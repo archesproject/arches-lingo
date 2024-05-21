@@ -26,10 +26,14 @@ from arches_rdm.const import (
     CONCEPT_NAME_CONTENT_NODE,
     CONCEPT_NAME_LANGUAGE_NODE,
     CONCEPT_NAME_TYPE_NODE,
+    CONCEPT_IDENTIFIER_CONTENT_NODE,
+    CONCEPT_IDENTIFIER_NODEGROUP,
     SCHEME_NAME_NODEGROUP,
     SCHEME_NAME_CONTENT_NODE,
     SCHEME_NAME_LANGUAGE_NODE,
     SCHEME_NAME_TYPE_NODE,
+    SCHEME_IDENTIFIER_NODEGROUP,
+    SCHEME_IDENTIFIER_CONTENT_NODE,
     PREF_LABEL_VALUE_ID,
 )
 
@@ -75,6 +79,18 @@ def setUpModule():
                 CONCEPT_NAME_NODEGROUP,
                 CONCEPT_NAME_LANGUAGE_NODE,
                 "Name language",
+                "string",
+            ),
+            (
+                SCHEME_IDENTIFIER_NODEGROUP,
+                SCHEME_IDENTIFIER_CONTENT_NODE,
+                "Identifier content",
+                "string",
+            ),
+            (
+                CONCEPT_IDENTIFIER_NODEGROUP,
+                CONCEPT_IDENTIFIER_CONTENT_NODE,
+                "Identifier content",
                 "string",
             ),
         ]:
@@ -126,6 +142,13 @@ class ConceptTreeViewTests(TestCase):
                 SCHEME_NAME_LANGUAGE_NODE: [ENGLISH_VALUE_ID],
             },
         )
+        TileModel.objects.create(
+            resourceinstance=cls.scheme,
+            nodegroup_id=SCHEME_IDENTIFIER_NODEGROUP,
+            data={
+                SCHEME_IDENTIFIER_CONTENT_NODE: localized_string("http://archesproject.org/scheme"),
+            },
+        )
 
         MAX_DEPTH = 5
         CONCEPT_COUNT = 5
@@ -135,6 +158,14 @@ class ConceptTreeViewTests(TestCase):
         ResourceInstance.objects.bulk_create(cls.concepts)
 
         for i, concept in enumerate(cls.concepts):
+            # Create identifier tile
+            TileModel.objects.create(
+                resourceinstance=concept,
+                nodegroup_id=CONCEPT_IDENTIFIER_NODEGROUP,
+                data={
+                    CONCEPT_IDENTIFIER_CONTENT_NODE: localized_string(f"http://archesproject.org/concept_{i+1}"),
+                },
+            )
             # Create label tile
             TileModel.objects.create(
                 resourceinstance=concept,
@@ -197,6 +228,7 @@ class ConceptTreeViewTests(TestCase):
         scheme = result["schemes"][0]
 
         self.assertEqual(scheme["labels"][0]["value"], "Test Scheme")
+        self.assertEqual(scheme["identifier"], "http://archesproject.org/scheme")
         self.assertEqual(len(scheme["top_concepts"]), 1)
         top = scheme["top_concepts"][0]
         self.assertEqual(top["labels"][0]["value"], "Concept 1")
@@ -211,4 +243,8 @@ class ConceptTreeViewTests(TestCase):
         self.assertEqual(
             {n["labels"][0]["value"] for n in concept_2["narrower"]},
             {"Concept 3"},
+        )
+        self.assertEqual(
+            {n["identifier"] for n in concept_2["narrower"]},
+            {"http://archesproject.org/concept_3"},
         )
