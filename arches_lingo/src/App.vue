@@ -3,5 +3,5 @@ import Foo from "@/components/FooComponent.vue";
 </script>
 
 <template>
-    <Foo />
+  <Foo />
 </template>

@@ -41,7 +41,7 @@ define([
                             null,
                             function(){}
                         )
-                    )
+                    );
                 }).always(() => {
                     self.loading(false);
                 });

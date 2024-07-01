@@ -18,10 +18,10 @@
         "vitest": "vitest --run --coverage"
     },
     "devDependencies": {
-        "arches-dev-dependencies": "archesproject/arches-dev-dependencies#dev/7.6.x"
+        "arches-dev-dependencies": "archesproject/arches-dev-dependencies#dev/8.0.x"
     },
     "dependencies": {
-        "arches": "archesproject/arches#dev/7.6.x"
+        "arches": "archesproject/arches#controlled-list-item-editor"
     },
     "nodeModulesPaths": {
     },
