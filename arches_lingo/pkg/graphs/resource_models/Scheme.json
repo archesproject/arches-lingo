@@ -2069,16 +2069,16 @@
                     "config": {
                         "descriptor_types": {
                             "description": {
-                                "nodegroup_id": "",
-                                "string_template": ""
+                                "nodegroup_id": "7131bc72-11e0-11ef-9493-0a58a9feac02",
+                                "string_template": "<statement>"
                             },
                             "map_popup": {
                                 "nodegroup_id": "",
                                 "string_template": ""
                             },
                             "name": {
-                                "nodegroup_id": "749a27cf-423c-11ee-8a8d-11afefc4bff7",
-                                "string_template": "<name_content>"
+                                "nodegroup_id": "ef87ac28-11de-11ef-9493-0a58a9feac02",
+                                "string_template": "<appellative_status_ascribed_name_content>"
                             }
                         },
                         "triggering_nodegroups": []

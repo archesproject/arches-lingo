@@ -3,201 +3,232 @@
   xmlns:skos="http://www.w3.org/2004/02/skos/core#"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 >
-  <skos:Collection rdf:about="https://rdm.dev.fargeo.com2cc0e054-ef9b-41ae-8e86-e0c3b4e7ca00">
+  <skos:Collection rdf:about="http://localhost:8000/deb847fc-f4c3-4e82-be19-04641579f129">
+    <skos:prefLabel xml:lang="en">{"id": "32817961-1a23-48ab-ad0e-c0e58f017f00", "value": "label"}</skos:prefLabel>
     <skos:member>
-      <skos:Concept rdf:about="https://rdm.dev.fargeo.comc1d8c87d-183c-4c46-aa6f-7920825cba5e"/>
+      <skos:Concept rdf:about="http://localhost:8000/2e3a2045-b44e-47fc-a27b-3078b17e08e4"/>
     </skos:member>
-    <skos:prefLabel xml:lang="en">{"id": "26b5a068-df40-441e-920a-02f6d6c6478b", "value": "Statuteses"}</skos:prefLabel>
     <skos:member>
-      <skos:Concept rdf:about="https://rdm.dev.fargeo.comc047ea56-465a-479c-b85c-8de23766384a"/>
+      <skos:Concept rdf:about="http://localhost:8000/df24d257-b547-4733-ae89-dfffa3597683"/>
+    </skos:member>
+    <skos:member>
+      <skos:Concept rdf:about="http://localhost:8000/19376b93-4bdc-4d48-a22a-71121506b70b"/>
     </skos:member>
   </skos:Collection>
-  <skos:Collection rdf:about="https://rdm.dev.fargeo.com55ce793b-a51a-4b25-811d-d08ea797f8c3">
+  <skos:Collection rdf:about="http://localhost:8000/55ce793b-a51a-4b25-811d-d08ea797f8c3">
     <skos:member>
-      <skos:Concept rdf:about="https://rdm.dev.fargeo.coma6795899-3874-420e-bb8e-7f7bf87b66eb"/>
+      <skos:Concept rdf:about="http://localhost:8000/845cc417-ef77-4582-9271-ffba5e4cabc9"/>
+    </skos:member>
+    <skos:member>
+      <skos:Concept rdf:about="http://localhost:8000/15386a71-b8d6-4371-9bf7-69efb98c79ed"/>
+    </skos:member>
+    <skos:member>
+      <skos:Concept rdf:about="http://localhost:8000/e66bfcd6-cf68-4564-bcc1-ed0a36cfcf4f"/>
+    </skos:member>
+    <skos:member>
+      <skos:Concept rdf:about="http://localhost:8000/28855929-b8c5-43ae-8794-ab7497486345"/>
+    </skos:member>
+    <skos:member>
+      <skos:Concept rdf:about="http://localhost:8000/a6795899-3874-420e-bb8e-7f7bf87b66eb"/>
+    </skos:member>
+    <skos:member>
+      <skos:Concept rdf:about="http://localhost:8000/05967b72-5a51-4da1-90bb-5b53f62ec7ca"/>
+    </skos:member>
+    <skos:member>
+      <skos:Concept rdf:about="http://localhost:8000/c0fe6a60-ee6e-4738-a58b-74f8973c07b8"/>
+    </skos:member>
+    <skos:member>
+      <skos:Concept rdf:about="http://localhost:8000/97f89729-35ed-4780-aeea-d487717ffb65"/>
+    </skos:member>
+    <skos:member>
+      <skos:Concept rdf:about="http://localhost:8000/989ca6d8-2376-45c1-af07-3689d41e5602"/>
+    </skos:member>
+    <skos:member>
+      <skos:Concept rdf:about="http://localhost:8000/58695100-659c-48df-8c87-fa565dfef39e"/>
+    </skos:member>
+    <skos:member>
+      <skos:Concept rdf:about="http://localhost:8000/e69de7f4-a03b-4806-95bd-e83041fa5440"/>
+    </skos:member>
+    <skos:member>
+      <skos:Concept rdf:about="http://localhost:8000/5b633cd0-e407-4dce-9f7c-5657ae57408f"/>
     </skos:member>
     <skos:prefLabel xml:lang="en">{"id": "a3b5bf31-1646-44ef-854c-aa445dc52240", "value": "Languages"}</skos:prefLabel>
     <skos:member>
-      <skos:Concept rdf:about="https://rdm.dev.fargeo.com05967b72-5a51-4da1-90bb-5b53f62ec7ca"/>
+      <skos:Concept rdf:about="http://localhost:8000/386b1c1a-a9b5-418c-b1d3-6aa518bb7cfb"/>
     </skos:member>
     <skos:member>
-      <skos:Concept rdf:about="https://rdm.dev.fargeo.com5b633cd0-e407-4dce-9f7c-5657ae57408f"/>
-    </skos:member>
-    <skos:member>
-      <skos:Concept rdf:about="https://rdm.dev.fargeo.com386b1c1a-a9b5-418c-b1d3-6aa518bb7cfb"/>
-    </skos:member>
-    <skos:member>
-      <skos:Concept rdf:about="https://rdm.dev.fargeo.com58695100-659c-48df-8c87-fa565dfef39e"/>
+      <skos:Concept rdf:about="http://localhost:8000/8cba0ddc-94d0-4b06-baff-f3d5a21d6b3c"/>
     </skos:member>
   </skos:Collection>
-  <skos:Collection rdf:about="https://rdm.dev.fargeo.com891574cc-47bf-4395-a512-d246cd75c1a1">
-    <skos:prefLabel xml:lang="en">{"id": "db749170-299d-4c08-b9fe-c41d86af3e4c", "value": "Name Types"}</skos:prefLabel>
+  <skos:Collection rdf:about="http://localhost:8000/f028fe8e-5a23-40a7-8ffe-7865ebac9487">
+    <skos:prefLabel xml:lang="en">{"id": "1d648e40-e9e2-4fa5-8b7b-1c331496c8ce", "value": "Identifier Types - General"}</skos:prefLabel>
     <skos:member>
-      <skos:Concept rdf:about="https://rdm.dev.fargeo.com05e62a8a-b5c2-437c-b741-4f8176cea0d1"/>
-    </skos:member>
-    <skos:member>
-      <skos:Concept rdf:about="https://rdm.dev.fargeo.combc6ce063-7ad5-4b92-8685-000bfe27ebf2"/>
+      <skos:Concept rdf:about="http://localhost:8000/fe814127-d68f-43ed-beb9-67a8d4d6336e"/>
     </skos:member>
   </skos:Collection>
-  <skos:Collection rdf:about="https://rdm.dev.fargeo.com1c950e16-3fcf-4f33-9e5e-ce5c6c992cca">
-    <skos:prefLabel xml:lang="en">{"id": "3b01965f-786c-400b-a7f2-a6c6c5157c78", "value": "Right Types"}</skos:prefLabel>
-  </skos:Collection>
-  <skos:Collection rdf:about="https://rdm.dev.fargeo.com38fc54d4-67ef-4183-8934-66669f1f504c">
-    <skos:prefLabel xml:lang="en">{"id": "621ac89a-98c1-48e9-9b4b-205d7bef676c", "value": "Scheme Identifier Types"}</skos:prefLabel>
-  </skos:Collection>
-  <skos:Collection rdf:about="https://rdm.dev.fargeo.comef69e772-de53-45fe-98d4-bf3e7b10eb57">
+  <skos:Collection rdf:about="http://localhost:8000/5f28f263-9d16-4c01-a146-80a97d7119a9">
     <skos:member>
-      <skos:Concept rdf:about="https://rdm.dev.fargeo.com9c93be63-b900-4f63-b0cf-7351e5129508"/>
-    </skos:member>
-    <skos:prefLabel xml:lang="en">{"id": "57c8a2b7-9e8a-4621-9b7a-6a64e390ee36", "value": "Metatypes"}</skos:prefLabel>
-    <skos:member>
-      <skos:Concept rdf:about="https://rdm.dev.fargeo.com7b873aed-1dbd-45e4-98e7-85143ee453c6"/>
+      <skos:Concept rdf:about="http://localhost:8000/bffe467f-5d22-4b3c-a6c7-9766165271b3"/>
     </skos:member>
     <skos:member>
-      <skos:Concept rdf:about="https://rdm.dev.fargeo.com02a0fc69-9f92-4bef-b657-af1ed37c1d3e"/>
-    </skos:member>
-  </skos:Collection>
-  <skos:Collection rdf:about="https://rdm.dev.fargeo.comfb5dd406-33ef-4e83-a6a9-9ea02c1ada17">
-    <skos:prefLabel xml:lang="en">{"id": "40879c17-cb58-4957-927f-a00ffc5bb635", "value": "Scheme Types"}</skos:prefLabel>
-    <skos:member>
-      <skos:Concept rdf:about="https://rdm.dev.fargeo.com929bfdbf-a592-4f70-bd8b-9c11deb6bff9"/>
-    </skos:member>
-  </skos:Collection>
-  <skos:Collection rdf:about="https://rdm.dev.fargeo.com6eaa2c6f-af83-464c-9200-051c4cfe7e8e">
-    <skos:prefLabel xml:lang="en">{"id": "7ab97324-867e-4be9-b705-f35c90df8442", "value": "Event Types"}</skos:prefLabel>
-    <skos:member>
-      <skos:Concept rdf:about="https://rdm.dev.fargeo.com14751cb1-f7af-45d9-b32a-59d150bdac0f"/>
-    </skos:member>
-  </skos:Collection>
-  <skos:Collection rdf:about="https://rdm.dev.fargeo.com4f9b2c82-59c6-4173-99ea-2a6bfbab6aa2">
-    <skos:member>
-      <skos:Concept rdf:about="https://rdm.dev.fargeo.comb655c9b3-53f5-4d8a-a7e5-6751b4fc1d2c"/>
+      <skos:Concept rdf:about="http://localhost:8000/6abe2747-f53f-40d9-857a-3c027ccf2f79"/>
     </skos:member>
     <skos:member>
-      <skos:Concept rdf:about="https://rdm.dev.fargeo.comd1012561-bd8f-4498-b7b1-fea78cb73afa"/>
+      <skos:Concept rdf:about="http://localhost:8000/36f1b686-c4ba-4c0e-b4f3-b8b190f3a88d"/>
     </skos:member>
     <skos:member>
-      <skos:Concept rdf:about="https://rdm.dev.fargeo.com45fab276-7818-4c83-8dd8-43e4e862904c"/>
-    </skos:member>
-    <skos:member>
-      <skos:Concept rdf:about="https://rdm.dev.fargeo.com710a5dbf-c445-40bf-b431-cc7f6802be32"/>
-    </skos:member>
-    <skos:prefLabel xml:lang="en">{"id": "9f9dfd1a-b7f6-4976-8915-e671d9fcb4ee", "value": "Term Types"}</skos:prefLabel>
-  </skos:Collection>
-  <skos:Collection rdf:about="https://rdm.dev.fargeo.com5f28f263-9d16-4c01-a146-80a97d7119a9">
-    <skos:member>
-      <skos:Concept rdf:about="https://rdm.dev.fargeo.comfd263a79-e808-49a0-a0da-b663978e4e68"/>
-    </skos:member>
-    <skos:member>
-      <skos:Concept rdf:about="https://rdm.dev.fargeo.com6abe2747-f53f-40d9-857a-3c027ccf2f79"/>
-    </skos:member>
-    <skos:member>
-      <skos:Concept rdf:about="https://rdm.dev.fargeo.com36f1b686-c4ba-4c0e-b4f3-b8b190f3a88d"/>
-    </skos:member>
-    <skos:member>
-      <skos:Concept rdf:about="https://rdm.dev.fargeo.combffe467f-5d22-4b3c-a6c7-9766165271b3"/>
+      <skos:Concept rdf:about="http://localhost:8000/fd263a79-e808-49a0-a0da-b663978e4e68"/>
     </skos:member>
     <skos:prefLabel xml:lang="en">{"id": "3f58f3d2-d3d4-4ace-98ef-7825d309544e", "value": "E55 Type"}</skos:prefLabel>
   </skos:Collection>
-  <skos:Collection rdf:about="https://rdm.dev.fargeo.comdeb847fc-f4c3-4e82-be19-04641579f129">
+  <skos:Collection rdf:about="http://localhost:8000/00000000-0000-0000-0000-000000000005">
     <skos:member>
-      <skos:Concept rdf:about="https://rdm.dev.fargeo.com2e3a2045-b44e-47fc-a27b-3078b17e08e4"/>
+      <skos:Concept rdf:about="http://localhost:8000/00000000-0000-0000-0000-000000000007"/>
     </skos:member>
-    <skos:prefLabel xml:lang="en">{"id": "32817961-1a23-48ab-ad0e-c0e58f017f00", "value": "label"}</skos:prefLabel>
+    <skos:prefLabel xml:lang="en-us">{"id": "d8c622f6-e786-11e6-905a-475a5eee86f5", "value": "Resource To Resource Relationship Types"}</skos:prefLabel>
+  </skos:Collection>
+  <skos:Collection rdf:about="http://localhost:8000/38fc54d4-67ef-4183-8934-66669f1f504c">
     <skos:member>
-      <skos:Concept rdf:about="https://rdm.dev.fargeo.com19376b93-4bdc-4d48-a22a-71121506b70b"/>
+      <skos:Concept rdf:about="http://localhost:8000/9baf3cd5-33d4-4fbc-b1d1-a2d218732f1e"/>
+    </skos:member>
+    <skos:prefLabel xml:lang="en">{"id": "621ac89a-98c1-48e9-9b4b-205d7bef676c", "value": "Scheme Identifier Types"}</skos:prefLabel>
+  </skos:Collection>
+  <skos:Collection rdf:about="http://localhost:8000/ef69e772-de53-45fe-98d4-bf3e7b10eb57">
+    <skos:member>
+      <skos:Concept rdf:about="http://localhost:8000/02a0fc69-9f92-4bef-b657-af1ed37c1d3e"/>
     </skos:member>
     <skos:member>
-      <skos:Concept rdf:about="https://rdm.dev.fargeo.comdf24d257-b547-4733-ae89-dfffa3597683"/>
+      <skos:Concept rdf:about="http://localhost:8000/7b873aed-1dbd-45e4-98e7-85143ee453c6"/>
+    </skos:member>
+    <skos:member>
+      <skos:Concept rdf:about="http://localhost:8000/9c93be63-b900-4f63-b0cf-7351e5129508"/>
+    </skos:member>
+    <skos:prefLabel xml:lang="en">{"id": "57c8a2b7-9e8a-4621-9b7a-6a64e390ee36", "value": "Metatypes"}</skos:prefLabel>
+  </skos:Collection>
+  <skos:Collection rdf:about="http://localhost:8000/2cc0e054-ef9b-41ae-8e86-e0c3b4e7ca00">
+    <skos:member>
+      <skos:Concept rdf:about="http://localhost:8000/c047ea56-465a-479c-b85c-8de23766384a"/>
+    </skos:member>
+    <skos:prefLabel xml:lang="en">{"id": "26b5a068-df40-441e-920a-02f6d6c6478b", "value": "Statuteses"}</skos:prefLabel>
+    <skos:member>
+      <skos:Concept rdf:about="http://localhost:8000/c1d8c87d-183c-4c46-aa6f-7920825cba5e"/>
     </skos:member>
   </skos:Collection>
-  <skos:Collection rdf:about="https://rdm.dev.fargeo.coma8da34eb-575b-498c-ada7-161ee745fd16">
+  <skos:Collection rdf:about="http://localhost:8000/fb5dd406-33ef-4e83-a6a9-9ea02c1ada17">
+    <skos:prefLabel xml:lang="en">{"id": "40879c17-cb58-4957-927f-a00ffc5bb635", "value": "Scheme Types"}</skos:prefLabel>
     <skos:member>
-      <skos:Concept rdf:about="https://rdm.dev.fargeo.com926aa6de-a7e6-4959-9fc4-5ea87c46d677"/>
-    </skos:member>
-    <skos:member>
-      <skos:Concept rdf:about="https://rdm.dev.fargeo.comde263fe8-5ebd-4d6c-a7c7-8068598ba962"/>
-    </skos:member>
-    <skos:prefLabel xml:lang="en">{"id": "7fc9d400-c1d9-4c7f-bbde-d2cd36c0ea6f", "value": "Identifier Types"}</skos:prefLabel>
-    <skos:member>
-      <skos:Concept rdf:about="https://rdm.dev.fargeo.comd98bfcab-fa26-4c8b-992d-a56eb7bbbaa2"/>
+      <skos:Concept rdf:about="http://localhost:8000/929bfdbf-a592-4f70-bd8b-9c11deb6bff9"/>
     </skos:member>
   </skos:Collection>
-  <skos:Collection rdf:about="https://rdm.dev.fargeo.comf028fe8e-5a23-40a7-8ffe-7865ebac9487">
-    <skos:prefLabel xml:lang="en">{"id": "1d648e40-e9e2-4fa5-8b7b-1c331496c8ce", "value": "Identifier Types - General"}</skos:prefLabel>
+  <skos:Collection rdf:about="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97">
     <skos:member>
-      <skos:Concept rdf:about="https://rdm.dev.fargeo.comfe814127-d68f-43ed-beb9-67a8d4d6336e"/>
+      <skos:Concept rdf:about="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d">
+        <skos:member rdf:resource="http://localhost:8000/68792506-7b45-4008-9a12-15d63ea18f29"/>
+      </skos:Concept>
+    </skos:member>
+    <skos:prefLabel xml:lang="en">{"id": "faf6c183-0e9b-4ccc-b6ab-87bf3f59ff9a", "value": "related"}</skos:prefLabel>
+  </skos:Collection>
+  <skos:Collection rdf:about="http://localhost:8000/4f9b2c82-59c6-4173-99ea-2a6bfbab6aa2">
+    <skos:member>
+      <skos:Concept rdf:about="http://localhost:8000/d1012561-bd8f-4498-b7b1-fea78cb73afa"/>
+    </skos:member>
+    <skos:prefLabel xml:lang="en">{"id": "9f9dfd1a-b7f6-4976-8915-e671d9fcb4ee", "value": "Term Types"}</skos:prefLabel>
+    <skos:member>
+      <skos:Concept rdf:about="http://localhost:8000/b655c9b3-53f5-4d8a-a7e5-6751b4fc1d2c"/>
+    </skos:member>
+    <skos:member>
+      <skos:Concept rdf:about="http://localhost:8000/710a5dbf-c445-40bf-b431-cc7f6802be32"/>
+    </skos:member>
+    <skos:member>
+      <skos:Concept rdf:about="http://localhost:8000/45fab276-7818-4c83-8dd8-43e4e862904c"/>
     </skos:member>
   </skos:Collection>
-  <skos:Collection rdf:about="https://rdm.dev.fargeo.comaba2a0b4-75a4-45ba-8b57-021f3ca92a6a">
+  <skos:Collection rdf:about="http://localhost:8000/891574cc-47bf-4395-a512-d246cd75c1a1">
     <skos:member>
-      <skos:Concept rdf:about="https://rdm.dev.fargeo.com44bb50fc-42d5-41a0-bc21-4ad8d2f8bf5e">
-        <skos:member rdf:resource="https://rdm.dev.fargeo.comdb222348-5dbc-4647-b649-52e0ae6df99a"/>
-        <skos:member rdf:resource="https://rdm.dev.fargeo.com713f38ea-b13c-4ea2-b7bb-35ec255bdf12"/>
-        <skos:member rdf:resource="https://rdm.dev.fargeo.com854e54ba-8a9e-4b7d-87ed-ce80e54506a4"/>
-        <skos:member rdf:resource="https://rdm.dev.fargeo.comdd9186a8-a591-4f40-914c-1f476e60f552"/>
-        <skos:member rdf:resource="https://rdm.dev.fargeo.com52eb8678-485d-418c-9ad2-aa97d077ac56"/>
-        <skos:member rdf:resource="https://rdm.dev.fargeo.com970f7714-2df3-4c56-b248-9f1d022ab28c"/>
+      <skos:Concept rdf:about="http://localhost:8000/05e62a8a-b5c2-437c-b741-4f8176cea0d1"/>
+    </skos:member>
+    <skos:member>
+      <skos:Concept rdf:about="http://localhost:8000/bc6ce063-7ad5-4b92-8685-000bfe27ebf2"/>
+    </skos:member>
+    <skos:prefLabel xml:lang="en">{"id": "db749170-299d-4c08-b9fe-c41d86af3e4c", "value": "Name Types"}</skos:prefLabel>
+  </skos:Collection>
+  <skos:Collection rdf:about="http://localhost:8000/769fa072-6247-4e23-b638-4e801f8c50dc">
+    <skos:prefLabel xml:lang="en">{"id": "6eb4125d-1651-4852-ada2-3b93e97865d1", "value": "mappingRelation"}</skos:prefLabel>
+    <skos:member>
+      <skos:Concept rdf:about="http://localhost:8000/ed044298-b4a1-4455-b11a-81561fbf2fd8">
+        <skos:member rdf:resource="http://localhost:8000/cce4ce1c-0e47-453e-8a12-3e23c3dbb472"/>
+      </skos:Concept>
+    </skos:member>
+    <skos:member>
+      <skos:Concept rdf:about="http://localhost:8000/b3ffe5b4-21ba-4568-aec0-e6e0bd669c38"/>
+    </skos:member>
+    <skos:member>
+      <skos:Concept rdf:about="http://localhost:8000/bb125622-0256-4f28-902f-7c273d353bc9"/>
+    </skos:member>
+    <skos:member>
+      <skos:Concept rdf:about="http://localhost:8000/68792506-7b45-4008-9a12-15d63ea18f29"/>
+    </skos:member>
+  </skos:Collection>
+  <skos:Collection rdf:about="http://localhost:8000/aba2a0b4-75a4-45ba-8b57-021f3ca92a6a">
+    <skos:member>
+      <skos:Concept rdf:about="http://localhost:8000/44bb50fc-42d5-41a0-bc21-4ad8d2f8bf5e">
+        <skos:member rdf:resource="http://localhost:8000/970f7714-2df3-4c56-b248-9f1d022ab28c"/>
+        <skos:member rdf:resource="http://localhost:8000/854e54ba-8a9e-4b7d-87ed-ce80e54506a4"/>
+        <skos:member rdf:resource="http://localhost:8000/713f38ea-b13c-4ea2-b7bb-35ec255bdf12"/>
+        <skos:member rdf:resource="http://localhost:8000/52eb8678-485d-418c-9ad2-aa97d077ac56"/>
+        <skos:member rdf:resource="http://localhost:8000/dd9186a8-a591-4f40-914c-1f476e60f552"/>
+        <skos:member rdf:resource="http://localhost:8000/db222348-5dbc-4647-b649-52e0ae6df99a"/>
       </skos:Concept>
     </skos:member>
     <skos:prefLabel xml:lang="en">{"id": "d505fc19-e27c-4623-9228-539e00bf2684", "value": "note"}</skos:prefLabel>
   </skos:Collection>
-  <skos:Collection rdf:about="https://rdm.dev.fargeo.com769fa072-6247-4e23-b638-4e801f8c50dc">
+  <skos:Collection rdf:about="http://localhost:8000/9ff32b7d-e2f6-4294-8327-4c91ad61c2c3">
+    <skos:prefLabel xml:lang="en">{"id": "5f390dd0-4818-4d10-9ae9-f23de571de9a", "value": "Label Type"}</skos:prefLabel>
+  </skos:Collection>
+  <skos:Collection rdf:about="http://localhost:8000/a8da34eb-575b-498c-ada7-161ee745fd16">
     <skos:member>
-      <skos:Concept rdf:about="https://rdm.dev.fargeo.comed044298-b4a1-4455-b11a-81561fbf2fd8">
-        <skos:member rdf:resource="https://rdm.dev.fargeo.comcce4ce1c-0e47-453e-8a12-3e23c3dbb472"/>
-      </skos:Concept>
+      <skos:Concept rdf:about="http://localhost:8000/de263fe8-5ebd-4d6c-a7c7-8068598ba962"/>
+    </skos:member>
+    <skos:member rdf:resource="http://localhost:8000/9baf3cd5-33d4-4fbc-b1d1-a2d218732f1e"/>
+    <skos:prefLabel xml:lang="en">{"id": "7fc9d400-c1d9-4c7f-bbde-d2cd36c0ea6f", "value": "Identifier Types"}</skos:prefLabel>
+    <skos:member>
+      <skos:Concept rdf:about="http://localhost:8000/926aa6de-a7e6-4959-9fc4-5ea87c46d677"/>
     </skos:member>
     <skos:member>
-      <skos:Concept rdf:about="https://rdm.dev.fargeo.comb3ffe5b4-21ba-4568-aec0-e6e0bd669c38"/>
-    </skos:member>
-    <skos:member>
-      <skos:Concept rdf:about="https://rdm.dev.fargeo.com68792506-7b45-4008-9a12-15d63ea18f29"/>
-    </skos:member>
-    <skos:prefLabel xml:lang="en">{"id": "6eb4125d-1651-4852-ada2-3b93e97865d1", "value": "mappingRelation"}</skos:prefLabel>
-    <skos:member>
-      <skos:Concept rdf:about="https://rdm.dev.fargeo.combb125622-0256-4f28-902f-7c273d353bc9"/>
+      <skos:Concept rdf:about="http://localhost:8000/d98bfcab-fa26-4c8b-992d-a56eb7bbbaa2"/>
     </skos:member>
   </skos:Collection>
-  <skos:Collection rdf:about="https://rdm.dev.fargeo.com8fe1efd6-c90e-4f64-a125-14b2cc4d78e3">
+  <skos:Collection rdf:about="http://localhost:8000/42e91d71-7d25-4e43-97df-8b43f46711cf">
     <skos:member>
-      <skos:Concept rdf:about="https://rdm.dev.fargeo.comd1544a63-b04e-4ec6-b6b1-256cd70c4954"/>
-    </skos:member>
-    <skos:prefLabel xml:lang="en">{"id": "bd8822bd-6115-4587-8d4c-6c5918fea7ad", "value": "Subject Types"}</skos:prefLabel>
-    <skos:member>
-      <skos:Concept rdf:about="https://rdm.dev.fargeo.com774994db-54d3-4793-baa1-2810410be8d0"/>
-    </skos:member>
-  </skos:Collection>
-  <skos:Collection rdf:about="https://rdm.dev.fargeo.comed3f8d46-c372-4c99-a326-8f726076fb97">
-    <skos:prefLabel xml:lang="en">{"id": "faf6c183-0e9b-4ccc-b6ab-87bf3f59ff9a", "value": "related"}</skos:prefLabel>
-    <skos:member>
-      <skos:Concept rdf:about="https://rdm.dev.fargeo.com31916ec0-f408-473d-9184-667a4d097b9d">
-        <skos:member rdf:resource="https://rdm.dev.fargeo.com68792506-7b45-4008-9a12-15d63ea18f29"/>
-      </skos:Concept>
-    </skos:member>
-  </skos:Collection>
-  <skos:Collection rdf:about="https://rdm.dev.fargeo.com00000000-0000-0000-0000-000000000005">
-    <skos:prefLabel xml:lang="en-us">{"id": "d8c622f6-e786-11e6-905a-475a5eee86f5", "value": "Resource To Resource Relationship Types"}</skos:prefLabel>
-    <skos:member>
-      <skos:Concept rdf:about="https://rdm.dev.fargeo.com00000000-0000-0000-0000-000000000007"/>
-    </skos:member>
-  </skos:Collection>
-  <skos:Collection rdf:about="https://rdm.dev.fargeo.com42e91d71-7d25-4e43-97df-8b43f46711cf">
-    <skos:member>
-      <skos:Concept rdf:about="https://rdm.dev.fargeo.com4810df79-8bdd-4102-a067-fdb11dcff8b7">
-        <skos:member rdf:resource="https://rdm.dev.fargeo.comb3ffe5b4-21ba-4568-aec0-e6e0bd669c38"/>
+      <skos:Concept rdf:about="http://localhost:8000/4810df79-8bdd-4102-a067-fdb11dcff8b7">
+        <skos:member rdf:resource="http://localhost:8000/b3ffe5b4-21ba-4568-aec0-e6e0bd669c38"/>
       </skos:Concept>
     </skos:member>
     <skos:prefLabel xml:lang="en">{"id": "bc7a90c8-979c-45b7-ab3a-8b0d374ba430", "value": "broaderTransitive"}</skos:prefLabel>
   </skos:Collection>
-  <skos:Collection rdf:about="https://rdm.dev.fargeo.com9ff32b7d-e2f6-4294-8327-4c91ad61c2c3">
-    <skos:prefLabel xml:lang="en">{"id": "5f390dd0-4818-4d10-9ae9-f23de571de9a", "value": "Label Type"}</skos:prefLabel>
+  <skos:Collection rdf:about="http://localhost:8000/1c950e16-3fcf-4f33-9e5e-ce5c6c992cca">
+    <skos:prefLabel xml:lang="en">{"id": "3b01965f-786c-400b-a7f2-a6c6c5157c78", "value": "Right Types"}</skos:prefLabel>
   </skos:Collection>
-  <skos:Concept rdf:about="https://rdm.dev.fargeo.comdb222348-5dbc-4647-b649-52e0ae6df99a"/>
-  <skos:Concept rdf:about="https://rdm.dev.fargeo.com970f7714-2df3-4c56-b248-9f1d022ab28c"/>
-  <skos:Concept rdf:about="https://rdm.dev.fargeo.comdd9186a8-a591-4f40-914c-1f476e60f552"/>
-  <skos:Concept rdf:about="https://rdm.dev.fargeo.com854e54ba-8a9e-4b7d-87ed-ce80e54506a4"/>
-  <skos:Concept rdf:about="https://rdm.dev.fargeo.comcce4ce1c-0e47-453e-8a12-3e23c3dbb472"/>
-  <skos:Concept rdf:about="https://rdm.dev.fargeo.com713f38ea-b13c-4ea2-b7bb-35ec255bdf12"/>
-  <skos:Concept rdf:about="https://rdm.dev.fargeo.com52eb8678-485d-418c-9ad2-aa97d077ac56"/>
+  <skos:Collection rdf:about="http://localhost:8000/6eaa2c6f-af83-464c-9200-051c4cfe7e8e">
+    <skos:prefLabel xml:lang="en">{"id": "7ab97324-867e-4be9-b705-f35c90df8442", "value": "Event Types"}</skos:prefLabel>
+    <skos:member>
+      <skos:Concept rdf:about="http://localhost:8000/14751cb1-f7af-45d9-b32a-59d150bdac0f"/>
+    </skos:member>
+  </skos:Collection>
+  <skos:Collection rdf:about="http://localhost:8000/8fe1efd6-c90e-4f64-a125-14b2cc4d78e3">
+    <skos:member>
+      <skos:Concept rdf:about="http://localhost:8000/774994db-54d3-4793-baa1-2810410be8d0"/>
+    </skos:member>
+    <skos:prefLabel xml:lang="en">{"id": "bd8822bd-6115-4587-8d4c-6c5918fea7ad", "value": "Subject Types"}</skos:prefLabel>
+    <skos:member>
+      <skos:Concept rdf:about="http://localhost:8000/d1544a63-b04e-4ec6-b6b1-256cd70c4954"/>
+    </skos:member>
+  </skos:Collection>
+  <skos:Concept rdf:about="http://localhost:8000/970f7714-2df3-4c56-b248-9f1d022ab28c"/>
+  <skos:Concept rdf:about="http://localhost:8000/713f38ea-b13c-4ea2-b7bb-35ec255bdf12"/>
+  <skos:Concept rdf:about="http://localhost:8000/cce4ce1c-0e47-453e-8a12-3e23c3dbb472"/>
+  <skos:Concept rdf:about="http://localhost:8000/854e54ba-8a9e-4b7d-87ed-ce80e54506a4"/>
+  <skos:Concept rdf:about="http://localhost:8000/52eb8678-485d-418c-9ad2-aa97d077ac56"/>
+  <skos:Concept rdf:about="http://localhost:8000/dd9186a8-a591-4f40-914c-1f476e60f552"/>
+  <skos:Concept rdf:about="http://localhost:8000/db222348-5dbc-4647-b649-52e0ae6df99a"/>
 </rdf:RDF>

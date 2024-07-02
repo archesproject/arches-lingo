@@ -16,15 +16,15 @@ from arches.app.models.concept import Concept
 from arches.app.models.models import LoadStaging, NodeGroup, LoadEvent
 from arches.app.utils.betterJSONSerializer import JSONSerializer
 import arches_lingo.tasks as tasks
+from arches_lingo.const import (
+    SCHEMES_GRAPH_ID,
+    CONCEPTS_GRAPH_ID,
+    TOP_CONCEPT_OF_NODE_AND_NODEGROUP,
+    BROADER_NODE_AND_NODEGROUP,
+    CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID,
+)
 
 logger = logging.getLogger(__name__)
-
-#### Constants ####
-SCHEMES_GRAPH_ID = uuid.UUID("56788995-423b-11ee-8a8d-11afefc4bff7")
-CONCEPTS_GRAPH_ID = uuid.UUID("bf73e576-4888-11ee-8a8d-11afefc4bff7")
-CONCEPTS_TOP_CONCEPT_OF_NODEGROUP_ID = uuid.UUID("bf73e5b9-4888-11ee-8a8d-11afefc4bff7")
-CONCEPTS_BROADER_NODEGROUP_ID = uuid.UUID("bf73e5f5-4888-11ee-8a8d-11afefc4bff7")
-CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID = uuid.UUID("bf73e60a-4888-11ee-8a8d-11afefc4bff7")
 
 details = {
     "etlmoduleid": "11cad3ca-e155-44b1-9910-c50b3def47f6",
@@ -62,16 +62,25 @@ class RDMMtoLingoMigrator(BaseImportModule):
                     concept.pk
                 )  # use old conceptid as new resourceinstanceid
 
-                name = {}
+                appellative_status = {}
                 identifier = {}
                 if (
                     value.valuetype_id == "prefLabel"
                     or value.valuetype_id == "altLabel"
                 ):
-                    name["name_content"] = value.value
-                    name["name_language"] = value.language_id
-                    name["name_type"] = value.valuetype_id
-                    scheme_to_load["tile_data"].append({"name": name})
+                    appellative_status["appellative_status_ascribed_name_content"] = (
+                        value.value
+                    )
+
+                    appellative_status["appellative_status_ascribed_name_language"] = (
+                        value.language_id
+                    )
+                    appellative_status["appellative_status_ascribed_relation"] = (
+                        value.valuetype_id
+                    )
+                    scheme_to_load["tile_data"].append(
+                        {"appellative_status": appellative_status}
+                    )
                 elif value.valuetype_id == "identifier":
                     identifier["identifier_content"] = value.value
                     identifier["identifier_type"] = value.valuetype_id
@@ -90,16 +99,24 @@ class RDMMtoLingoMigrator(BaseImportModule):
                     concept.pk
                 )  # use old conceptid as new resourceinstanceid
 
-                name = {}
+                appellative_status = {}
                 identifier = {}
                 if (
                     value.valuetype_id == "prefLabel"
                     or value.valuetype_id == "altLabel"
                 ):
-                    name["name_content"] = value.value
-                    name["name_language"] = value.language_id
-                    name["name_type"] = value.valuetype_id
-                    concept_to_load["tile_data"].append({"name": name})
+                    appellative_status["appellative_status_ascribed_name_content"] = (
+                        value.value
+                    )
+                    appellative_status["appellative_status_ascribed_name_language"] = (
+                        value.language_id
+                    )
+                    appellative_status["appellative_status_ascribed_relation"] = (
+                        value.valuetype_id
+                    )
+                    concept_to_load["tile_data"].append(
+                        {"appellative_status": appellative_status}
+                    )
                 elif value.valuetype_id == "identifier":
                     identifier["identifier_content"] = value.value
                     identifier["identifier_type"] = value.valuetype_id
@@ -242,9 +259,9 @@ class RDMMtoLingoMigrator(BaseImportModule):
             where relationtype = 'hasTopConcept';
         """,
             (
-                CONCEPTS_TOP_CONCEPT_OF_NODEGROUP_ID,
+                TOP_CONCEPT_OF_NODE_AND_NODEGROUP,
                 loadid,
-                CONCEPTS_TOP_CONCEPT_OF_NODEGROUP_ID,
+                TOP_CONCEPT_OF_NODE_AND_NODEGROUP,
             ),
         )
 
@@ -283,7 +300,7 @@ class RDMMtoLingoMigrator(BaseImportModule):
             from relations
             where relationtype = 'narrower';
         """,
-            (CONCEPTS_BROADER_NODEGROUP_ID, loadid, CONCEPTS_BROADER_NODEGROUP_ID),
+            (BROADER_NODE_AND_NODEGROUP, loadid, BROADER_NODE_AND_NODEGROUP),
         )
 
         # Create Part of Scheme relationships - derived by recursively generating concept hierarchy & associating

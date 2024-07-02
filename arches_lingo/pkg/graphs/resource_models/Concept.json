@@ -3470,16 +3470,16 @@
                     "config": {
                         "descriptor_types": {
                             "description": {
-                                "nodegroup_id": "802bc768-19a6-11ee-8f04-cd21e680a247",
-                                "string_template": "<statement_content>"
+                                "nodegroup_id": "bf73e5d7-4888-11ee-8a8d-11afefc4bff7",
+                                "string_template": "<statement>"
                             },
                             "map_popup": {
                                 "nodegroup_id": "",
                                 "string_template": ""
                             },
                             "name": {
-                                "nodegroup_id": "bf73e616-4888-11ee-8a8d-11afefc4bff7",
-                                "string_template": "<name_content>"
+                                "nodegroup_id": "ab9fee9c-0eb6-11ef-93db-0a58a9feac02",
+                                "string_template": "<appellative_status_ascribed_name_content>"
                             }
                         },
                         "triggering_nodegroups": []
@@ -6337,9 +6337,9 @@
         }
     ],
     "metadata": {
-        "db": "PostgreSQL 14.10 on aarch64-unknown-linux-gnu, compiled by gcc (GCC) 7.3.1 20180712 (Red Hat 7.3.1-6), 64-bit",
-        "git hash": "/bin/sh: 1: git: not found",
-        "os": "Linux",
-        "os version": "5.10.215-203.850.amzn2.x86_64"
+        "db": "PostgreSQL 14.5 on x86_64-apple-darwin20.6.0, compiled by Apple clang version 12.0.0 (clang-1200.0.32.29), 64-bit",
+        "git hash": "728621149 2024-06-27 09:32:13 -0700",
+        "os": "Darwin",
+        "os version": "23.5.0"
     }
 }
