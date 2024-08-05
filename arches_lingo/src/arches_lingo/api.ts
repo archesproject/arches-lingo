@@ -12,7 +12,6 @@ function getToken() {
 export const login = async (username: string, password: string) => {
     const response = await fetch(arches.urls.api_login, {
         method: "POST",
-        credentials: "include",
         headers: { "X-CSRFTOKEN": getToken() },
         body: JSON.stringify({ username, password }),
     });
@@ -30,7 +29,6 @@ export const login = async (username: string, password: string) => {
 export const logout = async () => {
     const response = await fetch(arches.urls.api_logout, {
         method: "POST",
-        credentials: "include",
         headers: { "X-CSRFTOKEN": getToken() },
     });
     if (response.ok) {

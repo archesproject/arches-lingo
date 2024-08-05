@@ -6,6 +6,7 @@ from django.db.models.expressions import CombinedExpression, Func
 from django.shortcuts import render
 from django.utils.translation import gettext_lazy as _
 from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.generic import View
 
 from arches.app.models.models import (
@@ -200,6 +201,7 @@ class ConceptTreeView(View):
 
 
 class LingoRootView(BaseManagerView):
+    @method_decorator(ensure_csrf_cookie)
     def get(self, request, graphid=None, resourceid=None):
         context = self.get_context_data(main_script="views/root")
         context["page_title"] = _("Lingo")
