@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, inject } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import { useToast } from "primevue/usetoast";
@@ -7,10 +7,11 @@ import Button from "primevue/button";
 
 import { DEFAULT_ERROR_TOAST_LIFE, ERROR } from "@/arches_lingo/constants.ts";
 import { logout } from "@/arches_lingo/api.ts";
+import { userKey } from "@/arches_lingo/constants.ts";
 
-import type { User } from "@/arches_lingo/types";
+import type { UserRefAndSetter } from "@/arches_lingo/types";
 
-const user = defineModel<User | null>({ required: true });
+const { user } = inject(userKey) as UserRefAndSetter;
 
 const { $gettext } = useGettext();
 const toast = useToast();
