@@ -5,6 +5,7 @@ import { useGettext } from "vue3-gettext";
 import Menubar from "primevue/menubar";
 
 import { routeNames } from "@/arches_lingo/routes.ts";
+import DarkModeToggle from "@/arches_lingo/components/header/DarkModeToggle.vue";
 import UserInteraction from "@/arches_lingo/components/user/UserInteraction.vue";
 
 const { $gettext } = useGettext();
@@ -49,7 +50,16 @@ const items = ref([
             </RouterLink>
         </template>
         <template #end>
-            <UserInteraction />
+            <div
+                style="
+                    display: flex;
+                    align-items: center;
+                    gap: var(--p-content-gap);
+                "
+            >
+                <DarkModeToggle />
+                <UserInteraction />
+            </div>
         </template>
     </Menubar>
 </template>
