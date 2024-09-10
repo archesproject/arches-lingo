@@ -24,16 +24,13 @@ const items = ref([
 </script>
 
 <template>
-    <Menubar
-        class="page-header"
-        :model="items"
-    >
+    <Menubar :model="items">
         <template #start>
             <RouterLink
                 :to="{ name: routeNames.root }"
                 style="text-decoration: none; color: inherit"
             >
-                <h2>{{ $gettext("Arches Lingo") }}</h2>
+                <h1>{{ $gettext("Arches Lingo") }}</h1>
             </RouterLink>
         </template>
         <template #item="{ item }">
@@ -46,7 +43,9 @@ const items = ref([
                     :class="item.icon"
                     aria-hidden="true"
                 ></i>
-                <span>{{ item.label }}</span>
+                <span style="font-weight: var(--p-button-label-font-weight)">{{
+                    item.label
+                }}</span>
             </RouterLink>
         </template>
         <template #end>
@@ -56,8 +55,8 @@ const items = ref([
 </template>
 
 <style scoped>
-.page-header {
-    border-radius: 0;
+:deep(.p-menubar-start) {
+    gap: var(--p-menubar-gap);
 }
 
 @media screen and (max-width: 960px) {

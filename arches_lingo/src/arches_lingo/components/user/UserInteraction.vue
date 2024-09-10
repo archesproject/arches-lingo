@@ -52,13 +52,11 @@ const greeting = computed(() => {
 </script>
 
 <template>
-    <div style="display: flex; align-items: center">
+    <div style="display: flex; align-items: center; gap: var(--p-content-gap)">
         <span v-if="user">{{ greeting }}</span>
         <Button
-            style="margin-left: 1rem"
+            :label="$gettext('Sign out')"
             @click="issueLogout"
-        >
-            {{ $gettext("Sign out") }}
-        </Button>
+        ></Button>
     </div>
 </template>
