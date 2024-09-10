@@ -77,6 +77,7 @@ main {
     font-family: sans-serif;
     height: 100vh;
     width: 100vw;
+    overflow-x: hidden;
     display: flex;
     flex-direction: column;
 }

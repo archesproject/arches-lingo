@@ -18,15 +18,6 @@ export const routes = [
         },
     },
     {
-        path: "/search",
-        name: "search",
-        component: () => import("@/arches_lingo/pages/BasicSearch.vue"),
-        meta: {
-            shouldShowNavigation: true,
-            requiresAuthentication: true,
-        },
-    },
-    {
         path: "/advanced-search",
         name: "advanced-search",
         component: () => import("@/arches_lingo/pages/AdvancedSearch.vue"),

@@ -1,0 +1,12 @@
+{% extends "arches_urls.htm" %}
+
+{% load static %}
+{% load l10n %}
+{% load i18n %}
+
+{% block arches_urls %}
+{{ block.super }}
+<div class="arches-urls"
+    api_search="{% url 'api-search' %}"
+></div>
+{% endblock arches_urls %}

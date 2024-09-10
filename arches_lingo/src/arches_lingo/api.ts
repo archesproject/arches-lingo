@@ -54,3 +54,25 @@ export const fetchUser = async () => {
         throw new Error((error as Error).message || response.statusText);
     }
 };
+
+export const fetchSearchResults = async (
+    searchTerm: string,
+    items: number,
+    page: number,
+) => {
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    const url = `
+        ${arches.urls.api_search}?term=${encodeURIComponent(searchTerm)}&items=${encodeURIComponent(items)}&page=${encodeURIComponent(page)}
+    `;
+    const response = await fetch(url);
+    try {
+        const responseJson = await response.json();
+        if (response.ok) {
+            return responseJson;
+        }
+        throw new Error(responseJson.message);
+    } catch (error) {
+        throw new Error((error as Error).message || response.statusText);
+    }
+};
