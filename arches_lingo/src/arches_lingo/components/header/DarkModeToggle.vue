@@ -30,8 +30,10 @@ const toggleDarkMode = () => {
         :off-label="$gettext('Light')"
         off-icon="pi pi-sun"
         on-icon="pi pi-moon"
-        :aria-label="$gettext('Toggle dark mode')"
-        :pt="{ label: { style: { display: 'none' } } }"
+        :pt="{
+            root: { ariaLabel: $gettext('Toggle dark mode') },
+            label: { style: { display: 'none' } },
+        }"
         @click="toggleDarkMode"
     />
 </template>
