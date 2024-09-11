@@ -1,13 +1,16 @@
 <script setup lang="ts">
 import { inject } from "vue";
 
-import { selectedLanguageKey } from "@/arches_references/constants.ts";
-import { bestLabel } from "@/arches_lingo/utils.ts";
+import { getItemLabel } from "@/arches_vue_utils/utils.ts";
+import {
+    selectedLanguageKey,
+    systemLanguageKey,
+} from "@/arches_lingo/constants.ts";
 
 import type { Language } from "@/arches_vue_utils/types";
 import type { Ref } from "vue";
 import type { TreeNode } from "primevue/treenode";
-import type { Labellable } from "@/arches_lingo/types";
+import type { Concept, Scheme } from "@/arches_lingo/types";
 
 const { node, focusLabel, unfocusLabel } = defineProps<{
     node: TreeNode;
@@ -15,15 +18,20 @@ const { node, focusLabel, unfocusLabel } = defineProps<{
     unfocusLabel: string;
 }>();
 const selectedLanguage = inject(selectedLanguageKey) as Ref<Language>;
+const systemLanguage = inject(systemLanguageKey) as Language;
 
 const filterValue = defineModel<string>("filterValue");
 const focusedNode = defineModel<TreeNode | null>("focusedNode");
 
-const rowLabel = (data: Labellable) => {
+const rowLabel = (data: Concept | Scheme) => {
     if (!data) {
         return "";
     }
-    const unstyledLabel = bestLabel(data, selectedLanguage?.value?.code).value;
+    const unstyledLabel = getItemLabel(
+        data,
+        selectedLanguage?.value.code,
+        systemLanguage.code,
+    ).value;
     if (!filterValue.value) {
         return unstyledLabel;
     }

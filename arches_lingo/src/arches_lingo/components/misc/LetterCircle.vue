@@ -3,9 +3,9 @@ import { computed } from "vue";
 
 import { dataIsScheme } from "@/arches_lingo/utils.ts";
 
-import type { Labellable } from "@/arches_lingo/types";
+import type { Concept, Scheme } from "@/arches_lingo/types";
 
-const props = defineProps<{ labelled: Labellable }>();
+const props = defineProps<{ labelled: Concept | Scheme }>();
 
 const color = computed(() => {
     if (dataIsScheme(props.labelled)) {

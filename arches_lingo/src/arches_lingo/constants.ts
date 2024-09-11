@@ -17,6 +17,7 @@ export const USER_KEY = Symbol() as InjectionKey<UserRefAndSetter>;
 export const displayedRowKey = Symbol() as InjectionKey<Ref<Concept | null>>;
 export const headerKey = Symbol() as InjectionKey<HeaderRefAndSetter>;
 export const selectedLanguageKey = Symbol() as InjectionKey<Ref<Language>>;
+export const systemLanguageKey = Symbol() as InjectionKey<Language>; // not reactive
 
 export const ENGLISH = {
     code: "en",

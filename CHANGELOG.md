@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   Add concept hierarchy component [#18](https://github.com/archesproject/arches-lingo/issues/18)
 
 ### Fixed
+-   Merge language finder implementations [#92](https://github.com/archesproject/arches-lingo/issues/92)
 
 ### Deprecated
 

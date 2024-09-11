@@ -14,6 +14,7 @@ import {
     USER_KEY,
     headerKey,
     selectedLanguageKey,
+    systemLanguageKey,
 } from "@/arches_lingo/constants.ts";
 
 import { routeNames } from "@/arches_lingo/routes.ts";
@@ -33,6 +34,8 @@ provide(USER_KEY, { user, setUser });
 
 const selectedLanguage: Ref<Language> = ref(ENGLISH);
 provide(selectedLanguageKey, selectedLanguage);
+const systemLanguage = ENGLISH; // TODO: get from settings
+provide(systemLanguageKey, systemLanguage);
 
 const router = useRouter();
 const route = useRoute();

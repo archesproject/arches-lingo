@@ -4,9 +4,9 @@
             "id": "c9c8548f-6ecc-40d5-ad67-42e9a7e7242e",
             "labels": [
                 {
-                    "language": "en",
+                    "language_id": "en",
                     "value": "Test Scheme",
-                    "valuetype": "prefLabel"
+                    "valuetype_id": "prefLabel"
                 }
             ],
             "top_concepts": [
@@ -14,9 +14,9 @@
                     "id": "943a70f1-236e-4c28-b5ab-69a4b83a63e9",
                     "labels": [
                         {
-                            "language": "en",
+                            "language_id": "en",
                             "value": "Concept 1",
-                            "valuetype": "prefLabel"
+                            "valuetype_id": "prefLabel"
                         }
                     ],
                     "narrower": [
@@ -24,9 +24,9 @@
                             "id": "8f7a7ca8-8548-464b-8fb7-01b3cec6487d",
                             "labels": [
                                 {
-                                    "language": "en",
+                                    "language_id": "en",
                                     "value": "Concept 3",
-                                    "valuetype": "prefLabel"
+                                    "valuetype_id": "prefLabel"
                                 }
                             ],
                             "narrower": [
@@ -34,9 +34,9 @@
                                     "id": "15bb81ff-194e-4fea-b495-b222f431caee",
                                     "labels": [
                                         {
-                                            "language": "en",
+                                            "language_id": "en",
                                             "value": "Concept 4",
-                                            "valuetype": "prefLabel"
+                                            "valuetype_id": "prefLabel"
                                         }
                                     ],
                                     "narrower": [
@@ -44,9 +44,9 @@
                                             "id": "edf8dd01-a3fe-445e-a330-dc3bd04c7302",
                                             "labels": [
                                                 {
-                                                    "language": "en",
+                                                    "language_id": "en",
                                                     "value": "Concept 5",
-                                                    "valuetype": "prefLabel"
+                                                    "valuetype_id": "prefLabel"
                                                 }
                                             ],
                                             "narrower": []
@@ -59,9 +59,9 @@
                             "id": "53ee9df5-3fa8-4686-a25b-ea8034cc4a5c",
                             "labels": [
                                 {
-                                    "language": "en",
+                                    "language_id": "en",
                                     "value": "Concept 2",
-                                    "valuetype": "prefLabel"
+                                    "valuetype_id": "prefLabel"
                                 }
                             ],
                             "narrower": [
@@ -69,9 +69,9 @@
                                     "id": "8f7a7ca8-8548-464b-8fb7-01b3cec6487d",
                                     "labels": [
                                         {
-                                            "language": "en",
+                                            "language_id": "en",
                                             "value": "Concept 3",
-                                            "valuetype": "prefLabel"
+                                            "valuetype_id": "prefLabel"
                                         }
                                     ],
                                     "narrower": [
@@ -79,9 +79,9 @@
                                             "id": "15bb81ff-194e-4fea-b495-b222f431caee",
                                             "labels": [
                                                 {
-                                                    "language": "en",
+                                                    "language_id": "en",
                                                     "value": "Concept 4",
-                                                    "valuetype": "prefLabel"
+                                                    "valuetype_id": "prefLabel"
                                                 }
                                             ],
                                             "narrower": [
@@ -89,9 +89,9 @@
                                                     "id": "edf8dd01-a3fe-445e-a330-dc3bd04c7302",
                                                     "labels": [
                                                         {
-                                                            "language": "en",
+                                                            "language_id": "en",
                                                             "value": "Concept 5",
-                                                            "valuetype": "prefLabel"
+                                                            "valuetype_id": "prefLabel"
                                                         }
                                                     ],
                                                     "narrower": []
@@ -106,9 +106,9 @@
                             "id": "15bb81ff-194e-4fea-b495-b222f431caee",
                             "labels": [
                                 {
-                                    "language": "en",
+                                    "language_id": "en",
                                     "value": "Concept 4",
-                                    "valuetype": "prefLabel"
+                                    "valuetype_id": "prefLabel"
                                 }
                             ],
                             "narrower": [
@@ -116,9 +116,9 @@
                                     "id": "edf8dd01-a3fe-445e-a330-dc3bd04c7302",
                                     "labels": [
                                         {
-                                            "language": "en",
+                                            "language_id": "en",
                                             "value": "Concept 5",
-                                            "valuetype": "prefLabel"
+                                            "valuetype_id": "prefLabel"
                                         }
                                     ],
                                     "narrower": []
@@ -129,9 +129,9 @@
                             "id": "edf8dd01-a3fe-445e-a330-dc3bd04c7302",
                             "labels": [
                                 {
-                                    "language": "en",
+                                    "language_id": "en",
                                     "value": "Concept 5",
-                                    "valuetype": "prefLabel"
+                                    "valuetype_id": "prefLabel"
                                 }
                             ],
                             "narrower": []

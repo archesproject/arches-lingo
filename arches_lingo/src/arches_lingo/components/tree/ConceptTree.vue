@@ -6,6 +6,7 @@ import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
 import Tree from "primevue/tree";
 
+import { getItemLabel } from "@/arches_vue_utils/utils.ts";
 import PresentationControls from "@/arches_references/components/tree/PresentationControls.vue";
 import {
     DEFAULT_ERROR_TOAST_LIFE,
@@ -16,8 +17,9 @@ import { fetchConcepts } from "@/arches_lingo/api.ts";
 import {
     displayedRowKey,
     selectedLanguageKey,
+    systemLanguageKey,
 } from "@/arches_lingo/constants.ts";
-import { bestLabel, treeFromSchemes } from "@/arches_lingo/utils.ts";
+import { treeFromSchemes } from "@/arches_lingo/utils.ts";
 import { routeNames } from "@/arches_lingo/routes.ts";
 import LetterCircle from "@/arches_lingo/components/misc/LetterCircle.vue";
 import TreeRow from "@/arches_lingo/components/tree/TreeRow.vue";
@@ -51,6 +53,7 @@ const expandedKeys: Ref<TreeExpandedKeys> = ref({});
 const filterValue = ref("");
 const treeDOMRef: Ref<ComponentPublicInstance | null> = ref(null);
 const selectedLanguage = inject(selectedLanguageKey) as Ref<Language>;
+const systemLanguage = inject(systemLanguageKey) as Language;
 const nextFilterChangeNeedsExpandAll = ref(false);
 const expandedKeysSnapshotBeforeSearch = ref<TreeExpandedKeys>({});
 const rerenderTree = ref(0);
@@ -62,6 +65,7 @@ const tree = computed(() =>
     treeFromSchemes(
         schemes.value,
         selectedLanguage.value,
+        systemLanguage,
         iconLabels,
         focusedNode.value,
     ),
@@ -182,7 +186,11 @@ const snoopOnFilterValue = () => {
 };
 
 function lazyLabelLookup(node: TreeNode) {
-    return bestLabel(node.data, selectedLanguage.value.code).value;
+    return getItemLabel(
+        node.data,
+        selectedLanguage.value.code,
+        systemLanguage.code,
+    ).value;
 }
 
 const updateSelectedAndExpanded = (node: TreeNode) => {

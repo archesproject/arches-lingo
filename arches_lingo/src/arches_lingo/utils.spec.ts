@@ -14,6 +14,7 @@ describe("Build scheme hierarchy", () => {
         const nodes = treeFromSchemes(
             schemesFixture["schemes"] as Scheme[],
             ENGLISH,
+            ENGLISH,
             iconLabels,
             null,
         );

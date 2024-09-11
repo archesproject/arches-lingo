@@ -9,46 +9,44 @@ import Splitter from "primevue/splitter";
 import SplitterPanel from "primevue/splitterpanel";
 
 import { shouldUseContrast } from "@/arches_references/utils.ts";
+import { getItemLabel } from "@/arches_vue_utils/utils.ts";
 import {
     CONTRAST,
     SECONDARY,
     displayedRowKey,
     headerKey,
     selectedLanguageKey,
+    systemLanguageKey,
 } from "@/arches_lingo/constants.ts";
 import { routeNames } from "@/arches_lingo/routes.ts";
-import {
-    bestLabel,
-    dataIsConcept,
-    dataIsScheme,
-} from "@/arches_lingo/utils.ts";
+import { dataIsConcept, dataIsScheme } from "@/arches_lingo/utils.ts";
 import ConceptDetail from "@/arches_lingo/components/detail/ConceptDetail.vue";
 import ConceptTree from "@/arches_lingo/components/tree/ConceptTree.vue";
 import SchemeDetail from "@/arches_lingo/components/detail/SchemeDetail.vue";
 
 import type { Ref } from "vue";
 import type { Language } from "@/arches_vue_utils/types";
-import type {
-    Concept,
-    HeaderRefAndSetter,
-    Labellable,
-    Scheme,
-} from "@/arches_lingo/types";
+import type { Concept, HeaderRefAndSetter, Scheme } from "@/arches_lingo/types";
 
 const { $gettext } = useGettext();
 const router = useRouter();
 const selectedLanguage = inject(selectedLanguageKey) as Ref<Language>;
+const systemLanguage = inject(systemLanguageKey) as Language;
 
 const { setHeader } = inject(headerKey) as HeaderRefAndSetter;
 
-const displayedRow: Ref<Labellable | null> = ref(null);
+const displayedRow: Ref<Concept | Scheme | null> = ref(null);
 const rowLabel = computed(() => {
     if (!displayedRow.value) {
         return "Concept detail placeholder";
     }
-    return bestLabel(displayedRow.value, selectedLanguage.value.code).value;
+    return getItemLabel(
+        displayedRow.value,
+        selectedLanguage.value.code,
+        systemLanguage.code,
+    ).value;
 });
-const setDisplayedRow = (val: Labellable | null) => {
+const setDisplayedRow = (val: Concept | Scheme | null) => {
     displayedRow.value = val;
     if (val === null) {
         return;
@@ -64,16 +62,13 @@ const setDisplayedRow = (val: Labellable | null) => {
 provide(displayedRowKey, { displayedRow, setDisplayedRow });
 
 const showHierarchy = ref(true);
-const toggleHierarchy = () => {
-    showHierarchy.value = !showHierarchy.value;
-};
 </script>
 
 <template>
     <Button
         :severity="shouldUseContrast() ? CONTRAST : SECONDARY"
         :label="$gettext('Toggle hierarchy')"
-        @click="toggleHierarchy"
+        @click="() => (showHierarchy = !showHierarchy)"
     />
     <Splitter
         style="display: flex; height: 100%"
