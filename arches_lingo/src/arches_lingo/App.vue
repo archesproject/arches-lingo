@@ -69,7 +69,13 @@ router.beforeEach(async (to, _from, next) => {
             </div>
         </div>
     </main>
-    <Toast />
+    <Toast
+        :pt="{
+            messageIcon: {
+                style: { marginTop: 'var(--p-toast-messageicon-margintop)' },
+            },
+        }"
+    />
 </template>
 
 <style scoped>
