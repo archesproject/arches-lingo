@@ -285,12 +285,10 @@
                 {
                     "card_id": "6811fb53-2860-40c5-8c40-db6e6ae8aa4c",
                     "config": {
-                        "defaultValue": "",
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Subject",
-                        "options": [],
                         "placeholder": {
                             "en": "Select an option"
                         }
@@ -303,17 +301,15 @@
                     "sortorder": 0,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "10000000-0000-0000-0000-000000000012"
+                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
                 },
                 {
                     "card_id": "59dbe9fd-6e92-45f4-bd63-5990bbfd8c28",
                     "config": {
-                        "defaultValue": "7f18f8f8-f1ab-46a1-93ca-55370f66fe93",
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Type",
-                        "options": [],
                         "placeholder": {
                             "en": "Select an option"
                         }
@@ -326,7 +322,7 @@
                     "sortorder": 0,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "10000000-0000-0000-0000-000000000002"
+                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
                 },
                 {
                     "card_id": "010f8936-423c-11ee-8a8d-11afefc4bff7",
@@ -353,12 +349,10 @@
                 {
                     "card_id": "ef87ae08-11de-11ef-9493-0a58a9feac02",
                     "config": {
-                        "defaultValue": "24559510-c6c6-4558-b411-7cd127642657",
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Warrant Type",
-                        "options": [],
                         "placeholder": {
                             "en": "Select an option"
                         }
@@ -371,17 +365,15 @@
                     "sortorder": 9,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "10000000-0000-0000-0000-000000000002"
+                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
                 },
                 {
                     "card_id": "7b9b459f-bc56-41e4-a172-d0e3f289495e",
                     "config": {
-                        "defaultValue": "",
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Language",
-                        "options": [],
                         "placeholder": {
                             "en": "Select an option"
                         }
@@ -394,17 +386,15 @@
                     "sortorder": 0,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "10000000-0000-0000-0000-000000000012"
+                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
                 },
                 {
                     "card_id": "92c68f1f-423c-11ee-8a8d-11afefc4bff7",
                     "config": {
-                        "defaultValue": "19b88d0c-4607-401b-b5ee-6312832d0e0c",
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "namespace_type",
-                        "options": [],
                         "placeholder": {
                             "en": "Select an option"
                         }
@@ -417,17 +407,15 @@
                     "sortorder": 1,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "10000000-0000-0000-0000-000000000002"
+                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
                 },
                 {
                     "card_id": "59dbe9fd-6e92-45f4-bd63-5990bbfd8c28",
                     "config": {
-                        "defaultValue": "1cea8e22-2bc3-43aa-abfd-0d04719d99d1",
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Type Metatype",
-                        "options": [],
                         "placeholder": {
                             "en": "Select an option"
                         }
@@ -440,7 +428,7 @@
                     "sortorder": 1,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "10000000-0000-0000-0000-000000000002"
+                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
                 },
                 {
                     "card_id": "7e5c3bc7-423c-11ee-8a8d-11afefc4bff7",
@@ -466,12 +454,10 @@
                 {
                     "card_id": "87fac835-423c-11ee-8a8d-11afefc4bff7",
                     "config": {
-                        "defaultValue": "",
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Rights Statement Type",
-                        "options": [],
                         "placeholder": {
                             "en": "Select an option"
                         }
@@ -484,17 +470,15 @@
                     "sortorder": 2,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "10000000-0000-0000-0000-000000000002"
+                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
                 },
                 {
                     "card_id": "8e34b481-423c-11ee-8a8d-11afefc4bff7",
                     "config": {
-                        "defaultValue": "",
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Identifier Type",
-                        "options": [],
                         "placeholder": {
                             "en": "Select an option"
                         }
@@ -507,7 +491,7 @@
                     "sortorder": 1,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "10000000-0000-0000-0000-000000000002"
+                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
                 },
                 {
                     "card_id": "7e5c3bc7-423c-11ee-8a8d-11afefc4bff7",
@@ -533,12 +517,10 @@
                 {
                     "card_id": "7131bd94-11e0-11ef-9493-0a58a9feac02",
                     "config": {
-                        "defaultValue": "51ccf153-fa7b-4b22-8d0d-d1a57a6c84c2",
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Statement Metatype",
-                        "options": [],
                         "placeholder": {
                             "en": "Select an option"
                         }
@@ -551,19 +533,15 @@
                     "sortorder": 3,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "10000000-0000-0000-0000-000000000002"
+                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
                 },
                 {
                     "card_id": "7131bd94-11e0-11ef-9493-0a58a9feac02",
                     "config": {
-                        "defaultValue": [
-                            "4f8699ea-aca7-4e84-9243-f6c9158f7c11"
-                        ],
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Statement Type",
-                        "options": [],
                         "placeholder": {
                             "en": "Select an option"
                         }
@@ -576,17 +554,15 @@
                     "sortorder": 2,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "10000000-0000-0000-0000-000000000012"
+                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
                 },
                 {
                     "card_id": "7131bd94-11e0-11ef-9493-0a58a9feac02",
                     "config": {
-                        "defaultValue": "",
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Statement Language",
-                        "options": [],
                         "placeholder": {
                             "en": "Select an option"
                         }
@@ -599,7 +575,7 @@
                     "sortorder": 1,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "10000000-0000-0000-0000-000000000012"
+                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
                 },
                 {
                     "card_id": "7131bd94-11e0-11ef-9493-0a58a9feac02",
@@ -780,12 +756,10 @@
                 {
                     "card_id": "7131bd94-11e0-11ef-9493-0a58a9feac02",
                     "config": {
-                        "defaultValue": "24559510-c6c6-4558-b411-7cd127642657",
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Warrant Assertion Type",
-                        "options": [],
                         "placeholder": {
                             "en": "Select an option"
                         }
@@ -798,7 +772,7 @@
                     "sortorder": 5,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "10000000-0000-0000-0000-000000000002"
+                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
                 },
                 {
                     "card_id": "7e5c3bc7-423c-11ee-8a8d-11afefc4bff7",
@@ -1101,12 +1075,10 @@
                 {
                     "card_id": "97351c47-423c-11ee-8a8d-11afefc4bff7",
                     "config": {
-                        "defaultValue": "e77aa058-8cbf-4c41-bc03-ede1cebb5ce0",
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Version Type",
-                        "options": [],
                         "placeholder": {
                             "en": "Select an option"
                         }
@@ -1119,17 +1091,15 @@
                     "sortorder": 1,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "10000000-0000-0000-0000-000000000002"
+                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
                 },
                 {
                     "card_id": "87fac835-423c-11ee-8a8d-11afefc4bff7",
                     "config": {
-                        "defaultValue": "",
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Rights Statement Type",
-                        "options": [],
                         "placeholder": {
                             "en": "Select an option"
                         }
@@ -1142,17 +1112,15 @@
                     "sortorder": 1,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "10000000-0000-0000-0000-000000000002"
+                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
                 },
                 {
                     "card_id": "87fac838-423c-11ee-8a8d-11afefc4bff7",
                     "config": {
-                        "defaultValue": "",
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Right Type",
-                        "options": [],
                         "placeholder": {
                             "en": "Select an option"
                         }
@@ -1165,17 +1133,15 @@
                     "sortorder": 0,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "10000000-0000-0000-0000-000000000002"
+                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
                 },
                 {
                     "card_id": "ef87ae08-11de-11ef-9493-0a58a9feac02",
                     "config": {
-                        "defaultValue": null,
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Label Status",
-                        "options": [],
                         "placeholder": {
                             "en": "Select an option"
                         }
@@ -1188,17 +1154,15 @@
                     "sortorder": 3,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "10000000-0000-0000-0000-000000000002"
+                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
                 },
                 {
                     "card_id": "ef87ae08-11de-11ef-9493-0a58a9feac02",
                     "config": {
-                        "defaultValue": "",
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Label Language",
-                        "options": [],
                         "placeholder": {
                             "en": "Select an option"
                         }
@@ -1211,7 +1175,7 @@
                     "sortorder": 1,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "10000000-0000-0000-0000-000000000012"
+                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
                 },
                 {
                     "card_id": "ef87ae08-11de-11ef-9493-0a58a9feac02",
@@ -1311,12 +1275,10 @@
                 {
                     "card_id": "ef87ae08-11de-11ef-9493-0a58a9feac02",
                     "config": {
-                        "defaultValue": "",
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Label Type",
-                        "options": [],
                         "placeholder": {
                             "en": "Select an option"
                         }
@@ -1329,7 +1291,7 @@
                     "sortorder": 2,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "10000000-0000-0000-0000-000000000002"
+                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
                 },
                 {
                     "card_id": "ef87ae08-11de-11ef-9493-0a58a9feac02",
@@ -1355,12 +1317,10 @@
                 {
                     "card_id": "ef87ae08-11de-11ef-9493-0a58a9feac02",
                     "config": {
-                        "defaultValue": "f8abdf58-1a22-43e1-86d9-d30a1d1466fb",
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Label Status Metatype",
-                        "options": [],
                         "placeholder": {
                             "en": "Select an option"
                         }
@@ -1373,7 +1333,7 @@
                     "sortorder": 4,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "10000000-0000-0000-0000-000000000002"
+                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
                 },
                 {
                     "card_id": "92c68f1f-423c-11ee-8a8d-11afefc4bff7",
@@ -1408,12 +1368,10 @@
                 {
                     "card_id": "87fac835-423c-11ee-8a8d-11afefc4bff7",
                     "config": {
-                        "defaultValue": "",
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Rights Statement Language",
-                        "options": [],
                         "placeholder": {
                             "en": "Select an option"
                         }
@@ -1426,7 +1384,7 @@
                     "sortorder": 3,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "10000000-0000-0000-0000-000000000012"
+                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
                 },
                 {
                     "card_id": "ec1155f0-423b-11ee-8a8d-11afefc4bff7",
@@ -2217,9 +2175,10 @@
                 {
                     "alias": "appellative_status_data_assignment_type",
                     "config": {
-                        "rdmCollection": "6eaa2c6f-af83-464c-9200-051c4cfe7e8e"
+                        "controlledList": "6eaa2c6f-af83-464c-9200-051c4cfe7e8e",
+                        "multiValue": false
                     },
-                    "datatype": "concept",
+                    "datatype": "reference",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -2242,9 +2201,10 @@
                 {
                     "alias": "right_statement_language",
                     "config": {
-                        "rdmCollection": "55ce793b-a51a-4b25-811d-d08ea797f8c3"
+                        "controlledList": "55ce793b-a51a-4b25-811d-d08ea797f8c3",
+                        "multiValue": true
                     },
-                    "datatype": "concept-list",
+                    "datatype": "reference",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -2267,9 +2227,10 @@
                 {
                     "alias": "version_type",
                     "config": {
-                        "rdmCollection": "a8da34eb-575b-498c-ada7-161ee745fd16"
+                        "controlledList": "a8da34eb-575b-498c-ada7-161ee745fd16",
+                        "multiValue": false
                     },
-                    "datatype": "concept",
+                    "datatype": "reference",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -2315,9 +2276,10 @@
                 {
                     "alias": "subject_coverage",
                     "config": {
-                        "rdmCollection": "8fe1efd6-c90e-4f64-a125-14b2cc4d78e3"
+                        "controlledList": "8fe1efd6-c90e-4f64-a125-14b2cc4d78e3",
+                        "multiValue": true
                     },
-                    "datatype": "concept-list",
+                    "datatype": "reference",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -2365,9 +2327,10 @@
                 {
                     "alias": "statement_data_assignment_type",
                     "config": {
-                        "rdmCollection": "6eaa2c6f-af83-464c-9200-051c4cfe7e8e"
+                        "controlledList": "6eaa2c6f-af83-464c-9200-051c4cfe7e8e",
+                        "multiValue": false
                     },
-                    "datatype": "concept",
+                    "datatype": "reference",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -2465,9 +2428,10 @@
                 {
                     "alias": "statement_language_n1",
                     "config": {
-                        "rdmCollection": "55ce793b-a51a-4b25-811d-d08ea797f8c3"
+                        "controlledList": "55ce793b-a51a-4b25-811d-d08ea797f8c3",
+                        "multiValue": true
                     },
-                    "datatype": "concept-list",
+                    "datatype": "reference",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -2490,9 +2454,10 @@
                 {
                     "alias": "statement_type_metatype_n1",
                     "config": {
-                        "rdmCollection": "ef69e772-de53-45fe-98d4-bf3e7b10eb57"
+                        "controlledList": "ef69e772-de53-45fe-98d4-bf3e7b10eb57",
+                        "multiValue": false
                     },
-                    "datatype": "concept",
+                    "datatype": "reference",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -2515,9 +2480,10 @@
                 {
                     "alias": "statement_type_n1",
                     "config": {
-                        "rdmCollection": "aba2a0b4-75a4-45ba-8b57-021f3ca92a6a"
+                        "controlledList": "aba2a0b4-75a4-45ba-8b57-021f3ca92a6a",
+                        "multiValue": true
                     },
-                    "datatype": "concept-list",
+                    "datatype": "reference",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -3053,9 +3019,10 @@
                 {
                     "alias": "namespace_type",
                     "config": {
-                        "rdmCollection": "a8da34eb-575b-498c-ada7-161ee745fd16"
+                        "controlledList": "a8da34eb-575b-498c-ada7-161ee745fd16",
+                        "multiValue": false
                     },
-                    "datatype": "concept",
+                    "datatype": "reference",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -3174,9 +3141,10 @@
                 {
                     "alias": "text_language",
                     "config": {
-                        "rdmCollection": "55ce793b-a51a-4b25-811d-d08ea797f8c3"
+                        "controlledList": "55ce793b-a51a-4b25-811d-d08ea797f8c3",
+                        "multiValue": true
                     },
-                    "datatype": "concept-list",
+                    "datatype": "reference",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -3199,9 +3167,10 @@
                 {
                     "alias": "identifier_type",
                     "config": {
-                        "rdmCollection": "38fc54d4-67ef-4183-8934-66669f1f504c"
+                        "controlledList": "38fc54d4-67ef-4183-8934-66669f1f504c",
+                        "multiValue": false
                     },
-                    "datatype": "concept",
+                    "datatype": "reference",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -3299,9 +3268,10 @@
                 {
                     "alias": "right_type",
                     "config": {
-                        "rdmCollection": "1c950e16-3fcf-4f33-9e5e-ce5c6c992cca"
+                        "controlledList": "1c950e16-3fcf-4f33-9e5e-ce5c6c992cca",
+                        "multiValue": false
                     },
-                    "datatype": "concept",
+                    "datatype": "reference",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -3324,9 +3294,10 @@
                 {
                     "alias": "type",
                     "config": {
-                        "rdmCollection": "fb5dd406-33ef-4e83-a6a9-9ea02c1ada17"
+                        "controlledList": "fb5dd406-33ef-4e83-a6a9-9ea02c1ada17",
+                        "multiValue": false
                     },
-                    "datatype": "concept",
+                    "datatype": "reference",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -3349,9 +3320,10 @@
                 {
                     "alias": "type_metatype",
                     "config": {
-                        "rdmCollection": "ef69e772-de53-45fe-98d4-bf3e7b10eb57"
+                        "controlledList": "ef69e772-de53-45fe-98d4-bf3e7b10eb57",
+                        "multiValue": false
                     },
-                    "datatype": "concept",
+                    "datatype": "reference",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -3431,9 +3403,10 @@
                 {
                     "alias": "appellative_status_status",
                     "config": {
-                        "rdmCollection": "2cc0e054-ef9b-41ae-8e86-e0c3b4e7ca00"
+                        "controlledList": "2cc0e054-ef9b-41ae-8e86-e0c3b4e7ca00",
+                        "multiValue": false
                     },
-                    "datatype": "concept",
+                    "datatype": "reference",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -3456,9 +3429,10 @@
                 {
                     "alias": "appellative_status_status_metatype",
                     "config": {
-                        "rdmCollection": "ef69e772-de53-45fe-98d4-bf3e7b10eb57"
+                        "controlledList": "ef69e772-de53-45fe-98d4-bf3e7b10eb57",
+                        "multiValue": false
                     },
-                    "datatype": "concept",
+                    "datatype": "reference",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -3646,9 +3620,10 @@
                 {
                     "alias": "appellative_status_ascribed_name_language",
                     "config": {
-                        "rdmCollection": "55ce793b-a51a-4b25-811d-d08ea797f8c3"
+                        "controlledList": "55ce793b-a51a-4b25-811d-d08ea797f8c3",
+                        "multiValue": true
                     },
-                    "datatype": "concept-list",
+                    "datatype": "reference",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -3703,9 +3678,10 @@
                 {
                     "alias": "appellative_status_ascribed_relation",
                     "config": {
-                        "rdmCollection": "deb847fc-f4c3-4e82-be19-04641579f129"
+                        "controlledList": "deb847fc-f4c3-4e82-be19-04641579f129",
+                        "multiValue": false
                     },
-                    "datatype": "concept",
+                    "datatype": "reference",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -3753,9 +3729,10 @@
                 {
                     "alias": "right_statement_type",
                     "config": {
-                        "rdmCollection": "aba2a0b4-75a4-45ba-8b57-021f3ca92a6a"
+                        "controlledList": "aba2a0b4-75a4-45ba-8b57-021f3ca92a6a",
+                        "multiValue": false
                     },
-                    "datatype": "concept",
+                    "datatype": "reference",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -3778,9 +3755,10 @@
                 {
                     "alias": "right_statement_type_metatype",
                     "config": {
-                        "rdmCollection": "ef69e772-de53-45fe-98d4-bf3e7b10eb57"
+                        "controlledList": "ef69e772-de53-45fe-98d4-bf3e7b10eb57",
+                        "multiValue": false
                     },
-                    "datatype": "concept",
+                    "datatype": "reference",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -3805,9 +3783,9 @@
             "publication": {
                 "graph_id": "56788995-423b-11ee-8a8d-11afefc4bff7",
                 "most_recent_edit_id": null,
-                "notes": "make statement cardinality n",
-                "publicationid": "ac6cef0a-5f10-11ef-8525-0aa766c61b65",
-                "published_time": "2024-08-20T11:24:28.871"
+                "notes": "Migrated concept/concept-list nodes to reference datatype",
+                "publicationid": "d4ece790-8022-11ef-99a9-0aa766c61b66",
+                "published_time": "2024-10-01T13:27:36.131"
             },
             "relatable_resource_model_ids": [],
             "resource_2_resource_constraints": [],
@@ -3890,8 +3868,8 @@
     ],
     "metadata": {
         "db": "PostgreSQL 14.5 on x86_64-apple-darwin20.6.0, compiled by Apple clang version 12.0.0 (clang-1200.0.32.29), 64-bit",
-        "git hash": "144af1ca3 2024-08-19 11:13:01 -0400",
+        "git hash": "c54906bac6 2024-10-01 14:15:57 -0400",
         "os": "Darwin",
-        "os version": "23.6.0"
+        "os version": "24.0.0"
     }
 }
