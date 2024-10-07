@@ -108,7 +108,7 @@ class ConceptBuilder:
         if value_id == ALT_LABEL_VALUE_ID:
             return "altLabel"
         if value_id == HIDDEN_LABEL_VALUE_ID:
-            return "hidden"
+            return "hiddenLabel"
         return "unknown"
 
     @staticmethod
@@ -205,8 +205,8 @@ class ConceptBuilder:
         except (StopIteration, KeyError):
             value = "Unknown"
         return {
-            "valuetype": self.human_label_type(label_tile[SCHEME_NAME_TYPE_NODE]),
-            "language": lang_code,
+            "valuetype_id": self.human_label_type(label_tile[SCHEME_NAME_TYPE_NODE]),
+            "language_id": lang_code,
             "value": value,
         }
 
@@ -263,7 +263,7 @@ class ConceptBuilder:
         except (StopIteration, KeyError):
             value = "Unknown"
         return {
-            "valuetype": self.human_label_type(label_tile[CONCEPT_NAME_TYPE_NODE]),
-            "language": lang_code,
+            "valuetype_id": self.human_label_type(label_tile[CONCEPT_NAME_TYPE_NODE]),
+            "language_id": lang_code,
             "value": value,
         }

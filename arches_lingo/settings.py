@@ -2,10 +2,7 @@
 Django settings for arches_lingo project.
 """
 
-import json
 import os
-import sys
-import arches
 import inspect
 import semantic_version
 from datetime import datetime, timedelta
@@ -144,6 +141,7 @@ INSTALLED_APPS = (
     "corsheaders",
     "oauth2_provider",
     "django_celery_results",
+    "arches_vue_utils",
     "arches_references",
     # "silk",
 )

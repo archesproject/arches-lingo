@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { nextTick, ref, watch, onMounted } from "vue";
 import { useGettext } from "vue3-gettext";
+import { useRouter } from "vue-router";
 
 import AutoComplete from "primevue/autocomplete";
 import Button from "primevue/button";
@@ -12,22 +13,21 @@ import SearchResult from "@/arches_lingo/components/basic-search/SearchResult.vu
 
 import { fetchSearchResults } from "@/arches_lingo/api.ts";
 import { DEFAULT_ERROR_TOAST_LIFE, ERROR } from "@/arches_lingo/constants.ts";
+import { routeNames } from "@/arches_lingo/routes.ts";
 
-import type { Concept } from "@/arches_lingo/types.ts";
+import type { AutoCompleteOptionSelectEvent } from "primevue/autocomplete";
+import type { SearchResultItem } from "@/arches_lingo/types.ts";
 
 const { $gettext } = useGettext();
+const router = useRouter();
 const toast = useToast();
 
-const props = defineProps({
-    searchResultsPerPage: {
-        type: Number,
-        required: true,
-    },
-    searchResultItemSize: {
-        type: Number,
-        required: true,
-    },
-});
+interface Props {
+    searchResultsPerPage: number;
+    searchResultItemSize: number;
+    toggleModal: () => void;
+}
+const props = defineProps<Props>();
 
 const autoCompleteInstance = ref<InstanceType<typeof AutoComplete> | null>(
     null,
@@ -36,7 +36,7 @@ const autoCompleteKey = ref(0);
 const computedSearchResultsHeight = ref("");
 const isLoading = ref(false);
 const isLoadingAdditionalResults = ref(false);
-const searchResults = ref<Concept[]>([]);
+const searchResults = ref<SearchResultItem[]>([]);
 const searchResultsPage = ref(1);
 const searchResultsTotalCount = ref(0);
 const query = ref("");
@@ -126,7 +126,10 @@ const loadAdditionalSearchResults = (event: {
     }
 };
 
-const navigateToReport = () => {};
+const navigateToReport = (event: AutoCompleteOptionSelectEvent) => {
+    props.toggleModal();
+    router.push({ name: routeNames.concept, params: { id: event.value.id } });
+};
 
 onMounted(focusInput);
 
