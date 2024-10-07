@@ -71,6 +71,8 @@ router.beforeEach(async (to, _from, next) => {
     </main>
     <Toast
         :pt="{
+            summary: { fontSize: 'medium' },
+            detail: { fontSize: 'small' },
             messageIcon: {
                 style: { marginTop: 'var(--p-toast-messageicon-margintop)' },
             },
@@ -80,7 +82,7 @@ router.beforeEach(async (to, _from, next) => {
 
 <style scoped>
 main {
-    font-family: var(--p-font-family);
+    font-family: system-ui, sans-serif;
     height: 100vh;
     width: 100vw;
     display: flex;
