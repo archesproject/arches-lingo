@@ -22,7 +22,6 @@
     },
     "dependencies": {
         "arches": "archesproject/arches#dev/8.0.x",
-        "arches-references": "archesproject/arches-references#main",
         "vue-router": "^4.4.3"
     },
     "nodeModulesPaths": {},
