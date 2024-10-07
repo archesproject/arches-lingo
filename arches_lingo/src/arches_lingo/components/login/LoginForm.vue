@@ -65,7 +65,7 @@ const submit = async () => {
 form {
     display: flex;
     flex-direction: column;
-    gap: var(--p-content-gap);
+    gap: 1rem;
     width: 30%;
 }
 

@@ -52,7 +52,7 @@ const greeting = computed(() => {
 </script>
 
 <template>
-    <div style="display: flex; align-items: center; gap: var(--p-content-gap)">
+    <div style="display: flex; align-items: center; gap: 1rem">
         <span v-if="user">{{ greeting }}</span>
         <Button
             :label="$gettext('Sign out')"
