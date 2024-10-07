@@ -80,7 +80,7 @@ router.beforeEach(async (to, _from, next) => {
 
 <style scoped>
 main {
-    font-family: system-ui, sans-serif;
+    font-family: var(--p-font-family);
     height: 100vh;
     width: 100vw;
     display: flex;
