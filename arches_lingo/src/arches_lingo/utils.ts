@@ -10,27 +10,21 @@ import type {
 } from "@/arches_lingo/types";
 
 // Duck-typing helpers
-export const dataIsScheme = (data: Concept | Scheme) => {
+export function dataIsScheme(data: Concept | Scheme) {
     return (data as Scheme).top_concepts !== undefined;
-};
-export const dataIsConcept = (data: Concept | Scheme) => {
+}
+export function dataIsConcept(data: Concept | Scheme) {
     return !dataIsScheme(data);
-};
-export const nodeIsConcept = (node: TreeNode) => {
-    return !nodeIsScheme(node);
-};
-export const nodeIsScheme = (node: TreeNode) => {
-    return dataIsScheme(node.data);
-};
+}
 
 // Tree builder
-export const treeFromSchemes = (
+export function treeFromSchemes(
     schemes: Scheme[],
     selectedLanguage: Language,
     systemLanguage: Language,
     iconLabels: IconLabels,
     focusedNode: TreeNode | null,
-): TreeNode[] => {
+): TreeNode[] {
     // Use a closure to avoid passing around params (selectedLanguage, etc).
     const conceptAsNodeAndInstruction = (
         concept: Concept,
@@ -102,4 +96,4 @@ export const treeFromSchemes = (
         return [parentOfFocusedNode.node];
     }
     return nodesAndInstructions.map((obj) => obj.node);
-};
+}

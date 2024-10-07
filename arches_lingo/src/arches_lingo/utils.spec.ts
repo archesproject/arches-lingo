@@ -1,5 +1,9 @@
 import { ENGLISH } from "@/arches_lingo/constants.ts";
-import { treeFromSchemes } from "@/arches_lingo/utils.ts";
+import {
+    dataIsScheme,
+    dataIsConcept,
+    treeFromSchemes,
+} from "@/arches_lingo/utils.ts";
 import schemesFixture from "./fixtures/test_scheme.json";
 
 import type { IconLabels, Scheme } from "@/arches_lingo/types";
@@ -8,6 +12,14 @@ const iconLabels: IconLabels = {
     concept: "Concept",
     scheme: "Scheme",
 };
+
+describe("Duck-typing helpers", () => {
+    it("Should distinguish schemes from concepts", () => {
+        const scheme = schemesFixture["schemes"][0];
+        expect(dataIsScheme(scheme)).toBeTruthy();
+        expect(dataIsConcept(scheme)).toBeFalsy();
+    });
+});
 
 describe("Build scheme hierarchy", () => {
     it("Should shape schemes into TreeNodes", () => {
