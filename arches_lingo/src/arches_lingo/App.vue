@@ -69,12 +69,20 @@ router.beforeEach(async (to, _from, next) => {
             </div>
         </div>
     </main>
-    <Toast />
+    <Toast
+        :pt="{
+            summary: { fontSize: 'medium' },
+            detail: { fontSize: 'small' },
+            messageIcon: {
+                style: { marginTop: 'var(--p-toast-messageicon-margintop)' },
+            },
+        }"
+    />
 </template>
 
 <style scoped>
 main {
-    font-family: sans-serif;
+    font-family: system-ui, sans-serif;
     height: 100vh;
     width: 100vw;
     display: flex;
