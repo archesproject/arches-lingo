@@ -13,14 +13,14 @@ const isDarkModeEnabled = ref(
         window.matchMedia("(prefers-color-scheme: dark)").matches,
 );
 
-const toggleDarkMode = () => {
+function toggleDarkMode() {
     const element = document.querySelector("html");
     // Remove the leading dot from the selector to get class name.
     element!.classList.toggle(
         DEFAULT_THEME.theme.options.darkModeSelector.substring(1),
     );
     isDarkModeEnabled.value = !isDarkModeEnabled.value;
-};
+}
 </script>
 
 <template>
