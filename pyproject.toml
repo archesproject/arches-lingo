@@ -16,17 +16,19 @@ classifiers = [
     "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Framework :: Django",
     "Framework :: Django :: 5.1",
     "Intended Audience :: Developers",
     "Intended Audience :: Information Technology",
     "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
 ]
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
     "arches @ git+https://github.com/archesproject/arches.git@dev/8.0.x",
     "arches_vue_utils @ git+https://github.com/archesproject/arches-vue-utils.git@main",
     "arches_references @ git+https://github.com/archesproject/arches-references.git@main",
+    "djangorestframework==3.15.2",
 ]
 version = "0.0.1"
 
