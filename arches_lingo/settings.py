@@ -135,6 +135,7 @@ INSTALLED_APPS = (
     "django.contrib.staticfiles",
     "django.contrib.gis",
     "django_hosts",
+    "rest_framework",
     "arches_vue_utils",
     "arches",
     "arches.app.models",
@@ -150,6 +151,15 @@ INSTALLED_APPS = (
 )
 
 INSTALLED_APPS += ("arches.app",)
+
+REST_FRAMEWORK = {
+    # Use Django's standard `django.contrib.auth` permissions,
+    # or allow read-only access for unauthenticated users.
+    # TODO: choose
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly"
+    ]
+}
 
 ROOT_HOSTCONF = "arches_lingo.hosts"
 DEFAULT_HOST = "arches_lingo"
@@ -431,6 +441,15 @@ SHOW_LANGUAGE_SWITCH = len(LANGUAGES) > 1
 
 # TODO: remove when finalizing release
 SILENCED_SYSTEM_CHECKS += ["arches.E002"]
+
+# WELL_KNOWN_RESOURCE_MODELS = [
+#     {
+#         "model_name": "Concept",
+#         "graphid": "bf73e576-4888-11ee-8a8d-11afefc4bff7",
+#         "nodes": {}, # optional additional configuration
+#         "to_string": lambda wkrm: str(wkrm) # optional callback for stringifying
+#     }
+# ]
 
 try:
     from .package_settings import *
