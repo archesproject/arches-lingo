@@ -9,17 +9,22 @@ import { useToast } from "primevue/usetoast";
 import {
     ANONYMOUS,
     DEFAULT_ERROR_TOAST_LIFE,
+    ENGLISH,
     ERROR,
     USER_KEY,
+    headerKey,
+    selectedLanguageKey,
+    systemLanguageKey,
 } from "@/arches_lingo/constants.ts";
 
 import { routeNames } from "@/arches_lingo/routes.ts";
 import { fetchUser } from "@/arches_lingo/api.ts";
-
-import type { User } from "@/arches_lingo/types.ts";
-
 import PageHeader from "@/arches_lingo/components/header/PageHeader.vue";
 import SideNav from "@/arches_lingo/components/sidenav/SideNav.vue";
+
+import type { Ref } from "vue";
+import type { Language } from "@/arches_vue_utils/types";
+import type { User } from "@/arches_lingo/types";
 
 const user = ref<User | null>(null);
 const setUser = (userToSet: User | null) => {
@@ -27,10 +32,21 @@ const setUser = (userToSet: User | null) => {
 };
 provide(USER_KEY, { user, setUser });
 
+const selectedLanguage: Ref<Language> = ref(ENGLISH);
+provide(selectedLanguageKey, selectedLanguage);
+const systemLanguage = ENGLISH; // TODO: get from settings
+provide(systemLanguageKey, systemLanguage);
+
 const router = useRouter();
 const route = useRoute();
 const toast = useToast();
 const { $gettext } = useGettext();
+
+const header = ref($gettext("Arches Lingo"));
+const setHeader = (headerToSet: string) => {
+    header.value = headerToSet;
+};
+provide(headerKey, { header, setHeader });
 
 router.beforeEach(async (to, _from, next) => {
     try {
@@ -61,10 +77,13 @@ router.beforeEach(async (to, _from, next) => {
 
 <template>
     <main>
-        <PageHeader v-if="route.meta.shouldShowNavigation" />
+        <PageHeader
+            v-if="route.meta.shouldShowNavigation"
+            :header
+        />
         <div style="display: flex; flex: auto; flex-direction: row">
             <SideNav v-if="route.meta.shouldShowNavigation" />
-            <div style="margin: 1rem; flex: auto">
+            <div style="flex: auto">
                 <RouterView />
             </div>
         </div>

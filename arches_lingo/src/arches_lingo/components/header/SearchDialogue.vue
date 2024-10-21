@@ -10,6 +10,9 @@ import BasicSearch from "@/arches_lingo/components/basic-search/BasicSearch.vue"
 const { $gettext } = useGettext();
 
 const visible = ref(false);
+const toggleModal = () => {
+    visible.value = !visible.value;
+};
 
 const SEARCH_RESULTS_PER_PAGE = 25;
 const SEARCH_RESULT_ITEM_SIZE = 38;
@@ -19,7 +22,7 @@ const SEARCH_RESULT_ITEM_SIZE = 38;
     <Button
         icon="pi pi-search"
         :label="$gettext('Search')"
-        @click="visible = true"
+        @click="toggleModal"
     />
 
     <Dialog
@@ -44,6 +47,7 @@ const SEARCH_RESULT_ITEM_SIZE = 38;
             <BasicSearch
                 :search-results-per-page="SEARCH_RESULTS_PER_PAGE"
                 :search-result-item-size="SEARCH_RESULT_ITEM_SIZE"
+                :toggle-modal="toggleModal"
             />
         </div>
     </Dialog>
