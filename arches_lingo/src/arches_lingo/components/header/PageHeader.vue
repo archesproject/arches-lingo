@@ -5,6 +5,7 @@ import { useGettext } from "vue3-gettext";
 import Menubar from "primevue/menubar";
 
 import { routeNames } from "@/arches_lingo/routes.ts";
+import DarkModeToggle from "@/arches_lingo/components/header/DarkModeToggle.vue";
 import UserInteraction from "@/arches_lingo/components/user/UserInteraction.vue";
 
 const { $gettext } = useGettext();
@@ -25,15 +26,15 @@ const items = ref([
 
 <template>
     <Menubar
-        class="page-header"
         :model="items"
+        style="border-radius: 0"
     >
         <template #start>
             <RouterLink
                 :to="{ name: routeNames.root }"
                 style="text-decoration: none; color: inherit"
             >
-                <h2>{{ $gettext("Arches Lingo") }}</h2>
+                <h1>{{ $gettext("Arches Lingo") }}</h1>
             </RouterLink>
         </template>
         <template #item="{ item }">
@@ -46,18 +47,23 @@ const items = ref([
                     :class="item.icon"
                     aria-hidden="true"
                 ></i>
-                <span>{{ item.label }}</span>
+                <span style="font-weight: var(--p-button-label-font-weight)">{{
+                    item.label
+                }}</span>
             </RouterLink>
         </template>
         <template #end>
-            <UserInteraction />
+            <div style="display: flex; align-items: center; gap: 1rem">
+                <DarkModeToggle />
+                <UserInteraction />
+            </div>
         </template>
     </Menubar>
 </template>
 
 <style scoped>
-.page-header {
-    border-radius: 0;
+:deep(.p-menubar-start) {
+    gap: var(--p-menubar-gap);
 }
 
 @media screen and (max-width: 960px) {
