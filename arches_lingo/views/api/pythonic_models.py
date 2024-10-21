@@ -1,3 +1,5 @@
+from functools import partial
+
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.generics import RetrieveUpdateDestroyAPIView
 
@@ -14,6 +16,15 @@ class PythonicModelAPIMixin:
         return ResourceInstance.as_model(
             self.serializer_class.Meta.graph_slug, only=fields
         )
+
+    def get_object(self, user=None):
+        ret = super().get_object()
+        ret.save = partial(ret.save, user=user)
+        return ret
+
+    def update(self, request, *args, **kwargs):
+        self.get_object = partial(self.get_object, user=request.user)
+        return super().update(request, *args, **kwargs)
 
 
 class SchemeDetailView(PythonicModelAPIMixin, RetrieveUpdateDestroyAPIView):
