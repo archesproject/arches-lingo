@@ -57,13 +57,14 @@ class PythonicModelSerializer(serializers.ModelSerializer):
     def build_unknown_field(self, field_name, model_class):
         # TODO: get this somewhere else?
         graph_slug = self.__class__.Meta.graph_slug
-        datatype = Node.objects.get(
+        node = Node.objects.get(
             graph__slug=graph_slug,
             graph__source_identifier=None,
             alias=field_name,
-        ).datatype
-        model_field = deepcopy(self.DATATYPE_FIELD_MAPPING[datatype])
+        )
+        model_field = deepcopy(self.DATATYPE_FIELD_MAPPING[node.datatype])
         model_field.model = ResourceInstance
+        model_field.blank = not node.isrequired
         if isinstance(model_field, ForeignKey):
             model_field.queryset = ResourceInstance.as_model(graph_slug)
             relation_info = model_meta.RelationInfo(
