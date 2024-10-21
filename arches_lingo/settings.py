@@ -442,15 +442,6 @@ SHOW_LANGUAGE_SWITCH = len(LANGUAGES) > 1
 # TODO: remove when finalizing release
 SILENCED_SYSTEM_CHECKS += ["arches.E002"]
 
-# WELL_KNOWN_RESOURCE_MODELS = [
-#     {
-#         "model_name": "Concept",
-#         "graphid": "bf73e576-4888-11ee-8a8d-11afefc4bff7",
-#         "nodes": {}, # optional additional configuration
-#         "to_string": lambda wkrm: str(wkrm) # optional callback for stringifying
-#     }
-# ]
-
 try:
     from .package_settings import *
 except ImportError:
