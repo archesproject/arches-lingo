@@ -1,10 +1,12 @@
 from copy import deepcopy
 
 from django.contrib.postgres.fields import ArrayField
-from django.db.models import fields, ForeignKey, DO_NOTHING
+
+from django.db.models import fields
 from rest_framework import renderers
 from rest_framework import serializers
-from rest_framework.utils import model_meta
+
+# from rest_framework.utils import model_meta
 
 from arches.app.models.models import ResourceInstance, Node
 from arches.app.utils.betterJSONSerializer import JSONSerializer
@@ -18,23 +20,24 @@ renderers.JSONOpenAPIRenderer.encoder_class = JSONSerializer
 class PythonicModelSerializer(serializers.ModelSerializer):
     # TODO: move into core / or arches-rest-framework?
     DATATYPE_FIELD_MAPPING = {
-        "string": fields.CharField(),  # XXX
-        "number": fields.FloatField(),
-        "concept": fields.CharField(),
-        "concept-list": ArrayField(base_field=fields.CharField()),
-        "date": fields.CharField(),  # XXX
-        "node-value": fields.CharField(),  # XXX
-        "edtf": fields.CharField(),  # XXX
-        "annotation": fields.CharField(),  # XXX
-        "url": fields.URLField(),
-        "resource-instance": ForeignKey(to="self", on_delete=DO_NOTHING),
-        "resource-instance-list": ArrayField(base_field=fields.UUIDField()),  # XXX
-        "boolean": fields.BooleanField(),
-        "domain-value": ArrayField(base_field=fields.CharField()),
-        "domain-value-list": ArrayField(base_field=fields.CharField()),
-        "non-localized-string": fields.CharField(),
-        "geojson-feature-collection": fields.CharField(),  # XXX
-        "file-list": ArrayField(base_field=fields.CharField()),  # XXX
+        "string": fields.CharField(null=True),  # XXX
+        "number": fields.FloatField(null=True),
+        "concept": fields.CharField(null=True),
+        "concept-list": ArrayField(base_field=fields.CharField(), null=True),
+        "date": fields.CharField(null=True),  # XXX
+        "node-value": fields.CharField(null=True),  # XXX
+        "edtf": fields.CharField(null=True),  # XXX
+        "annotation": fields.CharField(null=True),  # XXX
+        "url": fields.URLField(null=True),
+        # "resource-instance": ForeignKey(to="self", on_delete=DO_NOTHING, null=True),
+        "resource-instance": fields.UUIDField(null=True),
+        "resource-instance-list": ArrayField(base_field=fields.UUIDField(), null=True),
+        "boolean": fields.BooleanField(null=True),
+        "domain-value": ArrayField(base_field=fields.CharField(), null=True),
+        "domain-value-list": ArrayField(base_field=fields.CharField(), null=True),
+        "non-localized-string": fields.CharField(null=True),
+        "geojson-feature-collection": fields.CharField(null=True),  # XXX
+        "file-list": ArrayField(base_field=fields.CharField(), null=True),  # XXX
         # "reference"
     }
 
@@ -56,28 +59,39 @@ class PythonicModelSerializer(serializers.ModelSerializer):
 
     def build_unknown_field(self, field_name, model_class):
         graph_slug = self.__class__.Meta.graph_slug
-        node = Node.objects.get(
-            graph__slug=graph_slug,
-            graph__source_identifier=None,
-            alias=field_name,
+        node = (
+            Node.objects.filter(
+                graph__slug=graph_slug,
+                graph__source_identifier=None,
+                alias=field_name,
+            )
+            .select_related()
+            .get()
         )
         model_field = deepcopy(self.DATATYPE_FIELD_MAPPING[node.datatype])
         model_field.model = ResourceInstance
         model_field.blank = not node.isrequired
-        if isinstance(model_field, ForeignKey):
-            relation_info = model_meta.RelationInfo(
-                model_field=ForeignKey(
-                    "ResourceInstance", on_delete=DO_NOTHING, blank=not node.isrequired
-                ),
-                related_model=ResourceInstance,
-                to_many=False,
-                to_field=None,
-                has_through_model=False,
-                reverse=False,
+
+        # if isinstance(model_field, ForeignKey) and node.nodegroup.cardinality == "1":
+        #     relation_info = model_meta.RelationInfo(
+        #         model_field=ForeignKey(
+        #             "ResourceInstance", on_delete=DO_NOTHING, blank=model_field.blank, null=True
+        #         ),
+        #         related_model=ResourceInstance,
+        #         to_many=node.datatype == "resource-instance-list",
+        #         to_field=None,
+        #         has_through_model=False,
+        #         reverse=False,
+        #     )
+        #     return self.build_relational_field(field_name, relation_info)
+
+        if node.nodegroup.cardinality == "n":
+            model_field = ArrayField(
+                base_field=model_field, null=True, blank=model_field.blank
             )
-            return self.build_relational_field(field_name, relation_info)
-        else:
-            return self.build_standard_field(field_name, model_field)
+            model_field.model = ResourceInstance
+
+        return self.build_standard_field(field_name, model_field)
 
 
 ### end code that should go in arches rest framework
