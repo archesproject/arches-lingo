@@ -372,12 +372,10 @@
                 {
                     "card_id": "bf73e5d9-4888-11ee-8a8d-11afefc4bff7",
                     "config": {
-                        "defaultValue": "",
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Statement Language",
-                        "options": [],
                         "placeholder": {
                             "en": "Select an option"
                         }
@@ -390,17 +388,15 @@
                     "sortorder": 1,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "10000000-0000-0000-0000-000000000012"
+                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
                 },
                 {
                     "card_id": "dd3dca36-7d80-4827-92eb-d42cff9c1e2e",
                     "config": {
-                        "defaultValue": "f8abdf58-1a22-43e1-86d9-d30a1d1466fb",
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Associated Concept Relation Status Metatype",
-                        "options": [],
                         "placeholder": {
                             "en": "Select an option"
                         }
@@ -413,17 +409,15 @@
                     "sortorder": 3,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "10000000-0000-0000-0000-000000000002"
+                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
                 },
                 {
                     "card_id": "bf73e5d9-4888-11ee-8a8d-11afefc4bff7",
                     "config": {
-                        "defaultValue": "51ccf153-fa7b-4b22-8d0d-d1a57a6c84c2",
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Statement Metatype",
-                        "options": [],
                         "placeholder": {
                             "en": "Select an option"
                         }
@@ -436,7 +430,7 @@
                     "sortorder": 3,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "10000000-0000-0000-0000-000000000002"
+                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
                 },
                 {
                     "card_id": "bf73e5d9-4888-11ee-8a8d-11afefc4bff7",
@@ -492,12 +486,10 @@
                 {
                     "card_id": "bf73e58b-4888-11ee-8a8d-11afefc4bff7",
                     "config": {
-                        "defaultValue": "",
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Statement Type",
-                        "options": [],
                         "placeholder": {
                             "en": "Select an option"
                         }
@@ -510,7 +502,7 @@
                     "sortorder": 1,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "10000000-0000-0000-0000-000000000012"
+                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
                 },
                 {
                     "card_id": "bf73e630-4888-11ee-8a8d-11afefc4bff7",
@@ -536,12 +528,10 @@
                 {
                     "card_id": "bf73e630-4888-11ee-8a8d-11afefc4bff7",
                     "config": {
-                        "defaultValue": "24559510-c6c6-4558-b411-7cd127642657",
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Warrant Assertion Event Type",
-                        "options": [],
                         "placeholder": {
                             "en": "Select an option"
                         }
@@ -554,17 +544,15 @@
                     "sortorder": 0,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "10000000-0000-0000-0000-000000000002"
+                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
                 },
                 {
                     "card_id": "32bc9136-f3f3-4424-b1cf-d0af4367980c",
                     "config": {
-                        "defaultValue": "",
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Label Language",
-                        "options": [],
                         "placeholder": {
                             "en": "Select an option"
                         }
@@ -577,7 +565,7 @@
                     "sortorder": 1,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "10000000-0000-0000-0000-000000000012"
+                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
                 },
                 {
                     "card_id": "dabcc16e-2119-4e99-87bf-a2d4448bff04",
@@ -604,12 +592,10 @@
                 {
                     "card_id": "2c0ba8d5-4d03-487c-ac1e-d27287e894c0",
                     "config": {
-                        "defaultValue": "",
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Class",
-                        "options": [],
                         "placeholder": {
                             "en": "Select an option"
                         }
@@ -622,7 +608,7 @@
                     "sortorder": 0,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "10000000-0000-0000-0000-000000000012"
+                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
                 },
                 {
                     "card_id": "32bc9136-f3f3-4424-b1cf-d0af4367980c",
@@ -649,12 +635,10 @@
                 {
                     "card_id": "bb7d7bc8-467f-429d-a594-0f073386f12b",
                     "config": {
-                        "defaultValue": "",
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Status",
-                        "options": [],
                         "placeholder": {
                             "en": "Select an option"
                         }
@@ -667,7 +651,7 @@
                     "sortorder": 0,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "10000000-0000-0000-0000-000000000002"
+                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
                 },
                 {
                     "card_id": "bf73e61e-4888-11ee-8a8d-11afefc4bff7",
@@ -735,12 +719,10 @@
                 {
                     "card_id": "dabcc16e-2119-4e99-87bf-a2d4448bff04",
                     "config": {
-                        "defaultValue": "24559510-c6c6-4558-b411-7cd127642657",
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Warrant Assertion Event Type",
-                        "options": [],
                         "placeholder": {
                             "en": "Select an option"
                         }
@@ -753,7 +735,7 @@
                     "sortorder": 8,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "10000000-0000-0000-0000-000000000002"
+                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
                 },
                 {
                     "card_id": "dd3dca36-7d80-4827-92eb-d42cff9c1e2e",
@@ -780,12 +762,10 @@
                 {
                     "card_id": "32bc9136-f3f3-4424-b1cf-d0af4367980c",
                     "config": {
-                        "defaultValue": null,
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Label Status",
-                        "options": [],
                         "placeholder": {
                             "en": "Select an option"
                         }
@@ -798,17 +778,15 @@
                     "sortorder": 3,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "10000000-0000-0000-0000-000000000002"
+                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
                 },
                 {
                     "card_id": "bf73e58b-4888-11ee-8a8d-11afefc4bff7",
                     "config": {
-                        "defaultValue": "",
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Statement Type Metatype",
-                        "options": [],
                         "placeholder": {
                             "en": "Select an option"
                         }
@@ -821,17 +799,15 @@
                     "sortorder": 2,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "10000000-0000-0000-0000-000000000002"
+                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
                 },
                 {
                     "card_id": "bf73e5d3-4888-11ee-8a8d-11afefc4bff7",
                     "config": {
-                        "defaultValue": "",
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Identifier Type",
-                        "options": [],
                         "placeholder": {
                             "en": "Select an option"
                         }
@@ -844,17 +820,15 @@
                     "sortorder": 1,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "10000000-0000-0000-0000-000000000012"
+                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
                 },
                 {
                     "card_id": "4cfaac3a-0ed7-11ef-9493-0a58a9feac02",
                     "config": {
-                        "defaultValue": "",
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Matched Concept Relation",
-                        "options": [],
                         "placeholder": {
                             "en": "Select an option"
                         }
@@ -867,7 +841,7 @@
                     "sortorder": 1,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "10000000-0000-0000-0000-000000000002"
+                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
                 },
                 {
                     "card_id": "4cfaac3a-0ed7-11ef-9493-0a58a9feac02",
@@ -958,12 +932,10 @@
                 {
                     "card_id": "4cfaac3a-0ed7-11ef-9493-0a58a9feac02",
                     "config": {
-                        "defaultValue": "",
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Matched Concept Relation Status",
-                        "options": [],
                         "placeholder": {
                             "en": "Select an option"
                         }
@@ -976,17 +948,15 @@
                     "sortorder": 2,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "10000000-0000-0000-0000-000000000012"
+                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
                 },
                 {
                     "card_id": "4cfaac3a-0ed7-11ef-9493-0a58a9feac02",
                     "config": {
-                        "defaultValue": "f8abdf58-1a22-43e1-86d9-d30a1d1466fb",
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Matched Concept Relation Status Metatype",
-                        "options": [],
                         "placeholder": {
                             "en": "Select an option"
                         }
@@ -999,7 +969,7 @@
                     "sortorder": 3,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "10000000-0000-0000-0000-000000000002"
+                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
                 },
                 {
                     "card_id": "4cfaac3a-0ed7-11ef-9493-0a58a9feac02",
@@ -1026,12 +996,10 @@
                 {
                     "card_id": "bf73e5d9-4888-11ee-8a8d-11afefc4bff7",
                     "config": {
-                        "defaultValue": "24559510-c6c6-4558-b411-7cd127642657",
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Warrant Assertion Type",
-                        "options": [],
                         "placeholder": {
                             "en": "Select an option"
                         }
@@ -1044,7 +1012,7 @@
                     "sortorder": 5,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "10000000-0000-0000-0000-000000000002"
+                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
                 },
                 {
                     "card_id": "dabcc16e-2119-4e99-87bf-a2d4448bff04",
@@ -1071,12 +1039,10 @@
                 {
                     "card_id": "861024d2-798c-4f6e-9860-5141ac5f7b99",
                     "config": {
-                        "defaultValue": "",
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Type",
-                        "options": [],
                         "placeholder": {
                             "en": "Select an option"
                         }
@@ -1089,17 +1055,15 @@
                     "sortorder": 0,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "10000000-0000-0000-0000-000000000002"
+                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
                 },
                 {
                     "card_id": "dd3dca36-7d80-4827-92eb-d42cff9c1e2e",
                     "config": {
-                        "defaultValue": "24559510-c6c6-4558-b411-7cd127642657",
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Warrant Assertion Event",
-                        "options": [],
                         "placeholder": {
                             "en": "Select an option"
                         }
@@ -1112,7 +1076,7 @@
                     "sortorder": 8,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "10000000-0000-0000-0000-000000000002"
+                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
                 },
                 {
                     "card_id": "dd3dca36-7d80-4827-92eb-d42cff9c1e2e",
@@ -1138,12 +1102,10 @@
                 {
                     "card_id": "bf73e59a-4888-11ee-8a8d-11afefc4bff7",
                     "config": {
-                        "defaultValue": "fa0828ba-06f2-4877-9a47-808cee685a52",
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "URI Type",
-                        "options": [],
                         "placeholder": {
                             "en": "Select an option"
                         }
@@ -1156,7 +1118,7 @@
                     "sortorder": 1,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "10000000-0000-0000-0000-000000000002"
+                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
                 },
                 {
                     "card_id": "bf73e5d9-4888-11ee-8a8d-11afefc4bff7",
@@ -1182,12 +1144,10 @@
                 {
                     "card_id": "dd3dca36-7d80-4827-92eb-d42cff9c1e2e",
                     "config": {
-                        "defaultValue": "",
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Associated Concept Relation Status",
-                        "options": [],
                         "placeholder": {
                             "en": "Select an option"
                         }
@@ -1200,17 +1160,15 @@
                     "sortorder": 2,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "10000000-0000-0000-0000-000000000012"
+                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
                 },
                 {
                     "card_id": "dabcc16e-2119-4e99-87bf-a2d4448bff04",
                     "config": {
-                        "defaultValue": "",
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Hierarchical Relation",
-                        "options": [],
                         "placeholder": {
                             "en": "Select an option"
                         }
@@ -1223,17 +1181,15 @@
                     "sortorder": 1,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "10000000-0000-0000-0000-000000000012"
+                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
                 },
                 {
                     "card_id": "32bc9136-f3f3-4424-b1cf-d0af4367980c",
                     "config": {
-                        "defaultValue": "24559510-c6c6-4558-b411-7cd127642657",
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Warrant Assertion Event Type",
-                        "options": [],
                         "placeholder": {
                             "en": "Select an option"
                         }
@@ -1246,17 +1202,15 @@
                     "sortorder": 9,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "10000000-0000-0000-0000-000000000002"
+                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
                 },
                 {
                     "card_id": "bf73e58b-4888-11ee-8a8d-11afefc4bff7",
                     "config": {
-                        "defaultValue": "",
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Statement Language",
-                        "options": [],
                         "placeholder": {
                             "en": "Select an option"
                         }
@@ -1269,7 +1223,7 @@
                     "sortorder": 3,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "10000000-0000-0000-0000-000000000012"
+                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
                 },
                 {
                     "card_id": "32bc9136-f3f3-4424-b1cf-d0af4367980c",
@@ -1361,12 +1315,10 @@
                 {
                     "card_id": "dd3dca36-7d80-4827-92eb-d42cff9c1e2e",
                     "config": {
-                        "defaultValue": "",
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Associated Concept Relation",
-                        "options": [],
                         "placeholder": {
                             "en": "Select an option"
                         }
@@ -1379,17 +1331,15 @@
                     "sortorder": 1,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "10000000-0000-0000-0000-000000000002"
+                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
                 },
                 {
                     "card_id": "dabcc16e-2119-4e99-87bf-a2d4448bff04",
                     "config": {
-                        "defaultValue": "",
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Hierarchy Type",
-                        "options": [],
                         "placeholder": {
                             "en": "Select an option"
                         }
@@ -1402,17 +1352,15 @@
                     "sortorder": 2,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "10000000-0000-0000-0000-000000000012"
+                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
                 },
                 {
                     "card_id": "861024d2-798c-4f6e-9860-5141ac5f7b99",
                     "config": {
-                        "defaultValue": "1cea8e22-2bc3-43aa-abfd-0d04719d99d1",
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Metatype",
-                        "options": [],
                         "placeholder": {
                             "en": "Select an option"
                         }
@@ -1425,7 +1373,7 @@
                     "sortorder": 1,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "10000000-0000-0000-0000-000000000002"
+                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
                 },
                 {
                     "card_id": "32bc9136-f3f3-4424-b1cf-d0af4367980c",
@@ -1451,12 +1399,10 @@
                 {
                     "card_id": "bf73e59d-4888-11ee-8a8d-11afefc4bff7",
                     "config": {
-                        "defaultValue": "",
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Statement Type",
-                        "options": [],
                         "placeholder": {
                             "en": "Select an option"
                         }
@@ -1469,17 +1415,15 @@
                     "sortorder": 2,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "10000000-0000-0000-0000-000000000012"
+                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
                 },
                 {
                     "card_id": "4cfaac3a-0ed7-11ef-9493-0a58a9feac02",
                     "config": {
-                        "defaultValue": "24559510-c6c6-4558-b411-7cd127642657",
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Warrant Assertion Event Type",
-                        "options": [],
                         "placeholder": {
                             "en": "Select an option"
                         }
@@ -1492,7 +1436,7 @@
                     "sortorder": 8,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "10000000-0000-0000-0000-000000000002"
+                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
                 },
                 {
                     "card_id": "dd3dca36-7d80-4827-92eb-d42cff9c1e2e",
@@ -2085,12 +2029,10 @@
                 {
                     "card_id": "bf73e5d3-4888-11ee-8a8d-11afefc4bff7",
                     "config": {
-                        "defaultValue": "1cea8e22-2bc3-43aa-abfd-0d04719d99d1",
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Identifier Type Metatype",
-                        "options": [],
                         "placeholder": {
                             "en": "Select an option"
                         }
@@ -2103,7 +2045,7 @@
                     "sortorder": 3,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "10000000-0000-0000-0000-000000000002"
+                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
                 },
                 {
                     "card_id": "bf73e5d9-4888-11ee-8a8d-11afefc4bff7",
@@ -2129,12 +2071,10 @@
                 {
                     "card_id": "bb7d7bc8-467f-429d-a594-0f073386f12b",
                     "config": {
-                        "defaultValue": "f8abdf58-1a22-43e1-86d9-d30a1d1466fb",
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Status Metatype",
-                        "options": [],
                         "placeholder": {
                             "en": "Select an option"
                         }
@@ -2147,17 +2087,15 @@
                     "sortorder": 1,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "10000000-0000-0000-0000-000000000002"
+                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
                 },
                 {
                     "card_id": "bf73e59d-4888-11ee-8a8d-11afefc4bff7",
                     "config": {
-                        "defaultValue": "",
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Statement Type Metatype",
-                        "options": [],
                         "placeholder": {
                             "en": "Select an option"
                         }
@@ -2170,7 +2108,7 @@
                     "sortorder": 3,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "10000000-0000-0000-0000-000000000002"
+                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
                 },
                 {
                     "card_id": "32bc9136-f3f3-4424-b1cf-d0af4367980c",
@@ -2256,14 +2194,10 @@
                 {
                     "card_id": "bf73e5d9-4888-11ee-8a8d-11afefc4bff7",
                     "config": {
-                        "defaultValue": [
-                            "4f8699ea-aca7-4e84-9243-f6c9158f7c11"
-                        ],
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Statement Type",
-                        "options": [],
                         "placeholder": {
                             "en": "Select an option"
                         }
@@ -2276,17 +2210,15 @@
                     "sortorder": 2,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "10000000-0000-0000-0000-000000000012"
+                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
                 },
                 {
                     "card_id": "32bc9136-f3f3-4424-b1cf-d0af4367980c",
                     "config": {
-                        "defaultValue": "f8abdf58-1a22-43e1-86d9-d30a1d1466fb",
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Label Status Metatype",
-                        "options": [],
                         "placeholder": {
                             "en": "Select an option"
                         }
@@ -2299,17 +2231,15 @@
                     "sortorder": 4,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "10000000-0000-0000-0000-000000000002"
+                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
                 },
                 {
                     "card_id": "32bc9136-f3f3-4424-b1cf-d0af4367980c",
                     "config": {
-                        "defaultValue": "",
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Label Type",
-                        "options": [],
                         "placeholder": {
                             "en": "Select an option"
                         }
@@ -2322,17 +2252,15 @@
                     "sortorder": 2,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "10000000-0000-0000-0000-000000000002"
+                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
                 },
                 {
                     "card_id": "dabcc16e-2119-4e99-87bf-a2d4448bff04",
                     "config": {
-                        "defaultValue": "",
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Hierarchy Type Metatype",
-                        "options": [],
                         "placeholder": {
                             "en": "Select an option"
                         }
@@ -2345,17 +2273,15 @@
                     "sortorder": 3,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "10000000-0000-0000-0000-000000000002"
+                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
                 },
                 {
                     "card_id": "bf73e59d-4888-11ee-8a8d-11afefc4bff7",
                     "config": {
-                        "defaultValue": "",
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Statement Language",
-                        "options": [],
                         "placeholder": {
                             "en": "Select an option"
                         }
@@ -2368,7 +2294,7 @@
                     "sortorder": 4,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "10000000-0000-0000-0000-000000000012"
+                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
                 },
                 {
                     "card_id": "dabcc16e-2119-4e99-87bf-a2d4448bff04",
@@ -3658,9 +3584,10 @@
                 {
                     "alias": "data_assignment_type_metatype",
                     "config": {
-                        "rdmCollection": "ef69e772-de53-45fe-98d4-bf3e7b10eb57"
+                        "controlledList": "ef69e772-de53-45fe-98d4-bf3e7b10eb57",
+                        "multiValue": false
                     },
-                    "datatype": "concept",
+                    "datatype": "reference",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -3683,9 +3610,10 @@
                 {
                     "alias": "relation_status_data_assignment_type",
                     "config": {
-                        "rdmCollection": "6eaa2c6f-af83-464c-9200-051c4cfe7e8e"
+                        "controlledList": "6eaa2c6f-af83-464c-9200-051c4cfe7e8e",
+                        "multiValue": false
                     },
-                    "datatype": "concept",
+                    "datatype": "reference",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -3805,9 +3733,10 @@
                 {
                     "alias": "statement_type_metatype",
                     "config": {
-                        "rdmCollection": "ef69e772-de53-45fe-98d4-bf3e7b10eb57"
+                        "controlledList": "ef69e772-de53-45fe-98d4-bf3e7b10eb57",
+                        "multiValue": false
                     },
-                    "datatype": "concept",
+                    "datatype": "reference",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -3830,9 +3759,10 @@
                 {
                     "alias": "status",
                     "config": {
-                        "rdmCollection": "2cc0e054-ef9b-41ae-8e86-e0c3b4e7ca00"
+                        "controlledList": "2cc0e054-ef9b-41ae-8e86-e0c3b4e7ca00",
+                        "multiValue": false
                     },
-                    "datatype": "concept",
+                    "datatype": "reference",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -3855,9 +3785,10 @@
                 {
                     "alias": "appellative_status_ascribed_relation",
                     "config": {
-                        "rdmCollection": "deb847fc-f4c3-4e82-be19-04641579f129"
+                        "controlledList": "deb847fc-f4c3-4e82-be19-04641579f129",
+                        "multiValue": false
                     },
-                    "datatype": "concept",
+                    "datatype": "reference",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -3880,9 +3811,10 @@
                 {
                     "alias": "data_assignment_language",
                     "config": {
-                        "rdmCollection": "55ce793b-a51a-4b25-811d-d08ea797f8c3"
+                        "controlledList": "55ce793b-a51a-4b25-811d-d08ea797f8c3",
+                        "multiValue": true
                     },
-                    "datatype": "concept-list",
+                    "datatype": "reference",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -3905,9 +3837,10 @@
                 {
                     "alias": "data_assignment_type",
                     "config": {
-                        "rdmCollection": "6eaa2c6f-af83-464c-9200-051c4cfe7e8e"
+                        "controlledList": "6eaa2c6f-af83-464c-9200-051c4cfe7e8e",
+                        "multiValue": false
                     },
-                    "datatype": "concept",
+                    "datatype": "reference",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -3930,9 +3863,10 @@
                 {
                     "alias": "status_metatype",
                     "config": {
-                        "rdmCollection": "ef69e772-de53-45fe-98d4-bf3e7b10eb57"
+                        "controlledList": "ef69e772-de53-45fe-98d4-bf3e7b10eb57",
+                        "multiValue": false
                     },
-                    "datatype": "concept",
+                    "datatype": "reference",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -3980,9 +3914,10 @@
                 {
                     "alias": "match_status_ascribed_relation",
                     "config": {
-                        "rdmCollection": "769fa072-6247-4e23-b638-4e801f8c50dc"
+                        "controlledList": "769fa072-6247-4e23-b638-4e801f8c50dc",
+                        "multiValue": false
                     },
-                    "datatype": "concept",
+                    "datatype": "reference",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -4102,9 +4037,10 @@
                 {
                     "alias": "match_status_status_metatype",
                     "config": {
-                        "rdmCollection": "ef69e772-de53-45fe-98d4-bf3e7b10eb57"
+                        "controlledList": "ef69e772-de53-45fe-98d4-bf3e7b10eb57",
+                        "multiValue": false
                     },
-                    "datatype": "concept",
+                    "datatype": "reference",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -4177,9 +4113,10 @@
                 {
                     "alias": "match_status_status",
                     "config": {
-                        "rdmCollection": "2cc0e054-ef9b-41ae-8e86-e0c3b4e7ca00"
+                        "controlledList": "2cc0e054-ef9b-41ae-8e86-e0c3b4e7ca00",
+                        "multiValue": true
                     },
-                    "datatype": "concept-list",
+                    "datatype": "reference",
                     "description": "{\"en\": \"\"}",
                     "exportable": false,
                     "fieldname": null,
@@ -4346,9 +4283,10 @@
                 {
                     "alias": "relation_status_status",
                     "config": {
-                        "rdmCollection": "2cc0e054-ef9b-41ae-8e86-e0c3b4e7ca00"
+                        "controlledList": "2cc0e054-ef9b-41ae-8e86-e0c3b4e7ca00",
+                        "multiValue": true
                     },
-                    "datatype": "concept-list",
+                    "datatype": "reference",
                     "description": "{\"en\": \"\"}",
                     "exportable": false,
                     "fieldname": null,
@@ -4371,9 +4309,10 @@
                 {
                     "alias": "relation_status_status_metatype",
                     "config": {
-                        "rdmCollection": "ef69e772-de53-45fe-98d4-bf3e7b10eb57"
+                        "controlledList": "ef69e772-de53-45fe-98d4-bf3e7b10eb57",
+                        "multiValue": false
                     },
-                    "datatype": "concept",
+                    "datatype": "reference",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -4421,9 +4360,10 @@
                 {
                     "alias": "statement_data_assignment_type",
                     "config": {
-                        "rdmCollection": "6eaa2c6f-af83-464c-9200-051c4cfe7e8e"
+                        "controlledList": "6eaa2c6f-af83-464c-9200-051c4cfe7e8e",
+                        "multiValue": false
                     },
-                    "datatype": "concept",
+                    "datatype": "reference",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -4471,9 +4411,10 @@
                 {
                     "alias": "statement_data_assignment_statement_type",
                     "config": {
-                        "rdmCollection": "aba2a0b4-75a4-45ba-8b57-021f3ca92a6a"
+                        "controlledList": "aba2a0b4-75a4-45ba-8b57-021f3ca92a6a",
+                        "multiValue": true
                     },
-                    "datatype": "concept-list",
+                    "datatype": "reference",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -4496,9 +4437,10 @@
                 {
                     "alias": "classification_status_ascribed_relation",
                     "config": {
-                        "rdmCollection": "42e91d71-7d25-4e43-97df-8b43f46711cf"
+                        "controlledList": "42e91d71-7d25-4e43-97df-8b43f46711cf",
+                        "multiValue": true
                     },
-                    "datatype": "concept-list",
+                    "datatype": "reference",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -4521,9 +4463,10 @@
                 {
                     "alias": "classification_status_type",
                     "config": {
-                        "rdmCollection": "2cc0e054-ef9b-41ae-8e86-e0c3b4e7ca00"
+                        "controlledList": "2cc0e054-ef9b-41ae-8e86-e0c3b4e7ca00",
+                        "multiValue": true
                     },
-                    "datatype": "concept-list",
+                    "datatype": "reference",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -4571,9 +4514,10 @@
                 {
                     "alias": "type",
                     "config": {
-                        "rdmCollection": "4f9b2c82-59c6-4173-99ea-2a6bfbab6aa2"
+                        "controlledList": "4f9b2c82-59c6-4173-99ea-2a6bfbab6aa2",
+                        "multiValue": false
                     },
-                    "datatype": "concept",
+                    "datatype": "reference",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -4596,9 +4540,10 @@
                 {
                     "alias": "relation_status_ascribed_relation",
                     "config": {
-                        "rdmCollection": "ed3f8d46-c372-4c99-a326-8f726076fb97"
+                        "controlledList": "ed3f8d46-c372-4c99-a326-8f726076fb97",
+                        "multiValue": false
                     },
-                    "datatype": "concept",
+                    "datatype": "reference",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -4621,9 +4566,10 @@
                 {
                     "alias": "identifier_type_metatype",
                     "config": {
-                        "rdmCollection": "ef69e772-de53-45fe-98d4-bf3e7b10eb57"
+                        "controlledList": "ef69e772-de53-45fe-98d4-bf3e7b10eb57",
+                        "multiValue": false
                     },
-                    "datatype": "concept",
+                    "datatype": "reference",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -4671,9 +4617,10 @@
                 {
                     "alias": "statement_data_assignment_statement_type_metatype",
                     "config": {
-                        "rdmCollection": "ef69e772-de53-45fe-98d4-bf3e7b10eb57"
+                        "controlledList": "ef69e772-de53-45fe-98d4-bf3e7b10eb57",
+                        "multiValue": false
                     },
-                    "datatype": "concept",
+                    "datatype": "reference",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -4696,9 +4643,10 @@
                 {
                     "alias": "appellative_status_data_assignment_type",
                     "config": {
-                        "rdmCollection": "6eaa2c6f-af83-464c-9200-051c4cfe7e8e"
+                        "controlledList": "6eaa2c6f-af83-464c-9200-051c4cfe7e8e",
+                        "multiValue": false
                     },
-                    "datatype": "concept",
+                    "datatype": "reference",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -4721,9 +4669,10 @@
                 {
                     "alias": "uri_type",
                     "config": {
-                        "rdmCollection": "a8da34eb-575b-498c-ada7-161ee745fd16"
+                        "controlledList": "a8da34eb-575b-498c-ada7-161ee745fd16",
+                        "multiValue": false
                     },
-                    "datatype": "concept",
+                    "datatype": "reference",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -4746,9 +4695,10 @@
                 {
                     "alias": "type_metatype",
                     "config": {
-                        "rdmCollection": "ef69e772-de53-45fe-98d4-bf3e7b10eb57"
+                        "controlledList": "ef69e772-de53-45fe-98d4-bf3e7b10eb57",
+                        "multiValue": false
                     },
-                    "datatype": "concept",
+                    "datatype": "reference",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -4771,9 +4721,10 @@
                 {
                     "alias": "classification_status_type_metatype",
                     "config": {
-                        "rdmCollection": "ef69e772-de53-45fe-98d4-bf3e7b10eb57"
+                        "controlledList": "ef69e772-de53-45fe-98d4-bf3e7b10eb57",
+                        "multiValue": false
                     },
-                    "datatype": "concept",
+                    "datatype": "reference",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -4821,9 +4772,10 @@
                 {
                     "alias": "statement_data_assignment_statement_language",
                     "config": {
-                        "rdmCollection": "55ce793b-a51a-4b25-811d-d08ea797f8c3"
+                        "controlledList": "55ce793b-a51a-4b25-811d-d08ea797f8c3",
+                        "multiValue": true
                     },
-                    "datatype": "concept-list",
+                    "datatype": "reference",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -4878,9 +4830,10 @@
                 {
                     "alias": "appellative_status_ascribed_name_language",
                     "config": {
-                        "rdmCollection": "55ce793b-a51a-4b25-811d-d08ea797f8c3"
+                        "controlledList": "55ce793b-a51a-4b25-811d-d08ea797f8c3",
+                        "multiValue": true
                     },
-                    "datatype": "concept-list",
+                    "datatype": "reference",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -5058,9 +5011,10 @@
                 {
                     "alias": "identifier_type",
                     "config": {
-                        "rdmCollection": "a8da34eb-575b-498c-ada7-161ee745fd16"
+                        "controlledList": "a8da34eb-575b-498c-ada7-161ee745fd16",
+                        "multiValue": true
                     },
-                    "datatype": "concept-list",
+                    "datatype": "reference",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -5083,9 +5037,10 @@
                 {
                     "alias": "also_instance_of",
                     "config": {
-                        "rdmCollection": "5f28f263-9d16-4c01-a146-80a97d7119a9"
+                        "controlledList": "5f28f263-9d16-4c01-a146-80a97d7119a9",
+                        "multiValue": true
                     },
-                    "datatype": "concept-list",
+                    "datatype": "reference",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -6031,9 +5986,10 @@
                 {
                     "alias": "match_status_data_assignment_type",
                     "config": {
-                        "rdmCollection": "6eaa2c6f-af83-464c-9200-051c4cfe7e8e"
+                        "controlledList": "6eaa2c6f-af83-464c-9200-051c4cfe7e8e",
+                        "multiValue": false
                     },
-                    "datatype": "concept",
+                    "datatype": "reference",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -6186,9 +6142,10 @@
                 {
                     "alias": "statement_language",
                     "config": {
-                        "rdmCollection": "55ce793b-a51a-4b25-811d-d08ea797f8c3"
+                        "controlledList": "55ce793b-a51a-4b25-811d-d08ea797f8c3",
+                        "multiValue": true
                     },
-                    "datatype": "concept-list",
+                    "datatype": "reference",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -6286,9 +6243,10 @@
                 {
                     "alias": "classification_status_data_assignment_type",
                     "config": {
-                        "rdmCollection": "6eaa2c6f-af83-464c-9200-051c4cfe7e8e"
+                        "controlledList": "6eaa2c6f-af83-464c-9200-051c4cfe7e8e",
+                        "multiValue": false
                     },
-                    "datatype": "concept",
+                    "datatype": "reference",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -6343,9 +6301,10 @@
                 {
                     "alias": "appellative_status_status",
                     "config": {
-                        "rdmCollection": "2cc0e054-ef9b-41ae-8e86-e0c3b4e7ca00"
+                        "controlledList": "2cc0e054-ef9b-41ae-8e86-e0c3b4e7ca00",
+                        "multiValue": false
                     },
-                    "datatype": "concept",
+                    "datatype": "reference",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -6443,9 +6402,10 @@
                 {
                     "alias": "data_assignment_type_n1",
                     "config": {
-                        "rdmCollection": "aba2a0b4-75a4-45ba-8b57-021f3ca92a6a"
+                        "controlledList": "aba2a0b4-75a4-45ba-8b57-021f3ca92a6a",
+                        "multiValue": true
                     },
-                    "datatype": "concept-list",
+                    "datatype": "reference",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -6518,9 +6478,10 @@
                 {
                     "alias": "statement_type",
                     "config": {
-                        "rdmCollection": "aba2a0b4-75a4-45ba-8b57-021f3ca92a6a"
+                        "controlledList": "aba2a0b4-75a4-45ba-8b57-021f3ca92a6a",
+                        "multiValue": true
                     },
-                    "datatype": "concept-list",
+                    "datatype": "reference",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -6543,9 +6504,10 @@
                 {
                     "alias": "appellative_status_status_metatype",
                     "config": {
-                        "rdmCollection": "ef69e772-de53-45fe-98d4-bf3e7b10eb57"
+                        "controlledList": "ef69e772-de53-45fe-98d4-bf3e7b10eb57",
+                        "multiValue": false
                     },
-                    "datatype": "concept",
+                    "datatype": "reference",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -6570,9 +6532,9 @@
             "publication": {
                 "graph_id": "bf73e576-4888-11ee-8a8d-11afefc4bff7",
                 "most_recent_edit_id": null,
-                "notes": "Make relation_status, match_status, classification_status, part_of_scheme, and top_concept_of cardinality-n",
-                "publicationid": "958008ba-657b-11ef-bb37-0aa766c61b65",
-                "published_time": "2024-08-28T15:24:53.535"
+                "notes": "Migrated concept/concept-list nodes to reference datatype",
+                "publicationid": "ad44080e-8022-11ef-91e0-0aa766c61b66",
+                "published_time": "2024-10-01T13:26:29.593"
             },
             "relatable_resource_model_ids": [],
             "resource_2_resource_constraints": [],
@@ -6655,8 +6617,8 @@
     ],
     "metadata": {
         "db": "PostgreSQL 14.5 on x86_64-apple-darwin20.6.0, compiled by Apple clang version 12.0.0 (clang-1200.0.32.29), 64-bit",
-        "git hash": "",
+        "git hash": "c54906bac6 2024-10-01 14:15:57 -0400",
         "os": "Darwin",
-        "os version": "23.6.0"
+        "os version": "24.0.0"
     }
 }
