@@ -55,7 +55,7 @@ class PythonicModelAPIMixin:
         )
         return super().destroy(request, *args, **kwargs)
 
-    def perform_update(self, serializer):
+    def validate_tile_data_and_save_resource(self, serializer):
         """Re-raise ValidationError as DRF ValidationError.
 
         In 3.0 (2014), DRF decided to stop full_clean()'ing before save(),
@@ -75,6 +75,12 @@ class PythonicModelAPIMixin:
             serializer.save()
         except DjangoValidationError as django_error:
             raise ValidationError(detail=django_error) from django_error
+
+    def perform_create(self, serializer):
+        self.validate_tile_data_and_save_resource(serializer)
+
+    def perform_update(self, serializer):
+        self.validate_tile_data_and_save_resource(serializer)
 
 
 class SchemeDetailView(PythonicModelAPIMixin, RetrieveUpdateDestroyAPIView):
