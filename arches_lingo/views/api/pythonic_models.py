@@ -1,11 +1,16 @@
 from functools import partial
 
 from django.core.exceptions import ValidationError as DjangoValidationError
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.generics import RetrieveUpdateDestroyAPIView
 
 from arches.app.models.models import ResourceInstance
+from arches.app.utils.permission_backend import (
+    user_can_delete_resource,
+    user_can_edit_resource,
+    user_can_read_resource,
+)
 
 from arches_lingo.serializers import ConceptSerializer, SchemeSerializer
 
@@ -19,14 +24,36 @@ class PythonicModelAPIMixin:
             self.serializer_class.Meta.graph_slug, only=fields
         )
 
-    def get_object(self, user=None):
+    def get_object(self, user=None, permission_callable=None):
         ret = super().get_object()
+        if permission_callable and not permission_callable(user=user, resource=ret):
+            raise NotFound
         ret.save = partial(ret.save, user=user)
         return ret
 
+    def retrieve(self, request, *args, **kwargs):
+        self.get_object = partial(
+            self.get_object,
+            user=request.user,
+            permission_callable=user_can_read_resource,
+        )
+        return super().retrieve(request, *args, **kwargs)
+
     def update(self, request, *args, **kwargs):
-        self.get_object = partial(self.get_object, user=request.user)
+        self.get_object = partial(
+            self.get_object,
+            user=request.user,
+            permission_callable=user_can_edit_resource,
+        )
         return super().update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        self.get_object = partial(
+            self.get_object,
+            user=request.user,
+            permission_callable=user_can_delete_resource,
+        )
+        return super().destroy(request, *args, **kwargs)
 
     def perform_update(self, serializer):
         """Re-raise ValidationError as DRF ValidationError.
