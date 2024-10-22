@@ -74,7 +74,8 @@ class PythonicModelAPIMixin:
         try:
             serializer.save()
         except DjangoValidationError as django_error:
-            raise ValidationError(detail=django_error) from django_error
+            # TODO: doesn't handle well inner lists, stringifies them
+            raise ValidationError(detail=django_error.error_dict) from django_error
 
     def perform_create(self, serializer):
         self.validate_tile_data_and_save_resource(serializer)
