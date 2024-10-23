@@ -6,15 +6,11 @@ import Menubar from "primevue/menubar";
 
 import { routeNames } from "@/arches_lingo/routes.ts";
 import UserInteraction from "@/arches_lingo/components/user/UserInteraction.vue";
+import SearchDialogue from "@/arches_lingo/components/header/SearchDialogue.vue";
 
 const { $gettext } = useGettext();
 
 const items = ref([
-    {
-        label: $gettext("Search"),
-        icon: "fa fa-search",
-        name: routeNames.search,
-    },
     {
         label: $gettext("Advanced Search"),
         icon: "fa fa-file",
@@ -35,6 +31,7 @@ const items = ref([
             >
                 <h2>{{ $gettext("Arches Lingo") }}</h2>
             </RouterLink>
+            <SearchDialogue />
         </template>
         <template #item="{ item }">
             <RouterLink

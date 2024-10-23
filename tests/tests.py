@@ -242,7 +242,7 @@ class ViewTests(TestCase):
             with self.subTest(query=query):
                 response = self.client.get(reverse("api-search"), QUERY_STRING=query)
                 result = json.loads(response.content)
-                self.assertEqual(len(result), expected_result_count, result)
+                self.assertEqual(len(result["data"]), expected_result_count, result)
 
     def test_invalid_search_term(self):
         self.client.force_login(self.admin)

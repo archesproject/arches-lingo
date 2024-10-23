@@ -12,11 +12,6 @@ const items = ref([
         routeName: routeNames.root,
         linkName: $gettext("Home"),
     },
-    {
-        icon: "fa fa-search",
-        routeName: routeNames.search,
-        linkName: $gettext("Search"),
-    },
 ]);
 </script>
 
