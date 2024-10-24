@@ -8,6 +8,7 @@ from django.urls import reverse
 # these tests can be run from the command line via
 # python manage.py test tests.tests --settings="tests.test_settings"
 
+from arches.app.datatypes.datatypes import DataTypeFactory
 from arches.app.models.models import (
     Concept,
     GraphModel,
@@ -20,9 +21,7 @@ from arches.app.models.models import (
 )
 
 from arches_lingo.const import (
-    ENGLISH_VALUE_ID,
     CONCEPTS_GRAPH_ID,
-    LANGUAGE_CONCEPT_ID,
     SCHEMES_GRAPH_ID,
     TOP_CONCEPT_OF_NODE_AND_NODEGROUP,
     CLASSIFICATION_STATUS_NODEGROUP,
@@ -35,52 +34,72 @@ from arches_lingo.const import (
     SCHEME_NAME_CONTENT_NODE,
     SCHEME_NAME_LANGUAGE_NODE,
     SCHEME_NAME_TYPE_NODE,
-    PREF_LABEL_VALUE_ID,
+    LANGUAGES_LIST_ID,
+    LABEL_LIST_ID,
 )
 
 
-def setUpModule():
-    """Bootstrap just a few nodes as an alternative to loading the entire package."""
-    if not GraphModel.objects.filter(pk=SCHEMES_GRAPH_ID).exists():
+def localized_string(text, language="en", direction="ltr"):
+    return {language: {"value": text, "direction": direction}}
+
+
+class ViewTests(TestCase):
+    def setUpModule():
+        """Bootstrap just a few nodes as an alternative to loading the entire package."""
+
         GraphModel.objects.create(pk=SCHEMES_GRAPH_ID, isresource=True)
         GraphModel.objects.create(pk=CONCEPTS_GRAPH_ID, isresource=True)
 
-        for nodegroup_id, node_id, node_name, datatype in [
+        for nodegroup_id, node_id, node_name, datatype, config in [
             (
                 TOP_CONCEPT_OF_NODE_AND_NODEGROUP,
                 TOP_CONCEPT_OF_NODE_AND_NODEGROUP,
                 "top_concept_of",
-                "concept-list",
+                "resource-instance-list",
+                {
+                    "graphs": [{"graphid": SCHEMES_GRAPH_ID, "name": "Scheme"}],
+                    "searchDsl": "",
+                    "searchString": "",
+                },
             ),
             (
                 CLASSIFICATION_STATUS_NODEGROUP,
                 CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID,
                 "classification_status_ascribed_classification",
-                "concept-list",
+                "resource-instance",
+                {
+                    "graphs": [{"graphid": CONCEPTS_GRAPH_ID, "name": "Concept"}],
+                    "searchDsl": "",
+                    "searchString": "",
+                },
             ),
             (
                 SCHEME_NAME_NODEGROUP,
                 SCHEME_NAME_CONTENT_NODE,
                 "appellative_status_ascribed_name_content",
-                "concept-list",
+                "string",
+                {"en": ""},
             ),
             (
                 SCHEME_NAME_NODEGROUP,
                 SCHEME_NAME_LANGUAGE_NODE,
                 "appellative_status_ascribed_name_language",
-                "string",
+                "reference",
+                {"controlledList": LANGUAGES_LIST_ID, "multiValue": True},
             ),
             (
                 CONCEPT_NAME_NODEGROUP,
                 CONCEPT_NAME_CONTENT_NODE,
                 "appellative_status_ascribed_name_content",
-                "concept-list",
+                "string",
+                {"en": ""},
             ),
             (
                 CONCEPT_NAME_NODEGROUP,
                 CONCEPT_NAME_LANGUAGE_NODE,
                 "appellative_status_ascribed_name_language",
-                "string",
+                "reference",
+                {"controlledList": LANGUAGES_LIST_ID, "multiValue": True},
             ),
         ]:
             NodeGroup.objects.update_or_create(
@@ -93,45 +112,34 @@ def setUpModule():
                 name=node_name,
                 istopnode=False,
                 datatype=datatype,
+                config=config,
                 isrequired=datatype == "string",
             )
 
-    Concept.objects.get_or_create(
-        conceptid=LANGUAGE_CONCEPT_ID,
-        nodetype_id="Concept",
-    )
-    Value.objects.get_or_create(
-        concept_id=LANGUAGE_CONCEPT_ID,
-        valueid=ENGLISH_VALUE_ID,
-        valuetype_id="prefLabel",
-        value="en",
-    )
-    Relation.objects.get_or_create(
-        conceptfrom_id=LANGUAGE_CONCEPT_ID,
-        conceptto_id=LANGUAGE_CONCEPT_ID,
-        relationtype_id="narrower",
-    )
-
-
-def localized_string(text, language="en", direction="ltr"):
-    return {language: {"value": text, "direction": direction}}
-
-
-class ViewTests(TestCase):
     @classmethod
     def setUpTestData(cls):
+        cls.setUpModule()
         cls.admin = User.objects.get(username="admin")
 
         # Create a scheme with five concepts, each one narrower than the last,
         # and each concept after the top concept also narrower than the top.
         cls.scheme = ResourceInstance.objects.create(graph_id=SCHEMES_GRAPH_ID)
+
+        reference = DataTypeFactory().get_instance("reference")
+        language_config = {"controlledList": LANGUAGES_LIST_ID}
+        label_config = {"controlledList": LABEL_LIST_ID}
+        prefLabel_reference_dt = reference.transform_value_for_tile(
+            "prefLabel", **label_config
+        )
+        en_reference_dt = reference.transform_value_for_tile("en", **language_config)
+
         TileModel.objects.create(
             resourceinstance=cls.scheme,
             nodegroup_id=SCHEME_NAME_NODEGROUP,
             data={
                 SCHEME_NAME_CONTENT_NODE: localized_string("Test Scheme"),
-                SCHEME_NAME_TYPE_NODE: PREF_LABEL_VALUE_ID,
-                SCHEME_NAME_LANGUAGE_NODE: [ENGLISH_VALUE_ID],
+                SCHEME_NAME_TYPE_NODE: prefLabel_reference_dt,
+                SCHEME_NAME_LANGUAGE_NODE: en_reference_dt,
             },
         )
 
@@ -150,8 +158,8 @@ class ViewTests(TestCase):
                 nodegroup_id=CONCEPT_NAME_NODEGROUP,
                 data={
                     CONCEPT_NAME_CONTENT_NODE: localized_string(f"Concept {i + 1}"),
-                    CONCEPT_NAME_TYPE_NODE: PREF_LABEL_VALUE_ID,
-                    CONCEPT_NAME_LANGUAGE_NODE: [ENGLISH_VALUE_ID],
+                    CONCEPT_NAME_TYPE_NODE: prefLabel_reference_dt,
+                    CONCEPT_NAME_LANGUAGE_NODE: en_reference_dt,
                 },
             )
             # Create top concept/narrower tile
@@ -192,13 +200,12 @@ class ViewTests(TestCase):
 
     def test_get_concept_trees(self):
         self.client.force_login(self.admin)
-        with self.assertNumQueries(6):
+        with self.assertNumQueries(5):
             # 1: session
             # 2: auth
-            # 3: select relations (to find languages)
-            # 4: select broader tiles, subquery for labels
-            # 5: select top concept tiles, subquery for labels
-            # 6: select schemes, subquery for labels
+            # 3: select broader tiles, subquery for labels
+            # 4: select top concept tiles, subquery for labels
+            # 5: select schemes, subquery for labels
             response = self.client.get(reverse("api-concepts"))
 
         self.assertEqual(response.status_code, 200)
