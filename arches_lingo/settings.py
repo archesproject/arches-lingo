@@ -135,6 +135,7 @@ INSTALLED_APPS = (
     "django.contrib.staticfiles",
     "django.contrib.gis",
     "django_hosts",
+    "rest_framework",
     "arches_vue_utils",
     "arches",
     "arches.app.models",
@@ -150,6 +151,15 @@ INSTALLED_APPS = (
 )
 
 INSTALLED_APPS += ("arches.app",)
+
+REST_FRAMEWORK = {
+    # Use Django's standard `django.contrib.auth` permissions,
+    # or allow read-only access for unauthenticated users.
+    # TODO: choose
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly"
+    ]
+}
 
 ROOT_HOSTCONF = "arches_lingo.hosts"
 DEFAULT_HOST = "arches_lingo"

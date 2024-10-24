@@ -5,6 +5,7 @@ from django.urls import include, path
 
 from arches_lingo.views.root import LingoRootView
 from arches_lingo.views.api.concepts import ConceptTreeView, ValueSearchView
+from arches_lingo.views.api.pythonic_models import ConceptDetailView, SchemeDetailView
 
 urlpatterns = [
     path("", LingoRootView.as_view(), name="root"),
@@ -14,6 +15,11 @@ urlpatterns = [
     path("schemes", LingoRootView.as_view(), name="schemes"),
     path("api/concepts", ConceptTreeView.as_view(), name="api-concepts"),
     path("api/search", ValueSearchView.as_view(), name="api-search"),
+    # TODO: polish route names
+    path(
+        "api/concepts-drf/<uuid:pk>", ConceptDetailView.as_view(), name="concepts-drf"
+    ),
+    path("api/schemes-drf/<uuid:pk>", SchemeDetailView.as_view(), name="schemes-drf"),
     path("", include("arches_references.urls")),
 ]
 
