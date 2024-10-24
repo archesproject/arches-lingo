@@ -7,6 +7,7 @@
 {% block arches_urls %}
 {{ block.super }}
 <div class="arches-urls"
+    api_concepts="{% url 'api-concepts' %}"
     api_search="{% url 'api-search' %}"
 ></div>
 {% endblock arches_urls %}

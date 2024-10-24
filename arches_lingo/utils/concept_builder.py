@@ -22,14 +22,10 @@ from arches_lingo.const import (
     CONCEPT_NAME_CONTENT_NODE,
     CONCEPT_NAME_LANGUAGE_NODE,
     CONCEPT_NAME_TYPE_NODE,
-    HIDDEN_LABEL_VALUE_ID,
-    LANGUAGE_CONCEPT_ID,
     SCHEME_NAME_NODEGROUP,
     SCHEME_NAME_CONTENT_NODE,
     SCHEME_NAME_LANGUAGE_NODE,
     SCHEME_NAME_TYPE_NODE,
-    PREF_LABEL_VALUE_ID,
-    ALT_LABEL_VALUE_ID,
 )
 from arches_lingo.utils.query_expressions import JsonbArrayElements
 
@@ -43,8 +39,6 @@ class ConceptBuilder:
     def __init__(self):
         self.schemes = ResourceInstance.objects.none()
 
-        # key=concept valueid (str) val=language code
-        self.language_concepts: dict[str:str] = {}
         # key=scheme resourceid (str) val=set of concept resourceids (str)
         self.top_concepts: dict[str : set[str]] = defaultdict(set)
         # key=concept resourceid (str) val=set of concept resourceids (str)
@@ -66,7 +60,6 @@ class ConceptBuilder:
     def read_from_cache(self):
         from_cache = cache.get_many(
             [
-                "language_concepts",
                 "top_concepts",
                 "narrower_concepts",
                 "schemes",
@@ -76,7 +69,6 @@ class ConceptBuilder:
             ]
         )
         try:
-            self.language_concepts = from_cache["language_concepts"]
             self.top_concepts = from_cache["top_concepts"]
             self.narrower_concepts = from_cache["narrower_concepts"]
             self.schemes = from_cache["schemes"]
@@ -87,12 +79,10 @@ class ConceptBuilder:
             self.rebuild_cache()
 
     def rebuild_cache(self):
-        self.language_concepts_map()
         self.top_concepts_map()
         self.narrower_concepts_map()
         self.populate_schemes()
 
-        cache.set("language_concepts", self.language_concepts)
         cache.set("top_concepts", self.top_concepts)
         cache.set("narrower_concepts", self.narrower_concepts)
         cache.set("schemes", self.schemes)
@@ -100,16 +90,6 @@ class ConceptBuilder:
         # Reverse trees.
         cache.set("broader_concepts", self.broader_concepts)
         cache.set("schemes_by_top_concept", self.schemes_by_top_concept)
-
-    @staticmethod
-    def human_label_type(value_id):
-        if value_id == PREF_LABEL_VALUE_ID:
-            return "prefLabel"
-        if value_id == ALT_LABEL_VALUE_ID:
-            return "altLabel"
-        if value_id == HIDDEN_LABEL_VALUE_ID:
-            return "hidden"
-        return "unknown"
 
     @staticmethod
     def resources_from_tiles(lookup_expression: str):
@@ -136,20 +116,6 @@ class ConceptBuilder:
                 resourceinstance_id=outer, nodegroup_id=nodegroup_id
             ).values("data")
         )
-
-    def language_concepts_map(self):
-        language_preflabels = ConceptValue.objects.filter(
-            Exists(
-                Relation.objects.filter(
-                    conceptfrom=LANGUAGE_CONCEPT_ID,
-                    conceptto=OuterRef("concept_id"),
-                    relationtype="narrower",
-                )
-            ),
-            valuetype="prefLabel",
-        )
-        for language_label in language_preflabels:
-            self.language_concepts[str(language_label.pk)] = language_label.value
 
     def top_concepts_map(self):
         top_concept_of_tiles = (
@@ -198,15 +164,16 @@ class ConceptBuilder:
         return data
 
     def serialize_scheme_label(self, label_tile: dict):
-        lang_code = self.language_concepts[label_tile[SCHEME_NAME_LANGUAGE_NODE][0]]
+        valuetype_id = label_tile[SCHEME_NAME_TYPE_NODE][0]["labels"][0]["value"]
+        language_id = label_tile[SCHEME_NAME_LANGUAGE_NODE][0]["labels"][0]["value"]
         localized_string_objs = label_tile[SCHEME_NAME_CONTENT_NODE].values()
         try:
             value = next(iter(localized_string_objs))["value"]
         except (StopIteration, KeyError):
             value = "Unknown"
         return {
-            "valuetype": self.human_label_type(label_tile[SCHEME_NAME_TYPE_NODE]),
-            "language": lang_code,
+            "valuetype_id": valuetype_id,
+            "language_id": language_id,
             "value": value,
         }
 
@@ -256,14 +223,15 @@ class ConceptBuilder:
         )
 
     def serialize_concept_label(self, label_tile: dict):
-        lang_code = self.language_concepts[label_tile[CONCEPT_NAME_LANGUAGE_NODE][0]]
+        valuetype_id = label_tile[CONCEPT_NAME_TYPE_NODE][0]["labels"][0]["value"]
+        language_id = label_tile[CONCEPT_NAME_LANGUAGE_NODE][0]["labels"][0]["value"]
         localized_string_objs = label_tile[CONCEPT_NAME_CONTENT_NODE].values()
         try:
             value = next(iter(localized_string_objs))["value"]
         except (StopIteration, KeyError):
             value = "Unknown"
         return {
-            "valuetype": self.human_label_type(label_tile[CONCEPT_NAME_TYPE_NODE]),
-            "language": lang_code,
+            "valuetype_id": valuetype_id,
+            "language_id": language_id,
             "value": value,
         }
