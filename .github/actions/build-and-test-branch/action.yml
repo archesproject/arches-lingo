@@ -33,6 +33,7 @@ runs:
 
     - name: Ensure frontend configuration files exist
       run: |
+          export ARCHES_DJANGO_DEBUG=True
           python manage.py check
       shell: bash
 

@@ -1,0 +1,81 @@
+name: Build Container Image
+
+on:
+  push:
+    branches:
+      - "deploy"
+      - "test/*"
+  repository_dispatch:
+    type:
+      - deploy_project
+jobs:
+  build:
+    name: Build Docker Image and Push
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: arches-lingo
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-west-1
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build, tag, and push image to Amazon ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: lingo-repository
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          # Build a docker container and
+          # push it to ECR so that it can
+          # be deployed to ECS.
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f arches-lingo/docker/production/Dockerfile ./arches-lingo
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+
+      - name: Fill in the new image ID in the Amazon ECS task definition for service
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: arches-lingo/docker/deploy/task-definition.json
+          container-name: arches
+          image: ${{ steps.build-image.outputs.image }}
+
+      - name: Fill in the new image ID in the Amazon ECS task definition to reset db
+        id: task-def-run-reset
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: arches-lingo/docker/deploy/task-definition-reset-database.json
+          container-name: arches
+          image: ${{ steps.build-image.outputs.image }}
+
+      - name: Deploy Reset Amazon ECS task definition to reset db
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        id: task-def-deploy-reset
+        with:
+          task-definition: ${{ steps.task-def-run-reset.outputs.task-definition }}
+          cluster: lingo-cluster
+
+      - name: Reset database
+        id: run-reset-task
+        run: |
+          # Build a docker container and
+          # push it to ECR so that it can
+          # be deployed to ECS.
+          aws ecs run-task --cluster lingo-cluster --task-definition ${{ steps.task-def-deploy-reset.outputs.task-definition-arn }} --count 1 --launch-type FARGATE --network-configuration "awsvpcConfiguration={subnets=['subnet-0d66c5e9e3c174519','subnet-0ad21fa3dbc479860'],securityGroups=['sg-04ca486cc6239259b']}"
+
+      - name: Deploy Amazon ECS task definition to arches service
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: lingo-arches-service
+          cluster: lingo-cluster

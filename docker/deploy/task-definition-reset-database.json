@@ -1,0 +1,91 @@
+{
+    "requiresCompatibilities": [
+        "FARGATE"
+    ],
+    "inferenceAccelerators": [],
+    "containerDefinitions": [
+        {
+            "name": "arches",
+            "image": "ecs-devops-sandbox-repository:00000",
+            "resourceRequirements": null,
+            "essential": true,
+            "portMappings": [
+                {
+                    "containerPort": "443",
+                    "protocol": "tcp"
+                }
+            ],
+            "healthCheck": {
+                "command": [
+                    "CMD-SHELL",
+                    "test $(echo | ps aux | grep -c manage.py) > 1 || exit 1"
+                ]
+            },
+            "command": [
+                "reset_database"
+            ],
+            "environment": [
+                {
+                    "name": "ARCHES_ES_SECRET_ID",
+                    "value": "prod/lingo/elastic"
+                },
+                {
+                    "name": "ARCHES_DB_SECRET_ID",
+                    "value": "archesDbSecretC996653C-9RvtCl4Ud1ud"
+                },
+                {
+                    "name": "ARCHES_PUBLIC_SERVER_ADDRESS",
+                    "value": "https://lingo.dev.fargeo.com"
+                },
+                {
+                    "name": "ARCHES_SECRETS_MODE",
+                    "value": "AWS"
+                },
+                {
+                    "name": "ARCHES_S3FILEOVERWRITE",
+                    "value": "False"
+                },
+                {
+                    "name": "ARCHES_ALLOWED_HOSTS",
+                    "value": "*"
+                },
+                {
+                    "name": "ARCHES_ESPROTOCOL",
+                    "value": "https"
+                },
+                {
+                    "name": "ARCHES_ESVALIDATE",
+                    "value": "False"
+                },
+                {
+                    "name": "ARCHES_PROJECT",
+                    "value": "arches-lingo"
+                },
+                {
+                    "name": "ARCHES_STORAGEBACKEND",
+                    "value": "storages.backends.s3.S3Storage"
+                },
+                {
+                    "name": "ARCHES_S3BUCKETNAME",
+                    "value": "fargeo-lingo-media-files"
+                }
+            ],
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-stream-prefix": "arches",
+                    "awslogs-group": "lingo-base-infrastructure-lingocontainerloggroup79B923D7-o5bIiMZjbylI",
+                    "awslogs-region": "us-west-1"
+                }
+            }
+        }
+    ],
+    "volumes": [],
+    "networkMode": "awsvpc",
+    "memory": "8192",
+    "cpu": "4096",
+    "executionRoleArn": "arn:aws:iam::889276910795:role/arches-execution-role-lingo",
+    "family": "reset-database-container-lingo",
+    "taskRoleArn": "arn:aws:iam::889276910795:role/arches-task-role-lingo",
+    "placementConstraints": []
+}
