@@ -9,14 +9,11 @@ from django.urls import reverse
 # python manage.py test tests.tests --settings="tests.test_settings"
 
 from arches.app.models.models import (
-    Concept,
     GraphModel,
     Node,
     NodeGroup,
-    Relation,
     ResourceInstance,
     TileModel,
-    Value,
 )
 
 from arches_lingo.const import (
@@ -42,7 +39,8 @@ def localized_string(text, language="en", direction="ltr"):
 
 
 class ViewTests(TestCase):
-    def setUpModule():
+    @classmethod
+    def mock_concept_and_scheme_graphs(cls):
         """Bootstrap just a few nodes as an alternative to loading the entire package."""
 
         GraphModel.objects.create(pk=SCHEMES_GRAPH_ID, isresource=True)
@@ -116,7 +114,7 @@ class ViewTests(TestCase):
 
     @classmethod
     def setUpTestData(cls):
-        cls.setUpModule()
+        cls.mock_concept_and_scheme_graphs()
         cls.admin = User.objects.get(username="admin")
 
         # Create a scheme with five concepts, each one narrower than the last,
