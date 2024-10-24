@@ -8,7 +8,6 @@ from django.urls import reverse
 # these tests can be run from the command line via
 # python manage.py test tests.tests --settings="tests.test_settings"
 
-from arches.app.datatypes.datatypes import DataTypeFactory
 from arches.app.models.models import (
     Concept,
     GraphModel,
@@ -35,7 +34,6 @@ from arches_lingo.const import (
     SCHEME_NAME_LANGUAGE_NODE,
     SCHEME_NAME_TYPE_NODE,
     LANGUAGES_LIST_ID,
-    LABEL_LIST_ID,
 )
 
 
@@ -125,14 +123,35 @@ class ViewTests(TestCase):
         # and each concept after the top concept also narrower than the top.
         cls.scheme = ResourceInstance.objects.create(graph_id=SCHEMES_GRAPH_ID)
 
-        reference = DataTypeFactory().get_instance("reference")
-        language_config = {"controlledList": LANGUAGES_LIST_ID}
-        label_config = {"controlledList": LABEL_LIST_ID}
-        prefLabel_reference_dt = reference.transform_value_for_tile(
-            "prefLabel", **label_config
-        )
-        en_reference_dt = reference.transform_value_for_tile("en", **language_config)
-
+        prefLabel_reference_dt = [
+            {
+                "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/2e3a2045-b44e-47fc-a27b-3078b17e08e4",
+                "labels": [
+                    {
+                        "id": "6ac8e471-476e-4fd0-b276-86e01a17bcc8",
+                        "value": "prefLabel",
+                        "language_id": "en",
+                        "list_item_id": "2e3a2045-b44e-47fc-a27b-3078b17e08e4",
+                        "valuetype_id": "prefLabel",
+                    }
+                ],
+                "listid": "deb847fc-f4c3-4e82-be19-04641579f129",
+            }
+        ]
+        en_reference_dt = [
+            {
+                "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/845cc417-ef77-4582-9271-ffba5e4cabc9",
+                "labels": [
+                    {
+                        "id": "de978fd0-2819-4855-8858-8c089780f32c",
+                        "value": "en",
+                        "language_id": "en",
+                        "list_item_id": "845cc417-ef77-4582-9271-ffba5e4cabc9",
+                        "valuetype_id": "prefLabel",
+                    }
+                ],
+            }
+        ]
         TileModel.objects.create(
             resourceinstance=cls.scheme,
             nodegroup_id=SCHEME_NAME_NODEGROUP,
