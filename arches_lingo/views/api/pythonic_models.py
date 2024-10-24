@@ -15,7 +15,7 @@ from arches.app.utils.permission_backend import (
 from arches_lingo.serializers import ConceptSerializer, SchemeSerializer
 
 
-class PythonicModelAPIMixin:
+class ArchesModelAPIMixin:
     def get_queryset(self):
         fields = self.serializer_class.Meta.fields
         if fields == "__all__":
@@ -64,9 +64,8 @@ class PythonicModelAPIMixin:
         The stated reasons were:
             - to avoid needing to know about big & scary full_clean(). Fine.
             - to force expressing validation logic outside of models.
-        but to adhere to *that* here would require some way of generically
-        validating incoming tile data without knowledge of the resource/graph,
-        which isn't practical under this implementation.
+        but adhering to that second point would be difficult in light of
+        how dynamically these fields are constructed.
 
         Discussion:
         https://github.com/encode/django-rest-framework/discussions/7850
@@ -84,13 +83,13 @@ class PythonicModelAPIMixin:
         self.validate_tile_data_and_save_resource(serializer)
 
 
-class SchemeDetailView(PythonicModelAPIMixin, RetrieveUpdateDestroyAPIView):
+class SchemeDetailView(ArchesModelAPIMixin, RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = SchemeSerializer
     graph_slug = "scheme"
 
 
-class ConceptDetailView(PythonicModelAPIMixin, RetrieveUpdateDestroyAPIView):
+class ConceptDetailView(ArchesModelAPIMixin, RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = ConceptSerializer
     graph_slug = "concept"

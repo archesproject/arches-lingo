@@ -17,8 +17,8 @@ renderers.JSONRenderer.encoder_class = JSONSerializer
 renderers.JSONOpenAPIRenderer.encoder_class = JSONSerializer
 
 
-class PythonicModelSerializer(serializers.ModelSerializer):
-    # TODO: move into core / or arches-rest-framework?
+class ArchesModelSerializer(serializers.ModelSerializer):
+    # TODO: move into core
     DATATYPE_FIELD_MAPPING = {
         "string": fields.CharField(null=True),  # XXX
         "number": fields.FloatField(null=True),
@@ -94,19 +94,19 @@ class PythonicModelSerializer(serializers.ModelSerializer):
         return self.build_standard_field(field_name, model_field)
 
 
-### end code that should go in arches rest framework
+### end code that should go in core arches
 
 ### BEGIN application level code
 
 
-class SchemeSerializer(PythonicModelSerializer):
+class SchemeSerializer(ArchesModelSerializer):
     class Meta:
         model = ResourceInstance
         graph_slug = "scheme"
         fields = "__all__"
 
 
-class ConceptSerializer(PythonicModelSerializer):
+class ConceptSerializer(ArchesModelSerializer):
     class Meta:
         model = ResourceInstance
         graph_slug = "concept"
