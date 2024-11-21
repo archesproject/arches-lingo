@@ -1,6 +1,6 @@
 import arches from "arches";
 import Cookies from "js-cookie";
-import type { SchemeNamespace } from "@/arches_lingo/types";
+import type { SchemeInstance } from "@/arches_lingo/types";
 
 function getToken() {
     const token = Cookies.get("csrftoken");
@@ -45,9 +45,40 @@ export const fetchSchemeNamespace = async (schemeId: string) => {
     return parsed;
 };
 
+export const fetchTextualWorkRdmSystemList = async () => {
+    const response = await fetch(arches.urls.api_textualwork_list);
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
+export const fetchSchemeCreation = async (schemeId: string) => {
+    const response = await fetch(arches.urls.api_scheme_creation(schemeId));
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
+export const updateSchemeCreation = async (
+    schemeId: string,
+    schemeInstance: SchemeInstance,
+) => {
+    const response = await fetch(arches.urls.api_scheme_creation(schemeId), {
+        method: "PATCH",
+        headers: {
+            "X-CSRFTOKEN": getToken(),
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(schemeInstance),
+    });
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
 export const updateSchemeNamespace = async (
     schemeId: string,
-    schemeNamespace: SchemeNamespace,
+    schemeNamespace: SchemeInstance,
 ) => {
     const response = await fetch(arches.urls.api_uri_namespace(schemeId), {
         method: "PATCH",

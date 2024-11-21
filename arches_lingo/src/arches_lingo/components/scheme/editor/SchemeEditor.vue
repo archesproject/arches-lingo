@@ -9,7 +9,7 @@ import TabPanels from "primevue/tabpanels";
 import TabPanel from "primevue/tabpanel";
 import SchemeNamespace from "../report/SchemeNamespace.vue";
 import { onBeforeUpdate, onUpdated, ref } from "vue";
-
+import SchemeStandard from "../report/SchemeStandard.vue";
 type sectionTypes = typeof SchemeNamespace;
 
 const { $gettext } = useGettext();
@@ -24,6 +24,11 @@ const schemeComponents = [
         component: SchemeNamespace,
         id: "namespace",
         editorTabName: $gettext("Scheme Namespace"),
+    },
+    {
+        component: SchemeStandard,
+        id: "standard",
+        editorTabName: $gettext("Scheme Standards Followed"),
     },
 ];
 
@@ -109,7 +114,7 @@ async function updateScheme() {
                                 :is="component.component"
                                 v-bind="{ mode: EDIT }"
                                 :ref="(el) => getRef(el, index)"
-                                v-on="onUpdated"
+                                v-on="{ updated: onUpdated }"
                             />
                         </TabPanel>
                     </template>
@@ -131,7 +136,7 @@ async function updateScheme() {
     display: flex;
     align-items: center;
 }
-.header div h2 {
+.header div h3 {
     flex: 1;
 }
 </style>
