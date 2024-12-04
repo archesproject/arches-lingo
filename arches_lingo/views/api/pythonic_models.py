@@ -15,6 +15,7 @@ from arches_lingo.serializers import (
 class SchemeListCreateView(ArchesModelAPIMixin, ListCreateAPIView):
     permission_classes = [RDMAdministrator]
     serializer_class = SchemeSerializer
+    pagination_class = None
 
 
 class SchemeDetailView(ArchesModelAPIMixin, RetrieveUpdateDestroyAPIView):

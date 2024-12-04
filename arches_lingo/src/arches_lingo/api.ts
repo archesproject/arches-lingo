@@ -86,3 +86,10 @@ export const fetchConcepts = async () => {
     if (!response.ok) throw new Error(parsed.message || response.statusText);
     return parsed;
 };
+
+export const fetchSchemes = async () => {
+    const response = await fetch(arches.urls.api_schemes);
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};

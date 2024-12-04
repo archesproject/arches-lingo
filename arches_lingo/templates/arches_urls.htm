@@ -10,5 +10,6 @@
     api_concepts="{% url 'api-concepts' %}"
     api_search="{% url 'api-search' %}"
     api_uri_namespace='(pluginid)=>{return "{% url "api-uri-components" "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa" %}".replace("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", pluginid)}'
+    api_schemes="{% url 'schemes-list-create' %}"
 ></div>
 {% endblock arches_urls %}
