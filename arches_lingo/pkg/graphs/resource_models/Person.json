@@ -20684,7 +20684,7 @@
                     "sourcebranchpublication_id": null
                 },
                 {
-                    "alias": "data_assignment_",
+                    "alias": "data_assignment",
                     "config": {},
                     "datatype": "semantic",
                     "description": "",
@@ -20696,7 +20696,7 @@
                     "isrequired": false,
                     "issearchable": true,
                     "istopnode": false,
-                    "name": "data_assignment ",
+                    "name": "data_assignment",
                     "nodegroup_id": "1b7fd2dc-8957-11ee-8c66-2364610b9df3",
                     "nodeid": "1b7fd2dc-8957-11ee-8c66-2364610b9df3",
                     "ontologyclass": "http://www.cidoc-crm.org/cidoc-crm/E13_Attribute_Assignment",
@@ -38974,7 +38974,7 @@
                     "sourcebranchpublication_id": null
                 },
                 {
-                    "alias": "professional_activity_identifier_data_assignment_",
+                    "alias": "professional_activity_identifier_data_assignment",
                     "config": {},
                     "datatype": "semantic",
                     "description": "",
@@ -38986,7 +38986,7 @@
                     "isrequired": false,
                     "issearchable": true,
                     "istopnode": false,
-                    "name": "professional_activity_identifier_data_assignment ",
+                    "name": "professional_activity_identifier_data_assignment",
                     "nodegroup_id": "b1507408-894b-11ee-8c66-2364610b9df3",
                     "nodeid": "b1507408-894b-11ee-8c66-2364610b9df3",
                     "ontologyclass": "http://www.cidoc-crm.org/cidoc-crm/E13_Attribute_Assignment",

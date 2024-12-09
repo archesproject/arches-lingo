@@ -960,14 +960,14 @@
                         "i18n_properties": [
                             "placeholder"
                         ],
-                        "label": "Standards / Sources ",
+                        "label": "Standards / Sources",
                         "placeholder": {
                             "en": ""
                         }
                     },
                     "id": "7e5c3bed-423c-11ee-8a8d-11afefc4bff7",
                     "label": {
-                        "en": "Standards / Sources "
+                        "en": "Standards / Sources"
                     },
                     "node_id": "7e5c3be5-423c-11ee-8a8d-11afefc4bff7",
                     "sortorder": 1,
@@ -2863,7 +2863,7 @@
                     "sourcebranchpublication_id": null
                 },
                 {
-                    "alias": "creation_sources_",
+                    "alias": "creation_sources",
                     "config": {
                         "graphs": [
                             {
@@ -2889,7 +2889,7 @@
                     "isrequired": false,
                     "issearchable": true,
                     "istopnode": false,
-                    "name": "creation_sources ",
+                    "name": "creation_sources",
                     "nodegroup_id": "7e5c3bc5-423c-11ee-8a8d-11afefc4bff7",
                     "nodeid": "7e5c3be5-423c-11ee-8a8d-11afefc4bff7",
                     "ontologyclass": "http://www.cidoc-crm.org/cidoc-crm/E33_Linguistic_Object",

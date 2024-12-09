@@ -11228,7 +11228,7 @@
                     "sourcebranchpublication_id": null
                 },
                 {
-                    "alias": "standards_sources_",
+                    "alias": "standards_sources",
                     "config": {
                         "graphs": [
                             {
@@ -11249,7 +11249,7 @@
                     "isrequired": false,
                     "issearchable": true,
                     "istopnode": false,
-                    "name": "standards_sources ",
+                    "name": "standards_sources",
                     "nodegroup_id": "5b8894a5-48aa-11ee-8a8d-11afefc4bff7",
                     "nodeid": "5b88950a-48aa-11ee-8a8d-11afefc4bff7",
                     "ontologyclass": "http://www.cidoc-crm.org/cidoc-crm/E33_Linguistic_Object",

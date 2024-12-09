@@ -5922,7 +5922,7 @@
                     "sourcebranchpublication_id": null
                 },
                 {
-                    "alias": "concept_",
+                    "alias": "concept",
                     "config": {},
                     "datatype": "semantic",
                     "description": "",
@@ -6807,7 +6807,7 @@
                 ]
             },
             "root": {
-                "alias": "concept_",
+                "alias": "concept",
                 "config": {},
                 "datatype": "semantic",
                 "description": "",
