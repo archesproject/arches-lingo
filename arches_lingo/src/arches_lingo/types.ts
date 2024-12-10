@@ -1,6 +1,7 @@
 import type { Ref } from "vue";
 import type { TreeNode } from "primevue/treenode";
 import type { Label } from "@/arches_vue_utils/types.ts";
+import type { EDIT, VIEW } from "./constants";
 
 export interface User {
     first_name: string;
@@ -46,9 +47,23 @@ export interface ControlledListItem {
     labels: ControlledListeItemLabelValue[];
 }
 
+export interface ResourceInstanceReference {
+    resourceId: string;
+    ontologyProperty: string;
+    resourceXresourceId?: string;
+    inverseOntologyProperty: string;
+    display_value?: string;
+}
+
+export interface ResourceInstanceResult {
+    resourceinstanceid: string;
+    descriptors: { [key: string]: { name: string } };
+}
 interface ControlledListItemValue {
     value: string;
 }
+
+export type DataComponentMode = typeof EDIT | typeof VIEW;
 
 export interface SchemeNamespaceUpdate {
     namespace?: {
@@ -57,14 +72,15 @@ export interface SchemeNamespaceUpdate {
     };
 }
 
-export interface SchemeNamespace {
+export interface SchemeInstance {
     namespace?: {
         namespace_name: string;
         namespace_type: ControlledListItem[];
     };
+    creation?: {
+        creation_sources_: ResourceInstanceReference[];
+    };
 }
-
-export type DataComponentMode = "edit" | "view";
 
 export interface SchemeResource {
     resourceinstanceid: string;

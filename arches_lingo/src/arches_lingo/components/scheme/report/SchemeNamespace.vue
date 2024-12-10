@@ -12,13 +12,12 @@ import {
 import type {
     DataComponentMode,
     SchemeNamespaceUpdate,
-    SchemeNamespace,
+    SchemeInstance,
 } from "@/arches_lingo/types";
+import { VIEW, EDIT } from "@/arches_lingo/constants.ts";
 
 const { $gettext } = useGettext();
-const VIEW = "view";
-const EDIT = "edit";
-const schemeNamespace = ref<SchemeNamespace>();
+const schemeNamespace = ref<SchemeInstance>();
 const route = useRoute();
 
 defineProps<{
@@ -36,7 +35,7 @@ onMounted(async () => {
 async function save() {
     await updateSchemeNamespace(
         route.params.id as string,
-        schemeNamespace.value as SchemeNamespace,
+        schemeNamespace.value as SchemeInstance,
     );
 }
 
@@ -45,7 +44,7 @@ async function getSectionValue() {
     schemeNamespace.value = response;
 }
 
-const onNamespaceNameUpdate = (val: string) => {
+function onNamespaceNameUpdate(val: string) {
     const namespaceValue = schemeNamespace.value as SchemeNamespaceUpdate;
     if (!namespaceValue?.namespace) {
         namespaceValue.namespace = {
@@ -56,7 +55,7 @@ const onNamespaceNameUpdate = (val: string) => {
         namespaceValue.namespace.namespace_name = val;
         namespaceValue.namespace.namespace_type = [{ value: "namespace" }];
     }
-};
+}
 </script>
 
 <template>
