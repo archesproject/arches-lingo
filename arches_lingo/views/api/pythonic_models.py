@@ -53,6 +53,7 @@ class SchemeCreationView(ArchesModelAPIMixin, RetrieveUpdateDestroyAPIView):
 class TextualWorkRdmSystemSerializerView(ArchesModelAPIMixin, ListCreateAPIView):
     permission_classes = [RDMAdministrator]
     serializer_class = TextualWorkRdmSystemSerializer
+    pagination_class = None
 
 
 class ConceptDetailView(ArchesModelAPIMixin, RetrieveUpdateDestroyAPIView):

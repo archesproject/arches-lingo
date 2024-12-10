@@ -39,7 +39,7 @@ onMounted(async () => {
 
 async function getOptions(): Promise<ResourceInstanceReference[]> {
     const options = await fetchTextualWorkRdmSystemList();
-    const results = options.results.map((option: ResourceInstanceResult) => {
+    const results = options.map((option: ResourceInstanceResult) => {
         const result: ResourceInstanceReference = {
             display_value: option.descriptors[selectedLanguage.value.code].name,
             resourceId: option.resourceinstanceid,
