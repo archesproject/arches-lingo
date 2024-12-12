@@ -14,7 +14,7 @@ import {
     fetchTextualWorkRdmSystemList,
     updateSchemeCreation,
 } from "@/arches_lingo/api.ts";
-import ResourceInstanceRelationships from "../../generic/ResourceInstanceRelationships.vue";
+import ResourceInstanceRelationships from "@/arches_lingo/components/generic/ResourceInstanceRelationships.vue";
 import {
     selectedLanguageKey,
     VIEW,
