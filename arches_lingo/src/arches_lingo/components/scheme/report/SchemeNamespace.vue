@@ -14,7 +14,7 @@ import type {
     SchemeNamespaceUpdate,
     SchemeInstance,
 } from "@/arches_lingo/types";
-import { VIEW, EDIT } from "@/arches_lingo/constants.ts";
+import { VIEW, EDIT, OPEN_EDITOR } from "@/arches_lingo/constants.ts";
 
 const { $gettext } = useGettext();
 const schemeNamespace = ref<SchemeInstance>();
@@ -24,7 +24,7 @@ defineProps<{
     mode?: DataComponentMode;
 }>();
 
-defineEmits(["openEditor"]);
+defineEmits([OPEN_EDITOR]);
 
 defineExpose({ save, getSectionValue });
 
@@ -63,7 +63,7 @@ function onNamespaceNameUpdate(val: string) {
         <div v-if="!mode || mode === VIEW">
             <SchemeReportSection
                 :title-text="$gettext('Scheme Namespace')"
-                @open-editor="$emit('openEditor')"
+                @open-editor="$emit(OPEN_EDITOR)"
             >
                 <NonLocalizedString
                     :value="schemeNamespace?.namespace?.namespace_name"

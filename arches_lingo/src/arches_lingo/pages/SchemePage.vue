@@ -2,6 +2,7 @@
 import { ref } from "vue";
 import Splitter from "primevue/splitter";
 import SplitterPanel from "primevue/splitterpanel";
+import SchemeLabel from "@/arches_lingo/components/scheme/report/SchemeLabel.vue";
 import SchemeLicense from "@/arches_lingo/components/scheme/report/SchemeLicense.vue";
 import SchemeNote from "@/arches_lingo/components/scheme/report/SchemeNote.vue";
 import SchemeNamespace from "@/arches_lingo/components/scheme/report/SchemeNamespace.vue";
@@ -12,7 +13,10 @@ import SchemeEditor from "@/arches_lingo/components/scheme/editor/SchemeEditor.v
 const editorVisible = ref(false);
 const sectionVisible = ref(true);
 const editorTab = ref<string>();
+const activeEditorArgs = ref<Array<object>>([]);
+
 type sectionTypes =
+    | typeof SchemeLabel
     | typeof SchemeNamespace
     | typeof SchemeLicense
     | typeof SchemeStandard
@@ -35,10 +39,11 @@ const onClose = () => {
     sectionVisible.value = true;
 };
 
-const onOpenEditor = (tab: string) => {
+const onOpenEditor = (tab: string, ...args: object[]) => {
     editorTab.value = tab;
     editorVisible.value = true;
     sectionVisible.value = true;
+    activeEditorArgs.value = args;
 };
 const onUpdated = () => {
     childRefs.value.forEach((ref) => {
@@ -47,6 +52,7 @@ const onUpdated = () => {
 };
 
 const components = [
+    { component: SchemeLabel, id: "label", props: {} },
     { component: SchemeNote, id: "note", props: {} },
     { component: SchemeAuthority, id: "authority", props: {} },
     { component: SchemeStandard, id: "standard", props: {} },
@@ -74,7 +80,10 @@ const getRef = (el: object | null, index: number) => {
                     :is="component.component"
                     :ref="(el) => getRef(el, index)"
                     v-bind="component.props"
-                    @open-editor="onOpenEditor(component.id)"
+                    @open-editor="
+                        (...args: object[]) =>
+                            onOpenEditor(component.id, ...args)
+                    "
                 />
             </template>
         </SplitterPanel>
@@ -87,6 +96,7 @@ const getRef = (el: object | null, index: number) => {
                 v-if="editorTab"
                 :editor-max="sectionVisible"
                 :active-tab="editorTab"
+                :active-args="activeEditorArgs"
                 @maximize="onMaximize"
                 @side="onSide"
                 @close="onClose"

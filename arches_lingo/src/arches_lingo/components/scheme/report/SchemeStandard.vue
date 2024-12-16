@@ -15,21 +15,25 @@ import {
     updateSchemeCreation,
 } from "@/arches_lingo/api.ts";
 import ResourceInstanceRelationships from "../../generic/ResourceInstanceRelationships.vue";
-import { selectedLanguageKey, VIEW, EDIT } from "@/arches_lingo/constants.ts";
+import {
+    selectedLanguageKey,
+    VIEW,
+    EDIT,
+    OPEN_EDITOR,
+} from "@/arches_lingo/constants.ts";
 import type { Language } from "@/arches_vue_utils/types.ts";
 
-const OPEN_EDITOR = "openEditor";
 const schemeInstance = ref<SchemeInstance>();
 const textualWorkOptions = ref<ResourceInstanceReference[]>();
 const route = useRoute();
 const selectedLanguage = inject(selectedLanguageKey) as Ref<Language>;
 const { $gettext } = useGettext();
 
-defineProps<{
+const { mode = VIEW } = defineProps<{
     mode?: DataComponentMode;
 }>();
 
-const emits = defineEmits(["openEditor"]);
+const emits = defineEmits([OPEN_EDITOR]);
 
 defineExpose({ save, getSectionValue });
 
