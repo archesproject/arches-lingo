@@ -28,3 +28,5 @@ export const ENGLISH = {
     name: "English",
     scope: "system",
 };
+
+export const LANGUAGE_CONTROLLED_LIST = "55ce793b-a51a-4b25-811d-d08ea797f8c3";
