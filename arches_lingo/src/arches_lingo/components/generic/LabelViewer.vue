@@ -7,7 +7,7 @@ import ConfirmDialog from "primevue/confirmdialog";
 import { useConfirm } from "primevue/useconfirm";
 
 import type { AppellativeStatus } from "@/arches_lingo/types";
-import ControlledListItemViewer from "@/arches_lingo/components/generic/ControlledListItemViewer.vue";
+import ReferenceDatatypeViewer from "@/arches_lingo/components/generic/ReferenceDatatypeViewer.vue";
 import ResourceInstanceRelationshipsViewer from "@/arches_lingo/components/generic/ResourceInstanceRelationshipsViewer.vue";
 
 const expandedRows = ref([]);
@@ -70,13 +70,13 @@ function confirmDelete(tileId: string) {
             sortable
         >
             <template #body="slotProps">
-                <ControlledListItemViewer
+                <ReferenceDatatypeViewer
                     :value="
                         (slotProps.data as AppellativeStatus)
                             .appellative_status_ascribed_relation
                     "
                 >
-                </ControlledListItemViewer>
+                </ReferenceDatatypeViewer>
             </template>
         </Column>
         <Column
@@ -85,13 +85,13 @@ function confirmDelete(tileId: string) {
             sortable
         >
             <template #body="slotProps">
-                <ControlledListItemViewer
+                <ReferenceDatatypeViewer
                     :value="
                         (slotProps.data as AppellativeStatus)
                             .appellative_status_ascribed_name_language
                     "
                 >
-                </ControlledListItemViewer>
+                </ReferenceDatatypeViewer>
             </template>
         </Column>
         <Column>

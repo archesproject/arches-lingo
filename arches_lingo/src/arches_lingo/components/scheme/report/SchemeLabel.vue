@@ -2,18 +2,19 @@
 import { useGettext } from "vue3-gettext";
 import { onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
+import { useToast } from "primevue/usetoast";
 
 import { VIEW, EDIT, OPEN_EDITOR } from "@/arches_lingo/constants.ts";
+import { deleteSchemeLabelTile, fetchSchemeLabel } from "@/arches_lingo/api.ts";
+import LabelViewer from "@/arches_lingo/components/generic/LabelViewer.vue";
+import LabelEditor from "@/arches_lingo/components/generic/LabelEditor.vue";
+import SchemeReportSection from "@/arches_lingo/components/scheme/report/SchemeSection.vue";
+
 import type {
     DataComponentMode,
     SchemeInstance,
 } from "@/arches_lingo/types.ts";
-import { deleteSchemeLabelTile, fetchSchemeLabel } from "@/arches_lingo/api.ts";
-import SchemeReportSection from "@/arches_lingo/components/scheme/report/SchemeSection.vue";
-import LabelViewer from "@/arches_lingo/components/generic/LabelViewer.vue";
-import { useToast } from "primevue/usetoast";
 
-const schemeInstance = ref<SchemeInstance>();
 const { $gettext } = useGettext();
 const toast = useToast();
 const route = useRoute();
@@ -22,12 +23,15 @@ withDefaults(
     defineProps<{
         mode?: DataComponentMode;
         args?: Array<object>;
+        // todo for Johnathan - if obj empty, create new tile
+        // if obj has values, load those values into the form
     }>(),
     {
         mode: VIEW,
         args: () => [],
     },
 );
+const schemeInstance = ref<SchemeInstance>();
 
 defineExpose({ save, getSectionValue });
 
@@ -95,7 +99,14 @@ async function save() {
             ></LabelViewer>
         </SchemeReportSection>
     </div>
-    <div v-if="mode === EDIT"><!-- todo for Johnathan-->abc</div>
+    <div v-if="mode === EDIT">
+        <div
+            v-for="appellative_status in schemeInstance?.appellative_status"
+            :key="appellative_status.tileid"
+        >
+            <LabelEditor :value="appellative_status"></LabelEditor>
+        </div>
+    </div>
 </template>
 <style scoped>
 :deep(.drawer) {
