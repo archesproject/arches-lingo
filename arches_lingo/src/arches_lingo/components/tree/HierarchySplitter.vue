@@ -67,7 +67,7 @@ const showHierarchy = ref(false);
         />
     </div>
     <Splitter
-        style="display: flex; height: 100%"
+        style="height: 100%"
         :pt="{
             gutter: { style: { display: showHierarchy ? 'flex' : 'none' } },
         }"

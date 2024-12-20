@@ -60,7 +60,7 @@ const getRef = (el: object | null, index: number) => {
 </script>
 
 <template>
-    <Splitter>
+    <Splitter style="height: 100%">
         <SplitterPanel
             v-if="sectionVisible"
             :size="66"
