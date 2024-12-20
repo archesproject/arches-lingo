@@ -80,6 +80,9 @@ export interface SchemeInstance {
     creation?: {
         creation_sources: ResourceInstanceReference[];
     };
+    rights?: {
+        right_holder: ResourceInstanceReference[];
+    };
 }
 
 export interface SchemeResource {

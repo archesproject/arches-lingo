@@ -12,9 +12,12 @@ from arches_lingo.serializers import (
     SchemeCreationSerializer,
     SchemeNamespaceSerializer,
     SchemeSerializer,
+    SchemeRightsSerializer,
     ConceptStatementSerializer,
     SchemeStatementSerializer,
     TextualWorkRdmSystemSerializer,
+    GroupRdmSystemSerializer,
+    PersonRdmSystemSerializer,
 )
 
 
@@ -54,9 +57,25 @@ class SchemeCreationView(ArchesModelAPIMixin, RetrieveUpdateDestroyAPIView):
     serializer_class = SchemeCreationSerializer
 
 
+class SchemeRightsView(ArchesModelAPIMixin, RetrieveUpdateDestroyAPIView):
+    permission_classes = [RDMAdministrator]
+    serializer_class = SchemeRightsSerializer
+
+
 class TextualWorkRdmSystemSerializerView(ArchesModelAPIMixin, ListAPIView):
     permission_classes = [RDMAdministrator]
     serializer_class = TextualWorkRdmSystemSerializer
+    pagination_class = None
+
+class GroupRdmSystemSerializerView(ArchesModelAPIMixin, ListAPIView):
+    permission_classes = [RDMAdministrator]
+    serializer_class = GroupRdmSystemSerializer
+    pagination_class = None
+
+
+class PersonRdmSystemSerializerView(ArchesModelAPIMixin, ListAPIView):
+    permission_classes = [RDMAdministrator]
+    serializer_class = PersonRdmSystemSerializer
     pagination_class = None
 
 

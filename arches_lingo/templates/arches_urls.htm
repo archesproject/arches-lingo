@@ -13,5 +13,8 @@
     api_schemes="{% url 'schemes-list-create' %}"
     api_scheme_creation='(pluginid)=>{return "{% url "api-scheme-creation" "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa" %}".replace("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", pluginid)}'
     api_textualwork_list="{% url 'api-textualwork-list' %}"
+    api_person_list="{% url 'api-person-list' %}"
+    api_group_list="{% url 'api-group-list' %}"
+    api_scheme_rights='(pluginid)=>{return "{% url "api-scheme-rights" "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa" %}".replace("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", pluginid)}'
 ></div>
 {% endblock arches_urls %}

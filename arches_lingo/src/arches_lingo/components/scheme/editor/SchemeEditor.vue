@@ -10,6 +10,7 @@ import TabPanel from "primevue/tabpanel";
 import SchemeNamespace from "../report/SchemeNamespace.vue";
 import { onBeforeUpdate, onUpdated, ref } from "vue";
 import SchemeStandard from "../report/SchemeStandard.vue";
+import SchemeLicense from "../report/SchemeLicense.vue";
 type sectionTypes = typeof SchemeNamespace;
 
 const { $gettext } = useGettext();
@@ -29,6 +30,11 @@ const schemeComponents = [
         component: SchemeStandard,
         id: "standard",
         editorTabName: $gettext("Scheme Standards Followed"),
+    },
+    {
+        component: SchemeLicense,
+        id: "rights",
+        editorTabName: $gettext("Scheme Rights"),
     },
 ];
 
