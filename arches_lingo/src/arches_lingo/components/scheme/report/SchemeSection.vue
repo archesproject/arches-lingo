@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { useGettext } from "vue3-gettext";
 import Button from "primevue/button";
+import { OPEN_EDITOR } from "@/arches_lingo/constants.ts";
 
-defineEmits(["openEditor"]);
+defineEmits([OPEN_EDITOR]);
 
 const { $gettext } = useGettext();
 const props = defineProps<{
@@ -17,7 +18,7 @@ const props = defineProps<{
             <div>
                 <Button
                     :label="$gettext(`Add ${props.titleText}`)"
-                    @click="$emit('openEditor')"
+                    @click="$emit(OPEN_EDITOR)"
                 ></Button>
             </div>
         </div>

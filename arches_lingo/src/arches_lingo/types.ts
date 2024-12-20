@@ -72,6 +72,17 @@ export interface SchemeNamespaceUpdate {
     };
 }
 
+export interface AppellativeStatus {
+    tileid: string;
+    appellative_status_ascribed_name_content: string;
+    appellative_status_ascribed_name_language?: ControlledListItem[];
+    appellative_status_ascribed_relation?: ControlledListItem[];
+    appellative_status_status_metatype?: ControlledListItem[];
+    appellative_status_status?: ControlledListItem[];
+    appellative_status_data_assignment_object_used: ResourceInstanceReference[];
+    appellative_status_data_assignment_actor: ResourceInstanceReference[];
+}
+
 export interface SchemeInstance {
     namespace?: {
         namespace_name: string;
@@ -80,6 +91,7 @@ export interface SchemeInstance {
     creation?: {
         creation_sources: ResourceInstanceReference[];
     };
+    appellative_status?: AppellativeStatus[];
 }
 
 export interface SchemeResource {

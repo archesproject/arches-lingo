@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { onBeforeUpdate, onUpdated, ref } from "vue";
 import { useGettext } from "vue3-gettext";
 import Button from "primevue/button";
 
@@ -7,9 +8,9 @@ import TabList from "primevue/tablist";
 import Tab from "primevue/tab";
 import TabPanels from "primevue/tabpanels";
 import TabPanel from "primevue/tabpanel";
-import SchemeNamespace from "../report/SchemeNamespace.vue";
-import { onBeforeUpdate, onUpdated, ref } from "vue";
-import SchemeStandard from "../report/SchemeStandard.vue";
+import SchemeNamespace from "@/arches_lingo/components/scheme/report/SchemeNamespace.vue";
+import SchemeStandard from "@/arches_lingo/components/scheme/report/SchemeStandard.vue";
+import SchemeLabel from "@/arches_lingo/components/scheme/report/SchemeLabel.vue";
 type sectionTypes = typeof SchemeNamespace;
 
 const { $gettext } = useGettext();
@@ -17,9 +18,15 @@ const EDIT = "edit";
 const props = defineProps<{
     editorMax: boolean;
     activeTab: string;
+    tileId?: string;
 }>();
 const childRefs = ref<Array<sectionTypes>>([]);
 const schemeComponents = [
+    {
+        component: SchemeLabel,
+        id: "label",
+        editorTabName: $gettext("Scheme Label"),
+    },
     {
         component: SchemeNamespace,
         id: "namespace",
@@ -111,7 +118,7 @@ async function updateScheme() {
                     <TabPanel :value="component.id">
                         <component
                             :is="component.component"
-                            v-bind="{ mode: EDIT }"
+                            v-bind="{ mode: EDIT, tileId: props.tileId }"
                             :ref="(el) => getRef(el, index)"
                             v-on="{ updated: onUpdated }"
                         />

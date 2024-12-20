@@ -26,7 +26,9 @@ function onUpdate(val: string[]) {
     <div v-if="mode === EDIT">
         <ResourceInstanceRelationshipsEditor
             :options="options"
-            :val="value?.map((x) => x.resourceId) ?? []"
+            :val="
+                value?.map((referenceValue) => referenceValue.resourceId) ?? []
+            "
             @update="onUpdate"
         />
     </div>
