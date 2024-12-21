@@ -82,6 +82,7 @@ export interface SchemeInstance {
     };
     rights?: {
         right_holder: ResourceInstanceReference[];
+        right_type: ControlledListItem[];
     };
 }
 

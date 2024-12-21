@@ -127,7 +127,6 @@ export const updateSchemeRights = async (
         body: JSON.stringify(schemeRights),
     });
     const parsed = await response.json();
-    console.log(parsed);
     if (!response.ok) throw new Error(parsed.message || response.statusText);
     return parsed;
 };

@@ -17,6 +17,7 @@ import type {
 } from "@/arches_lingo/types";
 import { selectedLanguageKey, VIEW, EDIT } from "@/arches_lingo/constants.ts";
 import ResourceInstanceRelationships from "../../generic/ResourceInstanceRelationships.vue";
+import ControlledListItem from "../../generic/ControlledListItem.vue";
 import type { Language } from "@/arches_vue_utils/types.ts";
 
 onMounted(async () => {
@@ -51,7 +52,6 @@ async function getOptions(): Promise<ResourceInstanceReference[]> {
 };
 function onSchemeRightsUpdate(val: string[]) {
     const schemeRightsValue = schemeRights.value!;
-    console.log(schemeRightsValue);
     if (actorRdmOptions.value) {
         const options = actorRdmOptions.value?.filter((option) =>
             val.includes(option.resourceId),
@@ -59,6 +59,7 @@ function onSchemeRightsUpdate(val: string[]) {
         if (!schemeRightsValue?.rights) {
             schemeRightsValue.rights = {
                 right_holder: options,
+                right_type: [],
             };
         } else {
             schemeRightsValue.rights.right_holder = options;
@@ -109,6 +110,11 @@ const { $gettext } = useGettext();
                     :value="schemeRights?.rights?.right_holder"
                     :mode="VIEW"
                 />
+                <h4>{{ $gettext('Rights Type') }}</h4>
+                <!-- <ControlledListItem
+                    :value="schemeRights?.rights?.right_type"
+                    :mode="VIEW"
+                /> -->
             </SchemeReportSection>
         </div>
         <div v-if="mode === EDIT">
@@ -119,6 +125,11 @@ const { $gettext } = useGettext();
                 :mode="EDIT"
                 @update="onSchemeRightsUpdate"
             />
+            <h4>{{ $gettext('Rights Type') }}</h4>
+            <!-- <ControlledListItem
+                :value="schemeRights?.rights?.right_type"
+                :mode="EDIT"
+            /> -->
         </div>
     </div>
 </template>
