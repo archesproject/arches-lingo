@@ -3,6 +3,8 @@ import { inject } from "vue";
 import { systemLanguageKey } from "@/arches_lingo/constants.ts";
 import { routeNames } from "@/arches_lingo/routes.ts";
 
+import Card from "primevue/card";
+
 import type { Language } from "@/arches_vue_utils/types";
 import type { SchemeResource, ResourceDescriptor } from "@/arches_lingo/types";
 
@@ -28,34 +30,32 @@ if (descriptors) {
 </script>
 
 <template>
-    <RouterLink
-        :to="schemeURL"
-        class="scheme-card"
-    >
-        <p>{{ schemeDescriptor.name }}</p>
-        <p>{{ schemeDescriptor.description }}</p>
+    <RouterLink :to="schemeURL">
+        <Card>
+            <template #title>
+                {{ schemeDescriptor.name }}
+            </template>
+            <template #content>
+                {{ schemeDescriptor.description }}
+            </template>
+        </Card>
     </RouterLink>
 </template>
 
 <style scoped>
-p {
-    text-align: center;
-}
-.scheme-card {
+a {
     text-decoration: none;
-    color: var(--p-text-color);
+}
+
+:deep(.p-card) {
+    background-color: var(--p-button-primary-background);
+    color: var(--p-button-primary-color);
     width: 15rem;
     height: 15rem;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
     margin: 0.5rem;
-    border: 1px solid var(--p-menubar-border-color);
-    background-color: var(--p-primary-400);
 }
-.scheme-card:hover {
-    background-color: var(--p-button-primary-hover-background);
-    cursor: pointer;
+
+:deep(.p-card-body) {
+    text-align: center;
 }
 </style>

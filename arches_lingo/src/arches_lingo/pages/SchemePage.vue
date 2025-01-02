@@ -60,10 +60,11 @@ const getRef = (el: object | null, index: number) => {
 </script>
 
 <template>
-    <Splitter>
+    <Splitter style="height: 100%">
         <SplitterPanel
             v-if="sectionVisible"
-            :size="75"
+            :size="66"
+            :min-size="33"
         >
             <template
                 v-for="(component, index) in components"
@@ -79,7 +80,8 @@ const getRef = (el: object | null, index: number) => {
         </SplitterPanel>
         <SplitterPanel
             v-if="editorVisible"
-            :size="25"
+            :size="33"
+            :min-size="33"
         >
             <SchemeEditor
                 v-if="editorTab"
