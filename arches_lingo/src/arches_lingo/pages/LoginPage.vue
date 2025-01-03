@@ -6,7 +6,7 @@ import LoginLinks from "@/arches_lingo/components/login/LoginLinks.vue";
 <template>
     <div class="login-container">
         <LoginForm />
-        <div class="spacer"></div>
+        <div class="spacer" />
         <LoginLinks />
     </div>
 </template>

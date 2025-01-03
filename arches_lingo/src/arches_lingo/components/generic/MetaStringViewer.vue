@@ -47,7 +47,7 @@ function confirmDelete(tileId: string) {
     <ConfirmDialog
         :pt="{ root: { style: { fontFamily: 'sans-serif' } } }"
         :group="metaStringText.name"
-    ></ConfirmDialog>
+    />
     <div v-if="props.metaStrings?.length">
         <DataTable
             v-model:expanded-rows="expandedRows"
@@ -65,7 +65,7 @@ function confirmDelete(tileId: string) {
                     <slot
                         name="name"
                         :row-data="slotProps.data"
-                    ></slot>
+                    />
                 </template>
             </Column>
             <Column
@@ -76,7 +76,7 @@ function confirmDelete(tileId: string) {
                     <slot
                         name="type"
                         :row-data="slotProps.data"
-                    ></slot>
+                    />
                 </template>
             </Column>
             <Column
@@ -87,7 +87,7 @@ function confirmDelete(tileId: string) {
                     <slot
                         name="language"
                         :row-data="slotProps.data"
-                    ></slot>
+                    />
                 </template>
             </Column>
             <Column>
@@ -124,7 +124,7 @@ function confirmDelete(tileId: string) {
                     <slot
                         name="drawer"
                         :row-data="slotProps.data"
-                    ></slot>
+                    />
                 </div>
             </template>
         </DataTable>

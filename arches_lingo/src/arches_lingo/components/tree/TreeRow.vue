@@ -62,7 +62,7 @@ const toggleFocus = (node: TreeNode) => {
 
 <template>
     <!-- eslint-disable vue/no-v-html -->
-    <span v-html="rowLabel(node.data)"></span>
+    <span v-html="rowLabel(node.data)" />
     <!-- eslint-enable vue/no-v-html -->
     <i
         v-tooltip="{
@@ -76,5 +76,5 @@ const toggleFocus = (node: TreeNode) => {
         :style="{ alignSelf: 'center', marginLeft: '1rem' }"
         @click="toggleFocus(node)"
         @keyup.enter="toggleFocus(node)"
-    ></i>
+    />
 </template>

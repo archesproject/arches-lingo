@@ -38,6 +38,9 @@ export default [
         },
         "rules": {
             "semi": ["error", "always"],
+            "vue/html-self-closing": [
+                "error", { "html": { "void": "any" } }
+            ],
         },
     },
 ];

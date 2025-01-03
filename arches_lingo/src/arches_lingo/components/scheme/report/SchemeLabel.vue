@@ -145,8 +145,7 @@ function editSectionValue(tileId: string) {
                             (rowData as AppellativeStatus)
                                 .appellative_status_ascribed_relation
                         "
-                    >
-                    </ControlledListItem>
+                    />
                 </template>
                 <template #language="{ rowData }">
                     <ControlledListItem
@@ -154,8 +153,7 @@ function editSectionValue(tileId: string) {
                             (rowData as AppellativeStatus)
                                 .appellative_status_ascribed_name_language
                         "
-                    >
-                    </ControlledListItem>
+                    />
                 </template>
                 <template #drawer="{ rowData }">
                     <div>
@@ -165,7 +163,7 @@ function editSectionValue(tileId: string) {
                                 (rowData as AppellativeStatus)
                                     .appellative_status_data_assignment_object_used
                             "
-                        ></ResourceInstanceRelationships>
+                        />
                     </div>
                     <div>
                         <span>{{ $gettext("Contributors:") }}</span>
@@ -174,7 +172,7 @@ function editSectionValue(tileId: string) {
                                 (rowData as AppellativeStatus)
                                     .appellative_status_data_assignment_actor
                             "
-                        ></ResourceInstanceRelationships>
+                        />
                     </div>
                 </template>
             </MetaStringViewer>

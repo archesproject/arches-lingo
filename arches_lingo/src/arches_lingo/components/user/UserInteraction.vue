@@ -57,6 +57,6 @@ const greeting = computed(() => {
         <Button
             :label="$gettext('Sign out')"
             @click="issueLogout"
-        ></Button>
+        />
     </div>
 </template>

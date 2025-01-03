@@ -19,11 +19,11 @@ const props = defineProps<{
                 <Button
                     :label="$gettext(`Add ${props.titleText}`)"
                     @click="$emit(OPEN_EDITOR)"
-                ></Button>
+                />
             </div>
         </div>
         <div class="content">
-            <slot></slot>
+            <slot />
         </div>
     </div>
 </template>

@@ -43,7 +43,7 @@ const items = ref([
                 <i
                     :class="item.icon"
                     aria-hidden="true"
-                ></i>
+                />
                 <span style="font-weight: var(--p-button-label-font-weight)">
                     {{ item.label }}
                 </span>

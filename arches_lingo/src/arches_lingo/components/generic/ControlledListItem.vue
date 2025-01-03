@@ -17,6 +17,6 @@ defineEmits(["update"]);
         <div v-if="mode === VIEW">
             <ControlledListItemViewer :value="value" />
         </div>
-        <div v-if="mode === EDIT"></div>
+        <div v-if="mode === EDIT" />
     </div>
 </template>

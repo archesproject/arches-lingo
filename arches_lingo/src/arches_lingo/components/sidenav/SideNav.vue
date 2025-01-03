@@ -33,7 +33,7 @@ const items = ref([
                 <i
                     :class="item.icon"
                     aria-hidden="true"
-                ></i>
+                />
             </RouterLink>
         </div>
     </aside>
