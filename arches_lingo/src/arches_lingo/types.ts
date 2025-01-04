@@ -46,11 +46,21 @@ export interface ControlledListeItemLabelValue {
 }
 
 export interface ControlledListItem {
+    item_id?: string;
     list_id: string;
     uri: string;
-    sortorder: number;
-    guide: boolean;
+    sortorder?: number;
+    guide?: boolean;
     labels: ControlledListeItemLabelValue[];
+}
+
+export interface ControlledListItemResult {
+    id?: string;
+    list_id: string;
+    uri: string;
+    sortorder?: number;
+    guide?: boolean;
+    values: ControlledListeItemLabelValue[];
 }
 
 export interface ResourceInstanceReference {
@@ -107,6 +117,7 @@ export interface AppellativeStatus {
     appellative_status_status?: ControlledListItem[];
     appellative_status_data_assignment_object_used: ResourceInstanceReference[];
     appellative_status_data_assignment_actor: ResourceInstanceReference[];
+    appellative_status_data_assignment_type: ControlledListItem[];
 }
 
 export interface SchemeStatement {

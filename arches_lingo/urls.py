@@ -10,6 +10,8 @@ from arches_lingo.views.api.pythonic_models import (
     ConceptListCreateView,
     ConceptStatementDetailView,
     ConceptStatementListCreateView,
+    GroupRdmSystemSerializerView,
+    PersonRdmSystemSerializerView,
     SchemeCreationView,
     SchemeDetailView,
     SchemeLabelTileView,
@@ -82,6 +84,16 @@ urlpatterns = [
         "api/textual-work",
         TextualWorkRdmSystemSerializerView.as_view(),
         name="api-textualwork-list",
+    ),
+    path(
+        "api/group-rdm-system",
+        GroupRdmSystemSerializerView.as_view(),
+        name="api-group-list",
+    ),
+    path(
+        "api/person-rdm-system",
+        PersonRdmSystemSerializerView.as_view(),
+        name="api-person-list",
     ),
     path(
         "api/scheme/statements",

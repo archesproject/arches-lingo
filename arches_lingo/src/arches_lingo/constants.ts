@@ -30,3 +30,10 @@ export const ENGLISH = {
     name: "English",
     scope: "system",
 };
+
+export const LANGUAGE_CONTROLLED_LIST = "55ce793b-a51a-4b25-811d-d08ea797f8c3";
+export const LABEL_CONTROLLED_LIST = "deb847fc-f4c3-4e82-be19-04641579f129";
+export const STATUSES_CONTROLLED_LIST = "2cc0e054-ef9b-41ae-8e86-e0c3b4e7ca00";
+export const METATYPES_CONTROLLED_LIST = "ef69e772-de53-45fe-98d4-bf3e7b10eb57";
+export const EVENT_TYPES_CONTROLLED_LIST =
+    "6eaa2c6f-af83-464c-9200-051c4cfe7e8e";

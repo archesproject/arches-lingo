@@ -1,7 +1,6 @@
 import arches from "arches";
 import Cookies from "js-cookie";
-
-import type { SchemeInstance } from "@/arches_lingo/types";
+import type { AppellativeStatus, SchemeInstance } from "@/arches_lingo/types";
 
 function getToken() {
     const token = Cookies.get("csrftoken");
@@ -53,6 +52,20 @@ export const fetchTextualWorkRdmSystemList = async () => {
     return parsed;
 };
 
+export const fetchGroupRdmSystemList = async () => {
+    const response = await fetch(arches.urls.api_group_list);
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
+export const fetchPersonRdmSystemList = async () => {
+    const response = await fetch(arches.urls.api_person_list);
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
 export const fetchSchemeCreation = async (schemeId: string) => {
     const response = await fetch(arches.urls.api_scheme_creation(schemeId));
     const parsed = await response.json();
@@ -85,6 +98,27 @@ export const deleteSchemeLabelTile = async (
     } else {
         return true;
     }
+};
+
+export const updateSchemeLabel = async (
+    schemeId: string,
+    tileId: string,
+    appellative_status: AppellativeStatus,
+) => {
+    const response = await fetch(
+        arches.urls.api_scheme_label_tile(schemeId, tileId),
+        {
+            method: "PATCH",
+            headers: {
+                "X-CSRFTOKEN": getToken(),
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(appellative_status),
+        },
+    );
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
 };
 
 export const fetchSchemeNotes = async (schemeId: string) => {
@@ -189,6 +223,13 @@ export const fetchConcepts = async () => {
 
 export const fetchSchemes = async () => {
     const response = await fetch(arches.urls.api_schemes);
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
+export const fetchControlledListOptions = async (controlledListId: string) => {
+    const response = await fetch(arches.urls.controlled_list(controlledListId));
     const parsed = await response.json();
     if (!response.ok) throw new Error(parsed.message || response.statusText);
     return parsed;

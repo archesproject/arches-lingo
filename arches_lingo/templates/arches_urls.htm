@@ -17,5 +17,7 @@
     api_scheme_note_tile='(resourceid, tileid)=>{return "{% url "api-scheme-note-tile" "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa" "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaab" %}".replace("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", resourceid).replace("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaab", tileid)}'
     api_scheme_creation='(resourceid)=>{return "{% url "api-scheme-creation" "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa" %}".replace("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", resourceid)}'
     api_textualwork_list="{% url 'api-textualwork-list' %}"
+    api_group_list="{% url 'api-group-list' %}"
+    api_person_list="{% url 'api-person-list' %}"
 ></div>
 {% endblock arches_urls %}

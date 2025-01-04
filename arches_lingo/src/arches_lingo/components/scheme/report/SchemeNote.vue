@@ -20,7 +20,7 @@ import type {
     SchemeStatement,
 } from "@/arches_lingo/types.ts";
 import ResourceInstanceRelationships from "@/arches_lingo/components/generic/ResourceInstanceRelationships.vue";
-import ControlledListItem from "@/arches_lingo/components/generic/ControlledListItem.vue";
+import ReferenceDatatype from "@/arches_lingo/components/generic/ReferenceDatatype.vue";
 
 const { $gettext } = useGettext();
 const schemeInstance = ref<SchemeInstance>();
@@ -128,12 +128,12 @@ function editSectionValue(tileId: string) {
                     </span>
                 </template>
                 <template #type="{ rowData }">
-                    <ControlledListItem
+                    <ReferenceDatatype
                         :value="(rowData as SchemeStatement).statement_type_n1"
                     />
                 </template>
                 <template #language="{ rowData }">
-                    <ControlledListItem
+                    <ReferenceDatatype
                         :value="
                             (rowData as SchemeStatement).statement_language_n1
                         "
