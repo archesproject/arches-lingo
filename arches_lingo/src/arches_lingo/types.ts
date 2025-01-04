@@ -118,6 +118,8 @@ export interface AppellativeStatus {
     appellative_status_data_assignment_object_used: ResourceInstanceReference[];
     appellative_status_data_assignment_actor: ResourceInstanceReference[];
     appellative_status_data_assignment_type: ControlledListItem[];
+    appellative_status_timespan_begin_of_the_begin: string;
+    appellative_status_timespan_end_of_the_end: string;
 }
 
 export interface SchemeStatement {

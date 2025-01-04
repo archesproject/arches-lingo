@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { defineProps, inject, onMounted, ref, toRaw, type Ref } from "vue";
+import { inject, onMounted, ref, toRaw, type Ref } from "vue";
+
 import Button from "primevue/button";
 import { useGettext } from "vue3-gettext";
 import { useRoute } from "vue-router";
@@ -13,6 +14,7 @@ import {
     updateSchemeLabel,
 } from "@/arches_lingo/api.ts";
 
+import DateDatatype from "@/arches_lingo/components/generic/DateDatatype.vue";
 import NonLocalizedString from "@/arches_lingo/components/generic/NonLocalizedString.vue";
 import ReferenceDatatype from "@/arches_lingo/components/generic/ReferenceDatatype.vue";
 import ResourceInstanceRelationships from "@/arches_lingo/components/generic/ResourceInstanceRelationships.vue";
@@ -195,11 +197,22 @@ onMounted(async () => {
         :options="metatypeOptions"
         @update="(val) => onUpdate('appellative_status_status_metatype', val)"
     />
+
     <!-- Label Temporal Validity Start: date -->
     <label for="">{{ $gettext("Label Temporal Validity Start") }}</label>
+    <DateDatatype
+        :value="value?.appellative_status_timespan_begin_of_the_begin"
+        :mode="EDIT"
+        @update="onUpdate"
+    />
 
     <!-- Label Temporal Validity End: date -->
     <label for="">{{ $gettext("Label Temporal Validity End") }}</label>
+    <DateDatatype
+        :value="value?.appellative_status_timespan_end_of_the_end"
+        :mode="EDIT"
+        @update="onUpdate"
+    />
 
     <!-- Contributor: resource instance -->
     <label for="">{{ $gettext("Contributor") }}</label>
