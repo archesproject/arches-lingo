@@ -115,7 +115,8 @@ export interface MetaStringText {
 }
 
 export interface AppellativeStatus {
-    tileid: string;
+    resourceinstance?: string;
+    tileid?: string;
     appellative_status_ascribed_name_content: string;
     appellative_status_ascribed_name_language?: ControlledListItem[];
     appellative_status_ascribed_relation?: ControlledListItem[];
@@ -129,7 +130,8 @@ export interface AppellativeStatus {
 }
 
 export interface SchemeStatement {
-    tileid: string;
+    resourceinstance?: string;
+    tileid?: string;
     statement_content_n1: string;
     statement_language_n1?: ControlledListItem[];
     statement_type_n1?: ControlledListItem[];
@@ -156,14 +158,29 @@ export interface SchemeRightStatement {
     right_statement_type_metatype?: ControlledListItem[];
 }
 
+export interface SchemeNamespace {
+    resourceinstance?: string;
+    tileid?: string;
+    namespace_name: string;
+    namespace_type: ControlledListItem[];
+}
+
+export interface SchemeCreation {
+    resourceinstance?: string;
+    tileid?: string;
+    creation_sources: ResourceInstanceReference[];
+}
+
+export type SchemeTile =
+    | AppellativeStatus
+    | SchemeStatement
+    | SchemeNamespace
+    | SchemeCreation
+    | SchemeRights;
+
 export interface SchemeInstance {
-    namespace?: {
-        namespace_name: string;
-        namespace_type: ControlledListItem[];
-    };
-    creation?: {
-        creation_sources: ResourceInstanceReference[];
-    };
+    namespace?: SchemeNamespace;
+    creation?: SchemeCreation;
     appellative_status?: AppellativeStatus[];
     statement?: SchemeStatement[];
     rights?: SchemeRights;

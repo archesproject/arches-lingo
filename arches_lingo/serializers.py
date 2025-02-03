@@ -7,38 +7,7 @@ from arches.app.models.tile import Tile
 from arches_references.models import ListItem
 
 
-class SchemeStatementSerializer(ArchesTileSerializer):
-    class Meta:
-        model = TileModel
-        graph_slug = "scheme"
-        root_node = "statement"
-        fields = "__all__"
-
-
-class SchemeSerializer(ArchesModelSerializer):
-    class Meta:
-        model = ResourceInstance
-        graph_slug = "scheme"
-        nodegroups = "__all__"
-        fields = "__all__"
-
-
-class SchemeNamespaceSerializer(ArchesModelSerializer):
-    class Meta:
-        model = ResourceInstance
-        graph_slug = "scheme"
-        nodegroups = ["namespace"]
-        fields = "__all__"
-
-
-class SchemeCreationSerializer(ArchesModelSerializer):
-    class Meta:
-        model = ResourceInstance
-        graph_slug = "scheme"
-        nodegroups = ["creation"]
-        fields = "__all__"
-
-
+# Temporary until parent/child developer experience finalized in core.
 class SchemeRightsSerializer(ArchesModelSerializer):
     class Meta:
         model = ResourceInstance
@@ -69,33 +38,30 @@ class SchemeRightsSerializer(ArchesModelSerializer):
         return instance
 
 
-class SchemeLabelSerializer(ArchesModelSerializer):
+# Generic serializers for Lingo.
+class LingoResourceSerializer(ArchesModelSerializer):
     class Meta:
         model = ResourceInstance
-        graph_slug = "scheme"
-        nodegroups = ["appellative_status"]
+        graph_slug = None  # generic
+        nodegroups = "__all__"
         fields = "__all__"
 
 
-class SchemeLabelTileSerializer(ArchesTileSerializer):
+class LingoTileSerializer(ArchesTileSerializer):
     class Meta:
         model = TileModel
-        graph_slug = "scheme"
-        root_node = "appellative_status"
+        graph_slug = None  # generic
+        root_node = None  # generic
         fields = "__all__"
 
-    def validate(self, data):
-        data = super().validate(data)
+    def validate_appellative_status(self, data):
         try:
-            PREF_LABEL_LIST_ITEM = ListItem.objects.get(
-                list_item_values__value="prefLabel",
-            )
+            PREF_LABEL = ListItem.objects.get(list_item_values__value="prefLabel")
         except ListItem.MultipleObjectsReturned:
-            raise RuntimeError(
-                _(
-                    "Ask your system administrator to deduplicate the prefLabel list items."
-                )
+            msg = _(
+                "Ask your system administrator to deduplicate the prefLabel list items."
             )
+            raise ValidationError(msg)
 
         if data:
             # TODO: reduce nested-fallback awkwardness by returning a dataclass from
@@ -118,68 +84,11 @@ class SchemeLabelTileSerializer(ArchesTileSerializer):
                 )
                 if (
                     data.get("tileid", None) not in (None, label.tileid)
-                    and new_label_type.get("uri", "") == PREF_LABEL_LIST_ITEM.uri
-                    and label_type.get("uri", "") == PREF_LABEL_LIST_ITEM.uri
+                    and new_label_type.get("uri", "") == PREF_LABEL.uri
+                    and label_type.get("uri", "") == PREF_LABEL.uri
                     and label_language.get("uri", "")
                     == new_label_language.get("uri", "")
                 ):
-                    raise ValidationError(
-                        _("Only one preferred label per language is permitted.")
-                    )
+                    msg = _("Only one preferred label per language is permitted.")
+                    raise ValidationError(msg)
         return data
-
-
-class SchemeNoteSerializer(ArchesModelSerializer):
-    class Meta:
-        model = ResourceInstance
-        graph_slug = "scheme"
-        nodegroups = ["statement"]
-        fields = "__all__"
-
-
-class SchemeNoteTileSerializer(ArchesTileSerializer):
-    class Meta:
-        model = TileModel
-        graph_slug = "scheme"
-        root_node = "statement"
-        fields = "__all__"
-
-
-class TextualWorkRdmSystemSerializer(ArchesModelSerializer):
-    class Meta:
-        model = ResourceInstance
-        graph_slug = "textual_work"
-        nodegroups = "__all__"
-        fields = "__all__"
-
-
-class ConceptStatementSerializer(ArchesTileSerializer):
-    class Meta:
-        model = TileModel
-        graph_slug = "concept"
-        root_node = "statement"
-        fields = "__all__"
-
-
-class ConceptSerializer(ArchesModelSerializer):
-    class Meta:
-        model = ResourceInstance
-        graph_slug = "concept"
-        nodegroups = "__all__"
-        fields = "__all__"
-
-
-class PersonRdmSystemSerializer(ArchesModelSerializer):
-    class Meta:
-        model = ResourceInstance
-        graph_slug = "person"
-        nodegroups = "__all__"
-        fields = "__all__"
-
-
-class GroupRdmSystemSerializer(ArchesModelSerializer):
-    class Meta:
-        model = ResourceInstance
-        graph_slug = "group"
-        nodegroups = "__all__"
-        fields = "__all__"

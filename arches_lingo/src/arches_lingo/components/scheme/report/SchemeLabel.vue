@@ -12,7 +12,10 @@ import {
     VIEW,
     UPDATED,
 } from "@/arches_lingo/constants.ts";
-import { deleteSchemeLabelTile, fetchSchemeLabel } from "@/arches_lingo/api.ts";
+import {
+    deleteLingoTile,
+    fetchLingoResourcePartial,
+} from "@/arches_lingo/api.ts";
 import LabelEditor from "@/arches_lingo/components/generic/LabelEditor.vue";
 import MetaStringViewer from "@/arches_lingo/components/generic/MetaStringViewer.vue";
 import ResourceInstanceRelationships from "@/arches_lingo/components/generic/ResourceInstanceRelationships.vue";
@@ -70,7 +73,11 @@ async function getSectionValue() {
         return;
     }
     try {
-        const result = await fetchSchemeLabel(route.params.id as string);
+        const result = await fetchLingoResourcePartial(
+            "scheme",
+            route.params.id as string,
+            "appellative_status",
+        );
         schemeInstance.value = {
             appellative_status: result.appellative_status,
         };
@@ -89,7 +96,7 @@ async function getSectionValue() {
 async function deleteSectionValue(tileId: string) {
     let result = false;
     try {
-        result = await deleteSchemeLabelTile(route.params.id as string, tileId);
+        result = await deleteLingoTile("scheme", "appellative_status", tileId);
     } catch (error) {
         toast.add({
             severity: ERROR,

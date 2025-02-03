@@ -10,11 +10,8 @@ import { fetchLists } from "@/arches_references/api.ts";
 
 import {
     createScheme,
-    createSchemeLabel,
-    fetchGroupRdmSystemList,
-    fetchPersonRdmSystemList,
-    fetchTextualWorkRdmSystemList,
-    updateSchemeLabel,
+    fetchLingoResources,
+    upsertLingoTile,
 } from "@/arches_lingo/api.ts";
 
 import DateDatatype from "@/arches_lingo/components/generic/DateDatatype.vue";
@@ -137,30 +134,30 @@ function onUpdateResourceInstance(
 
 async function save() {
     try {
+        let newTileId;
         if (route.params.id === NEW) {
             const newSchemeInstance: SchemeInstance = {
                 appellative_status: [toRaw(formValue.value)],
             };
             const updated = await createScheme(newSchemeInstance);
+            newTileId = updated.appellative_status[0].tileid;
             await router.push({
                 name: "scheme",
                 params: { id: updated.resourceinstanceid },
             });
-        } else if (!formValue.value.tileid) {
-            const schemeLabel: AppellativeStatus = await createSchemeLabel(
-                route.params.id as string,
-                formValue.value,
-            );
-            valueRef.value = schemeLabel;
-            emit("update", schemeLabel.tileid);
         } else {
-            await updateSchemeLabel(
-                route.params.id as string,
+            const updated = await upsertLingoTile(
+                "scheme",
+                "appellative_status",
+                {
+                    resourceinstance: route.params.id as string,
+                    ...formValue.value,
+                },
                 formValue.value.tileid,
-                formValue.value,
             );
+            newTileId = updated.tileid;
         }
-        emit("update");
+        emit("update", newTileId);
     } catch (error) {
         toast.add({
             severity: ERROR,
@@ -233,15 +230,17 @@ async function getResourceInstanceOptions(
 }
 async function initializeSelectOptions() {
     getControlledLists();
-    groupAndPersonOptions.value = await getResourceInstanceOptions(
-        fetchGroupRdmSystemList,
+    groupAndPersonOptions.value = await getResourceInstanceOptions(() =>
+        fetchLingoResources("group"),
     );
     groupAndPersonOptions.value = [
         ...(groupAndPersonOptions.value || []),
-        ...(await getResourceInstanceOptions(fetchPersonRdmSystemList)),
+        ...(await getResourceInstanceOptions(() =>
+            fetchLingoResources("person"),
+        )),
     ];
-    textualWorkOptions.value = await getResourceInstanceOptions(
-        fetchTextualWorkRdmSystemList,
+    textualWorkOptions.value = await getResourceInstanceOptions(() =>
+        fetchLingoResources("textual_work"),
     );
 }
 

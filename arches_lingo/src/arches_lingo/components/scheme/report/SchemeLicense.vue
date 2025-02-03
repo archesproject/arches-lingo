@@ -6,11 +6,10 @@ import { useToast } from "primevue/usetoast";
 import Button from "primevue/button";
 import SchemeReportSection from "@/arches_lingo/components/scheme/report/SchemeSection.vue";
 import {
-    fetchSchemeRights,
     createSchemeFromRights,
+    fetchLingoResource,
+    fetchLingoResources,
     updateSchemeRights,
-    fetchPersonRdmSystemList,
-    fetchGroupRdmSystemList,
 } from "@/arches_lingo/api.ts";
 import { fetchLists } from "@/arches_references/api.ts";
 
@@ -98,8 +97,8 @@ const referenceNodeConfig = [
 ];
 
 async function getActorOptions() {
-    const options_person = await fetchPersonRdmSystemList();
-    const options_group = await fetchGroupRdmSystemList();
+    const options_person = await fetchLingoResources("person");
+    const options_group = await fetchLingoResources("group");
     const options = options_person.concat(options_group);
 
     actorRdmOptions.value = options.map((option: ResourceInstanceResult) => {
@@ -230,7 +229,10 @@ async function getSectionValue() {
     if (route.params.id === NEW) {
         return;
     }
-    const schemeInstance = await fetchSchemeRights(route.params.id as string);
+    const schemeInstance = await fetchLingoResource(
+        "scheme",
+        route.params.id as string,
+    );
     schemeRights.value = schemeInstance?.rights ?? {};
     if (schemeInstance?.rights) {
         parentExists.value = true;

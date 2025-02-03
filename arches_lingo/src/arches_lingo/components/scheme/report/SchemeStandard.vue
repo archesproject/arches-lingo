@@ -2,21 +2,18 @@
 import { inject, onMounted, ref, type Ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useGettext } from "vue3-gettext";
+
 import Button from "primevue/button";
-import type {
-    DataComponentMode,
-    ResourceInstanceReference,
-    ResourceInstanceResult,
-    SchemeInstance,
-} from "@/arches_lingo/types";
+import { useToast } from "primevue/usetoast";
+
+import ResourceInstanceRelationships from "@/arches_lingo/components/generic/ResourceInstanceRelationships.vue";
 import SchemeReportSection from "@/arches_lingo/components/scheme/report/SchemeSection.vue";
 import {
     createScheme,
-    fetchSchemeCreation,
-    fetchTextualWorkRdmSystemList,
-    updateSchemeCreation,
+    fetchLingoResourcePartial,
+    fetchLingoResources,
+    updateLingoResource,
 } from "@/arches_lingo/api.ts";
-import ResourceInstanceRelationships from "@/arches_lingo/components/generic/ResourceInstanceRelationships.vue";
 import {
     selectedLanguageKey,
     VIEW,
@@ -26,8 +23,14 @@ import {
     UPDATED,
     ERROR,
 } from "@/arches_lingo/constants.ts";
+
 import type { Language } from "@/arches_vue_utils/types.ts";
-import { useToast } from "primevue/usetoast";
+import type {
+    DataComponentMode,
+    ResourceInstanceReference,
+    ResourceInstanceResult,
+    SchemeInstance,
+} from "@/arches_lingo/types";
 
 const toast = useToast();
 const schemeInstance = ref<SchemeInstance>({});
@@ -50,7 +53,7 @@ onMounted(async () => {
 });
 
 async function getOptions(): Promise<ResourceInstanceReference[]> {
-    const options = await fetchTextualWorkRdmSystemList();
+    const options = await fetchLingoResources("textual_work");
     const results = options.map((option: ResourceInstanceResult) => {
         const result: ResourceInstanceReference = {
             display_value: option.descriptors[selectedLanguage.value.code].name,
@@ -73,7 +76,8 @@ async function save() {
                 params: { id: updated.resourceinstanceid },
             });
         } else {
-            updated = await updateSchemeCreation(
+            updated = await updateLingoResource(
+                "scheme",
                 route.params.id as string,
                 schemeInstance.value,
             );
@@ -114,7 +118,11 @@ async function setSchemeInstance(
     options: ResourceInstanceReference[] | undefined,
 ) {
     try {
-        const scheme = await fetchSchemeCreation(route.params.id as string);
+        const scheme = await fetchLingoResourcePartial(
+            "scheme",
+            route.params.id as string,
+            "creation",
+        );
 
         const hydratedResults = options?.map((option) => {
             const savedSource = scheme.creation?.creation_sources.find(
@@ -188,6 +196,6 @@ function onCreationUpdate(val: string[]) {
         <Button
             :label="$gettext('Update')"
             @click="save"
-        ></Button>
+        />
     </div>
 </template>

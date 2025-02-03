@@ -7,8 +7,8 @@ import SchemeReportSection from "@/arches_lingo/components/scheme/report/SchemeS
 import NonLocalizedString from "@/arches_lingo/components/generic/NonLocalizedString.vue";
 import {
     createScheme,
-    fetchSchemeNamespace,
-    updateSchemeNamespace,
+    fetchLingoResourcePartial,
+    updateLingoResource,
 } from "@/arches_lingo/api.ts";
 import {
     EDIT,
@@ -55,7 +55,8 @@ async function save() {
                 params: { id: updated.resourceinstanceid },
             });
         } else {
-            updated = await updateSchemeNamespace(
+            updated = await updateLingoResource(
+                "scheme",
                 route.params.id as string,
                 schemeInstance.value,
             );
@@ -76,7 +77,11 @@ async function getSectionValue() {
         return;
     }
     try {
-        const response = await fetchSchemeNamespace(route.params.id as string);
+        const response = await fetchLingoResourcePartial(
+            "scheme",
+            route.params.id as string,
+            "namespace",
+        );
         schemeInstance.value = response;
         if (schemeInstance.value.namespace) {
             exists.value = true;

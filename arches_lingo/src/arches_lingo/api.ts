@@ -1,11 +1,11 @@
 import arches from "arches";
 import Cookies from "js-cookie";
+
 import type {
-    AppellativeStatus,
     SchemeInstance,
-    SchemeStatement,
     SchemeRights,
     SchemeRightStatement,
+    SchemeTile,
 } from "@/arches_lingo/types";
 
 function getToken() {
@@ -44,166 +44,97 @@ export const fetchUser = async () => {
     return parsed;
 };
 
-export const fetchSchemeNamespace = async (schemeId: string) => {
-    const response = await fetch(arches.urls.api_uri_namespace(schemeId));
+export const fetchLingoResources = async (graphSlug: string) => {
+    const response = await fetch(arches.urls.api_lingo_resources(graphSlug));
     const parsed = await response.json();
     if (!response.ok) throw new Error(parsed.message || response.statusText);
     return parsed;
 };
 
-export const fetchTextualWorkRdmSystemList = async () => {
-    const response = await fetch(arches.urls.api_textualwork_list);
-    const parsed = await response.json();
-    if (!response.ok) throw new Error(parsed.message || response.statusText);
-    return parsed;
-};
-
-export const fetchGroupRdmSystemList = async () => {
-    const response = await fetch(arches.urls.api_group_list);
-    const parsed = await response.json();
-    if (!response.ok) throw new Error(parsed.message || response.statusText);
-    return parsed;
-};
-
-export const fetchPersonRdmSystemList = async () => {
-    const response = await fetch(arches.urls.api_person_list);
-    const parsed = await response.json();
-    if (!response.ok) throw new Error(parsed.message || response.statusText);
-    return parsed;
-};
-
-export const fetchSchemeCreation = async (schemeId: string) => {
-    const response = await fetch(arches.urls.api_scheme_creation(schemeId));
-    const parsed = await response.json();
-    if (!response.ok) throw new Error(parsed.message || response.statusText);
-    return parsed;
-};
-
-export const fetchSchemeLabel = async (schemeId: string) => {
-    const response = await fetch(arches.urls.api_scheme_label(schemeId));
-    const parsed = await response.json();
-    if (!response.ok) throw new Error(parsed.message || response.statusText);
-    return parsed;
-};
-
-export const createSchemeLabel = async (
+export const fetchLingoResource = async (
+    graphSlug: string,
     schemeId: string,
-    appellative_status: AppellativeStatus,
-) => {
-    const response = await fetch(arches.urls.api_scheme_label_list_create, {
-        method: "POST",
-        headers: {
-            "X-CSRFTOKEN": getToken(),
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-            resourceinstance: schemeId,
-            ...appellative_status,
-        }),
-    });
-    const parsed = await response.json();
-    if (!response.ok) throw new Error(parsed.message || response.statusText);
-    return parsed;
-};
-
-export const createSchemeNote = async (
-    schemeId: string,
-    statement: SchemeStatement,
-) => {
-    const response = await fetch(arches.urls.api_scheme_note_create, {
-        method: "POST",
-        headers: {
-            "X-CSRFTOKEN": getToken(),
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-            resourceinstance: schemeId,
-            ...statement,
-        }),
-    });
-    const parsed = await response.json();
-    if (!response.ok) throw new Error(parsed.message || response.statusText);
-    return parsed;
-};
-
-export const deleteSchemeLabelTile = async (
-    schemeId: string,
-    tileId: string,
 ) => {
     const response = await fetch(
-        arches.urls.api_scheme_label_tile(schemeId, tileId),
-        {
-            method: "DELETE",
-            headers: { "X-CSRFTOKEN": getToken() },
-        },
+        arches.urls.api_lingo_resource(graphSlug, schemeId),
     );
-
-    if (!response.ok) {
-        const parsed = await response.json();
-        throw new Error(parsed.message || response.statusText);
-    } else {
-        return true;
-    }
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
 };
 
-export const updateSchemeLabel = async (
+export const fetchLingoResourcePartial = async (
+    graphSlug: string,
     schemeId: string,
-    tileId: string,
-    appellative_status: AppellativeStatus,
+    nodegroupAlias: string,
 ) => {
     const response = await fetch(
-        arches.urls.api_scheme_label_tile(schemeId, tileId),
+        arches.urls.api_lingo_resource_partial(
+            graphSlug,
+            schemeId,
+            nodegroupAlias,
+        ),
+    );
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
+export const updateLingoResource = async (
+    graphSlug: string,
+    schemeId: string,
+    schemeInstance: SchemeInstance,
+) => {
+    const response = await fetch(
+        arches.urls.api_lingo_resource(graphSlug, schemeId),
         {
             method: "PATCH",
             headers: {
                 "X-CSRFTOKEN": getToken(),
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify(appellative_status),
+            body: JSON.stringify(schemeInstance),
         },
     );
     const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
+export const upsertLingoTile = async (
+    graphSlug: string,
+    nodegroupAlias: string,
+    tileData: SchemeTile, // TODO: generalize type
+    tileId: string | undefined,
+) => {
+    const url = tileId
+        ? arches.urls.api_lingo_tile
+        : arches.urls.api_lingo_tiles;
+    const response = await fetch(url(graphSlug, nodegroupAlias, tileId), {
+        method: tileId ? "PATCH" : "POST",
+        headers: {
+            "X-CSRFTOKEN": getToken(),
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(tileData),
+    });
+
+    const parsed = await response.json();
     if (!response.ok)
         throw new Error(
+            // TODO: show all errors
             parsed.non_field_errors || parsed.message || response.statusText,
         );
     return parsed;
 };
 
-export const fetchSchemeNotes = async (schemeId: string) => {
-    const response = await fetch(arches.urls.api_scheme_note(schemeId));
-    const parsed = await response.json();
-    if (!response.ok) throw new Error(parsed.message || response.statusText);
-    return parsed;
-};
-
-export const updateSchemeNote = async (
+export const deleteLingoTile = async (
     schemeId: string,
-    tileId: string,
-    schemeStatement: SchemeStatement,
-) => {
-    const response = await fetch(
-        arches.urls.api_scheme_note_tile(schemeId, tileId),
-        {
-            method: "PATCH",
-            headers: {
-                "X-CSRFTOKEN": getToken(),
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(schemeStatement),
-        },
-    );
-    const parsed = await response.json();
-    if (!response.ok) throw new Error(parsed.message || response.statusText);
-    return parsed;
-};
-
-export const deleteSchemeNoteTile = async (
-    schemeId: string,
+    nodegroupAlias: string,
     tileId: string,
 ) => {
     const response = await fetch(
-        arches.urls.api_scheme_note_tile(schemeId, tileId),
+        arches.urls.api_lingo_tile(schemeId, nodegroupAlias, tileId),
         {
             method: "DELETE",
             headers: { "X-CSRFTOKEN": getToken() },
@@ -219,54 +150,13 @@ export const deleteSchemeNoteTile = async (
 };
 
 export const createScheme = async (newScheme: SchemeInstance) => {
-    const response = await fetch(arches.urls.api_schemes, {
+    const response = await fetch(arches.urls.api_lingo_resources("scheme"), {
         method: "POST",
         headers: {
             "X-CSRFTOKEN": getToken(),
             "Content-Type": "application/json",
         },
         body: JSON.stringify(newScheme),
-    });
-    const parsed = await response.json();
-    if (!response.ok) throw new Error(parsed.message || response.statusText);
-    return parsed;
-};
-
-export const fetchSchemeRights = async (schemeId: string) => {
-    const response = await fetch(arches.urls.api_scheme_rights(schemeId));
-    const parsed = await response.json();
-    if (!response.ok) throw new Error(parsed.message || response.statusText);
-    return parsed;
-};
-
-export const updateSchemeCreation = async (
-    schemeId: string,
-    schemeInstance: SchemeInstance,
-) => {
-    const response = await fetch(arches.urls.api_scheme_creation(schemeId), {
-        method: "PATCH",
-        headers: {
-            "X-CSRFTOKEN": getToken(),
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify(schemeInstance),
-    });
-    const parsed = await response.json();
-    if (!response.ok) throw new Error(parsed.message || response.statusText);
-    return parsed;
-};
-
-export const updateSchemeNamespace = async (
-    schemeId: string,
-    schemeNamespace: SchemeInstance,
-) => {
-    const response = await fetch(arches.urls.api_uri_namespace(schemeId), {
-        method: "PATCH",
-        headers: {
-            "X-CSRFTOKEN": getToken(),
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify(schemeNamespace),
     });
     const parsed = await response.json();
     if (!response.ok) throw new Error(parsed.message || response.statusText);
@@ -294,18 +184,21 @@ export const updateSchemeRights = async (
     schemeRightsValue: SchemeRights,
     schemeRightStatementValue: SchemeRightStatement,
 ) => {
-    const response = await fetch(arches.urls.api_scheme_rights(schemeId), {
-        method: "PATCH",
-        headers: {
-            "X-CSRFTOKEN": getToken(),
-            "Content-Type": "application/json",
+    const response = await fetch(
+        arches.urls.api_scheme_rights_detail(schemeId),
+        {
+            method: "PATCH",
+            headers: {
+                "X-CSRFTOKEN": getToken(),
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                resourceinstanceid: schemeId,
+                rights: schemeRightsValue,
+                right_statement: schemeRightStatementValue,
+            }),
         },
-        body: JSON.stringify({
-            resourceinstanceid: schemeId,
-            rights: schemeRightsValue,
-            right_statement: schemeRightStatementValue,
-        }),
-    });
+    );
     const parsed = await response.json();
     if (!response.ok) throw new Error(parsed.message || response.statusText);
     return parsed;
@@ -331,13 +224,6 @@ export const fetchSearchResults = async (
 
 export const fetchConcepts = async () => {
     const response = await fetch(arches.urls.api_concepts);
-    const parsed = await response.json();
-    if (!response.ok) throw new Error(parsed.message || response.statusText);
-    return parsed;
-};
-
-export const fetchSchemes = async () => {
-    const response = await fetch(arches.urls.api_schemes);
     const parsed = await response.json();
     if (!response.ok) throw new Error(parsed.message || response.statusText);
     return parsed;
