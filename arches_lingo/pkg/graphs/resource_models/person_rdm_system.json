@@ -89,7 +89,6 @@
                             "placeholder"
                         ],
                         "label": "Name Type",
-                        "options": [],
                         "placeholder": {
                             "en": "Select an option"
                         }
@@ -102,7 +101,7 @@
                     "sortorder": 1,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "10000000-0000-0000-0000-000000000012"
+                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
                 },
                 {
                     "card_id": "4952a8f4-bb15-11ea-85a6-3af9d3b32b71",
@@ -232,7 +231,6 @@
                             "placeholder"
                         ],
                         "label": "Type",
-                        "options": [],
                         "placeholder": {
                             "en": "Select an option"
                         }
@@ -245,17 +243,30 @@
                     "sortorder": 0,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "10000000-0000-0000-0000-000000000012"
+                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
                 },
                 {
                     "card_id": "85af7630-11e5-11ef-9493-0a58a9feac02",
                     "config": {
-                        "defaultValue": "51ccf153-fa7b-4b22-8d0d-d1a57a6c84c2",
+                        "defaultValue": [
+                            {
+                                "labels": [
+                                    {
+                                        "id": "51ccf153-fa7b-4b22-8d0d-d1a57a6c84c2",
+                                        "language_id": "en",
+                                        "list_item_id": "02a0fc69-9f92-4bef-b657-af1ed37c1d3e",
+                                        "value": "brief texts",
+                                        "valuetype_id": "prefLabel"
+                                    }
+                                ],
+                                "listid": "ef69e772-de53-45fe-98d4-bf3e7b10eb57",
+                                "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/02a0fc69-9f92-4bef-b657-af1ed37c1d3e"
+                            }
+                        ],
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Statement Metatype",
-                        "options": [],
                         "placeholder": {
                             "en": "Select an option"
                         }
@@ -268,19 +279,30 @@
                     "sortorder": 3,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "10000000-0000-0000-0000-000000000002"
+                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
                 },
                 {
                     "card_id": "85af7630-11e5-11ef-9493-0a58a9feac02",
                     "config": {
                         "defaultValue": [
-                            "4f8699ea-aca7-4e84-9243-f6c9158f7c11"
+                            {
+                                "labels": [
+                                    {
+                                        "id": "4f8699ea-aca7-4e84-9243-f6c9158f7c11",
+                                        "language_id": "en",
+                                        "list_item_id": "52eb8678-485d-418c-9ad2-aa97d077ac56",
+                                        "value": "scopeNote",
+                                        "valuetype_id": "prefLabel"
+                                    }
+                                ],
+                                "listid": "aba2a0b4-75a4-45ba-8b57-021f3ca92a6a",
+                                "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/52eb8678-485d-418c-9ad2-aa97d077ac56"
+                            }
                         ],
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Statement Type",
-                        "options": [],
                         "placeholder": {
                             "en": "Select an option"
                         }
@@ -293,7 +315,7 @@
                     "sortorder": 2,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "10000000-0000-0000-0000-000000000012"
+                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
                 },
                 {
                     "card_id": "85af7630-11e5-11ef-9493-0a58a9feac02",
@@ -303,7 +325,6 @@
                             "placeholder"
                         ],
                         "label": "Statement Language",
-                        "options": [],
                         "placeholder": {
                             "en": "Select an option"
                         }
@@ -316,7 +337,7 @@
                     "sortorder": 1,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "10000000-0000-0000-0000-000000000012"
+                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
                 },
                 {
                     "card_id": "85af7630-11e5-11ef-9493-0a58a9feac02",
@@ -386,7 +407,6 @@
                             "placeholder"
                         ],
                         "label": "Name Language",
-                        "options": [],
                         "placeholder": {
                             "en": "Select an option"
                         }
@@ -399,17 +419,30 @@
                     "sortorder": 2,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "10000000-0000-0000-0000-000000000012"
+                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
                 },
                 {
                     "card_id": "b831287a-9652-4263-8352-1c16d28814d8",
                     "config": {
-                        "defaultValue": "1cea8e22-2bc3-43aa-abfd-0d04719d99d1",
+                        "defaultValue": [
+                            {
+                                "labels": [
+                                    {
+                                        "id": "1cea8e22-2bc3-43aa-abfd-0d04719d99d1",
+                                        "language_id": "en",
+                                        "list_item_id": "9c93be63-b900-4f63-b0cf-7351e5129508",
+                                        "value": "classification",
+                                        "valuetype_id": "prefLabel"
+                                    }
+                                ],
+                                "listid": "ef69e772-de53-45fe-98d4-bf3e7b10eb57",
+                                "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/9c93be63-b900-4f63-b0cf-7351e5129508"
+                            }
+                        ],
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Metatype",
-                        "options": [],
                         "placeholder": {
                             "en": "Select an option"
                         }
@@ -422,7 +455,7 @@
                     "sortorder": 1,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "10000000-0000-0000-0000-000000000002"
+                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
                 },
                 {
                     "card_id": "5782c634-bb15-11ea-85a6-3af9d3b32b71",
@@ -432,7 +465,6 @@
                             "placeholder"
                         ],
                         "label": "Identifier Type",
-                        "options": [],
                         "placeholder": {
                             "en": "Select an option"
                         }
@@ -445,7 +477,7 @@
                     "sortorder": 1,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "10000000-0000-0000-0000-000000000002"
+                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
                 }
             ],
             "color": "rgb(255,189,202)",
@@ -673,24 +705,28 @@
             "nodegroups": [
                 {
                     "cardinality": "1",
+                    "grouping_node_id": "42e44f60-11e5-11ef-9493-0a58a9feac02",
                     "legacygroupid": null,
                     "nodegroupid": "42e44f60-11e5-11ef-9493-0a58a9feac02",
                     "parentnodegroup_id": null
                 },
                 {
                     "cardinality": "n",
+                    "grouping_node_id": "4952a70a-bb15-11ea-85a6-3af9d3b32b71",
                     "legacygroupid": null,
                     "nodegroupid": "4952a70a-bb15-11ea-85a6-3af9d3b32b71",
                     "parentnodegroup_id": null
                 },
                 {
                     "cardinality": "n",
+                    "grouping_node_id": "5782c422-bb15-11ea-85a6-3af9d3b32b71",
                     "legacygroupid": null,
                     "nodegroupid": "5782c422-bb15-11ea-85a6-3af9d3b32b71",
                     "parentnodegroup_id": null
                 },
                 {
                     "cardinality": "1",
+                    "grouping_node_id": "85af7504-11e5-11ef-9493-0a58a9feac02",
                     "legacygroupid": null,
                     "nodegroupid": "85af7504-11e5-11ef-9493-0a58a9feac02",
                     "parentnodegroup_id": null
@@ -700,9 +736,10 @@
                 {
                     "alias": "identifier_type",
                     "config": {
-                        "rdmCollection": "f028fe8e-5a23-40a7-8ffe-7865ebac9487"
+                        "controlledList": "f028fe8e-5a23-40a7-8ffe-7865ebac9487",
+                        "multiValue": false
                     },
-                    "datatype": "concept",
+                    "datatype": "reference",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -725,9 +762,10 @@
                 {
                     "alias": "type",
                     "config": {
-                        "rdmCollection": null
+                        "controlledList": "8936df69-415c-4f4d-8443-ae8f66309457",
+                        "multiValue": true
                     },
-                    "datatype": "concept-list",
+                    "datatype": "reference",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -819,9 +857,10 @@
                 {
                     "alias": "type_metatype",
                     "config": {
-                        "rdmCollection": "ef69e772-de53-45fe-98d4-bf3e7b10eb57"
+                        "controlledList": "ef69e772-de53-45fe-98d4-bf3e7b10eb57",
+                        "multiValue": false
                     },
-                    "datatype": "concept",
+                    "datatype": "reference",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -938,9 +977,10 @@
                 {
                     "alias": "statement_language",
                     "config": {
-                        "rdmCollection": "55ce793b-a51a-4b25-811d-d08ea797f8c3"
+                        "controlledList": "55ce793b-a51a-4b25-811d-d08ea797f8c3",
+                        "multiValue": true
                     },
-                    "datatype": "concept-list",
+                    "datatype": "reference",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -963,9 +1003,10 @@
                 {
                     "alias": "statement_type_metatype",
                     "config": {
-                        "rdmCollection": "ef69e772-de53-45fe-98d4-bf3e7b10eb57"
+                        "controlledList": "ef69e772-de53-45fe-98d4-bf3e7b10eb57",
+                        "multiValue": false
                     },
-                    "datatype": "concept",
+                    "datatype": "reference",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -988,9 +1029,10 @@
                 {
                     "alias": "statement_type",
                     "config": {
-                        "rdmCollection": "aba2a0b4-75a4-45ba-8b57-021f3ca92a6a"
+                        "controlledList": "aba2a0b4-75a4-45ba-8b57-021f3ca92a6a",
+                        "multiValue": true
                     },
-                    "datatype": "concept-list",
+                    "datatype": "reference",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -1082,9 +1124,10 @@
                 {
                     "alias": "name_type",
                     "config": {
-                        "rdmCollection": "891574cc-47bf-4395-a512-d246cd75c1a1"
+                        "controlledList": "891574cc-47bf-4395-a512-d246cd75c1a1",
+                        "multiValue": true
                     },
-                    "datatype": "concept-list",
+                    "datatype": "reference",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -1107,9 +1150,10 @@
                 {
                     "alias": "name_language",
                     "config": {
-                        "rdmCollection": "55ce793b-a51a-4b25-811d-d08ea797f8c3"
+                        "controlledList": "55ce793b-a51a-4b25-811d-d08ea797f8c3",
+                        "multiValue": true
                     },
-                    "datatype": "concept-list",
+                    "datatype": "reference",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -1134,9 +1178,9 @@
             "publication": {
                 "graph_id": "9ffb6fcc-b4b4-11ea-84f7-3af9d3b32b71",
                 "most_recent_edit_id": null,
-                "notes": "add graph slug",
-                "publicationid": "f1454dda-c931-11ef-9a6e-0aa766c61b64",
-                "published_time": "2025-01-02T11:49:41.020"
+                "notes": "Migrated concept/concept-list nodes to reference datatype",
+                "publicationid": "9205c34a-e240-11ef-9e8a-0aa766c61b66",
+                "published_time": "2025-02-03T09:07:22.741"
             },
             "relatable_resource_model_ids": [],
             "resource_2_resource_constraints": [],
@@ -1219,7 +1263,7 @@
     ],
     "metadata": {
         "db": "PostgreSQL 17.0 (Postgres.app) on aarch64-apple-darwin23.6.0, compiled by Apple clang version 15.0.0 (clang-1500.3.9.4), 64-bit",
-        "git hash": "ccd33b586 2024-12-30 15:00:45 -0500",
+        "git hash": "4b6f74160 2025-01-31 17:56:30 -0500",
         "os": "Darwin",
         "os version": "24.2.0"
     }

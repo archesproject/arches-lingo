@@ -82,6 +82,24 @@
     },
     {
         "model": "arches_references.list",
+        "pk": "891574cc-47bf-4395-a512-d246cd75c1a1",
+        "fields": {
+            "name": "Name Types",
+            "dynamic": false,
+            "search_only": false
+        }
+    },
+    {
+        "model": "arches_references.list",
+        "pk": "8936df69-415c-4f4d-8443-ae8f66309457",
+        "fields": {
+            "name": "PLACEHOLDER",
+            "dynamic": false,
+            "search_only": false
+        }
+    },
+    {
+        "model": "arches_references.list",
         "pk": "8fe1efd6-c90e-4f64-a125-14b2cc4d78e3",
         "fields": {
             "name": "Subject Types",
@@ -136,6 +154,15 @@
     },
     {
         "model": "arches_references.list",
+        "pk": "f028fe8e-5a23-40a7-8ffe-7865ebac9487",
+        "fields": {
+            "name": "Identifier Types - General",
+            "dynamic": false,
+            "search_only": false
+        }
+    },
+    {
+        "model": "arches_references.list",
         "pk": "fb5dd406-33ef-4e83-a6a9-9ea02c1ada17",
         "fields": {
             "name": "Scheme Types",
@@ -161,6 +188,17 @@
             "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/05967b72-5a51-4da1-90bb-5b53f62ec7ca",
             "list": "55ce793b-a51a-4b25-811d-d08ea797f8c3",
             "sortorder": 1,
+            "parent": null,
+            "guide": false
+        }
+    },
+    {
+        "model": "arches_references.listitem",
+        "pk": "05e62a8a-b5c2-437c-b741-4f8176cea0d1",
+        "fields": {
+            "uri": "http://localhost:8000/plugins/controlled-list-manager/item/05e62a8a-b5c2-437c-b741-4f8176cea0d1",
+            "list": "891574cc-47bf-4395-a512-d246cd75c1a1",
+            "sortorder": 0,
             "parent": null,
             "guide": false
         }
@@ -563,6 +601,17 @@
     },
     {
         "model": "arches_references.listitem",
+        "pk": "bc6ce063-7ad5-4b92-8685-000bfe27ebf2",
+        "fields": {
+            "uri": "http://localhost:8000/plugins/controlled-list-manager/item/bc6ce063-7ad5-4b92-8685-000bfe27ebf2",
+            "list": "891574cc-47bf-4395-a512-d246cd75c1a1",
+            "sortorder": 1,
+            "parent": null,
+            "guide": false
+        }
+    },
+    {
+        "model": "arches_references.listitem",
         "pk": "bffe467f-5d22-4b3c-a6c7-9766165271b3",
         "fields": {
             "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/bffe467f-5d22-4b3c-a6c7-9766165271b3",
@@ -760,6 +809,17 @@
         }
     },
     {
+        "model": "arches_references.listitem",
+        "pk": "fe814127-d68f-43ed-beb9-67a8d4d6336e",
+        "fields": {
+            "uri": "http://localhost:8000/plugins/controlled-list-manager/item/fe814127-d68f-43ed-beb9-67a8d4d6336e",
+            "list": "f028fe8e-5a23-40a7-8ffe-7865ebac9487",
+            "sortorder": 0,
+            "parent": null,
+            "guide": false
+        }
+    },
+    {
         "model": "arches_references.listitemvalue",
         "pk": "026cc253-fd50-4378-9aac-588d9d320f15",
         "fields": {
@@ -831,6 +891,16 @@
     },
     {
         "model": "arches_references.listitemvalue",
+        "pk": "14b0059a-d56b-4184-9fb7-00620d7df6b3",
+        "fields": {
+            "list_item": "bc6ce063-7ad5-4b92-8685-000bfe27ebf2",
+            "valuetype": "prefLabel",
+            "language": "en",
+            "value": "preferred terms"
+        }
+    },
+    {
+        "model": "arches_references.listitemvalue",
         "pk": "18c46580-8c3c-48b7-9a6c-a0643708cb8b",
         "fields": {
             "list_item": "df24d257-b547-4733-ae89-dfffa3597683",
@@ -861,6 +931,16 @@
     },
     {
         "model": "arches_references.listitemvalue",
+        "pk": "1e8c2e9f-ce80-433b-aada-e410aa8a9bcd",
+        "fields": {
+            "list_item": "05e62a8a-b5c2-437c-b741-4f8176cea0d1",
+            "valuetype": "prefLabel",
+            "language": "en",
+            "value": "nonpreferred terms"
+        }
+    },
+    {
+        "model": "arches_references.listitemvalue",
         "pk": "2335c03b-a320-4f1f-ad55-20b873dce17f",
         "fields": {
             "list_item": "97f89729-35ed-4780-aeea-d487717ffb65",
@@ -877,6 +957,16 @@
             "valuetype": "prefLabel",
             "language": "en",
             "value": "warrant assertion event"
+        }
+    },
+    {
+        "model": "arches_references.listitemvalue",
+        "pk": "254c78d5-ff58-496f-8790-bf1f7179f793",
+        "fields": {
+            "list_item": "fe814127-d68f-43ed-beb9-67a8d4d6336e",
+            "valuetype": "prefLabel",
+            "language": "en",
+            "value": "system identifier"
         }
     },
     {

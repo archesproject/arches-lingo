@@ -1,0 +1,207 @@
+{
+    "business_data": {
+        "resources": [
+            {
+                "resourceinstance": {
+                    "createdtime": "2025-02-03T10:28:39.734",
+                    "descriptors": {
+                        "en": {
+                            "description": null,
+                            "map_popup": null,
+                            "name": null
+                        }
+                    },
+                    "graph_id": "ce57ee93-1f08-11ee-9071-214dbb482912",
+                    "graph_publication_id": "713400a0-e240-11ef-a90b-0aa766c61b66",
+                    "legacyid": null,
+                    "name": "",
+                    "principaluser_id": 1,
+                    "resource_instance_lifecycle_state_id": "f75bb034-36e3-4ab4-8167-f520cf0b4c58",
+                    "resourceinstanceid": "801ee2b5-a1de-481b-ba5e-d7c19cf20d5a",
+                    "publication_id": "713400a0-e240-11ef-a90b-0aa766c61b66"
+                },
+                "tiles": [
+                    {
+                        "data": {
+                            "78fc235e-11e8-11ef-9493-0a58a9feac02": {
+                                "en": {
+                                    "direction": "ltr",
+                                    "value": "Example Digital Object"
+                                },
+                                "en-US": {
+                                    "direction": "ltr",
+                                    "value": ""
+                                }
+                            },
+                            "78fc2430-11e8-11ef-9493-0a58a9feac02": null,
+                            "78fc24da-11e8-11ef-9493-0a58a9feac02": [
+                                {
+                                    "labels": [
+                                        {
+                                            "id": "de978fd0-2819-4855-8858-8c089780f32c",
+                                            "language_id": "en",
+                                            "list_item_id": "845cc417-ef77-4582-9271-ffba5e4cabc9",
+                                            "value": "en",
+                                            "valuetype_id": "prefLabel"
+                                        }
+                                    ],
+                                    "listid": "55ce793b-a51a-4b25-811d-d08ea797f8c3",
+                                    "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/845cc417-ef77-4582-9271-ffba5e4cabc9"
+                                }
+                            ],
+                            "78fc2570-11e8-11ef-9493-0a58a9feac02": [
+                                {
+                                    "labels": [
+                                        {
+                                            "id": "14b0059a-d56b-4184-9fb7-00620d7df6b3",
+                                            "language_id": "en",
+                                            "list_item_id": "bc6ce063-7ad5-4b92-8685-000bfe27ebf2",
+                                            "value": "preferred terms",
+                                            "valuetype_id": "prefLabel"
+                                        }
+                                    ],
+                                    "listid": "891574cc-47bf-4395-a512-d246cd75c1a1",
+                                    "uri": "http://localhost:8000/plugins/controlled-list-manager/item/bc6ce063-7ad5-4b92-8685-000bfe27ebf2"
+                                }
+                            ]
+                        },
+                        "nodegroup_id": "78fc1ff8-11e8-11ef-9493-0a58a9feac02",
+                        "parenttile_id": null,
+                        "provisionaledits": null,
+                        "resourceinstance_id": "801ee2b5-a1de-481b-ba5e-d7c19cf20d5a",
+                        "sortorder": 0,
+                        "tileid": "4bb9b27d-0060-4574-87f6-0060cda58784"
+                    },
+                    {
+                        "data": {
+                            "7d8f40e0-11e8-11ef-9493-0a58a9feac02": [
+                                {
+                                    "labels": [
+                                        {
+                                            "id": "254c78d5-ff58-496f-8790-bf1f7179f793",
+                                            "language_id": "en",
+                                            "list_item_id": "fe814127-d68f-43ed-beb9-67a8d4d6336e",
+                                            "value": "system identifier",
+                                            "valuetype_id": "prefLabel"
+                                        }
+                                    ],
+                                    "listid": "f028fe8e-5a23-40a7-8ffe-7865ebac9487",
+                                    "uri": "http://localhost:8000/plugins/controlled-list-manager/item/fe814127-d68f-43ed-beb9-67a8d4d6336e"
+                                }
+                            ],
+                            "7d8f41b2-11e8-11ef-9493-0a58a9feac02": null,
+                            "7d8f4252-11e8-11ef-9493-0a58a9feac02": {
+                                "en": {
+                                    "direction": "ltr",
+                                    "value": "example identifier"
+                                },
+                                "en-US": {
+                                    "direction": "ltr",
+                                    "value": ""
+                                }
+                            }
+                        },
+                        "nodegroup_id": "7d8f3db6-11e8-11ef-9493-0a58a9feac02",
+                        "parenttile_id": null,
+                        "provisionaledits": null,
+                        "resourceinstance_id": "801ee2b5-a1de-481b-ba5e-d7c19cf20d5a",
+                        "sortorder": 0,
+                        "tileid": "2afa63dd-0316-46df-804a-9bbb02023648"
+                    },
+                    {
+                        "data": {
+                            "8880237a-11e8-11ef-9493-0a58a9feac02": null,
+                            "8880269a-11e8-11ef-9493-0a58a9feac02": [
+                                {
+                                    "labels": [
+                                        {
+                                            "id": "1cea8e22-2bc3-43aa-abfd-0d04719d99d1",
+                                            "language_id": "en",
+                                            "list_item_id": "9c93be63-b900-4f63-b0cf-7351e5129508",
+                                            "value": "classification",
+                                            "valuetype_id": "prefLabel"
+                                        }
+                                    ],
+                                    "listid": "ef69e772-de53-45fe-98d4-bf3e7b10eb57",
+                                    "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/9c93be63-b900-4f63-b0cf-7351e5129508"
+                                }
+                            ]
+                        },
+                        "nodegroup_id": "8880237a-11e8-11ef-9493-0a58a9feac02",
+                        "parenttile_id": null,
+                        "provisionaledits": null,
+                        "resourceinstance_id": "801ee2b5-a1de-481b-ba5e-d7c19cf20d5a",
+                        "sortorder": 0,
+                        "tileid": "9d6a7667-d30b-4d74-a113-d58bcf1e248e"
+                    },
+                    {
+                        "data": {
+                            "8278eaac-11e8-11ef-9493-0a58a9feac02": [
+                                {
+                                    "labels": [
+                                        {
+                                            "id": "de978fd0-2819-4855-8858-8c089780f32c",
+                                            "language_id": "en",
+                                            "list_item_id": "845cc417-ef77-4582-9271-ffba5e4cabc9",
+                                            "value": "en",
+                                            "valuetype_id": "prefLabel"
+                                        }
+                                    ],
+                                    "listid": "55ce793b-a51a-4b25-811d-d08ea797f8c3",
+                                    "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/845cc417-ef77-4582-9271-ffba5e4cabc9"
+                                }
+                            ],
+                            "8278ebe2-11e8-11ef-9493-0a58a9feac02": [
+                                {
+                                    "labels": [
+                                        {
+                                            "id": "51ccf153-fa7b-4b22-8d0d-d1a57a6c84c2",
+                                            "language_id": "en",
+                                            "list_item_id": "02a0fc69-9f92-4bef-b657-af1ed37c1d3e",
+                                            "value": "brief texts",
+                                            "valuetype_id": "prefLabel"
+                                        }
+                                    ],
+                                    "listid": "ef69e772-de53-45fe-98d4-bf3e7b10eb57",
+                                    "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/02a0fc69-9f92-4bef-b657-af1ed37c1d3e"
+                                }
+                            ],
+                            "8278ec78-11e8-11ef-9493-0a58a9feac02": [
+                                {
+                                    "labels": [
+                                        {
+                                            "id": "4f8699ea-aca7-4e84-9243-f6c9158f7c11",
+                                            "language_id": "en",
+                                            "list_item_id": "52eb8678-485d-418c-9ad2-aa97d077ac56",
+                                            "value": "scopeNote",
+                                            "valuetype_id": "prefLabel"
+                                        }
+                                    ],
+                                    "listid": "aba2a0b4-75a4-45ba-8b57-021f3ca92a6a",
+                                    "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/52eb8678-485d-418c-9ad2-aa97d077ac56"
+                                }
+                            ],
+                            "8278ed0e-11e8-11ef-9493-0a58a9feac02": null,
+                            "8278eda4-11e8-11ef-9493-0a58a9feac02": {
+                                "en": {
+                                    "direction": "ltr",
+                                    "value": "this is an example statement about the example digital object"
+                                },
+                                "en-US": {
+                                    "direction": "ltr",
+                                    "value": ""
+                                }
+                            }
+                        },
+                        "nodegroup_id": "8278e3c2-11e8-11ef-9493-0a58a9feac02",
+                        "parenttile_id": null,
+                        "provisionaledits": null,
+                        "resourceinstance_id": "801ee2b5-a1de-481b-ba5e-d7c19cf20d5a",
+                        "sortorder": 0,
+                        "tileid": "49252a10-640a-4fcb-a667-d55942d53ddf"
+                    }
+                ]
+            }
+        ]
+    }
+}

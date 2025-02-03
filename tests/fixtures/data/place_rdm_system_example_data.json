@@ -1,0 +1,304 @@
+{
+    "business_data": {
+        "resources": [
+            {
+                "resourceinstance": {
+                    "createdtime": "2025-02-03T10:36:45.471",
+                    "descriptors": {
+                        "en": {
+                            "description": "<statement_content>",
+                            "map_popup": "Undefined",
+                            "name": "<name_content>"
+                        }
+                    },
+                    "graph_id": "06903e8f-1a65-11ee-8f04-cd21e680a247",
+                    "graph_publication_id": "a57fe644-e240-11ef-9f69-0aa766c61b66",
+                    "legacyid": null,
+                    "name": "<name_content>",
+                    "principaluser_id": 1,
+                    "resource_instance_lifecycle_state_id": "f75bb034-36e3-4ab4-8167-f520cf0b4c58",
+                    "resourceinstanceid": "6251553d-2399-4a19-b0b4-5362d3a7d147",
+                    "publication_id": "a57fe644-e240-11ef-9f69-0aa766c61b66"
+                },
+                "tiles": [
+                    {
+                        "data": {
+                            "705c44fc-311c-11ee-8a8d-11afefc4bff7": {
+                                "features": [
+                                    {
+                                        "geometry": {
+                                            "coordinates": [
+                                                -118.56517889291896,
+                                                34.04506093253171
+                                            ],
+                                            "type": "Point"
+                                        },
+                                        "id": "2d4901e0d99cbed7fb5a1626835d6d3b",
+                                        "properties": {
+                                            "nodeId": "705c44fc-311c-11ee-8a8d-11afefc4bff7"
+                                        },
+                                        "type": "Feature"
+                                    }
+                                ],
+                                "type": "FeatureCollection"
+                            }
+                        },
+                        "nodegroup_id": "705c44fc-311c-11ee-8a8d-11afefc4bff7",
+                        "parenttile_id": null,
+                        "provisionaledits": null,
+                        "resourceinstance_id": "6251553d-2399-4a19-b0b4-5362d3a7d147",
+                        "sortorder": 0,
+                        "tileid": "1afdcb5d-6511-4b05-ac2c-ce053953e471"
+                    },
+                    {
+                        "data": {
+                            "0345ebd6-11e8-11ef-9493-0a58a9feac02": [
+                                {
+                                    "labels": [
+                                        {
+                                            "id": "2d9a3c97-3b5d-44bc-8ba1-7b1689b8b4d3",
+                                            "language_id": "en",
+                                            "list_item_id": "c1d8c87d-183c-4c46-aa6f-7920825cba5e",
+                                            "value": "current",
+                                            "valuetype_id": "prefLabel"
+                                        }
+                                    ],
+                                    "listid": "2cc0e054-ef9b-41ae-8e86-e0c3b4e7ca00",
+                                    "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/c1d8c87d-183c-4c46-aa6f-7920825cba5e"
+                                }
+                            ],
+                            "0345ecbc-11e8-11ef-9493-0a58a9feac02": [
+                                {
+                                    "labels": [
+                                        {
+                                            "id": "f8abdf58-1a22-43e1-86d9-d30a1d1466fb",
+                                            "language_id": "en",
+                                            "list_item_id": "7b873aed-1dbd-45e4-98e7-85143ee453c6",
+                                            "value": "informational status",
+                                            "valuetype_id": "prefLabel"
+                                        }
+                                    ],
+                                    "listid": "ef69e772-de53-45fe-98d4-bf3e7b10eb57",
+                                    "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/7b873aed-1dbd-45e4-98e7-85143ee453c6"
+                                }
+                            ],
+                            "0345ed66-11e8-11ef-9493-0a58a9feac02": "1954-01-01",
+                            "0345edfc-11e8-11ef-9493-0a58a9feac02": {
+                                "en": {
+                                    "direction": "ltr",
+                                    "value": "The Getty Villa"
+                                },
+                                "en-US": {
+                                    "direction": "ltr",
+                                    "value": ""
+                                }
+                            },
+                            "0345ee92-11e8-11ef-9493-0a58a9feac02": null,
+                            "0345ef28-11e8-11ef-9493-0a58a9feac02": "2031-01-01",
+                            "0345f0e0-11e8-11ef-9493-0a58a9feac02": [
+                                {
+                                    "labels": [
+                                        {
+                                            "id": "de978fd0-2819-4855-8858-8c089780f32c",
+                                            "language_id": "en",
+                                            "list_item_id": "845cc417-ef77-4582-9271-ffba5e4cabc9",
+                                            "value": "en",
+                                            "valuetype_id": "prefLabel"
+                                        }
+                                    ],
+                                    "listid": "55ce793b-a51a-4b25-811d-d08ea797f8c3",
+                                    "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/845cc417-ef77-4582-9271-ffba5e4cabc9"
+                                }
+                            ],
+                            "0345f176-11e8-11ef-9493-0a58a9feac02": null,
+                            "0345f216-11e8-11ef-9493-0a58a9feac02": [
+                                {
+                                    "labels": [
+                                        {
+                                            "id": "6ac8e471-476e-4fd0-b276-86e01a17bcc8",
+                                            "language_id": "en",
+                                            "list_item_id": "2e3a2045-b44e-47fc-a27b-3078b17e08e4",
+                                            "value": "prefLabel",
+                                            "valuetype_id": "prefLabel"
+                                        }
+                                    ],
+                                    "listid": "deb847fc-f4c3-4e82-be19-04641579f129",
+                                    "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/2e3a2045-b44e-47fc-a27b-3078b17e08e4"
+                                }
+                            ],
+                            "9c54276c-1773-11ef-b270-0a58a9feac02": [
+                                {
+                                    "labels": [
+                                        {
+                                            "id": "24559510-c6c6-4558-b411-7cd127642657",
+                                            "language_id": "en",
+                                            "list_item_id": "14751cb1-f7af-45d9-b32a-59d150bdac0f",
+                                            "value": "warrant assertion event",
+                                            "valuetype_id": "prefLabel"
+                                        }
+                                    ],
+                                    "listid": "6eaa2c6f-af83-464c-9200-051c4cfe7e8e",
+                                    "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/14751cb1-f7af-45d9-b32a-59d150bdac0f"
+                                }
+                            ]
+                        },
+                        "nodegroup_id": "0345e87a-11e8-11ef-9493-0a58a9feac02",
+                        "parenttile_id": null,
+                        "provisionaledits": null,
+                        "resourceinstance_id": "6251553d-2399-4a19-b0b4-5362d3a7d147",
+                        "sortorder": 0,
+                        "tileid": "95cc09da-7a6a-4026-9f51-468f0f9cd820"
+                    },
+                    {
+                        "data": {
+                            "c277ca26-11e6-11ef-9493-0a58a9feac02": [
+                                {
+                                    "labels": [
+                                        {
+                                            "id": "254c78d5-ff58-496f-8790-bf1f7179f793",
+                                            "language_id": "en",
+                                            "list_item_id": "fe814127-d68f-43ed-beb9-67a8d4d6336e",
+                                            "value": "system identifier",
+                                            "valuetype_id": "prefLabel"
+                                        }
+                                    ],
+                                    "listid": "f028fe8e-5a23-40a7-8ffe-7865ebac9487",
+                                    "uri": "http://localhost:8000/plugins/controlled-list-manager/item/fe814127-d68f-43ed-beb9-67a8d4d6336e"
+                                }
+                            ],
+                            "c277caf8-11e6-11ef-9493-0a58a9feac02": null,
+                            "c277cbac-11e6-11ef-9493-0a58a9feac02": {
+                                "en": {
+                                    "direction": "ltr",
+                                    "value": "Getty Villa identifier"
+                                },
+                                "en-US": {
+                                    "direction": "ltr",
+                                    "value": ""
+                                }
+                            }
+                        },
+                        "nodegroup_id": "c277c6de-11e6-11ef-9493-0a58a9feac02",
+                        "parenttile_id": null,
+                        "provisionaledits": null,
+                        "resourceinstance_id": "6251553d-2399-4a19-b0b4-5362d3a7d147",
+                        "sortorder": 0,
+                        "tileid": "49f14382-f285-4238-b4a0-f248e4ce9456"
+                    },
+                    {
+                        "data": {
+                            "c81876a6-11e6-11ef-9493-0a58a9feac02": null,
+                            "c8187a02-11e6-11ef-9493-0a58a9feac02": [
+                                {
+                                    "labels": [
+                                        {
+                                            "id": "1cea8e22-2bc3-43aa-abfd-0d04719d99d1",
+                                            "language_id": "en",
+                                            "list_item_id": "9c93be63-b900-4f63-b0cf-7351e5129508",
+                                            "value": "classification",
+                                            "valuetype_id": "prefLabel"
+                                        }
+                                    ],
+                                    "listid": "ef69e772-de53-45fe-98d4-bf3e7b10eb57",
+                                    "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/9c93be63-b900-4f63-b0cf-7351e5129508"
+                                }
+                            ]
+                        },
+                        "nodegroup_id": "c81876a6-11e6-11ef-9493-0a58a9feac02",
+                        "parenttile_id": null,
+                        "provisionaledits": null,
+                        "resourceinstance_id": "6251553d-2399-4a19-b0b4-5362d3a7d147",
+                        "sortorder": 0,
+                        "tileid": "a481e7ad-1c6f-4dba-b917-4c72e780bbc0"
+                    },
+                    {
+                        "data": {
+                            "49a8af78-11e8-11ef-9493-0a58a9feac02": [
+                                {
+                                    "labels": [
+                                        {
+                                            "id": "24559510-c6c6-4558-b411-7cd127642657",
+                                            "language_id": "en",
+                                            "list_item_id": "14751cb1-f7af-45d9-b32a-59d150bdac0f",
+                                            "value": "warrant assertion event",
+                                            "valuetype_id": "prefLabel"
+                                        }
+                                    ],
+                                    "listid": "6eaa2c6f-af83-464c-9200-051c4cfe7e8e",
+                                    "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/14751cb1-f7af-45d9-b32a-59d150bdac0f"
+                                }
+                            ],
+                            "49a8b22a-11e8-11ef-9493-0a58a9feac02": null,
+                            "49a8b356-11e8-11ef-9493-0a58a9feac02": null,
+                            "49a8b48c-11e8-11ef-9493-0a58a9feac02": [
+                                {
+                                    "labels": [
+                                        {
+                                            "id": "de978fd0-2819-4855-8858-8c089780f32c",
+                                            "language_id": "en",
+                                            "list_item_id": "845cc417-ef77-4582-9271-ffba5e4cabc9",
+                                            "value": "en",
+                                            "valuetype_id": "prefLabel"
+                                        }
+                                    ],
+                                    "listid": "55ce793b-a51a-4b25-811d-d08ea797f8c3",
+                                    "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/845cc417-ef77-4582-9271-ffba5e4cabc9"
+                                }
+                            ],
+                            "49a8b5b8-11e8-11ef-9493-0a58a9feac02": [
+                                {
+                                    "labels": [
+                                        {
+                                            "id": "51ccf153-fa7b-4b22-8d0d-d1a57a6c84c2",
+                                            "language_id": "en",
+                                            "list_item_id": "02a0fc69-9f92-4bef-b657-af1ed37c1d3e",
+                                            "value": "brief texts",
+                                            "valuetype_id": "prefLabel"
+                                        }
+                                    ],
+                                    "listid": "ef69e772-de53-45fe-98d4-bf3e7b10eb57",
+                                    "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/02a0fc69-9f92-4bef-b657-af1ed37c1d3e"
+                                }
+                            ],
+                            "49a8b64e-11e8-11ef-9493-0a58a9feac02": [
+                                {
+                                    "labels": [
+                                        {
+                                            "id": "4f8699ea-aca7-4e84-9243-f6c9158f7c11",
+                                            "language_id": "en",
+                                            "list_item_id": "52eb8678-485d-418c-9ad2-aa97d077ac56",
+                                            "value": "scopeNote",
+                                            "valuetype_id": "prefLabel"
+                                        }
+                                    ],
+                                    "listid": "aba2a0b4-75a4-45ba-8b57-021f3ca92a6a",
+                                    "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/52eb8678-485d-418c-9ad2-aa97d077ac56"
+                                }
+                            ],
+                            "49a8b6e4-11e8-11ef-9493-0a58a9feac02": null,
+                            "49a8b77a-11e8-11ef-9493-0a58a9feac02": {
+                                "en": {
+                                    "direction": "ltr",
+                                    "value": "This is an example statement about the Getty Villa"
+                                },
+                                "en-US": {
+                                    "direction": "ltr",
+                                    "value": ""
+                                }
+                            },
+                            "49a8b89c-11e8-11ef-9493-0a58a9feac02": null,
+                            "49a8b93c-11e8-11ef-9493-0a58a9feac02": null,
+                            "49a8b9d2-11e8-11ef-9493-0a58a9feac02": null
+                        },
+                        "nodegroup_id": "49a8ad70-11e8-11ef-9493-0a58a9feac02",
+                        "parenttile_id": null,
+                        "provisionaledits": null,
+                        "resourceinstance_id": "6251553d-2399-4a19-b0b4-5362d3a7d147",
+                        "sortorder": 0,
+                        "tileid": "a96d4702-107a-45c4-9b47-d132ad94bfb4"
+                    }
+                ]
+            }
+        ]
+    }
+}
