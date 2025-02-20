@@ -21,7 +21,11 @@
         "arches-dev-dependencies": "archesproject/arches-dev-dependencies#dev/8.0.x"
     },
     "dependencies": {
+        "@primevue/forms": "^4.2.5",
         "arches": "archesproject/arches#dev/8.0.x",
+        "date-fns": "^4.1.0",
+        "dayjs": "^1.11.13",
+        "primevue": "^4.2.5",
         "vue-router": "^4.4.3"
     },
     "nodeModulesPaths": {},

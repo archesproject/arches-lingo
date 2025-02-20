@@ -137,75 +137,79 @@ async function update(tileId: string | undefined) {
 </script>
 
 <template>
-    <div v-if="mode === VIEW">
-        <SchemeReportSection
-            :title-text="$gettext('Scheme Labels')"
-            :button-text="$gettext('Add New Scheme Label')"
-            @open-editor="emit(OPEN_EDITOR)"
-        >
-            <MetaStringViewer
-                :meta-strings="schemeInstance?.appellative_status"
-                :meta-string-text="metaStringLabel"
-                @edit-string="editSectionValue"
-                @delete-string="deleteSectionValue"
+    <template v-if="schemeInstance">
+        <div v-if="mode === VIEW">
+            <SchemeReportSection
+                :title-text="$gettext('Scheme Labels')"
+                :button-text="$gettext('Add New Scheme Label')"
+                @open-editor="emit(OPEN_EDITOR)"
             >
-                <template #name="{ rowData }">
-                    <span>
-                        {{
-                            (rowData as AppellativeStatus)
-                                .appellative_status_ascribed_name_content
-                        }}
-                    </span>
-                </template>
-                <template #type="{ rowData }">
-                    <ReferenceDatatype
-                        :value="
-                            (rowData as AppellativeStatus)
-                                .appellative_status_ascribed_relation
-                        "
-                        :mode="VIEW"
-                    >
-                    </ReferenceDatatype>
-                </template>
-                <template #language="{ rowData }">
-                    <ReferenceDatatype
-                        :value="
-                            (rowData as AppellativeStatus)
-                                .appellative_status_ascribed_name_language
-                        "
-                        :mode="VIEW"
-                    >
-                    </ReferenceDatatype>
-                </template>
-                <template #drawer="{ rowData }">
-                    <div>
-                        <span>{{ $gettext("Bibliographic Sources:") }}</span>
-                        <ResourceInstanceRelationships
+                <MetaStringViewer
+                    :meta-strings="schemeInstance?.appellative_status"
+                    :meta-string-text="metaStringLabel"
+                    @edit-string="editSectionValue"
+                    @delete-string="deleteSectionValue"
+                >
+                    <template #name="{ rowData }">
+                        <span>
+                            {{
+                                (rowData as AppellativeStatus)
+                                    .appellative_status_ascribed_name_content
+                            }}
+                        </span>
+                    </template>
+                    <template #type="{ rowData }">
+                        <ReferenceDatatype
                             :value="
                                 (rowData as AppellativeStatus)
-                                    .appellative_status_data_assignment_object_used
+                                    .appellative_status_ascribed_relation
                             "
-                        ></ResourceInstanceRelationships>
-                    </div>
-                    <div>
-                        <span>{{ $gettext("Contributors:") }}</span>
-                        <ResourceInstanceRelationships
+                            :mode="VIEW"
+                        >
+                        </ReferenceDatatype>
+                    </template>
+                    <template #language="{ rowData }">
+                        <ReferenceDatatype
                             :value="
                                 (rowData as AppellativeStatus)
-                                    .appellative_status_data_assignment_actor
+                                    .appellative_status_ascribed_name_language
                             "
-                        ></ResourceInstanceRelationships>
-                    </div>
-                </template>
-            </MetaStringViewer>
-        </SchemeReportSection>
-    </div>
-    <div v-if="mode === EDIT">
-        <LabelEditor
-            :value="appellativeStatusToEdit"
-            @update="update"
-        />
-    </div>
+                            :mode="VIEW"
+                        >
+                        </ReferenceDatatype>
+                    </template>
+                    <template #drawer="{ rowData }">
+                        <div>
+                            <span>{{
+                                $gettext("Bibliographic Sources:")
+                            }}</span>
+                            <ResourceInstanceRelationships
+                                :value="
+                                    (rowData as AppellativeStatus)
+                                        .appellative_status_data_assignment_object_used
+                                "
+                            ></ResourceInstanceRelationships>
+                        </div>
+                        <div>
+                            <span>{{ $gettext("Contributors:") }}</span>
+                            <ResourceInstanceRelationships
+                                :value="
+                                    (rowData as AppellativeStatus)
+                                        .appellative_status_data_assignment_actor
+                                "
+                            ></ResourceInstanceRelationships>
+                        </div>
+                    </template>
+                </MetaStringViewer>
+            </SchemeReportSection>
+        </div>
+        <div v-if="mode === EDIT">
+            <LabelEditor
+                :value="appellativeStatusToEdit"
+                @update="update"
+            />
+        </div>
+    </template>
 </template>
 <style scoped>
 :deep(.drawer) {

@@ -1,49 +1,25 @@
 <script setup lang="ts">
-import { computed, inject, onMounted, ref, toRaw, toRef, useId } from "vue";
+import { computed, ref, useTemplateRef } from "vue";
 
-import Button from "primevue/button";
 import { useGettext } from "vue3-gettext";
-import { useRoute, useRouter } from "vue-router";
-import { useToast } from "primevue/usetoast";
+import { useRoute } from "vue-router";
 
-import { fetchLists } from "@/arches_controlled_lists/api.ts";
+import { Form } from "@primevue/forms";
+import Button from "primevue/button";
 
-import {
-    createScheme,
-    fetchLingoResources,
-    upsertLingoTile,
-} from "@/arches_lingo/api.ts";
+import NonLocalizedStringWidget from "@/arches_component_lab/widgets/NonLocalizedStringWidget/NonLocalizedStringWidget.vue";
+import ReferenceSelectWidget from "@/arches_controlled_lists/widgets/ReferenceSelectWidget/ReferenceSelectWidget.vue";
+import ResourceInstanceMultiSelectWidget from "@/arches_component_lab/widgets/ResourceInstanceMultiSelectWidget/ResourceInstanceMultiSelectWidget.vue";
+import DateWidget from "@/arches_component_lab/widgets/DateWidget/DateWidget.vue";
 
-import DateDatatype from "@/arches_lingo/components/generic/DateDatatype.vue";
-import NonLocalizedString from "@/arches_lingo/components/generic/NonLocalizedString.vue";
-import ReferenceDatatype from "@/arches_lingo/components/generic/ReferenceDatatype.vue";
-import ResourceInstanceRelationships from "@/arches_lingo/components/generic/ResourceInstanceRelationships.vue";
+import { upsertLingoTile } from "@/arches_lingo/api.ts";
 
-import {
-    EDIT,
-    ERROR,
-    NEW,
-    selectedLanguageKey,
-} from "@/arches_lingo/constants.ts";
+import { EDIT } from "@/arches_lingo/constants.ts";
 
-import type { Ref } from "vue";
-import type {
-    AppellativeStatus,
-    ControlledListResult,
-    ControlledListItem,
-    ControlledListItemResult,
-    ResourceInstanceReference,
-    ResourceInstanceResult,
-    SchemeInstance,
-} from "@/arches_lingo/types.ts";
-import type { Language } from "@/arches_vue_utils/types.ts";
+import { checkDeepEquality } from "@/arches_lingo/utils.ts";
 
-const emit = defineEmits(["update"]);
-const toast = useToast();
-const route = useRoute();
-const router = useRouter();
-const selectedLanguage = inject(selectedLanguageKey) as Ref<Language>;
-const { $gettext } = useGettext();
+import type { FormSubmitEvent } from "@primevue/forms";
+import type { AppellativeStatus } from "@/arches_lingo/types.ts";
 
 const props = withDefaults(
     defineProps<{
@@ -53,346 +29,153 @@ const props = withDefaults(
         value: () => ({}) as AppellativeStatus,
     },
 );
-const valueRef = toRef(props, "value");
-const formValue = computed({
-    get: () => valueRef.value,
-    set: (newVal: AppellativeStatus) => {
-        valueRef.value = newVal;
-    },
+
+// this is to compensate for the of a Form type in the primevue/forms module
+interface FormInstance {
+    fields: Record<
+        string,
+        {
+            options: { name: string };
+            states: { value: unknown };
+        }
+    >;
+}
+
+const route = useRoute();
+const { $gettext } = useGettext();
+
+const formRef = useTemplateRef<FormInstance>("formRef");
+const formKey = ref(0);
+
+const isFormDirty = computed(() => {
+    if (!formRef.value) return false;
+
+    return Object.values(formRef.value.fields).some((fieldData) => {
+        return !checkDeepEquality(
+            props.value[fieldData.options.name as keyof AppellativeStatus],
+            fieldData.states.value,
+        );
+    });
 });
 
-const languageOptions = ref<ControlledListItem[]>([]);
-const typeOptions = ref<ControlledListItem[]>([]);
-const statusOptions = ref<ControlledListItem[]>([]);
-const metatypeOptions = ref<ControlledListItem[]>([]);
-const eventTypeOptions = ref<ControlledListItem[]>([]);
-const groupAndPersonOptions = ref<ResourceInstanceReference[]>();
-const textualWorkOptions = ref<ResourceInstanceReference[]>();
-
-const labelId = useId();
-const labelLanguageId = useId();
-const labelTypeId = useId();
-const labelStatusId = useId();
-const labelMetatypeId = useId();
-const labelStartId = useId();
-const labelEndId = useId();
-const labelContributorId = useId();
-const labelSourcesId = useId();
-const labelWarrantId = useId();
-
-const referenceNodeConfig = [
-    {
-        nodeAlias: "appellative_status_ascribed_name_language",
-        listRef: languageOptions,
-        listName: "Languages",
-    },
-    {
-        nodeAlias: "appellative_status_ascribed_relation",
-        listRef: typeOptions,
-        listName: "label",
-    },
-    {
-        nodeAlias: "appellative_status_status",
-        listRef: statusOptions,
-        listName: "Statuteses",
-    },
-    {
-        nodeAlias: "appellative_status_status_metatype",
-        listRef: metatypeOptions,
-        listName: "Metatypes",
-    },
-    {
-        nodeAlias: "appellative_status_data_assignment_type",
-        listRef: eventTypeOptions,
-        listName: "Event Types",
-    },
-];
-
-function onUpdateString(node: keyof AppellativeStatus, val: string) {
-    (formValue.value[node] as unknown) = toRaw(val);
-}
-
-function onUpdateReferenceDatatype(
-    node: keyof AppellativeStatus,
-    val: ControlledListItem[],
-) {
-    (formValue.value[node] as unknown) = val.map((item) => toRaw(item));
-}
-
-function onUpdateResourceInstance(
-    node: keyof AppellativeStatus,
-    val: string[],
-    options: ResourceInstanceReference[],
-) {
-    if (val.length > 0) {
-        const selectedOptions = options.filter((option) =>
-            val.includes(option.resourceId),
-        );
-        (formValue.value[node] as unknown) = selectedOptions;
-    }
-}
-
-async function save() {
-    try {
-        let newTileId;
-        if (route.params.id === NEW) {
-            const newSchemeInstance: SchemeInstance = {
-                appellative_status: [toRaw(formValue.value)],
-            };
-            const updated = await createScheme(newSchemeInstance);
-            newTileId = updated.appellative_status[0].tileid;
-            await router.push({
-                name: "scheme",
-                params: { id: updated.resourceinstanceid },
-            });
-        } else {
-            const updated = await upsertLingoTile(
-                "scheme",
-                "appellative_status",
-                {
-                    resourceinstance: route.params.id as string,
-                    ...formValue.value,
+async function save(e: FormSubmitEvent) {
+    upsertLingoTile(
+        "scheme",
+        "appellative_status",
+        {
+            resourceinstance: route.params.id as string,
+            ...Object.entries(e.states).reduce(
+                (acc, [key, state]) => {
+                    acc[key] = state.value;
+                    return acc;
                 },
-                formValue.value.tileid,
-            );
-            newTileId = updated.tileid;
-        }
-        emit("update", newTileId);
-    } catch (error) {
-        toast.add({
-            severity: ERROR,
-            summary: $gettext("Error saving scheme"),
-            detail: (error as Error).message,
-        });
-    }
-}
-
-async function getControlledLists() {
-    let parsed;
-    try {
-        parsed = await fetchLists(
-            referenceNodeConfig.map((node) => node.nodeAlias),
-        );
-    } catch (error) {
-        toast.add({
-            severity: ERROR,
-            summary: $gettext("Error"),
-            detail:
-                error instanceof Error
-                    ? error.message
-                    : $gettext("Could not fetch the controlled list options"),
-        });
-        return [];
-    }
-    const controlledLists = parsed.controlled_lists;
-    referenceNodeConfig.forEach((node) => {
-        const matchingList = controlledLists.find(
-            (list: ControlledListResult) => list.name === node.listName,
-        );
-        const options = matchingList.items.map(
-            (item: ControlledListItemResult): ControlledListItem => ({
-                list_id: item.list_id,
-                uri: item.uri,
-                labels: item.values,
-            }),
-        );
-        node.listRef.value = options;
-    });
-}
-
-async function getResourceInstanceOptions(
-    fetchOptions: () => Promise<ResourceInstanceResult[]>,
-): Promise<ResourceInstanceReference[]> {
-    let options;
-    try {
-        options = await fetchOptions();
-    } catch (error) {
-        toast.add({
-            severity: ERROR,
-            summary: $gettext("Error"),
-            detail:
-                error instanceof Error
-                    ? error.message
-                    : $gettext("Could not fetch the resource instance options"),
-        });
-        return [];
-    }
-    const results = options.map((option: ResourceInstanceResult) => {
-        const result: ResourceInstanceReference = {
-            display_value: option.descriptors[selectedLanguage.value.code].name,
-            resourceId: option.resourceinstanceid,
-            ontologyProperty: "ac41d9be-79db-4256-b368-2f4559cfbe55",
-            inverseOntologyProperty: "ac41d9be-79db-4256-b368-2f4559cfbe55",
-        };
-        return result;
-    });
-    return results;
-}
-async function initializeSelectOptions() {
-    getControlledLists();
-    groupAndPersonOptions.value = await getResourceInstanceOptions(() =>
-        fetchLingoResources("group"),
-    );
-    groupAndPersonOptions.value = [
-        ...(groupAndPersonOptions.value || []),
-        ...(await getResourceInstanceOptions(() =>
-            fetchLingoResources("person"),
-        )),
-    ];
-    textualWorkOptions.value = await getResourceInstanceOptions(() =>
-        fetchLingoResources("textual_work"),
+                {} as Record<string, unknown>,
+            ),
+            tileid: props.value.tileid,
+        },
+        props.value.tileid,
     );
 }
 
-onMounted(initializeSelectOptions);
+function reset() {
+    formKey.value += 1;
+}
 </script>
 
 <template>
-    <label :for="labelId">{{ $gettext("Label") }}</label>
-    <NonLocalizedString
-        :value="formValue?.appellative_status_ascribed_name_content"
-        :mode="EDIT"
-        :pass-thru-id="labelId"
-        @update="
-            (val) =>
-                onUpdateString('appellative_status_ascribed_name_content', val)
-        "
-    />
-    <p :id="labelLanguageId">{{ $gettext("Label Language") }}</p>
-    <ReferenceDatatype
-        :value="formValue?.appellative_status_ascribed_name_language"
-        :mode="EDIT"
-        :multi-value="false"
-        :options="languageOptions"
-        :pt-aria-labeled-by="labelLanguageId"
-        @update="
-            (val) =>
-                onUpdateReferenceDatatype(
-                    'appellative_status_ascribed_name_language',
-                    val,
-                )
-        "
-    />
-    <p :id="labelTypeId">{{ $gettext("Label Type") }}</p>
-    <ReferenceDatatype
-        :value="formValue?.appellative_status_ascribed_relation"
-        :mode="EDIT"
-        :multi-value="false"
-        :options="typeOptions"
-        :pt-aria-labeled-by="labelTypeId"
-        @update="
-            (val) =>
-                onUpdateReferenceDatatype(
-                    'appellative_status_ascribed_relation',
-                    val,
-                )
-        "
-    />
-    <p :id="labelStatusId">{{ $gettext("Label Status") }}</p>
-    <ReferenceDatatype
-        :value="formValue?.appellative_status_status"
-        :mode="EDIT"
-        :multi-value="false"
-        :options="statusOptions"
-        :pt-aria-labeled-by="labelStatusId"
-        @update="
-            (val) => onUpdateReferenceDatatype('appellative_status_status', val)
-        "
-    />
-    <p :id="labelMetatypeId">{{ $gettext("Label Metatype") }}</p>
-    <ReferenceDatatype
-        :value="formValue?.appellative_status_status_metatype"
-        :mode="EDIT"
-        :multi-value="false"
-        :options="metatypeOptions"
-        :pt-aria-labeled-by="labelMetatypeId"
-        @update="
-            (val) =>
-                onUpdateReferenceDatatype(
-                    'appellative_status_status_metatype',
-                    val,
-                )
-        "
-    />
-    <p :id="labelStartId">{{ $gettext("Label Temporal Validity Start") }}</p>
-    <DateDatatype
-        :value="formValue?.appellative_status_timespan_begin_of_the_begin"
-        :mode="EDIT"
-        :pt-aria-labeled-by="labelStartId"
-        @update="
-            (val) =>
-                onUpdateString(
-                    'appellative_status_timespan_begin_of_the_begin',
-                    val,
-                )
-        "
-    />
-    <p :id="labelEndId">{{ $gettext("Label Temporal Validity End") }}</p>
-    <DateDatatype
-        :value="formValue?.appellative_status_timespan_end_of_the_end"
-        :mode="EDIT"
-        :pt-aria-labeled-by="labelEndId"
-        @update="
-            (val) =>
-                onUpdateString(
-                    'appellative_status_timespan_end_of_the_end',
-                    val,
-                )
-        "
-    />
-    <p :id="labelContributorId">{{ $gettext("Contributor") }}</p>
-    <ResourceInstanceRelationships
-        :value="formValue?.appellative_status_data_assignment_actor"
-        :mode="EDIT"
-        :options="groupAndPersonOptions"
-        :pt-aria-labeled-by="labelContributorId"
-        @update="
-            (val) =>
-                onUpdateResourceInstance(
-                    'appellative_status_data_assignment_actor',
-                    val,
-                    groupAndPersonOptions ?? [],
-                )
-        "
-    />
-    <p :id="labelSourcesId">{{ $gettext("Sources") }}</p>
-    <ResourceInstanceRelationships
-        :value="formValue?.appellative_status_data_assignment_object_used"
-        :mode="EDIT"
-        :options="textualWorkOptions"
-        :pt-aria-labeled-by="labelSourcesId"
-        @update="
-            (val) =>
-                onUpdateResourceInstance(
-                    'appellative_status_data_assignment_object_used',
-                    val,
-                    textualWorkOptions ?? [],
-                )
-        "
-    />
-    <p :id="labelWarrantId">{{ $gettext("Warrant Type") }}</p>
-    <ReferenceDatatype
-        :value="formValue?.appellative_status_data_assignment_type"
-        :mode="EDIT"
-        :multi-value="false"
-        :options="eventTypeOptions"
-        :pt-aria-labeled-by="labelWarrantId"
-        @update="
-            (val) =>
-                onUpdateReferenceDatatype(
-                    'appellative_status_data_assignment_type',
-                    val,
-                )
-        "
-    />
-    <Button
-        :label="$gettext('Update')"
-        @click="save"
-    />
-</template>
+    <Form
+        v-if="Object.values(props.value).length"
+        ref="formRef"
+        :key="formKey"
+        @submit="save"
+        @reset="reset"
+    >
+        <NonLocalizedStringWidget
+            graph-slug="scheme"
+            node-alias="appellative_status_ascribed_name_content"
+            :initial-value="
+                props.value.appellative_status_ascribed_name_content
+            "
+            :mode="EDIT"
+        />
+        <DateWidget
+            graph-slug="scheme"
+            node-alias="appellative_status_timespan_begin_of_the_begin"
+            :initial-value="
+                props.value.appellative_status_timespan_begin_of_the_begin
+            "
+            :mode="EDIT"
+        />
+        <DateWidget
+            graph-slug="scheme"
+            node-alias="appellative_status_timespan_end_of_the_end"
+            :initial-value="
+                props.value.appellative_status_timespan_end_of_the_end
+            "
+            :mode="EDIT"
+        />
 
-<style scoped>
-p {
-    margin: 0;
-}
-</style>
+        <ResourceInstanceMultiSelectWidget
+            graph-slug="scheme"
+            node-alias="appellative_status_data_assignment_actor"
+            :initial-value="
+                props.value.appellative_status_data_assignment_actor
+            "
+            :mode="EDIT"
+        />
+        <ResourceInstanceMultiSelectWidget
+            graph-slug="scheme"
+            node-alias="appellative_status_data_assignment_object_used"
+            :initial-value="
+                props.value.appellative_status_data_assignment_object_used
+            "
+            :mode="EDIT"
+        />
+
+        <ReferenceSelectWidget
+            graph-slug="scheme"
+            node-alias="appellative_status_ascribed_name_language"
+            :initial-value="
+                props.value.appellative_status_ascribed_name_language
+            "
+            :mode="EDIT"
+        />
+        <ReferenceSelectWidget
+            graph-slug="scheme"
+            node-alias="appellative_status_ascribed_relation"
+            :initial-value="props.value.appellative_status_ascribed_relation"
+            :mode="EDIT"
+        />
+        <ReferenceSelectWidget
+            graph-slug="scheme"
+            node-alias="appellative_status_status"
+            :initial-value="props.value.appellative_status_status"
+            :mode="EDIT"
+        />
+        <ReferenceSelectWidget
+            graph-slug="scheme"
+            node-alias="appellative_status_status_metatype"
+            :initial-value="props.value.appellative_status_status_metatype"
+            :mode="EDIT"
+        />
+        <ReferenceSelectWidget
+            graph-slug="scheme"
+            node-alias="appellative_status_data_assignment_type"
+            :initial-value="props.value.appellative_status_data_assignment_type"
+            :mode="EDIT"
+        />
+
+        <div style="display: flex">
+            <Button
+                :label="$gettext('Update')"
+                type="submit"
+                :disabled="!isFormDirty"
+            />
+            <Button
+                :label="$gettext('Reset')"
+                type="reset"
+                :disabled="!isFormDirty"
+            />
+        </div>
+    </Form>
+</template>

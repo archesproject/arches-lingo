@@ -26,6 +26,7 @@ const value = computed({
         return valRef.value;
     },
     set(value) {
+        console.log("value", value);
         emit("update", value);
     },
 });
