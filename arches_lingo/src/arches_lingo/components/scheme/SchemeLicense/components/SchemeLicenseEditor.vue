@@ -86,7 +86,6 @@ async function save(e: FormSubmitEvent) {
                     ...expectedTileShape,
                     tileid: props.tileId,
                 },
-                props.tileId,
             );
 
             updatedTileId = updatedScheme.tileid;
