@@ -3,9 +3,9 @@ from rest_framework.generics import (
     RetrieveUpdateDestroyAPIView,
 )
 
-from arches.app.permissions.rest_framework import RDMAdministrator
-from arches.app.models.serializers import ArchesResourceSerializer
-from arches.app.views.api.mixins import ArchesModelAPIMixin
+from arches_querysets.rest_framework.permissions import RDMAdministrator
+from arches_querysets.rest_framework.serializers import ArchesResourceSerializer
+from arches_querysets.rest_framework.view_mixins import ArchesModelAPIMixin
 
 from arches_lingo.serializers import LingoTileSerializer
 
