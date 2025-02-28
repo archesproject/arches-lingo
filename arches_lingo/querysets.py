@@ -1,11 +1,10 @@
 from django.db import models
 from django.utils.translation import gettext as _
 
-from arches_lingo.utils.query_expressions import LevenshteinLessEqual
+from arches_lingo.query_expressions import LevenshteinLessEqual
 
 
 class LabelValueQuerySet(models.QuerySet):
-
     def fuzzy_search(self, term, max_edit_distance):
         from arches_lingo.models import VwLabelValue
 

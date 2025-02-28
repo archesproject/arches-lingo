@@ -2,7 +2,7 @@ from django.db import models
 
 from arches.app.models.models import ResourceInstance
 
-from arches_lingo.utils.querysets import LabelValueQuerySet
+from arches_lingo.querysets import LabelValueQuerySet
 
 
 class VwLabelValue(models.Model):
