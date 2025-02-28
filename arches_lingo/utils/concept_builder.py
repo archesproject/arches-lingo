@@ -23,7 +23,7 @@ from arches_lingo.const import (
     SCHEME_NAME_TYPE_NODE,
 )
 
-from arches_lingo.utils.query_expressions import JsonbArrayElements
+from arches_lingo.query_expressions import JsonbArrayElements
 
 
 TOP_CONCEPT_OF_LOOKUP = f"data__{TOP_CONCEPT_OF_NODE_AND_NODEGROUP}"
