@@ -90,8 +90,6 @@ function closeEditor() {
 }
 
 function openEditor(componentName: string, tileId?: string) {
-    editorPanelKey.value += 1;
-
     selectedComponentDatum.value = componentData.value.find(
         (componentDatum) => {
             return componentDatum.componentName === componentName;
@@ -100,6 +98,7 @@ function openEditor(componentName: string, tileId?: string) {
 
     editorTileId.value = tileId;
     editorState.value = MINIMIZED;
+    editorPanelKey.value += 1;
 }
 
 function maximizeEditor() {

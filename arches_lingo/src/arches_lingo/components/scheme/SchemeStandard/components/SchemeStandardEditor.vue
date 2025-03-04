@@ -46,22 +46,21 @@ async function save(e: FormSubmitEvent) {
             Object.entries(e.states).map(([key, state]) => [key, state.value]),
         );
 
+        let updatedTileId;
+
         if (!props.resourceInstanceId) {
-            const updated = await createScheme({
+            const updatedScheme = await createScheme({
                 [props.nodegroupAlias]: formData,
             });
 
             await router.push({
                 name: props.graphSlug,
-                params: { id: updated.resourceinstanceid },
+                params: { id: updatedScheme.resourceinstanceid },
             });
 
-            openEditor!(
-                props.componentName,
-                updated[props.nodegroupAlias].tileid,
-            );
+            updatedTileId = updatedScheme[props.nodegroupAlias][0].tileid;
         } else {
-            await upsertLingoTile(
+            const updatedScheme = await upsertLingoTile(
                 props.graphSlug,
                 props.nodegroupAlias,
                 {
@@ -71,11 +70,15 @@ async function save(e: FormSubmitEvent) {
                 },
                 props.tileId,
             );
+
+            updatedTileId = updatedScheme.tileid;
         }
 
-        refreshReportSection!(props.componentName);
+        openEditor!(props.componentName, updatedTileId);
     } catch (error) {
         console.error(error);
+    } finally {
+        refreshReportSection!(props.componentName);
     }
 }
 </script>
