@@ -1,100 +1,42 @@
 <script setup lang="ts">
-import { onBeforeUpdate, ref, shallowRef, watch } from "vue";
-import { useGettext } from "vue3-gettext";
-import Button from "primevue/button";
-import SchemeNamespace from "@/arches_lingo/components/scheme/report/SchemeNamespace.vue";
-import SchemeStandard from "@/arches_lingo/components/scheme/report/SchemeStandard.vue";
-import SchemeLabel from "@/arches_lingo/components/scheme/report/SchemeLabel.vue";
-import SchemeNote from "@/arches_lingo/components/scheme/report/SchemeNote.vue";
-import SchemeLicense from "@/arches_lingo/components/scheme/report/SchemeLicense.vue";
-import type { SectionTypes } from "@/arches_lingo/types.ts";
-import {
-    OPEN_EDITOR,
-    EDIT,
-    UPDATED,
-    MAXIMIZE,
-    SIDE,
-    CLOSE,
-} from "@/arches_lingo/constants.ts";
+import { provide, ref } from "vue";
 
-const { $gettext } = useGettext();
+import { useGettext } from "vue3-gettext";
+
+import Button from "primevue/button";
+
+import { MAXIMIZE, MINIMIZE, CLOSE } from "@/arches_lingo/constants.ts";
+
 const props = defineProps<{
-    editorMax: boolean;
-    editorForm: string;
-    tileId?: string;
+    isEditorMaximized: boolean;
 }>();
 
-type SchemeComponent = {
-    component: SectionTypes;
-    id: string;
-    editorName: string;
-};
+const { $gettext } = useGettext();
 
-const childRefs = ref<Array<SectionTypes>>([]);
-const currentEditor = shallowRef<SchemeComponent>();
-const schemeComponents = [
-    {
-        component: SchemeLabel,
-        id: "label",
-        editorName: $gettext("Scheme Label"),
-    },
-    {
-        component: SchemeNamespace,
-        id: "namespace",
-        editorName: $gettext("Scheme Namespace"),
-    },
-    {
-        component: SchemeStandard,
-        id: "standard",
-        editorName: $gettext("Scheme Standards Followed"),
-    },
-    {
-        component: SchemeNote,
-        id: "note",
-        editorName: $gettext("Scheme Notes"),
-    },
-    {
-        component: SchemeLicense,
-        id: "license",
-        editorName: $gettext("Scheme Rights"),
-    },
-];
+const emit = defineEmits([MAXIMIZE, MINIMIZE, CLOSE]);
 
-watch(
-    props,
-    (newValue) => {
-        if (newValue) {
-            currentEditor.value = schemeComponents.find((component) => {
-                return component.id === newValue.editorForm;
-            });
-        }
-    },
-    { immediate: true },
-);
-
-const emit = defineEmits([MAXIMIZE, SIDE, CLOSE, UPDATED, OPEN_EDITOR]);
-
-onBeforeUpdate(() => {
-    childRefs.value = [];
-});
+const formKey = ref(0);
+const schemeEditorFormRef = ref();
+provide("schemeEditorFormRef", schemeEditorFormRef);
 
 function toggleSize() {
-    if (props.editorMax) {
-        emit(MAXIMIZE);
+    if (props.isEditorMaximized) {
+        emit(MINIMIZE);
     } else {
-        emit(SIDE);
+        emit(MAXIMIZE);
     }
 }
 
-function onSectionUpdate() {
-    emit(UPDATED);
+function resetForm() {
+    formKey.value += 1;
 }
 </script>
 
 <template>
-    <div class="header">
-        <div>
-            <h3>{{ $gettext("Editor Tools") }}</h3>
+    <div class="container">
+        <div class="header">
+            <h2>{{ $gettext("Editor Tools") }}</h2>
+
             <div>
                 <Button
                     :aria-label="$gettext('toggle editor size')"
@@ -103,8 +45,8 @@ function onSectionUpdate() {
                     <i
                         :class="{
                             pi: true,
-                            'pi-window-maximize': props.editorMax,
-                            'pi-window-minimize': !props.editorMax,
+                            'pi-window-maximize': props.isEditorMaximized,
+                            'pi-window-minimize': !props.isEditorMaximized,
                         }"
                         aria-hidden="true"
                     />
@@ -120,30 +62,49 @@ function onSectionUpdate() {
                 </Button>
             </div>
         </div>
-    </div>
-    <div
-        v-if="currentEditor"
-        class="content"
-    >
-        <h3>{{ currentEditor.editorName }}</h3>
-        <component
-            :is="currentEditor.component"
-            v-bind="{ mode: EDIT, tileId: tileId }"
-            v-on="{
-                updated: onSectionUpdate,
-                openEditor: (tileId: string | undefined) =>
-                    $emit(OPEN_EDITOR, currentEditor?.id, tileId),
-            }"
-        />
+
+        <div class="editor-content">
+            <slot :key="formKey" />
+        </div>
+
+        <div>
+            <Button
+                :label="$gettext('Save Changes')"
+                severity="success"
+                @click="schemeEditorFormRef.onSubmit()"
+            />
+            <Button
+                :label="$gettext('Cancel')"
+                severity="danger"
+                @click="resetForm"
+            />
+        </div>
     </div>
 </template>
+
 <style scoped>
-.header div {
-    margin: 0 1rem;
+.container {
     display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
     align-items: center;
 }
-.header div h3 {
+
+.editor-form {
+    display: flex;
+    flex-direction: column;
     flex: 1;
+    min-height: 0;
+}
+
+.editor-content {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
 }
 </style>

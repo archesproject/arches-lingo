@@ -2,7 +2,7 @@ import createVueApplication from 'arches/arches/app/media/js/utils/create-vue-ap
 
 import { createRouter, createWebHistory } from 'vue-router';
 
-import LingoApp from '@/arches_lingo/App.vue';
+import ArchesLingo from '@/arches_lingo/ArchesLingo.vue';
 import { routes } from '@/arches_lingo/routes.ts';
 
 const router = createRouter({
@@ -10,7 +10,7 @@ const router = createRouter({
     routes,
 });
 
-createVueApplication(LingoApp).then(vueApp => {
+createVueApplication(ArchesLingo).then(vueApp => {
     vueApp.use(router);
     vueApp.mount('#lingo-mounting-point');
 });

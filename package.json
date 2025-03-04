@@ -21,8 +21,12 @@
         "arches-dev-dependencies": "archesproject/arches-dev-dependencies#dev/8.0.x"
     },
     "dependencies": {
+        "@primevue/forms": "4.2.5",
+        "@primevue/themes": "4.2.5",
         "arches": "archesproject/arches#dev/8.0.x",
-        "vue-router": "^4.4.3"
+        "arches-component-lab": "archesproject/arches-component-lab#main",
+        "primevue": "4.2.5",
+        "vue-router": "4.4.3"
     },
     "nodeModulesPaths": {},
     "overrides": {

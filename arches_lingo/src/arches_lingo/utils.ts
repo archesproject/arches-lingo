@@ -100,3 +100,34 @@ export function treeFromSchemes(
 
     return reshapedSchemes;
 }
+
+export function checkDeepEquality(value1: unknown, value2: unknown): boolean {
+    if (typeof value1 !== typeof value2) {
+        return false;
+    }
+
+    if (Array.isArray(value1) && Array.isArray(value2)) {
+        return (
+            value1.length === value2.length &&
+            value1.every((item, index) =>
+                checkDeepEquality(item, value2[index]),
+            )
+        );
+    }
+
+    if (
+        typeof value1 !== "object" ||
+        value1 === null ||
+        typeof value2 !== "object" ||
+        value2 === null
+    ) {
+        return value1 === value2;
+    }
+
+    const object1 = value1 as Record<string, unknown>;
+    const object2 = value2 as Record<string, unknown>;
+
+    return Object.keys(object1).every((key) => {
+        return checkDeepEquality(object1[key], object2[key]);
+    });
+}

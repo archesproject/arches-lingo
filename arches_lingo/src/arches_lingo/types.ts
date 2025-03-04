@@ -1,12 +1,8 @@
 import type { Ref } from "vue";
 import type { TreeNode } from "primevue/treenode";
 import type { Label } from "@/arches_vue_utils/types.ts";
-import type { EDIT, VIEW } from "./constants";
-import SchemeNamespace from "@/arches_lingo/src/arches_lingo/components/scheme/report/SchemeNamespace.vue";
-import SchemeLabel from "@/arches_lingo/src/arches_lingo/components/scheme/report/SchemeLabel.vue";
-import SchemeLicense from "@/arches_lingo/src/arches_lingo/components/scheme/report/SchemeLicense.vue";
-import SchemeStandard from "@/arches_lingo/src/arches_lingo/components/scheme/report/SchemeStandard.vue";
-import SchemeNote from "@/arches_lingo/src/arches_lingo/components/scheme/report/SchemeNote.vue";
+import type { EDIT, VIEW } from "@/arches_lingo/constants.ts";
+import type { ControlledListItem } from "@/arches_controlled_lists/types.ts";
 
 export interface User {
     first_name: string;
@@ -50,15 +46,6 @@ export interface ControlledListItemLabelValue {
     list_item_id: string;
 }
 
-export interface ControlledListItem {
-    item_id?: string;
-    list_id: string;
-    uri: string;
-    sortorder?: number;
-    guide?: boolean;
-    labels: ControlledListItemLabelValue[];
-}
-
 export interface ControlledListItemResult {
     id?: string;
     list_id: string;
@@ -82,29 +69,8 @@ export interface ResourceInstanceResult {
     resourceinstanceid: string;
     descriptors: { [key: string]: { name: string } };
 }
-interface ControlledListItemValue {
-    value: string;
-}
-
-export type SectionTypes =
-    | typeof SchemeLabel
-    | typeof SchemeNamespace
-    | typeof SchemeLicense
-    | typeof SchemeStandard
-    | typeof SchemeNote;
 
 export type DataComponentMode = typeof EDIT | typeof VIEW;
-
-export interface SchemeNamespaceUpdate {
-    namespace?: {
-        namespace_name: string;
-        namespace_type: ControlledListItemValue[] | ControlledListItem[];
-    };
-}
-
-export interface MetaString {
-    tileid: string;
-}
 
 export interface MetaStringText {
     name: string;

@@ -49,6 +49,7 @@ urlpatterns = [
         name="api-lingo-tile",
     ),
     path("", include("arches_controlled_lists.urls")),
+    path("", include("arches_component_lab.urls")),
 ]
 
 # Ensure Arches core urls are superseded by project-level urls

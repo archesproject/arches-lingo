@@ -4,6 +4,7 @@ import type { Concept, UserRefAndSetter } from "@/arches_lingo/types.ts";
 
 export const ANONYMOUS = "anonymous";
 export const ERROR = "error";
+export const DANGER = "danger";
 export const SECONDARY = "secondary";
 export const CONTRAST = "contrast";
 export const EDIT = "edit";
@@ -12,8 +13,11 @@ export const OPEN_EDITOR = "openEditor";
 export const UPDATED = "updated";
 export const NEW = "new";
 export const MAXIMIZE = "maximize";
-export const SIDE = "side";
+export const MAXIMIZED = "maximized";
+export const MINIMIZE = "minimize";
+export const MINIMIZED = "minimized";
 export const CLOSE = "close";
+export const CLOSED = "closed";
 
 export const DEFAULT_ERROR_TOAST_LIFE = 8000;
 export const SEARCH_RESULTS_PER_PAGE = 25;
