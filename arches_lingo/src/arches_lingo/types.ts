@@ -80,9 +80,12 @@ export interface MetaStringText {
     noRecords: string;
 }
 
-export interface AppellativeStatus {
+export interface TileData {
     resourceinstance?: string;
     tileid?: string;
+}
+
+export interface AppellativeStatus extends TileData {
     appellative_status_ascribed_name_content: string;
     appellative_status_ascribed_name_language?: ControlledListItem[];
     appellative_status_ascribed_relation?: ControlledListItem[];
@@ -95,9 +98,7 @@ export interface AppellativeStatus {
     appellative_status_timespan_end_of_the_end: string;
 }
 
-export interface SchemeStatement {
-    resourceinstance?: string;
-    tileid?: string;
+export interface SchemeStatement extends TileData {
     statement_content_n1: string;
     statement_language_n1?: ControlledListItem[];
     statement_type_n1?: ControlledListItem[];
@@ -109,15 +110,13 @@ export interface SchemeStatement {
     statement_data_assignment_timespan_end_of_the_end: string;
 }
 
-export interface SchemeRights {
-    tileid?: string;
+export interface SchemeRights extends TileData {
     right_holder?: ResourceInstanceReference[];
     right_type?: ControlledListItem[];
     right_statement?: SchemeRightStatement;
 }
 
-export interface SchemeRightStatement {
-    tileid?: string;
+export interface SchemeRightStatement extends TileData {
     right_statement_content?: string;
     right_statement_label?: string;
     right_statement_language?: ControlledListItem[];
@@ -125,25 +124,14 @@ export interface SchemeRightStatement {
     right_statement_type_metatype?: ControlledListItem[];
 }
 
-export interface SchemeNamespace {
-    resourceinstance?: string;
-    tileid?: string;
+export interface SchemeNamespace extends TileData {
     namespace_name: string;
     namespace_type: ControlledListItem[];
 }
 
-export interface SchemeCreation {
-    resourceinstance?: string;
-    tileid?: string;
+export interface SchemeCreation extends TileData {
     creation_sources: ResourceInstanceReference[];
 }
-
-export type SchemeTile =
-    | AppellativeStatus
-    | SchemeStatement
-    | SchemeNamespace
-    | SchemeCreation
-    | SchemeRights;
 
 export interface SchemeInstance {
     namespace?: SchemeNamespace;

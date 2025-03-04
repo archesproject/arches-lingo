@@ -1,7 +1,7 @@
 import arches from "arches";
 import Cookies from "js-cookie";
 
-import type { SchemeInstance, SchemeTile } from "@/arches_lingo/types";
+import type { SchemeInstance, TileData } from "@/arches_lingo/types";
 
 function getToken() {
     const token = Cookies.get("csrftoken");
@@ -99,20 +99,22 @@ export const updateLingoResource = async (
 export const upsertLingoTile = async (
     graphSlug: string,
     nodegroupAlias: string,
-    tileData: SchemeTile, // TODO: generalize type
-    tileId: string | undefined,
+    tileData: TileData,
 ) => {
-    const url = tileId
+    const url = tileData.tileid
         ? arches.urls.api_lingo_tile
         : arches.urls.api_lingo_tiles;
-    const response = await fetch(url(graphSlug, nodegroupAlias, tileId), {
-        method: tileId ? "PATCH" : "POST",
-        headers: {
-            "X-CSRFTOKEN": getToken(),
-            "Content-Type": "application/json",
+    const response = await fetch(
+        url(graphSlug, nodegroupAlias, tileData.tileid),
+        {
+            method: tileData.tileid ? "PATCH" : "POST",
+            headers: {
+                "X-CSRFTOKEN": getToken(),
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(tileData),
         },
-        body: JSON.stringify(tileData),
-    });
+    );
 
     const parsed = await response.json();
     if (!response.ok)
