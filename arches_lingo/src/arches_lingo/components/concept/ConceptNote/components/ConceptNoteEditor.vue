@@ -1,27 +1,29 @@
 <script setup lang="ts">
-import { inject, useTemplateRef, watch, type Component, type Ref } from "vue";
-import { useRouter } from "vue-router";
+import { inject, useTemplateRef, watch } from "vue";
 
+import { useRouter } from "vue-router";
 import { Form } from "@primevue/forms";
 
+import DateWidget from "@/arches_component_lab/widgets/DateWidget/DateWidget.vue";
 import NonLocalizedStringWidget from "@/arches_component_lab/widgets/NonLocalizedStringWidget/NonLocalizedStringWidget.vue";
 import ReferenceSelectWidget from "@/arches_controlled_lists/widgets/ReferenceSelectWidget/ReferenceSelectWidget.vue";
 import ResourceInstanceMultiSelectWidget from "@/arches_component_lab/widgets/ResourceInstanceMultiSelectWidget/ResourceInstanceMultiSelectWidget.vue";
 
-import { createScheme, upsertLingoTile } from "@/arches_lingo/api.ts";
-
+import { createConcept, upsertLingoTile } from "@/arches_lingo/api.ts";
 import { EDIT } from "@/arches_lingo/constants.ts";
 
+import type { Component, Ref } from "vue";
 import type { FormSubmitEvent } from "@primevue/forms";
-import type { SchemeRights } from "@/arches_lingo/types";
+
+import type { ConceptStatement } from "@/arches_lingo/types.ts";
 
 const props = defineProps<{
-    tileData: SchemeRights | undefined;
-    graphSlug: string;
-    sectionTitle: string;
-    resourceInstanceId: string | undefined;
+    tileData: ConceptStatement | undefined;
     componentName: string;
+    sectionTitle: string;
+    graphSlug: string;
     nodegroupAlias: string;
+    resourceInstanceId: string | undefined;
     tileId?: string;
 }>();
 
@@ -38,7 +40,6 @@ const refreshReportSection = inject<(componentName: string) => void>(
 );
 
 const formRef = useTemplateRef("form");
-
 watch(
     () => formRef.value,
     (formComponent) => (componentEditorFormRef!.value = formComponent),
@@ -50,45 +51,31 @@ async function save(e: FormSubmitEvent) {
             Object.entries(e.states).map(([key, state]) => [key, state.value]),
         );
 
-        // TODO: in future versions hit an API for expected shape &&
-        // recursively map the form data to the expected shape
-        const expectedTileShape = {
-            right_holder: formData.right_holder,
-            right_type: formData.right_type,
-            right_statement: {
-                right_statement_content: formData.right_statement_content,
-                right_statement_language: formData.right_statement_language,
-                right_statement_type: formData.right_statement_type,
-                right_statement_type_metatype:
-                    formData.right_statement_type_metatype,
-            },
-        };
-
         let updatedTileId;
 
         if (!props.resourceInstanceId) {
-            const updatedScheme = await createScheme({
-                [props.nodegroupAlias]: expectedTileShape,
+            const updatedConcept = await createConcept({
+                [props.nodegroupAlias]: [formData],
             });
 
             await router.push({
                 name: props.graphSlug,
-                params: { id: updatedScheme.resourceinstanceid },
+                params: { id: updatedConcept.resourceinstanceid },
             });
 
-            updatedTileId = updatedScheme[props.nodegroupAlias][0].tileid;
+            updatedTileId = updatedConcept[props.nodegroupAlias][0].tileid;
         } else {
-            const updatedScheme = await upsertLingoTile(
+            const updatedConcept = await upsertLingoTile(
                 props.graphSlug,
                 props.nodegroupAlias,
                 {
                     resourceinstance: props.resourceInstanceId,
-                    ...expectedTileShape,
+                    ...formData,
                     tileid: props.tileId,
                 },
             );
 
-            updatedTileId = updatedScheme.tileid;
+            updatedTileId = updatedConcept.tileid;
         }
 
         openEditor!(props.componentName, updatedTileId);
@@ -107,48 +94,66 @@ async function save(e: FormSubmitEvent) {
         ref="form"
         @submit="save"
     >
-        <ResourceInstanceMultiSelectWidget
-            node-alias="right_holder"
-            :graph-slug="props.graphSlug"
-            :initial-value="props.tileData?.right_holder"
-            :mode="EDIT"
-        />
-        <ReferenceSelectWidget
-            node-alias="right_type"
-            :graph-slug="props.graphSlug"
-            :initial-value="props.tileData?.right_type"
-            :mode="EDIT"
-        />
         <NonLocalizedStringWidget
-            node-alias="right_statement_content"
             :graph-slug="props.graphSlug"
+            node-alias="statement_content"
+            :initial-value="props.tileData?.statement_content"
+            :mode="EDIT"
+        />
+        <ReferenceSelectWidget
+            :graph-slug="props.graphSlug"
+            node-alias="statement_language"
+            :initial-value="props.tileData?.statement_language"
+            :mode="EDIT"
+        />
+        <ReferenceSelectWidget
+            :graph-slug="props.graphSlug"
+            node-alias="statement_type"
+            :initial-value="props.tileData?.statement_type"
+            :mode="EDIT"
+        />
+        <ReferenceSelectWidget
+            :graph-slug="props.graphSlug"
+            node-alias="statement_type_metatype"
+            :initial-value="props.tileData?.statement_type_metatype"
+            :mode="EDIT"
+        />
+        <DateWidget
+            :graph-slug="props.graphSlug"
+            node-alias="statement_data_assignment_timespan_begin_of_the_begin"
             :initial-value="
-                props.tileData?.right_statement?.right_statement_content
+                props.tileData
+                    ?.statement_data_assignment_timespan_begin_of_the_begin
+            "
+            :mode="EDIT"
+        />
+        <DateWidget
+            :graph-slug="props.graphSlug"
+            node-alias="statement_data_assignment_timespan_end_of_the_end"
+            :initial-value="
+                props.tileData
+                    ?.statement_data_assignment_timespan_end_of_the_end
+            "
+            :mode="EDIT"
+        />
+        <ResourceInstanceMultiSelectWidget
+            :graph-slug="props.graphSlug"
+            node-alias="statement_data_assignment_actor"
+            :initial-value="props.tileData?.statement_data_assignment_actor"
+            :mode="EDIT"
+        />
+        <ResourceInstanceMultiSelectWidget
+            :graph-slug="props.graphSlug"
+            node-alias="statement_data_assignment_object_used"
+            :initial-value="
+                props.tileData?.statement_data_assignment_object_used
             "
             :mode="EDIT"
         />
         <ReferenceSelectWidget
-            node-alias="right_statement_language"
             :graph-slug="props.graphSlug"
-            :initial-value="
-                props.tileData?.right_statement?.right_statement_language
-            "
-            :mode="EDIT"
-        />
-        <ReferenceSelectWidget
-            node-alias="right_statement_type"
-            :graph-slug="props.graphSlug"
-            :initial-value="
-                props.tileData?.right_statement?.right_statement_type
-            "
-            :mode="EDIT"
-        />
-        <ReferenceSelectWidget
-            node-alias="right_statement_type_metatype"
-            :graph-slug="props.graphSlug"
-            :initial-value="
-                props.tileData?.right_statement?.right_statement_type_metatype
-            "
+            node-alias="statement_data_assignment_type"
+            :initial-value="props.tileData?.statement_data_assignment_type"
             :mode="EDIT"
         />
     </Form>

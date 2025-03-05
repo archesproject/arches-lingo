@@ -98,6 +98,18 @@ export interface AppellativeStatus extends TileData {
     appellative_status_timespan_end_of_the_end: string;
 }
 
+export interface ConceptStatement extends TileData {
+    statement_content: string;
+    statement_language?: ControlledListItem[];
+    statement_type?: ControlledListItem[];
+    statement_type_metatype?: ControlledListItem[];
+    statement_data_assignment_object_used?: ResourceInstanceReference[];
+    statement_data_assignment_actor?: ResourceInstanceReference[];
+    statement_data_assignment_type?: ControlledListItem[];
+    statement_data_assignment_timespan_begin_of_the_begin?: string | null;
+    statement_data_assignment_timespan_end_of_the_end?: string | null;
+}
+
 export interface SchemeStatement extends TileData {
     statement_content_n1: string;
     statement_language_n1?: ControlledListItem[];
@@ -131,6 +143,10 @@ export interface SchemeNamespace extends TileData {
 
 export interface SchemeCreation extends TileData {
     creation_sources: ResourceInstanceReference[];
+}
+
+export interface ConceptInstance {
+    appellative_status?: AppellativeStatus[];
 }
 
 export interface SchemeInstance {

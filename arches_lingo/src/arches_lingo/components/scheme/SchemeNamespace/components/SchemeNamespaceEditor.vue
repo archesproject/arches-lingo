@@ -24,8 +24,8 @@ const props = defineProps<{
     tileId?: string;
 }>();
 
-const schemeEditorFormRef = inject<Ref<Component | null>>(
-    "schemeEditorFormRef",
+const componentEditorFormRef = inject<Ref<Component | null>>(
+    "componentEditorFormRef",
 );
 
 const openEditor =
@@ -38,7 +38,7 @@ const formRef = useTemplateRef("form");
 
 watch(
     () => formRef.value,
-    (formComponent) => (schemeEditorFormRef!.value = formComponent),
+    (formComponent) => (componentEditorFormRef!.value = formComponent),
 );
 
 async function save(e: FormSubmitEvent) {

@@ -1,27 +1,28 @@
 <script setup lang="ts">
-import { inject, useTemplateRef, watch, type Component, type Ref } from "vue";
-import { useRouter } from "vue-router";
+import { inject, useTemplateRef, watch } from "vue";
 
+import { useRouter } from "vue-router";
 import { Form } from "@primevue/forms";
 
+import DateWidget from "@/arches_component_lab/widgets/DateWidget/DateWidget.vue";
 import NonLocalizedStringWidget from "@/arches_component_lab/widgets/NonLocalizedStringWidget/NonLocalizedStringWidget.vue";
 import ReferenceSelectWidget from "@/arches_controlled_lists/widgets/ReferenceSelectWidget/ReferenceSelectWidget.vue";
 import ResourceInstanceMultiSelectWidget from "@/arches_component_lab/widgets/ResourceInstanceMultiSelectWidget/ResourceInstanceMultiSelectWidget.vue";
 
-import { createScheme, upsertLingoTile } from "@/arches_lingo/api.ts";
-
+import { createConcept, upsertLingoTile } from "@/arches_lingo/api.ts";
 import { EDIT } from "@/arches_lingo/constants.ts";
 
+import type { Component, Ref } from "vue";
 import type { FormSubmitEvent } from "@primevue/forms";
-import type { SchemeRights } from "@/arches_lingo/types";
+import type { AppellativeStatus } from "@/arches_lingo/types.ts";
 
 const props = defineProps<{
-    tileData: SchemeRights | undefined;
-    graphSlug: string;
-    sectionTitle: string;
-    resourceInstanceId: string | undefined;
+    tileData: AppellativeStatus | undefined;
     componentName: string;
+    sectionTitle: string;
+    graphSlug: string;
     nodegroupAlias: string;
+    resourceInstanceId: string | undefined;
     tileId?: string;
 }>();
 
@@ -50,25 +51,11 @@ async function save(e: FormSubmitEvent) {
             Object.entries(e.states).map(([key, state]) => [key, state.value]),
         );
 
-        // TODO: in future versions hit an API for expected shape &&
-        // recursively map the form data to the expected shape
-        const expectedTileShape = {
-            right_holder: formData.right_holder,
-            right_type: formData.right_type,
-            right_statement: {
-                right_statement_content: formData.right_statement_content,
-                right_statement_language: formData.right_statement_language,
-                right_statement_type: formData.right_statement_type,
-                right_statement_type_metatype:
-                    formData.right_statement_type_metatype,
-            },
-        };
-
         let updatedTileId;
 
         if (!props.resourceInstanceId) {
-            const updatedScheme = await createScheme({
-                [props.nodegroupAlias]: expectedTileShape,
+            const updatedScheme = await createConcept({
+                [props.nodegroupAlias]: [formData],
             });
 
             await router.push({
@@ -83,7 +70,7 @@ async function save(e: FormSubmitEvent) {
                 props.nodegroupAlias,
                 {
                     resourceinstance: props.resourceInstanceId,
-                    ...expectedTileShape,
+                    ...formData,
                     tileid: props.tileId,
                 },
             );
@@ -107,47 +94,81 @@ async function save(e: FormSubmitEvent) {
         ref="form"
         @submit="save"
     >
-        <ResourceInstanceMultiSelectWidget
-            node-alias="right_holder"
-            :graph-slug="props.graphSlug"
-            :initial-value="props.tileData?.right_holder"
-            :mode="EDIT"
-        />
-        <ReferenceSelectWidget
-            node-alias="right_type"
-            :graph-slug="props.graphSlug"
-            :initial-value="props.tileData?.right_type"
-            :mode="EDIT"
-        />
         <NonLocalizedStringWidget
-            node-alias="right_statement_content"
             :graph-slug="props.graphSlug"
+            node-alias="appellative_status_ascribed_name_content"
             :initial-value="
-                props.tileData?.right_statement?.right_statement_content
+                props.tileData?.appellative_status_ascribed_name_content
+            "
+            :mode="EDIT"
+        />
+        <DateWidget
+            :graph-slug="props.graphSlug"
+            node-alias="appellative_status_timespan_begin_of_the_begin"
+            :initial-value="
+                props.tileData?.appellative_status_timespan_begin_of_the_begin
+            "
+            :mode="EDIT"
+        />
+        <DateWidget
+            :graph-slug="props.graphSlug"
+            node-alias="appellative_status_timespan_end_of_the_end"
+            :initial-value="
+                props.tileData?.appellative_status_timespan_end_of_the_end
+            "
+            :mode="EDIT"
+        />
+
+        <ResourceInstanceMultiSelectWidget
+            :graph-slug="props.graphSlug"
+            node-alias="appellative_status_data_assignment_actor"
+            :initial-value="
+                props.tileData?.appellative_status_data_assignment_actor
+            "
+            :mode="EDIT"
+        />
+        <ResourceInstanceMultiSelectWidget
+            :graph-slug="props.graphSlug"
+            node-alias="appellative_status_data_assignment_object_used"
+            :initial-value="
+                props.tileData?.appellative_status_data_assignment_object_used
+            "
+            :mode="EDIT"
+        />
+
+        <ReferenceSelectWidget
+            :graph-slug="props.graphSlug"
+            node-alias="appellative_status_ascribed_name_language"
+            :initial-value="
+                props.tileData?.appellative_status_ascribed_name_language
             "
             :mode="EDIT"
         />
         <ReferenceSelectWidget
-            node-alias="right_statement_language"
             :graph-slug="props.graphSlug"
+            node-alias="appellative_status_ascribed_relation"
             :initial-value="
-                props.tileData?.right_statement?.right_statement_language
+                props.tileData?.appellative_status_ascribed_relation
             "
             :mode="EDIT"
         />
         <ReferenceSelectWidget
-            node-alias="right_statement_type"
             :graph-slug="props.graphSlug"
-            :initial-value="
-                props.tileData?.right_statement?.right_statement_type
-            "
+            node-alias="appellative_status_status"
+            :initial-value="props.tileData?.appellative_status_status"
             :mode="EDIT"
         />
         <ReferenceSelectWidget
-            node-alias="right_statement_type_metatype"
             :graph-slug="props.graphSlug"
+            node-alias="appellative_status_status_metatype"
+            :initial-value="props.tileData?.appellative_status_status_metatype"
+            :mode="EDIT"
+        />
+        <ReferenceSelectWidget
+            :graph-slug="props.graphSlug"
+            node-alias="appellative_status_data_assignment_type"
             :initial-value="
-                props.tileData?.right_statement?.right_statement_type_metatype
+                props.tileData?.appellative_status_data_assignment_type
             "
             :mode="EDIT"
         />
