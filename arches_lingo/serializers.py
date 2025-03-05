@@ -27,12 +27,16 @@ class LingoTileSerializer(ArchesTileSerializer):
                 # Still working on the right API for this.
                 # Don't want to do it too eagerly.
                 self.instance._enrich(self.graph_slug)
-                self._check_pref_label_uniqueness(data, self.instance.resourceinstance, new_label_lang, new_label_type)
+                self._check_pref_label_uniqueness(
+                    data, self.instance.resourceinstance, new_label_lang, new_label_type
+                )
 
         return data
 
     @staticmethod
-    def _check_pref_label_uniqueness(data, resource, new_label_language, new_label_type):
+    def _check_pref_label_uniqueness(
+        data, resource, new_label_language, new_label_type
+    ):
         try:
             PREF_LABEL = ListItem.objects.get(list_item_values__value="prefLabel")
         except ListItem.MultipleObjectsReturned:
