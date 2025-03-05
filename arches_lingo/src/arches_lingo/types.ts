@@ -133,6 +133,10 @@ export interface SchemeCreation extends TileData {
     creation_sources: ResourceInstanceReference[];
 }
 
+export interface ConceptInstance {
+    appellative_status?: AppellativeStatus[];
+}
+
 export interface SchemeInstance {
     namespace?: SchemeNamespace;
     creation?: SchemeCreation;

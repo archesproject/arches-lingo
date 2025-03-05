@@ -16,8 +16,8 @@ const { $gettext } = useGettext();
 const emit = defineEmits([MAXIMIZE, MINIMIZE, CLOSE]);
 
 const formKey = ref(0);
-const schemeEditorFormRef = ref();
-provide("schemeEditorFormRef", schemeEditorFormRef);
+const componentEditorFormRef = ref();
+provide("componentEditorFormRef", componentEditorFormRef);
 
 function toggleSize() {
     if (props.isEditorMaximized) {
@@ -71,7 +71,7 @@ function resetForm() {
             <Button
                 :label="$gettext('Save Changes')"
                 severity="success"
-                @click="schemeEditorFormRef.onSubmit()"
+                @click="componentEditorFormRef.onSubmit()"
             />
             <Button
                 :label="$gettext('Cancel')"

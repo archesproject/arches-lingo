@@ -1,15 +1,22 @@
 <script setup lang="ts">
-import { inject } from "vue";
+import { useGettext } from "vue3-gettext";
 
-import { displayedRowKey } from "@/arches_lingo/constants.ts";
+import ComponentManager from "@/arches_lingo/components/generic/ComponentManager/ComponentManager.vue";
+import ConceptLabel from "@/arches_lingo/components/concept/ConceptLabel/ConceptLabel.vue";
 
-import type { DisplayedRowRefAndSetter } from "@/arches_lingo/types";
+const { $gettext } = useGettext();
 
-const { displayedRow } = inject(
-    displayedRowKey,
-) as unknown as DisplayedRowRefAndSetter;
+const componentData = [
+    {
+        component: ConceptLabel,
+        componentName: "ConceptLabel",
+        sectionTitle: $gettext("Concept Label"),
+        graphSlug: "concept",
+        nodegroupAlias: "appellative_status",
+    },
+];
 </script>
 
 <template>
-    <pre style="text-wrap: auto">{{ displayedRow }}</pre>
+    <ComponentManager :component-data="componentData" />
 </template>

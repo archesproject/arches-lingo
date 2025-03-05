@@ -1,7 +1,11 @@
 import arches from "arches";
 import Cookies from "js-cookie";
 
-import type { SchemeInstance, TileData } from "@/arches_lingo/types";
+import type {
+    ConceptInstance,
+    SchemeInstance,
+    TileData,
+} from "@/arches_lingo/types";
 
 function getToken() {
     const token = Cookies.get("csrftoken");
@@ -154,6 +158,20 @@ export const createScheme = async (newScheme: SchemeInstance) => {
             "Content-Type": "application/json",
         },
         body: JSON.stringify(newScheme),
+    });
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
+export const createConcept = async (newConcept: ConceptInstance) => {
+    const response = await fetch(arches.urls.api_lingo_resources("concept"), {
+        method: "POST",
+        headers: {
+            "X-CSRFTOKEN": getToken(),
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newConcept),
     });
     const parsed = await response.json();
     if (!response.ok) throw new Error(parsed.message || response.statusText);
