@@ -103,11 +103,11 @@ export interface ConceptStatement extends TileData {
     statement_language?: ControlledListItem[];
     statement_type?: ControlledListItem[];
     statement_type_metatype?: ControlledListItem[];
-    statement_data_assignment_object_used: ResourceInstanceReference[];
-    statement_data_assignment_actor: ResourceInstanceReference[];
-    statement_data_assignment_type: ControlledListItem[];
-    statement_data_assignment_timespan_begin_of_the_begin: string;
-    statement_data_assignment_timespan_end_of_the_end: string;
+    statement_data_assignment_object_used?: ResourceInstanceReference[];
+    statement_data_assignment_actor?: ResourceInstanceReference[];
+    statement_data_assignment_type?: ControlledListItem[];
+    statement_data_assignment_timespan_begin_of_the_begin?: string | null;
+    statement_data_assignment_timespan_end_of_the_end?: string | null;
 }
 
 export interface SchemeStatement extends TileData {
