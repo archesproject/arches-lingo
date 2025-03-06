@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { inject, useTemplateRef, watch } from "vue";
+import { inject, ref, useTemplateRef, watch } from "vue";
 
 import { useRouter } from "vue-router";
 import { Form } from "@primevue/forms";
+
+import ProgressSpinner from "primevue/progressspinner";
 
 import DateWidget from "@/arches_component_lab/widgets/DateWidget/DateWidget.vue";
 import NonLocalizedStringWidget from "@/arches_component_lab/widgets/NonLocalizedStringWidget/NonLocalizedStringWidget.vue";
@@ -39,13 +41,14 @@ const refreshReportSection = inject<(componentName: string) => void>(
 );
 
 const formRef = useTemplateRef("form");
-
+const isSaving = ref(false);
 watch(
     () => formRef.value,
     (formComponent) => (componentEditorFormRef!.value = formComponent),
 );
 
 async function save(e: FormSubmitEvent) {
+    isSaving.value = true;
     try {
         const formData = Object.fromEntries(
             Object.entries(e.states).map(([key, state]) => [key, state.value]),
@@ -83,6 +86,7 @@ async function save(e: FormSubmitEvent) {
         console.error(error);
     } finally {
         refreshReportSection!(props.componentName);
+        isSaving.value = false;
     }
 }
 </script>
@@ -90,7 +94,12 @@ async function save(e: FormSubmitEvent) {
 <template>
     <h3>{{ props.sectionTitle }}</h3>
 
+    <ProgressSpinner
+        v-if="isSaving"
+        style="width: 100%"
+    />
     <Form
+        v-else
         ref="form"
         @submit="save"
     >

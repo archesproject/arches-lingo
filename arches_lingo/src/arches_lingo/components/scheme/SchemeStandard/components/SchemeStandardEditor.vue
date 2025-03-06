@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { inject, useTemplateRef, watch, type Component, type Ref } from "vue";
+import { inject, ref, useTemplateRef, watch, type Component, type Ref } from "vue";
 import { useRouter } from "vue-router";
 
 import { Form } from "@primevue/forms";
+
+import ProgressSpinner from "primevue/progressspinner";
 
 import ResourceInstanceMultiSelectWidget from "@/arches_component_lab/widgets/ResourceInstanceMultiSelectWidget/ResourceInstanceMultiSelectWidget.vue";
 
@@ -34,6 +36,7 @@ const refreshReportSection = inject<(componentName: string) => void>(
     "refreshReportSection",
 );
 
+const isSaving = ref(false);
 const formRef = useTemplateRef("form");
 watch(
     () => formRef.value,
@@ -41,6 +44,7 @@ watch(
 );
 
 async function save(e: FormSubmitEvent) {
+    isSaving.value = true;
     try {
         const formData = Object.fromEntries(
             Object.entries(e.states).map(([key, state]) => [key, state.value]),
@@ -78,6 +82,8 @@ async function save(e: FormSubmitEvent) {
         console.error(error);
     } finally {
         refreshReportSection!(props.componentName);
+        isSaving.value = false;
+        console.log("done saving");
     }
 }
 </script>
@@ -85,7 +91,12 @@ async function save(e: FormSubmitEvent) {
 <template>
     <h3>{{ props.sectionTitle }}</h3>
 
+    <ProgressSpinner
+        v-if="isSaving"
+        style="width: 100%"
+    />
     <Form
+        v-else
         ref="form"
         @submit="save"
     >
