@@ -93,7 +93,12 @@ async function save(e: FormSubmitEvent) {
 <template>
     <h3>{{ props.sectionTitle }}</h3>
 
+    <ProgressSpinner
+        v-if="isSaving"
+        style="width: 100%"
+    />
     <Form
+        v-else
         ref="form"
         @submit="save"
     >
