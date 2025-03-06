@@ -14,7 +14,11 @@ import ReferenceSelectWidget from "@/arches_controlled_lists/widgets/ReferenceSe
 import ResourceInstanceMultiSelectWidget from "@/arches_component_lab/widgets/ResourceInstanceMultiSelectWidget/ResourceInstanceMultiSelectWidget.vue";
 
 import { createScheme, upsertLingoTile } from "@/arches_lingo/api.ts";
-import { DEFAULT_ERROR_TOAST_LIFE, EDIT, ERROR, } from "@/arches_lingo/constants.ts";
+import {
+    DEFAULT_ERROR_TOAST_LIFE,
+    EDIT,
+    ERROR,
+} from "@/arches_lingo/constants.ts";
 
 import type { Component, Ref } from "vue";
 import type { FormSubmitEvent } from "@primevue/forms";
@@ -89,11 +93,11 @@ async function save(e: FormSubmitEvent) {
         openEditor!(props.componentName, updatedTileId);
     } catch (error) {
         toast.add({
-                severity: ERROR,
-                life: DEFAULT_ERROR_TOAST_LIFE,
-                summary: $gettext("Failed to save data."),
-                detail: error instanceof Error ? error.message : undefined,
-            });
+            severity: ERROR,
+            life: DEFAULT_ERROR_TOAST_LIFE,
+            summary: $gettext("Failed to save data."),
+            detail: error instanceof Error ? error.message : undefined,
+        });
     } finally {
         refreshReportSection!(props.componentName);
         isSaving.value = false;
