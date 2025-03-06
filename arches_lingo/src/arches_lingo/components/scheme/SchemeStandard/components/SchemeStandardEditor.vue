@@ -1,15 +1,18 @@
 <script setup lang="ts">
 import { inject, ref, useTemplateRef, watch, type Component, type Ref } from "vue";
 import { useRouter } from "vue-router";
+import { useGettext } from "vue3-gettext";
 
 import { Form } from "@primevue/forms";
+
+import { useToast } from "primevue/usetoast";
 
 import ProgressSpinner from "primevue/progressspinner";
 
 import ResourceInstanceMultiSelectWidget from "@/arches_component_lab/widgets/ResourceInstanceMultiSelectWidget/ResourceInstanceMultiSelectWidget.vue";
 
 import { createScheme, upsertLingoTile } from "@/arches_lingo/api.ts";
-import { EDIT } from "@/arches_lingo/constants.ts";
+import { DEFAULT_ERROR_TOAST_LIFE, EDIT, ERROR, } from "@/arches_lingo/constants.ts";
 
 import type { FormSubmitEvent } from "@primevue/forms";
 import type { SchemeCreation } from "@/arches_lingo/types.ts";
@@ -25,6 +28,8 @@ const props = defineProps<{
 }>();
 
 const router = useRouter();
+const toast = useToast();
+const { $gettext } = useGettext();
 
 const componentEditorFormRef = inject<Ref<Component | null>>(
     "componentEditorFormRef",
@@ -79,11 +84,15 @@ async function save(e: FormSubmitEvent) {
 
         openEditor!(props.componentName, updatedTileId);
     } catch (error) {
-        console.error(error);
+        toast.add({
+                severity: ERROR,
+                life: DEFAULT_ERROR_TOAST_LIFE,
+                summary: $gettext("Failed to save data."),
+                detail: error instanceof Error ? error.message : undefined,
+            });
     } finally {
         refreshReportSection!(props.componentName);
         isSaving.value = false;
-        console.log("done saving");
     }
 }
 </script>
