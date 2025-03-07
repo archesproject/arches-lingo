@@ -32,6 +32,7 @@ class LingoTileSerializer(ArchesTileSerializer):
 
         return data
 
+    @staticmethod
     def get_reference_object(data) -> Reference:
         # TODO: serializer should just do this itself, only waiting to tackle:
         # https://github.com/archesproject/arches/issues/10851#issuecomment-2427305853
