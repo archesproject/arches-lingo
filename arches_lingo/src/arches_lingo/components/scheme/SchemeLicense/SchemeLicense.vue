@@ -1,12 +1,20 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 
+import { useGettext } from "vue3-gettext";
+import { useToast } from "primevue/usetoast";
+
 import ProgressSpinner from "primevue/progressspinner";
 
 import SchemeLicenseViewer from "@/arches_lingo/components/scheme/SchemeLicense/components/SchemeLicenseViewer.vue";
 import SchemeLicenseEditor from "@/arches_lingo/components/scheme/SchemeLicense/components/SchemeLicenseEditor.vue";
 
-import { EDIT, VIEW } from "@/arches_lingo/constants.ts";
+import {
+    DEFAULT_ERROR_TOAST_LIFE,
+    EDIT,
+    ERROR,
+    VIEW,
+} from "@/arches_lingo/constants.ts";
 
 import { fetchLingoResourcePartial } from "@/arches_lingo/api.ts";
 
@@ -21,6 +29,9 @@ const props = defineProps<{
     resourceInstanceId: string | undefined;
     tileId?: string;
 }>();
+
+const toast = useToast();
+const { $gettext } = useGettext();
 
 const isLoading = ref(true);
 const tileData = ref<SchemeRights>();
@@ -47,7 +58,13 @@ async function getSectionValue() {
             props.nodegroupAlias,
         );
     } catch (error) {
-        console.error(error);
+        toast.add({
+            severity: ERROR,
+            life: DEFAULT_ERROR_TOAST_LIFE,
+            summary: $gettext("Failed to fetch data."),
+            detail: error instanceof Error ? error.message : undefined,
+        });
+
     }
 }
 </script>
