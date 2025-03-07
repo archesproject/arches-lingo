@@ -9,10 +9,10 @@ import {
 } from "vue";
 import { useRouter } from "vue-router";
 import { useGettext } from "vue3-gettext";
+import { useToast } from "primevue/usetoast";
 
 import { Form } from "@primevue/forms";
 
-import { useToast } from "primevue/usetoast";
 import ProgressSpinner from "primevue/progressspinner";
 
 import NonLocalizedStringWidget from "@/arches_component_lab/widgets/NonLocalizedStringWidget/NonLocalizedStringWidget.vue";
@@ -126,14 +126,15 @@ async function save(e: FormSubmitEvent) {
 </script>
 
 <template>
-    <h3>{{ props.sectionTitle }}</h3>
-
     <ProgressSpinner
         v-if="isSaving"
         style="width: 100%"
     />
+
+    <h3 v-show="!isSaving">{{ props.sectionTitle }}</h3>
+
     <Form
-        v-else
+        v-show="!isSaving"
         ref="form"
         @submit="save"
     >
