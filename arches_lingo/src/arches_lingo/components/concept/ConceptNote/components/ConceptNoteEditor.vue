@@ -1,8 +1,13 @@
 <script setup lang="ts">
-import { inject, useTemplateRef, watch } from "vue";
+import { inject, ref, useTemplateRef, watch } from "vue";
 
 import { useRouter } from "vue-router";
+import { useGettext } from "vue3-gettext";
+import { useToast } from "primevue/usetoast";
+
 import { Form } from "@primevue/forms";
+
+import ProgressSpinner from "primevue/progressspinner";
 
 import DateWidget from "@/arches_component_lab/widgets/DateWidget/DateWidget.vue";
 import NonLocalizedStringWidget from "@/arches_component_lab/widgets/NonLocalizedStringWidget/NonLocalizedStringWidget.vue";
@@ -10,7 +15,11 @@ import ReferenceSelectWidget from "@/arches_controlled_lists/widgets/ReferenceSe
 import ResourceInstanceMultiSelectWidget from "@/arches_component_lab/widgets/ResourceInstanceMultiSelectWidget/ResourceInstanceMultiSelectWidget.vue";
 
 import { createConcept, upsertLingoTile } from "@/arches_lingo/api.ts";
-import { EDIT } from "@/arches_lingo/constants.ts";
+import {
+    DEFAULT_ERROR_TOAST_LIFE,
+    EDIT,
+    ERROR,
+} from "@/arches_lingo/constants.ts";
 
 import type { Component, Ref } from "vue";
 import type { FormSubmitEvent } from "@primevue/forms";
@@ -28,6 +37,8 @@ const props = defineProps<{
 }>();
 
 const router = useRouter();
+const toast = useToast();
+const { $gettext } = useGettext();
 
 const componentEditorFormRef = inject<Ref<Component | null>>(
     "componentEditorFormRef",
@@ -40,12 +51,15 @@ const refreshReportSection = inject<(componentName: string) => void>(
 );
 
 const formRef = useTemplateRef("form");
+const isSaving = ref(false);
+
 watch(
     () => formRef.value,
     (formComponent) => (componentEditorFormRef!.value = formComponent),
 );
 
 async function save(e: FormSubmitEvent) {
+    isSaving.value = true;
     try {
         const formData = Object.fromEntries(
             Object.entries(e.states).map(([key, state]) => [key, state.value]),
@@ -80,17 +94,29 @@ async function save(e: FormSubmitEvent) {
 
         openEditor!(props.componentName, updatedTileId);
     } catch (error) {
-        console.error(error);
+        toast.add({
+            severity: ERROR,
+            life: DEFAULT_ERROR_TOAST_LIFE,
+            summary: $gettext("Failed to save data."),
+            detail: error instanceof Error ? error.message : undefined,
+        });
     } finally {
         refreshReportSection!(props.componentName);
+        isSaving.value = false;
     }
 }
 </script>
 
 <template>
-    <h3>{{ props.sectionTitle }}</h3>
+    <ProgressSpinner
+        v-if="isSaving"
+        style="width: 100%"
+    />
+
+    <h3 v-show="!isSaving">{{ props.sectionTitle }}</h3>
 
     <Form
+        v-show="!isSaving"
         ref="form"
         @submit="save"
     >
