@@ -8,7 +8,7 @@ import NonLocalizedStringWidget from "@/arches_component_lab/widgets/NonLocalize
 import ReferenceSelectWidget from "@/arches_controlled_lists/widgets/ReferenceSelectWidget/ReferenceSelectWidget.vue";
 import ResourceInstanceMultiSelectWidget from "@/arches_component_lab/widgets/ResourceInstanceMultiSelectWidget/ResourceInstanceMultiSelectWidget.vue";
 
-import { createScheme, upsertLingoTile } from "@/arches_lingo/api.ts";
+import { createLingoResource, upsertLingoTile } from "@/arches_lingo/api.ts";
 
 import { EDIT } from "@/arches_lingo/constants.ts";
 
@@ -67,9 +67,12 @@ async function save(e: FormSubmitEvent) {
         let updatedTileId;
 
         if (!props.resourceInstanceId) {
-            const updatedScheme = await createScheme({
-                [props.nodegroupAlias]: expectedTileShape,
-            });
+            const updatedScheme = await createLingoResource(
+                {
+                    [props.nodegroupAlias]: [formData],
+                },
+                props.graphSlug,
+            );
 
             await router.push({
                 name: props.graphSlug,
