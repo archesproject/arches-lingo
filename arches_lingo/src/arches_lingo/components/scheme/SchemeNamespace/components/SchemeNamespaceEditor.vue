@@ -6,7 +6,7 @@ import { Form } from "@primevue/forms";
 
 import NonLocalizedStringWidget from "@/arches_component_lab/widgets/NonLocalizedStringWidget/NonLocalizedStringWidget.vue";
 
-import { createScheme, upsertLingoTile } from "@/arches_lingo/api.ts";
+import { createLingoResource, upsertLingoTile } from "@/arches_lingo/api.ts";
 import { EDIT } from "@/arches_lingo/constants.ts";
 
 import type { FormSubmitEvent } from "@primevue/forms";
@@ -50,9 +50,12 @@ async function save(e: FormSubmitEvent) {
         let updatedTileId;
 
         if (!props.resourceInstanceId) {
-            const updatedScheme = await createScheme({
-                [props.nodegroupAlias]: formData,
-            });
+            const updatedScheme = await createLingoResource(
+                {
+                    [props.nodegroupAlias]: [formData],
+                },
+                props.graphSlug,
+            );
 
             await router.push({
                 name: props.graphSlug,
