@@ -64,7 +64,6 @@ async function getSectionValue() {
             summary: $gettext("Failed to fetch data."),
             detail: error instanceof Error ? error.message : undefined,
         });
-
     }
 }
 </script>
