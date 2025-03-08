@@ -110,6 +110,18 @@ export interface ConceptStatement extends TileData {
     statement_data_assignment_timespan_end_of_the_end?: string | null;
 }
 
+export interface ConceptRelationStatus extends TileData {
+    relation_status_ascribed_comparate: ResourceInstanceReference[];
+    relation_status_ascribed_relation: ControlledListItem[];
+    relation_status_status: ControlledListItem[];
+    relation_status_status_metatype: ControlledListItem[];
+    relation_status_timespan_begin_of_the_begin: string;
+    relation_status_timespan_end_of_the_end: string;
+    relation_status_data_assignment_actor: ResourceInstanceReference[];
+    relation_status_data_assignment_object_used: ResourceInstanceReference[];
+    relation_status_data_assignment_type: ControlledListItem[];
+}
+
 export interface SchemeStatement extends TileData {
     statement_content_n1: string;
     statement_language_n1?: ControlledListItem[];
