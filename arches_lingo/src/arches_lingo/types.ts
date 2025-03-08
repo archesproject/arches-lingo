@@ -122,6 +122,18 @@ export interface ConceptRelationStatus extends TileData {
     relation_status_data_assignment_type: ControlledListItem[];
 }
 
+export interface ConceptMatchStatus extends TileData {
+    match_status_ascribed_comparate: ResourceInstanceReference[];
+    match_status_ascribed_relation: ControlledListItem[];
+    match_status_status: ControlledListItem[];
+    match_status_status_metatype: ControlledListItem[];
+    match_status_timespan_begin_of_the_begin: string;
+    match_status_timespan_end_of_the_end: string;
+    match_status_data_assignment_actor: ResourceInstanceReference[];
+    match_status_data_assignment_object_used: ResourceInstanceReference[];
+    match_status_data_assignment_type: ControlledListItem[];
+}
+
 export interface SchemeStatement extends TileData {
     statement_content_n1: string;
     statement_language_n1?: ControlledListItem[];
