@@ -14,7 +14,7 @@ import NonLocalizedStringWidget from "@/arches_component_lab/widgets/NonLocalize
 import ReferenceSelectWidget from "@/arches_controlled_lists/widgets/ReferenceSelectWidget/ReferenceSelectWidget.vue";
 import ResourceInstanceMultiSelectWidget from "@/arches_component_lab/widgets/ResourceInstanceMultiSelectWidget/ResourceInstanceMultiSelectWidget.vue";
 
-import { createConcept, upsertLingoTile } from "@/arches_lingo/api.ts";
+import { createLingoResource, upsertLingoTile } from "@/arches_lingo/api.ts";
 import {
     DEFAULT_ERROR_TOAST_LIFE,
     EDIT,
@@ -67,18 +67,21 @@ async function save(e: FormSubmitEvent) {
         let updatedTileId;
 
         if (!props.resourceInstanceId) {
-            const updatedScheme = await createConcept({
-                [props.nodegroupAlias]: [formData],
-            });
+            const updatedConcept = await createLingoResource(
+                {
+                    [props.nodegroupAlias]: [formData],
+                },
+                props.graphSlug,
+            );
 
             await router.push({
                 name: props.graphSlug,
-                params: { id: updatedScheme.resourceinstanceid },
+                params: { id: updatedConcept.resourceinstanceid },
             });
 
-            updatedTileId = updatedScheme[props.nodegroupAlias][0].tileid;
+            updatedTileId = updatedConcept[props.nodegroupAlias][0].tileid;
         } else {
-            const updatedScheme = await upsertLingoTile(
+            const updatedConcept = await upsertLingoTile(
                 props.graphSlug,
                 props.nodegroupAlias,
                 {
@@ -88,7 +91,7 @@ async function save(e: FormSubmitEvent) {
                 },
             );
 
-            updatedTileId = updatedScheme.tileid;
+            updatedTileId = updatedConcept.tileid;
         }
 
         openEditor!(props.componentName, updatedTileId);

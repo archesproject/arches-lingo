@@ -17,7 +17,7 @@ import ProgressSpinner from "primevue/progressspinner";
 
 import ResourceInstanceMultiSelectWidget from "@/arches_component_lab/widgets/ResourceInstanceMultiSelectWidget/ResourceInstanceMultiSelectWidget.vue";
 
-import { createScheme, upsertLingoTile } from "@/arches_lingo/api.ts";
+import { createLingoResource, upsertLingoTile } from "@/arches_lingo/api.ts";
 import {
     DEFAULT_ERROR_TOAST_LIFE,
     EDIT,
@@ -69,9 +69,12 @@ async function save(e: FormSubmitEvent) {
         let updatedTileId;
 
         if (!props.resourceInstanceId) {
-            const updatedScheme = await createScheme({
-                [props.nodegroupAlias]: formData,
-            });
+            const updatedScheme = await createLingoResource(
+                {
+                    [props.nodegroupAlias]: [formData],
+                },
+                props.graphSlug,
+            );
 
             await router.push({
                 name: props.graphSlug,
