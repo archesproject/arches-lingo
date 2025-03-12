@@ -81,15 +81,21 @@ async function save(e: FormSubmitEvent) {
             });
 
             updatedTileId = updatedConcept[props.nodegroupAlias][0].tileid;
-            openEditor!(props.componentName, updatedTileId);
         } else {
-            await upsertLingoTile(props.graphSlug, props.nodegroupAlias, {
-                resourceinstance: props.resourceInstanceId,
-                ...formData,
-                tileid: props.tileId,
-            });
+            const updatedConcept = await upsertLingoTile(
+                props.graphSlug,
+                props.nodegroupAlias,
+                {
+                    resourceinstance: props.resourceInstanceId,
+                    ...formData,
+                    tileid: props.tileId,
+                },
+            );
+
+            updatedTileId = updatedConcept.tileid;
         }
 
+        openEditor!(props.componentName, updatedTileId);
         refreshReportSection!(props.componentName);
     } catch (error) {
         toast.add({
