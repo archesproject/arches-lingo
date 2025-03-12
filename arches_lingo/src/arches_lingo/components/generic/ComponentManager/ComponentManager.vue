@@ -84,6 +84,13 @@ function minimizeEditor() {
     editorState.value = MINIMIZED;
 }
 
+function updateAfterComponentDeletion(componentName: string, tileId: string) {
+    if (tileId === editorTileId.value) {
+        closeEditor();
+        openEditor(componentName);
+    }
+}
+
 function refreshReportSection(componentName: string) {
     const componentDatum = processedComponentData.value.find(
         (componentDatum) => {
@@ -97,6 +104,7 @@ function refreshReportSection(componentName: string) {
 }
 
 provide("openEditor", openEditor);
+provide("updateAfterComponentDeletion", updateAfterComponentDeletion);
 provide("refreshReportSection", refreshReportSection);
 </script>
 
