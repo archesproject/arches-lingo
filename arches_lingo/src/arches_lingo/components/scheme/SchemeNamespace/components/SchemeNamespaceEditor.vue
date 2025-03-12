@@ -1,18 +1,36 @@
 <script setup lang="ts">
-import { inject, useTemplateRef, watch, type Component, type Ref } from "vue";
+import {
+    inject,
+    ref,
+    useTemplateRef,
+    watch,
+    type Component,
+    type Ref,
+} from "vue";
+
 import { useRouter } from "vue-router";
+import { useGettext } from "vue3-gettext";
+import { useToast } from "primevue/usetoast";
 
 import { Form } from "@primevue/forms";
+
+import ProgressSpinner from "primevue/progressspinner";
 
 import NonLocalizedStringWidget from "@/arches_component_lab/widgets/NonLocalizedStringWidget/NonLocalizedStringWidget.vue";
 
 import { createLingoResource, upsertLingoTile } from "@/arches_lingo/api.ts";
-import { EDIT } from "@/arches_lingo/constants.ts";
+import {
+    DEFAULT_ERROR_TOAST_LIFE,
+    EDIT,
+    ERROR,
+} from "@/arches_lingo/constants.ts";
 
 import type { FormSubmitEvent } from "@primevue/forms";
 import type { SchemeNamespace } from "@/arches_lingo/types.ts";
 
 const router = useRouter();
+const toast = useToast();
+const { $gettext } = useGettext();
 
 const props = defineProps<{
     tileData: SchemeNamespace | undefined;
@@ -35,6 +53,7 @@ const refreshReportSection = inject<(componentName: string) => void>(
 );
 
 const formRef = useTemplateRef("form");
+const isSaving = ref(false);
 
 watch(
     () => formRef.value,
@@ -42,6 +61,8 @@ watch(
 );
 
 async function save(e: FormSubmitEvent) {
+    isSaving.value = true;
+
     try {
         const formData = Object.fromEntries(
             Object.entries(e.states).map(([key, state]) => [key, state.value]),
@@ -77,27 +98,43 @@ async function save(e: FormSubmitEvent) {
             updatedTileId = updatedScheme.tileid;
         }
 
-        openEditor!(props.componentName, updatedTileId);
-    } catch (error) {
-        console.error(error);
-    } finally {
+        if (updatedTileId !== props.tileId) {
+            openEditor!(props.componentName, updatedTileId);
+        }
+
         refreshReportSection!(props.componentName);
+    } catch (error) {
+        toast.add({
+            severity: ERROR,
+            life: DEFAULT_ERROR_TOAST_LIFE,
+            summary: $gettext("Failed to save data."),
+            detail: error instanceof Error ? error.message : undefined,
+        });
+    } finally {
+        isSaving.value = false;
     }
 }
 </script>
 
 <template>
-    <h3>{{ props.sectionTitle }}</h3>
+    <ProgressSpinner
+        v-show="isSaving"
+        style="width: 100%"
+    />
 
-    <Form
-        ref="form"
-        @submit="save"
-    >
-        <NonLocalizedStringWidget
-            node-alias="namespace_name"
-            :graph-slug="props.graphSlug"
-            :initial-value="props.tileData?.namespace_name"
-            :mode="EDIT"
-        />
-    </Form>
+    <div v-show="!isSaving">
+        <h3>{{ props.sectionTitle }}</h3>
+
+        <Form
+            ref="form"
+            @submit="save"
+        >
+            <NonLocalizedStringWidget
+                node-alias="namespace_name"
+                :graph-slug="props.graphSlug"
+                :initial-value="props.tileData?.namespace_name"
+                :mode="EDIT"
+            />
+        </Form>
+    </div>
 </template>
