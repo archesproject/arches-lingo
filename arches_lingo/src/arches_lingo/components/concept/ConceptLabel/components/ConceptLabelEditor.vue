@@ -95,7 +95,10 @@ async function save(e: FormSubmitEvent) {
             updatedTileId = updatedConcept.tileid;
         }
 
-        openEditor!(props.componentName, updatedTileId);
+        if (updatedTileId !== props.tileId) {
+            openEditor!(props.componentName, updatedTileId);
+        }
+
         refreshReportSection!(props.componentName);
     } catch (error) {
         toast.add({
