@@ -114,18 +114,19 @@ async function save(e: FormSubmitEvent) {
         style="width: 100%"
     />
 
-    <h3 v-show="!isSaving">{{ props.sectionTitle }}</h3>
+    <template v-else>
+        <h3>{{ props.sectionTitle }}</h3>
 
-    <Form
-        v-show="!isSaving"
-        ref="form"
-        @submit="save"
-    >
-        <NonLocalizedStringWidget
-            node-alias="namespace_name"
-            :graph-slug="props.graphSlug"
-            :initial-value="props.tileData?.namespace_name"
-            :mode="EDIT"
-        />
-    </Form>
+        <Form
+            ref="form"
+            @submit="save"
+        >
+            <NonLocalizedStringWidget
+                node-alias="namespace_name"
+                :graph-slug="props.graphSlug"
+                :initial-value="props.tileData?.namespace_name"
+                :mode="EDIT"
+            />
+        </Form>
+    </template>
 </template>
