@@ -1,12 +1,6 @@
 <script setup lang="ts">
-import {
-    inject,
-    ref,
-    useTemplateRef,
-    watch,
-    type Component,
-    type Ref,
-} from "vue";
+import { inject, ref, useTemplateRef, watch } from "vue";
+
 import { useRouter } from "vue-router";
 import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
@@ -24,6 +18,7 @@ import {
     ERROR,
 } from "@/arches_lingo/constants.ts";
 
+import type { Component, Ref } from "vue";
 import type { FormSubmitEvent } from "@primevue/forms";
 import type { SchemeCreation } from "@/arches_lingo/types.ts";
 

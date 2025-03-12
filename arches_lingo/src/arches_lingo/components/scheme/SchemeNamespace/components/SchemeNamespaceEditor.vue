@@ -7,6 +7,7 @@ import {
     type Component,
     type Ref,
 } from "vue";
+
 import { useRouter } from "vue-router";
 import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";

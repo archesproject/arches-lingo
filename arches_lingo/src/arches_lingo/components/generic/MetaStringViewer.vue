@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { inject, ref } from "vue";
-import { useGettext } from "vue3-gettext";
+
 import { useConfirm } from "primevue/useconfirm";
+import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
 
 import DataTable from "primevue/datatable";
