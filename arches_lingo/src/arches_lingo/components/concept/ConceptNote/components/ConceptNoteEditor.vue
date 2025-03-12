@@ -60,6 +60,7 @@ watch(
 
 async function save(e: FormSubmitEvent) {
     isSaving.value = true;
+
     try {
         const formData = Object.fromEntries(
             Object.entries(e.states).map(([key, state]) => [key, state.value]),
@@ -81,21 +82,16 @@ async function save(e: FormSubmitEvent) {
             });
 
             updatedTileId = updatedConcept[props.nodegroupAlias][0].tileid;
+            openEditor!(props.componentName, updatedTileId);
         } else {
-            const updatedConcept = await upsertLingoTile(
-                props.graphSlug,
-                props.nodegroupAlias,
-                {
-                    resourceinstance: props.resourceInstanceId,
-                    ...formData,
-                    tileid: props.tileId,
-                },
-            );
-
-            updatedTileId = updatedConcept.tileid;
+            await upsertLingoTile(props.graphSlug, props.nodegroupAlias, {
+                resourceinstance: props.resourceInstanceId,
+                ...formData,
+                tileid: props.tileId,
+            });
         }
 
-        openEditor!(props.componentName, updatedTileId);
+        refreshReportSection!(props.componentName);
     } catch (error) {
         toast.add({
             severity: ERROR,
@@ -104,7 +100,6 @@ async function save(e: FormSubmitEvent) {
             detail: error instanceof Error ? error.message : undefined,
         });
     } finally {
-        refreshReportSection!(props.componentName);
         isSaving.value = false;
     }
 }
