@@ -108,11 +108,11 @@ async function save(e: FormSubmitEvent) {
 
 <template>
     <ProgressSpinner
-        v-if="isSaving"
+        v-show="isSaving"
         style="width: 100%"
     />
 
-    <template v-else>
+    <div v-show="!isSaving">
         <h3>{{ props.sectionTitle }}</h3>
 
         <Form
@@ -202,5 +202,5 @@ async function save(e: FormSubmitEvent) {
                 :mode="EDIT"
             />
         </Form>
-    </template>
+    </div>
 </template>
