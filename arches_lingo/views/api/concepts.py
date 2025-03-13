@@ -5,6 +5,7 @@ from django.utils.decorators import method_decorator
 from django.utils.translation import gettext as _
 from django.views.generic import View
 
+from arches.app.models.models import Tile
 from arches.app.models.system_settings import settings
 from arches.app.utils.decorators import group_required
 from arches.app.utils.response import JSONErrorResponse, JSONResponse
@@ -30,10 +31,12 @@ class ConceptTreeView(View):
 )
 class ValueSearchView(ConceptTreeView):
     def get(self, request):
-        term = request.GET.get("term")
+        term = request.GET.get("term", None)
         max_edit_distance = request.GET.get(
             "maxEditDistance", self.default_sensitivity()
         )
+        scheme = request.GET.get("scheme", None)
+        exclude = request.GET.get("exclude", None)
         exact = request.GET.get("exact", False)
         page_number = request.GET.get("page", 1)
         items_per_page = request.GET.get("items", 25)
@@ -53,9 +56,26 @@ class ValueSearchView(ConceptTreeView):
                     message=ve.args[0],
                     status=HTTPStatus.BAD_REQUEST,
                 )
+        elif scheme:
+            try:
+                part_of_scheme_node_id = "bf73e60a-4888-11ee-8a8d-11afefc4bff7"
+                query_string = "data__{}__0__resourceId".format(part_of_scheme_node_id)
+                if exclude == "true":
+                    tile_query = Tile.objects.exclude(**{query_string: scheme})
+                else:
+                    tile_query = Tile.objects.filter(**{query_string: scheme})
+            except ValueError as e:
+                return JSONErrorResponse(
+                    title=_("Unable to fetch concepts."),
+                    message=e.args[0],
+                    status=HTTPStatus.BAD_REQUEST,
+                )
         else:
-            concept_query = VwLabelValue.objects.all().order_by("concept_id")
-        concept_ids = concept_query.values_list("concept_id", flat=True).distinct()
+            concept_query = VwLabelValue.objects.exclude(value__isnull=True).order_by("concept_id")
+        if scheme:
+            concept_ids = tile_query.values_list("resourceinstance_id", flat=True).distinct()
+        else:
+            concept_ids = concept_query.values_list("concept_id", flat=True).distinct()
 
         data = []
         paginator = Paginator(concept_ids, items_per_page)

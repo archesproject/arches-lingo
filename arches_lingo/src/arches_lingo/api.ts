@@ -182,9 +182,13 @@ export const fetchSearchResults = async (
     searchTerm: string,
     items: number,
     page: number,
+    schemeResource: string = "",
+    exclude: boolean = false,
 ) => {
     const params = new URLSearchParams({
         term: searchTerm,
+        scheme: schemeResource,
+        exclude: exclude.toString(),
         items: items.toString(),
         page: page.toString(),
     });
