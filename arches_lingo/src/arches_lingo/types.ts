@@ -46,6 +46,10 @@ export interface ControlledListItemLabelValue {
     list_item_id: string;
 }
 
+export interface Url {
+    url: string;
+    url_label: string;
+}
 export interface ControlledListItemResult {
     id?: string;
     list_id: string;
@@ -132,6 +136,7 @@ export interface ConceptMatchStatus extends TileData {
     match_status_data_assignment_actor: ResourceInstanceReference[];
     match_status_data_assignment_object_used: ResourceInstanceReference[];
     match_status_data_assignment_type: ControlledListItem[];
+    uri: Url;
 }
 
 export interface SchemeStatement extends TileData {
