@@ -1,16 +1,22 @@
 <script setup lang="ts">
 import { inject, ref } from "vue";
+
+import { useConfirm } from "primevue/useconfirm";
 import { useGettext } from "vue3-gettext";
+import { useToast } from "primevue/usetoast";
 
 import DataTable from "primevue/datatable";
 import Column from "primevue/column";
 import Button from "primevue/button";
 import ConfirmDialog from "primevue/confirmdialog";
-import { useConfirm } from "primevue/useconfirm";
 
 import { deleteLingoTile } from "@/arches_lingo/api.ts";
-import { SECONDARY } from "@/arches_lingo/constants.ts";
-import { DANGER } from "@/arches_lingo/constants.ts";
+import {
+    DANGER,
+    DEFAULT_ERROR_TOAST_LIFE,
+    ERROR,
+    SECONDARY,
+} from "@/arches_lingo/constants.ts";
 
 import type { MetaStringText } from "@/arches_lingo/types.ts";
 
@@ -22,11 +28,15 @@ const props = defineProps<{
     componentName: string;
 }>();
 
+const toast = useToast();
 const { $gettext } = useGettext();
 const confirm = useConfirm();
 
 const openEditor =
-    inject<(componentName: string, tileid?: string) => void>("openEditor");
+    inject<(componentName: string, tileId?: string) => void>("openEditor");
+const updateAfterComponentDeletion = inject<
+    (componentName: string, tileId: string) => void
+>("updateAfterComponentDeletion");
 const refreshReportSection = inject<(componentName: string) => void>(
     "refreshReportSection",
 );
@@ -58,9 +68,14 @@ async function deleteSectionValue(tileId: string) {
         await deleteLingoTile(props.graphSlug, props.nodegroupAlias, tileId);
 
         refreshReportSection!(props.componentName);
-        openEditor!(props.componentName, undefined);
+        updateAfterComponentDeletion!(props.componentName, tileId);
     } catch (error) {
-        console.error(error);
+        toast.add({
+            severity: ERROR,
+            life: DEFAULT_ERROR_TOAST_LIFE,
+            summary: $gettext("Failed to delete data."),
+            detail: error instanceof Error ? error.message : undefined,
+        });
     }
 }
 </script>

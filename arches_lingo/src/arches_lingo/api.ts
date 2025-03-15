@@ -150,28 +150,17 @@ export const deleteLingoTile = async (
     }
 };
 
-export const createScheme = async (newScheme: SchemeInstance) => {
-    const response = await fetch(arches.urls.api_lingo_resources("scheme"), {
+export const createLingoResource = async (
+    newResource: SchemeInstance | ConceptInstance,
+    graphSlug: string,
+) => {
+    const response = await fetch(arches.urls.api_lingo_resources(graphSlug), {
         method: "POST",
         headers: {
             "X-CSRFTOKEN": getToken(),
             "Content-Type": "application/json",
         },
-        body: JSON.stringify(newScheme),
-    });
-    const parsed = await response.json();
-    if (!response.ok) throw new Error(parsed.message || response.statusText);
-    return parsed;
-};
-
-export const createConcept = async (newConcept: ConceptInstance) => {
-    const response = await fetch(arches.urls.api_lingo_resources("concept"), {
-        method: "POST",
-        headers: {
-            "X-CSRFTOKEN": getToken(),
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify(newConcept),
+        body: JSON.stringify(newResource),
     });
     const parsed = await response.json();
     if (!response.ok) throw new Error(parsed.message || response.statusText);

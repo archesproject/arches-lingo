@@ -1,14 +1,24 @@
 <script setup lang="ts">
-import { inject, useTemplateRef, watch, type Component, type Ref } from "vue";
+import { inject, ref, useTemplateRef, watch } from "vue";
+
 import { useRouter } from "vue-router";
+import { useGettext } from "vue3-gettext";
+import { useToast } from "primevue/usetoast";
 
 import { Form } from "@primevue/forms";
 
+import ProgressSpinner from "primevue/progressspinner";
+
 import ResourceInstanceMultiSelectWidget from "@/arches_component_lab/widgets/ResourceInstanceMultiSelectWidget/ResourceInstanceMultiSelectWidget.vue";
 
-import { createScheme, upsertLingoTile } from "@/arches_lingo/api.ts";
-import { EDIT } from "@/arches_lingo/constants.ts";
+import { createLingoResource, upsertLingoTile } from "@/arches_lingo/api.ts";
+import {
+    DEFAULT_ERROR_TOAST_LIFE,
+    EDIT,
+    ERROR,
+} from "@/arches_lingo/constants.ts";
 
+import type { Component, Ref } from "vue";
 import type { FormSubmitEvent } from "@primevue/forms";
 import type { SchemeCreation } from "@/arches_lingo/types.ts";
 
@@ -23,6 +33,8 @@ const props = defineProps<{
 }>();
 
 const router = useRouter();
+const toast = useToast();
+const { $gettext } = useGettext();
 
 const componentEditorFormRef = inject<Ref<Component | null>>(
     "componentEditorFormRef",
@@ -35,12 +47,16 @@ const refreshReportSection = inject<(componentName: string) => void>(
 );
 
 const formRef = useTemplateRef("form");
+const isSaving = ref(false);
+
 watch(
     () => formRef.value,
     (formComponent) => (componentEditorFormRef!.value = formComponent),
 );
 
 async function save(e: FormSubmitEvent) {
+    isSaving.value = true;
+
     try {
         const formData = Object.fromEntries(
             Object.entries(e.states).map(([key, state]) => [key, state.value]),
@@ -49,9 +65,12 @@ async function save(e: FormSubmitEvent) {
         let updatedTileId;
 
         if (!props.resourceInstanceId) {
-            const updatedScheme = await createScheme({
-                [props.nodegroupAlias]: formData,
-            });
+            const updatedScheme = await createLingoResource(
+                {
+                    [props.nodegroupAlias]: [formData],
+                },
+                props.graphSlug,
+            );
 
             await router.push({
                 name: props.graphSlug,
@@ -73,27 +92,43 @@ async function save(e: FormSubmitEvent) {
             updatedTileId = updatedScheme.tileid;
         }
 
-        openEditor!(props.componentName, updatedTileId);
-    } catch (error) {
-        console.error(error);
-    } finally {
+        if (updatedTileId !== props.tileId) {
+            openEditor!(props.componentName, updatedTileId);
+        }
+
         refreshReportSection!(props.componentName);
+    } catch (error) {
+        toast.add({
+            severity: ERROR,
+            life: DEFAULT_ERROR_TOAST_LIFE,
+            summary: $gettext("Failed to save data."),
+            detail: error instanceof Error ? error.message : undefined,
+        });
+    } finally {
+        isSaving.value = false;
     }
 }
 </script>
 
 <template>
-    <h3>{{ props.sectionTitle }}</h3>
+    <ProgressSpinner
+        v-show="isSaving"
+        style="width: 100%"
+    />
 
-    <Form
-        ref="form"
-        @submit="save"
-    >
-        <ResourceInstanceMultiSelectWidget
-            graph-slug="scheme"
-            node-alias="creation_sources"
-            :initial-value="props.tileData?.creation_sources"
-            :mode="EDIT"
-        />
-    </Form>
+    <div v-show="!isSaving">
+        <h3>{{ props.sectionTitle }}</h3>
+
+        <Form
+            ref="form"
+            @submit="save"
+        >
+            <ResourceInstanceMultiSelectWidget
+                graph-slug="scheme"
+                node-alias="creation_sources"
+                :initial-value="props.tileData?.creation_sources"
+                :mode="EDIT"
+            />
+        </Form>
+    </div>
 </template>

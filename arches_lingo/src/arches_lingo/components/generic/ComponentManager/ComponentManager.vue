@@ -41,6 +41,7 @@ const processedComponentData = ref(
     }),
 );
 
+const editorKey = ref(0);
 const editorTileId = ref();
 const editorState = ref(CLOSED);
 const selectedComponentDatum = ref();
@@ -68,9 +69,9 @@ function openEditor(componentName: string, tileId?: string) {
 
     if (componentDatum) {
         selectedComponentDatum.value = componentDatum;
-        componentDatum.key += 1;
     }
 
+    editorKey.value += 1;
     editorTileId.value = tileId;
     editorState.value = MINIMIZED;
 }
@@ -81,6 +82,13 @@ function maximizeEditor() {
 
 function minimizeEditor() {
     editorState.value = MINIMIZED;
+}
+
+function updateAfterComponentDeletion(componentName: string, tileId: string) {
+    if (tileId === editorTileId.value) {
+        closeEditor();
+        openEditor(componentName);
+    }
 }
 
 function refreshReportSection(componentName: string) {
@@ -96,6 +104,7 @@ function refreshReportSection(componentName: string) {
 }
 
 provide("openEditor", openEditor);
+provide("updateAfterComponentDeletion", updateAfterComponentDeletion);
 provide("refreshReportSection", refreshReportSection);
 </script>
 
@@ -124,6 +133,7 @@ provide("refreshReportSection", refreshReportSection);
             :size="editorState === MINIMIZED ? 33 : 100"
         >
             <ComponentEditor
+                :key="editorKey"
                 :is-editor-maximized="editorState === MAXIMIZED"
                 @maximize="maximizeEditor"
                 @minimize="minimizeEditor"
@@ -131,11 +141,6 @@ provide("refreshReportSection", refreshReportSection);
             >
                 <component
                     :is="selectedComponentDatum.component"
-                    :key="
-                        selectedComponentDatum.componentName +
-                        '-' +
-                        selectedComponentDatum.key
-                    "
                     :graph-slug="selectedComponentDatum.graphSlug"
                     :nodegroup-alias="selectedComponentDatum.nodegroupAlias"
                     :resource-instance-id="resourceInstanceId"
