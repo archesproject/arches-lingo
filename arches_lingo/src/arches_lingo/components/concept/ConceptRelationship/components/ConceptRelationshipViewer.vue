@@ -33,7 +33,7 @@ const metaStringLabel: MetaStringText = {
     name: $gettext("RelationshipID"),
     type: $gettext("Relationship"),
     language: $gettext("Related Concept"),
-    noRecords: $gettext("No concept labels were found."),
+    noRecords: $gettext("No associated concepts were found."),
 };
 </script>
 
