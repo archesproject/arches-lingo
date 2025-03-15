@@ -7,6 +7,7 @@ import type {
     IconLabels,
     NodeAndParentInstruction,
     Scheme,
+    SearchResultItem,
 } from "@/arches_lingo/types";
 
 // Duck-typing helpers
@@ -131,3 +132,23 @@ export function checkDeepEquality(value1: unknown, value2: unknown): boolean {
         return checkDeepEquality(object1[key], object2[key]);
     });
 }
+
+export function getParentLabels(
+    item: SearchResultItem,
+    preferredLanguageCode: string,
+    systemLanguageCode: string,
+): string {
+    const arrowIcon = " → ";
+
+    return item.parents.reduce((acc, parent, index) => {
+        const label = getItemLabel(
+            parent,
+            preferredLanguageCode,
+            systemLanguageCode,
+        ).value;
+        if (label) {
+            return acc + (index > 0 ? arrowIcon : "") + label;
+        }
+        return acc;
+    }, "");
+};
