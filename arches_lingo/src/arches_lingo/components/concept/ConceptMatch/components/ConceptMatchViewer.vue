@@ -5,6 +5,7 @@ import { useGettext } from "vue3-gettext";
 import Button from "primevue/button";
 
 import MetaStringViewer from "@/arches_lingo/components/generic/MetaStringViewer.vue";
+import UrlWidget from "@/arches_lingo/components/widgets/UrlWidget/UrlWidget.vue";
 
 import ReferenceSelectWidget from "@/arches_controlled_lists/widgets/ReferenceSelectWidget/ReferenceSelectWidget.vue";
 import ResourceInstanceMultiSelectWidget from "@/arches_component_lab/widgets/ResourceInstanceMultiSelectWidget/ResourceInstanceMultiSelectWidget.vue";
@@ -33,7 +34,7 @@ const metaStringLabel: MetaStringText = {
     name: $gettext("Match Type"),
     type: $gettext("Related URI"),
     language: $gettext("Related Label"),
-    noRecords: $gettext("No concept labels were found."),
+    noRecords: $gettext("No matched concepts were found."),
 };
 </script>
 
@@ -64,10 +65,10 @@ const metaStringLabel: MetaStringText = {
             />
         </template>
         <template #type="{ rowData }">
-            <ResourceInstanceMultiSelectWidget
+            <UrlWidget
                 :graph-slug="props.graphSlug"
-                node-alias="match_status_ascribed_comparate"
-                :initial-value="rowData.match_status_ascribed_comparate"
+                node-alias="uri_content"
+                :initial-value="rowData.uri"
                 :mode="VIEW"
                 :show-label="false"
             />

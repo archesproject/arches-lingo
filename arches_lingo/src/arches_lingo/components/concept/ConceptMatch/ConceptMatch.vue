@@ -55,11 +55,15 @@ onMounted(async () => {
 
 async function getSectionValue() {
     try {
-        return await fetchLingoResourcePartial(
+        const sectionValue = await fetchLingoResourcePartial(
             props.graphSlug,
             props.resourceInstanceId as string,
             props.nodegroupAlias,
         );
+        for (const value of sectionValue[props.nodegroupAlias]){
+            value ["uri"] = await getURI(value["match_status_ascribed_comparate"][0]["resourceId"]);
+        };
+        return sectionValue;
     } catch (error) {
         toast.add({
             severity: ERROR,
@@ -69,6 +73,16 @@ async function getSectionValue() {
         });
     }
 }
+
+async function getURI(resourceId: string) {
+    const uriData = await fetchLingoResourcePartial(
+        props.graphSlug,
+        resourceId,
+        "uri",
+    );
+    return JSON.parse(uriData.uri.uri_content.replace(/'/g, '"'));
+}
+
 </script>
 
 <template>
