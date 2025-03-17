@@ -1,20 +1,13 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 
-import { useGettext } from "vue3-gettext";
-import { useToast } from "primevue/usetoast";
-
+import Message from "primevue/message";
 import ProgressSpinner from "primevue/progressspinner";
 
 import SchemeLicenseViewer from "@/arches_lingo/components/scheme/SchemeLicense/components/SchemeLicenseViewer.vue";
 import SchemeLicenseEditor from "@/arches_lingo/components/scheme/SchemeLicense/components/SchemeLicenseEditor.vue";
 
-import {
-    DEFAULT_ERROR_TOAST_LIFE,
-    EDIT,
-    ERROR,
-    VIEW,
-} from "@/arches_lingo/constants.ts";
+import { EDIT, VIEW } from "@/arches_lingo/constants.ts";
 
 import { fetchLingoResourcePartial } from "@/arches_lingo/api.ts";
 
@@ -30,11 +23,9 @@ const props = defineProps<{
     tileId?: string;
 }>();
 
-const toast = useToast();
-const { $gettext } = useGettext();
-
 const isLoading = ref(true);
 const tileData = ref<SchemeRights>();
+const fetchError = ref();
 
 const shouldCreateNewTile = Boolean(props.mode === EDIT && !props.tileId);
 
@@ -58,12 +49,7 @@ async function getSectionValue() {
             props.nodegroupAlias,
         );
     } catch (error) {
-        toast.add({
-            severity: ERROR,
-            life: DEFAULT_ERROR_TOAST_LIFE,
-            summary: $gettext("Failed to fetch data."),
-            detail: error instanceof Error ? error.message : undefined,
-        });
+        fetchError.value = error;
     }
 }
 </script>
@@ -91,5 +77,11 @@ async function getSectionValue() {
             :nodegroup-alias="props.nodegroupAlias"
             :tile-id="props.tileId"
         />
+        <Message
+            v-if="fetchError"
+            severity="error"
+            size="small"
+        >{{ fetchError.message }}
+        </Message>
     </template>
 </template>
