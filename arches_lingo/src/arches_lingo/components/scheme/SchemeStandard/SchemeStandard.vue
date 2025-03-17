@@ -33,15 +33,19 @@ const fetchError = ref();
 const shouldCreateNewTile = Boolean(props.mode === EDIT && !props.tileId);
 
 onMounted(async () => {
-    if (
-        props.resourceInstanceId &&
-        (props.mode === VIEW || !shouldCreateNewTile)
-    ) {
-        const sectionValue = await getSectionValue();
-        tileData.value = sectionValue[props.nodegroupAlias];
+    try {
+        if (
+            props.resourceInstanceId &&
+            (props.mode === VIEW || !shouldCreateNewTile)
+        ) {
+            const sectionValue = await getSectionValue();
+            tileData.value = sectionValue[props.nodegroupAlias];
+        }
+    } catch (error) {
+        fetchError.value = error;
+    } finally {
+        isLoading.value = false;
     }
-
-    isLoading.value = false;
 });
 
 async function getSectionValue() {
@@ -52,7 +56,7 @@ async function getSectionValue() {
             props.nodegroupAlias,
         );
     } catch (error) {
-        fetchError.value = error;
+        console.error(error);
     }
 }
 </script>

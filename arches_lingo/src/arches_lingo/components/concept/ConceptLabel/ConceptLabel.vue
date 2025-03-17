@@ -52,7 +52,7 @@ async function getSectionValue() {
             props.nodegroupAlias,
         );
     } catch (error) {
-        fetchError.value = error;
+        console.error(error);
     }
 }
 </script>
