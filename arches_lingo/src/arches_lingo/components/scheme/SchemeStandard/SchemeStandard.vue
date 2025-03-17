@@ -85,7 +85,7 @@ async function getSectionValue() {
             v-if="fetchError"
             severity="error"
             size="small"
-        >{{ fetchError.message }}
+            >{{ fetchError.message }}
         </Message>
     </template>
 </template>
