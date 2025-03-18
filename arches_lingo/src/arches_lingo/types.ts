@@ -102,14 +102,19 @@ export interface ConceptImages extends TileData {
     depicting_digital_asset_internal: ResourceInstanceReference[];
 }
 
-export interface NameNodegroup extends TileData {
+export interface ConceptName extends TileData {
     name: string;
 }
 
+export interface ConceptStatement extends TileData {
+    statement_content: string;
+}
+
 export interface DigitalObjectInstance {
-    name: NameNodegroup;
+    name: ConceptName;
     content: DigitalObjectContent;
     resourceinstanceid: string;
+    statement: ConceptStatement | undefined;
 }
 
 export interface DigitalObjectContent extends TileData {
