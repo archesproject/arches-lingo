@@ -3,6 +3,10 @@ import type { TreeNode } from "primevue/treenode";
 import type { Label } from "@/arches_vue_utils/types.ts";
 import type { EDIT, VIEW } from "@/arches_lingo/constants.ts";
 import type { ReferenceSelectFetchedOption } from "@/arches_controlled_lists/widgets/types.ts";
+import type {
+    ResourceInstanceReference,
+    FileReference,
+} from "@/arches_component_lab/widgets/types.ts";
 
 export interface User {
     first_name: string;
@@ -57,14 +61,6 @@ export interface ControlledListItemResult {
     depth: number;
 }
 
-export interface ResourceInstanceReference {
-    resourceId: string;
-    ontologyProperty: string;
-    resourceXresourceId?: string;
-    inverseOntologyProperty: string;
-    display_value?: string;
-}
-
 export interface ResourceInstanceResult {
     resourceinstanceid: string;
     descriptors: { [key: string]: { name: string } };
@@ -89,6 +85,11 @@ export interface TileData<T extends AliasedData = AliasedData> {
     aliased_data: T;
 }
 
+export interface ResourceData<T extends AliasedData = AliasedData> {
+    resourceinstanceid: string;
+    aliased_data: T;
+}
+
 export interface AppellativeStatusAliases extends AliasedData {
     appellative_status_ascribed_name_content: string;
     appellative_status_ascribed_name_language?: ReferenceSelectFetchedOption[];
@@ -101,6 +102,39 @@ export interface AppellativeStatusAliases extends AliasedData {
     appellative_status_timespan_begin_of_the_begin: string;
     appellative_status_timespan_end_of_the_end: string;
 }
+
+export interface ConceptNameAlises extends AliasedData {
+    name: string;
+}
+
+export type ConceptName = TileData<ConceptNameAlises>;
+
+export interface DigitalObjectContentAliases extends AliasedData {
+    content: FileReference[];
+}
+
+export type DigitalObjectContent = TileData<DigitalObjectContentAliases>;
+
+export interface ConceptImagesAliases extends AliasedData {
+    depicting_digital_asset_internal: ResourceInstanceReference[];
+}
+
+export type ConceptImages = TileData<ConceptImagesAliases>;
+
+export interface DigitalObjectNameAliases extends AliasedData {
+    name_content: string;
+}
+
+export type DigitalObjectName = TileData<DigitalObjectNameAliases>;
+
+export interface DigitalObjectInstanceAliases extends AliasedData {
+    name: DigitalObjectName;
+    content?: DigitalObjectContent;
+    resourceinstanceid: string;
+    statement?: ConceptStatement;
+}
+
+export type DigitalObjectInstance = ResourceData<DigitalObjectInstanceAliases>;
 
 export type AppellativeStatus = TileData<AppellativeStatusAliases>;
 
@@ -167,18 +201,19 @@ export interface ConceptInstance {
     aliased_data: {
         appellative_status?: AppellativeStatus[];
         concept_statement?: ConceptStatement[];
+        depicting_digital_asset_internal?: ConceptImages[];
     };
 }
 
-export interface SchemeInstance {
-    aliased_data: {
-        namespace?: SchemeNamespace;
-        creation?: SchemeCreation;
-        appellative_status?: AppellativeStatus[];
-        statement?: SchemeStatement[];
-        rights?: SchemeRights;
-    };
+export interface SchemeInstanceAliases extends AliasedData {
+    namespace?: SchemeNamespace;
+    creation?: SchemeCreation;
+    appellative_status?: AppellativeStatus[];
+    statement?: SchemeStatement[];
+    rights?: SchemeRights;
 }
+
+export type SchemeInstance = ResourceData<SchemeInstanceAliases>;
 
 export interface SchemeResource {
     resourceinstanceid: string;
