@@ -113,9 +113,7 @@ async function getConceptImageResource(resourceInstanceId: string) {
                 class="conceptImage"
             />
             <div class="footer">
-                bobbobbobbob bobbobbobbob bob. bobbobbob bobbobbobbobbob
-                bobbobbobbob bob. bobbobbob bobbobbobbobbob bobbobbobbob bob.
-                bobbobbob bob bobbobbobbob bobbobbobbob bob. bobbobbob bob
+                {{ resource.statement?.statement_content }}
             </div>
         </div>
     </div>
@@ -139,6 +137,7 @@ async function getConceptImageResource(resourceInstanceId: string) {
     display: grid;
     grid-template-rows: auto auto auto;
     margin: 2rem 5rem;
+    flex: 1 1 0;
 }
 
 .conceptImage .header {
