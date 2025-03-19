@@ -31,7 +31,8 @@ onMounted(async () => {
     if (props.tileData) {
         resources.value = await Promise.all(
             props.tileData.depicting_digital_asset_internal.map(
-                async (x) => await getConceptImageResource(x.resourceId),
+                async (digitalAsset) =>
+                    await getConceptImageResource(digitalAsset.resourceId),
             ),
         );
     }
