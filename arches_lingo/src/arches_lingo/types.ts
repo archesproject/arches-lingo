@@ -3,6 +3,10 @@ import type { TreeNode } from "primevue/treenode";
 import type { Label } from "@/arches_vue_utils/types.ts";
 import type { EDIT, VIEW } from "@/arches_lingo/constants.ts";
 import type { ControlledListItem } from "@/arches_controlled_lists/types.ts";
+import type {
+    ResourceInstanceReference,
+    FileReference,
+} from "@/arches_component_lab/widgets/types.ts";
 
 export interface User {
     first_name: string;
@@ -57,14 +61,6 @@ export interface ControlledListItemResult {
     depth: number;
 }
 
-export interface ResourceInstanceReference {
-    resourceId: string;
-    ontologyProperty: string;
-    resourceXresourceId?: string;
-    inverseOntologyProperty: string;
-    display_value?: string;
-}
-
 export interface ResourceInstanceResult {
     resourceinstanceid: string;
     descriptors: { [key: string]: { name: string } };
@@ -96,6 +92,29 @@ export interface AppellativeStatus extends TileData {
     appellative_status_data_assignment_type: ControlledListItem[];
     appellative_status_timespan_begin_of_the_begin: string;
     appellative_status_timespan_end_of_the_end: string;
+}
+
+export interface ConceptImages extends TileData {
+    depicting_digital_asset_internal: ResourceInstanceReference[];
+}
+
+export interface ConceptName extends TileData {
+    name: string;
+}
+
+export interface ConceptStatement extends TileData {
+    statement_content: string;
+}
+
+export interface DigitalObjectInstance {
+    name: ConceptName;
+    content: DigitalObjectContent;
+    resourceinstanceid: string;
+    statement: ConceptStatement | undefined;
+}
+
+export interface DigitalObjectContent extends TileData {
+    content: FileReference[];
 }
 
 export interface ConceptStatement extends TileData {
@@ -147,6 +166,7 @@ export interface SchemeCreation extends TileData {
 
 export interface ConceptInstance {
     appellative_status?: AppellativeStatus[];
+    depicting_digital_asset_internal?: ConceptImages[];
 }
 
 export interface SchemeInstance {
