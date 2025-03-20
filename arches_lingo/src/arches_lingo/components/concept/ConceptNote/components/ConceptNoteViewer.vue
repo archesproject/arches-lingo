@@ -55,7 +55,7 @@ const metaStringLabel: MetaStringText = {
             <NonLocalizedStringWidget
                 node-alias="statement_content"
                 :graph-slug="props.graphSlug"
-                :initial-value="rowData.statement_content"
+                :initial-value="rowData.aliased_data.statement_content"
                 :mode="VIEW"
                 :show-label="false"
             />
@@ -64,7 +64,7 @@ const metaStringLabel: MetaStringText = {
             <ReferenceSelectWidget
                 node-alias="statement_type"
                 :graph-slug="props.graphSlug"
-                :initial-value="rowData.statement_type"
+                :initial-value="rowData.aliased_data.statement_type"
                 :mode="VIEW"
                 :show-label="false"
             />
@@ -73,7 +73,7 @@ const metaStringLabel: MetaStringText = {
             <ReferenceSelectWidget
                 node-alias="statement_language"
                 :graph-slug="props.graphSlug"
-                :initial-value="rowData.statement_language"
+                :initial-value="rowData.aliased_data.statement_language"
                 :mode="VIEW"
                 :show-label="false"
             />

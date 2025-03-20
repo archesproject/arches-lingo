@@ -77,11 +77,13 @@ async function save(e: FormSubmitEvent) {
             right_holder: formData.right_holder,
             right_type: formData.right_type,
             right_statement: {
-                right_statement_content: formData.right_statement_content,
-                right_statement_language: formData.right_statement_language,
-                right_statement_type: formData.right_statement_type,
-                right_statement_type_metatype:
-                    formData.right_statement_type_metatype,
+                aliased_data: {
+                    right_statement_content: formData.right_statement_content,
+                    right_statement_language: formData.right_statement_language,
+                    right_statement_type: formData.right_statement_type,
+                    right_statement_type_metatype:
+                        formData.right_statement_type_metatype,
+                },
             },
         };
 
@@ -90,7 +92,9 @@ async function save(e: FormSubmitEvent) {
         if (!props.resourceInstanceId) {
             const updatedScheme = await createLingoResource(
                 {
-                    [props.nodegroupAlias]: [formData],
+                    aliased_data: {
+                        [props.nodegroupAlias]: [formData],
+                    },
                 },
                 props.graphSlug,
             );
@@ -107,7 +111,7 @@ async function save(e: FormSubmitEvent) {
                 props.nodegroupAlias,
                 {
                     resourceinstance: props.resourceInstanceId,
-                    ...expectedTileShape,
+                    aliased_data: { ...expectedTileShape },
                     tileid: props.tileId,
                 },
             );
@@ -149,20 +153,21 @@ async function save(e: FormSubmitEvent) {
             <ResourceInstanceMultiSelectWidget
                 node-alias="right_holder"
                 :graph-slug="props.graphSlug"
-                :initial-value="props.tileData?.right_holder"
+                :initial-value="props.tileData?.aliased_data.right_holder"
                 :mode="EDIT"
             />
             <ReferenceSelectWidget
                 node-alias="right_type"
                 :graph-slug="props.graphSlug"
-                :initial-value="props.tileData?.right_type"
+                :initial-value="props.tileData?.aliased_data.right_type"
                 :mode="EDIT"
             />
             <NonLocalizedStringWidget
                 node-alias="right_statement_content"
                 :graph-slug="props.graphSlug"
                 :initial-value="
-                    props.tileData?.right_statement?.right_statement_content
+                    props.tileData?.aliased_data.right_statement?.aliased_data
+                        .right_statement_content
                 "
                 :mode="EDIT"
             />
@@ -170,7 +175,8 @@ async function save(e: FormSubmitEvent) {
                 node-alias="right_statement_language"
                 :graph-slug="props.graphSlug"
                 :initial-value="
-                    props.tileData?.right_statement?.right_statement_language
+                    props.tileData?.aliased_data.right_statement?.aliased_data
+                        .right_statement_language
                 "
                 :mode="EDIT"
             />
@@ -178,7 +184,8 @@ async function save(e: FormSubmitEvent) {
                 node-alias="right_statement_type"
                 :graph-slug="props.graphSlug"
                 :initial-value="
-                    props.tileData?.right_statement?.right_statement_type
+                    props.tileData?.aliased_data.right_statement?.aliased_data
+                        .right_statement_type
                 "
                 :mode="EDIT"
             />
@@ -186,8 +193,8 @@ async function save(e: FormSubmitEvent) {
                 node-alias="right_statement_type_metatype"
                 :graph-slug="props.graphSlug"
                 :initial-value="
-                    props.tileData?.right_statement
-                        ?.right_statement_type_metatype
+                    props.tileData?.aliased_data.right_statement?.aliased_data
+                        .right_statement_type_metatype
                 "
                 :mode="EDIT"
             />
