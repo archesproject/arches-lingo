@@ -355,9 +355,11 @@ class RDMMtoLingoMigrator(BaseImportModule):
                 source_description,
                 loadid,
                 nodegroupid,
-                operation
+                operation,
+                sortorder
             )
             select 
+                distinct on (conceptidfrom, conceptidto)
                 json_build_object(%s::uuid,
                     json_build_object(
                         'notes', '',
@@ -374,10 +376,13 @@ class RDMMtoLingoMigrator(BaseImportModule):
                 'Scheme: top_concept_of' as source_description,
                 %s::uuid as loadid,
                 %s::uuid as nodegroupid,
-                'insert' as operation
-            from relations
+                'insert' as operation,
+                (rank() over (partition by conceptidfrom order by v.value)-1) as sortorter
+            from relations r
+            left join values v on r.conceptidto = v.conceptid
             where relationtype = 'hasTopConcept'
-            and conceptidto = ANY(%s);
+                and v.valuetype = 'prefLabel'
+                and conceptidto = ANY(%s);
         """,
             (
                 TOP_CONCEPT_OF_NODE_AND_NODEGROUP,
@@ -399,7 +404,8 @@ class RDMMtoLingoMigrator(BaseImportModule):
                 source_description,
                 loadid,
                 nodegroupid,
-                operation
+                operation,
+                sortorder
             )
             select 
                 json_build_object(%s::uuid,
@@ -426,10 +432,13 @@ class RDMMtoLingoMigrator(BaseImportModule):
                 'Scheme: top_concept_of' as source_description,
                 %s::uuid as loadid,
                 %s::uuid as nodegroupid,
-                'insert' as operation
-            from relations
+                'insert' as operation,
+                (rank() over (partition by conceptidto order by v.value)-1) as sortorter
+            from relations r
+            left join values v on r.conceptidto = v.conceptid
             where relationtype = 'narrower'
-            and conceptidto = ANY(%s);
+                and v.valuetype = 'prefLabel'
+                and conceptidto = ANY(%s);
         """,
             (
                 CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID,
@@ -507,6 +516,7 @@ class RDMMtoLingoMigrator(BaseImportModule):
                 load_event=LoadEvent(self.loadid),
                 nodegroup=part_of_scheme_nodegroup,
                 operation="insert",
+                sortorder=0,
             )
             staging_tile.full_clean()
             part_of_scheme_tiles.append(staging_tile)
