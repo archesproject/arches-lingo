@@ -12,7 +12,7 @@
         "model": "arches_controlled_lists.list",
         "pk": "2cc0e054-ef9b-41ae-8e86-e0c3b4e7ca00",
         "fields": {
-            "name": "Statuteses",
+            "name": "Information State Statuses",
             "dynamic": false,
             "search_only": false
         }
@@ -30,7 +30,7 @@
         "model": "arches_controlled_lists.list",
         "pk": "42e91d71-7d25-4e43-97df-8b43f46711cf",
         "fields": {
-            "name": "broaderTransitive",
+            "name": "broader properties",
             "dynamic": false,
             "search_only": false
         }
@@ -57,7 +57,7 @@
         "model": "arches_controlled_lists.list",
         "pk": "5f28f263-9d16-4c01-a146-80a97d7119a9",
         "fields": {
-            "name": "E55 Type",
+            "name": "Ontology Classes",
             "dynamic": false,
             "search_only": false
         }
@@ -75,25 +75,7 @@
         "model": "arches_controlled_lists.list",
         "pk": "769fa072-6247-4e23-b638-4e801f8c50dc",
         "fields": {
-            "name": "mappingRelation",
-            "dynamic": false,
-            "search_only": false
-        }
-    },
-    {
-        "model": "arches_controlled_lists.list",
-        "pk": "891574cc-47bf-4395-a512-d246cd75c1a1",
-        "fields": {
-            "name": "Name Types",
-            "dynamic": false,
-            "search_only": false
-        }
-    },
-    {
-        "model": "arches_controlled_lists.list",
-        "pk": "8936df69-415c-4f4d-8443-ae8f66309457",
-        "fields": {
-            "name": "PLACEHOLDER",
+            "name": "Mapping properties",
             "dynamic": false,
             "search_only": false
         }
@@ -138,7 +120,7 @@
         "model": "arches_controlled_lists.list",
         "pk": "ed3f8d46-c372-4c99-a326-8f726076fb97",
         "fields": {
-            "name": "related",
+            "name": "related properties",
             "dynamic": false,
             "search_only": false
         }
@@ -148,15 +130,6 @@
         "pk": "ef69e772-de53-45fe-98d4-bf3e7b10eb57",
         "fields": {
             "name": "Metatypes",
-            "dynamic": false,
-            "search_only": false
-        }
-    },
-    {
-        "model": "arches_controlled_lists.list",
-        "pk": "f028fe8e-5a23-40a7-8ffe-7865ebac9487",
-        "fields": {
-            "name": "Identifier Types - General",
             "dynamic": false,
             "search_only": false
         }
@@ -174,7 +147,7 @@
         "model": "arches_controlled_lists.listitem",
         "pk": "02a0fc69-9f92-4bef-b657-af1ed37c1d3e",
         "fields": {
-            "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/02a0fc69-9f92-4bef-b657-af1ed37c1d3e",
+            "uri": "https://vocab.getty.edu/aat/300418049",
             "list": "ef69e772-de53-45fe-98d4-bf3e7b10eb57",
             "sortorder": 0,
             "parent": null,
@@ -185,21 +158,21 @@
         "model": "arches_controlled_lists.listitem",
         "pk": "05967b72-5a51-4da1-90bb-5b53f62ec7ca",
         "fields": {
-            "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/05967b72-5a51-4da1-90bb-5b53f62ec7ca",
+            "uri": "http://vocab.getty.edu/aat/300388113",
             "list": "55ce793b-a51a-4b25-811d-d08ea797f8c3",
-            "sortorder": 1,
+            "sortorder": 2,
             "parent": null,
             "guide": false
         }
     },
     {
         "model": "arches_controlled_lists.listitem",
-        "pk": "05e62a8a-b5c2-437c-b741-4f8176cea0d1",
+        "pk": "0e53033b-49f0-4252-b9cc-e50f120c76f9",
         "fields": {
-            "uri": "http://localhost:8000/plugins/controlled-list-manager/item/05e62a8a-b5c2-437c-b741-4f8176cea0d1",
-            "list": "891574cc-47bf-4395-a512-d246cd75c1a1",
-            "sortorder": 0,
-            "parent": null,
+            "uri": "http://purl.org/iso25964/skos-thes#broaderGeneric",
+            "list": "42e91d71-7d25-4e43-97df-8b43f46711cf",
+            "sortorder": 4,
+            "parent": "4810df79-8bdd-4102-a067-fdb11dcff8b7",
             "guide": false
         }
     },
@@ -207,7 +180,7 @@
         "model": "arches_controlled_lists.listitem",
         "pk": "14751cb1-f7af-45d9-b32a-59d150bdac0f",
         "fields": {
-            "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/14751cb1-f7af-45d9-b32a-59d150bdac0f",
+            "uri": "https://vocab.getty.edu/aat/300456597",
             "list": "6eaa2c6f-af83-464c-9200-051c4cfe7e8e",
             "sortorder": 0,
             "parent": null,
@@ -218,9 +191,9 @@
         "model": "arches_controlled_lists.listitem",
         "pk": "15386a71-b8d6-4371-9bf7-69efb98c79ed",
         "fields": {
-            "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/15386a71-b8d6-4371-9bf7-69efb98c79ed",
+            "uri": "http://vocab.getty.edu/aat/300389168",
             "list": "55ce793b-a51a-4b25-811d-d08ea797f8c3",
-            "sortorder": 11,
+            "sortorder": 7,
             "parent": null,
             "guide": false
         }
@@ -229,7 +202,7 @@
         "model": "arches_controlled_lists.listitem",
         "pk": "19376b93-4bdc-4d48-a22a-71121506b70b",
         "fields": {
-            "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/19376b93-4bdc-4d48-a22a-71121506b70b",
+            "uri": "http://www.w3.org/2004/02/skos/core#altLabel",
             "list": "deb847fc-f4c3-4e82-be19-04641579f129",
             "sortorder": 0,
             "parent": null,
@@ -238,12 +211,12 @@
     },
     {
         "model": "arches_controlled_lists.listitem",
-        "pk": "28855929-b8c5-43ae-8794-ab7497486345",
+        "pk": "221b97ab-5344-4157-b661-6e8786198dff",
         "fields": {
-            "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/28855929-b8c5-43ae-8794-ab7497486345",
-            "list": "55ce793b-a51a-4b25-811d-d08ea797f8c3",
-            "sortorder": 13,
-            "parent": null,
+            "uri": "http://vocab.getty.edu/aat/300265269",
+            "list": "fb5dd406-33ef-4e83-a6a9-9ea02c1ada17",
+            "sortorder": 6,
+            "parent": "929bfdbf-a592-4f70-bd8b-9c11deb6bff9",
             "guide": false
         }
     },
@@ -251,7 +224,7 @@
         "model": "arches_controlled_lists.listitem",
         "pk": "2e3a2045-b44e-47fc-a27b-3078b17e08e4",
         "fields": {
-            "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/2e3a2045-b44e-47fc-a27b-3078b17e08e4",
+            "uri": "http://www.w3.org/2004/02/skos/core#prefLabel",
             "list": "deb847fc-f4c3-4e82-be19-04641579f129",
             "sortorder": 2,
             "parent": null,
@@ -262,7 +235,7 @@
         "model": "arches_controlled_lists.listitem",
         "pk": "31916ec0-f408-473d-9184-667a4d097b9d",
         "fields": {
-            "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/31916ec0-f408-473d-9184-667a4d097b9d",
+            "uri": "http://www.w3.org/2004/02/skos/core#related",
             "list": "ed3f8d46-c372-4c99-a326-8f726076fb97",
             "sortorder": 0,
             "parent": null,
@@ -273,10 +246,10 @@
         "model": "arches_controlled_lists.listitem",
         "pk": "36f1b686-c4ba-4c0e-b4f3-b8b190f3a88d",
         "fields": {
-            "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/36f1b686-c4ba-4c0e-b4f3-b8b190f3a88d",
+            "uri": "http://www.cidoc-crm.org/cidoc-crm/E57_Material",
             "list": "5f28f263-9d16-4c01-a146-80a97d7119a9",
-            "sortorder": 1,
-            "parent": null,
+            "sortorder": 4,
+            "parent": "b80b3df5-39ce-4dd3-a979-a73aed2b362c",
             "guide": false
         }
     },
@@ -284,9 +257,20 @@
         "model": "arches_controlled_lists.listitem",
         "pk": "386b1c1a-a9b5-418c-b1d3-6aa518bb7cfb",
         "fields": {
-            "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/386b1c1a-a9b5-418c-b1d3-6aa518bb7cfb",
+            "uri": "http://vocab.getty.edu/aat/300388277",
             "list": "55ce793b-a51a-4b25-811d-d08ea797f8c3",
-            "sortorder": 7,
+            "sortorder": 0,
+            "parent": null,
+            "guide": false
+        }
+    },
+    {
+        "model": "arches_controlled_lists.listitem",
+        "pk": "4062bbcd-bd0f-46c5-85ba-6479c1eac864",
+        "fields": {
+            "uri": "http://www.w3.org/2004/02/skos/core#broadMatch",
+            "list": "6eaa2c6f-af83-464c-9200-051c4cfe7e8e",
+            "sortorder": 1,
             "parent": null,
             "guide": false
         }
@@ -295,7 +279,7 @@
         "model": "arches_controlled_lists.listitem",
         "pk": "44bb50fc-42d5-41a0-bc21-4ad8d2f8bf5e",
         "fields": {
-            "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/44bb50fc-42d5-41a0-bc21-4ad8d2f8bf5e",
+            "uri": "http://www.w3.org/2004/02/skos/core#note",
             "list": "aba2a0b4-75a4-45ba-8b57-021f3ca92a6a",
             "sortorder": 0,
             "parent": null,
@@ -306,7 +290,7 @@
         "model": "arches_controlled_lists.listitem",
         "pk": "45fab276-7818-4c83-8dd8-43e4e862904c",
         "fields": {
-            "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/45fab276-7818-4c83-8dd8-43e4e862904c",
+            "uri": "http://vocab.getty.edu/page/aat/300386700",
             "list": "4f9b2c82-59c6-4173-99ea-2a6bfbab6aa2",
             "sortorder": 1,
             "parent": null,
@@ -317,10 +301,21 @@
         "model": "arches_controlled_lists.listitem",
         "pk": "4810df79-8bdd-4102-a067-fdb11dcff8b7",
         "fields": {
-            "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/4810df79-8bdd-4102-a067-fdb11dcff8b7",
+            "uri": "http://www.w3.org/2004/02/skos/core#broader",
             "list": "42e91d71-7d25-4e43-97df-8b43f46711cf",
-            "sortorder": 0,
-            "parent": null,
+            "sortorder": 2,
+            "parent": "ad3bbf30-5fa6-43a3-b6cd-f5e874befd7e",
+            "guide": false
+        }
+    },
+    {
+        "model": "arches_controlled_lists.listitem",
+        "pk": "4a08c8ab-d909-4dd1-aa7f-e240c8712def",
+        "fields": {
+            "uri": "http://purl.org/iso25964/skos-thes#broaderInstantial",
+            "list": "42e91d71-7d25-4e43-97df-8b43f46711cf",
+            "sortorder": 5,
+            "parent": "4810df79-8bdd-4102-a067-fdb11dcff8b7",
             "guide": false
         }
     },
@@ -328,7 +323,7 @@
         "model": "arches_controlled_lists.listitem",
         "pk": "52eb8678-485d-418c-9ad2-aa97d077ac56",
         "fields": {
-            "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/52eb8678-485d-418c-9ad2-aa97d077ac56",
+            "uri": "http://www.w3.org/2004/02/skos/core#scopeNote",
             "list": "aba2a0b4-75a4-45ba-8b57-021f3ca92a6a",
             "sortorder": 7,
             "parent": "44bb50fc-42d5-41a0-bc21-4ad8d2f8bf5e",
@@ -339,9 +334,9 @@
         "model": "arches_controlled_lists.listitem",
         "pk": "58695100-659c-48df-8c87-fa565dfef39e",
         "fields": {
-            "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/58695100-659c-48df-8c87-fa565dfef39e",
+            "uri": "http://vocab.getty.edu/aat/300387843",
             "list": "55ce793b-a51a-4b25-811d-d08ea797f8c3",
-            "sortorder": 0,
+            "sortorder": 1,
             "parent": null,
             "guide": false
         }
@@ -350,9 +345,9 @@
         "model": "arches_controlled_lists.listitem",
         "pk": "5b633cd0-e407-4dce-9f7c-5657ae57408f",
         "fields": {
-            "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/5b633cd0-e407-4dce-9f7c-5657ae57408f",
+            "uri": "http://vocab.getty.edu/aat/300389311",
             "list": "55ce793b-a51a-4b25-811d-d08ea797f8c3",
-            "sortorder": 12,
+            "sortorder": 8,
             "parent": null,
             "guide": false
         }
@@ -361,10 +356,10 @@
         "model": "arches_controlled_lists.listitem",
         "pk": "5ca7196a-2e9a-449c-b6fe-8ed42f604cba",
         "fields": {
-            "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/68792506-7b45-4008-9a12-15d63ea18f29",
+            "uri": "http://www.w3.org/2004/02/skos/core#relatedMatch",
             "list": "769fa072-6247-4e23-b638-4e801f8c50dc",
-            "sortorder": 3,
-            "parent": null,
+            "sortorder": 5,
+            "parent": "d6c5ca2f-04e3-4a61-9065-40193bce8d83",
             "guide": false
         }
     },
@@ -383,7 +378,7 @@
         "model": "arches_controlled_lists.listitem",
         "pk": "68792506-7b45-4008-9a12-15d63ea18f29",
         "fields": {
-            "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/68792506-7b45-4008-9a12-15d63ea18f29",
+            "uri": "http://www.w3.org/2004/02/skos/core#relatedMatch",
             "list": "ed3f8d46-c372-4c99-a326-8f726076fb97",
             "sortorder": 1,
             "parent": "31916ec0-f408-473d-9184-667a4d097b9d",
@@ -392,12 +387,23 @@
     },
     {
         "model": "arches_controlled_lists.listitem",
+        "pk": "6abd4767-6959-41f9-9f36-95e8af6d5752",
+        "fields": {
+            "uri": "http://vocab.getty.edu/aat/300026963",
+            "list": "fb5dd406-33ef-4e83-a6a9-9ea02c1ada17",
+            "sortorder": 2,
+            "parent": "f3464aca-b9d8-4667-a551-71fe5058f7fd",
+            "guide": false
+        }
+    },
+    {
+        "model": "arches_controlled_lists.listitem",
         "pk": "6abe2747-f53f-40d9-857a-3c027ccf2f79",
         "fields": {
-            "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/6abe2747-f53f-40d9-857a-3c027ccf2f79",
+            "uri": "http://www.cidoc-crm.org/cidoc-crm/E99_Product_Type",
             "list": "5f28f263-9d16-4c01-a146-80a97d7119a9",
-            "sortorder": 3,
-            "parent": null,
+            "sortorder": 2,
+            "parent": "b80b3df5-39ce-4dd3-a979-a73aed2b362c",
             "guide": false
         }
     },
@@ -405,7 +411,7 @@
         "model": "arches_controlled_lists.listitem",
         "pk": "710a5dbf-c445-40bf-b431-cc7f6802be32",
         "fields": {
-            "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/710a5dbf-c445-40bf-b431-cc7f6802be32",
+            "uri": "http://vocab.getty.edu/page/aat/300387516",
             "list": "4f9b2c82-59c6-4173-99ea-2a6bfbab6aa2",
             "sortorder": 2,
             "parent": null,
@@ -416,7 +422,7 @@
         "model": "arches_controlled_lists.listitem",
         "pk": "713f38ea-b13c-4ea2-b7bb-35ec255bdf12",
         "fields": {
-            "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/713f38ea-b13c-4ea2-b7bb-35ec255bdf12",
+            "uri": "http://www.w3.org/2004/02/skos/core#changeNote",
             "list": "aba2a0b4-75a4-45ba-8b57-021f3ca92a6a",
             "sortorder": 1,
             "parent": "44bb50fc-42d5-41a0-bc21-4ad8d2f8bf5e",
@@ -427,7 +433,7 @@
         "model": "arches_controlled_lists.listitem",
         "pk": "774994db-54d3-4793-baa1-2810410be8d0",
         "fields": {
-            "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/774994db-54d3-4793-baa1-2810410be8d0",
+            "uri": "https://vocab.getty.edu/aat/300263552",
             "list": "8fe1efd6-c90e-4f64-a125-14b2cc4d78e3",
             "sortorder": 0,
             "parent": null,
@@ -438,7 +444,7 @@
         "model": "arches_controlled_lists.listitem",
         "pk": "7b873aed-1dbd-45e4-98e7-85143ee453c6",
         "fields": {
-            "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/7b873aed-1dbd-45e4-98e7-85143ee453c6",
+            "uri": "https://vocab.getty.edu/aat/300456594",
             "list": "ef69e772-de53-45fe-98d4-bf3e7b10eb57",
             "sortorder": 2,
             "parent": null,
@@ -447,20 +453,9 @@
     },
     {
         "model": "arches_controlled_lists.listitem",
-        "pk": "845cc417-ef77-4582-9271-ffba5e4cabc9",
-        "fields": {
-            "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/845cc417-ef77-4582-9271-ffba5e4cabc9",
-            "list": "55ce793b-a51a-4b25-811d-d08ea797f8c3",
-            "sortorder": 4,
-            "parent": null,
-            "guide": false
-        }
-    },
-    {
-        "model": "arches_controlled_lists.listitem",
         "pk": "854e54ba-8a9e-4b7d-87ed-ce80e54506a4",
         "fields": {
-            "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/854e54ba-8a9e-4b7d-87ed-ce80e54506a4",
+            "uri": "http://www.w3.org/2004/02/skos/core#definition",
             "list": "aba2a0b4-75a4-45ba-8b57-021f3ca92a6a",
             "sortorder": 2,
             "parent": "44bb50fc-42d5-41a0-bc21-4ad8d2f8bf5e",
@@ -469,12 +464,12 @@
     },
     {
         "model": "arches_controlled_lists.listitem",
-        "pk": "8cba0ddc-94d0-4b06-baff-f3d5a21d6b3c",
+        "pk": "8a036544-6392-4ec2-8128-107b7e7cf151",
         "fields": {
-            "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/8cba0ddc-94d0-4b06-baff-f3d5a21d6b3c",
-            "list": "55ce793b-a51a-4b25-811d-d08ea797f8c3",
-            "sortorder": 5,
-            "parent": null,
+            "uri": "http://vocab.getty.edu/aat/300026966",
+            "list": "fb5dd406-33ef-4e83-a6a9-9ea02c1ada17",
+            "sortorder": 3,
+            "parent": "f3464aca-b9d8-4667-a551-71fe5058f7fd",
             "guide": false
         }
     },
@@ -482,7 +477,7 @@
         "model": "arches_controlled_lists.listitem",
         "pk": "926aa6de-a7e6-4959-9fc4-5ea87c46d677",
         "fields": {
-            "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/926aa6de-a7e6-4959-9fc4-5ea87c46d677",
+            "uri": "https://vocab.getty.edu/aat/300456598",
             "list": "a8da34eb-575b-498c-ada7-161ee745fd16",
             "sortorder": 3,
             "parent": null,
@@ -493,7 +488,7 @@
         "model": "arches_controlled_lists.listitem",
         "pk": "929bfdbf-a592-4f70-bd8b-9c11deb6bff9",
         "fields": {
-            "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/929bfdbf-a592-4f70-bd8b-9c11deb6bff9",
+            "uri": "http://vocab.getty.edu/aat/300265266",
             "list": "fb5dd406-33ef-4e83-a6a9-9ea02c1ada17",
             "sortorder": 0,
             "parent": null,
@@ -504,7 +499,7 @@
         "model": "arches_controlled_lists.listitem",
         "pk": "970f7714-2df3-4c56-b248-9f1d022ab28c",
         "fields": {
-            "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/970f7714-2df3-4c56-b248-9f1d022ab28c",
+            "uri": "http://www.w3.org/2004/02/skos/core#historyNote",
             "list": "aba2a0b4-75a4-45ba-8b57-021f3ca92a6a",
             "sortorder": 6,
             "parent": "44bb50fc-42d5-41a0-bc21-4ad8d2f8bf5e",
@@ -515,20 +510,9 @@
         "model": "arches_controlled_lists.listitem",
         "pk": "97f89729-35ed-4780-aeea-d487717ffb65",
         "fields": {
-            "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/97f89729-35ed-4780-aeea-d487717ffb65",
+            "uri": "http://vocab.getty.edu/aat/300388344",
             "list": "55ce793b-a51a-4b25-811d-d08ea797f8c3",
-            "sortorder": 2,
-            "parent": null,
-            "guide": false
-        }
-    },
-    {
-        "model": "arches_controlled_lists.listitem",
-        "pk": "989ca6d8-2376-45c1-af07-3689d41e5602",
-        "fields": {
-            "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/989ca6d8-2376-45c1-af07-3689d41e5602",
-            "list": "55ce793b-a51a-4b25-811d-d08ea797f8c3",
-            "sortorder": 6,
+            "sortorder": 3,
             "parent": null,
             "guide": false
         }
@@ -537,7 +521,7 @@
         "model": "arches_controlled_lists.listitem",
         "pk": "9baf3cd5-33d4-4fbc-b1d1-a2d218732f1e",
         "fields": {
-            "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/9baf3cd5-33d4-4fbc-b1d1-a2d218732f1e",
+            "uri": "https://vocab.getty.edu/aat/300404012",
             "list": "38fc54d4-67ef-4183-8934-66669f1f504c",
             "sortorder": 0,
             "parent": null,
@@ -548,7 +532,7 @@
         "model": "arches_controlled_lists.listitem",
         "pk": "9c93be63-b900-4f63-b0cf-7351e5129508",
         "fields": {
-            "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/9c93be63-b900-4f63-b0cf-7351e5129508",
+            "uri": "https://vocab.getty.edu/aat/300435444",
             "list": "ef69e772-de53-45fe-98d4-bf3e7b10eb57",
             "sortorder": 1,
             "parent": null,
@@ -559,9 +543,31 @@
         "model": "arches_controlled_lists.listitem",
         "pk": "a6795899-3874-420e-bb8e-7f7bf87b66eb",
         "fields": {
-            "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/a6795899-3874-420e-bb8e-7f7bf87b66eb",
+            "uri": "http://vocab.getty.edu/aat/300388306",
             "list": "55ce793b-a51a-4b25-811d-d08ea797f8c3",
-            "sortorder": 9,
+            "sortorder": 5,
+            "parent": null,
+            "guide": false
+        }
+    },
+    {
+        "model": "arches_controlled_lists.listitem",
+        "pk": "a9982494-aed2-428c-9792-b6ec7a88e550",
+        "fields": {
+            "uri": "http://vocab.getty.edu/aat/300265267",
+            "list": "fb5dd406-33ef-4e83-a6a9-9ea02c1ada17",
+            "sortorder": 4,
+            "parent": "929bfdbf-a592-4f70-bd8b-9c11deb6bff9",
+            "guide": false
+        }
+    },
+    {
+        "model": "arches_controlled_lists.listitem",
+        "pk": "ad3bbf30-5fa6-43a3-b6cd-f5e874befd7e",
+        "fields": {
+            "uri": "http://www.w3.org/2004/02/skos/core#broaderTransitive",
+            "list": "42e91d71-7d25-4e43-97df-8b43f46711cf",
+            "sortorder": 0,
             "parent": null,
             "guide": false
         }
@@ -570,10 +576,10 @@
         "model": "arches_controlled_lists.listitem",
         "pk": "b3ffe5b4-21ba-4568-aec0-e6e0bd669c38",
         "fields": {
-            "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/b3ffe5b4-21ba-4568-aec0-e6e0bd669c38",
+            "uri": "http://www.w3.org/2004/02/skos/core#broadMatch",
             "list": "769fa072-6247-4e23-b638-4e801f8c50dc",
-            "sortorder": 0,
-            "parent": null,
+            "sortorder": 2,
+            "parent": "d6c5ca2f-04e3-4a61-9065-40193bce8d83",
             "guide": false
         }
     },
@@ -581,7 +587,7 @@
         "model": "arches_controlled_lists.listitem",
         "pk": "b655c9b3-53f5-4d8a-a7e5-6751b4fc1d2c",
         "fields": {
-            "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/b655c9b3-53f5-4d8a-a7e5-6751b4fc1d2c",
+            "uri": "http://vocab.getty.edu/page/aat/300386699",
             "list": "4f9b2c82-59c6-4173-99ea-2a6bfbab6aa2",
             "sortorder": 0,
             "parent": null,
@@ -590,21 +596,10 @@
     },
     {
         "model": "arches_controlled_lists.listitem",
-        "pk": "bb125622-0256-4f28-902f-7c273d353bc9",
+        "pk": "b80b3df5-39ce-4dd3-a979-a73aed2b362c",
         "fields": {
-            "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/bb125622-0256-4f28-902f-7c273d353bc9",
-            "list": "769fa072-6247-4e23-b638-4e801f8c50dc",
-            "sortorder": 2,
-            "parent": null,
-            "guide": false
-        }
-    },
-    {
-        "model": "arches_controlled_lists.listitem",
-        "pk": "bc6ce063-7ad5-4b92-8685-000bfe27ebf2",
-        "fields": {
-            "uri": "http://localhost:8000/plugins/controlled-list-manager/item/bc6ce063-7ad5-4b92-8685-000bfe27ebf2",
-            "list": "891574cc-47bf-4395-a512-d246cd75c1a1",
+            "uri": "http://www.cidoc-crm.org/cidoc-crm/E55_Type",
+            "list": "5f28f263-9d16-4c01-a146-80a97d7119a9",
             "sortorder": 1,
             "parent": null,
             "guide": false
@@ -612,12 +607,23 @@
     },
     {
         "model": "arches_controlled_lists.listitem",
+        "pk": "bb125622-0256-4f28-902f-7c273d353bc9",
+        "fields": {
+            "uri": "http://www.w3.org/2004/02/skos/core#narrowMatch",
+            "list": "769fa072-6247-4e23-b638-4e801f8c50dc",
+            "sortorder": 6,
+            "parent": "d6c5ca2f-04e3-4a61-9065-40193bce8d83",
+            "guide": false
+        }
+    },
+    {
+        "model": "arches_controlled_lists.listitem",
         "pk": "bffe467f-5d22-4b3c-a6c7-9766165271b3",
         "fields": {
-            "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/bffe467f-5d22-4b3c-a6c7-9766165271b3",
+            "uri": "http://www.cidoc-crm.org/cidoc-crm/E56_Language",
             "list": "5f28f263-9d16-4c01-a146-80a97d7119a9",
-            "sortorder": 0,
-            "parent": null,
+            "sortorder": 3,
+            "parent": "b80b3df5-39ce-4dd3-a979-a73aed2b362c",
             "guide": false
         }
     },
@@ -625,7 +631,7 @@
         "model": "arches_controlled_lists.listitem",
         "pk": "c047ea56-465a-479c-b85c-8de23766384a",
         "fields": {
-            "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/c047ea56-465a-479c-b85c-8de23766384a",
+            "uri": "https://vocab.getty.edu/aat/300456595",
             "list": "2cc0e054-ef9b-41ae-8e86-e0c3b4e7ca00",
             "sortorder": 1,
             "parent": null,
@@ -636,9 +642,9 @@
         "model": "arches_controlled_lists.listitem",
         "pk": "c0fe6a60-ee6e-4738-a58b-74f8973c07b8",
         "fields": {
-            "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/c0fe6a60-ee6e-4738-a58b-74f8973c07b8",
+            "uri": "http://vocab.getty.edu/aat/300389115",
             "list": "55ce793b-a51a-4b25-811d-d08ea797f8c3",
-            "sortorder": 10,
+            "sortorder": 6,
             "parent": null,
             "guide": false
         }
@@ -647,7 +653,7 @@
         "model": "arches_controlled_lists.listitem",
         "pk": "c1d8c87d-183c-4c46-aa6f-7920825cba5e",
         "fields": {
-            "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/c1d8c87d-183c-4c46-aa6f-7920825cba5e",
+            "uri": "https://vocab.getty.edu/aat/300456596",
             "list": "2cc0e054-ef9b-41ae-8e86-e0c3b4e7ca00",
             "sortorder": 0,
             "parent": null,
@@ -658,7 +664,7 @@
         "model": "arches_controlled_lists.listitem",
         "pk": "cce4ce1c-0e47-453e-8a12-3e23c3dbb472",
         "fields": {
-            "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/cce4ce1c-0e47-453e-8a12-3e23c3dbb472",
+            "uri": "http://www.w3.org/2004/02/skos/core#exactMatch",
             "list": "769fa072-6247-4e23-b638-4e801f8c50dc",
             "sortorder": 4,
             "parent": "ed044298-b4a1-4455-b11a-81561fbf2fd8",
@@ -669,7 +675,7 @@
         "model": "arches_controlled_lists.listitem",
         "pk": "d1012561-bd8f-4498-b7b1-fea78cb73afa",
         "fields": {
-            "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/d1012561-bd8f-4498-b7b1-fea78cb73afa",
+            "uri": "http://vocab.getty.edu/page/aat/300387329",
             "list": "4f9b2c82-59c6-4173-99ea-2a6bfbab6aa2",
             "sortorder": 3,
             "parent": null,
@@ -680,8 +686,19 @@
         "model": "arches_controlled_lists.listitem",
         "pk": "d1544a63-b04e-4ec6-b6b1-256cd70c4954",
         "fields": {
-            "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/d1544a63-b04e-4ec6-b6b1-256cd70c4954",
+            "uri": "https://vocab.getty.edu/aat/300417586",
             "list": "8fe1efd6-c90e-4f64-a125-14b2cc4d78e3",
+            "sortorder": 1,
+            "parent": null,
+            "guide": false
+        }
+    },
+    {
+        "model": "arches_controlled_lists.listitem",
+        "pk": "d6c5ca2f-04e3-4a61-9065-40193bce8d83",
+        "fields": {
+            "uri": "http://www.w3.org/2004/02/skos/core#mappingRelation",
+            "list": "769fa072-6247-4e23-b638-4e801f8c50dc",
             "sortorder": 1,
             "parent": null,
             "guide": false
@@ -691,9 +708,20 @@
         "model": "arches_controlled_lists.listitem",
         "pk": "d7723ec7-a527-4a39-9ef5-cea3f99a7455",
         "fields": {
-            "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/b3ffe5b4-21ba-4568-aec0-e6e0bd669c38",
+            "uri": "http://www.w3.org/2004/02/skos/core#broadMatch",
             "list": "42e91d71-7d25-4e43-97df-8b43f46711cf",
-            "sortorder": 1,
+            "sortorder": 3,
+            "parent": "4810df79-8bdd-4102-a067-fdb11dcff8b7",
+            "guide": false
+        }
+    },
+    {
+        "model": "arches_controlled_lists.listitem",
+        "pk": "d8a07e1a-3c4a-4b09-a2d9-82754d6f95cf",
+        "fields": {
+            "uri": "http://purl.org/iso25964/skos-thes#broaderPartitive",
+            "list": "42e91d71-7d25-4e43-97df-8b43f46711cf",
+            "sortorder": 6,
             "parent": "4810df79-8bdd-4102-a067-fdb11dcff8b7",
             "guide": false
         }
@@ -702,7 +730,7 @@
         "model": "arches_controlled_lists.listitem",
         "pk": "d8ba08f9-b265-4288-9412-857c77fe2581",
         "fields": {
-            "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/9baf3cd5-33d4-4fbc-b1d1-a2d218732f1e",
+            "uri": "https://vocab.getty.edu/aat/300404012",
             "list": "a8da34eb-575b-498c-ada7-161ee745fd16",
             "sortorder": 0,
             "parent": null,
@@ -713,7 +741,7 @@
         "model": "arches_controlled_lists.listitem",
         "pk": "d98bfcab-fa26-4c8b-992d-a56eb7bbbaa2",
         "fields": {
-            "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/d98bfcab-fa26-4c8b-992d-a56eb7bbbaa2",
+            "uri": "https://vocab.getty.edu/aat/300404629",
             "list": "a8da34eb-575b-498c-ada7-161ee745fd16",
             "sortorder": 2,
             "parent": null,
@@ -724,7 +752,7 @@
         "model": "arches_controlled_lists.listitem",
         "pk": "db222348-5dbc-4647-b649-52e0ae6df99a",
         "fields": {
-            "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/db222348-5dbc-4647-b649-52e0ae6df99a",
+            "uri": "http://www.w3.org/2004/02/skos/core#editorialNote",
             "list": "aba2a0b4-75a4-45ba-8b57-021f3ca92a6a",
             "sortorder": 4,
             "parent": "44bb50fc-42d5-41a0-bc21-4ad8d2f8bf5e",
@@ -735,7 +763,7 @@
         "model": "arches_controlled_lists.listitem",
         "pk": "dd9186a8-a591-4f40-914c-1f476e60f552",
         "fields": {
-            "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/dd9186a8-a591-4f40-914c-1f476e60f552",
+            "uri": "http://www.w3.org/2004/02/skos/core#example",
             "list": "aba2a0b4-75a4-45ba-8b57-021f3ca92a6a",
             "sortorder": 5,
             "parent": "44bb50fc-42d5-41a0-bc21-4ad8d2f8bf5e",
@@ -746,7 +774,7 @@
         "model": "arches_controlled_lists.listitem",
         "pk": "de263fe8-5ebd-4d6c-a7c7-8068598ba962",
         "fields": {
-            "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/de263fe8-5ebd-4d6c-a7c7-8068598ba962",
+            "uri": "https://vocab.getty.edu/aat/300456599",
             "list": "a8da34eb-575b-498c-ada7-161ee745fd16",
             "sortorder": 1,
             "parent": null,
@@ -757,7 +785,7 @@
         "model": "arches_controlled_lists.listitem",
         "pk": "df24d257-b547-4733-ae89-dfffa3597683",
         "fields": {
-            "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/df24d257-b547-4733-ae89-dfffa3597683",
+            "uri": "http://www.w3.org/2004/02/skos/core#hiddenLabel",
             "list": "deb847fc-f4c3-4e82-be19-04641579f129",
             "sortorder": 1,
             "parent": null,
@@ -768,21 +796,21 @@
         "model": "arches_controlled_lists.listitem",
         "pk": "e66bfcd6-cf68-4564-bcc1-ed0a36cfcf4f",
         "fields": {
-            "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/e66bfcd6-cf68-4564-bcc1-ed0a36cfcf4f",
+            "uri": "http://vocab.getty.edu/aat/300388361",
             "list": "55ce793b-a51a-4b25-811d-d08ea797f8c3",
-            "sortorder": 3,
+            "sortorder": 4,
             "parent": null,
             "guide": false
         }
     },
     {
         "model": "arches_controlled_lists.listitem",
-        "pk": "e69de7f4-a03b-4806-95bd-e83041fa5440",
+        "pk": "ea4de366-3459-4e97-a597-426cb7b9ab3d",
         "fields": {
-            "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/e69de7f4-a03b-4806-95bd-e83041fa5440",
-            "list": "55ce793b-a51a-4b25-811d-d08ea797f8c3",
-            "sortorder": 8,
-            "parent": null,
+            "uri": "http://vocab.getty.edu/aat/300444161",
+            "list": "fb5dd406-33ef-4e83-a6a9-9ea02c1ada17",
+            "sortorder": 5,
+            "parent": "929bfdbf-a592-4f70-bd8b-9c11deb6bff9",
             "guide": false
         }
     },
@@ -790,10 +818,21 @@
         "model": "arches_controlled_lists.listitem",
         "pk": "ed044298-b4a1-4455-b11a-81561fbf2fd8",
         "fields": {
-            "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/ed044298-b4a1-4455-b11a-81561fbf2fd8",
+            "uri": "http://www.w3.org/2004/02/skos/core#closeMatch",
             "list": "769fa072-6247-4e23-b638-4e801f8c50dc",
+            "sortorder": 3,
+            "parent": "b3ffe5b4-21ba-4568-aec0-e6e0bd669c38",
+            "guide": false
+        }
+    },
+    {
+        "model": "arches_controlled_lists.listitem",
+        "pk": "f3464aca-b9d8-4667-a551-71fe5058f7fd",
+        "fields": {
+            "uri": "http://vocab.getty.edu/aat/300026957",
+            "list": "fb5dd406-33ef-4e83-a6a9-9ea02c1ada17",
             "sortorder": 1,
-            "parent": null,
+            "parent": "929bfdbf-a592-4f70-bd8b-9c11deb6bff9",
             "guide": false
         }
     },
@@ -801,21 +840,10 @@
         "model": "arches_controlled_lists.listitem",
         "pk": "fd263a79-e808-49a0-a0da-b663978e4e68",
         "fields": {
-            "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/fd263a79-e808-49a0-a0da-b663978e4e68",
+            "uri": "http://www.cidoc-crm.org/cidoc-crm/E58_Measurement_Unit",
             "list": "5f28f263-9d16-4c01-a146-80a97d7119a9",
-            "sortorder": 2,
-            "parent": null,
-            "guide": false
-        }
-    },
-    {
-        "model": "arches_controlled_lists.listitem",
-        "pk": "fe814127-d68f-43ed-beb9-67a8d4d6336e",
-        "fields": {
-            "uri": "http://localhost:8000/plugins/controlled-list-manager/item/fe814127-d68f-43ed-beb9-67a8d4d6336e",
-            "list": "f028fe8e-5a23-40a7-8ffe-7865ebac9487",
-            "sortorder": 0,
-            "parent": null,
+            "sortorder": 5,
+            "parent": "b80b3df5-39ce-4dd3-a979-a73aed2b362c",
             "guide": false
         }
     },
@@ -851,16 +879,6 @@
     },
     {
         "model": "arches_controlled_lists.listitemvalue",
-        "pk": "0a3569ba-32d9-4613-bdb2-5f1da5b81a49",
-        "fields": {
-            "list_item": "989ca6d8-2376-45c1-af07-3689d41e5602",
-            "valuetype": "scopeNote",
-            "language": "en",
-            "value": "English"
-        }
-    },
-    {
-        "model": "arches_controlled_lists.listitemvalue",
         "pk": "0a544fb2-1d9a-4fcd-980a-f60053fd0478",
         "fields": {
             "list_item": "d1544a63-b04e-4ec6-b6b1-256cd70c4954",
@@ -871,12 +889,22 @@
     },
     {
         "model": "arches_controlled_lists.listitemvalue",
+        "pk": "0dfed155-a3e1-434a-ba1b-505f6fbb2278",
+        "fields": {
+            "list_item": "d1012561-bd8f-4498-b7b1-fea78cb73afa",
+            "valuetype": "definition",
+            "language": "en",
+            "value": "A term is a word or group of words representing a single concept; a vocabulary record comprises terms and other information, including relationships, scope note, sources, etc. Additionally, in the jargon of thesaurus construction, the word term is often used as shorthand to actually refer to the concept that is represented by that term (for example, BT and NT actually refer to the relationships between concepts). The distinction between a term in the strict sense and term meaning a record must often be inferred from the context of the discussion."
+        }
+    },
+    {
+        "model": "arches_controlled_lists.listitemvalue",
         "pk": "0e7810aa-75b8-4fa1-9f6a-611a8b4c58c8",
         "fields": {
             "list_item": "97f89729-35ed-4780-aeea-d487717ffb65",
             "valuetype": "prefLabel",
             "language": "en",
-            "value": "de"
+            "value": "German"
         }
     },
     {
@@ -891,12 +919,32 @@
     },
     {
         "model": "arches_controlled_lists.listitemvalue",
-        "pk": "14b0059a-d56b-4184-9fb7-00620d7df6b3",
+        "pk": "10207793-e5db-4f96-a723-0fd6830b015c",
         "fields": {
-            "list_item": "bc6ce063-7ad5-4b92-8685-000bfe27ebf2",
+            "list_item": "ad3bbf30-5fa6-43a3-b6cd-f5e874befd7e",
             "valuetype": "prefLabel",
             "language": "en",
-            "value": "preferred terms"
+            "value": "broaderTransitive"
+        }
+    },
+    {
+        "model": "arches_controlled_lists.listitemvalue",
+        "pk": "164d1e83-5095-4bd8-99c6-0ee5dfeebf36",
+        "fields": {
+            "list_item": "0e53033b-49f0-4252-b9cc-e50f120c76f9",
+            "valuetype": "altLabel",
+            "language": "en",
+            "value": "BTG"
+        }
+    },
+    {
+        "model": "arches_controlled_lists.listitemvalue",
+        "pk": "166a32ce-7253-46dc-9ddf-43abbe18d450",
+        "fields": {
+            "list_item": "221b97ab-5344-4157-b661-6e8786198dff",
+            "valuetype": "prefLabel",
+            "language": "en",
+            "value": "subject headings"
         }
     },
     {
@@ -906,7 +954,7 @@
             "list_item": "df24d257-b547-4733-ae89-dfffa3597683",
             "valuetype": "prefLabel",
             "language": "en",
-            "value": "hiddenLabel"
+            "value": "hidden label"
         }
     },
     {
@@ -916,7 +964,7 @@
             "list_item": "de263fe8-5ebd-4d6c-a7c7-8068598ba962",
             "valuetype": "prefLabel",
             "language": "en",
-            "value": "namespace"
+            "value": "namespaces"
         }
     },
     {
@@ -931,12 +979,42 @@
     },
     {
         "model": "arches_controlled_lists.listitemvalue",
-        "pk": "1e8c2e9f-ce80-433b-aada-e410aa8a9bcd",
+        "pk": "1eccc0b8-3ee0-4ce5-a0f8-605510b9e2c3",
         "fields": {
-            "list_item": "05e62a8a-b5c2-437c-b741-4f8176cea0d1",
+            "list_item": "713f38ea-b13c-4ea2-b7bb-35ec255bdf12",
+            "valuetype": "altLabel",
+            "language": "en",
+            "value": "changeNote"
+        }
+    },
+    {
+        "model": "arches_controlled_lists.listitemvalue",
+        "pk": "1fe25f9d-3189-4249-892c-f5e592ebc8a3",
+        "fields": {
+            "list_item": "0e53033b-49f0-4252-b9cc-e50f120c76f9",
             "valuetype": "prefLabel",
             "language": "en",
-            "value": "nonpreferred terms"
+            "value": "broaderGeneric"
+        }
+    },
+    {
+        "model": "arches_controlled_lists.listitemvalue",
+        "pk": "2160c819-00d8-4ea0-b25c-30e9daae1bbf",
+        "fields": {
+            "list_item": "02a0fc69-9f92-4bef-b657-af1ed37c1d3e",
+            "valuetype": "scopeNote",
+            "language": "en",
+            "value": "Documents comprising texts that are relatively short in length, sometimes but not always abbreviated versions of longer texts."
+        }
+    },
+    {
+        "model": "arches_controlled_lists.listitemvalue",
+        "pk": "21615219-3290-45f2-8362-842e84027b5b",
+        "fields": {
+            "list_item": "fd263a79-e808-49a0-a0da-b663978e4e68",
+            "valuetype": "scopeNote",
+            "language": "en",
+            "value": "This class is a specialization of E55 Type and comprises the types of measurement units: feet, inches, centimetres, litres, lumens, etc.\n\nThis type is used categorically in the model without reference to instances of it, i.e. the model does not foresee the description of instances of instances of E58 Measurement Unit, e.g. “instances of cm”.\n\nSystème International (SI) units or internationally recognized non-SI terms should be used whenever possible, such as those defined by ISO80000:2009. Archaic Measurement Units used in historical records should be preserved."
         }
     },
     {
@@ -961,12 +1039,12 @@
     },
     {
         "model": "arches_controlled_lists.listitemvalue",
-        "pk": "254c78d5-ff58-496f-8790-bf1f7179f793",
+        "pk": "245c0f42-7168-4fa7-a968-614fe7ddb872",
         "fields": {
-            "list_item": "fe814127-d68f-43ed-beb9-67a8d4d6336e",
-            "valuetype": "prefLabel",
+            "list_item": "45fab276-7818-4c83-8dd8-43e4e862904c",
+            "valuetype": "definition",
             "language": "en",
-            "value": "system identifier"
+            "value": "A guide term is a record represented by a term or phrase that is created as a hierarchical level to provide order and structure to thesauri by grouping narrower terms according to a given logic. Guide terms are not used for indexing and are often enclosed in angled brackets or otherwise distinguished from other terms in displays (for example, <photographs by form>)."
         }
     },
     {
@@ -976,7 +1054,7 @@
             "list_item": "e66bfcd6-cf68-4564-bcc1-ed0a36cfcf4f",
             "valuetype": "prefLabel",
             "language": "en",
-            "value": "el"
+            "value": "Greek"
         }
     },
     {
@@ -991,12 +1069,22 @@
     },
     {
         "model": "arches_controlled_lists.listitemvalue",
-        "pk": "30fc081c-8f11-45dd-9da8-14040f46c781",
+        "pk": "328d3d3e-40ff-4dfc-8373-ba6e0dbd129f",
         "fields": {
-            "list_item": "845cc417-ef77-4582-9271-ffba5e4cabc9",
+            "list_item": "6abd4767-6959-41f9-9f36-95e8af6d5752",
+            "valuetype": "prefLabel",
+            "language": "en",
+            "value": "name authority files"
+        }
+    },
+    {
+        "model": "arches_controlled_lists.listitemvalue",
+        "pk": "33d5f785-4a2d-4c0e-b444-15e62e6848a5",
+        "fields": {
+            "list_item": "926aa6de-a7e6-4959-9fc4-5ea87c46d677",
             "valuetype": "scopeNote",
             "language": "en",
-            "value": "English"
+            "value": "Numeric identifiers which indicate unique iterative states of an object."
         }
     },
     {
@@ -1006,7 +1094,7 @@
             "list_item": "5b633cd0-e407-4dce-9f7c-5657ae57408f",
             "valuetype": "prefLabel",
             "language": "en",
-            "value": "spanish"
+            "value": "Spanish"
         }
     },
     {
@@ -1017,6 +1105,26 @@
             "valuetype": "scopeNote",
             "language": "en",
             "value": "Portuguese"
+        }
+    },
+    {
+        "model": "arches_controlled_lists.listitemvalue",
+        "pk": "3615f567-a6e3-4677-92d8-4fc86c39c39d",
+        "fields": {
+            "list_item": "7b873aed-1dbd-45e4-98e7-85143ee453c6",
+            "valuetype": "scopeNote",
+            "language": "en",
+            "value": "The current state of an information object qua information at a particular time; the validity of a piece of data regarding its appropriateness, or rightness to use at the present historical moment. An implicit author is applied to all such judgments."
+        }
+    },
+    {
+        "model": "arches_controlled_lists.listitemvalue",
+        "pk": "39b85a0d-0b5f-4307-89ca-98cea69cec01",
+        "fields": {
+            "list_item": "4a08c8ab-d909-4dd1-aa7f-e240c8712def",
+            "valuetype": "altLabel",
+            "language": "en",
+            "value": "broader term (instantial)"
         }
     },
     {
@@ -1036,27 +1144,17 @@
             "list_item": "713f38ea-b13c-4ea2-b7bb-35ec255bdf12",
             "valuetype": "prefLabel",
             "language": "en",
-            "value": "changeNote"
+            "value": "change note"
         }
     },
     {
         "model": "arches_controlled_lists.listitemvalue",
-        "pk": "42042a63-4e89-427d-b635-86312a5cbd50",
+        "pk": "49bc2d00-0836-489f-8a09-b95928b32450",
         "fields": {
-            "list_item": "8cba0ddc-94d0-4b06-baff-f3d5a21d6b3c",
-            "valuetype": "scopeNote",
+            "list_item": "f3464aca-b9d8-4667-a551-71fe5058f7fd",
+            "valuetype": "prefLabel",
             "language": "en",
-            "value": "English"
-        }
-    },
-    {
-        "model": "arches_controlled_lists.listitemvalue",
-        "pk": "4b82ab33-b79e-4de7-9d7c-3e051753620c",
-        "fields": {
-            "list_item": "e69de7f4-a03b-4806-95bd-e83041fa5440",
-            "valuetype": "scopeNote",
-            "language": "en",
-            "value": "French"
+            "value": "authority files"
         }
     },
     {
@@ -1066,7 +1164,17 @@
             "list_item": "52eb8678-485d-418c-9ad2-aa97d077ac56",
             "valuetype": "prefLabel",
             "language": "en",
-            "value": "scopeNote"
+            "value": "scope note"
+        }
+    },
+    {
+        "model": "arches_controlled_lists.listitemvalue",
+        "pk": "4f87c03a-566c-44c3-8237-5f605b67272b",
+        "fields": {
+            "list_item": "d8a07e1a-3c4a-4b09-a2d9-82754d6f95cf",
+            "valuetype": "prefLabel",
+            "language": "en",
+            "value": "broaderPartitive"
         }
     },
     {
@@ -1091,6 +1199,26 @@
     },
     {
         "model": "arches_controlled_lists.listitemvalue",
+        "pk": "54df8ee1-0b64-415e-85b2-032a6a215425",
+        "fields": {
+            "list_item": "221b97ab-5344-4157-b661-6e8786198dff",
+            "valuetype": "definition",
+            "language": "en",
+            "value": "Access points to a bibliographical record based upon subject terminology, usually from a standardized or controlled vocabulary. Subject headings are words or phrases; pre-coordination of terminology is a characteristic of subject headings, meaning that they combine several unique concepts together in a string (e.g., \"Medieval bronze vessels\" combines a period, material, and work type in one heading)."
+        }
+    },
+    {
+        "model": "arches_controlled_lists.listitemvalue",
+        "pk": "5a6aeb6e-3bf7-419c-a9ea-b4f1a5ff56a1",
+        "fields": {
+            "list_item": "d8ba08f9-b265-4288-9412-857c77fe2581",
+            "valuetype": "scopeNote",
+            "language": "en",
+            "value": "Numbers or alphanumeric codes that are not repeated within a given environment and used to unambiguously and uniquely identify an object, record, or data element."
+        }
+    },
+    {
+        "model": "arches_controlled_lists.listitemvalue",
         "pk": "5b3e455d-8d74-4227-9bd8-62133eefaf5f",
         "fields": {
             "list_item": "cce4ce1c-0e47-453e-8a12-3e23c3dbb472",
@@ -1101,12 +1229,32 @@
     },
     {
         "model": "arches_controlled_lists.listitemvalue",
+        "pk": "61058db8-2adb-41dd-a9b2-8ce790858fdb",
+        "fields": {
+            "list_item": "0e53033b-49f0-4252-b9cc-e50f120c76f9",
+            "valuetype": "definition",
+            "language": "en",
+            "value": "ISO 25964-1: BTG\nThe immediate (direct or one-step) class - generalized class relationship"
+        }
+    },
+    {
+        "model": "arches_controlled_lists.listitemvalue",
+        "pk": "61e04502-edb6-48e6-9d22-60f1ddca3bba",
+        "fields": {
+            "list_item": "ea4de366-3459-4e97-a597-426cb7b9ab3d",
+            "valuetype": "prefLabel",
+            "language": "en",
+            "value": "indexing languages"
+        }
+    },
+    {
+        "model": "arches_controlled_lists.listitemvalue",
         "pk": "6299d5f0-a706-4cb2-a75d-e95227e03b75",
         "fields": {
             "list_item": "970f7714-2df3-4c56-b248-9f1d022ab28c",
             "valuetype": "prefLabel",
             "language": "en",
-            "value": "historyNote"
+            "value": "history note"
         }
     },
     {
@@ -1121,12 +1269,12 @@
     },
     {
         "model": "arches_controlled_lists.listitemvalue",
-        "pk": "654f924a-41bd-4871-a78e-be1b8de0bf5d",
+        "pk": "666d6593-b93c-45c0-8f7f-9a604967a8ad",
         "fields": {
-            "list_item": "28855929-b8c5-43ae-8794-ab7497486345",
-            "valuetype": "prefLabel",
+            "list_item": "d8a07e1a-3c4a-4b09-a2d9-82754d6f95cf",
+            "valuetype": "altLabel",
             "language": "en",
-            "value": "zh"
+            "value": "BTP"
         }
     },
     {
@@ -1136,17 +1284,37 @@
             "list_item": "2e3a2045-b44e-47fc-a27b-3078b17e08e4",
             "valuetype": "prefLabel",
             "language": "en",
-            "value": "prefLabel"
+            "value": "preferred label"
         }
     },
     {
         "model": "arches_controlled_lists.listitemvalue",
-        "pk": "727dc5e5-fac6-4347-8d38-7b868365714f",
+        "pk": "6db00fa3-21d6-4963-9510-88c311597a58",
         "fields": {
-            "list_item": "989ca6d8-2376-45c1-af07-3689d41e5602",
+            "list_item": "df24d257-b547-4733-ae89-dfffa3597683",
+            "valuetype": "altLabel",
+            "language": "en",
+            "value": "hiddenLabel"
+        }
+    },
+    {
+        "model": "arches_controlled_lists.listitemvalue",
+        "pk": "6ee43cd1-28be-4043-ba50-3a5f41838760",
+        "fields": {
+            "list_item": "9baf3cd5-33d4-4fbc-b1d1-a2d218732f1e",
+            "valuetype": "scopeNote",
+            "language": "en",
+            "value": "Numbers or alphanumeric codes that are not repeated within a given environment and used to unambiguously and uniquely identify an object, record, or data element."
+        }
+    },
+    {
+        "model": "arches_controlled_lists.listitemvalue",
+        "pk": "71e2be62-748e-4e7a-95da-c7cb21e35cd9",
+        "fields": {
+            "list_item": "8a036544-6392-4ec2-8128-107b7e7cf151",
             "valuetype": "prefLabel",
             "language": "en",
-            "value": "en-US"
+            "value": "subject authority files"
         }
     },
     {
@@ -1161,12 +1329,32 @@
     },
     {
         "model": "arches_controlled_lists.listitemvalue",
+        "pk": "733f192b-0bc9-4cf7-adca-72fd4dd3104e",
+        "fields": {
+            "list_item": "8a036544-6392-4ec2-8128-107b7e7cf151",
+            "valuetype": "definition",
+            "language": "en",
+            "value": "Electronic or physical files or other groupings of authorized cataloging entries for terminology appropriate for subject indexing."
+        }
+    },
+    {
+        "model": "arches_controlled_lists.listitemvalue",
         "pk": "76f71e8e-9eb6-4bd9-84f4-f4f031c056e1",
         "fields": {
             "list_item": "05967b72-5a51-4da1-90bb-5b53f62ec7ca",
             "valuetype": "prefLabel",
             "language": "en",
-            "value": "chinese"
+            "value": "Chinese"
+        }
+    },
+    {
+        "model": "arches_controlled_lists.listitemvalue",
+        "pk": "7a484df8-a7f7-43ba-8731-32b82887037f",
+        "fields": {
+            "list_item": "c047ea56-465a-479c-b85c-8de23766384a",
+            "valuetype": "scopeNote",
+            "language": "en",
+            "value": "The state that an information object possessed in the past, but that is no longer valid in a present context."
         }
     },
     {
@@ -1176,7 +1364,7 @@
             "list_item": "c0fe6a60-ee6e-4738-a58b-74f8973c07b8",
             "valuetype": "prefLabel",
             "language": "en",
-            "value": "pt"
+            "value": "Portuguese"
         }
     },
     {
@@ -1187,6 +1375,26 @@
             "valuetype": "prefLabel",
             "language": "en",
             "value": "controlled vocabularies"
+        }
+    },
+    {
+        "model": "arches_controlled_lists.listitemvalue",
+        "pk": "7fed811c-748d-4e40-84f5-3f95311a1c4b",
+        "fields": {
+            "list_item": "970f7714-2df3-4c56-b248-9f1d022ab28c",
+            "valuetype": "altLabel",
+            "language": "en",
+            "value": "historyNote"
+        }
+    },
+    {
+        "model": "arches_controlled_lists.listitemvalue",
+        "pk": "80c413e0-4113-4b28-857e-a05af42ee805",
+        "fields": {
+            "list_item": "de263fe8-5ebd-4d6c-a7c7-8068598ba962",
+            "valuetype": "scopeNote",
+            "language": "en",
+            "value": "Text elements that act as containers or environments created to hold a logical grouping of unique identifiers, as for a scheme or concept."
         }
     },
     {
@@ -1206,17 +1414,17 @@
             "list_item": "15386a71-b8d6-4371-9bf7-69efb98c79ed",
             "valuetype": "prefLabel",
             "language": "en",
-            "value": "ru"
+            "value": "Russian"
         }
     },
     {
         "model": "arches_controlled_lists.listitemvalue",
-        "pk": "847d6a0c-9697-497c-9b34-743a47ce3697",
+        "pk": "885eb93a-2061-4f04-b4fe-35cc6ac6b3df",
         "fields": {
-            "list_item": "8cba0ddc-94d0-4b06-baff-f3d5a21d6b3c",
-            "valuetype": "prefLabel",
+            "list_item": "0e53033b-49f0-4252-b9cc-e50f120c76f9",
+            "valuetype": "altLabel",
             "language": "en",
-            "value": "en-us"
+            "value": "broader term (generic)"
         }
     },
     {
@@ -1226,7 +1434,37 @@
             "list_item": "b655c9b3-53f5-4d8a-a7e5-6751b4fc1d2c",
             "valuetype": "prefLabel",
             "language": "en",
-            "value": "facets"
+            "value": "facets (controlled vocabulary)"
+        }
+    },
+    {
+        "model": "arches_controlled_lists.listitemvalue",
+        "pk": "8f5a9d25-9666-4a73-8168-bbabf7127be4",
+        "fields": {
+            "list_item": "6abd4767-6959-41f9-9f36-95e8af6d5752",
+            "valuetype": "definition",
+            "language": "en",
+            "value": "Electronic or physical files or other groupings of authorized cataloging entries for names, particularly personal and corporate names, but the term could also be used for authorities containing other names, such as geographic names, titles of works of art, etc."
+        }
+    },
+    {
+        "model": "arches_controlled_lists.listitemvalue",
+        "pk": "9e079e3f-8efc-4e65-941e-5da38889ebbd",
+        "fields": {
+            "list_item": "52eb8678-485d-418c-9ad2-aa97d077ac56",
+            "valuetype": "altLabel",
+            "language": "en",
+            "value": "scopeNote"
+        }
+    },
+    {
+        "model": "arches_controlled_lists.listitemvalue",
+        "pk": "a0d655f6-e290-4e3f-be0c-9a6b6b7ef131",
+        "fields": {
+            "list_item": "b80b3df5-39ce-4dd3-a979-a73aed2b362c",
+            "valuetype": "scopeNote",
+            "language": "en",
+            "value": "This class comprises concepts denoted by terms from thesauri and controlled vocabularies used to characterize and classify instances of CIDOC CRM classes. Instances of E55 Type represent concepts, in contrast to instances of E41 Appellation which are used to name instances of CIDOC CRM classes.\n\nE55 Type provides an interface to domain specific ontologies and thesauri. These can be represented in the CIDOC CRM as subclasses of E55 Type, forming hierarchies of terms, i.e. instances of E55 Type linked via P127 has broader term (has narrower term): E55 Type. Such hierarchies may be extended with additional properties."
         }
     },
     {
@@ -1241,12 +1479,52 @@
     },
     {
         "model": "arches_controlled_lists.listitemvalue",
+        "pk": "a4df7163-bba3-4d79-8058-5c6fffa983e9",
+        "fields": {
+            "list_item": "4a08c8ab-d909-4dd1-aa7f-e240c8712def",
+            "valuetype": "altLabel",
+            "language": "en",
+            "value": "BTI"
+        }
+    },
+    {
+        "model": "arches_controlled_lists.listitemvalue",
+        "pk": "a675bd06-42af-4954-b4b6-81e70ef43ddb",
+        "fields": {
+            "list_item": "710a5dbf-c445-40bf-b431-cc7f6802be32",
+            "valuetype": "definition",
+            "language": "en",
+            "value": "The highest levels of hierarchies, from which all branches descend."
+        }
+    },
+    {
+        "model": "arches_controlled_lists.listitemvalue",
         "pk": "a8db0760-1038-4430-86ac-5e8ac8aab05d",
         "fields": {
             "list_item": "58695100-659c-48df-8c87-fa565dfef39e",
             "valuetype": "prefLabel",
             "language": "en",
-            "value": "arabic"
+            "value": "Arabic"
+        }
+    },
+    {
+        "model": "arches_controlled_lists.listitemvalue",
+        "pk": "b1466303-c9ec-4c19-be81-a0b12240cd85",
+        "fields": {
+            "list_item": "4062bbcd-bd0f-46c5-85ba-6479c1eac864",
+            "valuetype": "prefLabel",
+            "language": "en",
+            "value": "test event"
+        }
+    },
+    {
+        "model": "arches_controlled_lists.listitemvalue",
+        "pk": "b3c32ac6-6425-4c22-8376-47f8c66048db",
+        "fields": {
+            "list_item": "a9982494-aed2-428c-9792-b6ec7a88e550",
+            "valuetype": "prefLabel",
+            "language": "en",
+            "value": "controlled lists"
         }
     },
     {
@@ -1256,7 +1534,7 @@
             "list_item": "db222348-5dbc-4647-b649-52e0ae6df99a",
             "valuetype": "prefLabel",
             "language": "en",
-            "value": "editorialNote"
+            "value": "editorial note"
         }
     },
     {
@@ -1281,6 +1559,26 @@
     },
     {
         "model": "arches_controlled_lists.listitemvalue",
+        "pk": "b54b8856-0526-443b-a027-e457e5771bf8",
+        "fields": {
+            "list_item": "a9982494-aed2-428c-9792-b6ec7a88e550",
+            "valuetype": "definition",
+            "language": "en",
+            "value": "A controlled list is a simple list of terms used to control terminology. In a well-constructed controlled list, the following should be true: each term must be unique; terms should all be members of same class; terms should not be overlapping in meaning; terms should be equal in granularity/specificity; and terms should be arranged alphabetically or in another logical order."
+        }
+    },
+    {
+        "model": "arches_controlled_lists.listitemvalue",
+        "pk": "b57931a3-4d70-4399-a9fb-db2be5bb3e1a",
+        "fields": {
+            "list_item": "d8a07e1a-3c4a-4b09-a2d9-82754d6f95cf",
+            "valuetype": "example",
+            "language": "en",
+            "value": "A \"bicycle wheel\" for instance belongs uniquely to a \"bicycle\" while a \"wheel\" does not.\nA BTP/NTP relationship should not be established between \"bicycles\" and \"wheels\" because a wheel could be part of a motor car, a wheelbarrow or one of many other artefacts."
+        }
+    },
+    {
+        "model": "arches_controlled_lists.listitemvalue",
         "pk": "b96e0ba7-27d6-4b89-b415-482bfb5fca08",
         "fields": {
             "list_item": "774994db-54d3-4793-baa1-2810410be8d0",
@@ -1291,12 +1589,12 @@
     },
     {
         "model": "arches_controlled_lists.listitemvalue",
-        "pk": "beb61aed-7f67-47c9-868e-555bdefdcdf3",
+        "pk": "be691ade-037e-4423-923f-26b805b35b15",
         "fields": {
-            "list_item": "28855929-b8c5-43ae-8794-ab7497486345",
-            "valuetype": "scopeNote",
+            "list_item": "929bfdbf-a592-4f70-bd8b-9c11deb6bff9",
+            "valuetype": "definition",
             "language": "en",
-            "value": "Chinese"
+            "value": "A controlled vocabulary is an organized arrangement of words and phrases that are used to index content and/or to retrieve content through browsing or searching. It typically includes preferred and variant terms and has a limited scope or describes a specific domain. Controlled vocabulary is a broader concept than authority file, encompassing authority files as well as other controlled lists of terminology."
         }
     },
     {
@@ -1307,6 +1605,36 @@
             "valuetype": "prefLabel",
             "language": "en",
             "value": "E58 Measurement Unit"
+        }
+    },
+    {
+        "model": "arches_controlled_lists.listitemvalue",
+        "pk": "c24b1599-c328-4ef1-ac7b-c7783a5ab4cd",
+        "fields": {
+            "list_item": "d1544a63-b04e-4ec6-b6b1-256cd70c4954",
+            "valuetype": "scopeNote",
+            "language": "en",
+            "value": "General term for the broad genre of objects, environments, or experiences (as in performance art) that are visual in nature, were created by the use of skill and imagination, and possess an aesthetic that is valued and of a quality and type that would be collected by art museums. It may refer to the study or practice of the fine arts or the fine and decorative arts together. For the discipline of art including reference to expertise of art, use \"art (discipline).\""
+        }
+    },
+    {
+        "model": "arches_controlled_lists.listitemvalue",
+        "pk": "c2dff6b5-9bb9-430a-838e-ca88a666fae1",
+        "fields": {
+            "list_item": "9c93be63-b900-4f63-b0cf-7351e5129508",
+            "valuetype": "scopeNote",
+            "language": "en",
+            "value": "Indication of the placement of a work of art or architecture within a classification scheme that groups other, similar works together on the basis of similar characteristics"
+        }
+    },
+    {
+        "model": "arches_controlled_lists.listitemvalue",
+        "pk": "c3bf012c-e280-4d0a-b015-8b6ab11f22a4",
+        "fields": {
+            "list_item": "4a08c8ab-d909-4dd1-aa7f-e240c8712def",
+            "valuetype": "definition",
+            "language": "en",
+            "value": "ISO 25964-1: BTI\nThe immediate (direct or one-step) instance - class relationship."
         }
     },
     {
@@ -1326,7 +1654,7 @@
             "list_item": "386b1c1a-a9b5-418c-b1d3-6aa518bb7cfb",
             "valuetype": "prefLabel",
             "language": "en",
-            "value": "english"
+            "value": "English"
         }
     },
     {
@@ -1351,6 +1679,26 @@
     },
     {
         "model": "arches_controlled_lists.listitemvalue",
+        "pk": "ce7b3f8d-ee1b-4ccf-98c6-0f895ebbe2f2",
+        "fields": {
+            "list_item": "d8a07e1a-3c4a-4b09-a2d9-82754d6f95cf",
+            "valuetype": "altLabel",
+            "language": "en",
+            "value": "broader term (partitive)"
+        }
+    },
+    {
+        "model": "arches_controlled_lists.listitemvalue",
+        "pk": "d2af22cd-7eb2-42c3-bdf2-f591a0dda57c",
+        "fields": {
+            "list_item": "b80b3df5-39ce-4dd3-a979-a73aed2b362c",
+            "valuetype": "prefLabel",
+            "language": "en",
+            "value": "E55 Type"
+        }
+    },
+    {
+        "model": "arches_controlled_lists.listitemvalue",
         "pk": "d3d468f7-64cc-488e-95d9-bc5e1b6a1d70",
         "fields": {
             "list_item": "6abe2747-f53f-40d9-857a-3c027ccf2f79",
@@ -1371,6 +1719,26 @@
     },
     {
         "model": "arches_controlled_lists.listitemvalue",
+        "pk": "d4953787-ef00-434b-9c16-21eec0947fc7",
+        "fields": {
+            "list_item": "774994db-54d3-4793-baa1-2810410be8d0",
+            "valuetype": "scopeNote",
+            "language": "en",
+            "value": "Structures or parts of structures that are the result of conscious construction, are of practical use, are relatively stable and permanent, and are of a size and scale appropriate for--but not limited to--habitable buildings. Works of architecture are manifestations of the built environment that is typically classified as fine art, meaning it is generally considered to have aesthetic value, was designed by an architect (whether or not his or her name is known), and constructed with skilled labor. For the art or science of designing and building structures, use \"architecture (discipline).\""
+        }
+    },
+    {
+        "model": "arches_controlled_lists.listitemvalue",
+        "pk": "d5c25a88-c462-4a93-b8e0-b734099346f7",
+        "fields": {
+            "list_item": "db222348-5dbc-4647-b649-52e0ae6df99a",
+            "valuetype": "altLabel",
+            "language": "en",
+            "value": "editorialNote"
+        }
+    },
+    {
+        "model": "arches_controlled_lists.listitemvalue",
         "pk": "d66d0449-e870-4d86-b453-bfe083836226",
         "fields": {
             "list_item": "dd9186a8-a591-4f40-914c-1f476e60f552",
@@ -1381,12 +1749,22 @@
     },
     {
         "model": "arches_controlled_lists.listitemvalue",
+        "pk": "d6f87f96-45b2-4187-8b2f-848e58be568a",
+        "fields": {
+            "list_item": "d8a07e1a-3c4a-4b09-a2d9-82754d6f95cf",
+            "valuetype": "definition",
+            "language": "en",
+            "value": "ISO 25964-1: BTP\nWhen the ISO 25964 standard is followed, the BTP/NTP relationship should qualify for a transitive closure."
+        }
+    },
+    {
+        "model": "arches_controlled_lists.listitemvalue",
         "pk": "d9e362ca-c155-4569-9197-5583dd66f7e5",
         "fields": {
             "list_item": "19376b93-4bdc-4d48-a22a-71121506b70b",
             "valuetype": "prefLabel",
             "language": "en",
-            "value": "altLabel"
+            "value": "alternative label"
         }
     },
     {
@@ -1401,22 +1779,32 @@
     },
     {
         "model": "arches_controlled_lists.listitemvalue",
-        "pk": "de978fd0-2819-4855-8858-8c089780f32c",
-        "fields": {
-            "list_item": "845cc417-ef77-4582-9271-ffba5e4cabc9",
-            "valuetype": "prefLabel",
-            "language": "en",
-            "value": "en"
-        }
-    },
-    {
-        "model": "arches_controlled_lists.listitemvalue",
         "pk": "deab57d2-7975-4081-b497-629ad5ef262f",
         "fields": {
             "list_item": "a6795899-3874-420e-bb8e-7f7bf87b66eb",
             "valuetype": "prefLabel",
             "language": "en",
-            "value": "french"
+            "value": "French"
+        }
+    },
+    {
+        "model": "arches_controlled_lists.listitemvalue",
+        "pk": "e487f9be-f64f-4651-ab40-142d52edd7fa",
+        "fields": {
+            "list_item": "2e3a2045-b44e-47fc-a27b-3078b17e08e4",
+            "valuetype": "altLabel",
+            "language": "en",
+            "value": "prefLabel"
+        }
+    },
+    {
+        "model": "arches_controlled_lists.listitemvalue",
+        "pk": "e57706b1-49fc-4554-bb76-604b2a64a921",
+        "fields": {
+            "list_item": "d6c5ca2f-04e3-4a61-9065-40193bce8d83",
+            "valuetype": "prefLabel",
+            "language": "en",
+            "value": "mappingRelation"
         }
     },
     {
@@ -1436,7 +1824,7 @@
             "list_item": "926aa6de-a7e6-4959-9fc4-5ea87c46d677",
             "valuetype": "prefLabel",
             "language": "en",
-            "value": "versions"
+            "value": "version numbers"
         }
     },
     {
@@ -1447,6 +1835,56 @@
             "valuetype": "prefLabel",
             "language": "en",
             "value": "identifier"
+        }
+    },
+    {
+        "model": "arches_controlled_lists.listitemvalue",
+        "pk": "ea6ce3aa-dd56-46a6-9561-f2b932c07d8a",
+        "fields": {
+            "list_item": "19376b93-4bdc-4d48-a22a-71121506b70b",
+            "valuetype": "altLabel",
+            "language": "en",
+            "value": "altLabel"
+        }
+    },
+    {
+        "model": "arches_controlled_lists.listitemvalue",
+        "pk": "ebef5cbd-b97e-49e7-a38b-ff8db4e78d48",
+        "fields": {
+            "list_item": "4a08c8ab-d909-4dd1-aa7f-e240c8712def",
+            "valuetype": "prefLabel",
+            "language": "en",
+            "value": "broaderInstantial"
+        }
+    },
+    {
+        "model": "arches_controlled_lists.listitemvalue",
+        "pk": "ee5aae6d-d0ef-4e64-8da4-0d33eb2744a9",
+        "fields": {
+            "list_item": "bffe467f-5d22-4b3c-a6c7-9766165271b3",
+            "valuetype": "scopeNote",
+            "language": "en",
+            "value": "This class is a specialization of E55 Type and comprises the natural languages in the sense of concepts.\n\nThis type is used categorically in the model without reference to instances of it, i.e. the Model does not foresee the description of instances of instances of E56 Language, e.g. “instances of Mandarin Chinese”.\n\nIt is recommended that internationally or nationally agreed codes and terminology should be used to denote instances of E56 Language, such as those defined in ISO 639-3:2007 and later versions."
+        }
+    },
+    {
+        "model": "arches_controlled_lists.listitemvalue",
+        "pk": "f244a3a8-8a65-4868-8da9-c3136fcf355f",
+        "fields": {
+            "list_item": "b655c9b3-53f5-4d8a-a7e5-6751b4fc1d2c",
+            "valuetype": "scopeNote",
+            "language": "en",
+            "value": "A facet is a fundamental, homogeneous, and mutually exclusive category of information in a thesaurus (for example, the AAT has seven facets: Associated Concepts, Physical Attributes, Styles and Periods, Agents, Materials, Activities, Objects)."
+        }
+    },
+    {
+        "model": "arches_controlled_lists.listitemvalue",
+        "pk": "f5f016d9-26e1-4b0c-89ff-7d22c072ce1c",
+        "fields": {
+            "list_item": "d98bfcab-fa26-4c8b-992d-a56eb7bbbaa2",
+            "valuetype": "scopeNote",
+            "language": "en",
+            "value": "Strings of characters or numbers used to identify individual electronic resources online."
         }
     },
     {
@@ -1471,12 +1909,12 @@
     },
     {
         "model": "arches_controlled_lists.listitemvalue",
-        "pk": "fc487961-bb68-4aa5-b839-24e22b317220",
+        "pk": "fb9cedcf-ad4e-4d1c-b3a9-c7d4a5cd7677",
         "fields": {
-            "list_item": "e69de7f4-a03b-4806-95bd-e83041fa5440",
-            "valuetype": "prefLabel",
+            "list_item": "c1d8c87d-183c-4c46-aa6f-7920825cba5e",
+            "valuetype": "scopeNote",
             "language": "en",
-            "value": "fr"
+            "value": "The state that an information object possesses in the present; that is valid in a present context."
         }
     },
     {
