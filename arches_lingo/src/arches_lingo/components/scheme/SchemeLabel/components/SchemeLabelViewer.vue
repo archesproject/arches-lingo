@@ -60,7 +60,8 @@ const metaStringLabel: MetaStringText = {
                 :graph-slug="props.graphSlug"
                 node-alias="appellative_status_ascribed_name_content"
                 :initial-value="
-                    rowData.appellative_status_ascribed_name_content
+                    rowData.aliased_data
+                        .appellative_status_ascribed_name_content
                 "
                 :mode="VIEW"
                 :show-label="false"
@@ -70,7 +71,9 @@ const metaStringLabel: MetaStringText = {
             <ReferenceSelectWidget
                 :graph-slug="props.graphSlug"
                 node-alias="appellative_status_ascribed_relation"
-                :initial-value="rowData.appellative_status_ascribed_relation"
+                :initial-value="
+                    rowData.aliased_data.appellative_status_ascribed_relation
+                "
                 :mode="VIEW"
                 :show-label="false"
             />
@@ -80,7 +83,8 @@ const metaStringLabel: MetaStringText = {
                 :graph-slug="props.graphSlug"
                 node-alias="appellative_status_ascribed_name_language"
                 :initial-value="
-                    rowData.appellative_status_ascribed_name_language
+                    rowData.aliased_data
+                        .appellative_status_ascribed_name_language
                 "
                 :mode="VIEW"
                 :show-label="false"
@@ -91,7 +95,8 @@ const metaStringLabel: MetaStringText = {
                 :graph-slug="props.graphSlug"
                 node-alias="appellative_status_data_assignment_object_used"
                 :initial-value="
-                    rowData.appellative_status_data_assignment_object_used
+                    rowData.aliased_data
+                        .appellative_status_data_assignment_object_used
                 "
                 :mode="VIEW"
             />
@@ -99,7 +104,8 @@ const metaStringLabel: MetaStringText = {
                 :graph-slug="props.graphSlug"
                 node-alias="appellative_status_data_assignment_actor"
                 :initial-value="
-                    rowData.appellative_status_data_assignment_actor
+                    rowData.aliased_data
+                        .appellative_status_data_assignment_actor
                 "
                 :mode="VIEW"
             />

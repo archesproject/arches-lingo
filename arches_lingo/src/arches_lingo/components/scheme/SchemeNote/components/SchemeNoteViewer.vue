@@ -55,7 +55,7 @@ const metaStringLabel: MetaStringText = {
             <NonLocalizedStringWidget
                 node-alias="statement_content_n1"
                 :graph-slug="props.graphSlug"
-                :initial-value="rowData.statement_content_n1"
+                :initial-value="rowData.aliased_data.statement_content_n1"
                 :mode="VIEW"
                 :show-label="false"
             />
@@ -64,7 +64,7 @@ const metaStringLabel: MetaStringText = {
             <ReferenceSelectWidget
                 node-alias="statement_type_n1"
                 :graph-slug="props.graphSlug"
-                :initial-value="rowData.statement_type_n1"
+                :initial-value="rowData.aliased_data.statement_type_n1"
                 :mode="VIEW"
                 :show-label="false"
             />
@@ -73,7 +73,7 @@ const metaStringLabel: MetaStringText = {
             <ReferenceSelectWidget
                 node-alias="statement_language_n1"
                 :graph-slug="props.graphSlug"
-                :initial-value="rowData.statement_language_n1"
+                :initial-value="rowData.aliased_data.statement_language_n1"
                 :mode="VIEW"
                 :show-label="false"
             />
@@ -82,13 +82,17 @@ const metaStringLabel: MetaStringText = {
             <ResourceInstanceMultiSelectWidget
                 node-alias="statement_data_assignment_object_used"
                 :graph-slug="props.graphSlug"
-                :initial-value="rowData.statement_data_assignment_object_used"
+                :initial-value="
+                    rowData.aliased_data.statement_data_assignment_object_used
+                "
                 :mode="VIEW"
             />
             <ResourceInstanceMultiSelectWidget
                 node-alias="statement_data_assignment_actor"
                 :graph-slug="props.graphSlug"
-                :initial-value="rowData.statement_data_assignment_actor"
+                :initial-value="
+                    rowData.aliased_data.statement_data_assignment_actor
+                "
                 :mode="VIEW"
             />
         </template>

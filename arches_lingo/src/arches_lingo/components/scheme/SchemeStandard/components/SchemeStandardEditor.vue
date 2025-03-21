@@ -67,7 +67,9 @@ async function save(e: FormSubmitEvent) {
         if (!props.resourceInstanceId) {
             const updatedScheme = await createLingoResource(
                 {
-                    [props.nodegroupAlias]: [formData],
+                    aliased_data: {
+                        [props.nodegroupAlias]: [formData],
+                    },
                 },
                 props.graphSlug,
             );
@@ -84,7 +86,7 @@ async function save(e: FormSubmitEvent) {
                 props.nodegroupAlias,
                 {
                     resourceinstance: props.resourceInstanceId,
-                    ...formData,
+                    aliased_data: { ...formData },
                     tileid: props.tileId,
                 },
             );
@@ -126,7 +128,7 @@ async function save(e: FormSubmitEvent) {
             <ResourceInstanceMultiSelectWidget
                 graph-slug="scheme"
                 node-alias="creation_sources"
-                :initial-value="props.tileData?.creation_sources"
+                :initial-value="props.tileData?.aliased_data.creation_sources"
                 :mode="EDIT"
             />
         </Form>

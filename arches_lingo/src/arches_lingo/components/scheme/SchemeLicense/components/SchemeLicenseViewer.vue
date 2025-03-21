@@ -48,20 +48,21 @@ const buttonLabel = computed(() => {
         <ResourceInstanceMultiSelectWidget
             node-alias="right_holder"
             :graph-slug="props.graphSlug"
-            :initial-value="props.tileData?.right_holder"
+            :initial-value="props.tileData?.aliased_data.right_holder"
             :mode="VIEW"
         />
         <ReferenceSelectWidget
             node-alias="right_type"
             :graph-slug="props.graphSlug"
-            :initial-value="props.tileData?.right_type"
+            :initial-value="props.tileData?.aliased_data.right_type"
             :mode="VIEW"
         />
         <NonLocalizedStringWidget
             node-alias="right_statement_content"
             :graph-slug="props.graphSlug"
             :initial-value="
-                props.tileData?.right_statement?.right_statement_content
+                props.tileData?.aliased_data.right_statement?.aliased_data
+                    .right_statement_content
             "
             :mode="VIEW"
         />
@@ -69,7 +70,8 @@ const buttonLabel = computed(() => {
             node-alias="right_statement_language"
             :graph-slug="props.graphSlug"
             :initial-value="
-                props.tileData?.right_statement?.right_statement_language
+                props.tileData?.aliased_data.right_statement?.aliased_data
+                    .right_statement_language
             "
             :mode="VIEW"
         />
@@ -77,7 +79,8 @@ const buttonLabel = computed(() => {
             node-alias="right_statement_type"
             :graph-slug="props.graphSlug"
             :initial-value="
-                props.tileData?.right_statement?.right_statement_type
+                props.tileData?.aliased_data.right_statement?.aliased_data
+                    .right_statement_type
             "
             :mode="VIEW"
         />
@@ -85,7 +88,8 @@ const buttonLabel = computed(() => {
             node-alias="right_statement_type_metatype"
             :graph-slug="props.graphSlug"
             :initial-value="
-                props.tileData?.right_statement?.right_statement_type_metatype
+                props.tileData?.aliased_data.right_statement?.aliased_data
+                    .right_statement_type_metatype
             "
             :mode="VIEW"
         />
