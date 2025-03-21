@@ -80,16 +80,13 @@ export interface MetaStringText {
     noRecords: string;
 }
 
-// eslint-disable-next-line
-interface AliasedData {}
-
-export interface TileData<T extends AliasedData = AliasedData> {
+export interface TileData<T> {
     resourceinstance?: string;
     tileid?: string;
     aliased_data: T;
 }
 
-export interface AppellativeStatusAliases extends AliasedData {
+export interface AppellativeStatusAliases {
     appellative_status_ascribed_name_content: string;
     appellative_status_ascribed_name_language?: ControlledListItem[];
     appellative_status_ascribed_relation?: ControlledListItem[];
@@ -104,7 +101,7 @@ export interface AppellativeStatusAliases extends AliasedData {
 
 export type AppellativeStatus = TileData<AppellativeStatusAliases>;
 
-export interface ConceptStatementAliases extends AliasedData {
+export interface ConceptStatementAliases {
     statement_content: string;
     statement_language?: ControlledListItem[];
     statement_type?: ControlledListItem[];
@@ -118,7 +115,7 @@ export interface ConceptStatementAliases extends AliasedData {
 
 export type ConceptStatement = TileData<ConceptStatementAliases>;
 
-export interface SchemeStatementAliases extends AliasedData {
+export interface SchemeStatementAliases {
     statement_content_n1: string;
     statement_language_n1?: ControlledListItem[];
     statement_type_n1?: ControlledListItem[];
@@ -132,7 +129,7 @@ export interface SchemeStatementAliases extends AliasedData {
 
 export type SchemeStatement = TileData<SchemeStatementAliases>;
 
-export interface SchemeRightsAliases extends TileData {
+export interface SchemeRightsAliases {
     right_holder?: ResourceInstanceReference[];
     right_type?: ControlledListItem[];
     right_statement?: SchemeRightStatement;
@@ -140,7 +137,7 @@ export interface SchemeRightsAliases extends TileData {
 
 export type SchemeRights = TileData<SchemeRightsAliases>;
 
-export interface SchemeRightStatementAliases extends AliasedData {
+export interface SchemeRightStatementAliases {
     right_statement_content?: string;
     right_statement_label?: string;
     right_statement_language?: ControlledListItem[];
@@ -150,14 +147,14 @@ export interface SchemeRightStatementAliases extends AliasedData {
 
 export type SchemeRightStatement = TileData<SchemeRightStatementAliases>;
 
-export interface SchemeNamespaceAliases extends AliasedData {
+export interface SchemeNamespaceAliases {
     namespace_name: string;
     namespace_type: ControlledListItem[];
 }
 
 export type SchemeNamespace = TileData<SchemeNamespaceAliases>;
 
-export interface SchemeCreationAliases extends AliasedData {
+export interface SchemeCreationAliases {
     creation_sources: ResourceInstanceReference[];
 }
 
