@@ -3,7 +3,7 @@
         "resources": [
             {
                 "resourceinstance": {
-                    "createdtime": "2024-11-20T07:29:33.734",
+                    "createdtime": "2025-03-21T14:18:55.737",
                     "descriptors": {
                         "en": {
                             "description": "Undefined",
@@ -28,15 +28,15 @@
                                 {
                                     "labels": [
                                         {
-                                            "id": "727dc5e5-fac6-4347-8d38-7b868365714f",
+                                            "id": "c8e475b0-1a9a-4717-9a90-ef9fb14d73d6",
                                             "language_id": "en",
-                                            "list_item_id": "989ca6d8-2376-45c1-af07-3689d41e5602",
-                                            "value": "en-US",
+                                            "list_item_id": "386b1c1a-a9b5-418c-b1d3-6aa518bb7cfb",
+                                            "value": "English",
                                             "valuetype_id": "prefLabel"
                                         }
                                     ],
                                     "list_id": "55ce793b-a51a-4b25-811d-d08ea797f8c3",
-                                    "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/989ca6d8-2376-45c1-af07-3689d41e5602"
+                                    "uri": "http://vocab.getty.edu/aat/300388277"
                                 }
                             ],
                             "ef87b588-11de-11ef-9493-0a58a9feac02": [
@@ -46,12 +46,19 @@
                                             "id": "6ac8e471-476e-4fd0-b276-86e01a17bcc8",
                                             "language_id": "en",
                                             "list_item_id": "2e3a2045-b44e-47fc-a27b-3078b17e08e4",
-                                            "value": "prefLabel",
+                                            "value": "preferred label",
                                             "valuetype_id": "prefLabel"
+                                        },
+                                        {
+                                            "id": "e487f9be-f64f-4651-ab40-142d52edd7fa",
+                                            "language_id": "en",
+                                            "list_item_id": "2e3a2045-b44e-47fc-a27b-3078b17e08e4",
+                                            "value": "prefLabel",
+                                            "valuetype_id": "altLabel"
                                         }
                                     ],
                                     "list_id": "deb847fc-f4c3-4e82-be19-04641579f129",
-                                    "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/2e3a2045-b44e-47fc-a27b-3078b17e08e4"
+                                    "uri": "http://www.w3.org/2004/02/skos/core#prefLabel"
                                 }
                             ]
                         },
@@ -59,8 +66,8 @@
                         "parenttile_id": null,
                         "provisionaledits": null,
                         "resourceinstance_id": "b73e741b-46da-496c-8960-55cc1007bec4",
-                        "sortorder": null,
-                        "tileid": "7b559cf4-77a1-49b3-9116-aabffd464bd3"
+                        "sortorder": 0,
+                        "tileid": "fdda3bc4-357f-4edd-9c04-2196e747c95d"
                     },
                     {
                         "data": {
@@ -82,7 +89,7 @@
                                         }
                                     ],
                                     "list_id": "38fc54d4-67ef-4183-8934-66669f1f504c",
-                                    "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/9baf3cd5-33d4-4fbc-b1d1-a2d218732f1e"
+                                    "uri": "https://vocab.getty.edu/aat/300404012"
                                 }
                             ]
                         },
@@ -90,8 +97,8 @@
                         "parenttile_id": null,
                         "provisionaledits": null,
                         "resourceinstance_id": "b73e741b-46da-496c-8960-55cc1007bec4",
-                        "sortorder": null,
-                        "tileid": "d35063cf-e93c-4bb9-89b1-d718d1d21ee3"
+                        "sortorder": 0,
+                        "tileid": "8042d162-b082-471a-a24a-475e70bc84a8"
                     }
                 ]
             }
