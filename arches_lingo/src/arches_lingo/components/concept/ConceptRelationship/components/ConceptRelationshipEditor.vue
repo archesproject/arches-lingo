@@ -4,6 +4,7 @@ import { inject, useTemplateRef, watch } from "vue";
 import { useRouter } from "vue-router";
 import { Form } from "@primevue/forms";
 
+import ConceptResourceSelectWidget from "@/arches_lingo/components/widgets/ConceptResourceSelectWidget/ConceptResourceSelectWidget.vue";
 import DateWidget from "@/arches_component_lab/widgets/DateWidget/DateWidget.vue";
 import ReferenceSelectWidget from "@/arches_controlled_lists/widgets/ReferenceSelectWidget/ReferenceSelectWidget.vue";
 import ResourceInstanceMultiSelectWidget from "@/arches_component_lab/widgets/ResourceInstanceMultiSelectWidget/ResourceInstanceMultiSelectWidget.vue";
@@ -22,6 +23,7 @@ const props = defineProps<{
     graphSlug: string;
     nodegroupAlias: string;
     resourceInstanceId: string | undefined;
+    scheme: string;
     tileId?: string;
 }>();
 
@@ -96,36 +98,29 @@ async function save(e: FormSubmitEvent) {
         ref="form"
         @submit="save"
     >
-        <ResourceInstanceMultiSelectWidget
+        <ConceptResourceSelectWidget
             :graph-slug="props.graphSlug"
             node-alias="relation_status_ascribed_comparate"
-            :initial-value="
-                props.tileData?.relation_status_ascribed_comparate
-            "
+            :scheme="props.scheme"
+            :initial-value="props.tileData?.relation_status_ascribed_comparate"
             :mode="EDIT"
         />
         <ReferenceSelectWidget
             :graph-slug="props.graphSlug"
             node-alias="relation_status_ascribed_relation"
-            :initial-value="
-                props.tileData?.relation_status_ascribed_relation
-            "
+            :initial-value="props.tileData?.relation_status_ascribed_relation"
             :mode="EDIT"
         />
         <ReferenceSelectWidget
             :graph-slug="props.graphSlug"
             node-alias="relation_status_status"
-            :initial-value="
-                props.tileData?.relation_status_status
-            "
+            :initial-value="props.tileData?.relation_status_status"
             :mode="EDIT"
         />
         <ReferenceSelectWidget
             :graph-slug="props.graphSlug"
             node-alias="relation_status_status_metatype"
-            :initial-value="
-                props.tileData?.relation_status_status_metatype
-            "
+            :initial-value="props.tileData?.relation_status_status_metatype"
             :mode="EDIT"
         />
         <DateWidget
@@ -163,7 +158,9 @@ async function save(e: FormSubmitEvent) {
         <ReferenceSelectWidget
             :graph-slug="props.graphSlug"
             node-alias="relation_status_data_assignment_type"
-            :initial-value="props.tileData?.relation_status_data_assignment_type"
+            :initial-value="
+                props.tileData?.relation_status_data_assignment_type
+            "
             :mode="EDIT"
         />
     </Form>

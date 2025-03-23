@@ -214,6 +214,7 @@ export interface IconLabels {
 export interface SearchResultItem {
     id: string;
     labels: Label[];
+    label?: string;
     parents: {
         id: string;
         labels: Label[];

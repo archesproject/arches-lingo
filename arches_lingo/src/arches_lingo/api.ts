@@ -173,6 +173,7 @@ export const fetchSearchResults = async (
     page: number,
     schemeResource: string = "",
     exclude: boolean = false,
+    conceptIds: string[] = [],
 ) => {
     const params = new URLSearchParams({
         term: searchTerm,
@@ -180,6 +181,7 @@ export const fetchSearchResults = async (
         exclude: exclude.toString(),
         items: items.toString(),
         page: page.toString(),
+        concepts: conceptIds.join(","),
     });
 
     const url = `${arches.urls.api_search}?${params.toString()}`;

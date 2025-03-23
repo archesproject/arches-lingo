@@ -40,6 +40,7 @@ class ValueSearchView(ConceptTreeView):
         exact = request.GET.get("exact", False)
         page_number = request.GET.get("page", 1)
         items_per_page = request.GET.get("items", 25)
+        concept_ids = request.GET.get("concepts","").split(",")
 
         if exact:
             concept_query = VwLabelValue.objects.filter(value=term).order_by(
@@ -74,6 +75,8 @@ class ValueSearchView(ConceptTreeView):
             concept_query = VwLabelValue.objects.exclude(value__isnull=True).order_by("concept_id")
         if scheme:
             concept_ids = tile_query.values_list("resourceinstance_id", flat=True).distinct()
+        elif concept_ids:
+            concept_ids = concept_ids
         else:
             concept_ids = concept_query.values_list("concept_id", flat=True).distinct()
 

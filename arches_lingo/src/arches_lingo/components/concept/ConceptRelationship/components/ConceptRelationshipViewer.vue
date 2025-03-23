@@ -4,6 +4,7 @@ import { useGettext } from "vue3-gettext";
 
 import Button from "primevue/button";
 
+import ConceptResourceSelectWidget from "@/arches_lingo/components/widgets/ConceptResourceSelectWidget/ConceptResourceSelectWidget.vue";
 import MetaStringViewer from "@/arches_lingo/components/generic/MetaStringViewer.vue";
 
 import ReferenceSelectWidget from "@/arches_controlled_lists/widgets/ReferenceSelectWidget/ReferenceSelectWidget.vue";
@@ -29,7 +30,9 @@ const { $gettext } = useGettext();
 const openEditor = inject<(componentName: string) => void>("openEditor");
 
 const metaStringLabel: MetaStringText = {
-    deleteConfirm: $gettext("Are you sure you want to delete this relationship?"),
+    deleteConfirm: $gettext(
+        "Are you sure you want to delete this relationship?",
+    ),
     name: $gettext("RelationshipID"),
     type: $gettext("Relationship"),
     language: $gettext("Related Concept"),
@@ -73,12 +76,10 @@ const metaStringLabel: MetaStringText = {
             />
         </template>
         <template #language="{ rowData }">
-            <ResourceInstanceMultiSelectWidget
+            <ConceptResourceSelectWidget
                 :graph-slug="props.graphSlug"
                 node-alias="relation_status_ascribed_comparate"
-                :initial-value="
-                    rowData.relation_status_ascribed_comparate
-                "
+                :initial-value="rowData.relation_status_ascribed_comparate"
                 :mode="VIEW"
                 :show-label="false"
             />
@@ -87,9 +88,7 @@ const metaStringLabel: MetaStringText = {
             <ResourceInstanceMultiSelectWidget
                 :graph-slug="props.graphSlug"
                 node-alias="relation_status_data_assignment_actor"
-                :initial-value="
-                    rowData.relation_status_data_assignment_actor
-                "
+                :initial-value="rowData.relation_status_data_assignment_actor"
                 :mode="VIEW"
             />
             <ResourceInstanceMultiSelectWidget
