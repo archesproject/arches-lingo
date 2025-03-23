@@ -60,9 +60,11 @@ async function getSectionValue() {
             props.resourceInstanceId as string,
             props.nodegroupAlias,
         );
-        for (const value of sectionValue[props.nodegroupAlias]){
-            value ["uri"] = await getURI(value["match_status_ascribed_comparate"][0]["resourceId"]);
-        };
+        for (const value of sectionValue[props.nodegroupAlias]) {
+            value["uri"] = await getURI(
+                value["match_status_ascribed_comparate"][0]["resourceId"],
+            );
+        }
         return sectionValue;
     } catch (error) {
         toast.add({
@@ -82,7 +84,6 @@ async function getURI(resourceId: string) {
     );
     return JSON.parse(uriData.uri.uri_content.replace(/'/g, '"'));
 }
-
 </script>
 
 <template>

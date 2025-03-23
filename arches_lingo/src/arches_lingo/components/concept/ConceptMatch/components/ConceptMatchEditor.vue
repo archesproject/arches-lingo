@@ -99,33 +99,25 @@ async function save(e: FormSubmitEvent) {
         <ResourceInstanceMultiSelectWidget
             :graph-slug="props.graphSlug"
             node-alias="match_status_ascribed_comparate"
-            :initial-value="
-                props.tileData?.match_status_ascribed_comparate
-            "
+            :initial-value="props.tileData?.match_status_ascribed_comparate"
             :mode="EDIT"
         />
         <ReferenceSelectWidget
             :graph-slug="props.graphSlug"
             node-alias="match_status_ascribed_relation"
-            :initial-value="
-                props.tileData?.match_status_ascribed_relation
-            "
+            :initial-value="props.tileData?.match_status_ascribed_relation"
             :mode="EDIT"
         />
         <ReferenceSelectWidget
             :graph-slug="props.graphSlug"
             node-alias="match_status_status"
-            :initial-value="
-                props.tileData?.match_status_status
-            "
+            :initial-value="props.tileData?.match_status_status"
             :mode="EDIT"
         />
         <ReferenceSelectWidget
             :graph-slug="props.graphSlug"
             node-alias="match_status_status_metatype"
-            :initial-value="
-                props.tileData?.match_status_status_metatype
-            "
+            :initial-value="props.tileData?.match_status_status_metatype"
             :mode="EDIT"
         />
         <DateWidget
@@ -147,9 +139,7 @@ async function save(e: FormSubmitEvent) {
         <ResourceInstanceMultiSelectWidget
             :graph-slug="props.graphSlug"
             node-alias="match_status_data_assignment_actor"
-            :initial-value="
-                props.tileData?.match_status_data_assignment_actor
-            "
+            :initial-value="props.tileData?.match_status_data_assignment_actor"
             :mode="EDIT"
         />
         <ResourceInstanceMultiSelectWidget

@@ -30,7 +30,9 @@ const { $gettext } = useGettext();
 const openEditor = inject<(componentName: string) => void>("openEditor");
 
 const metaStringLabel: MetaStringText = {
-    deleteConfirm: $gettext("Are you sure you want to delete this relationship?"),
+    deleteConfirm: $gettext(
+        "Are you sure you want to delete this relationship?",
+    ),
     name: $gettext("Match Type"),
     type: $gettext("Related URI"),
     language: $gettext("Related Label"),
@@ -77,9 +79,7 @@ const metaStringLabel: MetaStringText = {
             <ResourceInstanceMultiSelectWidget
                 :graph-slug="props.graphSlug"
                 node-alias="match_status_ascribed_comparate"
-                :initial-value="
-                    rowData.match_status_ascribed_comparate
-                "
+                :initial-value="rowData.match_status_ascribed_comparate"
                 :mode="VIEW"
                 :show-label="false"
             />
@@ -88,9 +88,7 @@ const metaStringLabel: MetaStringText = {
             <ResourceInstanceMultiSelectWidget
                 :graph-slug="props.graphSlug"
                 node-alias="match_status_data_assignment_actor"
-                :initial-value="
-                    rowData.match_status_data_assignment_actor
-                "
+                :initial-value="rowData.match_status_data_assignment_actor"
                 :mode="VIEW"
             />
             <ResourceInstanceMultiSelectWidget
