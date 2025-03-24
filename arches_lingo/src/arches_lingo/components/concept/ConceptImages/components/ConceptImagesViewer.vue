@@ -14,6 +14,7 @@ import type {
     DigitalObjectInstance,
 } from "@/arches_lingo/types.ts";
 import { fetchLingoResource } from "@/arches_lingo/api.ts";
+import NonLocalizedStringWidget from "@/arches_component_lab/widgets/NonLocalizedStringWidget/NonLocalizedStringWidget.vue";
 
 const props = defineProps<{
     tileData: ConceptImages | undefined;
@@ -30,7 +31,7 @@ const confirm = useConfirm();
 onMounted(async () => {
     if (props.tileData) {
         resources.value = await Promise.all(
-            props.tileData.depicting_digital_asset_internal.map(
+            props.tileData.aliased_data.depicting_digital_asset_internal.map(
                 async (digitalAsset) =>
                     await getConceptImageResource(digitalAsset.resourceId),
             ),
@@ -87,11 +88,16 @@ async function getConceptImageResource(resourceInstanceId: string) {
                 <label
                     for="conceptImage"
                     class="element"
-                    >bobbobbobbob bobbobbobbob bob. bobbobbob bobbobbobbobbob
-                    bobbobbobbob bob. bobbobbob bobbobbobbobbob bobbobbobbob
-                    bob. bobbobbob bob bobbobbobbob bobbobbobbob bob. bobbobbob
-                    bob</label
                 >
+                    <NonLocalizedStringWidget
+                        node-alias="name_content"
+                        graph-slug="digital_object_rdm_system"
+                        :mode="VIEW"
+                        :initial-value="
+                            resource.aliased_data.name.aliased_data.name_content
+                        "
+                    />
+                </label>
                 <div class="element">
                     <Button
                         icon="pi pi-file-edit"
@@ -109,12 +115,26 @@ async function getConceptImageResource(resourceInstanceId: string) {
             <FileListWidget
                 node-alias="content"
                 graph-slug="digital_object_rdm_system"
-                :initial-value="resource.content.content"
+                :initial-value="
+                    resource.aliased_data.content?.aliased_data.content
+                "
                 :mode="VIEW"
                 class="conceptImage"
             />
             <div class="footer">
-                {{ resource.statement?.statement_content }}
+                <NonLocalizedStringWidget
+                    node-alias="statement_content"
+                    graph-slug="digital_object_rdm_system"
+                    :mode="VIEW"
+                    :initial-value="
+                        resource.aliased_data.statement?.aliased_data
+                            .statement_content
+                    "
+                />
+                {{
+                    resource.aliased_data.statement?.aliased_data
+                        .statement_content
+                }}
             </div>
         </div>
     </div>
