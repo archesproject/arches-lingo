@@ -85,6 +85,11 @@ export interface TileData<T extends AliasedData = AliasedData> {
     aliased_data: T;
 }
 
+export interface ResourceData<T extends AliasedData = AliasedData> {
+    resourceinstanceid: string;
+    aliased_data: T;
+}
+
 export interface AppellativeStatusAliases extends AliasedData {
     appellative_status_ascribed_name_content: string;
     appellative_status_ascribed_name_language?: ReferenceSelectFetchedOption[];
@@ -98,48 +103,38 @@ export interface AppellativeStatusAliases extends AliasedData {
     appellative_status_timespan_end_of_the_end: string;
 }
 
-export interface ConceptImages extends TileData {
-    depicting_digital_asset_internal: ResourceInstanceReference[];
-}
-
-export interface ConceptName extends TileData {
+export interface ConceptNameAlises extends AliasedData {
     name: string;
 }
 
-export interface ConceptStatement extends TileData {
-    statement_content: string;
+export type ConceptName = TileData<ConceptNameAlises>;
+
+export interface DigitalObjectContentAliases extends AliasedData {
+    content: FileReference[];
 }
 
-export interface DigitalObjectInstance {
-    name: ConceptName;
-    content: DigitalObjectContent;
+export type DigitalObjectContent = TileData<DigitalObjectContentAliases>;
+
+export interface ConceptImagesAliases extends AliasedData {
+    depicting_digital_asset_internal: ResourceInstanceReference[];
+}
+
+export type ConceptImages = TileData<ConceptImagesAliases>;
+
+export interface DigitalObjectNameAliases extends AliasedData {
+    name_content: string;
+}
+
+export type DigitalObjectName = TileData<DigitalObjectNameAliases>;
+
+export interface DigitalObjectInstanceAliases extends AliasedData {
+    name: DigitalObjectName;
+    content?: DigitalObjectContent;
     resourceinstanceid: string;
-    statement: ConceptStatement | undefined;
+    statement?: ConceptStatement;
 }
 
-export interface DigitalObjectContent extends TileData {
-    content: FileReference[];
-}
-
-export interface ConceptImages extends AliasedData {
-    depicting_digital_asset_internal: ResourceInstanceReference[];
-}
-
-export interface NameNodegroup extends AliasedData {
-    name: string;
-}
-
-export interface DigitalObjectInstance {
-    aliased_data: {
-        name: NameNodegroup;
-        content: DigitalObjectContent;
-        resourceinstanceid: string;
-    };
-}
-
-export interface DigitalObjectContent extends TileData {
-    content: FileReference[];
-}
+export type DigitalObjectInstance = ResourceData<DigitalObjectInstanceAliases>;
 
 export type AppellativeStatus = TileData<AppellativeStatusAliases>;
 
@@ -210,15 +205,15 @@ export interface ConceptInstance {
     };
 }
 
-export interface SchemeInstance {
-    aliased_data: {
-        namespace?: SchemeNamespace;
-        creation?: SchemeCreation;
-        appellative_status?: AppellativeStatus[];
-        statement?: SchemeStatement[];
-        rights?: SchemeRights;
-    };
+export interface SchemeInstanceAliases extends AliasedData {
+    namespace?: SchemeNamespace;
+    creation?: SchemeCreation;
+    appellative_status?: AppellativeStatus[];
+    statement?: SchemeStatement[];
+    rights?: SchemeRights;
 }
+
+export type SchemeInstance = ResourceData<SchemeInstanceAliases>;
 
 export interface SchemeResource {
     resourceinstanceid: string;
