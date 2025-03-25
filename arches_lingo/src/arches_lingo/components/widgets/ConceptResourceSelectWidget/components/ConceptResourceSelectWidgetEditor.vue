@@ -105,14 +105,10 @@ async function getOptions(page: number, filterTerm?: string) {
             ).value;
         });
 
-        if (page === 1) {
-            options.value = parsedResponse.data;
-        } else {
-            options.value = [
-                ...options.value,
-                ...parsedResponse.data,
-            ];
-        }
+        options.value = [
+            ...options.value,
+            ...parsedResponse.data,
+        ];
 
         searchResultsPage.value = parsedResponse.current_page;
         searchResultsTotalCount.value = parsedResponse.total_results;
