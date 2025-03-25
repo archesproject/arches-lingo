@@ -122,7 +122,6 @@ export interface ConceptStatementAliases extends AliasedData {
 
 export type ConceptStatement = TileData<ConceptStatementAliases>;
 
-
 export interface ConceptRelationStatus extends TileData {
     relation_status_ascribed_comparate: ResourceInstanceReference[];
     relation_status_ascribed_relation: ControlledListItem[];

@@ -151,4 +151,4 @@ export function getParentLabels(
         }
         return acc;
     }, "");
-};
+}

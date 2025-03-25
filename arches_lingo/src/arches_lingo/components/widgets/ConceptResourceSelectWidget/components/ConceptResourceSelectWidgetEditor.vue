@@ -55,19 +55,17 @@ watch(
             newVal.every((item: string | object) => typeof item === "string")
         ) {
             // @ts-expect-error - This is a bug in the PrimeVue types
-            formFieldRef.value!.field.states.value = options.value.filter(
-                (option) => {
+            formFieldRef.value!.field.states.value = options.value
+                .filter((option) => {
                     return newVal?.includes(option.id);
-                },
-            ).map(
-                (option) => {
+                })
+                .map((option) => {
                     return {
                         resourceId: option.id,
                         ontologyProperty: "",
                         inverseOntologyProperty: "",
                     };
-                },
-            );
+                });
         }
     },
 );
@@ -102,14 +100,10 @@ async function getOptions(page: number, filterTerm?: string) {
             ).value;
         });
 
-        options.value = [
-            ...options.value,
-            ...parsedResponse.data,
-        ];
+        options.value = [...options.value, ...parsedResponse.data];
 
         searchResultsPage.value = parsedResponse.current_page;
         searchResultsTotalCount.value = parsedResponse.total_results;
-
     } catch (error) {
         fetchError.value = (error as Error).message;
     } finally {
@@ -170,7 +164,7 @@ function validate(e: FormFieldResolverOptions) {
         ref="formFieldRef"
         v-slot="$field"
         :name="props.nodeAlias"
-        :initial-value="props.initialValue?.map(concept => concept.id)"
+        :initial-value="props.initialValue?.map((concept) => concept.id)"
         :resolver="resolver"
     >
         <MultiSelect
