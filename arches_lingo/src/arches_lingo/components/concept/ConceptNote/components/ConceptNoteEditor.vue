@@ -71,7 +71,9 @@ async function save(e: FormSubmitEvent) {
         if (!props.resourceInstanceId) {
             const updatedConcept = await createLingoResource(
                 {
-                    [props.nodegroupAlias]: [formData],
+                    aliased_data: {
+                        [props.nodegroupAlias]: [formData],
+                    },
                 },
                 props.graphSlug,
             );
@@ -88,7 +90,7 @@ async function save(e: FormSubmitEvent) {
                 props.nodegroupAlias,
                 {
                     resourceinstance: props.resourceInstanceId,
-                    ...formData,
+                    aliased_data: { ...formData },
                     tileid: props.tileId,
                 },
             );
@@ -130,33 +132,35 @@ async function save(e: FormSubmitEvent) {
             <NonLocalizedStringWidget
                 :graph-slug="props.graphSlug"
                 node-alias="statement_content"
-                :initial-value="props.tileData?.statement_content"
+                :initial-value="props.tileData?.aliased_data.statement_content"
                 :mode="EDIT"
             />
             <ReferenceSelectWidget
                 :graph-slug="props.graphSlug"
                 node-alias="statement_language"
-                :initial-value="props.tileData?.statement_language"
+                :initial-value="props.tileData?.aliased_data.statement_language"
                 :mode="EDIT"
             />
             <ReferenceSelectWidget
                 :graph-slug="props.graphSlug"
                 node-alias="statement_type"
-                :initial-value="props.tileData?.statement_type"
+                :initial-value="props.tileData?.aliased_data.statement_type"
                 :mode="EDIT"
             />
             <ReferenceSelectWidget
                 :graph-slug="props.graphSlug"
                 node-alias="statement_type_metatype"
-                :initial-value="props.tileData?.statement_type_metatype"
+                :initial-value="
+                    props.tileData?.aliased_data.statement_type_metatype
+                "
                 :mode="EDIT"
             />
             <DateWidget
                 :graph-slug="props.graphSlug"
                 node-alias="statement_data_assignment_timespan_begin_of_the_begin"
                 :initial-value="
-                    props.tileData
-                        ?.statement_data_assignment_timespan_begin_of_the_begin
+                    props.tileData?.aliased_data
+                        .statement_data_assignment_timespan_begin_of_the_begin
                 "
                 :mode="EDIT"
             />
@@ -164,29 +168,34 @@ async function save(e: FormSubmitEvent) {
                 :graph-slug="props.graphSlug"
                 node-alias="statement_data_assignment_timespan_end_of_the_end"
                 :initial-value="
-                    props.tileData
-                        ?.statement_data_assignment_timespan_end_of_the_end
+                    props.tileData?.aliased_data
+                        .statement_data_assignment_timespan_end_of_the_end
                 "
                 :mode="EDIT"
             />
             <ResourceInstanceMultiSelectWidget
                 :graph-slug="props.graphSlug"
                 node-alias="statement_data_assignment_actor"
-                :initial-value="props.tileData?.statement_data_assignment_actor"
+                :initial-value="
+                    props.tileData?.aliased_data.statement_data_assignment_actor
+                "
                 :mode="EDIT"
             />
             <ResourceInstanceMultiSelectWidget
                 :graph-slug="props.graphSlug"
                 node-alias="statement_data_assignment_object_used"
                 :initial-value="
-                    props.tileData?.statement_data_assignment_object_used
+                    props.tileData?.aliased_data
+                        .statement_data_assignment_object_used
                 "
                 :mode="EDIT"
             />
             <ReferenceSelectWidget
                 :graph-slug="props.graphSlug"
                 node-alias="statement_data_assignment_type"
-                :initial-value="props.tileData?.statement_data_assignment_type"
+                :initial-value="
+                    props.tileData?.aliased_data.statement_data_assignment_type
+                "
                 :mode="EDIT"
             />
         </Form>

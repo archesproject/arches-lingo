@@ -84,12 +84,16 @@ export interface MetaStringText {
     noRecords: string;
 }
 
-export interface TileData {
+// eslint-disable-next-line
+interface AliasedData {}
+
+export interface TileData<T extends AliasedData = AliasedData> {
     resourceinstance?: string;
     tileid?: string;
+    aliased_data: T;
 }
 
-export interface AppellativeStatus extends TileData {
+export interface AppellativeStatusAliases extends AliasedData {
     appellative_status_ascribed_name_content: string;
     appellative_status_ascribed_name_language?: ControlledListItem[];
     appellative_status_ascribed_relation?: ControlledListItem[];
@@ -102,7 +106,9 @@ export interface AppellativeStatus extends TileData {
     appellative_status_timespan_end_of_the_end: string;
 }
 
-export interface ConceptStatement extends TileData {
+export type AppellativeStatus = TileData<AppellativeStatusAliases>;
+
+export interface ConceptStatementAliases extends AliasedData {
     statement_content: string;
     statement_language?: ControlledListItem[];
     statement_type?: ControlledListItem[];
@@ -113,6 +119,9 @@ export interface ConceptStatement extends TileData {
     statement_data_assignment_timespan_begin_of_the_begin?: string | null;
     statement_data_assignment_timespan_end_of_the_end?: string | null;
 }
+
+export type ConceptStatement = TileData<ConceptStatementAliases>;
+
 
 export interface ConceptRelationStatus extends TileData {
     relation_status_ascribed_comparate: ResourceInstanceReference[];
@@ -139,7 +148,7 @@ export interface ConceptMatchStatus extends TileData {
     uri: Url;
 }
 
-export interface SchemeStatement extends TileData {
+export interface SchemeStatementAliases extends AliasedData {
     statement_content_n1: string;
     statement_language_n1?: ControlledListItem[];
     statement_type_n1?: ControlledListItem[];
@@ -151,13 +160,17 @@ export interface SchemeStatement extends TileData {
     statement_data_assignment_timespan_end_of_the_end?: string | null;
 }
 
-export interface SchemeRights extends TileData {
+export type SchemeStatement = TileData<SchemeStatementAliases>;
+
+export interface SchemeRightsAliases extends TileData {
     right_holder?: ResourceInstanceReference[];
     right_type?: ControlledListItem[];
     right_statement?: SchemeRightStatement;
 }
 
-export interface SchemeRightStatement extends TileData {
+export type SchemeRights = TileData<SchemeRightsAliases>;
+
+export interface SchemeRightStatementAliases extends AliasedData {
     right_statement_content?: string;
     right_statement_label?: string;
     right_statement_language?: ControlledListItem[];
@@ -165,25 +178,36 @@ export interface SchemeRightStatement extends TileData {
     right_statement_type_metatype?: ControlledListItem[];
 }
 
-export interface SchemeNamespace extends TileData {
+export type SchemeRightStatement = TileData<SchemeRightStatementAliases>;
+
+export interface SchemeNamespaceAliases extends AliasedData {
     namespace_name: string;
     namespace_type: ControlledListItem[];
 }
 
-export interface SchemeCreation extends TileData {
+export type SchemeNamespace = TileData<SchemeNamespaceAliases>;
+
+export interface SchemeCreationAliases extends AliasedData {
     creation_sources: ResourceInstanceReference[];
 }
 
+export type SchemeCreation = TileData<SchemeCreationAliases>;
+
 export interface ConceptInstance {
-    appellative_status?: AppellativeStatus[];
+    aliased_data: {
+        appellative_status?: AppellativeStatus[];
+        concept_statement?: ConceptStatement[];
+    };
 }
 
 export interface SchemeInstance {
-    namespace?: SchemeNamespace;
-    creation?: SchemeCreation;
-    appellative_status?: AppellativeStatus[];
-    statement?: SchemeStatement[];
-    rights?: SchemeRights;
+    aliased_data: {
+        namespace?: SchemeNamespace;
+        creation?: SchemeCreation;
+        appellative_status?: AppellativeStatus[];
+        statement?: SchemeStatement[];
+        rights?: SchemeRights;
+    };
 }
 
 export interface SchemeResource {

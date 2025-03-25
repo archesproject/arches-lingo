@@ -70,7 +70,9 @@ async function save(e: FormSubmitEvent) {
         if (!props.resourceInstanceId) {
             const updatedScheme = await createLingoResource(
                 {
-                    [props.nodegroupAlias]: [formData],
+                    aliased_data: {
+                        [props.nodegroupAlias]: [formData],
+                    },
                 },
                 props.graphSlug,
             );
@@ -87,7 +89,7 @@ async function save(e: FormSubmitEvent) {
                 props.nodegroupAlias,
                 {
                     resourceinstance: props.resourceInstanceId,
-                    ...formData,
+                    aliased_data: { ...formData },
                     tileid: props.tileId,
                 },
             );
@@ -130,7 +132,8 @@ async function save(e: FormSubmitEvent) {
                 :graph-slug="props.graphSlug"
                 node-alias="appellative_status_ascribed_name_content"
                 :initial-value="
-                    props.tileData?.appellative_status_ascribed_name_content
+                    props.tileData?.aliased_data
+                        .appellative_status_ascribed_name_content
                 "
                 :mode="EDIT"
             />
@@ -138,7 +141,7 @@ async function save(e: FormSubmitEvent) {
                 :graph-slug="props.graphSlug"
                 node-alias="appellative_status_timespan_begin_of_the_begin"
                 :initial-value="
-                    props.tileData
+                    props.tileData?.aliased_data
                         ?.appellative_status_timespan_begin_of_the_begin
                 "
                 :mode="EDIT"
@@ -147,7 +150,8 @@ async function save(e: FormSubmitEvent) {
                 :graph-slug="props.graphSlug"
                 node-alias="appellative_status_timespan_end_of_the_end"
                 :initial-value="
-                    props.tileData?.appellative_status_timespan_end_of_the_end
+                    props.tileData?.aliased_data
+                        ?.appellative_status_timespan_end_of_the_end
                 "
                 :mode="EDIT"
             />
@@ -156,7 +160,8 @@ async function save(e: FormSubmitEvent) {
                 :graph-slug="props.graphSlug"
                 node-alias="appellative_status_data_assignment_actor"
                 :initial-value="
-                    props.tileData?.appellative_status_data_assignment_actor
+                    props.tileData?.aliased_data
+                        ?.appellative_status_data_assignment_actor
                 "
                 :mode="EDIT"
             />
@@ -164,7 +169,7 @@ async function save(e: FormSubmitEvent) {
                 :graph-slug="props.graphSlug"
                 node-alias="appellative_status_data_assignment_object_used"
                 :initial-value="
-                    props.tileData
+                    props.tileData?.aliased_data
                         ?.appellative_status_data_assignment_object_used
                 "
                 :mode="EDIT"
@@ -174,7 +179,8 @@ async function save(e: FormSubmitEvent) {
                 :graph-slug="props.graphSlug"
                 node-alias="appellative_status_ascribed_name_language"
                 :initial-value="
-                    props.tileData?.appellative_status_ascribed_name_language
+                    props.tileData?.aliased_data
+                        .appellative_status_ascribed_name_language
                 "
                 :mode="EDIT"
             />
@@ -182,21 +188,25 @@ async function save(e: FormSubmitEvent) {
                 :graph-slug="props.graphSlug"
                 node-alias="appellative_status_ascribed_relation"
                 :initial-value="
-                    props.tileData?.appellative_status_ascribed_relation
+                    props.tileData?.aliased_data
+                        .appellative_status_ascribed_relation
                 "
                 :mode="EDIT"
             />
             <ReferenceSelectWidget
                 :graph-slug="props.graphSlug"
                 node-alias="appellative_status_status"
-                :initial-value="props.tileData?.appellative_status_status"
+                :initial-value="
+                    props.tileData?.aliased_data.appellative_status_status
+                "
                 :mode="EDIT"
             />
             <ReferenceSelectWidget
                 :graph-slug="props.graphSlug"
                 node-alias="appellative_status_status_metatype"
                 :initial-value="
-                    props.tileData?.appellative_status_status_metatype
+                    props.tileData?.aliased_data
+                        .appellative_status_status_metatype
                 "
                 :mode="EDIT"
             />
@@ -204,7 +214,8 @@ async function save(e: FormSubmitEvent) {
                 :graph-slug="props.graphSlug"
                 node-alias="appellative_status_data_assignment_type"
                 :initial-value="
-                    props.tileData?.appellative_status_data_assignment_type
+                    props.tileData?.aliased_data
+                        .appellative_status_data_assignment_type
                 "
                 :mode="EDIT"
             />
