@@ -23,16 +23,7 @@
                 "tiles": [
                     {
                         "data": {
-                            "78fc235e-11e8-11ef-9493-0a58a9feac02": {
-                                "en": {
-                                    "direction": "ltr",
-                                    "value": "Example Digital Object"
-                                },
-                                "en-US": {
-                                    "direction": "ltr",
-                                    "value": ""
-                                }
-                            },
+                            "95522790-08fc-11f0-9797-b33468cba848": "Example Digital Object",
                             "78fc2430-11e8-11ef-9493-0a58a9feac02": null,
                             "78fc24da-11e8-11ef-9493-0a58a9feac02": [
                                 {
@@ -182,16 +173,7 @@
                                 }
                             ],
                             "8278ed0e-11e8-11ef-9493-0a58a9feac02": null,
-                            "8278eda4-11e8-11ef-9493-0a58a9feac02": {
-                                "en": {
-                                    "direction": "ltr",
-                                    "value": "this is an example statement about the example digital object"
-                                },
-                                "en-US": {
-                                    "direction": "ltr",
-                                    "value": ""
-                                }
-                            }
+                            "4e995163-08fc-11f0-b111-b33468cba848": "this is an example statement about the example digital object"
                         },
                         "nodegroup_id": "8278e3c2-11e8-11ef-9493-0a58a9feac02",
                         "parenttile_id": null,
