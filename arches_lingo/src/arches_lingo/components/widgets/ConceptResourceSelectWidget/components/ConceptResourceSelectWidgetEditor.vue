@@ -232,22 +232,4 @@ function validate(e: FormFieldResolverOptions) {
     font-size: small;
     color: steelblue;
 }
-:deep(.concept-resource-select-widget .p-multiselect-label) {
-    visibility: visible;
-    display: grid;
-    min-width: 0;
-    min-height: 0;
-}
-
-:deep(.concept-resource-select-widget .p-multiselect-chip) {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto auto;
-    align-items: center;
-    min-width: 0;
-    min-height: 0;
-}
-
-:deep(.concept-resource-select-widget .p-multiselect-chip .pi) {
-    margin: 0 0.5rem;
-}
 </style>

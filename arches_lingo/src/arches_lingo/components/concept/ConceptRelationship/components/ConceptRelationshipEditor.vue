@@ -23,7 +23,7 @@ const props = defineProps<{
     graphSlug: string;
     nodegroupAlias: string;
     resourceInstanceId: string | undefined;
-    scheme: string;
+    scheme?: string;
     tileId?: string;
 }>();
 
