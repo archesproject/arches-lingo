@@ -84,7 +84,6 @@ async function getConceptHyerarchy(conceptIds: string[]) {
         </label>
 
         <div v-if="mode === EDIT">
-            <span>{{ searchResult }}</span>
             <ConceptResourceSelectWidgetEditor
                 :initial-value="searchResult"
                 :node-alias="props.nodeAlias"
