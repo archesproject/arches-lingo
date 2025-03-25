@@ -1,12 +1,9 @@
 <script setup lang="ts">
 import { computed, ref, useTemplateRef, watch } from "vue";
 
-import arches from "arches";
-
 import { useGettext } from "vue3-gettext";
 import { FormField } from "@primevue/forms";
 
-import Button from "primevue/button";
 import Message from "primevue/message";
 import MultiSelect from "primevue/multiselect";
 
