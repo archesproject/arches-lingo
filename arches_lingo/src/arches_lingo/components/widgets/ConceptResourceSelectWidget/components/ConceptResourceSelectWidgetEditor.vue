@@ -28,14 +28,15 @@ const props = defineProps<{
     scheme: string;
 }>();
 
+props.initialValue?.forEach((option) => {
+    option.label = getItemLabel(option, ENGLISH.code, ENGLISH.code).value;
+});
+
 const { $gettext } = useGettext();
 
 const itemSize = 36; // in future iteration this should be declared in the CardXNodeXWidget config
 
-const initialValue = props.initialValue?.map((option) => {
-    return { ...option, label: getItemLabel(option, ENGLISH.code, ENGLISH.code).value };
-}) || [];
-const options = ref<SearchResultItem[]>(initialValue);
+const options = ref<SearchResultItem[]>(props.initialValue || []);
 const isLoading = ref(false);
 const searchResultsPage = ref(0);
 const searchResultsTotalCount = ref(0);
@@ -61,6 +62,14 @@ watch(
                 (option) => {
                     return newVal?.includes(option.id);
                 },
+            ).map(
+                (option) => {
+                    return {
+                        resourceId: option.id,
+                        ontologyProperty: "",
+                        inverseOntologyProperty: "",
+                    };
+                },
             );
         }
     },
@@ -69,7 +78,7 @@ watch(
 const searchResultsCurrentCount = computed(() => options.value.length);
 
 function clearOptions() {
-    options.value = initialValue;
+    options.value = props.initialValue || [];
 }
 
 function onFilter(event: MultiSelectFilterEvent) {
@@ -82,7 +91,7 @@ async function getOptions(page: number, filterTerm?: string) {
         isLoading.value = true;
         const parsedResponse = await fetchSearchResults(
             filterTerm || "",
-            20,
+            itemSize,
             page,
             props.scheme,
             false,
@@ -168,7 +177,7 @@ function validate(e: FormFieldResolverOptions) {
         ref="formFieldRef"
         v-slot="$field"
         :name="props.nodeAlias"
-        :initial-value="initialValue?.map(concept => concept.id)"
+        :initial-value="props.initialValue?.map(concept => concept.id)"
         :resolver="resolver"
     >
         <MultiSelect
