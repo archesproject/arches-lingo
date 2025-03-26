@@ -38,6 +38,7 @@ const { $gettext } = useGettext();
 
 const isLoading = ref(true);
 const tileData = ref<ConceptMatchStatus[]>([]);
+const schemeId = ref<string>();
 
 const shouldCreateNewTile = Boolean(props.mode === EDIT && !props.tileId);
 
@@ -50,6 +51,7 @@ onMounted(async () => {
         tileData.value = sectionValue[props.nodegroupAlias];
     }
 
+    schemeId.value = await getSchemeId();
     isLoading.value = false;
 });
 
@@ -84,6 +86,16 @@ async function getURI(resourceId: string) {
     );
     return JSON.parse(uriData.uri.uri_content.replace(/'/g, '"'));
 }
+
+async function getSchemeId() {
+    const partOfScheme = await fetchLingoResourcePartial(
+        props.graphSlug,
+        props.resourceInstanceId as string,
+        "part_of_scheme",
+    );
+
+    return partOfScheme.part_of_scheme?.part_of_scheme?.[0]?.resourceId;
+}
 </script>
 
 <template>
@@ -106,6 +118,8 @@ async function getURI(resourceId: string) {
             :tile-data="
                 tileData.find((tileDatum) => tileDatum.tileid === props.tileId)
             "
+            :scheme="schemeId"
+            :exclude="true"
             :component-name="props.componentName"
             :section-title="props.sectionTitle"
             :graph-slug="props.graphSlug"

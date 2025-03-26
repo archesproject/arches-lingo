@@ -26,6 +26,7 @@ const props = withDefaults(
         nodeAlias: string;
         graphSlug: string;
         scheme?: string;
+        exclude?: boolean | false;
         showLabel?: boolean;
     }>(),
     {
@@ -89,6 +90,7 @@ async function getConceptHyerarchy(conceptIds: string[]) {
                 :node-alias="props.nodeAlias"
                 :graph-slug="props.graphSlug"
                 :scheme="props.scheme"
+                :exclude="props.exclude"
             />
         </div>
         <div v-if="mode === VIEW">

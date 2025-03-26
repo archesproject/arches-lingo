@@ -4,6 +4,7 @@ import { inject, useTemplateRef, watch } from "vue";
 import { useRouter } from "vue-router";
 import { Form } from "@primevue/forms";
 
+import ConceptResourceSelectWidget from "@/arches_lingo/components/widgets/ConceptResourceSelectWidget/ConceptResourceSelectWidget.vue";
 import DateWidget from "@/arches_component_lab/widgets/DateWidget/DateWidget.vue";
 import ReferenceSelectWidget from "@/arches_controlled_lists/widgets/ReferenceSelectWidget/ReferenceSelectWidget.vue";
 import ResourceInstanceMultiSelectWidget from "@/arches_component_lab/widgets/ResourceInstanceMultiSelectWidget/ResourceInstanceMultiSelectWidget.vue";
@@ -17,6 +18,8 @@ import type { ConceptMatchStatus } from "@/arches_lingo/types.ts";
 
 const props = defineProps<{
     tileData: ConceptMatchStatus | undefined;
+    scheme?: string;
+    exclude?: boolean;
     componentName: string;
     sectionTitle: string;
     graphSlug: string;
@@ -96,9 +99,11 @@ async function save(e: FormSubmitEvent) {
         ref="form"
         @submit="save"
     >
-        <ResourceInstanceMultiSelectWidget
+        <ConceptResourceSelectWidget
             :graph-slug="props.graphSlug"
             node-alias="match_status_ascribed_comparate"
+            :scheme="props.scheme"
+            :exclude="props.exclude"
             :initial-value="props.tileData?.match_status_ascribed_comparate"
             :mode="EDIT"
         />
