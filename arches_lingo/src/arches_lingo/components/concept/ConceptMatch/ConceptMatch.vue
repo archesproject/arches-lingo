@@ -84,6 +84,9 @@ async function getURI(resourceId: string) {
         resourceId,
         "uri",
     );
+    if (!uriData.uri) {
+        return null;
+    }
     return JSON.parse(uriData.uri.uri_content.replace(/'/g, '"'));
 }
 
