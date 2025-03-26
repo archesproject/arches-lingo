@@ -7,7 +7,7 @@ import { FormField } from "@primevue/forms";
 import Message from "primevue/message";
 import MultiSelect from "primevue/multiselect";
 
-import { fetchSearchResults } from "@/arches_lingo/api.ts";
+import { fetchConceptResources } from "@/arches_lingo/api.ts";
 import { getItemLabel } from "@/arches_vue_utils/utils.ts";
 import { getParentLabels } from "@/arches_lingo/utils.ts";
 import { ENGLISH } from "@/arches_lingo/constants.ts";
@@ -84,7 +84,7 @@ function onFilter(event: MultiSelectFilterEvent) {
 async function getOptions(page: number, filterTerm?: string) {
     try {
         isLoading.value = true;
-        const parsedResponse = await fetchSearchResults(
+        const parsedResponse = await fetchConceptResources(
             filterTerm || "",
             itemSize,
             page,

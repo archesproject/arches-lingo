@@ -92,3 +92,68 @@ class ValueSearchView(ConceptTreeView):
         if elastic_prefix_length >= 5:
             return 0
         return int(5 - elastic_prefix_length)
+
+@method_decorator(
+    group_required("RDM Administrator", raise_exception=True), name="dispatch"
+)
+class ConceptResourceView(ConceptTreeView):
+    def get(self, request):
+        scheme = request.GET.get("scheme", None)
+        exclude = request.GET.get("exclude", None)
+        term = request.GET.get("term", None)
+        page_number = request.GET.get("page", 1)
+        items_per_page = request.GET.get("items", 25)
+        concept_ids = request.GET.get("concepts", "").split(",")
+        part_of_scheme_node_id = "bf73e60a-4888-11ee-8a8d-11afefc4bff7"
+
+        if scheme:
+            try:
+                query_string = "data__{}__0__resourceId".format(part_of_scheme_node_id)
+                if exclude == "true":
+                    tile_query = Tile.objects.exclude(**{query_string: scheme})
+                else:
+                    tile_query = Tile.objects.filter(**{query_string: scheme})
+                concept_ids = tile_query.values_list(
+                    "resourceinstance_id", flat=True
+                ).distinct()
+            except ValueError as e:
+                return JSONErrorResponse(
+                    title=_("Unable to fetch concepts."),
+                    message=e.args[0],
+                    status=HTTPStatus.BAD_REQUEST,
+                )
+        elif concept_ids:
+            concept_ids = concept_ids
+        else:
+            concept_query = VwLabelValue.objects.all().order_by("concept_id")
+            concept_ids = concept_query.values_list("concept_id", flat=True).distinct()
+
+        if term:
+            filter_concept_query = VwLabelValue.objects.filter(value__icontains=term).order_by(
+                "concept_id"
+            )
+            filtering_concept_ids = filter_concept_query.values_list(
+                "concept_id", flat=True
+            )
+            concept_ids = [id for id in concept_ids if id in filtering_concept_ids]
+
+        data = []
+        paginator = Paginator(concept_ids, items_per_page)
+        if paginator.count:
+            builder = ConceptBuilder()
+            data = [
+                builder.serialize_concept(
+                    str(concept_uuid), parents=True, children=False
+                )
+                for concept_uuid in paginator.get_page(page_number)
+            ]
+
+        return JSONResponse(
+            {
+                "current_page": paginator.get_page(page_number).number,
+                "total_pages": paginator.num_pages,
+                "results_per_page": paginator.per_page,
+                "total_results": paginator.count,
+                "data": data,
+            }
+        )

@@ -11,7 +11,7 @@ import {
     fetchWidgetData,
     fetchNodeData,
 } from "@/arches_component_lab/widgets/api.ts";
-import { fetchSearchResults } from "@/arches_lingo/api.ts";
+import { fetchConceptResources } from "@/arches_lingo/api.ts";
 import { EDIT, VIEW } from "@/arches_component_lab/widgets/constants.ts";
 
 import type {
@@ -59,7 +59,7 @@ onMounted(async () => {
 });
 
 async function getConceptHyerarchy(conceptIds: string[]) {
-    const parsedResponse = await fetchSearchResults(
+    const parsedResponse = await fetchConceptResources(
         "",
         conceptIds.length,
         1,
