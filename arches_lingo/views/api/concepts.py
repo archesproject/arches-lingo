@@ -94,6 +94,7 @@ class ValueSearchView(ConceptTreeView):
             return 0
         return int(5 - elastic_prefix_length)
 
+
 @method_decorator(
     group_required("RDM Administrator", raise_exception=True), name="dispatch"
 )
@@ -113,17 +114,28 @@ class ConceptResourceView(ConceptTreeView):
         else:
             if scheme:
                 if exclude == "true":
-                    concept_query = Concept.exclude(part_of_scheme__0__0__resourceId=scheme)
+                    concept_query = Concept.exclude(
+                        part_of_scheme__0__0__resourceId=scheme
+                    )
                 else:
-                    concept_query = Concept.filter(part_of_scheme__0__0__resourceId=scheme)
-                concept_ids = concept_query.order_by("pk").values_list("pk", flat=True).distinct()
+                    concept_query = Concept.filter(
+                        part_of_scheme__0__0__resourceId=scheme
+                    )
+                concept_ids = (
+                    concept_query.order_by("pk").values_list("pk", flat=True).distinct()
+                )
             else:
-                concept_ids = VwLabelValue.objects.all().order_by("concept_id").values_list("concept_id", flat=True).distinct()
+                concept_ids = (
+                    VwLabelValue.objects.all()
+                    .order_by("concept_id")
+                    .values_list("concept_id", flat=True)
+                    .distinct()
+                )
 
         if term:
-            filtering_concept_ids = VwLabelValue.objects.filter(value__icontains=term).values_list(
-                "concept_id", flat=True
-            )
+            filtering_concept_ids = VwLabelValue.objects.filter(
+                value__icontains=term
+            ).values_list("concept_id", flat=True)
             concept_ids = [id for id in concept_ids if id in filtering_concept_ids]
 
         data = []

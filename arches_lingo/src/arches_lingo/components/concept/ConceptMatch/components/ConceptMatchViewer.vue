@@ -62,7 +62,9 @@ const metaStringLabel: MetaStringText = {
             <ReferenceSelectWidget
                 :graph-slug="props.graphSlug"
                 node-alias="match_status_ascribed_relation"
-                :initial-value="rowData.aliased_data.match_status_ascribed_relation"
+                :initial-value="
+                    rowData.aliased_data.match_status_ascribed_relation
+                "
                 :mode="VIEW"
                 :show-label="false"
             />
@@ -80,7 +82,9 @@ const metaStringLabel: MetaStringText = {
             <ConceptResourceSelectWidget
                 :graph-slug="props.graphSlug"
                 node-alias="match_status_ascribed_comparate"
-                :initial-value="rowData.aliased_data.match_status_ascribed_comparate"
+                :initial-value="
+                    rowData.aliased_data.match_status_ascribed_comparate
+                "
                 :mode="VIEW"
                 :show-label="false"
             />
@@ -89,7 +93,9 @@ const metaStringLabel: MetaStringText = {
             <ResourceInstanceMultiSelectWidget
                 :graph-slug="props.graphSlug"
                 node-alias="match_status_data_assignment_actor"
-                :initial-value="rowData.aliased_data.match_status_data_assignment_actor"
+                :initial-value="
+                    rowData.aliased_data.match_status_data_assignment_actor
+                "
                 :mode="VIEW"
             />
             <ResourceInstanceMultiSelectWidget

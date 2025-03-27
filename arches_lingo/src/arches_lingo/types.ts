@@ -134,7 +134,7 @@ export interface ConceptRelationAliases extends AliasedData {
     relation_status_data_assignment_type: ControlledListItem[];
 }
 
-export type ConceptRelationStatus = TileData<ConceptRelationAliases>
+export type ConceptRelationStatus = TileData<ConceptRelationAliases>;
 
 export interface ConceptMatchAliases extends AliasedData {
     match_status_ascribed_comparate: ResourceInstanceReference[];
@@ -149,7 +149,7 @@ export interface ConceptMatchAliases extends AliasedData {
     uri: Url;
 }
 
-export type ConceptMatchStatus = TileData<ConceptMatchAliases>
+export type ConceptMatchStatus = TileData<ConceptMatchAliases>;
 
 export interface SchemeStatementAliases extends AliasedData {
     statement_content_n1: string;

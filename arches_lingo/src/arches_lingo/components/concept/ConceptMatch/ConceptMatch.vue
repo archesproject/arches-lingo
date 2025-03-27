@@ -48,7 +48,7 @@ onMounted(async () => {
         (props.mode === VIEW || !shouldCreateNewTile)
     ) {
         const sectionValue = await getSectionValue();
-        tileData.value = sectionValue.aliased_data[props.nodegroupAlias];;
+        tileData.value = sectionValue.aliased_data[props.nodegroupAlias];
     }
 
     schemeId.value = await getSchemeId();
@@ -64,7 +64,9 @@ async function getSectionValue() {
         );
         for (const value of sectionValue.aliased_data[props.nodegroupAlias]) {
             value.aliased_data["uri"] = await getURI(
-                value.aliased_data["match_status_ascribed_comparate"][0]["resourceId"],
+                value.aliased_data["match_status_ascribed_comparate"][0][
+                    "resourceId"
+                ],
             );
         }
         return sectionValue;
@@ -87,7 +89,9 @@ async function getURI(resourceId: string) {
     if (!uriData.aliased_data.uri) {
         return null;
     }
-    return JSON.parse(uriData.aliased_data.uri.aliased_data.uri_content.replace(/'/g, '"'));
+    return JSON.parse(
+        uriData.aliased_data.uri.aliased_data.uri_content.replace(/'/g, '"'),
+    );
 }
 
 async function getSchemeId() {
@@ -97,7 +101,8 @@ async function getSchemeId() {
         "part_of_scheme",
     );
 
-    return partOfScheme.aliased_data?.part_of_scheme?.aliased_data?.part_of_scheme?.[0]?.resourceId;
+    return partOfScheme.aliased_data?.part_of_scheme?.aliased_data
+        ?.part_of_scheme?.[0]?.resourceId;
 }
 </script>
 
