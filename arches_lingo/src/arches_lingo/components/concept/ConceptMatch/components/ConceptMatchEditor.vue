@@ -58,7 +58,9 @@ async function save(e: FormSubmitEvent) {
         if (!props.resourceInstanceId) {
             const updatedConcept = await createLingoResource(
                 {
-                    [props.nodegroupAlias]: [formData],
+                    aliased_data: {
+                        [props.nodegroupAlias]: [formData],
+                    },
                 },
                 props.graphSlug,
             );
@@ -75,7 +77,7 @@ async function save(e: FormSubmitEvent) {
                 props.nodegroupAlias,
                 {
                     resourceinstance: props.resourceInstanceId,
-                    ...formData,
+                    aliased_data: { ...formData },
                     tileid: props.tileId,
                 },
             );
@@ -104,32 +106,32 @@ async function save(e: FormSubmitEvent) {
             node-alias="match_status_ascribed_comparate"
             :scheme="props.scheme"
             :exclude="props.exclude"
-            :initial-value="props.tileData?.match_status_ascribed_comparate"
+            :initial-value="props.tileData?.aliased_data.match_status_ascribed_comparate"
             :mode="EDIT"
         />
         <ReferenceSelectWidget
             :graph-slug="props.graphSlug"
             node-alias="match_status_ascribed_relation"
-            :initial-value="props.tileData?.match_status_ascribed_relation"
+            :initial-value="props.tileData?.aliased_data.match_status_ascribed_relation"
             :mode="EDIT"
         />
         <ReferenceSelectWidget
             :graph-slug="props.graphSlug"
             node-alias="match_status_status"
-            :initial-value="props.tileData?.match_status_status"
+            :initial-value="props.tileData?.aliased_data.match_status_status"
             :mode="EDIT"
         />
         <ReferenceSelectWidget
             :graph-slug="props.graphSlug"
             node-alias="match_status_status_metatype"
-            :initial-value="props.tileData?.match_status_status_metatype"
+            :initial-value="props.tileData?.aliased_data.match_status_status_metatype"
             :mode="EDIT"
         />
         <DateWidget
             :graph-slug="props.graphSlug"
             node-alias="match_status_timespan_begin_of_the_begin"
             :initial-value="
-                props.tileData?.match_status_timespan_begin_of_the_begin
+                props.tileData?.aliased_data.match_status_timespan_begin_of_the_begin
             "
             :mode="EDIT"
         />
@@ -137,28 +139,28 @@ async function save(e: FormSubmitEvent) {
             :graph-slug="props.graphSlug"
             node-alias="match_status_timespan_end_of_the_end"
             :initial-value="
-                props.tileData?.match_status_timespan_end_of_the_end
+                props.tileData?.aliased_data.match_status_timespan_end_of_the_end
             "
             :mode="EDIT"
         />
         <ResourceInstanceMultiSelectWidget
             :graph-slug="props.graphSlug"
             node-alias="match_status_data_assignment_actor"
-            :initial-value="props.tileData?.match_status_data_assignment_actor"
+            :initial-value="props.tileData?.aliased_data.match_status_data_assignment_actor"
             :mode="EDIT"
         />
         <ResourceInstanceMultiSelectWidget
             :graph-slug="props.graphSlug"
             node-alias="match_status_data_assignment_object_used"
             :initial-value="
-                props.tileData?.match_status_data_assignment_object_used
+                props.tileData?.aliased_data.match_status_data_assignment_object_used
             "
             :mode="EDIT"
         />
         <ReferenceSelectWidget
             :graph-slug="props.graphSlug"
             node-alias="match_status_data_assignment_type"
-            :initial-value="props.tileData?.match_status_data_assignment_type"
+            :initial-value="props.tileData?.aliased_data.match_status_data_assignment_type"
             :mode="EDIT"
         />
     </Form>

@@ -47,7 +47,7 @@ onMounted(async () => {
         (props.mode === VIEW || !shouldCreateNewTile)
     ) {
         const sectionValue = await getSectionValue();
-        tileData.value = sectionValue[props.nodegroupAlias];
+        tileData.value = sectionValue.aliased_data[props.nodegroupAlias];;
     }
     schemeId.value = await getSchemeId();
     isLoading.value = false;
@@ -77,7 +77,7 @@ async function getSchemeId() {
         "part_of_scheme",
     );
 
-    return partOfScheme.part_of_scheme?.part_of_scheme?.[0]?.resourceId;
+    return partOfScheme.aliased_data?.part_of_scheme?.aliased_data?.part_of_scheme?.[0]?.resourceId;
 }
 </script>
 
