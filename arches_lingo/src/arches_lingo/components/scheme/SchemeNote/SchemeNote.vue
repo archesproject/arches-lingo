@@ -39,6 +39,8 @@ onMounted(async () => {
     ) {
         const sectionValue = await getSectionValue();
         tileData.value = sectionValue[props.nodegroupAlias];
+    } else {
+        isLoading.value = false;
     }
 });
 
