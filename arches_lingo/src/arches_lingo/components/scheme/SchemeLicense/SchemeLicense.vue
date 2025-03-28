@@ -35,7 +35,7 @@ onMounted(async () => {
         (props.mode === VIEW || !shouldCreateNewTile)
     ) {
         const sectionValue = await getSectionValue();
-        tileData.value = sectionValue[props.nodegroupAlias];
+        tileData.value = sectionValue.aliased_data[props.nodegroupAlias];
     } else {
         isLoading.value = false;
     }

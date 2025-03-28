@@ -75,7 +75,7 @@ runs:
 
     - name: Check for missing migrations
       run: |
-        python manage.py makemigrations --check
+        export ARCHES_DJANGO_DEBUG="True" && python manage.py makemigrations --check
       shell: bash
 
     - name: Ensure previous Python coverage data is erased
