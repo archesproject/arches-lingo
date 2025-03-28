@@ -1,20 +1,13 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 
-import { useGettext } from "vue3-gettext";
-import { useToast } from "primevue/usetoast";
-
+import Message from "primevue/message";
 import ProgressSpinner from "primevue/progressspinner";
 
 import ConceptMatchEditor from "@/arches_lingo/components/concept/ConceptMatch/components/ConceptMatchEditor.vue";
 import ConceptMatchViewer from "@/arches_lingo/components/concept/ConceptMatch/components/ConceptMatchViewer.vue";
 
-import {
-    DEFAULT_ERROR_TOAST_LIFE,
-    EDIT,
-    ERROR,
-    VIEW,
-} from "@/arches_lingo/constants.ts";
+import { EDIT, VIEW } from "@/arches_lingo/constants.ts";
 
 import { fetchLingoResourcePartial } from "@/arches_lingo/api.ts";
 
@@ -33,12 +26,10 @@ const props = defineProps<{
     tileId?: string;
 }>();
 
-const toast = useToast();
-const { $gettext } = useGettext();
-
 const isLoading = ref(true);
 const tileData = ref<ConceptMatchStatus[]>([]);
 const schemeId = ref<string>();
+const fetchError = ref();
 
 const shouldCreateNewTile = Boolean(props.mode === EDIT && !props.tileId);
 
@@ -49,10 +40,10 @@ onMounted(async () => {
     ) {
         const sectionValue = await getSectionValue();
         tileData.value = sectionValue.aliased_data[props.nodegroupAlias];
+        schemeId.value = await getSchemeId();
+    } else {
+        isLoading.value = false;
     }
-
-    schemeId.value = await getSchemeId();
-    isLoading.value = false;
 });
 
 async function getSectionValue() {
@@ -71,12 +62,9 @@ async function getSectionValue() {
         }
         return sectionValue;
     } catch (error) {
-        toast.add({
-            severity: ERROR,
-            life: DEFAULT_ERROR_TOAST_LIFE,
-            summary: $gettext("Failed to fetch data."),
-            detail: error instanceof Error ? error.message : undefined,
-        });
+        fetchError.value = error;
+    } finally {
+        isLoading.value = false;
     }
 }
 
@@ -135,5 +123,11 @@ async function getSchemeId() {
             :resource-instance-id="props.resourceInstanceId"
             :tile-id="props.tileId"
         />
+        <Message
+            v-if="fetchError"
+            severity="error"
+            size="small"
+            >{{ fetchError.message }}
+        </Message>
     </template>
 </template>
