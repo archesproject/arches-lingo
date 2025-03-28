@@ -46,6 +46,10 @@ export interface ControlledListItemLabelValue {
     list_item_id: string;
 }
 
+export interface Url {
+    url: string;
+    url_label: string;
+}
 export interface ControlledListItemResult {
     id?: string;
     list_id: string;
@@ -117,6 +121,35 @@ export interface ConceptStatementAliases extends AliasedData {
 }
 
 export type ConceptStatement = TileData<ConceptStatementAliases>;
+
+export interface ConceptRelationAliases extends AliasedData {
+    relation_status_ascribed_comparate: ResourceInstanceReference[];
+    relation_status_ascribed_relation: ControlledListItem[];
+    relation_status_status: ControlledListItem[];
+    relation_status_status_metatype: ControlledListItem[];
+    relation_status_timespan_begin_of_the_begin: string;
+    relation_status_timespan_end_of_the_end: string;
+    relation_status_data_assignment_actor: ResourceInstanceReference[];
+    relation_status_data_assignment_object_used: ResourceInstanceReference[];
+    relation_status_data_assignment_type: ControlledListItem[];
+}
+
+export type ConceptRelationStatus = TileData<ConceptRelationAliases>;
+
+export interface ConceptMatchAliases extends AliasedData {
+    match_status_ascribed_comparate: ResourceInstanceReference[];
+    match_status_ascribed_relation: ControlledListItem[];
+    match_status_status: ControlledListItem[];
+    match_status_status_metatype: ControlledListItem[];
+    match_status_timespan_begin_of_the_begin: string;
+    match_status_timespan_end_of_the_end: string;
+    match_status_data_assignment_actor: ResourceInstanceReference[];
+    match_status_data_assignment_object_used: ResourceInstanceReference[];
+    match_status_data_assignment_type: ControlledListItem[];
+    uri: Url;
+}
+
+export type ConceptMatchStatus = TileData<ConceptMatchAliases>;
 
 export interface SchemeStatementAliases extends AliasedData {
     statement_content_n1: string;
@@ -208,6 +241,7 @@ export interface IconLabels {
 export interface SearchResultItem {
     id: string;
     labels: Label[];
+    label?: string;
     parents: {
         id: string;
         labels: Label[];
