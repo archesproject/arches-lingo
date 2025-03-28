@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 
+import Message from "primevue/message";
 import ProgressSpinner from "primevue/progressspinner";
 
 import SchemeNamespaceEditor from "@/arches_lingo/components/scheme/SchemeNamespace/components/SchemeNamespaceEditor.vue";
 import SchemeNamespaceViewer from "@/arches_lingo/components/scheme/SchemeNamespace/components/SchemeNamespaceViewer.vue";
 
 import { EDIT, VIEW } from "@/arches_lingo/constants.ts";
+
 import { fetchLingoResourcePartial } from "@/arches_lingo/api.ts";
 
 import type {
@@ -28,6 +30,7 @@ const shouldCreateNewTile = Boolean(props.mode === EDIT && !props.tileId);
 
 const isLoading = ref(true);
 const tileData = ref<SchemeNamespace | undefined>();
+const fetchError = ref();
 
 onMounted(async () => {
     if (
@@ -36,9 +39,9 @@ onMounted(async () => {
     ) {
         const sectionValue = await getSectionValue();
         tileData.value = sectionValue.aliased_data[props.nodegroupAlias];
+    } else {
+        isLoading.value = false;
     }
-
-    isLoading.value = false;
 });
 
 async function getSectionValue() {
@@ -49,7 +52,9 @@ async function getSectionValue() {
             props.nodegroupAlias,
         );
     } catch (error) {
-        console.error(error);
+        fetchError.value = error;
+    } finally {
+        isLoading.value = false;
     }
 }
 </script>
@@ -78,5 +83,11 @@ async function getSectionValue() {
             :nodegroup-alias="props.nodegroupAlias"
             :tile-id="props.tileId"
         />
+        <Message
+            v-if="fetchError"
+            severity="error"
+            size="small"
+            >{{ fetchError.message }}
+        </Message>
     </template>
 </template>
