@@ -87,7 +87,7 @@ async function getConceptImageResource(resourceInstanceId: string) {
             <div class="header">
                 <label
                     for="conceptImage"
-                    class="element"
+                    class="text"
                 >
                     <NonLocalizedStringWidget
                         node-alias="name_content"
@@ -98,7 +98,7 @@ async function getConceptImageResource(resourceInstanceId: string) {
                         "
                     />
                 </label>
-                <div class="element">
+                <div class="buttons">
                     <Button
                         icon="pi pi-file-edit"
                         @click="openEditor!(props.componentName)"
@@ -171,12 +171,18 @@ async function getConceptImageResource(resourceInstanceId: string) {
     padding: 1rem 0;
 }
 
-.conceptImage .header .element {
+.conceptImage .header .text {
     display: flex;
-    align-items: center;
+    align-items: start;
+    flex-direction: column;
 }
 
-.conceptImage .header .element button {
+.conceptImage .header .buttons {
+    display: flex;
+    justify-content: center;
+}
+
+.conceptImage .header .buttons button {
     margin: 0 0.5rem;
 }
 
