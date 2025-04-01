@@ -128,7 +128,9 @@ class ViewTests(TestCase):
         prefLabel_reference_dt = reference.transform_value_for_tile(
             "prefLabel", **label_config
         )
-        en_reference_dt = reference.transform_value_for_tile("en", **language_config)
+        en_reference_dt = reference.transform_value_for_tile(
+            "English", **language_config
+        )
 
         TileModel.objects.create(
             resourceinstance=cls.scheme,
