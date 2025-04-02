@@ -1,18 +1,33 @@
 import { definePreset, palette } from "@primevue/themes";
-import { ArchesPreset, DEFAULT_THEME } from "@/arches/themes/default.ts";
+import {
+    archesColors,
+    ArchesPreset,
+    DEFAULT_THEME,
+} from "@/arches/themes/default.ts";
 
 const lingoColors = Object.freeze({
     // Custom Lingo colors that differ from Arches colors in default.ts
+    blue: "#579ddb",
 });
 
 export const LingoPreset = definePreset(ArchesPreset, {
-    primitive: {
-        arches: {
-            ...lingoColors,
+    // primitive: {
+    //     // arches: {
+    //     //     ...lingoColors,
+    //     // },
+    //     // blue: palette(lingoColors.blue),
+    // },
+    semantic: {
+        colorScheme: {
+            light: {
+                primary: palette(archesColors.blue),
+            },
+            dark: {
+                // DRW: develop Arches blue color for dark mode
+                primary: palette(archesColors.green),
+            },
         },
-        // blue: palette(lingoColors.blue),
     },
-    semantic: {},
     components: {},
 });
 
