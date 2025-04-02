@@ -73,8 +73,7 @@ const showHierarchy = ref(false);
         }"
     >
         <SplitterPanel
-            :size="40"
-            :min-size="25"
+            :size="30"
             :style="{
                 display: showHierarchy ? 'flex' : 'none',
                 flexDirection: 'column',
@@ -88,7 +87,7 @@ const showHierarchy = ref(false);
             </Suspense>
         </SplitterPanel>
         <SplitterPanel
-            :min-size="25"
+            :size="70"
             style="overflow-y: auto"
         >
             <RouterView />
@@ -99,7 +98,7 @@ const showHierarchy = ref(false);
 <style scoped>
 .subheading {
     display: flex;
-    margin: 0.5rem;
+    padding: 0.5rem;
     gap: 0.5rem;
 }
 

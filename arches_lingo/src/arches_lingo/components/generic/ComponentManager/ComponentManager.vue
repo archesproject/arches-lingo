@@ -112,8 +112,8 @@ provide("refreshReportSection", refreshReportSection);
     <Splitter style="height: 100%">
         <SplitterPanel
             v-show="editorState !== MAXIMIZED"
-            :size="66"
-            style="overflow: auto"
+            :size="30"
+            class="splitter-panel"
         >
             <component
                 :is="componentDatum.component"
@@ -130,7 +130,8 @@ provide("refreshReportSection", refreshReportSection);
 
         <SplitterPanel
             v-if="editorState !== CLOSED"
-            :size="editorState === MINIMIZED ? 33 : 100"
+            :size="editorState === MINIMIZED ? 70 : 100"
+            class="splitter-panel"
         >
             <ComponentEditor
                 :key="editorKey"
@@ -153,3 +154,10 @@ provide("refreshReportSection", refreshReportSection);
         </SplitterPanel>
     </Splitter>
 </template>
+
+<style scoped>
+.splitter-panel {
+    overflow: auto;
+    padding: 0rem 0.75rem 0.75rem;
+}
+</style>
