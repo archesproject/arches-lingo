@@ -28,14 +28,14 @@ const componentData = [
     {
         component: ConceptRelationship,
         componentName: "ConceptRelationship",
-        sectionTitle: $gettext("Concept Relationship"),
+        sectionTitle: $gettext("Assocaitive Relationship"),
         graphSlug: "concept",
         nodegroupAlias: "relation_status",
     },
     {
         component: ConceptMatch,
         componentName: "ConceptMatch",
-        sectionTitle: $gettext("Concept Match"),
+        sectionTitle: $gettext("Matched"),
         graphSlug: "concept",
         nodegroupAlias: "match_status",
     },

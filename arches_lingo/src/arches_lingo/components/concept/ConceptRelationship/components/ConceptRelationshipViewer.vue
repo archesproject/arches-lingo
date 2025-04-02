@@ -45,7 +45,7 @@ const metaStringLabel: MetaStringText = {
         <h2>{{ props.sectionTitle }}</h2>
 
         <Button
-            :label="$gettext('Add New Concept Label')"
+            :label="$gettext('Add New Associated Concept')"
             @click="openEditor!(props.componentName)"
         ></Button>
     </div>
