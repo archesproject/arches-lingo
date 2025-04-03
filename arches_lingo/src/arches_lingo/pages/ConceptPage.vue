@@ -28,7 +28,7 @@ const componentData = [
     {
         component: ConceptRelationship,
         componentName: "ConceptRelationship",
-        sectionTitle: $gettext("Assocaitive Relationship"),
+        sectionTitle: $gettext("Associative Relationship"),
         graphSlug: "concept",
         nodegroupAlias: "relation_status",
     },
