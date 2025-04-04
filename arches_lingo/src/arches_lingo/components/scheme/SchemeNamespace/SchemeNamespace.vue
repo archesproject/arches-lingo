@@ -39,7 +39,7 @@ onMounted(async () => {
     ) {
         const sectionValue = await getSectionValue();
         tileData.value = sectionValue.aliased_data[props.nodegroupAlias];
-     }
+    }
     isLoading.value = false;
 });
 
