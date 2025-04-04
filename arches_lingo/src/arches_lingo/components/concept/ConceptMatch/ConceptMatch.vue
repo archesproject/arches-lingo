@@ -41,9 +41,8 @@ onMounted(async () => {
         const sectionValue = await getSectionValue();
         tileData.value = sectionValue.aliased_data[props.nodegroupAlias];
         schemeId.value = await getSchemeId();
-    } else {
-        isLoading.value = false;
     }
+    isLoading.value = false;
 });
 
 async function getSectionValue() {
@@ -63,8 +62,6 @@ async function getSectionValue() {
         return sectionValue;
     } catch (error) {
         fetchError.value = error;
-    } finally {
-        isLoading.value = false;
     }
 }
 
@@ -99,7 +96,13 @@ async function getSchemeId() {
         v-if="isLoading"
         style="width: 100%"
     />
-
+    <Message
+        v-else-if="fetchError"
+        severity="error"
+        size="small"
+    >
+        {{ fetchError.message }}
+    </Message>
     <template v-else>
         <ConceptMatchViewer
             v-if="mode === VIEW"
@@ -123,11 +126,5 @@ async function getSchemeId() {
             :resource-instance-id="props.resourceInstanceId"
             :tile-id="props.tileId"
         />
-        <Message
-            v-if="fetchError"
-            severity="error"
-            size="small"
-            >{{ fetchError.message }}
-        </Message>
     </template>
 </template>
