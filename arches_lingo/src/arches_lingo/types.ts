@@ -2,7 +2,7 @@ import type { Ref } from "vue";
 import type { TreeNode } from "primevue/treenode";
 import type { Label } from "@/arches_vue_utils/types.ts";
 import type { EDIT, VIEW } from "@/arches_lingo/constants.ts";
-import type { ControlledListItem } from "@/arches_controlled_lists/types.ts";
+import type { ReferenceSelectFetchedOption } from "@/arches_controlled_lists/widgets/types.ts";
 
 export interface User {
     first_name: string;
@@ -35,7 +35,7 @@ export interface Scheme {
 export interface ControlledListResult {
     id: string;
     name: string;
-    items: ControlledListItem[];
+    items: ReferenceSelectFetchedOption[];
 }
 
 export interface ControlledListItemLabelValue {
@@ -91,13 +91,13 @@ export interface TileData<T extends AliasedData = AliasedData> {
 
 export interface AppellativeStatusAliases extends AliasedData {
     appellative_status_ascribed_name_content: string;
-    appellative_status_ascribed_name_language?: ControlledListItem[];
-    appellative_status_ascribed_relation?: ControlledListItem[];
-    appellative_status_status_metatype?: ControlledListItem[];
-    appellative_status_status?: ControlledListItem[];
+    appellative_status_ascribed_name_language?: ReferenceSelectFetchedOption[];
+    appellative_status_ascribed_relation?: ReferenceSelectFetchedOption[];
+    appellative_status_status_metatype?: ReferenceSelectFetchedOption[];
+    appellative_status_status?: ReferenceSelectFetchedOption[];
     appellative_status_data_assignment_object_used: ResourceInstanceReference[];
     appellative_status_data_assignment_actor: ResourceInstanceReference[];
-    appellative_status_data_assignment_type: ControlledListItem[];
+    appellative_status_data_assignment_type: ReferenceSelectFetchedOption[];
     appellative_status_timespan_begin_of_the_begin: string;
     appellative_status_timespan_end_of_the_end: string;
 }
@@ -106,12 +106,12 @@ export type AppellativeStatus = TileData<AppellativeStatusAliases>;
 
 export interface ConceptStatementAliases extends AliasedData {
     statement_content: string;
-    statement_language?: ControlledListItem[];
-    statement_type?: ControlledListItem[];
-    statement_type_metatype?: ControlledListItem[];
+    statement_language?: ReferenceSelectFetchedOption[];
+    statement_type?: ReferenceSelectFetchedOption[];
+    statement_type_metatype?: ReferenceSelectFetchedOption[];
     statement_data_assignment_object_used?: ResourceInstanceReference[];
     statement_data_assignment_actor?: ResourceInstanceReference[];
-    statement_data_assignment_type?: ControlledListItem[];
+    statement_data_assignment_type?: ReferenceSelectFetchedOption[];
     statement_data_assignment_timespan_begin_of_the_begin?: string | null;
     statement_data_assignment_timespan_end_of_the_end?: string | null;
 }
@@ -120,12 +120,12 @@ export type ConceptStatement = TileData<ConceptStatementAliases>;
 
 export interface SchemeStatementAliases extends AliasedData {
     statement_content_n1: string;
-    statement_language_n1?: ControlledListItem[];
-    statement_type_n1?: ControlledListItem[];
-    statement_type_metatype_n1?: ControlledListItem[];
+    statement_language_n1?: ReferenceSelectFetchedOption[];
+    statement_type_n1?: ReferenceSelectFetchedOption[];
+    statement_type_metatype_n1?: ReferenceSelectFetchedOption[];
     statement_data_assignment_object_used?: ResourceInstanceReference[];
     statement_data_assignment_actor?: ResourceInstanceReference[];
-    statement_data_assignment_type?: ControlledListItem[];
+    statement_data_assignment_type?: ReferenceSelectFetchedOption[];
     statement_data_assignment_timespan_begin_of_the_begin?: string | null;
     statement_data_assignment_timespan_end_of_the_end?: string | null;
 }
@@ -134,7 +134,7 @@ export type SchemeStatement = TileData<SchemeStatementAliases>;
 
 export interface SchemeRightsAliases extends TileData {
     right_holder?: ResourceInstanceReference[];
-    right_type?: ControlledListItem[];
+    right_type?: ReferenceSelectFetchedOption[];
     right_statement?: SchemeRightStatement;
 }
 
@@ -143,16 +143,16 @@ export type SchemeRights = TileData<SchemeRightsAliases>;
 export interface SchemeRightStatementAliases extends AliasedData {
     right_statement_content?: string;
     right_statement_label?: string;
-    right_statement_language?: ControlledListItem[];
-    right_statement_type?: ControlledListItem[];
-    right_statement_type_metatype?: ControlledListItem[];
+    right_statement_language?: ReferenceSelectFetchedOption[];
+    right_statement_type?: ReferenceSelectFetchedOption[];
+    right_statement_type_metatype?: ReferenceSelectFetchedOption[];
 }
 
 export type SchemeRightStatement = TileData<SchemeRightStatementAliases>;
 
 export interface SchemeNamespaceAliases extends AliasedData {
     namespace_name: string;
-    namespace_type: ControlledListItem[];
+    namespace_type: ReferenceSelectFetchedOption[];
 }
 
 export type SchemeNamespace = TileData<SchemeNamespaceAliases>;

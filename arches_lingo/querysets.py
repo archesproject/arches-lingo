@@ -6,8 +6,6 @@ from arches_lingo.query_expressions import LevenshteinLessEqual
 
 class LabelValueQuerySet(models.QuerySet):
     def fuzzy_search(self, term, max_edit_distance):
-        from arches_lingo.models import VwLabelValue
-
         if len(term) > 255:
             raise ValueError(_("Fuzzy search terms cannot exceed 255 characters."))
         try:
@@ -15,7 +13,7 @@ class LabelValueQuerySet(models.QuerySet):
         except ValueError:
             raise ValueError(_("Edit distance could not be converted to an integer."))
 
-        fuzzy_matches = VwLabelValue.objects.annotate(
+        fuzzy_matches = self.annotate(
             edit_distance=LevenshteinLessEqual(
                 models.F("value"),
                 models.Value(term),
@@ -23,7 +21,7 @@ class LabelValueQuerySet(models.QuerySet):
                 output_field=models.IntegerField(),
             )
         ).filter(edit_distance__lte=max_edit_distance)
-        substring_matches = VwLabelValue.objects.filter(value__icontains=term).annotate(
+        substring_matches = self.filter(value__icontains=term).annotate(
             edit_distance=models.Value(0)
         )
         matches = substring_matches | fuzzy_matches

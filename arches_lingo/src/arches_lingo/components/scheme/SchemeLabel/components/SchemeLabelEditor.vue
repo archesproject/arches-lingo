@@ -61,9 +61,7 @@ async function save(e: FormSubmitEvent) {
     isSaving.value = true;
 
     try {
-        const formData = Object.fromEntries(
-            Object.entries(e.states).map(([key, state]) => [key, state.value]),
-        );
+        const formData = e.values;
 
         let updatedTileId;
 
