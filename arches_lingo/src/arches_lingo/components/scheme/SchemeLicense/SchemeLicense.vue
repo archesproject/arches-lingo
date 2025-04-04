@@ -58,6 +58,13 @@ async function getSectionValue() {
         v-if="isLoading"
         style="width: 100%"
     />
+    <Message
+        v-else-if="fetchError"
+        severity="error"
+        size="small"
+    >
+        {{ fetchError.message }}
+    </Message>
     <template v-else>
         <SchemeLicenseViewer
             v-if="mode === VIEW"
@@ -76,11 +83,5 @@ async function getSectionValue() {
             :nodegroup-alias="props.nodegroupAlias"
             :tile-id="props.tileId"
         />
-        <Message
-            v-if="fetchError"
-            severity="error"
-            size="small"
-            >{{ fetchError.message }}
-        </Message>
     </template>
 </template>
