@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 
+import Message from "primevue/message";
 import ProgressSpinner from "primevue/progressspinner";
 
 import ConceptNoteEditor from "@/arches_lingo/components/concept/ConceptNote/components/ConceptNoteEditor.vue";
@@ -27,6 +28,7 @@ const props = defineProps<{
 
 const isLoading = ref(true);
 const tileData = ref<ConceptStatement[]>([]);
+const fetchError = ref();
 
 const shouldCreateNewTile = Boolean(props.mode === EDIT && !props.tileId);
 
@@ -38,7 +40,6 @@ onMounted(async () => {
         const sectionValue = await getSectionValue();
         tileData.value = sectionValue.aliased_data[props.nodegroupAlias];
     }
-
     isLoading.value = false;
 });
 
@@ -50,7 +51,7 @@ async function getSectionValue() {
             props.nodegroupAlias,
         );
     } catch (error) {
-        console.error(error);
+        fetchError.value = error;
     }
 }
 </script>
@@ -60,7 +61,13 @@ async function getSectionValue() {
         v-if="isLoading"
         style="width: 100%"
     />
-
+    <Message
+        v-else-if="fetchError"
+        severity="error"
+        size="small"
+    >
+        {{ fetchError.message }}
+    </Message>
     <template v-else>
         <ConceptNoteViewer
             v-if="mode === VIEW"

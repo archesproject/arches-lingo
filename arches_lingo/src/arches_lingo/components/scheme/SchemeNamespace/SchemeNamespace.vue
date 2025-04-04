@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 
+import Message from "primevue/message";
 import ProgressSpinner from "primevue/progressspinner";
 
 import SchemeNamespaceEditor from "@/arches_lingo/components/scheme/SchemeNamespace/components/SchemeNamespaceEditor.vue";
 import SchemeNamespaceViewer from "@/arches_lingo/components/scheme/SchemeNamespace/components/SchemeNamespaceViewer.vue";
 
 import { EDIT, VIEW } from "@/arches_lingo/constants.ts";
+
 import { fetchLingoResourcePartial } from "@/arches_lingo/api.ts";
 
 import type {
@@ -28,6 +30,7 @@ const shouldCreateNewTile = Boolean(props.mode === EDIT && !props.tileId);
 
 const isLoading = ref(true);
 const tileData = ref<SchemeNamespace | undefined>();
+const fetchError = ref();
 
 onMounted(async () => {
     if (
@@ -37,7 +40,6 @@ onMounted(async () => {
         const sectionValue = await getSectionValue();
         tileData.value = sectionValue.aliased_data[props.nodegroupAlias];
     }
-
     isLoading.value = false;
 });
 
@@ -49,7 +51,7 @@ async function getSectionValue() {
             props.nodegroupAlias,
         );
     } catch (error) {
-        console.error(error);
+        fetchError.value = error;
     }
 }
 </script>
@@ -59,7 +61,13 @@ async function getSectionValue() {
         v-if="isLoading"
         style="width: 100%"
     />
-
+    <Message
+        v-else-if="fetchError"
+        severity="error"
+        size="small"
+    >
+        {{ fetchError.message }}
+    </Message>
     <template v-else>
         <SchemeNamespaceViewer
             v-if="mode === VIEW"
