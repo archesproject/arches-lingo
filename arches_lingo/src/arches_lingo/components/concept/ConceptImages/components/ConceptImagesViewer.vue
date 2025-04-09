@@ -1,23 +1,28 @@
 <script setup lang="ts">
-import { inject, ref, onMounted } from "vue";
+import { inject, ref, onMounted, nextTick } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import Button from "primevue/button";
 import ConfirmDialog from "primevue/confirmdialog";
 import Message from "primevue/message";
 import ProgressSpinner from "primevue/progressspinner";
+import { useConfirm } from "primevue/useconfirm";
 
 import FileListWidget from "@/arches_component_lab/widgets/FileListWidget/FileListWidget.vue";
+import NonLocalizedStringWidget from "@/arches_component_lab/widgets/NonLocalizedStringWidget/NonLocalizedStringWidget.vue";
 
 import { DANGER, SECONDARY, VIEW } from "@/arches_lingo/constants.ts";
-import { useConfirm } from "primevue/useconfirm";
 
 import type {
     ConceptImages,
+    ConceptInstance,
     DigitalObjectInstance,
 } from "@/arches_lingo/types.ts";
-import { fetchLingoResourcesBatch } from "@/arches_lingo/api.ts";
-import NonLocalizedStringWidget from "@/arches_component_lab/widgets/NonLocalizedStringWidget/NonLocalizedStringWidget.vue";
+import {
+    fetchLingoResourcePartial,
+    fetchLingoResourcesBatch,
+    updateLingoResource,
+} from "@/arches_lingo/api.ts";
 
 const props = defineProps<{
     tileData: ConceptImages | undefined;
@@ -27,7 +32,8 @@ const props = defineProps<{
     nodegroupAlias: string;
 }>();
 
-const openEditor = inject<(componentName: string) => void>("openEditor");
+const openEditor =
+    inject<(componentName: string, tileId?: string) => void>("openEditor");
 
 const configurationError = ref();
 const isLoading = ref(true);
@@ -38,12 +44,16 @@ const confirm = useConfirm();
 onMounted(async () => {
     if (props.tileData) {
         try {
-            resources.value = await fetchLingoResourcesBatch(
-                "digital_object_rdm_system",
-                props.tileData.aliased_data.depicting_digital_asset_internal.map(
+            const digitalObjectInstances =
+                props.tileData.aliased_data.depicting_digital_asset_internal?.map(
                     (resource) => resource.resourceId,
-                ),
-            );
+                );
+            if (digitalObjectInstances) {
+                resources.value = await fetchLingoResourcesBatch(
+                    "digital_object_rdm_system",
+                    digitalObjectInstances,
+                );
+            }
         } catch (error) {
             configurationError.value = error;
         }
@@ -51,12 +61,46 @@ onMounted(async () => {
     isLoading.value = false;
 });
 
-function confirmDelete() {
+function confirmDelete(removedResourceInstanceId: string) {
     confirm.require({
         header: $gettext("Confirmation"),
-        message: $gettext("Do you want to delete this concept image?"),
-        accept: () => {
-            console.log("do delete");
+        message: $gettext(
+            "Do you want to remove this digital resource from concept images? (This does not delete the digital resource)",
+        ),
+        accept: async () => {
+            const resourceInstanceId = props.tileData?.resourceinstance;
+            if (resourceInstanceId) {
+                const resource: ConceptInstance =
+                    await fetchLingoResourcePartial(
+                        props.graphSlug,
+                        resourceInstanceId,
+                        props.nodegroupAlias,
+                    );
+
+                const depictingDigitalAssetInternalData =
+                    resource.aliased_data.depicting_digital_asset_internal
+                        ?.aliased_data;
+                if (
+                    depictingDigitalAssetInternalData?.depicting_digital_asset_internal
+                ) {
+                    depictingDigitalAssetInternalData.depicting_digital_asset_internal =
+                        depictingDigitalAssetInternalData.depicting_digital_asset_internal.filter(
+                            (assetReference) =>
+                                assetReference.resourceId !==
+                                removedResourceInstanceId,
+                        );
+                    resources.value = resources.value?.filter(
+                        (resource) =>
+                            resource.resourceinstanceid !==
+                            removedResourceInstanceId,
+                    );
+                    await updateLingoResource(
+                        props.graphSlug,
+                        resourceInstanceId,
+                        resource,
+                    );
+                }
+            }
         },
         rejectProps: {
             label: $gettext("Cancel"),
@@ -67,6 +111,26 @@ function confirmDelete() {
             label: $gettext("Delete"),
             severity: DANGER,
         },
+    });
+}
+
+function newResource() {
+    modifyResource();
+}
+
+function editResource(resourceInstanceId: string) {
+    modifyResource(resourceInstanceId);
+}
+
+function modifyResource(resourceInstanceId?: string) {
+    openEditor!(props.componentName);
+
+    nextTick(() => {
+        const openConceptImagesEditor = new CustomEvent(
+            "openConceptImagesEditor",
+            { detail: { resourceInstanceId: resourceInstanceId } },
+        );
+        document.dispatchEvent(openConceptImagesEditor);
     });
 }
 </script>
@@ -80,7 +144,7 @@ function confirmDelete() {
             <Button
                 :label="$gettext('Add Image')"
                 class="add-button"
-                @click="openEditor!(props.componentName)"
+                @click="newResource"
             ></Button>
         </div>
 
@@ -104,70 +168,64 @@ function confirmDelete() {
             {{ $gettext("No concept images were found.") }}
         </div>
 
-        <div
-            v-else
-            style="overflow-x: auto"
-        >
-            <div class="conceptImages">
-                <div
-                    v-for="resource in resources"
-                    :key="resource.resourceinstanceid"
-                    class="conceptImage"
-                >
-                    <div class="header">
-                        <label
-                            for="conceptImage"
-                            class="text"
-                        >
-                            <NonLocalizedStringWidget
-                                node-alias="name_content"
-                                graph-slug="digital_object_rdm_system"
-                                :mode="VIEW"
-                                :initial-value="
-                                    resource.aliased_data.name.aliased_data
-                                        .name_content
-                                "
-                            />
-                        </label>
-                        <div class="buttons">
-                            <Button
-                                icon="pi pi-file-edit"
-                                :aria-label="$gettext('edit')"
-                                rounded
-                                @click="openEditor!(props.componentName)"
-                            />
-                            <Button
-                                icon="pi pi-trash"
-                                class="label-delete-button"
-                                :aria-label="$gettext('Delete')"
-                                severity="danger"
-                                rounded
-                                @click="confirmDelete"
-                            />
-                        </div>
-                    </div>
-                    <FileListWidget
-                        node-alias="content"
-                        graph-slug="digital_object_rdm_system"
-                        :initial-value="
-                            resource.aliased_data.content?.aliased_data.content
-                        "
-                        :mode="VIEW"
-                    />
-                    <div class="footer">
+    <div
+        v-else
+        style="overflow-x: auto"
+    >
+        <div class="conceptImages">
+            <div
+                v-for="resource in resources"
+                :key="resource.resourceinstanceid"
+                class="conceptImage"
+            >
+                <div class="header">
+                    <label
+                        for="conceptImage"
+                        class="text"
+                    >
                         <NonLocalizedStringWidget
-                            node-alias="statement_content"
+                            node-alias="name_content"
                             graph-slug="digital_object_rdm_system"
                             :mode="VIEW"
-                            :initial-value="
-                                resource.aliased_data.statement?.aliased_data
-                                    .statement_content
-                            "
+                            :initial-value="resource.aliased_data.name?.aliased_data
+                                .name_content
+                                "
+                        />
+                    </label>
+                    <div class="buttons">
+                        <Button
+                            icon="pi pi-file-edit"
+                            @click="editResource(resource.resourceinstanceid)"
+                        />
+                        <Button
+                            icon="pi pi-trash"
+                            :aria-label="$gettext('Delete')"
+                            severity="danger"
+                            outlined
+                            @click="confirmDelete(resource.resourceinstanceid)"
                         />
                     </div>
                 </div>
+                <FileListWidget
+                    node-alias="content"
+                    graph-slug="digital_object_rdm_system"
+                    :initial-value="resource.aliased_data.content?.aliased_data.content
+                        "
+                    :mode="VIEW"
+                />
+                <div class="footer">
+                    <NonLocalizedStringWidget
+                        node-alias="statement_content"
+                        graph-slug="digital_object_rdm_system"
+                        :mode="VIEW"
+                        :initial-value="resource.aliased_data.statement?.aliased_data
+                            .statement_content
+                            "
+                    />
+                </div>
             </div>
         </div>
+    </div>
     </div>
 </template>
 
@@ -208,6 +266,8 @@ function confirmDelete() {
 .conceptImage .header .buttons button {
     margin: 0 0.5rem;
 }
+
+.conceptImages :deep(.mainImage) {}
 
 .conceptImages :deep(.p-galleria) {
     border: none;

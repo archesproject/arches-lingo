@@ -104,6 +104,7 @@ export interface TileData<T extends AliasedData = AliasedData> {
 }
 
 export interface ResourceData<T extends AliasedData = AliasedData> {
+    display_value?: string;
     resourceinstanceid: string;
     aliased_data: T;
 }
@@ -146,9 +147,8 @@ export interface DigitalObjectNameAliases extends AliasedData {
 export type DigitalObjectName = TileData<DigitalObjectNameAliases>;
 
 export interface DigitalObjectInstanceAliases extends AliasedData {
-    name: DigitalObjectName;
+    name?: DigitalObjectName;
     content?: DigitalObjectContent;
-    resourceinstanceid: string;
     statement?: ConceptStatement;
 }
 
@@ -219,7 +219,7 @@ export interface ConceptInstance {
     aliased_data: {
         appellative_status?: AppellativeStatus[];
         concept_statement?: ConceptStatement[];
-        depicting_digital_asset_internal?: ConceptImages[];
+        depicting_digital_asset_internal?: ConceptImages;
         classification_status?: ConceptClassificationStatusAliases[];
     };
 }
