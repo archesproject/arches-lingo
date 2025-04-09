@@ -185,6 +185,30 @@ export const fetchSearchResults = async (
     return parsed;
 };
 
+export const fetchConceptResources = async (
+    searchTerm: string,
+    items: number,
+    page: number,
+    schemeResource: string = "",
+    exclude: boolean = false,
+    conceptIds: string[] = [],
+) => {
+    const params = new URLSearchParams({
+        term: searchTerm,
+        scheme: schemeResource,
+        exclude: exclude.toString(),
+        items: items.toString(),
+        page: page.toString(),
+        concepts: conceptIds.join(","),
+    });
+
+    const url = `${arches.urls.api_concept_resources}?${params.toString()}`;
+    const response = await fetch(url);
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
 export const fetchConcepts = async () => {
     const response = await fetch(arches.urls.api_concepts);
     const parsed = await response.json();
