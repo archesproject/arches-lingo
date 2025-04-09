@@ -134,6 +134,7 @@ provide("refreshReportSection", refreshReportSection);
         <SplitterPanel
             v-if="editorState !== CLOSED"
             :size="50"
+            class="splitter-panel-parent"
         >
             <ComponentEditor
                 :key="editorKey"
@@ -163,5 +164,9 @@ provide("refreshReportSection", refreshReportSection);
     overflow: auto;
     padding: 1rem;
     padding-top: 0;
+}
+
+.p-splitterpanel:has(> .splitter-panel-content) {
+    overflow-y: auto;
 }
 </style>
