@@ -74,9 +74,7 @@ async function getURI(resourceId: string) {
     if (!uriData.aliased_data.uri) {
         return null;
     }
-    return JSON.parse(
-        uriData.aliased_data.uri.aliased_data.uri_content.replace(/'/g, '"'),
-    );
+    return uriData.aliased_data.uri.aliased_data.uri_content;
 }
 
 async function getSchemeId() {
