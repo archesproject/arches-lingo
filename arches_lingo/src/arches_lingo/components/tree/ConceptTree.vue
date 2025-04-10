@@ -21,7 +21,7 @@ import {
 } from "@/arches_lingo/constants.ts";
 import { treeFromSchemes } from "@/arches_lingo/utils.ts";
 import { routeNames } from "@/arches_lingo/routes.ts";
-import TreeRow from "@/arches_lingo/components/tree/TreeRow.vue";
+import TreeRow from "@/arches_lingo/components/tree/components/TreeRow/TreeRow.vue";
 
 import type { ComponentPublicInstance, Ref } from "vue";
 import type { RouteLocationNormalizedLoadedGeneric } from "vue-router";
@@ -281,7 +281,7 @@ await initializeTree();
         <template #default="slotProps">
             <TreeRow
                 v-model:focused-node="focusedNode"
-                v-model:filter-value="filterValue"
+                :filter-value="filterValue"
                 :node="slotProps.node"
                 :focus-label="FOCUS"
                 :unfocus-label="UNFOCUS"
