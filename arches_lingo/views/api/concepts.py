@@ -113,11 +113,11 @@ class ConceptResourceView(ConceptTreeView):
             if scheme:
                 if exclude == "true":
                     concept_query = Concept.exclude(
-                        part_of_scheme__0__0__resourceId=scheme
+                        part_of_scheme__0__resourceId=scheme
                     )
                 else:
                     concept_query = Concept.filter(
-                        part_of_scheme__0__0__resourceId=scheme
+                        part_of_scheme__0__resourceId=scheme
                     )
             else:
                 concept_query = Concept.all()
