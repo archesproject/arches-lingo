@@ -52,10 +52,10 @@ export const fetchLingoResources = async (graphSlug: string) => {
 
 export const fetchLingoResource = async (
     graphSlug: string,
-    schemeId: string,
+    resourceId: string,
 ) => {
     const response = await fetch(
-        arches.urls.api_lingo_resource(graphSlug, schemeId),
+        arches.urls.api_lingo_resource(graphSlug, resourceId),
     );
     const parsed = await response.json();
     if (!response.ok) throw new Error(parsed.message || response.statusText);
