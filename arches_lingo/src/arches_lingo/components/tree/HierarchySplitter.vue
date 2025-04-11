@@ -1,97 +1,74 @@
 <script setup lang="ts">
-import { inject, provide, ref } from "vue";
-import { useRouter } from "vue-router";
+import { onMounted, ref } from "vue";
+import { useRoute } from "vue-router";
 import { useGettext } from "vue3-gettext";
 
 import Button from "primevue/button";
-import ProgressSpinner from "primevue/progressspinner";
 import Splitter from "primevue/splitter";
 import SplitterPanel from "primevue/splitterpanel";
 
-import { getItemLabel } from "@/arches_vue_utils/utils.ts";
-import { shouldUseContrast } from "@/arches_controlled_lists/utils.ts";
 import {
-    CONTRAST,
     SECONDARY,
-    displayedRowKey,
-    selectedLanguageKey,
-    systemLanguageKey,
 } from "@/arches_lingo/constants.ts";
-import { routeNames } from "@/arches_lingo/routes.ts";
-import { dataIsConcept, dataIsScheme } from "@/arches_lingo/utils.ts";
 import ConceptTree from "@/arches_lingo/components/tree/ConceptTree.vue";
 
-import type { Ref } from "vue";
-import type { Language } from "@/arches_vue_utils/types";
-import type { Concept, Scheme } from "@/arches_lingo/types";
-
 const { $gettext } = useGettext();
-const router = useRouter();
-const selectedLanguage = inject(selectedLanguageKey) as Ref<Language>;
-const systemLanguage = inject(systemLanguageKey) as Language;
-
-const displayedRow: Ref<Concept | Scheme | null> = ref(null);
-const setDisplayedRow = (val: Concept | Scheme | null) => {
-    displayedRow.value = val;
-    if (val === null) {
-        return;
-    }
-    // TODO: Consider adding some sort of short-circuiting of fetchUser
-    if (dataIsScheme(val)) {
-        router.push({ name: routeNames.scheme, params: { id: val.id } });
-    } else if (dataIsConcept(val)) {
-        router.push({ name: routeNames.concept, params: { id: val.id } });
-    }
-};
-// @ts-expect-error vue-tsc doesn't like arbitrary properties here
-provide(displayedRowKey, { displayedRow, setDisplayedRow });
+const route = useRoute();
 
 const showHierarchy = ref(false);
+
+onMounted(() => {
+    showHierarchy.value = Boolean(route.query.showHierarchy);
+});
+
+// vanilla JS instead of Vue Router to avoid reloading the page
+function toggleShowHierarchy() {
+    const url = new URL(window.location.href);
+
+    if (showHierarchy.value) {
+        url.searchParams.delete('showHierarchy');
+        showHierarchy.value = false;
+    } else {
+        url.searchParams.set('showHierarchy', 'true');
+        showHierarchy.value = true;
+    }
+
+    window.history.replaceState({}, '', url);
+}
 </script>
 
 <template>
     <div class="subheading">
-        <h2 v-if="displayedRow">
-            {{
-                getItemLabel(
-                    displayedRow,
-                    selectedLanguage.code,
-                    systemLanguage.code,
-                ).value
-            }}
-        </h2>
-        <Button
-            :severity="shouldUseContrast() ? CONTRAST : SECONDARY"
-            :label="$gettext('Toggle hierarchy')"
-            @click="() => (showHierarchy = !showHierarchy)"
+        <Button 
+            :severity="SECONDARY" 
+            :label="$gettext('Toggle hierarchy')" 
+            @click="toggleShowHierarchy" 
         />
     </div>
-    <Splitter
-        style="height: 100%; overflow: hidden"
+    <Splitter 
+        style="height: 100%; 
+        overflow: hidden" 
         :pt="{
-            gutter: { style: { display: showHierarchy ? 'flex' : 'none' } },
+            gutter: { 
+                style: { display: showHierarchy ? 'flex' : 'none' } 
+            },
         }"
     >
-        <SplitterPanel
-            :size="40"
-            :min-size="25"
+        <SplitterPanel 
+            :size="40" 
+            :min-size="25" 
             :style="{
                 display: showHierarchy ? 'flex' : 'none',
                 flexDirection: 'column',
             }"
         >
-            <Suspense>
-                <ConceptTree />
-                <template #fallback>
-                    <ProgressSpinner />
-                </template>
-            </Suspense>
+            <ConceptTree />
         </SplitterPanel>
-        <SplitterPanel
-            :min-size="25"
+        <SplitterPanel 
+            :min-size="25" 
             style="overflow-y: auto"
         >
-            <RouterView />
+            <RouterView :key="route.fullPath" />
         </SplitterPanel>
     </Splitter>
 </template>

@@ -1,33 +1,41 @@
 <script setup lang="ts">
-    import { computed } from "vue"
+import { computed } from "vue"
 
-    import type { TreeNode } from "primevue/treenode"
+import Button from "primevue/button";
 
-    const { node, focusLabel, unfocusLabel } = defineProps<{
-        node: TreeNode,
-        focusLabel: string,
-        unfocusLabel: string,
-    }>();
+import type { TreeNode } from "primevue/treenode"
 
-    const focusedNode = defineModel<TreeNode | null>("focusedNode");
+const { node, focusLabel, unfocusLabel } = defineProps<{
+    node: TreeNode,
+    focusLabel: string,
+    unfocusLabel: string,
+}>();
 
-    const isFocused = computed(() => {
-        return focusedNode.value?.data?.id === node.data.id;
-    });
+const focusedNode = defineModel<TreeNode | null>("focusedNode");
 
-    function toggleFocus() {
-        if (isFocused.value) {
-            focusedNode.value = null;
-        } else {
-            focusedNode.value = node;
-        }
+const isFocused = computed(() => {
+    return focusedNode.value?.data?.id === node.data.id;
+});
+
+function toggleFocus() {
+    if (isFocused.value) {
+        focusedNode.value = null;
+    } else {
+        focusedNode.value = node;
     }
+}
 </script>
 
 <template>
-    <i
+    <Button
+        :icon="isFocused ? 'fa fa-search-minus' : 'fa fa-bullseye'"
         role="button"
-        style="display: flex; align-items: center;"
+        size="small"
+        style="
+            color: var(--p-tree-node-selected-color);
+            width: 1rem;
+            height: 1rem;
+        "
         tabindex="0"
         v-tooltip="{
             value: isFocused ? unfocusLabel : focusLabel,
@@ -37,9 +45,10 @@
                 } 
             }
         }"
+        variant="text" 
         :aria-label="isFocused ? unfocusLabel : focusLabel"
-        :class="isFocused ? 'fa fa-search-minus' : 'fa fa-bullseye'"
-        @click="toggleFocus"
-        @keyup.enter="toggleFocus"
+        :rounded="true"
+        @click.stop="toggleFocus"
+        @keyup.enter.stop="toggleFocus"
     />
 </template>

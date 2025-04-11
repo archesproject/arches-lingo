@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, inject, ref, watch } from "vue";
-import { useRoute } from "vue-router";
+import { computed, inject, onMounted, ref, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import { useGettext } from "vue3-gettext";
 
 import { useToast } from "primevue/usetoast";
@@ -15,11 +15,10 @@ import {
 import { findNodeInTree } from "@/arches_controlled_lists/utils.ts";
 import { fetchConcepts } from "@/arches_lingo/api.ts";
 import {
-    displayedRowKey,
     selectedLanguageKey,
     systemLanguageKey,
 } from "@/arches_lingo/constants.ts";
-import { treeFromSchemes } from "@/arches_lingo/utils.ts";
+import { treeFromSchemes, navigateToSchemeOrConcept } from "@/arches_lingo/utils.ts";
 import { routeNames } from "@/arches_lingo/routes.ts";
 import TreeRow from "@/arches_lingo/components/tree/components/TreeRow/TreeRow.vue";
 
@@ -33,7 +32,6 @@ import type {
 import type { TreeNode } from "primevue/treenode";
 import type { Language } from "@/arches_vue_utils/types";
 import type {
-    DisplayedRowRefAndSetter,
     IconLabels,
     Scheme,
 } from "@/arches_lingo/types";
@@ -41,8 +39,10 @@ import type {
 const toast = useToast();
 const { $gettext } = useGettext();
 const route = useRoute();
+const router = useRouter();
 
 // Defining these in the parent avoids re-running $gettext in thousands of children.
+const NEW = 'new';
 const FOCUS = $gettext("Focus");
 const UNFOCUS = $gettext("Unfocus");
 const iconLabels: IconLabels = Object.freeze({
@@ -61,75 +61,37 @@ const systemLanguage = inject(systemLanguageKey) as Language;
 const nextFilterChangeNeedsExpandAll = ref(false);
 const expandedKeysSnapshotBeforeSearch = ref<TreeExpandedKeys>({});
 const rerenderTree = ref(0);
-const { setDisplayedRow } = inject(
-    displayedRowKey,
-) as unknown as DisplayedRowRefAndSetter;
 
-const tree = computed(() =>
-    treeFromSchemes(
+const tree = computed(() =>{
+    return treeFromSchemes(
         schemes.value,
         selectedLanguage.value,
         systemLanguage,
         iconLabels,
         focusedNode.value,
-    ),
-);
+    )
+});
 
-const navigate = (newRoute: RouteLocationNormalizedLoadedGeneric) => {
-    switch (newRoute.name) {
-        case routeNames.concept: {
-            if (!tree.value.length) {
-                return;
-            }
-            const { found, path } = findNodeInTree(
-                tree.value,
-                newRoute.params.id as string,
-            );
-            if (found) {
-                setDisplayedRow(found.data);
-                const itemsToExpandIds = path.map(
-                    (itemInPath: TreeNode) => itemInPath.key,
-                );
-                expandedKeys.value = {
-                    ...expandedKeys.value,
-                    ...Object.fromEntries(
-                        itemsToExpandIds.map((x: string) => [x, true]),
-                    ),
-                };
-                selectedKeys.value = { [found.data.id]: true };
-            }
-            break;
-        }
-    }
-};
+onMounted(initializeTree);
 
 // React to route changes.
-watch(
-    [
-        () => {
-            return { ...route };
-        },
-    ],
-    ([newRoute]) => {
-        navigate(newRoute);
-    },
-);
+watch(route, (newRoute) => selectNodeFromRoute(newRoute));
 
 // Navigate on initial load of the tree.
-watch(tree, () => navigate(route), { once: true });
+watch(tree, () => selectNodeFromRoute(route), { once: true });
 
-const expandAll = () => {
+function expandAll() {
     for (const node of tree.value) {
         expandNode(node);
     }
     expandedKeys.value = { ...expandedKeys.value };
 };
 
-const collapseAll = () => {
+function collapseAll() {
     expandedKeys.value = {};
 };
 
-const expandNode = (node: TreeNode) => {
+function expandNode(node: TreeNode) {
     if (node.children && node.children.length) {
         expandedKeys.value[node.key] = true;
         for (const child of node.children) {
@@ -138,7 +100,7 @@ const expandNode = (node: TreeNode) => {
     }
 };
 
-const expandPathsToFilterResults = (newFilterValue: string) => {
+function expandPathsToFilterResults(newFilterValue: string) {
     // https://github.com/primefaces/primevue/issues/3996
     if (filterValue.value && !newFilterValue) {
         expandedKeys.value = { ...expandedKeysSnapshotBeforeSearch.value };
@@ -167,7 +129,7 @@ function getInputElement() {
     }
 }
 
-const restoreFocusToInput = () => {
+function restoreFocusToInput() {
     // The current implementation of collapsing all nodes when
     // backspacing out the search value relies on rerendering the
     // <Tree> component. Restore focus to the input element.
@@ -179,7 +141,7 @@ const restoreFocusToInput = () => {
     }
 };
 
-const snoopOnFilterValue = () => {
+function snoopOnFilterValue() {
     // If we wait to react to the emitted filter event, the templated rows
     // will have already rendered. (<TreeRow> bolds search terms.)
     const inputEl = getInputElement();
@@ -197,15 +159,14 @@ function lazyLabelLookup(node: TreeNode) {
     ).value;
 }
 
-const updateSelectedAndExpanded = (node: TreeNode) => {
-    setDisplayedRow(node.data);
+function updateSelectedAndExpanded(node: TreeNode) {
     expandedKeys.value = {
         ...expandedKeys.value,
         [node.key]: true,
     };
 };
 
-const initializeTree = async () => {
+async function initializeTree() {
     /*
     Currently, rather than inspecting the results of the batched
     delete requests, we just refetch everything. This requires being
@@ -232,7 +193,33 @@ const initializeTree = async () => {
         });
 };
 
-await initializeTree();
+function selectNodeFromRoute(newRoute: RouteLocationNormalizedLoadedGeneric) {
+    switch (newRoute.name) {
+        case routeNames.concept: {
+            if (!tree.value.length || newRoute.params.id === NEW) {
+                return;
+            }
+
+            const { found, path } = findNodeInTree(
+                tree.value,
+                newRoute.params.id as string,
+            );
+            if (found) {
+                const itemsToExpandIds = path.map(
+                    (itemInPath: TreeNode) => itemInPath.key,
+                );
+                expandedKeys.value = {
+                    ...expandedKeys.value,
+                    ...Object.fromEntries(
+                        itemsToExpandIds.map((x: string) => [x, true]),
+                    ),
+                };
+                selectedKeys.value = { [found.data.id]: true };
+            }
+            break;
+        }
+    }
+};
 </script>
 
 <template>
@@ -276,7 +263,10 @@ await initializeTree();
             },
         }"
         @node-collapse="nextFilterChangeNeedsExpandAll = true"
-        @node-select="updateSelectedAndExpanded"
+        @node-select="(node) => {
+            updateSelectedAndExpanded(node);
+            navigateToSchemeOrConcept!(router, node.data);
+        }"
     >
         <template #default="slotProps">
             <TreeRow

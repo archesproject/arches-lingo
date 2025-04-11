@@ -1,24 +1,36 @@
 <script setup lang="ts">
-    import type { TreeNode } from "primevue/treenode"
-    
-    const { node, addChildLabel } = defineProps<{
-        node: TreeNode
-        addChildLabel?: string
-    }>()
-    
-    const emit = defineEmits<{ (e: "add-child", node: TreeNode): void }>()
-    
-    function onAddChild() {
-        emit("add-child", node)
-    }
+import { useRouter } from "vue-router";
+
+import Button from "primevue/button";
+
+import { NEW_CONCEPT } from "@/arches_lingo/constants.ts";
+import { navigateToSchemeOrConcept } from "@/arches_lingo/utils.ts";
+
+import type { TreeNode } from "primevue/treenode"
+
+const { node, addChildLabel } = defineProps<{
+    node: TreeNode
+    addChildLabel?: string
+}>();
+
+const router = useRouter();
+
+function onAddChild() {
+    navigateToSchemeOrConcept(router, NEW_CONCEPT);
+}
 </script>
 
 <template>
-    <i
-        class="fa fa-plus"
-        style="display: flex; align-items: center;"
+    <Button
+        icon="fa fa-plus"
         role="button"
-        tabindex="0"
+        size="small"
+        style="
+            color: var(--p-tree-node-selected-color);
+            width: 1rem;
+            height: 1rem;
+        "
+        tabindex="1"
         v-tooltip="{
             value: addChildLabel,
             pt: { 
@@ -27,8 +39,10 @@
                 } 
             }
         }"
+        variant="text" 
         :aria-label="addChildLabel"
-        @click="onAddChild"
-        @keyup.enter="onAddChild"
+        :rounded="true"
+        @click.stop="onAddChild"
+        @keyup.enter.stop="onAddChild"
     />
 </template>

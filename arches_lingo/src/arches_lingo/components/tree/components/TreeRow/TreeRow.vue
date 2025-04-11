@@ -1,22 +1,24 @@
 <script setup lang="ts">
-    import TreeRowLabel from "@/arches_lingo/components/tree/components/TreeRow/components/TreeRowLabel.vue"
-    import FocusIcon from "@/arches_lingo/components/tree/components/TreeRow/components/FocusIcon.vue"
-    import AddChildIcon from "@/arches_lingo/components/tree/components/TreeRow/components/AddChildIcon.vue"
-    
-    import type { TreeNode } from "primevue/treenode"
+import TreeRowLabel from "@/arches_lingo/components/tree/components/TreeRow/components/TreeRowLabel.vue"
+import FocusIcon from "@/arches_lingo/components/tree/components/TreeRow/components/FocusIcon.vue"
+import AddChildIcon from "@/arches_lingo/components/tree/components/TreeRow/components/AddChildIcon.vue"
 
-    const { node, focusLabel, unfocusLabel, filterValue } = defineProps<{
-        node: TreeNode,
-        focusLabel: string,
-        unfocusLabel: string,
-        filterValue: string,
-    }>();
+import type { TreeNode } from "primevue/treenode"
 
-    const focusedNode = defineModel<TreeNode | null>("focusedNode");
+const { node, focusLabel, unfocusLabel, filterValue } = defineProps<{
+    node: TreeNode,
+    focusLabel: string,
+    unfocusLabel: string,
+    filterValue: string,
+}>();
+
+const focusedNode = defineModel<TreeNode | null>("focusedNode");
+
+console.log(node)
 </script>
 
 <template>
-    <div style="display: flex; gap: 0.5rem; margin: 0 0.5rem;">
+    <div style="display: flex; align-items: center; gap: 0.5rem; margin: 0 0.5rem;">
         <TreeRowLabel 
             :filter-value="filterValue" 
             :node="node" 

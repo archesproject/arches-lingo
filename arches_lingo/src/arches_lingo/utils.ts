@@ -1,13 +1,17 @@
 import { getItemLabel } from "@/arches_vue_utils/utils.ts";
+import { routeNames } from "@/arches_lingo/routes.ts";
+
+import { NEW_CONCEPT } from "@/arches_lingo/constants.ts";
 
 import type { TreeNode } from "primevue/treenode";
-import type { Language } from "@/arches_vue_utils/types";
+import type { Language } from "@/arches_vue_utils/types.ts";
 import type {
     Concept,
     IconLabels,
     NodeAndParentInstruction,
     Scheme,
 } from "@/arches_lingo/types";
+import type { Router } from "vue-router/dist/vue-router";
 
 // Duck-typing helpers
 export function dataIsScheme(data: Concept | Scheme) {
@@ -16,6 +20,29 @@ export function dataIsScheme(data: Concept | Scheme) {
 export function dataIsConcept(data: Concept | Scheme) {
     return !dataIsScheme(data);
 }
+
+export function navigateToSchemeOrConcept(
+    router: Router,
+    value: Concept | Scheme | typeof NEW_CONCEPT,
+) {
+    // TODO: Consider adding some sort of short-circuiting of fetchUser
+    if (value === NEW_CONCEPT) {
+        router.push({ 
+            name: routeNames.concept, 
+            params: { id: value } 
+        });
+    } else if (dataIsScheme(value)) {
+        router.push({ 
+            name: routeNames.scheme, 
+            params: { id: value.id } 
+        });
+    } else if (dataIsConcept(value)) {
+        router.push({ 
+            name: routeNames.concept, 
+            params: { id: value.id } 
+        });
+    }
+};
 
 // Tree builder
 export function treeFromSchemes(
