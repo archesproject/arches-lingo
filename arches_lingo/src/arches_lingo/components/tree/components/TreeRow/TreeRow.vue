@@ -5,19 +5,12 @@ import AddChildIcon from "@/arches_lingo/components/tree/components/TreeRow/comp
 
 import type { TreeNode } from "primevue/treenode"
 
-import { useRoute } from "vue-router";
-
-const NEW = 'new';
-
-
 const { node, focusLabel, unfocusLabel, filterValue } = defineProps<{
     node: TreeNode,
     focusLabel: string,
     unfocusLabel: string,
     filterValue: string,
 }>();
-
-const route = useRoute();
 
 const focusedNode = defineModel<TreeNode | null>("focusedNode");
 </script>
@@ -35,7 +28,6 @@ const focusedNode = defineModel<TreeNode | null>("focusedNode");
             :unfocusLabel="unfocusLabel"
         />
         <AddChildIcon 
-            v-if=" route.params.id !== NEW"
             :node="node" 
             :addChildLabel="'Add Child'"
         />

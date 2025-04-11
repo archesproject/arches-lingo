@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 
 import Button from "primevue/button";
 
@@ -14,6 +14,7 @@ const { node, addChildLabel } = defineProps<{
 }>();
 
 const router = useRouter();
+const route = useRoute();
 
 function onAddChild() {
     navigateToSchemeOrConcept(router, NEW_CONCEPT, {
@@ -25,6 +26,7 @@ function onAddChild() {
 
 <template>
     <Button
+        :disabled="route.params.id ==='new'"
         icon="fa fa-plus"
         role="button"
         size="small"

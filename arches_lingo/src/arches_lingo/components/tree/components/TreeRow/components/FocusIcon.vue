@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from "vue"
+import { useRoute } from "vue-router";
 
 import Button from "primevue/button";
 
@@ -10,6 +11,8 @@ const { node, focusLabel, unfocusLabel } = defineProps<{
     focusLabel: string,
     unfocusLabel: string,
 }>();
+
+const route = useRoute();
 
 const focusedNode = defineModel<TreeNode | null>("focusedNode");
 
@@ -28,6 +31,7 @@ function toggleFocus() {
 
 <template>
     <Button
+        :disabled="route.params.id === 'new' && node.data.id !== 'new'"
         :icon="isFocused ? 'fa fa-search-minus' : 'fa fa-bullseye'"
         role="button"
         size="small"

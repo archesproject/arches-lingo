@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { inject, ref, useTemplateRef, watch } from "vue";
 
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
 
@@ -35,6 +35,7 @@ const props = defineProps<{
     tileId?: string;
 }>();
 
+const route = useRoute();
 const router = useRouter();
 const toast = useToast();
 const { $gettext } = useGettext();
@@ -68,20 +69,22 @@ async function save(e: FormSubmitEvent) {
         let updatedTileId;
 
         if (!props.resourceInstanceId) {
-            console.log("()()()()", props)
             const updatedConcept = await createLingoResource(
                 {
                     aliased_data: {
                         [props.nodegroupAlias]: [formData],
                         part_of_scheme: {
-                            "resourceId": "b73e741b-46da-496c-8960-55cc1007bec4",
+                            "resourceId": route.query.scheme,
                         },
+                        classification_status: [{
+                            classification_status_ascribed_classification: {
+                                "resourceId": route.query.parent,
+                            }
+                        }]
                     },
                 },
                 props.graphSlug,
             );
-
-            console.log("()()()()", updatedConcept)
 
             await router.push({
                 name: props.graphSlug,
