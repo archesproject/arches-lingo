@@ -67,7 +67,12 @@ export interface ResourceInstanceReference {
 
 export interface ResourceInstanceResult {
     resourceinstanceid: string;
-    descriptors: { [key: string]: { name: string } };
+    descriptors: {
+        [key: string]: {
+            name: string;
+            description: string;
+        };
+    };
 }
 
 export type DataComponentMode = typeof EDIT | typeof VIEW;
@@ -177,16 +182,6 @@ export interface SchemeInstance {
         appellative_status?: AppellativeStatus[];
         statement?: SchemeStatement[];
         rights?: SchemeRights;
-    };
-}
-
-export interface SchemeResource {
-    resourceinstanceid: string;
-    descriptors: {
-        [key: string]: {
-            name: string;
-            description: string;
-        };
     };
 }
 

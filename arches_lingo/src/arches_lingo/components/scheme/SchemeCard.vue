@@ -5,30 +5,20 @@ import { routeNames } from "@/arches_lingo/routes.ts";
 
 import Card from "primevue/card";
 
+import { extractDescriptors } from "@/arches_lingo/utils.ts";
+
 import type { Language } from "@/arches_vue_utils/types";
-import type { SchemeResource, ResourceDescriptor } from "@/arches_lingo/types";
+import type { ResourceInstanceResult } from "@/arches_lingo/types";
 
 const systemLanguage = inject(systemLanguageKey) as Language;
 
-const { scheme } = defineProps<{ scheme: SchemeResource }>();
+const { scheme } = defineProps<{ scheme: ResourceInstanceResult }>();
 const schemeURL = {
     name: routeNames.scheme,
     params: { id: scheme.resourceinstanceid },
 };
 
-const descriptors = scheme.descriptors;
-let schemeDescriptor: ResourceDescriptor = {
-    name: "",
-    description: "",
-};
-if (descriptors) {
-    const descriptor =
-        descriptors[systemLanguage.code] ?? Object.values(descriptors)[0];
-    if (descriptor) {
-        schemeDescriptor.name = descriptor.name ?? "";
-        schemeDescriptor.description = descriptor.description ?? "";
-    }
-}
+const schemeDescriptor = extractDescriptors(scheme, systemLanguage);
 </script>
 
 <template>
