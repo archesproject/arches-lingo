@@ -16,7 +16,10 @@ const { node, addChildLabel } = defineProps<{
 const router = useRouter();
 
 function onAddChild() {
-    navigateToSchemeOrConcept(router, NEW_CONCEPT);
+    navigateToSchemeOrConcept(router, NEW_CONCEPT, {
+        scheme: node.data.schemeId,
+        parent: node.data.id,
+    });
 }
 </script>
 

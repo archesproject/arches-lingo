@@ -5,6 +5,11 @@ import AddChildIcon from "@/arches_lingo/components/tree/components/TreeRow/comp
 
 import type { TreeNode } from "primevue/treenode"
 
+import { useRoute } from "vue-router";
+
+const NEW = 'new';
+
+
 const { node, focusLabel, unfocusLabel, filterValue } = defineProps<{
     node: TreeNode,
     focusLabel: string,
@@ -12,13 +17,13 @@ const { node, focusLabel, unfocusLabel, filterValue } = defineProps<{
     filterValue: string,
 }>();
 
-const focusedNode = defineModel<TreeNode | null>("focusedNode");
+const route = useRoute();
 
-console.log(node)
+const focusedNode = defineModel<TreeNode | null>("focusedNode");
 </script>
 
 <template>
-    <div style="display: flex; align-items: center; gap: 0.5rem; margin: 0 0.5rem;">
+    <div class="tree-row">
         <TreeRowLabel 
             :filter-value="filterValue" 
             :node="node" 
@@ -30,8 +35,18 @@ console.log(node)
             :unfocusLabel="unfocusLabel"
         />
         <AddChildIcon 
+            v-if=" route.params.id !== NEW"
             :node="node" 
             :addChildLabel="'Add Child'"
         />
     </div>
 </template>
+
+<style scoped>
+.tree-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0 0.5rem;
+}
+</style>

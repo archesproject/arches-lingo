@@ -68,14 +68,20 @@ async function save(e: FormSubmitEvent) {
         let updatedTileId;
 
         if (!props.resourceInstanceId) {
+            console.log("()()()()", props)
             const updatedConcept = await createLingoResource(
                 {
                     aliased_data: {
                         [props.nodegroupAlias]: [formData],
+                        part_of_scheme: {
+                            "resourceId": "b73e741b-46da-496c-8960-55cc1007bec4",
+                        },
                     },
                 },
                 props.graphSlug,
             );
+
+            console.log("()()()()", updatedConcept)
 
             await router.push({
                 name: props.graphSlug,

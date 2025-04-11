@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, inject, onMounted, ref, watch } from "vue";
+import { computed, inject, nextTick, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useGettext } from "vue3-gettext";
 
@@ -73,12 +73,36 @@ const tree = computed(() =>{
 });
 
 // React to route changes.
-watch(route, (newRoute) => selectNodeFromRoute(newRoute));
+watch(
+    route, 
+    (newRoute) => {
+        selectNodeFromRoute(newRoute);
+    },
+);
 
-// Navigate on initial load of the tree.
-watch(tree, () => selectNodeFromRoute(route), { once: true });
+onMounted(async() => {
+    try {
+        const priorSortedSchemeIds = tree.value.map((node) => node.key);
+        const concepts = await fetchConcepts();
 
-onMounted(initializeTree);
+        schemes.value = (concepts.schemes as Scheme[]).sort(
+            (a, b) => {
+                return (
+                    priorSortedSchemeIds.indexOf(a.id) - priorSortedSchemeIds.indexOf(b.id)
+                );
+            }
+        ); 
+
+        selectNodeFromRoute(route);
+    } catch (error) {
+        toast.add({
+            severity: ERROR,
+            life: DEFAULT_ERROR_TOAST_LIFE,
+            summary: $gettext("Unable to fetch concepts"),
+            detail: (error as Error).message,
+        });
+    }
+});
 
 function expandAll() {
     for (const node of tree.value) {
@@ -166,39 +190,105 @@ function updateSelectedAndExpanded(node: TreeNode) {
     };
 };
 
-async function initializeTree() {
-    /*
-    Currently, rather than inspecting the results of the batched
-    delete requests, we just refetch everything. This requires being
-    a little clever about resorting the ordered response from the API
-    to preserve the existing sort (and avoid confusion).
-    */
-    const priorSortedSchemeIds = tree.value.map((node) => node.key);
 
-    await fetchConcepts()
-        .then(({ schemes: fetchedSchemes }: { schemes: Scheme[] }) => {
-            schemes.value = fetchedSchemes.sort(
-                (a, b) =>
-                    priorSortedSchemeIds.indexOf(a.id) -
-                    priorSortedSchemeIds.indexOf(b.id),
-            );
-        })
-        .catch((error: Error) => {
-            toast.add({
-                severity: ERROR,
-                life: DEFAULT_ERROR_TOAST_LIFE,
-                summary: $gettext("Unable to fetch concepts"),
-                detail: error.message,
-            });
-        });
-};
 
-import { nextTick } from "vue";
+
+
+
+
+function findNodeById(data, targetId) {
+  const queue = [];
+  
+  if (Array.isArray(data)) {
+    for (const node of data) {
+      queue.push({ node, path: [node] });
+    }
+  } else {
+    queue.push({ node: data, path: [data] });
+  }
+
+  while (queue.length > 0) {
+    const { node: currentNode, path } = queue.shift();
+
+    if (currentNode.id === targetId) {
+      return { node: currentNode, path };
+    }
+
+    if (currentNode.narrower && Array.isArray(currentNode.narrower)) {
+      for (const child of currentNode.narrower) {
+        queue.push({ node: child, path: [...path, child] });
+      }
+    }
+  }
+
+  return null;
+}
+
+const foo = ref([]);
 
 function selectNodeFromRoute(newRoute: RouteLocationNormalizedLoadedGeneric) {
+    if (
+        newRoute.name === routeNames.concept &&
+        newRoute.params.id === NEW
+    ) {
+        const schemeId = newRoute.query.scheme;
+        const parentId = newRoute.query.parent;
+
+        const schemeToEdit = schemes.value.find(
+            (scheme) => scheme.id === schemeId
+        );
+
+        let parent;
+        let path;
+
+        if (schemeId === parentId) {
+            parent = schemeToEdit;
+            path = schemeToEdit!.top_concepts;
+        } else {
+            const result = findNodeById(schemeToEdit!.top_concepts, parentId);
+  
+            parent = result!.node;
+            path = [
+                schemeToEdit,
+                ...result!.path
+            ];
+        }
+
+        foo.value = path;
+
+        console.log("((()))", path, parent)
+
+        parent.narrower.unshift(
+            {
+                id: NEW,
+                labels: [
+                    {
+                        language_id: selectedLanguage.value.code,
+                        value: $gettext('New concept'),
+                        valuetype_id: "preferred label",
+                    }
+                ],
+                narrower: [],
+            }
+        )
+
+        schemes.value = schemes.value.map(scheme => {
+            if (scheme.id === schemeId) {
+                return schemeToEdit!;
+            }
+            return scheme;
+        })
+
+    } else {
+        if (foo.value.length) {
+            foo.value[foo.value.length - 1].narrower.shift()
+            foo.value = [];
+        }
+    }
+
     switch (newRoute.name) {
         case routeNames.concept: {
-            if (!tree.value.length || newRoute.params.id === NEW) {
+            if (!tree.value.length) {
                 return;
             }
 
@@ -266,6 +356,13 @@ function selectNodeFromRoute(newRoute: RouteLocationNormalizedLoadedGeneric) {
                     },
                 },
             },
+            nodeContent: ({ instance }: TreePassThroughMethodOptions) => {
+                return {
+                    style: instance.node.data.id === NEW
+                        ? { backgroundColor: 'red' }
+                        : {},
+                }
+            },
             nodeIcon: ({ instance }: TreePassThroughMethodOptions) => {
                 return { ariaLabel: instance.node.iconLabel };
             },
@@ -279,6 +376,10 @@ function selectNodeFromRoute(newRoute: RouteLocationNormalizedLoadedGeneric) {
         }"
         @node-collapse="nextFilterChangeNeedsExpandAll = true"
         @node-select="(node) => {
+            if (node.data.id === NEW) {
+                return;
+            }
+
             updateSelectedAndExpanded(node);
             navigateToSchemeOrConcept!(router, node.data);
         }"
