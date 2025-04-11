@@ -44,9 +44,13 @@ onMounted(async () => {
             const sectionValue = await getSectionValue();
             tileData.value = sectionValue.aliased_data[props.nodegroupAlias];
         }
-        const parent_concepts = tileData.value?.map((tile) => 
-            tile.aliased_data.classification_status_ascribed_classification[0].resourceId
-        ) || [];
+        const parent_concepts =
+            tileData.value?.map(
+                (tile) =>
+                    tile.aliased_data
+                        .classification_status_ascribed_classification[0]
+                        .resourceId,
+            ) || [];
         // if (parent_concepts) {
         //     concepts.value = concepts.value.concat(parent_concepts);
         // }
@@ -59,7 +63,7 @@ onMounted(async () => {
             (datum: SearchResultItem) => {
                 const hierarchicalArray = datum.parents;
                 hierarchicalArray.push(datum);
-                hierarchicalArray.push(currentPosition.data[0])
+                hierarchicalArray.push(currentPosition.data[0]);
                 return hierarchicalArray;
             },
         );
@@ -68,8 +72,9 @@ onMounted(async () => {
             for (const datum of hierarchicalData.value) {
                 datum.tileid = tileData.value.find(
                     (tile) =>
-                        (tile.aliased_data.classification_status_ascribed_classification[0].resourceId ===
-                            datum[datum.length - 2].id)
+                        tile.aliased_data
+                            .classification_status_ascribed_classification[0]
+                            .resourceId === datum[datum.length - 2].id,
                 )?.tileid;
             }
         }

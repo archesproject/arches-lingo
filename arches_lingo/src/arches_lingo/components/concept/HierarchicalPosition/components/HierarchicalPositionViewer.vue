@@ -8,7 +8,10 @@ import Button from "primevue/button";
 import ConfirmDialog from "primevue/confirmdialog";
 
 import { deleteLingoTile, upsertLingoTile } from "@/arches_lingo/api.ts";
-import type { SearchResultItem, SearchResultHierarchy } from "@/arches_lingo/types.ts";
+import type {
+    SearchResultItem,
+    SearchResultHierarchy,
+} from "@/arches_lingo/types.ts";
 import {
     ENGLISH,
     DANGER,
@@ -50,7 +53,10 @@ function getIcon(item: SearchResultItem) {
 function confirmDelete(tileId: string) {
     confirm.require({
         header: $gettext("Confirmation"),
-        message: $gettext("Are you sure you want to delete the parent relationship? "+tileId),
+        message: $gettext(
+            "Are you sure you want to delete the parent relationship? " +
+                tileId,
+        ),
         group: "delete-parent",
         accept: () => {
             deleteSectionValue(tileId);
@@ -70,15 +76,11 @@ function confirmDelete(tileId: string) {
 async function deleteSectionValue(tileId: string) {
     try {
         await deleteLingoTile(props.graphSlug, props.nodegroupAlias, tileId);
-        await upsertLingoTile(
-            props.graphSlug,
-            props.nodegroupAlias,
-            {
-                resourceinstance: props.resourceInstanceId,
-                aliased_data: { top_concept_of: props.scheme },
-                tileid: undefined,
-            },
-        );
+        await upsertLingoTile(props.graphSlug, props.nodegroupAlias, {
+            resourceinstance: props.resourceInstanceId,
+            aliased_data: { top_concept_of: props.scheme },
+            tileid: undefined,
+        });
 
         refreshReportSection!(props.componentName);
         updateAfterComponentDeletion!(props.componentName, tileId);
@@ -129,17 +131,16 @@ async function deleteSectionValue(tileId: string) {
                 <span>
                     {{ getItemLabel(item, ENGLISH.code, ENGLISH.code).value }}
                 </span>
-                <span v-if="index === searchResults.length - 1">
+                <span
+                    class="current-position"
+                    v-if="index === searchResults.length - 1"
+                >
                     <Button
                         icon="pi pi-file-edit"
                         :aria-label="$gettext('edit')"
                         size="small"
-                        style="width: 2rem"
                         @click="
-                            openEditor!(
-                                componentName,
-                                searchResults.tileid,
-                            )
+                            openEditor!(componentName, searchResults.tileid)
                         "
                     />
                     <Button
@@ -147,7 +148,6 @@ async function deleteSectionValue(tileId: string) {
                         :aria-label="$gettext('delete')"
                         severity="danger"
                         size="small"
-                        style="width: 2rem"
                         outlined
                         @click="confirmDelete(searchResults.tileid)"
                     />
@@ -166,5 +166,10 @@ async function deleteSectionValue(tileId: string) {
     justify-content: space-between;
     align-items: center;
     border-bottom: 0.125rem solid var(--p-menubar-border-color);
+}
+
+.section-item .current-position button {
+    width: 2rem;
+    margin-left: 0.5rem;
 }
 </style>

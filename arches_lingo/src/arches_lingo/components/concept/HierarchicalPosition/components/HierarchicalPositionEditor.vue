@@ -33,7 +33,7 @@ const componentEditorFormRef = inject<Ref<Component | null>>(
 const openEditor =
     inject<(componentName: string, tileid?: string) => void>("openEditor");
 
-    const refreshReportSection = inject<(componentName: string) => void>(
+const refreshReportSection = inject<(componentName: string) => void>(
     "refreshReportSection",
 );
 
