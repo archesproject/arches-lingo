@@ -26,6 +26,7 @@ const props = defineProps<{
 
 const openEditor = inject<(componentName: string) => void>("openEditor");
 
+const configurationError = ref();
 const isLoading = ref(true);
 const resources = ref<DigitalObjectInstance[]>();
 const { $gettext } = useGettext();
@@ -33,14 +34,18 @@ const confirm = useConfirm();
 
 onMounted(async () => {
     if (props.tileData) {
-
-        resources.value = await fetchLingoResourcesBatch(
-            "digital_object_rdm_system",
-            props.tileData.aliased_data.depicting_digital_asset_internal.map(
-                (resource) => resource.resourceId,
-            ),
-        );
-        isLoading.value = false;
+        try {
+            resources.value = await fetchLingoResourcesBatch(
+                "digital_object_rdm_system",
+                props.tileData.aliased_data.depicting_digital_asset_internal.map(
+                    (resource) => resource.resourceId,
+                ),
+            );
+            isLoading.value = false;
+        } catch (error) {
+            configurationError.value = error;
+            isLoading.value = false;
+        }
     }
 });
 function confirmDelete() {
@@ -67,7 +72,14 @@ function confirmDelete() {
     <ProgressSpinner
         v-if="isLoading"
         style="width: 100%"
-    />
+    />    
+    <Message
+        v-else-if="configurationError"
+        severity="error"
+        size="small"
+    >
+        {{ configurationError.message }}
+    </Message>
     <template v-else>
         <div class="section-header">
             <h2>{{ props.sectionTitle }}</h2>

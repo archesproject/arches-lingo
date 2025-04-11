@@ -4,7 +4,7 @@ import { inject, useTemplateRef, watch } from "vue";
 import { useRouter } from "vue-router";
 import { Form } from "@primevue/forms";
 
-import { createConcept, upsertLingoTile } from "@/arches_lingo/api.ts";
+import { upsertLingoTile } from "@/arches_lingo/api.ts";
 
 import type { Component, Ref } from "vue";
 import type { FormSubmitEvent } from "@primevue/forms";

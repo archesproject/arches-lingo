@@ -24,6 +24,7 @@ const props = defineProps<{
 
 const isLoading = ref(true);
 const tileData = ref<ConceptImages>();
+const configurationError = ref();
 
 const shouldCreateNewTile = Boolean(props.mode === EDIT && !props.tileId);
 
@@ -47,7 +48,8 @@ async function getSectionValue() {
             props.nodegroupAlias,
         );
     } catch (error) {
-        console.error(error);
+        isLoading.value = false;
+        configurationError.value = error;
     }
 }
 </script>
@@ -57,7 +59,13 @@ async function getSectionValue() {
         v-if="isLoading"
         style="width: 100%"
     />
-
+    <Message
+        v-else-if="configurationError"
+        severity="error"
+        size="small"
+    >
+        {{ configurationError.message }}
+    </Message>
     <template v-else>
         <ConceptImagesViewer
             v-if="mode === VIEW"
