@@ -72,13 +72,13 @@ const tree = computed(() =>{
     )
 });
 
-onMounted(initializeTree);
-
 // React to route changes.
 watch(route, (newRoute) => selectNodeFromRoute(newRoute));
 
 // Navigate on initial load of the tree.
 watch(tree, () => selectNodeFromRoute(route), { once: true });
+
+onMounted(initializeTree);
 
 function expandAll() {
     for (const node of tree.value) {
@@ -193,6 +193,8 @@ async function initializeTree() {
         });
 };
 
+import { nextTick } from "vue";
+
 function selectNodeFromRoute(newRoute: RouteLocationNormalizedLoadedGeneric) {
     switch (newRoute.name) {
         case routeNames.concept: {
@@ -208,18 +210,31 @@ function selectNodeFromRoute(newRoute: RouteLocationNormalizedLoadedGeneric) {
                 const itemsToExpandIds = path.map(
                     (itemInPath: TreeNode) => itemInPath.key,
                 );
+
                 expandedKeys.value = {
                     ...expandedKeys.value,
                     ...Object.fromEntries(
-                        itemsToExpandIds.map((x: string) => [x, true]),
+                        itemsToExpandIds.map((item: string) => [item, true]),
                     ),
+                    [found.key]: true,
                 };
                 selectedKeys.value = { [found.data.id]: true };
+
+                nextTick(() => {
+                    const element = document.getElementById(found.data.id);
+                    if (element) {
+                        element.scrollIntoView({
+                            behavior: "smooth",
+                            block: "center",
+                        });
+                    }
+                });
             }
             break;
         }
     }
 };
+
 </script>
 
 <template>
@@ -270,6 +285,7 @@ function selectNodeFromRoute(newRoute: RouteLocationNormalizedLoadedGeneric) {
     >
         <template #default="slotProps">
             <TreeRow
+                :id="slotProps.node.data.id"
                 v-model:focused-node="focusedNode"
                 :filter-value="filterValue"
                 :node="slotProps.node"

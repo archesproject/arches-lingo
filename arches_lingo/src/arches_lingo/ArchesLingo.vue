@@ -43,7 +43,7 @@ const route = useRoute();
 const toast = useToast();
 const { $gettext } = useGettext();
 
-async function checkUserAuthentication(to:RouteLocationNormalizedLoadedGeneric) {
+async function checkUserAuthentication(to: RouteLocationNormalizedLoadedGeneric) {
     const userData = await fetchUser();
     setUser(userData);
 

@@ -29,7 +29,7 @@ export function navigateToSchemeOrConcept(
     if (value === NEW_CONCEPT) {
         router.push({ 
             name: routeNames.concept, 
-            params: { id: value } 
+            params: { id: 'new' } 
         });
     } else if (dataIsScheme(value)) {
         router.push({ 
