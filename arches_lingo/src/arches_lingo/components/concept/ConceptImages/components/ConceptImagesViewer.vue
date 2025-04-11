@@ -13,9 +13,7 @@ import type {
     ConceptImages,
     DigitalObjectInstance,
 } from "@/arches_lingo/types.ts";
-import {
-    fetchLingoResourcesBatch,
-} from "@/arches_lingo/api.ts";
+import { fetchLingoResourcesBatch } from "@/arches_lingo/api.ts";
 import NonLocalizedStringWidget from "@/arches_component_lab/widgets/NonLocalizedStringWidget/NonLocalizedStringWidget.vue";
 
 const props = defineProps<{
@@ -28,18 +26,21 @@ const props = defineProps<{
 
 const openEditor = inject<(componentName: string) => void>("openEditor");
 
+const isLoading = ref(true);
 const resources = ref<DigitalObjectInstance[]>();
 const { $gettext } = useGettext();
 const confirm = useConfirm();
 
 onMounted(async () => {
     if (props.tileData) {
+
         resources.value = await fetchLingoResourcesBatch(
             "digital_object_rdm_system",
             props.tileData.aliased_data.depicting_digital_asset_internal.map(
                 (resource) => resource.resourceId,
             ),
         );
+        isLoading.value = false;
     }
 });
 function confirmDelete() {
@@ -63,66 +64,72 @@ function confirmDelete() {
 </script>
 
 <template>
-    <div class="section-header">
-        <h2>{{ props.sectionTitle }}</h2>
-        <Button
-            :label="$gettext('Add New Concept Image')"
-            @click="openEditor!(props.componentName)"
-        ></Button>
-    </div>
-    <div class="conceptImages">
-        <div
-            v-for="resource in resources"
-            :key="resource.resourceinstanceid"
-            class="conceptImage"
-        >
-            <div class="header">
-                <label
-                    for="conceptImage"
-                    class="text"
-                >
+    <ProgressSpinner
+        v-if="isLoading"
+        style="width: 100%"
+    />
+    <template v-else>
+        <div class="section-header">
+            <h2>{{ props.sectionTitle }}</h2>
+            <Button
+                :label="$gettext('Add New Concept Image')"
+                @click="openEditor!(props.componentName)"
+            ></Button>
+        </div>
+        <div class="conceptImages">
+            <div
+                v-for="resource in resources"
+                :key="resource.resourceinstanceid"
+                class="conceptImage"
+            >
+                <div class="header">
+                    <label
+                        for="conceptImage"
+                        class="text"
+                    >
+                        <NonLocalizedStringWidget
+                            node-alias="name_content"
+                            graph-slug="digital_object_rdm_system"
+                            :mode="VIEW"
+                            :initial-value="resource.aliased_data.name.aliased_data.name_content
+                                "
+                        />
+                    </label>
+                    <div class="buttons">
+                        <Button
+                            icon="pi pi-file-edit"
+                            @click="openEditor!(props.componentName)"
+                        />
+                        <Button
+                            icon="pi pi-trash"
+                            :aria-label="$gettext('Delete')"
+                            severity="danger"
+                            outlined
+                            @click="confirmDelete()"
+                        />
+                    </div>
+                </div>
+                <FileListWidget
+                    node-alias="content"
+                    graph-slug="digital_object_rdm_system"
+                    :initial-value="resource.aliased_data.content?.aliased_data.content
+                        "
+                    :mode="VIEW"
+                    class="conceptImage"
+                />
+                <div class="footer">
                     <NonLocalizedStringWidget
-                        node-alias="name_content"
+                        node-alias="statement_content"
                         graph-slug="digital_object_rdm_system"
                         :mode="VIEW"
-                        :initial-value="resource.aliased_data.name.aliased_data.name_content
+                        :initial-value="resource.aliased_data.statement?.aliased_data
+                            .statement_content
                             "
-                    />
-                </label>
-                <div class="buttons">
-                    <Button
-                        icon="pi pi-file-edit"
-                        @click="openEditor!(props.componentName)"
-                    />
-                    <Button
-                        icon="pi pi-trash"
-                        :aria-label="$gettext('Delete')"
-                        severity="danger"
-                        outlined
-                        @click="confirmDelete()"
                     />
                 </div>
             </div>
-            <FileListWidget
-                node-alias="content"
-                graph-slug="digital_object_rdm_system"
-                :initial-value="resource.aliased_data.content?.aliased_data.content
-                    "
-                :mode="VIEW"
-                class="conceptImage"
-            />
-            <div class="footer">
-                <NonLocalizedStringWidget
-                    node-alias="statement_content"
-                    graph-slug="digital_object_rdm_system"
-                    :mode="VIEW"
-                    :initial-value="resource.aliased_data.statement?.aliased_data
-                            .statement_content
-                        "
-                />
-            </div>
-        </div>
-    </div>
+        </div> 
+    </template>
 </template>
 
 <style scoped>
