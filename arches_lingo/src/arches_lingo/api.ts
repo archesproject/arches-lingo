@@ -130,12 +130,12 @@ export const upsertLingoTile = async (
 };
 
 export const deleteLingoTile = async (
-    schemeId: string,
+    graphSlug: string,
     nodegroupAlias: string,
     tileId: string,
 ) => {
     const response = await fetch(
-        arches.urls.api_lingo_tile(schemeId, nodegroupAlias, tileId),
+        arches.urls.api_lingo_tile(graphSlug, nodegroupAlias, tileId),
         {
             method: "DELETE",
             headers: { "X-CSRFTOKEN": getToken() },
