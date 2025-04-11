@@ -13,7 +13,9 @@ import type {
     ConceptImages,
     DigitalObjectInstance,
 } from "@/arches_lingo/types.ts";
-import { fetchLingoResource } from "@/arches_lingo/api.ts";
+import {
+    fetchLingoResourcesBatch,
+} from "@/arches_lingo/api.ts";
 import NonLocalizedStringWidget from "@/arches_component_lab/widgets/NonLocalizedStringWidget/NonLocalizedStringWidget.vue";
 
 const props = defineProps<{
@@ -24,16 +26,18 @@ const props = defineProps<{
     nodegroupAlias: string;
 }>();
 
+const openEditor = inject<(componentName: string) => void>("openEditor");
+
 const resources = ref<DigitalObjectInstance[]>();
 const { $gettext } = useGettext();
 const confirm = useConfirm();
 
 onMounted(async () => {
     if (props.tileData) {
-        resources.value = await Promise.all(
+        resources.value = await fetchLingoResourcesBatch(
+            "digital_object_rdm_system",
             props.tileData.aliased_data.depicting_digital_asset_internal.map(
-                async (digitalAsset) =>
-                    await getConceptImageResource(digitalAsset.resourceId),
+                (resource) => resource.resourceId,
             ),
         );
     }
@@ -55,18 +59,6 @@ function confirmDelete() {
             severity: DANGER,
         },
     });
-}
-
-const openEditor = inject<(componentName: string) => void>("openEditor");
-async function getConceptImageResource(resourceInstanceId: string) {
-    try {
-        return await fetchLingoResource(
-            "digital_object_rdm_system",
-            resourceInstanceId as string,
-        );
-    } catch (error) {
-        console.error(error);
-    }
 }
 </script>
 
@@ -93,9 +85,8 @@ async function getConceptImageResource(resourceInstanceId: string) {
                         node-alias="name_content"
                         graph-slug="digital_object_rdm_system"
                         :mode="VIEW"
-                        :initial-value="
-                            resource.aliased_data.name.aliased_data.name_content
-                        "
+                        :initial-value="resource.aliased_data.name.aliased_data.name_content
+                            "
                     />
                 </label>
                 <div class="buttons">
@@ -105,7 +96,7 @@ async function getConceptImageResource(resourceInstanceId: string) {
                     />
                     <Button
                         icon="pi pi-trash"
-                        :aria-label="$gettext('delete')"
+                        :aria-label="$gettext('Delete')"
                         severity="danger"
                         outlined
                         @click="confirmDelete()"
@@ -115,9 +106,8 @@ async function getConceptImageResource(resourceInstanceId: string) {
             <FileListWidget
                 node-alias="content"
                 graph-slug="digital_object_rdm_system"
-                :initial-value="
-                    resource.aliased_data.content?.aliased_data.content
-                "
+                :initial-value="resource.aliased_data.content?.aliased_data.content
+                    "
                 :mode="VIEW"
                 class="conceptImage"
             />
@@ -126,15 +116,10 @@ async function getConceptImageResource(resourceInstanceId: string) {
                     node-alias="statement_content"
                     graph-slug="digital_object_rdm_system"
                     :mode="VIEW"
-                    :initial-value="
-                        resource.aliased_data.statement?.aliased_data
+                    :initial-value="resource.aliased_data.statement?.aliased_data
                             .statement_content
-                    "
+                        "
                 />
-                {{
-                    resource.aliased_data.statement?.aliased_data
-                        .statement_content
-                }}
             </div>
         </div>
     </div>
@@ -186,8 +171,7 @@ async function getConceptImageResource(resourceInstanceId: string) {
     margin: 0 0.5rem;
 }
 
-.conceptImages :deep(.mainImage) {
-}
+.conceptImages :deep(.mainImage) {}
 
 .conceptImages :deep(.p-galleria) {
     border: none;
