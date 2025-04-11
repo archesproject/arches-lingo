@@ -16,6 +16,7 @@ import type {
 } from "@/arches_lingo/types.ts";
 import { EDIT } from "@/arches_lingo/constants.ts";
 import NonLocalizedStringWidget from "@/arches_component_lab/widgets/NonLocalizedStringWidget/NonLocalizedStringWidget.vue";
+import { fetchLingoResource, updateLingoResource } from "@/arches_lingo/api.ts";
 
 const props = defineProps<{
     tileData: ConceptImages | undefined;
@@ -51,16 +52,16 @@ watch(
     (formComponent) => (componentEditorFormRef!.value = formComponent),
 );
 
-// async function getConceptImageResource(/*resourceInstanceId: string*/) {
-//     try {
-//         // return await fetchLingoResource(
-//         //     "digital_object_rdm_system",
-//         //     resourceInstanceId as string,
-//         // );
-//     } catch (error) {
-//         console.error(error);
-//     }
-// }
+async function getConceptImageResource(resourceInstanceId: string) {
+    try {
+        return await fetchLingoResource(
+            "digital_object_rdm_system",
+            resourceInstanceId,
+        );
+    } catch (error) {
+        console.error(error);
+    }
+}
 
 async function save(e: FormSubmitEvent) {
     try {
@@ -68,33 +69,13 @@ async function save(e: FormSubmitEvent) {
             Object.entries(e.states).map(([key, state]) => [key, state.value]),
         );
         console.log("hey, formdata!", formData);
-        const result = await formRef.value.submit();
         let updatedTileId;
 
-        if (!props.resourceInstanceId) {
-            // const updatedConcept = await createLingoResource({
-            //     aliased_data: {
-            //         [props.nodegroupAlias]: [formData]
-            //     }
-            // },
-            //     props.graphSlug
-            // );
-            // await router.push({
-            //     name: props.graphSlug,
-            //     params: { id: updatedConcept.resourceinstanceid },
-            // });
-            // updatedTileId = updatedConcept[props.nodegroupAlias][0].tileid;
-        } else {
-            // const updatedConcept = await upsertLingoTile(
-            //     props.graphSlug,
-            //     props.nodegroupAlias,
-            //     {
-            //         resourceinstance: props.resourceInstanceId,
-            //         aliased_data: { ...formData },
-            //         tileid: props.tileId,
-            //     },
-            // );a
-            // updatedTileId = updatedConcept.tileid;
+        if (resource.value) {
+            await updateLingoResource(
+                props.graphSlug,
+
+            )
         }
 
         openEditor!(props.componentName, updatedTileId);
@@ -104,6 +85,13 @@ async function save(e: FormSubmitEvent) {
         refreshReportSection!(props.componentName);
     }
 }
+
+document.addEventListener("openConceptImagesEditor", async (e) => {
+    const customEvent = e as CustomEvent;
+    console.log('foo event triggered', customEvent.detail.resourceInstanceId);
+    resource.value = await getConceptImageResource(customEvent.detail.resourceInstanceId);
+
+});
 </script>
 
 <template>
@@ -126,14 +114,13 @@ async function save(e: FormSubmitEvent) {
             node-alias="statement_content"
             graph-slug="digital_object_rdm_system"
             :mode="EDIT"
-            :initial-value="resource?.aliased_data.statement.aliased_data.statement_content
+            :initial-value="resource?.aliased_data.statement?.aliased_data.statement_content
                 "
         />
         <FileListWidget
             node-alias="content"
             graph-slug="digital_object_rdm_system"
-            :initial-value="resource?.aliased_data?.content?.aliased_data.content
-                "
+            :initial-value="resource?.aliased_data?.content?.aliased_data.content"
             :mode="EDIT"
             class="conceptImage"
         />

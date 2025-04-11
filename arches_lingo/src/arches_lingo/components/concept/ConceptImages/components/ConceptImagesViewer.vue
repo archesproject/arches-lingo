@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject, ref, onMounted } from "vue";
+import { inject, ref, onMounted, nextTick } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import Button from "primevue/button";
@@ -24,7 +24,7 @@ const props = defineProps<{
     nodegroupAlias: string;
 }>();
 
-const openEditor = inject<(componentName: string) => void>("openEditor");
+const openEditor = inject<(componentName: string, tileId?: string) => void>("openEditor");
 
 const configurationError = ref();
 const isLoading = ref(true);
@@ -65,6 +65,16 @@ function confirmDelete() {
             severity: DANGER,
         },
     });
+}
+
+function editResource(resourceInstanceId: string) {
+    openEditor!(props.componentName)
+
+    nextTick(() => {
+        const openConceptImagesEditor = new CustomEvent('openConceptImagesEditor', { detail: { resourceInstanceId: resourceInstanceId } })
+        document.dispatchEvent(openConceptImagesEditor)
+    })
+
 }
 </script>
 
@@ -110,11 +120,11 @@ function confirmDelete() {
                     <div class="buttons">
                         <Button
                             icon="pi pi-file-edit"
-                            @click="openEditor!(props.componentName)"
+                            @click="editResource(resource.resourceinstanceid)"
                         />
                         <Button
                             icon="pi pi-trash"
-                            :aria-label="$gettext('Delete')"
+                            :aria-label="$gettext('delete')"
                             severity="danger"
                             outlined
                             @click="confirmDelete()"
@@ -140,7 +150,7 @@ function confirmDelete() {
                     />
                 </div>
             </div>
-        </div> 
+        </div>
     </template>
 </template>
 
