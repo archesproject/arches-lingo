@@ -84,6 +84,9 @@ onMounted(async () => {
 
 async function getHierarchicalData(conceptIds: string[]) {
     try {
+        if (conceptIds.length === 0) {
+            return;
+        }
         return await fetchConceptResources(
             "",
             conceptIds.length,
