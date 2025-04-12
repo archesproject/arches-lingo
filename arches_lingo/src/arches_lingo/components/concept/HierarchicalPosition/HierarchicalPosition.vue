@@ -35,7 +35,7 @@ const concepts = ref<string[]>([props.resourceInstanceId!]); // Ensure we have a
 const hierarchicalData = ref<SearchResultHierarchy[]>();
 const schemeId = ref<string>();
 const tileData = ref<ConceptClassificationStatus[]>();
-const topConceptOf = ref<string>();
+const topConceptOfTileId = ref<string>();
 
 const shouldCreateNewTile = Boolean(props.mode === EDIT && !props.tileId);
 
@@ -66,10 +66,13 @@ onMounted(async () => {
                     return { searchResults: hierarchicalArray };
                 },
             );
-            if (topConceptOf.value) {
+            if (topConceptOfTileId.value) {
                 const topConceptHierarchy =[hierarchicalData.value![0].searchResults[0]];
                 topConceptHierarchy.push(currentPosition.data[0]);
-                hierarchicalData.value?.unshift({ searchResults: topConceptHierarchy });
+                hierarchicalData.value!.unshift({
+                    searchResults: topConceptHierarchy,
+                    tileid: topConceptOfTileId.value,
+                });
             }
         } else {
             hierarchicalData.value = currentPosition.data.map(
@@ -83,6 +86,9 @@ onMounted(async () => {
 
         if (hierarchicalData.value && tileData.value) {
             for (const datum of hierarchicalData.value) {
+                if (datum.tileid) {
+                    continue;
+                }
                 datum.tileid = tileData.value.find(
                     (tile) =>
                         tile.aliased_data
@@ -126,7 +132,7 @@ async function getSectionValue() {
             props.resourceInstanceId as string,
             "top_concept_of",
         );
-        topConceptOf.value = topConceptOfValue.aliased_data.top_concept_of[0]?.aliased_data.top_concept_of[0].resourceId;
+        topConceptOfTileId.value = topConceptOfValue.aliased_data.top_concept_of[0]?.tileid;
 
         return sectionValue;
     } catch (error) {
