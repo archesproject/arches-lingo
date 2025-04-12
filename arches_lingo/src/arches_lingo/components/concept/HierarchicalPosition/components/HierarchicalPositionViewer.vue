@@ -50,7 +50,8 @@ function getIcon(item: SearchResultItem) {
     return item.id === props.scheme ? "pi pi-folder" : "pi pi-tag";
 }
 
-function confirmDelete(tileId: string) {
+function confirmDelete(tileId: string|undefined) {
+    if (!tileId) return;
     confirm.require({
         header: $gettext("Confirmation"),
         message: $gettext(
@@ -117,14 +118,14 @@ async function deleteSectionValue(tileId: string) {
                 <span>{{ $gettext("Lineage " + (index + 1)) }}</span>
             </div>
             <div
-                v-for="(item, index) in hierarchy.searchResults"
+                v-for="(item, subindex) in hierarchy.searchResults"
                 :key="item.id"
                 class="section-item"
             >
                 <span
                     :class="getIcon(item)"
                     :style="{
-                        'margin-left': index + 'rem',
+                        'margin-left': subindex + 'rem',
                         'margin-right': '0.5rem',
                     }"
                 ></span>
@@ -132,8 +133,8 @@ async function deleteSectionValue(tileId: string) {
                     {{ getItemLabel(item, ENGLISH.code, ENGLISH.code).value }}
                 </span>
                 <span
+                    v-if="subindex === hierarchy.searchResults.length - 1"
                     class="current-position"
-                    v-if="index === hierarchy.searchResults.length - 1"
                 >
                     <Button
                         icon="pi pi-file-edit"
@@ -144,12 +145,13 @@ async function deleteSectionValue(tileId: string) {
                         "
                     />
                     <Button
+                        v-if="hierarchy.tileid"
                         icon="pi pi-trash"
                         :aria-label="$gettext('delete')"
                         severity="danger"
                         size="small"
                         outlined
-                        @click="confirmDelete(hierarchy.tileid)"
+                        @click="confirmDelete(hierarchy!.tileid)"
                     />
                 </span>
             </div>

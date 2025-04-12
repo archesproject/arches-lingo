@@ -35,6 +35,7 @@ const concepts = ref<string[]>([props.resourceInstanceId!]); // Ensure we have a
 const hierarchicalData = ref<SearchResultHierarchy[]>();
 const schemeId = ref<string>();
 const tileData = ref<ConceptClassificationStatus[]>();
+const topConceptOf = ref<string>();
 
 const shouldCreateNewTile = Boolean(props.mode === EDIT && !props.tileId);
 
@@ -51,22 +52,34 @@ onMounted(async () => {
                         .classification_status_ascribed_classification[0]
                         .resourceId,
             ) || [];
-        // if (parent_concepts) {
-        //     concepts.value = concepts.value.concat(parent_concepts);
-        // }
 
         const currentPosition = await getHierarchicalData(concepts.value);
-        const parentsPosition = await getHierarchicalData(parent_concepts);
+        schemeId.value = currentPosition.data[0].parents[0].id;
 
-        schemeId.value = currentPosition?.data[0].parents[0].id;
-        hierarchicalData.value = parentsPosition?.data.map(
-            (datum: SearchResultItem) => {
-                const hierarchicalArray = datum.parents;
-                hierarchicalArray.push(datum);
-                hierarchicalArray.push(currentPosition.data[0]);
-                return { searchResults: hierarchicalArray };
-            },
-        );
+        if (tileData.value && tileData.value.length > 1) {
+            const parentsPosition = await getHierarchicalData(parent_concepts);
+            hierarchicalData.value = parentsPosition?.data.map(
+                (datum: SearchResultItem) => {
+                    const hierarchicalArray = datum.parents;
+                    hierarchicalArray.push(datum);
+                    hierarchicalArray.push(currentPosition.data[0]);
+                    return { searchResults: hierarchicalArray };
+                },
+            );
+            if (topConceptOf.value) {
+                const topConceptHierarchy =[hierarchicalData.value![0].searchResults[0]];
+                topConceptHierarchy.push(currentPosition.data[0]);
+                hierarchicalData.value?.unshift({ searchResults: topConceptHierarchy });
+            }
+        } else {
+            hierarchicalData.value = currentPosition.data.map(
+                (datum: SearchResultItem) => {
+                    const hierarchicalArray = datum.parents;
+                    hierarchicalArray.push(datum);
+                    return { searchResults: hierarchicalArray };
+                },
+            );
+        }
 
         if (hierarchicalData.value && tileData.value) {
             for (const datum of hierarchicalData.value) {
@@ -107,6 +120,14 @@ async function getSectionValue() {
             props.resourceInstanceId as string,
             props.nodegroupAlias,
         );
+
+        const topConceptOfValue = await fetchLingoResourcePartial(
+            props.graphSlug,
+            props.resourceInstanceId as string,
+            "top_concept_of",
+        );
+        topConceptOf.value = topConceptOfValue.aliased_data.top_concept_of[0]?.aliased_data.top_concept_of[0].resourceId;
+
         return sectionValue;
     } catch (error) {
         fetchError.value = error;
