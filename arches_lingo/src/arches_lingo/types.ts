@@ -265,5 +265,5 @@ export interface SearchResultItem {
 
 export interface SearchResultHierarchy {
     tileid?: string;
-    searchResult: SearchResultItem[];
+    searchResults: SearchResultItem[];
 }

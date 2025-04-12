@@ -116,9 +116,7 @@ class ConceptResourceView(ConceptTreeView):
                         part_of_scheme__0__resourceId=scheme
                     )
                 else:
-                    concept_query = Concept.filter(
-                        part_of_scheme__0__resourceId=scheme
-                    )
+                    concept_query = Concept.filter(part_of_scheme__0__resourceId=scheme)
             else:
                 concept_query = Concept.all()
 
@@ -128,9 +126,7 @@ class ConceptResourceView(ConceptTreeView):
                 ).values_list("concept_id", flat=True)
                 concept_query = concept_query.filter(pk__in=filtering_concept_ids)
 
-            concept_ids = (
-                concept_query.order_by("pk").values_list("pk", flat=True)
-            )
+            concept_ids = concept_query.order_by("pk").values_list("pk", flat=True)
 
         data = []
         paginator = Paginator(concept_ids, items_per_page)

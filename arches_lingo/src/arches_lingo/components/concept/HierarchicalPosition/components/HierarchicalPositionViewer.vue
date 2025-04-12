@@ -54,8 +54,7 @@ function confirmDelete(tileId: string) {
     confirm.require({
         header: $gettext("Confirmation"),
         message: $gettext(
-            "Are you sure you want to delete the parent relationship? " +
-                tileId,
+            "Are you sure you want to delete relationship to parent?",
         ),
         group: "delete-parent",
         accept: () => {
@@ -76,9 +75,10 @@ function confirmDelete(tileId: string) {
 async function deleteSectionValue(tileId: string) {
     try {
         await deleteLingoTile(props.graphSlug, props.nodegroupAlias, tileId);
-        await upsertLingoTile(props.graphSlug, props.nodegroupAlias, {
+
+        await upsertLingoTile(props.graphSlug, "top_concept_of", {
             resourceinstance: props.resourceInstanceId,
-            aliased_data: { top_concept_of: props.scheme },
+            aliased_data: { top_concept_of: [props.scheme] },
             tileid: undefined,
         });
 
@@ -110,14 +110,14 @@ async function deleteSectionValue(tileId: string) {
     ></ConfirmDialog>
     <div>
         <div
-            v-for="(searchResults, index) in props.data"
+            v-for="(hierarchy, index) in props.data"
             :key="index"
         >
             <div>
                 <span>{{ $gettext("Lineage " + (index + 1)) }}</span>
             </div>
             <div
-                v-for="(item, index) in searchResults"
+                v-for="(item, index) in hierarchy.searchResults"
                 :key="item.id"
                 class="section-item"
             >
@@ -133,14 +133,14 @@ async function deleteSectionValue(tileId: string) {
                 </span>
                 <span
                     class="current-position"
-                    v-if="index === searchResults.length - 1"
+                    v-if="index === hierarchy.searchResults.length - 1"
                 >
                     <Button
                         icon="pi pi-file-edit"
                         :aria-label="$gettext('edit')"
                         size="small"
                         @click="
-                            openEditor!(componentName, searchResults.tileid)
+                            openEditor!(componentName, hierarchy.tileid)
                         "
                     />
                     <Button
@@ -149,7 +149,7 @@ async function deleteSectionValue(tileId: string) {
                         severity="danger"
                         size="small"
                         outlined
-                        @click="confirmDelete(searchResults.tileid)"
+                        @click="confirmDelete(hierarchy.tileid)"
                     />
                 </span>
             </div>

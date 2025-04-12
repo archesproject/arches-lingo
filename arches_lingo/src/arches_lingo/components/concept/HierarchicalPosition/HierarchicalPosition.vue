@@ -64,7 +64,7 @@ onMounted(async () => {
                 const hierarchicalArray = datum.parents;
                 hierarchicalArray.push(datum);
                 hierarchicalArray.push(currentPosition.data[0]);
-                return hierarchicalArray;
+                return { searchResults: hierarchicalArray };
             },
         );
 
@@ -74,7 +74,7 @@ onMounted(async () => {
                     (tile) =>
                         tile.aliased_data
                             .classification_status_ascribed_classification[0]
-                            .resourceId === datum[datum.length - 2].id,
+                            .resourceId === datum.searchResults[datum.searchResults.length - 2].id,
                 )?.tileid;
             }
         }
