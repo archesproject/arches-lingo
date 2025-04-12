@@ -50,8 +50,8 @@ function getIcon(item: SearchResultItem) {
     return item.id === props.scheme ? "pi pi-folder" : "pi pi-tag";
 }
 
-function confirmDelete(tileId: string|undefined) {
-    if (!tileId) return;
+function confirmDelete(hierarchy: SearchResultHierarchy) {
+    if (!hierarchy.tileid) return;
     confirm.require({
         header: $gettext("Confirmation"),
         message: $gettext(
@@ -59,7 +59,7 @@ function confirmDelete(tileId: string|undefined) {
         ),
         group: "delete-parent",
         accept: () => {
-            deleteSectionValue(tileId);
+            deleteSectionValue(hierarchy);
         },
         rejectProps: {
             label: $gettext("Cancel"),
@@ -73,18 +73,24 @@ function confirmDelete(tileId: string|undefined) {
     });
 }
 
-async function deleteSectionValue(tileId: string) {
+async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
     try {
-        await deleteLingoTile(props.graphSlug, props.nodegroupAlias, tileId);
-
-        await upsertLingoTile(props.graphSlug, "top_concept_of", {
-            resourceinstance: props.resourceInstanceId,
-            aliased_data: { top_concept_of: [props.scheme] },
-            tileid: undefined,
-        });
-
+        if (props.data.length !== 1) {
+            if (hierarchy.searchResults.length > 2) {
+                await deleteLingoTile(props.graphSlug, props.nodegroupAlias, hierarchy.tileid!);
+            } else if (hierarchy.searchResults.length === 2) {
+                await deleteLingoTile(props.graphSlug, "top_concept_of", hierarchy.tileid!);
+            }
+        } else {
+            toast.add({
+                severity: ERROR,
+                life: DEFAULT_ERROR_TOAST_LIFE,
+                summary: $gettext("Failed to delete data."),
+                detail: $gettext("Cannot delete the last relationship."),
+            });
+        }
         refreshReportSection!(props.componentName);
-        updateAfterComponentDeletion!(props.componentName, tileId);
+        updateAfterComponentDeletion!(props.componentName, hierarchy.tileid!);
     } catch (error) {
         toast.add({
             severity: ERROR,
@@ -151,7 +157,7 @@ async function deleteSectionValue(tileId: string) {
                         severity="danger"
                         size="small"
                         outlined
-                        @click="confirmDelete(hierarchy!.tileid)"
+                        @click="confirmDelete(hierarchy)"
                     />
                 </span>
             </div>
