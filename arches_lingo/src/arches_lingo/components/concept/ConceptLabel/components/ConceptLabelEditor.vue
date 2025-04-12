@@ -82,7 +82,8 @@ async function save(e: FormSubmitEvent) {
                 params: { id: updatedConcept.resourceinstanceid },
             });
 
-            updatedTileId = updatedConcept.aliased_data[props.nodegroupAlias][0].tileid;
+            updatedTileId =
+                updatedConcept.aliased_data[props.nodegroupAlias][0].tileid;
         } else {
             const updatedTile = await upsertLingoTile(
                 props.graphSlug,
