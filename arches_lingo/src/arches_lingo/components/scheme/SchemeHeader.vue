@@ -59,7 +59,15 @@ onMounted(async () => {
 <template>
     <div>
         <h2>{{ schemeDescriptor?.name }} ({{ systemLanguage.name }})</h2>
-        <p>{{ schemeDescriptor?.description }}</p>
-        <p>Resource Instance ID: {{ scheme?.resourceinstanceid }}</p>
+        <p>URI:</p>
+        <p>Description: {{ schemeDescriptor?.description }}</p>
+        <p>Life cycle state:</p>
+        <p>Created by:</p>
     </div>
 </template>
+
+<style scoped>
+p {
+    margin: 0;
+}
+</style>

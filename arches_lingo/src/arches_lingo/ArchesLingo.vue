@@ -114,4 +114,8 @@ main {
     flex-direction: column;
     flex: 1 1 auto;
 }
+
+.sidenav {
+    background: var(--p-sidenav-background);
+}
 </style>
