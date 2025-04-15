@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { inject, ref, useTemplateRef, watch } from "vue";
 
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
 
@@ -35,6 +35,7 @@ const props = defineProps<{
     tileId?: string;
 }>();
 
+const route = useRoute();
 const router = useRouter();
 const toast = useToast();
 const { $gettext } = useGettext();
@@ -61,9 +62,7 @@ async function save(e: FormSubmitEvent) {
     isSaving.value = true;
 
     try {
-        const formData = Object.fromEntries(
-            Object.entries(e.states).map(([key, state]) => [key, state.value]),
-        );
+        const formData = e.values;
 
         let updatedTileId;
 
@@ -72,6 +71,15 @@ async function save(e: FormSubmitEvent) {
                 {
                     aliased_data: {
                         [props.nodegroupAlias]: [formData],
+                        part_of_scheme: {
+                            part_of_scheme: route.query.scheme,
+                        },
+                        classification_status: [
+                            {
+                                classification_status_ascribed_classification:
+                                    route.query.parent,
+                            },
+                        ],
                     },
                 },
                 props.graphSlug,
