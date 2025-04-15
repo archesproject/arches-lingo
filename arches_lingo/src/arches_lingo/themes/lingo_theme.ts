@@ -40,12 +40,12 @@ export const LingoPreset = definePreset(ArchesPreset, {
                 sidenav: {
                     background: "{arches.legacy.sidebar}",
                 },
-                header: {
-                    background: "{surface.50}",
-                },
-                footer: {
-                    background: "{surface.50}",
-                },
+                // header: {
+                //     background: "{surface.50}",
+                // },
+                // footer: {
+                //     background: "{surface.50}",
+                // },
             },
             dark: {
                 // DRW: develop Arches blue color for dark mode
