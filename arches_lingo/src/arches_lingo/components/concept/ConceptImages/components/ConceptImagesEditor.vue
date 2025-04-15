@@ -85,9 +85,16 @@ async function save(e: FormSubmitEvent) {
                 (file) => !formData.content.deletedFiles.includes(file),
             );
             const formdata = new FormData();
-            formdata.append("aliased_data", JSON.stringify(contentTile));
+            for (const [key, val] of Object.entries(resource.value)) {
+                if (["name", "descriptors"].includes(key)) {
+                    // TODO: avoid need to skip these
+                    continue;
+                }
+                formdata.append(key, val);
+            }
             for (const file of formData.content.newFiles) {
                 formdata.append(
+                    // future: change(?)
                     `file-list_${"f522c448-1778-11ef-b270-0a58a9feac02"}`,
                     file,
                 );
