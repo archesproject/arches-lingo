@@ -1,7 +1,6 @@
 from collections import defaultdict
 
 from django.contrib.postgres.expressions import ArraySubquery
-from django.core.cache import caches
 from django.db.models import CharField, F, OuterRef, Value
 from django.db.models.expressions import CombinedExpression
 from django.utils.translation import gettext as _
@@ -29,64 +28,29 @@ from arches_lingo.query_expressions import JsonbArrayElements
 TOP_CONCEPT_OF_LOOKUP = f"data__{TOP_CONCEPT_OF_NODE_AND_NODEGROUP}"
 BROADER_LOOKUP = f"data__{CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID}"
 
-cache = caches["lingo"]
-
 
 class ConceptBuilder:
     def __init__(self):
         self.schemes = ResourceInstance.objects.none()
 
         # key=scheme resourceid (str) val=set of concept resourceids (str)
-        self.top_concepts: dict[str : set[str]] = defaultdict(set)
+        self.top_concepts: dict[str, set[str]] = defaultdict(set)
         # key=concept resourceid (str) val=set of concept resourceids (str)
-        self.narrower_concepts: dict[str : set[str]] = defaultdict(set)
+        self.narrower_concepts: dict[str, set[str]] = defaultdict(set)
         # key=resourceid (str) val=list of label dicts
-        self.labels: dict[str : list[dict]] = defaultdict(set)
+        self.labels: dict[str, list[dict]] = defaultdict(set)
 
         # Maps representing a reverse (leaf-first) tree
         # key=resourceid (str) val=set of concept resourceids (str)
-        self.broader_concepts: dict[str : set[str]] = defaultdict(set)
+        self.broader_concepts: dict[str, set[str]] = defaultdict(set)
         # key=resourceid (str) val=set of scheme resourceids (str)
-        self.schemes_by_top_concept: dict[str : set[str]] = defaultdict(set)
+        self.schemes_by_top_concept: dict[str, set[str]] = defaultdict(set)
 
-        self.read_from_cache()
-
-        # Not currently cached because written to during serialization.
-        self.polyhierarchical_concepts = set()
-
-    def read_from_cache(self):
-        from_cache = cache.get_many(
-            [
-                "top_concepts",
-                "narrower_concepts",
-                "schemes",
-                "labels",
-                "broader_concepts",
-                "schemes_by_top_concept",
-            ]
-        )
-        try:
-            self.top_concepts = from_cache["top_concepts"]
-            self.narrower_concepts = from_cache["narrower_concepts"]
-            self.schemes = from_cache["schemes"]
-            self.labels = from_cache["labels"]
-            self.broader_concepts = from_cache["broader_concepts"]
-            self.schemes_by_top_concept = from_cache["schemes_by_top_concept"]
-        except KeyError:
-            self.rebuild_cache()
-
-    def rebuild_cache(self):
         self.top_concepts_map()
         self.narrower_concepts_map()
         self.populate_schemes()
 
-        cache.set("top_concepts", self.top_concepts)
-        cache.set("narrower_concepts", self.narrower_concepts)
-        cache.set("schemes", self.schemes)
-        cache.set("labels", self.labels)
-        # Reverse trees.
-        cache.set("broader_concepts", self.broader_concepts)
-        cache.set("schemes_by_top_concept", self.schemes_by_top_concept)
+        self.polyhierarchical_concepts = set()
 
     @staticmethod
     def resources_from_tiles(lookup_expression: str):

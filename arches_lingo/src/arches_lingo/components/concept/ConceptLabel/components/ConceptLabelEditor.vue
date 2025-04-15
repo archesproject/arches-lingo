@@ -72,13 +72,14 @@ async function save(e: FormSubmitEvent) {
                     aliased_data: {
                         [props.nodegroupAlias]: [formData],
                         part_of_scheme: {
-                            "resourceId": route.query.scheme,
+                            part_of_scheme: route.query.scheme,
                         },
-                        classification_status: [{
-                            classification_status_ascribed_classification: {
-                                "resourceId": route.query.parent,
-                            }
-                        }]
+                        classification_status: [
+                            {
+                                classification_status_ascribed_classification:
+                                    route.query.parent,
+                            },
+                        ],
                     },
                 },
                 props.graphSlug,
