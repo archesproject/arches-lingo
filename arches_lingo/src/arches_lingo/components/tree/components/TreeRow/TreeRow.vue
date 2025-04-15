@@ -1,15 +1,15 @@
 <script setup lang="ts">
-import TreeRowLabel from "@/arches_lingo/components/tree/components/TreeRow/components/TreeRowLabel.vue"
-import FocusIcon from "@/arches_lingo/components/tree/components/TreeRow/components/FocusIcon.vue"
-import AddChildIcon from "@/arches_lingo/components/tree/components/TreeRow/components/AddChildIcon.vue"
+import TreeRowLabel from "@/arches_lingo/components/tree/components/TreeRow/components/TreeRowLabel.vue";
+import FocusIcon from "@/arches_lingo/components/tree/components/TreeRow/components/FocusIcon.vue";
+import AddChildIcon from "@/arches_lingo/components/tree/components/TreeRow/components/AddChildIcon.vue";
 
-import type { TreeNode } from "primevue/treenode"
+import type { TreeNode } from "primevue/treenode";
 
 const { node, focusLabel, unfocusLabel, filterValue } = defineProps<{
-    node: TreeNode,
-    focusLabel: string,
-    unfocusLabel: string,
-    filterValue: string,
+    node: TreeNode;
+    focusLabel: string;
+    unfocusLabel: string;
+    filterValue: string;
 }>();
 
 const focusedNode = defineModel<TreeNode | null>("focusedNode");
@@ -17,19 +17,19 @@ const focusedNode = defineModel<TreeNode | null>("focusedNode");
 
 <template>
     <div class="tree-row">
-        <TreeRowLabel 
-            :filter-value="filterValue" 
-            :node="node" 
+        <TreeRowLabel
+            :filter-value="filterValue"
+            :node="node"
         />
-        <FocusIcon 
-            v-model:focused-node="focusedNode" 
-            :focusLabel="focusLabel" 
-            :node="node" 
-            :unfocusLabel="unfocusLabel"
+        <FocusIcon
+            v-model:focused-node="focusedNode"
+            :focus-label="focusLabel"
+            :node="node"
+            :unfocus-label="unfocusLabel"
         />
-        <AddChildIcon 
-            :node="node" 
-            :addChildLabel="'Add Child'"
+        <AddChildIcon
+            :node="node"
+            :add-child-label="'Add Child'"
         />
     </div>
 </template>

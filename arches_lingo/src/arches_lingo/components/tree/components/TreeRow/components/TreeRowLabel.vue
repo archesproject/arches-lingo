@@ -1,20 +1,23 @@
 <script setup lang="ts">
-import { computed, inject } from "vue"
-import { getItemLabel } from "@/arches_vue_utils/utils.ts"
-import { selectedLanguageKey, systemLanguageKey } from "@/arches_lingo/constants.ts"
-import type { TreeNode } from "primevue/treenode"
+import { computed, inject } from "vue";
+import { getItemLabel } from "@/arches_vue_utils/utils.ts";
+import {
+    selectedLanguageKey,
+    systemLanguageKey,
+} from "@/arches_lingo/constants.ts";
+import type { TreeNode } from "primevue/treenode";
 
 const { node, filterValue } = defineProps<{
-    node: TreeNode,
-    filterValue: string,
-}>()
+    node: TreeNode;
+    filterValue: string;
+}>();
 
 const selectedLanguage = inject(selectedLanguageKey);
 const systemLanguage = inject(systemLanguageKey);
 
 function tokenizeLabel(
     label: string,
-    filter?: string
+    filter?: string,
 ): { text: string; highlight: boolean }[] {
     if (!filter) {
         return [{ text: label, highlight: false }];
@@ -27,8 +30,8 @@ function tokenizeLabel(
         if (part) {
             acc.push({
                 text: part,
-                highlight: part.toLowerCase() === filter.toLowerCase()
-            })
+                highlight: part.toLowerCase() === filter.toLowerCase(),
+            });
         }
         return acc;
     }, []);
@@ -42,17 +45,17 @@ const tokenizedLabel = computed(() => {
     const unstyledLabel = getItemLabel(
         node.data,
         selectedLanguage!.value.code,
-        systemLanguage!.code
+        systemLanguage!.code,
     ).value;
 
     return tokenizeLabel(unstyledLabel, filterValue);
-})
+});
 </script>
 
 <template>
     <div>
-        <template 
-            v-for="(token, index) in tokenizedLabel" 
+        <template
+            v-for="(token, index) in tokenizedLabel"
             :key="index"
         >
             <b v-if="token.highlight">{{ token.text }}</b>
@@ -60,4 +63,3 @@ const tokenizedLabel = computed(() => {
         </template>
     </div>
 </template>
-

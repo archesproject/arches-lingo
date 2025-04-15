@@ -6,11 +6,11 @@ import Button from "primevue/button";
 import { NEW_CONCEPT } from "@/arches_lingo/constants.ts";
 import { navigateToSchemeOrConcept } from "@/arches_lingo/utils.ts";
 
-import type { TreeNode } from "primevue/treenode"
+import type { TreeNode } from "primevue/treenode";
 
 const { node, addChildLabel } = defineProps<{
-    node: TreeNode
-    addChildLabel?: string
+    node: TreeNode;
+    addChildLabel?: string;
 }>();
 
 const router = useRouter();
@@ -26,7 +26,15 @@ function onAddChild() {
 
 <template>
     <Button
-        :disabled="route.params.id ==='new'"
+        v-tooltip="{
+            value: addChildLabel,
+            pt: {
+                text: {
+                    style: { fontFamily: 'sans-serif' },
+                },
+            },
+        }"
+        :disabled="route.params.id === 'new'"
         icon="fa fa-plus"
         role="button"
         size="small"
@@ -36,15 +44,7 @@ function onAddChild() {
             height: 1rem;
         "
         tabindex="1"
-        v-tooltip="{
-            value: addChildLabel,
-            pt: { 
-                text: { 
-                    style: { fontFamily: 'sans-serif' } 
-                } 
-            }
-        }"
-        variant="text" 
+        variant="text"
         :aria-label="addChildLabel"
         :rounded="true"
         @click.stop="onAddChild"

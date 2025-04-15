@@ -18,7 +18,10 @@ import {
     selectedLanguageKey,
     systemLanguageKey,
 } from "@/arches_lingo/constants.ts";
-import { treeFromSchemes, navigateToSchemeOrConcept } from "@/arches_lingo/utils.ts";
+import {
+    treeFromSchemes,
+    navigateToSchemeOrConcept,
+} from "@/arches_lingo/utils.ts";
 import { routeNames } from "@/arches_lingo/routes.ts";
 import TreeRow from "@/arches_lingo/components/tree/components/TreeRow/TreeRow.vue";
 
@@ -31,10 +34,7 @@ import type {
 } from "primevue/tree";
 import type { TreeNode } from "primevue/treenode";
 import type { Language } from "@/arches_vue_utils/types";
-import type {
-    IconLabels,
-    Scheme,
-} from "@/arches_lingo/types";
+import type { IconLabels, Scheme } from "@/arches_lingo/types";
 
 const toast = useToast();
 const { $gettext } = useGettext();
@@ -42,7 +42,7 @@ const route = useRoute();
 const router = useRouter();
 
 // Defining these in the parent avoids re-running $gettext in thousands of children.
-const NEW = 'new';
+const NEW = "new";
 const FOCUS = $gettext("Focus");
 const UNFOCUS = $gettext("Unfocus");
 const iconLabels: IconLabels = Object.freeze({
@@ -62,36 +62,32 @@ const nextFilterChangeNeedsExpandAll = ref(false);
 const expandedKeysSnapshotBeforeSearch = ref<TreeExpandedKeys>({});
 const rerenderTree = ref(0);
 
-const tree = computed(() =>{
+const tree = computed(() => {
     return treeFromSchemes(
         schemes.value,
         selectedLanguage.value,
         systemLanguage,
         iconLabels,
         focusedNode.value,
-    )
+    );
 });
 
 // React to route changes.
-watch(
-    route, 
-    (newRoute) => {
-        selectNodeFromRoute(newRoute);
-    },
-);
+watch(route, (newRoute) => {
+    selectNodeFromRoute(newRoute);
+});
 
-onMounted(async() => {
+onMounted(async () => {
     try {
         const priorSortedSchemeIds = tree.value.map((node) => node.key);
         const concepts = await fetchConcepts();
 
-        schemes.value = (concepts.schemes as Scheme[]).sort(
-            (a, b) => {
-                return (
-                    priorSortedSchemeIds.indexOf(a.id) - priorSortedSchemeIds.indexOf(b.id)
-                );
-            }
-        ); 
+        schemes.value = (concepts.schemes as Scheme[]).sort((a, b) => {
+            return (
+                priorSortedSchemeIds.indexOf(a.id) -
+                priorSortedSchemeIds.indexOf(b.id)
+            );
+        });
 
         selectNodeFromRoute(route);
     } catch (error) {
@@ -109,11 +105,11 @@ function expandAll() {
         expandNode(node);
     }
     expandedKeys.value = { ...expandedKeys.value };
-};
+}
 
 function collapseAll() {
     expandedKeys.value = {};
-};
+}
 
 function expandNode(node: TreeNode) {
     if (node.children && node.children.length) {
@@ -122,7 +118,7 @@ function expandNode(node: TreeNode) {
             expandNode(child);
         }
     }
-};
+}
 
 function expandPathsToFilterResults(newFilterValue: string) {
     // https://github.com/primefaces/primevue/issues/3996
@@ -143,7 +139,7 @@ function expandPathsToFilterResults(newFilterValue: string) {
         expandAll();
     }
     nextFilterChangeNeedsExpandAll.value = false;
-};
+}
 
 function getInputElement() {
     if (treeDOMRef.value !== null) {
@@ -163,7 +159,7 @@ function restoreFocusToInput() {
             inputEl.focus();
         }
     }
-};
+}
 
 function snoopOnFilterValue() {
     // If we wait to react to the emitted filter event, the templated rows
@@ -173,7 +169,7 @@ function snoopOnFilterValue() {
         expandPathsToFilterResults(inputEl.value);
         filterValue.value = inputEl.value;
     }
-};
+}
 
 function lazyLabelLookup(node: TreeNode) {
     return getItemLabel(
@@ -188,54 +184,45 @@ function updateSelectedAndExpanded(node: TreeNode) {
         ...expandedKeys.value,
         [node.key]: true,
     };
-};
-
-
-
-
-
-
+}
 
 function findNodeById(data, targetId) {
-  const queue = [];
-  
-  if (Array.isArray(data)) {
-    for (const node of data) {
-      queue.push({ node, path: [node] });
-    }
-  } else {
-    queue.push({ node: data, path: [data] });
-  }
+    const queue = [];
 
-  while (queue.length > 0) {
-    const { node: currentNode, path } = queue.shift();
-
-    if (currentNode.id === targetId) {
-      return { node: currentNode, path };
+    if (Array.isArray(data)) {
+        for (const node of data) {
+            queue.push({ node, path: [node] });
+        }
+    } else {
+        queue.push({ node: data, path: [data] });
     }
 
-    if (currentNode.narrower && Array.isArray(currentNode.narrower)) {
-      for (const child of currentNode.narrower) {
-        queue.push({ node: child, path: [...path, child] });
-      }
-    }
-  }
+    while (queue.length > 0) {
+        const { node: currentNode, path } = queue.shift();
 
-  return null;
+        if (currentNode.id === targetId) {
+            return { node: currentNode, path };
+        }
+
+        if (currentNode.narrower && Array.isArray(currentNode.narrower)) {
+            for (const child of currentNode.narrower) {
+                queue.push({ node: child, path: [...path, child] });
+            }
+        }
+    }
+
+    return null;
 }
 
 const foo = ref([]);
 
 function selectNodeFromRoute(newRoute: RouteLocationNormalizedLoadedGeneric) {
-    if (
-        newRoute.name === routeNames.concept &&
-        newRoute.params.id === NEW
-    ) {
+    if (newRoute.name === routeNames.concept && newRoute.params.id === NEW) {
         const schemeId = newRoute.query.scheme;
         const parentId = newRoute.query.parent;
 
         const schemeToEdit = schemes.value.find(
-            (scheme) => scheme.id === schemeId
+            (scheme) => scheme.id === schemeId,
         );
 
         let parent;
@@ -246,42 +233,36 @@ function selectNodeFromRoute(newRoute: RouteLocationNormalizedLoadedGeneric) {
             path = schemeToEdit!.top_concepts;
         } else {
             const result = findNodeById(schemeToEdit!.top_concepts, parentId);
-  
+
             parent = result!.node;
-            path = [
-                schemeToEdit,
-                ...result!.path
-            ];
+            path = [schemeToEdit, ...result!.path];
         }
 
         foo.value = path;
 
-        console.log("((()))", path, parent)
+        console.log("((()))", path, parent);
 
-        parent.narrower.unshift(
-            {
-                id: NEW,
-                labels: [
-                    {
-                        language_id: selectedLanguage.value.code,
-                        value: $gettext('New concept'),
-                        valuetype_id: "preferred label",
-                    }
-                ],
-                narrower: [],
-            }
-        )
+        parent.narrower.unshift({
+            id: NEW,
+            labels: [
+                {
+                    language_id: selectedLanguage.value.code,
+                    value: $gettext("New concept"),
+                    valuetype_id: "preferred label",
+                },
+            ],
+            narrower: [],
+        });
 
-        schemes.value = schemes.value.map(scheme => {
+        schemes.value = schemes.value.map((scheme) => {
             if (scheme.id === schemeId) {
                 return schemeToEdit!;
             }
             return scheme;
-        })
-
+        });
     } else {
         if (foo.value.length) {
-            foo.value[foo.value.length - 1].narrower.shift()
+            foo.value[foo.value.length - 1].narrower.shift();
             foo.value = [];
         }
     }
@@ -323,8 +304,7 @@ function selectNodeFromRoute(newRoute: RouteLocationNormalizedLoadedGeneric) {
             break;
         }
     }
-};
-
+}
 </script>
 
 <template>
@@ -358,10 +338,11 @@ function selectNodeFromRoute(newRoute: RouteLocationNormalizedLoadedGeneric) {
             },
             nodeContent: ({ instance }: TreePassThroughMethodOptions) => {
                 return {
-                    style: instance.node.data.id === NEW
-                        ? { backgroundColor: 'red' }
-                        : {},
-                }
+                    style:
+                        instance.node.data.id === NEW
+                            ? { backgroundColor: 'red' }
+                            : {},
+                };
             },
             nodeIcon: ({ instance }: TreePassThroughMethodOptions) => {
                 return { ariaLabel: instance.node.iconLabel };
@@ -375,14 +356,16 @@ function selectNodeFromRoute(newRoute: RouteLocationNormalizedLoadedGeneric) {
             },
         }"
         @node-collapse="nextFilterChangeNeedsExpandAll = true"
-        @node-select="(node) => {
-            if (node.data.id === NEW) {
-                return;
-            }
+        @node-select="
+            (node) => {
+                if (node.data.id === NEW) {
+                    return;
+                }
 
-            updateSelectedAndExpanded(node);
-            navigateToSchemeOrConcept!(router, node.data);
-        }"
+                updateSelectedAndExpanded(node);
+                navigateToSchemeOrConcept!(router, node.data);
+            }
+        "
     >
         <template #default="slotProps">
             <TreeRow

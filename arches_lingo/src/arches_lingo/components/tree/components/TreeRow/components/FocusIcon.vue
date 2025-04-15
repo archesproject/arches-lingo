@@ -1,15 +1,15 @@
 <script setup lang="ts">
-import { computed } from "vue"
+import { computed } from "vue";
 import { useRoute } from "vue-router";
 
 import Button from "primevue/button";
 
-import type { TreeNode } from "primevue/treenode"
+import type { TreeNode } from "primevue/treenode";
 
 const { node, focusLabel, unfocusLabel } = defineProps<{
-    node: TreeNode,
-    focusLabel: string,
-    unfocusLabel: string,
+    node: TreeNode;
+    focusLabel: string;
+    unfocusLabel: string;
 }>();
 
 const route = useRoute();
@@ -31,6 +31,14 @@ function toggleFocus() {
 
 <template>
     <Button
+        v-tooltip="{
+            value: isFocused ? unfocusLabel : focusLabel,
+            pt: {
+                text: {
+                    style: { fontFamily: 'sans-serif' },
+                },
+            },
+        }"
         :disabled="route.params.id === 'new' && node.data.id !== 'new'"
         :icon="isFocused ? 'fa fa-search-minus' : 'fa fa-bullseye'"
         role="button"
@@ -41,15 +49,7 @@ function toggleFocus() {
             height: 1rem;
         "
         tabindex="0"
-        v-tooltip="{
-            value: isFocused ? unfocusLabel : focusLabel,
-            pt: { 
-                text: { 
-                    style: { fontFamily: 'sans-serif' }
-                } 
-            }
-        }"
-        variant="text" 
+        variant="text"
         :aria-label="isFocused ? unfocusLabel : focusLabel"
         :rounded="true"
         @click.stop="toggleFocus"
