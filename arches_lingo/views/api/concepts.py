@@ -5,7 +5,6 @@ from django.utils.decorators import method_decorator
 from django.utils.translation import gettext as _
 from django.views.generic import View
 
-from arches.app.models.models import Tile
 from arches.app.models.system_settings import settings
 from arches.app.utils.decorators import group_required
 from arches.app.utils.response import JSONErrorResponse, JSONResponse
