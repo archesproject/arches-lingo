@@ -67,7 +67,9 @@ onMounted(async () => {
                 },
             );
             if (topConceptOfTileId.value) {
-                const topConceptHierarchy =[hierarchicalData.value![0].searchResults[0]];
+                const topConceptHierarchy = [
+                    hierarchicalData.value![0].searchResults[0],
+                ];
                 topConceptHierarchy.push(currentPosition.data[0]);
                 hierarchicalData.value!.unshift({
                     searchResults: topConceptHierarchy,
@@ -93,7 +95,8 @@ onMounted(async () => {
                     (tile) =>
                         tile.aliased_data
                             .classification_status_ascribed_classification[0]
-                            .resourceId === datum.searchResults[datum.searchResults.length - 2].id,
+                            .resourceId ===
+                        datum.searchResults[datum.searchResults.length - 2].id,
                 )?.tileid;
             }
         }
@@ -132,7 +135,8 @@ async function getSectionValue() {
             props.resourceInstanceId as string,
             "top_concept_of",
         );
-        topConceptOfTileId.value = topConceptOfValue.aliased_data.top_concept_of[0]?.tileid;
+        topConceptOfTileId.value =
+            topConceptOfValue.aliased_data.top_concept_of[0]?.tileid;
 
         return sectionValue;
     } catch (error) {
