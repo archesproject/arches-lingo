@@ -52,17 +52,6 @@ watch(
     (formComponent) => (componentEditorFormRef!.value = formComponent),
 );
 
-async function getConceptImageResource(resourceInstanceId: string) {
-    try {
-        return await fetchLingoResource(
-            "digital_object_rdm_system",
-            resourceInstanceId,
-        );
-    } catch (error) {
-        console.error(error);
-    }
-}
-
 async function save(e: FormSubmitEvent) {
     try {
         const formData = Object.fromEntries(
@@ -71,11 +60,44 @@ async function save(e: FormSubmitEvent) {
         console.log("hey, formdata!", formData);
         let updatedTileId;
 
-        if (resource.value) {
+        if (resource.value && resource.value?.aliased_data.content) {
+            const contentTile =
+                resource.value.aliased_data.content.aliased_data;
+            // file do not respect json.stringify
+            const fileJsonObjects = formData.content.newFiles.map((file) => {
+                return {
+                    name: file.name,
+                    accepted: file.accepted,
+                    height: file.height,
+                    lastModified: file.lastModified,
+                    size: file.size,
+                    status: file.status,
+                    type: file.type,
+                    width: file.width,
+                    url: null,
+                    file_id: null,
+                    content: URL.createObjectURL(file),
+                    error: file.error,
+                };
+            });
+            contentTile.content = [...contentTile.content, ...fileJsonObjects];
+            contentTile.content.filter(
+                (file) => !formData.content.deletedFiles.includes(file),
+            );
+            const formdata = new FormData();
+            formdata.append("aliased_data", JSON.stringify(contentTile));
+            for (const file of formData.content.newFiles) {
+                formdata.append(
+                    `file-list_${"f522c448-1778-11ef-b270-0a58a9feac02"}`,
+                    file,
+                );
+            }
             await updateLingoResource(
-                props.graphSlug,
-
-            )
+                "digital_object_rdm_system",
+                resource.value.resourceinstanceid,
+                undefined,
+                formdata,
+            );
         }
 
         openEditor!(props.componentName, updatedTileId);
@@ -88,9 +110,14 @@ async function save(e: FormSubmitEvent) {
 
 document.addEventListener("openConceptImagesEditor", async (e) => {
     const customEvent = e as CustomEvent;
-    console.log('foo event triggered', customEvent.detail.resourceInstanceId);
-    resource.value = await getConceptImageResource(customEvent.detail.resourceInstanceId);
-
+    try {
+        resource.value = await fetchLingoResource(
+            "digital_object_rdm_system",
+            customEvent.detail.resourceInstanceId,
+        );
+    } catch (error) {
+        console.error(error);
+    }
 });
 </script>
 
@@ -107,20 +134,24 @@ document.addEventListener("openConceptImagesEditor", async (e) => {
             node-alias="name_content"
             graph-slug="digital_object_rdm_system"
             :mode="EDIT"
-            :initial-value="resource?.aliased_data.name.aliased_data.name_content
-                "
+            :initial-value="
+                resource?.aliased_data.name.aliased_data.name_content
+            "
         />
         <NonLocalizedStringWidget
             node-alias="statement_content"
             graph-slug="digital_object_rdm_system"
             :mode="EDIT"
-            :initial-value="resource?.aliased_data.statement?.aliased_data.statement_content
-                "
+            :initial-value="
+                resource?.aliased_data.statement?.aliased_data.statement_content
+            "
         />
         <FileListWidget
             node-alias="content"
             graph-slug="digital_object_rdm_system"
-            :initial-value="resource?.aliased_data?.content?.aliased_data.content"
+            :initial-value="
+                resource?.aliased_data?.content?.aliased_data.content
+            "
             :mode="EDIT"
             class="conceptImage"
         />

@@ -545,6 +545,7 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly"
     ],
+    "DEFAULT_PARSER_CLASSES": ["rest_framework.parsers.MultiPartParser"],
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
     "PAGE_SIZE": API_MAX_PAGE_SIZE,
 }

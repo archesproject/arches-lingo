@@ -24,7 +24,8 @@ const props = defineProps<{
     nodegroupAlias: string;
 }>();
 
-const openEditor = inject<(componentName: string, tileId?: string) => void>("openEditor");
+const openEditor =
+    inject<(componentName: string, tileId?: string) => void>("openEditor");
 
 const configurationError = ref();
 const isLoading = ref(true);
@@ -68,13 +69,15 @@ function confirmDelete() {
 }
 
 function editResource(resourceInstanceId: string) {
-    openEditor!(props.componentName)
+    openEditor!(props.componentName);
 
     nextTick(() => {
-        const openConceptImagesEditor = new CustomEvent('openConceptImagesEditor', { detail: { resourceInstanceId: resourceInstanceId } })
-        document.dispatchEvent(openConceptImagesEditor)
-    })
-
+        const openConceptImagesEditor = new CustomEvent(
+            "openConceptImagesEditor",
+            { detail: { resourceInstanceId: resourceInstanceId } },
+        );
+        document.dispatchEvent(openConceptImagesEditor);
+    });
 }
 </script>
 
@@ -82,7 +85,7 @@ function editResource(resourceInstanceId: string) {
     <ProgressSpinner
         v-if="isLoading"
         style="width: 100%"
-    />    
+    />
     <Message
         v-else-if="configurationError"
         severity="error"
@@ -113,8 +116,10 @@ function editResource(resourceInstanceId: string) {
                             node-alias="name_content"
                             graph-slug="digital_object_rdm_system"
                             :mode="VIEW"
-                            :initial-value="resource.aliased_data.name.aliased_data.name_content
-                                "
+                            :initial-value="
+                                resource.aliased_data.name.aliased_data
+                                    .name_content
+                            "
                         />
                     </label>
                     <div class="buttons">
@@ -134,8 +139,9 @@ function editResource(resourceInstanceId: string) {
                 <FileListWidget
                     node-alias="content"
                     graph-slug="digital_object_rdm_system"
-                    :initial-value="resource.aliased_data.content?.aliased_data.content
-                        "
+                    :initial-value="
+                        resource.aliased_data.content?.aliased_data.content
+                    "
                     :mode="VIEW"
                     class="conceptImage"
                 />
@@ -144,9 +150,10 @@ function editResource(resourceInstanceId: string) {
                         node-alias="statement_content"
                         graph-slug="digital_object_rdm_system"
                         :mode="VIEW"
-                        :initial-value="resource.aliased_data.statement?.aliased_data
-                            .statement_content
-                            "
+                        :initial-value="
+                            resource.aliased_data.statement?.aliased_data
+                                .statement_content
+                        "
                     />
                 </div>
             </div>
@@ -200,7 +207,8 @@ function editResource(resourceInstanceId: string) {
     margin: 0 0.5rem;
 }
 
-.conceptImages :deep(.mainImage) {}
+.conceptImages :deep(.mainImage) {
+}
 
 .conceptImages :deep(.p-galleria) {
     border: none;

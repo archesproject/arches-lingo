@@ -3,6 +3,7 @@ import Cookies from "js-cookie";
 
 import type {
     ConceptInstance,
+    DigitalObjectInstance,
     SchemeInstance,
     TileData,
 } from "@/arches_lingo/types";
@@ -97,18 +98,22 @@ export const fetchLingoResourcePartial = async (
 
 export const updateLingoResource = async (
     graphSlug: string,
-    schemeId: string,
-    schemeInstance: SchemeInstance,
+    resourceId: string,
+    instance:
+        | SchemeInstance
+        | ConceptInstance
+        | DigitalObjectInstance
+        | undefined,
+    formdata: FormData | undefined = undefined,
 ) => {
     const response = await fetch(
-        arches.urls.api_lingo_resource(graphSlug, schemeId),
+        arches.urls.api_lingo_resource(graphSlug, resourceId),
         {
             method: "PATCH",
             headers: {
                 "X-CSRFTOKEN": getToken(),
-                "Content-Type": "application/json",
             },
-            body: JSON.stringify(schemeInstance),
+            body: instance ? JSON.stringify(instance) : formdata,
         },
     );
     const parsed = await response.json();
