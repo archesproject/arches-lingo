@@ -60,9 +60,28 @@ async function save(e: FormSubmitEvent) {
         console.log("hey, formdata!", formData);
         let updatedTileId;
 
-        if (resource.value && resource.value?.aliased_data.content) {
-            const contentTile =
-                resource.value.aliased_data.content.aliased_data;
+        if (resource.value) {
+            if (!resource.value.aliased_data.name) {
+                resource.value.aliased_data.name = {
+                    aliased_data: {
+                        name_content: formData.name_content,
+                    },
+                };
+            } else {
+                resource.value.aliased_data.name.aliased_data.name_content =
+                    formData.name_content;
+            }
+            if (!resource.value.aliased_data.statement) {
+                resource.value.aliased_data.statement = {
+                    aliased_data: {
+                        statement_content: formData.statement_content,
+                    },
+                };
+            } else {
+                resource.value.aliased_data.statement.aliased_data.statement_content =
+                    formData.statement_content;
+            }
+
             // file do not respect json.stringify
             const fileJsonObjects = formData.content.newFiles.map((file) => {
                 return {
@@ -80,17 +99,42 @@ async function save(e: FormSubmitEvent) {
                     error: file.error,
                 };
             });
+
+            if (!resource.value.aliased_data.content) {
+                resource.value.aliased_data.content = {
+                    aliased_data: {
+                        content: fileJsonObjects,
+                    },
+                };
+            } else {
+                resource.value.aliased_data.content.aliased_data.content =
+                    fileJsonObjects;
+            }
+            const contentTile =
+                resource.value.aliased_data.content.aliased_data;
+
             contentTile.content = [...contentTile.content, ...fileJsonObjects];
             contentTile.content.filter(
                 (file) => !formData.content.deletedFiles.includes(file),
             );
             const formdata = new FormData();
+            const isJsonObject = (testObject: unknown) =>
+                testObject &&
+                typeof testObject === "object" &&
+                !Array.isArray(testObject) &&
+                Object.prototype.toString.call(testObject) ===
+                    "[object Object]";
+
             for (const [key, val] of Object.entries(resource.value)) {
                 if (["name", "descriptors"].includes(key)) {
                     // TODO: avoid need to skip these
                     continue;
                 }
+                // if (isJsonObject(val)) {
+                //     formdata.append(key, JSON.stringify(val));
+                // } else {
                 formdata.append(key, val);
+                //}
             }
             for (const file of formData.content.newFiles) {
                 formdata.append(
