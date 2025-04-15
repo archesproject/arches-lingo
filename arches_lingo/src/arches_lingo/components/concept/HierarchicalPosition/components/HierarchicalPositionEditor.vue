@@ -4,7 +4,7 @@ import { inject, useTemplateRef, watch } from "vue";
 import { useRouter } from "vue-router";
 import { Form } from "@primevue/forms";
 
-import ConceptResourceSelectWidget from "@/arches_lingo/components/widgets/ConceptResourceSelectWidget/ConceptResourceSelectWidget.vue";
+import ConceptResourceSelectWidget from "@/arches_component_lab/widgets/ConceptResourceSelectWidget/ConceptResourceSelectWidget.vue";
 
 import { createLingoResource, upsertLingoTile } from "@/arches_lingo/api.ts";
 import { EDIT } from "@/arches_lingo/constants.ts";
