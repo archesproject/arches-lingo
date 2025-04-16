@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { provide, ref } from "vue";
+import { computed, provide, ref } from "vue";
 
 import { useGettext } from "vue3-gettext";
 
@@ -19,6 +19,14 @@ const formKey = ref(0);
 const componentEditorFormRef = ref();
 provide("componentEditorFormRef", componentEditorFormRef);
 
+const isFormDirty = computed(() => {
+    const formFields = Object.keys(componentEditorFormRef.value.states);
+    const states = formFields.map((field) => {
+        return componentEditorFormRef.value.states[field].dirty;
+    });
+    return states.some((state) => state === true);
+});
+
 function toggleSize() {
     if (props.isEditorMaximized) {
         emit(MINIMIZE);
@@ -28,7 +36,11 @@ function toggleSize() {
 }
 
 function resetForm() {
-    formKey.value += 1;
+    if (isFormDirty.value) {
+        formKey.value += 1;
+    } else {
+        emit(CLOSE);
+    }
 }
 </script>
 
