@@ -78,7 +78,7 @@ export interface ResourceInstanceResult {
             description: string;
         };
     };
-    aliased_data: {
+    aliased_data?: {
         [key: string]: any;
     };
     principalUser?: number | string;
