@@ -20,6 +20,11 @@ export interface DisplayedRowRefAndSetter {
     setDisplayedRow: (val: Concept | Scheme | null) => void;
 }
 
+export interface HierarchyRefAndSetter {
+    hierarchyVisible: Ref<boolean>;
+    toggleHierarchy: () => void;
+}
+
 export interface Concept {
     id: string;
     labels: Label[];

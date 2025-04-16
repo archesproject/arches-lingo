@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, markRaw, provide, ref } from "vue";
+import { computed, inject, markRaw, provide, ref } from "vue";
 
 import { useRoute } from "vue-router";
 
@@ -18,6 +18,7 @@ import {
 } from "@/arches_lingo/constants.ts";
 
 import type { Component } from "vue";
+import type { HierarchyRefAndSetter } from "@/arches_lingo/types";
 
 const props = defineProps<{
     componentData: {
@@ -30,6 +31,7 @@ const props = defineProps<{
 }>();
 
 const route = useRoute();
+const toggleHierarchy = inject<HierarchyRefAndSetter>("toggleHierarchy");
 
 const processedComponentData = ref(
     props.componentData.map(function (item) {
@@ -69,6 +71,10 @@ function openEditor(componentName: string, tileId?: string) {
 
     if (componentDatum) {
         selectedComponentDatum.value = componentDatum;
+    }
+
+    if (toggleHierarchy?.hierarchyVisible.value) {
+        toggleHierarchy.toggleHierarchy();
     }
 
     editorKey.value += 1;
