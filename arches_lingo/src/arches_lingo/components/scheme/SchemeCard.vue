@@ -51,6 +51,20 @@ a {
 }
 
 :deep(.p-card-body) {
+    flex-grow: 1;
     text-align: center;
+    overflow: hidden;
+}
+
+:deep(.p-card-content) {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    text-overflow: ellipsis;
+}
+
+:deep(.p-card-content > p) {
+    margin: 0;
 }
 </style>
