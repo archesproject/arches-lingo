@@ -85,7 +85,7 @@ async function save(e: FormSubmitEvent) {
             // file do not respect json.stringify
             const fileJsonObjects = formData.content.newFiles.map((file) => {
                 return {
-                    name: file.name,
+                    name: file.name.replace(/ /g, "_"),
                     accepted: file.accepted,
                     height: file.height,
                     lastModified: file.lastModified,
@@ -123,18 +123,20 @@ async function save(e: FormSubmitEvent) {
                 typeof testObject === "object" &&
                 !Array.isArray(testObject) &&
                 Object.prototype.toString.call(testObject) ===
-                    "[object Object]";
+                "[object Object]";
 
             for (const [key, val] of Object.entries(resource.value)) {
                 if (["name", "descriptors"].includes(key)) {
                     // TODO: avoid need to skip these
                     continue;
                 }
-                // if (isJsonObject(val)) {
-                //     formdata.append(key, JSON.stringify(val));
-                // } else {
-                formdata.append(key, val);
-                //}
+                if (isJsonObject(val)) {
+                    formdata.append(key, new Blob([JSON.stringify(val)], {
+                        type: "application/json",
+                    }));
+                } else {
+                    formdata.append(key, val);
+                }
             }
             for (const file of formData.content.newFiles) {
                 formdata.append(
@@ -185,24 +187,21 @@ document.addEventListener("openConceptImagesEditor", async (e) => {
             node-alias="name_content"
             graph-slug="digital_object_rdm_system"
             :mode="EDIT"
-            :initial-value="
-                resource?.aliased_data.name.aliased_data.name_content
-            "
+            :initial-value="resource?.aliased_data.name.aliased_data.name_content
+                "
         />
         <NonLocalizedStringWidget
             node-alias="statement_content"
             graph-slug="digital_object_rdm_system"
             :mode="EDIT"
-            :initial-value="
-                resource?.aliased_data.statement?.aliased_data.statement_content
-            "
+            :initial-value="resource?.aliased_data.statement?.aliased_data.statement_content
+                "
         />
         <FileListWidget
             node-alias="content"
             graph-slug="digital_object_rdm_system"
-            :initial-value="
-                resource?.aliased_data?.content?.aliased_data.content
-            "
+            :initial-value="resource?.aliased_data?.content?.aliased_data.content
+                "
             :mode="EDIT"
             class="conceptImage"
         />
