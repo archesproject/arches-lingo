@@ -6,7 +6,7 @@ from django.db.models import CharField, F, OuterRef, Value
 from django.db.models.expressions import CombinedExpression
 from django.utils.translation import gettext as _
 
-from arches.app.models.models import ResourceInstance, TileModel
+from arches.app.models.models import Language, ResourceInstance, TileModel
 
 from arches_lingo.const import (
     SCHEMES_GRAPH_ID,
@@ -17,6 +17,9 @@ from arches_lingo.const import (
     CONCEPT_NAME_CONTENT_NODE,
     CONCEPT_NAME_LANGUAGE_NODE,
     CONCEPT_NAME_TYPE_NODE,
+    ALT_LABEL_VALUE,
+    HIDDEN_LABEL_VALUE,
+    PREF_LABEL_VALUE,
     SCHEME_NAME_NODEGROUP,
     SCHEME_NAME_CONTENT_NODE,
     SCHEME_NAME_LANGUAGE_NODE,
@@ -54,6 +57,8 @@ class ConceptBuilder:
         # Not currently cached because written to during serialization.
         self.polyhierarchical_concepts = set()
 
+        self.language_lookup = {lang.name: lang.code for lang in Language.objects.all()}
+
     def read_from_cache(self):
         from_cache = cache.get_many(
             [
@@ -87,6 +92,19 @@ class ConceptBuilder:
         # Reverse trees.
         cache.set("broader_concepts", self.broader_concepts)
         cache.set("schemes_by_top_concept", self.schemes_by_top_concept)
+
+    @staticmethod
+    def find_valuetype_id_from_value(value):
+        if value == PREF_LABEL_VALUE:
+            return "prefLabel"
+        if value == ALT_LABEL_VALUE:
+            return "altLabel"
+        if value == HIDDEN_LABEL_VALUE:
+            return "hidden"
+        return "unknown"
+
+    def find_language_id_from_value(self, value):
+        return self.language_lookup.get(value, value)
 
     @staticmethod
     def resources_from_tiles(lookup_expression: str):
@@ -168,8 +186,12 @@ class ConceptBuilder:
         return data
 
     def serialize_scheme_label(self, label_tile: dict):
-        valuetype_id = label_tile[SCHEME_NAME_TYPE_NODE][0]["labels"][0]["value"]
-        language_id = label_tile[SCHEME_NAME_LANGUAGE_NODE][0]["labels"][0]["value"]
+        valuetype_id = self.find_valuetype_id_from_value(
+            label_tile[SCHEME_NAME_TYPE_NODE][0]["labels"][0]["value"]
+        )
+        language_id = self.find_language_id_from_value(
+            label_tile[SCHEME_NAME_LANGUAGE_NODE][0]["labels"][0]["value"]
+        )
         value = label_tile[SCHEME_NAME_CONTENT_NODE] or _("Unknown")
         return {
             "valuetype_id": valuetype_id,
@@ -224,8 +246,12 @@ class ConceptBuilder:
         )
 
     def serialize_concept_label(self, label_tile: dict):
-        valuetype_id = label_tile[CONCEPT_NAME_TYPE_NODE][0]["labels"][0]["value"]
-        language_id = label_tile[CONCEPT_NAME_LANGUAGE_NODE][0]["labels"][0]["value"]
+        valuetype_id = self.find_valuetype_id_from_value(
+            label_tile[CONCEPT_NAME_TYPE_NODE][0]["labels"][0]["value"]
+        )
+        language_id = self.find_language_id_from_value(
+            label_tile[CONCEPT_NAME_LANGUAGE_NODE][0]["labels"][0]["value"]
+        )
         value = label_tile[CONCEPT_NAME_CONTENT_NODE] or _("Unknown")
         return {
             "valuetype_id": valuetype_id,
