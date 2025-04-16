@@ -12,7 +12,10 @@ import {
 import { fetchLingoResource } from "@/arches_lingo/api.ts";
 import { extractDescriptors } from "@/arches_lingo/utils.ts";
 
-import type { ResourceInstanceResult } from "@/arches_lingo/types";
+import type {
+    ResourceInstanceResult,
+    SchemeHeader,
+} from "@/arches_lingo/types";
 import type { Language } from "@/arches_vue_utils/types";
 
 const toast = useToast();
@@ -22,27 +25,32 @@ const systemLanguage = inject(systemLanguageKey) as Language;
 const scheme = ref<ResourceInstanceResult>();
 
 const props = defineProps<{
-    // mode: DataComponentMode;
     sectionTitle: string;
     componentName: string;
     graphSlug: string;
-    // nodegroupAlias: string;
     resourceInstanceId: string;
-    // tileId?: string;
 }>();
 
-const schemeDescriptor = ref();
+const data = ref<SchemeHeader>();
 watch(
     () => scheme.value,
     (newValue) => {
-        schemeDescriptor.value = extractDescriptors(newValue, systemLanguage);
+        const descriptor = extractDescriptors(newValue, systemLanguage);
+        const principalUser = newValue?.principalUser;
+        const lifeCycleState = newValue?.resource_instance_lifecycle_state;
+
+        data.value = {
+            descriptor: descriptor,
+            principalUser: principalUser,
+            lifeCycleState: lifeCycleState,
+        };
     },
 );
 
 onMounted(async () => {
     try {
         scheme.value = await fetchLingoResource(
-            "scheme",
+            props.graphSlug,
             props.resourceInstanceId,
         );
     } catch (error) {
@@ -58,11 +66,13 @@ onMounted(async () => {
 
 <template>
     <div>
-        <h2>{{ schemeDescriptor?.name }} ({{ systemLanguage.name }})</h2>
-        <p>URI:</p>
-        <p>Description: {{ schemeDescriptor?.description }}</p>
-        <p>Life cycle state:</p>
-        <p>Created by:</p>
+        <h2>{{ data?.descriptor?.name }} ({{ systemLanguage.name }})</h2>
+        <p>Description: {{ data?.descriptor?.description }}</p>
+        <p>Life cycle state: {{ data?.lifeCycleState }}</p>
+        <p>
+            Created by:
+            {{ data?.principalUser || $gettext("No Principal User") }}
+        </p>
     </div>
 </template>
 

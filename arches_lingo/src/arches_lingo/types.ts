@@ -73,6 +73,11 @@ export interface ResourceInstanceResult {
             description: string;
         };
     };
+    aliased_data: {
+        [key: string]: any;
+    };
+    principalUser?: number | string;
+    resource_instance_lifecycle_state?: string;
 }
 
 export type DataComponentMode = typeof EDIT | typeof VIEW;
@@ -173,6 +178,37 @@ export interface ConceptInstance {
         appellative_status?: AppellativeStatus[];
         concept_statement?: ConceptStatement[];
     };
+}
+
+export interface ConceptClassificationStatusAliases extends AliasedData {
+    aliased_data: {
+        classification_status_ascribed_classification?: ResourceInstanceReference[];
+        classification_status_ascribed_relation?: ReferenceSelectFetchedOption[];
+        classification_status_data_assignment_actor?: ResourceInstanceReference[];
+        classification_status_data_assignment_object_used?: ResourceInstanceReference[];
+        classification_status_data_assignment_type?: ReferenceSelectFetchedOption[];
+        classification_status_timespan_end_of_the_end?: string | null;
+        classification_status_timespan_begin_of_the_begin?: string | null;
+        classification_status_type?: ReferenceSelectFetchedOption[];
+        classification_status_type_metatype?: ReferenceSelectFetchedOption[];
+    };
+}
+
+export interface ConceptHeader {
+    descriptor?: ResourceDescriptor;
+    uri?: string;
+    principalUser?: number | string;
+    lifeCycleState?: string;
+    partOfScheme?: ResourceInstanceReference;
+    parentConcepts?: ResourceInstanceReference;
+    type?: ReferenceSelectFetchedOption[];
+    status?: ReferenceSelectFetchedOption[];
+}
+
+export interface SchemeHeader {
+    descriptor?: ResourceDescriptor;
+    principalUser?: number | string;
+    lifeCycleState?: string;
 }
 
 export interface SchemeInstance {
