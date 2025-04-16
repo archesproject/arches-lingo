@@ -127,7 +127,7 @@ class ConceptBuilder:
         if children:
             data["top_concepts"] = [
                 self.serialize_concept(concept_id)
-                for concept_id in self.top_concepts[scheme_id]
+                for concept_id in sorted(self.top_concepts[scheme_id])
             ]
         return data
 
@@ -150,8 +150,8 @@ class ConceptBuilder:
         }
         if children:
             data["narrower"] = [
-                self.serialize_concept(conceptid)
-                for conceptid in self.narrower_concepts[conceptid]
+                self.serialize_concept(child_id)
+                for child_id in sorted(self.narrower_concepts[conceptid])
             ]
         if parents:
             path = self.add_broader_concept_recursive([], conceptid)
