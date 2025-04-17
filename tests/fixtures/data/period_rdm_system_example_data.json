@@ -35,7 +35,7 @@
                                         }
                                     ],
                                     "list_id": "6eaa2c6f-af83-464c-9200-051c4cfe7e8e",
-                                    "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/14751cb1-f7af-45d9-b32a-59d150bdac0f"
+                                    "uri": "https://vocab.getty.edu/aat/300456597"
                                 }
                             ],
                             "a95ce656-11e7-11ef-9493-0a58a9feac02": [
@@ -50,7 +50,7 @@
                                         }
                                     ],
                                     "list_id": "2cc0e054-ef9b-41ae-8e86-e0c3b4e7ca00",
-                                    "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/c1d8c87d-183c-4c46-aa6f-7920825cba5e"
+                                    "uri": "https://vocab.getty.edu/aat/300456596"
                                 }
                             ],
                             "a95ce728-11e7-11ef-9493-0a58a9feac02": [
@@ -65,7 +65,7 @@
                                         }
                                     ],
                                     "list_id": "ef69e772-de53-45fe-98d4-bf3e7b10eb57",
-                                    "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/7b873aed-1dbd-45e4-98e7-85143ee453c6"
+                                    "uri": "https://vocab.getty.edu/aat/300456594"
                                 }
                             ],
                             "a95ce7d2-11e7-11ef-9493-0a58a9feac02": "2025-01-01",
@@ -87,13 +87,13 @@
                                         {
                                             "id": "de978fd0-2819-4855-8858-8c089780f32c",
                                             "language_id": "en",
-                                            "list_item_id": "845cc417-ef77-4582-9271-ffba5e4cabc9",
-                                            "value": "en",
+                                            "list_item_id": "386b1c1a-a9b5-418c-b1d3-6aa518bb7cfb",
+                                            "value": "English",
                                             "valuetype_id": "prefLabel"
                                         }
                                     ],
                                     "list_id": "55ce793b-a51a-4b25-811d-d08ea797f8c3",
-                                    "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/845cc417-ef77-4582-9271-ffba5e4cabc9"
+                                    "uri": "http://vocab.getty.edu/aat/300388277"
                                 }
                             ],
                             "a95cebd8-11e7-11ef-9493-0a58a9feac02": null,
@@ -109,7 +109,7 @@
                                         }
                                     ],
                                     "list_id": "deb847fc-f4c3-4e82-be19-04641579f129",
-                                    "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/2e3a2045-b44e-47fc-a27b-3078b17e08e4"
+                                    "uri": "http://www.w3.org/2004/02/skos/core#prefLabel"
                                 }
                             ]
                         },
@@ -157,7 +157,7 @@
                                         }
                                     ],
                                     "list_id": "ef69e772-de53-45fe-98d4-bf3e7b10eb57",
-                                    "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/9c93be63-b900-4f63-b0cf-7351e5129508"
+                                    "uri": "https://vocab.getty.edu/aat/300435444"
                                 }
                             ]
                         },
@@ -182,7 +182,7 @@
                                         }
                                     ],
                                     "list_id": "6eaa2c6f-af83-464c-9200-051c4cfe7e8e",
-                                    "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/14751cb1-f7af-45d9-b32a-59d150bdac0f"
+                                    "uri": "https://vocab.getty.edu/aat/300456597"
                                 }
                             ],
                             "c0313058-11e7-11ef-9493-0a58a9feac02": null,
@@ -193,13 +193,13 @@
                                         {
                                             "id": "de978fd0-2819-4855-8858-8c089780f32c",
                                             "language_id": "en",
-                                            "list_item_id": "845cc417-ef77-4582-9271-ffba5e4cabc9",
-                                            "value": "en",
+                                            "list_item_id": "386b1c1a-a9b5-418c-b1d3-6aa518bb7cfb",
+                                            "value": "English",
                                             "valuetype_id": "prefLabel"
                                         }
                                     ],
                                     "list_id": "55ce793b-a51a-4b25-811d-d08ea797f8c3",
-                                    "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/845cc417-ef77-4582-9271-ffba5e4cabc9"
+                                    "uri": "http://vocab.getty.edu/aat/300388277"
                                 }
                             ],
                             "c03133e6-11e7-11ef-9493-0a58a9feac02": [
@@ -214,7 +214,7 @@
                                         }
                                     ],
                                     "list_id": "ef69e772-de53-45fe-98d4-bf3e7b10eb57",
-                                    "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/02a0fc69-9f92-4bef-b657-af1ed37c1d3e"
+                                    "uri": "https://vocab.getty.edu/aat/300456598"
                                 }
                             ],
                             "c031347c-11e7-11ef-9493-0a58a9feac02": [
@@ -229,7 +229,7 @@
                                         }
                                     ],
                                     "list_id": "aba2a0b4-75a4-45ba-8b57-021f3ca92a6a",
-                                    "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/52eb8678-485d-418c-9ad2-aa97d077ac56"
+                                    "uri": "http://www.w3.org/2004/02/skos/core#scopeNote"
                                 }
                             ],
                             "c0313508-11e7-11ef-9493-0a58a9feac02": null,
