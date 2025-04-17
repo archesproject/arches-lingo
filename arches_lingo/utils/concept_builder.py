@@ -7,6 +7,8 @@ from django.db.models.expressions import CombinedExpression
 from django.utils.translation import gettext as _
 
 from arches.app.models.models import Language, ResourceInstance, TileModel
+from arches_controlled_lists.datatypes.datatypes import ReferenceLabel
+from arches_controlled_lists.models import ListItem
 
 from arches_lingo.const import (
     SCHEMES_GRAPH_ID,
@@ -186,11 +188,19 @@ class ConceptBuilder:
         return data
 
     def serialize_scheme_label(self, label_tile: dict):
+        scheme_name_type_labels = [
+            ReferenceLabel(**label)
+            for label in label_tile[SCHEME_NAME_TYPE_NODE][0]["labels"]
+        ]
         valuetype_id = self.find_valuetype_id_from_value(
-            label_tile[SCHEME_NAME_TYPE_NODE][0]["labels"][0]["value"]
+            ListItem.find_best_label_from_set(scheme_name_type_labels)
         )
+        language_labels = [
+            ReferenceLabel(**label)
+            for label in label_tile[SCHEME_NAME_LANGUAGE_NODE][0]["labels"]
+        ]
         language_id = self.find_language_id_from_value(
-            label_tile[SCHEME_NAME_LANGUAGE_NODE][0]["labels"][0]["value"]
+            ListItem.find_best_label_from_set(language_labels)
         )
         value = label_tile[SCHEME_NAME_CONTENT_NODE] or _("Unknown")
         return {
@@ -246,11 +256,19 @@ class ConceptBuilder:
         )
 
     def serialize_concept_label(self, label_tile: dict):
+        scheme_name_type_labels = [
+            ReferenceLabel(**label)
+            for label in label_tile[CONCEPT_NAME_TYPE_NODE][0]["labels"]
+        ]
         valuetype_id = self.find_valuetype_id_from_value(
-            label_tile[CONCEPT_NAME_TYPE_NODE][0]["labels"][0]["value"]
+            ListItem.find_best_label_from_set(scheme_name_type_labels)
         )
+        language_labels = [
+            ReferenceLabel(**label)
+            for label in label_tile[CONCEPT_NAME_LANGUAGE_NODE][0]["labels"]
+        ]
         language_id = self.find_language_id_from_value(
-            label_tile[CONCEPT_NAME_LANGUAGE_NODE][0]["labels"][0]["value"]
+            ListItem.find_best_label_from_set(language_labels)
         )
         value = label_tile[CONCEPT_NAME_CONTENT_NODE] or _("Unknown")
         return {
