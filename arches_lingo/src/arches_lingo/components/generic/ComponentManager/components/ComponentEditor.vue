@@ -20,11 +20,13 @@ const componentEditorFormRef = ref();
 provide("componentEditorFormRef", componentEditorFormRef);
 
 const isFormDirty = computed(() => {
-    const formFields = Object.keys(componentEditorFormRef.value.states);
-    const states = formFields.map((field) => {
-        return componentEditorFormRef.value.states[field].dirty;
-    });
-    return states.some((state) => state === true);
+    if (componentEditorFormRef.value) {
+        const formFields = Object.keys(componentEditorFormRef.value.states);
+        const states = formFields.map((field) => {
+            return componentEditorFormRef.value.states[field].dirty;
+        });
+        return states.some((state) => state === true);
+    }
 });
 
 function toggleSize() {
@@ -83,6 +85,7 @@ function resetForm() {
             <Button
                 :label="$gettext('Save Changes')"
                 severity="success"
+                :disabled="!isFormDirty"
                 @click="componentEditorFormRef.onSubmit()"
             />
             <Button
