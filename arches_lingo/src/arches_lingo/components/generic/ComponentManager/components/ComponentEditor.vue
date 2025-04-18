@@ -119,6 +119,10 @@ function resetForm() {
     min-height: 0;
 }
 
+.editor-content :deep(.p-formfield) {
+    margin-bottom: 0.65rem;
+}
+
 .editor-content {
     min-height: 50vh;
     overflow-y: auto;
