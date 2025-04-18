@@ -11,6 +11,7 @@ from arches.app.utils.response import JSONErrorResponse, JSONResponse
 
 from arches_lingo.models import VwLabelValue
 from arches_lingo.utils.concept_builder import ConceptBuilder
+from arches_querysets.models import SemanticResource
 
 
 @method_decorator(
@@ -91,3 +92,62 @@ class ValueSearchView(ConceptTreeView):
         if elastic_prefix_length >= 5:
             return 0
         return int(5 - elastic_prefix_length)
+
+
+@method_decorator(
+    group_required("RDM Administrator", raise_exception=True), name="dispatch"
+)
+class ConceptResourceView(ConceptTreeView):
+    def get(self, request):
+        scheme = request.GET.get("scheme", None)
+        exclude = request.GET.get("exclude", None)
+        term = request.GET.get("term", None)
+        page_number = request.GET.get("page", 1)
+        items_per_page = request.GET.get("items", 25)
+        concepts = request.GET.get("concepts", None)
+        concept_ids = concepts.split(",") if concepts else None
+        Concept = SemanticResource.as_model("concept")
+
+        if not concept_ids:
+            if scheme:
+                if exclude == "true":
+                    concept_query = Concept.exclude(
+                        part_of_scheme__0__resourceId=scheme
+                    )
+                else:
+                    concept_query = Concept.filter(
+                        part_of_scheme__0__resourceId=scheme
+                    )
+            else:
+                concept_query = Concept.all()
+
+            if term:
+                filtering_concept_ids = VwLabelValue.objects.filter(
+                    value__icontains=term
+                ).values_list("concept_id", flat=True)
+                concept_query = concept_query.filter(pk__in=filtering_concept_ids)
+
+            concept_ids = (
+                concept_query.order_by("pk").values_list("pk", flat=True)
+            )
+
+        data = []
+        paginator = Paginator(concept_ids, items_per_page)
+        if paginator.count:
+            builder = ConceptBuilder()
+            data = [
+                builder.serialize_concept(
+                    str(concept_uuid), parents=True, children=False
+                )
+                for concept_uuid in paginator.get_page(page_number)
+            ]
+
+        return JSONResponse(
+            {
+                "current_page": paginator.get_page(page_number).number,
+                "total_pages": paginator.num_pages,
+                "results_per_page": paginator.per_page,
+                "total_results": paginator.count,
+                "data": data,
+            }
+        )
