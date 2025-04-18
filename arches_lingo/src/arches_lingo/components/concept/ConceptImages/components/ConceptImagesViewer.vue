@@ -3,6 +3,8 @@ import { inject, ref, onMounted } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import Button from "primevue/button";
+import Message from "primevue/message";
+import ProgressSpinner from "primevue/progressspinner";
 
 import FileListWidget from "@/arches_component_lab/widgets/FileListWidget/FileListWidget.vue";
 
@@ -41,13 +43,13 @@ onMounted(async () => {
                     (resource) => resource.resourceId,
                 ),
             );
-            isLoading.value = false;
         } catch (error) {
             configurationError.value = error;
-            isLoading.value = false;
         }
     }
+    isLoading.value = false;
 });
+
 function confirmDelete() {
     confirm.require({
         header: $gettext("Confirmation"),
@@ -69,10 +71,19 @@ function confirmDelete() {
 </script>
 
 <template>
+    <div class="section-header">
+        <h2>{{ props.sectionTitle }}</h2>
+        <Button
+            :label="$gettext('Add New Concept Image')"
+            @click="openEditor!(props.componentName)"
+        ></Button>
+    </div>
+
     <ProgressSpinner
         v-if="isLoading"
         style="width: 100%"
-    />    
+    />
+
     <Message
         v-else-if="configurationError"
         severity="error"
@@ -80,14 +91,15 @@ function confirmDelete() {
     >
         {{ configurationError.message }}
     </Message>
-    <template v-else>
-        <div class="section-header">
-            <h2>{{ props.sectionTitle }}</h2>
-            <Button
-                :label="$gettext('Add New Concept Image')"
-                @click="openEditor!(props.componentName)"
-            ></Button>
-        </div>
+
+    <div v-else-if="!resources || !resources.length">
+        {{ $gettext("No concept images were found.") }}
+    </div>
+
+    <div
+        v-else
+        style="overflow-x: auto"
+    >
         <div class="conceptImages">
             <div
                 v-for="resource in resources"
@@ -103,8 +115,10 @@ function confirmDelete() {
                             node-alias="name_content"
                             graph-slug="digital_object_rdm_system"
                             :mode="VIEW"
-                            :initial-value="resource.aliased_data.name.aliased_data.name_content
-                                "
+                            :initial-value="
+                                resource.aliased_data.name.aliased_data
+                                    .name_content
+                            "
                         />
                     </label>
                     <div class="buttons">
@@ -124,24 +138,25 @@ function confirmDelete() {
                 <FileListWidget
                     node-alias="content"
                     graph-slug="digital_object_rdm_system"
-                    :initial-value="resource.aliased_data.content?.aliased_data.content
-                        "
+                    :initial-value="
+                        resource.aliased_data.content?.aliased_data.content
+                    "
                     :mode="VIEW"
-                    class="conceptImage"
                 />
                 <div class="footer">
                     <NonLocalizedStringWidget
                         node-alias="statement_content"
                         graph-slug="digital_object_rdm_system"
                         :mode="VIEW"
-                        :initial-value="resource.aliased_data.statement?.aliased_data
-                            .statement_content
-                            "
+                        :initial-value="
+                            resource.aliased_data.statement?.aliased_data
+                                .statement_content
+                        "
                     />
                 </div>
             </div>
-        </div> 
-    </template>
+        </div>
+    </div>
 </template>
 
 <style scoped>
@@ -156,13 +171,12 @@ function confirmDelete() {
     display: flex;
     flex-direction: row;
     align-items: start;
+    width: fit-content;
 }
 
 .conceptImage {
-    display: grid;
-    grid-template-rows: auto auto auto;
-    margin: 2rem 5rem;
-    flex: 1 1 0;
+    width: 30rem;
+    margin: 0 1rem;
 }
 
 .conceptImage .header {
@@ -189,8 +203,6 @@ function confirmDelete() {
 .conceptImage .header .buttons button {
     margin: 0 0.5rem;
 }
-
-.conceptImages :deep(.mainImage) {}
 
 .conceptImages :deep(.p-galleria) {
     border: none;

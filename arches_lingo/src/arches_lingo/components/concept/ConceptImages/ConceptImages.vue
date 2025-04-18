@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 
+import Message from "primevue/message";
 import ProgressSpinner from "primevue/progressspinner";
 
 //import ConceptImagesEditor from "@/arches_lingo/components/concept/ConceptImages/components/ConceptImagesEditor.vue";
@@ -48,7 +49,6 @@ async function getSectionValue() {
             props.nodegroupAlias,
         );
     } catch (error) {
-        isLoading.value = false;
         configurationError.value = error;
     }
 }
