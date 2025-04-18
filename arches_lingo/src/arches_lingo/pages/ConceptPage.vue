@@ -13,7 +13,7 @@ const componentData = [
     {
         component: ConceptHeader,
         componentName: "ConceptHeader",
-        sectionTitle: $gettext("Scheme Metadata"),
+        sectionTitle: $gettext("Concept Metadata"),
         graphSlug: "concept",
         nodegroupAlias: "",
     },

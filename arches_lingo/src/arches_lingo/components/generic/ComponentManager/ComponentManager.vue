@@ -164,6 +164,6 @@ provide("refreshReportSection", refreshReportSection);
 <style scoped>
 .splitter-panel {
     overflow: auto;
-    padding: 0rem 0.75rem 0.75rem;
+    padding: 0rem 1rem 1rem;
 }
 </style>
