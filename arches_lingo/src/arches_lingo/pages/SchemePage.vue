@@ -3,6 +3,7 @@ import { useGettext } from "vue3-gettext";
 
 import ComponentManager from "@/arches_lingo/components/generic/ComponentManager/ComponentManager.vue";
 
+import SchemeHeader from "@/arches_lingo/components/scheme/SchemeHeader.vue";
 import SchemeLabel from "@/arches_lingo/components/scheme/SchemeLabel/SchemeLabel.vue";
 import SchemeNamespace from "@/arches_lingo/components/scheme/SchemeNamespace/SchemeNamespace.vue";
 import SchemeNote from "@/arches_lingo/components/scheme/SchemeNote/SchemeNote.vue";
@@ -12,6 +13,13 @@ import SchemeLicense from "@/arches_lingo/components/scheme/SchemeLicense/Scheme
 const { $gettext } = useGettext();
 
 const componentData = [
+    {
+        component: SchemeHeader,
+        componentName: "SchemeHeader",
+        sectionTitle: $gettext("Scheme Metadata"),
+        graphSlug: "scheme",
+        nodegroupAlias: "",
+    },
     {
         component: SchemeLabel,
         componentName: "SchemeLabel",

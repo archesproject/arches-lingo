@@ -20,6 +20,11 @@ export interface DisplayedRowRefAndSetter {
     setDisplayedRow: (val: Concept | Scheme | null) => void;
 }
 
+export interface HierarchyRefAndSetter {
+    hierarchyVisible: Ref<boolean>;
+    toggleHierarchy: () => void;
+}
+
 export interface Concept {
     id: string;
     labels: Label[];
@@ -67,7 +72,18 @@ export interface ResourceInstanceReference {
 
 export interface ResourceInstanceResult {
     resourceinstanceid: string;
-    descriptors: { [key: string]: { name: string } };
+    name?: string | undefined;
+    descriptors: {
+        [key: string]: {
+            name: string;
+            description: string;
+        };
+    };
+    aliased_data?: {
+        [key: string]: any;
+    };
+    principalUser?: number | string;
+    resource_instance_lifecycle_state?: string;
 }
 
 export type DataComponentMode = typeof EDIT | typeof VIEW;
@@ -170,6 +186,40 @@ export interface ConceptInstance {
     };
 }
 
+export interface ConceptClassificationStatusAliases extends AliasedData {
+    aliased_data: {
+        classification_status_ascribed_classification?: ResourceInstanceReference[];
+        classification_status_ascribed_relation?: ReferenceSelectFetchedOption[];
+        classification_status_data_assignment_actor?: ResourceInstanceReference[];
+        classification_status_data_assignment_object_used?: ResourceInstanceReference[];
+        classification_status_data_assignment_type?: ReferenceSelectFetchedOption[];
+        classification_status_timespan_end_of_the_end?: string | null;
+        classification_status_timespan_begin_of_the_begin?: string | null;
+        classification_status_type?: ReferenceSelectFetchedOption[];
+        classification_status_type_metatype?: ReferenceSelectFetchedOption[];
+    };
+}
+
+export interface ConceptHeader {
+    uri?: string;
+    name?: string;
+    descriptor?: ResourceDescriptor;
+    principalUser?: number | string;
+    lifeCycleState: string;
+    partOfScheme?: ResourceInstanceReference;
+    parentConcepts?: ResourceInstanceReference;
+    type?: ReferenceSelectFetchedOption[];
+    status?: ReferenceSelectFetchedOption[];
+}
+
+export interface SchemeHeader {
+    uri?: string;
+    name?: string;
+    descriptor?: ResourceDescriptor;
+    principalUser?: number | string;
+    lifeCycleState: string;
+}
+
 export interface SchemeInstance {
     aliased_data: {
         namespace?: SchemeNamespace;
@@ -180,19 +230,10 @@ export interface SchemeInstance {
     };
 }
 
-export interface SchemeResource {
-    resourceinstanceid: string;
-    descriptors: {
-        [key: string]: {
-            name: string;
-            description: string;
-        };
-    };
-}
-
 export interface ResourceDescriptor {
     name: string;
     description: string;
+    language: string;
 }
 
 export interface NodeAndParentInstruction {
@@ -213,4 +254,15 @@ export interface SearchResultItem {
         labels: Label[];
     }[];
     polyhierarchical: boolean;
+}
+
+export interface archesPreset {
+    arches: {
+        legacy: {
+            sidebar: string;
+        };
+        blue: string;
+        green: string;
+        red: string;
+    };
 }

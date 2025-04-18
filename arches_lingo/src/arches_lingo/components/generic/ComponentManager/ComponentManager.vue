@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, markRaw, provide, ref } from "vue";
+import { computed, inject, markRaw, provide, ref } from "vue";
 
 import { useRoute } from "vue-router";
 
@@ -18,6 +18,7 @@ import {
 } from "@/arches_lingo/constants.ts";
 
 import type { Component } from "vue";
+import type { HierarchyRefAndSetter } from "@/arches_lingo/types";
 
 const props = defineProps<{
     componentData: {
@@ -30,6 +31,7 @@ const props = defineProps<{
 }>();
 
 const route = useRoute();
+const toggleHierarchy = inject<HierarchyRefAndSetter>("toggleHierarchy");
 
 const processedComponentData = ref(
     props.componentData.map(function (item) {
@@ -69,6 +71,10 @@ function openEditor(componentName: string, tileId?: string) {
 
     if (componentDatum) {
         selectedComponentDatum.value = componentDatum;
+    }
+
+    if (toggleHierarchy?.hierarchyVisible.value) {
+        toggleHierarchy.toggleHierarchy();
     }
 
     editorKey.value += 1;
@@ -112,8 +118,8 @@ provide("refreshReportSection", refreshReportSection);
     <Splitter style="height: 100%">
         <SplitterPanel
             v-show="editorState !== MAXIMIZED"
-            :size="66"
-            style="overflow: auto"
+            :size="30"
+            class="splitter-panel"
         >
             <component
                 :is="componentDatum.component"
@@ -130,7 +136,8 @@ provide("refreshReportSection", refreshReportSection);
 
         <SplitterPanel
             v-if="editorState !== CLOSED"
-            :size="editorState === MINIMIZED ? 33 : 100"
+            :size="editorState === MINIMIZED ? 70 : 100"
+            class="splitter-panel"
         >
             <ComponentEditor
                 :key="editorKey"
@@ -153,3 +160,10 @@ provide("refreshReportSection", refreshReportSection);
         </SplitterPanel>
     </Splitter>
 </template>
+
+<style scoped>
+.splitter-panel {
+    overflow: auto;
+    padding: 0rem 1rem 1rem;
+}
+</style>

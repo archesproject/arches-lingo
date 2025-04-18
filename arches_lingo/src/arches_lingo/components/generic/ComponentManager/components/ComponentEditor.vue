@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { provide, ref } from "vue";
+import { computed, provide, ref } from "vue";
 
 import { useGettext } from "vue3-gettext";
 
@@ -19,6 +19,16 @@ const formKey = ref(0);
 const componentEditorFormRef = ref();
 provide("componentEditorFormRef", componentEditorFormRef);
 
+const isFormDirty = computed(() => {
+    if (componentEditorFormRef.value) {
+        const formFields = Object.keys(componentEditorFormRef.value.states);
+        const states = formFields.map((field) => {
+            return componentEditorFormRef.value.states[field].dirty;
+        });
+        return states.some((state) => state === true);
+    }
+});
+
 function toggleSize() {
     if (props.isEditorMaximized) {
         emit(MINIMIZE);
@@ -28,7 +38,11 @@ function toggleSize() {
 }
 
 function resetForm() {
-    formKey.value += 1;
+    if (isFormDirty.value) {
+        formKey.value += 1;
+    } else {
+        emit(CLOSE);
+    }
 }
 </script>
 
@@ -67,10 +81,11 @@ function resetForm() {
             <slot :key="formKey" />
         </div>
 
-        <div>
+        <div class="footer">
             <Button
                 :label="$gettext('Save Changes')"
                 severity="success"
+                :disabled="!isFormDirty"
                 @click="componentEditorFormRef.onSubmit()"
             />
             <Button
@@ -93,6 +108,8 @@ function resetForm() {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    border-bottom: 0.125rem solid var(--p-menubar-border-color);
+    background: var(--p-header-background);
 }
 
 .editor-form {
@@ -102,9 +119,27 @@ function resetForm() {
     min-height: 0;
 }
 
+.editor-content :deep(.p-formfield) {
+    margin-bottom: 0.65rem;
+}
+
 .editor-content {
-    flex: 1;
-    min-height: 0;
+    min-height: 50vh;
     overflow-y: auto;
+    padding-bottom: 1rem;
+    border-bottom: 0.085rem solid var(--p-menubar-border-color);
+}
+
+.footer {
+    display: flex;
+    justify-content: flex-start;
+    padding: 1rem;
+    border-bottom: 0.085rem solid var(--p-menubar-border-color);
+    background: var(--p-footer-background);
+}
+
+.footer > Button {
+    margin: 0 0.5rem;
+    flex: 1;
 }
 </style>

@@ -160,7 +160,7 @@ async function deleteSectionValue(tileId: string) {
             </template>
         </DataTable>
     </div>
-    <div v-else>{{ props.metaStringText.noRecords }}</div>
+    <p v-else>{{ props.metaStringText.noRecords }}</p>
 </template>
 <style scoped>
 :deep(.drawer) {
