@@ -142,13 +142,18 @@ export function extractDescriptors(
     const schemeDescriptor: ResourceDescriptor = {
         name: "",
         description: "",
+        language: "",
     };
     if (descriptors) {
+        const languagecode = descriptors[selectedLanguage.code]
+            ? selectedLanguage.code
+            : Object.keys(descriptors)[0];
         const descriptor =
             descriptors[selectedLanguage.code] ?? Object.values(descriptors)[0];
         if (descriptor) {
             schemeDescriptor.name = descriptor.name ?? "";
             schemeDescriptor.description = descriptor.description ?? "";
+            schemeDescriptor.language = languagecode;
         }
     }
     return schemeDescriptor;

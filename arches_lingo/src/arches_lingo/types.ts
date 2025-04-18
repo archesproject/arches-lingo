@@ -72,6 +72,7 @@ export interface ResourceInstanceReference {
 
 export interface ResourceInstanceResult {
     resourceinstanceid: string;
+    name?: string | undefined;
     descriptors: {
         [key: string]: {
             name: string;
@@ -200,10 +201,11 @@ export interface ConceptClassificationStatusAliases extends AliasedData {
 }
 
 export interface ConceptHeader {
-    descriptor?: ResourceDescriptor;
     uri?: string;
+    name?: string;
+    descriptor?: ResourceDescriptor;
     principalUser?: number | string;
-    lifeCycleState?: string;
+    lifeCycleState: string;
     partOfScheme?: ResourceInstanceReference;
     parentConcepts?: ResourceInstanceReference;
     type?: ReferenceSelectFetchedOption[];
@@ -211,9 +213,11 @@ export interface ConceptHeader {
 }
 
 export interface SchemeHeader {
+    uri?: string;
+    name?: string;
     descriptor?: ResourceDescriptor;
     principalUser?: number | string;
-    lifeCycleState?: string;
+    lifeCycleState: string;
 }
 
 export interface SchemeInstance {
@@ -229,6 +233,7 @@ export interface SchemeInstance {
 export interface ResourceDescriptor {
     name: string;
     description: string;
+    language: string;
 }
 
 export interface NodeAndParentInstruction {
