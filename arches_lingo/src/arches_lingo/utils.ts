@@ -6,6 +6,8 @@ import type {
     Concept,
     IconLabels,
     NodeAndParentInstruction,
+    ResourceInstanceResult,
+    ResourceDescriptor,
     Scheme,
 } from "@/arches_lingo/types";
 
@@ -130,4 +132,29 @@ export function checkDeepEquality(value1: unknown, value2: unknown): boolean {
     return Object.keys(object1).every((key) => {
         return checkDeepEquality(object1[key], object2[key]);
     });
+}
+
+export function extractDescriptors(
+    resource: ResourceInstanceResult | undefined,
+    selectedLanguage: Language,
+): ResourceDescriptor {
+    const descriptors = resource?.descriptors;
+    const schemeDescriptor: ResourceDescriptor = {
+        name: "",
+        description: "",
+        language: "",
+    };
+    if (descriptors) {
+        const languagecode = descriptors[selectedLanguage.code]
+            ? selectedLanguage.code
+            : Object.keys(descriptors)[0];
+        const descriptor =
+            descriptors[selectedLanguage.code] ?? Object.values(descriptors)[0];
+        if (descriptor) {
+            schemeDescriptor.name = descriptor.name ?? "";
+            schemeDescriptor.description = descriptor.description ?? "";
+            schemeDescriptor.language = languagecode;
+        }
+    }
+    return schemeDescriptor;
 }

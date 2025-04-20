@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, markRaw, provide, ref } from "vue";
+import { computed, inject, markRaw, provide, ref } from "vue";
 
 import { useRoute } from "vue-router";
 
@@ -18,6 +18,7 @@ import {
 } from "@/arches_lingo/constants.ts";
 
 import type { Component } from "vue";
+import type { HierarchyRefAndSetter } from "@/arches_lingo/types";
 
 const props = defineProps<{
     componentData: {
@@ -30,6 +31,7 @@ const props = defineProps<{
 }>();
 
 const route = useRoute();
+const toggleHierarchy = inject<HierarchyRefAndSetter>("toggleHierarchy");
 
 const processedComponentData = ref(
     props.componentData.map(function (item) {
@@ -69,6 +71,10 @@ function openEditor(componentName: string, tileId?: string) {
 
     if (componentDatum) {
         selectedComponentDatum.value = componentDatum;
+    }
+
+    if (toggleHierarchy?.hierarchyVisible.value) {
+        toggleHierarchy.toggleHierarchy();
     }
 
     editorKey.value += 1;
@@ -112,28 +118,32 @@ provide("refreshReportSection", refreshReportSection);
     <Splitter style="height: 100%">
         <SplitterPanel
             v-show="editorState !== MAXIMIZED"
-            :size="66"
-            style="overflow: auto"
+            :size="50"
         >
-            <component
-                :is="componentDatum.component"
-                v-for="componentDatum in processedComponentData"
-                :key="componentDatum.componentName + '-' + componentDatum.key"
-                :graph-slug="componentDatum.graphSlug"
-                :nodegroup-alias="componentDatum.nodegroupAlias"
-                :resource-instance-id="resourceInstanceId"
-                :section-title="componentDatum.sectionTitle"
-                :component-name="componentDatum.componentName"
-                :mode="VIEW"
-            />
+            <div class="splitter-panel-content">
+                <component
+                    :is="componentDatum.component"
+                    v-for="componentDatum in processedComponentData"
+                    :key="
+                        componentDatum.componentName + '-' + componentDatum.key
+                    "
+                    :graph-slug="componentDatum.graphSlug"
+                    :nodegroup-alias="componentDatum.nodegroupAlias"
+                    :resource-instance-id="resourceInstanceId"
+                    :section-title="componentDatum.sectionTitle"
+                    :component-name="componentDatum.componentName"
+                    :mode="VIEW"
+                />
+            </div>
         </SplitterPanel>
 
         <SplitterPanel
             v-if="editorState !== CLOSED"
-            :size="editorState === MINIMIZED ? 33 : 100"
+            :size="50"
         >
             <ComponentEditor
                 :key="editorKey"
+                class="splitter-panel-content"
                 :is-editor-maximized="editorState === MAXIMIZED"
                 @maximize="maximizeEditor"
                 @minimize="minimizeEditor"
@@ -153,3 +163,11 @@ provide("refreshReportSection", refreshReportSection);
         </SplitterPanel>
     </Splitter>
 </template>
+
+<style scoped>
+.splitter-panel-content {
+    overflow: auto;
+    padding: 1rem;
+    padding-top: 0;
+}
+</style>

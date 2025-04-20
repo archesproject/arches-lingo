@@ -24,6 +24,11 @@ export interface DisplayedRowRefAndSetter {
     setDisplayedRow: (val: Concept | Scheme | null) => void;
 }
 
+export interface HierarchyRefAndSetter {
+    hierarchyVisible: Ref<boolean>;
+    toggleHierarchy: () => void;
+}
+
 export interface Concept {
     id: string;
     labels: Label[];
@@ -63,7 +68,20 @@ export interface ControlledListItemResult {
 
 export interface ResourceInstanceResult {
     resourceinstanceid: string;
-    descriptors: { [key: string]: { name: string } };
+    name?: string | undefined;
+    descriptors: {
+        [key: string]: {
+            name: string;
+            description: string;
+        };
+    };
+    aliased_data?: {
+        // TODO: Make this exstensible for various types of aliased_data
+        // eslint-disable-next-line
+        [key: string]: any;
+    };
+    principalUser?: number | string;
+    resource_instance_lifecycle_state?: string;
 }
 
 export type DataComponentMode = typeof EDIT | typeof VIEW;
@@ -205,29 +223,54 @@ export interface ConceptInstance {
     };
 }
 
-export interface SchemeInstanceAliases extends AliasedData {
-    namespace?: SchemeNamespace;
-    creation?: SchemeCreation;
-    appellative_status?: AppellativeStatus[];
-    statement?: SchemeStatement[];
-    rights?: SchemeRights;
+export interface ConceptClassificationStatusAliases extends AliasedData {
+    aliased_data: {
+        classification_status_ascribed_classification?: ResourceInstanceReference[];
+        classification_status_ascribed_relation?: ReferenceSelectFetchedOption[];
+        classification_status_data_assignment_actor?: ResourceInstanceReference[];
+        classification_status_data_assignment_object_used?: ResourceInstanceReference[];
+        classification_status_data_assignment_type?: ReferenceSelectFetchedOption[];
+        classification_status_timespan_end_of_the_end?: string | null;
+        classification_status_timespan_begin_of_the_begin?: string | null;
+        classification_status_type?: ReferenceSelectFetchedOption[];
+        classification_status_type_metatype?: ReferenceSelectFetchedOption[];
+    };
 }
 
-export type SchemeInstance = ResourceData<SchemeInstanceAliases>;
+export interface ConceptHeaderData {
+    uri?: string;
+    name?: string;
+    descriptor?: ResourceDescriptor;
+    principalUser?: number | string;
+    lifeCycleState: string;
+    partOfScheme?: ResourceInstanceReference[];
+    parentConcepts?: ResourceInstanceReference[];
+    type?: ReferenceSelectFetchedOption[];
+    status?: ReferenceSelectFetchedOption[];
+}
 
-export interface SchemeResource {
-    resourceinstanceid: string;
-    descriptors: {
-        [key: string]: {
-            name: string;
-            description: string;
-        };
+export interface SchemeHeader {
+    uri?: string;
+    name?: string;
+    descriptor?: ResourceDescriptor;
+    principalUser?: number | string;
+    lifeCycleState: string;
+}
+
+export interface SchemeInstance {
+    aliased_data: {
+        namespace?: SchemeNamespace;
+        creation?: SchemeCreation;
+        appellative_status?: AppellativeStatus[];
+        statement?: SchemeStatement[];
+        rights?: SchemeRights;
     };
 }
 
 export interface ResourceDescriptor {
     name: string;
     description: string;
+    language: string;
 }
 
 export interface NodeAndParentInstruction {
@@ -248,4 +291,15 @@ export interface SearchResultItem {
         labels: Label[];
     }[];
     polyhierarchical: boolean;
+}
+
+export interface archesPreset {
+    arches: {
+        legacy: {
+            sidebar: string;
+        };
+        blue: string;
+        green: string;
+        red: string;
+    };
 }
