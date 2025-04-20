@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject, onMounted, ref, watch } from "vue";
+import { inject, onMounted, ref } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import { useToast } from "primevue/usetoast";
@@ -18,7 +18,7 @@ import { extractDescriptors } from "@/arches_lingo/utils.ts";
 import ResourceInstanceMultiSelectWidget from "@/arches_component_lab/widgets/ResourceInstanceMultiSelectWidget/ResourceInstanceMultiSelectWidget.vue";
 
 import type {
-    ConceptHeader,
+    ConceptHeaderData,
     ConceptClassificationStatusAliases,
     ResourceInstanceResult,
     DataComponentMode,
@@ -29,8 +29,6 @@ const toast = useToast();
 const { $gettext } = useGettext();
 const systemLanguage = inject(systemLanguageKey) as Language;
 
-const concept = ref<ResourceInstanceResult>();
-
 const props = defineProps<{
     mode: DataComponentMode;
     sectionTitle: string;
@@ -40,41 +38,37 @@ const props = defineProps<{
     nodegroupAlias: string;
 }>();
 
-const data = ref<ConceptHeader>();
+const concept = ref<ResourceInstanceResult>();
+const data = ref<ConceptHeaderData>();
 
-watch(
-    () => concept.value,
-    (newValue) => {
-        const aliased_data = newValue?.aliased_data;
+function extractConceptHeaderData(concept: ResourceInstanceResult) {
+    const aliased_data = concept?.aliased_data;
 
-        const name = newValue?.name;
-        const descriptor = extractDescriptors(newValue, systemLanguage);
-        // TODO: get human-readable user name from resource endpoint
-        const principalUser = "Anonymous"; //newValue?.principalUser; // returns userid int
-        // TODO: get human-readable life cycle state from resource endpoint
-        const lifeCycleState = $gettext("Draft");
-        const uri = aliased_data?.uri?.aliased_data?.uri_content?.url;
-        const partOfScheme =
-            aliased_data?.part_of_scheme?.aliased_data?.part_of_scheme;
-        const parentConcepts = (
-            aliased_data?.classification_status || []
-        ).flatMap(
-            (tile: ConceptClassificationStatusAliases) =>
-                tile?.aliased_data
-                    ?.classification_status_ascribed_classification || [],
-        );
+    const name = concept?.name;
+    const descriptor = extractDescriptors(concept, systemLanguage);
+    // TODO: get human-readable user name from resource endpoint
+    const principalUser = "Anonymous"; //concept?.principalUser; // returns userid int
+    // TODO: get human-readable life cycle state from resource endpoint
+    const lifeCycleState = $gettext("Draft");
+    const uri = aliased_data?.uri?.aliased_data?.uri_content?.url;
+    const partOfScheme =
+        aliased_data?.part_of_scheme?.aliased_data?.part_of_scheme;
+    const parentConcepts = (aliased_data?.classification_status || []).flatMap(
+        (tile: ConceptClassificationStatusAliases) =>
+            tile?.aliased_data?.classification_status_ascribed_classification ||
+            [],
+    );
 
-        data.value = {
-            name: name,
-            descriptor: descriptor,
-            uri: uri,
-            principalUser: principalUser,
-            lifeCycleState: lifeCycleState,
-            partOfScheme: partOfScheme,
-            parentConcepts: parentConcepts,
-        };
-    },
-);
+    data.value = {
+        name: name,
+        descriptor: descriptor,
+        uri: uri,
+        principalUser: principalUser,
+        lifeCycleState: lifeCycleState,
+        partOfScheme: partOfScheme,
+        parentConcepts: parentConcepts,
+    };
+}
 
 onMounted(async () => {
     try {
@@ -89,6 +83,9 @@ onMounted(async () => {
             summary: $gettext("Unable to fetch concept"),
             detail: error instanceof Error ? error.message : undefined,
         });
+    }
+    if (concept.value) {
+        extractConceptHeaderData(concept.value);
     }
 });
 </script>
@@ -121,7 +118,7 @@ onMounted(async () => {
     <div class="header-row">
         <!-- TODO: Human-reable conceptid to be displayed here -->
         <div class="header-item">
-            <span class="header-item-label">{{ $gettext("Scheme: ") }}</span>
+            <span class="header-item-label">{{ $gettext("Scheme:") }}</span>
             <!-- TODO: Allow resource multiselect to route within lingo, not to resource pg -->
             <ResourceInstanceMultiSelectWidget
                 :graph-slug="props.graphSlug"
@@ -136,7 +133,7 @@ onMounted(async () => {
     <div class="header-row">
         <div class="header-item">
             <span class="header-item-label">{{
-                $gettext("Parent Concept(s): ")
+                $gettext("Parent Concept(s):")
             }}</span>
             <!-- TODO: Allow resource multiselect to route within lingo, not to resource pg -->
             <ResourceInstanceMultiSelectWidget
@@ -148,7 +145,7 @@ onMounted(async () => {
             ></ResourceInstanceMultiSelectWidget>
         </div>
         <div class="header-item">
-            <span class="header-item-label">{{ $gettext("Owner: ") }}</span>
+            <span class="header-item-label">{{ $gettext("Owner:") }}</span>
             <span>{{ data?.principalUser || $gettext("Anonymous") }}</span>
         </div>
     </div>

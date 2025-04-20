@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject, onMounted, ref, watch } from "vue";
+import { inject, onMounted, ref } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import { useToast } from "primevue/usetoast";
@@ -24,8 +24,6 @@ const toast = useToast();
 const { $gettext } = useGettext();
 const systemLanguage = inject(systemLanguageKey) as Language;
 
-const scheme = ref<ResourceInstanceResult>();
-
 const props = defineProps<{
     mode: DataComponentMode;
     sectionTitle: string;
@@ -35,25 +33,24 @@ const props = defineProps<{
     nodegroupAlias: string;
 }>();
 
+const scheme = ref<ResourceInstanceResult>();
 const data = ref<SchemeHeader>();
-watch(
-    () => scheme.value,
-    (newValue) => {
-        const name = newValue?.name;
-        const descriptor = extractDescriptors(newValue, systemLanguage);
-        // TODO: get human-readable user name from resource endpoint
-        const principalUser = "Anonymous"; //newValue?.principalUser; // returns userid int
-        // TODO: get human-readable life cycle state from resource endpoint
-        const lifeCycleState = $gettext("Draft");
 
-        data.value = {
-            name: name,
-            descriptor: descriptor,
-            principalUser: principalUser,
-            lifeCycleState: lifeCycleState,
-        };
-    },
-);
+function extractSchemeHeaderData(scheme: ResourceInstanceResult) {
+    const name = scheme?.name;
+    const descriptor = extractDescriptors(scheme, systemLanguage);
+    // TODO: get human-readable user name from resource endpoint
+    const principalUser = "Anonymous"; //scheme?.principalUser; // returns userid int
+    // TODO: get human-readable life cycle state from resource endpoint
+    const lifeCycleState = $gettext("Draft");
+
+    data.value = {
+        name: name,
+        descriptor: descriptor,
+        principalUser: principalUser,
+        lifeCycleState: lifeCycleState,
+    };
+}
 
 onMounted(async () => {
     try {
@@ -68,6 +65,9 @@ onMounted(async () => {
             summary: $gettext("Unable to fetch scheme"),
             detail: error instanceof Error ? error.message : undefined,
         });
+    }
+    if (scheme.value) {
+        extractSchemeHeaderData(scheme.value);
     }
 });
 </script>
@@ -87,7 +87,7 @@ onMounted(async () => {
     </div>
     <div class="header-row">
         <div class="header-item">
-            <span class="header-item-label">{{ $gettext("Owner: ") }}</span>
+            <span class="header-item-label">{{ $gettext("Owner:") }}</span>
             <span>{{ data?.principalUser || $gettext("Anonymous") }}</span>
         </div>
     </div>

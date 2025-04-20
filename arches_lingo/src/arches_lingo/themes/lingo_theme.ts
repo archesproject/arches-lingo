@@ -14,19 +14,14 @@ export const LingoPreset = definePreset(ArchesPreset, {
     primitive: {
         ...archesPrimitives,
         ...lingoColors,
-        arches: {
-            legacy: {
-                sidebarDark: "#b9c9d9", // TODO: use shade from surface palette or pick better color
-            },
-        },
     },
     semantic: {
         focusRing: {
             width: "0.35rem",
             style: "solid",
             color: "{primary-color}",
-            offset: "0.05rem",
-            borderRadius: "0.05rem",
+            offset: "0.125rem",
+            borderRadius: "0.125rem",
         },
         colorScheme: {
             light: {
@@ -52,9 +47,9 @@ export const LingoPreset = definePreset(ArchesPreset, {
             dark: {
                 // DRW: develop Arches blue color for dark mode
                 primary: palette(archesPrimitives.arches.blue),
-                surface: palette("{slate}"),
+                surface: palette("{zinc}"),
                 sidenav: {
-                    background: "{arches.legacy.sidebarDark}",
+                    background: "{surface.800}",
                 },
                 header: {
                     background: "{surface.900}",
@@ -76,7 +71,7 @@ export const LingoPreset = definePreset(ArchesPreset, {
         button: {
             colorScheme: {
                 light: {
-                    // @ts-ignore: Ignoring type mismatch for button primary background
+                    // @ts-expect-error: Ignoring type mismatch for button primary background
                     primary: {
                         background: "{primary-800}",
                         border: {
@@ -85,7 +80,7 @@ export const LingoPreset = definePreset(ArchesPreset, {
                     },
                 },
                 dark: {
-                    // @ts-ignore: Ignoring type mismatch for button primary background
+                    // @ts-expect-error: Ignoring type mismatch for button primary background
                     primary: {
                         background: "{primary-100}",
                     },
@@ -98,7 +93,7 @@ export const LingoPreset = definePreset(ArchesPreset, {
                     // background: "{surface-50}",
                 },
                 dark: {
-                    // @ts-ignore: Ignoring type mismatch for button primary background
+                    // @ts-expect-error: Ignoring type mismatch for button primary background
                     background: "{surface-900}",
                 },
             },
@@ -110,10 +105,5 @@ export const LingoTheme = {
     theme: {
         ...DEFAULT_THEME.theme,
         preset: LingoPreset,
-        // options: {
-        //     prefix: "al",
-        //     darkModeSelector: ".arches-dark",
-        //     cssLayer: false,
-        // },
     },
 };

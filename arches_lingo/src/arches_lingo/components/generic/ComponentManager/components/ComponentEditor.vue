@@ -27,6 +27,7 @@ const isFormDirty = computed(() => {
         });
         return states.some((state) => state === true);
     }
+    return false;
 });
 
 function toggleSize() {
@@ -127,14 +128,14 @@ function resetForm() {
     min-height: 50vh;
     overflow-y: auto;
     padding-bottom: 1rem;
-    border-bottom: 0.085rem solid var(--p-menubar-border-color);
+    flex: 1;
 }
 
 .footer {
     display: flex;
     justify-content: flex-start;
     padding: 1rem;
-    border-bottom: 0.085rem solid var(--p-menubar-border-color);
+    border-bottom: 0.125rem solid var(--p-menubar-border-color);
     background: var(--p-footer-background);
 }
 

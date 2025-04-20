@@ -80,6 +80,7 @@ export interface ResourceInstanceResult {
         };
     };
     aliased_data?: {
+        // TODO: Make this exstensible for various types of aliased_data
         [key: string]: any;
     };
     principalUser?: number | string;
@@ -200,7 +201,7 @@ export interface ConceptClassificationStatusAliases extends AliasedData {
     };
 }
 
-export interface ConceptHeader {
+export interface ConceptHeaderData {
     uri?: string;
     name?: string;
     descriptor?: ResourceDescriptor;
