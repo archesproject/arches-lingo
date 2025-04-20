@@ -45,7 +45,6 @@ const items = ref([
     flex-direction: column;
     align-items: center;
     border-right: 1px solid var(--p-menubar-border-color);
-    background: var(--p-sidenav-background);
 }
 
 .p-button {

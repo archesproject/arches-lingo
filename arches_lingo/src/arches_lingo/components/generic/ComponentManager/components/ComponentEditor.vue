@@ -125,18 +125,14 @@ function resetForm() {
 }
 
 .editor-content {
-    min-height: 50vh;
     overflow-y: auto;
-    padding-bottom: 1rem;
     flex: 1;
 }
 
 .footer {
+    border-top: 0.125rem solid var(--p-menubar-border-color);
+    padding-top: 1rem;
     display: flex;
-    justify-content: flex-start;
-    padding: 1rem;
-    border-bottom: 0.125rem solid var(--p-menubar-border-color);
-    background: var(--p-footer-background);
 }
 
 .footer > Button {

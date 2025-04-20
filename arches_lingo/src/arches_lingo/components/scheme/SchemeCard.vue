@@ -58,9 +58,6 @@ a {
 
 :deep(.p-card-content) {
     overflow: hidden;
-    display: -webkit-box;
-    -webkit-line-clamp: 5;
-    -webkit-box-orient: vertical;
     text-overflow: ellipsis;
 }
 

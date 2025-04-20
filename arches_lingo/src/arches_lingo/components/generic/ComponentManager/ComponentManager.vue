@@ -118,29 +118,32 @@ provide("refreshReportSection", refreshReportSection);
     <Splitter style="height: 100%">
         <SplitterPanel
             v-show="editorState !== MAXIMIZED"
-            :size="30"
-            class="splitter-panel"
+            :size="50"
         >
-            <component
-                :is="componentDatum.component"
-                v-for="componentDatum in processedComponentData"
-                :key="componentDatum.componentName + '-' + componentDatum.key"
-                :graph-slug="componentDatum.graphSlug"
-                :nodegroup-alias="componentDatum.nodegroupAlias"
-                :resource-instance-id="resourceInstanceId"
-                :section-title="componentDatum.sectionTitle"
-                :component-name="componentDatum.componentName"
-                :mode="VIEW"
-            />
+            <div class="splitter-panel-content">
+                <component
+                    :is="componentDatum.component"
+                    v-for="componentDatum in processedComponentData"
+                    :key="
+                        componentDatum.componentName + '-' + componentDatum.key
+                    "
+                    :graph-slug="componentDatum.graphSlug"
+                    :nodegroup-alias="componentDatum.nodegroupAlias"
+                    :resource-instance-id="resourceInstanceId"
+                    :section-title="componentDatum.sectionTitle"
+                    :component-name="componentDatum.componentName"
+                    :mode="VIEW"
+                />
+            </div>
         </SplitterPanel>
 
         <SplitterPanel
             v-if="editorState !== CLOSED"
-            :size="editorState === MINIMIZED ? 70 : 100"
-            class="splitter-panel"
+            :size="50"
         >
             <ComponentEditor
                 :key="editorKey"
+                class="splitter-panel-content"
                 :is-editor-maximized="editorState === MAXIMIZED"
                 @maximize="maximizeEditor"
                 @minimize="minimizeEditor"
@@ -162,8 +165,9 @@ provide("refreshReportSection", refreshReportSection);
 </template>
 
 <style scoped>
-.splitter-panel {
+.splitter-panel-content {
     overflow: auto;
-    padding: 0rem 1rem 1rem 1rem;
+    padding: 1rem;
+    padding-top: 0;
 }
 </style>

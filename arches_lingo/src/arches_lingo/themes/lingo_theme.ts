@@ -30,12 +30,6 @@ export const LingoPreset = definePreset(ArchesPreset, {
                 sidenav: {
                     background: "{arches.legacy.sidebar}",
                 },
-                // header: {
-                //     background: "{surface.50}",
-                // },
-                // footer: {
-                //     background: "{surface.50}",
-                // },
                 sortAndFilterControls: {
                     background: "{light-blue-gray}",
                     border: "{gray}",
@@ -83,15 +77,15 @@ export const LingoPreset = definePreset(ArchesPreset, {
                     // @ts-expect-error: Ignoring type mismatch for button primary background
                     primary: {
                         background: "{primary-100}",
+                        border: {
+                            color: "{button-primary-background}",
+                        },
                     },
                 },
             },
         },
         splitter: {
             colorScheme: {
-                light: {
-                    // background: "{surface-50}",
-                },
                 dark: {
                     // @ts-expect-error: Ignoring type mismatch for button primary background
                     background: "{surface-900}",
