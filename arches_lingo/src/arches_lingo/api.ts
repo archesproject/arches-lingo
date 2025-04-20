@@ -52,10 +52,26 @@ export const fetchLingoResources = async (graphSlug: string) => {
 
 export const fetchLingoResource = async (
     graphSlug: string,
-    resourceId: string,
+    resourceInstanceId: string,
 ) => {
     const response = await fetch(
-        arches.urls.api_lingo_resource(graphSlug, resourceId),
+        arches.urls.api_lingo_resource(graphSlug, resourceInstanceId),
+    );
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
+export const fetchLingoResourcesBatch = async (
+    graphSlug: string,
+    resourceInstanceIds: string[],
+) => {
+    const params = {
+        resource_ids: resourceInstanceIds.join(","),
+    };
+
+    const response = await fetch(
+        `${arches.urls.api_lingo_resources(graphSlug)}?${new URLSearchParams(params)}`,
     );
     const parsed = await response.json();
     if (!response.ok) throw new Error(parsed.message || response.statusText);

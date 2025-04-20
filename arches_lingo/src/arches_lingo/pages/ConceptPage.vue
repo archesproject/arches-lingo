@@ -6,6 +6,7 @@ import ComponentManager from "@/arches_lingo/components/generic/ComponentManager
 import ConceptHeader from "@/arches_lingo/components/concept/ConceptHeader.vue";
 import ConceptLabel from "@/arches_lingo/components/concept/ConceptLabel/ConceptLabel.vue";
 import ConceptNote from "@/arches_lingo/components/concept/ConceptNote/ConceptNote.vue";
+import ConceptImages from "@/arches_lingo/components/concept/ConceptImages/ConceptImages.vue";
 
 const { $gettext } = useGettext();
 
@@ -30,6 +31,13 @@ const componentData = [
         sectionTitle: $gettext("Concept Note"),
         graphSlug: "concept",
         nodegroupAlias: "statement",
+    },
+    {
+        component: ConceptImages,
+        componentName: "ConceptImages",
+        sectionTitle: $gettext("Concept Images"),
+        graphSlug: "concept",
+        nodegroupAlias: "depicting_digital_asset_internal",
     },
 ];
 </script>
