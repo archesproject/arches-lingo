@@ -154,7 +154,7 @@ export function getParentLabels(
         return acc;
     }, "");
 
-    export function extractDescriptors(
+export function extractDescriptors(
     resource: ResourceInstanceResult | undefined,
     selectedLanguage: Language,
 ): ResourceDescriptor {
