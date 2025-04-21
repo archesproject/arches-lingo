@@ -67,9 +67,7 @@ async function save(e: FormSubmitEvent) {
     isSaving.value = true;
 
     try {
-        const formData = Object.fromEntries(
-            Object.entries(e.states).map(([key, state]) => [key, state.value]),
-        );
+        const formData = e.values;
 
         // TODO: in future versions hit an API for expected shape &&
         // recursively map the form data to the expected shape
@@ -104,9 +102,10 @@ async function save(e: FormSubmitEvent) {
                 params: { id: updatedScheme.resourceinstanceid },
             });
 
-            updatedTileId = updatedScheme[props.nodegroupAlias][0].tileid;
+            updatedTileId =
+                updatedScheme.aliased_data[props.nodegroupAlias][0].tileid;
         } else {
-            const updatedScheme = await upsertLingoTile(
+            const updatedTile = await upsertLingoTile(
                 props.graphSlug,
                 props.nodegroupAlias,
                 {
@@ -116,7 +115,7 @@ async function save(e: FormSubmitEvent) {
                 },
             );
 
-            updatedTileId = updatedScheme.tileid;
+            updatedTileId = updatedTile.tileid;
         }
 
         if (updatedTileId !== props.tileId) {
