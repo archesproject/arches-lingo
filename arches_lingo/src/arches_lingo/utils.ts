@@ -153,6 +153,7 @@ export function getParentLabels(
         }
         return acc;
     }, "");
+}
 
 export function extractDescriptors(
     resource: ResourceInstanceResult | undefined,
