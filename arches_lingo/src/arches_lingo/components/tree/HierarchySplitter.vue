@@ -43,17 +43,25 @@ function toggleShowHierarchy() {
             @click="toggleShowHierarchy"
         />
     </div>
-    <Splitter style="height: 100%; overflow: hidden">
+    <Splitter
+        style="height: 100%; overflow: hidden"
+        :pt="{
+            gutter: {
+                style: { display: showHierarchy ? 'flex' : 'none' },
+            },
+        }"
+    >
         <SplitterPanel
-            :size="30"
+            :size="40"
             :style="{
+                display: showHierarchy ? 'flex' : 'none',
                 flexDirection: 'column',
             }"
         >
             <ConceptTree />
         </SplitterPanel>
         <SplitterPanel
-            :size="70"
+            :size="60"
             style="overflow-y: auto"
         >
             <RouterView :key="route.fullPath" />
@@ -64,7 +72,7 @@ function toggleShowHierarchy() {
 <style scoped>
 .subheading {
     display: flex;
-    padding: 0.5rem;
+    margin: 0.5rem;
     gap: 0.5rem;
 }
 

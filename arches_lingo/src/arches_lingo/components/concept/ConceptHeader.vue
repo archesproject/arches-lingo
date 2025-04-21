@@ -40,6 +40,7 @@ const props = defineProps<{
 
 const concept = ref<ResourceInstanceResult>();
 const data = ref<ConceptHeaderData>();
+const isLoading = ref(true);
 
 function extractConceptHeaderData(concept: ResourceInstanceResult) {
     const aliased_data = concept?.aliased_data;
@@ -76,6 +77,8 @@ onMounted(async () => {
             props.graphSlug,
             props.resourceInstanceId,
         );
+
+        extractConceptHeaderData(concept.value!);
     } catch (error) {
         toast.add({
             severity: ERROR,
@@ -83,73 +86,80 @@ onMounted(async () => {
             summary: $gettext("Unable to fetch concept"),
             detail: error instanceof Error ? error.message : undefined,
         });
-    }
-    if (concept.value) {
-        extractConceptHeaderData(concept.value);
+    } finally {
+        isLoading.value = false;
     }
 });
 </script>
 
 <template>
-    <div class="header-row">
-        <h2>{{ data?.descriptor?.name }} ({{ data?.descriptor?.language }})</h2>
-        <!-- TODO: Life Cycle mgmt functionality goes here -->
-        <div class="header-item">
-            <span class="header-item-label">{{
-                $gettext("Life cycle state:")
-            }}</span>
-            <span>{{ data?.lifeCycleState }}</span>
+    <ProgressSpinner
+        v-if="isLoading"
+        style="width: 100%"
+    />
+    <div v-else>
+        <div class="header-row">
+            <h2>
+                {{ data?.descriptor?.name }} ({{ data?.descriptor?.language }})
+            </h2>
+            <!-- TODO: Life Cycle mgmt functionality goes here -->
+            <div class="header-item">
+                <span class="header-item-label">{{
+                    $gettext("Life cycle state:")
+                }}</span>
+                <span>{{ data?.lifeCycleState }}</span>
+            </div>
         </div>
+        <div class="header-row">
+            <div class="header-item">
+                <span class="header-item-label">{{ $gettext("URI:") }}</span>
+                <Button
+                    :label="data?.uri || '--'"
+                    variant="link"
+                    as="a"
+                    :href="data?.uri"
+                    target="_blank"
+                    rel="noopener"
+                    :disabled="!data?.uri"
+                ></Button>
+            </div>
+        </div>
+        <div class="header-row">
+            <!-- TODO: Human-reable conceptid to be displayed here -->
+            <div class="header-item">
+                <span class="header-item-label">{{ $gettext("Scheme:") }}</span>
+                <!-- TODO: Allow resource multiselect to route within lingo, not to resource pg -->
+                <ResourceInstanceMultiSelectWidget
+                    :graph-slug="props.graphSlug"
+                    node-alias="part_of_scheme"
+                    :initial-value="data?.partOfScheme"
+                    :mode="VIEW"
+                    :show-label="false"
+                ></ResourceInstanceMultiSelectWidget>
+            </div>
+            <!-- TODO: export to rdf/skos/json-ld buttons go here -->
+        </div>
+        <div class="header-row">
+            <div class="header-item">
+                <span class="header-item-label">{{
+                    $gettext("Parent Concept(s):")
+                }}</span>
+                <!-- TODO: Allow resource multiselect to route within lingo, not to resource pg -->
+                <ResourceInstanceMultiSelectWidget
+                    :graph-slug="props.graphSlug"
+                    node-alias="classification_status_ascribed_classification"
+                    :initial-value="data?.parentConcepts"
+                    :mode="VIEW"
+                    :show-label="false"
+                ></ResourceInstanceMultiSelectWidget>
+            </div>
+            <div class="header-item">
+                <span class="header-item-label">{{ $gettext("Owner:") }}</span>
+                <span>{{ data?.principalUser || $gettext("Anonymous") }}</span>
+            </div>
+        </div>
+        <Divider />
     </div>
-    <div class="header-row">
-        <div class="header-item">
-            <span class="header-item-label">{{ $gettext("URI:") }}</span>
-            <Button
-                :label="data?.uri || '--'"
-                variant="link"
-                as="a"
-                :href="data?.uri"
-                target="_blank"
-                rel="noopener"
-                :disabled="!data?.uri"
-            ></Button>
-        </div>
-    </div>
-    <div class="header-row">
-        <!-- TODO: Human-reable conceptid to be displayed here -->
-        <div class="header-item">
-            <span class="header-item-label">{{ $gettext("Scheme:") }}</span>
-            <!-- TODO: Allow resource multiselect to route within lingo, not to resource pg -->
-            <ResourceInstanceMultiSelectWidget
-                :graph-slug="props.graphSlug"
-                node-alias="part_of_scheme"
-                :initial-value="data?.partOfScheme"
-                :mode="VIEW"
-                :show-label="false"
-            ></ResourceInstanceMultiSelectWidget>
-        </div>
-        <!-- TODO: export to rdf/skos/json-ld buttons go here -->
-    </div>
-    <div class="header-row">
-        <div class="header-item">
-            <span class="header-item-label">{{
-                $gettext("Parent Concept(s):")
-            }}</span>
-            <!-- TODO: Allow resource multiselect to route within lingo, not to resource pg -->
-            <ResourceInstanceMultiSelectWidget
-                :graph-slug="props.graphSlug"
-                node-alias="classification_status_ascribed_classification"
-                :initial-value="data?.parentConcepts"
-                :mode="VIEW"
-                :show-label="false"
-            ></ResourceInstanceMultiSelectWidget>
-        </div>
-        <div class="header-item">
-            <span class="header-item-label">{{ $gettext("Owner:") }}</span>
-            <span>{{ data?.principalUser || $gettext("Anonymous") }}</span>
-        </div>
-    </div>
-    <Divider />
 </template>
 
 <style scoped>

@@ -56,6 +56,7 @@ class ConceptBuilder:
         self.populate_schemes()
 
         self.polyhierarchical_concepts = set()
+        self.language_lookup = {lang.name: lang.code for lang in Language.objects.all()}
 
     @staticmethod
     def find_valuetype_id_from_value(value):

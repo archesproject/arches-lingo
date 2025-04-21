@@ -35,6 +35,7 @@ const props = defineProps<{
 
 const scheme = ref<ResourceInstanceResult>();
 const data = ref<SchemeHeader>();
+const isLoading = ref(true);
 
 function extractSchemeHeaderData(scheme: ResourceInstanceResult) {
     const name = scheme?.name;
@@ -58,6 +59,8 @@ onMounted(async () => {
             props.graphSlug,
             props.resourceInstanceId,
         );
+
+        extractSchemeHeaderData(scheme.value!);
     } catch (error) {
         toast.add({
             severity: ERROR,
@@ -65,33 +68,44 @@ onMounted(async () => {
             summary: $gettext("Unable to fetch scheme"),
             detail: error instanceof Error ? error.message : undefined,
         });
-    }
-    if (scheme.value) {
-        extractSchemeHeaderData(scheme.value);
+    } finally {
+        isLoading.value = false;
     }
 });
 </script>
 
 <template>
-    <div class="header-row">
-        <h2>{{ data?.descriptor?.name }} ({{ data?.descriptor?.language }})</h2>
-    </div>
-    <div class="header-row">
-        <!-- TODO: Life Cycle mgmt functionality goes here -->
-        <div class="header-item">
-            <span class="header-item-label">{{
-                $gettext("Life cycle state:")
-            }}</span>
-            <span>{{ data?.lifeCycleState }}</span>
+    <ProgressSpinner
+        v-if="isLoading"
+        style="width: 100%"
+    />
+
+    <div v-else>
+        <div class="header-row">
+            <h2>
+                {{ data?.descriptor?.name }} ({{ data?.descriptor?.language }})
+            </h2>
         </div>
-    </div>
-    <div class="header-row">
-        <div class="header-item">
-            <span class="header-item-label">{{ $gettext("Owner:") }}</span>
-            <span>{{ data?.principalUser || $gettext("Anonymous") }}</span>
+
+        <div class="header-row">
+            <!-- TODO: Life Cycle mgmt functionality goes here -->
+            <div class="header-item">
+                <span class="header-item-label">{{
+                    $gettext("Life cycle state:")
+                }}</span>
+                <span>{{ data?.lifeCycleState }}</span>
+            </div>
         </div>
+
+        <div class="header-row">
+            <div class="header-item">
+                <span class="header-item-label">{{ $gettext("Owner:") }}</span>
+                <span>{{ data?.principalUser || $gettext("Anonymous") }}</span>
+            </div>
+        </div>
+
+        <Divider />
     </div>
-    <Divider />
 </template>
 
 <style scoped>
