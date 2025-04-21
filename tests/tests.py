@@ -200,12 +200,13 @@ class ViewTests(TestCase):
 
     def test_get_concept_trees(self):
         self.client.force_login(self.admin)
-        with self.assertNumQueries(5):
+        with self.assertNumQueries(6):
             # 1: session
             # 2: auth
             # 3: select broader tiles, subquery for labels
             # 4: select top concept tiles, subquery for labels
             # 5: select schemes, subquery for labels
+            # 6: languages
             response = self.client.get(reverse("api-concepts"))
 
         self.assertEqual(response.status_code, 200)
@@ -213,6 +214,7 @@ class ViewTests(TestCase):
         scheme = result["schemes"][0]
 
         self.assertEqual(scheme["labels"][0]["value"], "Test Scheme")
+        self.assertEqual(scheme["labels"][0]["valuetype_id"], "prefLabel")
         self.assertEqual(len(scheme["top_concepts"]), 1)
         top = scheme["top_concepts"][0]
         self.assertEqual(top["labels"][0]["value"], "Concept 1")
@@ -227,6 +229,10 @@ class ViewTests(TestCase):
         self.assertEqual(
             {n["labels"][0]["value"] for n in concept_2["narrower"]},
             {"Concept 3"},
+        )
+        self.assertEqual(
+            {n["labels"][0]["valuetype_id"] for n in concept_2["narrower"]},
+            {"prefLabel"},
         )
 
     def test_search(self):

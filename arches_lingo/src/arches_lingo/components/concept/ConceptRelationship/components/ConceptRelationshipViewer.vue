@@ -61,7 +61,7 @@ const metaStringLabel: MetaStringText = {
         <template #name="{ rowData }">
             <NonLocalizedStringWidget
                 :graph-slug="props.graphSlug"
-                node-alias=""
+                node-alias="relation_status_ascribed_comparate"
                 :initial-value="rowData.aliased_data.relationshipId"
                 :mode="VIEW"
                 :show-label="false"

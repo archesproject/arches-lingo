@@ -43,10 +43,16 @@ const setDisplayedRow = (val: Concept | Scheme | null) => {
         router.push({ name: routeNames.concept, params: { id: val.id } });
     }
 };
+
+const hierarchyVisible = ref(false);
+
+function toggleHierarchy() {
+    hierarchyVisible.value = !hierarchyVisible.value;
+}
+
 // @ts-expect-error vue-tsc doesn't like arbitrary properties here
 provide(displayedRowKey, { displayedRow, setDisplayedRow });
-
-const showHierarchy = ref(false);
+provide("toggleHierarchy", { hierarchyVisible, toggleHierarchy });
 </script>
 
 <template>
@@ -63,20 +69,19 @@ const showHierarchy = ref(false);
         <Button
             :severity="shouldUseContrast() ? CONTRAST : SECONDARY"
             :label="$gettext('Toggle hierarchy')"
-            @click="() => (showHierarchy = !showHierarchy)"
+            @click="toggleHierarchy()"
         />
     </div>
     <Splitter
         style="height: 100%; overflow: hidden"
         :pt="{
-            gutter: { style: { display: showHierarchy ? 'flex' : 'none' } },
+            gutter: { style: { display: hierarchyVisible ? 'flex' : 'none' } },
         }"
     >
         <SplitterPanel
-            :size="40"
-            :min-size="25"
+            :size="30"
             :style="{
-                display: showHierarchy ? 'flex' : 'none',
+                display: hierarchyVisible ? 'flex' : 'none',
                 flexDirection: 'column',
             }"
         >
@@ -88,7 +93,7 @@ const showHierarchy = ref(false);
             </Suspense>
         </SplitterPanel>
         <SplitterPanel
-            :min-size="25"
+            :size="70"
             style="overflow-y: auto"
         >
             <RouterView />
@@ -99,7 +104,7 @@ const showHierarchy = ref(false);
 <style scoped>
 .subheading {
     display: flex;
-    margin: 0.5rem;
+    padding: 0.5rem;
     gap: 0.5rem;
 }
 

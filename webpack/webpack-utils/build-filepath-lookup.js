@@ -4,6 +4,7 @@ const Path = require('path');
 const fs = require('fs');
 
 function buildFilepathLookup(path, staticUrlPrefix) {
+    path = path.replace(/\\/g, '/')
     if (!fs.existsSync(path)) {
         return;
     }
@@ -13,7 +14,7 @@ function buildFilepathLookup(path, staticUrlPrefix) {
 
     const getFileList = function (dirPath) {
         return fs.readdirSync(dirPath, { withFileTypes: true }).reduce((fileList,entries) => {
-            const childPath = Path.join(dirPath, entries.name);
+            const childPath = Path.join(dirPath, entries.name).replace(/\\/g, '/');
 
             if (entries.isDirectory()) {
                 fileList.push(...getFileList(childPath, fileList));
@@ -34,10 +35,10 @@ function buildFilepathLookup(path, staticUrlPrefix) {
         const extensionReplacementRegex = new RegExp(`\\.${extension}$`);
 
         if (extension === 'js') {
-            lookup[file.replace(path,'').replace(/\\/g, '/').replace(extensionReplacementRegex,'').replace(/^\//,'')] = {"import": file, "filename": `${prefix}/[name].${extension}`};
+            lookup[file.replace(path,'').replace(/\\/g, '/').replace(extensionReplacementRegex,'').replace(/^\//,'')] = {"import": file, "filename": `${prefix}/[name].[contenthash].${extension}`};
         }
         else if (extension === 'css' || extension === 'scss') {
-            lookup[Path.join('css', file.replace(path,'').replace(/\\/g, '/')).replace(extensionReplacementRegex,'').replace(/^\//,'')] = { 'import': file };
+            lookup[Path.join('css', file.replace(path,'')).replace(/\\/g, '/').replace(extensionReplacementRegex,'').replace(/^\//,'')] = {'import': file, "filename": `${prefix}/[name].[contenthash].${extension}`};
         }
         else {
             // staticUrl used for images

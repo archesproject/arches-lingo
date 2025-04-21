@@ -113,5 +113,6 @@ main {
     display: flex;
     flex-direction: column;
     flex: 1 1 auto;
+    min-width: 0;
 }
 </style>

@@ -12,12 +12,12 @@ import SchemeCard from "@/arches_lingo/components/scheme/SchemeCard.vue";
 import { fetchLingoResources } from "@/arches_lingo/api.ts";
 import { NEW } from "@/arches_lingo/constants.ts";
 
-import type { SchemeResource } from "@/arches_lingo/types";
+import type { ResourceInstanceResult } from "@/arches_lingo/types";
 
 const toast = useToast();
 const { $gettext } = useGettext();
 
-const schemes = ref<SchemeResource[]>([]);
+const schemes = ref<ResourceInstanceResult[]>([]);
 
 onMounted(async () => {
     try {
