@@ -172,7 +172,7 @@
                                     }
                                 ],
                                 "list_id": "6eaa2c6f-af83-464c-9200-051c4cfe7e8e",
-                                "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/14751cb1-f7af-45d9-b32a-59d150bdac0f"
+                                "uri": "https://vocab.getty.edu/aat/300456597"
                             }
                         ],
                         "i18n_properties": [
@@ -390,7 +390,7 @@
                                     }
                                 ],
                                 "list_id": "ef69e772-de53-45fe-98d4-bf3e7b10eb57",
-                                "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/7b873aed-1dbd-45e4-98e7-85143ee453c6"
+                                "uri": "https://vocab.getty.edu/aat/300456594"
                             }
                         ],
                         "i18n_properties": [
@@ -634,7 +634,7 @@
                                     }
                                 ],
                                 "list_id": "ef69e772-de53-45fe-98d4-bf3e7b10eb57",
-                                "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/02a0fc69-9f92-4bef-b657-af1ed37c1d3e"
+                                "uri": "https://vocab.getty.edu/aat/300456598"
                             }
                         ],
                         "i18n_properties": [
@@ -670,7 +670,7 @@
                                     }
                                 ],
                                 "list_id": "aba2a0b4-75a4-45ba-8b57-021f3ca92a6a",
-                                "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/52eb8678-485d-418c-9ad2-aa97d077ac56"
+                                "uri": "http://www.w3.org/2004/02/skos/core#scopeNote"
                             }
                         ],
                         "i18n_properties": [
@@ -904,7 +904,7 @@
                                     }
                                 ],
                                 "list_id": "6eaa2c6f-af83-464c-9200-051c4cfe7e8e",
-                                "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/14751cb1-f7af-45d9-b32a-59d150bdac0f"
+                                "uri": "https://vocab.getty.edu/aat/300456597"
                             }
                         ],
                         "i18n_properties": [
@@ -962,7 +962,7 @@
                                     }
                                 ],
                                 "list_id": "ef69e772-de53-45fe-98d4-bf3e7b10eb57",
-                                "uri": "https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/9c93be63-b900-4f63-b0cf-7351e5129508"
+                                "uri": "https://vocab.getty.edu/aat/300435444"
                             }
                         ],
                         "i18n_properties": [
