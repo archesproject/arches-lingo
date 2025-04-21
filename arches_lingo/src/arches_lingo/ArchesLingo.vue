@@ -43,11 +43,15 @@ const route = useRoute();
 const toast = useToast();
 const { $gettext } = useGettext();
 
-async function checkUserAuthentication(to: RouteLocationNormalizedLoadedGeneric) {
+async function checkUserAuthentication(
+    to: RouteLocationNormalizedLoadedGeneric,
+) {
     const userData = await fetchUser();
     setUser(userData);
 
-    const requiresAuthentication = to.matched.some(record => record.meta.requiresAuthentication);
+    const requiresAuthentication = to.matched.some(
+        (record) => record.meta.requiresAuthentication,
+    );
     if (requiresAuthentication && userData.username === ANONYMOUS) {
         throw new Error("Authentication required");
     }
@@ -56,15 +60,19 @@ async function checkUserAuthentication(to: RouteLocationNormalizedLoadedGeneric)
 function carryOverShowHierarchy(to: RouteLocationNormalizedLoadedGeneric) {
     const currentUrl = new URL(window.location.href);
     const currentShowHierarchy = currentUrl.searchParams.get("showHierarchy");
-    
-    if (currentShowHierarchy && to.matched.some(record => record.meta.shouldShowHierarchy) && !to.query.showHierarchy) {
+
+    if (
+        currentShowHierarchy &&
+        to.matched.some((record) => record.meta.shouldShowHierarchy) &&
+        !to.query.showHierarchy
+    ) {
         return {
             name: to.name,
             params: to.params,
             query: {
                 ...to.query,
-                showHierarchy: currentShowHierarchy
-            }
+                showHierarchy: currentShowHierarchy,
+            },
         };
     }
     return null;
@@ -138,5 +146,6 @@ main {
     display: flex;
     flex-direction: column;
     flex: 1 1 auto;
+    min-width: 0;
 }
 </style>

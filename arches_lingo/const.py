@@ -51,3 +51,9 @@ SCHEME_NAME_TYPE_NODE = "ef87b588-11de-11ef-9493-0a58a9feac02"
 ### Lists and List Items ###
 LANGUAGES_LIST_ID = "55ce793b-a51a-4b25-811d-d08ea797f8c3"
 LABEL_LIST_ID = "deb847fc-f4c3-4e82-be19-04641579f129"
+
+
+### Values ###
+PREF_LABEL_VALUE = "preferred label"
+ALT_LABEL_VALUE = "alternative label"
+HIDDEN_LABEL_VALUE = "hidden label"
