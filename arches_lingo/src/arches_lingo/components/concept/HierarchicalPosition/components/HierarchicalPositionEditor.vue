@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject, useTemplateRef, watch } from "vue";
+import { inject, ref, useTemplateRef, watch } from "vue";
 
 import { useRouter } from "vue-router";
 import { Form } from "@primevue/forms";
@@ -38,6 +38,7 @@ const refreshReportSection = inject<(componentName: string) => void>(
 );
 
 const formRef = useTemplateRef("form");
+const isSaving = ref(false);
 
 watch(
     () => formRef.value,
@@ -45,10 +46,10 @@ watch(
 );
 
 async function save(e: FormSubmitEvent) {
+    isSaving.value = true;
+
     try {
-        const formData = Object.fromEntries(
-            Object.entries(e.states).map(([key, state]) => [key, state.value]),
-        );
+        const formData = e.values;
 
         let updatedTileId;
 
@@ -92,22 +93,29 @@ async function save(e: FormSubmitEvent) {
 </script>
 
 <template>
-    <h3>{{ props.sectionTitle }}</h3>
+    <ProgressSpinner
+        v-show="isSaving"
+        style="width: 100%"
+    />
 
-    <Form
-        ref="form"
-        @submit="save"
-    >
-        <ConceptResourceSelectWidget
-            :graph-slug="props.graphSlug"
-            node-alias="classification_status_ascribed_classification"
-            :scheme="props.scheme"
-            :exclude="props.exclude"
-            :initial-value="
-                props.tileData?.aliased_data
-                    .classification_status_ascribed_classification
-            "
-            :mode="EDIT"
-        />
-    </Form>
+    <div v-show="!isSaving">
+        <h3>{{ props.sectionTitle }}</h3>
+
+        <Form
+            ref="form"
+            @submit="save"
+        >
+            <ConceptResourceSelectWidget
+                :graph-slug="props.graphSlug"
+                node-alias="classification_status_ascribed_classification"
+                :scheme="props.scheme"
+                :exclude="props.exclude"
+                :initial-value="
+                    props.tileData?.aliased_data
+                        .classification_status_ascribed_classification
+                "
+                :mode="EDIT"
+            />
+        </Form>
+    </div>
 </template>
