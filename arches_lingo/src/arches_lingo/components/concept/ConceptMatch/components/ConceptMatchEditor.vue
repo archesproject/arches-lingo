@@ -129,7 +129,9 @@ async function save(e: FormSubmitEvent) {
             <ReferenceSelectWidget
                 :graph-slug="props.graphSlug"
                 node-alias="match_status_status"
-                :initial-value="props.tileData?.aliased_data.match_status_status"
+                :initial-value="
+                    props.tileData?.aliased_data.match_status_status
+                "
                 :mode="EDIT"
             />
             <ReferenceSelectWidget
@@ -162,7 +164,8 @@ async function save(e: FormSubmitEvent) {
                 :graph-slug="props.graphSlug"
                 node-alias="match_status_data_assignment_actor"
                 :initial-value="
-                    props.tileData?.aliased_data.match_status_data_assignment_actor
+                    props.tileData?.aliased_data
+                        .match_status_data_assignment_actor
                 "
                 :mode="EDIT"
             />
@@ -179,7 +182,8 @@ async function save(e: FormSubmitEvent) {
                 :graph-slug="props.graphSlug"
                 node-alias="match_status_data_assignment_type"
                 :initial-value="
-                    props.tileData?.aliased_data.match_status_data_assignment_type
+                    props.tileData?.aliased_data
+                        .match_status_data_assignment_type
                 "
                 :mode="EDIT"
             />

@@ -111,7 +111,8 @@ async function save(e: FormSubmitEvent) {
                 node-alias="relation_status_ascribed_comparate"
                 :scheme="props.scheme"
                 :initial-value="
-                    props.tileData?.aliased_data.relation_status_ascribed_comparate
+                    props.tileData?.aliased_data
+                        .relation_status_ascribed_comparate
                 "
                 :mode="EDIT"
             />
@@ -119,14 +120,17 @@ async function save(e: FormSubmitEvent) {
                 :graph-slug="props.graphSlug"
                 node-alias="relation_status_ascribed_relation"
                 :initial-value="
-                    props.tileData?.aliased_data.relation_status_ascribed_relation
+                    props.tileData?.aliased_data
+                        .relation_status_ascribed_relation
                 "
                 :mode="EDIT"
             />
             <ReferenceSelectWidget
                 :graph-slug="props.graphSlug"
                 node-alias="relation_status_status"
-                :initial-value="props.tileData?.aliased_data.relation_status_status"
+                :initial-value="
+                    props.tileData?.aliased_data.relation_status_status
+                "
                 :mode="EDIT"
             />
             <ReferenceSelectWidget
