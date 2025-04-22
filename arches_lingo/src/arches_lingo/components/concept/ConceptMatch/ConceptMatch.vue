@@ -78,14 +78,19 @@ async function getURI(resourceId: string) {
 }
 
 async function getSchemeId() {
-    const partOfScheme = await fetchLingoResourcePartial(
-        props.graphSlug,
-        props.resourceInstanceId as string,
-        "part_of_scheme",
-    );
+    try {
+        const partOfScheme = await fetchLingoResourcePartial(
+            props.graphSlug,
+            props.resourceInstanceId as string,
+            "part_of_scheme",
+        );
 
-    return partOfScheme.aliased_data?.part_of_scheme?.aliased_data
-        ?.part_of_scheme?.[0]?.resourceId;
+        return partOfScheme.aliased_data?.part_of_scheme?.aliased_data
+            ?.part_of_scheme?.[0]?.resourceId;
+        }
+    catch (error) {
+        fetchError.value = error;
+    }
 }
 </script>
 
