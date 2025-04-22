@@ -176,28 +176,28 @@ export type ConceptStatement = TileData<ConceptStatementAliases>;
 
 export interface ConceptRelationAliases extends AliasedData {
     relation_status_ascribed_comparate: ResourceInstanceReference[];
-    relation_status_ascribed_relation: ControlledListItem[];
-    relation_status_status: ControlledListItem[];
-    relation_status_status_metatype: ControlledListItem[];
+    relation_status_ascribed_relation: ReferenceSelectFetchedOption[];
+    relation_status_status: ReferenceSelectFetchedOption[];
+    relation_status_status_metatype: ReferenceSelectFetchedOption[];
     relation_status_timespan_begin_of_the_begin: string;
     relation_status_timespan_end_of_the_end: string;
     relation_status_data_assignment_actor: ResourceInstanceReference[];
     relation_status_data_assignment_object_used: ResourceInstanceReference[];
-    relation_status_data_assignment_type: ControlledListItem[];
+    relation_status_data_assignment_type: ReferenceSelectFetchedOption[];
 }
 
 export type ConceptRelationStatus = TileData<ConceptRelationAliases>;
 
 export interface ConceptMatchAliases extends AliasedData {
     match_status_ascribed_comparate: ResourceInstanceReference[];
-    match_status_ascribed_relation: ControlledListItem[];
-    match_status_status: ControlledListItem[];
-    match_status_status_metatype: ControlledListItem[];
+    match_status_ascribed_relation: ReferenceSelectFetchedOption[];
+    match_status_status: ReferenceSelectFetchedOption[];
+    match_status_status_metatype: ReferenceSelectFetchedOption[];
     match_status_timespan_begin_of_the_begin: string;
     match_status_timespan_end_of_the_end: string;
     match_status_data_assignment_actor: ResourceInstanceReference[];
     match_status_data_assignment_object_used: ResourceInstanceReference[];
-    match_status_data_assignment_type: ControlledListItem[];
+    match_status_data_assignment_type: ReferenceSelectFetchedOption[];
     uri: Url;
 }
 
