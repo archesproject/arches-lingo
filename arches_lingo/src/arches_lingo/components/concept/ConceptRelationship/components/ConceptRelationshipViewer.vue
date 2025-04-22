@@ -4,7 +4,7 @@ import { useGettext } from "vue3-gettext";
 
 import Button from "primevue/button";
 
-import ConceptResourceSelectWidget from "@/arches_component_lab/widgets/ConceptResourceSelectWidget/ConceptResourceSelectWidget.vue";
+import ConceptResourceSelectWidget from "@/arches_lingo/components/widgets/ConceptResourceSelectWidget/ConceptResourceSelectWidget.vue";
 import MetaStringViewer from "@/arches_lingo/components/generic/MetaStringViewer.vue";
 
 import ReferenceSelectWidget from "@/arches_controlled_lists/widgets/ReferenceSelectWidget/ReferenceSelectWidget.vue";
