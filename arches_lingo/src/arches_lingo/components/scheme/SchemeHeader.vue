@@ -4,6 +4,8 @@ import { useGettext } from "vue3-gettext";
 
 import { useToast } from "primevue/usetoast";
 import Divider from "primevue/divider";
+import ProgressSpinner from "primevue/progressspinner";
+
 import {
     DEFAULT_ERROR_TOAST_LIFE,
     ERROR,
@@ -17,24 +19,25 @@ import type {
     DataComponentMode,
     ResourceInstanceResult,
     SchemeHeader,
-} from "@/arches_lingo/types";
-import type { Language } from "@/arches_vue_utils/types";
-
-const toast = useToast();
-const { $gettext } = useGettext();
-const systemLanguage = inject(systemLanguageKey) as Language;
+} from "@/arches_lingo/types.ts";
+import type { Language } from "@/arches_vue_utils/types.ts";
 
 const props = defineProps<{
     mode: DataComponentMode;
     sectionTitle: string;
     componentName: string;
     graphSlug: string;
-    resourceInstanceId: string;
+    resourceInstanceId: string | undefined;
     nodegroupAlias: string;
 }>();
 
+const toast = useToast();
+const { $gettext } = useGettext();
+const systemLanguage = inject(systemLanguageKey) as Language;
+
 const scheme = ref<ResourceInstanceResult>();
 const data = ref<SchemeHeader>();
+const isLoading = ref(true);
 
 function extractSchemeHeaderData(scheme: ResourceInstanceResult) {
     const name = scheme?.name;
@@ -54,10 +57,16 @@ function extractSchemeHeaderData(scheme: ResourceInstanceResult) {
 
 onMounted(async () => {
     try {
+        if (!props.resourceInstanceId) {
+            return;
+        }
+
         scheme.value = await fetchLingoResource(
             props.graphSlug,
             props.resourceInstanceId,
         );
+
+        extractSchemeHeaderData(scheme.value!);
     } catch (error) {
         toast.add({
             severity: ERROR,
@@ -65,33 +74,44 @@ onMounted(async () => {
             summary: $gettext("Unable to fetch scheme"),
             detail: error instanceof Error ? error.message : undefined,
         });
-    }
-    if (scheme.value) {
-        extractSchemeHeaderData(scheme.value);
+    } finally {
+        isLoading.value = false;
     }
 });
 </script>
 
 <template>
-    <div class="header-row">
-        <h2>{{ data?.descriptor?.name }} ({{ data?.descriptor?.language }})</h2>
-    </div>
-    <div class="header-row">
-        <!-- TODO: Life Cycle mgmt functionality goes here -->
-        <div class="header-item">
-            <span class="header-item-label">{{
-                $gettext("Life cycle state:")
-            }}</span>
-            <span>{{ data?.lifeCycleState }}</span>
+    <ProgressSpinner
+        v-if="isLoading"
+        style="width: 100%"
+    />
+
+    <div v-else>
+        <div class="header-row">
+            <h2>
+                {{ data?.descriptor?.name }} ({{ data?.descriptor?.language }})
+            </h2>
         </div>
-    </div>
-    <div class="header-row">
-        <div class="header-item">
-            <span class="header-item-label">{{ $gettext("Owner:") }}</span>
-            <span>{{ data?.principalUser || $gettext("Anonymous") }}</span>
+
+        <div class="header-row">
+            <!-- TODO: Life Cycle mgmt functionality goes here -->
+            <div class="header-item">
+                <span class="header-item-label">{{
+                    $gettext("Life cycle state:")
+                }}</span>
+                <span>{{ data?.lifeCycleState }}</span>
+            </div>
         </div>
+
+        <div class="header-row">
+            <div class="header-item">
+                <span class="header-item-label">{{ $gettext("Owner:") }}</span>
+                <span>{{ data?.principalUser || $gettext("Anonymous") }}</span>
+            </div>
+        </div>
+
+        <Divider />
     </div>
-    <Divider />
 </template>
 
 <style scoped>
