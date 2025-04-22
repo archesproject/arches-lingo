@@ -46,6 +46,30 @@ const concept = ref<ResourceInstanceResult>();
 const data = ref<ConceptHeaderData>();
 const isLoading = ref(true);
 
+onMounted(async () => {
+    try {
+        if (!props.resourceInstanceId) {
+            return;
+        }
+
+        concept.value = await fetchLingoResource(
+            props.graphSlug,
+            props.resourceInstanceId,
+        );
+
+        extractConceptHeaderData(concept.value!);
+    } catch (error) {
+        toast.add({
+            severity: ERROR,
+            life: DEFAULT_ERROR_TOAST_LIFE,
+            summary: $gettext("Unable to fetch concept"),
+            detail: error instanceof Error ? error.message : undefined,
+        });
+    } finally {
+        isLoading.value = false;
+    }
+});
+
 function extractConceptHeaderData(concept: ResourceInstanceResult) {
     const aliased_data = concept?.aliased_data;
 
@@ -74,30 +98,6 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
         parentConcepts: parentConcepts,
     };
 }
-
-onMounted(async () => {
-    try {
-        if (!props.resourceInstanceId) {
-            return;
-        }
-
-        concept.value = await fetchLingoResource(
-            props.graphSlug,
-            props.resourceInstanceId,
-        );
-
-        extractConceptHeaderData(concept.value!);
-    } catch (error) {
-        toast.add({
-            severity: ERROR,
-            life: DEFAULT_ERROR_TOAST_LIFE,
-            summary: $gettext("Unable to fetch concept"),
-            detail: error instanceof Error ? error.message : undefined,
-        });
-    } finally {
-        isLoading.value = false;
-    }
-});
 </script>
 
 <template>

@@ -53,7 +53,7 @@ async function checkUserAuthentication(
         (record) => record.meta.requiresAuthentication,
     );
     if (requiresAuthentication && userData.username === ANONYMOUS) {
-        throw new Error("Authentication required");
+        throw new Error($gettext("Authentication required."));
     }
 }
 

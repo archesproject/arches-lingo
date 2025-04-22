@@ -1,29 +1,32 @@
 <script setup lang="ts">
 import { computed, inject, nextTick, onMounted, ref, watch } from "vue";
+
 import { useRoute, useRouter } from "vue-router";
 import { useGettext } from "vue3-gettext";
-
 import { useToast } from "primevue/usetoast";
+
 import Tree from "primevue/tree";
 
-import { getItemLabel } from "@/arches_vue_utils/utils.ts";
+import TreeRow from "@/arches_lingo/components/tree/components/TreeRow/TreeRow.vue";
 import PresentationControls from "@/arches_controlled_lists/components/tree/PresentationControls.vue";
+
 import {
     DEFAULT_ERROR_TOAST_LIFE,
     ERROR,
 } from "@/arches_controlled_lists/constants.ts";
-import { findNodeInTree } from "@/arches_controlled_lists/utils.ts";
-import { fetchConcepts } from "@/arches_lingo/api.ts";
 import {
     selectedLanguageKey,
     systemLanguageKey,
 } from "@/arches_lingo/constants.ts";
+
+import { findNodeInTree } from "@/arches_controlled_lists/utils.ts";
+import { fetchConcepts } from "@/arches_lingo/api.ts";
+
 import {
     treeFromSchemes,
     navigateToSchemeOrConcept,
 } from "@/arches_lingo/utils.ts";
-
-import TreeRow from "@/arches_lingo/components/tree/components/TreeRow/TreeRow.vue";
+import { getItemLabel } from "@/arches_vue_utils/utils.ts";
 
 import type { ComponentPublicInstance, Ref } from "vue";
 import type { RouteLocationNormalizedLoadedGeneric } from "vue-router";
@@ -45,6 +48,8 @@ const router = useRouter();
 const NEW = "new";
 const FOCUS = $gettext("Focus");
 const UNFOCUS = $gettext("Unfocus");
+const ADD_CHILD = $gettext("Add child");
+
 const iconLabels: IconLabels = Object.freeze({
     concept: $gettext("Concept"),
     scheme: $gettext("Scheme"),
@@ -202,6 +207,7 @@ function findNodeById(concepts: Concept | Concept[], targetId: string) {
         const queueItem = queue.shift() as
             | { node: Concept; path: Concept[] }
             | undefined;
+
         if (!queueItem) {
             continue;
         }
@@ -362,10 +368,9 @@ function onNodeSelect(node: TreeNode) {
             },
             nodeContent: ({ instance }: TreePassThroughMethodOptions) => {
                 return {
-                    style:
-                        instance.node.data.id === NEW
-                            ? { backgroundColor: 'red' }
-                            : {},
+                    style: instance.node.data.id === NEW && {
+                        backgroundColor: 'red',
+                    },
                 };
             },
             nodeIcon: ({ instance }: TreePassThroughMethodOptions) => {
@@ -385,11 +390,12 @@ function onNodeSelect(node: TreeNode) {
         <template #default="slotProps">
             <TreeRow
                 :id="slotProps.node.data.id"
-                v-model:focused-node="focusedNode"
+                :focused-node="focusedNode"
                 :filter-value="filterValue"
                 :node="slotProps.node"
                 :focus-label="FOCUS"
                 :unfocus-label="UNFOCUS"
+                :add-child-label="ADD_CHILD"
             />
         </template>
     </Tree>

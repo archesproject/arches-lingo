@@ -5,12 +5,14 @@ import AddChildIcon from "@/arches_lingo/components/tree/components/TreeRow/comp
 
 import type { TreeNode } from "primevue/treenode";
 
-const { node, focusLabel, unfocusLabel, filterValue } = defineProps<{
-    node: TreeNode;
-    focusLabel: string;
-    unfocusLabel: string;
-    filterValue: string;
-}>();
+const { node, focusLabel, unfocusLabel, addChildLabel, filterValue } =
+    defineProps<{
+        node: TreeNode;
+        focusLabel: string;
+        unfocusLabel: string;
+        addChildLabel: string;
+        filterValue: string;
+    }>();
 
 const focusedNode = defineModel<TreeNode | null>("focusedNode");
 </script>
@@ -29,7 +31,7 @@ const focusedNode = defineModel<TreeNode | null>("focusedNode");
         />
         <AddChildIcon
             :node="node"
-            :add-child-label="'Add Child'"
+            :add-child-label="addChildLabel"
         />
     </div>
 </template>
