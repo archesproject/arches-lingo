@@ -1,10 +1,15 @@
 <script setup lang="ts">
 import { inject, onMounted, ref } from "vue";
-import { useGettext } from "vue3-gettext";
 
+import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
+
 import Button from "primevue/button";
 import Divider from "primevue/divider";
+import ProgressSpinner from "primevue/progressspinner";
+
+import ResourceInstanceMultiSelectWidget from "@/arches_component_lab/widgets/ResourceInstanceMultiSelectWidget/ResourceInstanceMultiSelectWidget.vue";
+
 import {
     DEFAULT_ERROR_TOAST_LIFE,
     ERROR,
@@ -15,28 +20,27 @@ import {
 import { fetchLingoResource } from "@/arches_lingo/api.ts";
 import { extractDescriptors } from "@/arches_lingo/utils.ts";
 
-import ResourceInstanceMultiSelectWidget from "@/arches_component_lab/widgets/ResourceInstanceMultiSelectWidget/ResourceInstanceMultiSelectWidget.vue";
-
 import type {
     ConceptHeaderData,
     ConceptClassificationStatusAliases,
     ResourceInstanceResult,
     DataComponentMode,
-} from "@/arches_lingo/types";
-import type { Language } from "@/arches_vue_utils/types";
+} from "@/arches_lingo/types.ts";
 
-const toast = useToast();
-const { $gettext } = useGettext();
-const systemLanguage = inject(systemLanguageKey) as Language;
+import type { Language } from "@/arches_vue_utils/types.ts";
 
 const props = defineProps<{
     mode: DataComponentMode;
     sectionTitle: string;
     componentName: string;
     graphSlug: string;
-    resourceInstanceId: string;
+    resourceInstanceId: string | undefined;
     nodegroupAlias: string;
 }>();
+
+const toast = useToast();
+const { $gettext } = useGettext();
+const systemLanguage = inject(systemLanguageKey) as Language;
 
 const concept = ref<ResourceInstanceResult>();
 const data = ref<ConceptHeaderData>();
@@ -73,6 +77,10 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
 
 onMounted(async () => {
     try {
+        if (!props.resourceInstanceId) {
+            return;
+        }
+
         concept.value = await fetchLingoResource(
             props.graphSlug,
             props.resourceInstanceId,

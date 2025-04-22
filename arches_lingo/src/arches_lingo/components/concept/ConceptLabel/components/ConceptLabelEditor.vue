@@ -23,7 +23,10 @@ import {
 
 import type { Component, Ref } from "vue";
 import type { FormSubmitEvent } from "@primevue/forms";
-import type { AppellativeStatus } from "@/arches_lingo/types.ts";
+import type {
+    AppellativeStatus,
+    ConceptInstance,
+} from "@/arches_lingo/types.ts";
 
 const props = defineProps<{
     tileData: AppellativeStatus | undefined;
@@ -44,8 +47,11 @@ const componentEditorFormRef = inject<Ref<Component | null>>(
     "componentEditorFormRef",
 );
 
+const refreshConceptTree = inject<() => null>("refreshConceptTree");
+
 const openEditor =
     inject<(componentName: string, tileid?: string) => void>("openEditor");
+
 const refreshReportSection = inject<(componentName: string) => void>(
     "refreshReportSection",
 );
@@ -67,21 +73,34 @@ async function save(e: FormSubmitEvent) {
         let updatedTileId;
 
         if (!props.resourceInstanceId) {
-            const updatedConcept = await createLingoResource(
-                {
-                    aliased_data: {
-                        [props.nodegroupAlias]: [formData],
-                        part_of_scheme: {
-                            part_of_scheme: route.query.scheme,
-                        },
-                        classification_status: [
-                            {
-                                classification_status_ascribed_classification:
-                                    route.query.parent,
-                            },
-                        ],
+            const isTopConcept = route.query.scheme === route.query.parent;
+
+            const requiredData = {
+                aliased_data: {
+                    [props.nodegroupAlias]: [formData],
+                    part_of_scheme: {
+                        part_of_scheme: route.query.scheme,
                     },
                 },
+            };
+
+            if (isTopConcept) {
+                requiredData["aliased_data"]["top_concept_of"] = [
+                    {
+                        top_concept_of: route.query.parent,
+                    },
+                ];
+            } else {
+                requiredData["aliased_data"]["classification_status"] = [
+                    {
+                        classification_status_ascribed_classification:
+                            route.query.parent,
+                    },
+                ];
+            }
+
+            const updatedConcept = await createLingoResource(
+                requiredData as ConceptInstance,
                 props.graphSlug,
             );
 
@@ -111,6 +130,7 @@ async function save(e: FormSubmitEvent) {
         }
 
         refreshReportSection!(props.componentName);
+        refreshConceptTree!();
     } catch (error) {
         toast.add({
             severity: ERROR,

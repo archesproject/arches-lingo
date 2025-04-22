@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { useRoute, useRouter } from "vue-router";
+import { useRouter } from "vue-router";
 
 import Button from "primevue/button";
 
 import { NEW_CONCEPT } from "@/arches_lingo/constants.ts";
 import { navigateToSchemeOrConcept } from "@/arches_lingo/utils.ts";
+import { NEW } from "@/arches_lingo/constants.ts";
 
 import type { TreeNode } from "primevue/treenode";
 
@@ -14,7 +15,6 @@ const { node, addChildLabel } = defineProps<{
 }>();
 
 const router = useRouter();
-const route = useRoute();
 
 function onAddChild() {
     navigateToSchemeOrConcept(router, NEW_CONCEPT, {
@@ -34,7 +34,7 @@ function onAddChild() {
                 },
             },
         }"
-        :disabled="route.params.id === 'new'"
+        :disabled="node.data.id === NEW"
         icon="fa fa-plus"
         role="button"
         size="small"

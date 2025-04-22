@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { onMounted, provide, ref } from "vue";
 import { useRoute } from "vue-router";
 import { useGettext } from "vue3-gettext";
 
@@ -14,6 +14,7 @@ const { $gettext } = useGettext();
 const route = useRoute();
 
 const showHierarchy = ref(false);
+const conceptTreeKey = ref(0);
 
 onMounted(() => {
     showHierarchy.value = Boolean(route.query.showHierarchy);
@@ -33,6 +34,12 @@ function toggleShowHierarchy() {
 
     window.history.replaceState({}, "", url);
 }
+
+function refreshConceptTree() {
+    conceptTreeKey.value += 1;
+}
+
+provide("refreshConceptTree", refreshConceptTree);
 </script>
 
 <template>
@@ -58,7 +65,7 @@ function toggleShowHierarchy() {
                 flexDirection: 'column',
             }"
         >
-            <ConceptTree />
+            <ConceptTree :key="conceptTreeKey" />
         </SplitterPanel>
         <SplitterPanel
             :size="60"

@@ -4,6 +4,8 @@ import { useGettext } from "vue3-gettext";
 
 import { useToast } from "primevue/usetoast";
 import Divider from "primevue/divider";
+import ProgressSpinner from "primevue/progressspinner";
+
 import {
     DEFAULT_ERROR_TOAST_LIFE,
     ERROR,
@@ -17,21 +19,21 @@ import type {
     DataComponentMode,
     ResourceInstanceResult,
     SchemeHeader,
-} from "@/arches_lingo/types";
-import type { Language } from "@/arches_vue_utils/types";
-
-const toast = useToast();
-const { $gettext } = useGettext();
-const systemLanguage = inject(systemLanguageKey) as Language;
+} from "@/arches_lingo/types.ts";
+import type { Language } from "@/arches_vue_utils/types.ts";
 
 const props = defineProps<{
     mode: DataComponentMode;
     sectionTitle: string;
     componentName: string;
     graphSlug: string;
-    resourceInstanceId: string;
+    resourceInstanceId: string | undefined;
     nodegroupAlias: string;
 }>();
+
+const toast = useToast();
+const { $gettext } = useGettext();
+const systemLanguage = inject(systemLanguageKey) as Language;
 
 const scheme = ref<ResourceInstanceResult>();
 const data = ref<SchemeHeader>();
@@ -55,6 +57,10 @@ function extractSchemeHeaderData(scheme: ResourceInstanceResult) {
 
 onMounted(async () => {
     try {
+        if (!props.resourceInstanceId) {
+            return;
+        }
+
         scheme.value = await fetchLingoResource(
             props.graphSlug,
             props.resourceInstanceId,

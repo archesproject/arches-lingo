@@ -22,7 +22,7 @@ import {
     treeFromSchemes,
     navigateToSchemeOrConcept,
 } from "@/arches_lingo/utils.ts";
-import { routeNames } from "@/arches_lingo/routes.ts";
+
 import TreeRow from "@/arches_lingo/components/tree/components/TreeRow/TreeRow.vue";
 
 import type { ComponentPublicInstance, Ref } from "vue";
@@ -34,7 +34,7 @@ import type {
 } from "primevue/tree";
 import type { TreeNode } from "primevue/treenode";
 import type { Language } from "@/arches_vue_utils/types";
-import type { IconLabels, Scheme } from "@/arches_lingo/types";
+import type { IconLabels, Scheme, Concept } from "@/arches_lingo/types";
 
 const toast = useToast();
 const { $gettext } = useGettext();
@@ -61,6 +61,7 @@ const systemLanguage = inject(systemLanguageKey) as Language;
 const nextFilterChangeNeedsExpandAll = ref(false);
 const expandedKeysSnapshotBeforeSearch = ref<TreeExpandedKeys>({});
 const rerenderTree = ref(0);
+const newTreeItemParentPath = ref<Concept[] | Scheme[]>([]);
 
 const tree = computed(() => {
     return treeFromSchemes(
@@ -186,27 +187,34 @@ function updateSelectedAndExpanded(node: TreeNode) {
     };
 }
 
-function findNodeById(data, targetId) {
+function findNodeById(concepts: Concept | Concept[], targetId: string) {
     const queue = [];
 
-    if (Array.isArray(data)) {
-        for (const node of data) {
+    if (Array.isArray(concepts)) {
+        for (const node of concepts) {
             queue.push({ node, path: [node] });
         }
     } else {
-        queue.push({ node: data, path: [data] });
+        queue.push({ node: concepts, path: [concepts] });
     }
 
     while (queue.length > 0) {
-        const { node: currentNode, path } = queue.shift();
+        const queueItem = queue.shift() as
+            | { node: Concept; path: Concept[] }
+            | undefined;
+        if (!queueItem) {
+            continue;
+        }
+
+        const { node: currentNode, path: path } = queueItem;
 
         if (currentNode.id === targetId) {
-            return { node: currentNode, path };
+            return { node: currentNode, path: path };
         }
 
         if (currentNode.narrower && Array.isArray(currentNode.narrower)) {
-            for (const child of currentNode.narrower) {
-                queue.push({ node: child, path: [...path, child] });
+            for (const childNode of currentNode.narrower) {
+                queue.push({ node: childNode, path: [...path, childNode] });
             }
         }
     }
@@ -214,96 +222,112 @@ function findNodeById(data, targetId) {
     return null;
 }
 
-const foo = ref([]);
+function resetNewTreeItemParentPath() {
+    if (newTreeItemParentPath.value.length) {
+        const parent = newTreeItemParentPath.value.at(-1);
 
-function selectNodeFromRoute(newRoute: RouteLocationNormalizedLoadedGeneric) {
-    if (newRoute.name === routeNames.concept && newRoute.params.id === NEW) {
-        const schemeId = newRoute.query.scheme;
-        const parentId = newRoute.query.parent;
+        if ("top_concepts" in parent!) {
+            parent.top_concepts.shift();
+        } else if ("narrower" in parent!) {
+            parent.narrower.shift();
+        }
 
-        const schemeToEdit = schemes.value.find(
-            (scheme) => scheme.id === schemeId,
+        newTreeItemParentPath.value = [];
+    }
+}
+
+function scrollToItemInTree(nodeId: string) {
+    const { found, path } = findNodeInTree(tree.value, nodeId);
+
+    if (found) {
+        const itemsToExpandIds = path.map(
+            (itemInPath: TreeNode) => itemInPath.key,
         );
 
-        let parent;
-        let path;
+        expandedKeys.value = {
+            ...expandedKeys.value,
+            ...Object.fromEntries(
+                itemsToExpandIds.map((item: string) => [item, true]),
+            ),
+            [found.key]: true,
+        };
+        selectedKeys.value = { [found.data.id]: true };
 
-        if (schemeId === parentId) {
-            parent = schemeToEdit;
-            path = schemeToEdit!.top_concepts;
-        } else {
-            const result = findNodeById(schemeToEdit!.top_concepts, parentId);
+        nextTick(() => {
+            const element = document.getElementById(found.data.id);
 
-            parent = result!.node;
-            path = [schemeToEdit, ...result!.path];
-        }
-
-        foo.value = path;
-
-        console.log("((()))", path, parent);
-
-        parent.narrower.unshift({
-            id: NEW,
-            labels: [
-                {
-                    language_id: selectedLanguage.value.code,
-                    value: $gettext("New concept"),
-                    valuetype_id: "preferred label",
-                },
-            ],
-            narrower: [],
-        });
-
-        schemes.value = schemes.value.map((scheme) => {
-            if (scheme.id === schemeId) {
-                return schemeToEdit!;
-            }
-            return scheme;
-        });
-    } else {
-        if (foo.value.length) {
-            foo.value[foo.value.length - 1].narrower.shift();
-            foo.value = [];
-        }
-    }
-
-    switch (newRoute.name) {
-        case routeNames.concept: {
-            if (!tree.value.length) {
-                return;
-            }
-
-            const { found, path } = findNodeInTree(
-                tree.value,
-                newRoute.params.id as string,
-            );
-            if (found) {
-                const itemsToExpandIds = path.map(
-                    (itemInPath: TreeNode) => itemInPath.key,
-                );
-
-                expandedKeys.value = {
-                    ...expandedKeys.value,
-                    ...Object.fromEntries(
-                        itemsToExpandIds.map((item: string) => [item, true]),
-                    ),
-                    [found.key]: true,
-                };
-                selectedKeys.value = { [found.data.id]: true };
-
-                nextTick(() => {
-                    const element = document.getElementById(found.data.id);
-                    if (element) {
-                        element.scrollIntoView({
-                            behavior: "smooth",
-                            block: "center",
-                        });
-                    }
+            if (element) {
+                element.scrollIntoView({
+                    behavior: "smooth",
+                    block: "center",
                 });
             }
-            break;
-        }
+        });
     }
+}
+
+function addNewConceptToTree(schemeId: string, parentId: string) {
+    const targetScheme = schemes.value.find(
+        (schemeItem) => schemeItem.id === schemeId,
+    );
+    if (!targetScheme) return;
+
+    const newConcept = {
+        id: NEW,
+        labels: [
+            {
+                language_id: selectedLanguage.value.code,
+                value: $gettext("New concept"),
+                valuetype_id: "preferred label",
+            },
+        ],
+        narrower: [],
+    };
+
+    let parentPath = [targetScheme];
+
+    if (schemeId === parentId) {
+        // adding top concept to scheme
+        targetScheme.top_concepts.unshift(newConcept);
+    } else {
+        // adding narrower concept to existing concept
+        const searchResult = findNodeById(targetScheme.top_concepts, parentId);
+        if (!searchResult) return;
+
+        searchResult.node.narrower.unshift(newConcept);
+        parentPath = [
+            targetScheme,
+            ...(searchResult.path as unknown as Scheme[]),
+        ];
+    }
+
+    newTreeItemParentPath.value = parentPath;
+
+    schemes.value = schemes.value.map((existingScheme) => {
+        return existingScheme.id === schemeId ? targetScheme : existingScheme;
+    });
+}
+
+function selectNodeFromRoute(newRoute: RouteLocationNormalizedLoadedGeneric) {
+    resetNewTreeItemParentPath();
+
+    if (newRoute.params.id === NEW) {
+        addNewConceptToTree(
+            newRoute.query.scheme as string,
+            newRoute.query.parent as string,
+        );
+    }
+
+    scrollToItemInTree(newRoute.params.id as string);
+}
+
+function onNodeSelect(node: TreeNode) {
+    if (node.data.id === NEW) {
+        return;
+    }
+
+    updateSelectedAndExpanded(node);
+    navigateToSchemeOrConcept!(router, node.data);
 }
 </script>
 
@@ -356,16 +380,7 @@ function selectNodeFromRoute(newRoute: RouteLocationNormalizedLoadedGeneric) {
             },
         }"
         @node-collapse="nextFilterChangeNeedsExpandAll = true"
-        @node-select="
-            (node) => {
-                if (node.data.id === NEW) {
-                    return;
-                }
-
-                updateSelectedAndExpanded(node);
-                navigateToSchemeOrConcept!(router, node.data);
-            }
-        "
+        @node-select="onNodeSelect"
     >
         <template #default="slotProps">
             <TreeRow
