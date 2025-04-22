@@ -14,7 +14,8 @@ import NonLocalizedStringWidget from "@/arches_component_lab/widgets/NonLocalize
 import ReferenceSelectWidget from "@/arches_controlled_lists/widgets/ReferenceSelectWidget/ReferenceSelectWidget.vue";
 import ResourceInstanceMultiSelectWidget from "@/arches_component_lab/widgets/ResourceInstanceMultiSelectWidget/ResourceInstanceMultiSelectWidget.vue";
 
-import { createLingoResource, upsertLingoTile } from "@/arches_lingo/api.ts";
+import { createOrUpdateConcept } from "@/arches_lingo/utils.ts";
+
 import {
     DEFAULT_ERROR_TOAST_LIFE,
     EDIT,
@@ -23,10 +24,7 @@ import {
 
 import type { Component, Ref } from "vue";
 import type { FormSubmitEvent } from "@primevue/forms";
-import type {
-    AppellativeStatus,
-    ConceptInstance,
-} from "@/arches_lingo/types.ts";
+import type { AppellativeStatus } from "@/arches_lingo/types.ts";
 
 const props = defineProps<{
     tileData: AppellativeStatus | undefined;
@@ -70,60 +68,19 @@ async function save(e: FormSubmitEvent) {
     try {
         const formData = e.values;
 
-        let updatedTileId;
+        const scheme = route.query.scheme as string;
+        const parent = route.query.parent as string;
 
-        if (!props.resourceInstanceId) {
-            const isTopConcept = route.query.scheme === route.query.parent;
-
-            const requiredData = {
-                aliased_data: {
-                    [props.nodegroupAlias]: [formData],
-                    part_of_scheme: {
-                        part_of_scheme: route.query.scheme,
-                    },
-                },
-            };
-
-            if (isTopConcept) {
-                requiredData["aliased_data"]["top_concept_of"] = [
-                    {
-                        top_concept_of: route.query.parent,
-                    },
-                ];
-            } else {
-                requiredData["aliased_data"]["classification_status"] = [
-                    {
-                        classification_status_ascribed_classification:
-                            route.query.parent,
-                    },
-                ];
-            }
-
-            const updatedConcept = await createLingoResource(
-                requiredData as ConceptInstance,
-                props.graphSlug,
-            );
-
-            await router.push({
-                name: props.graphSlug,
-                params: { id: updatedConcept.resourceinstanceid },
-            });
-
-            updatedTileId =
-                updatedConcept.aliased_data[props.nodegroupAlias][0].tileid;
-        } else {
-            const updatedTile = await upsertLingoTile(
-                props.graphSlug,
-                props.nodegroupAlias,
-                {
-                    resourceinstance: props.resourceInstanceId,
-                    aliased_data: { ...formData },
-                    tileid: props.tileId,
-                },
-            );
-
-            updatedTileId = updatedTile.tileid;
-        }
+        const updatedTileId = await createOrUpdateConcept(
+            formData,
+            props.graphSlug,
+            props.nodegroupAlias,
+            scheme,
+            parent,
+            router,
+            props.resourceInstanceId,
+            props.tileId,
+        );
 
         if (updatedTileId !== props.tileId) {
             openEditor!(props.componentName, updatedTileId);

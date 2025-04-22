@@ -198,3 +198,54 @@ export function extractDescriptors(
     }
     return schemeDescriptor;
 }
+
+import { createLingoResource, upsertLingoTile } from "@/arches_lingo/api.ts";
+import type { ConceptInstance } from "@/arches_lingo/types.ts";
+
+export async function createOrUpdateConcept(
+    formData: Record<string, unknown>,
+    graphSlug: string,
+    nodegroupAlias: string,
+    scheme: string,
+    parent: string,
+    router: Router,
+    resourceInstanceId?: string,
+    tileId?: string,
+): Promise<string> {
+    if (!resourceInstanceId) {
+        const isTop = scheme === parent;
+
+        const aliased_data = {
+            [nodegroupAlias]: [formData],
+            part_of_scheme: { part_of_scheme: scheme },
+        };
+
+        if (isTop) {
+            aliased_data.top_concept_of = [{ top_concept_of: parent }];
+        } else {
+            aliased_data.classification_status = [
+                { classification_status_ascribed_classification: parent },
+            ];
+        }
+
+        const concept = await createLingoResource(
+            { aliased_data } as ConceptInstance,
+            graphSlug,
+        );
+
+        await router.push({
+            name: graphSlug,
+            params: { id: concept.resourceinstanceid },
+        });
+
+        return concept.aliased_data[nodegroupAlias][0].tileid;
+    } else {
+        const tile = await upsertLingoTile(graphSlug, nodegroupAlias, {
+            resourceinstance: resourceInstanceId,
+            aliased_data: { ...formData },
+            tileid: tileId!,
+        });
+
+        return tile.tileid;
+    }
+}

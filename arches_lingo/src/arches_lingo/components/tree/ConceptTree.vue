@@ -243,32 +243,37 @@ function resetNewTreeItemParentPath() {
 }
 
 function scrollToItemInTree(nodeId: string) {
-    const { found, path } = findNodeInTree(tree.value, nodeId);
+    try {
+        const { found, path } = findNodeInTree(tree.value, nodeId);
 
-    if (found) {
-        const itemsToExpandIds = path.map(
-            (itemInPath: TreeNode) => itemInPath.key,
-        );
+        if (found) {
+            const itemsToExpandIds = path.map(
+                (itemInPath: TreeNode) => itemInPath.key,
+            );
 
-        expandedKeys.value = {
-            ...expandedKeys.value,
-            ...Object.fromEntries(
-                itemsToExpandIds.map((item: string) => [item, true]),
-            ),
-            [found.key]: true,
-        };
-        selectedKeys.value = { [found.data.id]: true };
+            expandedKeys.value = {
+                ...expandedKeys.value,
+                ...Object.fromEntries(
+                    itemsToExpandIds.map((item: string) => [item, true]),
+                ),
+                [found.key]: true,
+            };
+            selectedKeys.value = { [found.data.id]: true };
 
-        nextTick(() => {
-            const element = document.getElementById(found.data.id);
+            nextTick(() => {
+                const element = document.getElementById(found.data.id);
 
-            if (element) {
-                element.scrollIntoView({
-                    behavior: "smooth",
-                    block: "center",
-                });
-            }
-        });
+                if (element) {
+                    element.scrollIntoView({
+                        behavior: "smooth",
+                        block: "center",
+                    });
+                }
+            });
+        }
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (error) {
+        return null;
     }
 }
 
