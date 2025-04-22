@@ -1,6 +1,7 @@
 import { getItemLabel } from "@/arches_vue_utils/utils.ts";
 import { routeNames } from "@/arches_lingo/routes.ts";
 
+import { createLingoResource, upsertLingoTile } from "@/arches_lingo/api.ts";
 import { NEW_CONCEPT } from "@/arches_lingo/constants.ts";
 
 import type { TreeNode } from "primevue/treenode";
@@ -14,6 +15,7 @@ import type {
     Scheme,
 } from "@/arches_lingo/types";
 import type { Router } from "vue-router/dist/vue-router";
+import type { ConceptInstance } from "@/arches_lingo/types.ts";
 
 // Duck-typing helpers
 export function dataIsScheme(data: Concept | Scheme) {
@@ -198,9 +200,6 @@ export function extractDescriptors(
     }
     return schemeDescriptor;
 }
-
-import { createLingoResource, upsertLingoTile } from "@/arches_lingo/api.ts";
-import type { ConceptInstance } from "@/arches_lingo/types.ts";
 
 export async function createOrUpdateConcept(
     formData: Record<string, unknown>,
