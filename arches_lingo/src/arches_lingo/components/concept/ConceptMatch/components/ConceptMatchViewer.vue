@@ -7,9 +7,9 @@ import Button from "primevue/button";
 import MetaStringViewer from "@/arches_lingo/components/generic/MetaStringViewer.vue";
 import UrlWidget from "@/arches_component_lab/widgets/UrlWidget/UrlWidget.vue";
 
-import ConceptResourceSelectWidget from "@/arches_component_lab/widgets/ConceptResourceSelectWidget/ConceptResourceSelectWidget.vue";
 import ReferenceSelectWidget from "@/arches_controlled_lists/widgets/ReferenceSelectWidget/ReferenceSelectWidget.vue";
 import ResourceInstanceMultiSelectWidget from "@/arches_component_lab/widgets/ResourceInstanceMultiSelectWidget/ResourceInstanceMultiSelectWidget.vue";
+import ConceptResourceSelectWidget from "@/arches_lingo/components/widgets/ConceptResourceSelectWidget/ConceptResourceSelectWidget.vue";
 
 import { VIEW } from "@/arches_lingo/constants.ts";
 
