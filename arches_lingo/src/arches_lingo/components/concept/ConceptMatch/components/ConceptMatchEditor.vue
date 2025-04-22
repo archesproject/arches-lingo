@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject, useTemplateRef, watch } from "vue";
+import { inject, ref, useTemplateRef, watch } from "vue";
 
 import { useRouter } from "vue-router";
 import { Form } from "@primevue/forms";
@@ -41,6 +41,7 @@ const refreshReportSection = inject<(componentName: string) => void>(
 );
 
 const formRef = useTemplateRef("form");
+const isSaving = ref(false);
 
 watch(
     () => formRef.value,
@@ -48,10 +49,10 @@ watch(
 );
 
 async function save(e: FormSubmitEvent) {
+    isSaving.value = true;
+
     try {
-        const formData = Object.fromEntries(
-            Object.entries(e.states).map(([key, state]) => [key, state.value]),
-        );
+        const formData = e.values;
 
         let updatedTileId;
 
@@ -95,86 +96,93 @@ async function save(e: FormSubmitEvent) {
 </script>
 
 <template>
-    <h3>{{ props.sectionTitle }}</h3>
+    <ProgressSpinner
+        v-show="isSaving"
+        style="width: 100%"
+    />
 
-    <Form
-        ref="form"
-        @submit="save"
-    >
-        <ConceptResourceSelectWidget
-            :graph-slug="props.graphSlug"
-            node-alias="match_status_ascribed_comparate"
-            :scheme="props.scheme"
-            :exclude="props.exclude"
-            :initial-value="
-                props.tileData?.aliased_data.match_status_ascribed_comparate
-            "
-            :mode="EDIT"
-        />
-        <ReferenceSelectWidget
-            :graph-slug="props.graphSlug"
-            node-alias="match_status_ascribed_relation"
-            :initial-value="
-                props.tileData?.aliased_data.match_status_ascribed_relation
-            "
-            :mode="EDIT"
-        />
-        <ReferenceSelectWidget
-            :graph-slug="props.graphSlug"
-            node-alias="match_status_status"
-            :initial-value="props.tileData?.aliased_data.match_status_status"
-            :mode="EDIT"
-        />
-        <ReferenceSelectWidget
-            :graph-slug="props.graphSlug"
-            node-alias="match_status_status_metatype"
-            :initial-value="
-                props.tileData?.aliased_data.match_status_status_metatype
-            "
-            :mode="EDIT"
-        />
-        <DateWidget
-            :graph-slug="props.graphSlug"
-            node-alias="match_status_timespan_begin_of_the_begin"
-            :initial-value="
-                props.tileData?.aliased_data
-                    .match_status_timespan_begin_of_the_begin
-            "
-            :mode="EDIT"
-        />
-        <DateWidget
-            :graph-slug="props.graphSlug"
-            node-alias="match_status_timespan_end_of_the_end"
-            :initial-value="
-                props.tileData?.aliased_data
-                    .match_status_timespan_end_of_the_end
-            "
-            :mode="EDIT"
-        />
-        <ResourceInstanceMultiSelectWidget
-            :graph-slug="props.graphSlug"
-            node-alias="match_status_data_assignment_actor"
-            :initial-value="
-                props.tileData?.aliased_data.match_status_data_assignment_actor
-            "
-            :mode="EDIT"
-        />
-        <ResourceInstanceMultiSelectWidget
-            :graph-slug="props.graphSlug"
-            node-alias="match_status_data_assignment_object_used"
-            :initial-value="
-                props.tileData?.aliased_data
-                    .match_status_data_assignment_object_used
-            "
-            :mode="EDIT"
-        />
-        <ReferenceSelectWidget
-            :graph-slug="props.graphSlug"
-            node-alias="match_status_data_assignment_type"
-            :initial-value="
-                props.tileData?.aliased_data.match_status_data_assignment_type
-            "
-            :mode="EDIT"
-        />
-    </Form>
+    <div v-show="!isSaving">
+        <h3>{{ props.sectionTitle }}</h3>
+
+        <Form
+            ref="form"
+            @submit="save"
+        >
+            <ConceptResourceSelectWidget
+                :graph-slug="props.graphSlug"
+                node-alias="match_status_ascribed_comparate"
+                :scheme="props.scheme"
+                :exclude="props.exclude"
+                :initial-value="
+                    props.tileData?.aliased_data.match_status_ascribed_comparate
+                "
+                :mode="EDIT"
+            />
+            <ReferenceSelectWidget
+                :graph-slug="props.graphSlug"
+                node-alias="match_status_ascribed_relation"
+                :initial-value="
+                    props.tileData?.aliased_data.match_status_ascribed_relation
+                "
+                :mode="EDIT"
+            />
+            <ReferenceSelectWidget
+                :graph-slug="props.graphSlug"
+                node-alias="match_status_status"
+                :initial-value="props.tileData?.aliased_data.match_status_status"
+                :mode="EDIT"
+            />
+            <ReferenceSelectWidget
+                :graph-slug="props.graphSlug"
+                node-alias="match_status_status_metatype"
+                :initial-value="
+                    props.tileData?.aliased_data.match_status_status_metatype
+                "
+                :mode="EDIT"
+            />
+            <DateWidget
+                :graph-slug="props.graphSlug"
+                node-alias="match_status_timespan_begin_of_the_begin"
+                :initial-value="
+                    props.tileData?.aliased_data
+                        .match_status_timespan_begin_of_the_begin
+                "
+                :mode="EDIT"
+            />
+            <DateWidget
+                :graph-slug="props.graphSlug"
+                node-alias="match_status_timespan_end_of_the_end"
+                :initial-value="
+                    props.tileData?.aliased_data
+                        .match_status_timespan_end_of_the_end
+                "
+                :mode="EDIT"
+            />
+            <ResourceInstanceMultiSelectWidget
+                :graph-slug="props.graphSlug"
+                node-alias="match_status_data_assignment_actor"
+                :initial-value="
+                    props.tileData?.aliased_data.match_status_data_assignment_actor
+                "
+                :mode="EDIT"
+            />
+            <ResourceInstanceMultiSelectWidget
+                :graph-slug="props.graphSlug"
+                node-alias="match_status_data_assignment_object_used"
+                :initial-value="
+                    props.tileData?.aliased_data
+                        .match_status_data_assignment_object_used
+                "
+                :mode="EDIT"
+            />
+            <ReferenceSelectWidget
+                :graph-slug="props.graphSlug"
+                node-alias="match_status_data_assignment_type"
+                :initial-value="
+                    props.tileData?.aliased_data.match_status_data_assignment_type
+                "
+                :mode="EDIT"
+            />
+        </Form>
+    </div>
 </template>
