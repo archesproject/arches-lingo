@@ -9,7 +9,7 @@ import ConceptMatchViewer from "@/arches_lingo/components/concept/ConceptMatch/c
 
 import { EDIT, VIEW } from "@/arches_lingo/constants.ts";
 
-import { fetchLingoResourcePartial } from "@/arches_lingo/api.ts";
+import { fetchConceptRelationships } from "@/arches_lingo/api.ts";
 
 import type {
     ConceptMatchStatus,
@@ -39,59 +39,24 @@ onMounted(async () => {
         (props.mode === VIEW || !shouldCreateNewTile)
     ) {
         const sectionValue = await getSectionValue();
-        tileData.value = sectionValue.aliased_data[props.nodegroupAlias];
-        schemeId.value = await getSchemeId();
+        tileData.value = sectionValue;
+        schemeId.value = sectionValue.scheme_id;
     }
     isLoading.value = false;
 });
 
 async function getSectionValue() {
     try {
-        const sectionValue = await fetchLingoResourcePartial(
-            props.graphSlug,
+        const sectionValue = await fetchConceptRelationships(
             props.resourceInstanceId as string,
-            props.nodegroupAlias,
+            "matched"
         );
-        for (const value of sectionValue.aliased_data[props.nodegroupAlias]) {
-            value.aliased_data["uri"] = await getURI(
-                value.aliased_data["match_status_ascribed_comparate"][0][
-                    "resourceId"
-                ],
-            );
-        }
         return sectionValue;
     } catch (error) {
         fetchError.value = error;
     }
 }
 
-async function getURI(resourceId: string) {
-    const uriData = await fetchLingoResourcePartial(
-        props.graphSlug,
-        resourceId,
-        "uri",
-    );
-    if (!uriData.aliased_data.uri) {
-        return null;
-    }
-    return uriData.aliased_data.uri.aliased_data.uri_content;
-}
-
-async function getSchemeId() {
-    try {
-        const partOfScheme = await fetchLingoResourcePartial(
-            props.graphSlug,
-            props.resourceInstanceId as string,
-            "part_of_scheme",
-        );
-
-        return partOfScheme.aliased_data?.part_of_scheme?.aliased_data
-            ?.part_of_scheme?.[0]?.resourceId;
-        }
-    catch (error) {
-        fetchError.value = error;
-    }
-}
 </script>
 
 <template>
