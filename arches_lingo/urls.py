@@ -8,6 +8,7 @@ from arches_lingo.views.api.concepts import (
     ConceptTreeView,
     ValueSearchView,
     ConceptResourceView,
+    ConceptRelationshipView,
 )
 from arches_lingo.views.api.generic import (
     LingoResourceDetailView,
@@ -31,6 +32,11 @@ urlpatterns = [
         "api/concept-resources",
         ConceptResourceView.as_view(),
         name="api-concept-resources",
+    ),
+    path(
+        "api/concept-relationships",
+        ConceptRelationshipView.as_view(),
+        name="api-concept-relationships",
     ),
     path(
         "api/lingo/<slug:graph>",
