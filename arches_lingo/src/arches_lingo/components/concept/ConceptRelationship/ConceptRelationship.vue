@@ -39,7 +39,6 @@ onMounted(async () => {
         (props.mode === VIEW || !shouldCreateNewTile)
     ) {
         const sectionValue = await getSectionValue();
-        console.log("sectionValue", sectionValue);
         tileData.value = sectionValue;
         schemeId.value = sectionValue.scheme_id;
     }
