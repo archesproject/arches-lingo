@@ -9,7 +9,7 @@ import ConceptRelationshipViewer from "@/arches_lingo/components/concept/Concept
 
 import { EDIT, VIEW } from "@/arches_lingo/constants.ts";
 
-import { fetchLingoResourcePartial } from "@/arches_lingo/api.ts";
+import { fetchConceptRelationships } from "@/arches_lingo/api.ts";
 
 import type {
     ConceptRelationStatus,
@@ -39,33 +39,22 @@ onMounted(async () => {
         (props.mode === VIEW || !shouldCreateNewTile)
     ) {
         const sectionValue = await getSectionValue();
-        tileData.value = sectionValue.aliased_data[props.nodegroupAlias];
-        schemeId.value = await getSchemeId();
+        tileData.value = sectionValue;
+        schemeId.value = sectionValue.scheme_id;
     }
     isLoading.value = false;
 });
 
 async function getSectionValue() {
     try {
-        return await fetchLingoResourcePartial(
-            props.graphSlug,
+        const sectionValue = await fetchConceptRelationships(
             props.resourceInstanceId as string,
-            props.nodegroupAlias,
+            "associated"
         );
+        return sectionValue;
     } catch (error) {
         fetchError.value = error;
     }
-}
-
-async function getSchemeId() {
-    const partOfScheme = await fetchLingoResourcePartial(
-        props.graphSlug,
-        props.resourceInstanceId as string,
-        "part_of_scheme",
-    );
-
-    return partOfScheme.aliased_data?.part_of_scheme?.aliased_data
-        ?.part_of_scheme?.[0]?.resourceId;
 }
 </script>
 

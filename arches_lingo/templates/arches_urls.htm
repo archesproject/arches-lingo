@@ -10,6 +10,7 @@
     api_concepts="{% url 'api-concepts' %}"
     api_search="{% url 'api-search' %}"
     api_concept_resources="{% url 'api-concept-resources' %}"
+    api_concept_relationships="{% url 'api-concept-relationships' %}"
     api_lingo_resources='(graphslug) => {return "{% url "api-lingo-resources" "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa" %}".replace("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", graphslug)}'
     api_lingo_resource='(graphslug, resourceinstanceid) => { return "{% url "api-lingo-resource" "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa" "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb" %}".replace("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", graphslug).replace("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", resourceinstanceid)}'
     api_lingo_resource_partial='(graphslug, resourceinstanceid, nodegroupAlias) => { return "{% url "api-lingo-resource-partial" "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa" "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb" "cccccccc-cccc-cccc-cccc-cccccccccccc" %}".replace("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", graphslug).replace("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", resourceinstanceid).replace("cccccccc-cccc-cccc-cccc-cccccccccccc", nodegroupAlias)}'

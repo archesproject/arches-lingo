@@ -225,6 +225,22 @@ export const fetchConceptResources = async (
     return parsed;
 };
 
+export const fetchConceptRelationships = async (
+    conceptId: string,
+    type: string,
+) => {
+    const params = new URLSearchParams({
+        concept: conceptId,
+        type: type,
+    });
+
+    const url = `${arches.urls.api_concept_relationships}?${params.toString()}`;
+    const response = await fetch(url);
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
 export const fetchConcepts = async () => {
     const response = await fetch(arches.urls.api_concepts);
     const parsed = await response.json();
