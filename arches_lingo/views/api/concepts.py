@@ -129,9 +129,7 @@ class ConceptResourceView(ConceptTreeView):
                 ).values_list("concept_id", flat=True)
                 concept_query = concept_query.filter(pk__in=filtering_concept_ids)
 
-            concept_ids = (
-                concept_query.order_by("pk").values_list("pk", flat=True)
-            )
+            concept_ids = concept_query.order_by("pk").values_list("pk", flat=True)
 
         data = []
         paginator = Paginator(concept_ids, items_per_page)

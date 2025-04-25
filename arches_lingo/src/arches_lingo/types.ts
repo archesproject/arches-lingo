@@ -199,6 +199,21 @@ export interface ConceptMatchAliases extends AliasedData {
 
 export type ConceptMatchStatus = TileData<ConceptMatchAliases>;
 
+export interface ConceptClassificationStatusAliases extends AliasedData {
+    classification_status_ascribed_classification: ResourceInstanceReference[];
+    classification_status_ascribed_relation: ReferenceSelectFetchedOption[];
+    classification_status_data_assignment_actor: ResourceInstanceReference[];
+    classification_status_data_assignment_object_used: ResourceInstanceReference[];
+    classification_status_data_assignment_type: ReferenceSelectFetchedOption[];
+    classification_status_timespan_begin_of_the_begin: string;
+    classification_status_timespan_end_of_the_end: string;
+    classification_status_type: ReferenceSelectFetchedOption[];
+    classification_status_type_metatype: ReferenceSelectFetchedOption[];
+}
+
+export type ConceptClassificationStatus =
+    TileData<ConceptClassificationStatusAliases>;
+
 export interface SchemeStatementAliases extends AliasedData {
     statement_content_n1: string;
     statement_language_n1?: ReferenceSelectFetchedOption[];
@@ -323,6 +338,10 @@ export interface SearchResultItem {
     polyhierarchical: boolean;
 }
 
+export interface SearchResultHierarchy {
+    tileid?: string;
+    searchResults: SearchResultItem[];
+}
 export interface archesPreset {
     arches: {
         legacy: {
