@@ -25,6 +25,7 @@ import type {
     ConceptClassificationStatusAliases,
     ResourceInstanceResult,
     DataComponentMode,
+    AppellativeStatus,
 } from "@/arches_lingo/types.ts";
 
 import type { Language } from "@/arches_vue_utils/types.ts";
@@ -73,7 +74,23 @@ onMounted(async () => {
 function extractConceptHeaderData(concept: ResourceInstanceResult) {
     const aliased_data = concept?.aliased_data;
 
-    const name = concept?.name;
+    const appellative_status = (aliased_data?.appellative_status || []).find(
+        (appellative_status: AppellativeStatus) => {
+            const appellative_status_ascribed_relation = appellative_status?.aliased_data?.
+                appellative_status_ascribed_relation || [];
+            const appellative_status_ascribed_name_language = appellative_status?.aliased_data?.
+                appellative_status_ascribed_name_language || [];
+            return (
+                appellative_status_ascribed_relation[0]?.display_value ===
+                "preferred label" &&
+                appellative_status_ascribed_name_language[0]?.display_value ===
+                "English"
+            );
+        },
+    );
+    const name =
+        appellative_status?.aliased_data
+            ?.appellative_status_ascribed_name_content;
     const descriptor = extractDescriptors(concept, systemLanguage);
     // TODO: get human-readable user name from resource endpoint
     const principalUser = "Anonymous"; //concept?.principalUser; // returns userid int
@@ -107,9 +124,7 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
     />
     <div v-else>
         <div class="header-row">
-            <h2>
-                {{ data?.descriptor?.name }} ({{ data?.descriptor?.language }})
-            </h2>
+            <h2>{{ data?.name }} ({{ data?.descriptor?.language }})</h2>
             <!-- TODO: Life Cycle mgmt functionality goes here -->
             <div class="header-item">
                 <span class="header-item-label">{{
