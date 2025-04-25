@@ -7,7 +7,7 @@ import { useToast } from "primevue/usetoast";
 import Button from "primevue/button";
 import ConfirmDialog from "primevue/confirmdialog";
 
-import { deleteLingoTile, upsertLingoTile } from "@/arches_lingo/api.ts";
+import { deleteLingoTile } from "@/arches_lingo/api.ts";
 import type {
     SearchResultItem,
     SearchResultHierarchy,
