@@ -76,15 +76,17 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
 
     const appellative_status = (aliased_data?.appellative_status || []).find(
         (appellative_status: AppellativeStatus) => {
-            const appellative_status_ascribed_relation = appellative_status?.aliased_data?.
-                appellative_status_ascribed_relation || [];
-            const appellative_status_ascribed_name_language = appellative_status?.aliased_data?.
-                appellative_status_ascribed_name_language || [];
+            const appellative_status_ascribed_relation =
+                appellative_status?.aliased_data
+                    ?.appellative_status_ascribed_relation || [];
+            const appellative_status_ascribed_name_language =
+                appellative_status?.aliased_data
+                    ?.appellative_status_ascribed_name_language || [];
             return (
                 appellative_status_ascribed_relation[0]?.display_value ===
-                "preferred label" &&
+                    "preferred label" &&
                 appellative_status_ascribed_name_language[0]?.display_value ===
-                "English"
+                    "English"
             );
         },
     );
