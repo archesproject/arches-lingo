@@ -126,7 +126,7 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
     />
     <div v-else>
         <div class="header-row">
-            <h2>{{ data?.name }} ({{ data?.descriptor?.language }})</h2>
+            <h2>{{ data?.name || $gettext("New Concept") }} (en)</h2>
             <!-- TODO: Life Cycle mgmt functionality goes here -->
             <div class="header-item">
                 <span class="header-item-label">{{
