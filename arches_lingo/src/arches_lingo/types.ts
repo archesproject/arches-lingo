@@ -264,6 +264,7 @@ export interface ConceptInstance {
         appellative_status?: AppellativeStatus[];
         concept_statement?: ConceptStatement[];
         depicting_digital_asset_internal?: ConceptImages[];
+        classification_status?: ConceptClassificationStatusAliases[];
     };
 }
 

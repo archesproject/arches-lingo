@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { inject, ref, useTemplateRef, watch } from "vue";
 
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
 
@@ -14,7 +14,8 @@ import NonLocalizedStringWidget from "@/arches_component_lab/widgets/NonLocalize
 import ReferenceSelectWidget from "@/arches_controlled_lists/widgets/ReferenceSelectWidget/ReferenceSelectWidget.vue";
 import ResourceInstanceMultiSelectWidget from "@/arches_component_lab/widgets/ResourceInstanceMultiSelectWidget/ResourceInstanceMultiSelectWidget.vue";
 
-import { createLingoResource, upsertLingoTile } from "@/arches_lingo/api.ts";
+import { createOrUpdateConcept } from "@/arches_lingo/utils.ts";
+
 import {
     DEFAULT_ERROR_TOAST_LIFE,
     EDIT,
@@ -35,6 +36,7 @@ const props = defineProps<{
     tileId?: string;
 }>();
 
+const route = useRoute();
 const router = useRouter();
 const toast = useToast();
 const { $gettext } = useGettext();
@@ -43,8 +45,11 @@ const componentEditorFormRef = inject<Ref<Component | null>>(
     "componentEditorFormRef",
 );
 
+const refreshConceptTree = inject<() => null>("refreshConceptTree");
+
 const openEditor =
     inject<(componentName: string, tileid?: string) => void>("openEditor");
+
 const refreshReportSection = inject<(componentName: string) => void>(
     "refreshReportSection",
 );
@@ -63,44 +68,26 @@ async function save(e: FormSubmitEvent) {
     try {
         const formData = e.values;
 
-        let updatedTileId;
+        const scheme = route.query.scheme as string;
+        const parent = route.query.parent as string;
 
-        if (!props.resourceInstanceId) {
-            const updatedConcept = await createLingoResource(
-                {
-                    aliased_data: {
-                        [props.nodegroupAlias]: [formData],
-                    },
-                },
-                props.graphSlug,
-            );
-
-            await router.push({
-                name: props.graphSlug,
-                params: { id: updatedConcept.resourceinstanceid },
-            });
-
-            updatedTileId =
-                updatedConcept.aliased_data[props.nodegroupAlias][0].tileid;
-        } else {
-            const updatedTile = await upsertLingoTile(
-                props.graphSlug,
-                props.nodegroupAlias,
-                {
-                    resourceinstance: props.resourceInstanceId,
-                    aliased_data: { ...formData },
-                    tileid: props.tileId,
-                },
-            );
-
-            updatedTileId = updatedTile.tileid;
-        }
+        const updatedTileId = await createOrUpdateConcept(
+            formData,
+            props.graphSlug,
+            props.nodegroupAlias,
+            scheme,
+            parent,
+            router,
+            props.resourceInstanceId,
+            props.tileId,
+        );
 
         if (updatedTileId !== props.tileId) {
             openEditor!(props.componentName, updatedTileId);
         }
 
         refreshReportSection!(props.componentName);
+        refreshConceptTree!();
     } catch (error) {
         toast.add({
             severity: ERROR,

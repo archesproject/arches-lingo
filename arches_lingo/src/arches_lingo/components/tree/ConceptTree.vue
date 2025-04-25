@@ -1,27 +1,32 @@
 <script setup lang="ts">
-import { computed, inject, ref, watch } from "vue";
-import { useRoute } from "vue-router";
-import { useGettext } from "vue3-gettext";
+import { computed, inject, nextTick, onMounted, ref, watch } from "vue";
 
+import { useRoute, useRouter } from "vue-router";
+import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
+
 import Tree from "primevue/tree";
 
-import { getItemLabel } from "@/arches_vue_utils/utils.ts";
+import TreeRow from "@/arches_lingo/components/tree/components/TreeRow/TreeRow.vue";
 import PresentationControls from "@/arches_controlled_lists/components/tree/PresentationControls.vue";
+
 import {
     DEFAULT_ERROR_TOAST_LIFE,
     ERROR,
 } from "@/arches_controlled_lists/constants.ts";
-import { findNodeInTree } from "@/arches_controlled_lists/utils.ts";
-import { fetchConcepts } from "@/arches_lingo/api.ts";
 import {
-    displayedRowKey,
     selectedLanguageKey,
     systemLanguageKey,
 } from "@/arches_lingo/constants.ts";
-import { treeFromSchemes } from "@/arches_lingo/utils.ts";
-import { routeNames } from "@/arches_lingo/routes.ts";
-import TreeRow from "@/arches_lingo/components/tree/TreeRow.vue";
+
+import { findNodeInTree } from "@/arches_controlled_lists/utils.ts";
+import { fetchConcepts } from "@/arches_lingo/api.ts";
+
+import {
+    treeFromSchemes,
+    navigateToSchemeOrConcept,
+} from "@/arches_lingo/utils.ts";
+import { getItemLabel } from "@/arches_vue_utils/utils.ts";
 
 import type { ComponentPublicInstance, Ref } from "vue";
 import type { RouteLocationNormalizedLoadedGeneric } from "vue-router";
@@ -32,19 +37,19 @@ import type {
 } from "primevue/tree";
 import type { TreeNode } from "primevue/treenode";
 import type { Language } from "@/arches_vue_utils/types";
-import type {
-    DisplayedRowRefAndSetter,
-    IconLabels,
-    Scheme,
-} from "@/arches_lingo/types";
+import type { IconLabels, Scheme, Concept } from "@/arches_lingo/types";
 
 const toast = useToast();
 const { $gettext } = useGettext();
 const route = useRoute();
+const router = useRouter();
 
 // Defining these in the parent avoids re-running $gettext in thousands of children.
+const NEW = "new";
 const FOCUS = $gettext("Focus");
 const UNFOCUS = $gettext("Unfocus");
+const ADD_CHILD = $gettext("Add child");
+
 const iconLabels: IconLabels = Object.freeze({
     concept: $gettext("Concept"),
     scheme: $gettext("Scheme"),
@@ -61,84 +66,67 @@ const systemLanguage = inject(systemLanguageKey) as Language;
 const nextFilterChangeNeedsExpandAll = ref(false);
 const expandedKeysSnapshotBeforeSearch = ref<TreeExpandedKeys>({});
 const rerenderTree = ref(0);
-const { setDisplayedRow } = inject(
-    displayedRowKey,
-) as unknown as DisplayedRowRefAndSetter;
+const newTreeItemParentPath = ref<Concept[] | Scheme[]>([]);
 
-const tree = computed(() =>
-    treeFromSchemes(
+const tree = computed(() => {
+    return treeFromSchemes(
         schemes.value,
         selectedLanguage.value,
         systemLanguage,
         iconLabels,
         focusedNode.value,
-    ),
-);
-
-const navigate = (newRoute: RouteLocationNormalizedLoadedGeneric) => {
-    switch (newRoute.name) {
-        case routeNames.concept: {
-            if (!tree.value.length) {
-                return;
-            }
-            const { found, path } = findNodeInTree(
-                tree.value,
-                newRoute.params.id as string,
-            );
-            if (found) {
-                setDisplayedRow(found.data);
-                const itemsToExpandIds = path.map(
-                    (itemInPath: TreeNode) => itemInPath.key,
-                );
-                expandedKeys.value = {
-                    ...expandedKeys.value,
-                    ...Object.fromEntries(
-                        itemsToExpandIds.map((x: string) => [x, true]),
-                    ),
-                };
-                selectedKeys.value = { [found.data.id]: true };
-            }
-            break;
-        }
-    }
-};
+    );
+});
 
 // React to route changes.
-watch(
-    [
-        () => {
-            return { ...route };
-        },
-    ],
-    ([newRoute]) => {
-        navigate(newRoute);
-    },
-);
+watch(route, (newRoute) => {
+    selectNodeFromRoute(newRoute);
+});
 
-// Navigate on initial load of the tree.
-watch(tree, () => navigate(route), { once: true });
+onMounted(async () => {
+    try {
+        const priorSortedSchemeIds = tree.value.map((node) => node.key);
+        const concepts = await fetchConcepts();
 
-const expandAll = () => {
+        schemes.value = (concepts.schemes as Scheme[]).sort((a, b) => {
+            return (
+                priorSortedSchemeIds.indexOf(a.id) -
+                priorSortedSchemeIds.indexOf(b.id)
+            );
+        });
+
+        selectNodeFromRoute(route);
+    } catch (error) {
+        toast.add({
+            severity: ERROR,
+            life: DEFAULT_ERROR_TOAST_LIFE,
+            summary: $gettext("Unable to fetch concepts"),
+            detail: (error as Error).message,
+        });
+    }
+});
+
+function expandAll() {
     for (const node of tree.value) {
         expandNode(node);
     }
     expandedKeys.value = { ...expandedKeys.value };
-};
+}
 
-const collapseAll = () => {
+function collapseAll() {
     expandedKeys.value = {};
-};
+}
 
-const expandNode = (node: TreeNode) => {
+function expandNode(node: TreeNode) {
     if (node.children && node.children.length) {
         expandedKeys.value[node.key] = true;
         for (const child of node.children) {
             expandNode(child);
         }
     }
-};
+}
 
-const expandPathsToFilterResults = (newFilterValue: string) => {
+function expandPathsToFilterResults(newFilterValue: string) {
     // https://github.com/primefaces/primevue/issues/3996
     if (filterValue.value && !newFilterValue) {
         expandedKeys.value = { ...expandedKeysSnapshotBeforeSearch.value };
@@ -157,7 +145,7 @@ const expandPathsToFilterResults = (newFilterValue: string) => {
         expandAll();
     }
     nextFilterChangeNeedsExpandAll.value = false;
-};
+}
 
 function getInputElement() {
     if (treeDOMRef.value !== null) {
@@ -167,7 +155,7 @@ function getInputElement() {
     }
 }
 
-const restoreFocusToInput = () => {
+function restoreFocusToInput() {
     // The current implementation of collapsing all nodes when
     // backspacing out the search value relies on rerendering the
     // <Tree> component. Restore focus to the input element.
@@ -177,9 +165,9 @@ const restoreFocusToInput = () => {
             inputEl.focus();
         }
     }
-};
+}
 
-const snoopOnFilterValue = () => {
+function snoopOnFilterValue() {
     // If we wait to react to the emitted filter event, the templated rows
     // will have already rendered. (<TreeRow> bolds search terms.)
     const inputEl = getInputElement();
@@ -187,7 +175,7 @@ const snoopOnFilterValue = () => {
         expandPathsToFilterResults(inputEl.value);
         filterValue.value = inputEl.value;
     }
-};
+}
 
 function lazyLabelLookup(node: TreeNode) {
     return getItemLabel(
@@ -197,42 +185,161 @@ function lazyLabelLookup(node: TreeNode) {
     ).value;
 }
 
-const updateSelectedAndExpanded = (node: TreeNode) => {
-    setDisplayedRow(node.data);
+function updateSelectedAndExpanded(node: TreeNode) {
     expandedKeys.value = {
         ...expandedKeys.value,
         [node.key]: true,
     };
-};
+}
 
-const initializeTree = async () => {
-    /*
-    Currently, rather than inspecting the results of the batched
-    delete requests, we just refetch everything. This requires being
-    a little clever about resorting the ordered response from the API
-    to preserve the existing sort (and avoid confusion).
-    */
-    const priorSortedSchemeIds = tree.value.map((node) => node.key);
+function findNodeById(concepts: Concept | Concept[], targetId: string) {
+    const queue = [];
 
-    await fetchConcepts()
-        .then(({ schemes: fetchedSchemes }: { schemes: Scheme[] }) => {
-            schemes.value = fetchedSchemes.sort(
-                (a, b) =>
-                    priorSortedSchemeIds.indexOf(a.id) -
-                    priorSortedSchemeIds.indexOf(b.id),
+    if (Array.isArray(concepts)) {
+        for (const node of concepts) {
+            queue.push({ node, path: [node] });
+        }
+    } else {
+        queue.push({ node: concepts, path: [concepts] });
+    }
+
+    while (queue.length > 0) {
+        const queueItem = queue.shift() as
+            | { node: Concept; path: Concept[] }
+            | undefined;
+
+        if (!queueItem) {
+            continue;
+        }
+
+        const { node: currentNode, path: path } = queueItem;
+
+        if (currentNode.id === targetId) {
+            return { node: currentNode, path: path };
+        }
+
+        if (currentNode.narrower && Array.isArray(currentNode.narrower)) {
+            for (const childNode of currentNode.narrower) {
+                queue.push({ node: childNode, path: [...path, childNode] });
+            }
+        }
+    }
+
+    return null;
+}
+
+function resetNewTreeItemParentPath() {
+    if (newTreeItemParentPath.value.length) {
+        const parent = newTreeItemParentPath.value.at(-1);
+
+        if ("top_concepts" in parent!) {
+            parent.top_concepts.shift();
+        } else if ("narrower" in parent!) {
+            parent.narrower.shift();
+        }
+
+        newTreeItemParentPath.value = [];
+    }
+}
+
+function scrollToItemInTree(nodeId: string) {
+    try {
+        const { found, path } = findNodeInTree(tree.value, nodeId);
+
+        if (found) {
+            const itemsToExpandIds = path.map(
+                (itemInPath: TreeNode) => itemInPath.key,
             );
-        })
-        .catch((error: Error) => {
-            toast.add({
-                severity: ERROR,
-                life: DEFAULT_ERROR_TOAST_LIFE,
-                summary: $gettext("Unable to fetch concepts"),
-                detail: error.message,
-            });
-        });
-};
 
-await initializeTree();
+            expandedKeys.value = {
+                ...expandedKeys.value,
+                ...Object.fromEntries(
+                    itemsToExpandIds.map((item: string) => [item, true]),
+                ),
+                [found.key]: true,
+            };
+            selectedKeys.value = { [found.data.id]: true };
+
+            nextTick(() => {
+                const element = document.getElementById(found.data.id);
+
+                if (element) {
+                    element.scrollIntoView({
+                        behavior: "smooth",
+                        block: "center",
+                    });
+                }
+            });
+        }
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (error) {
+        return null;
+    }
+}
+
+function addNewConceptToTree(schemeId: string, parentId: string) {
+    const targetScheme = schemes.value.find(
+        (schemeItem) => schemeItem.id === schemeId,
+    );
+    if (!targetScheme) return;
+
+    const newConcept = {
+        id: NEW,
+        labels: [
+            {
+                language_id: selectedLanguage.value.code,
+                value: $gettext("New concept"),
+                valuetype_id: "preferred label",
+            },
+        ],
+        narrower: [],
+    };
+
+    let parentPath = [targetScheme];
+
+    if (schemeId === parentId) {
+        // adding top concept to scheme
+        targetScheme.top_concepts.unshift(newConcept);
+    } else {
+        // adding narrower concept to existing concept
+        const searchResult = findNodeById(targetScheme.top_concepts, parentId);
+        if (!searchResult) return;
+
+        searchResult.node.narrower.unshift(newConcept);
+        parentPath = [
+            targetScheme,
+            ...(searchResult.path as unknown as Scheme[]),
+        ];
+    }
+
+    newTreeItemParentPath.value = parentPath;
+
+    schemes.value = schemes.value.map((existingScheme) => {
+        return existingScheme.id === schemeId ? targetScheme : existingScheme;
+    });
+}
+
+function selectNodeFromRoute(newRoute: RouteLocationNormalizedLoadedGeneric) {
+    resetNewTreeItemParentPath();
+
+    if (newRoute.params.id === NEW) {
+        addNewConceptToTree(
+            newRoute.query.scheme as string,
+            newRoute.query.parent as string,
+        );
+    }
+
+    scrollToItemInTree(newRoute.params.id as string);
+}
+
+function onNodeSelect(node: TreeNode) {
+    if (node.data.id === NEW) {
+        return;
+    }
+
+    updateSelectedAndExpanded(node);
+    navigateToSchemeOrConcept!(router, node.data);
+}
 </script>
 
 <template>
@@ -264,6 +371,13 @@ await initializeTree();
                     },
                 },
             },
+            nodeContent: ({ instance }: TreePassThroughMethodOptions) => {
+                return {
+                    style: instance.node.data.id === NEW && {
+                        backgroundColor: 'rgb(250 247 207)',
+                    },
+                };
+            },
             nodeIcon: ({ instance }: TreePassThroughMethodOptions) => {
                 return { ariaLabel: instance.node.iconLabel };
             },
@@ -276,15 +390,17 @@ await initializeTree();
             },
         }"
         @node-collapse="nextFilterChangeNeedsExpandAll = true"
-        @node-select="updateSelectedAndExpanded"
+        @node-select="onNodeSelect"
     >
         <template #default="slotProps">
             <TreeRow
-                v-model:focused-node="focusedNode"
-                v-model:filter-value="filterValue"
+                :id="slotProps.node.data.id"
+                :focused-node="focusedNode"
+                :filter-value="filterValue"
                 :node="slotProps.node"
                 :focus-label="FOCUS"
                 :unfocus-label="UNFOCUS"
+                :add-child-label="ADD_CHILD"
             />
         </template>
     </Tree>

@@ -18,6 +18,7 @@ export const MINIMIZE = "minimize";
 export const MINIMIZED = "minimized";
 export const CLOSE = "close";
 export const CLOSED = "closed";
+export const NEW_CONCEPT = "newConcept";
 
 export const DEFAULT_ERROR_TOAST_LIFE = 8000;
 export const SEARCH_RESULTS_PER_PAGE = 25;
