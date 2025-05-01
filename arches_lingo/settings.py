@@ -97,6 +97,29 @@ STORAGES = {
     },
 }
 
+DATABASES = {
+    "default": {
+        "ATOMIC_REQUESTS": False,
+        "AUTOCOMMIT": True,
+        "CONN_MAX_AGE": 0,
+        "README": True,
+        "ENGINE": "django.contrib.gis.db.backends.postgis",
+        "OPTIONS": {
+            "options": "-c cursor_tuple_fraction=1",
+        },
+        "HOST": DB_HOST,
+        "NAME": DB_NAME,
+        "PASSWORD": DB_PASSWORD,
+        "PORT": DB_PORT,
+        "WRITE_MODE": True,
+        "READ_MODE": True,
+        "POSTGIS_TEMPLATE": "template_postgis",
+        "TEST": {"CHARSET": None, "COLLATION": None, "MIRROR": None, "NAME": None},
+        "TIME_ZONE": None,
+        "USER": DB_USER,
+    },
+}
+
 if SECRETS_MODE == "AWS":
     try:
         import boto3
@@ -113,10 +136,76 @@ if SECRETS_MODE == "AWS":
             client.get_secret_value(SecretId=DB_SECRET_ID)["SecretString"]
         )
         DB_NAME = APP_NAME
-        DB_USER = db_secret["username"]
-        DB_PASSWORD = db_secret["password"]
-        DB_HOST = db_secret["host"]
-        DB_PORT = db_secret["port"]
+
+        if "databases" in db_secret:
+            DATABASES = {}
+            for database in db_secret["databases"]:
+                DB_USER = database["username"]
+                DB_PASSWORD = database["password"]
+                DB_HOST = database["host"]
+                DB_PORT = database["port"]
+                DB_LABEL = database["label"]
+                DB_WRITE_MODE = (
+                    bool(database["write"]) if "write" in database else False
+                )
+                DB_READ_MODE = bool(database["read"]) if "read" in database else True
+                DATABASES[DB_LABEL] = {
+                    "ATOMIC_REQUESTS": False,
+                    "AUTOCOMMIT": True,
+                    "CONN_MAX_AGE": 0,
+                    "ENGINE": "django.contrib.gis.db.backends.postgis",
+                    "OPTIONS": {
+                        "options": "-c cursor_tuple_fraction=1",
+                    },
+                    "HOST": DB_HOST,
+                    "NAME": DB_NAME,
+                    "WRITE_MODE": DB_WRITE_MODE,
+                    "READ_MODE": DB_READ_MODE,
+                    "PASSWORD": DB_PASSWORD,
+                    "PORT": DB_PORT,
+                    "POSTGIS_TEMPLATE": "template_postgis",
+                    "TEST": {
+                        "CHARSET": None,
+                        "COLLATION": None,
+                        "MIRROR": None,
+                        "NAME": None,
+                    },
+                    "TIME_ZONE": None,
+                    "USER": DB_USER,
+                }
+
+        else:
+            DB_USER = db_secret["username"]
+            DB_PASSWORD = db_secret["password"]
+            DB_HOST = db_secret["host"]
+            DB_PORT = db_secret["port"]
+            DATABASES = {
+                "default": {
+                    "ATOMIC_REQUESTS": False,
+                    "AUTOCOMMIT": True,
+                    "CONN_MAX_AGE": 0,
+                    "ENGINE": "django.contrib.gis.db.backends.postgis",
+                    "OPTIONS": {
+                        "options": "-c cursor_tuple_fraction=1",
+                    },
+                    "HOST": DB_HOST,
+                    "NAME": DB_NAME,
+                    "PASSWORD": DB_PASSWORD,
+                    "PORT": DB_PORT,
+                    "WRITE_MODE": True,
+                    "READ_MODE": True,
+                    "POSTGIS_TEMPLATE": "template_postgis",
+                    "TEST": {
+                        "CHARSET": None,
+                        "COLLATION": None,
+                        "MIRROR": None,
+                        "NAME": None,
+                    },
+                    "TIME_ZONE": None,
+                    "USER": DB_USER,
+                }
+            }
+
         ES_USER = es_secret["user"]
         ES_PASSWORD = es_secret["password"]
         ES_HOST = es_secret["host"]
@@ -204,78 +293,6 @@ PUBLIC_SERVER_ADDRESS = get_optional_env_variable(
 ARCHES_NAMESPACE_FOR_DATA_EXPORT = get_optional_env_variable(
     "ARCHES_NAMESPACE_FOR_DATA_EXPORT", PUBLIC_SERVER_ADDRESS
 )
-
-DATABASES = {
-    "default": {
-        "ATOMIC_REQUESTS": False,
-        "AUTOCOMMIT": True,
-        "CONN_MAX_AGE": 0,
-        "ENGINE": "django.contrib.gis.db.backends.postgis",
-        "OPTIONS": {
-            "options": "-c cursor_tuple_fraction=1",
-        },
-        "WRITE_MODE": True,
-        "READ_MODE": True,
-        "HOST": DB_HOST,
-        "NAME": DB_NAME,
-        "PASSWORD": DB_PASSWORD,
-        "PORT": DB_PORT,
-        "POSTGIS_TEMPLATE": "template_postgis",
-        "TEST": {"CHARSET": None, "COLLATION": None, "MIRROR": None, "NAME": None},
-        "TIME_ZONE": None,
-        "USER": DB_USER,
-    },
-    "replica_1": {
-        "ATOMIC_REQUESTS": False,
-        "AUTOCOMMIT": True,
-        "CONN_MAX_AGE": 0,
-        "ENGINE": "django.contrib.gis.db.backends.postgis",
-        "OPTIONS": {
-            "options": "-c cursor_tuple_fraction=1",
-        },
-        "WRITE_MODE": False,
-        "READ_MODE": True,
-        "HOST": DB_HOST,
-        "NAME": DB_NAME,
-        "PASSWORD": DB_PASSWORD,
-        "PORT": 5433,
-        "POSTGIS_TEMPLATE": "template_postgis",
-        "TEST": {
-            "CHARSET": None,
-            "COLLATION": None,
-            "MIRROR": None,
-            "NAME": None,
-            "MIGRATE": False,
-        },
-        "TIME_ZONE": None,
-        "USER": DB_USER,
-    },
-    "replica_2": {
-        "ATOMIC_REQUESTS": False,
-        "AUTOCOMMIT": True,
-        "CONN_MAX_AGE": 0,
-        "ENGINE": "django.contrib.gis.db.backends.postgis",
-        "OPTIONS": {
-            "options": "-c cursor_tuple_fraction=1",
-        },
-        "WRITE_MODE": False,
-        "READ_MODE": True,
-        "HOST": DB_HOST,
-        "NAME": DB_NAME,
-        "PASSWORD": DB_PASSWORD,
-        "PORT": 5434,
-        "POSTGIS_TEMPLATE": "template_postgis",
-        "TEST": {
-            "CHARSET": None,
-            "COLLATION": None,
-            "MIRROR": None,
-            "NAME": None,
-            "MIGRATE": False,
-        },
-        "TIME_ZONE": None,
-        "USER": DB_USER,
-    },
-}
 
 
 DATABASE_ROUTERS = [
