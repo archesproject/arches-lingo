@@ -222,8 +222,58 @@ DATABASES = {
         "TEST": {"CHARSET": None, "COLLATION": None, "MIRROR": None, "NAME": None},
         "TIME_ZONE": None,
         "USER": DB_USER,
-    }
+    },
+    "replica_1": {
+        "ATOMIC_REQUESTS": False,
+        "AUTOCOMMIT": True,
+        "CONN_MAX_AGE": 0,
+        "ENGINE": "django.contrib.gis.db.backends.postgis",
+        "OPTIONS": {
+            "options": "-c cursor_tuple_fraction=1",
+        },
+        "HOST": DB_HOST,
+        "NAME": DB_NAME,
+        "PASSWORD": DB_PASSWORD,
+        "PORT": DB_PORT,
+        "POSTGIS_TEMPLATE": "template_postgis",
+        "TEST": {
+            "CHARSET": None,
+            "COLLATION": None,
+            "MIRROR": None,
+            "NAME": None,
+            "MIGRATE": False,
+        },
+        "TIME_ZONE": None,
+        "USER": DB_USER,
+    },
+    "replica_2": {
+        "ATOMIC_REQUESTS": False,
+        "AUTOCOMMIT": True,
+        "CONN_MAX_AGE": 0,
+        "ENGINE": "django.contrib.gis.db.backends.postgis",
+        "OPTIONS": {
+            "options": "-c cursor_tuple_fraction=1",
+        },
+        "HOST": DB_HOST,
+        "NAME": DB_NAME,
+        "PASSWORD": DB_PASSWORD,
+        "PORT": DB_PORT,
+        "POSTGIS_TEMPLATE": "template_postgis",
+        "TEST": {
+            "CHARSET": None,
+            "COLLATION": None,
+            "MIRROR": None,
+            "NAME": None,
+            "MIGRATE": False,
+        },
+        "TIME_ZONE": None,
+        "USER": DB_USER,
+    },
 }
+
+DATABASE_ROUTERS = [
+    "arches_lingo.database_routers.ArchesRouter",
+]
 
 SEARCH_THUMBNAILS = False
 
@@ -338,7 +388,7 @@ LOGGING = {
             "formatter": "console",
         },
         "console": {
-            "level": "WARNING",
+            "level": "INFO",
             "class": "logging.StreamHandler",
             "formatter": "console",
         },
@@ -348,7 +398,11 @@ LOGGING = {
             "handlers": ["file", "console"],
             "level": "WARNING",
             "propagate": True,
-        }
+        },
+        "arches_lingo.database_routers": {
+            "handlers": ["console"],
+            "level": "INFO",
+        },
     },
 }
 
