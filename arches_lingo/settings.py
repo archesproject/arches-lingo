@@ -214,6 +214,8 @@ DATABASES = {
         "OPTIONS": {
             "options": "-c cursor_tuple_fraction=1",
         },
+        "WRITE_MODE": True,
+        "READ_MODE": True,
         "HOST": DB_HOST,
         "NAME": DB_NAME,
         "PASSWORD": DB_PASSWORD,
@@ -231,10 +233,12 @@ DATABASES = {
         "OPTIONS": {
             "options": "-c cursor_tuple_fraction=1",
         },
+        "WRITE_MODE": False,
+        "READ_MODE": True,
         "HOST": DB_HOST,
         "NAME": DB_NAME,
         "PASSWORD": DB_PASSWORD,
-        "PORT": DB_PORT,
+        "PORT": 5433,
         "POSTGIS_TEMPLATE": "template_postgis",
         "TEST": {
             "CHARSET": None,
@@ -254,10 +258,12 @@ DATABASES = {
         "OPTIONS": {
             "options": "-c cursor_tuple_fraction=1",
         },
+        "WRITE_MODE": False,
+        "READ_MODE": True,
         "HOST": DB_HOST,
         "NAME": DB_NAME,
         "PASSWORD": DB_PASSWORD,
-        "PORT": DB_PORT,
+        "PORT": 5434,
         "POSTGIS_TEMPLATE": "template_postgis",
         "TEST": {
             "CHARSET": None,
@@ -270,6 +276,7 @@ DATABASES = {
         "USER": DB_USER,
     },
 }
+
 
 DATABASE_ROUTERS = [
     "arches_lingo.database_routers.ArchesRouter",
