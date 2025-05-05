@@ -7,7 +7,11 @@ from arches_lingo.etl_modules import migrate_to_lingo
 from arches.app.tasks import notify_completion
 
 
-@shared_task
+from django_tasks import task
+
+
+# @shared_task
+@task
 def migrate_rdm_to_lingo_task(userid, loadid, scheme_conceptid):
     logger = logging.getLogger(__name__)
 

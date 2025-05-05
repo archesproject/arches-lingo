@@ -238,6 +238,8 @@ INSTALLED_APPS = (
     "django.contrib.staticfiles",
     "django.contrib.gis",
     "django_hosts",
+    "django_tasks",
+    "django_tasks.backends.database",
     "arches_component_lab",
     "arches_controlled_lists",
     "arches",
@@ -350,6 +352,8 @@ LOGGING = {
         }
     },
 }
+
+TASKS = {"default": {"BACKEND": "django_tasks.backends.database.DatabaseBackend"}}
 
 # Rate limit for authentication views
 # See options (including None or python callables):

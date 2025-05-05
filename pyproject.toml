@@ -40,6 +40,7 @@ dev = [
     "django-silk==5.1.0",
     "pre-commit",
     "black==24.4.2",
+    "django-tasks==0.7.0",
 ]
 
 [tool.setuptools]
