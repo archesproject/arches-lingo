@@ -1,5 +1,5 @@
 import type { InjectionKey, Ref } from "vue";
-import type { Language } from "@/arches_vue_utils/types.ts";
+import type { Language } from "@/arches_component_lab/types.ts";
 import type { Concept, UserRefAndSetter } from "@/arches_lingo/types.ts";
 
 export const ANONYMOUS = "anonymous";

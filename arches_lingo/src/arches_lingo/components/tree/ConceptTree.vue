@@ -26,7 +26,7 @@ import {
     treeFromSchemes,
     navigateToSchemeOrConcept,
 } from "@/arches_lingo/utils.ts";
-import { getItemLabel } from "@/arches_vue_utils/utils.ts";
+import { getItemLabel } from "@/arches_component_lab/utils.ts";
 
 import type { ComponentPublicInstance, Ref } from "vue";
 import type { RouteLocationNormalizedLoadedGeneric } from "vue-router";
@@ -36,7 +36,7 @@ import type {
     TreeSelectionKeys,
 } from "primevue/tree";
 import type { TreeNode } from "primevue/treenode";
-import type { Language } from "@/arches_vue_utils/types";
+import type { Language } from "@/arches_component_lab/types";
 import type { IconLabels, Scheme, Concept } from "@/arches_lingo/types";
 
 const toast = useToast();
