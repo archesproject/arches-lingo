@@ -240,7 +240,6 @@ INSTALLED_APPS = (
     "django_hosts",
     "arches_component_lab",
     "arches_controlled_lists",
-    "arches_vue_utils",
     "arches",
     "arches.app.models",
     "arches.management",

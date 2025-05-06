@@ -20,7 +20,7 @@ import type {
     ResourceInstanceResult,
     SchemeHeader,
 } from "@/arches_lingo/types.ts";
-import type { Language } from "@/arches_vue_utils/types.ts";
+import type { Language } from "@/arches_component_lab/types.ts";
 
 const props = defineProps<{
     mode: DataComponentMode;

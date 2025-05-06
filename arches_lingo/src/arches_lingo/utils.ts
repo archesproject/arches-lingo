@@ -1,11 +1,11 @@
-import { getItemLabel } from "@/arches_vue_utils/utils.ts";
+import { getItemLabel } from "@/arches_component_lab/utils.ts";
 import { routeNames } from "@/arches_lingo/routes.ts";
 
 import { createLingoResource, upsertLingoTile } from "@/arches_lingo/api.ts";
 import { NEW_CONCEPT } from "@/arches_lingo/constants.ts";
 
 import type { TreeNode } from "primevue/treenode";
-import type { Language } from "@/arches_vue_utils/types.ts";
+import type { Language } from "@/arches_component_lab/types.ts";
 import type {
     Concept,
     IconLabels,
