@@ -198,8 +198,10 @@ class ViewTests(TestCase):
                     },
                 )
 
-    def test_get_concept_trees(self):
+    def setUp(self):
         self.client.force_login(self.admin)
+
+    def test_get_concept_trees(self):
         with self.assertNumQueries(6):
             # 1: session
             # 2: auth
@@ -236,8 +238,6 @@ class ViewTests(TestCase):
         )
 
     def test_search(self):
-        self.client.force_login(self.admin)
-
         cases = (
             # Fuzzy match: finds all 5 concepts
             ["term=Concept 1", 5],
@@ -257,8 +257,36 @@ class ViewTests(TestCase):
                 result = json.loads(response.content)
                 self.assertEqual(len(result["data"]), expected_result_count, result)
 
+    def test_hierarchy(self):
+        response = self.client.get(
+            reverse("api-search"), QUERY_STRING="term=Concept 5&maxEditDistance=0"
+        )
+        result = json.loads(response.content)
+
+        self.assertIs(result["data"][0]["polyhierarchical"], True)
+        # Since each concept was also created with a broader concept tile for
+        # the top concept (Concept 1), Concept 5 has 4 paths back to root.
+        self.assertEqual(
+            sorted(
+                [concept["labels"][0]["value"] for concept in path]
+                for path in result["data"][0]["parents"]
+            ),
+            [
+                [
+                    "Test Scheme",
+                    "Concept 1",
+                    "Concept 2",
+                    "Concept 3",
+                    "Concept 4",
+                    "Concept 5",
+                ],
+                ["Test Scheme", "Concept 1", "Concept 3", "Concept 4", "Concept 5"],
+                ["Test Scheme", "Concept 1", "Concept 4", "Concept 5"],
+                ["Test Scheme", "Concept 1", "Concept 5"],
+            ],
+        )
+
     def test_invalid_search_term(self):
-        self.client.force_login(self.admin)
         with self.assertLogs("django.request", level="WARNING"):
             response = self.client.get(
                 reverse("api-search"), QUERY_STRING="term=" + ("!" * 256)
@@ -270,7 +298,6 @@ class ViewTests(TestCase):
         )
 
     def test_invalid_edit_distance(self):
-        self.client.force_login(self.admin)
         with self.assertLogs("django.request", level="WARNING"):
             response = self.client.get(
                 reverse("api-search"), QUERY_STRING="term=test&maxEditDistance=?"

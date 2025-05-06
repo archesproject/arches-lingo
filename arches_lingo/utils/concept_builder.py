@@ -137,6 +137,9 @@ class ConceptBuilder:
             graph_id=SCHEMES_GRAPH_ID
         ).annotate(labels=self.labels_subquery(SCHEME_NAME_NODEGROUP))
 
+    def lookup_scheme(self, scheme_id: str):
+        return [scheme for scheme in self.schemes if str(scheme.pk) == scheme_id][0]
+
     def serialize_scheme(self, scheme: ResourceInstance, *, children=True):
         scheme_id: str = str(scheme.pk)
         data = {
@@ -185,38 +188,45 @@ class ConceptBuilder:
                 for child_id in sorted(self.narrower_concepts[conceptid])
             ]
         if parents:
-            path = self.add_broader_concept_recursive([], conceptid)
-            scheme_id, parent_concept_ids = path[0], path[1:]
-            if len(parent_concept_ids) > 1:
+            paths = self.find_paths_to_root([conceptid], conceptid)
+            if len(paths) > 1:
                 self.polyhierarchical_concepts.add(conceptid)
-            schemes = [scheme for scheme in self.schemes if str(scheme.pk) == scheme_id]
-            data["parents"] = [self.serialize_scheme(schemes[0], children=False)] + [
-                self.serialize_concept(parent_id, children=False)
-                for parent_id in parent_concept_ids
+
+            data["parents"] = [
+                [self.serialize_scheme(self.lookup_scheme(scheme_id), children=False)]
+                + [
+                    self.serialize_concept(parent_id, children=False)
+                    for parent_id in concept_ids
+                ]
+                for scheme_id, *concept_ids in paths
             ]
 
-            self_and_parent_ids = set([conceptid] + parent_concept_ids)
+            self_and_parent_ids = set()
+            for path in paths:
+                self_and_parent_ids |= set(path)
             data["polyhierarchical"] = bool(
                 self_and_parent_ids.intersection(self.polyhierarchical_concepts)
             )
 
         return data
 
-    def add_broader_concept_recursive(self, working_parent_list, conceptid):
-        # TODO: sort on sortorder at higher stacklevel once captured in original data.
-        broader_concepts = sorted(self.broader_concepts[conceptid])
-        try:
-            first_broader_conceptid = broader_concepts[0]
-        except IndexError:
-            # TODO: sort here too.
-            schemes = sorted(self.schemes_by_top_concept[conceptid])
-            working_parent_list.insert(0, schemes[0])
-            return working_parent_list
+    def find_paths_to_root(self, working_path, conceptid) -> list[list[str]]:
+        """Return an array of paths (path: an array of scheme & concept ids)."""
 
-        working_parent_list.insert(0, first_broader_conceptid)
-        return self.add_broader_concept_recursive(
-            working_parent_list, first_broader_conceptid
-        )
+        parent_ids = self.broader_concepts[conceptid]
+        if not parent_ids:
+            if not (schemes := sorted(self.schemes_by_top_concept[conceptid])):
+                return []
+            working_path.insert(0, schemes[0])
+            return [working_path]
+
+        collected_paths = []
+        for parent in parent_ids:
+            forked_path = working_path[:]
+            forked_path.insert(0, parent)
+            collected_paths.extend(self.find_paths_to_root(forked_path, parent))
+
+        return collected_paths
 
     def serialize_concept_label(self, label_tile: dict):
         scheme_name_type_labels = [
