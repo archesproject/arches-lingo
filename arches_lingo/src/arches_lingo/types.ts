@@ -290,7 +290,7 @@ export interface SearchResultItem {
     parents: {
         id: string;
         labels: Label[];
-    }[];
+    }[][];
     polyhierarchical: boolean;
 }
 
