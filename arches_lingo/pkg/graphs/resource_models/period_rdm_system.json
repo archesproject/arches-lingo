@@ -2880,7 +2880,7 @@
                 "source_identifier_id": null,
                 "sourcebranchpublication_id": null
             },
-            "slug": null,
+            "slug": "period_rdm_system",
             "source_identifier_id": null,
             "subtitle": "A historical or archaeological period, which has a specific time-span and is associated with a specific geographic area..",
             "template_id": "50000000-0000-0000-0000-000000000001",
