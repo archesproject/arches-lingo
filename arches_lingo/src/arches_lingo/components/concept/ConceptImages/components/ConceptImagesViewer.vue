@@ -1,22 +1,28 @@
 <script setup lang="ts">
-import { inject, ref, onMounted } from "vue";
+import { inject, ref, onMounted, nextTick } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import Button from "primevue/button";
 import Message from "primevue/message";
 import ProgressSpinner from "primevue/progressspinner";
+import ConfirmDialog from "primevue/confirmdialog";
+import { useConfirm } from "primevue/useconfirm";
 
 import FileListWidget from "@/arches_component_lab/widgets/FileListWidget/FileListWidget.vue";
+import NonLocalizedStringWidget from "@/arches_component_lab/widgets/NonLocalizedStringWidget/NonLocalizedStringWidget.vue";
 
 import { DANGER, SECONDARY, VIEW } from "@/arches_lingo/constants.ts";
-import { useConfirm } from "primevue/useconfirm";
 
 import type {
     ConceptImages,
+    ConceptInstance,
     DigitalObjectInstance,
 } from "@/arches_lingo/types.ts";
-import { fetchLingoResourcesBatch } from "@/arches_lingo/api.ts";
-import NonLocalizedStringWidget from "@/arches_component_lab/widgets/NonLocalizedStringWidget/NonLocalizedStringWidget.vue";
+import {
+    fetchLingoResourcePartial,
+    fetchLingoResourcesBatch,
+    updateLingoResource,
+} from "@/arches_lingo/api.ts";
 
 const props = defineProps<{
     tileData: ConceptImages | undefined;
@@ -26,7 +32,8 @@ const props = defineProps<{
     nodegroupAlias: string;
 }>();
 
-const openEditor = inject<(componentName: string) => void>("openEditor");
+const openEditor =
+    inject<(componentName: string, tileId?: string) => void>("openEditor");
 
 const configurationError = ref();
 const isLoading = ref(true);
@@ -50,12 +57,50 @@ onMounted(async () => {
     isLoading.value = false;
 });
 
-function confirmDelete() {
+function confirmDelete(removedResourceInstanceId: string) {
     confirm.require({
         header: $gettext("Confirmation"),
-        message: $gettext("Do you want to delete this concept image?"),
-        accept: () => {
-            console.log("do delete");
+        message: $gettext(
+            "Do you want to remove this digital resource from concept images? (This does not delete the digital resource)",
+        ),
+        accept: async () => {
+            const resourceInstanceId = props.tileData?.resourceinstance;
+            if (resourceInstanceId) {
+                const resource: ConceptInstance =
+                    await fetchLingoResourcePartial(
+                        props.graphSlug,
+                        resourceInstanceId,
+                        props.nodegroupAlias,
+                    );
+                const indexOfRemoved =
+                    resource.aliased_data.depicting_digital_asset_internal?.aliased_data.depicting_digital_asset_internal.findIndex(
+                        (assetReference) => {
+                            return (
+                                assetReference.resourceId ==
+                                removedResourceInstanceId
+                            );
+                        },
+                    );
+                if (indexOfRemoved !== undefined && indexOfRemoved != -1) {
+                    resource.aliased_data.depicting_digital_asset_internal?.aliased_data.depicting_digital_asset_internal.splice(
+                        indexOfRemoved,
+                        1,
+                    );
+                    await updateLingoResource(
+                        props.graphSlug,
+                        resourceInstanceId,
+                        resource,
+                    );
+                    resources.value?.splice(
+                        resources.value.findIndex(
+                            (resource) =>
+                                resource.resourceinstanceid ==
+                                removedResourceInstanceId,
+                        ),
+                        1,
+                    );
+                }
+            }
         },
         rejectProps: {
             label: $gettext("Cancel"),
@@ -66,6 +111,26 @@ function confirmDelete() {
             label: $gettext("Delete"),
             severity: DANGER,
         },
+    });
+}
+
+function newResource() {
+    modifyResource();
+}
+
+function editResource(resourceInstanceId: string) {
+    modifyResource(resourceInstanceId);
+}
+
+function modifyResource(resourceInstanceId?: string) {
+    openEditor!(props.componentName);
+
+    nextTick(() => {
+        const openConceptImagesEditor = new CustomEvent(
+            "openConceptImagesEditor",
+            { detail: { resourceInstanceId: resourceInstanceId } },
+        );
+        document.dispatchEvent(openConceptImagesEditor);
     });
 }
 </script>
@@ -83,7 +148,6 @@ function confirmDelete() {
         v-if="isLoading"
         style="width: 100%"
     />
-
     <Message
         v-else-if="configurationError"
         severity="error"
@@ -100,6 +164,13 @@ function confirmDelete() {
         v-else
         style="overflow-x: auto"
     >
+        <div class="section-header">
+            <h2>{{ props.sectionTitle }}</h2>
+            <Button
+                :label="$gettext('Add New Concept Image')"
+                @click="newResource"
+            ></Button>
+        </div>
         <div class="conceptImages">
             <div
                 v-for="resource in resources"
@@ -116,7 +187,7 @@ function confirmDelete() {
                             graph-slug="digital_object_rdm_system"
                             :mode="VIEW"
                             :initial-value="
-                                resource.aliased_data.name.aliased_data
+                                resource.aliased_data.name?.aliased_data
                                     .name_content
                             "
                         />
@@ -124,14 +195,14 @@ function confirmDelete() {
                     <div class="buttons">
                         <Button
                             icon="pi pi-file-edit"
-                            @click="openEditor!(props.componentName)"
+                            @click="editResource(resource.resourceinstanceid)"
                         />
                         <Button
                             icon="pi pi-trash"
-                            :aria-label="$gettext('Delete')"
+                            :aria-label="$gettext('delete')"
                             severity="danger"
                             outlined
-                            @click="confirmDelete()"
+                            @click="confirmDelete(resource.resourceinstanceid)"
                         />
                     </div>
                 </div>
@@ -157,6 +228,31 @@ function confirmDelete() {
             </div>
         </div>
     </div>
+    <ConfirmDialog
+        style="border-radius: 0rem"
+        :draggable="false"
+        :pt="{
+            header: {
+                style: {
+                    background: 'var(--p-navigation-header-color)',
+                    color: 'white',
+                    borderRadius: '0rem',
+                    marginBottom: '2rem',
+                },
+            },
+            footer: {
+                style: {
+                    marginTop: '2rem',
+                },
+            },
+            title: {
+                style: {
+                    fontWeight: 800,
+                    fontSize: 'small',
+                },
+            },
+        }"
+    />
 </template>
 
 <style scoped>
@@ -202,6 +298,9 @@ function confirmDelete() {
 
 .conceptImage .header .buttons button {
     margin: 0 0.5rem;
+}
+
+.conceptImages :deep(.mainImage) {
 }
 
 .conceptImages :deep(.p-galleria) {
