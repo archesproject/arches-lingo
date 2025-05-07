@@ -215,9 +215,8 @@ class ConceptBuilder:
 
         parent_ids = self.broader_concepts[conceptid]
         if not parent_ids:
-            if not (schemes := sorted(self.schemes_by_top_concept[conceptid])):
-                return []
-            working_path.insert(0, schemes[0])
+            if schemes := sorted(self.schemes_by_top_concept[conceptid]):
+                working_path.insert(0, schemes[0])
             return [working_path]
 
         collected_paths = []
