@@ -9,7 +9,8 @@ from arches.app.models.system_settings import settings
 from arches.app.utils.decorators import group_required
 from arches.app.utils.response import JSONErrorResponse, JSONResponse
 
-from arches_lingo.models import VwLabelValue
+from arches_querysets.models import SemanticTile
+from arches_lingo.querysets import fuzzy_search
 from arches_lingo.utils.concept_builder import ConceptBuilder
 
 
@@ -38,15 +39,15 @@ class ValueSearchView(ConceptTreeView):
         page_number = request.GET.get("page", 1)
         items_per_page = request.GET.get("items", 25)
 
+        labels = SemanticTile.as_nodegroup("appellative_status", graph_slug="concept")
+
         if exact:
-            concept_query = VwLabelValue.objects.filter(value=term).order_by(
-                "concept_id"
-            )
+            concept_query = labels.filter(
+                appellative_status_ascribed_name_content=term
+            ).order_by("resourceinstance")
         elif term:
             try:
-                concept_query = VwLabelValue.objects.fuzzy_search(
-                    term, max_edit_distance
-                )
+                concept_query = fuzzy_search(labels, term, max_edit_distance)
             except ValueError as ve:
                 return JSONErrorResponse(
                     title=_("Unable to perform search."),
@@ -54,8 +55,10 @@ class ValueSearchView(ConceptTreeView):
                     status=HTTPStatus.BAD_REQUEST,
                 )
         else:
-            concept_query = VwLabelValue.objects.all().order_by("concept_id")
-        concept_ids = concept_query.values_list("concept_id", flat=True).distinct()
+            concept_query = labels.order_by("resourceinstance")
+        concept_ids = concept_query.values_list(
+            "resourceinstance", flat=True
+        ).distinct()
 
         data = []
         paginator = Paginator(concept_ids, items_per_page)
