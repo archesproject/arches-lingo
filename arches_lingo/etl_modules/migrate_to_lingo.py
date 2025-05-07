@@ -310,7 +310,7 @@ class RDMMtoLingoMigrator(BaseImportModule):
                 from relations
                 where not exists (
                     select 1 from relations r2 where r2.conceptidto = relations.conceptidfrom
-                ) and relationtype != 'member'
+                ) and (relationtype = 'narrower' or relationtype = 'hasTopConcept')
                 union all
                 select ch.root_scheme,
                     r.conceptidto,
@@ -318,7 +318,7 @@ class RDMMtoLingoMigrator(BaseImportModule):
                     ch.depth + 1
                 from collection_hierarchy ch
                 join relations r on ch.child = r.conceptidfrom
-                where relationtype != 'member'
+                where relationtype = 'narrower' or relationtype = 'hasTopConcept'
             )
             select * 
             from collection_hierarchy
@@ -554,7 +554,7 @@ class RDMMtoLingoMigrator(BaseImportModule):
     def write(self, request):
         self.loadid = request.POST.get("loadid")
         self.scheme_conceptid = request.POST.get("scheme")
-        if models.Concept.objects.count() < 500:
+        if models.Concept.objects.count() < 500000:
             response = self.run_load_task(
                 self.userid, self.loadid, self.scheme_conceptid
             )
