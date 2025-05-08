@@ -63,6 +63,16 @@ const items = ref([
     gap: var(--p-menubar-gap);
 }
 
+.p-menubar {
+    height: 3.125rem;
+}
+
+h1 {
+    font-weight: 400;
+    font-size: 1.25rem;
+    margin: 0rem;
+}
+
 @media screen and (max-width: 960px) {
     :deep(.p-menubar-button) {
         display: none !important;

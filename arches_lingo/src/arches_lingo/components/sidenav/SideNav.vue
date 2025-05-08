@@ -45,13 +45,16 @@ const items = ref([
     flex-direction: column;
     align-items: center;
     border-right: 1px solid var(--p-menubar-border-color);
+    width: 3.125rem;
 }
 
 .p-button {
     min-height: var(--p-button-icon-only-width);
     min-width: var(--p-button-icon-only-width);
     border-radius: 0;
-    font-size: 1.5rem;
+    font-size: 1.25rem;
+    height: 2rem;
+    width: 3.125rem;
 }
 
 @media screen and (max-width: 960px) {
