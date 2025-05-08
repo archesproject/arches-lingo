@@ -27,7 +27,7 @@ const querySortPreference = ref();
 <template>
     <div class="sort-and-filter-controls">
         <div class="sort-container">
-            <div class="label">Placeholder Sorting:</div>
+            <div class="label">Sorting:</div>
 
             <div
                 v-for="(sortOption, index) in sortOptions"
@@ -47,7 +47,7 @@ const querySortPreference = ref();
         </div>
 
         <div class="filter-container">
-            <div class="label">Placeholder Include:</div>
+            <div class="label">Include:</div>
 
             <div
                 v-for="(filter, index) in filters"
@@ -90,14 +90,24 @@ const querySortPreference = ref();
 }
 
 .label {
-    min-width: 150px; /* Adjust as necessary */
-    font-weight: bold;
+    font-weight: 400;
+    color: var(--p-zinc-500);
 }
 
 .query-sort-preference,
 .query-filter {
     display: flex;
     align-items: center;
+}
+
+.query-sort-preference label {
+    font-size: .9rem;
+    color: var(--p-zinc-500);
+}
+
+.query-filter label {
+    font-size: .9rem;
+    color: var(--p-zinc-500);
 }
 
 label {
@@ -109,6 +119,11 @@ label {
 :deep(.p-checkbox-box) {
     background-color: var(--p-checkbox-background);
     border: 1px solid;
+    border-color: var(--p-zinc-500);
+}
+
+:deep(.p-checkbox-box) {
+    border-radius: 2px;
 }
 
 @media screen and (max-width: 960px) {
