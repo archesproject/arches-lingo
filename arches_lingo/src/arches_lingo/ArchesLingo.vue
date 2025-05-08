@@ -107,6 +107,7 @@ router.beforeEach(async (to, _from, next) => {
         <PageHeader v-if="route.meta.shouldShowNavigation" />
 
         <div class="main-content">
+           
             <SideNav v-if="route.meta.shouldShowNavigation" />
 
             <div class="content-panel">
