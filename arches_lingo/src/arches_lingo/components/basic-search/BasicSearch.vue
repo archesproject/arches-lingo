@@ -314,6 +314,7 @@ watch(searchResults, (searchResults) => {
     position: static !important;
     margin-top: 0px !important;
     border-top: 1px solid #ddd;
+    min-height: 3.25rem;
 }
 
 :deep(.p-autocomplete-option) {

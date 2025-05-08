@@ -147,7 +147,7 @@ h2 {
 }
 
 :deep(.p-datatable-row-expansion td) {
-    padding: 1rem 0rem;
+    padding: 0.5rem 0rem;
 }
 
 :deep(.controls) {
