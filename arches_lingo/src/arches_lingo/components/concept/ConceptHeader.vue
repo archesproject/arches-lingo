@@ -125,7 +125,7 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                     :disabled="!data?.uri"
                 ></Button>
 
-                <!-- TODO: Life Cycle mgmt functionality goes here -->
+                <!-- TODO: export to rdf/skos/json-ld buttons go here -->
                 <div class="header-item">
                     <span class="header-item-label">{{
                         $gettext("Export:")
@@ -152,13 +152,14 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                     ></ResourceInstanceMultiSelectWidget>
                 </div>
                 
+                <!-- TODO: Life Cycle mgmt functionality goes here -->
                 <div class="header-item">
                     <span class="header-item-label">{{
                         $gettext("Life cycle state:")
                     }}</span>
                     <span class="header-item-value">{{ data?.lifeCycleState }}</span>
                 </div>
-                <!-- TODO: export to rdf/skos/json-ld buttons go here -->
+                
             </div>
             <div class="header-row">
                 <div class="header-item">

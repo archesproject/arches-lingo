@@ -38,12 +38,8 @@ const getParentLabels = (
         class="search-result"
         :class="{ 'is-even': searchResult.index % 2 === 0 }"
     >
-        <i
-            class="pi pi-paperclip"
-            aria-hidden="true"
-        />
-
         <div style="margin: 0 0.5rem">
+            <i class="pi pi-paperclip concept-icon" aria-hidden="true"/>
             {{
                 getItemLabel(searchResult.option, ENGLISH.code, ENGLISH.code)
                     .value
@@ -66,23 +62,30 @@ const getParentLabels = (
     width: 100%;
     padding: 0.5rem;
     display: flex;
-    align-items: center;
-    background-color: white;
-    border-bottom: 1px solid #ddd;
+    align-items: flex-start;
+    flex-direction: column;
+    background-color: var(--p-dialog-background);
+    border-bottom: 1px solid var(--p-zinc-200);
     font-family: sans-serif;
+    color: var(--p-sky-600);
 }
 
 .search-result-hierarchy {
     margin: 0 0.5rem;
     font-size: small;
-    color: steelblue;
+    color: var(--p-zinc-400);
 }
 
 .p-focus > .search-result {
-    background-color: #9cc3e4;
+    background-color: var(--p-sky-100);
 }
 
 .is-even {
-    background-color: #d3e5f4;
+    background-color: var(--p-slate-100);
 }
+
+.concept-icon {
+    font-size: .75rem;
+}
+
 </style>
