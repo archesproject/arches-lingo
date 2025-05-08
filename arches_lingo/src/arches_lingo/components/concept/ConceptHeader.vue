@@ -105,24 +105,18 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
         v-if="isLoading"
         style="width: 100%"
     />
-    <div v-else>
-        <div class="header-row">
-            <h2>
-                {{ data?.descriptor?.name }} ({{ data?.descriptor?.language }})
-            </h2>
-            <!-- TODO: Life Cycle mgmt functionality goes here -->
-            <div class="header-item">
-                <span class="header-item-label">{{
-                    $gettext("Life cycle state:")
-                }}</span>
-                <span>{{ data?.lifeCycleState }}</span>
+    <div class="concept-header" v-else>
+        <div class="concept-header-panel">
+            <div class="header-row">
+                <h2>
+                    {{ data?.descriptor?.name }} <span class="concept-label-lang">({{ data?.descriptor?.language }})</span>
+                </h2>
             </div>
-        </div>
-        <div class="header-row">
-            <div class="header-item">
+            <div class="header-row">
                 <span class="header-item-label">{{ $gettext("URI:") }}</span>
                 <Button
                     :label="data?.uri || '--'"
+                    class="concept-uri"
                     variant="link"
                     as="a"
                     :href="data?.uri"
@@ -130,50 +124,93 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                     rel="noopener"
                     :disabled="!data?.uri"
                 ></Button>
+
+                <!-- TODO: Life Cycle mgmt functionality goes here -->
+                <div class="header-item">
+                    <span class="header-item-label">{{
+                        $gettext("Export:")
+                    }}</span>
+                    <span class="header-item-value">CSV | SKOS | RDF | JSON-LD</span>
+                </div>
             </div>
         </div>
-        <div class="header-row">
-            <!-- TODO: Human-reable conceptid to be displayed here -->
-            <div class="header-item">
-                <span class="header-item-label">{{ $gettext("Scheme:") }}</span>
-                <!-- TODO: Allow resource multiselect to route within lingo, not to resource pg -->
-                <ResourceInstanceMultiSelectWidget
-                    :graph-slug="props.graphSlug"
-                    node-alias="part_of_scheme"
-                    :initial-value="data?.partOfScheme"
-                    :mode="VIEW"
-                    :show-label="false"
-                ></ResourceInstanceMultiSelectWidget>
+
+        <div class="concept-header-section">
+            
+            <div class="header-row">
+                <!-- TODO: Human-reable conceptid to be displayed here -->
+                <div class="header-item">
+                    <span class="header-item-label">{{ $gettext("Scheme:") }}</span>
+                    <!-- TODO: Allow resource multiselect to route within lingo, not to resource pg -->
+                    <ResourceInstanceMultiSelectWidget
+                        :graph-slug="props.graphSlug"
+                        class="concept-uri"
+                        node-alias="part_of_scheme"
+                        :initial-value="data?.partOfScheme"
+                        :mode="VIEW"
+                        :show-label="false"
+                    ></ResourceInstanceMultiSelectWidget>
+                </div>
+                
+                <div class="header-item">
+                    <span class="header-item-label">{{
+                        $gettext("Life cycle state:")
+                    }}</span>
+                    <span class="header-item-value">{{ data?.lifeCycleState }}</span>
+                </div>
+                <!-- TODO: export to rdf/skos/json-ld buttons go here -->
             </div>
-            <!-- TODO: export to rdf/skos/json-ld buttons go here -->
+            <div class="header-row">
+                <div class="header-item">
+                    <span class="header-item-label">{{
+                        $gettext("Parent Concept(s):")
+                    }}</span>
+                    <!-- TODO: Allow resource multiselect to route within lingo, not to resource pg -->
+                    <ResourceInstanceMultiSelectWidget
+                        :graph-slug="props.graphSlug"
+                        node-alias="classification_status_ascribed_classification"
+                        :initial-value="data?.parentConcepts"
+                        :mode="VIEW"
+                        :show-label="false"
+                    ></ResourceInstanceMultiSelectWidget>
+                </div>
+                <div class="header-item">
+                    <span class="header-item-label">{{ $gettext("Owner:") }}</span>
+                    <span class="header-item-value">{{ data?.principalUser || $gettext("Anonymous") }}</span>
+                </div>
+            </div>
         </div>
-        <div class="header-row">
-            <div class="header-item">
-                <span class="header-item-label">{{
-                    $gettext("Parent Concept(s):")
-                }}</span>
-                <!-- TODO: Allow resource multiselect to route within lingo, not to resource pg -->
-                <ResourceInstanceMultiSelectWidget
-                    :graph-slug="props.graphSlug"
-                    node-alias="classification_status_ascribed_classification"
-                    :initial-value="data?.parentConcepts"
-                    :mode="VIEW"
-                    :show-label="false"
-                ></ResourceInstanceMultiSelectWidget>
-            </div>
-            <div class="header-item">
-                <span class="header-item-label">{{ $gettext("Owner:") }}</span>
-                <span>{{ data?.principalUser || $gettext("Anonymous") }}</span>
-            </div>
-        </div>
-        <Divider />
     </div>
 </template>
 
 <style scoped>
-h2 {
-    margin-bottom: 1rem;
+.concept-header {
+    padding: 1rem 1rem 1.25rem 1rem;
+    background: var(--p-slate-50);
+    border-bottom: 1px solid var(--p-neutral-300);
 }
+
+.concept-header-panel {
+    padding-bottom: 0.5rem;
+}
+
+h2 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 400;
+}
+
+.concept-label-lang {
+    font-size: .9rem;
+    color: var(--p-slate-400);
+}
+
+.concept-uri{
+    font-size: .8rem;
+    font-weight: 400;
+    color: var(--p-primary-500);
+}
+
 .p-button-link {
     padding: 0;
     margin: 0;
@@ -181,14 +218,27 @@ h2 {
 .header-row {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: baseline;
 }
 .header-item {
     display: inline-flex;
     margin-inline-end: 1rem;
+    align-items: baseline;
 }
 .header-item-label {
-    font-weight: bold;
+    font-weight: 400;
+    font-size: .9rem;
+    color: var(--p-slate-500);
     margin-inline-end: 0.25rem;
+}
+
+.header-item-value {
+    font-size: .9rem;
+    color: var(--p-primary-500);
+}
+
+:deep(a) {
+    color: var(--p-primary-500);
+    font-size: .9rem;
 }
 </style>
