@@ -53,8 +53,9 @@ const items = ref([
     min-width: var(--p-button-icon-only-width);
     border-radius: 0;
     font-size: 1.25rem;
-    height: 2rem;
+    height: 2.8rem;
     width: 3.125rem;
+    border-bottom: 1px solid var(--p-surface-950);
 }
 
 @media screen and (max-width: 960px) {
