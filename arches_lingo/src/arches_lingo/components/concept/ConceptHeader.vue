@@ -111,8 +111,16 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                 <h2>
                     {{ data?.descriptor?.name }} <span class="concept-label-lang">({{ data?.descriptor?.language }})</span>
                 </h2>
+
+                <!-- TODO: export to rdf/skos/json-ld buttons go here -->
+                <div class="header-item">
+                    <span class="header-item-label">{{
+                        $gettext("Export:")
+                    }}</span>
+                    <span class="header-item-value">CSV | SKOS | RDF | JSON-LD</span>
+                </div>
             </div>
-            <div class="header-row">
+            <div class="header-row uri-container">
                 <span class="header-item-label">{{ $gettext("URI:") }}</span>
                 <Button
                     :label="data?.uri || '--'"
@@ -124,19 +132,10 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                     rel="noopener"
                     :disabled="!data?.uri"
                 ></Button>
-
-                <!-- TODO: export to rdf/skos/json-ld buttons go here -->
-                <div class="header-item">
-                    <span class="header-item-label">{{
-                        $gettext("Export:")
-                    }}</span>
-                    <span class="header-item-value">CSV | SKOS | RDF | JSON-LD</span>
-                </div>
             </div>
         </div>
 
         <div class="concept-header-section">
-            
             <div class="header-row">
                 <!-- TODO: Human-reable conceptid to be displayed here -->
                 <div class="header-item">
@@ -221,6 +220,10 @@ h2 {
     justify-content: space-between;
     align-items: baseline;
 }
+.uri-container {
+    justify-content: flex-start;
+}
+
 .header-item {
     display: inline-flex;
     margin-inline-end: 1rem;
