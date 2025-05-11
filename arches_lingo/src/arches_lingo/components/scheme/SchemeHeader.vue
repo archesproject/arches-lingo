@@ -86,38 +86,77 @@ onMounted(async () => {
         style="width: 100%"
     />
 
-    <div v-else>
-        <div class="header-row">
-            <h2>
-                {{ data?.descriptor?.name }} ({{ data?.descriptor?.language }})
-            </h2>
-        </div>
+    <div class="scheme-header" v-else>
+        <div class="scheme-header-panel">
+            <div class="header-row">
+                <h2>
+                    {{ data?.descriptor?.name }}  <span class="scheme-label-lang">({{ data?.descriptor?.language }})</span>
+                </h2>
 
-        <div class="header-row">
-            <!-- TODO: Life Cycle mgmt functionality goes here -->
-            <div class="header-item">
-                <span class="header-item-label">{{
-                    $gettext("Life cycle state:")
-                }}</span>
-                <span>{{ data?.lifeCycleState }}</span>
+                <!-- TODO: export to rdf/skos/json-ld buttons go here -->
+                <div class="header-item">
+                    <span class="header-item-label">{{
+                        $gettext("Export:")
+                    }}</span>
+                    <span class="header-item-value">CSV | SKOS | RDF | JSON-LD</span>
+                </div>
+            </div>
+            <div class="header-row uri-container">
+                <span class="header-item-label">{{ $gettext("URI:") }}</span>
+                <!-- TODO: show Scheme URI here -->
             </div>
         </div>
+        <div class="scheme-header-section">
 
-        <div class="header-row">
-            <div class="header-item">
-                <span class="header-item-label">{{ $gettext("Owner:") }}</span>
-                <span>{{ data?.principalUser || $gettext("Anonymous") }}</span>
+            <div class="header-row">
+                <!-- TODO: Life Cycle mgmt functionality goes here -->
+                <div class="header-item">
+                    <span class="header-item-label">{{
+                        $gettext("Life cycle state:")
+                    }}</span>
+                    <span class="header-item-value">{{ data?.lifeCycleState }}</span>
+                </div>
+            </div>
+            <div class="header-row">
+                <div class="header-item">
+                    <span class="header-item-label">{{ $gettext("Owner:") }}</span>
+                    <span class="header-item-value">{{ data?.principalUser || $gettext("Anonymous") }}</span>
+                </div>
+            </div>
+
+            <!-- TODO: Load Scheme languages here -->
+            <div class="header-row language-chip-container">
+                <span class="scheme-language">{{ $gettext("English (en)") }}</span>
+                <span class="scheme-language">{{ $gettext("German (de)") }}</span>
+                <span class="scheme-language">{{ $gettext("French (fr)") }}</span>
+                <span class="add-language">{{ $gettext("Add Language") }}</span>
             </div>
         </div>
-
-        <Divider />
     </div>
 </template>
 
 <style scoped>
-h2 {
-    margin-bottom: 1rem;
+.scheme-header {
+    padding: 1rem 1rem 1.25rem 1rem;
+    background: var(--p-slate-50);
+    border-bottom: 1px solid var(--p-neutral-300);
 }
+
+.scheme-header-panel {
+    padding-bottom: 0.5rem;
+}
+
+h2 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 400;
+}
+
+.scheme-label-lang {
+    font-size: .9rem;
+    color: var(--p-slate-400);
+}
+
 .p-button-link {
     padding: 0;
     margin: 0;
@@ -125,14 +164,44 @@ h2 {
 .header-row {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: baseline;
+}
+.uri-container {
+    justify-content: flex-start;
+}
+.language-chip-container {
+    justify-content: flex-start;
+    gap: 0.25rem;
+    margin-top: .25rem;
+}
+.add-language {
+    font-size: .9rem;
+    color: var(--p-primary-500);
+    text-decoration: underline;
+    padding: 0 .5rem;
 }
 .header-item {
     display: inline-flex;
     margin-inline-end: 1rem;
+    align-items: baseline;
 }
 .header-item-label {
-    font-weight: bold;
+    font-weight: 400;
+    font-size: .9rem;
+    color: var(--p-slate-500);
     margin-inline-end: 0.25rem;
+}
+.header-item-value {
+    font-size: .9rem;
+    color: var(--p-primary-500);
+}
+
+.scheme-language {
+    padding: 0.5rem 1rem;
+    background: var(--p-menubar-item-icon-color);
+    border: 1px solid var(--p-menubar-item-icon-color);
+    border-radius: 2px;
+    font-size: .9rem;
+    color: var(--p-content-color);
 }
 </style>
