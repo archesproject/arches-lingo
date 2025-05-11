@@ -97,6 +97,7 @@ async function deleteSectionValue(tileId: string) {
             />
             <Column
                 :header="props.metaStringText.name"
+                style="max-width: 50rem;"
                 sortable
             >
                 <template #body="slotProps">
