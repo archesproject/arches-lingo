@@ -170,6 +170,35 @@ export interface ConceptStatementAliases extends AliasedData {
 
 export type ConceptStatement = TileData<ConceptStatementAliases>;
 
+export interface ConceptRelationAliases extends AliasedData {
+    relation_status_ascribed_comparate: ResourceInstanceReference[];
+    relation_status_ascribed_relation: ReferenceSelectFetchedOption[];
+    relation_status_status: ReferenceSelectFetchedOption[];
+    relation_status_status_metatype: ReferenceSelectFetchedOption[];
+    relation_status_timespan_begin_of_the_begin: string;
+    relation_status_timespan_end_of_the_end: string;
+    relation_status_data_assignment_actor: ResourceInstanceReference[];
+    relation_status_data_assignment_object_used: ResourceInstanceReference[];
+    relation_status_data_assignment_type: ReferenceSelectFetchedOption[];
+}
+
+export type ConceptRelationStatus = TileData<ConceptRelationAliases>;
+
+export interface ConceptMatchAliases extends AliasedData {
+    match_status_ascribed_comparate: ResourceInstanceReference[];
+    match_status_ascribed_relation: ReferenceSelectFetchedOption[];
+    match_status_status: ReferenceSelectFetchedOption[];
+    match_status_status_metatype: ReferenceSelectFetchedOption[];
+    match_status_timespan_begin_of_the_begin: string;
+    match_status_timespan_end_of_the_end: string;
+    match_status_data_assignment_actor: ResourceInstanceReference[];
+    match_status_data_assignment_object_used: ResourceInstanceReference[];
+    match_status_data_assignment_type: ReferenceSelectFetchedOption[];
+    uri: Url;
+}
+
+export type ConceptMatchStatus = TileData<ConceptMatchAliases>;
+
 export interface SchemeStatementAliases extends AliasedData {
     statement_content_n1: string;
     statement_language_n1?: ReferenceSelectFetchedOption[];
@@ -287,6 +316,7 @@ export interface IconLabels {
 export interface SearchResultItem {
     id: string;
     labels: Label[];
+    label?: string;
     parents: {
         id: string;
         labels: Label[];

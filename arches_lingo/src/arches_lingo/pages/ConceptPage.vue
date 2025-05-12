@@ -6,6 +6,8 @@ import ComponentManager from "@/arches_lingo/components/generic/ComponentManager
 import ConceptHeader from "@/arches_lingo/components/concept/ConceptHeader.vue";
 import ConceptLabel from "@/arches_lingo/components/concept/ConceptLabel/ConceptLabel.vue";
 import ConceptNote from "@/arches_lingo/components/concept/ConceptNote/ConceptNote.vue";
+import ConceptRelationship from "@/arches_lingo/components/concept/ConceptRelationship/ConceptRelationship.vue";
+import ConceptMatch from "@/arches_lingo/components/concept/ConceptMatch/ConceptMatch.vue";
 import ConceptImages from "@/arches_lingo/components/concept/ConceptImages/ConceptImages.vue";
 
 const { $gettext } = useGettext();
@@ -31,6 +33,20 @@ const componentData = [
         sectionTitle: $gettext("Concept Note"),
         graphSlug: "concept",
         nodegroupAlias: "statement",
+    },
+    {
+        component: ConceptRelationship,
+        componentName: "ConceptRelationship",
+        sectionTitle: $gettext("Associative Relationship"),
+        graphSlug: "concept",
+        nodegroupAlias: "relation_status",
+    },
+    {
+        component: ConceptMatch,
+        componentName: "ConceptMatch",
+        sectionTitle: $gettext("Matched"),
+        graphSlug: "concept",
+        nodegroupAlias: "match_status",
     },
     {
         component: ConceptImages,
