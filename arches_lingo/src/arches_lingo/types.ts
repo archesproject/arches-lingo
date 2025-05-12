@@ -1,6 +1,6 @@
 import type { Ref } from "vue";
 import type { TreeNode } from "primevue/treenode";
-import type { Label } from "@/arches_vue_utils/types.ts";
+import type { Label } from "@/arches_component_lab/types.ts";
 import type { EDIT, VIEW } from "@/arches_lingo/constants.ts";
 import type { ReferenceSelectFetchedOption } from "@/arches_controlled_lists/widgets/types.ts";
 import type {
@@ -249,6 +249,7 @@ export interface ConceptInstance {
         appellative_status?: AppellativeStatus[];
         concept_statement?: ConceptStatement[];
         depicting_digital_asset_internal?: ConceptImages[];
+        classification_status?: ConceptClassificationStatusAliases[];
     };
 }
 

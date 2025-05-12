@@ -66,7 +66,7 @@ const viewModel = function(params) {
                         null,
                         function(){}
                     )
-                )
+                );
             }).always(() => {
                 self.loading(false);
             });

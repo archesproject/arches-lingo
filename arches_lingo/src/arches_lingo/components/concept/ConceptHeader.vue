@@ -1,10 +1,15 @@
 <script setup lang="ts">
 import { inject, onMounted, ref } from "vue";
-import { useGettext } from "vue3-gettext";
 
+import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
+
 import Button from "primevue/button";
 import Divider from "primevue/divider";
+import ProgressSpinner from "primevue/progressspinner";
+
+import ResourceInstanceMultiSelectWidget from "@/arches_component_lab/widgets/ResourceInstanceMultiSelectWidget/ResourceInstanceMultiSelectWidget.vue";
+
 import {
     DEFAULT_ERROR_TOAST_LIFE,
     ERROR,
@@ -15,31 +20,55 @@ import {
 import { fetchLingoResource } from "@/arches_lingo/api.ts";
 import { extractDescriptors } from "@/arches_lingo/utils.ts";
 
-import ResourceInstanceMultiSelectWidget from "@/arches_component_lab/widgets/ResourceInstanceMultiSelectWidget/ResourceInstanceMultiSelectWidget.vue";
-
 import type {
     ConceptHeaderData,
     ConceptClassificationStatusAliases,
     ResourceInstanceResult,
     DataComponentMode,
-} from "@/arches_lingo/types";
-import type { Language } from "@/arches_vue_utils/types";
+} from "@/arches_lingo/types.ts";
 
-const toast = useToast();
-const { $gettext } = useGettext();
-const systemLanguage = inject(systemLanguageKey) as Language;
+import type { Language } from "@/arches_component_lab/types.ts";
 
 const props = defineProps<{
     mode: DataComponentMode;
     sectionTitle: string;
     componentName: string;
     graphSlug: string;
-    resourceInstanceId: string;
+    resourceInstanceId: string | undefined;
     nodegroupAlias: string;
 }>();
 
+const toast = useToast();
+const { $gettext } = useGettext();
+const systemLanguage = inject(systemLanguageKey) as Language;
+
 const concept = ref<ResourceInstanceResult>();
 const data = ref<ConceptHeaderData>();
+const isLoading = ref(true);
+
+onMounted(async () => {
+    try {
+        if (!props.resourceInstanceId) {
+            return;
+        }
+
+        concept.value = await fetchLingoResource(
+            props.graphSlug,
+            props.resourceInstanceId,
+        );
+
+        extractConceptHeaderData(concept.value!);
+    } catch (error) {
+        toast.add({
+            severity: ERROR,
+            life: DEFAULT_ERROR_TOAST_LIFE,
+            summary: $gettext("Unable to fetch concept"),
+            detail: error instanceof Error ? error.message : undefined,
+        });
+    } finally {
+        isLoading.value = false;
+    }
+});
 
 function extractConceptHeaderData(concept: ResourceInstanceResult) {
     const aliased_data = concept?.aliased_data;
@@ -69,87 +98,76 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
         parentConcepts: parentConcepts,
     };
 }
-
-onMounted(async () => {
-    try {
-        concept.value = await fetchLingoResource(
-            props.graphSlug,
-            props.resourceInstanceId,
-        );
-    } catch (error) {
-        toast.add({
-            severity: ERROR,
-            life: DEFAULT_ERROR_TOAST_LIFE,
-            summary: $gettext("Unable to fetch concept"),
-            detail: error instanceof Error ? error.message : undefined,
-        });
-    }
-    if (concept.value) {
-        extractConceptHeaderData(concept.value);
-    }
-});
 </script>
 
 <template>
-    <div class="header-row">
-        <h2>{{ data?.descriptor?.name }} ({{ data?.descriptor?.language }})</h2>
-        <!-- TODO: Life Cycle mgmt functionality goes here -->
-        <div class="header-item">
-            <span class="header-item-label">{{
-                $gettext("Life cycle state:")
-            }}</span>
-            <span>{{ data?.lifeCycleState }}</span>
+    <ProgressSpinner
+        v-if="isLoading"
+        style="width: 100%"
+    />
+    <div v-else>
+        <div class="header-row">
+            <h2>
+                {{ data?.descriptor?.name }} ({{ data?.descriptor?.language }})
+            </h2>
+            <!-- TODO: Life Cycle mgmt functionality goes here -->
+            <div class="header-item">
+                <span class="header-item-label">{{
+                    $gettext("Life cycle state:")
+                }}</span>
+                <span>{{ data?.lifeCycleState }}</span>
+            </div>
         </div>
+        <div class="header-row">
+            <div class="header-item">
+                <span class="header-item-label">{{ $gettext("URI:") }}</span>
+                <Button
+                    :label="data?.uri || '--'"
+                    variant="link"
+                    as="a"
+                    :href="data?.uri"
+                    target="_blank"
+                    rel="noopener"
+                    :disabled="!data?.uri"
+                ></Button>
+            </div>
+        </div>
+        <div class="header-row">
+            <!-- TODO: Human-reable conceptid to be displayed here -->
+            <div class="header-item">
+                <span class="header-item-label">{{ $gettext("Scheme:") }}</span>
+                <!-- TODO: Allow resource multiselect to route within lingo, not to resource pg -->
+                <ResourceInstanceMultiSelectWidget
+                    :graph-slug="props.graphSlug"
+                    node-alias="part_of_scheme"
+                    :initial-value="data?.partOfScheme"
+                    :mode="VIEW"
+                    :show-label="false"
+                ></ResourceInstanceMultiSelectWidget>
+            </div>
+            <!-- TODO: export to rdf/skos/json-ld buttons go here -->
+        </div>
+        <div class="header-row">
+            <div class="header-item">
+                <span class="header-item-label">{{
+                    $gettext("Parent Concept(s):")
+                }}</span>
+                <!-- TODO: Allow resource multiselect to route within lingo, not to resource pg -->
+                <ResourceInstanceMultiSelectWidget
+                    :graph-slug="props.graphSlug"
+                    node-alias="classification_status_ascribed_classification"
+                    :initial-value="data?.parentConcepts"
+                    :mode="VIEW"
+                    :show-label="false"
+                ></ResourceInstanceMultiSelectWidget>
+            </div>
+            <div class="header-item">
+                <span class="header-item-label">{{ $gettext("Owner:") }}</span>
+                <span>{{ data?.principalUser || $gettext("Anonymous") }}</span>
+            </div>
+        </div>
+        <Divider />
     </div>
-    <div class="header-row">
-        <div class="header-item">
-            <span class="header-item-label">{{ $gettext("URI:") }}</span>
-            <Button
-                :label="data?.uri || '--'"
-                variant="link"
-                as="a"
-                :href="data?.uri"
-                target="_blank"
-                rel="noopener"
-                :disabled="!data?.uri"
-            ></Button>
-        </div>
-    </div>
-    <div class="header-row">
-        <!-- TODO: Human-reable conceptid to be displayed here -->
-        <div class="header-item">
-            <span class="header-item-label">{{ $gettext("Scheme:") }}</span>
-            <!-- TODO: Allow resource multiselect to route within lingo, not to resource pg -->
-            <ResourceInstanceMultiSelectWidget
-                :graph-slug="props.graphSlug"
-                node-alias="part_of_scheme"
-                :initial-value="data?.partOfScheme"
-                :mode="VIEW"
-                :show-label="false"
-            ></ResourceInstanceMultiSelectWidget>
-        </div>
-        <!-- TODO: export to rdf/skos/json-ld buttons go here -->
-    </div>
-    <div class="header-row">
-        <div class="header-item">
-            <span class="header-item-label">{{
-                $gettext("Parent Concept(s):")
-            }}</span>
-            <!-- TODO: Allow resource multiselect to route within lingo, not to resource pg -->
-            <ResourceInstanceMultiSelectWidget
-                :graph-slug="props.graphSlug"
-                node-alias="classification_status_ascribed_classification"
-                :initial-value="data?.parentConcepts"
-                :mode="VIEW"
-                :show-label="false"
-            ></ResourceInstanceMultiSelectWidget>
-        </div>
-        <div class="header-item">
-            <span class="header-item-label">{{ $gettext("Owner:") }}</span>
-            <span>{{ data?.principalUser || $gettext("Anonymous") }}</span>
-        </div>
-    </div>
-    <Divider />
 </template>
 
 <style scoped>
