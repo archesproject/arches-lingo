@@ -1,7 +1,11 @@
-import { getItemLabel } from "@/arches_vue_utils/utils.ts";
+import { getItemLabel } from "@/arches_component_lab/utils.ts";
+import { routeNames } from "@/arches_lingo/routes.ts";
+
+import { createLingoResource, upsertLingoTile } from "@/arches_lingo/api.ts";
+import { NEW_CONCEPT } from "@/arches_lingo/constants.ts";
 
 import type { TreeNode } from "primevue/treenode";
-import type { Language } from "@/arches_vue_utils/types";
+import type { Language } from "@/arches_component_lab/types.ts";
 import type {
     Concept,
     IconLabels,
@@ -11,6 +15,8 @@ import type {
     Scheme,
     SearchResultItem,
 } from "@/arches_lingo/types";
+import type { Router } from "vue-router/dist/vue-router";
+import type { ConceptInstance } from "@/arches_lingo/types.ts";
 
 // Duck-typing helpers
 export function dataIsScheme(data: Concept | Scheme) {
@@ -18,6 +24,33 @@ export function dataIsScheme(data: Concept | Scheme) {
 }
 export function dataIsConcept(data: Concept | Scheme) {
     return !dataIsScheme(data);
+}
+
+export function navigateToSchemeOrConcept(
+    router: Router,
+    value: Concept | Scheme | typeof NEW_CONCEPT,
+    queryParams: { [key: string]: string } = {},
+) {
+    // TODO: Consider adding some sort of short-circuiting of fetchUser
+    if (value === NEW_CONCEPT) {
+        router.push({
+            name: routeNames.concept,
+            params: { id: "new" },
+            query: queryParams,
+        });
+    } else if (dataIsScheme(value)) {
+        router.push({
+            name: routeNames.scheme,
+            params: { id: value.id },
+            query: queryParams,
+        });
+    } else if (dataIsConcept(value)) {
+        router.push({
+            name: routeNames.concept,
+            params: { id: value.id },
+            query: queryParams,
+        });
+    }
 }
 
 // Tree builder
@@ -31,6 +64,7 @@ export function treeFromSchemes(
     function buildNode(
         item: Concept | Scheme,
         childNodes: TreeNode[],
+        schemeId: string,
     ): TreeNode {
         return {
             key: item.id,
@@ -40,7 +74,10 @@ export function treeFromSchemes(
                 systemLanguage.code,
             ).value,
             children: childNodes,
-            data: item,
+            data: {
+                ...item,
+                schemeId,
+            },
             icon: dataIsScheme(item) ? "pi pi-folder" : "pi pi-tag",
             iconLabel: dataIsScheme(item)
                 ? iconLabels.scheme
@@ -53,10 +90,11 @@ export function treeFromSchemes(
     function processItem(
         item: Concept | Scheme,
         children: Concept[],
+        schemeId: string,
     ): NodeAndParentInstruction {
         let childrenAsNodes: TreeNode[];
         const nodesAndInstructions = children.map((child) =>
-            processItem(child, child.narrower),
+            processItem(child, child.narrower, schemeId),
         );
         const parentOfFocusedNode = nodesAndInstructions.find(
             (obj) => obj.shouldHideSiblings,
@@ -67,7 +105,7 @@ export function treeFromSchemes(
             childrenAsNodes = nodesAndInstructions.map((obj) => obj.node);
         }
 
-        const node: TreeNode = buildNode(item, childrenAsNodes);
+        const node: TreeNode = buildNode(item, childrenAsNodes, schemeId);
         let shouldHideSiblings = !!parentOfFocusedNode;
         if (!shouldHideSiblings) {
             const focalNode = node.children!.find(
@@ -84,7 +122,10 @@ export function treeFromSchemes(
     // If this scheme is focused, immediately process and return it.
     const focalScheme = schemes.find((sch) => sch.id === focusedNode?.data?.id);
     if (focalScheme) {
-        return [processItem(focalScheme, focalScheme.top_concepts).node];
+        return [
+            processItem(focalScheme, focalScheme.top_concepts, focalScheme.id)
+                .node,
+        ];
     }
 
     // Otherwise, process schemes until a focused node is found.
@@ -93,6 +134,7 @@ export function treeFromSchemes(
         const { node, shouldHideSiblings } = processItem(
             scheme,
             scheme.top_concepts,
+            scheme.id,
         );
         if (shouldHideSiblings) {
             return [node];
@@ -178,4 +220,52 @@ export function extractDescriptors(
         }
     }
     return schemeDescriptor;
+}
+
+export async function createOrUpdateConcept(
+    formData: Record<string, unknown>,
+    graphSlug: string,
+    nodegroupAlias: string,
+    scheme: string,
+    parent: string,
+    router: Router,
+    resourceInstanceId?: string,
+    tileId?: string,
+): Promise<string> {
+    if (!resourceInstanceId) {
+        const isTop = scheme === parent;
+
+        const aliased_data = {
+            [nodegroupAlias]: [formData],
+            part_of_scheme: { part_of_scheme: scheme },
+        };
+
+        if (isTop) {
+            aliased_data.top_concept_of = [{ top_concept_of: parent }];
+        } else {
+            aliased_data.classification_status = [
+                { classification_status_ascribed_classification: parent },
+            ];
+        }
+
+        const concept = await createLingoResource(
+            { aliased_data } as ConceptInstance,
+            graphSlug,
+        );
+
+        await router.push({
+            name: graphSlug,
+            params: { id: concept.resourceinstanceid },
+        });
+
+        return concept.aliased_data[nodegroupAlias][0].tileid;
+    } else {
+        const tile = await upsertLingoTile(graphSlug, nodegroupAlias, {
+            resourceinstance: resourceInstanceId,
+            aliased_data: { ...formData },
+            tileid: tileId!,
+        });
+
+        return tile.tileid;
+    }
 }

@@ -16,13 +16,6 @@ export const LingoPreset = definePreset(ArchesPreset, {
         ...lingoColors,
     },
     semantic: {
-        focusRing: {
-            width: "0.35rem",
-            style: "solid",
-            color: "{primary-color}",
-            offset: "0.125rem",
-            borderRadius: "0.125rem",
-        },
         colorScheme: {
             light: {
                 primary: palette(archesPrimitives.arches.blue),

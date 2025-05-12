@@ -23,8 +23,9 @@ import PageHeader from "@/arches_lingo/components/header/PageHeader.vue";
 import SideNav from "@/arches_lingo/components/sidenav/SideNav.vue";
 
 import type { Ref } from "vue";
-import type { Language } from "@/arches_vue_utils/types";
+import type { Language } from "@/arches_component_lab/types";
 import type { User } from "@/arches_lingo/types";
+import type { RouteLocationNormalizedLoadedGeneric } from "vue-router";
 
 const user = ref<User | null>(null);
 const setUser = (userToSet: User | null) => {
@@ -42,19 +43,51 @@ const route = useRoute();
 const toast = useToast();
 const { $gettext } = useGettext();
 
+async function checkUserAuthentication(
+    to: RouteLocationNormalizedLoadedGeneric,
+) {
+    const userData = await fetchUser();
+    setUser(userData);
+
+    const requiresAuthentication = to.matched.some(
+        (record) => record.meta.requiresAuthentication,
+    );
+    if (requiresAuthentication && userData.username === ANONYMOUS) {
+        throw new Error($gettext("Authentication required."));
+    }
+}
+
+function carryOverShowHierarchy(to: RouteLocationNormalizedLoadedGeneric) {
+    const currentUrl = new URL(window.location.href);
+    const currentShowHierarchy = currentUrl.searchParams.get("showHierarchy");
+
+    if (
+        currentShowHierarchy &&
+        to.matched.some((record) => record.meta.shouldShowHierarchy) &&
+        !to.query.showHierarchy
+    ) {
+        return {
+            name: to.name,
+            params: to.params,
+            query: {
+                ...to.query,
+                showHierarchy: currentShowHierarchy,
+            },
+        };
+    }
+    return null;
+}
+
 router.beforeEach(async (to, _from, next) => {
     try {
-        let userData = await fetchUser();
-        setUser(userData);
+        await checkUserAuthentication(to);
+        const newLocation = carryOverShowHierarchy(to);
 
-        const requiresAuthentication = to.matched.some(
-            (record) => record.meta.requiresAuthentication,
-        );
-        if (requiresAuthentication && userData.username === ANONYMOUS) {
-            throw new Error();
-        } else {
-            next();
+        if (newLocation) {
+            return next(newLocation);
         }
+
+        next();
     } catch (error) {
         if (to.name !== routeNames.root) {
             toast.add({

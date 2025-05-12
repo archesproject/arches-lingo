@@ -1253,7 +1253,7 @@
                 "source_identifier_id": null,
                 "sourcebranchpublication_id": null
             },
-            "slug": "person",
+            "slug": "person_rdm_system",
             "source_identifier_id": null,
             "subtitle": "An individual, named human person",
             "template_id": "50000000-0000-0000-0000-000000000001",

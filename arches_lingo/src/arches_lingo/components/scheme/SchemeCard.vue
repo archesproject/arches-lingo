@@ -7,7 +7,7 @@ import Card from "primevue/card";
 
 import { extractDescriptors } from "@/arches_lingo/utils.ts";
 
-import type { Language } from "@/arches_vue_utils/types";
+import type { Language } from "@/arches_component_lab/types";
 import type { ResourceInstanceResult } from "@/arches_lingo/types";
 
 const systemLanguage = inject(systemLanguageKey) as Language;
