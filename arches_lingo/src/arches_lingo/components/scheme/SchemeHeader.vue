@@ -101,35 +101,34 @@ onMounted(async () => {
                     <span class="header-item-value">CSV | SKOS | RDF | JSON-LD</span>
                 </div>
             </div>
+
+            <!-- TODO: show Scheme URI here -->
             <div class="header-row uri-container">
                 <span class="header-item-label">{{ $gettext("URI:") }}</span>
-                <!-- TODO: show Scheme URI here -->
-            </div>
-        </div>
-        <div class="scheme-header-section">
-
-            <div class="header-row">
-                <!-- TODO: Life Cycle mgmt functionality goes here -->
-                <div class="header-item">
-                    <span class="header-item-label">{{
-                        $gettext("Life cycle state:")
-                    }}</span>
-                    <span class="header-item-value">{{ data?.lifeCycleState }}</span>
-                </div>
-            </div>
-            <div class="header-row">
-                <div class="header-item">
-                    <span class="header-item-label">{{ $gettext("Owner:") }}</span>
-                    <span class="header-item-value">{{ data?.principalUser || $gettext("Anonymous") }}</span>
-                </div>
             </div>
 
-            <!-- TODO: Load Scheme languages here -->
-            <div class="header-row language-chip-container">
-                <span class="scheme-language">{{ $gettext("English (en)") }}</span>
-                <span class="scheme-language">{{ $gettext("German (de)") }}</span>
-                <span class="scheme-language">{{ $gettext("French (fr)") }}</span>
-                <span class="add-language">{{ $gettext("Add Language") }}</span>
+            <div class="header-row metadata-container">
+
+                <!-- TODO: Load Scheme languages here -->
+                <div class="language-chip-container">
+                    <span class="scheme-language">{{ $gettext("English (en)") }}</span>
+                    <span class="scheme-language">{{ $gettext("German (de)") }}</span>
+                    <span class="scheme-language">{{ $gettext("French (fr)") }}</span>
+                    <span class="add-language">{{ $gettext("Add Language") }}</span>
+                </div>
+                
+                <div class="lifecycle-container">
+                    <div class="header-item">
+                        <span class="header-item-label">{{
+                            $gettext("Life cycle state:")
+                        }}</span>
+                        <span class="header-item-value">{{ data?.lifeCycleState }}</span>
+                    </div>
+                    <div class="header-item" style="padding-top: .1rem;">
+                        <span class="header-item-label">{{ $gettext("Owner:") }}</span>
+                        <span class="header-item-value">{{ data?.principalUser || $gettext("Anonymous") }}</span>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -169,10 +168,20 @@ h2 {
 .uri-container {
     justify-content: flex-start;
 }
-.language-chip-container {
-    justify-content: flex-start;
+.metadata-container {
     gap: 0.25rem;
-    margin-top: .25rem;
+    margin-top: .5rem;
+    justify-content: space-between;
+    align-items: anchor-center;
+}
+.language-chip-container {
+    display: flex; gap: .25rem; 
+    align-items: center;
+}
+.lifecycle-container {
+    display: flex; 
+    flex-direction: column;
+    align-items: end;
 }
 .add-language {
     font-size: .9rem;
