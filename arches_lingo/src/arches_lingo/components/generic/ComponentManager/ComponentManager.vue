@@ -112,6 +112,7 @@ provide("refreshReportSection", refreshReportSection);
     <Splitter style="height: 100%; border-radius: 0px;">
         <SplitterPanel
             v-show="editorState !== MAXIMIZED"
+            class="content"
             :size="50"
         >
             <div class="splitter-panel-content">
@@ -159,6 +160,9 @@ provide("refreshReportSection", refreshReportSection);
 </template>
 
 <style scoped>
+.content {
+    overflow: auto;
+}
 :deep(.p-splitter) {
     border-radius: 0;
 }

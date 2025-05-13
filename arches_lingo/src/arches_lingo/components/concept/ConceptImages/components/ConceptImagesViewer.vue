@@ -169,14 +169,14 @@ function confirmDelete() {
 .section-header {
     display: flex;
     justify-content: space-between;
-    align-items: baseline;
+    align-items: center;
     border-bottom: 1px solid var(--p-form-field-border-color);
     padding-bottom: .5rem;
 }
 
 h2 {
     margin: 0;
-    font-size: 1.1rem;
+    font-size: 1.2rem;
     font-weight: 400;
     color: var(--p-neutral-500);
 }
