@@ -27,9 +27,9 @@ const openEditor = inject<(componentName: string) => void>("openEditor");
 
 const metaStringLabel: MetaStringText = {
     deleteConfirm: $gettext("Are you sure you want to delete this note?"),
-    language: $gettext("Note Language"),
-    name: $gettext("Note Name"),
-    type: $gettext("Note Type"),
+    language: $gettext("Language"),
+    name: $gettext("Note"),
+    type: $gettext("Type"),
     noRecords: $gettext("No concept notes were found."),
 };
 </script>
@@ -107,6 +107,8 @@ const metaStringLabel: MetaStringText = {
     display: flex;
     justify-content: space-between;
     align-items: baseline;
+    border-bottom: 1px solid var(--p-form-field-border-color);
+    padding-bottom: .5rem;
 }
 
 h2 {
@@ -122,6 +124,15 @@ h2 {
     font-weight: 400;
     min-width: 10rem;
     border-radius: 2px;
+}
+
+:deep(.p-datatable-header-cell) {
+    padding: 0.9rem 1rem;
+}
+
+:deep(.p-datatable-tbody > tr > td ) {
+    font-size: .95rem;
+    padding: .4rem 1rem;
 }
 
 :deep(.p-datatable-column-title) {
