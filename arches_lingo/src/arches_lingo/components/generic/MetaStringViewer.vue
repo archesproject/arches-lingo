@@ -195,11 +195,10 @@ async function deleteSectionValue(tileId: string) {
     border-color: var(--p-button-warn-active-background);
 }
 
---p-button-danger-hover-background
-
 .no-data {
-    margin: 0.1rem 0.5rem 1rem 0.5rem;
-    color: var(--p-slate-400);
+    padding: .5rem 0;
+    margin: 0;
+    color: var(--p-inputtext-placeholder-color)
 }
 
 :deep(.p-dialog) {
