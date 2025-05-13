@@ -28,18 +28,18 @@ const componentData = [
         nodegroupAlias: "appellative_status",
     },
     {
-        component: SchemeNamespace,
-        componentName: "SchemeNamespace",
-        sectionTitle: $gettext("Scheme Namespace"),
-        graphSlug: "scheme",
-        nodegroupAlias: "namespace",
-    },
-    {
         component: SchemeNote,
         componentName: "SchemeNote",
         sectionTitle: $gettext("Scheme Notes"),
         graphSlug: "scheme",
         nodegroupAlias: "statement",
+    },
+    {
+        component: SchemeNamespace,
+        componentName: "SchemeNamespace",
+        sectionTitle: $gettext("Scheme Namespace"),
+        graphSlug: "scheme",
+        nodegroupAlias: "namespace",
     },
     {
         component: SchemeStandard,
