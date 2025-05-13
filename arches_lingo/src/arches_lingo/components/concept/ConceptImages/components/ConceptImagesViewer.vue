@@ -71,88 +71,91 @@ function confirmDelete() {
 </script>
 
 <template>
-    <div class="section-header">
-        <h2>{{ props.sectionTitle }}</h2>
-        <Button
-            :label="$gettext('Add New Concept Image')"
-            @click="openEditor!(props.componentName)"
-        ></Button>
-    </div>
+    <div class="section">
+        <div class="section-header">
+            <h2>{{ props.sectionTitle }}</h2>
+            <Button
+                :label="$gettext('Add Image')"
+                class="add-button"
+                @click="openEditor!(props.componentName)"
+            ></Button>
+        </div>
 
-    <ProgressSpinner
-        v-if="isLoading"
-        style="width: 100%"
-    />
+        <ProgressSpinner
+            v-if="isLoading"
+            style="width: 100%"
+        />
 
-    <Message
-        v-else-if="configurationError"
-        severity="error"
-        size="small"
-    >
-        {{ configurationError.message }}
-    </Message>
+        <Message
+            v-else-if="configurationError"
+            severity="error"
+            size="small"
+        >
+            {{ configurationError.message }}
+        </Message>
 
-    <div v-else-if="!resources || !resources.length">
-        {{ $gettext("No concept images were found.") }}
-    </div>
+        <div class="section-message" v-else-if="!resources || !resources.length">
+            {{ $gettext("No concept images were found.") }}
+        </div>
 
-    <div
-        v-else
-        style="overflow-x: auto"
-    >
-        <div class="conceptImages">
-            <div
-                v-for="resource in resources"
-                :key="resource.resourceinstanceid"
-                class="conceptImage"
-            >
-                <div class="header">
-                    <label
-                        for="conceptImage"
-                        class="text"
-                    >
+        <div
+            v-else
+            style="overflow-x: auto"
+        >
+            <div class="conceptImages">
+                <div
+                    v-for="resource in resources"
+                    :key="resource.resourceinstanceid"
+                    class="conceptImage"
+                >
+                    <div class="header">
+                        <label
+                            for="conceptImage"
+                            class="text"
+                        >
+                            <NonLocalizedStringWidget
+                                node-alias="name_content"
+                                graph-slug="digital_object_rdm_system"
+                                :mode="VIEW"
+                                :initial-value="
+                                    resource.aliased_data.name.aliased_data
+                                        .name_content
+                                "
+                            />
+                        </label>
+                        <div class="buttons">
+                            <Button
+                                icon="pi pi-file-edit"
+                                @click="openEditor!(props.componentName)"
+                            />
+                            <Button
+                                icon="pi pi-trash"
+                                :aria-label="$gettext('Delete')"
+                                severity="danger"
+                                outlined
+                                @click="confirmDelete()"
+                            />
+                        </div>
+                    </div>
+                    <FileListWidget
+                        node-alias="content"
+                        graph-slug="digital_object_rdm_system"
+                        :initial-value="
+                            resource.aliased_data.content?.aliased_data.content
+                        "
+                        :mode="VIEW"
+                    />
+                    <div class="footer">
                         <NonLocalizedStringWidget
-                            node-alias="name_content"
+                            node-alias="statement_content"
                             graph-slug="digital_object_rdm_system"
                             :mode="VIEW"
                             :initial-value="
-                                resource.aliased_data.name.aliased_data
-                                    .name_content
+                                resource.aliased_data.statement?.aliased_data
+                                    .statement_content
                             "
                         />
-                    </label>
-                    <div class="buttons">
-                        <Button
-                            icon="pi pi-file-edit"
-                            @click="openEditor!(props.componentName)"
-                        />
-                        <Button
-                            icon="pi pi-trash"
-                            :aria-label="$gettext('Delete')"
-                            severity="danger"
-                            outlined
-                            @click="confirmDelete()"
-                        />
                     </div>
-                </div>
-                <FileListWidget
-                    node-alias="content"
-                    graph-slug="digital_object_rdm_system"
-                    :initial-value="
-                        resource.aliased_data.content?.aliased_data.content
-                    "
-                    :mode="VIEW"
-                />
-                <div class="footer">
-                    <NonLocalizedStringWidget
-                        node-alias="statement_content"
-                        graph-slug="digital_object_rdm_system"
-                        :mode="VIEW"
-                        :initial-value="
-                            resource.aliased_data.statement?.aliased_data
-                                .statement_content
-                        "
-                    />
                 </div>
             </div>
         </div>
@@ -160,11 +163,35 @@ function confirmDelete() {
 </template>
 
 <style scoped>
+.section {
+    padding: 1rem 1rem 1.25rem 1rem;
+}
 .section-header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    border-bottom: 0.125rem solid var(--p-menubar-border-color);
+    align-items: baseline;
+    border-bottom: 1px solid var(--p-form-field-border-color);
+    padding-bottom: .5rem;
+}
+
+h2 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 400;
+    color: var(--p-neutral-500);
+}
+
+.add-button {
+    height: 2.0rem;
+    font-size: 0.9rem;
+    font-weight: 400;
+    min-width: 10rem;
+    border-radius: 2px;
+}
+
+.section-message {
+    padding: .5rem 0;
+    color: var(--p-inputtext-placeholder-color)
 }
 
 .conceptImages {
