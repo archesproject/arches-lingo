@@ -39,85 +39,134 @@ const metaStringLabel: MetaStringText = {
 </script>
 
 <template>
-    <div class="section-header">
-        <h2>{{ props.sectionTitle }}</h2>
+    <div class="section">
+        <div class="section-header">
+            <h2>{{ props.sectionTitle }}</h2>
 
-        <Button
-            :label="$gettext('Add New Scheme Label')"
-            @click="openEditor!(props.componentName)"
-        ></Button>
-    </div>
+            <Button
+                :label="$gettext('Add Label')"
+                class="add-button"
+                @click="openEditor!(props.componentName)"
+            ></Button>
+        </div>
 
-    <MetaStringViewer
-        :meta-strings="props.tileData"
-        :meta-string-text="metaStringLabel"
-        :component-name="props.componentName"
-        :graph-slug="props.graphSlug"
-        :nodegroup-alias="props.nodegroupAlias"
-    >
-        <template #name="{ rowData }">
-            <NonLocalizedStringWidget
-                :graph-slug="props.graphSlug"
-                node-alias="appellative_status_ascribed_name_content"
-                :initial-value="
-                    rowData.aliased_data
-                        .appellative_status_ascribed_name_content
-                "
-                :mode="VIEW"
-                :show-label="false"
-            />
-        </template>
-        <template #type="{ rowData }">
-            <ReferenceSelectWidget
-                :graph-slug="props.graphSlug"
-                node-alias="appellative_status_ascribed_relation"
-                :initial-value="
-                    rowData.aliased_data.appellative_status_ascribed_relation
-                "
-                :mode="VIEW"
-                :show-label="false"
-            />
-        </template>
-        <template #language="{ rowData }">
-            <ReferenceSelectWidget
-                :graph-slug="props.graphSlug"
-                node-alias="appellative_status_ascribed_name_language"
-                :initial-value="
-                    rowData.aliased_data
-                        .appellative_status_ascribed_name_language
-                "
-                :mode="VIEW"
-                :show-label="false"
-            />
-        </template>
-        <template #drawer="{ rowData }">
-            <ResourceInstanceMultiSelectWidget
-                :graph-slug="props.graphSlug"
-                node-alias="appellative_status_data_assignment_object_used"
-                :initial-value="
-                    rowData.aliased_data
-                        .appellative_status_data_assignment_object_used
-                "
-                :mode="VIEW"
-            />
-            <ResourceInstanceMultiSelectWidget
-                :graph-slug="props.graphSlug"
-                node-alias="appellative_status_data_assignment_actor"
-                :initial-value="
-                    rowData.aliased_data
-                        .appellative_status_data_assignment_actor
-                "
-                :mode="VIEW"
-            />
-        </template>
-    </MetaStringViewer>
+        <MetaStringViewer
+            :meta-strings="props.tileData"
+            :meta-string-text="metaStringLabel"
+            :component-name="props.componentName"
+            :graph-slug="props.graphSlug"
+            :nodegroup-alias="props.nodegroupAlias"
+        >
+            <template #name="{ rowData }">
+                <NonLocalizedStringWidget
+                    :graph-slug="props.graphSlug"
+                    node-alias="appellative_status_ascribed_name_content"
+                    :initial-value="
+                        rowData.aliased_data
+                            .appellative_status_ascribed_name_content
+                    "
+                    :mode="VIEW"
+                    :show-label="false"
+                />
+            </template>
+            <template #type="{ rowData }">
+                <ReferenceSelectWidget
+                    :graph-slug="props.graphSlug"
+                    node-alias="appellative_status_ascribed_relation"
+                    :initial-value="
+                        rowData.aliased_data.appellative_status_ascribed_relation
+                    "
+                    :mode="VIEW"
+                    :show-label="false"
+                />
+            </template>
+            <template #language="{ rowData }">
+                <ReferenceSelectWidget
+                    :graph-slug="props.graphSlug"
+                    node-alias="appellative_status_ascribed_name_language"
+                    :initial-value="
+                        rowData.aliased_data
+                            .appellative_status_ascribed_name_language
+                    "
+                    :mode="VIEW"
+                    :show-label="false"
+                />
+            </template>
+            <template #drawer="{ rowData }">
+                <ResourceInstanceMultiSelectWidget
+                    :graph-slug="props.graphSlug"
+                    node-alias="appellative_status_data_assignment_object_used"
+                    :initial-value="
+                        rowData.aliased_data
+                            .appellative_status_data_assignment_object_used
+                    "
+                    :mode="VIEW"
+                />
+                <ResourceInstanceMultiSelectWidget
+                    :graph-slug="props.graphSlug"
+                    node-alias="appellative_status_data_assignment_actor"
+                    :initial-value="
+                        rowData.aliased_data
+                            .appellative_status_data_assignment_actor
+                    "
+                    :mode="VIEW"
+                />
+            </template>
+        </MetaStringViewer>
+    </div>    
 </template>
 
 <style scoped>
+.section {
+    padding: 1rem 1rem 1.25rem 1rem;
+}
 .section-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 0.125rem solid var(--p-menubar-border-color);
+    border-bottom: 1px solid var(--p-form-field-border-color);
+    padding-bottom: .5rem;
+}
+
+h2 {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 400;
+    color: var(--p-neutral-500);
+}
+
+.add-button {
+    height: 2.0rem;
+    font-size: 0.9rem;
+    font-weight: 400;
+    min-width: 10rem;
+    border-radius: 2px;
+}
+
+:deep(.p-datatable-header-cell) {
+    padding: 0.9rem 1rem;
+}
+
+:deep(.p-datatable-tbody > tr > td ) {
+    font-size: .95rem;
+    padding: .4rem 1rem;
+}
+
+:deep(.p-datatable-column-title) {
+    font-weight: 400;
+    color: var(--p-neutral-500);
+}
+
+:deep(.p-datatable-row-expansion td) {
+    padding: 0.5rem 0rem;
+}
+
+:deep(.controls) {
+    flex-direction: row-reverse;
+}
+
+:deep(.controls button) {
+    border-radius: 50%;
+    margin: 0 0.15rem;
 }
 </style>

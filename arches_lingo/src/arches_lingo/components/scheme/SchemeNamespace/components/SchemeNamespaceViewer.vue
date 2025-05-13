@@ -26,40 +26,67 @@ const openEditor =
 
 const buttonLabel = computed(() => {
     if (props.tileData) {
-        return $gettext("Edit Scheme Namespace");
+        return $gettext("Edit Namespace");
     } else {
-        return $gettext("Add New Scheme Namespace");
+        return $gettext("Add Namespace");
     }
 });
 </script>
 
 <template>
-    <div class="section-header">
-        <h2>{{ props.sectionTitle }}</h2>
+    <div class="section">
+        <div class="section-header">
+            <h2>{{ props.sectionTitle }}</h2>
 
-        <Button
-            :label="buttonLabel"
-            @click="openEditor!(props.componentName, props.tileData?.tileid)"
-        ></Button>
-    </div>
+            <Button
+                :label="buttonLabel"
+                class="add-button"
+                @click="openEditor!(props.componentName, props.tileData?.tileid)"
+            ></Button>
+        </div>
 
-    <NonLocalizedStringWidget
-        v-if="props.tileData"
-        node-alias="namespace_name"
-        :graph-slug="props.graphSlug"
-        :initial-value="props.tileData.aliased_data.namespace_name"
-        :mode="VIEW"
-    />
-    <div v-else>
-        <p>{{ $gettext("No Scheme Namespaces were found.") }}</p>
+        <NonLocalizedStringWidget
+            v-if="props.tileData"
+            node-alias="namespace_name"
+            :graph-slug="props.graphSlug"
+            :initial-value="props.tileData.aliased_data.namespace_name"
+            :mode="VIEW"
+        />
+        <div v-else>
+            <p class="section-message">{{ $gettext("No Scheme Namespaces were found.") }}</p>
+        </div>
     </div>
 </template>
 
 <style scoped>
+.section {
+    padding: 1rem 1rem 1.25rem 1rem;
+}
 .section-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 0.125rem solid var(--p-menubar-border-color);
+    border-bottom: 1px solid var(--p-form-field-border-color);
+    padding-bottom: .5rem;
+}
+
+h2 {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 400;
+    color: var(--p-neutral-500);
+}
+
+.add-button {
+    height: 2.0rem;
+    font-size: 0.9rem;
+    font-weight: 400;
+    min-width: 10rem;
+    border-radius: 2px;
+}
+
+.section-message {
+    padding: .5rem 0;
+    color: var(--p-inputtext-placeholder-color);
 }
 </style>
