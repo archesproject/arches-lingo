@@ -1,13 +1,11 @@
 <script setup lang="ts">
 import LoginForm from "@/arches_lingo/components/login/LoginForm.vue";
-import LoginLinks from "@/arches_lingo/components/login/LoginLinks.vue";
 </script>
 
 <template>
     <div class="login-container">
         <LoginForm />
         <div class="spacer"></div>
-        <LoginLinks />
     </div>
 </template>
 
@@ -19,6 +17,7 @@ import LoginLinks from "@/arches_lingo/components/login/LoginLinks.vue";
     align-items: center;
     height: 100%;
     padding-bottom: 12rem;
+    background: var(--p-form-field-disabled-background);
 }
 
 .spacer {
