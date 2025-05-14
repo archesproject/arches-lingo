@@ -64,7 +64,7 @@ const submit = async () => {
             />
         </div>
         <div class="form-footer">
-            <h2>{{ $gettext("Get an account or add additional security to your login") }}</h2>
+            <h2>{{ $gettext("Get an account or use additional security to your login") }}</h2>
             <LoginLinks />
         </div>
     </form>
@@ -72,6 +72,7 @@ const submit = async () => {
 
 <style scoped>
 form {
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
     display: flex;
     flex-direction: column;
     padding: 2rem 2rem;
