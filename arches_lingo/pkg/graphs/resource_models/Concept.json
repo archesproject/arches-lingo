@@ -1849,61 +1849,6 @@
                     "widget_id": "10000000-0000-0000-0000-000000000001"
                 },
                 {
-                    "card_id": "bf73e58b-4888-11ee-8a8d-11afefc4bff7",
-                    "config": {
-                        "defaultValue": "",
-                        "i18n_properties": [
-                            "placeholder"
-                        ],
-                        "label": "Statement",
-                        "maxLength": null,
-                        "placeholder": {
-                            "en": "Enter text"
-                        },
-                        "uneditable": false,
-                        "width": "100%"
-                    },
-                    "id": "bf73e7d8-4888-11ee-8a8d-11afefc4bff7",
-                    "label": {
-                        "en": "Statement"
-                    },
-                    "node_id": "bf73e717-4888-11ee-8a8d-11afefc4bff7",
-                    "sortorder": 0,
-                    "source_identifier_id": null,
-                    "visible": true,
-                    "widget_id": "46ef064b-2611-4708-9f52-60136bd8a65b"
-                },
-                {
-                    "card_id": "bf73e58b-4888-11ee-8a8d-11afefc4bff7",
-                    "config": {
-                        "defaultValue": {
-                            "en": {
-                                "direction": "ltr",
-                                "value": ""
-                            }
-                        },
-                        "i18n_properties": [
-                            "placeholder"
-                        ],
-                        "label": "Statement Label",
-                        "maxLength": null,
-                        "placeholder": {
-                            "en": "Enter text"
-                        },
-                        "uneditable": false,
-                        "width": "100%"
-                    },
-                    "id": "bf73e7da-4888-11ee-8a8d-11afefc4bff7",
-                    "label": {
-                        "en": "Statement Label"
-                    },
-                    "node_id": "bf73e718-4888-11ee-8a8d-11afefc4bff7",
-                    "sortorder": 4,
-                    "source_identifier_id": null,
-                    "visible": false,
-                    "widget_id": "10000000-0000-0000-0000-000000000001"
-                },
-                {
                     "card_id": "bf73e5d3-4888-11ee-8a8d-11afefc4bff7",
                     "config": {
                         "defaultValue": {
