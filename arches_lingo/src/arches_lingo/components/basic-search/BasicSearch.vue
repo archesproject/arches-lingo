@@ -312,5 +312,12 @@ watch(searchResults, (searchResults) => {
 
 :deep(.p-autocomplete-overlay) {
     position: static !important;
+    margin-top: 0px !important;
+    border-top: 1px solid #ddd;
+    min-height: 3.25rem;
+}
+
+:deep(.p-autocomplete-option) {
+    height: 50px !important;
 }
 </style>

@@ -38,7 +38,7 @@ onMounted(async () => {
 </script>
 
 <template>
-    <div>
+    <div class="scheme-cards-container">
         <ul class="scheme-cards">
             <li
                 v-for="scheme in schemes"
@@ -51,6 +51,10 @@ onMounted(async () => {
 </template>
 
 <style scoped>
+.scheme-cards-container {
+    padding: 0rem 1rem;
+    font-family: 'Open Sans', 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+}
 .scheme-cards {
     display: flex;
     flex-wrap: wrap;
