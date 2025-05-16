@@ -212,20 +212,19 @@ class ConceptBuilder:
 
     def find_paths_to_root(self, working_path, conceptid) -> list[list[str]]:
         """Return an array of paths (path: an array of scheme & concept ids)."""
-
-        parent_ids = self.broader_concepts[conceptid]
-        if not parent_ids:
-            if schemes := sorted(self.schemes_by_top_concept[conceptid]):
-                working_path.insert(0, schemes[0])
-            return [working_path]
+        concept_and_scheme_parents = sorted(self.broader_concepts[conceptid]) + sorted(
+            self.schemes_by_top_concept[conceptid]
+        )
 
         collected_paths = []
-        for parent in parent_ids:
+        for parent in concept_and_scheme_parents:
             forked_path = working_path[:]
             forked_path.insert(0, parent)
             collected_paths.extend(self.find_paths_to_root(forked_path, parent))
 
-        return collected_paths
+        if concept_and_scheme_parents:
+            return collected_paths
+        return [working_path]
 
     def serialize_concept_label(self, label_tile: dict):
         scheme_name_type_labels = [

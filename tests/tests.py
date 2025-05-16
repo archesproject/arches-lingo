@@ -257,7 +257,19 @@ class ViewTests(TestCase):
                 result = json.loads(response.content)
                 self.assertEqual(len(result["data"]), expected_result_count, result)
 
-    def test_hierarchy(self):
+    def test_lineage(self):
+        # Supplement the test data with a tile that makes Concept 5
+        # also a top concept of the scheme (in addition to Concept 1).
+        TileModel.objects.create(
+            resourceinstance=self.concepts[4],
+            nodegroup_id=TOP_CONCEPT_OF_NODE_AND_NODEGROUP,
+            data={
+                TOP_CONCEPT_OF_NODE_AND_NODEGROUP: [
+                    {"resourceId": str(self.scheme.pk)},
+                ],
+            },
+        )
+
         response = self.client.get(
             reverse("api-search"), QUERY_STRING="term=Concept 5&maxEditDistance=0"
         )
@@ -265,7 +277,8 @@ class ViewTests(TestCase):
 
         self.assertIs(result["data"][0]["polyhierarchical"], True)
         # Since each concept was also created with a broader concept tile for
-        # the top concept (Concept 1), Concept 5 has 4 paths back to root.
+        # the top concept (Concept 1), Concept 5 has 4 paths back to root, plus
+        # another path directly to the Scheme from the extra tile created above.
         self.assertEqual(
             sorted(
                 [concept["labels"][0]["value"] for concept in path]
@@ -283,6 +296,7 @@ class ViewTests(TestCase):
                 ["Test Scheme", "Concept 1", "Concept 3", "Concept 4", "Concept 5"],
                 ["Test Scheme", "Concept 1", "Concept 4", "Concept 5"],
                 ["Test Scheme", "Concept 1", "Concept 5"],
+                ["Test Scheme", "Concept 5"],
             ],
         )
 
