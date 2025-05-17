@@ -10,7 +10,7 @@ import Message from "primevue/message";
 import MultiSelect from "primevue/multiselect";
 
 import { fetchConceptResources } from "@/arches_lingo/api.ts";
-import { getItemLabel } from "@/arches_vue_utils/utils.ts";
+import { getItemLabel } from "@/arches_component_lab/utils.ts";
 import { getParentLabels } from "@/arches_lingo/utils.ts";
 import { ENGLISH } from "@/arches_lingo/constants.ts";
 

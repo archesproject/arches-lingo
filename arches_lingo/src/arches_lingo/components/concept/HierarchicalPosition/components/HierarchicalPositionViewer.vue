@@ -19,7 +19,7 @@ import {
     ERROR,
     SECONDARY,
 } from "@/arches_lingo/constants.ts";
-import { getItemLabel } from "@/arches_vue_utils/utils.ts";
+import { getItemLabel } from "@/arches_component_lab/utils.ts";
 
 const props = defineProps<{
     data: SearchResultHierarchy[];
