@@ -45,52 +45,15 @@ onMounted(async () => {
             const sectionValue = await getSectionValue();
             tileData.value = sectionValue.aliased_data[props.nodegroupAlias];
         }
-        const parent_concepts =
-            tileData.value?.map(
-                (tile) =>
-                    tile.aliased_data
-                        .classification_status_ascribed_classification[0]
-                        .resourceId,
-            ) || [];
-
         const currentPosition = await getHierarchicalData(concepts.value);
         schemeId.value = currentPosition.data[0].parents[0].id;
-
-        if (tileData.value && tileData.value.length > 0) {
-            const parentsPosition = await getHierarchicalData(parent_concepts);
-            hierarchicalData.value = parentsPosition?.data.map(
-                (datum: SearchResultItem) => {
-                    const hierarchicalArray = datum.parents;
-                    hierarchicalArray.push(datum);
-                    hierarchicalArray.push(currentPosition.data[0]);
-                    return { searchResults: hierarchicalArray };
-                },
-            );
-            if (topConceptOfTileId.value) {
-                const topConceptHierarchy = [
-                    hierarchicalData.value![0].searchResults[0],
-                ];
-                topConceptHierarchy.push(currentPosition.data[0]);
-                hierarchicalData.value!.unshift({
-                    searchResults: topConceptHierarchy,
-                    tileid: topConceptOfTileId.value,
-                });
-            }
-        } else {
-            hierarchicalData.value = currentPosition.data.map(
-                (datum: SearchResultItem) => {
-                    const hierarchicalArray = datum.parents;
-                    hierarchicalArray.push(datum);
-                    return { searchResults: hierarchicalArray };
-                },
-            );
-        }
+ 
+        hierarchicalData.value = currentPosition.data[0].parents.map(
+            (parent: SearchResultItem) => ({ searchResults: parent })
+        );
 
         if (hierarchicalData.value && tileData.value) {
             for (const datum of hierarchicalData.value) {
-                if (datum.tileid) {
-                    continue;
-                }
                 datum.tileid = tileData.value.find(
                     (tile) =>
                         tile.aliased_data
@@ -98,6 +61,9 @@ onMounted(async () => {
                             .resourceId ===
                         datum.searchResults[datum.searchResults.length - 2].id,
                 )?.tileid;
+                if (!datum.tileid && topConceptOfTileId.value) {
+                    datum.tileid = topConceptOfTileId.value;
+                }
             }
         }
     }
