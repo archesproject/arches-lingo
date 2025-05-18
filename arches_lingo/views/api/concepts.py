@@ -127,10 +127,9 @@ class ConceptResourceView(ConceptTreeView):
                 concept_query = Concept.all()
 
             if term:
-                filtering_concept_ids = VwLabelValue.objects.filter(
-                    value__icontains=term
-                ).values_list("concept_id", flat=True)
-                concept_query = concept_query.filter(pk__in=filtering_concept_ids)
+                concept_query = concept_query.filter(
+                    appellative_status_ascribed_name_content__icontains=term
+                )
 
             concept_ids = concept_query.order_by("pk").values_list("pk", flat=True)
 
