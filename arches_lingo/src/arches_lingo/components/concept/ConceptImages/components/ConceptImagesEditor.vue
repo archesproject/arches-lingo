@@ -1,29 +1,25 @@
 <script setup lang="ts">
-import { inject, onMounted, ref, useTemplateRef, watch } from "vue";
+import { inject, ref, useTemplateRef, watch } from "vue";
 
 import { Form, type FormSubmitEvent } from "@primevue/forms";
 
 import FileListWidget from "@/arches_component_lab/widgets/FileListWidget/FileListWidget.vue";
-
-//import { createLingoResource, fetchLingoResource, upsertLingoTile } from "@/arches_lingo/api.ts";
+import NonLocalizedStringWidget from "@/arches_component_lab/widgets/NonLocalizedStringWidget/NonLocalizedStringWidget.vue";
+import { EDIT } from "@/arches_lingo/constants.ts";
+import {
+    createLingoResource,
+    fetchLingoResource,
+    fetchLingoResourcePartial,
+    updateLingoResource,
+} from "@/arches_lingo/api.ts";
 
 import type { Component, Ref } from "vue";
-//import type { FormSubmitEvent } from "@primevue/forms";
-
 import type {
     ConceptImages,
     ConceptInstance,
     DigitalObjectInstance,
     DigitalObjectInstanceAliases,
 } from "@/arches_lingo/types.ts";
-import { EDIT } from "@/arches_lingo/constants.ts";
-import NonLocalizedStringWidget from "@/arches_component_lab/widgets/NonLocalizedStringWidget/NonLocalizedStringWidget.vue";
-import {
-    fetchLingoResource,
-    updateLingoResource,
-    createLingoResource,
-    fetchLingoResourcePartial,
-} from "@/arches_lingo/api.ts";
 
 const props = defineProps<{
     tileData: ConceptImages | undefined;
@@ -36,12 +32,6 @@ const props = defineProps<{
 }>();
 
 const resource = ref<DigitalObjectInstance>();
-
-onMounted(async () => {
-    if (props.resourceInstanceId) {
-        //resource.value = await getConceptImageResource(props.resourceInstanceId);
-    }
-});
 
 const componentEditorFormRef = inject<Ref<Component | null>>(
     "componentEditorFormRef",
@@ -305,4 +295,3 @@ document.addEventListener("openConceptImagesEditor", async (e) => {
         />
     </Form>
 </template>
--->
