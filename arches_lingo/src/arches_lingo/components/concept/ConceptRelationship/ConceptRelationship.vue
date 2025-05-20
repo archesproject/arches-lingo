@@ -40,7 +40,7 @@ onMounted(async () => {
     ) {
         const sectionValue = await getSectionValue();
         tileData.value = sectionValue;
-        schemeId.value = sectionValue[0].scheme_id;
+        schemeId.value = sectionValue?.[0]?.scheme_id;
     }
     isLoading.value = false;
 });
