@@ -56,6 +56,9 @@ export const LingoPreset = definePreset(ArchesPreset, {
     },
     components: {
         button: {
+            border: {
+                radius: "0.25rem",
+            },
             colorScheme: {
                 light: {
                     // @ts-expect-error: Ignoring type mismatch for button primary background
@@ -75,6 +78,12 @@ export const LingoPreset = definePreset(ArchesPreset, {
                         },
                     },
                 },
+            },
+        },
+        inputtext: {
+            // @ts-expect-error: primevue does have border on inputtext
+            border: {
+                radius: "0.25rem",
             },
         },
         splitter: {
