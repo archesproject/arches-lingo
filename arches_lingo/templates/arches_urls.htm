@@ -9,19 +9,10 @@
 <div class="arches-urls"
     api_concepts="{% url 'api-concepts' %}"
     api_search="{% url 'api-search' %}"
-    api_uri_namespace='(resourceid)=>{return "{% url "api-uri-components" "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa" %}".replace("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", resourceid)}'
-    api_schemes="{% url 'schemes-list-create' %}"
-    api_scheme_label='(resourceid)=>{return "{% url "api-scheme-label" "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa" %}".replace("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", resourceid)}'
-    api_scheme_label_tile='(resourceid, tileid)=>{return "{% url "api-scheme-label-tile" "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa" "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaab"%}".replace("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", resourceid).replace("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaab", tileid)}'
-    api_scheme_label_list_create="{% url 'api-scheme-label-list-create' %}"
-    api_scheme_note='(resourceid)=>{return "{% url "api-scheme-note" "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa" %}".replace("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", resourceid)}'
-    api_scheme_note_tile='(resourceid, tileid)=>{return "{% url "api-scheme-note-tile" "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa" "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaab" %}".replace("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", resourceid).replace("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaab", tileid)}'
-    api_scheme_note_create="{% url 'api-scheme-note-create' %}"
-    api_scheme_creation='(resourceid)=>{return "{% url "api-scheme-creation" "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa" %}".replace("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", resourceid)}'
-    api_textualwork_list="{% url 'api-textualwork-list' %}"
-    api_group_list="{% url 'api-group-list' %}"
-    api_person_list="{% url 'api-person-list' %}"
-    api_scheme_rights='(resourceid)=>{return "{% url "api-scheme-rights" "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa" %}".replace("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", resourceid)}'
-    api_scheme_rights_list_create="{% url 'api-scheme-rights-list-create' %}"
+    api_lingo_resources='(graphslug) => {return "{% url "api-lingo-resources" "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa" %}".replace("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", graphslug)}'
+    api_lingo_resource='(graphslug, resourceinstanceid) => { return "{% url "api-lingo-resource" "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa" "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb" %}".replace("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", graphslug).replace("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", resourceinstanceid)}'
+    api_lingo_resource_partial='(graphslug, resourceinstanceid, nodegroupAlias) => { return "{% url "api-lingo-resource-partial" "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa" "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb" "cccccccc-cccc-cccc-cccc-cccccccccccc" %}".replace("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", graphslug).replace("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", resourceinstanceid).replace("cccccccc-cccc-cccc-cccc-cccccccccccc", nodegroupAlias)}'
+    api_lingo_tiles='(graphslug, nodegroupAlias) => { return "{% url "api-lingo-tiles" "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa" "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb" %}".replace("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", graphslug).replace("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", nodegroupAlias)}'
+    api_lingo_tile='(graphslug, nodegroupAlias, tileid) => { return "{% url "api-lingo-tile" "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa" "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb" "cccccccc-cccc-cccc-cccc-cccccccccccc" %}".replace("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", graphslug).replace("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", nodegroupAlias).replace("cccccccc-cccc-cccc-cccc-cccccccccccc", tileid)}'
 ></div>
 {% endblock arches_urls %}

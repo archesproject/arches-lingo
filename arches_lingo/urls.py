@@ -5,28 +5,11 @@ from django.urls import include, path
 
 from arches_lingo.views.root import LingoRootView
 from arches_lingo.views.api.concepts import ConceptTreeView, ValueSearchView
-from arches_lingo.views.api.pythonic_models import (
-    ConceptDetailView,
-    ConceptListCreateView,
-    ConceptStatementDetailView,
-    ConceptStatementListCreateView,
-    GroupRdmSystemSerializerView,
-    PersonRdmSystemSerializerView,
-    SchemeCreationView,
-    SchemeRightsListCreateView,
-    SchemeRightsView,
-    SchemeDetailView,
-    SchemeLabelTileView,
-    SchemeLabelView,
-    SchemeLabelCreateView,
-    SchemeListCreateView,
-    SchemeNamespaceView,
-    SchemeNoteTileView,
-    SchemeNoteView,
-    SchemeNoteCreateView,
-    SchemeStatementDetailView,
-    SchemeStatementListCreateView,
-    TextualWorkRdmSystemSerializerView,
+from arches_lingo.views.api.generic import (
+    LingoResourceDetailView,
+    LingoResourceListCreateView,
+    LingoTileDetailView,
+    LingoTileListCreateView,
 )
 
 urlpatterns = [
@@ -38,98 +21,36 @@ urlpatterns = [
     path("scheme/<uuid:id>", LingoRootView.as_view(), name="scheme"),
     path("scheme/new", LingoRootView.as_view(), name="new-scheme"),
     path("concept/<uuid:id>", LingoRootView.as_view(), name="concept"),
+    path("concept/new", LingoRootView.as_view(), name="new-concept"),
     path("api/concept-tree", ConceptTreeView.as_view(), name="api-concepts"),
     path("api/search", ValueSearchView.as_view(), name="api-search"),
-    path("api/concepts", ConceptListCreateView.as_view(), name="concepts-list-create"),
-    path("api/concept/<uuid:pk>", ConceptDetailView.as_view(), name="concept-detail"),
     path(
-        "api/concept/statements",
-        ConceptStatementListCreateView.as_view(),
-        name="concept-statements-list-create",
+        "api/lingo/<slug:graph>",
+        LingoResourceListCreateView.as_view(),
+        name="api-lingo-resources",
     ),
     path(
-        "api/concept/statement/<uuid:pk>",
-        ConceptStatementDetailView.as_view(),
-        name="concept-statement-detail",
-    ),
-    path("api/schemes", SchemeListCreateView.as_view(), name="schemes-list-create"),
-    path("api/scheme/<uuid:pk>", SchemeDetailView.as_view(), name="scheme-detail"),
-    path(
-        "api/scheme/<uuid:pk>/namespace",
-        SchemeNamespaceView.as_view(),
-        name="api-uri-components",
+        "api/lingo/<slug:graph>/<uuid:pk>",
+        LingoResourceDetailView.as_view(),
+        name="api-lingo-resource",
     ),
     path(
-        "api/scheme/<uuid:pk>/creation",
-        SchemeCreationView.as_view(),
-        name="api-scheme-creation",
+        "api/lingo/<slug:graph>/<uuid:pk>/<slug:nodegroup_alias>",
+        LingoResourceDetailView.as_view(),
+        name="api-lingo-resource-partial",
     ),
     path(
-        "api/scheme/<uuid:pk>/label",
-        SchemeLabelView.as_view(),
-        name="api-scheme-label",
+        "api/lingo/<slug:graph>/<slug:nodegroup_alias>",
+        LingoTileListCreateView.as_view(),
+        name="api-lingo-tiles",
     ),
     path(
-        "api/scheme/<uuid:resource_id>/label/<uuid:pk>",
-        SchemeLabelTileView.as_view(),
-        name="api-scheme-label-tile",
+        "api/lingo/<slug:graph>/<slug:nodegroup_alias>/<uuid:pk>",
+        LingoTileDetailView.as_view(),
+        name="api-lingo-tile",
     ),
-    path(
-        "api/scheme/labels",
-        SchemeLabelCreateView.as_view(),
-        name="api-scheme-label-list-create",
-    ),
-    path(
-        "api/scheme/<uuid:pk>/note",
-        SchemeNoteView.as_view(),
-        name="api-scheme-note",
-    ),
-    path(
-        "api/scheme/<uuid:resource_id>/note/<uuid:pk>",
-        SchemeNoteTileView.as_view(),
-        name="api-scheme-note-tile",
-    ),
-    path(
-        "api/scheme/note",
-        SchemeNoteCreateView.as_view(),
-        name="api-scheme-note-create",
-    ),
-    path(
-        "api/scheme/scheme-rights",
-        SchemeRightsListCreateView.as_view(),
-        name="api-scheme-rights-list-create",
-    ),
-    path(
-        "api/scheme/<uuid:pk>/scheme-rights",
-        SchemeRightsView.as_view(),
-        name="api-scheme-rights",
-    ),
-    path(
-        "api/textual-work",
-        TextualWorkRdmSystemSerializerView.as_view(),
-        name="api-textualwork-list",
-    ),
-    path(
-        "api/group-rdm-system",
-        GroupRdmSystemSerializerView.as_view(),
-        name="api-group-list",
-    ),
-    path(
-        "api/person-rdm-system",
-        PersonRdmSystemSerializerView.as_view(),
-        name="api-person-list",
-    ),
-    path(
-        "api/scheme/statements",
-        SchemeStatementListCreateView.as_view(),
-        name="scheme-statements-list-create",
-    ),
-    path(
-        "api/scheme/statement/<uuid:pk>",
-        SchemeStatementDetailView.as_view(),
-        name="scheme-statement-detail",
-    ),
-    path("", include("arches_references.urls")),
+    path("", include("arches_controlled_lists.urls")),
+    path("", include("arches_component_lab.urls")),
 ]
 
 # Ensure Arches core urls are superseded by project-level urls

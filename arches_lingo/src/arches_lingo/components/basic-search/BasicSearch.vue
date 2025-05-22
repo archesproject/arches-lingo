@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { nextTick, ref, watch, onMounted } from "vue";
+import { nextTick, ref, watch, onMounted, useTemplateRef } from "vue";
 import { useGettext } from "vue3-gettext";
 import { useRouter } from "vue-router";
 
@@ -30,9 +30,7 @@ interface Props {
 }
 const props = defineProps<Props>();
 
-const autoCompleteInstance = ref<InstanceType<typeof AutoComplete> | null>(
-    null,
-);
+const autoCompleteInstance = useTemplateRef("autoCompleteInstance");
 const autoCompleteKey = ref(0);
 const computedSearchResultsHeight = ref("");
 const isLoading = ref(false);
@@ -94,6 +92,7 @@ const fetchData = async (searchTerm: string, items: number, page: number) => {
 
 const focusInput = () => {
     if (autoCompleteInstance.value) {
+        // @ts-expect-error - autoCompleteInstance is mistyped in PrimeVue
         autoCompleteInstance.value.$el.querySelector("input").focus();
     }
 };
@@ -104,6 +103,7 @@ const keepOverlayVisible = () => {
         searchResults.value.length &&
         isLoading.value === isLoadingAdditionalResults.value
     ) {
+        // @ts-expect-error - autoCompleteInstance is mistyped in PrimeVue
         nextTick(() => autoCompleteInstance.value?.show());
     }
 };
@@ -220,6 +220,7 @@ watch(searchResults, (searchResults) => {
                 }"
                 @complete="
                     () => {
+                        // @ts-expect-error - autoCompleteInstance is mistyped in PrimeVue
                         autoCompleteInstance?.hide();
                         fetchData(query, props.searchResultsPerPage, 1);
                     }

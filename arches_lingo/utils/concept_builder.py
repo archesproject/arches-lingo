@@ -1,12 +1,13 @@
 from collections import defaultdict
 
 from django.contrib.postgres.expressions import ArraySubquery
-from django.core.cache import caches
 from django.db.models import CharField, F, OuterRef, Value
 from django.db.models.expressions import CombinedExpression
 from django.utils.translation import gettext as _
 
-from arches.app.models.models import ResourceInstance, TileModel
+from arches.app.models.models import Language, ResourceInstance, TileModel
+from arches_controlled_lists.datatypes.datatypes import ReferenceLabel
+from arches_controlled_lists.models import ListItem
 
 from arches_lingo.const import (
     SCHEMES_GRAPH_ID,
@@ -17,19 +18,20 @@ from arches_lingo.const import (
     CONCEPT_NAME_CONTENT_NODE,
     CONCEPT_NAME_LANGUAGE_NODE,
     CONCEPT_NAME_TYPE_NODE,
+    ALT_LABEL_VALUE,
+    HIDDEN_LABEL_VALUE,
+    PREF_LABEL_VALUE,
     SCHEME_NAME_NODEGROUP,
     SCHEME_NAME_CONTENT_NODE,
     SCHEME_NAME_LANGUAGE_NODE,
     SCHEME_NAME_TYPE_NODE,
 )
 
-from arches_lingo.utils.query_expressions import JsonbArrayElements
+from arches_lingo.query_expressions import JsonbArrayElements
 
 
 TOP_CONCEPT_OF_LOOKUP = f"data__{TOP_CONCEPT_OF_NODE_AND_NODEGROUP}"
 BROADER_LOOKUP = f"data__{CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID}"
-
-cache = caches["lingo"]
 
 
 class ConceptBuilder:
@@ -37,56 +39,37 @@ class ConceptBuilder:
         self.schemes = ResourceInstance.objects.none()
 
         # key=scheme resourceid (str) val=set of concept resourceids (str)
-        self.top_concepts: dict[str : set[str]] = defaultdict(set)
+        self.top_concepts: dict[str, set[str]] = defaultdict(set)
         # key=concept resourceid (str) val=set of concept resourceids (str)
-        self.narrower_concepts: dict[str : set[str]] = defaultdict(set)
+        self.narrower_concepts: dict[str, set[str]] = defaultdict(set)
         # key=resourceid (str) val=list of label dicts
-        self.labels: dict[str : list[dict]] = defaultdict(set)
+        self.labels: dict[str, list[dict]] = defaultdict(set)
 
         # Maps representing a reverse (leaf-first) tree
         # key=resourceid (str) val=set of concept resourceids (str)
-        self.broader_concepts: dict[str : set[str]] = defaultdict(set)
+        self.broader_concepts: dict[str, set[str]] = defaultdict(set)
         # key=resourceid (str) val=set of scheme resourceids (str)
-        self.schemes_by_top_concept: dict[str : set[str]] = defaultdict(set)
+        self.schemes_by_top_concept: dict[str, set[str]] = defaultdict(set)
 
-        self.read_from_cache()
-
-        # Not currently cached because written to during serialization.
-        self.polyhierarchical_concepts = set()
-
-    def read_from_cache(self):
-        from_cache = cache.get_many(
-            [
-                "top_concepts",
-                "narrower_concepts",
-                "schemes",
-                "labels",
-                "broader_concepts",
-                "schemes_by_top_concept",
-            ]
-        )
-        try:
-            self.top_concepts = from_cache["top_concepts"]
-            self.narrower_concepts = from_cache["narrower_concepts"]
-            self.schemes = from_cache["schemes"]
-            self.labels = from_cache["labels"]
-            self.broader_concepts = from_cache["broader_concepts"]
-            self.schemes_by_top_concept = from_cache["schemes_by_top_concept"]
-        except KeyError:
-            self.rebuild_cache()
-
-    def rebuild_cache(self):
         self.top_concepts_map()
         self.narrower_concepts_map()
         self.populate_schemes()
 
-        cache.set("top_concepts", self.top_concepts)
-        cache.set("narrower_concepts", self.narrower_concepts)
-        cache.set("schemes", self.schemes)
-        cache.set("labels", self.labels)
-        # Reverse trees.
-        cache.set("broader_concepts", self.broader_concepts)
-        cache.set("schemes_by_top_concept", self.schemes_by_top_concept)
+        self.polyhierarchical_concepts = set()
+        self.language_lookup = {lang.name: lang.code for lang in Language.objects.all()}
+
+    @staticmethod
+    def find_valuetype_id_from_value(value):
+        if value == PREF_LABEL_VALUE:
+            return "prefLabel"
+        if value == ALT_LABEL_VALUE:
+            return "altLabel"
+        if value == HIDDEN_LABEL_VALUE:
+            return "hidden"
+        return "unknown"
+
+    def find_language_id_from_value(self, value):
+        return self.language_lookup.get(value, value)
 
     @staticmethod
     def resources_from_tiles(lookup_expression: str):
@@ -154,6 +137,9 @@ class ConceptBuilder:
             graph_id=SCHEMES_GRAPH_ID
         ).annotate(labels=self.labels_subquery(SCHEME_NAME_NODEGROUP))
 
+    def lookup_scheme(self, scheme_id: str):
+        return [scheme for scheme in self.schemes if str(scheme.pk) == scheme_id][0]
+
     def serialize_scheme(self, scheme: ResourceInstance, *, children=True):
         scheme_id: str = str(scheme.pk)
         data = {
@@ -163,13 +149,25 @@ class ConceptBuilder:
         if children:
             data["top_concepts"] = [
                 self.serialize_concept(concept_id)
-                for concept_id in self.top_concepts[scheme_id]
+                for concept_id in sorted(self.top_concepts[scheme_id])
             ]
         return data
 
     def serialize_scheme_label(self, label_tile: dict):
-        valuetype_id = label_tile[SCHEME_NAME_TYPE_NODE][0]["labels"][0]["value"]
-        language_id = label_tile[SCHEME_NAME_LANGUAGE_NODE][0]["labels"][0]["value"]
+        scheme_name_type_labels = [
+            ReferenceLabel(**label)
+            for label in label_tile[SCHEME_NAME_TYPE_NODE][0]["labels"]
+        ]
+        valuetype_id = self.find_valuetype_id_from_value(
+            ListItem.find_best_label_from_set(scheme_name_type_labels)
+        )
+        language_labels = [
+            ReferenceLabel(**label)
+            for label in label_tile[SCHEME_NAME_LANGUAGE_NODE][0]["labels"]
+        ]
+        language_id = self.find_language_id_from_value(
+            ListItem.find_best_label_from_set(language_labels)
+        )
         value = label_tile[SCHEME_NAME_CONTENT_NODE] or _("Unknown")
         return {
             "valuetype_id": valuetype_id,
@@ -186,46 +184,63 @@ class ConceptBuilder:
         }
         if children:
             data["narrower"] = [
-                self.serialize_concept(conceptid)
-                for conceptid in self.narrower_concepts[conceptid]
+                self.serialize_concept(child_id)
+                for child_id in sorted(self.narrower_concepts[conceptid])
             ]
         if parents:
-            path = self.add_broader_concept_recursive([], conceptid)
-            scheme_id, parent_concept_ids = path[0], path[1:]
-            if len(parent_concept_ids) > 1:
+            paths = self.find_paths_to_root([conceptid], conceptid)
+            if len(paths) > 1:
                 self.polyhierarchical_concepts.add(conceptid)
-            schemes = [scheme for scheme in self.schemes if str(scheme.pk) == scheme_id]
-            data["parents"] = [self.serialize_scheme(schemes[0], children=False)] + [
-                self.serialize_concept(parent_id, children=False)
-                for parent_id in parent_concept_ids
+
+            data["parents"] = [
+                [self.serialize_scheme(self.lookup_scheme(scheme_id), children=False)]
+                + [
+                    self.serialize_concept(parent_id, children=False)
+                    for parent_id in concept_ids
+                ]
+                for scheme_id, *concept_ids in paths
             ]
 
-            self_and_parent_ids = set([conceptid] + parent_concept_ids)
+            self_and_parent_ids = set()
+            for path in paths:
+                self_and_parent_ids |= set(path)
             data["polyhierarchical"] = bool(
                 self_and_parent_ids.intersection(self.polyhierarchical_concepts)
             )
 
         return data
 
-    def add_broader_concept_recursive(self, working_parent_list, conceptid):
-        # TODO: sort on sortorder at higher stacklevel once captured in original data.
-        broader_concepts = sorted(self.broader_concepts[conceptid])
-        try:
-            first_broader_conceptid = broader_concepts[0]
-        except IndexError:
-            # TODO: sort here too.
-            schemes = sorted(self.schemes_by_top_concept[conceptid])
-            working_parent_list.insert(0, schemes[0])
-            return working_parent_list
-
-        working_parent_list.insert(0, first_broader_conceptid)
-        return self.add_broader_concept_recursive(
-            working_parent_list, first_broader_conceptid
+    def find_paths_to_root(self, working_path, conceptid) -> list[list[str]]:
+        """Return an array of paths (path: an array of scheme & concept ids)."""
+        concept_and_scheme_parents = sorted(self.broader_concepts[conceptid]) + sorted(
+            self.schemes_by_top_concept[conceptid]
         )
 
+        collected_paths = []
+        for parent in concept_and_scheme_parents:
+            forked_path = working_path[:]
+            forked_path.insert(0, parent)
+            collected_paths.extend(self.find_paths_to_root(forked_path, parent))
+
+        if concept_and_scheme_parents:
+            return collected_paths
+        return [working_path]
+
     def serialize_concept_label(self, label_tile: dict):
-        valuetype_id = label_tile[CONCEPT_NAME_TYPE_NODE][0]["labels"][0]["value"]
-        language_id = label_tile[CONCEPT_NAME_LANGUAGE_NODE][0]["labels"][0]["value"]
+        scheme_name_type_labels = [
+            ReferenceLabel(**label)
+            for label in label_tile[CONCEPT_NAME_TYPE_NODE][0]["labels"]
+        ]
+        valuetype_id = self.find_valuetype_id_from_value(
+            ListItem.find_best_label_from_set(scheme_name_type_labels)
+        )
+        language_labels = [
+            ReferenceLabel(**label)
+            for label in label_tile[CONCEPT_NAME_LANGUAGE_NODE][0]["labels"]
+        ]
+        language_id = self.find_language_id_from_value(
+            ListItem.find_best_label_from_set(language_labels)
+        )
         value = label_tile[CONCEPT_NAME_CONTENT_NODE] or _("Unknown")
         return {
             "valuetype_id": valuetype_id,

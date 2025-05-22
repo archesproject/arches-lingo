@@ -44,7 +44,6 @@ const items = ref([
     display: flex;
     flex-direction: column;
     align-items: center;
-    min-width: var(--p-button-icon-only-width);
     border-right: 1px solid var(--p-menubar-border-color);
 }
 

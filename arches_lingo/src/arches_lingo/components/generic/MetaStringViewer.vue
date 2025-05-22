@@ -1,26 +1,47 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { inject, ref } from "vue";
+
+import { useConfirm } from "primevue/useconfirm";
 import { useGettext } from "vue3-gettext";
+import { useToast } from "primevue/usetoast";
+
 import DataTable from "primevue/datatable";
 import Column from "primevue/column";
 import Button from "primevue/button";
 import ConfirmDialog from "primevue/confirmdialog";
-import { useConfirm } from "primevue/useconfirm";
 
-import type { MetaString, MetaStringText } from "@/arches_lingo/types.ts";
-import { SECONDARY } from "@/arches_lingo/constants.ts";
-import { DANGER } from "@/arches_references/constants.ts";
+import { deleteLingoTile } from "@/arches_lingo/api.ts";
+import {
+    DANGER,
+    DEFAULT_ERROR_TOAST_LIFE,
+    ERROR,
+    SECONDARY,
+} from "@/arches_lingo/constants.ts";
 
-const { $gettext } = useGettext();
-const expandedRows = ref([]);
-const confirm = useConfirm();
+import type { MetaStringText } from "@/arches_lingo/types.ts";
 
 const props = defineProps<{
     metaStringText: MetaStringText;
     metaStrings?: object[];
+    graphSlug: string;
+    nodegroupAlias: string;
+    componentName: string;
 }>();
 
-const emits = defineEmits(["editString", "deleteString"]);
+const toast = useToast();
+const { $gettext } = useGettext();
+const confirm = useConfirm();
+
+const openEditor =
+    inject<(componentName: string, tileId?: string) => void>("openEditor");
+const updateAfterComponentDeletion = inject<
+    (componentName: string, tileId: string) => void
+>("updateAfterComponentDeletion");
+const refreshReportSection = inject<(componentName: string) => void>(
+    "refreshReportSection",
+);
+
+const expandedRows = ref([]);
 
 function confirmDelete(tileId: string) {
     confirm.require({
@@ -28,7 +49,7 @@ function confirmDelete(tileId: string) {
         message: props.metaStringText.deleteConfirm,
         group: props.metaStringText.name,
         accept: () => {
-            emits("deleteString", tileId);
+            deleteSectionValue(tileId);
         },
         rejectProps: {
             label: $gettext("Cancel"),
@@ -40,6 +61,22 @@ function confirmDelete(tileId: string) {
             severity: DANGER,
         },
     });
+}
+
+async function deleteSectionValue(tileId: string) {
+    try {
+        await deleteLingoTile(props.graphSlug, props.nodegroupAlias, tileId);
+
+        refreshReportSection!(props.componentName);
+        updateAfterComponentDeletion!(props.componentName, tileId);
+    } catch (error) {
+        toast.add({
+            severity: ERROR,
+            life: DEFAULT_ERROR_TOAST_LIFE,
+            summary: $gettext("Failed to delete data."),
+            detail: error instanceof Error ? error.message : undefined,
+        });
+    }
 }
 </script>
 
@@ -97,11 +134,10 @@ function confirmDelete(tileId: string) {
                             icon="pi pi-file-edit"
                             :aria-label="$gettext('edit')"
                             @click="
-                                () =>
-                                    emits(
-                                        'editString',
-                                        (slotProps.data as MetaString).tileid,
-                                    )
+                                openEditor!(
+                                    componentName,
+                                    slotProps.data.tileid,
+                                )
                             "
                         />
                         <Button
@@ -109,12 +145,7 @@ function confirmDelete(tileId: string) {
                             :aria-label="$gettext('delete')"
                             severity="danger"
                             outlined
-                            @click="
-                                () =>
-                                    confirmDelete(
-                                        (slotProps.data as MetaString).tileid,
-                                    )
-                            "
+                            @click="confirmDelete(slotProps.data.tileid)"
                         />
                     </div>
                 </template>
@@ -129,9 +160,13 @@ function confirmDelete(tileId: string) {
             </template>
         </DataTable>
     </div>
-    <div v-else>{{ props.metaStringText.noRecords }}</div>
+    <p v-else>{{ props.metaStringText.noRecords }}</p>
 </template>
 <style scoped>
+:deep(.drawer) {
+    padding: 1rem 2rem;
+}
+
 .controls {
     display: flex;
     flex-direction: row;

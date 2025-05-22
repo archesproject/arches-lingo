@@ -6,22 +6,22 @@ import { useToast } from "primevue/usetoast";
 import {
     DEFAULT_ERROR_TOAST_LIFE,
     ERROR,
-} from "@/arches_references/constants.ts";
+} from "@/arches_controlled_lists/constants.ts";
 
 import SchemeCard from "@/arches_lingo/components/scheme/SchemeCard.vue";
-import { fetchSchemes } from "@/arches_lingo/api.ts";
+import { fetchLingoResources } from "@/arches_lingo/api.ts";
 import { NEW } from "@/arches_lingo/constants.ts";
 
-import type { SchemeResource } from "@/arches_lingo/types";
+import type { ResourceInstanceResult } from "@/arches_lingo/types";
 
 const toast = useToast();
 const { $gettext } = useGettext();
 
-const schemes = ref<SchemeResource[]>([]);
+const schemes = ref<ResourceInstanceResult[]>([]);
 
 onMounted(async () => {
     try {
-        schemes.value = await fetchSchemes();
+        schemes.value = await fetchLingoResources("scheme");
     } catch (error) {
         toast.add({
             severity: ERROR,

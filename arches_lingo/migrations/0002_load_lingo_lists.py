@@ -11,7 +11,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ("arches_lingo", "0001_initial"),
-        ("arches_references", "0004_require_controlledlistitem_uri"),
+        ("arches_controlled_lists", "0001_initial"),
     ]
 
     def load_lists(apps, schema_editor):

@@ -1,15 +1,47 @@
 <script setup lang="ts">
-import { inject } from "vue";
+import { useGettext } from "vue3-gettext";
 
-import { displayedRowKey } from "@/arches_lingo/constants.ts";
+import ComponentManager from "@/arches_lingo/components/generic/ComponentManager/ComponentManager.vue";
 
-import type { DisplayedRowRefAndSetter } from "@/arches_lingo/types";
+import ConceptHeader from "@/arches_lingo/components/concept/ConceptHeader.vue";
+import ConceptLabel from "@/arches_lingo/components/concept/ConceptLabel/ConceptLabel.vue";
+import ConceptNote from "@/arches_lingo/components/concept/ConceptNote/ConceptNote.vue";
+import ConceptImages from "@/arches_lingo/components/concept/ConceptImages/ConceptImages.vue";
 
-const { displayedRow } = inject(
-    displayedRowKey,
-) as unknown as DisplayedRowRefAndSetter;
+const { $gettext } = useGettext();
+
+const componentData = [
+    {
+        component: ConceptHeader,
+        componentName: "ConceptHeader",
+        sectionTitle: $gettext("Concept Metadata"),
+        graphSlug: "concept",
+        nodegroupAlias: "",
+    },
+    {
+        component: ConceptLabel,
+        componentName: "ConceptLabel",
+        sectionTitle: $gettext("Concept Label"),
+        graphSlug: "concept",
+        nodegroupAlias: "appellative_status",
+    },
+    {
+        component: ConceptNote,
+        componentName: "ConceptNote",
+        sectionTitle: $gettext("Concept Note"),
+        graphSlug: "concept",
+        nodegroupAlias: "statement",
+    },
+    {
+        component: ConceptImages,
+        componentName: "ConceptImages",
+        sectionTitle: $gettext("Concept Images"),
+        graphSlug: "concept",
+        nodegroupAlias: "depicting_digital_asset_internal",
+    },
+];
 </script>
 
 <template>
-    <pre style="text-wrap: auto">{{ displayedRow }}</pre>
+    <ComponentManager :component-data="componentData" />
 </template>

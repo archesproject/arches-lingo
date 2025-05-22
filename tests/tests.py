@@ -1,20 +1,19 @@
 import json
 from http import HTTPStatus
+from pathlib import Path
 
+from django.conf import settings
 from django.contrib.auth.models import User
+from django.core import management
 from django.test import TestCase
+from django.test.utils import captured_stdout
 from django.urls import reverse
 
-# these tests can be run from the command line via
-# python manage.py test tests.tests --settings="tests.test_settings"
-
 from arches.app.datatypes.datatypes import DataTypeFactory
-from arches.app.models.models import (
-    GraphModel,
-    Node,
-    NodeGroup,
-    ResourceInstance,
-    TileModel,
+from arches.app.models.models import ResourceInstance, TileModel
+from arches.app.utils.betterJSONSerializer import JSONDeserializer
+from arches.app.utils.data_management.resource_graphs.importer import (
+    import_graph as ResourceGraphImporter,
 )
 
 from arches_lingo.const import (
@@ -35,85 +34,30 @@ from arches_lingo.const import (
     LABEL_LIST_ID,
 )
 
+# these tests can be run from the command line via
+# python manage.py test tests.tests --settings="tests.test_settings"
+
 
 class ViewTests(TestCase):
+    graph_fixtures = ["Scheme.json", "Concept.json"]
+
     @classmethod
-    def mock_concept_and_scheme_graphs(cls):
-        """Bootstrap just a few nodes as an alternative to loading the entire package."""
+    def load_ontology(cls):
+        path = Path(settings.APP_ROOT) / "pkg" / "ontologies" / "takin"
+        management.call_command("load_ontology", source=path, verbosity=0)
 
-        GraphModel.objects.create(pk=SCHEMES_GRAPH_ID, isresource=True)
-        GraphModel.objects.create(pk=CONCEPTS_GRAPH_ID, isresource=True)
-
-        for nodegroup_id, node_id, node_name, datatype, config in [
-            (
-                TOP_CONCEPT_OF_NODE_AND_NODEGROUP,
-                TOP_CONCEPT_OF_NODE_AND_NODEGROUP,
-                "top_concept_of",
-                "resource-instance",
-                {
-                    "graphs": [{"graphid": SCHEMES_GRAPH_ID, "name": "Scheme"}],
-                    "searchDsl": "",
-                    "searchString": "",
-                },
-            ),
-            (
-                CLASSIFICATION_STATUS_NODEGROUP,
-                CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID,
-                "classification_status_ascribed_classification",
-                "resource-instance",
-                {
-                    "graphs": [{"graphid": CONCEPTS_GRAPH_ID, "name": "Concept"}],
-                    "searchDsl": "",
-                    "searchString": "",
-                },
-            ),
-            (
-                SCHEME_NAME_NODEGROUP,
-                SCHEME_NAME_CONTENT_NODE,
-                "appellative_status_ascribed_name_content",
-                "non-localized-string",
-                {},
-            ),
-            (
-                SCHEME_NAME_NODEGROUP,
-                SCHEME_NAME_LANGUAGE_NODE,
-                "appellative_status_ascribed_name_language",
-                "reference",
-                {"controlledList": LANGUAGES_LIST_ID, "multiValue": True},
-            ),
-            (
-                CONCEPT_NAME_NODEGROUP,
-                CONCEPT_NAME_CONTENT_NODE,
-                "appellative_status_ascribed_name_content",
-                "non-localized-string",
-                {},
-            ),
-            (
-                CONCEPT_NAME_NODEGROUP,
-                CONCEPT_NAME_LANGUAGE_NODE,
-                "appellative_status_ascribed_name_language",
-                "reference",
-                {"controlledList": LANGUAGES_LIST_ID, "multiValue": True},
-            ),
-        ]:
-            NodeGroup.objects.update_or_create(
-                pk=nodegroup_id,
-                defaults={"cardinality": "1" if node_name == "top_concept_of" else "n"},
-            )
-            Node.objects.create(
-                pk=node_id,
-                graph_id=CONCEPTS_GRAPH_ID,
-                nodegroup_id=nodegroup_id,
-                name=node_name,
-                istopnode=False,
-                datatype=datatype,
-                config=config,
-                isrequired=False,
-            )
+    @classmethod
+    def load_graphs(cls):
+        path = Path(settings.APP_ROOT) / "pkg" / "graphs" / "resource_models"
+        for file_path in cls.graph_fixtures:
+            with captured_stdout(), open(path / file_path, "r") as f:
+                archesfile = JSONDeserializer().deserialize(f)
+                ResourceGraphImporter(archesfile["graph"], overwrite_graphs=True)
 
     @classmethod
     def setUpTestData(cls):
-        cls.mock_concept_and_scheme_graphs()
+        cls.load_ontology()
+        cls.load_graphs()
         cls.admin = User.objects.get(username="admin")
 
         # Create a scheme with five concepts, each one narrower than the last,
@@ -128,7 +72,9 @@ class ViewTests(TestCase):
         prefLabel_reference_dt = reference.transform_value_for_tile(
             "prefLabel", **label_config
         )
-        en_reference_dt = reference.transform_value_for_tile("en", **language_config)
+        en_reference_dt = reference.transform_value_for_tile(
+            "English", **language_config
+        )
 
         TileModel.objects.create(
             resourceinstance=cls.scheme,
@@ -196,14 +142,17 @@ class ViewTests(TestCase):
                     },
                 )
 
-    def test_get_concept_trees(self):
+    def setUp(self):
         self.client.force_login(self.admin)
-        with self.assertNumQueries(5):
+
+    def test_get_concept_trees(self):
+        with self.assertNumQueries(6):
             # 1: session
             # 2: auth
             # 3: select broader tiles, subquery for labels
             # 4: select top concept tiles, subquery for labels
             # 5: select schemes, subquery for labels
+            # 6: languages
             response = self.client.get(reverse("api-concepts"))
 
         self.assertEqual(response.status_code, 200)
@@ -211,6 +160,7 @@ class ViewTests(TestCase):
         scheme = result["schemes"][0]
 
         self.assertEqual(scheme["labels"][0]["value"], "Test Scheme")
+        self.assertEqual(scheme["labels"][0]["valuetype_id"], "prefLabel")
         self.assertEqual(len(scheme["top_concepts"]), 1)
         top = scheme["top_concepts"][0]
         self.assertEqual(top["labels"][0]["value"], "Concept 1")
@@ -226,10 +176,12 @@ class ViewTests(TestCase):
             {n["labels"][0]["value"] for n in concept_2["narrower"]},
             {"Concept 3"},
         )
+        self.assertEqual(
+            {n["labels"][0]["valuetype_id"] for n in concept_2["narrower"]},
+            {"prefLabel"},
+        )
 
     def test_search(self):
-        self.client.force_login(self.admin)
-
         cases = (
             # Fuzzy match: finds all 5 concepts
             ["term=Concept 1", 5],
@@ -249,8 +201,50 @@ class ViewTests(TestCase):
                 result = json.loads(response.content)
                 self.assertEqual(len(result["data"]), expected_result_count, result)
 
+    def test_lineage(self):
+        # Supplement the test data with a tile that makes Concept 5
+        # also a top concept of the scheme (in addition to Concept 1).
+        TileModel.objects.create(
+            resourceinstance=self.concepts[4],
+            nodegroup_id=TOP_CONCEPT_OF_NODE_AND_NODEGROUP,
+            data={
+                TOP_CONCEPT_OF_NODE_AND_NODEGROUP: [
+                    {"resourceId": str(self.scheme.pk)},
+                ],
+            },
+        )
+
+        response = self.client.get(
+            reverse("api-search"), QUERY_STRING="term=Concept 5&maxEditDistance=0"
+        )
+        result = json.loads(response.content)
+
+        self.assertIs(result["data"][0]["polyhierarchical"], True)
+        # Since each concept was also created with a broader concept tile for
+        # the top concept (Concept 1), Concept 5 has 4 paths back to root, plus
+        # another path directly to the Scheme from the extra tile created above.
+        self.assertEqual(
+            sorted(
+                [concept["labels"][0]["value"] for concept in path]
+                for path in result["data"][0]["parents"]
+            ),
+            [
+                [
+                    "Test Scheme",
+                    "Concept 1",
+                    "Concept 2",
+                    "Concept 3",
+                    "Concept 4",
+                    "Concept 5",
+                ],
+                ["Test Scheme", "Concept 1", "Concept 3", "Concept 4", "Concept 5"],
+                ["Test Scheme", "Concept 1", "Concept 4", "Concept 5"],
+                ["Test Scheme", "Concept 1", "Concept 5"],
+                ["Test Scheme", "Concept 5"],
+            ],
+        )
+
     def test_invalid_search_term(self):
-        self.client.force_login(self.admin)
         with self.assertLogs("django.request", level="WARNING"):
             response = self.client.get(
                 reverse("api-search"), QUERY_STRING="term=" + ("!" * 256)
@@ -262,7 +256,6 @@ class ViewTests(TestCase):
         )
 
     def test_invalid_edit_distance(self):
-        self.client.force_login(self.admin)
         with self.assertLogs("django.request", level="WARNING"):
             response = self.client.get(
                 reverse("api-search"), QUERY_STRING="term=test&maxEditDistance=?"

@@ -3,8 +3,9 @@ import json
 import logging
 import uuid
 
+from collections import defaultdict
 from django.db import connection
-from django.db.models import OuterRef, Subquery
+from django.db.models import OuterRef, Prefetch, Subquery
 from django.db.models.functions import Coalesce
 from django.utils.translation import gettext as _
 from arches.app.datatypes.datatypes import DataTypeFactory
@@ -91,7 +92,9 @@ class RDMMtoLingoMigrator(BaseImportModule):
         schemes = []
         for concept in models.Concept.objects.filter(
             pk=scheme_conceptid
-        ).prefetch_related("value_set"):
+        ).prefetch_related(
+            Prefetch("value_set", queryset=models.Value.objects.order_by("value"))
+        ):
             scheme_to_load = {"type": "Scheme", "tile_data": []}
             for value in concept.value_set.all():
                 scheme_to_load["resourceinstanceid"] = (
@@ -108,7 +111,7 @@ class RDMMtoLingoMigrator(BaseImportModule):
                         value.value
                     )
                     appellative_status["appellative_status_ascribed_name_language"] = (
-                        value.language_id
+                        value.language.name
                     )
                     appellative_status["appellative_status_ascribed_relation"] = (
                         value.valuetype_id
@@ -134,7 +137,7 @@ class RDMMtoLingoMigrator(BaseImportModule):
                     statement = {}
                     statement["statement_content_n1"] = value.value
                     statement["statement_type_n1"] = value.valuetype_id
-                    statement["statement_language_n1"] = value.language_id
+                    statement["statement_language_n1"] = value.language.name
                     scheme_to_load["tile_data"].append({"statement": statement})
             schemes.append(scheme_to_load)
         self.populate_staging_table(cursor, schemes, nodegroup_lookup, node_lookup)
@@ -143,7 +146,9 @@ class RDMMtoLingoMigrator(BaseImportModule):
         concepts = []
         for concept in models.Concept.objects.filter(
             nodetype="Concept", pk__in=concepts_to_migrate
-        ).prefetch_related("value_set"):
+        ).prefetch_related(
+            Prefetch("value_set", queryset=models.Value.objects.order_by("value"))
+        ):
             concept_to_load = {"type": "Concept", "tile_data": []}
             for value in concept.value_set.all():
                 concept_to_load["resourceinstanceid"] = (
@@ -160,7 +165,7 @@ class RDMMtoLingoMigrator(BaseImportModule):
                         value.value
                     )
                     appellative_status["appellative_status_ascribed_name_language"] = (
-                        value.language_id
+                        value.language.name
                     )
                     appellative_status["appellative_status_ascribed_relation"] = (
                         value.valuetype_id
@@ -186,7 +191,7 @@ class RDMMtoLingoMigrator(BaseImportModule):
                     statement = {}
                     statement["statement_content"] = value.value
                     statement["statement_type"] = value.valuetype_id
-                    statement["statement_language"] = value.language_id
+                    statement["statement_language"] = value.language.name
                     concept_to_load["tile_data"].append({"statement": statement})
             concepts.append(concept_to_load)
         self.populate_staging_table(cursor, concepts, nodegroup_lookup, node_lookup)
@@ -195,8 +200,10 @@ class RDMMtoLingoMigrator(BaseImportModule):
         self, cursor, concepts_to_load, nodegroup_lookup, node_lookup
     ):
         tiles_to_load = []
+        sortorder_counter = defaultdict(lambda: defaultdict(int))
         for concept_to_load in concepts_to_load:
             for mock_tile in concept_to_load["tile_data"]:
+                resourceid = concept_to_load["resourceinstanceid"]
                 nodegroup_alias = next(iter(mock_tile.keys()), None)
                 nodegroup_id = node_lookup[nodegroup_alias]["nodeid"]
                 nodegroup_depth = nodegroup_lookup[nodegroup_id]["depth"]
@@ -206,11 +213,13 @@ class RDMMtoLingoMigrator(BaseImportModule):
                     cursor, mock_tile, nodegroup_alias, nodegroup_lookup, node_lookup
                 )
                 operation = "insert"
+                sortorder = sortorder_counter[resourceid][nodegroup_id]
+                sortorder_counter[resourceid][nodegroup_id] += 1
                 tiles_to_load.append(
                     LoadStaging(
                         load_event=LoadEvent(self.loadid),
                         nodegroup=NodeGroup(nodegroup_id),
-                        resourceid=concept_to_load["resourceinstanceid"],
+                        resourceid=resourceid,
                         tileid=tile_id,
                         parenttileid=parent_tile_id,
                         value=tile_value_json,
@@ -220,6 +229,7 @@ class RDMMtoLingoMigrator(BaseImportModule):
                         ),  # source_description
                         passes_validation=passes_validation,
                         operation=operation,
+                        sortorder=sortorder,
                     )
                 )
         staged_tiles = LoadStaging.objects.bulk_create(tiles_to_load)
@@ -300,7 +310,7 @@ class RDMMtoLingoMigrator(BaseImportModule):
                 from relations
                 where not exists (
                     select 1 from relations r2 where r2.conceptidto = relations.conceptidfrom
-                ) and relationtype != 'member'
+                ) and (relationtype = 'narrower' or relationtype = 'hasTopConcept')
                 union all
                 select ch.root_scheme,
                     r.conceptidto,
@@ -308,7 +318,7 @@ class RDMMtoLingoMigrator(BaseImportModule):
                     ch.depth + 1
                 from collection_hierarchy ch
                 join relations r on ch.child = r.conceptidfrom
-                where relationtype != 'member'
+                where relationtype = 'narrower' or relationtype = 'hasTopConcept'
             )
             select * 
             from collection_hierarchy
@@ -345,9 +355,11 @@ class RDMMtoLingoMigrator(BaseImportModule):
                 source_description,
                 loadid,
                 nodegroupid,
-                operation
+                operation,
+                sortorder
             )
             select 
+                distinct on (conceptidfrom, conceptidto)
                 json_build_object(%s::uuid,
                     json_build_object(
                         'notes', '',
@@ -364,10 +376,13 @@ class RDMMtoLingoMigrator(BaseImportModule):
                 'Scheme: top_concept_of' as source_description,
                 %s::uuid as loadid,
                 %s::uuid as nodegroupid,
-                'insert' as operation
-            from relations
+                'insert' as operation,
+                (rank() over (partition by conceptidfrom order by v.value)-1) as sortorter
+            from relations r
+            left join values v on r.conceptidto = v.conceptid
             where relationtype = 'hasTopConcept'
-            and conceptidto = ANY(%s);
+                and v.valuetype = 'prefLabel'
+                and conceptidto = ANY(%s);
         """,
             (
                 TOP_CONCEPT_OF_NODE_AND_NODEGROUP,
@@ -389,7 +404,8 @@ class RDMMtoLingoMigrator(BaseImportModule):
                 source_description,
                 loadid,
                 nodegroupid,
-                operation
+                operation,
+                sortorder
             )
             select 
                 json_build_object(%s::uuid,
@@ -416,10 +432,13 @@ class RDMMtoLingoMigrator(BaseImportModule):
                 'Scheme: top_concept_of' as source_description,
                 %s::uuid as loadid,
                 %s::uuid as nodegroupid,
-                'insert' as operation
-            from relations
+                'insert' as operation,
+                (rank() over (partition by conceptidto order by v.value)-1) as sortorter
+            from relations r
+            left join values v on r.conceptidto = v.conceptid
             where relationtype = 'narrower'
-            and conceptidto = ANY(%s);
+                and v.valuetype = 'prefLabel'
+                and conceptidto = ANY(%s);
         """,
             (
                 CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID,
@@ -497,6 +516,7 @@ class RDMMtoLingoMigrator(BaseImportModule):
                 load_event=LoadEvent(self.loadid),
                 nodegroup=part_of_scheme_nodegroup,
                 operation="insert",
+                sortorder=0,
             )
             staging_tile.full_clean()
             part_of_scheme_tiles.append(staging_tile)
@@ -534,7 +554,7 @@ class RDMMtoLingoMigrator(BaseImportModule):
     def write(self, request):
         self.loadid = request.POST.get("loadid")
         self.scheme_conceptid = request.POST.get("scheme")
-        if models.Concept.objects.count() < 500:
+        if models.Concept.objects.count() < 500000:
             response = self.run_load_task(
                 self.userid, self.loadid, self.scheme_conceptid
             )

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { getItemLabel } from "@/arches_vue_utils/utils.ts";
+import { getItemLabel } from "@/arches_component_lab/utils.ts";
 import { ENGLISH } from "@/arches_lingo/constants.ts";
 
 import type { PropType } from "vue";
@@ -19,7 +19,7 @@ const getParentLabels = (
 ): string => {
     const arrowIcon = " → ";
 
-    return item.parents.reduce((acc, parent, index) => {
+    return item.parents[0].reduce((acc, parent, index) => {
         const label = getItemLabel(
             parent,
             preferredLanguageCode,
