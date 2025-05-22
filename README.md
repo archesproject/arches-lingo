@@ -79,8 +79,7 @@
 
 14. Load the test data:
     ```
-    python manage.py packages -o import_business_data -s tests/fixtures/data/aat_entries_scheme_examples.json -ow overwrite
-    python manage.py packages -o import_business_data -s tests/fixtures/data/aat_entries_concept_examples.json -ow overwrite
+    python manage.py loaddata tests/fixtures/data/FISH_Thesauri_example_data_resources.json tests/fixtures/data/FISH_Thesauri_example_data_tiles.json
     ```
 
 15. In the terminal window that is running the Django server, halt the server and restart it.
