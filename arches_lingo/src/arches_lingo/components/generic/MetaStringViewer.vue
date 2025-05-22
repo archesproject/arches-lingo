@@ -88,6 +88,7 @@ async function deleteSectionValue(tileId: string) {
     <div v-if="props.metaStrings?.length">
         <DataTable
             v-model:expanded-rows="expandedRows"
+            striped-rows
             :value="props.metaStrings"
         >
             <Column
@@ -96,6 +97,7 @@ async function deleteSectionValue(tileId: string) {
             />
             <Column
                 :header="props.metaStringText.name"
+                style="max-width: 50rem;"
                 sortable
             >
                 <template #body="slotProps">
@@ -142,6 +144,7 @@ async function deleteSectionValue(tileId: string) {
                         />
                         <Button
                             icon="pi pi-trash"
+                            class="label-delete-button"
                             :aria-label="$gettext('delete')"
                             severity="danger"
                             outlined
@@ -160,7 +163,7 @@ async function deleteSectionValue(tileId: string) {
             </template>
         </DataTable>
     </div>
-    <p v-else>{{ props.metaStringText.noRecords }}</p>
+    <p class="no-data" v-else>{{ props.metaStringText.noRecords }}</p>
 </template>
 <style scoped>
 :deep(.drawer) {
@@ -173,5 +176,37 @@ async function deleteSectionValue(tileId: string) {
 }
 .controls button {
     margin: 0 0.5rem;
+}
+
+.p-button-danger:hover {
+    background: var(--p-button-warn-active-background);
+    border-color: var(--p-button-warn-active-background);
+}
+
+.p-button-outlined.p-button-danger {
+    color: var(--p-button-warn-color);
+    background: var(--p-button-warn-active-background);
+    border-color: var(--p-button-warn-active-background);
+}
+
+.p-button-outlined.p-button-danger:not(:disabled):hover {
+    color: var(--p-button-warn-color);
+    background: var(--p-button-warn-background);
+    border-color: var(--p-button-warn-active-background);
+}
+
+.no-data {
+    padding: .5rem 0;
+    margin: 0;
+    color: var(--p-inputtext-placeholder-color)
+}
+
+:deep(.p-dialog) {
+    border-radius: 2px;
+}
+
+:deep(.p-datatable-tbody > tr > td) {
+    color: var(--p-inputtext-placeholder-color);
+    font-size: .95rem;
 }
 </style>
