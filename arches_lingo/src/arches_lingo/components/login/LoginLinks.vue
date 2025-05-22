@@ -10,7 +10,7 @@ const { $gettext } = useGettext();
 </script>
 
 <template>
-    <div style="display: flex; justify-content: space-between;">
+    <div style="display: flex; justify-content: space-between">
         <Button
             as="a"
             class="login-action"
@@ -31,15 +31,14 @@ const { $gettext } = useGettext();
 </template>
 
 <style scoped>
-    :deep(.login-action) {
-        border-radius: 2px;
-        text-decoration: none;
-        min-width: 10rem;
-    }
+:deep(.login-action) {
+    text-decoration: none;
+    min-width: 10rem;
+}
 
-    :deep(.p-button-outlined.p-button-secondary:not(:disabled):hover) {
-        color: var(--p-primary-contrast-color);
-        background: var(--p-primary-active-color);
-        border-color: var(--p-primary-active-color);
-    }
+:deep(.p-button-outlined.p-button-secondary:not(:disabled):hover) {
+    color: var(--p-primary-contrast-color);
+    background: var(--p-primary-active-color);
+    border-color: var(--p-primary-active-color);
+}
 </style>

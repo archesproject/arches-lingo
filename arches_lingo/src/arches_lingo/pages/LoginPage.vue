@@ -16,8 +16,12 @@ import LoginForm from "@/arches_lingo/components/login/LoginForm.vue";
     justify-content: center;
     align-items: center;
     height: 100%;
-    padding-bottom: 12rem;
     background: var(--p-form-field-disabled-background);
+    overflow: scroll;
+    padding-bottom: 12rem;
+    @media (max-width: 800px) {
+        padding-bottom: 0;
+    }
 }
 
 .spacer {

@@ -40,7 +40,13 @@ const submit = async () => {
     <form>
         <div class="form-header">
             <h1>{{ $gettext("LINGO") }}</h1>
-            <h2>{{ $gettext("Vocabulary and authority data management powered by Arches.") }}</h2>
+            <h2>
+                {{
+                    $gettext(
+                        "Vocabulary and authority data management powered by Arches.",
+                    )
+                }}
+            </h2>
         </div>
         <div class="main-form">
             <InputText
@@ -58,13 +64,19 @@ const submit = async () => {
                 @keyup.enter="submit"
             />
             <Button
-            type="button"
-            :label="$gettext('Sign In')"
-            @click="submit"
+                type="button"
+                :label="$gettext('Sign In')"
+                @click="submit"
             />
         </div>
         <div class="form-footer">
-            <h2>{{ $gettext("Get an account or use additional security to your login") }}</h2>
+            <h2>
+                {{
+                    $gettext(
+                        "Create an account or log in using multi-factor authentication",
+                    )
+                }}
+            </h2>
             <LoginLinks />
         </div>
     </form>
@@ -72,15 +84,18 @@ const submit = async () => {
 
 <style scoped>
 form {
-    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+    font-family: "Lucida Sans", "Lucida Sans Regular", "Lucida Grande",
+        "Lucida Sans Unicode", Geneva, Verdana, sans-serif;
     display: flex;
     flex-direction: column;
     padding: 2rem 2rem;
     gap: 1rem;
     width: 25rem;
     background: var(--p-inputtext-background);
-    border-radius: 3px;
-    box-shadow: 0 0px 16px 6px rgba(20, 20, 20, 0.125), 0 26px 20px 0 rgba(0, 0, 0, 0.19); 
+    border-radius: 0.25rem;
+    box-shadow:
+        0 0 1rem 0.375rem rgba(20, 20, 20, 0.125),
+        0 1.5rem 1.25rem 0 rgba(0, 0, 0, 0.19);
 }
 
 .form-header {
@@ -102,13 +117,11 @@ h2 {
 
 input {
     width: 100%;
-    border-radius: 2px;
     margin-bottom: 0.5rem;
 }
 
 button {
     height: 2.5rem;
-    border-radius: 3px;
     width: 100%;
     margin-top: 1rem;
 }
@@ -116,11 +129,11 @@ button {
 .form-footer {
     margin: 1rem 0;
     padding: 0.75rem 0;
-    border-top: 1px solid var(--p-inputtext-border-color);
+    border-top: 0.08rem solid var(--p-inputtext-border-color);
 }
 
 .form-footer h2 {
-    padding-bottom: 1.0rem;
+    padding-bottom: 1rem;
     font-size: 0.95rem;
 }
 </style>
