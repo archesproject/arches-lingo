@@ -168,10 +168,7 @@ watch(searchResults, (searchResults) => {
 </script>
 
 <template>
-    <div
-        id="basic-search-container"
-        style="width: 100%; font-family: sans-serif"
-    >
+    <div id="basic-search-container">
         <div style="display: flex; align-items: center">
             <i
                 class="pi pi-search search-icon"
@@ -236,7 +233,7 @@ watch(searchResults, (searchResults) => {
                 "
             >
                 <template #empty>
-                    <div style="font-family: sans-serif; text-align: center">
+                    <div style="text-align: center">
                         {{ $gettext("No search results found") }}
                     </div>
                 </template>
@@ -272,6 +269,12 @@ watch(searchResults, (searchResults) => {
 </template>
 
 <style scoped>
+#basic-search-container {
+    width: 100%;
+    font-family: "Open Sans", "Lucida Sans", "Lucida Sans Regular",
+        "Lucida Grande", "Lucida Sans Unicode", Geneva, Verdana, sans-serif;
+}
+
 .clear-button {
     background-color: transparent !important;
     position: absolute;
