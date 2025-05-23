@@ -107,7 +107,6 @@ router.beforeEach(async (to, _from, next) => {
         <PageHeader v-if="route.meta.shouldShowNavigation" />
 
         <div class="main-content">
-           
             <SideNav v-if="route.meta.shouldShowNavigation" />
 
             <div class="content-panel">
@@ -129,7 +128,8 @@ router.beforeEach(async (to, _from, next) => {
 
 <style scoped>
 main {
-    font-family: sans-serif;
+    font-family: "Open Sans", "Lucida Sans", "Lucida Sans Regular",
+        "Lucida Grande", "Lucida Sans Unicode", Geneva, Verdana, sans-serif;
     height: 100vh;
     width: 100vw;
     overflow: hidden;

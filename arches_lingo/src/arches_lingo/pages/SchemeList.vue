@@ -53,7 +53,6 @@ onMounted(async () => {
 <style scoped>
 .scheme-cards-container {
     padding: 0rem 1rem;
-    font-family: 'Open Sans', 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
 }
 .scheme-cards {
     display: flex;

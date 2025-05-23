@@ -39,7 +39,10 @@ const getParentLabels = (
         :class="{ 'is-even': searchResult.index % 2 === 0 }"
     >
         <div style="margin: 0 0.5rem">
-            <i class="pi pi-paperclip concept-icon" aria-hidden="true"/>
+            <i
+                class="pi pi-paperclip concept-icon"
+                aria-hidden="true"
+            />
             {{
                 getItemLabel(searchResult.option, ENGLISH.code, ENGLISH.code)
                     .value
@@ -66,7 +69,6 @@ const getParentLabels = (
     flex-direction: column;
     background-color: var(--p-dialog-background);
     border-bottom: 1px solid var(--p-zinc-200);
-    font-family: sans-serif;
     color: var(--p-sky-600);
 }
 
@@ -85,7 +87,6 @@ const getParentLabels = (
 }
 
 .concept-icon {
-    font-size: .75rem;
+    font-size: 0.75rem;
 }
-
 </style>
