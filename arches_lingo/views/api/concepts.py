@@ -165,7 +165,7 @@ class ConceptRelationshipView(ConceptTreeView):
         Concept = SemanticResource.as_model("concept", as_representation=True)
 
         concept = Concept.get(pk=concept_id)
-        scheme_id = concept.aliased_data.part_of_scheme.part_of_scheme[0]["resourceId"]
+        scheme_id = concept.aliased_data.part_of_scheme.aliased_data.part_of_scheme[0]["resourceId"]
         
         if relationship_type == "associated":
             relationships = concept.aliased_data.relation_status
