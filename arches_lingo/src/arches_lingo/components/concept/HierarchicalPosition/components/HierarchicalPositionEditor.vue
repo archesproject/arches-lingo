@@ -2,6 +2,7 @@
 import { inject, ref, useTemplateRef, watch } from "vue";
 
 import { useRouter } from "vue-router";
+import Button from "primevue/button";
 import { Form } from "@primevue/forms";
 
 import ConceptResourceSelectWidget from "@/arches_lingo/components/widgets/ConceptResourceSelectWidget/ConceptResourceSelectWidget.vue";
@@ -69,13 +70,23 @@ async function save(e: FormSubmitEvent) {
             });
             updatedTileId =
                 updatedConcept.aliased_data[props.nodegroupAlias][0].tileid;
-        } else {
+        } else {            
+            let nodegroupAlias;
+            let values;
+            if (Object.values(formData)[0][0].resourceId == props.scheme) {
+                nodegroupAlias = "top_concept_of";
+                values = { "top_concept_of": Object.values(formData)[0] };
+            } else {
+                nodegroupAlias = props.nodegroupAlias;
+                values = formData;
+            }
+
             const updatedConcept = await upsertLingoTile(
                 props.graphSlug,
-                props.nodegroupAlias,
+                nodegroupAlias,
                 {
                     resourceinstance: props.resourceInstanceId,
-                    aliased_data: { ...formData },
+                    aliased_data: { ...values },
                     tileid: props.tileId,
                 },
             );
