@@ -68,22 +68,22 @@ const getParentLabels = (
     align-items: flex-start;
     flex-direction: column;
     background-color: var(--p-dialog-background);
-    border-bottom: 1px solid var(--p-zinc-200);
-    color: var(--p-sky-600);
+    border-bottom: 0.06rem solid var(--p-search-result-border-bottom);
+    color: var(--p-search-result-color);
 }
 
 .search-result-hierarchy {
     margin: 0 0.5rem;
     font-size: small;
-    color: var(--p-zinc-400);
+    color: var(--p-search-result-hierarchy-color);
 }
 
 .p-focus > .search-result {
-    background-color: var(--p-sky-100);
+    background-color: var(--p-search-result-focus-background);
 }
 
 .is-even {
-    background-color: var(--p-slate-100);
+    background-color: var(--p-search-result-is-even-background);
 }
 
 .concept-icon {

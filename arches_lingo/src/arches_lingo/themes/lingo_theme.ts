@@ -20,36 +20,61 @@ export const LingoPreset = definePreset(ArchesPreset, {
             light: {
                 primary: palette(archesPrimitives.arches.blue),
                 surface: palette("{slate}"),
+                checkbox: {
+                    background: "{light-gray}",
+                },
+                searchResult: {
+                    color: "{sky.600}",
+                    borderBottom: "{zinc.200}",
+                    isEven: {
+                        background: "{surface.100}",
+                    },
+                    focus: {
+                        background: "{sky.100}",
+                    },
+                },
+                searchResultHierarchy: {
+                    color: "{zinc.400}",
+                },
                 sidenav: {
-                    background: "{arches.legacy.sidebar}",
+                    backgroundColor: "{arches.legacy.sidebar}",
                 },
                 sortAndFilterControls: {
                     background: "{light-blue-gray}",
                     border: "{gray}",
-                },
-                checkbox: {
-                    background: "{light-gray}",
                 },
             },
             dark: {
                 // DRW: develop Arches blue color for dark mode
                 primary: palette(archesPrimitives.arches.blue),
                 surface: palette("{zinc}"),
-                sidenav: {
-                    background: "{surface.800}",
-                },
-                header: {
-                    background: "{surface.900}",
+                checkbox: {
+                    background: "{surface.500}",
                 },
                 footer: {
                     background: "{surface.900}",
                 },
+                header: {
+                    background: "{surface.900}",
+                },
+                searchResult: {
+                    borderBottom: "{surface.900}",
+                    isEven: {
+                        background: "{surface.800}",
+                    },
+                    focus: {
+                        background: "{sky.900}",
+                    },
+                },
+                searchResultHierarchy: {
+                    color: "{zinc.400}",
+                },
+                sidenav: {
+                    background: "{surface.800}",
+                },
                 sortAndFilterControls: {
                     background: "{surface.700}",
                     border: "{#surface.900}",
-                },
-                checkbox: {
-                    background: "{surface.500}",
                 },
             },
         },
