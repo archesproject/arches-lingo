@@ -158,8 +158,7 @@ reset_database() {
 	(echo "CREATE DATABASE template_postgis" | ../ENV/bin/python manage.py dbshell --database postgres && \
 	echo "CREATE EXTENSION postgis" | ../ENV/bin/python manage.py dbshell --database postgres))
 	../ENV/bin/python manage.py packages -o load_package -a arches_lingo -db -dev -y
-	../ENV/bin/python manage.py packages -o import_business_data -s tests/fixtures/data/aat_entries_scheme_examples.json -ow overwrite
-	../ENV/bin/python manage.py packages -o import_business_data -s tests/fixtures/data/aat_entries_concept_examples.json -ow overwrite
+	../ENV/bin/python manage.py loaddata tests/fixtures/data/FISH_Thesauri_example_data_resources.json tests/fixtures/data/FISH_Thesauri_example_data_tiles.json
 	../ENV/bin/python manage.py es reindex_database -mp
 }
 

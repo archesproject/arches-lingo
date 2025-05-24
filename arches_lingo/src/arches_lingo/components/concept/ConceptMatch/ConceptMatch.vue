@@ -39,7 +39,7 @@ onMounted(async () => {
         (props.mode === VIEW || !shouldCreateNewTile)
     ) {
         const sectionValue = await getSectionValue();
-        tileData.value = sectionValue;
+        tileData.value = sectionValue?.data;
         schemeId.value = sectionValue.scheme_id;
     }
     isLoading.value = false;
@@ -49,14 +49,13 @@ async function getSectionValue() {
     try {
         const sectionValue = await fetchConceptRelationships(
             props.resourceInstanceId as string,
-            "matched"
+            "matched",
         );
         return sectionValue;
     } catch (error) {
         fetchError.value = error;
     }
 }
-
 </script>
 
 <template>
@@ -79,6 +78,7 @@ async function getSectionValue() {
             :graph-slug="props.graphSlug"
             :nodegroup-alias="props.nodegroupAlias"
             :component-name="props.componentName"
+            :scheme="schemeId"
         />
         <ConceptMatchEditor
             v-else-if="mode === EDIT"

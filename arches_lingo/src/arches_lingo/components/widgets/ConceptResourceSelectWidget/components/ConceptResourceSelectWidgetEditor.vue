@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import arches from "arches";
-import { computed, ref, useTemplateRef } from "vue";
+import { computed, ref } from "vue";
 
 import { useGettext } from "vue3-gettext";
 import { FormField } from "@primevue/forms";
@@ -10,7 +10,7 @@ import Message from "primevue/message";
 import MultiSelect from "primevue/multiselect";
 
 import { fetchConceptResources } from "@/arches_lingo/api.ts";
-import { getItemLabel } from "@/arches_vue_utils/utils.ts";
+import { getItemLabel } from "@/arches_component_lab/utils.ts";
 import { getParentLabels } from "@/arches_lingo/utils.ts";
 import { ENGLISH } from "@/arches_lingo/constants.ts";
 
@@ -26,6 +26,7 @@ const props = defineProps<{
     nodeAlias: string;
     scheme: string;
     exclude: boolean;
+    schemeSelectable: boolean;
 }>();
 
 props.initialValue?.forEach((option) => {
@@ -73,10 +74,14 @@ async function getOptions(page: number, filterTerm?: string) {
         });
         if (page === 1) {
             options.value = parsedResponse.data;
+            if (props.schemeSelectable && parsedResponse.data.length > 0) {
+                const scheme = parsedResponse.data[0].parents[0][0];
+                scheme.parents = [[parsedResponse.data[0].parents[0][0]]];
+                options.value.unshift(scheme);
+            }
         } else {
             options.value = [...options.value, ...parsedResponse.data];
         }
-
         searchResultsPage.value = parsedResponse.current_page;
         searchResultsTotalCount.value = parsedResponse.total_results;
     } catch (error) {

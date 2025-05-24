@@ -11,7 +11,8 @@ from arches.app.utils.betterJSONSerializer import JSONDeserializer, JSONSerializ
 from arches.app.utils.decorators import group_required
 from arches.app.utils.response import JSONErrorResponse, JSONResponse
 
-from arches_lingo.models import VwLabelValue
+from arches_querysets.models import SemanticTile
+from arches_lingo.querysets import fuzzy_search
 from arches_lingo.utils.concept_builder import ConceptBuilder
 from arches_querysets.models import SemanticResource
 
@@ -41,15 +42,15 @@ class ValueSearchView(ConceptTreeView):
         page_number = request.GET.get("page", 1)
         items_per_page = request.GET.get("items", 25)
 
+        labels = SemanticTile.as_nodegroup("appellative_status", graph_slug="concept")
+
         if exact:
-            concept_query = VwLabelValue.objects.filter(value=term).order_by(
-                "concept_id"
-            )
+            concept_query = labels.filter(
+                appellative_status_ascribed_name_content=term
+            ).order_by("resourceinstance")
         elif term:
             try:
-                concept_query = VwLabelValue.objects.fuzzy_search(
-                    term, max_edit_distance
-                )
+                concept_query = fuzzy_search(labels, term, max_edit_distance)
             except ValueError as ve:
                 return JSONErrorResponse(
                     title=_("Unable to perform search."),
@@ -57,8 +58,10 @@ class ValueSearchView(ConceptTreeView):
                     status=HTTPStatus.BAD_REQUEST,
                 )
         else:
-            concept_query = VwLabelValue.objects.all().order_by("concept_id")
-        concept_ids = concept_query.values_list("concept_id", flat=True).distinct()
+            concept_query = labels.order_by("resourceinstance")
+        concept_ids = concept_query.values_list(
+            "resourceinstance", flat=True
+        ).distinct()
 
         data = []
         paginator = Paginator(concept_ids, items_per_page)
@@ -111,27 +114,22 @@ class ConceptResourceView(ConceptTreeView):
         Concept = SemanticResource.as_model("concept")
 
         if not concept_ids:
-            # if scheme:
-            #     if exclude == "true":
-            #         concept_query = Concept.exclude(
-            #             part_of_scheme__0__0__resourceId=scheme
-            #         )
-            #     else:
-            #         concept_query = Concept.filter(
-            #             part_of_scheme__0__0__resourceId=scheme
-            #         )
-            # else:
-            concept_query = Concept.all()
+            if scheme:
+                if exclude == "true":
+                    concept_query = Concept.exclude(
+                        part_of_scheme__0__resourceId=scheme
+                    )
+                else:
+                    concept_query = Concept.filter(part_of_scheme__0__resourceId=scheme)
+            else:
+                concept_query = Concept.all()
 
             if term:
-                filtering_concept_ids = VwLabelValue.objects.filter(
-                    value__icontains=term
-                ).values_list("concept_id", flat=True)
-                concept_query = concept_query.filter(pk__in=filtering_concept_ids)
+                concept_query = concept_query.filter(
+                    appellative_status_ascribed_name_content__icontains=term
+                )
 
-            concept_ids = (
-                concept_query.order_by("pk").values_list("pk", flat=True)
-            )
+            concept_ids = concept_query.order_by("pk").values_list("pk", flat=True)
 
         data = []
         paginator = Paginator(concept_ids, items_per_page)
@@ -160,34 +158,25 @@ class ConceptResourceView(ConceptTreeView):
 )
 class ConceptRelationshipView(ConceptTreeView):
     def get(self, request):
-        def get_pref_label(labels, language):
-            pref_label = {
-                "display_value": "",
-                "list_item_id": "",
-            }
-            for label in labels:
-                if label["language_id"] == language and label["valuetype_id"] == "prefLabel":
-                    pref_label["display_value"] = label["value"]
-                    pref_label["list_item_id"] = label["list_item_id"]
-                    break
-            return pref_label
-
         concept_id = request.GET.get("concept")
         relationship_type = request.GET.get("type")
-        language = get_language()
-        Concept = SemanticResource.as_model("concept")
+        Concept = SemanticResource.as_model("concept", as_representation=True)
 
         concept = Concept.get(pk=concept_id)
-        scheme_id = concept.aliased_data.part_of_scheme.aliased_data.part_of_scheme["resourceId"]
-        
+        scheme_id = concept.aliased_data.part_of_scheme.aliased_data.part_of_scheme[0][
+            "resourceId"
+        ]
+
         if relationship_type == "associated":
             relationships = concept.aliased_data.relation_status
         elif relationship_type == "matched":
             relationships = concept.aliased_data.match_status
 
-        return_data = []
+        return_data = {"data": []}
         for relationship in relationships:
-            data = JSONDeserializer().deserialize(JSONSerializer().serialize(relationship))
+            data = JSONDeserializer().deserialize(
+                JSONSerializer().serialize(relationship)
+            )
             aliased_data = JSONDeserializer().deserialize(
                 JSONSerializer().serialize(relationship.aliased_data)
             )
@@ -196,37 +185,26 @@ class ConceptRelationshipView(ConceptTreeView):
             for node_alias, node_value in aliased_data.items():
                 if node_value and type(node_value) == list:
                     resource_id = None
-                    return_labels = []
                     if "resourceId" in node_value[0]:
                         for value in node_value:
                             resource_id = value["resourceId"]
-                            resource = Resource.objects.get(pk=resource_id)
-                            display_value = resource.descriptors[language]["name"]
-                            value["display_value"] = display_value
                         if resource_id:
                             try:
                                 concept = Concept.get(pk=resource_id)
                                 if concept.aliased_data.uri:
-                                    print("concept.aliased_data.uri", concept.aliased_data.uri)
-                                    uri = concept.aliased_data.uri.aliased_data.uri_content
-                                    print(uri)
+                                    uri = (
+                                        concept.aliased_data.uri.aliased_data.uri_content
+                                    )
                             except SemanticResource.DoesNotExist:
                                 pass
-                    elif "labels" in node_value[0]:
-                        for value in node_value:                            
-                            labels = value["labels"]
-                            pref_label = get_pref_label(labels, language)
-                            if pref_label["display_value"]:
-                                return_labels.append(pref_label)
-                        if len(return_labels) > 0:
-                            aliased_data[node_alias] = return_labels
 
             if uri:
                 aliased_data["uri"] = uri
 
             del data["data"]
             data["aliased_data"] = aliased_data
-            data["scheme_id"] = scheme_id
-            return_data.append(data)
+            return_data["data"].append(data)
+
+        return_data["scheme_id"] = scheme_id
 
         return JSONResponse(return_data)
