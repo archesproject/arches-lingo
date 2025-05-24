@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import arches from "arches";
-import { computed, ref, useTemplateRef } from "vue";
+import { computed, ref } from "vue";
 
 import { useGettext } from "vue3-gettext";
 import { FormField } from "@primevue/forms";

@@ -49,14 +49,13 @@ async function getSectionValue() {
     try {
         const sectionValue = await fetchConceptRelationships(
             props.resourceInstanceId as string,
-            "matched"
+            "matched",
         );
         return sectionValue;
     } catch (error) {
         fetchError.value = error;
     }
 }
-
 </script>
 
 <template>

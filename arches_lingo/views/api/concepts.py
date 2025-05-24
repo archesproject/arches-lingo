@@ -120,9 +120,7 @@ class ConceptResourceView(ConceptTreeView):
                         part_of_scheme__0__resourceId=scheme
                     )
                 else:
-                    concept_query = Concept.filter(
-                        part_of_scheme__0__resourceId=scheme
-                    )
+                    concept_query = Concept.filter(part_of_scheme__0__resourceId=scheme)
             else:
                 concept_query = Concept.all()
 
@@ -165,8 +163,10 @@ class ConceptRelationshipView(ConceptTreeView):
         Concept = SemanticResource.as_model("concept", as_representation=True)
 
         concept = Concept.get(pk=concept_id)
-        scheme_id = concept.aliased_data.part_of_scheme.aliased_data.part_of_scheme[0]["resourceId"]
-        
+        scheme_id = concept.aliased_data.part_of_scheme.aliased_data.part_of_scheme[0][
+            "resourceId"
+        ]
+
         if relationship_type == "associated":
             relationships = concept.aliased_data.relation_status
         elif relationship_type == "matched":
@@ -174,7 +174,9 @@ class ConceptRelationshipView(ConceptTreeView):
 
         return_data = []
         for relationship in relationships:
-            data = JSONDeserializer().deserialize(JSONSerializer().serialize(relationship))
+            data = JSONDeserializer().deserialize(
+                JSONSerializer().serialize(relationship)
+            )
             aliased_data = JSONDeserializer().deserialize(
                 JSONSerializer().serialize(relationship.aliased_data)
             )
@@ -190,7 +192,9 @@ class ConceptRelationshipView(ConceptTreeView):
                             try:
                                 concept = Concept.get(pk=resource_id)
                                 if concept.aliased_data.uri:
-                                    uri = concept.aliased_data.uri.aliased_data.uri_content
+                                    uri = (
+                                        concept.aliased_data.uri.aliased_data.uri_content
+                                    )
                             except SemanticResource.DoesNotExist:
                                 pass
 

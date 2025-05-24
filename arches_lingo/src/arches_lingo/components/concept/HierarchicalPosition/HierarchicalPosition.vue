@@ -47,9 +47,9 @@ onMounted(async () => {
         }
         const currentPosition = await getHierarchicalData(concepts.value);
         schemeId.value = currentPosition.data[0].parents[0][0].id;
- 
+
         hierarchicalData.value = currentPosition.data[0].parents.map(
-            (parent: SearchResultItem) => ({ searchResults: parent })
+            (parent: SearchResultItem) => ({ searchResults: parent }),
         );
 
         if (hierarchicalData.value && tileData.value) {

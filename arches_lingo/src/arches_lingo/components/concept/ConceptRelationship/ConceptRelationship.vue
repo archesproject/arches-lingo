@@ -49,7 +49,7 @@ async function getSectionValue() {
     try {
         const sectionValue = await fetchConceptRelationships(
             props.resourceInstanceId as string,
-            "associated"
+            "associated",
         );
         return sectionValue;
     } catch (error) {
