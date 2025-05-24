@@ -75,7 +75,6 @@ async function getOptions(page: number, filterTerm?: string) {
         if (page === 1) {
             options.value = parsedResponse.data;
             if (props.schemeSelectable) {
-                console.log("this happens?");
                 const scheme = parsedResponse.data[0].parents[0][0];
                 scheme.parents = [[parsedResponse.data[0].parents[0][0]]];
                 options.value.unshift(scheme);
@@ -83,7 +82,6 @@ async function getOptions(page: number, filterTerm?: string) {
         } else {
             options.value = [...options.value, ...parsedResponse.data];
         }
-        console.log("options", options.value);
         searchResultsPage.value = parsedResponse.current_page;
         searchResultsTotalCount.value = parsedResponse.total_results;
     } catch (error) {
