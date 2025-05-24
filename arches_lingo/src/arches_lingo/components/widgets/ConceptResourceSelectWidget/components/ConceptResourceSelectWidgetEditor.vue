@@ -74,7 +74,7 @@ async function getOptions(page: number, filterTerm?: string) {
         });
         if (page === 1) {
             options.value = parsedResponse.data;
-            if (props.schemeSelectable) {
+            if (props.schemeSelectable && parsedResponse.data.length > 0) {
                 const scheme = parsedResponse.data[0].parents[0][0];
                 scheme.parents = [[parsedResponse.data[0].parents[0][0]]];
                 options.value.unshift(scheme);

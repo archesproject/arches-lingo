@@ -172,7 +172,7 @@ class ConceptRelationshipView(ConceptTreeView):
         elif relationship_type == "matched":
             relationships = concept.aliased_data.match_status
 
-        return_data = []
+        return_data = {"data": []}
         for relationship in relationships:
             data = JSONDeserializer().deserialize(
                 JSONSerializer().serialize(relationship)
@@ -203,7 +203,8 @@ class ConceptRelationshipView(ConceptTreeView):
 
             del data["data"]
             data["aliased_data"] = aliased_data
-            data["scheme_id"] = scheme_id
-            return_data.append(data)
+            return_data["data"].append(data)
+
+        return_data["scheme_id"] = scheme_id
 
         return JSONResponse(return_data)
