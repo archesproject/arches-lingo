@@ -28,6 +28,7 @@ const props = withDefaults(
         scheme?: string;
         exclude?: boolean | false;
         showLabel?: boolean;
+        schemeSelectable?: boolean | false;
     }>(),
     {
         scheme: "",
@@ -91,6 +92,7 @@ async function getConceptHyerarchy(conceptIds: string[]) {
                 :graph-slug="props.graphSlug"
                 :scheme="props.scheme"
                 :exclude="props.exclude"
+                :scheme-selectable="props.schemeSelectable"
             />
         </div>
         <div v-if="mode === VIEW">

@@ -120,6 +120,7 @@ async function save(e: FormSubmitEvent) {
                 node-alias="classification_status_ascribed_classification"
                 :scheme="props.scheme"
                 :exclude="props.exclude"
+                :scheme-selectable="true"
                 :initial-value="
                     props.tileData?.aliased_data
                         .classification_status_ascribed_classification

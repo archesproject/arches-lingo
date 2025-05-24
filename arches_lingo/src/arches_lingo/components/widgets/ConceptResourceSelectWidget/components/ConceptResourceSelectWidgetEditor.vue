@@ -26,6 +26,7 @@ const props = defineProps<{
     nodeAlias: string;
     scheme: string;
     exclude: boolean;
+    schemeSelectable: boolean;
 }>();
 
 props.initialValue?.forEach((option) => {
@@ -73,13 +74,16 @@ async function getOptions(page: number, filterTerm?: string) {
         });
         if (page === 1) {
             options.value = parsedResponse.data;
-            const scheme = parsedResponse.data[0].parents[0][0];
-            scheme.parents = [[parsedResponse.data[0].parents[0][0]]];
-            options.value.unshift(scheme);
+            if (props.schemeSelectable) {
+                console.log("this happens?");
+                const scheme = parsedResponse.data[0].parents[0][0];
+                scheme.parents = [[parsedResponse.data[0].parents[0][0]]];
+                options.value.unshift(scheme);
+            }
         } else {
             options.value = [...options.value, ...parsedResponse.data];
         }
-
+        console.log("options", options.value);
         searchResultsPage.value = parsedResponse.current_page;
         searchResultsTotalCount.value = parsedResponse.total_results;
     } catch (error) {
