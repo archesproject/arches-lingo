@@ -153,6 +153,7 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
                     <Button
                         icon="pi pi-file-edit"
                         :aria-label="$gettext('edit')"
+                        :disabled="hierarchy.isTopConcept"
                         size="small"
                         @click="openEditor!(componentName, hierarchy.tileid)"
                     />

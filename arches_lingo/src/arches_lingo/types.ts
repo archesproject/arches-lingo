@@ -342,6 +342,7 @@ export interface SearchResultItem {
 export interface SearchResultHierarchy {
     tileid?: string;
     searchResults: SearchResultItem[];
+    isTopConcept?: boolean;
 }
 export interface archesPreset {
     arches: {

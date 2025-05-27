@@ -32,7 +32,7 @@ const props = defineProps<{
 const isLoading = ref(true);
 const fetchError = ref();
 const concepts = ref<string[]>([props.resourceInstanceId!]); // Ensure we have a resource instance id for fetching
-const hierarchicalData = ref<SearchResultHierarchy[]>();
+const hierarchicalData = ref<SearchResultHierarchy[]>([]);
 const schemeId = ref<string>();
 const tileData = ref<ConceptClassificationStatus[]>();
 const topConceptOfTileId = ref<string>();
@@ -63,6 +63,7 @@ onMounted(async () => {
                 )?.tileid;
                 if (!datum.tileid && topConceptOfTileId.value) {
                     datum.tileid = topConceptOfTileId.value;
+                    datum.isTopConcept = true;
                 }
             }
         }
