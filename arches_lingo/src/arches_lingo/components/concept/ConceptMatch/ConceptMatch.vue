@@ -31,13 +31,8 @@ const tileData = ref<ConceptMatchStatus[]>([]);
 const schemeId = ref<string>();
 const fetchError = ref();
 
-const shouldCreateNewTile = Boolean(props.mode === EDIT && !props.tileId);
-
 onMounted(async () => {
-    if (
-        props.resourceInstanceId &&
-        (props.mode === VIEW || !shouldCreateNewTile)
-    ) {
+    if (props.resourceInstanceId) {
         const sectionValue = await getSectionValue();
         tileData.value = sectionValue?.data;
         schemeId.value = sectionValue.scheme_id;

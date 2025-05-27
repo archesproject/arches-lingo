@@ -24,11 +24,13 @@ const props = defineProps<{
     sectionTitle: string;
     graphSlug: string;
     nodegroupAlias: string;
+    scheme?: string;
 }>();
 
 const { $gettext } = useGettext();
 
-const openEditor = inject<(componentName: string) => void>("openEditor");
+const openEditor =
+    inject<(componentName: string, tileId?: string) => void>("openEditor");
 
 const metaStringLabel: MetaStringText = {
     deleteConfirm: $gettext(
