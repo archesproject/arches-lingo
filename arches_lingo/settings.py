@@ -245,6 +245,7 @@ INSTALLED_APPS = (
     "arches.management",
     "guardian",
     "django_recaptcha",
+    "pgtrigger",
     "revproxy",
     "arches_querysets",
     "rest_framework",
