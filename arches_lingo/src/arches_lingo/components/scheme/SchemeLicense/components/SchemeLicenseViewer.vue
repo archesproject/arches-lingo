@@ -35,14 +35,16 @@ const buttonLabel = computed(() => {
 });
 </script>
 <template>
-    <div class="section">
+    <div class="viewer-section">
         <div class="section-header">
             <h2>{{ props.sectionTitle }}</h2>
 
             <Button
                 :label="buttonLabel"
                 class="add-button"
-                @click="openEditor!(props.componentName, props.tileData?.tileid)"
+                @click="
+                    openEditor!(props.componentName, props.tileData?.tileid)
+                "
             ></Button>
         </div>
 
@@ -97,21 +99,20 @@ const buttonLabel = computed(() => {
             />
         </div>
         <div v-else>
-            <p class="section-message">{{ $gettext("No Scheme Rights were found.") }}</p>
+            <p class="section-message">
+                {{ $gettext("No Scheme Rights were found.") }}
+            </p>
         </div>
     </div>
 </template>
 
 <style scoped>
-.section {
-    padding: 1rem 1rem 1.25rem 1rem;
-}
 .section-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     border-bottom: 1px solid var(--p-form-field-border-color);
-    padding-bottom: .5rem;
+    padding-bottom: 0.5rem;
 }
 
 h2 {
@@ -122,7 +123,7 @@ h2 {
 }
 
 .add-button {
-    height: 2.0rem;
+    height: 2rem;
     font-size: 0.9rem;
     font-weight: 400;
     min-width: 10rem;
@@ -130,7 +131,7 @@ h2 {
 }
 
 .section-message {
-    padding: .5rem 0;
+    padding: 0.5rem 0;
     color: var(--p-inputtext-placeholder-color);
     margin: 0;
 }
