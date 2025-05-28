@@ -6,7 +6,7 @@ import type { ReferenceSelectFetchedOption } from "@/arches_controlled_lists/wid
 import type {
     ResourceInstanceReference,
     FileReference,
-    Url
+    URLDatatype
 } from "@/arches_component_lab/widgets/types.ts";
 
 export interface User {
@@ -195,7 +195,7 @@ export interface ConceptMatchAliases extends AliasedData {
     match_status_data_assignment_actor: ResourceInstanceReference[];
     match_status_data_assignment_object_used: ResourceInstanceReference[];
     match_status_data_assignment_type: ReferenceSelectFetchedOption[];
-    uri: Url;
+    uri: URLDatatype;
 }
 
 export type ConceptMatchStatus = TileData<ConceptMatchAliases>;
