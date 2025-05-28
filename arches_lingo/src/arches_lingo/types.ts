@@ -6,7 +6,7 @@ import type { ReferenceSelectFetchedOption } from "@/arches_controlled_lists/wid
 import type {
     ResourceInstanceReference,
     FileReference,
-    URLDatatype
+    URLDatatype,
 } from "@/arches_component_lab/widgets/types.ts";
 
 export interface User {
