@@ -91,7 +91,7 @@ const querySortPreference = ref();
 
 .label {
     font-weight: 400;
-    color: var(--p-zinc-500);
+    color: var(--p-button-text-secondary-color);
 }
 
 .query-sort-preference,
@@ -101,13 +101,13 @@ const querySortPreference = ref();
 }
 
 .query-sort-preference label {
-    font-size: .9rem;
-    color: var(--p-zinc-500);
+    font-size: 0.9rem;
+    color: var(--p-button-text-secondary-color);
 }
 
 .query-filter label {
-    font-size: .9rem;
-    color: var(--p-zinc-500);
+    font-size: 0.9rem;
+    color: var(--p-button-text-secondary-color);
 }
 
 label {
@@ -118,8 +118,8 @@ label {
 :deep(.p-radiobutton-box),
 :deep(.p-checkbox-box) {
     background-color: var(--p-checkbox-background);
-    border: 1px solid;
-    border-color: var(--p-zinc-500);
+    border: 0.06rem solid;
+    border-color: var(--p-button-text-secondary-color);
 }
 
 :deep(.p-checkbox-box) {

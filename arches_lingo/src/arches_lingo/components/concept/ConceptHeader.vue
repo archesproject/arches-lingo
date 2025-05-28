@@ -5,7 +5,6 @@ import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
 
 import Button from "primevue/button";
-import Divider from "primevue/divider";
 import ProgressSpinner from "primevue/progressspinner";
 
 import ResourceInstanceMultiSelectWidget from "@/arches_component_lab/widgets/ResourceInstanceMultiSelectWidget/ResourceInstanceMultiSelectWidget.vue";
@@ -105,11 +104,17 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
         v-if="isLoading"
         style="width: 100%"
     />
-    <div class="concept-header" v-else>
+    <div
+        v-else
+        class="concept-header"
+    >
         <div class="concept-header-panel">
             <div class="header-row">
                 <h2>
-                    {{ data?.descriptor?.name }} <span class="concept-label-lang">({{ data?.descriptor?.language }})</span>
+                    {{ data?.descriptor?.name }}
+                    <span class="concept-label-lang"
+                        >({{ data?.descriptor?.language }})</span
+                    >
                 </h2>
 
                 <!-- TODO: export to rdf/skos/json-ld buttons go here -->
@@ -117,7 +122,9 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                     <span class="header-item-label">{{
                         $gettext("Export:")
                     }}</span>
-                    <span class="header-item-value">CSV | SKOS | RDF | JSON-LD</span>
+                    <span class="header-item-value"
+                        >CSV | SKOS | RDF | JSON-LD</span
+                    >
                 </div>
             </div>
             <div class="header-row uri-container">
@@ -139,7 +146,9 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
             <div class="header-row">
                 <!-- TODO: Human-reable conceptid to be displayed here -->
                 <div class="header-item">
-                    <span class="header-item-label">{{ $gettext("Scheme:") }}</span>
+                    <span class="header-item-label">{{
+                        $gettext("Scheme:")
+                    }}</span>
                     <!-- TODO: Allow resource multiselect to route within lingo, not to resource pg -->
                     <ResourceInstanceMultiSelectWidget
                         :graph-slug="props.graphSlug"
@@ -150,15 +159,16 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                         :show-label="false"
                     ></ResourceInstanceMultiSelectWidget>
                 </div>
-                
+
                 <!-- TODO: Life Cycle mgmt functionality goes here -->
                 <div class="header-item">
                     <span class="header-item-label">{{
                         $gettext("Life cycle state:")
                     }}</span>
-                    <span class="header-item-value">{{ data?.lifeCycleState }}</span>
+                    <span class="header-item-value">{{
+                        data?.lifeCycleState
+                    }}</span>
                 </div>
-                
             </div>
             <div class="header-row">
                 <div class="header-item">
@@ -175,8 +185,12 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                     ></ResourceInstanceMultiSelectWidget>
                 </div>
                 <div class="header-item">
-                    <span class="header-item-label">{{ $gettext("Owner:") }}</span>
-                    <span class="header-item-value">{{ data?.principalUser || $gettext("Anonymous") }}</span>
+                    <span class="header-item-label">{{
+                        $gettext("Owner:")
+                    }}</span>
+                    <span class="header-item-value">{{
+                        data?.principalUser || $gettext("Anonymous")
+                    }}</span>
                 </div>
             </div>
         </div>
@@ -186,8 +200,8 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
 <style scoped>
 .concept-header {
     padding: 1rem 1rem 1.25rem 1rem;
-    background: var(--p-slate-50);
-    border-bottom: 1px solid var(--p-neutral-300);
+    background: var(--p-header-background);
+    border-bottom: 0.06rem solid var(--p-header-border);
 }
 
 .concept-header-panel {
@@ -201,12 +215,12 @@ h2 {
 }
 
 .concept-label-lang {
-    font-size: .9rem;
-    color: var(--p-slate-400);
+    font-size: 0.9rem;
+    color: var(--p-text-muted-color);
 }
 
-.concept-uri{
-    font-size: .8rem;
+.concept-uri {
+    font-size: 0.8rem;
     font-weight: 400;
     color: var(--p-primary-500);
 }
@@ -231,18 +245,14 @@ h2 {
 }
 .header-item-label {
     font-weight: 400;
-    font-size: .9rem;
-    color: var(--p-slate-500);
+    font-size: 0.9rem;
+    color: var(--p-header-item-label);
     margin-inline-end: 0.25rem;
 }
 
-.header-item-value {
-    font-size: .9rem;
-    color: var(--p-primary-500);
-}
-
+.header-item-value,
 :deep(a) {
+    font-size: 0.9rem;
     color: var(--p-primary-500);
-    font-size: .9rem;
 }
 </style>

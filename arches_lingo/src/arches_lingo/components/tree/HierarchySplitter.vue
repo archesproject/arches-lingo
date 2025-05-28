@@ -52,7 +52,7 @@ provide("refreshConceptTree", refreshConceptTree);
         />
     </div>
     <Splitter
-        style="height: 100%; overflow: hidden; border-radius: 0px;"
+        style="height: 100%; overflow: hidden; border-radius: 0"
         class="hierarchy-container"
         :pt="{
             gutter: {
@@ -84,7 +84,7 @@ provide("refreshConceptTree", refreshConceptTree);
     margin: 0;
     gap: 0.5rem;
     height: 3rem;
-    background: var(--p-slate-100);
+    background: var(--p-button-secondary-background);
 }
 
 .subheading h2 {
@@ -93,8 +93,10 @@ provide("refreshConceptTree", refreshConceptTree);
 
 .toggle-hierarchy {
     border-radius: 0;
-    border-right: 1px solid #ddd;
-    border-left: 1px solid #ddd;
-    font-size: .9rem;
+    border-inline-start: 0.06rem solid
+        var(--p-button-secondary-active-border-color);
+    border-inline-end: 0.06rem solid
+        var(--p-button-secondary-active-border-color);
+    font-size: 0.9rem;
 }
 </style>

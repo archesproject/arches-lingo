@@ -23,6 +23,11 @@ export const LingoPreset = definePreset(ArchesPreset, {
                 checkbox: {
                     background: "{light-gray}",
                 },
+                header: {
+                    background: "{surface.50}",
+                    border: "{neutral.300}",
+                    itemLabel: "{surface.500}",
+                },
                 searchResult: {
                     color: "{sky.600}",
                     borderBottom: "{zinc.200}",
@@ -55,7 +60,9 @@ export const LingoPreset = definePreset(ArchesPreset, {
                     background: "{surface.900}",
                 },
                 header: {
-                    background: "{surface.900}",
+                    background: "{surface.700}",
+                    border: "{neutral.500}",
+                    itemLabel: "{surface.400}",
                 },
                 searchResult: {
                     borderBottom: "{surface.900}",
@@ -74,7 +81,7 @@ export const LingoPreset = definePreset(ArchesPreset, {
                 },
                 sortAndFilterControls: {
                     background: "{surface.700}",
-                    border: "{#surface.900}",
+                    border: "{surface.900}",
                 },
             },
         },

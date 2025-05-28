@@ -3,7 +3,6 @@ import { inject, onMounted, ref } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import { useToast } from "primevue/usetoast";
-import Divider from "primevue/divider";
 import ProgressSpinner from "primevue/progressspinner";
 
 import {
@@ -86,11 +85,17 @@ onMounted(async () => {
         style="width: 100%"
     />
 
-    <div class="scheme-header" v-else>
+    <div
+        v-else
+        class="scheme-header"
+    >
         <div class="scheme-header-panel">
             <div class="header-row">
                 <h2>
-                    {{ data?.descriptor?.name }}  <span class="scheme-label-lang">({{ data?.descriptor?.language }})</span>
+                    {{ data?.descriptor?.name }}
+                    <span class="scheme-label-lang"
+                        >({{ data?.descriptor?.language }})</span
+                    >
                 </h2>
 
                 <!-- TODO: export to rdf/skos/json-ld buttons go here -->
@@ -98,7 +103,9 @@ onMounted(async () => {
                     <span class="header-item-label">{{
                         $gettext("Export:")
                     }}</span>
-                    <span class="header-item-value">CSV | SKOS | RDF | JSON-LD</span>
+                    <span class="header-item-value"
+                        >CSV | SKOS | RDF | JSON-LD</span
+                    >
                 </div>
             </div>
 
@@ -108,25 +115,41 @@ onMounted(async () => {
             </div>
 
             <div class="header-row metadata-container">
-
                 <!-- TODO: Load Scheme languages here -->
                 <div class="language-chip-container">
-                    <span class="scheme-language">{{ $gettext("English (en)") }}</span>
-                    <span class="scheme-language">{{ $gettext("German (de)") }}</span>
-                    <span class="scheme-language">{{ $gettext("French (fr)") }}</span>
-                    <span class="add-language">{{ $gettext("Add Language") }}</span>
+                    <span class="scheme-language">{{
+                        $gettext("English (en)")
+                    }}</span>
+                    <span class="scheme-language">{{
+                        $gettext("German (de)")
+                    }}</span>
+                    <span class="scheme-language">{{
+                        $gettext("French (fr)")
+                    }}</span>
+                    <span class="add-language">{{
+                        $gettext("Add Language")
+                    }}</span>
                 </div>
-                
+
                 <div class="lifecycle-container">
                     <div class="header-item">
                         <span class="header-item-label">{{
                             $gettext("Life cycle state:")
                         }}</span>
-                        <span class="header-item-value">{{ data?.lifeCycleState }}</span>
+                        <span class="header-item-value">{{
+                            data?.lifeCycleState
+                        }}</span>
                     </div>
-                    <div class="header-item" style="padding-top: .1rem;">
-                        <span class="header-item-label">{{ $gettext("Owner:") }}</span>
-                        <span class="header-item-value">{{ data?.principalUser || $gettext("Anonymous") }}</span>
+                    <div
+                        class="header-item"
+                        style="padding-top: 0.1rem"
+                    >
+                        <span class="header-item-label">{{
+                            $gettext("Owner:")
+                        }}</span>
+                        <span class="header-item-value">{{
+                            data?.principalUser || $gettext("Anonymous")
+                        }}</span>
                     </div>
                 </div>
             </div>
@@ -137,8 +160,8 @@ onMounted(async () => {
 <style scoped>
 .scheme-header {
     padding: 1rem 1rem 1.25rem 1rem;
-    background: var(--p-slate-50);
-    border-bottom: 1px solid var(--p-neutral-300);
+    background: var(--p-header-background);
+    border-bottom: 0.06rem solid var(--p-header-border);
 }
 
 .scheme-header-panel {
@@ -152,65 +175,75 @@ h2 {
 }
 
 .scheme-label-lang {
-    font-size: .9rem;
-    color: var(--p-slate-400);
+    font-size: 0.9rem;
+    color: var(--p-text-muted-color);
 }
 
 .p-button-link {
     padding: 0;
     margin: 0;
 }
+
 .header-row {
     display: flex;
     justify-content: space-between;
     align-items: baseline;
 }
+
 .uri-container {
     justify-content: flex-start;
 }
+
 .metadata-container {
     gap: 0.25rem;
-    margin-top: .5rem;
+    margin-top: 0.5rem;
     justify-content: space-between;
     align-items: anchor-center;
 }
+
 .language-chip-container {
-    display: flex; gap: .25rem; 
+    display: flex;
+    gap: 0.25rem;
     align-items: center;
 }
+
 .lifecycle-container {
-    display: flex; 
+    display: flex;
     flex-direction: column;
     align-items: end;
 }
+
 .add-language {
-    font-size: .9rem;
+    font-size: 0.9rem;
     color: var(--p-primary-500);
     text-decoration: underline;
-    padding: 0 .5rem;
+    padding: 0 0.5rem;
 }
+
 .header-item {
     display: inline-flex;
     margin-inline-end: 1rem;
     align-items: baseline;
 }
+
 .header-item-label {
     font-weight: 400;
-    font-size: .9rem;
-    color: var(--p-slate-500);
+    font-size: 0.9rem;
+    color: var(--p-header-item-label);
     margin-inline-end: 0.25rem;
 }
+
 .header-item-value {
-    font-size: .9rem;
+    font-size: 0.9rem;
     color: var(--p-primary-500);
 }
 
 .scheme-language {
     padding: 0.5rem 1rem;
     background: var(--p-menubar-item-icon-color);
-    border: 1px solid var(--p-menubar-item-icon-color);
-    border-radius: 2px;
-    font-size: .9rem;
+    border: 0.06rem solid var(--p-menubar-item-icon-color);
+    border-radius: 0.125rem;
+    font-size: 0.9rem;
     color: var(--p-content-color);
 }
 </style>
