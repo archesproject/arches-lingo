@@ -407,6 +407,6 @@ function onNodeSelect(node: TreeNode) {
 </template>
 <style scoped>
 :deep(.p-tree-filter-input) {
-    border-radius: 2px;
+    border-radius: 0.125rem;
 }
 </style>

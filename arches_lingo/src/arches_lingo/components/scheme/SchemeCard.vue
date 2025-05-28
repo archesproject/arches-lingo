@@ -25,10 +25,18 @@ const schemeDescriptor = extractDescriptors(scheme, systemLanguage);
     <RouterLink :to="schemeURL">
         <Card>
             <template #title>
-                <p class="new-scheme-card" v-if="scheme.resourceinstanceid === NEW">
+                <p
+                    v-if="scheme.resourceinstanceid === NEW"
+                    class="new-scheme-card"
+                >
                     {{ $gettext("Create a new scheme") }}
                 </p>
-                <p class="scheme-card" v-else>{{ schemeDescriptor.name }}</p>
+                <p
+                    v-else
+                    class="scheme-card"
+                >
+                    {{ schemeDescriptor.name }}
+                </p>
             </template>
             <template #content>
                 <p>{{ schemeDescriptor.description }}</p>
@@ -48,7 +56,7 @@ a {
     width: 15rem;
     height: 15rem;
     margin: 0.25rem;
-    border-radius: 2px;
+    border-radius: 0.125rem;
 }
 
 :deep(.p-card-body) {

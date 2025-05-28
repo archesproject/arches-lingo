@@ -122,10 +122,6 @@ label {
     border-color: var(--p-button-text-secondary-color);
 }
 
-:deep(.p-checkbox-box) {
-    border-radius: 2px;
-}
-
 @media screen and (max-width: 960px) {
     .sort-and-filter-controls {
         flex-direction: column;
