@@ -1,0 +1,25 @@
+{
+    "_comment": "This is a generated file. Do not edit directly.",
+    "compilerOptions": {
+        "paths": {
+            "@/arches/*": [
+                "../../ENV/lib/python3.12/site-packages/arches/app/src/arches/*"
+            ],
+            "@/arches_lingo/*": [
+                "../arches_lingo/src/arches_lingo/*"
+            ],
+            "@/arches_component_lab/*": [
+                "../../ENV/lib/python3.12/site-packages/arches_component_lab/src/arches_component_lab/*"
+            ],
+            "@/arches_controlled_lists/*": [
+                "../../ENV/lib/python3.12/site-packages/arches_controlled_lists/src/arches_controlled_lists/*"
+            ],
+            "@/arches_querysets/*": [
+                "../../ENV/lib/python3.12/site-packages/arches_querysets/src/arches_querysets/*"
+            ],
+            "*": [
+                "../node_modules/*"
+            ]
+        }
+    }
+}

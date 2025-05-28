@@ -1,0 +1,2917 @@
+{
+    "_comment": "This file is auto-generated. Do not edit manually.",
+    "add_resource": [
+        {
+            "url": "/add-resource/{graphid}",
+            "params": [
+                "graphid"
+            ]
+        }
+    ],
+    "admin": [
+        {
+            "url": "/admin/auth/group/{object_id}/",
+            "params": [
+                "object_id"
+            ]
+        },
+        {
+            "url": "/admin/auth/user/{object_id}/",
+            "params": [
+                "object_id"
+            ]
+        },
+        {
+            "url": "/admin/models/mapsource/{object_id}/",
+            "params": [
+                "object_id"
+            ]
+        },
+        {
+            "url": "/admin/models/geocoder/{object_id}/",
+            "params": [
+                "object_id"
+            ]
+        },
+        {
+            "url": "/admin/models/mapmarker/{object_id}/",
+            "params": [
+                "object_id"
+            ]
+        },
+        {
+            "url": "/admin/models/ddatatype/{object_id}/",
+            "params": [
+                "object_id"
+            ]
+        },
+        {
+            "url": "/admin/models/widget/{object_id}/",
+            "params": [
+                "object_id"
+            ]
+        },
+        {
+            "url": "/admin/models/userprofile/{object_id}/",
+            "params": [
+                "object_id"
+            ]
+        },
+        {
+            "url": "/admin/models/graphmodel/{object_id}/",
+            "params": [
+                "object_id"
+            ]
+        },
+        {
+            "url": "/admin/models/resourceinstancelifecycle/{object_id}/",
+            "params": [
+                "object_id"
+            ]
+        },
+        {
+            "url": "/admin/models/resourceinstancelifecyclestate/{object_id}/",
+            "params": [
+                "object_id"
+            ]
+        },
+        {
+            "url": "/admin/models/searchcomponent/{object_id}/",
+            "params": [
+                "object_id"
+            ]
+        },
+        {
+            "url": "/admin/models/iiifmanifest/{object_id}/",
+            "params": [
+                "object_id"
+            ]
+        },
+        {
+            "url": "/admin/models/groupmapsettings/{object_id}/",
+            "params": [
+                "object_id"
+            ]
+        },
+        {
+            "url": "/admin/models/language/{object_id}/",
+            "params": [
+                "object_id"
+            ]
+        },
+        {
+            "url": "/admin/models/nodegroup/{object_id}/",
+            "params": [
+                "object_id"
+            ]
+        },
+        {
+            "url": "/admin/models/spatialview/{object_id}/",
+            "params": [
+                "object_id"
+            ]
+        },
+        {
+            "url": "/admin/models/userpreference/{object_id}/",
+            "params": [
+                "object_id"
+            ]
+        },
+        {
+            "url": "/admin/models/plugin/{object_id}/",
+            "params": [
+                "object_id"
+            ]
+        },
+        {
+            "url": "/admin/models/maplayer/{object_id}/",
+            "params": [
+                "object_id"
+            ]
+        },
+        {
+            "url": "/admin/models/etlmodule/{object_id}/",
+            "params": [
+                "object_id"
+            ]
+        },
+        {
+            "url": "/admin/oauth2_provider/application/{object_id}/",
+            "params": [
+                "object_id"
+            ]
+        },
+        {
+            "url": "/admin/oauth2_provider/accesstoken/{object_id}/",
+            "params": [
+                "object_id"
+            ]
+        },
+        {
+            "url": "/admin/oauth2_provider/grant/{object_id}/",
+            "params": [
+                "object_id"
+            ]
+        },
+        {
+            "url": "/admin/oauth2_provider/idtoken/{object_id}/",
+            "params": [
+                "object_id"
+            ]
+        },
+        {
+            "url": "/admin/oauth2_provider/refreshtoken/{object_id}/",
+            "params": [
+                "object_id"
+            ]
+        },
+        {
+            "url": "/admin/django_celery_results/taskresult/{object_id}/",
+            "params": [
+                "object_id"
+            ]
+        },
+        {
+            "url": "/admin/django_celery_results/groupresult/{object_id}/",
+            "params": [
+                "object_id"
+            ]
+        },
+        {
+            "url": "/admin/{url}",
+            "params": [
+                "url"
+            ]
+        }
+    ],
+    "admin:app_list": [
+        {
+            "url": "/admin/{app_label}/",
+            "params": [
+                "app_label"
+            ]
+        }
+    ],
+    "admin:auth_group_add": [
+        {
+            "url": "/admin/auth/group/add/",
+            "params": []
+        }
+    ],
+    "admin:auth_group_change": [
+        {
+            "url": "/admin/auth/group/{object_id}/change/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:auth_group_changelist": [
+        {
+            "url": "/admin/auth/group",
+            "params": []
+        }
+    ],
+    "admin:auth_group_delete": [
+        {
+            "url": "/admin/auth/group/{object_id}/delete/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:auth_group_history": [
+        {
+            "url": "/admin/auth/group/{object_id}/history/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:auth_user_add": [
+        {
+            "url": "/admin/auth/user/add/",
+            "params": []
+        }
+    ],
+    "admin:auth_user_change": [
+        {
+            "url": "/admin/auth/user/{object_id}/change/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:auth_user_changelist": [
+        {
+            "url": "/admin/auth/user",
+            "params": []
+        }
+    ],
+    "admin:auth_user_delete": [
+        {
+            "url": "/admin/auth/user/{object_id}/delete/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:auth_user_history": [
+        {
+            "url": "/admin/auth/user/{object_id}/history/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:auth_user_password_change": [
+        {
+            "url": "/admin/auth/user/{id}/password/",
+            "params": [
+                "id"
+            ]
+        }
+    ],
+    "admin:autocomplete": [
+        {
+            "url": "/admin/autocomplete/",
+            "params": []
+        }
+    ],
+    "admin:django_celery_results_groupresult_add": [
+        {
+            "url": "/admin/django_celery_results/groupresult/add/",
+            "params": []
+        }
+    ],
+    "admin:django_celery_results_groupresult_change": [
+        {
+            "url": "/admin/django_celery_results/groupresult/{object_id}/change/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:django_celery_results_groupresult_changelist": [
+        {
+            "url": "/admin/django_celery_results/groupresult",
+            "params": []
+        }
+    ],
+    "admin:django_celery_results_groupresult_delete": [
+        {
+            "url": "/admin/django_celery_results/groupresult/{object_id}/delete/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:django_celery_results_groupresult_history": [
+        {
+            "url": "/admin/django_celery_results/groupresult/{object_id}/history/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:django_celery_results_taskresult_add": [
+        {
+            "url": "/admin/django_celery_results/taskresult/add/",
+            "params": []
+        }
+    ],
+    "admin:django_celery_results_taskresult_change": [
+        {
+            "url": "/admin/django_celery_results/taskresult/{object_id}/change/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:django_celery_results_taskresult_changelist": [
+        {
+            "url": "/admin/django_celery_results/taskresult",
+            "params": []
+        }
+    ],
+    "admin:django_celery_results_taskresult_delete": [
+        {
+            "url": "/admin/django_celery_results/taskresult/{object_id}/delete/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:django_celery_results_taskresult_history": [
+        {
+            "url": "/admin/django_celery_results/taskresult/{object_id}/history/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:index": [
+        {
+            "url": "/admin",
+            "params": []
+        }
+    ],
+    "admin:jsi18n": [
+        {
+            "url": "/admin/jsi18n/",
+            "params": []
+        }
+    ],
+    "admin:login": [
+        {
+            "url": "/admin/login/",
+            "params": []
+        }
+    ],
+    "admin:logout": [
+        {
+            "url": "/admin/logout/",
+            "params": []
+        }
+    ],
+    "admin:models_ddatatype_add": [
+        {
+            "url": "/admin/models/ddatatype/add/",
+            "params": []
+        }
+    ],
+    "admin:models_ddatatype_change": [
+        {
+            "url": "/admin/models/ddatatype/{object_id}/change/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:models_ddatatype_changelist": [
+        {
+            "url": "/admin/models/ddatatype",
+            "params": []
+        }
+    ],
+    "admin:models_ddatatype_delete": [
+        {
+            "url": "/admin/models/ddatatype/{object_id}/delete/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:models_ddatatype_history": [
+        {
+            "url": "/admin/models/ddatatype/{object_id}/history/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:models_etlmodule_add": [
+        {
+            "url": "/admin/models/etlmodule/add/",
+            "params": []
+        }
+    ],
+    "admin:models_etlmodule_change": [
+        {
+            "url": "/admin/models/etlmodule/{object_id}/change/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:models_etlmodule_changelist": [
+        {
+            "url": "/admin/models/etlmodule",
+            "params": []
+        }
+    ],
+    "admin:models_etlmodule_delete": [
+        {
+            "url": "/admin/models/etlmodule/{object_id}/delete/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:models_etlmodule_history": [
+        {
+            "url": "/admin/models/etlmodule/{object_id}/history/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:models_etlmodule_permissions": [
+        {
+            "url": "/admin/models/etlmodule/{object_pk}/permissions/",
+            "params": [
+                "object_pk"
+            ]
+        }
+    ],
+    "admin:models_etlmodule_permissions_manage_group": [
+        {
+            "url": "/admin/models/etlmodule/{object_pk}/permissions/group-manage/{group_id}/",
+            "params": [
+                "object_pk",
+                "group_id"
+            ]
+        }
+    ],
+    "admin:models_etlmodule_permissions_manage_user": [
+        {
+            "url": "/admin/models/etlmodule/{object_pk}/permissions/user-manage/{user_id}/",
+            "params": [
+                "object_pk",
+                "user_id"
+            ]
+        }
+    ],
+    "admin:models_geocoder_add": [
+        {
+            "url": "/admin/models/geocoder/add/",
+            "params": []
+        }
+    ],
+    "admin:models_geocoder_change": [
+        {
+            "url": "/admin/models/geocoder/{object_id}/change/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:models_geocoder_changelist": [
+        {
+            "url": "/admin/models/geocoder",
+            "params": []
+        }
+    ],
+    "admin:models_geocoder_delete": [
+        {
+            "url": "/admin/models/geocoder/{object_id}/delete/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:models_geocoder_history": [
+        {
+            "url": "/admin/models/geocoder/{object_id}/history/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:models_graphmodel_add": [
+        {
+            "url": "/admin/models/graphmodel/add/",
+            "params": []
+        }
+    ],
+    "admin:models_graphmodel_change": [
+        {
+            "url": "/admin/models/graphmodel/{object_id}/change/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:models_graphmodel_changelist": [
+        {
+            "url": "/admin/models/graphmodel",
+            "params": []
+        }
+    ],
+    "admin:models_graphmodel_delete": [
+        {
+            "url": "/admin/models/graphmodel/{object_id}/delete/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:models_graphmodel_history": [
+        {
+            "url": "/admin/models/graphmodel/{object_id}/history/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:models_groupmapsettings_add": [
+        {
+            "url": "/admin/models/groupmapsettings/add/",
+            "params": []
+        }
+    ],
+    "admin:models_groupmapsettings_change": [
+        {
+            "url": "/admin/models/groupmapsettings/{object_id}/change/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:models_groupmapsettings_changelist": [
+        {
+            "url": "/admin/models/groupmapsettings",
+            "params": []
+        }
+    ],
+    "admin:models_groupmapsettings_delete": [
+        {
+            "url": "/admin/models/groupmapsettings/{object_id}/delete/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:models_groupmapsettings_history": [
+        {
+            "url": "/admin/models/groupmapsettings/{object_id}/history/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:models_iiifmanifest_add": [
+        {
+            "url": "/admin/models/iiifmanifest/add/",
+            "params": []
+        }
+    ],
+    "admin:models_iiifmanifest_change": [
+        {
+            "url": "/admin/models/iiifmanifest/{object_id}/change/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:models_iiifmanifest_changelist": [
+        {
+            "url": "/admin/models/iiifmanifest",
+            "params": []
+        }
+    ],
+    "admin:models_iiifmanifest_delete": [
+        {
+            "url": "/admin/models/iiifmanifest/{object_id}/delete/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:models_iiifmanifest_history": [
+        {
+            "url": "/admin/models/iiifmanifest/{object_id}/history/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:models_language_add": [
+        {
+            "url": "/admin/models/language/add/",
+            "params": []
+        }
+    ],
+    "admin:models_language_change": [
+        {
+            "url": "/admin/models/language/{object_id}/change/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:models_language_changelist": [
+        {
+            "url": "/admin/models/language",
+            "params": []
+        }
+    ],
+    "admin:models_language_delete": [
+        {
+            "url": "/admin/models/language/{object_id}/delete/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:models_language_history": [
+        {
+            "url": "/admin/models/language/{object_id}/history/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:models_maplayer_add": [
+        {
+            "url": "/admin/models/maplayer/add/",
+            "params": []
+        }
+    ],
+    "admin:models_maplayer_change": [
+        {
+            "url": "/admin/models/maplayer/{object_id}/change/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:models_maplayer_changelist": [
+        {
+            "url": "/admin/models/maplayer",
+            "params": []
+        }
+    ],
+    "admin:models_maplayer_delete": [
+        {
+            "url": "/admin/models/maplayer/{object_id}/delete/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:models_maplayer_history": [
+        {
+            "url": "/admin/models/maplayer/{object_id}/history/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:models_maplayer_permissions": [
+        {
+            "url": "/admin/models/maplayer/{object_pk}/permissions/",
+            "params": [
+                "object_pk"
+            ]
+        }
+    ],
+    "admin:models_maplayer_permissions_manage_group": [
+        {
+            "url": "/admin/models/maplayer/{object_pk}/permissions/group-manage/{group_id}/",
+            "params": [
+                "object_pk",
+                "group_id"
+            ]
+        }
+    ],
+    "admin:models_maplayer_permissions_manage_user": [
+        {
+            "url": "/admin/models/maplayer/{object_pk}/permissions/user-manage/{user_id}/",
+            "params": [
+                "object_pk",
+                "user_id"
+            ]
+        }
+    ],
+    "admin:models_mapmarker_add": [
+        {
+            "url": "/admin/models/mapmarker/add/",
+            "params": []
+        }
+    ],
+    "admin:models_mapmarker_change": [
+        {
+            "url": "/admin/models/mapmarker/{object_id}/change/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:models_mapmarker_changelist": [
+        {
+            "url": "/admin/models/mapmarker",
+            "params": []
+        }
+    ],
+    "admin:models_mapmarker_delete": [
+        {
+            "url": "/admin/models/mapmarker/{object_id}/delete/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:models_mapmarker_history": [
+        {
+            "url": "/admin/models/mapmarker/{object_id}/history/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:models_mapsource_add": [
+        {
+            "url": "/admin/models/mapsource/add/",
+            "params": []
+        }
+    ],
+    "admin:models_mapsource_change": [
+        {
+            "url": "/admin/models/mapsource/{object_id}/change/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:models_mapsource_changelist": [
+        {
+            "url": "/admin/models/mapsource",
+            "params": []
+        }
+    ],
+    "admin:models_mapsource_delete": [
+        {
+            "url": "/admin/models/mapsource/{object_id}/delete/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:models_mapsource_history": [
+        {
+            "url": "/admin/models/mapsource/{object_id}/history/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:models_nodegroup_add": [
+        {
+            "url": "/admin/models/nodegroup/add/",
+            "params": []
+        }
+    ],
+    "admin:models_nodegroup_change": [
+        {
+            "url": "/admin/models/nodegroup/{object_id}/change/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:models_nodegroup_changelist": [
+        {
+            "url": "/admin/models/nodegroup",
+            "params": []
+        }
+    ],
+    "admin:models_nodegroup_delete": [
+        {
+            "url": "/admin/models/nodegroup/{object_id}/delete/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:models_nodegroup_history": [
+        {
+            "url": "/admin/models/nodegroup/{object_id}/history/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:models_plugin_add": [
+        {
+            "url": "/admin/models/plugin/add/",
+            "params": []
+        }
+    ],
+    "admin:models_plugin_change": [
+        {
+            "url": "/admin/models/plugin/{object_id}/change/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:models_plugin_changelist": [
+        {
+            "url": "/admin/models/plugin",
+            "params": []
+        }
+    ],
+    "admin:models_plugin_delete": [
+        {
+            "url": "/admin/models/plugin/{object_id}/delete/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:models_plugin_history": [
+        {
+            "url": "/admin/models/plugin/{object_id}/history/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:models_plugin_permissions": [
+        {
+            "url": "/admin/models/plugin/{object_pk}/permissions/",
+            "params": [
+                "object_pk"
+            ]
+        }
+    ],
+    "admin:models_plugin_permissions_manage_group": [
+        {
+            "url": "/admin/models/plugin/{object_pk}/permissions/group-manage/{group_id}/",
+            "params": [
+                "object_pk",
+                "group_id"
+            ]
+        }
+    ],
+    "admin:models_plugin_permissions_manage_user": [
+        {
+            "url": "/admin/models/plugin/{object_pk}/permissions/user-manage/{user_id}/",
+            "params": [
+                "object_pk",
+                "user_id"
+            ]
+        }
+    ],
+    "admin:models_resourceinstancelifecycle_add": [
+        {
+            "url": "/admin/models/resourceinstancelifecycle/add/",
+            "params": []
+        }
+    ],
+    "admin:models_resourceinstancelifecycle_change": [
+        {
+            "url": "/admin/models/resourceinstancelifecycle/{object_id}/change/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:models_resourceinstancelifecycle_changelist": [
+        {
+            "url": "/admin/models/resourceinstancelifecycle",
+            "params": []
+        }
+    ],
+    "admin:models_resourceinstancelifecycle_delete": [
+        {
+            "url": "/admin/models/resourceinstancelifecycle/{object_id}/delete/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:models_resourceinstancelifecycle_history": [
+        {
+            "url": "/admin/models/resourceinstancelifecycle/{object_id}/history/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:models_resourceinstancelifecyclestate_add": [
+        {
+            "url": "/admin/models/resourceinstancelifecyclestate/add/",
+            "params": []
+        }
+    ],
+    "admin:models_resourceinstancelifecyclestate_change": [
+        {
+            "url": "/admin/models/resourceinstancelifecyclestate/{object_id}/change/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:models_resourceinstancelifecyclestate_changelist": [
+        {
+            "url": "/admin/models/resourceinstancelifecyclestate",
+            "params": []
+        }
+    ],
+    "admin:models_resourceinstancelifecyclestate_delete": [
+        {
+            "url": "/admin/models/resourceinstancelifecyclestate/{object_id}/delete/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:models_resourceinstancelifecyclestate_history": [
+        {
+            "url": "/admin/models/resourceinstancelifecyclestate/{object_id}/history/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:models_searchcomponent_add": [
+        {
+            "url": "/admin/models/searchcomponent/add/",
+            "params": []
+        }
+    ],
+    "admin:models_searchcomponent_change": [
+        {
+            "url": "/admin/models/searchcomponent/{object_id}/change/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:models_searchcomponent_changelist": [
+        {
+            "url": "/admin/models/searchcomponent",
+            "params": []
+        }
+    ],
+    "admin:models_searchcomponent_delete": [
+        {
+            "url": "/admin/models/searchcomponent/{object_id}/delete/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:models_searchcomponent_history": [
+        {
+            "url": "/admin/models/searchcomponent/{object_id}/history/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:models_spatialview_add": [
+        {
+            "url": "/admin/models/spatialview/add/",
+            "params": []
+        }
+    ],
+    "admin:models_spatialview_change": [
+        {
+            "url": "/admin/models/spatialview/{object_id}/change/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:models_spatialview_changelist": [
+        {
+            "url": "/admin/models/spatialview",
+            "params": []
+        }
+    ],
+    "admin:models_spatialview_delete": [
+        {
+            "url": "/admin/models/spatialview/{object_id}/delete/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:models_spatialview_history": [
+        {
+            "url": "/admin/models/spatialview/{object_id}/history/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:models_userpreference_add": [
+        {
+            "url": "/admin/models/userpreference/add/",
+            "params": []
+        }
+    ],
+    "admin:models_userpreference_change": [
+        {
+            "url": "/admin/models/userpreference/{object_id}/change/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:models_userpreference_changelist": [
+        {
+            "url": "/admin/models/userpreference",
+            "params": []
+        }
+    ],
+    "admin:models_userpreference_delete": [
+        {
+            "url": "/admin/models/userpreference/{object_id}/delete/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:models_userpreference_history": [
+        {
+            "url": "/admin/models/userpreference/{object_id}/history/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:models_userprofile_add": [
+        {
+            "url": "/admin/models/userprofile/add/",
+            "params": []
+        }
+    ],
+    "admin:models_userprofile_change": [
+        {
+            "url": "/admin/models/userprofile/{object_id}/change/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:models_userprofile_changelist": [
+        {
+            "url": "/admin/models/userprofile",
+            "params": []
+        }
+    ],
+    "admin:models_userprofile_delete": [
+        {
+            "url": "/admin/models/userprofile/{object_id}/delete/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:models_userprofile_history": [
+        {
+            "url": "/admin/models/userprofile/{object_id}/history/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:models_widget_add": [
+        {
+            "url": "/admin/models/widget/add/",
+            "params": []
+        }
+    ],
+    "admin:models_widget_change": [
+        {
+            "url": "/admin/models/widget/{object_id}/change/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:models_widget_changelist": [
+        {
+            "url": "/admin/models/widget",
+            "params": []
+        }
+    ],
+    "admin:models_widget_delete": [
+        {
+            "url": "/admin/models/widget/{object_id}/delete/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:models_widget_history": [
+        {
+            "url": "/admin/models/widget/{object_id}/history/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:oauth2_provider_accesstoken_add": [
+        {
+            "url": "/admin/oauth2_provider/accesstoken/add/",
+            "params": []
+        }
+    ],
+    "admin:oauth2_provider_accesstoken_change": [
+        {
+            "url": "/admin/oauth2_provider/accesstoken/{object_id}/change/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:oauth2_provider_accesstoken_changelist": [
+        {
+            "url": "/admin/oauth2_provider/accesstoken",
+            "params": []
+        }
+    ],
+    "admin:oauth2_provider_accesstoken_delete": [
+        {
+            "url": "/admin/oauth2_provider/accesstoken/{object_id}/delete/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:oauth2_provider_accesstoken_history": [
+        {
+            "url": "/admin/oauth2_provider/accesstoken/{object_id}/history/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:oauth2_provider_application_add": [
+        {
+            "url": "/admin/oauth2_provider/application/add/",
+            "params": []
+        }
+    ],
+    "admin:oauth2_provider_application_change": [
+        {
+            "url": "/admin/oauth2_provider/application/{object_id}/change/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:oauth2_provider_application_changelist": [
+        {
+            "url": "/admin/oauth2_provider/application",
+            "params": []
+        }
+    ],
+    "admin:oauth2_provider_application_delete": [
+        {
+            "url": "/admin/oauth2_provider/application/{object_id}/delete/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:oauth2_provider_application_history": [
+        {
+            "url": "/admin/oauth2_provider/application/{object_id}/history/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:oauth2_provider_grant_add": [
+        {
+            "url": "/admin/oauth2_provider/grant/add/",
+            "params": []
+        }
+    ],
+    "admin:oauth2_provider_grant_change": [
+        {
+            "url": "/admin/oauth2_provider/grant/{object_id}/change/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:oauth2_provider_grant_changelist": [
+        {
+            "url": "/admin/oauth2_provider/grant",
+            "params": []
+        }
+    ],
+    "admin:oauth2_provider_grant_delete": [
+        {
+            "url": "/admin/oauth2_provider/grant/{object_id}/delete/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:oauth2_provider_grant_history": [
+        {
+            "url": "/admin/oauth2_provider/grant/{object_id}/history/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:oauth2_provider_idtoken_add": [
+        {
+            "url": "/admin/oauth2_provider/idtoken/add/",
+            "params": []
+        }
+    ],
+    "admin:oauth2_provider_idtoken_change": [
+        {
+            "url": "/admin/oauth2_provider/idtoken/{object_id}/change/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:oauth2_provider_idtoken_changelist": [
+        {
+            "url": "/admin/oauth2_provider/idtoken",
+            "params": []
+        }
+    ],
+    "admin:oauth2_provider_idtoken_delete": [
+        {
+            "url": "/admin/oauth2_provider/idtoken/{object_id}/delete/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:oauth2_provider_idtoken_history": [
+        {
+            "url": "/admin/oauth2_provider/idtoken/{object_id}/history/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:oauth2_provider_refreshtoken_add": [
+        {
+            "url": "/admin/oauth2_provider/refreshtoken/add/",
+            "params": []
+        }
+    ],
+    "admin:oauth2_provider_refreshtoken_change": [
+        {
+            "url": "/admin/oauth2_provider/refreshtoken/{object_id}/change/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:oauth2_provider_refreshtoken_changelist": [
+        {
+            "url": "/admin/oauth2_provider/refreshtoken",
+            "params": []
+        }
+    ],
+    "admin:oauth2_provider_refreshtoken_delete": [
+        {
+            "url": "/admin/oauth2_provider/refreshtoken/{object_id}/delete/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:oauth2_provider_refreshtoken_history": [
+        {
+            "url": "/admin/oauth2_provider/refreshtoken/{object_id}/history/",
+            "params": [
+                "object_id"
+            ]
+        }
+    ],
+    "admin:password_change": [
+        {
+            "url": "/admin/password_change/",
+            "params": []
+        }
+    ],
+    "admin:password_change_done": [
+        {
+            "url": "/admin/password_change/done/",
+            "params": []
+        }
+    ],
+    "admin:view_on_site": [
+        {
+            "url": "/admin/r/{content_type_id}/{object_id}/",
+            "params": [
+                "content_type_id",
+                "object_id"
+            ]
+        }
+    ],
+    "advanced-search": [
+        {
+            "url": "/advanced-search",
+            "params": []
+        }
+    ],
+    "api-concepts": [
+        {
+            "url": "/api/concept-tree",
+            "params": []
+        }
+    ],
+    "api-lingo-resource": [
+        {
+            "url": "/api/lingo/{graph}/{pk}",
+            "params": [
+                "graph",
+                "pk"
+            ]
+        }
+    ],
+    "api-lingo-resource-partial": [
+        {
+            "url": "/api/lingo/{graph}/{pk}/{nodegroup_alias}",
+            "params": [
+                "graph",
+                "pk",
+                "nodegroup_alias"
+            ]
+        }
+    ],
+    "api-lingo-resources": [
+        {
+            "url": "/api/lingo/{graph}",
+            "params": [
+                "graph"
+            ]
+        }
+    ],
+    "api-lingo-tile": [
+        {
+            "url": "/api/lingo/{graph}/{nodegroup_alias}/{pk}",
+            "params": [
+                "graph",
+                "nodegroup_alias",
+                "pk"
+            ]
+        }
+    ],
+    "api-lingo-tiles": [
+        {
+            "url": "/api/lingo/{graph}/{nodegroup_alias}",
+            "params": [
+                "graph",
+                "nodegroup_alias"
+            ]
+        }
+    ],
+    "api-node-data": [
+        {
+            "url": "/arches-component-lab/api/node-data/{graph_slug}/{node_alias}",
+            "params": [
+                "graph_slug",
+                "node_alias"
+            ]
+        }
+    ],
+    "api-relatable-resources": [
+        {
+            "url": "/arches-component-lab/api/relatable-resources/{graph}/{node_alias}",
+            "params": [
+                "graph",
+                "node_alias"
+            ]
+        }
+    ],
+    "api-search": [
+        {
+            "url": "/api/search",
+            "params": []
+        }
+    ],
+    "api-widget-data": [
+        {
+            "url": "/arches-component-lab/api/widget-data/{graph_slug}/{node_alias}",
+            "params": [
+                "graph_slug",
+                "node_alias"
+            ]
+        }
+    ],
+    "api_bulk_disambiguated_resource_instance": [
+        {
+            "url": "/api/bulk_disambiguated_resource_instance",
+            "params": []
+        }
+    ],
+    "api_bulk_resource_report": [
+        {
+            "url": "/api/bulk_resource_report",
+            "params": []
+        }
+    ],
+    "api_card": [
+        {
+            "url": "/cards/{resourceid}",
+            "params": [
+                "resourceid"
+            ]
+        }
+    ],
+    "api_export_results": [
+        {
+            "url": "/api/search/export_results",
+            "params": []
+        }
+    ],
+    "api_get_nodegroup_tree": [
+        {
+            "url": "/api/get_nodegroup_tree",
+            "params": []
+        }
+    ],
+    "api_instance_permissions": [
+        {
+            "url": "/api/instance_permissions/",
+            "params": []
+        }
+    ],
+    "api_login": [
+        {
+            "url": "/api/login",
+            "params": []
+        }
+    ],
+    "api_logout": [
+        {
+            "url": "/api/logout",
+            "params": []
+        }
+    ],
+    "api_node_value": [
+        {
+            "url": "/api/node_value/",
+            "params": []
+        }
+    ],
+    "api_nodegroup": [
+        {
+            "url": "/api/nodegroup/{nodegroupid}",
+            "params": [
+                "nodegroupid"
+            ]
+        }
+    ],
+    "api_nodes": [
+        {
+            "url": "/api/nodes/{nodeid}",
+            "params": [
+                "nodeid"
+            ]
+        }
+    ],
+    "api_plugins": [
+        {
+            "url": "/api/plugins/{pluginid}",
+            "params": [
+                "pluginid"
+            ]
+        }
+    ],
+    "api_resource_instance_lifecycle_state": [
+        {
+            "url": "/api/resource_instance_lifecycle_state/{resourceid}",
+            "params": [
+                "resourceid"
+            ]
+        }
+    ],
+    "api_resource_instance_lifecycle_states": [
+        {
+            "url": "/api/resource_instance_lifecycle/",
+            "params": []
+        }
+    ],
+    "api_resource_report": [
+        {
+            "url": "/api/resource_report/{resourceid}",
+            "params": [
+                "resourceid"
+            ]
+        }
+    ],
+    "api_search_component_data": [
+        {
+            "url": "/search_component_data/{componentname}",
+            "params": [
+                "componentname"
+            ]
+        }
+    ],
+    "api_tiles": [
+        {
+            "url": "/api/tiles/{tileid}",
+            "params": [
+                "tileid"
+            ]
+        }
+    ],
+    "api_user": [
+        {
+            "url": "/api/user",
+            "params": []
+        }
+    ],
+    "api_user_incomplete_workflows": [
+        {
+            "url": "/api/user_incomplete_workflows",
+            "params": []
+        }
+    ],
+    "api_user_preference_detail_view": [
+        {
+            "url": "/api/user_preference/{identifier}/",
+            "params": [
+                "identifier"
+            ]
+        }
+    ],
+    "api_user_preference_list_view": [
+        {
+            "url": "/api/user_preference/",
+            "params": []
+        }
+    ],
+    "append_branch": [
+        {
+            "url": "/graph/{graphid}/append_branch",
+            "params": [
+                "graphid"
+            ]
+        }
+    ],
+    "append_node": [
+        {
+            "url": "/graph/{graphid}/append_node",
+            "params": [
+                "graphid"
+            ]
+        }
+    ],
+    "apply_functions": [
+        {
+            "url": "/graph/{graphid}/apply_functions",
+            "params": [
+                "graphid"
+            ]
+        }
+    ],
+    "as_stream_collection": [
+        {
+            "url": "/history/",
+            "params": []
+        }
+    ],
+    "as_stream_page": [
+        {
+            "url": "/history/{page}",
+            "params": [
+                "page"
+            ]
+        }
+    ],
+    "auth": [
+        {
+            "url": "/auth/",
+            "params": []
+        }
+    ],
+    "buffer": [
+        {
+            "url": "/buffer/",
+            "params": []
+        }
+    ],
+    "card": [
+        {
+            "url": "/card/{cardid}",
+            "params": [
+                "cardid"
+            ]
+        }
+    ],
+    "change_password": [
+        {
+            "url": "/auth/password",
+            "params": []
+        }
+    ],
+    "clear_user_permission_cache": [
+        {
+            "url": "/clear-user-permission-cache",
+            "params": []
+        }
+    ],
+    "clone_graph": [
+        {
+            "url": "/graph/{graphid}/clone",
+            "params": [
+                "graphid"
+            ]
+        }
+    ],
+    "concept": [
+        {
+            "url": "/concept/{id}",
+            "params": [
+                "id"
+            ]
+        },
+        {
+            "url": "/concepts/{conceptid}",
+            "params": [
+                "conceptid"
+            ]
+        }
+    ],
+    "concept_manage_parents": [
+        {
+            "url": "/concepts/{conceptid}/manage_parents/",
+            "params": [
+                "conceptid"
+            ]
+        }
+    ],
+    "concept_search": [
+        {
+            "url": "/concepts/search",
+            "params": []
+        }
+    ],
+    "concept_tree": [
+        {
+            "url": "/concepts/tree/{mode}",
+            "params": [
+                "mode"
+            ]
+        }
+    ],
+    "concept_value": [
+        {
+            "url": "/conceptvalue/",
+            "params": []
+        }
+    ],
+    "concepts": [
+        {
+            "url": "/rdm/concepts/{conceptid}",
+            "params": [
+                "conceptid"
+            ]
+        }
+    ],
+    "config": [
+        {
+            "url": "/settings/",
+            "params": []
+        }
+    ],
+    "confirm_delete": [
+        {
+            "url": "/concepts/{conceptid}/confirm_delete/",
+            "params": [
+                "conceptid"
+            ]
+        }
+    ],
+    "confirm_signup": [
+        {
+            "url": "/auth/confirm_signup",
+            "params": []
+        }
+    ],
+    "controlled_list": [
+        {
+            "url": "/api/controlled_list/{list_id}",
+            "params": [
+                "list_id"
+            ]
+        }
+    ],
+    "controlled_list_add": [
+        {
+            "url": "/api/controlled_list",
+            "params": []
+        }
+    ],
+    "controlled_list_item": [
+        {
+            "url": "/api/controlled_list_item/{item_id}",
+            "params": [
+                "item_id"
+            ]
+        }
+    ],
+    "controlled_list_item_add": [
+        {
+            "url": "/api/controlled_list_item",
+            "params": []
+        }
+    ],
+    "controlled_list_item_image": [
+        {
+            "url": "/api/controlled_list_item_image/{image_id}",
+            "params": [
+                "image_id"
+            ]
+        }
+    ],
+    "controlled_list_item_image_add": [
+        {
+            "url": "/api/controlled_list_item_image",
+            "params": []
+        }
+    ],
+    "controlled_list_item_image_metadata": [
+        {
+            "url": "/api/controlled_list_item_image_metadata/{metadata_id}",
+            "params": [
+                "metadata_id"
+            ]
+        }
+    ],
+    "controlled_list_item_image_metadata_add": [
+        {
+            "url": "/api/controlled_list_item_image_metadata",
+            "params": []
+        }
+    ],
+    "controlled_list_item_value": [
+        {
+            "url": "/api/controlled_list_item_value/{value_id}",
+            "params": [
+                "value_id"
+            ]
+        }
+    ],
+    "controlled_list_item_value_add": [
+        {
+            "url": "/api/controlled_list_item_value",
+            "params": []
+        }
+    ],
+    "controlled_list_options": [
+        {
+            "url": "/api/controlled_list_options",
+            "params": []
+        }
+    ],
+    "controlled_lists": [
+        {
+            "url": "/api/controlled_lists",
+            "params": []
+        }
+    ],
+    "datatype_template": [
+        {
+            "url": "/components/datatypes/{template}",
+            "params": [
+                "template"
+            ]
+        }
+    ],
+    "delete_graph": [
+        {
+            "url": "/graph/{graphid}/delete",
+            "params": [
+                "graphid"
+            ]
+        }
+    ],
+    "delete_instances": [
+        {
+            "url": "/graph/{graphid}/delete_instances",
+            "params": [
+                "graphid"
+            ]
+        }
+    ],
+    "delete_node": [
+        {
+            "url": "/graph/{graphid}/delete_node",
+            "params": [
+                "graphid"
+            ]
+        }
+    ],
+    "delete_provisional_tile": [
+        {
+            "url": "/tiles/delete_provisional_tile",
+            "params": []
+        }
+    ],
+    "delete_published_graph": [
+        {
+            "url": "/graph/{graphid}/delete_published_graph",
+            "params": [
+                "graphid"
+            ]
+        }
+    ],
+    "dismiss_notifications": [
+        {
+            "url": "/notifications/dismiss",
+            "params": []
+        }
+    ],
+    "download_files": [
+        {
+            "url": "/tiles/download_files",
+            "params": []
+        }
+    ],
+    "dropdown": [
+        {
+            "url": "/concepts/dropdown",
+            "params": []
+        }
+    ],
+    "edit_history": [
+        {
+            "url": "/resource/history",
+            "params": []
+        }
+    ],
+    "etl_manager": [
+        {
+            "url": "/etl-manager",
+            "params": []
+        }
+    ],
+    "export_branch": [
+        {
+            "url": "/graph/{graphid}/export_branch",
+            "params": [
+                "graphid"
+            ]
+        }
+    ],
+    "export_concept": [
+        {
+            "url": "/concepts/export/{conceptid}",
+            "params": [
+                "conceptid"
+            ]
+        }
+    ],
+    "export_concept_collections": [
+        {
+            "url": "/concepts/export/collections",
+            "params": []
+        }
+    ],
+    "export_graph": [
+        {
+            "url": "/graph/{graphid}/export",
+            "params": [
+                "graphid"
+            ]
+        }
+    ],
+    "export_mapping_file": [
+        {
+            "url": "/graph/{graphid}/export_mapping_file",
+            "params": [
+                "graphid"
+            ]
+        }
+    ],
+    "export_results": [
+        {
+            "url": "/search/export_results",
+            "params": []
+        }
+    ],
+    "external_oauth_callback": [
+        {
+            "url": "/auth/eoauth_cb",
+            "params": []
+        }
+    ],
+    "external_oauth_start": [
+        {
+            "url": "/auth/eoauth_start",
+            "params": []
+        }
+    ],
+    "feature_popup_content": [
+        {
+            "url": "/feature_popup_content",
+            "params": []
+        }
+    ],
+    "file_access": [
+        {
+            "url": "/files/{fileid}",
+            "params": [
+                "fileid"
+            ]
+        }
+    ],
+    "files": [
+        {
+            "url": "/files/{path}",
+            "params": [
+                "path"
+            ]
+        }
+    ],
+    "from_sparql_endpoint": [
+        {
+            "url": "/concepts/{conceptid}/from_sparql_endpoint",
+            "params": [
+                "conceptid"
+            ]
+        }
+    ],
+    "function-templates": [
+        {
+            "url": "/function-templates/{template}",
+            "params": [
+                "template"
+            ]
+        }
+    ],
+    "function_manager": [
+        {
+            "url": "/graph/{graphid}/function_manager",
+            "params": [
+                "graphid"
+            ]
+        }
+    ],
+    "geojson": [
+        {
+            "url": "/geojson",
+            "params": []
+        }
+    ],
+    "get_client_id": [
+        {
+            "url": "/auth/get_client_id",
+            "params": []
+        }
+    ],
+    "get_concept_collections": [
+        {
+            "url": "/concepts/collections",
+            "params": []
+        }
+    ],
+    "get_dev_token": [
+        {
+            "url": "/auth/get_dev_token",
+            "params": []
+        }
+    ],
+    "get_domain_connections": [
+        {
+            "url": "/graph/{graphid}/get_domain_connections",
+            "params": [
+                "graphid"
+            ]
+        }
+    ],
+    "get_dsl": [
+        {
+            "url": "/search/get_dsl",
+            "params": []
+        }
+    ],
+    "get_export_file": [
+        {
+            "url": "/search/get_export_file",
+            "params": []
+        }
+    ],
+    "get_frontend_i18n_data": [
+        {
+            "url": "/api/get_frontend_i18n_data",
+            "params": []
+        }
+    ],
+    "get_graph_models_api": [
+        {
+            "url": "/graphs",
+            "params": []
+        }
+    ],
+    "get_notification_types": [
+        {
+            "url": "/notifications/get_types",
+            "params": []
+        }
+    ],
+    "get_notifications": [
+        {
+            "url": "/notifications",
+            "params": []
+        }
+    ],
+    "get_pref_label": [
+        {
+            "url": "/concepts/get_pref_label",
+            "params": []
+        }
+    ],
+    "get_related_nodes": [
+        {
+            "url": "/graph/{graphid}/get_related_nodes/{nodeid}",
+            "params": [
+                "graphid",
+                "nodeid"
+            ]
+        }
+    ],
+    "get_user_names": [
+        {
+            "url": "/user/get_user_names",
+            "params": []
+        }
+    ],
+    "get_valid_domain_nodes": [
+        {
+            "url": "/graph/{graphid}/get_valid_domain_nodes/{nodeid}",
+            "params": [
+                "graphid",
+                "nodeid"
+            ]
+        }
+    ],
+    "graph": [
+        {
+            "url": "/graph/{graphid}",
+            "params": [
+                "graphid"
+            ]
+        }
+    ],
+    "graph_designer": [
+        {
+            "url": "/graph_designer/{graphid}",
+            "params": [
+                "graphid"
+            ]
+        }
+    ],
+    "graph_is_active_api": [
+        {
+            "url": "/graph_is_active/{graph_id}",
+            "params": [
+                "graph_id"
+            ]
+        }
+    ],
+    "graph_nodes": [
+        {
+            "url": "/graph/{graphid}/nodes",
+            "params": [
+                "graphid"
+            ]
+        }
+    ],
+    "graph_settings": [
+        {
+            "url": "/graph_settings/{graphid}",
+            "params": [
+                "graphid"
+            ]
+        }
+    ],
+    "graphs_api": [
+        {
+            "url": "/graphs/{graph_id}",
+            "params": [
+                "graph_id"
+            ]
+        }
+    ],
+    "help_templates": [
+        {
+            "url": "/help-templates",
+            "params": []
+        }
+    ],
+    "home": [
+        {
+            "url": "/index.htm",
+            "params": []
+        }
+    ],
+    "icons": [
+        {
+            "url": "/icons",
+            "params": []
+        }
+    ],
+    "iiifannotationnodes": [
+        {
+            "url": "/iiifannotationnodes",
+            "params": []
+        }
+    ],
+    "iiifannotations": [
+        {
+            "url": "/iiifannotations",
+            "params": []
+        }
+    ],
+    "iiifmanifest": [
+        {
+            "url": "/iiifmanifest",
+            "params": []
+        }
+    ],
+    "iiifserver": [
+        {
+            "url": "/iiifserver/{path}",
+            "params": [
+                "path"
+            ]
+        }
+    ],
+    "images": [
+        {
+            "url": "/images",
+            "params": []
+        }
+    ],
+    "import_graph": [
+        {
+            "url": "/graph/import/",
+            "params": []
+        }
+    ],
+    "kibana": [
+        {
+            "url": "/kibana/{path}",
+            "params": [
+                "path"
+            ]
+        }
+    ],
+    "language": [
+        {
+            "url": "/language/",
+            "params": []
+        }
+    ],
+    "login": [
+        {
+            "url": "/login",
+            "params": []
+        }
+    ],
+    "make_collection": [
+        {
+            "url": "/concepts/{conceptid}/make_collection/",
+            "params": [
+                "conceptid"
+            ]
+        }
+    ],
+    "manifest": [
+        {
+            "url": "/manifest/{id}",
+            "params": [
+                "id"
+            ]
+        }
+    ],
+    "manifest_manager": [
+        {
+            "url": "/image-service-manager",
+            "params": []
+        }
+    ],
+    "map_layer_manager": [
+        {
+            "url": "/map_layer_manager/",
+            "params": []
+        }
+    ],
+    "map_layer_update": [
+        {
+            "url": "/map_layer_manager/{maplayerid}",
+            "params": [
+                "maplayerid"
+            ]
+        }
+    ],
+    "media_url": [
+        {
+            "url": "/files/",
+            "params": []
+        }
+    ],
+    "model_history": [
+        {
+            "url": "/graph/{graphid}/model_history",
+            "params": [
+                "graphid"
+            ]
+        }
+    ],
+    "move_node": [
+        {
+            "url": "/graph/{graphid}/move_node",
+            "params": [
+                "graphid"
+            ]
+        }
+    ],
+    "mvt": [
+        {
+            "url": "/mvt/{nodeid}/{zoom}/{x}/{y}.pbf",
+            "params": [
+                "nodeid",
+                "zoom",
+                "x",
+                "y"
+            ]
+        }
+    ],
+    "new-concept": [
+        {
+            "url": "/concept/new",
+            "params": []
+        }
+    ],
+    "new-scheme": [
+        {
+            "url": "/scheme/new",
+            "params": []
+        }
+    ],
+    "new_graph": [
+        {
+            "url": "/graph/new",
+            "params": []
+        }
+    ],
+    "node": [
+        {
+            "url": "/node/{graphid}",
+            "params": [
+                "graphid"
+            ]
+        }
+    ],
+    "node_layer": [
+        {
+            "url": "/node_layer/{graphid}",
+            "params": [
+                "graphid"
+            ]
+        }
+    ],
+    "nodegroup": [
+        {
+            "url": "/nodegroup/",
+            "params": []
+        }
+    ],
+    "oauth2:authorize": [
+        {
+            "url": "/o/authorize/",
+            "params": []
+        }
+    ],
+    "oauth2:authorized-token-delete": [
+        {
+            "url": "/o/authorized_tokens/{pk}/delete/",
+            "params": [
+                "pk"
+            ]
+        }
+    ],
+    "oauth2:authorized-token-list": [
+        {
+            "url": "/o/authorized_tokens/",
+            "params": []
+        }
+    ],
+    "oauth2:delete": [
+        {
+            "url": "/o/applications/{pk}/delete/",
+            "params": [
+                "pk"
+            ]
+        }
+    ],
+    "oauth2:detail": [
+        {
+            "url": "/o/applications/{pk}/",
+            "params": [
+                "pk"
+            ]
+        }
+    ],
+    "oauth2:introspect": [
+        {
+            "url": "/o/introspect/",
+            "params": []
+        }
+    ],
+    "oauth2:jwks-info": [
+        {
+            "url": "/o/.well-known/jwks.json",
+            "params": []
+        }
+    ],
+    "oauth2:list": [
+        {
+            "url": "/o/applications/",
+            "params": []
+        }
+    ],
+    "oauth2:oidc-connect-discovery-info": [
+        {
+            "url": "/o/.well-known/openid-configuration/",
+            "params": []
+        }
+    ],
+    "oauth2:register": [
+        {
+            "url": "/o/applications/register/",
+            "params": []
+        }
+    ],
+    "oauth2:revoke-token": [
+        {
+            "url": "/o/revoke_token/",
+            "params": []
+        }
+    ],
+    "oauth2:token": [
+        {
+            "url": "/o/token/",
+            "params": []
+        }
+    ],
+    "oauth2:update": [
+        {
+            "url": "/o/applications/{pk}/update/",
+            "params": [
+                "pk"
+            ]
+        }
+    ],
+    "oauth2:user-info": [
+        {
+            "url": "/o/userinfo/",
+            "params": []
+        }
+    ],
+    "ontology_properties": [
+        {
+            "url": "/ontology_properties",
+            "params": []
+        }
+    ],
+    "paged_dropdown": [
+        {
+            "url": "/concepts/paged_dropdown",
+            "params": []
+        }
+    ],
+    "password_reset": [
+        {
+            "url": "/password_reset/",
+            "params": []
+        }
+    ],
+    "password_reset_complete": [
+        {
+            "url": "/reset/done/",
+            "params": []
+        }
+    ],
+    "password_reset_confirm": [
+        {
+            "url": "/reset/{uidb64}/{token}/",
+            "params": [
+                "uidb64",
+                "token"
+            ]
+        }
+    ],
+    "password_reset_done": [
+        {
+            "url": "/password_reset/done/",
+            "params": []
+        }
+    ],
+    "permission_data": [
+        {
+            "url": "/graph/permissions",
+            "params": []
+        }
+    ],
+    "permission_manager_data": [
+        {
+            "url": "/graph/permissions/permission_manager_data",
+            "params": []
+        }
+    ],
+    "plugins": [
+        {
+            "url": "/plugins/{pluginid}",
+            "params": [
+                "pluginid"
+            ]
+        },
+        {
+            "url": "/plugins/{pluginid}/{path}",
+            "params": [
+                "pluginid",
+                "path"
+            ]
+        },
+        {
+            "url": "/plugins/{slug}",
+            "params": [
+                "slug"
+            ]
+        },
+        {
+            "url": "/plugins/{slug}/{path}",
+            "params": [
+                "slug",
+                "path"
+            ]
+        }
+    ],
+    "publish_graph": [
+        {
+            "url": "/graph/{graphid}/publish",
+            "params": [
+                "graphid"
+            ]
+        }
+    ],
+    "rdm": [
+        {
+            "url": "/rdm/{conceptid}",
+            "params": [
+                "conceptid"
+            ]
+        }
+    ],
+    "reindex": [
+        {
+            "url": "/admin/reindex/resources",
+            "params": []
+        }
+    ],
+    "relatable_resources": [
+        {
+            "url": "/resource/related/relatable",
+            "params": []
+        }
+    ],
+    "related_resource_candidates": [
+        {
+            "url": "/resource/related/candidates",
+            "params": []
+        }
+    ],
+    "related_resources": [
+        {
+            "url": "/resource/related/{resourceid}",
+            "params": [
+                "resourceid"
+            ]
+        }
+    ],
+    "remove_functions": [
+        {
+            "url": "/graph/{graphid}/remove_functions",
+            "params": [
+                "graphid"
+            ]
+        }
+    ],
+    "reorder_cards": [
+        {
+            "url": "/reorder_cards/",
+            "params": []
+        }
+    ],
+    "reorder_nodes": [
+        {
+            "url": "/graph/reorder_nodes",
+            "params": []
+        }
+    ],
+    "reorder_tiles": [
+        {
+            "url": "/tiles/reorder_tiles",
+            "params": []
+        }
+    ],
+    "report-templates": [
+        {
+            "url": "/report-templates/{template}",
+            "params": [
+                "template"
+            ]
+        }
+    ],
+    "resource": [
+        {
+            "url": "/resource",
+            "params": []
+        }
+    ],
+    "resource_cards": [
+        {
+            "url": "/resource/{resourceid}/cards",
+            "params": [
+                "resourceid"
+            ]
+        }
+    ],
+    "resource_copy": [
+        {
+            "url": "/resource/{resourceid}/copy",
+            "params": [
+                "resourceid"
+            ]
+        }
+    ],
+    "resource_data": [
+        {
+            "url": "/resource/{resourceid}/data/{formid}",
+            "params": [
+                "resourceid",
+                "formid"
+            ]
+        }
+    ],
+    "resource_descriptors": [
+        {
+            "url": "/resource/descriptors/{resourceid}",
+            "params": [
+                "resourceid"
+            ]
+        }
+    ],
+    "resource_edit_log": [
+        {
+            "url": "/resource/{resourceid}/history",
+            "params": [
+                "resourceid"
+            ]
+        }
+    ],
+    "resource_editor": [
+        {
+            "url": "/resource/{resourceid}",
+            "params": [
+                "resourceid"
+            ]
+        }
+    ],
+    "resource_permission_data": [
+        {
+            "url": "/resource/permissions",
+            "params": []
+        }
+    ],
+    "resource_report": [
+        {
+            "url": "/report/{resourceid}",
+            "params": [
+                "resourceid"
+            ]
+        }
+    ],
+    "resource_tiles": [
+        {
+            "url": "/resource/{resourceid}/tiles",
+            "params": [
+                "resourceid"
+            ]
+        }
+    ],
+    "resources": [
+        {
+            "url": "/resources/{resourceid}",
+            "params": [
+                "resourceid"
+            ]
+        }
+    ],
+    "resources_graphid": [
+        {
+            "url": "/resources/{graphid}/{resourceid}",
+            "params": [
+                "graphid",
+                "resourceid"
+            ]
+        }
+    ],
+    "resources_slug": [
+        {
+            "url": "/resources/{slug}/{resourceid}",
+            "params": [
+                "slug",
+                "resourceid"
+            ]
+        }
+    ],
+    "restore_state_from_serialized_graph": [
+        {
+            "url": "/graph/{graphid}/restore_state_from_serialized_graph",
+            "params": [
+                "graphid"
+            ]
+        }
+    ],
+    "revert_graph": [
+        {
+            "url": "/graph/{graphid}/revert",
+            "params": [
+                "graphid"
+            ]
+        }
+    ],
+    "root": [
+        {
+            "url": "/",
+            "params": []
+        }
+    ],
+    "scheme-root": [
+        {
+            "url": "/scheme/{id}",
+            "params": [
+                "id"
+            ]
+        }
+    ],
+    "schemes": [
+        {
+            "url": "/schemes",
+            "params": []
+        }
+    ],
+    "search_home": [
+        {
+            "url": "/search",
+            "params": []
+        }
+    ],
+    "search_results": [
+        {
+            "url": "/search/resources",
+            "params": []
+        }
+    ],
+    "search_sparql_endpoint": [
+        {
+            "url": "/concepts/search_sparql_endpoint",
+            "params": []
+        }
+    ],
+    "search_terms": [
+        {
+            "url": "/search/terms",
+            "params": []
+        }
+    ],
+    "server_settings": [
+        {
+            "url": "/auth/server_settings",
+            "params": []
+        }
+    ],
+    "set_language": [
+        {
+            "url": "/i18n/setlang/",
+            "params": []
+        }
+    ],
+    "signup": [
+        {
+            "url": "/auth/signup",
+            "params": []
+        }
+    ],
+    "spatialview_api": [
+        {
+            "url": "/api/spatialview/{identifier}/",
+            "params": [
+                "identifier"
+            ]
+        }
+    ],
+    "static_url": [
+        {
+            "url": "/static/",
+            "params": []
+        }
+    ],
+    "temp_file": [
+        {
+            "url": "/temp_file/{file_id}",
+            "params": [
+                "file_id"
+            ]
+        },
+        {
+            "url": "/temp_file",
+            "params": []
+        }
+    ],
+    "templates": [
+        {
+            "url": "/templates/{template}",
+            "params": [
+                "template"
+            ]
+        }
+    ],
+    "thumbnail": [
+        {
+            "url": "/thumbnail/{resource_id}",
+            "params": [
+                "resource_id"
+            ]
+        }
+    ],
+    "tile": [
+        {
+            "url": "/tile",
+            "params": []
+        }
+    ],
+    "tile_history": [
+        {
+            "url": "/tiles/tile_history",
+            "params": []
+        }
+    ],
+    "tileserver": [
+        {
+            "url": "/tileserver/{path}",
+            "params": [
+                "path"
+            ]
+        }
+    ],
+    "time_wheel_config": [
+        {
+            "url": "/search/time_wheel_config",
+            "params": []
+        }
+    ],
+    "transaction_reverse": [
+        {
+            "url": "/transaction/{transactionid}/reverse",
+            "params": [
+                "transactionid"
+            ]
+        }
+    ],
+    "transform_edtf_for_tile": [
+        {
+            "url": "/transform-edtf-for-tile",
+            "params": []
+        }
+    ],
+    "two-factor-authentication-login": [
+        {
+            "url": "/two-factor-authentication-login",
+            "params": []
+        }
+    ],
+    "two-factor-authentication-reset": [
+        {
+            "url": "/two-factor-authentication-reset",
+            "params": []
+        }
+    ],
+    "two-factor-authentication-settings": [
+        {
+            "url": "/two-factor-authentication-settings",
+            "params": []
+        }
+    ],
+    "update_node": [
+        {
+            "url": "/graph/{graphid}/update_node",
+            "params": [
+                "graphid"
+            ]
+        }
+    ],
+    "update_notification_types": [
+        {
+            "url": "/notifications/update_types",
+            "params": []
+        }
+    ],
+    "update_published_graph": [
+        {
+            "url": "/graph/{graphid}/update_published_graph",
+            "params": [
+                "graphid"
+            ]
+        }
+    ],
+    "update_published_graphs": [
+        {
+            "url": "/graph/{graphid}/update_published_graphs",
+            "params": [
+                "graphid"
+            ]
+        }
+    ],
+    "user_profile": [
+        {
+            "url": "/auth/user_profile",
+            "params": []
+        }
+    ],
+    "user_profile_manager": [
+        {
+            "url": "/user",
+            "params": []
+        }
+    ],
+    "validate": [
+        {
+            "url": "/validate/{itemtype}/{itemid}",
+            "params": [
+                "itemtype",
+                "itemid"
+            ]
+        }
+    ],
+    "validatejson": [
+        {
+            "url": "/validate/{itemtype}",
+            "params": [
+                "itemtype"
+            ]
+        }
+    ],
+    "widgets": [
+        {
+            "url": "/widgets/{template}",
+            "params": [
+                "template"
+            ]
+        }
+    ],
+    "workflow_history": [
+        {
+            "url": "/workflow_history/{workflowid}",
+            "params": [
+                "workflowid"
+            ]
+        }
+    ]
+}

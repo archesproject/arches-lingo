@@ -1,0 +1,21 @@
+{
+    "_comment": "This is a generated file. Do not edit directly.",
+    "APP_RELATIVE_PATH": "arches_lingo",
+    "APP_ROOT": "/web_root/arches-lingo/arches_lingo",
+    "ARCHES_APPLICATIONS": [
+        "arches_lingo",
+        "arches_component_lab",
+        "arches_controlled_lists",
+        "arches_querysets"
+    ],
+    "ARCHES_APPLICATIONS_PATHS": {
+        "arches_lingo": "/web_root/arches-lingo/arches_lingo",
+        "arches_component_lab": "/web_root/ENV/lib/python3.12/site-packages/arches_component_lab",
+        "arches_controlled_lists": "/web_root/ENV/lib/python3.12/site-packages/arches_controlled_lists",
+        "arches_querysets": "/web_root/ENV/lib/python3.12/site-packages/arches_querysets"
+    },
+    "SITE_PACKAGES_DIRECTORY": "/web_root/ENV/lib/python3.12/site-packages",
+    "ROOT_DIR": "/web_root/ENV/lib/python3.12/site-packages/arches",
+    "STATIC_URL": "/static/",
+    "WEBPACK_DEVELOPMENT_SERVER_PORT": 8022
+}
