@@ -35,7 +35,7 @@ const metaStringLabel: MetaStringText = {
 </script>
 
 <template>
-    <div class="section">
+    <div class="viewer-section">
         <div class="section-header">
             <h2>{{ props.sectionTitle }}</h2>
 
@@ -84,7 +84,9 @@ const metaStringLabel: MetaStringText = {
                 <ResourceInstanceMultiSelectWidget
                     node-alias="statement_data_assignment_object_used"
                     :graph-slug="props.graphSlug"
-                    :initial-value="rowData.statement_data_assignment_object_used"
+                    :initial-value="
+                        rowData.statement_data_assignment_object_used
+                    "
                     :mode="VIEW"
                 />
                 <ResourceInstanceMultiSelectWidget
@@ -99,16 +101,12 @@ const metaStringLabel: MetaStringText = {
 </template>
 
 <style scoped>
-.section {
-    padding: 1rem 1rem 1.25rem 1rem;
-}
-
 .section-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     border-bottom: 1px solid var(--p-form-field-border-color);
-    padding-bottom: .5rem;
+    padding-bottom: 0.5rem;
 }
 
 h2 {
@@ -119,7 +117,7 @@ h2 {
 }
 
 .add-button {
-    height: 2.0rem;
+    height: 2rem;
     font-size: 0.9rem;
     font-weight: 400;
     min-width: 10rem;
@@ -130,9 +128,9 @@ h2 {
     padding: 0.9rem 1rem;
 }
 
-:deep(.p-datatable-tbody > tr > td ) {
-    font-size: .95rem;
-    padding: .4rem 1rem;
+:deep(.p-datatable-tbody > tr > td) {
+    font-size: 0.95rem;
+    padding: 0.4rem 1rem;
 }
 
 :deep(.p-datatable-column-title) {
@@ -142,14 +140,5 @@ h2 {
 
 :deep(.p-datatable-row-expansion td) {
     padding: 1rem 0rem;
-}
-
-:deep(.controls) {
-    flex-direction: row-reverse;
-}
-
-:deep(.controls button) {
-    border-radius: 50%;
-    margin: 0 0.15rem;
 }
 </style>

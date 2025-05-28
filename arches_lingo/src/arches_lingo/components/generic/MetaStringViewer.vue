@@ -97,7 +97,7 @@ async function deleteSectionValue(tileId: string) {
             />
             <Column
                 :header="props.metaStringText.name"
-                style="max-width: 50rem;"
+                style="max-width: 50rem"
                 sortable
             >
                 <template #body="slotProps">
@@ -135,6 +135,7 @@ async function deleteSectionValue(tileId: string) {
                         <Button
                             icon="pi pi-file-edit"
                             :aria-label="$gettext('edit')"
+                            rounded
                             @click="
                                 openEditor!(
                                     componentName,
@@ -148,6 +149,7 @@ async function deleteSectionValue(tileId: string) {
                             :aria-label="$gettext('delete')"
                             severity="danger"
                             outlined
+                            rounded
                             @click="confirmDelete(slotProps.data.tileid)"
                         />
                     </div>
@@ -163,7 +165,12 @@ async function deleteSectionValue(tileId: string) {
             </template>
         </DataTable>
     </div>
-    <p class="no-data" v-else>{{ props.metaStringText.noRecords }}</p>
+    <p
+        v-else
+        class="no-data"
+    >
+        {{ props.metaStringText.noRecords }}
+    </p>
 </template>
 <style scoped>
 :deep(.drawer) {
@@ -173,7 +180,9 @@ async function deleteSectionValue(tileId: string) {
 .controls {
     display: flex;
     flex-direction: row;
+    justify-content: end;
 }
+
 .controls button {
     margin: 0 0.5rem;
 }
@@ -196,9 +205,9 @@ async function deleteSectionValue(tileId: string) {
 }
 
 .no-data {
-    padding: .5rem 0;
+    padding: 0.5rem 0;
     margin: 0;
-    color: var(--p-inputtext-placeholder-color)
+    color: var(--p-inputtext-placeholder-color);
 }
 
 :deep(.p-dialog) {
@@ -207,6 +216,6 @@ async function deleteSectionValue(tileId: string) {
 
 :deep(.p-datatable-tbody > tr > td) {
     color: var(--p-inputtext-placeholder-color);
-    font-size: .95rem;
+    font-size: 0.95rem;
 }
 </style>
