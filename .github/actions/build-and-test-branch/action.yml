@@ -27,14 +27,14 @@ runs:
     - name: Install Python packages
       run: |
         python -m pip install --upgrade pip
-        pip install '.[dev]'
+        pip install . --group dev
         echo Python packages installed
       shell: bash
-
+    
     - name: Ensure frontend configuration files exist
       run: |
-          export ARCHES_DJANGO_DEBUG=True
-          python manage.py check
+        export ARCHES_DJANGO_DEBUG=True
+        python manage.py check
       shell: bash
 
     - name: Install Arches applications
@@ -62,9 +62,9 @@ runs:
         black . --check --exclude=node_modules
       shell: bash
 
-    - name: Check line endings
+    - name: Check line endings on all but ontology (.xml) files
       run: |
-        ! git ls-files --eol | grep 'w/crlf\|w/mixed'
+        ! git ls-files --eol | grep -v '.xml' | grep 'w/crlf\|w/mixed'
       shell: bash
 
     - name: Run frontend tests
@@ -75,7 +75,8 @@ runs:
 
     - name: Check for missing migrations
       run: |
-        export ARCHES_DJANGO_DEBUG="True" && python manage.py makemigrations --check
+        export ARCHES_DJANGO_DEBUG="True"
+        python manage.py makemigrations --check
       shell: bash
 
     - name: Ensure previous Python coverage data is erased
