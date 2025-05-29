@@ -68,6 +68,14 @@
                 {
                     "name": "ARCHES_S3BUCKETNAME",
                     "value": "fargeo-lingo-media-files"
+                },
+                {
+                    "name": "ARCHES_MAIN_CACHE_TYPE",
+                    "value": "django.core.cache.backends.memcached.PyMemcacheCache"
+                },
+                {
+                    "name": "ARCHES_MAIN_CACHE_LOCATION",
+                    "value": "127.0.0.1:11211"
                 }
             ],
             "logConfiguration": {
