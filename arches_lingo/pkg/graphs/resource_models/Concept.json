@@ -4228,7 +4228,7 @@
                         "en": ""
                     },
                     "datatype": "semantic",
-                    "description": "{\"en\": \"\"}",
+                    "description": "",
                     "exportable": false,
                     "fieldname": null,
                     "graph_id": "bf73e576-4888-11ee-8a8d-11afefc4bff7",
@@ -4351,7 +4351,7 @@
                         "en": ""
                     },
                     "datatype": "semantic",
-                    "description": "{\"en\": \"\"}",
+                    "description": "",
                     "exportable": false,
                     "fieldname": null,
                     "graph_id": "bf73e576-4888-11ee-8a8d-11afefc4bff7",
@@ -4402,7 +4402,7 @@
                         "en": ""
                     },
                     "datatype": "semantic",
-                    "description": "{\"en\": \"\"}",
+                    "description": "",
                     "exportable": false,
                     "fieldname": null,
                     "graph_id": "bf73e576-4888-11ee-8a8d-11afefc4bff7",
@@ -4453,7 +4453,7 @@
                         "multiValue": true
                     },
                     "datatype": "reference",
-                    "description": "{\"en\": \"\"}",
+                    "description": "",
                     "exportable": false,
                     "fieldname": null,
                     "graph_id": "bf73e576-4888-11ee-8a8d-11afefc4bff7",
@@ -4547,7 +4547,7 @@
                         "en": ""
                     },
                     "datatype": "semantic",
-                    "description": "{\"en\": \"\"}",
+                    "description": "",
                     "exportable": false,
                     "fieldname": null,
                     "graph_id": "bf73e576-4888-11ee-8a8d-11afefc4bff7",
@@ -4623,7 +4623,7 @@
                         "multiValue": true
                     },
                     "datatype": "reference",
-                    "description": "{\"en\": \"\"}",
+                    "description": "",
                     "exportable": false,
                     "fieldname": null,
                     "graph_id": "bf73e576-4888-11ee-8a8d-11afefc4bff7",
@@ -5245,7 +5245,7 @@
                         "en": ""
                     },
                     "datatype": "semantic",
-                    "description": "{\"en\": \"\"}",
+                    "description": "",
                     "exportable": false,
                     "fieldname": null,
                     "graph_id": "bf73e576-4888-11ee-8a8d-11afefc4bff7",
@@ -6376,7 +6376,7 @@
                         "en": ""
                     },
                     "datatype": "semantic",
-                    "description": "{\"en\": \"\"}",
+                    "description": "",
                     "exportable": false,
                     "fieldname": null,
                     "graph_id": "bf73e576-4888-11ee-8a8d-11afefc4bff7",
@@ -6507,7 +6507,7 @@
                         "en": ""
                     },
                     "datatype": "semantic",
-                    "description": "{\"en\": \"\"}",
+                    "description": "",
                     "exportable": false,
                     "fieldname": null,
                     "graph_id": "bf73e576-4888-11ee-8a8d-11afefc4bff7",
@@ -6666,7 +6666,7 @@
                         "en": ""
                     },
                     "datatype": "semantic",
-                    "description": "{\"en\": \"\"}",
+                    "description": "",
                     "exportable": false,
                     "fieldname": null,
                     "graph_id": "bf73e576-4888-11ee-8a8d-11afefc4bff7",
