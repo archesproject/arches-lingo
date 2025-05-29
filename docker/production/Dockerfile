@@ -28,7 +28,9 @@ COPY --from=base /etc/ssl/private/nginx-selfsigned.key /etc/ssl/private/nginx-se
 COPY --from=base /etc/ssl/certs/nginx-selfsigned.crt /etc/ssl/certs/nginx-selfsigned.crt
 
 RUN chgrp www-data /var/www/media -R
-RUN apt-get update && apt-get install -y make software-properties-common && apt-get install -y ca-certificates curl gnupg nginx vim && apt-add-repository ppa:deadsnakes/ppa && apt-get update
+
+#TODO: remove memcached from this image
+RUN apt-get update && apt-get install -y make software-properties-common memcached && apt-get install -y ca-certificates curl gnupg nginx vim && apt-add-repository ppa:deadsnakes/ppa && apt-get update
 
 # Root project folder
 ENV WHEELS=/wheels
@@ -51,7 +53,9 @@ COPY . ${WEB_ROOT}/arches-lingo
 # Set default workdir
 WORKDIR ${APP_ROOT}
 COPY docker/nginx/default.conf /etc/nginx/sites-available/default
-RUN source ${WEB_ROOT}/ENV/bin/activate && pip install . && pip install gunicorn boto boto3 django-storages psutil
+
+#TODO: remove pymemcacheD from this image
+RUN source ${WEB_ROOT}/ENV/bin/activate && pip install . && pip install gunicorn pymemcache boto boto3 django-storages psutil
 
 # # Set entrypoint
 ENTRYPOINT ["../entrypoint.sh"]
