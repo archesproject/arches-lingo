@@ -148,7 +148,6 @@ async function deleteSectionValue(tileId: string) {
                             class="label-delete-button"
                             :aria-label="$gettext('delete')"
                             severity="danger"
-                            outlined
                             rounded
                             @click="confirmDelete(slotProps.data.tileid)"
                         />
@@ -184,24 +183,7 @@ async function deleteSectionValue(tileId: string) {
 }
 
 .controls button {
-    margin: 0 0.5rem;
-}
-
-.p-button-danger:hover {
-    background: var(--p-button-warn-active-background);
-    border-color: var(--p-button-warn-active-background);
-}
-
-.p-button-outlined.p-button-danger {
-    color: var(--p-button-warn-color);
-    background: var(--p-button-warn-active-background);
-    border-color: var(--p-button-warn-active-background);
-}
-
-.p-button-outlined.p-button-danger:not(:disabled):hover {
-    color: var(--p-button-warn-color);
-    background: var(--p-button-warn-background);
-    border-color: var(--p-button-warn-active-background);
+    margin: 0 0.25rem;
 }
 
 .no-data {
