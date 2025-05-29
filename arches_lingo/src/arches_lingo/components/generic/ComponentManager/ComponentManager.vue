@@ -163,15 +163,44 @@ provide("refreshReportSection", refreshReportSection);
 .content {
     overflow: auto;
 }
-:deep(.p-splitter) {
-    border-radius: 0;
-}
 
 .splitter-panel-content {
     overflow: auto;
 }
 
+:deep(.p-splitter) {
+    border-radius: 0;
+}
+
 :deep(.viewer-section) {
     padding: 1rem 1rem 1.25rem 1rem;
+}
+
+:deep(.section-message) {
+    padding: 0.5rem 0;
+    color: var(--p-inputtext-placeholder-color);
+}
+
+:deep(.section-header) {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 0.06rem solid var(--p-form-field-border-color);
+    padding-bottom: 0.5rem;
+}
+
+:deep(.section-header h2) {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 400;
+    color: var(--p-neutral-500);
+}
+
+:deep(.section-header .add-button) {
+    height: 2rem;
+    font-size: 0.9rem;
+    font-weight: 400;
+    min-width: 10rem;
+    border-radius: 0.125rem;
 }
 </style>

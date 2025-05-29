@@ -196,8 +196,22 @@ async function deleteSectionValue(tileId: string) {
     border-radius: 2px;
 }
 
+:deep(.p-datatable-header-cell) {
+    padding: 0.9rem 1rem;
+}
+
 :deep(.p-datatable-tbody > tr > td) {
     color: var(--p-inputtext-placeholder-color);
     font-size: 0.95rem;
+    padding: 0.4rem 1rem;
+}
+
+:deep(.p-datatable-column-title) {
+    font-weight: 400;
+    color: var(--p-neutral-500);
+}
+
+:deep(.p-datatable-row-expansion td) {
+    padding: 0.5rem 0rem;
 }
 </style>
