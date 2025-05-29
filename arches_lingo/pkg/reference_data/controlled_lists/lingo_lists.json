@@ -5,7 +5,7 @@
         "fields": {
             "name": "Right Types",
             "dynamic": false,
-            "search_only": false
+            "searchable": false
         }
     },
     {
@@ -14,7 +14,7 @@
         "fields": {
             "name": "Information State Statuses",
             "dynamic": false,
-            "search_only": false
+            "searchable": false
         }
     },
     {
@@ -23,7 +23,7 @@
         "fields": {
             "name": "Scheme Identifier Types",
             "dynamic": false,
-            "search_only": false
+            "searchable": false
         }
     },
     {
@@ -32,7 +32,7 @@
         "fields": {
             "name": "broader properties",
             "dynamic": false,
-            "search_only": false
+            "searchable": false
         }
     },
     {
@@ -41,7 +41,7 @@
         "fields": {
             "name": "Term Types",
             "dynamic": false,
-            "search_only": false
+            "searchable": false
         }
     },
     {
@@ -50,7 +50,7 @@
         "fields": {
             "name": "Languages",
             "dynamic": false,
-            "search_only": false
+            "searchable": false
         }
     },
     {
@@ -59,7 +59,7 @@
         "fields": {
             "name": "Ontology Classes",
             "dynamic": false,
-            "search_only": false
+            "searchable": false
         }
     },
     {
@@ -68,7 +68,7 @@
         "fields": {
             "name": "Event Types",
             "dynamic": false,
-            "search_only": false
+            "searchable": false
         }
     },
     {
@@ -77,7 +77,7 @@
         "fields": {
             "name": "Mapping properties",
             "dynamic": false,
-            "search_only": false
+            "searchable": false
         }
     },
     {
@@ -86,7 +86,7 @@
         "fields": {
             "name": "Subject Types",
             "dynamic": false,
-            "search_only": false
+            "searchable": false
         }
     },
     {
@@ -95,7 +95,7 @@
         "fields": {
             "name": "Identifier Types",
             "dynamic": false,
-            "search_only": false
+            "searchable": false
         }
     },
     {
@@ -104,7 +104,7 @@
         "fields": {
             "name": "note",
             "dynamic": false,
-            "search_only": false
+            "searchable": false
         }
     },
     {
@@ -113,7 +113,7 @@
         "fields": {
             "name": "label",
             "dynamic": false,
-            "search_only": false
+            "searchable": false
         }
     },
     {
@@ -122,7 +122,7 @@
         "fields": {
             "name": "related properties",
             "dynamic": false,
-            "search_only": false
+            "searchable": false
         }
     },
     {
@@ -131,7 +131,7 @@
         "fields": {
             "name": "Metatypes",
             "dynamic": false,
-            "search_only": false
+            "searchable": false
         }
     },
     {
@@ -140,7 +140,7 @@
         "fields": {
             "name": "Scheme Types",
             "dynamic": false,
-            "search_only": false
+            "searchable": false
         }
     },
     {

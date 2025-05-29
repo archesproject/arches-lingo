@@ -11,7 +11,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ("arches_lingo", "0001_initial"),
-        ("arches_controlled_lists", "0001_initial"),
+        ("arches_controlled_lists", "0003_rename_search_only_list_searchable"),
     ]
 
     def load_lists(apps, schema_editor):
