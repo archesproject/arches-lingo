@@ -166,34 +166,6 @@ function confirmDelete() {
 </template>
 
 <style scoped>
-.section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid var(--p-form-field-border-color);
-    padding-bottom: 0.5rem;
-}
-
-h2 {
-    margin: 0;
-    font-size: 1.2rem;
-    font-weight: 400;
-    color: var(--p-neutral-500);
-}
-
-.add-button {
-    height: 2rem;
-    font-size: 0.9rem;
-    font-weight: 400;
-    min-width: 10rem;
-    border-radius: 2px;
-}
-
-.section-message {
-    padding: 0.5rem 0;
-    color: var(--p-inputtext-placeholder-color);
-}
-
 .conceptImages {
     display: flex;
     flex-direction: row;
