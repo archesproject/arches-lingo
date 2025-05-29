@@ -955,7 +955,7 @@
                         "en": ""
                     },
                     "datatype": "semantic",
-                    "description": "{\"en\": \"\"}",
+                    "description": "",
                     "exportable": false,
                     "fieldname": null,
                     "graph_id": "9ffb6fcc-b4b4-11ea-84f7-3af9d3b32b71",

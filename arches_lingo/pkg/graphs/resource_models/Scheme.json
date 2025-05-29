@@ -13,10 +13,18 @@
                     "description": null,
                     "graph_id": "56788995-423b-11ee-8a8d-11afefc4bff7",
                     "helpenabled": false,
-                    "helptext": "",
-                    "helptitle": "",
-                    "instructions": "",
-                    "name": "Geographic Coverage",
+                    "helptext": {
+                        "en": ""
+                    },
+                    "helptitle": {
+                        "en": ""
+                    },
+                    "instructions": {
+                        "en": ""
+                    },
+                    "name": {
+                        "en": "Geographic Coverage"
+                    },
                     "nodegroup_id": "010f8934-423c-11ee-8a8d-11afefc4bff7",
                     "sortorder": 8,
                     "source_identifier_id": null,
@@ -32,10 +40,18 @@
                     "description": null,
                     "graph_id": "56788995-423b-11ee-8a8d-11afefc4bff7",
                     "helpenabled": false,
-                    "helptext": "",
-                    "helptitle": "",
-                    "instructions": "",
-                    "name": "Type",
+                    "helptext": {
+                        "en": ""
+                    },
+                    "helptitle": {
+                        "en": ""
+                    },
+                    "instructions": {
+                        "en": ""
+                    },
+                    "name": {
+                        "en": "Type"
+                    },
                     "nodegroup_id": "d8219dd6-0f64-11ef-9493-0a58a9feac02",
                     "sortorder": 4,
                     "source_identifier_id": null,
@@ -51,10 +67,18 @@
                     "description": null,
                     "graph_id": "56788995-423b-11ee-8a8d-11afefc4bff7",
                     "helpenabled": false,
-                    "helptext": "",
-                    "helptitle": "",
-                    "instructions": "",
-                    "name": "Subject Coverage",
+                    "helptext": {
+                        "en": ""
+                    },
+                    "helptitle": {
+                        "en": ""
+                    },
+                    "instructions": {
+                        "en": ""
+                    },
+                    "name": {
+                        "en": "Subject Coverage"
+                    },
                     "nodegroup_id": "6d8a7c34-11e1-11ef-9493-0a58a9feac02",
                     "sortorder": 9,
                     "source_identifier_id": null,
@@ -70,10 +94,18 @@
                     "description": "{\"en\": \"\"}",
                     "graph_id": "56788995-423b-11ee-8a8d-11afefc4bff7",
                     "helpenabled": false,
-                    "helptext": "",
-                    "helptitle": "",
-                    "instructions": "",
-                    "name": "Statement",
+                    "helptext": {
+                        "en": ""
+                    },
+                    "helptitle": {
+                        "en": ""
+                    },
+                    "instructions": {
+                        "en": ""
+                    },
+                    "name": {
+                        "en": "Statement"
+                    },
                     "nodegroup_id": "7131bc72-11e0-11ef-9493-0a58a9feac02",
                     "sortorder": 5,
                     "source_identifier_id": null,
@@ -89,10 +121,18 @@
                     "description": null,
                     "graph_id": "56788995-423b-11ee-8a8d-11afefc4bff7",
                     "helpenabled": false,
-                    "helptext": "",
-                    "helptitle": "",
-                    "instructions": "",
-                    "name": "Scheme Language",
+                    "helptext": {
+                        "en": ""
+                    },
+                    "helptitle": {
+                        "en": ""
+                    },
+                    "instructions": {
+                        "en": ""
+                    },
+                    "name": {
+                        "en": "Scheme Language"
+                    },
                     "nodegroup_id": "a61ecad8-11e0-11ef-9493-0a58a9feac02",
                     "sortorder": 6,
                     "source_identifier_id": null,
@@ -108,10 +148,18 @@
                     "description": "",
                     "graph_id": "56788995-423b-11ee-8a8d-11afefc4bff7",
                     "helpenabled": false,
-                    "helptext": "",
-                    "helptitle": "",
-                    "instructions": "",
-                    "name": "Creation",
+                    "helptext": {
+                        "en": ""
+                    },
+                    "helptitle": {
+                        "en": ""
+                    },
+                    "instructions": {
+                        "en": ""
+                    },
+                    "name": {
+                        "en": "Creation"
+                    },
                     "nodegroup_id": "7e5c3bc5-423c-11ee-8a8d-11afefc4bff7",
                     "sortorder": 10,
                     "source_identifier_id": null,
@@ -127,10 +175,18 @@
                     "description": null,
                     "graph_id": "56788995-423b-11ee-8a8d-11afefc4bff7",
                     "helpenabled": false,
-                    "helptext": "",
-                    "helptitle": "",
-                    "instructions": "",
-                    "name": "Rights Statement",
+                    "helptext": {
+                        "en": ""
+                    },
+                    "helptitle": {
+                        "en": ""
+                    },
+                    "instructions": {
+                        "en": ""
+                    },
+                    "name": {
+                        "en": "Rights Statement"
+                    },
                     "nodegroup_id": "87fac833-423c-11ee-8a8d-11afefc4bff7",
                     "sortorder": null,
                     "source_identifier_id": null,
@@ -146,10 +202,18 @@
                     "description": "",
                     "graph_id": "56788995-423b-11ee-8a8d-11afefc4bff7",
                     "helpenabled": false,
-                    "helptext": "",
-                    "helptitle": "",
-                    "instructions": "",
-                    "name": "Rights",
+                    "helptext": {
+                        "en": ""
+                    },
+                    "helptitle": {
+                        "en": ""
+                    },
+                    "instructions": {
+                        "en": ""
+                    },
+                    "name": {
+                        "en": "Rights"
+                    },
                     "nodegroup_id": "87fac836-423c-11ee-8a8d-11afefc4bff7",
                     "sortorder": 12,
                     "source_identifier_id": null,
@@ -165,10 +229,18 @@
                     "description": "",
                     "graph_id": "56788995-423b-11ee-8a8d-11afefc4bff7",
                     "helpenabled": false,
-                    "helptext": "",
-                    "helptitle": "",
-                    "instructions": "",
-                    "name": "Identifier",
+                    "helptext": {
+                        "en": ""
+                    },
+                    "helptitle": {
+                        "en": ""
+                    },
+                    "instructions": {
+                        "en": ""
+                    },
+                    "name": {
+                        "en": "Identifier"
+                    },
                     "nodegroup_id": "8e34b47f-423c-11ee-8a8d-11afefc4bff7",
                     "sortorder": 1,
                     "source_identifier_id": null,
@@ -184,10 +256,18 @@
                     "description": "",
                     "graph_id": "56788995-423b-11ee-8a8d-11afefc4bff7",
                     "helpenabled": false,
-                    "helptext": "",
-                    "helptitle": "",
-                    "instructions": "",
-                    "name": "Namespace",
+                    "helptext": {
+                        "en": ""
+                    },
+                    "helptitle": {
+                        "en": ""
+                    },
+                    "instructions": {
+                        "en": ""
+                    },
+                    "name": {
+                        "en": "Namespace"
+                    },
                     "nodegroup_id": "92c68f1d-423c-11ee-8a8d-11afefc4bff7",
                     "sortorder": 2,
                     "source_identifier_id": null,
@@ -203,10 +283,18 @@
                     "description": "",
                     "graph_id": "56788995-423b-11ee-8a8d-11afefc4bff7",
                     "helpenabled": false,
-                    "helptext": "",
-                    "helptitle": "",
-                    "instructions": "",
-                    "name": "Version",
+                    "helptext": {
+                        "en": ""
+                    },
+                    "helptitle": {
+                        "en": ""
+                    },
+                    "instructions": {
+                        "en": ""
+                    },
+                    "name": {
+                        "en": "Version"
+                    },
                     "nodegroup_id": "97351c45-423c-11ee-8a8d-11afefc4bff7",
                     "sortorder": 3,
                     "source_identifier_id": null,
@@ -222,10 +310,18 @@
                     "description": null,
                     "graph_id": "56788995-423b-11ee-8a8d-11afefc4bff7",
                     "helpenabled": false,
-                    "helptext": "",
-                    "helptitle": "",
-                    "instructions": "",
-                    "name": "Temporal Coverage",
+                    "helptext": {
+                        "en": ""
+                    },
+                    "helptitle": {
+                        "en": ""
+                    },
+                    "instructions": {
+                        "en": ""
+                    },
+                    "name": {
+                        "en": "Temporal Coverage"
+                    },
                     "nodegroup_id": "ec1155ee-423b-11ee-8a8d-11afefc4bff7",
                     "sortorder": 7,
                     "source_identifier_id": null,
@@ -241,10 +337,18 @@
                     "description": "{\"en\": \"\"}",
                     "graph_id": "56788995-423b-11ee-8a8d-11afefc4bff7",
                     "helpenabled": false,
-                    "helptext": "",
-                    "helptitle": "",
-                    "instructions": "",
-                    "name": "Label",
+                    "helptext": {
+                        "en": ""
+                    },
+                    "helptitle": {
+                        "en": ""
+                    },
+                    "instructions": {
+                        "en": ""
+                    },
+                    "name": {
+                        "en": "Label"
+                    },
                     "nodegroup_id": "ef87ac28-11de-11ef-9493-0a58a9feac02",
                     "sortorder": 0,
                     "source_identifier_id": null,
@@ -1053,61 +1157,6 @@
                     "widget_id": "ff3c400a-76ec-11e7-a793-784f435179ea"
                 },
                 {
-                    "card_id": "87fac838-423c-11ee-8a8d-11afefc4bff7",
-                    "config": {
-                        "defaultValue": {
-                            "en": {
-                                "direction": "ltr",
-                                "value": ""
-                            }
-                        },
-                        "i18n_properties": [
-                            "placeholder"
-                        ],
-                        "label": "Statement Label",
-                        "maxLength": null,
-                        "placeholder": {
-                            "en": "Enter text"
-                        },
-                        "uneditable": false,
-                        "width": "100%"
-                    },
-                    "id": "87fac84a-423c-11ee-8a8d-11afefc4bff7",
-                    "label": {
-                        "en": "Statement Label"
-                    },
-                    "node_id": "87fac83c-423c-11ee-8a8d-11afefc4bff7",
-                    "sortorder": 9,
-                    "source_identifier_id": null,
-                    "visible": false,
-                    "widget_id": "10000000-0000-0000-0000-000000000001"
-                },
-                {
-                    "card_id": "87fac838-423c-11ee-8a8d-11afefc4bff7",
-                    "config": {
-                        "defaultValue": "",
-                        "i18n_properties": [
-                            "placeholder"
-                        ],
-                        "label": "Statement",
-                        "maxLength": null,
-                        "placeholder": {
-                            "en": "Enter text"
-                        },
-                        "uneditable": false,
-                        "width": "100%%"
-                    },
-                    "id": "87fac84b-423c-11ee-8a8d-11afefc4bff7",
-                    "label": {
-                        "en": "Statement"
-                    },
-                    "node_id": "87fac83a-423c-11ee-8a8d-11afefc4bff7",
-                    "sortorder": 10,
-                    "source_identifier_id": null,
-                    "visible": true,
-                    "widget_id": "46ef064b-2611-4708-9f52-60136bd8a65b"
-                },
-                {
                     "card_id": "8e34b481-423c-11ee-8a8d-11afefc4bff7",
                     "config": {
                         "defaultValue": {
@@ -1469,7 +1518,9 @@
                         ],
                         "label": "Namespace Name",
                         "maxLength": null,
-                        "placeholder":"Enter text",
+                        "placeholder": {
+                            "en": "Enter text"
+                        },
                         "uneditable": false,
                         "width": "100%"
                     },
@@ -1532,7 +1583,9 @@
             "config": {},
             "deploymentdate": null,
             "deploymentfile": null,
-            "description": "",
+            "description": {
+                "en": ""
+            },
             "edges": [
                 {
                     "description": null,
@@ -2171,88 +2224,103 @@
             ],
             "graphid": "56788995-423b-11ee-8a8d-11afefc4bff7",
             "group_permissions": {},
-            "has_unpublished_changes": false,
+            "has_unpublished_changes": true,
             "iconclass": "",
             "is_active": true,
             "is_copy_immutable": false,
             "isresource": true,
             "jsonldcontext": null,
-            "name": "Scheme",
+            "name": {
+                "en": "Scheme"
+            },
             "nodegroups": [
                 {
                     "cardinality": "1",
+                    "grouping_node_id": "010f8934-423c-11ee-8a8d-11afefc4bff7",
                     "legacygroupid": null,
                     "nodegroupid": "010f8934-423c-11ee-8a8d-11afefc4bff7",
                     "parentnodegroup_id": null
                 },
                 {
                     "cardinality": "1",
+                    "grouping_node_id": "6d8a7c34-11e1-11ef-9493-0a58a9feac02",
                     "legacygroupid": null,
                     "nodegroupid": "6d8a7c34-11e1-11ef-9493-0a58a9feac02",
                     "parentnodegroup_id": null
                 },
                 {
                     "cardinality": "n",
+                    "grouping_node_id": "7131bc72-11e0-11ef-9493-0a58a9feac02",
                     "legacygroupid": null,
                     "nodegroupid": "7131bc72-11e0-11ef-9493-0a58a9feac02",
                     "parentnodegroup_id": null
                 },
                 {
                     "cardinality": "1",
+                    "grouping_node_id": "7e5c3bc5-423c-11ee-8a8d-11afefc4bff7",
                     "legacygroupid": null,
                     "nodegroupid": "7e5c3bc5-423c-11ee-8a8d-11afefc4bff7",
                     "parentnodegroup_id": null
                 },
                 {
                     "cardinality": "1",
+                    "grouping_node_id": "87fac833-423c-11ee-8a8d-11afefc4bff7",
                     "legacygroupid": null,
                     "nodegroupid": "87fac833-423c-11ee-8a8d-11afefc4bff7",
                     "parentnodegroup_id": "87fac836-423c-11ee-8a8d-11afefc4bff7"
                 },
                 {
                     "cardinality": "1",
+                    "grouping_node_id": "87fac836-423c-11ee-8a8d-11afefc4bff7",
                     "legacygroupid": null,
                     "nodegroupid": "87fac836-423c-11ee-8a8d-11afefc4bff7",
                     "parentnodegroup_id": null
                 },
                 {
                     "cardinality": "n",
+                    "grouping_node_id": "8e34b47f-423c-11ee-8a8d-11afefc4bff7",
                     "legacygroupid": null,
                     "nodegroupid": "8e34b47f-423c-11ee-8a8d-11afefc4bff7",
                     "parentnodegroup_id": null
                 },
                 {
                     "cardinality": "1",
+                    "grouping_node_id": "92c68f1d-423c-11ee-8a8d-11afefc4bff7",
                     "legacygroupid": null,
                     "nodegroupid": "92c68f1d-423c-11ee-8a8d-11afefc4bff7",
                     "parentnodegroup_id": null
                 },
                 {
                     "cardinality": "1",
+                    "grouping_node_id": "97351c45-423c-11ee-8a8d-11afefc4bff7",
                     "legacygroupid": null,
                     "nodegroupid": "97351c45-423c-11ee-8a8d-11afefc4bff7",
                     "parentnodegroup_id": null
                 },
                 {
                     "cardinality": "1",
+                    "grouping_node_id": "a61ecad8-11e0-11ef-9493-0a58a9feac02",
                     "legacygroupid": null,
                     "nodegroupid": "a61ecad8-11e0-11ef-9493-0a58a9feac02",
                     "parentnodegroup_id": null
                 },
                 {
                     "cardinality": "1",
+                    "grouping_node_id": "d8219dd6-0f64-11ef-9493-0a58a9feac02",
                     "legacygroupid": null,
                     "nodegroupid": "d8219dd6-0f64-11ef-9493-0a58a9feac02",
                     "parentnodegroup_id": null
                 },
                 {
                     "cardinality": "1",
+                    "grouping_node_id": "ec1155ee-423b-11ee-8a8d-11afefc4bff7",
                     "legacygroupid": null,
                     "nodegroupid": "ec1155ee-423b-11ee-8a8d-11afefc4bff7",
                     "parentnodegroup_id": null
                 },
                 {
                     "cardinality": "n",
+                    "grouping_node_id": "ef87ac28-11de-11ef-9493-0a58a9feac02",
                     "legacygroupid": null,
                     "nodegroupid": "ef87ac28-11de-11ef-9493-0a58a9feac02",
                     "parentnodegroup_id": null
@@ -2424,7 +2492,7 @@
                         "en": ""
                     },
                     "datatype": "semantic",
-                    "description": "{\"en\": \"\"}",
+                    "description": "",
                     "exportable": false,
                     "fieldname": null,
                     "graph_id": "56788995-423b-11ee-8a8d-11afefc4bff7",
@@ -2500,7 +2568,7 @@
                         "en": ""
                     },
                     "datatype": "semantic",
-                    "description": "{\"en\": \"\"}",
+                    "description": "",
                     "exportable": false,
                     "fieldname": null,
                     "graph_id": "56788995-423b-11ee-8a8d-11afefc4bff7",
@@ -3315,7 +3383,7 @@
                         "en": ""
                     },
                     "datatype": "semantic",
-                    "description": "{\"en\": \"\"}",
+                    "description": "",
                     "exportable": false,
                     "fieldname": null,
                     "graph_id": "56788995-423b-11ee-8a8d-11afefc4bff7",
@@ -3500,7 +3568,7 @@
                         "en": ""
                     },
                     "datatype": "semantic",
-                    "description": "{\"en\": \"\"}",
+                    "description": "",
                     "exportable": false,
                     "fieldname": null,
                     "graph_id": "56788995-423b-11ee-8a8d-11afefc4bff7",
@@ -3902,9 +3970,9 @@
             "publication": {
                 "graph_id": "56788995-423b-11ee-8a8d-11afefc4bff7",
                 "most_recent_edit_id": null,
-                "notes": "Migrated selected string nodes to non-localized string nodes",
-                "publicationid": "dfda523c-a2f5-11ef-afb4-0aa766c61b64",
-                "published_time": "2024-11-14T20:03:57.808"
+                "notes": "rm extra cardxnodexwidget records",
+                "publicationid": "d8a81977-3fb4-4632-aae9-b04a697d207b",
+                "published_time": "2025-05-22T09:04:29.573"
             },
             "relatable_resource_model_ids": [],
             "resource_2_resource_constraints": [],
@@ -3979,16 +4047,18 @@
             },
             "slug": "scheme",
             "source_identifier_id": null,
-            "subtitle": "",
+            "subtitle": {
+                "en": ""
+            },
             "template_id": "50000000-0000-0000-0000-000000000001",
             "user_permissions": {},
             "version": ""
         }
     ],
     "metadata": {
-        "db": "PostgreSQL 17.0 (Postgres.app) on aarch64-apple-darwin23.6.0, compiled by Apple clang version 15.0.0 (clang-1500.3.9.4), 64-bit",
-        "git hash": "92539cdf5 2024-11-14 19:28:17 -0500",
+        "db": "PostgreSQL 17.4 (Postgres.app) on aarch64-apple-darwin23.6.0, compiled by Apple clang version 15.0.0 (clang-1500.3.9.4), 64-bit",
+        "git hash": "0d2e19dc9b 2025-05-22 09:37:22 -0400",
         "os": "Darwin",
-        "os version": "24.1.0"
+        "os version": "24.4.0"
     }
 }

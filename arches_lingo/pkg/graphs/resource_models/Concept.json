@@ -13,10 +13,18 @@
                     "description": null,
                     "graph_id": "bf73e576-4888-11ee-8a8d-11afefc4bff7",
                     "helpenabled": false,
-                    "helptext": "",
-                    "helptitle": "",
-                    "instructions": "",
-                    "name": "Also Instance Of",
+                    "helptext": {
+                        "en": ""
+                    },
+                    "helptitle": {
+                        "en": ""
+                    },
+                    "instructions": {
+                        "en": ""
+                    },
+                    "name": {
+                        "en": "Also Instance Of"
+                    },
                     "nodegroup_id": "ba5be7fc-0f5f-11ef-9493-0a58a9feac02",
                     "sortorder": 6,
                     "source_identifier_id": null,
@@ -32,10 +40,18 @@
                     "description": null,
                     "graph_id": "bf73e576-4888-11ee-8a8d-11afefc4bff7",
                     "helpenabled": false,
-                    "helptext": "",
-                    "helptitle": "",
-                    "instructions": "",
-                    "name": "Label",
+                    "helptext": {
+                        "en": ""
+                    },
+                    "helptitle": {
+                        "en": ""
+                    },
+                    "instructions": {
+                        "en": ""
+                    },
+                    "name": {
+                        "en": "Label"
+                    },
                     "nodegroup_id": "ab9fee9c-0eb6-11ef-93db-0a58a9feac02",
                     "sortorder": 1,
                     "source_identifier_id": null,
@@ -51,10 +67,18 @@
                     "description": "{\"en\": \"\"}",
                     "graph_id": "bf73e576-4888-11ee-8a8d-11afefc4bff7",
                     "helpenabled": false,
-                    "helptext": "",
-                    "helptitle": "",
-                    "instructions": "",
-                    "name": "Matched Concept",
+                    "helptext": {
+                        "en": ""
+                    },
+                    "helptitle": {
+                        "en": ""
+                    },
+                    "instructions": {
+                        "en": ""
+                    },
+                    "name": {
+                        "en": "Matched Concept"
+                    },
                     "nodegroup_id": "4cfaaa64-0ed7-11ef-9493-0a58a9feac02",
                     "sortorder": 8,
                     "source_identifier_id": null,
@@ -70,10 +94,18 @@
                     "description": null,
                     "graph_id": "bf73e576-4888-11ee-8a8d-11afefc4bff7",
                     "helpenabled": false,
-                    "helptext": "",
-                    "helptitle": "",
-                    "instructions": "",
-                    "name": "Type",
+                    "helptext": {
+                        "en": ""
+                    },
+                    "helptitle": {
+                        "en": ""
+                    },
+                    "instructions": {
+                        "en": ""
+                    },
+                    "name": {
+                        "en": "Type"
+                    },
                     "nodegroup_id": "74d4d2cc-0f5d-11ef-9493-0a58a9feac02",
                     "sortorder": 4,
                     "source_identifier_id": null,
@@ -89,10 +121,18 @@
                     "description": null,
                     "graph_id": "bf73e576-4888-11ee-8a8d-11afefc4bff7",
                     "helpenabled": false,
-                    "helptext": "",
-                    "helptitle": "",
-                    "instructions": "",
-                    "name": "Status",
+                    "helptext": {
+                        "en": ""
+                    },
+                    "helptitle": {
+                        "en": ""
+                    },
+                    "instructions": {
+                        "en": ""
+                    },
+                    "name": {
+                        "en": "Status"
+                    },
                     "nodegroup_id": "152321b6-0f5e-11ef-9493-0a58a9feac02",
                     "sortorder": 5,
                     "source_identifier_id": null,
@@ -108,10 +148,18 @@
                     "description": null,
                     "graph_id": "bf73e576-4888-11ee-8a8d-11afefc4bff7",
                     "helpenabled": false,
-                    "helptext": "",
-                    "helptitle": "",
-                    "instructions": "",
-                    "name": "Depicting Digital Asset - External",
+                    "helptext": {
+                        "en": ""
+                    },
+                    "helptitle": {
+                        "en": ""
+                    },
+                    "instructions": {
+                        "en": ""
+                    },
+                    "name": {
+                        "en": "Depicting Digital Asset - External"
+                    },
                     "nodegroup_id": "bf73e577-4888-11ee-8a8d-11afefc4bff7",
                     "sortorder": 16,
                     "source_identifier_id": null,
@@ -127,10 +175,18 @@
                     "description": null,
                     "graph_id": "bf73e576-4888-11ee-8a8d-11afefc4bff7",
                     "helpenabled": false,
-                    "helptext": "",
-                    "helptitle": "",
-                    "instructions": "",
-                    "name": "Statement about Data Assignment",
+                    "helptext": {
+                        "en": ""
+                    },
+                    "helptitle": {
+                        "en": ""
+                    },
+                    "instructions": {
+                        "en": ""
+                    },
+                    "name": {
+                        "en": "Statement about Data Assignment"
+                    },
                     "nodegroup_id": "bf73e589-4888-11ee-8a8d-11afefc4bff7",
                     "sortorder": null,
                     "source_identifier_id": null,
@@ -146,10 +202,18 @@
                     "description": "",
                     "graph_id": "bf73e576-4888-11ee-8a8d-11afefc4bff7",
                     "helpenabled": false,
-                    "helptext": "",
-                    "helptitle": "",
-                    "instructions": "",
-                    "name": "URI",
+                    "helptext": {
+                        "en": ""
+                    },
+                    "helptitle": {
+                        "en": ""
+                    },
+                    "instructions": {
+                        "en": ""
+                    },
+                    "name": {
+                        "en": "URI"
+                    },
                     "nodegroup_id": "bf73e598-4888-11ee-8a8d-11afefc4bff7",
                     "sortorder": 0,
                     "source_identifier_id": null,
@@ -165,10 +229,18 @@
                     "description": null,
                     "graph_id": "bf73e576-4888-11ee-8a8d-11afefc4bff7",
                     "helpenabled": false,
-                    "helptext": "",
-                    "helptitle": "",
-                    "instructions": "",
-                    "name": "Warrant Assertion Statement",
+                    "helptext": {
+                        "en": ""
+                    },
+                    "helptitle": {
+                        "en": ""
+                    },
+                    "instructions": {
+                        "en": ""
+                    },
+                    "name": {
+                        "en": "Warrant Assertion Statement"
+                    },
                     "nodegroup_id": "bf73e59b-4888-11ee-8a8d-11afefc4bff7",
                     "sortorder": null,
                     "source_identifier_id": null,
@@ -184,10 +256,18 @@
                     "description": null,
                     "graph_id": "bf73e576-4888-11ee-8a8d-11afefc4bff7",
                     "helpenabled": false,
-                    "helptext": "",
-                    "helptitle": "",
-                    "instructions": "",
-                    "name": "Top Concept Of",
+                    "helptext": {
+                        "en": ""
+                    },
+                    "helptitle": {
+                        "en": ""
+                    },
+                    "instructions": {
+                        "en": ""
+                    },
+                    "name": {
+                        "en": "Top Concept Of"
+                    },
                     "nodegroup_id": "bf73e5b9-4888-11ee-8a8d-11afefc4bff7",
                     "sortorder": 11,
                     "source_identifier_id": null,
@@ -200,13 +280,23 @@
                     "config": null,
                     "constraints": [],
                     "cssclass": "big",
-                    "description": "* Collection_id: \n* Field_id: \n* Category_id: CAT.1_Names_and_Classifications",
+                    "description": {
+                        "en": "* Collection_id: \n* Field_id: \n* Category_id: CAT.1_Names_and_Classifications"
+                    },
                     "graph_id": "bf73e576-4888-11ee-8a8d-11afefc4bff7",
                     "helpenabled": false,
-                    "helptext": "",
-                    "helptitle": "",
-                    "instructions": "",
-                    "name": "Identifier",
+                    "helptext": {
+                        "en": ""
+                    },
+                    "helptitle": {
+                        "en": ""
+                    },
+                    "instructions": {
+                        "en": ""
+                    },
+                    "name": {
+                        "en": "Identifier"
+                    },
                     "nodegroup_id": "bf73e5d1-4888-11ee-8a8d-11afefc4bff7",
                     "sortorder": 2,
                     "source_identifier_id": null,
@@ -219,13 +309,23 @@
                     "config": null,
                     "constraints": [],
                     "cssclass": "big",
-                    "description": "* Collection_id: \n* Field_id: \n* Category_id: CAT.4_Description",
+                    "description": {
+                        "en": "* Collection_id: \n* Field_id: \n* Category_id: CAT.4_Description"
+                    },
                     "graph_id": "bf73e576-4888-11ee-8a8d-11afefc4bff7",
                     "helpenabled": false,
-                    "helptext": "",
-                    "helptitle": "",
-                    "instructions": "",
-                    "name": "Statement",
+                    "helptext": {
+                        "en": ""
+                    },
+                    "helptitle": {
+                        "en": ""
+                    },
+                    "instructions": {
+                        "en": ""
+                    },
+                    "name": {
+                        "en": "Statement"
+                    },
                     "nodegroup_id": "bf73e5d7-4888-11ee-8a8d-11afefc4bff7",
                     "sortorder": 3,
                     "source_identifier_id": null,
@@ -241,10 +341,18 @@
                     "description": null,
                     "graph_id": "bf73e576-4888-11ee-8a8d-11afefc4bff7",
                     "helpenabled": false,
-                    "helptext": "",
-                    "helptitle": "",
-                    "instructions": "",
-                    "name": "Part of Scheme",
+                    "helptext": {
+                        "en": ""
+                    },
+                    "helptitle": {
+                        "en": ""
+                    },
+                    "instructions": {
+                        "en": ""
+                    },
+                    "name": {
+                        "en": "Part of Scheme"
+                    },
                     "nodegroup_id": "bf73e60a-4888-11ee-8a8d-11afefc4bff7",
                     "sortorder": 12,
                     "source_identifier_id": null,
@@ -260,10 +368,18 @@
                     "description": "",
                     "graph_id": "bf73e576-4888-11ee-8a8d-11afefc4bff7",
                     "helpenabled": false,
-                    "helptext": "",
-                    "helptitle": "",
-                    "instructions": "",
-                    "name": "Creation",
+                    "helptext": {
+                        "en": ""
+                    },
+                    "helptitle": {
+                        "en": ""
+                    },
+                    "instructions": {
+                        "en": ""
+                    },
+                    "name": {
+                        "en": "Creation"
+                    },
                     "nodegroup_id": "bf73e61c-4888-11ee-8a8d-11afefc4bff7",
                     "sortorder": 14,
                     "source_identifier_id": null,
@@ -279,10 +395,18 @@
                     "description": null,
                     "graph_id": "bf73e576-4888-11ee-8a8d-11afefc4bff7",
                     "helpenabled": false,
-                    "helptext": "",
-                    "helptitle": "",
-                    "instructions": "",
-                    "name": "Depicting Digital Asset - Internal",
+                    "helptext": {
+                        "en": ""
+                    },
+                    "helptitle": {
+                        "en": ""
+                    },
+                    "instructions": {
+                        "en": ""
+                    },
+                    "name": {
+                        "en": "Depicting Digital Asset - Internal"
+                    },
                     "nodegroup_id": "bf73e628-4888-11ee-8a8d-11afefc4bff7",
                     "sortorder": 15,
                     "source_identifier_id": null,
@@ -298,10 +422,18 @@
                     "description": "",
                     "graph_id": "bf73e576-4888-11ee-8a8d-11afefc4bff7",
                     "helpenabled": false,
-                    "helptext": "",
-                    "helptitle": "",
-                    "instructions": "",
-                    "name": "Warrant Assertion Event",
+                    "helptext": {
+                        "en": ""
+                    },
+                    "helptitle": {
+                        "en": ""
+                    },
+                    "instructions": {
+                        "en": ""
+                    },
+                    "name": {
+                        "en": "Warrant Assertion Event"
+                    },
                     "nodegroup_id": "bf73e62e-4888-11ee-8a8d-11afefc4bff7",
                     "sortorder": 13,
                     "source_identifier_id": null,
@@ -317,10 +449,18 @@
                     "description": null,
                     "graph_id": "bf73e576-4888-11ee-8a8d-11afefc4bff7",
                     "helpenabled": false,
-                    "helptext": "",
-                    "helptitle": "",
-                    "instructions": "",
-                    "name": "Hierarchy",
+                    "helptext": {
+                        "en": ""
+                    },
+                    "helptitle": {
+                        "en": ""
+                    },
+                    "instructions": {
+                        "en": ""
+                    },
+                    "name": {
+                        "en": "Hierarchy"
+                    },
                     "nodegroup_id": "f3f7bbea-0eb9-11ef-93db-0a58a9feac02",
                     "sortorder": 10,
                     "source_identifier_id": null,
@@ -336,10 +476,18 @@
                     "description": null,
                     "graph_id": "bf73e576-4888-11ee-8a8d-11afefc4bff7",
                     "helpenabled": false,
-                    "helptext": "",
-                    "helptitle": "",
-                    "instructions": "",
-                    "name": "Associated Concept",
+                    "helptext": {
+                        "en": ""
+                    },
+                    "helptitle": {
+                        "en": ""
+                    },
+                    "instructions": {
+                        "en": ""
+                    },
+                    "name": {
+                        "en": "Associated Concept"
+                    },
                     "nodegroup_id": "807ef412-0ebe-11ef-9493-0a58a9feac02",
                     "sortorder": 7,
                     "source_identifier_id": null,
@@ -1988,31 +2136,6 @@
                 {
                     "card_id": "bf73e630-4888-11ee-8a8d-11afefc4bff7",
                     "config": {
-                        "defaultValue": "",
-                        "i18n_properties": [
-                            "placeholder"
-                        ],
-                        "label": "Data Assignment Statement Content",
-                        "maxLength": null,
-                        "placeholder": {
-                            "en": "Enter text"
-                        },
-                        "uneditable": false,
-                        "width": "100%"
-                    },
-                    "id": "bf73e7ea-4888-11ee-8a8d-11afefc4bff7",
-                    "label": {
-                        "en": "Data Assignment Statement Content"
-                    },
-                    "node_id": "bf73e717-4888-11ee-8a8d-11afefc4bff7",
-                    "sortorder": 2,
-                    "source_identifier_id": null,
-                    "visible": true,
-                    "widget_id": "46ef064b-2611-4708-9f52-60136bd8a65b"
-                },
-                {
-                    "card_id": "bf73e630-4888-11ee-8a8d-11afefc4bff7",
-                    "config": {
                         "defaultResourceInstance": [],
                         "i18n_properties": [
                             "placeholder"
@@ -2060,36 +2183,6 @@
                     "sortorder": 5,
                     "source_identifier_id": null,
                     "visible": false,
-                    "widget_id": "10000000-0000-0000-0000-000000000001"
-                },
-                {
-                    "card_id": "bf73e630-4888-11ee-8a8d-11afefc4bff7",
-                    "config": {
-                        "defaultValue": {
-                            "en": {
-                                "direction": "ltr",
-                                "value": ""
-                            }
-                        },
-                        "i18n_properties": [
-                            "placeholder"
-                        ],
-                        "label": "Statement Label",
-                        "maxLength": null,
-                        "placeholder": {
-                            "en": "Enter text"
-                        },
-                        "uneditable": false,
-                        "width": "100%"
-                    },
-                    "id": "bf73e7f0-4888-11ee-8a8d-11afefc4bff7",
-                    "label": {
-                        "en": "Statement Label"
-                    },
-                    "node_id": "bf73e718-4888-11ee-8a8d-11afefc4bff7",
-                    "sortorder": 4,
-                    "source_identifier_id": null,
-                    "visible": true,
                     "widget_id": "10000000-0000-0000-0000-000000000001"
                 },
                 {
@@ -2565,7 +2658,9 @@
             "config": {},
             "deploymentdate": null,
             "deploymentfile": null,
-            "description": "",
+            "description": {
+                "en": ""
+            },
             "edges": [
                 {
                     "description": null,
@@ -3684,118 +3779,138 @@
             ],
             "graphid": "bf73e576-4888-11ee-8a8d-11afefc4bff7",
             "group_permissions": {},
-            "has_unpublished_changes": false,
+            "has_unpublished_changes": true,
             "iconclass": "fa fa-lightbulb-o",
             "is_active": true,
             "is_copy_immutable": false,
             "isresource": true,
             "jsonldcontext": null,
-            "name": "Concept",
+            "name": {
+                "en": "Concept"
+            },
             "nodegroups": [
                 {
                     "cardinality": "1",
+                    "grouping_node_id": "152321b6-0f5e-11ef-9493-0a58a9feac02",
                     "legacygroupid": null,
                     "nodegroupid": "152321b6-0f5e-11ef-9493-0a58a9feac02",
                     "parentnodegroup_id": null
                 },
                 {
                     "cardinality": "n",
+                    "grouping_node_id": "4cfaaa64-0ed7-11ef-9493-0a58a9feac02",
                     "legacygroupid": null,
                     "nodegroupid": "4cfaaa64-0ed7-11ef-9493-0a58a9feac02",
                     "parentnodegroup_id": null
                 },
                 {
                     "cardinality": "1",
+                    "grouping_node_id": "74d4d2cc-0f5d-11ef-9493-0a58a9feac02",
                     "legacygroupid": null,
                     "nodegroupid": "74d4d2cc-0f5d-11ef-9493-0a58a9feac02",
                     "parentnodegroup_id": null
                 },
                 {
                     "cardinality": "n",
+                    "grouping_node_id": "807ef412-0ebe-11ef-9493-0a58a9feac02",
                     "legacygroupid": null,
                     "nodegroupid": "807ef412-0ebe-11ef-9493-0a58a9feac02",
                     "parentnodegroup_id": null
                 },
                 {
                     "cardinality": "n",
+                    "grouping_node_id": "ab9fee9c-0eb6-11ef-93db-0a58a9feac02",
                     "legacygroupid": null,
                     "nodegroupid": "ab9fee9c-0eb6-11ef-93db-0a58a9feac02",
                     "parentnodegroup_id": null
                 },
                 {
                     "cardinality": "1",
+                    "grouping_node_id": "ba5be7fc-0f5f-11ef-9493-0a58a9feac02",
                     "legacygroupid": null,
                     "nodegroupid": "ba5be7fc-0f5f-11ef-9493-0a58a9feac02",
                     "parentnodegroup_id": null
                 },
                 {
                     "cardinality": "1",
+                    "grouping_node_id": "bf73e577-4888-11ee-8a8d-11afefc4bff7",
                     "legacygroupid": null,
                     "nodegroupid": "bf73e577-4888-11ee-8a8d-11afefc4bff7",
                     "parentnodegroup_id": null
                 },
                 {
                     "cardinality": "n",
+                    "grouping_node_id": "bf73e589-4888-11ee-8a8d-11afefc4bff7",
                     "legacygroupid": null,
                     "nodegroupid": "bf73e589-4888-11ee-8a8d-11afefc4bff7",
                     "parentnodegroup_id": "bf73e62e-4888-11ee-8a8d-11afefc4bff7"
                 },
                 {
                     "cardinality": "1",
+                    "grouping_node_id": "bf73e598-4888-11ee-8a8d-11afefc4bff7",
                     "legacygroupid": null,
                     "nodegroupid": "bf73e598-4888-11ee-8a8d-11afefc4bff7",
                     "parentnodegroup_id": null
                 },
                 {
                     "cardinality": "1",
+                    "grouping_node_id": "bf73e59b-4888-11ee-8a8d-11afefc4bff7",
                     "legacygroupid": null,
                     "nodegroupid": "bf73e59b-4888-11ee-8a8d-11afefc4bff7",
                     "parentnodegroup_id": "bf73e5d7-4888-11ee-8a8d-11afefc4bff7"
                 },
                 {
                     "cardinality": "n",
+                    "grouping_node_id": "bf73e5b9-4888-11ee-8a8d-11afefc4bff7",
                     "legacygroupid": null,
                     "nodegroupid": "bf73e5b9-4888-11ee-8a8d-11afefc4bff7",
                     "parentnodegroup_id": null
                 },
                 {
                     "cardinality": "n",
+                    "grouping_node_id": "bf73e5d1-4888-11ee-8a8d-11afefc4bff7",
                     "legacygroupid": null,
                     "nodegroupid": "bf73e5d1-4888-11ee-8a8d-11afefc4bff7",
                     "parentnodegroup_id": null
                 },
                 {
                     "cardinality": "n",
+                    "grouping_node_id": "bf73e5d7-4888-11ee-8a8d-11afefc4bff7",
                     "legacygroupid": null,
                     "nodegroupid": "bf73e5d7-4888-11ee-8a8d-11afefc4bff7",
                     "parentnodegroup_id": null
                 },
                 {
                     "cardinality": "1",
+                    "grouping_node_id": "bf73e60a-4888-11ee-8a8d-11afefc4bff7",
                     "legacygroupid": null,
                     "nodegroupid": "bf73e60a-4888-11ee-8a8d-11afefc4bff7",
                     "parentnodegroup_id": null
                 },
                 {
                     "cardinality": "1",
+                    "grouping_node_id": "bf73e61c-4888-11ee-8a8d-11afefc4bff7",
                     "legacygroupid": null,
                     "nodegroupid": "bf73e61c-4888-11ee-8a8d-11afefc4bff7",
                     "parentnodegroup_id": null
                 },
                 {
                     "cardinality": "1",
+                    "grouping_node_id": "bf73e628-4888-11ee-8a8d-11afefc4bff7",
                     "legacygroupid": null,
                     "nodegroupid": "bf73e628-4888-11ee-8a8d-11afefc4bff7",
                     "parentnodegroup_id": null
                 },
                 {
                     "cardinality": "1",
+                    "grouping_node_id": "bf73e62e-4888-11ee-8a8d-11afefc4bff7",
                     "legacygroupid": null,
                     "nodegroupid": "bf73e62e-4888-11ee-8a8d-11afefc4bff7",
                     "parentnodegroup_id": null
                 },
                 {
                     "cardinality": "n",
+                    "grouping_node_id": "f3f7bbea-0eb9-11ef-93db-0a58a9feac02",
                     "legacygroupid": null,
                     "nodegroupid": "f3f7bbea-0eb9-11ef-93db-0a58a9feac02",
                     "parentnodegroup_id": null
@@ -4113,7 +4228,7 @@
                         "en": ""
                     },
                     "datatype": "semantic",
-                    "description": "{\"en\": \"\"}",
+                    "description": "",
                     "exportable": false,
                     "fieldname": null,
                     "graph_id": "bf73e576-4888-11ee-8a8d-11afefc4bff7",
@@ -4236,7 +4351,7 @@
                         "en": ""
                     },
                     "datatype": "semantic",
-                    "description": "{\"en\": \"\"}",
+                    "description": "",
                     "exportable": false,
                     "fieldname": null,
                     "graph_id": "bf73e576-4888-11ee-8a8d-11afefc4bff7",
@@ -4287,7 +4402,7 @@
                         "en": ""
                     },
                     "datatype": "semantic",
-                    "description": "{\"en\": \"\"}",
+                    "description": "",
                     "exportable": false,
                     "fieldname": null,
                     "graph_id": "bf73e576-4888-11ee-8a8d-11afefc4bff7",
@@ -4338,7 +4453,7 @@
                         "multiValue": true
                     },
                     "datatype": "reference",
-                    "description": "{\"en\": \"\"}",
+                    "description": "",
                     "exportable": false,
                     "fieldname": null,
                     "graph_id": "bf73e576-4888-11ee-8a8d-11afefc4bff7",
@@ -4432,7 +4547,7 @@
                         "en": ""
                     },
                     "datatype": "semantic",
-                    "description": "{\"en\": \"\"}",
+                    "description": "",
                     "exportable": false,
                     "fieldname": null,
                     "graph_id": "bf73e576-4888-11ee-8a8d-11afefc4bff7",
@@ -4508,7 +4623,7 @@
                         "multiValue": true
                     },
                     "datatype": "reference",
-                    "description": "{\"en\": \"\"}",
+                    "description": "",
                     "exportable": false,
                     "fieldname": null,
                     "graph_id": "bf73e576-4888-11ee-8a8d-11afefc4bff7",
@@ -5130,7 +5245,7 @@
                         "en": ""
                     },
                     "datatype": "semantic",
-                    "description": "{\"en\": \"\"}",
+                    "description": "",
                     "exportable": false,
                     "fieldname": null,
                     "graph_id": "bf73e576-4888-11ee-8a8d-11afefc4bff7",
@@ -6261,7 +6376,7 @@
                         "en": ""
                     },
                     "datatype": "semantic",
-                    "description": "{\"en\": \"\"}",
+                    "description": "",
                     "exportable": false,
                     "fieldname": null,
                     "graph_id": "bf73e576-4888-11ee-8a8d-11afefc4bff7",
@@ -6392,7 +6507,7 @@
                         "en": ""
                     },
                     "datatype": "semantic",
-                    "description": "{\"en\": \"\"}",
+                    "description": "",
                     "exportable": false,
                     "fieldname": null,
                     "graph_id": "bf73e576-4888-11ee-8a8d-11afefc4bff7",
@@ -6551,7 +6666,7 @@
                         "en": ""
                     },
                     "datatype": "semantic",
-                    "description": "{\"en\": \"\"}",
+                    "description": "",
                     "exportable": false,
                     "fieldname": null,
                     "graph_id": "bf73e576-4888-11ee-8a8d-11afefc4bff7",
@@ -6753,9 +6868,9 @@
             "publication": {
                 "graph_id": "bf73e576-4888-11ee-8a8d-11afefc4bff7",
                 "most_recent_edit_id": null,
-                "notes": "Migrated selected string nodes to non-localized string nodes and made part_of_scheme & top_concept_of 1:1 with concepts",
-                "publicationid": "442474c0-a2fb-11ef-82bb-0aa766c61b64",
-                "published_time": "2024-11-14T20:42:33.550"
+                "notes": "rm extra cardxnodexwidget records",
+                "publicationid": "74d3aefa-9b74-4202-8589-c62850697a06",
+                "published_time": "2025-05-22T09:02:14.554"
             },
             "relatable_resource_model_ids": [],
             "resource_2_resource_constraints": [],
@@ -6830,16 +6945,18 @@
             },
             "slug": "concept",
             "source_identifier_id": null,
-            "subtitle": "",
+            "subtitle": {
+                "en": ""
+            },
             "template_id": "50000000-0000-0000-0000-000000000001",
             "user_permissions": {},
             "version": ""
         }
     ],
     "metadata": {
-        "db": "PostgreSQL 17.0 (Postgres.app) on aarch64-apple-darwin23.6.0, compiled by Apple clang version 15.0.0 (clang-1500.3.9.4), 64-bit",
-        "git hash": "ab1e5bf70 2024-11-19 09:57:25 -0500",
+        "db": "PostgreSQL 17.4 (Postgres.app) on aarch64-apple-darwin23.6.0, compiled by Apple clang version 15.0.0 (clang-1500.3.9.4), 64-bit",
+        "git hash": "0d2e19dc9b 2025-05-22 09:37:22 -0400",
         "os": "Darwin",
-        "os version": "24.1.0"
+        "os version": "24.4.0"
     }
 }

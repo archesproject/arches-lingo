@@ -321,7 +321,9 @@ FORCE_SCRIPT_NAME = None
 
 RESOURCE_IMPORT_LOG = os.path.join(APP_ROOT, "logs", "resource_import.log")
 DEFAULT_RESOURCE_IMPORT_USER = {"username": "admin", "userid": 1}
-
+STREAM_LOG_LEVEL = get_optional_env_variable("ARCHES_STREAM_LOG_LEVEL", "WARNING")
+FILE_LOG_LEVEL = get_optional_env_variable("ARCHES_FILE_LOG_LEVEL", "WARNING")
+HANDLERS = get_optional_env_variable("ARCHES_LOG_HANDLERS", "file,console").split(",")
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
@@ -332,23 +334,30 @@ LOGGING = {
     },
     "handlers": {
         "file": {
-            "level": "WARNING",  # DEBUG, INFO, WARNING, ERROR
+            "level": FILE_LOG_LEVEL,  # DEBUG, INFO, WARNING, ERROR
             "class": "logging.FileHandler",
             "filename": os.path.join(APP_ROOT, "arches.log"),
             "formatter": "console",
         },
         "console": {
-            "level": "WARNING",
+            "level": STREAM_LOG_LEVEL,
             "class": "logging.StreamHandler",
             "formatter": "console",
         },
     },
     "loggers": {
         "arches": {
-            "handlers": ["file", "console"],
-            "level": "WARNING",
+            "handlers": HANDLERS,
             "propagate": True,
-        }
+        },
+        "arches_lingo": {
+            "handlers": HANDLERS,
+            "propagate": True,
+        },
+        "django.request": {
+            "handlers": HANDLERS,
+            "propagate": True,
+        },
     },
 }
 
@@ -363,14 +372,19 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = 15728640
 # Unique session cookie ensures that logins are treated separately for each app
 SESSION_COOKIE_NAME = "arches_lingo"
 
+MAIN_CACHE_TYPE = get_optional_env_variable(
+    "ARCHES_MAIN_CACHE_TYPE", "django.core.cache.backends.locmem.LocMemCache"
+)
+
+MAIN_CACHE_LOCATION = get_optional_env_variable("ARCHES_MAIN_CACHE_LOCATION", None)
+
 # For more info on configuring your cache: https://docs.djangoproject.com/en/2.2/topics/cache/
 CACHES = {
     "default": {
-        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "BACKEND": MAIN_CACHE_TYPE,
+        "LOCATION": MAIN_CACHE_LOCATION,
     },
-    "lingo": {
-        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
-    },
+    "lingo": {"BACKEND": MAIN_CACHE_TYPE, "LOCATION": MAIN_CACHE_LOCATION},
     "user_permission": {
         "BACKEND": "django.core.cache.backends.db.DatabaseCache",
         "LOCATION": "user_permission_cache",
