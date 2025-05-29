@@ -109,7 +109,7 @@ provide("refreshReportSection", refreshReportSection);
 </script>
 
 <template>
-    <Splitter style="height: 100%; border-radius: 0px">
+    <Splitter style="height: 100%">
         <SplitterPanel
             v-show="editorState !== MAXIMIZED"
             class="content"

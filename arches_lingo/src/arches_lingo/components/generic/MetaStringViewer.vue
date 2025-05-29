@@ -193,7 +193,7 @@ async function deleteSectionValue(tileId: string) {
 }
 
 :deep(.p-dialog) {
-    border-radius: 2px;
+    border-radius: 0.125rem;
 }
 
 :deep(.p-datatable-header-cell) {
