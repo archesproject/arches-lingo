@@ -111,6 +111,11 @@ function resetForm() {
     margin: 0 0.125rem;
 }
 
+h2 {
+    font-size: 1.25rem;
+    font-weight: 400;
+}
+
 .header {
     display: flex;
     justify-content: space-between;
@@ -129,6 +134,11 @@ function resetForm() {
     flex-direction: column;
     flex: 1;
     min-height: 0;
+}
+
+.editor-content :deep(h3) {
+    font-size: 1.15rem;
+    font-weight: 400;
 }
 
 .editor-content :deep(.p-formfield) {
