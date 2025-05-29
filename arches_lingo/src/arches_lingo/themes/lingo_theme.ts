@@ -50,7 +50,6 @@ export const LingoPreset = definePreset(ArchesPreset, {
                 },
             },
             dark: {
-                // DRW: develop Arches blue color for dark mode
                 primary: palette(archesPrimitives.arches.blue),
                 surface: palette("{zinc}"),
                 checkbox: {
@@ -98,6 +97,14 @@ export const LingoPreset = definePreset(ArchesPreset, {
                         background: "{primary-800}",
                         border: {
                             color: "{button-primary-background}",
+                        },
+                    },
+                    danger: {
+                        background: "{button-warn-active-background}",
+                        borderColor: "{button-warn-active-background}",
+                        hover: {
+                            background: "{button-warn-background}",
+                            borderColor: "{button-warn-background}",
                         },
                     },
                 },
