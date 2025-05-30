@@ -20,42 +20,76 @@ export const LingoPreset = definePreset(ArchesPreset, {
             light: {
                 primary: palette(archesPrimitives.arches.blue),
                 surface: palette("{slate}"),
+                checkbox: {
+                    background: "{light-gray}",
+                },
+                header: {
+                    background: "{surface.50}",
+                    border: "{neutral.300}",
+                    itemLabel: "{surface.500}",
+                },
+                searchResult: {
+                    color: "{sky.600}",
+                    borderBottom: "{zinc.200}",
+                    isEven: {
+                        background: "{surface.100}",
+                    },
+                    focus: {
+                        background: "{sky.100}",
+                    },
+                },
+                searchResultHierarchy: {
+                    color: "{zinc.400}",
+                },
                 sidenav: {
-                    background: "{arches.legacy.sidebar}",
+                    backgroundColor: "{arches.legacy.sidebar}",
                 },
                 sortAndFilterControls: {
                     background: "{light-blue-gray}",
                     border: "{gray}",
                 },
-                checkbox: {
-                    background: "{light-gray}",
-                },
             },
             dark: {
-                // DRW: develop Arches blue color for dark mode
                 primary: palette(archesPrimitives.arches.blue),
                 surface: palette("{zinc}"),
-                sidenav: {
-                    background: "{surface.800}",
-                },
-                header: {
-                    background: "{surface.900}",
+                checkbox: {
+                    background: "{surface.500}",
                 },
                 footer: {
                     background: "{surface.900}",
                 },
+                header: {
+                    background: "{surface.700}",
+                    border: "{neutral.500}",
+                    itemLabel: "{surface.400}",
+                },
+                searchResult: {
+                    borderBottom: "{surface.900}",
+                    isEven: {
+                        background: "{surface.800}",
+                    },
+                    focus: {
+                        background: "{sky.900}",
+                    },
+                },
+                searchResultHierarchy: {
+                    color: "{zinc.400}",
+                },
+                sidenav: {
+                    background: "{surface.800}",
+                },
                 sortAndFilterControls: {
                     background: "{surface.700}",
-                    border: "{#surface.900}",
-                },
-                checkbox: {
-                    background: "{surface.500}",
+                    border: "{surface.900}",
                 },
             },
         },
     },
     components: {
         button: {
+            border: {
+                radius: "0.25rem",
+            },
             colorScheme: {
                 light: {
                     // @ts-expect-error: Ignoring type mismatch for button primary background
@@ -63,6 +97,14 @@ export const LingoPreset = definePreset(ArchesPreset, {
                         background: "{primary-800}",
                         border: {
                             color: "{button-primary-background}",
+                        },
+                    },
+                    danger: {
+                        background: "{button-warn-active-background}",
+                        borderColor: "{button-warn-active-background}",
+                        hover: {
+                            background: "{button-warn-background}",
+                            borderColor: "{button-warn-background}",
                         },
                     },
                 },
@@ -75,6 +117,12 @@ export const LingoPreset = definePreset(ArchesPreset, {
                         },
                     },
                 },
+            },
+        },
+        inputtext: {
+            // @ts-expect-error: primevue does have border on inputtext
+            border: {
+                radius: "0.25rem",
             },
         },
         splitter: {

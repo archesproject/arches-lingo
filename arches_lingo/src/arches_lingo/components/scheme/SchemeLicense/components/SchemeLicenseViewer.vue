@@ -28,82 +28,81 @@ const openEditor =
 
 const buttonLabel = computed(() => {
     if (props.tileData) {
-        return $gettext("Edit Scheme Rights");
+        return $gettext("Edit Rights");
     } else {
-        return $gettext("Add New Scheme Rights");
+        return $gettext("Add Rights");
     }
 });
 </script>
 <template>
-    <div class="section-header">
-        <h2>{{ props.sectionTitle }}</h2>
+    <div class="viewer-section">
+        <div class="section-header">
+            <h2>{{ props.sectionTitle }}</h2>
 
-        <Button
-            :label="buttonLabel"
-            @click="openEditor!(props.componentName, props.tileData?.tileid)"
-        ></Button>
-    </div>
+            <Button
+                :label="buttonLabel"
+                class="add-button"
+                @click="
+                    openEditor!(props.componentName, props.tileData?.tileid)
+                "
+            ></Button>
+        </div>
 
-    <div v-if="props.tileData">
-        <ResourceInstanceMultiSelectWidget
-            node-alias="right_holder"
-            :graph-slug="props.graphSlug"
-            :initial-value="props.tileData?.aliased_data.right_holder"
-            :mode="VIEW"
-        />
-        <ReferenceSelectWidget
-            node-alias="right_type"
-            :graph-slug="props.graphSlug"
-            :initial-value="props.tileData?.aliased_data.right_type"
-            :mode="VIEW"
-        />
-        <NonLocalizedStringWidget
-            node-alias="right_statement_content"
-            :graph-slug="props.graphSlug"
-            :initial-value="
-                props.tileData?.aliased_data.right_statement?.aliased_data
-                    .right_statement_content
-            "
-            :mode="VIEW"
-        />
-        <ReferenceSelectWidget
-            node-alias="right_statement_language"
-            :graph-slug="props.graphSlug"
-            :initial-value="
-                props.tileData?.aliased_data.right_statement?.aliased_data
-                    .right_statement_language
-            "
-            :mode="VIEW"
-        />
-        <ReferenceSelectWidget
-            node-alias="right_statement_type"
-            :graph-slug="props.graphSlug"
-            :initial-value="
-                props.tileData?.aliased_data.right_statement?.aliased_data
-                    .right_statement_type
-            "
-            :mode="VIEW"
-        />
-        <ReferenceSelectWidget
-            node-alias="right_statement_type_metatype"
-            :graph-slug="props.graphSlug"
-            :initial-value="
-                props.tileData?.aliased_data.right_statement?.aliased_data
-                    .right_statement_type_metatype
-            "
-            :mode="VIEW"
-        />
-    </div>
-    <div v-else>
-        <p>{{ $gettext("No Scheme Rights were found.") }}</p>
+        <div v-if="props.tileData">
+            <ResourceInstanceMultiSelectWidget
+                node-alias="right_holder"
+                :graph-slug="props.graphSlug"
+                :initial-value="props.tileData?.aliased_data.right_holder"
+                :mode="VIEW"
+            />
+            <ReferenceSelectWidget
+                node-alias="right_type"
+                :graph-slug="props.graphSlug"
+                :initial-value="props.tileData?.aliased_data.right_type"
+                :mode="VIEW"
+            />
+            <NonLocalizedStringWidget
+                node-alias="right_statement_content"
+                :graph-slug="props.graphSlug"
+                :initial-value="
+                    props.tileData?.aliased_data.right_statement?.aliased_data
+                        .right_statement_content
+                "
+                :mode="VIEW"
+            />
+            <ReferenceSelectWidget
+                node-alias="right_statement_language"
+                :graph-slug="props.graphSlug"
+                :initial-value="
+                    props.tileData?.aliased_data.right_statement?.aliased_data
+                        .right_statement_language
+                "
+                :mode="VIEW"
+            />
+            <ReferenceSelectWidget
+                node-alias="right_statement_type"
+                :graph-slug="props.graphSlug"
+                :initial-value="
+                    props.tileData?.aliased_data.right_statement?.aliased_data
+                        .right_statement_type
+                "
+                :mode="VIEW"
+            />
+            <ReferenceSelectWidget
+                node-alias="right_statement_type_metatype"
+                :graph-slug="props.graphSlug"
+                :initial-value="
+                    props.tileData?.aliased_data.right_statement?.aliased_data
+                        .right_statement_type_metatype
+                "
+                :mode="VIEW"
+            />
+        </div>
+        <div
+            v-else
+            class="section-message"
+        >
+            {{ $gettext("No Scheme Rights were found.") }}
+        </div>
     </div>
 </template>
-
-<style scoped>
-.section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 0.125rem solid var(--p-menubar-border-color);
-}
-</style>

@@ -39,85 +39,80 @@ const metaStringLabel: MetaStringText = {
 </script>
 
 <template>
-    <div class="section-header">
-        <h2>{{ props.sectionTitle }}</h2>
+    <div class="viewer-section">
+        <div class="section-header">
+            <h2>{{ props.sectionTitle }}</h2>
 
-        <Button
-            :label="$gettext('Add New Scheme Label')"
-            @click="openEditor!(props.componentName)"
-        ></Button>
+            <Button
+                :label="$gettext('Add Label')"
+                class="add-button"
+                @click="openEditor!(props.componentName)"
+            ></Button>
+        </div>
+
+        <MetaStringViewer
+            :meta-strings="props.tileData"
+            :meta-string-text="metaStringLabel"
+            :component-name="props.componentName"
+            :graph-slug="props.graphSlug"
+            :nodegroup-alias="props.nodegroupAlias"
+        >
+            <template #name="{ rowData }">
+                <NonLocalizedStringWidget
+                    :graph-slug="props.graphSlug"
+                    node-alias="appellative_status_ascribed_name_content"
+                    :initial-value="
+                        rowData.aliased_data
+                            .appellative_status_ascribed_name_content
+                    "
+                    :mode="VIEW"
+                    :show-label="false"
+                />
+            </template>
+            <template #type="{ rowData }">
+                <ReferenceSelectWidget
+                    :graph-slug="props.graphSlug"
+                    node-alias="appellative_status_ascribed_relation"
+                    :initial-value="
+                        rowData.aliased_data
+                            .appellative_status_ascribed_relation
+                    "
+                    :mode="VIEW"
+                    :show-label="false"
+                />
+            </template>
+            <template #language="{ rowData }">
+                <ReferenceSelectWidget
+                    :graph-slug="props.graphSlug"
+                    node-alias="appellative_status_ascribed_name_language"
+                    :initial-value="
+                        rowData.aliased_data
+                            .appellative_status_ascribed_name_language
+                    "
+                    :mode="VIEW"
+                    :show-label="false"
+                />
+            </template>
+            <template #drawer="{ rowData }">
+                <ResourceInstanceMultiSelectWidget
+                    :graph-slug="props.graphSlug"
+                    node-alias="appellative_status_data_assignment_object_used"
+                    :initial-value="
+                        rowData.aliased_data
+                            .appellative_status_data_assignment_object_used
+                    "
+                    :mode="VIEW"
+                />
+                <ResourceInstanceMultiSelectWidget
+                    :graph-slug="props.graphSlug"
+                    node-alias="appellative_status_data_assignment_actor"
+                    :initial-value="
+                        rowData.aliased_data
+                            .appellative_status_data_assignment_actor
+                    "
+                    :mode="VIEW"
+                />
+            </template>
+        </MetaStringViewer>
     </div>
-
-    <MetaStringViewer
-        :meta-strings="props.tileData"
-        :meta-string-text="metaStringLabel"
-        :component-name="props.componentName"
-        :graph-slug="props.graphSlug"
-        :nodegroup-alias="props.nodegroupAlias"
-    >
-        <template #name="{ rowData }">
-            <NonLocalizedStringWidget
-                :graph-slug="props.graphSlug"
-                node-alias="appellative_status_ascribed_name_content"
-                :initial-value="
-                    rowData.aliased_data
-                        .appellative_status_ascribed_name_content
-                "
-                :mode="VIEW"
-                :show-label="false"
-            />
-        </template>
-        <template #type="{ rowData }">
-            <ReferenceSelectWidget
-                :graph-slug="props.graphSlug"
-                node-alias="appellative_status_ascribed_relation"
-                :initial-value="
-                    rowData.aliased_data.appellative_status_ascribed_relation
-                "
-                :mode="VIEW"
-                :show-label="false"
-            />
-        </template>
-        <template #language="{ rowData }">
-            <ReferenceSelectWidget
-                :graph-slug="props.graphSlug"
-                node-alias="appellative_status_ascribed_name_language"
-                :initial-value="
-                    rowData.aliased_data
-                        .appellative_status_ascribed_name_language
-                "
-                :mode="VIEW"
-                :show-label="false"
-            />
-        </template>
-        <template #drawer="{ rowData }">
-            <ResourceInstanceMultiSelectWidget
-                :graph-slug="props.graphSlug"
-                node-alias="appellative_status_data_assignment_object_used"
-                :initial-value="
-                    rowData.aliased_data
-                        .appellative_status_data_assignment_object_used
-                "
-                :mode="VIEW"
-            />
-            <ResourceInstanceMultiSelectWidget
-                :graph-slug="props.graphSlug"
-                node-alias="appellative_status_data_assignment_actor"
-                :initial-value="
-                    rowData.aliased_data
-                        .appellative_status_data_assignment_actor
-                "
-                :mode="VIEW"
-            />
-        </template>
-    </MetaStringViewer>
 </template>
-
-<style scoped>
-.section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 0.125rem solid var(--p-menubar-border-color);
-}
-</style>

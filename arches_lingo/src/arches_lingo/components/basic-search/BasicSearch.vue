@@ -168,10 +168,7 @@ watch(searchResults, (searchResults) => {
 </script>
 
 <template>
-    <div
-        id="basic-search-container"
-        style="width: 100%; font-family: sans-serif"
-    >
+    <div id="basic-search-container">
         <div style="display: flex; align-items: center">
             <i
                 class="pi pi-search search-icon"
@@ -236,7 +233,7 @@ watch(searchResults, (searchResults) => {
                 "
             >
                 <template #empty>
-                    <div style="font-family: sans-serif; text-align: center">
+                    <div style="text-align: center">
                         {{ $gettext("No search results found") }}
                     </div>
                 </template>
@@ -272,6 +269,12 @@ watch(searchResults, (searchResults) => {
 </template>
 
 <style scoped>
+#basic-search-container {
+    width: 100%;
+    font-family: "Open Sans", "Lucida Sans", "Lucida Sans Regular",
+        "Lucida Grande", "Lucida Sans Unicode", Geneva, Verdana, sans-serif;
+}
+
 .clear-button {
     background-color: transparent !important;
     position: absolute;
@@ -312,5 +315,12 @@ watch(searchResults, (searchResults) => {
 
 :deep(.p-autocomplete-overlay) {
     position: static !important;
+    margin-top: 0 !important;
+    border-top: 0.0725rem solid #ddd;
+    min-height: 3.25rem;
+}
+
+:deep(.p-autocomplete-option) {
+    height: 3.125rem !important;
 }
 </style>
