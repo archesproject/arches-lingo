@@ -3,6 +3,7 @@ import Cookies from "js-cookie";
 
 import type {
     ConceptInstance,
+    DigitalObjectInstance,
     SchemeInstance,
     TileData,
 } from "@/arches_lingo/types";
@@ -80,13 +81,13 @@ export const fetchLingoResourcesBatch = async (
 
 export const fetchLingoResourcePartial = async (
     graphSlug: string,
-    schemeId: string,
+    resourceId: string,
     nodegroupAlias: string,
 ) => {
     const response = await fetch(
         arches.urls.api_lingo_resource_partial(
             graphSlug,
-            schemeId,
+            resourceId,
             nodegroupAlias,
         ),
     );
@@ -97,18 +98,30 @@ export const fetchLingoResourcePartial = async (
 
 export const updateLingoResource = async (
     graphSlug: string,
-    schemeId: string,
-    schemeInstance: SchemeInstance,
+    resourceId: string,
+    instance:
+        | SchemeInstance
+        | ConceptInstance
+        | DigitalObjectInstance
+        | undefined,
+    formdata: FormData | undefined = undefined,
 ) => {
+    type headerType = {
+        "X-CSRFTOKEN": string;
+        "Content-Type"?: string;
+    };
+    const headers: headerType = {
+        "X-CSRFTOKEN": getToken(),
+    };
+    if (instance) {
+        headers["Content-Type"] = "application/json";
+    }
     const response = await fetch(
-        arches.urls.api_lingo_resource(graphSlug, schemeId),
+        arches.urls.api_lingo_resource(graphSlug, resourceId),
         {
             method: "PATCH",
-            headers: {
-                "X-CSRFTOKEN": getToken(),
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(schemeInstance),
+            headers: headers,
+            body: instance ? JSON.stringify(instance) : formdata,
         },
     );
     const parsed = await response.json();
@@ -167,17 +180,33 @@ export const deleteLingoTile = async (
 };
 
 export const createLingoResource = async (
-    newResource: SchemeInstance | ConceptInstance,
+    newResource:
+        | SchemeInstance
+        | ConceptInstance
+        | DigitalObjectInstance
+        | FormData,
     graphSlug: string,
 ) => {
+    let formData = undefined;
+    if (newResource instanceof FormData) {
+        formData = newResource;
+    }
+    type headerType = {
+        "X-CSRFTOKEN": string;
+        "Content-Type"?: string;
+    };
+    const headers: headerType = {
+        "X-CSRFTOKEN": getToken(),
+    };
+    if (!formData) {
+        headers["Content-Type"] = "application/json";
+    }
     const response = await fetch(arches.urls.api_lingo_resources(graphSlug), {
         method: "POST",
-        headers: {
-            "X-CSRFTOKEN": getToken(),
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify(newResource),
+        headers: headers,
+        body: !formData ? JSON.stringify(newResource) : formData,
     });
+
     const parsed = await response.json();
     if (!response.ok) throw new Error(parsed.message || response.statusText);
     return parsed;
