@@ -5,7 +5,7 @@ import { useGettext } from "vue3-gettext";
 import Button from "primevue/button";
 
 import MetaStringViewer from "@/arches_lingo/components/generic/MetaStringViewer.vue";
-import UrlWidget from "@/arches_component_lab/widgets/UrlWidget/UrlWidget.vue";
+import URLWidget from "@/arches_component_lab/widgets/URLWidget/URLWidget.vue";
 
 import ReferenceSelectWidget from "@/arches_controlled_lists/widgets/ReferenceSelectWidget/ReferenceSelectWidget.vue";
 import ResourceInstanceMultiSelectWidget from "@/arches_component_lab/widgets/ResourceInstanceMultiSelectWidget/ResourceInstanceMultiSelectWidget.vue";
@@ -72,7 +72,7 @@ const metaStringLabel: MetaStringText = {
             />
         </template>
         <template #type="{ rowData }">
-            <UrlWidget
+            <URLWidget
                 :graph-slug="props.graphSlug"
                 node-alias="uri_content"
                 :initial-value="rowData.aliased_data.uri"
