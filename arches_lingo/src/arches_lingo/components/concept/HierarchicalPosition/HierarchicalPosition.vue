@@ -25,13 +25,12 @@ const props = defineProps<{
     componentName: string;
     graphSlug: string;
     nodegroupAlias: string;
-    resourceInstanceId: string | undefined;
+    resourceInstanceId: string;
     tileId?: string;
 }>();
 
 const isLoading = ref(true);
 const fetchError = ref();
-const concepts = ref<string[]>([props.resourceInstanceId!]); // Ensure we have a resource instance id for fetching
 const hierarchicalData = ref<SearchResultHierarchy[]>([]);
 const schemeId = ref<string>();
 const tileData = ref<ConceptClassificationStatus[]>();
@@ -45,7 +44,9 @@ onMounted(async () => {
             const sectionValue = await getSectionValue();
             tileData.value = sectionValue.aliased_data[props.nodegroupAlias];
         }
-        const currentPosition = await getHierarchicalData(concepts.value);
+        const currentPosition = await getHierarchicalData([
+            props.resourceInstanceId,
+        ]);
         schemeId.value = currentPosition.data[0].parents[0][0].id;
 
         hierarchicalData.value = currentPosition.data[0].parents.map(

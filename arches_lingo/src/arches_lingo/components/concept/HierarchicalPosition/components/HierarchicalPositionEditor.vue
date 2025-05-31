@@ -72,9 +72,15 @@ async function save(e: FormSubmitEvent) {
         } else {
             let nodegroupAlias;
             let values;
-            if (Object.values(formData)[0][0].resourceId == props.scheme) {
+            if (
+                formData.classification_status_ascribed_classification[0]
+                    .resourceId == props.scheme
+            ) {
                 nodegroupAlias = "top_concept_of";
-                values = { top_concept_of: Object.values(formData)[0] };
+                values = {
+                    top_concept_of:
+                        formData.classification_status_ascribed_classification,
+                };
             } else {
                 nodegroupAlias = props.nodegroupAlias;
                 values = formData;

@@ -44,10 +44,10 @@ const conceptIds = props.initialValue?.map((value) => value.resourceId);
 const searchResult = ref();
 
 onMounted(async () => {
-    if (conceptIds) {
-        await getConceptHierarchy(conceptIds);
-    }
     try {
+        if (conceptIds) {
+            await getConceptHierarchy(conceptIds);
+        }
         widgetData.value = await fetchWidgetData(
             props.graphSlug,
             props.nodeAlias,
