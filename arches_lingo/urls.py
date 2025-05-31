@@ -30,14 +30,14 @@ urlpatterns = [
     path("api/concept-tree", ConceptTreeView.as_view(), name="api-concepts"),
     path("api/search", ValueSearchView.as_view(), name="api-search"),
     path(
-        "api/concept-resources",
+        "api/lingo/concept-resources",
         ConceptResourceView.as_view(),
-        name="api-concept-resources",
+        name="api-lingo-concept-resources",
     ),
     path(
-        "api/concept-relationships",
+        "api/lingo/concept-relationships",
         ConceptRelationshipView.as_view(),
-        name="api-concept-relationships",
+        name="api-lingo-concept-relationships",
     ),
     path(
         "api/lingo/<slug:graph>",

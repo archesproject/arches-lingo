@@ -45,7 +45,7 @@ const searchResult = ref();
 
 onMounted(async () => {
     if (conceptIds) {
-        await getConceptHyerarchy(conceptIds);
+        await getConceptHierarchy(conceptIds);
     }
     try {
         widgetData.value = await fetchWidgetData(
@@ -60,7 +60,7 @@ onMounted(async () => {
     }
 });
 
-async function getConceptHyerarchy(conceptIds: string[]) {
+async function getConceptHierarchy(conceptIds: string[]) {
     const parsedResponse = await fetchConceptResources(
         "",
         conceptIds.length,
