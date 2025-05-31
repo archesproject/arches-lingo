@@ -4,7 +4,12 @@ from django.conf.urls.i18n import i18n_patterns
 from django.urls import include, path
 
 from arches_lingo.views.root import LingoRootView
-from arches_lingo.views.api.concepts import ConceptTreeView, ValueSearchView
+from arches_lingo.views.api.concepts import (
+    ConceptTreeView,
+    ValueSearchView,
+    ConceptResourceView,
+    ConceptRelationshipView,
+)
 from arches_lingo.views.api.generic import (
     LingoResourceDetailView,
     LingoResourceListCreateView,
@@ -24,6 +29,16 @@ urlpatterns = [
     path("concept/new", LingoRootView.as_view(), name="new-concept"),
     path("api/concept-tree", ConceptTreeView.as_view(), name="api-concepts"),
     path("api/search", ValueSearchView.as_view(), name="api-search"),
+    path(
+        "api/lingo/concept-resources",
+        ConceptResourceView.as_view(),
+        name="api-lingo-concept-resources",
+    ),
+    path(
+        "api/lingo/concept-relationships",
+        ConceptRelationshipView.as_view(),
+        name="api-lingo-concept-relationships",
+    ),
     path(
         "api/lingo/<slug:graph>",
         LingoResourceListCreateView.as_view(),

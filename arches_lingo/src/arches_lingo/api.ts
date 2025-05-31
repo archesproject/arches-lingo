@@ -146,12 +146,12 @@ export const upsertLingoTile = async (
 };
 
 export const deleteLingoTile = async (
-    schemeId: string,
+    graphSlug: string,
     nodegroupAlias: string,
     tileId: string,
 ) => {
     const response = await fetch(
-        arches.urls.api_lingo_tile(schemeId, nodegroupAlias, tileId),
+        arches.urls.api_lingo_tile(graphSlug, nodegroupAlias, tileId),
         {
             method: "DELETE",
             headers: { "X-CSRFTOKEN": getToken() },
@@ -195,6 +195,46 @@ export const fetchSearchResults = async (
     });
 
     const url = `${arches.urls.api_search}?${params.toString()}`;
+    const response = await fetch(url);
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
+export const fetchConceptResources = async (
+    searchTerm: string,
+    items: number,
+    page: number,
+    schemeResource: string = "",
+    exclude: boolean = false,
+    conceptIds: string[] = [],
+) => {
+    const params = new URLSearchParams({
+        term: searchTerm,
+        scheme: schemeResource,
+        exclude: exclude.toString(),
+        items: items.toString(),
+        page: page.toString(),
+        concepts: conceptIds.join(","),
+    });
+
+    const url = `${arches.urls.api_lingo_concept_resources}?${params.toString()}`;
+    const response = await fetch(url);
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
+export const fetchConceptRelationships = async (
+    conceptId: string,
+    type: string,
+) => {
+    const params = new URLSearchParams({
+        concept: conceptId,
+        type: type,
+    });
+
+    const url = `${arches.urls.api_lingo_concept_relationships}?${params.toString()}`;
     const response = await fetch(url);
     const parsed = await response.json();
     if (!response.ok) throw new Error(parsed.message || response.statusText);
