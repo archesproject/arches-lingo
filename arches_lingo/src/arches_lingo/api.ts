@@ -1,5 +1,6 @@
 import arches from "arches";
 import Cookies from "js-cookie";
+import { generateArchesURL } from "@/arches/utils/generate-arches-url.ts";
 
 import type {
     ConceptInstance,
@@ -218,7 +219,7 @@ export const fetchConceptResources = async (
         concepts: conceptIds.join(","),
     });
 
-    const url = `${arches.urls.api_lingo_concept_resources}?${params.toString()}`;
+    const url = `${generateArchesURL("api-lingo-concept-resources")}?${params.toString()}`;
     const response = await fetch(url);
     const parsed = await response.json();
     if (!response.ok) throw new Error(parsed.message || response.statusText);
@@ -234,7 +235,7 @@ export const fetchConceptRelationships = async (
         type: type,
     });
 
-    const url = `${arches.urls.api_lingo_concept_relationships}?${params.toString()}`;
+    const url = `${generateArchesURL("api-lingo-concept-relationships")}?${params.toString()}`;
     const response = await fetch(url);
     const parsed = await response.json();
     if (!response.ok) throw new Error(parsed.message || response.statusText);

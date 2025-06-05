@@ -10,6 +10,7 @@ import Message from "primevue/message";
 import MultiSelect from "primevue/multiselect";
 
 import { fetchConceptResources } from "@/arches_lingo/api.ts";
+import { generateArchesURL } from "@/arches/utils/generate-arches-url.ts";
 import { getItemLabel } from "@/arches_component_lab/utils.ts";
 import { getParentLabels } from "@/arches_lingo/utils.ts";
 import { ENGLISH } from "@/arches_lingo/constants.ts";
@@ -243,7 +244,11 @@ function validate(e: FormFieldResolverOptions) {
                         variant="text"
                         size="small"
                         style="text-decoration: none"
-                        :href="`${arches.urls.resource_editor}${slotProps.value}`"
+                        :href="
+                            generateArchesURL('resource_editor', {
+                                resourceid: slotProps.value,
+                            })
+                        "
                         @click.stop
                     />
                     <Button
