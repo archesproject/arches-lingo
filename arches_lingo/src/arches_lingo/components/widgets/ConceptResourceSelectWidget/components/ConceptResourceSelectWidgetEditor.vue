@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import arches from "arches";
 import { computed, ref } from "vue";
 
 import { useGettext } from "vue3-gettext";
@@ -234,7 +233,11 @@ function validate(e: FormFieldResolverOptions) {
                         variant="text"
                         size="small"
                         style="text-decoration: none"
-                        :href="`${arches.urls.resource_report}${slotProps.value}`"
+                        :href="
+                            generateArchesURL('resource_report', {
+                                resourceid: slotProps.value,
+                            })
+                        "
                         @click.stop
                     />
                     <Button
