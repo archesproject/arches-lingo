@@ -8,18 +8,21 @@ import Button from "primevue/button";
 import ConfirmDialog from "primevue/confirmdialog";
 
 import { deleteLingoTile } from "@/arches_lingo/api.ts";
+import type { Ref } from "vue";
 import type {
     SearchResultItem,
     SearchResultHierarchy,
 } from "@/arches_lingo/types.ts";
 import {
-    ENGLISH,
     DANGER,
     DEFAULT_ERROR_TOAST_LIFE,
     ERROR,
     SECONDARY,
+    selectedLanguageKey,
+    systemLanguageKey,
 } from "@/arches_lingo/constants.ts";
 import { getItemLabel } from "@/arches_component_lab/utils.ts";
+import type { Language } from "@/arches_component_lab/types";
 
 const props = defineProps<{
     data: SearchResultHierarchy[];
@@ -33,6 +36,9 @@ const props = defineProps<{
 const { $gettext } = useGettext();
 const confirm = useConfirm();
 const toast = useToast();
+
+const selectedLanguage = inject(selectedLanguageKey) as Ref<Language>;
+const systemLanguage = inject(systemLanguageKey) as Language;
 
 const openEditor =
     inject<(componentName: string, tileId?: string) => void>("openEditor");
@@ -144,7 +150,12 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
                     }"
                 ></span>
                 <span>
-                    {{ getItemLabel(item, ENGLISH.code, ENGLISH.code).value }}
+                    {{ getItemLabel(
+                        item,
+                        selectedLanguage.code,
+                        systemLanguage.code
+                        ).value
+                    }}
                 </span>
                 <span
                     v-if="subindex === hierarchy.searchResults.length - 1"

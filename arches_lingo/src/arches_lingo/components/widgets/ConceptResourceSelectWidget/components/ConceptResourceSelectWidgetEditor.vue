@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, inject, ref } from "vue";
 
 import { useGettext } from "vue3-gettext";
 import { FormField } from "@primevue/forms";
@@ -12,13 +12,18 @@ import { fetchConceptResources } from "@/arches_lingo/api.ts";
 import { generateArchesURL } from "@/arches/utils/generate-arches-url.ts";
 import { getItemLabel } from "@/arches_component_lab/utils.ts";
 import { getParentLabels } from "@/arches_lingo/utils.ts";
-import { ENGLISH } from "@/arches_lingo/constants.ts";
+import {
+    selectedLanguageKey,
+    systemLanguageKey,
+} from "@/arches_lingo/constants.ts";
 
+import type { Ref } from "vue";
 import type { MultiSelectFilterEvent } from "primevue/multiselect";
 import type { FormFieldResolverOptions } from "@primevue/forms";
 import type { VirtualScrollerLazyEvent } from "primevue/virtualscroller";
 
 import type { SearchResultItem } from "@/arches_lingo/types.ts";
+import type { Language } from "@/arches_component_lab/types";
 
 const props = defineProps<{
     initialValue: SearchResultItem[] | null | undefined;
@@ -30,13 +35,15 @@ const props = defineProps<{
 }>();
 
 props.initialValue?.forEach((option) => {
-    option.label = getItemLabel(option, ENGLISH.code, ENGLISH.code).value;
+    option.label = getItemLabel(option, selectedLanguage.value.code, systemLanguage.code).value;
 });
 
 const { $gettext } = useGettext();
 
 const itemSize = 36; // in future iteration this should be declared in the CardXNodeXWidget config
 
+const selectedLanguage = inject(selectedLanguageKey) as Ref<Language>;
+const systemLanguage = inject(systemLanguageKey) as Language;
 const options = ref<SearchResultItem[]>(props.initialValue || []);
 const isLoading = ref(false);
 const searchResultsPage = ref(0);
@@ -68,8 +75,8 @@ async function getOptions(page: number, filterTerm?: string) {
         parsedResponse.data.forEach((option: SearchResultItem) => {
             option.label = getItemLabel(
                 option,
-                ENGLISH.code,
-                ENGLISH.code,
+                selectedLanguage.value.code,
+                systemLanguage.code,
             ).value;
         });
         if (page === 1) {
@@ -201,8 +208,8 @@ function validate(e: FormFieldResolverOptions) {
                         {{
                             getItemLabel(
                                 slotProps.option,
-                                ENGLISH.code,
-                                ENGLISH.code,
+                                selectedLanguage.code,
+                                systemLanguage.code,
                             ).value
                         }}
                     </span>
@@ -211,8 +218,8 @@ function validate(e: FormFieldResolverOptions) {
                         {{
                             getParentLabels(
                                 slotProps.option,
-                                ENGLISH.code,
-                                ENGLISH.code,
+                                selectedLanguage.code,
+                                systemLanguage.code,
                             )
                         }}
                         ]
