@@ -129,13 +129,16 @@ function confirmDelete() {
                         <div class="buttons">
                             <Button
                                 icon="pi pi-file-edit"
+                                :aria-label="$gettext('edit')"
+                                rounded
                                 @click="openEditor!(props.componentName)"
                             />
                             <Button
                                 icon="pi pi-trash"
+                                class="label-delete-button"
                                 :aria-label="$gettext('Delete')"
                                 severity="danger"
-                                outlined
+                                rounded
                                 @click="confirmDelete()"
                             />
                         </div>
