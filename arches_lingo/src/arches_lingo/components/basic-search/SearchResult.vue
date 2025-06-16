@@ -39,14 +39,19 @@ const getParentLabels = (
         :class="{ 'is-even': searchResult.index % 2 === 0 }"
     >
         <div style="margin: 0 0.5rem">
-            <i
-                class="pi pi-paperclip concept-icon"
-                aria-hidden="true"
-            />
-            {{
-                getItemLabel(searchResult.option, ENGLISH.code, ENGLISH.code)
-                    .value
-            }}
+            <span>
+                <i
+                    class="pi pi-paperclip concept-icon"
+                    aria-hidden="true"
+                />
+                {{
+                    getItemLabel(
+                        searchResult.option,
+                        ENGLISH.code,
+                        ENGLISH.code,
+                    ).value
+                }}
+            </span>
         </div>
 
         <div class="search-result-hierarchy">

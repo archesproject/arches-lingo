@@ -100,13 +100,9 @@ const querySortPreference = ref();
     align-items: center;
 }
 
-.query-sort-preference label {
-    font-size: 0.9rem;
-    color: var(--p-button-text-secondary-color);
-}
-
+.query-sort-preference label,
 .query-filter label {
-    font-size: 0.9rem;
+    font-size: 0.875rem;
     color: var(--p-button-text-secondary-color);
 }
 
