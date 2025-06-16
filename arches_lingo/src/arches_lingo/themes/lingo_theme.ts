@@ -16,6 +16,10 @@ export const LingoPreset = definePreset(ArchesPreset, {
         ...lingoColors,
     },
     semantic: {
+        lingoEditor: {
+            headerFontSize: "1.15rem",
+            headerFontWeight: "400",
+        },
         colorScheme: {
             light: {
                 primary: palette(archesPrimitives.arches.blue),

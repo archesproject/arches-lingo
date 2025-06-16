@@ -122,7 +122,7 @@ h2 {
     align-items: center;
     border-bottom: 0.125rem solid var(--p-menubar-border-color);
     background: var(--p-header-background);
-    padding: 0 1rem 0 1rem;
+    padding: 0 1rem;
 }
 
 .header > Button {
@@ -137,8 +137,8 @@ h2 {
 }
 
 .editor-content :deep(h3) {
-    font-size: 1.15rem;
-    font-weight: 400;
+    font-size: var(--p-lingo-editor-header-font-size);
+    font-weight: var(--p-lingo-editor-header-font-weight);
 }
 
 .editor-content :deep(.p-formfield) {
