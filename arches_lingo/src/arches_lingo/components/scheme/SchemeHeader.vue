@@ -91,11 +91,15 @@ onMounted(async () => {
     >
         <div class="scheme-header-panel">
             <div class="header-row">
-                <h2>
-                    {{ data?.descriptor?.name }}
-                    <span class="scheme-label-lang"
-                        >({{ data?.descriptor?.language }})</span
-                    >
+                <h2 v-if="data?.descriptor?.name">
+                    <span
+                        >{{ data?.descriptor?.name }}
+                        <span
+                            v-if="data?.descriptor?.language"
+                            class="scheme-label-lang"
+                            >({{ data?.descriptor?.language }})</span
+                        >
+                    </span>
                 </h2>
 
                 <!-- TODO: export to rdf/skos/json-ld buttons go here -->
@@ -198,7 +202,7 @@ h2 {
     gap: 0.25rem;
     margin-top: 0.5rem;
     justify-content: space-between;
-    align-items: anchor-center;
+    align-items: center;
 }
 
 .language-chip-container {

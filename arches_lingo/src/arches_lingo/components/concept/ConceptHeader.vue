@@ -110,11 +110,15 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
     >
         <div class="concept-header-panel">
             <div class="header-row">
-                <h2>
-                    {{ data?.descriptor?.name }}
-                    <span class="concept-label-lang"
-                        >({{ data?.descriptor?.language }})</span
-                    >
+                <h2 v-if="data?.descriptor?.name">
+                    <span
+                        >{{ data?.descriptor?.name }}
+                        <span
+                            v-if="data?.descriptor?.language"
+                            class="concept-label-lang"
+                            >({{ data?.descriptor?.language }})</span
+                        >
+                    </span>
                 </h2>
 
                 <!-- TODO: export to rdf/skos/json-ld buttons go here -->
@@ -166,7 +170,7 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                         $gettext("Life cycle state:")
                     }}</span>
                     <span class="header-item-value">{{
-                        data?.lifeCycleState
+                        data?.lifeCycleState ? data?.lifeCycleState : "--"
                     }}</span>
                 </div>
             </div>
