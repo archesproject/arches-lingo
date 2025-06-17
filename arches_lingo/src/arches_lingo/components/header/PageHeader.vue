@@ -68,7 +68,7 @@ const items = ref([
 }
 
 h1 {
-    font-weight: 400;
+    font-weight: var(--p-lingo-font-weight-normal);
     font-size: 1.25rem;
     margin: 0rem;
 }

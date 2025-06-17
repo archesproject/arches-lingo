@@ -90,7 +90,7 @@ const querySortPreference = ref();
 }
 
 .label {
-    font-weight: 400;
+    font-weight: var(--p-lingo-font-weight-normal);
     color: var(--p-button-text-secondary-color);
 }
 

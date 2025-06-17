@@ -175,7 +175,7 @@ onMounted(async () => {
 h2 {
     margin: 0;
     font-size: 1.25rem;
-    font-weight: 400;
+    font-weight: var(--p-lingo-font-weight-normal);
 }
 
 .scheme-label-lang {
@@ -231,7 +231,7 @@ h2 {
 }
 
 .header-item-label {
-    font-weight: 400;
+    font-weight: var(--p-lingo-font-weight-normal);
     font-size: 0.9rem;
     color: var(--p-header-item-label);
     margin-inline-end: 0.25rem;

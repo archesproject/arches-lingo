@@ -102,13 +102,13 @@ form {
 
 h1 {
     margin: 0;
-    font-weight: 400;
+    font-weight: var(--p-lingo-font-weight-normal);
     color: var(--p-inputtext-color);
 }
 
 h2 {
     margin: 0;
-    font-weight: 400;
+    font-weight: var(--p-lingo-font-weight-normal);
     font-size: 1rem;
     color: var(--p-inputtext-hover-border-color);
 }

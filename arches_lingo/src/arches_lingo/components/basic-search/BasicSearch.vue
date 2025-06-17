@@ -271,8 +271,7 @@ watch(searchResults, (searchResults) => {
 <style scoped>
 #basic-search-container {
     width: 100%;
-    font-family: "Open Sans", "Lucida Sans", "Lucida Sans Regular",
-        "Lucida Grande", "Lucida Sans Unicode", Geneva, Verdana, sans-serif;
+    font-family: var(--p-lingo-font-family);
 }
 
 .clear-button {

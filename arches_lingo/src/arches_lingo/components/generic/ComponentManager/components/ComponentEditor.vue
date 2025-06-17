@@ -113,7 +113,7 @@ function resetForm() {
 
 h2 {
     font-size: 1.25rem;
-    font-weight: 400;
+    font-weight: var(--p-lingo-font-weight-normal);
 }
 
 .header {
@@ -137,8 +137,8 @@ h2 {
 }
 
 .editor-content :deep(h3) {
-    font-size: var(--p-lingo-editor-header-font-size);
-    font-weight: var(--p-lingo-editor-header-font-weight);
+    font-size: var(--p-lingo-font-header-size);
+    font-weight: var(--p-lingo-font-weight-normal);
 }
 
 .editor-content :deep(.p-formfield) {

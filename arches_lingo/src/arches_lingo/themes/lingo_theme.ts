@@ -16,9 +16,13 @@ export const LingoPreset = definePreset(ArchesPreset, {
         ...lingoColors,
     },
     semantic: {
-        lingoEditor: {
-            headerFontSize: "1.15rem",
-            headerFontWeight: "400",
+        lingoFont: {
+            family: "'Open Sans','Lucida Sans','Lucida Sans Regular','Lucida Grande','Lucida Sans Unicode',Geneva,Verdana,sans-serif",
+            headerSize: "1.15rem",
+            weightLight: "300",
+            weightNormal: "400",
+            weightMedium: "500",
+            weightBold: "600",
         },
         colorScheme: {
             light: {

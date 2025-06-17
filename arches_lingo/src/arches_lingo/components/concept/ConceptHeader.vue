@@ -215,7 +215,7 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
 h2 {
     margin: 0;
     font-size: 1.25rem;
-    font-weight: 400;
+    font-weight: var(--p-lingo-font-weight-normal);
 }
 
 .concept-label-lang {
@@ -225,7 +225,7 @@ h2 {
 
 .concept-uri {
     font-size: 0.8rem;
-    font-weight: 400;
+    font-weight: var(--p-lingo-font-weight-normal);
     color: var(--p-primary-500);
 }
 
@@ -248,7 +248,7 @@ h2 {
     align-items: baseline;
 }
 .header-item-label {
-    font-weight: 400;
+    font-weight: var(--p-lingo-font-weight-normal);
     font-size: 0.9rem;
     color: var(--p-header-item-label);
     margin-inline-end: 0.25rem;
