@@ -30,7 +30,7 @@ const items = ref([
                 :to="{ name: routeNames.root }"
                 style="text-decoration: none; color: inherit"
             >
-                <h1>{{ $gettext("Arches Lingo") }}</h1>
+                <h1 class="lingo-title">{{ $gettext("Arches Lingo") }}</h1>
             </RouterLink>
             <SearchDialog />
         </template>
@@ -67,7 +67,7 @@ const items = ref([
     height: 3.125rem;
 }
 
-h1 {
+.lingo-title {
     font-weight: var(--p-lingo-font-weight-normal);
     font-size: 1.25rem;
     margin: 0rem;

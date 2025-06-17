@@ -39,8 +39,8 @@ const submit = async () => {
 <template>
     <form>
         <div class="form-header">
-            <h1>{{ $gettext("LINGO") }}</h1>
-            <h2>
+            <h1 class="form-title">{{ $gettext("LINGO") }}</h1>
+            <h2 class="form-subtitle">
                 {{
                     $gettext(
                         "Vocabulary and authority data management powered by Arches.",
@@ -70,7 +70,7 @@ const submit = async () => {
             />
         </div>
         <div class="form-footer">
-            <h2>
+            <h2 class="form-subtitle">
                 {{
                     $gettext(
                         "Create an account or log in using multi-factor authentication",
@@ -100,13 +100,13 @@ form {
     padding: 0.5rem 0;
 }
 
-h1 {
+.form-title {
     margin: 0;
     font-weight: var(--p-lingo-font-weight-normal);
     color: var(--p-inputtext-color);
 }
 
-h2 {
+.form-subtitle {
     margin: 0;
     font-weight: var(--p-lingo-font-weight-normal);
     font-size: 1rem;
