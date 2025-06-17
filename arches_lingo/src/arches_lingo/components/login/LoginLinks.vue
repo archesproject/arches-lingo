@@ -10,7 +10,7 @@ const { $gettext } = useGettext();
 </script>
 
 <template>
-    <div style="display: flex; justify-content: space-between">
+    <div class="link-container">
         <Button
             as="a"
             class="login-action"
@@ -31,9 +31,15 @@ const { $gettext } = useGettext();
 </template>
 
 <style scoped>
+.link-container {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
 :deep(.login-action) {
     text-decoration: none;
-    min-width: 10rem;
+    flex: 1;
 }
 
 :deep(.p-button-outlined.p-button-secondary:not(:disabled):hover) {
