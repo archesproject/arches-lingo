@@ -49,13 +49,11 @@ const items = ref([
 }
 
 .p-button {
-    min-height: var(--p-button-icon-only-width);
-    min-width: var(--p-button-icon-only-width);
+    min-height: var(--p-button-lg-icon-only-width);
+    min-width: var(--p-button-lg-icon-only-width);
     border-radius: 0;
     font-size: var(--p-lingo-font-size-large);
-    height: 2.8rem;
-    width: 3.125rem;
-    border-bottom: 1px solid var(--p-surface-950);
+    border-bottom: 0.1rem solid var(--p-button-outlined-primary-border-color);
 }
 
 @media screen and (max-width: 960px) {
