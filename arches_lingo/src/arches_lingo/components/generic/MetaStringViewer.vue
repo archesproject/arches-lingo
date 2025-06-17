@@ -164,12 +164,12 @@ async function deleteSectionValue(tileId: string) {
             </template>
         </DataTable>
     </div>
-    <p
+    <div
         v-else
         class="no-data"
     >
         {{ props.metaStringText.noRecords }}
-    </p>
+    </div>
 </template>
 <style scoped>
 :deep(.drawer) {
@@ -189,6 +189,7 @@ async function deleteSectionValue(tileId: string) {
 .no-data {
     padding: 0.5rem 0;
     margin: 0;
+    font-size: 0.95rem;
     color: var(--p-inputtext-placeholder-color);
 }
 
