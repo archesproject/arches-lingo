@@ -17,9 +17,9 @@ import LoginForm from "@/arches_lingo/components/login/LoginForm.vue";
     align-items: center;
     height: 100%;
     background: var(--p-form-field-disabled-background);
-    overflow: scroll;
+    overflow: auto;
     padding-bottom: 12rem;
-    @media (max-width: 800px) {
+    @media (max-width: 960px) {
         padding-bottom: 0;
     }
 }
