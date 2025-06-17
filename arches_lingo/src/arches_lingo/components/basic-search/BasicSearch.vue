@@ -299,7 +299,7 @@ watch(searchResults, (searchResults) => {
     inset-inline-end: 0;
 
     i {
-        font-size: 2rem;
+        font-size: var(--p-lingo-font-size-xxlarge);
         background-color: transparent;
         padding: 1rem;
         height: 4rem;

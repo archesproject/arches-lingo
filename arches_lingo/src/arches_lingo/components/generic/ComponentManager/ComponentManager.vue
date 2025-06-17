@@ -191,14 +191,14 @@ provide("refreshReportSection", refreshReportSection);
 
 :deep(.section-header h2) {
     margin: 0;
-    font-size: 1.2rem;
+    font-size: var(--p-lingo-font-size-large);
     font-weight: var(--p-lingo-font-weight-normal);
     color: var(--p-neutral-500);
 }
 
 :deep(.section-header .add-button) {
     height: 2rem;
-    font-size: 0.9rem;
+    font-size: var(--p-lingo-font-size-smallnormal);
     font-weight: var(--p-lingo-font-weight-normal);
     min-width: 10rem;
     border-radius: 0.125rem;

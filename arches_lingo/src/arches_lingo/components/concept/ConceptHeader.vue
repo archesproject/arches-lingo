@@ -214,17 +214,17 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
 
 h2 {
     margin: 0;
-    font-size: 1.25rem;
+    font-size: var(--p-lingo-font-size-large);
     font-weight: var(--p-lingo-font-weight-normal);
 }
 
 .concept-label-lang {
-    font-size: 0.9rem;
+    font-size: var(--p-lingo-font-size-smallnormal);
     color: var(--p-text-muted-color);
 }
 
 .concept-uri {
-    font-size: 0.8rem;
+    font-size: var(--p-lingo-font-size-xsmall);
     font-weight: var(--p-lingo-font-weight-normal);
     color: var(--p-primary-500);
 }
@@ -249,14 +249,14 @@ h2 {
 }
 .header-item-label {
     font-weight: var(--p-lingo-font-weight-normal);
-    font-size: 0.9rem;
+    font-size: var(--p-lingo-font-size-smallnormal);
     color: var(--p-header-item-label);
     margin-inline-end: 0.25rem;
 }
 
 .header-item-value,
 :deep(a) {
-    font-size: 0.9rem;
+    font-size: var(--p-lingo-font-size-smallnormal);
     color: var(--p-primary-500);
 }
 </style>

@@ -174,12 +174,12 @@ onMounted(async () => {
 
 h2 {
     margin: 0;
-    font-size: 1.25rem;
+    font-size: var(--p-lingo-font-size-large);
     font-weight: var(--p-lingo-font-weight-normal);
 }
 
 .scheme-label-lang {
-    font-size: 0.9rem;
+    font-size: var(--p-lingo-font-size-smallnormal);
     color: var(--p-text-muted-color);
 }
 
@@ -218,7 +218,7 @@ h2 {
 }
 
 .add-language {
-    font-size: 0.9rem;
+    font-size: var(--p-lingo-font-size-smallnormal);
     color: var(--p-primary-500);
     text-decoration: underline;
     padding: 0 0.5rem;
@@ -232,13 +232,13 @@ h2 {
 
 .header-item-label {
     font-weight: var(--p-lingo-font-weight-normal);
-    font-size: 0.9rem;
+    font-size: var(--p-lingo-font-size-smallnormal);
     color: var(--p-header-item-label);
     margin-inline-end: 0.25rem;
 }
 
 .header-item-value {
-    font-size: 0.9rem;
+    font-size: var(--p-lingo-font-size-smallnormal);
     color: var(--p-primary-500);
 }
 
@@ -247,7 +247,7 @@ h2 {
     background: var(--p-menubar-item-icon-color);
     border: 0.06rem solid var(--p-menubar-item-icon-color);
     border-radius: 0.125rem;
-    font-size: 0.9rem;
+    font-size: var(--p-lingo-font-size-smallnormal);
     color: var(--p-content-color);
 }
 </style>

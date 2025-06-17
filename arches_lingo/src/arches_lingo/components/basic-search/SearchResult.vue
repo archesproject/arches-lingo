@@ -79,7 +79,7 @@ const getParentLabels = (
 
 .search-result-hierarchy {
     margin: 0 0.5rem;
-    font-size: small;
+    font-size: var(--p-lingo-font-size-xsmall);
     color: var(--p-search-result-hierarchy-color);
 }
 
@@ -92,6 +92,6 @@ const getParentLabels = (
 }
 
 .concept-icon {
-    font-size: 0.75rem;
+    font-size: var(--p-lingo-font-size-xxsmall);
 }
 </style>

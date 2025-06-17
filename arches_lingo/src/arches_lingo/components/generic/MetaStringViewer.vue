@@ -189,7 +189,7 @@ async function deleteSectionValue(tileId: string) {
 .no-data {
     padding: 0.5rem 0;
     margin: 0;
-    font-size: 0.95rem;
+    font-size: var(--p-lingo-font-size-smallnormal);
     color: var(--p-inputtext-placeholder-color);
 }
 
@@ -203,7 +203,7 @@ async function deleteSectionValue(tileId: string) {
 
 :deep(.p-datatable-tbody > tr > td) {
     color: var(--p-inputtext-placeholder-color);
-    font-size: 0.95rem;
+    font-size: var(--p-lingo-font-size-smallnormal);
     padding: 0.4rem 1rem;
 }
 

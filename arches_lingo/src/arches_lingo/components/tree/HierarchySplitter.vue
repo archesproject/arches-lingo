@@ -97,6 +97,6 @@ provide("refreshConceptTree", refreshConceptTree);
         var(--p-button-secondary-active-border-color);
     border-inline-end: 0.06rem solid
         var(--p-button-secondary-active-border-color);
-    font-size: 0.9rem;
+    font-size: var(--p-lingo-font-size-smallnormal);
 }
 </style>

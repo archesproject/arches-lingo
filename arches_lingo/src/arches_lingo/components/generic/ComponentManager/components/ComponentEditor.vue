@@ -112,7 +112,7 @@ function resetForm() {
 }
 
 h2 {
-    font-size: 1.25rem;
+    font-size: var(--p-lingo-font-size-large);
     font-weight: var(--p-lingo-font-weight-normal);
 }
 
@@ -137,7 +137,7 @@ h2 {
 }
 
 .editor-content :deep(h3) {
-    font-size: var(--p-lingo-font-header-size);
+    font-size: var(--p-lingo-font-size-medium);
     font-weight: var(--p-lingo-font-weight-normal);
 }
 

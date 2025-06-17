@@ -109,7 +109,7 @@ form {
 .form-subtitle {
     margin: 0;
     font-weight: var(--p-lingo-font-weight-normal);
-    font-size: 1rem;
+    font-size: var(--p-lingo-font-size-normal);
     color: var(--p-inputtext-hover-border-color);
 }
 
@@ -132,6 +132,6 @@ button {
 
 .form-footer h2 {
     padding-bottom: 1rem;
-    font-size: 0.95rem;
+    font-size: var(--p-lingo-font-size-smallnormal);
 }
 </style>

@@ -102,7 +102,7 @@ const querySortPreference = ref();
 
 .query-sort-preference label,
 .query-filter label {
-    font-size: 0.875rem;
+    font-size: var(--p-lingo-font-size-small);
     color: var(--p-button-text-secondary-color);
 }
 

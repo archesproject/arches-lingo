@@ -69,7 +69,7 @@ const items = ref([
 
 .lingo-title {
     font-weight: var(--p-lingo-font-weight-normal);
-    font-size: 1.25rem;
+    font-size: var(--p-lingo-font-size-large);
     margin: 0rem;
 }
 

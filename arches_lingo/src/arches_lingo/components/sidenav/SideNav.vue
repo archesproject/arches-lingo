@@ -52,7 +52,7 @@ const items = ref([
     min-height: var(--p-button-icon-only-width);
     min-width: var(--p-button-icon-only-width);
     border-radius: 0;
-    font-size: 1.25rem;
+    font-size: var(--p-lingo-font-size-large);
     height: 2.8rem;
     width: 3.125rem;
     border-bottom: 1px solid var(--p-surface-950);
