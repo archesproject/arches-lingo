@@ -115,16 +115,14 @@ export const LingoPreset = definePreset(ArchesPreset, {
                     // @ts-expect-error: Ignoring type mismatch for button primary background
                     primary: {
                         background: "{primary-800}",
-                        border: {
-                            color: "{button-primary-background}",
-                        },
+                        borderColor: "{button-primary-background}",
                     },
                     danger: {
-                        background: "{button-warn-active-background}",
-                        borderColor: "{button-warn-active-background}",
+                        background: "{orange-700}",
+                        borderColor: "{orange-700}",
                         hover: {
-                            background: "{button-warn-background}",
-                            borderColor: "{button-warn-background}",
+                            background: "{orange-500}",
+                            borderColor: "{orange-500}",
                         },
                     },
                 },
@@ -132,9 +130,7 @@ export const LingoPreset = definePreset(ArchesPreset, {
                     // @ts-expect-error: Ignoring type mismatch for button primary background
                     primary: {
                         background: "{primary-100}",
-                        border: {
-                            color: "{button-primary-background}",
-                        },
+                        borderColor: "{button-primary-background}",
                     },
                 },
             },
