@@ -5,7 +5,6 @@ import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
 
 import Button from "primevue/button";
-import Divider from "primevue/divider";
 import ProgressSpinner from "primevue/progressspinner";
 
 import ResourceInstanceMultiSelectWidget from "@/arches_component_lab/widgets/ResourceInstanceMultiSelectWidget/ResourceInstanceMultiSelectWidget.vue";
@@ -105,24 +104,40 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
         v-if="isLoading"
         style="width: 100%"
     />
-    <div v-else>
-        <div class="header-row">
-            <h2>
-                {{ data?.descriptor?.name }} ({{ data?.descriptor?.language }})
-            </h2>
-            <!-- TODO: Life Cycle mgmt functionality goes here -->
-            <div class="header-item">
-                <span class="header-item-label">{{
-                    $gettext("Life cycle state:")
-                }}</span>
-                <span>{{ data?.lifeCycleState }}</span>
+    <div
+        v-else
+        class="concept-header"
+    >
+        <div class="concept-header-panel">
+            <div class="header-row">
+                <h2 v-if="data?.descriptor?.name">
+                    <span>
+                        {{ data?.descriptor?.name }}
+
+                        <span
+                            v-if="data?.descriptor?.language"
+                            class="concept-label-lang"
+                        >
+                            ({{ data?.descriptor?.language }})
+                        </span>
+                    </span>
+                </h2>
+
+                <!-- TODO: export to rdf/skos/json-ld buttons go here -->
+                <div class="header-item">
+                    <span class="header-item-label">
+                        {{ $gettext("Export:") }}
+                    </span>
+                    <span class="header-item-value">
+                        CSV | SKOS | RDF | JSON-LD
+                    </span>
+                </div>
             </div>
-        </div>
-        <div class="header-row">
-            <div class="header-item">
+            <div class="header-row uri-container">
                 <span class="header-item-label">{{ $gettext("URI:") }}</span>
                 <Button
                     :label="data?.uri || '--'"
+                    class="concept-uri"
                     variant="link"
                     as="a"
                     :href="data?.uri"
@@ -132,48 +147,90 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                 ></Button>
             </div>
         </div>
-        <div class="header-row">
-            <!-- TODO: Human-reable conceptid to be displayed here -->
-            <div class="header-item">
-                <span class="header-item-label">{{ $gettext("Scheme:") }}</span>
-                <!-- TODO: Allow resource multiselect to route within lingo, not to resource pg -->
-                <ResourceInstanceMultiSelectWidget
-                    :graph-slug="props.graphSlug"
-                    node-alias="part_of_scheme"
-                    :initial-value="data?.partOfScheme"
-                    :mode="VIEW"
-                    :show-label="false"
-                ></ResourceInstanceMultiSelectWidget>
+
+        <div class="concept-header-section">
+            <div class="header-row">
+                <!-- TODO: Human-reable conceptid to be displayed here -->
+                <div class="header-item">
+                    <span class="header-item-label">
+                        {{ $gettext("Scheme:") }}
+                    </span>
+                    <!-- TODO: Allow resource multiselect to route within lingo, not to resource pg -->
+                    <ResourceInstanceMultiSelectWidget
+                        :graph-slug="props.graphSlug"
+                        class="concept-uri"
+                        node-alias="part_of_scheme"
+                        :initial-value="data?.partOfScheme"
+                        :mode="VIEW"
+                        :show-label="false"
+                    ></ResourceInstanceMultiSelectWidget>
+                </div>
+
+                <!-- TODO: Life Cycle mgmt functionality goes here -->
+                <div class="header-item">
+                    <span class="header-item-label">
+                        {{ $gettext("Life cycle state:") }}
+                    </span>
+                    <span class="header-item-value">
+                        {{ data?.lifeCycleState ? data?.lifeCycleState : "--" }}
+                    </span>
+                </div>
             </div>
-            <!-- TODO: export to rdf/skos/json-ld buttons go here -->
+            <div class="header-row">
+                <div class="header-item">
+                    <span class="header-item-label">
+                        {{ $gettext("Parent Concept(s):") }}
+                    </span>
+                    <!-- TODO: Allow resource multiselect to route within lingo, not to resource pg -->
+                    <ResourceInstanceMultiSelectWidget
+                        :graph-slug="props.graphSlug"
+                        node-alias="classification_status_ascribed_classification"
+                        :initial-value="data?.parentConcepts"
+                        :mode="VIEW"
+                        :show-label="false"
+                    ></ResourceInstanceMultiSelectWidget>
+                </div>
+                <div class="header-item">
+                    <span class="header-item-label">
+                        {{ $gettext("Owner:") }}
+                    </span>
+                    <span class="header-item-value">
+                        {{ data?.principalUser || $gettext("Anonymous") }}
+                    </span>
+                </div>
+            </div>
         </div>
-        <div class="header-row">
-            <div class="header-item">
-                <span class="header-item-label">{{
-                    $gettext("Parent Concept(s):")
-                }}</span>
-                <!-- TODO: Allow resource multiselect to route within lingo, not to resource pg -->
-                <ResourceInstanceMultiSelectWidget
-                    :graph-slug="props.graphSlug"
-                    node-alias="classification_status_ascribed_classification"
-                    :initial-value="data?.parentConcepts"
-                    :mode="VIEW"
-                    :show-label="false"
-                ></ResourceInstanceMultiSelectWidget>
-            </div>
-            <div class="header-item">
-                <span class="header-item-label">{{ $gettext("Owner:") }}</span>
-                <span>{{ data?.principalUser || $gettext("Anonymous") }}</span>
-            </div>
-        </div>
-        <Divider />
     </div>
 </template>
 
 <style scoped>
-h2 {
-    margin-bottom: 1rem;
+.concept-header {
+    padding: 1rem 1rem 1.25rem 1rem;
+    background: var(--p-header-background);
+    border-bottom: 0.06rem solid var(--p-header-border);
 }
+
+.concept-header-panel {
+    padding-bottom: 0.5rem;
+}
+
+h2 {
+    margin: 0;
+    font-size: var(--p-lingo-font-size-large);
+    font-weight: var(--p-lingo-font-weight-normal);
+}
+
+.concept-label-lang {
+    font-size: var(--p-lingo-font-size-smallnormal);
+    color: var(--p-text-muted-color);
+}
+
+.concept-uri {
+    font-size: var(--p-lingo-font-size-xsmall);
+    font-weight: var(--p-lingo-font-weight-normal);
+    color: var(--p-primary-500);
+}
+
 .p-button-link {
     padding: 0;
     margin: 0;
@@ -181,14 +238,27 @@ h2 {
 .header-row {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: baseline;
 }
+.uri-container {
+    justify-content: flex-start;
+}
+
 .header-item {
     display: inline-flex;
     margin-inline-end: 1rem;
+    align-items: baseline;
 }
 .header-item-label {
-    font-weight: bold;
+    font-weight: var(--p-lingo-font-weight-normal);
+    font-size: var(--p-lingo-font-size-smallnormal);
+    color: var(--p-header-item-label);
     margin-inline-end: 0.25rem;
+}
+
+.header-item-value,
+:deep(a) {
+    font-size: var(--p-lingo-font-size-smallnormal);
+    color: var(--p-primary-500);
 }
 </style>

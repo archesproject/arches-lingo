@@ -10,9 +10,10 @@ const { $gettext } = useGettext();
 </script>
 
 <template>
-    <div style="display: flex; justify-content: space-between; width: 30%">
+    <div class="link-container">
         <Button
             as="a"
+            class="login-action"
             :label="$gettext('Register')"
             :href="arches.urls.signup"
             :severity="SECONDARY"
@@ -20,6 +21,7 @@ const { $gettext } = useGettext();
         />
         <Button
             as="a"
+            class="login-action"
             :label="$gettext('Multi-factor login')"
             :href="arches.urls.auth + '?next=/'"
             :severity="SECONDARY"
@@ -27,3 +29,22 @@ const { $gettext } = useGettext();
         />
     </div>
 </template>
+
+<style scoped>
+.link-container {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+:deep(.login-action) {
+    text-decoration: none;
+    flex: 1;
+}
+
+:deep(.p-button-outlined.p-button-secondary:not(:disabled):hover) {
+    color: var(--p-primary-contrast-color);
+    background: var(--p-primary-active-color);
+    border-color: var(--p-primary-active-color);
+}
+</style>

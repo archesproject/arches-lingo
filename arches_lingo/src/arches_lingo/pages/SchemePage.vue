@@ -23,9 +23,16 @@ const componentData = [
     {
         component: SchemeLabel,
         componentName: "SchemeLabel",
-        sectionTitle: $gettext("Scheme Label"),
+        sectionTitle: $gettext("Scheme Labels"),
         graphSlug: "scheme",
         nodegroupAlias: "appellative_status",
+    },
+    {
+        component: SchemeNote,
+        componentName: "SchemeNote",
+        sectionTitle: $gettext("Scheme Notes"),
+        graphSlug: "scheme",
+        nodegroupAlias: "statement",
     },
     {
         component: SchemeNamespace,
@@ -35,16 +42,9 @@ const componentData = [
         nodegroupAlias: "namespace",
     },
     {
-        component: SchemeNote,
-        componentName: "SchemeNote",
-        sectionTitle: $gettext("Scheme Note"),
-        graphSlug: "scheme",
-        nodegroupAlias: "statement",
-    },
-    {
         component: SchemeStandard,
         componentName: "SchemeStandard",
-        sectionTitle: $gettext("Scheme Standard"),
+        sectionTitle: $gettext("Scheme Standards"),
         graphSlug: "scheme",
         nodegroupAlias: "creation",
     },

@@ -30,7 +30,7 @@ const items = ref([
                 :to="{ name: routeNames.root }"
                 style="text-decoration: none; color: inherit"
             >
-                <h1>{{ $gettext("Arches Lingo") }}</h1>
+                <h1 class="lingo-title">{{ $gettext("Arches Lingo") }}</h1>
             </RouterLink>
             <SearchDialog />
         </template>
@@ -61,6 +61,16 @@ const items = ref([
 <style scoped>
 :deep(.p-menubar-start) {
     gap: var(--p-menubar-gap);
+}
+
+.p-menubar {
+    height: 3.125rem;
+}
+
+.lingo-title {
+    font-weight: var(--p-lingo-font-weight-normal);
+    font-size: var(--p-lingo-font-size-large);
+    margin: 0rem;
 }
 
 @media screen and (max-width: 960px) {

@@ -45,13 +45,15 @@ provide("refreshConceptTree", refreshConceptTree);
 <template>
     <div class="subheading">
         <Button
+            class="toggle-hierarchy"
             :severity="SECONDARY"
             :label="$gettext('Toggle hierarchy')"
             @click="toggleShowHierarchy"
         />
     </div>
     <Splitter
-        style="height: 100%; overflow: hidden"
+        style="height: 100%; overflow: hidden; border-radius: 0"
+        class="hierarchy-container"
         :pt="{
             gutter: {
                 style: { display: showHierarchy ? 'flex' : 'none' },
@@ -79,11 +81,22 @@ provide("refreshConceptTree", refreshConceptTree);
 <style scoped>
 .subheading {
     display: flex;
-    margin: 0.5rem;
+    margin: 0;
     gap: 0.5rem;
+    height: 3rem;
+    background: var(--p-button-secondary-background);
 }
 
 .subheading h2 {
     font-size: medium;
+}
+
+.toggle-hierarchy {
+    border-radius: 0;
+    border-inline-start: 0.06rem solid
+        var(--p-button-secondary-active-border-color);
+    border-inline-end: 0.06rem solid
+        var(--p-button-secondary-active-border-color);
+    font-size: var(--p-lingo-font-size-smallnormal);
 }
 </style>
