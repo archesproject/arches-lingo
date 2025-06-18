@@ -146,10 +146,7 @@ onMounted(async () => {
                             {{ data?.lifeCycleState }}
                         </span>
                     </div>
-                    <div
-                        class="header-item"
-                        style="padding-top: 0.1rem"
-                    >
+                    <div class="header-item">
                         <span class="header-item-label">
                             {{ $gettext("Owner:") }}
                         </span>

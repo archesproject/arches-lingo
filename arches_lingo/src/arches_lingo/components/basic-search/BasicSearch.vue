@@ -314,8 +314,6 @@ watch(searchResults, (searchResults) => {
 
 :deep(.p-autocomplete-overlay) {
     position: static !important;
-    margin-top: 0 !important;
     border-top: 0.0725rem solid var(--p-dialog-border-color);
-    min-height: 3.25rem;
 }
 </style>
