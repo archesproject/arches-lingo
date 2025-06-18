@@ -111,24 +111,26 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
         <div class="concept-header-panel">
             <div class="header-row">
                 <h2 v-if="data?.descriptor?.name">
-                    <span
-                        >{{ data?.descriptor?.name }}
+                    <span>
+                        {{ data?.descriptor?.name }}
+
                         <span
                             v-if="data?.descriptor?.language"
                             class="concept-label-lang"
-                            >({{ data?.descriptor?.language }})</span
                         >
+                            ({{ data?.descriptor?.language }})
+                        </span>
                     </span>
                 </h2>
 
                 <!-- TODO: export to rdf/skos/json-ld buttons go here -->
                 <div class="header-item">
-                    <span class="header-item-label">{{
-                        $gettext("Export:")
-                    }}</span>
-                    <span class="header-item-value"
-                        >CSV | SKOS | RDF | JSON-LD</span
-                    >
+                    <span class="header-item-label">
+                        {{ $gettext("Export:") }}
+                    </span>
+                    <span class="header-item-value">
+                        CSV | SKOS | RDF | JSON-LD
+                    </span>
                 </div>
             </div>
             <div class="header-row uri-container">
@@ -150,9 +152,9 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
             <div class="header-row">
                 <!-- TODO: Human-reable conceptid to be displayed here -->
                 <div class="header-item">
-                    <span class="header-item-label">{{
-                        $gettext("Scheme:")
-                    }}</span>
+                    <span class="header-item-label">
+                        {{ $gettext("Scheme:") }}
+                    </span>
                     <!-- TODO: Allow resource multiselect to route within lingo, not to resource pg -->
                     <ResourceInstanceMultiSelectWidget
                         :graph-slug="props.graphSlug"
@@ -166,19 +168,19 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
 
                 <!-- TODO: Life Cycle mgmt functionality goes here -->
                 <div class="header-item">
-                    <span class="header-item-label">{{
-                        $gettext("Life cycle state:")
-                    }}</span>
-                    <span class="header-item-value">{{
-                        data?.lifeCycleState ? data?.lifeCycleState : "--"
-                    }}</span>
+                    <span class="header-item-label">
+                        {{ $gettext("Life cycle state:") }}
+                    </span>
+                    <span class="header-item-value">
+                        {{ data?.lifeCycleState ? data?.lifeCycleState : "--" }}
+                    </span>
                 </div>
             </div>
             <div class="header-row">
                 <div class="header-item">
-                    <span class="header-item-label">{{
-                        $gettext("Parent Concept(s):")
-                    }}</span>
+                    <span class="header-item-label">
+                        {{ $gettext("Parent Concept(s):") }}
+                    </span>
                     <!-- TODO: Allow resource multiselect to route within lingo, not to resource pg -->
                     <ResourceInstanceMultiSelectWidget
                         :graph-slug="props.graphSlug"
@@ -189,12 +191,12 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                     ></ResourceInstanceMultiSelectWidget>
                 </div>
                 <div class="header-item">
-                    <span class="header-item-label">{{
-                        $gettext("Owner:")
-                    }}</span>
-                    <span class="header-item-value">{{
-                        data?.principalUser || $gettext("Anonymous")
-                    }}</span>
+                    <span class="header-item-label">
+                        {{ $gettext("Owner:") }}
+                    </span>
+                    <span class="header-item-value">
+                        {{ data?.principalUser || $gettext("Anonymous") }}
+                    </span>
                 </div>
             </div>
         </div>

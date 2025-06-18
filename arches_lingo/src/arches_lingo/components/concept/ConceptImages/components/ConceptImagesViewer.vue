@@ -3,6 +3,7 @@ import { inject, ref, onMounted } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import Button from "primevue/button";
+import ConfirmDialog from "primevue/confirmdialog";
 import Message from "primevue/message";
 import ProgressSpinner from "primevue/progressspinner";
 
@@ -72,6 +73,8 @@ function confirmDelete() {
 
 <template>
     <div class="viewer-section">
+        <ConfirmDialog />
+
         <div class="section-header">
             <h2>{{ props.sectionTitle }}</h2>
             <Button
@@ -139,7 +142,7 @@ function confirmDelete() {
                                 :aria-label="$gettext('Delete')"
                                 severity="danger"
                                 rounded
-                                @click="confirmDelete()"
+                                @click="confirmDelete"
                             />
                         </div>
                     </div>

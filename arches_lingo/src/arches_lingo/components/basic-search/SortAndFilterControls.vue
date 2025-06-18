@@ -27,7 +27,7 @@ const querySortPreference = ref();
 <template>
     <div class="sort-and-filter-controls">
         <div class="sort-container">
-            <div class="label">Sorting:</div>
+            <div class="label">{{ $gettext("Sorting:") }}</div>
 
             <div
                 v-for="(sortOption, index) in sortOptions"
@@ -47,7 +47,7 @@ const querySortPreference = ref();
         </div>
 
         <div class="filter-container">
-            <div class="label">Include:</div>
+            <div class="label">{{ $gettext("Include:") }}</div>
 
             <div
                 v-for="(filter, index) in filters"

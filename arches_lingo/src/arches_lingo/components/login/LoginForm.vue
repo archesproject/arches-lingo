@@ -92,8 +92,8 @@ form {
     background: var(--p-inputtext-background);
     border-radius: 0.25rem;
     box-shadow:
-        0 0 1rem 0.375rem rgba(20, 20, 20, 0.125),
-        0 1.5rem 1.25rem 0 rgba(0, 0, 0, 0.19);
+        0 0.75rem 1.5rem rgba(0, 0, 0, 0.18),
+        0 0.375rem 0.75rem rgba(0, 0, 0, 0.14);
 }
 
 .form-header {

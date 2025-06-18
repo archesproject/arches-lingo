@@ -92,24 +92,26 @@ onMounted(async () => {
         <div class="scheme-header-panel">
             <div class="header-row">
                 <h2 v-if="data?.descriptor?.name">
-                    <span
-                        >{{ data?.descriptor?.name }}
+                    <span>
+                        {{ data?.descriptor?.name }}
+
                         <span
                             v-if="data?.descriptor?.language"
                             class="scheme-label-lang"
-                            >({{ data?.descriptor?.language }})</span
                         >
+                            ({{ data?.descriptor?.language }})
+                        </span>
                     </span>
                 </h2>
 
                 <!-- TODO: export to rdf/skos/json-ld buttons go here -->
                 <div class="header-item">
-                    <span class="header-item-label">{{
-                        $gettext("Export:")
-                    }}</span>
-                    <span class="header-item-value"
-                        >CSV | SKOS | RDF | JSON-LD</span
-                    >
+                    <span class="header-item-label">
+                        {{ $gettext("Export:") }}
+                    </span>
+                    <span class="header-item-value">
+                        CSV | SKOS | RDF | JSON-LD
+                    </span>
                 </div>
             </div>
 
@@ -121,39 +123,39 @@ onMounted(async () => {
             <div class="header-row metadata-container">
                 <!-- TODO: Load Scheme languages here -->
                 <div class="language-chip-container">
-                    <span class="scheme-language">{{
-                        $gettext("English (en)")
-                    }}</span>
-                    <span class="scheme-language">{{
-                        $gettext("German (de)")
-                    }}</span>
-                    <span class="scheme-language">{{
-                        $gettext("French (fr)")
-                    }}</span>
-                    <span class="add-language">{{
-                        $gettext("Add Language")
-                    }}</span>
+                    <span class="scheme-language">
+                        {{ $gettext("English (en)") }}
+                    </span>
+                    <span class="scheme-language">
+                        {{ $gettext("German (de)") }}
+                    </span>
+                    <span class="scheme-language">
+                        {{ $gettext("French (fr)") }}
+                    </span>
+                    <span class="add-language">
+                        {{ $gettext("Add Language") }}
+                    </span>
                 </div>
 
                 <div class="lifecycle-container">
                     <div class="header-item">
-                        <span class="header-item-label">{{
-                            $gettext("Life cycle state:")
-                        }}</span>
-                        <span class="header-item-value">{{
-                            data?.lifeCycleState
-                        }}</span>
+                        <span class="header-item-label">
+                            {{ $gettext("Life cycle state:") }}
+                        </span>
+                        <span class="header-item-value">
+                            {{ data?.lifeCycleState }}
+                        </span>
                     </div>
                     <div
                         class="header-item"
                         style="padding-top: 0.1rem"
                     >
-                        <span class="header-item-label">{{
-                            $gettext("Owner:")
-                        }}</span>
-                        <span class="header-item-value">{{
-                            data?.principalUser || $gettext("Anonymous")
-                        }}</span>
+                        <span class="header-item-label">
+                            {{ $gettext("Owner:") }}
+                        </span>
+                        <span class="header-item-value">
+                            {{ data?.principalUser || $gettext("Anonymous") }}
+                        </span>
                     </div>
                 </div>
             </div>
