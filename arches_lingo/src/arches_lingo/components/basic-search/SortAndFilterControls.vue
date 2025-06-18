@@ -27,7 +27,7 @@ const querySortPreference = ref();
 <template>
     <div class="sort-and-filter-controls">
         <div class="sort-container">
-            <div class="label">Placeholder Sorting:</div>
+            <div class="label">{{ $gettext("Sorting:") }}</div>
 
             <div
                 v-for="(sortOption, index) in sortOptions"
@@ -47,7 +47,7 @@ const querySortPreference = ref();
         </div>
 
         <div class="filter-container">
-            <div class="label">Placeholder Include:</div>
+            <div class="label">{{ $gettext("Include:") }}</div>
 
             <div
                 v-for="(filter, index) in filters"
@@ -76,7 +76,7 @@ const querySortPreference = ref();
     align-items: flex-start;
     padding: 1rem;
     background-color: var(--p-sort-and-filter-controls-background);
-    border-top: 1px solid var(--p-sort-and-filter-controls-border);
+    border-top: 0.06rem solid var(--p-sort-and-filter-controls-border);
     gap: 1rem;
     flex-wrap: wrap;
 }
@@ -90,14 +90,20 @@ const querySortPreference = ref();
 }
 
 .label {
-    min-width: 150px; /* Adjust as necessary */
-    font-weight: bold;
+    font-weight: var(--p-lingo-font-weight-normal);
+    color: var(--p-button-text-secondary-color);
 }
 
 .query-sort-preference,
 .query-filter {
     display: flex;
     align-items: center;
+}
+
+.query-sort-preference label,
+.query-filter label {
+    font-size: var(--p-lingo-font-size-small);
+    color: var(--p-button-text-secondary-color);
 }
 
 label {
@@ -108,7 +114,8 @@ label {
 :deep(.p-radiobutton-box),
 :deep(.p-checkbox-box) {
     background-color: var(--p-checkbox-background);
-    border: 1px solid;
+    border: 0.06rem solid;
+    border-color: var(--p-button-text-secondary-color);
 }
 
 @media screen and (max-width: 960px) {

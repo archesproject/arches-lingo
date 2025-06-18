@@ -3,6 +3,7 @@ import { inject, ref, onMounted } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import Button from "primevue/button";
+import ConfirmDialog from "primevue/confirmdialog";
 import Message from "primevue/message";
 import ProgressSpinner from "primevue/progressspinner";
 
@@ -71,88 +72,99 @@ function confirmDelete() {
 </script>
 
 <template>
-    <div class="section-header">
-        <h2>{{ props.sectionTitle }}</h2>
-        <Button
-            :label="$gettext('Add New Concept Image')"
-            @click="openEditor!(props.componentName)"
-        ></Button>
-    </div>
+    <div class="viewer-section">
+        <ConfirmDialog />
 
-    <ProgressSpinner
-        v-if="isLoading"
-        style="width: 100%"
-    />
+        <div class="section-header">
+            <h2>{{ props.sectionTitle }}</h2>
+            <Button
+                :label="$gettext('Add Image')"
+                class="add-button"
+                @click="openEditor!(props.componentName)"
+            ></Button>
+        </div>
 
-    <Message
-        v-else-if="configurationError"
-        severity="error"
-        size="small"
-    >
-        {{ configurationError.message }}
-    </Message>
+        <ProgressSpinner
+            v-if="isLoading"
+            style="width: 100%"
+        />
 
-    <div v-else-if="!resources || !resources.length">
-        {{ $gettext("No concept images were found.") }}
-    </div>
+        <Message
+            v-else-if="configurationError"
+            severity="error"
+            size="small"
+        >
+            {{ configurationError.message }}
+        </Message>
 
-    <div
-        v-else
-        style="overflow-x: auto"
-    >
-        <div class="conceptImages">
-            <div
-                v-for="resource in resources"
-                :key="resource.resourceinstanceid"
-                class="conceptImage"
-            >
-                <div class="header">
-                    <label
-                        for="conceptImage"
-                        class="text"
-                    >
+        <div
+            v-else-if="!resources || !resources.length"
+            class="section-message"
+        >
+            {{ $gettext("No concept images were found.") }}
+        </div>
+
+        <div
+            v-else
+            style="overflow-x: auto"
+        >
+            <div class="conceptImages">
+                <div
+                    v-for="resource in resources"
+                    :key="resource.resourceinstanceid"
+                    class="conceptImage"
+                >
+                    <div class="header">
+                        <label
+                            for="conceptImage"
+                            class="text"
+                        >
+                            <NonLocalizedStringWidget
+                                node-alias="name_content"
+                                graph-slug="digital_object_rdm_system"
+                                :mode="VIEW"
+                                :initial-value="
+                                    resource.aliased_data.name.aliased_data
+                                        .name_content
+                                "
+                            />
+                        </label>
+                        <div class="buttons">
+                            <Button
+                                icon="pi pi-file-edit"
+                                :aria-label="$gettext('edit')"
+                                rounded
+                                @click="openEditor!(props.componentName)"
+                            />
+                            <Button
+                                icon="pi pi-trash"
+                                class="label-delete-button"
+                                :aria-label="$gettext('Delete')"
+                                severity="danger"
+                                rounded
+                                @click="confirmDelete"
+                            />
+                        </div>
+                    </div>
+                    <FileListWidget
+                        node-alias="content"
+                        graph-slug="digital_object_rdm_system"
+                        :initial-value="
+                            resource.aliased_data.content?.aliased_data.content
+                        "
+                        :mode="VIEW"
+                    />
+                    <div class="footer">
                         <NonLocalizedStringWidget
-                            node-alias="name_content"
+                            node-alias="statement_content"
                             graph-slug="digital_object_rdm_system"
                             :mode="VIEW"
                             :initial-value="
-                                resource.aliased_data.name.aliased_data
-                                    .name_content
+                                resource.aliased_data.statement?.aliased_data
+                                    .statement_content
                             "
                         />
-                    </label>
-                    <div class="buttons">
-                        <Button
-                            icon="pi pi-file-edit"
-                            @click="openEditor!(props.componentName)"
-                        />
-                        <Button
-                            icon="pi pi-trash"
-                            :aria-label="$gettext('Delete')"
-                            severity="danger"
-                            outlined
-                            @click="confirmDelete()"
-                        />
                     </div>
-                </div>
-                <FileListWidget
-                    node-alias="content"
-                    graph-slug="digital_object_rdm_system"
-                    :initial-value="
-                        resource.aliased_data.content?.aliased_data.content
-                    "
-                    :mode="VIEW"
-                />
-                <div class="footer">
-                    <NonLocalizedStringWidget
-                        node-alias="statement_content"
-                        graph-slug="digital_object_rdm_system"
-                        :mode="VIEW"
-                        :initial-value="
-                            resource.aliased_data.statement?.aliased_data
-                                .statement_content
-                        "
-                    />
                 </div>
             </div>
         </div>
@@ -160,13 +172,6 @@ function confirmDelete() {
 </template>
 
 <style scoped>
-.section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 0.125rem solid var(--p-menubar-border-color);
-}
-
 .conceptImages {
     display: flex;
     flex-direction: row;

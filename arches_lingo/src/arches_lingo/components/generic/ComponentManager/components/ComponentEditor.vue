@@ -52,9 +52,10 @@ function resetForm() {
         <div class="header">
             <h2>{{ $gettext("Editor Tools") }}</h2>
 
-            <div>
+            <div class="controls">
                 <Button
                     :aria-label="$gettext('toggle editor size')"
+                    rounded
                     @click="toggleSize"
                 >
                     <i
@@ -68,6 +69,7 @@ function resetForm() {
                 </Button>
                 <Button
                     :aria-label="$gettext('close editor')"
+                    rounded
                     @click="$emit(CLOSE)"
                 >
                     <i
@@ -105,12 +107,26 @@ function resetForm() {
     height: 100%;
 }
 
+.controls button {
+    margin: 0 0.125rem;
+}
+
+h2 {
+    font-size: var(--p-lingo-font-size-large);
+    font-weight: var(--p-lingo-font-weight-normal);
+}
+
 .header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     border-bottom: 0.125rem solid var(--p-menubar-border-color);
     background: var(--p-header-background);
+    padding: 0 1rem;
+}
+
+.header > Button {
+    margin: 0 0.125rem;
 }
 
 .editor-form {
@@ -120,6 +136,11 @@ function resetForm() {
     min-height: 0;
 }
 
+.editor-content :deep(h3) {
+    font-size: var(--p-lingo-font-size-medium);
+    font-weight: var(--p-lingo-font-weight-normal);
+}
+
 .editor-content :deep(.p-formfield) {
     margin-bottom: 0.65rem;
 }
@@ -127,12 +148,14 @@ function resetForm() {
 .editor-content {
     overflow-y: auto;
     flex: 1;
+    padding: 0 1rem 0 1rem;
 }
 
 .footer {
+    background: var(--p-header-background);
     border-top: 0.125rem solid var(--p-menubar-border-color);
-    padding-top: 1rem;
     display: flex;
+    padding: 1rem;
 }
 
 .footer > Button {

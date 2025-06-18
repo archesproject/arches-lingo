@@ -19,16 +19,20 @@ defineProps({
         class="search-result"
         :class="{ 'is-even': searchResult.index % 2 === 0 }"
     >
-        <i
-            class="pi pi-paperclip"
-            aria-hidden="true"
-        />
-
         <div style="margin: 0 0.5rem">
-            {{
-                getItemLabel(searchResult.option, ENGLISH.code, ENGLISH.code)
-                    .value
-            }}
+            <span>
+                <i
+                    class="pi pi-paperclip concept-icon"
+                    aria-hidden="true"
+                />
+                {{
+                    getItemLabel(
+                        searchResult.option,
+                        ENGLISH.code,
+                        ENGLISH.code,
+                    ).value
+                }}
+            </span>
         </div>
 
         <div class="search-result-hierarchy">
@@ -47,23 +51,28 @@ defineProps({
     width: 100%;
     padding: 0.5rem;
     display: flex;
-    align-items: center;
-    background-color: white;
-    border-bottom: 1px solid #ddd;
-    font-family: sans-serif;
+    align-items: flex-start;
+    flex-direction: column;
+    background-color: var(--p-dialog-background);
+    border-bottom: 0.06rem solid var(--p-search-result-border-bottom);
+    color: var(--p-search-result-color);
 }
 
 .search-result-hierarchy {
     margin: 0 0.5rem;
-    font-size: small;
-    color: steelblue;
+    font-size: var(--p-lingo-font-size-xsmall);
+    color: var(--p-search-result-hierarchy-color);
 }
 
 .p-focus > .search-result {
-    background-color: #9cc3e4;
+    background-color: var(--p-search-result-focus-background);
 }
 
 .is-even {
-    background-color: #d3e5f4;
+    background-color: var(--p-search-result-is-even-background);
+}
+
+.concept-icon {
+    font-size: var(--p-lingo-font-size-xxsmall);
 }
 </style>

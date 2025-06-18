@@ -24,14 +24,14 @@ const componentData = [
     {
         component: ConceptLabel,
         componentName: "ConceptLabel",
-        sectionTitle: $gettext("Concept Label"),
+        sectionTitle: $gettext("Concept Labels"),
         graphSlug: "concept",
         nodegroupAlias: "appellative_status",
     },
     {
         component: ConceptNote,
         componentName: "ConceptNote",
-        sectionTitle: $gettext("Concept Note"),
+        sectionTitle: $gettext("Concept Notes"),
         graphSlug: "concept",
         nodegroupAlias: "statement",
     },

@@ -45,13 +45,15 @@ const items = ref([
     flex-direction: column;
     align-items: center;
     border-right: 1px solid var(--p-menubar-border-color);
+    width: 3.125rem;
 }
 
 .p-button {
-    min-height: var(--p-button-icon-only-width);
-    min-width: var(--p-button-icon-only-width);
+    min-height: var(--p-button-lg-icon-only-width);
+    min-width: var(--p-button-lg-icon-only-width);
     border-radius: 0;
-    font-size: 1.5rem;
+    font-size: var(--p-lingo-font-size-large);
+    border-bottom: 0.1rem solid var(--p-button-outlined-primary-border-color);
 }
 
 @media screen and (max-width: 960px) {

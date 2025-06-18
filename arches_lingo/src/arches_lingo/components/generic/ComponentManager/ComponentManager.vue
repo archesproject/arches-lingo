@@ -112,6 +112,7 @@ provide("refreshReportSection", refreshReportSection);
     <Splitter style="height: 100%">
         <SplitterPanel
             v-show="editorState !== MAXIMIZED"
+            class="content"
             :size="50"
         >
             <div class="splitter-panel-content">
@@ -159,9 +160,47 @@ provide("refreshReportSection", refreshReportSection);
 </template>
 
 <style scoped>
+.content {
+    overflow: auto;
+}
+
 .splitter-panel-content {
     overflow: auto;
-    padding: 1rem;
-    padding-top: 0;
+}
+
+:deep(.p-splitter) {
+    border-radius: 0;
+}
+
+:deep(.viewer-section) {
+    padding: 1rem 1rem 1.25rem 1rem;
+}
+
+:deep(.section-message) {
+    padding: 0.5rem 0;
+    color: var(--p-inputtext-placeholder-color);
+}
+
+:deep(.section-header) {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 0.06rem solid var(--p-form-field-border-color);
+    padding-bottom: 0.5rem;
+}
+
+:deep(.section-header h2) {
+    margin: 0;
+    font-size: var(--p-lingo-font-size-large);
+    font-weight: var(--p-lingo-font-weight-normal);
+    color: var(--p-neutral-500);
+}
+
+:deep(.section-header .add-button) {
+    height: 2rem;
+    font-size: var(--p-lingo-font-size-smallnormal);
+    font-weight: var(--p-lingo-font-weight-normal);
+    min-width: 10rem;
+    border-radius: 0.125rem;
 }
 </style>
