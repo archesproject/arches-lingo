@@ -319,6 +319,6 @@ function validate(e: FormFieldResolverOptions) {
 
 .concept-hierarchy {
     font-size: small;
-    color: steelblue;
+    color: var(--p-primary-500);
 }
 </style>
