@@ -149,33 +149,12 @@ async function save(e: FormSubmitEvent) {
             ref="form"
             @submit="save"
         >
-            <ResourceInstanceMultiSelectWidget
-                node-alias="right_holder"
-                :graph-slug="props.graphSlug"
-                :initial-value="props.tileData?.aliased_data.right_holder"
-                :mode="EDIT"
-            />
-            <ReferenceSelectWidget
-                node-alias="right_type"
-                :graph-slug="props.graphSlug"
-                :initial-value="props.tileData?.aliased_data.right_type"
-                :mode="EDIT"
-            />
             <NonLocalizedStringWidget
                 node-alias="right_statement_content"
                 :graph-slug="props.graphSlug"
                 :initial-value="
                     props.tileData?.aliased_data.right_statement?.aliased_data
                         .right_statement_content
-                "
-                :mode="EDIT"
-            />
-            <ReferenceSelectWidget
-                node-alias="right_statement_language"
-                :graph-slug="props.graphSlug"
-                :initial-value="
-                    props.tileData?.aliased_data.right_statement?.aliased_data
-                        .right_statement_language
                 "
                 :mode="EDIT"
             />
@@ -189,12 +168,24 @@ async function save(e: FormSubmitEvent) {
                 :mode="EDIT"
             />
             <ReferenceSelectWidget
-                node-alias="right_statement_type_metatype"
+                node-alias="right_statement_language"
                 :graph-slug="props.graphSlug"
                 :initial-value="
                     props.tileData?.aliased_data.right_statement?.aliased_data
-                        .right_statement_type_metatype
+                        .right_statement_language
                 "
+                :mode="EDIT"
+            />
+            <ResourceInstanceMultiSelectWidget
+                node-alias="right_holder"
+                :graph-slug="props.graphSlug"
+                :initial-value="props.tileData?.aliased_data.right_holder"
+                :mode="EDIT"
+            />
+            <ReferenceSelectWidget
+                node-alias="right_type"
+                :graph-slug="props.graphSlug"
+                :initial-value="props.tileData?.aliased_data.right_type"
                 :mode="EDIT"
             />
         </Form>
