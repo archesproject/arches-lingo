@@ -34,10 +34,6 @@ const props = defineProps<{
     schemeSelectable: boolean;
 }>();
 
-props.initialValue?.forEach((option) => {
-    option.label = getItemLabel(option, selectedLanguage.value.code, systemLanguage.code).value;
-});
-
 const { $gettext } = useGettext();
 
 const itemSize = 36; // in future iteration this should be declared in the CardXNodeXWidget config
@@ -51,6 +47,10 @@ const searchResultsTotalCount = ref(0);
 const fetchError = ref<string | null>(null);
 
 const searchResultsCurrentCount = computed(() => options.value.length);
+
+props.initialValue?.forEach((option) => {
+    option.label = getItemLabel(option, selectedLanguage.value.code, systemLanguage.code).value;
+});
 
 function clearOptions() {
     options.value = props.initialValue || [];
