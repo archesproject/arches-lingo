@@ -122,22 +122,14 @@ async function save(e: FormSubmitEvent) {
             />
             <ReferenceSelectWidget
                 :graph-slug="props.graphSlug"
-                node-alias="statement_language"
-                :initial-value="props.tileData?.aliased_data.statement_language"
-                :mode="EDIT"
-            />
-            <ReferenceSelectWidget
-                :graph-slug="props.graphSlug"
                 node-alias="statement_type"
                 :initial-value="props.tileData?.aliased_data.statement_type"
                 :mode="EDIT"
             />
             <ReferenceSelectWidget
                 :graph-slug="props.graphSlug"
-                node-alias="statement_type_metatype"
-                :initial-value="
-                    props.tileData?.aliased_data.statement_type_metatype
-                "
+                node-alias="statement_language"
+                :initial-value="props.tileData?.aliased_data.statement_language"
                 :mode="EDIT"
             />
             <DateWidget
@@ -172,14 +164,6 @@ async function save(e: FormSubmitEvent) {
                 :initial-value="
                     props.tileData?.aliased_data
                         .statement_data_assignment_object_used
-                "
-                :mode="EDIT"
-            />
-            <ReferenceSelectWidget
-                :graph-slug="props.graphSlug"
-                node-alias="statement_data_assignment_type"
-                :initial-value="
-                    props.tileData?.aliased_data.statement_data_assignment_type
                 "
                 :mode="EDIT"
             />
