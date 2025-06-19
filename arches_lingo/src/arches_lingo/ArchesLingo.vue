@@ -104,14 +104,14 @@ router.beforeEach(async (to, _from, next) => {
 
 <template>
     <main>
-        <PageHeader v-if="route.meta.shouldShowNavigation" />
-
-        <div class="main-content">
+        <div class="nav-container">
             <SideNav v-if="route.meta.shouldShowNavigation" />
-
-            <div class="content-panel">
-                <HierarchySplitter v-if="route.meta.shouldShowHierarchy" />
-                <RouterView v-else />
+            <div class="main-content">
+                <PageHeader v-if="route.meta.shouldShowNavigation" />
+                <div class="content-panel">
+                    <HierarchySplitter v-if="route.meta.shouldShowHierarchy" />
+                    <RouterView v-else />
+                </div>
             </div>
         </div>
     </main>
@@ -136,8 +136,15 @@ main {
     flex-direction: column;
 }
 
+.nav-container {
+    display: flex;
+    flex-direction: row;
+    flex: 1 1 100vh;
+}
+
 .main-content {
     display: flex;
+    flex-direction: column;
     flex: 1 1 auto;
     overflow: hidden;
 }
