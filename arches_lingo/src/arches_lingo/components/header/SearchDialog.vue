@@ -22,6 +22,7 @@ const toggleModal = () => {
 
 <template>
     <Button
+        class="basic-search-button"
         icon="pi pi-search"
         :label="$gettext('Search')"
         @click="toggleModal"
@@ -59,6 +60,16 @@ const toggleModal = () => {
 
 <!-- NOT scoped because dialog gets appended to <body> and is unreachable via scoped styles -->
 <style>
+.basic-search-button {
+    background: var(--p-menubar-background) !important;
+    border: none !important;
+    color: var(--p-menubar-text-color) !important;
+}
+
+.basic-search-button:hover {
+    background: var(--p-button-primary-hover-background) !important;
+}
+
 .basic-search-dialog {
     margin-top: 6rem !important;
     border-radius: 0 !important;
