@@ -54,6 +54,6 @@ const systemLanguage = inject(systemLanguageKey) as Language;
 <style scoped>
 .concept-hierarchy {
     font-size: small;
-    color: steelblue;
+    color: var(--p-primary-500);
 }
 </style>
