@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { getItemLabel } from "@/arches_component_lab/utils.ts";
+import { getParentLabels } from "@/arches_lingo/utils.ts";
 import { ENGLISH } from "@/arches_lingo/constants.ts";
 
 import type { PropType } from "vue";
@@ -11,26 +12,6 @@ defineProps({
         required: true,
     },
 });
-
-const getParentLabels = (
-    item: SearchResultItem,
-    preferredLanguageCode: string,
-    systemLanguageCode: string,
-): string => {
-    const arrowIcon = " → ";
-
-    return item.parents[0].reduce((acc, parent, index) => {
-        const label = getItemLabel(
-            parent,
-            preferredLanguageCode,
-            systemLanguageCode,
-        ).value;
-        if (label) {
-            return acc + (index > 0 ? arrowIcon : "") + label;
-        }
-        return acc;
-    }, "");
-};
 </script>
 
 <template>
