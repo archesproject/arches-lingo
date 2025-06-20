@@ -1,38 +1,31 @@
 <script setup lang="ts">
 import { computed, inject, useTemplateRef } from "vue";
-import { useRouter } from "vue-router";
 import { useGettext } from "vue3-gettext";
-import { useToast } from "primevue/usetoast";
 
 import Button from "primevue/button";
-import Popover, { type PopoverMethods } from "primevue/popover";
+import Popover from "primevue/popover";
 
-import UserInteractionMenu from "@/arches_lingo/components/user/UserInteraction/components/UserInteractionMenu.vue";
+import UserInteractionMenu from "@/arches_lingo/components/user/UserInteraction/components/UserInteractionMenu/UserInteractionMenu.vue";
 
-import { logout } from "@/arches_lingo/api.ts";
-import {
-    DEFAULT_ERROR_TOAST_LIFE,
-    ERROR,
-    USER_KEY,
-} from "@/arches_lingo/constants.ts";
-import { routeNames } from "@/arches_lingo/routes.ts";
+import { USER_KEY } from "@/arches_lingo/constants.ts";
 
+import type { PopoverMethods } from "primevue/popover";
 import type { UserRefAndSetter } from "@/arches_lingo/types.ts";
 
 const { $gettext } = useGettext();
-const toast = useToast();
-const router = useRouter();
 const { user } = inject(USER_KEY) as UserRefAndSetter;
 
 const popover = useTemplateRef<PopoverMethods>("popover");
 
-const greeting = computed(() => {
+const displayName = computed(() => {
     if (!user.value) return "";
 
     if (user.value.first_name && user.value.last_name) {
-        return $gettext("%{first} %{last}", {
-            first: user.value.first_name,
-            last: user.value.last_name,
+        // Using gettext here to handle localization-dependant
+        // ordering of first name / last name
+        return $gettext("%{firstName} %{lastName}", {
+            firstName: user.value.first_name,
+            lastName: user.value.last_name,
         });
     }
 
@@ -52,22 +45,8 @@ const initials = computed(() => {
     return user.value.username.charAt(0).toUpperCase();
 });
 
-// async function issueLogout() {
-//     try {
-//         await logout();
-//         router.push({ name: routeNames.login });
-//     } catch (error) {
-//         toast.add({
-//             severity: ERROR,
-//             life: DEFAULT_ERROR_TOAST_LIFE,
-//             summary: $gettext("Sign out failed."),
-//             detail: error instanceof Error ? error.message : undefined,
-//         });
-//     }
-// }
-
 function openUserMenu(event: MouseEvent) {
-    popover!.value!.toggle(event);
+    popover.value!.toggle(event);
 }
 </script>
 
@@ -83,11 +62,14 @@ function openUserMenu(event: MouseEvent) {
             >
                 {{ initials }}
             </div>
-            <span v-if="user">{{ greeting }}</span>
+            <span>{{ displayName }}</span>
         </Button>
 
         <Popover ref="popover">
-            <UserInteractionMenu :user="user" />
+            <UserInteractionMenu
+                :display-name="displayName"
+                :email="user!.email"
+            />
         </Popover>
     </div>
 </template>
@@ -109,9 +91,7 @@ function openUserMenu(event: MouseEvent) {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: var(--p-lingo-font-weight-bold);
     background-color: var(--p-primary-700);
     border: 0.09rem solid var(--p-primary-950);
-    user-select: none;
 }
 </style>
