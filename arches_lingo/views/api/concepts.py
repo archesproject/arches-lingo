@@ -172,7 +172,10 @@ class ConceptRelationshipView(ConceptTreeView):
         elif relationship_type == "matched":
             relationships = concept.aliased_data.match_status
 
-        return_data = {"data": []}
+        return_data = {
+            "scheme_id": scheme_id,
+            "data": []
+        }
         for relationship in relationships:
             data = JSONDeserializer().deserialize(
                 JSONSerializer().serialize(relationship)
@@ -181,30 +184,21 @@ class ConceptRelationshipView(ConceptTreeView):
                 JSONSerializer().serialize(relationship.aliased_data)
             )
 
-            uri = None
-            for node_alias, node_value in aliased_data.items():
-                if node_value and type(node_value) == list:
-                    resource_id = None
-                    if "resourceId" in node_value[0]:
-                        for value in node_value:
-                            resource_id = value["resourceId"]
-                        if resource_id:
-                            try:
-                                concept = Concept.get(pk=resource_id)
-                                if concept.aliased_data.uri:
-                                    uri = (
-                                        concept.aliased_data.uri.aliased_data.uri_content
-                                    )
-                            except SemanticResource.DoesNotExist:
-                                pass
+            if relationship_type == "associated":
+                related_concept_resourceid = aliased_data["relation_status_ascribed_comparate"][0]["resourceId"]
+            elif relationship_type == "matched":
+                related_concept_resourceid = aliased_data["match_status_ascribed_comparate"][0]["resourceId"]
 
-            if uri:
-                aliased_data["uri"] = uri
+            related_concept = Concept.get(pk=related_concept_resourceid)
+            if related_concept.aliased_data.uri:
+                uri = (
+                    related_concept.aliased_data.uri.aliased_data.uri_content
+                )
+            else:
+                uri = None
+            aliased_data["uri"] = uri
 
-            del data["data"]
             data["aliased_data"] = aliased_data
             return_data["data"].append(data)
-
-        return_data["scheme_id"] = scheme_id
 
         return JSONResponse(return_data)
