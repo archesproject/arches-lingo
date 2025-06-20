@@ -11,95 +11,91 @@ import type { MenuItem } from "primevue/menuitem";
 
 const { $gettext } = useGettext();
 
-const expandedKeys = ref<Record<string, boolean>>({});
+// const expandedKeys = ref<Record<string, boolean>>({});
 const isExpanded = ref(false);
 const items = ref<MenuItem[]>([
     {
-        key: "navigation",
-        label: $gettext("Navigation"),
-        items: [
-            {
-                key: "home",
-                label: $gettext("Home"),
-                icon: "fa fa-home",
-                route: { name: routeNames.root },
-            } as MenuItem,
-            {
-                key: "advanced_search",
-                label: $gettext("Advanced Search"),
-                icon: "pi pi-search",
-                route: { name: routeNames.advancedSearch },
-            } as MenuItem,
-        ],
-    } as MenuItem,
+        key: "home",
+        label: $gettext("Home"),
+        icon: "fa fa-home",
+        route: { name: routeNames.root },
+        disabled: true,
+    },
+    {
+        key: "advanced_search",
+        label: $gettext("Advanced Search"),
+        icon: "pi pi-search",
+        route: { name: routeNames.advancedSearch },
+    },
     {
         key: "schemes",
         label: $gettext("Schemes"),
         icon: "pi pi-lightbulb",
         route: { name: routeNames.schemes },
-    } as MenuItem,
+    },
 ]);
 
 function toggleAll() {
-    if (Object.keys(expandedKeys.value).length) collapseAll();
-    else expandAll();
+    isExpanded.value = !isExpanded.value;
 }
 
-function toggleNode(node: MenuItem) {
-    if (node.key && expandedKeys.value[node.key]) {
-        collapseNode(node);
-    } else {
-        expandNode(node);
-    }
-}
+// function toggleAll() {
+//     if (Object.keys(expandedKeys.value).length) collapseAll();
+//     else expandAll();
+// }
 
-function expandAll() {
-    isExpanded.value = true;
-    for (let node of items.value) {
-        expandNode(node);
-    }
-    expandedKeys.value = { ...expandedKeys.value };
-}
+// function toggleNode(node: MenuItem) {
+//     if (node.key && expandedKeys.value[node.key]) {
+//         collapseNode(node);
+//     } else {
+//         expandNode(node);
+//     }
+// }
 
-function collapseAll() {
-    isExpanded.value = false;
-    expandedKeys.value = {};
-}
+// function expandAll() {
+//     isExpanded.value = true;
+//     for (let node of items.value) {
+//         expandNode(node);
+//     }
+//     expandedKeys.value = { ...expandedKeys.value };
+// }
 
-function expandNode(node: MenuItem) {
-    if (node.key && node.items && node.items.length) {
-        expandedKeys.value[node.key] = true;
+// function collapseAll() {
+//     isExpanded.value = false;
+//     expandedKeys.value = {};
+// }
 
-        for (let child of node.items) {
-            expandNode(child);
-        }
-    }
-}
+// function expandNode(node: MenuItem) {
+//     if (node.key && node.items && node.items.length) {
+//         expandedKeys.value[node.key] = true;
 
-function collapseNode(node: MenuItem) {
-    if (node.key && node.items && node.items.length) {
-        expandedKeys.value[node.key] = false;
+//         for (let child of node.items) {
+//             expandNode(child);
+//         }
+//     }
+// }
 
-        for (let child of node.items) {
-            collapseNode(child);
-        }
-    }
-}
+// function collapseNode(node: MenuItem) {
+//     if (node.key && node.items && node.items.length) {
+//         expandedKeys.value[node.key] = false;
+
+//         for (let child of node.items) {
+//             collapseNode(child);
+//         }
+//     }
+// }
 </script>
 
 <template>
     <aside class="sidenav">
         <Button
-            class="sidenav-header"
+            class="nav-button"
+            :aria-label="$gettext('Expand navigation')"
             @click="toggleAll"
         >
             <i class="pi pi-bars toggle-icon"></i>
-            <!-- <span v-show="isExpanded" class="header-title">Navigation</span> -->
         </Button>
-        <PanelMenu
-            :model="items"
-            :expanded-keys="expandedKeys"
-        >
+        <PanelMenu :model="items">
             <template #item="{ item }">
                 <router-link
                     v-if="item.route"
@@ -109,23 +105,21 @@ function collapseNode(node: MenuItem) {
                 >
                     <a
                         :href="href"
+                        class="nav-button p-button"
                         @click="navigate"
                     >
-                        <span :class="item.icon"></span>
+                        <i :class="item.icon"></i>
                         <span v-if="isExpanded">{{ item.label }}</span>
                     </a>
                 </router-link>
-                <a
-                    v-else
-                    @click="toggleNode(item)"
-                >
-                    <span :class="item.icon"></span>
+                <!-- <a v-else>
+                    <i :class="item.icon"></i>
                     <span v-if="isExpanded">{{ item.label }}</span>
                     <span
                         v-if="item.items"
                         class="pi pi-angle-down text-primary ml-auto"
                     />
-                </a>
+                </a> -->
             </template>
         </PanelMenu>
     </aside>
@@ -136,12 +130,25 @@ function collapseNode(node: MenuItem) {
     border-right: 1px solid var(--p-menubar-border-color);
 }
 
-.lingo-link {
+.p-panelmenu {
+    display: block;
+}
+
+:deep(.p-panelmenu-panel) {
+    padding: 0;
+    border-style: none;
+}
+
+.nav-button {
     min-height: var(--p-button-lg-icon-only-width);
-    min-width: var(--p-button-lg-icon-only-width);
+    width: 100%;
     border-radius: 0;
-    font-size: var(--p-lingo-font-size-large);
-    border-bottom: 0.1rem solid var(--p-button-outlined-primary-border-color);
+    text-decoration: none;
+    justify-content: flex-start;
+
+    i {
+        font-size: var(--p-lingo-font-size-large);
+    }
 }
 
 @media screen and (max-width: 960px) {
