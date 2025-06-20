@@ -55,17 +55,16 @@ onMounted(async () => {
 
         if (hierarchicalData.value && tileData.value) {
             for (const datum of hierarchicalData.value) {
-                // get the tileid from the next to last concept in the hierarchy
-                // ie. the parent of the current concept
-                datum.tileid = tileData.value.find(
+                const parentConceptResourceId =datum.searchResults[datum.searchResults.length - 2].id;
+                const parentConceptTile = tileData.value.find(
                     (tile) =>
                         tile.aliased_data
                             .classification_status_ascribed_classification[0]
-                            .resourceId ===
-                        datum.searchResults[datum.searchResults.length - 2].id,
-                )?.tileid;
-                // if the has no parent (ie. top concept) assign the top concept tileid
-                if (!datum.tileid && topConceptOfTileId.value) {
+                            .resourceId === parentConceptResourceId,
+                );
+                if (parentConceptTile) {
+                    datum.tileid = parentConceptTile.tileid;
+                } else if (topConceptOfTileId.value) {
                     datum.tileid = topConceptOfTileId.value;
                     datum.isTopConcept = true;
                 }
