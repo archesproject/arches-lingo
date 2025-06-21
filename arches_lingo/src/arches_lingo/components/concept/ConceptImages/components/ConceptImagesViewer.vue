@@ -168,64 +168,71 @@ function modifyResource(resourceInstanceId?: string) {
             {{ $gettext("No concept images were found.") }}
         </div>
 
-    <div
-        v-else
-        style="overflow-x: auto"
-    >
-        <div class="conceptImages">
-            <div
-                v-for="resource in resources"
-                :key="resource.resourceinstanceid"
-                class="conceptImage"
-            >
-                <div class="header">
-                    <label
-                        for="conceptImage"
-                        class="text"
-                    >
+        <div
+            v-else
+            style="overflow-x: auto"
+        >
+            <div class="conceptImages">
+                <div
+                    v-for="resource in resources"
+                    :key="resource.resourceinstanceid"
+                    class="conceptImage"
+                >
+                    <div class="header">
+                        <label
+                            for="conceptImage"
+                            class="text"
+                        >
+                            <NonLocalizedStringWidget
+                                node-alias="name_content"
+                                graph-slug="digital_object_rdm_system"
+                                :mode="VIEW"
+                                :initial-value="
+                                    resource.aliased_data.name?.aliased_data
+                                        .name_content
+                                "
+                            />
+                        </label>
+                        <div class="buttons">
+                            <Button
+                                icon="pi pi-file-edit"
+                                @click="
+                                    editResource(resource.resourceinstanceid)
+                                "
+                            />
+                            <Button
+                                icon="pi pi-trash"
+                                :aria-label="$gettext('Delete')"
+                                severity="danger"
+                                outlined
+                                @click="
+                                    confirmDelete(resource.resourceinstanceid)
+                                "
+                            />
+                        </div>
+                    </div>
+                    <FileListWidget
+                        node-alias="content"
+                        graph-slug="digital_object_rdm_system"
+                        :initial-value="
+                            resource.aliased_data.content?.aliased_data.content
+                        "
+                        :mode="VIEW"
+                    />
+                    <div class="footer">
                         <NonLocalizedStringWidget
-                            node-alias="name_content"
+                            node-alias="statement_content"
                             graph-slug="digital_object_rdm_system"
                             :mode="VIEW"
-                            :initial-value="resource.aliased_data.name?.aliased_data
-                                .name_content
-                                "
-                        />
-                    </label>
-                    <div class="buttons">
-                        <Button
-                            icon="pi pi-file-edit"
-                            @click="editResource(resource.resourceinstanceid)"
-                        />
-                        <Button
-                            icon="pi pi-trash"
-                            :aria-label="$gettext('Delete')"
-                            severity="danger"
-                            outlined
-                            @click="confirmDelete(resource.resourceinstanceid)"
+                            :initial-value="
+                                resource.aliased_data.statement?.aliased_data
+                                    .statement_content
+                            "
                         />
                     </div>
                 </div>
-                <FileListWidget
-                    node-alias="content"
-                    graph-slug="digital_object_rdm_system"
-                    :initial-value="resource.aliased_data.content?.aliased_data.content
-                        "
-                    :mode="VIEW"
-                />
-                <div class="footer">
-                    <NonLocalizedStringWidget
-                        node-alias="statement_content"
-                        graph-slug="digital_object_rdm_system"
-                        :mode="VIEW"
-                        :initial-value="resource.aliased_data.statement?.aliased_data
-                            .statement_content
-                            "
-                    />
-                </div>
             </div>
         </div>
-    </div>
     </div>
 </template>
 
@@ -267,7 +274,8 @@ function modifyResource(resourceInstanceId?: string) {
     margin: 0 0.5rem;
 }
 
-.conceptImages :deep(.mainImage) {}
+.conceptImages :deep(.mainImage) {
+}
 
 .conceptImages :deep(.p-galleria) {
     border: none;
