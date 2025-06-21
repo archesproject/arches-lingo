@@ -15,8 +15,15 @@ const { $gettext } = useGettext();
 const isExpanded = ref(false);
 const items = ref<MenuItem[]>([
     {
-        key: "home",
-        label: $gettext("Home"),
+        key: "navigation",
+        label: $gettext("Navigation"),
+        class: "nav-heading",
+        separator: true,
+        visible: showHeadings,
+    },
+    {
+        key: "dashboard",
+        label: $gettext("Dashboard"),
         icon: "fa fa-home",
         route: { name: routeNames.root },
         disabled: true,
@@ -28,6 +35,13 @@ const items = ref<MenuItem[]>([
         route: { name: routeNames.advancedSearch },
     },
     {
+        key: "editors",
+        label: $gettext("Authority Editors"),
+        class: "nav-heading",
+        separator: true,
+        visible: showHeadings,
+    },
+    {
         key: "schemes",
         label: $gettext("Schemes"),
         icon: "pi pi-lightbulb",
@@ -37,6 +51,10 @@ const items = ref<MenuItem[]>([
 
 function toggleAll() {
     isExpanded.value = !isExpanded.value;
+}
+
+function showHeadings() {
+    return isExpanded.value;
 }
 
 // function toggleAll() {
@@ -89,6 +107,12 @@ function toggleAll() {
 <template>
     <aside class="sidenav">
         <Button
+            v-tooltip="{
+                value: $gettext('Expand navigation'),
+                pt: {
+                    text: { style: { fontFamily: '--p-lingo-font-family' } },
+                },
+            }"
             class="nav-button"
             :aria-label="$gettext('Expand navigation')"
             @click="toggleAll"
@@ -104,6 +128,10 @@ function toggleAll() {
                     custom
                 >
                     <a
+                        v-tooltip="{
+                            value: item.label,
+                            pt: { text: { style: { fontFamily: '-' } } },
+                        }"
                         :href="href"
                         class="nav-button p-button"
                         @click="navigate"
@@ -112,14 +140,17 @@ function toggleAll() {
                         <span v-if="isExpanded">{{ item.label }}</span>
                     </a>
                 </router-link>
-                <!-- <a v-else>
+                <a
+                    v-else
+                    class="nav-button p-button"
+                >
                     <i :class="item.icon"></i>
                     <span v-if="isExpanded">{{ item.label }}</span>
                     <span
                         v-if="item.items"
                         class="pi pi-angle-down text-primary ml-auto"
                     />
-                </a> -->
+                </a>
             </template>
         </PanelMenu>
     </aside>
