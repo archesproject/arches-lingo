@@ -55,6 +55,8 @@ watch(
 document.addEventListener("openConceptImagesEditor", getDigitalObjectInstance);
 
 async function getDigitalObjectInstance(
+    // custom event type is from global dom
+    // eslint-disable-next-line no-undef
     e?: CustomEventInit<{ resourceInstanceId?: string }>,
 ) {
     const customEvent = e as CustomEvent;
@@ -112,22 +114,16 @@ async function save(e: FormSubmitEvent) {
         }
 
         // files do not respect json.stringify
-        // ignore file type any - it's from primevue's FileUploadSelectEvent
         const fileJsonObjects = submittedFormData.content.newFiles.map(
-            (file: any) => {
+            (file: File) => {
                 return {
                     name: file.name.replace(/ /g, "_"),
-                    accepted: file.accepted,
-                    height: file.height,
                     lastModified: file.lastModified,
                     size: file.size,
-                    status: file.status,
                     type: file.type,
-                    width: file.width,
                     url: null,
                     file_id: null,
                     content: URL.createObjectURL(file),
-                    error: file.error,
                 };
             },
         );
