@@ -37,14 +37,6 @@ function toggleSize() {
         emit(MAXIMIZE);
     }
 }
-
-function resetForm() {
-    if (isFormDirty.value) {
-        formKey.value += 1;
-    } else {
-        emit(CLOSE);
-    }
-}
 </script>
 
 <template>
@@ -94,7 +86,7 @@ function resetForm() {
             <Button
                 :label="$gettext('Cancel')"
                 severity="danger"
-                @click="resetForm"
+                @click="componentEditorFormRef.onReset()"
             />
         </div>
     </div>
