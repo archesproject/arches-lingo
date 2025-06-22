@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { markRaw, provide, ref } from "vue";
 import { useGettext } from "vue3-gettext";
-
-import { routeNames } from "@/arches_lingo/routes.ts";
 
 import Button from "primevue/button";
 import PanelMenu from "primevue/panelmenu";
+
+import NavNavigation from "@/arches_lingo/components/sidenav/components/NavNavigation.vue";
+import NavAuthorityEditors from "@/arches_lingo/components/sidenav/components/NavAuthorityEditors.vue";
+import NavReferenceData from "@/arches_lingo/components/sidenav/components/NavReferenceData.vue";
+import NavSettings from "@/arches_lingo/components/sidenav/components/NavSettings.vue";
 
 import type { MenuItem } from "primevue/menuitem";
 
@@ -15,37 +18,32 @@ const { $gettext } = useGettext();
 const isExpanded = ref(false);
 const items = ref<MenuItem[]>([
     {
+        component: markRaw(NavNavigation),
         key: "navigation",
         label: $gettext("Navigation"),
-        class: "nav-heading",
-        separator: true,
         visible: showHeadings,
+        items: [],
     },
     {
-        key: "dashboard",
-        label: $gettext("Dashboard"),
-        icon: "fa fa-home",
-        route: { name: routeNames.root },
-        disabled: true,
-    },
-    {
-        key: "advanced_search",
-        label: $gettext("Advanced Search"),
-        icon: "pi pi-search",
-        route: { name: routeNames.advancedSearch },
-    },
-    {
+        component: markRaw(NavAuthorityEditors),
         key: "editors",
         label: $gettext("Authority Editors"),
-        class: "nav-heading",
-        separator: true,
         visible: showHeadings,
+        items: [],
     },
     {
-        key: "schemes",
-        label: $gettext("Schemes"),
-        icon: "pi pi-lightbulb",
-        route: { name: routeNames.schemes },
+        component: markRaw(NavReferenceData),
+        key: "reference-data",
+        label: $gettext("Reference Data"),
+        visible: showHeadings,
+        items: [],
+    },
+    {
+        component: markRaw(NavSettings),
+        key: "settings",
+        label: $gettext("Settings"),
+        visible: showHeadings,
+        items: [],
     },
 ]);
 
@@ -102,6 +100,8 @@ function showHeadings() {
 //         }
 //     }
 // }
+
+provide("isExpanded", isExpanded);
 </script>
 
 <template>
@@ -121,36 +121,10 @@ function showHeadings() {
         </Button>
         <PanelMenu :model="items">
             <template #item="{ item }">
-                <router-link
-                    v-if="item.route"
-                    v-slot="{ href, navigate }"
-                    :to="item.route"
-                    custom
-                >
-                    <a
-                        v-tooltip="{
-                            value: item.label,
-                            pt: { text: { style: { fontFamily: '-' } } },
-                        }"
-                        :href="href"
-                        class="nav-button p-button"
-                        @click="navigate"
-                    >
-                        <i :class="item.icon"></i>
-                        <span v-if="isExpanded">{{ item.label }}</span>
-                    </a>
-                </router-link>
-                <a
-                    v-else
-                    class="nav-button p-button"
-                >
-                    <i :class="item.icon"></i>
-                    <span v-if="isExpanded">{{ item.label }}</span>
-                    <span
-                        v-if="item.items"
-                        class="pi pi-angle-down text-primary ml-auto"
-                    />
-                </a>
+                <component
+                    :is="item.component"
+                    :item="item"
+                />
             </template>
         </PanelMenu>
     </aside>
