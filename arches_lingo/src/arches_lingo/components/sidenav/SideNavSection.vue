@@ -57,7 +57,6 @@ const props = defineProps<{
 .disabled {
     opacity: var(--p-disabled-opacity);
     cursor: default;
-    pointer-events: none;
     user-select: none;
 }
 </style>
