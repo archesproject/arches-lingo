@@ -10,96 +10,43 @@ import NavAuthorityEditors from "@/arches_lingo/components/sidenav/components/Na
 import NavReferenceData from "@/arches_lingo/components/sidenav/components/NavReferenceData.vue";
 import NavSettings from "@/arches_lingo/components/sidenav/components/NavSettings.vue";
 
-import type { MenuItem } from "primevue/menuitem";
+import type { SideNavMenuItem } from "@/arches_lingo/types.ts";
 
 const { $gettext } = useGettext();
 
-const expandedKeys = ref<Record<string, boolean>>({});
-const isExpanded = ref(false);
-const items = ref<MenuItem[]>([
+const navIsExpanded = ref(false);
+const items = ref<SideNavMenuItem[]>([
     {
         component: markRaw(NavNavigation),
         key: "navigation",
         label: $gettext("Navigation"),
-        visible: showHeadings,
         items: [],
     },
     {
         component: markRaw(NavAuthorityEditors),
         key: "editors",
         label: $gettext("Authority Editors"),
-        visible: showHeadings,
         items: [],
     },
     {
         component: markRaw(NavReferenceData),
         key: "reference-data",
         label: $gettext("Reference Data"),
-        visible: showHeadings,
         items: [],
     },
     {
         component: markRaw(NavSettings),
         key: "settings",
         label: $gettext("Settings"),
-        visible: showHeadings,
         items: [],
     },
 ]);
 
-function showHeadings() {
-    return isExpanded.value;
-}
-
 function toggleAll() {
-    if (Object.keys(expandedKeys.value).length) collapseAll();
-    else expandAll();
+    navIsExpanded.value = !navIsExpanded.value;
 }
 
-function toggleNode(node: MenuItem) {
-    if (node.key && expandedKeys.value[node.key]) {
-        collapseNode(node);
-    } else {
-        expandNode(node);
-    }
-}
-
-function expandAll() {
-    isExpanded.value = true;
-    for (let node of items.value) {
-        expandNode(node);
-    }
-    expandedKeys.value = { ...expandedKeys.value };
-}
-
-function collapseAll() {
-    isExpanded.value = false;
-    expandedKeys.value = {};
-}
-
-function expandNode(node: MenuItem) {
-    if (node.key && node.items && node.items.length) {
-        expandedKeys.value[node.key] = true;
-
-        for (let child of node.items) {
-            expandNode(child);
-        }
-    }
-}
-
-function collapseNode(node: MenuItem) {
-    if (node.key && node.items && node.items.length) {
-        expandedKeys.value[node.key] = false;
-
-        for (let child of node.items) {
-            collapseNode(child);
-        }
-    }
-}
-
-provide("expandedKeys", expandedKeys);
-provide("isExpanded", isExpanded);
-provide("toggleNode", toggleNode);
+provide("navIsExpanded", navIsExpanded);
 </script>
 
 <template>
@@ -117,10 +64,7 @@ provide("toggleNode", toggleNode);
         >
             <i class="pi pi-bars toggle-icon"></i>
         </Button>
-        <PanelMenu
-            :model="items"
-            :expanded-keys="expandedKeys"
-        >
+        <PanelMenu :model="items">
             <template #item="{ item }">
                 <component
                     :is="item.component"

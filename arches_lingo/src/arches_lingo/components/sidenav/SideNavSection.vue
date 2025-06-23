@@ -1,57 +1,34 @@
 <script setup lang="ts">
 import { inject } from "vue";
 
-import type { Component, Ref } from "vue";
-import type { MenuItem } from "primevue/menuitem";
-
 import Button from "primevue/button";
 
-const expandedKeys = inject<Ref<Record<string, boolean>>>("expandedKeys");
-const isExpanded = inject<Ref<boolean>>("isExpanded");
-const toggleNode = inject<(item: MenuItem) => void>("toggleNode");
+import type { Ref } from "vue";
+import type { SideNavMenuItem } from "@/arches_lingo/types.ts";
+
+const navIsExpanded = inject<Ref<boolean>>("navIsExpanded");
 
 const props = defineProps<{
-    item: {
-        component: Component;
-        key: string;
-        label?: string;
-        icon?: string;
-        route?: string;
-        items?: MenuItem[];
-    };
+    item: SideNavMenuItem;
 }>();
-
-function toggleSection() {
-    if (props.item.items && props.item.items.length > 0) {
-        toggleNode?.(props.item);
-    }
-}
 </script>
 
 <template>
     <Button
-        v-if="!props.item.route"
+        v-if="!props.item.route && navIsExpanded"
         class="nav-button"
-        @click="toggleSection"
     >
         <i :class="props.item.icon"></i>
-        <span v-if="isExpanded">{{ props.item.label }}</span>
-        <span
-            v-if="props.item.items"
-            :class="
-                expandedKeys?.[props.item.key]
-                    ? 'pi pi-angle-up'
-                    : 'pi pi-angle-down'
-            "
-        />
+        <span>{{ props.item.label }}</span>
     </Button>
     <div
         v-for="child in props.item.items"
         :key="child.key"
-        class="nav-children"
+        class="nav-child"
+        :class="child.disabled ? 'disabled' : ''"
     >
         <RouterLink
-            v-if="child.route"
+            v-if="child.route && (child.showIconIfCollapsed || navIsExpanded)"
             v-slot="{ href, navigate }"
             :to="child.route"
             custom
@@ -70,8 +47,17 @@ function toggleSection() {
                 @click="navigate"
             >
                 <i :class="child.icon"></i>
-                <span v-if="isExpanded">{{ child.label }}</span>
+                <span v-if="navIsExpanded">{{ child.label }}</span>
             </a>
         </RouterLink>
     </div>
 </template>
+
+<style scoped>
+.disabled {
+    opacity: var(--p-disabled-opacity);
+    cursor: default;
+    pointer-events: none;
+    user-select: none;
+}
+</style>
