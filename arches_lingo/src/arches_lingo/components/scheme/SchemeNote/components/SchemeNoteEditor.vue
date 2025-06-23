@@ -50,6 +50,8 @@ const refreshReportSection = inject<(componentName: string) => void>(
     "refreshReportSection",
 );
 
+const resetForm = inject<() => void>("resetForm");
+
 const formRef = useTemplateRef("form");
 const isSaving = ref(false);
 
@@ -127,6 +129,7 @@ async function save(e: FormSubmitEvent) {
         <Form
             ref="form"
             @submit="save"
+            @reset="resetForm"
         >
             <NonLocalizedStringWidget
                 :graph-slug="props.graphSlug"

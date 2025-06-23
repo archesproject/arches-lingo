@@ -47,6 +47,8 @@ const componentEditorFormRef = inject<Ref<Component | null>>(
 
 const refreshConceptTree = inject<() => null>("refreshConceptTree");
 
+const resetForm = inject<() => void>("resetForm");
+
 const openEditor =
     inject<(componentName: string, tileid?: string) => void>("openEditor");
 
@@ -113,6 +115,7 @@ async function save(e: FormSubmitEvent) {
         <Form
             ref="form"
             @submit="save"
+            @reset="resetForm"
         >
             <NonLocalizedStringWidget
                 :graph-slug="props.graphSlug"

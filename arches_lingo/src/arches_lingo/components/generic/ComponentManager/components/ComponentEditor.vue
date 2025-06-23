@@ -18,6 +18,7 @@ const emit = defineEmits([MAXIMIZE, MINIMIZE, CLOSE]);
 const formKey = ref(0);
 const componentEditorFormRef = ref();
 provide("componentEditorFormRef", componentEditorFormRef);
+provide("resetForm", resetForm);
 
 const isFormDirty = computed(() => {
     if (componentEditorFormRef.value) {
@@ -35,6 +36,26 @@ function toggleSize() {
         emit(MINIMIZE);
     } else {
         emit(MAXIMIZE);
+    }
+}
+
+function handleCancelClick() {
+    const wasDirty = isFormDirty.value;
+    // Store the dirty state for the reset handler to use
+    componentEditorFormRef.value._wasDirty = wasDirty;
+    componentEditorFormRef.value.onReset();
+}
+
+function resetForm() {
+    const wasDirty = componentEditorFormRef.value?._wasDirty ?? false;
+    if (wasDirty) {
+        formKey.value += 1;
+    } else {
+        emit(CLOSE);
+    }
+    // Clean up the temporary flag
+    if (componentEditorFormRef.value) {
+        delete componentEditorFormRef.value._wasDirty;
     }
 }
 </script>
@@ -86,7 +107,7 @@ function toggleSize() {
             <Button
                 :label="$gettext('Cancel')"
                 severity="danger"
-                @click="componentEditorFormRef.onReset()"
+                @click="handleCancelClick"
             />
         </div>
     </div>

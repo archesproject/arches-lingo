@@ -40,6 +40,8 @@ const componentEditorFormRef = inject<Ref<Component | null>>(
     "componentEditorFormRef",
 );
 
+const resetForm = inject<() => void>("resetForm");
+
 const openEditor =
     inject<(componentName: string, tileid?: string) => void>("openEditor");
 const refreshReportSection = inject<(componentName: string) => void>(
@@ -123,6 +125,7 @@ async function save(e: FormSubmitEvent) {
         <Form
             ref="form"
             @submit="save"
+            @reset="resetForm"
         >
             <ResourceInstanceMultiSelectWidget
                 graph-slug="scheme"
