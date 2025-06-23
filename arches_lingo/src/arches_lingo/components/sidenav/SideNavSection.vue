@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { inject } from "vue";
 
-import Button from "primevue/button";
-
 import type { Ref } from "vue";
 import type { SideNavMenuItem } from "@/arches_lingo/types.ts";
 
@@ -14,13 +12,16 @@ const props = defineProps<{
 </script>
 
 <template>
-    <Button
+    <div
         v-if="!props.item.route && navIsExpanded"
-        class="nav-button"
+        class="nav-header nav-button p-button"
     >
-        <i :class="props.item.icon"></i>
+        <i
+            v-if="props.item.icon"
+            :class="props.item.icon"
+        ></i>
         <span>{{ props.item.label }}</span>
-    </Button>
+    </div>
     <div
         v-for="child in props.item.items"
         :key="child.key"
@@ -46,7 +47,10 @@ const props = defineProps<{
                 class="nav-button p-button"
                 @click="navigate"
             >
-                <i :class="child.icon"></i>
+                <i
+                    v-if="child.icon"
+                    :class="child.icon"
+                ></i>
                 <span v-if="navIsExpanded">{{ child.label }}</span>
             </a>
         </RouterLink>
@@ -58,5 +62,10 @@ const props = defineProps<{
     opacity: var(--p-disabled-opacity);
     cursor: default;
     user-select: none;
+}
+
+.nav-header {
+    justify-content: flex-start;
+    /* color: var(--p-slate-50); */
 }
 </style>

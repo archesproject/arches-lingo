@@ -90,14 +90,16 @@ provide("navIsExpanded", navIsExpanded);
 }
 
 :deep(.nav-button) {
-    min-height: var(--p-button-lg-icon-only-width);
+    min-height: var(--p-button-sm-icon-only-width);
     width: 100%;
     border-radius: 0;
     text-decoration: none;
     justify-content: flex-start;
+    font-size: var(--p-lingo-font-size-xsmall);
+    /* color: var(--p-slate-100); */
 
     i {
-        font-size: var(--p-lingo-font-size-large);
+        font-size: var(--p-lingo-font-size-medium);
     }
 }
 
