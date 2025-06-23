@@ -42,6 +42,7 @@ const props = defineProps<{
                             style: { fontFamily: '--p-lingo-font-family' },
                         },
                     },
+                    disabled: navIsExpanded,
                 }"
                 :href="href"
                 class="nav-button p-button"
