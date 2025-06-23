@@ -15,8 +15,8 @@ const props = defineProps<{
 
 const children = <SideNavMenuItem[]>[
     {
-        key: "home",
-        label: $gettext("Home"),
+        key: "dashboard",
+        label: $gettext("Dashboard"),
         icon: "fa fa-home",
         route: { name: routeNames.root },
         disabled: true,
