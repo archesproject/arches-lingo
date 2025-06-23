@@ -1,11 +1,14 @@
 <script setup lang="ts">
-// import { inject } from "vue";
+import { inject } from "vue";
 
-import type { Component } from "vue";
-
+import type { Component, Ref } from "vue";
 import type { MenuItem } from "primevue/menuitem";
 
-// const isExpanded = inject("isExpanded");
+import Button from "primevue/button";
+
+const expandedKeys = inject<Ref<Record<string, boolean>>>("expandedKeys");
+const isExpanded = inject<Ref<boolean>>("isExpanded");
+const toggleNode = inject<(item: MenuItem) => void>("toggleNode");
 
 const props = defineProps<{
     item: {
@@ -17,39 +20,58 @@ const props = defineProps<{
         items?: MenuItem[];
     };
 }>();
+
+function toggleSection() {
+    if (props.item.items && props.item.items.length > 0) {
+        toggleNode?.(props.item);
+    }
+}
 </script>
 
 <template>
-    Hello World!
-    {{ props.item.key }}
-    <!-- <router-link
-        v-if="item.route"
-        v-slot="{ href, navigate }"
-        :to="item.route"
-        custom
+    <Button
+        v-if="!props.item.route"
+        class="nav-button"
+        @click="toggleSection"
     >
-        <a
-            v-tooltip="{
-                value: item.label,
-                pt: { text: { style: { fontFamily: '-' } } },
-            }"
-            :href="href"
-            class="nav-button p-button"
-            @click="navigate"
-        >
-            <i :class="item.icon"></i>
-            <span v-if="isExpanded">{{ item.label }}</span>
-        </a>
-    </router-link>
-    <a
-        v-else
-        class="nav-button p-button"
-    >
-        <i :class="item.icon"></i>
-        <span v-if="isExpanded">{{ item.label }}</span>
+        <i :class="props.item.icon"></i>
+        <span v-if="isExpanded">{{ props.item.label }}</span>
         <span
-            v-if="item.items"
-            class="pi pi-angle-down text-primary ml-auto"
+            v-if="props.item.items"
+            :class="
+                expandedKeys?.[props.item.key]
+                    ? 'pi pi-angle-up'
+                    : 'pi pi-angle-down'
+            "
         />
-    </a> -->
+    </Button>
+    <div
+        v-for="child in props.item.items"
+        :key="child.key"
+        class="nav-children"
+    >
+        <RouterLink
+            v-if="child.route"
+            v-slot="{ href, navigate }"
+            :to="child.route"
+            custom
+        >
+            <a
+                v-tooltip="{
+                    value: child.label,
+                    pt: {
+                        text: {
+                            style: { fontFamily: '--p-lingo-font-family' },
+                        },
+                    },
+                }"
+                :href="href"
+                class="nav-button p-button"
+                @click="navigate"
+            >
+                <i :class="child.icon"></i>
+                <span v-if="isExpanded">{{ child.label }}</span>
+            </a>
+        </RouterLink>
+    </div>
 </template>

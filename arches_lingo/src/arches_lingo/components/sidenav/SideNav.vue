@@ -14,7 +14,7 @@ import type { MenuItem } from "primevue/menuitem";
 
 const { $gettext } = useGettext();
 
-// const expandedKeys = ref<Record<string, boolean>>({});
+const expandedKeys = ref<Record<string, boolean>>({});
 const isExpanded = ref(false);
 const items = ref<MenuItem[]>([
     {
@@ -47,61 +47,59 @@ const items = ref<MenuItem[]>([
     },
 ]);
 
-function toggleAll() {
-    isExpanded.value = !isExpanded.value;
-}
-
 function showHeadings() {
     return isExpanded.value;
 }
 
-// function toggleAll() {
-//     if (Object.keys(expandedKeys.value).length) collapseAll();
-//     else expandAll();
-// }
+function toggleAll() {
+    if (Object.keys(expandedKeys.value).length) collapseAll();
+    else expandAll();
+}
 
-// function toggleNode(node: MenuItem) {
-//     if (node.key && expandedKeys.value[node.key]) {
-//         collapseNode(node);
-//     } else {
-//         expandNode(node);
-//     }
-// }
+function toggleNode(node: MenuItem) {
+    if (node.key && expandedKeys.value[node.key]) {
+        collapseNode(node);
+    } else {
+        expandNode(node);
+    }
+}
 
-// function expandAll() {
-//     isExpanded.value = true;
-//     for (let node of items.value) {
-//         expandNode(node);
-//     }
-//     expandedKeys.value = { ...expandedKeys.value };
-// }
+function expandAll() {
+    isExpanded.value = true;
+    for (let node of items.value) {
+        expandNode(node);
+    }
+    expandedKeys.value = { ...expandedKeys.value };
+}
 
-// function collapseAll() {
-//     isExpanded.value = false;
-//     expandedKeys.value = {};
-// }
+function collapseAll() {
+    isExpanded.value = false;
+    expandedKeys.value = {};
+}
 
-// function expandNode(node: MenuItem) {
-//     if (node.key && node.items && node.items.length) {
-//         expandedKeys.value[node.key] = true;
+function expandNode(node: MenuItem) {
+    if (node.key && node.items && node.items.length) {
+        expandedKeys.value[node.key] = true;
 
-//         for (let child of node.items) {
-//             expandNode(child);
-//         }
-//     }
-// }
+        for (let child of node.items) {
+            expandNode(child);
+        }
+    }
+}
 
-// function collapseNode(node: MenuItem) {
-//     if (node.key && node.items && node.items.length) {
-//         expandedKeys.value[node.key] = false;
+function collapseNode(node: MenuItem) {
+    if (node.key && node.items && node.items.length) {
+        expandedKeys.value[node.key] = false;
 
-//         for (let child of node.items) {
-//             collapseNode(child);
-//         }
-//     }
-// }
+        for (let child of node.items) {
+            collapseNode(child);
+        }
+    }
+}
 
+provide("expandedKeys", expandedKeys);
 provide("isExpanded", isExpanded);
+provide("toggleNode", toggleNode);
 </script>
 
 <template>
@@ -119,7 +117,10 @@ provide("isExpanded", isExpanded);
         >
             <i class="pi pi-bars toggle-icon"></i>
         </Button>
-        <PanelMenu :model="items">
+        <PanelMenu
+            :model="items"
+            :expanded-keys="expandedKeys"
+        >
             <template #item="{ item }">
                 <component
                     :is="item.component"
@@ -144,7 +145,7 @@ provide("isExpanded", isExpanded);
     border-style: none;
 }
 
-.nav-button {
+:deep(.nav-button) {
     min-height: var(--p-button-lg-icon-only-width);
     width: 100%;
     border-radius: 0;
