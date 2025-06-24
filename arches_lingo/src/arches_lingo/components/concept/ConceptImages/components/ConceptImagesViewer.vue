@@ -34,6 +34,9 @@ const props = defineProps<{
 
 const openEditor =
     inject<(componentName: string, tileId?: string) => void>("openEditor");
+const updateAfterComponentDeletion = inject<
+    (componentName: string, tileId: string) => void
+>("updateAfterComponentDeletion");
 
 const configurationError = ref();
 const isLoading = ref(true);
@@ -98,6 +101,11 @@ function confirmDelete(removedResourceInstanceId: string) {
                         props.graphSlug,
                         resourceInstanceId,
                         resource,
+                    );
+
+                    updateAfterComponentDeletion!(
+                        props.componentName,
+                        props.tileData.tileid!,
                     );
                 }
             }
@@ -172,15 +180,15 @@ function modifyResource(resourceInstanceId?: string) {
             v-else
             style="overflow-x: auto"
         >
-            <div class="conceptImages">
+            <div class="concept-images">
                 <div
                     v-for="resource in resources"
                     :key="resource.resourceinstanceid"
-                    class="conceptImage"
+                    class="concept-image"
                 >
                     <div class="header">
                         <label
-                            for="conceptImage"
+                            for="concept-image"
                             class="text"
                         >
                             <NonLocalizedStringWidget
@@ -196,6 +204,7 @@ function modifyResource(resourceInstanceId?: string) {
                         <div class="buttons">
                             <Button
                                 icon="pi pi-file-edit"
+                                rounded
                                 @click="
                                     editResource(resource.resourceinstanceid)
                                 "
@@ -204,7 +213,7 @@ function modifyResource(resourceInstanceId?: string) {
                                 icon="pi pi-trash"
                                 :aria-label="$gettext('Delete')"
                                 severity="danger"
-                                outlined
+                                rounded
                                 @click="
                                     confirmDelete(resource.resourceinstanceid)
                                 "
@@ -218,6 +227,7 @@ function modifyResource(resourceInstanceId?: string) {
                             resource.aliased_data.content?.aliased_data.content
                         "
                         :mode="VIEW"
+                        :show-label="false"
                     />
                     <div class="footer">
                         <NonLocalizedStringWidget
@@ -237,47 +247,43 @@ function modifyResource(resourceInstanceId?: string) {
 </template>
 
 <style scoped>
-.conceptImages {
+.buttons {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.concept-images {
     display: flex;
     flex-direction: row;
     align-items: start;
     width: fit-content;
+    color: var(--p-inputtext-placeholder-color);
+    font-size: var(--p-lingo-font-size-smallnormal);
 }
 
-.conceptImage {
+.concept-image {
     width: 30rem;
     margin: 0 1rem;
 }
 
-.conceptImage .header {
+.concept-image .header {
     display: grid;
     grid-template-columns: 1fr auto;
     padding: 1rem 0;
 }
 
-.conceptImage .footer {
+.concept-image .footer {
     padding: 1rem 0;
 }
 
-.conceptImage .header .text {
+.concept-image .header .text {
     display: flex;
     align-items: start;
     flex-direction: column;
 }
 
-.conceptImage .header .buttons {
-    display: flex;
-    justify-content: center;
-}
-
-.conceptImage .header .buttons button {
-    margin: 0 0.5rem;
-}
-
-.conceptImages :deep(.mainImage) {
-}
-
-.conceptImages :deep(.p-galleria) {
+.concept-images :deep(.p-galleria) {
     border: none;
 }
 </style>

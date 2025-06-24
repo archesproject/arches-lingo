@@ -1,16 +1,28 @@
 <script setup lang="ts">
 import { inject, nextTick, ref, useTemplateRef, watch } from "vue";
 
-import { Form, type FormSubmitEvent } from "@primevue/forms";
+import { useGettext } from "vue3-gettext";
+import { useToast } from "primevue/usetoast";
+
+import { Form } from "@primevue/forms";
+
+import ProgressSpinner from "primevue/progressspinner";
 import FileListWidget from "@/arches_component_lab/widgets/FileListWidget/FileListWidget.vue";
 import NonLocalizedStringWidget from "@/arches_component_lab/widgets/NonLocalizedStringWidget/NonLocalizedStringWidget.vue";
+
 import { DIGITAL_OBJECT_GRAPH_SLUG } from "@/arches_lingo/components/concept/ConceptImages/components/constants.ts";
+import {
+    DEFAULT_ERROR_TOAST_LIFE,
+    EDIT,
+    ERROR,
+} from "@/arches_lingo/constants.ts";
+
 import {
     createFormDataForFileUpload,
     addDigitalObjectToConceptImageCollection,
     createDigitalObject,
 } from "@/arches_lingo/components/concept/ConceptImages/components/utils.ts";
-import { EDIT } from "@/arches_lingo/constants.ts";
+
 import {
     fetchLingoResource,
     updateLingoResource,
@@ -18,6 +30,7 @@ import {
 } from "@/arches_lingo/api.ts";
 
 import type { Component, Ref } from "vue";
+import type { FormSubmitEvent } from "@primevue/forms";
 import type {
     ConceptImages,
     DigitalObjectInstance,
@@ -34,6 +47,9 @@ const props = defineProps<{
     tileId?: string;
 }>();
 
+const { $gettext } = useGettext();
+const toast = useToast();
+
 const digitalObjectResource = ref<DigitalObjectInstance>();
 const digitalObjectLoaded = ref(false);
 
@@ -47,6 +63,8 @@ const refreshReportSection = inject<(componentName: string) => void>(
 );
 
 const formRef = useTemplateRef("form");
+const isSaving = ref(false);
+
 watch(
     () => formRef.value,
     (formComponent) => (componentEditorFormRef!.value = formComponent),
@@ -76,6 +94,8 @@ async function getDigitalObjectInstance(
 }
 
 async function save(e: FormSubmitEvent) {
+    isSaving.value = true;
+
     try {
         const submittedFormData = Object.fromEntries(
             Object.entries(e.states).map(([key, state]) => [key, state.value]),
@@ -198,11 +218,16 @@ async function save(e: FormSubmitEvent) {
 
         // simulated click of the current resource
         modifyResource(digitalObjectResource?.value?.resourceinstanceid);
-    } catch (error) {
-        console.error(error);
-        throw error;
-    } finally {
         refreshReportSection!(props.componentName);
+    } catch (error) {
+        toast.add({
+            severity: ERROR,
+            life: DEFAULT_ERROR_TOAST_LIFE,
+            summary: $gettext("Failed to save data."),
+            detail: error instanceof Error ? error.message : undefined,
+        });
+    } finally {
+        isSaving.value = false;
     }
 }
 
@@ -224,40 +249,46 @@ function resetForm() {
 </script>
 
 <template>
-    <h3>{{ props.sectionTitle }}</h3>
-    <Form
-        v-if="digitalObjectLoaded"
-        ref="form"
-        @submit="save"
-        @reset="resetForm"
-    >
-        <NonLocalizedStringWidget
-            node-alias="name_content"
-            graph-slug="digital_object_rdm_system"
-            :mode="EDIT"
-            :initial-value="
-                digitalObjectResource?.aliased_data.name?.aliased_data
-                    .name_content
-            "
-        />
-        <NonLocalizedStringWidget
-            node-alias="statement_content"
-            graph-slug="digital_object_rdm_system"
-            :mode="EDIT"
-            :initial-value="
-                digitalObjectResource?.aliased_data.statement?.aliased_data
-                    .statement_content
-            "
-        />
-        <FileListWidget
-            node-alias="content"
-            graph-slug="digital_object_rdm_system"
-            :initial-value="
-                digitalObjectResource?.aliased_data?.content?.aliased_data
-                    .content
-            "
-            :mode="EDIT"
-            class="conceptImage"
-        />
-    </Form>
+    <ProgressSpinner
+        v-show="isSaving"
+        style="width: 100%"
+    />
+    <div v-show="!isSaving">
+        <h3>{{ props.sectionTitle }}</h3>
+        <Form
+            v-if="digitalObjectLoaded"
+            ref="form"
+            @submit="save"
+            @reset="resetForm"
+        >
+            <NonLocalizedStringWidget
+                node-alias="name_content"
+                graph-slug="digital_object_rdm_system"
+                :mode="EDIT"
+                :initial-value="
+                    digitalObjectResource?.aliased_data.name?.aliased_data
+                        .name_content
+                "
+            />
+            <NonLocalizedStringWidget
+                node-alias="statement_content"
+                graph-slug="digital_object_rdm_system"
+                :mode="EDIT"
+                :initial-value="
+                    digitalObjectResource?.aliased_data.statement?.aliased_data
+                        .statement_content
+                "
+            />
+            <FileListWidget
+                node-alias="content"
+                graph-slug="digital_object_rdm_system"
+                :initial-value="
+                    digitalObjectResource?.aliased_data?.content?.aliased_data
+                        .content
+                "
+                :mode="EDIT"
+                :show-label="false"
+            />
+        </Form>
+    </div>
 </template>
