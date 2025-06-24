@@ -1,31 +1,28 @@
-from rest_framework.generics import (
-    ListCreateAPIView,
-    RetrieveUpdateDestroyAPIView,
+from arches_querysets.rest_framework.generic_views import (
+    ArchesResourceDetailView,
+    ArchesResourceListCreateView,
+    ArchesTileDetailView,
+    ArchesTileListCreateView,
 )
-
 from arches_querysets.rest_framework.permissions import RDMAdministrator
-from arches_querysets.rest_framework.serializers import ArchesResourceSerializer
-from arches_querysets.rest_framework.view_mixins import ArchesModelAPIMixin
 
 from arches_lingo.serializers import LingoTileSerializer
 
 
-class LingoResourceListCreateView(ArchesModelAPIMixin, ListCreateAPIView):
+class LingoResourceListCreateView(ArchesResourceListCreateView):
     permission_classes = [RDMAdministrator]
-    serializer_class = ArchesResourceSerializer
     pagination_class = None
 
 
-class LingoResourceDetailView(ArchesModelAPIMixin, RetrieveUpdateDestroyAPIView):
+class LingoResourceDetailView(ArchesResourceDetailView):
     permission_classes = [RDMAdministrator]
-    serializer_class = ArchesResourceSerializer
 
 
-class LingoTileListCreateView(ArchesModelAPIMixin, ListCreateAPIView):
+class LingoTileListCreateView(ArchesTileListCreateView):
     permission_classes = [RDMAdministrator]
     serializer_class = LingoTileSerializer
 
 
-class LingoTileDetailView(ArchesModelAPIMixin, RetrieveUpdateDestroyAPIView):
+class LingoTileDetailView(ArchesTileDetailView):
     permission_classes = [RDMAdministrator]
     serializer_class = LingoTileSerializer
