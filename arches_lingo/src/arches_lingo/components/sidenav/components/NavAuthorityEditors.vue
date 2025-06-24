@@ -27,7 +27,7 @@ const children = <SideNavMenuItem[]>[
         icon: "pi pi-globe",
         route: { name: routeNames.root },
         disabled: true,
-        showIconIfCollapsed: false,
+        showIconIfCollapsed: true,
     },
     {
         key: "people",
@@ -35,7 +35,7 @@ const children = <SideNavMenuItem[]>[
         icon: "pi pi-user",
         route: { name: routeNames.root },
         disabled: true,
-        showIconIfCollapsed: false,
+        showIconIfCollapsed: true,
     },
     {
         key: "groups",
@@ -43,7 +43,7 @@ const children = <SideNavMenuItem[]>[
         icon: "pi pi-users",
         route: { name: routeNames.root },
         disabled: true,
-        showIconIfCollapsed: false,
+        showIconIfCollapsed: true,
     },
     {
         key: "periods",
@@ -51,7 +51,7 @@ const children = <SideNavMenuItem[]>[
         icon: "pi pi-hourglass",
         route: { name: routeNames.root },
         disabled: true,
-        showIconIfCollapsed: false,
+        showIconIfCollapsed: true,
     },
 ];
 

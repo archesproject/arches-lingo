@@ -20,6 +20,7 @@ const children = <SideNavMenuItem[]>[
         icon: "pi pi-user-edit",
         route: { name: routeNames.root },
         disabled: true,
+        showIconIfCollapsed: true,
     },
     {
         key: "sources",
@@ -27,6 +28,7 @@ const children = <SideNavMenuItem[]>[
         icon: "pi pi-bookmark-fill",
         route: { name: routeNames.root },
         disabled: true,
+        showIconIfCollapsed: true,
     },
     {
         key: "controlled_lists",

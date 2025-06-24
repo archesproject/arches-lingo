@@ -20,6 +20,7 @@ const children = <SideNavMenuItem[]>[
         icon: "pi pi-shield",
         route: { name: routeNames.root },
         disabled: true,
+        showIconIfCollapsed: true,
     },
     {
         key: "system_settings",
@@ -27,6 +28,7 @@ const children = <SideNavMenuItem[]>[
         icon: "pi pi-cog",
         route: { name: routeNames.root },
         disabled: true,
+        showIconIfCollapsed: true,
     },
 ];
 
