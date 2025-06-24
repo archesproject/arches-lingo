@@ -23,7 +23,7 @@ const items = ref([
 <template>
     <Menubar
         :model="items"
-        style="border-radius: 0"
+        style="border-radius: 0; border-inline-start: 0; border-inline-end: 0"
     >
         <template #start>
             <RouterLink

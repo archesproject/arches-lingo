@@ -18,7 +18,6 @@ import {
 
 import { routeNames } from "@/arches_lingo/routes.ts";
 import { fetchUser } from "@/arches_lingo/api.ts";
-import HierarchySplitter from "@/arches_lingo/components/tree/HierarchySplitter.vue";
 import PageHeader from "@/arches_lingo/components/header/PageHeader.vue";
 import SideNav from "@/arches_lingo/components/sidenav/SideNav.vue";
 
@@ -104,15 +103,11 @@ router.beforeEach(async (to, _from, next) => {
 
 <template>
     <main>
-        <PageHeader v-if="route.meta.shouldShowNavigation" />
+        <SideNav v-if="route.meta.shouldShowNavigation" />
 
         <div class="main-content">
-            <SideNav v-if="route.meta.shouldShowNavigation" />
-
-            <div class="content-panel">
-                <HierarchySplitter v-if="route.meta.shouldShowHierarchy" />
-                <RouterView v-else />
-            </div>
+            <PageHeader v-if="route.meta.shouldShowNavigation" />
+            <RouterView />
         </div>
     </main>
     <Toast
@@ -133,19 +128,12 @@ main {
     width: 100vw;
     overflow: hidden;
     display: flex;
-    flex-direction: column;
 }
 
 .main-content {
     display: flex;
-    flex: 1 1 auto;
-    overflow: hidden;
-}
-
-.content-panel {
-    display: flex;
     flex-direction: column;
     flex: 1 1 auto;
-    min-width: 0;
+    overflow: hidden;
 }
 </style>
