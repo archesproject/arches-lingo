@@ -15,7 +15,6 @@ const isDarkModeEnabled = ref(
 watch(
     isDarkModeEnabled,
     (newValue) => {
-        console.log("Dark mode changed:", newValue);
         setTheme(newValue);
     },
     { immediate: true },
