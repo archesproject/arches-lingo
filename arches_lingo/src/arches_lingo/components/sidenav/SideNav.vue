@@ -81,7 +81,7 @@ provide("navIsExpanded", navIsExpanded);
 }
 
 .p-panelmenu {
-    display: block;
+    gap: 0;
 }
 
 :deep(.p-panelmenu-panel) {
@@ -96,7 +96,6 @@ provide("navIsExpanded", navIsExpanded);
     text-decoration: none;
     justify-content: flex-start;
     font-size: var(--p-lingo-font-size-xsmall);
-    /* color: var(--p-slate-100); */
 
     i {
         font-size: var(--p-lingo-font-size-medium);
