@@ -17,7 +17,7 @@ const children = <SideNavMenuItem[]>[
     {
         key: "dashboard",
         label: $gettext("Dashboard"),
-        icon: "fa fa-home",
+        icon: "pi pi-home",
         route: { name: routeNames.root },
         disabled: true,
         showIconIfCollapsed: true,

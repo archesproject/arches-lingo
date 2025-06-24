@@ -17,7 +17,7 @@ const children = <SideNavMenuItem[]>[
     {
         key: "contributors",
         label: $gettext("Contributors"),
-        icon: "fa fa-user",
+        icon: "pi pi-user-edit",
         route: { name: routeNames.root },
         disabled: true,
     },
@@ -31,7 +31,7 @@ const children = <SideNavMenuItem[]>[
     {
         key: "controlled_lists",
         label: $gettext("Controlled List Manager"),
-        icon: "fa fa-list",
+        icon: "pi pi-list",
         route: { name: routeNames.root },
         disabled: true,
         showIconIfCollapsed: true,

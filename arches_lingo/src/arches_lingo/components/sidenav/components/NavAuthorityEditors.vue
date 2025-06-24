@@ -48,7 +48,7 @@ const children = <SideNavMenuItem[]>[
     {
         key: "periods",
         label: $gettext("Periods"),
-        icon: "fa fa-hourglass-start",
+        icon: "pi pi-hourglass",
         route: { name: routeNames.root },
         disabled: true,
         showIconIfCollapsed: false,
