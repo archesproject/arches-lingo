@@ -78,6 +78,7 @@ provide("navIsExpanded", navIsExpanded);
 <style scoped>
 .sidenav {
     border-right: 1px solid var(--p-menubar-border-color);
+    min-width: max-content;
 }
 
 .p-panelmenu {
