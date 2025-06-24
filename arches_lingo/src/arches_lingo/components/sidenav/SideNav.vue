@@ -1,59 +1,108 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { markRaw, provide, ref } from "vue";
 import { useGettext } from "vue3-gettext";
 
-import { routeNames } from "@/arches_lingo/routes.ts";
+import Button from "primevue/button";
+import PanelMenu from "primevue/panelmenu";
+
+import NavNavigation from "@/arches_lingo/components/sidenav/components/NavNavigation.vue";
+import NavAuthorityEditors from "@/arches_lingo/components/sidenav/components/NavAuthorityEditors.vue";
+import NavReferenceData from "@/arches_lingo/components/sidenav/components/NavReferenceData.vue";
+import NavSettings from "@/arches_lingo/components/sidenav/components/NavSettings.vue";
+
+import type { SideNavMenuItem } from "@/arches_lingo/types.ts";
 
 const { $gettext } = useGettext();
 
-const items = ref([
+const isNavExpanded = ref(false);
+provide("isNavExpanded", isNavExpanded);
+
+const items = ref<SideNavMenuItem[]>([
     {
-        icon: "fa fa-home",
-        routeName: routeNames.root,
-        linkName: $gettext("Home"),
+        component: markRaw(NavNavigation),
+        key: "navigation",
+        label: $gettext("Navigation"),
+        items: [],
+    },
+    {
+        component: markRaw(NavAuthorityEditors),
+        key: "editors",
+        label: $gettext("Authority Editors"),
+        items: [],
+    },
+    {
+        component: markRaw(NavReferenceData),
+        key: "reference-data",
+        label: $gettext("Reference Data"),
+        items: [],
+    },
+    {
+        component: markRaw(NavSettings),
+        key: "settings",
+        label: $gettext("Settings"),
+        items: [],
     },
 ]);
+
+function toggleAll() {
+    isNavExpanded.value = !isNavExpanded.value;
+}
 </script>
 
 <template>
     <aside class="sidenav">
-        <div
-            v-for="item in items"
-            :key="item.routeName"
+        <Button
+            v-tooltip="{
+                value: $gettext('Expand navigation'),
+                disabled: isNavExpanded,
+                pt: {
+                    text: { style: { fontFamily: '--p-lingo-font-family' } },
+                },
+            }"
+            class="nav-button"
+            :aria-label="$gettext('Expand navigation')"
+            @click="toggleAll"
         >
-            <RouterLink
-                v-tooltip="{
-                    value: item.linkName,
-                    pt: { text: { style: { fontFamily: 'sans-serif' } } },
-                }"
-                :to="{ name: item.routeName }"
-                class="p-button p-component p-button-primary"
-                style="text-decoration: none"
-            >
-                <i
-                    :class="item.icon"
-                    aria-hidden="true"
-                ></i>
-            </RouterLink>
-        </div>
+            <i class="pi pi-bars toggle-icon"></i>
+        </Button>
+        <PanelMenu :model="items">
+            <template #item="{ item }">
+                <component
+                    :is="item.component"
+                    :item="item"
+                    :nav-is-expanded="isNavExpanded"
+                />
+            </template>
+        </PanelMenu>
     </aside>
 </template>
 
 <style scoped>
 .sidenav {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
     border-right: 1px solid var(--p-menubar-border-color);
-    width: 3.125rem;
+    min-width: max-content;
 }
 
-.p-button {
-    min-height: var(--p-button-lg-icon-only-width);
-    min-width: var(--p-button-lg-icon-only-width);
+.p-panelmenu {
+    gap: 0;
+}
+
+:deep(.p-panelmenu-panel) {
+    padding: 0;
+    border-style: none;
+}
+
+:deep(.nav-button) {
+    height: 3.125rem;
+    width: 100%;
     border-radius: 0;
-    font-size: var(--p-lingo-font-size-large);
-    border-bottom: 0.1rem solid var(--p-button-outlined-primary-border-color);
+    text-decoration: none;
+    justify-content: flex-start;
+    font-size: var(--p-lingo-font-size-xsmall);
+
+    i {
+        font-size: var(--p-lingo-font-size-medium);
+    }
 }
 
 @media screen and (max-width: 960px) {
