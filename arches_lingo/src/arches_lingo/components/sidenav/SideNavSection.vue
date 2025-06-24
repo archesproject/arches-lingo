@@ -1,19 +1,15 @@
 <script setup lang="ts">
-import { inject } from "vue";
-
-import type { Ref } from "vue";
 import type { SideNavMenuItem } from "@/arches_lingo/types.ts";
-
-const navIsExpanded = inject<Ref<boolean>>("navIsExpanded");
 
 const props = defineProps<{
     item: SideNavMenuItem;
+    navIsExpanded: boolean;
 }>();
 </script>
 
 <template>
     <div
-        v-if="!props.item.route && navIsExpanded"
+        v-if="!props.item.route && props.navIsExpanded"
         class="nav-header nav-button p-button"
     >
         <i
@@ -29,7 +25,10 @@ const props = defineProps<{
         :class="child.disabled ? 'disabled' : ''"
     >
         <RouterLink
-            v-if="child.route && (child.showIconIfCollapsed || navIsExpanded)"
+            v-if="
+                child.route &&
+                (child.showIconIfCollapsed || props.navIsExpanded)
+            "
             v-slot="{ href, navigate }"
             :to="child.route"
             custom
@@ -42,7 +41,7 @@ const props = defineProps<{
                             style: { fontFamily: '--p-lingo-font-family' },
                         },
                     },
-                    disabled: navIsExpanded,
+                    disabled: props.navIsExpanded,
                 }"
                 :href="href"
                 class="nav-button p-button"
@@ -52,7 +51,7 @@ const props = defineProps<{
                     v-if="child.icon"
                     :class="child.icon"
                 ></i>
-                <span v-if="navIsExpanded">{{ child.label }}</span>
+                <span v-if="props.navIsExpanded">{{ child.label }}</span>
             </a>
         </RouterLink>
     </div>

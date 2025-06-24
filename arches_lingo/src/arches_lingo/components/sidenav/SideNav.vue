@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { markRaw, provide, ref } from "vue";
+import { markRaw, ref } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import Button from "primevue/button";
@@ -45,8 +45,6 @@ const items = ref<SideNavMenuItem[]>([
 function toggleAll() {
     navIsExpanded.value = !navIsExpanded.value;
 }
-
-provide("navIsExpanded", navIsExpanded);
 </script>
 
 <template>
@@ -69,6 +67,7 @@ provide("navIsExpanded", navIsExpanded);
                 <component
                     :is="item.component"
                     :item="item"
+                    :nav-is-expanded="navIsExpanded"
                 />
             </template>
         </PanelMenu>

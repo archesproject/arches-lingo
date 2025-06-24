@@ -11,6 +11,7 @@ const { $gettext } = useGettext();
 
 const props = defineProps<{
     item: SideNavMenuItem;
+    navIsExpanded: boolean;
 }>();
 
 const children = <SideNavMenuItem[]>[
@@ -36,5 +37,8 @@ navSection.value.items = children;
 </script>
 
 <template>
-    <SideNavSection :item="navSection"></SideNavSection>
+    <SideNavSection
+        :item="navSection"
+        :nav-is-expanded="props.navIsExpanded"
+    ></SideNavSection>
 </template>
