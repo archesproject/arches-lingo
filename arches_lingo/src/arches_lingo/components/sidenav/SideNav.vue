@@ -93,7 +93,7 @@ function toggleAll() {
 }
 
 :deep(.nav-button) {
-    min-height: var(--p-button-sm-icon-only-width);
+    height: 3.125rem;
     width: 100%;
     border-radius: 0;
     text-decoration: none;
