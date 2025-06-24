@@ -1,15 +1,17 @@
 <script setup lang="ts">
+import { inject } from "vue";
 import type { SideNavMenuItem } from "@/arches_lingo/types.ts";
 
 const props = defineProps<{
     item: SideNavMenuItem;
-    navIsExpanded: boolean;
 }>();
+
+const isNavExpanded = inject("isNavExpanded", false);
 </script>
 
 <template>
     <div
-        v-if="!props.item.route && props.navIsExpanded"
+        v-if="!props.item.route && isNavExpanded"
         class="nav-header nav-button p-button"
     >
         <i
@@ -25,10 +27,7 @@ const props = defineProps<{
         :class="child.disabled ? 'disabled' : ''"
     >
         <RouterLink
-            v-if="
-                child.route &&
-                (child.showIconIfCollapsed || props.navIsExpanded)
-            "
+            v-if="child.route && (child.showIconIfCollapsed || isNavExpanded)"
             v-slot="{ href, navigate }"
             :to="child.route"
             custom
@@ -41,7 +40,7 @@ const props = defineProps<{
                             style: { fontFamily: '--p-lingo-font-family' },
                         },
                     },
-                    disabled: props.navIsExpanded,
+                    disabled: isNavExpanded,
                 }"
                 :href="href"
                 class="nav-button p-button"
@@ -51,7 +50,7 @@ const props = defineProps<{
                     v-if="child.icon"
                     :class="child.icon"
                 ></i>
-                <span v-if="props.navIsExpanded">{{ child.label }}</span>
+                <span v-if="isNavExpanded">{{ child.label }}</span>
             </a>
         </RouterLink>
     </div>
@@ -66,6 +65,5 @@ const props = defineProps<{
 
 .nav-header {
     justify-content: flex-start;
-    /* color: var(--p-slate-50); */
 }
 </style>

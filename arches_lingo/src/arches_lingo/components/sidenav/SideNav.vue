@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { markRaw, ref } from "vue";
+import { markRaw, provide, ref } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import Button from "primevue/button";
@@ -14,7 +14,9 @@ import type { SideNavMenuItem } from "@/arches_lingo/types.ts";
 
 const { $gettext } = useGettext();
 
-const navIsExpanded = ref(false);
+const isNavExpanded = ref(false);
+provide("isNavExpanded", isNavExpanded);
+
 const items = ref<SideNavMenuItem[]>([
     {
         component: markRaw(NavNavigation),
@@ -43,7 +45,7 @@ const items = ref<SideNavMenuItem[]>([
 ]);
 
 function toggleAll() {
-    navIsExpanded.value = !navIsExpanded.value;
+    isNavExpanded.value = !isNavExpanded.value;
 }
 </script>
 
@@ -52,6 +54,7 @@ function toggleAll() {
         <Button
             v-tooltip="{
                 value: $gettext('Expand navigation'),
+                disabled: isNavExpanded,
                 pt: {
                     text: { style: { fontFamily: '--p-lingo-font-family' } },
                 },
@@ -67,7 +70,7 @@ function toggleAll() {
                 <component
                     :is="item.component"
                     :item="item"
-                    :nav-is-expanded="navIsExpanded"
+                    :nav-is-expanded="isNavExpanded"
                 />
             </template>
         </PanelMenu>
