@@ -132,13 +132,17 @@ async function save(e: FormSubmitEvent) {
                 node-alias="statement_content_n1"
                 :initial-value="
                     props.tileData?.aliased_data?.statement_content_n1
+                        ?.interchange_value
                 "
                 :mode="EDIT"
             />
             <ReferenceSelectWidget
                 :graph-slug="props.graphSlug"
                 node-alias="statement_type_n1"
-                :initial-value="props.tileData?.aliased_data?.statement_type_n1"
+                :initial-value="
+                    props.tileData?.aliased_data?.statement_type_n1
+                        ?.interchange_value
+                "
                 :mode="EDIT"
             />
             <ReferenceSelectWidget
@@ -146,6 +150,7 @@ async function save(e: FormSubmitEvent) {
                 node-alias="statement_language_n1"
                 :initial-value="
                     props.tileData?.aliased_data?.statement_language_n1
+                        ?.interchange_value
                 "
                 :mode="EDIT"
             />
@@ -154,7 +159,7 @@ async function save(e: FormSubmitEvent) {
                 node-alias="statement_data_assignment_actor"
                 :initial-value="
                     props.tileData?.aliased_data
-                        ?.statement_data_assignment_actor
+                        ?.statement_data_assignment_actor?.interchange_value
                 "
                 :mode="EDIT"
             />
@@ -164,6 +169,7 @@ async function save(e: FormSubmitEvent) {
                 :initial-value="
                     props.tileData?.aliased_data
                         ?.statement_data_assignment_object_used
+                        ?.interchange_value
                 "
                 :mode="EDIT"
             />

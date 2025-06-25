@@ -132,6 +132,7 @@ async function save(e: FormSubmitEvent) {
                 :initial-value="
                     props.tileData?.aliased_data
                         .appellative_status_ascribed_name_content
+                        ?.interchange_value
                 "
                 :mode="EDIT"
             />
@@ -140,7 +141,7 @@ async function save(e: FormSubmitEvent) {
                 node-alias="appellative_status_ascribed_relation"
                 :initial-value="
                     props.tileData?.aliased_data
-                        .appellative_status_ascribed_relation
+                        .appellative_status_ascribed_relation?.interchange_value
                 "
                 :mode="EDIT"
             />
@@ -150,6 +151,7 @@ async function save(e: FormSubmitEvent) {
                 :initial-value="
                     props.tileData?.aliased_data
                         .appellative_status_ascribed_name_language
+                        ?.interchange_value
                 "
                 :mode="EDIT"
             />
@@ -159,6 +161,7 @@ async function save(e: FormSubmitEvent) {
                 :initial-value="
                     props.tileData?.aliased_data
                         ?.appellative_status_data_assignment_actor
+                        ?.interchange_value
                 "
                 :mode="EDIT"
             />
@@ -168,6 +171,7 @@ async function save(e: FormSubmitEvent) {
                 :initial-value="
                     props.tileData?.aliased_data
                         ?.appellative_status_data_assignment_object_used
+                        ?.interchange_value
                 "
                 :mode="EDIT"
             />
