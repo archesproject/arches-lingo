@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { provide, ref, watch } from "vue";
+import { ref } from "vue";
 import Drawer from "primevue/drawer";
 
 import ConceptTree from "@/arches_lingo/components/tree/ConceptTree.vue";
@@ -10,14 +10,6 @@ const showHierarchy = defineModel("showHierarchy", {
 });
 
 const conceptTreeKey = ref(0);
-const isLoading = ref(false);
-watch(isLoading, (ab) => console.log("LOADING", ab));
-
-function refreshConceptTree() {
-    conceptTreeKey.value += 1;
-}
-
-provide("refreshConceptTree", refreshConceptTree);
 </script>
 
 <template>
