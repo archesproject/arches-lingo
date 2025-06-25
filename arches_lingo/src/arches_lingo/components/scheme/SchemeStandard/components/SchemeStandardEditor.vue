@@ -127,7 +127,10 @@ async function save(e: FormSubmitEvent) {
             <ResourceInstanceMultiSelectWidget
                 graph-slug="scheme"
                 node-alias="creation_sources"
-                :initial-value="props.tileData?.aliased_data.creation_sources"
+                :initial-value="
+                    props.tileData?.aliased_data.creation_sources
+                        ?.interchange_value
+                "
                 :mode="EDIT"
             />
         </Form>
