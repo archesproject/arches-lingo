@@ -78,9 +78,10 @@ router.beforeEach(async (to, _from, next) => {
 <template>
     <main>
         <SideNav v-if="route.meta.shouldShowNavigation" />
+
         <div class="main-content">
             <PageHeader v-if="route.meta.shouldShowNavigation" />
-            <RouterView v-else />
+            <RouterView :key="route.fullPath" />
         </div>
     </main>
     <Toast
