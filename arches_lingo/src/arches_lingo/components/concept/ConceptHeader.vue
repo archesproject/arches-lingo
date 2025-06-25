@@ -5,7 +5,7 @@ import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
 
 import Button from "primevue/button";
-import ProgressSpinner from "primevue/progressspinner";
+import Skeleton from "primevue/skeleton";
 
 import ResourceInstanceMultiSelectWidget from "@/arches_component_lab/widgets/ResourceInstanceMultiSelectWidget/ResourceInstanceMultiSelectWidget.vue";
 
@@ -100,7 +100,7 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
 </script>
 
 <template>
-    <ProgressSpinner
+    <Skeleton
         v-if="isLoading"
         style="width: 100%"
     />
@@ -234,11 +234,13 @@ h2 {
     padding: 0;
     margin: 0;
 }
+
 .header-row {
     display: flex;
     justify-content: space-between;
     align-items: baseline;
 }
+
 .uri-container {
     justify-content: flex-start;
 }
@@ -248,6 +250,7 @@ h2 {
     margin-inline-end: 1rem;
     align-items: baseline;
 }
+
 .header-item-label {
     font-weight: var(--p-lingo-font-weight-normal);
     font-size: var(--p-lingo-font-size-smallnormal);

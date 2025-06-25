@@ -4,7 +4,7 @@ import { computed, inject, nextTick, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
-import ProgressSpinner from "primevue/progressspinner";
+import Skeleton from "primevue/skeleton";
 
 import Tree from "primevue/tree";
 
@@ -339,10 +339,15 @@ function onNodeSelect(node: TreeNode) {
         :expand-all
         :collapse-all
     />
-    <ProgressSpinner
+    <div
         v-if="!tree.length"
-        style="width: 100%"
-    />
+        class="skeleton"
+    >
+        <Skeleton height="1.75rem" />
+        <Skeleton height="1.75rem" />
+        <Skeleton height="1.75rem" />
+        <Skeleton height="1.75rem" />
+    </div>
     <Tree
         v-if="tree"
         ref="treeDOMRef"
@@ -407,10 +412,22 @@ function onNodeSelect(node: TreeNode) {
     padding: 0;
     font-size: var(--p-lingo-font-size-smallnormal);
 }
+
 :deep(.p-tree-filter-input) {
     border-radius: 0.125rem;
 }
+
 :deep(.p-tree-root) {
     height: 100%;
+}
+
+.skeleton {
+    padding: var(--p-tree-padding);
+    width: 29rem;
+}
+
+.skeleton :deep(.p-skeleton) {
+    margin: 0.5rem 0;
+    height: var(--p-tree-node-toggle-button-size);
 }
 </style>
