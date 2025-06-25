@@ -117,19 +117,28 @@ async function save(e: FormSubmitEvent) {
             <NonLocalizedStringWidget
                 :graph-slug="props.graphSlug"
                 node-alias="statement_content"
-                :initial-value="props.tileData?.aliased_data.statement_content"
+                :initial-value="
+                    props.tileData?.aliased_data.statement_content
+                        ?.display_value
+                "
                 :mode="EDIT"
             />
             <ReferenceSelectWidget
                 :graph-slug="props.graphSlug"
                 node-alias="statement_type"
-                :initial-value="props.tileData?.aliased_data.statement_type"
+                :initial-value="
+                    props.tileData?.aliased_data.statement_type
+                        ?.interchange_value
+                "
                 :mode="EDIT"
             />
             <ReferenceSelectWidget
                 :graph-slug="props.graphSlug"
                 node-alias="statement_language"
-                :initial-value="props.tileData?.aliased_data.statement_language"
+                :initial-value="
+                    props.tileData?.aliased_data.statement_language
+                        ?.interchange_value
+                "
                 :mode="EDIT"
             />
             <DateWidget
@@ -138,6 +147,7 @@ async function save(e: FormSubmitEvent) {
                 :initial-value="
                     props.tileData?.aliased_data
                         .statement_data_assignment_timespan_begin_of_the_begin
+                        ?.interchange_value
                 "
                 :mode="EDIT"
             />
@@ -147,6 +157,7 @@ async function save(e: FormSubmitEvent) {
                 :initial-value="
                     props.tileData?.aliased_data
                         .statement_data_assignment_timespan_end_of_the_end
+                        ?.interchange_value
                 "
                 :mode="EDIT"
             />
@@ -155,6 +166,7 @@ async function save(e: FormSubmitEvent) {
                 node-alias="statement_data_assignment_actor"
                 :initial-value="
                     props.tileData?.aliased_data.statement_data_assignment_actor
+                        ?.interchange_value
                 "
                 :mode="EDIT"
             />
@@ -164,6 +176,7 @@ async function save(e: FormSubmitEvent) {
                 :initial-value="
                     props.tileData?.aliased_data
                         .statement_data_assignment_object_used
+                        ?.interchange_value
                 "
                 :mode="EDIT"
             />

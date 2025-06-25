@@ -57,7 +57,9 @@ const metaStringLabel: MetaStringText = {
                 <NonLocalizedStringWidget
                     node-alias="statement_content"
                     :graph-slug="props.graphSlug"
-                    :initial-value="rowData.aliased_data.statement_content"
+                    :initial-value="
+                        rowData.aliased_data.statement_content?.display_value
+                    "
                     :mode="VIEW"
                     :show-label="false"
                 />
@@ -66,7 +68,9 @@ const metaStringLabel: MetaStringText = {
                 <ReferenceSelectWidget
                     node-alias="statement_type"
                     :graph-slug="props.graphSlug"
-                    :initial-value="rowData.aliased_data.statement_type"
+                    :initial-value="
+                        rowData.aliased_data.statement_type?.interchange_value
+                    "
                     :mode="VIEW"
                     :show-label="false"
                 />
@@ -75,7 +79,10 @@ const metaStringLabel: MetaStringText = {
                 <ReferenceSelectWidget
                     node-alias="statement_language"
                     :graph-slug="props.graphSlug"
-                    :initial-value="rowData.aliased_data.statement_language"
+                    :initial-value="
+                        rowData.aliased_data.statement_language
+                            ?.interchange_value
+                    "
                     :mode="VIEW"
                     :show-label="false"
                 />
@@ -86,13 +93,17 @@ const metaStringLabel: MetaStringText = {
                     :graph-slug="props.graphSlug"
                     :initial-value="
                         rowData.statement_data_assignment_object_used
+                            ?.interchange_value
                     "
                     :mode="VIEW"
                 />
                 <ResourceInstanceMultiSelectWidget
                     node-alias="statement_data_assignment_actor"
                     :graph-slug="props.graphSlug"
-                    :initial-value="rowData.statement_data_assignment_actor"
+                    :initial-value="
+                        rowData.statement_data_assignment_actor
+                            ?.interchange_value
+                    "
                     :mode="VIEW"
                 />
             </template>
