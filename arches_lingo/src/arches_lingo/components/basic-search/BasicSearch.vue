@@ -126,8 +126,9 @@ const loadAdditionalSearchResults = (event: VirtualScrollerLazyEvent) => {
 };
 
 const navigateToReport = async (event: AutoCompleteOptionSelectEvent) => {
-    const navigatingFromConcept =
-        router.currentRoute.value.name === routeNames.concept;
+    const navigatingFromConcept = Boolean(
+        router.currentRoute.value.name === routeNames.concept,
+    );
 
     await router.push({
         name: routeNames.concept,
