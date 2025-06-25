@@ -56,35 +56,9 @@ async function checkUserAuthentication(
     }
 }
 
-function carryOverShowHierarchy(to: RouteLocationNormalizedLoadedGeneric) {
-    const currentUrl = new URL(window.location.href);
-    const currentShowHierarchy = currentUrl.searchParams.get("showHierarchy");
-
-    if (
-        currentShowHierarchy &&
-        to.matched.some((record) => record.meta.shouldShowHierarchy) &&
-        !to.query.showHierarchy
-    ) {
-        return {
-            name: to.name,
-            params: to.params,
-            query: {
-                ...to.query,
-                showHierarchy: currentShowHierarchy,
-            },
-        };
-    }
-    return null;
-}
-
 router.beforeEach(async (to, _from, next) => {
     try {
         await checkUserAuthentication(to);
-        const newLocation = carryOverShowHierarchy(to);
-
-        if (newLocation) {
-            return next(newLocation);
-        }
 
         next();
     } catch (error) {
@@ -104,10 +78,9 @@ router.beforeEach(async (to, _from, next) => {
 <template>
     <main>
         <SideNav v-if="route.meta.shouldShowNavigation" />
-
         <div class="main-content">
             <PageHeader v-if="route.meta.shouldShowNavigation" />
-            <RouterView />
+            <RouterView v-else />
         </div>
     </main>
     <Toast
