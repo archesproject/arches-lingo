@@ -125,9 +125,20 @@ const loadAdditionalSearchResults = (event: VirtualScrollerLazyEvent) => {
     }
 };
 
-const navigateToReport = (event: AutoCompleteOptionSelectEvent) => {
+const navigateToReport = async (event: AutoCompleteOptionSelectEvent) => {
+    const navigatingFromConcept =
+        router.currentRoute.value.name === routeNames.concept;
+
+    await router.push({
+        name: routeNames.concept,
+        params: { id: event.value.id },
+    });
     props.toggleModal();
-    router.push({ name: routeNames.concept, params: { id: event.value.id } });
+
+    // If the current route is already the concept, we need to force a reload to see the new concept.
+    if (navigatingFromConcept) {
+        router.go(0);
+    }
 };
 
 onMounted(focusInput);
