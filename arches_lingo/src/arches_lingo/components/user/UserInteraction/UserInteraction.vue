@@ -65,7 +65,10 @@ function openUserMenu(event: MouseEvent) {
             <span>{{ displayName }}</span>
         </Button>
 
-        <Popover ref="popover">
+        <Popover
+            ref="popover"
+            style="padding: 1rem 0.5rem"
+        >
             <UserInteractionMenu
                 :display-name="displayName"
                 :email="user!.email"

@@ -18,13 +18,14 @@ const isNavExpanded = inject("isNavExpanded", false);
             v-if="props.item.icon"
             :class="props.item.icon"
         ></i>
-        <span>{{ props.item.label }}</span>
+        <span style="white-space: nowrap; flex-shrink: 0">{{
+            props.item.label
+        }}</span>
     </div>
     <div
         v-for="child in props.item.items"
         :key="child.key"
         class="nav-child"
-        :class="child.disabled ? 'disabled' : ''"
     >
         <RouterLink
             v-if="child.route && (child.showIconIfCollapsed || isNavExpanded)"
@@ -47,13 +48,19 @@ const isNavExpanded = inject("isNavExpanded", false);
                     paddingInlineStart: isNavExpanded ? '2rem' : '0.75rem',
                 }"
                 class="nav-button p-button"
+                :class="child.disabled ? 'disabled' : ''"
                 @click="navigate"
             >
                 <i
                     v-if="child.icon"
                     :class="child.icon"
                 ></i>
-                <span v-if="isNavExpanded">{{ child.label }}</span>
+                <span
+                    v-if="isNavExpanded"
+                    style="white-space: nowrap; flex-shrink: 0"
+                >
+                    {{ child.label }}
+                </span>
             </a>
         </RouterLink>
     </div>
@@ -62,14 +69,20 @@ const isNavExpanded = inject("isNavExpanded", false);
 <style scoped>
 .nav-child {
     background-color: var(--p-primary-950);
+    cursor: pointer;
 }
 .disabled {
     opacity: var(--p-disabled-opacity);
     cursor: default;
     user-select: none;
+    cursor: not-allowed;
+}
+.disabled:hover {
+    background-color: var(--p-disabled-opacity);
 }
 
 .p-button {
     justify-content: flex-start;
+    border: 0 !important;
 }
 </style>
