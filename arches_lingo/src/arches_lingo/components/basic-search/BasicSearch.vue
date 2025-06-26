@@ -5,6 +5,7 @@ import { useRouter } from "vue-router";
 
 import AutoComplete from "primevue/autocomplete";
 import Button from "primevue/button";
+import ProgressBar from "primevue/progressbar";
 
 import { useToast } from "primevue/usetoast";
 
@@ -124,9 +125,13 @@ const loadAdditionalSearchResults = (event: VirtualScrollerLazyEvent) => {
     }
 };
 
-const navigateToReport = (event: AutoCompleteOptionSelectEvent) => {
+const navigateToReport = async (event: AutoCompleteOptionSelectEvent) => {
     props.toggleModal();
-    router.push({ name: routeNames.concept, params: { id: event.value.id } });
+
+    router.push({
+        name: routeNames.concept,
+        params: { id: event.value.id },
+    });
 };
 
 onMounted(focusInput);
@@ -181,6 +186,7 @@ watch(searchResults, (searchResults) => {
                 v-model="query"
                 option-label="id"
                 append-to="#basic-search-container"
+                :delay="500"
                 :loading="isLoading && !isLoadingAdditionalResults"
                 :placeholder="$gettext('Quick Search')"
                 :pt="{
@@ -244,14 +250,10 @@ watch(searchResults, (searchResults) => {
                     v-if="isLoadingAdditionalResults"
                     #footer
                 >
-                    <div class="footer">
-                        <i
-                            class="pi pi-spin pi-spinner p-virtualscroller-loader"
-                            :aria-label="
-                                $gettext('Loading additional search results')
-                            "
-                        />
-                    </div>
+                    <ProgressBar
+                        mode="indeterminate"
+                        style="height: 0.5rem"
+                    />
                 </template>
             </AutoComplete>
 
@@ -264,6 +266,11 @@ watch(searchResults, (searchResults) => {
             />
         </div>
 
+        <ProgressBar
+            v-if="isLoading && !isLoadingAdditionalResults"
+            mode="indeterminate"
+            style="height: 0.25rem"
+        />
         <SortAndFilterControls />
     </div>
 </template>
@@ -292,18 +299,12 @@ watch(searchResults, (searchResults) => {
     width: 100%;
 }
 
-.footer {
-    text-align: center;
-    position: absolute;
-    bottom: 0;
-    inset-inline-end: 0;
+:deep(.p-autocomplete-loader) {
+    color: var(--p-primary-600);
+}
 
-    i {
-        font-size: var(--p-lingo-font-size-xxlarge);
-        background-color: transparent;
-        padding: 1rem;
-        height: 4rem;
-    }
+:deep(.p-progressbar .p-progressbar-value) {
+    background: var(--p-primary-800);
 }
 
 :deep(.p-autocomplete .p-autocomplete-input) {

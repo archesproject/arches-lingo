@@ -134,8 +134,8 @@ async function save(e: FormSubmitEvent) {
         }
 
         // files do not respect json.stringify
-        const fileJsonObjects = submittedFormData.content.newFiles.map(
-            (file: File) => {
+        const fileJsonObjects =
+            submittedFormData.content.newFiles?.map((file: File) => {
                 return {
                     name: file.name.replace(/ /g, "_"),
                     lastModified: file.lastModified,
@@ -145,8 +145,7 @@ async function save(e: FormSubmitEvent) {
                     file_id: null,
                     content: URL.createObjectURL(file),
                 };
-            },
-        );
+            }) ?? [];
 
         if (!digitalObjectInstanceAliases.content) {
             digitalObjectInstanceAliases.content = {
@@ -164,12 +163,12 @@ async function save(e: FormSubmitEvent) {
         const contentTile = digitalObjectInstanceAliases.content.aliased_data;
 
         contentTile.content.filter(
-            (file) => !submittedFormData.content.deletedFiles.includes(file),
+            (file) => !submittedFormData.content?.deletedFiles?.includes(file),
         );
 
         // this fork was requested because the multipartjson parser is unstable
         // if files go one way, if no files go the traditional way
-        if (submittedFormData.content.newFiles.length) {
+        if (submittedFormData.content.newFiles?.length) {
             const formDataForDigitalObject = await createFormDataForFileUpload(
                 digitalObjectResource as Ref<DigitalObjectInstance>,
                 digitalObjectInstanceAliases,
