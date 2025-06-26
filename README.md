@@ -1,12 +1,113 @@
-# Arches Lingo
+# Welcome to Arches Lingo!
 
-## About Lingo
+Arches Lingo is an Arches application designed to support the creation of thesaurus/vocabulary data.  It supports the creation of polyhierarchical thesauri, and provides a user interface for managing thesauri and their terms. Arches Lingo is built on top of the Arches platform, which is an open-source software platform for managing cultural heritage data.
 
-### References
-- [1] Contains information from the J. Paul Getty Trust, Getty Research Institute, the Art & Architecture Thesaurus, which is made available under the ODC Attribution License.
+Please see the [project page](http://archesproject.org/) for more information on the Arches project.
 
-## Setup
-### Note: This is a guide to set up the project for local development.
+
+## Installation
+
+If you are installing Arches Lingo for the first time, you can install it as an Arches application into a project or run it directly as an Arches project. Running Arches Lingo as a project can provide some convienience if you are a developer contributing to the Arches Lingo project. Otherwise, **we strongly recommend running Arches Lingo as an Arches Application** within a project because that will allow greater flexibility in customizing your project without the risk of conflicts when upgrading to the next version of Arches Lingo.  
+
+Install Arches Lingo using the following command:
+```
+pip install arches-lingo
+```
+
+For developer install instructions, see the [Developer Setup](#developer-setup-for-contributing-to-the-arches-lingo-project) section below.
+
+
+## Project Configuration
+
+1. If you don't already have an Arches project, you'll need to create one by following the instructions in the Arches [documentation](http://archesproject.org/documentation/).
+
+2. When your project is ready, add "arches_component_lab", "arches_controlled_lists", "arches_lingo", and "pgtrigger" to INSTALLED_APPS **below** the name of your project:
+    ```
+    INSTALLED_APPS = (
+        ...
+        "my_project_name",
+        "arches_component_lab",
+        "arches_controlled_lists",
+        "arches_lingo",
+        "pgtrigger",
+    )
+    ```
+
+3. Make sure the following settings are added to your project
+    ```
+    REFERENCES_INDEX_NAME = "references"
+    ELASTICSEARCH_CUSTOM_INDEXES = [
+        {
+            "module": "arches_controlled_lists.search_indexes.reference_index.ReferenceIndex",
+            "name": REFERENCES_INDEX_NAME,
+            "should_update_asynchronously": True,
+        }
+    ]
+    TERM_SEARCH_TYPES = [
+        {
+            "type": "term",
+            "label": _("Term Matches"),
+            "key": "terms",
+            "module": "arches.app.search.search_term.TermSearch",
+        },
+        {
+            "type": "concept",
+            "label": _("Concepts"),
+            "key": "concepts",
+            "module": "arches.app.search.concept_search.ConceptSearch",
+        },
+        {
+            "type": "reference",
+            "label": _("References"),
+            "key": REFERENCES_INDEX_NAME,
+            "module": "arches_controlled_lists.search_indexes.reference_index.ReferenceIndex",
+        },
+    ]
+
+    ES_MAPPING_MODIFIER_CLASSES = [
+        "arches_controlled_lists.search.references_es_mapping_modifier.ReferencesEsMappingModifier"
+    ]
+    ```
+
+4. Next ensure arches and arches_lingo are included as dependencies in package.json
+    ```
+    "dependencies": {
+        "@uppy/aws-s3": "3.6.2",
+        "@uppy/core": "3.13.0",
+        "@uppy/dashboard": "3.9.0",
+        "@uppy/drag-drop": "3.1.0",
+        "@uppy/progress-bar": "3.1.1",
+        "@uppy/companion-client": "3.1.3",
+        "typescript": "5.6.2",
+        "arches": "archesproject/arches#dev/8.0.x",
+        "arches_lingo": "archesproject/arches-lingo#dev/1.0.x"
+    }
+    ```
+
+5. Update urls.py to include the arches_lingo urls
+    ```
+    urlpatterns = [
+        path("", include("arches_lingo.urls")),
+    ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    ```
+
+6. Install the arches application package (models and other data)
+    ```
+    python manage.py packages -o load_package -a arches_lingo -dev -y
+    ```
+
+7. Start your project
+    ```
+    python manage.py runserver
+    ```
+
+8. Next cd into your project's app directory (the one with package.json) install and build front-end dependencies:
+    ```
+    npm install
+    npm run build_development
+    ```
+
+## Developer Setup (for contributing to the Arches Lingo project)
 
 1. Download the arches-lingo repo:
 
@@ -121,3 +222,7 @@ NOTE: Changes are committed to the arches-lingo repository.
     ```
 
 6. Navigate to https://github.com/archesproject/arches-lingo/pulls to see and commit the pull request
+
+
+## References
+- [1] Contains information from the J. Paul Getty Trust, Getty Research Institute, the Art & Architecture Thesaurus, which is made available under the ODC Attribution License.
