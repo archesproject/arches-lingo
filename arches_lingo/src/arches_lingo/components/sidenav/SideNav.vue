@@ -130,6 +130,7 @@ const emit = defineEmits(["update:isNavExpanded"]);
     width: 100%;
     min-width: 3rem;
     transition: min-width 0.3s ease-in-out;
+    border-right: 0.125rem solid var(--p-primary-950);
 }
 
 .sidenav-panelmenu.expanded {
@@ -139,6 +140,7 @@ const emit = defineEmits(["update:isNavExpanded"]);
 .nav-button {
     border: 0 !important;
     border-bottom: 0.125rem solid var(--p-primary-950) !important;
+    cursor: pointer;
 }
 
 .nav-button.expanded {
@@ -153,6 +155,7 @@ const emit = defineEmits(["update:isNavExpanded"]);
 :deep(.p-button) {
     background-color: var(--p-primary-950) !important;
     border-color: var(--p-primary-950) !important;
+    color: var(--p-menubar-color) !important;
 }
 :deep(.p-button):hover {
     background: var(--p-button-primary-hover-background) !important;

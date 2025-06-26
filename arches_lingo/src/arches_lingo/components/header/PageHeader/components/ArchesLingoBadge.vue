@@ -37,7 +37,6 @@ function handleClick(navigate: () => void, isActive: boolean) {
             v-slot="{ navigate, isActive }"
             :to="{ name: routeNames.root }"
             :custom="true"
-            style="text-decoration: none; color: inherit"
         >
             <div
                 class="lingo-badge"

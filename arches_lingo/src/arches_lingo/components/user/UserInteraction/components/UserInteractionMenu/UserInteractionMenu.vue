@@ -40,10 +40,12 @@ defineProps<{
 .email {
     font-size: var(--p-lingo-font-size-small);
     color: var(--p-text-muted-color);
+    margin-top: 0.25rem;
 }
 .user-interaction-menu {
     font-family: var(--p-lingo-font-family);
     width: 20rem;
+    height: 100%;
 }
 
 .user-interactions {

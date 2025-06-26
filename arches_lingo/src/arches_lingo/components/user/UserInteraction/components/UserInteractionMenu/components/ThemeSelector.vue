@@ -65,6 +65,7 @@ function setTheme(value: boolean) {
             :allow-empty="false"
             :aria-label="$gettext('Theme Selector')"
             :options="options"
+            style="width: max-content"
         >
             <template #option="slotProps">
                 <i :class="slotProps.option.icon"></i>
