@@ -55,25 +55,26 @@ export async function addDigitalObjectToConceptImageCollection(
             conceptDigitalObjectRelationshipList.aliased_data.depicting_digital_asset_internal =
                 {
                     aliased_data: {
-                        depicting_digital_asset_internal: [],
+                        depicting_digital_asset_internal: {
+                            interchange_value: [],
+                            display_value: "",
+                        },
                     },
                 };
         }
 
         if (
-            !conceptDigitalObjectRelationshipList.aliased_data
-                .depicting_digital_asset_internal.aliased_data
+            !conceptDigitalObjectRelationshipList?.aliased_data
+                .depicting_digital_asset_internal?.aliased_data
                 .depicting_digital_asset_internal
         ) {
-            conceptDigitalObjectRelationshipList.aliased_data.depicting_digital_asset_internal.aliased_data.depicting_digital_asset_internal =
+            conceptDigitalObjectRelationshipList.aliased_data.depicting_digital_asset_internal.aliased_data.depicting_digital_asset_internal.interchange_value =
                 [];
         }
-        conceptDigitalObjectRelationshipList.aliased_data.depicting_digital_asset_internal?.aliased_data.depicting_digital_asset_internal?.push(
+        conceptDigitalObjectRelationshipList.aliased_data.depicting_digital_asset_internal.aliased_data.depicting_digital_asset_internal.interchange_value.push(
             {
                 display_value: digitalObjectResource.display_value,
-                resourceId: digitalObjectResource.resourceinstanceid,
-                ontologyProperty: "",
-                inverseOntologyProperty: "",
+                resource_id: digitalObjectResource.resourceinstanceid,
             },
         );
         await updateLingoResource(
