@@ -45,8 +45,6 @@ const componentEditorFormRef = inject<Ref<Component | null>>(
     "componentEditorFormRef",
 );
 
-const refreshConceptTree = inject<() => null>("refreshConceptTree");
-
 const openEditor =
     inject<(componentName: string, tileid?: string) => void>("openEditor");
 
@@ -87,7 +85,6 @@ async function save(e: FormSubmitEvent) {
         }
 
         refreshReportSection!(props.componentName);
-        refreshConceptTree!();
     } catch (error) {
         toast.add({
             severity: ERROR,

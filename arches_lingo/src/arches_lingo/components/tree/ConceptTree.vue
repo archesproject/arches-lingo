@@ -4,6 +4,7 @@ import { computed, inject, nextTick, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
+import ProgressSpinner from "primevue/progressspinner";
 
 import Tree from "primevue/tree";
 
@@ -26,7 +27,6 @@ import {
     treeFromSchemes,
     navigateToSchemeOrConcept,
 } from "@/arches_lingo/utils.ts";
-import { getItemLabel } from "@/arches_component_lab/utils.ts";
 
 import type { ComponentPublicInstance, Ref } from "vue";
 import type { RouteLocationNormalizedLoadedGeneric } from "vue-router";
@@ -175,14 +175,6 @@ function snoopOnFilterValue() {
         expandPathsToFilterResults(inputEl.value);
         filterValue.value = inputEl.value;
     }
-}
-
-function lazyLabelLookup(node: TreeNode) {
-    return getItemLabel(
-        node.data,
-        selectedLanguage.value.code,
-        systemLanguage.code,
-    ).value;
 }
 
 function updateSelectedAndExpanded(node: TreeNode) {
@@ -347,6 +339,10 @@ function onNodeSelect(node: TreeNode) {
         :expand-all
         :collapse-all
     />
+    <ProgressSpinner
+        v-if="!tree.length"
+        style="width: 100%"
+    />
     <Tree
         v-if="tree"
         ref="treeDOMRef"
@@ -354,18 +350,15 @@ function onNodeSelect(node: TreeNode) {
         v-model:selection-keys="selectedKeys"
         v-model:expanded-keys="expandedKeys"
         :value="tree"
-        :filter="true"
-        :filter-by="lazyLabelLookup"
-        filter-mode="lenient"
-        :filter-placeholder="$gettext('Find')"
+        class="concept-tree"
         selection-mode="single"
-        style="display: flex; flex-direction: column; overflow-y: hidden"
         :pt="{
             pcFilter: {
                 root: {
                     ariaLabel: $gettext('Find'),
                     style: {
                         width: '100%',
+                        height: '100%',
                         marginBottom: '1rem',
                         display: 'flex',
                     },
@@ -395,7 +388,7 @@ function onNodeSelect(node: TreeNode) {
         <template #default="slotProps">
             <TreeRow
                 :id="slotProps.node.data.id"
-                :focused-node="focusedNode"
+                v-model:focused-node="focusedNode"
                 :filter-value="filterValue"
                 :node="slotProps.node"
                 :focus-label="FOCUS"
@@ -406,7 +399,18 @@ function onNodeSelect(node: TreeNode) {
     </Tree>
 </template>
 <style scoped>
+.concept-tree {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow-y: hidden;
+    padding: 0;
+    font-size: var(--p-lingo-font-size-smallnormal);
+}
 :deep(.p-tree-filter-input) {
     border-radius: 0.125rem;
+}
+:deep(.p-tree-root) {
+    height: 100%;
 }
 </style>
