@@ -68,6 +68,7 @@ const emit = defineEmits(["update:isNavExpanded"]);
             v-tooltip.bottom="{
                 value: $gettext('Expand navigation'),
                 disabled: isNavExpanded,
+                showDelay: 300,
                 pt: {
                     root: { style: { marginInlineStart: '7rem' } },
                     text: {
@@ -131,6 +132,8 @@ const emit = defineEmits(["update:isNavExpanded"]);
     min-width: 3rem;
     transition: min-width 0.3s ease-in-out;
     border-right: 0.125rem solid var(--p-primary-950);
+    gap: 0.1rem;
+    background-color: var(--p-surface-950);
 }
 
 .sidenav-panelmenu.expanded {
