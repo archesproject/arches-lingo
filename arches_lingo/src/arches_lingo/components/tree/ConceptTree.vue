@@ -350,14 +350,15 @@ function onNodeSelect(node: TreeNode) {
         v-model:selection-keys="selectedKeys"
         v-model:expanded-keys="expandedKeys"
         :value="tree"
+        class="concept-tree"
         selection-mode="single"
-        style="display: flex; flex-direction: column; overflow-y: hidden"
         :pt="{
             pcFilter: {
                 root: {
                     ariaLabel: $gettext('Find'),
                     style: {
                         width: '100%',
+                        height: '100%',
                         marginBottom: '1rem',
                         display: 'flex',
                     },
@@ -398,7 +399,18 @@ function onNodeSelect(node: TreeNode) {
     </Tree>
 </template>
 <style scoped>
+.concept-tree {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow-y: hidden;
+    padding: 0;
+    font-size: var(--p-lingo-font-size-smallnormal);
+}
 :deep(.p-tree-filter-input) {
     border-radius: 0.125rem;
+}
+:deep(.p-tree-root) {
+    height: 100%;
 }
 </style>

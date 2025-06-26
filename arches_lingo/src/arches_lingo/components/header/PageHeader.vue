@@ -39,6 +39,7 @@ function activateHierarchyOverlay() {
                 <h1 class="lingo-title">{{ $gettext("Arches Lingo") }}</h1>
             </RouterLink>
             <Button
+                icon="pi pi-globe"
                 class="toggle-hierarchy"
                 :label="$gettext('Explore...')"
                 @click="activateHierarchyOverlay"

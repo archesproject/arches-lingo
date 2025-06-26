@@ -16,39 +16,30 @@ const conceptTreeKey = ref(0);
     <Drawer
         v-model:visible="showHierarchy"
         class="hierarchy-container"
-        style="width: auto"
+        style="min-width: 32rem"
+        :header="$gettext('Explore Hierarchies')"
         :pt="{
-            header: { style: { justifyContent: 'end' } },
-            content: { style: { padding: '0' } },
+            content: {
+                style: {
+                    padding: '0',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    fontFamily: 'var(--p-lingo-font-family)',
+                },
+            },
+            header: {
+                style: {
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    backgroundColor: 'var(--p-form-field-filled-background)',
+                    paddingBottom: '0.5rem',
+                    fontFamily: 'var(--p-lingo-font-family)',
+                },
+            },
         }"
     >
         <ConceptTree :key="conceptTreeKey" />
     </Drawer>
 </template>
 
-<style scoped>
-.subheading {
-    display: flex;
-    margin: 0;
-    gap: 0.5rem;
-    height: 3rem;
-    background: var(--p-button-secondary-background);
-}
-
-.subheading h2 {
-    font-size: medium;
-}
-
-.toggle-hierarchy {
-    border-radius: 0;
-    border-inline-start: 0.06rem solid
-        var(--p-button-secondary-active-border-color);
-    border-inline-end: 0.06rem solid
-        var(--p-button-secondary-active-border-color);
-    font-size: var(--p-lingo-font-size-smallnormal);
-}
-
-:deep(.p-drawer-header) {
-    justify-content: end;
-}
-</style>
+<style scoped></style>
