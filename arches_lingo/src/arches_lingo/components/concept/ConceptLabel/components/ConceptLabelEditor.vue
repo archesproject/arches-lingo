@@ -117,7 +117,7 @@ async function save(e: FormSubmitEvent) {
                 :initial-value="
                     props.tileData?.aliased_data
                         ?.appellative_status_ascribed_name_content
-                        ?.display_value
+                        ?.interchange_value
                 "
                 :mode="EDIT"
             />

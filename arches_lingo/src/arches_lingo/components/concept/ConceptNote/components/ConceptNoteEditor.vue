@@ -116,7 +116,7 @@ async function save(e: FormSubmitEvent) {
                 node-alias="statement_content"
                 :initial-value="
                     props.tileData?.aliased_data.statement_content
-                        ?.display_value
+                        ?.interchange_value
                 "
                 :mode="EDIT"
             />
