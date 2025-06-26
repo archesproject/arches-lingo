@@ -8,7 +8,7 @@ readme = "README.md"
 authors = [
     {"name" = "Arches Project"}
 ]
-license = {text = "GNU AGPL3"}
+license = {text = "AGPL-3.0-or-later"}
 description = "An Arches application designed to support the creation of thesaurus/vocabulary data."
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -31,7 +31,7 @@ dependencies = [
     "arches_querysets @ git+https://github.com/archesproject/arches-querysets@main",
     "arches_controlled_lists @ git+https://github.com/archesproject/arches-controlled-lists.git@main",
 ]
-version = "0.0.1"
+version = "1.0.0a0"
 
 [project.urls]
 Homepage = "https://archesproject.org/"
