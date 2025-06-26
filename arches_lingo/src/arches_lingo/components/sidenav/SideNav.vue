@@ -70,7 +70,6 @@ function toggleAll() {
                 <component
                     :is="item.component"
                     :item="item"
-                    :nav-is-expanded="isNavExpanded"
                 />
             </template>
         </PanelMenu>

@@ -3,7 +3,7 @@ import { ref } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import { routeNames } from "@/arches_lingo/routes.ts";
-import SideNavSection from "@/arches_lingo/components/sidenav/SideNavSection.vue";
+import SideNavSection from "@/arches_lingo/components/sidenav/components/SideNavSection.vue";
 
 import type { SideNavMenuItem } from "@/arches_lingo/types.ts";
 
