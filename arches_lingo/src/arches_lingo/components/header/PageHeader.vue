@@ -3,21 +3,29 @@ import { ref } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import Menubar from "primevue/menubar";
-
+import Button from "primevue/button";
 import { routeNames } from "@/arches_lingo/routes.ts";
-import DarkModeToggle from "@/arches_lingo/components/header/DarkModeToggle.vue";
+import HierarchyOverlay from "@/arches_lingo/components/tree/HierarchyOverlay.vue";
 import UserInteraction from "@/arches_lingo/components/user/UserInteraction/UserInteraction.vue";
 import SearchDialog from "@/arches_lingo/components/header/SearchDialog.vue";
 
 import { generateArchesURL } from "@/arches/utils/generate-arches-url.ts";
 
 const { $gettext } = useGettext();
+const showHierarchy = ref();
 
 const items = ref([]);
+
+function activateHierarchyOverlay() {
+    showHierarchy.value = true;
+}
 </script>
 
 <template>
-    <Menubar :model="items">
+    <Menubar
+        :model="items"
+        style="border-radius: 0; border-inline-start: 0; border-inline-end: 0"
+    >
         <template #start>
             <RouterLink
                 :to="{ name: routeNames.root }"
@@ -35,6 +43,12 @@ const items = ref([]);
                     <h1 class="lingo-title">{{ $gettext("Lingo") }}</h1>
                 </div>
             </RouterLink>
+            <Button
+                icon="pi pi-globe"
+                class="toggle-hierarchy"
+                :label="$gettext('Explore...')"
+                @click="activateHierarchyOverlay"
+            />
             <SearchDialog />
         </template>
         <template #item="{ item }">
@@ -59,6 +73,7 @@ const items = ref([]);
             </div>
         </template>
     </Menubar>
+    <HierarchyOverlay v-model:show-hierarchy="showHierarchy" />
 </template>
 
 <style scoped>

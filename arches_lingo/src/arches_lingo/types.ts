@@ -1,4 +1,5 @@
-import type { Ref } from "vue";
+import type { Component, Ref } from "vue";
+import type { MenuItem } from "primevue/menuitem";
 import type { TreeNode } from "primevue/treenode";
 import type { Label } from "@/arches_component_lab/types.ts";
 import type { EDIT, VIEW } from "@/arches_lingo/constants.ts";
@@ -105,6 +106,7 @@ export interface TileData<T extends AliasedData = AliasedData> {
 }
 
 export interface ResourceData<T extends AliasedData = AliasedData> {
+    display_value?: string;
     resourceinstanceid: string;
     aliased_data: T;
 }
@@ -147,9 +149,8 @@ export interface DigitalObjectNameAliases extends AliasedData {
 export type DigitalObjectName = TileData<DigitalObjectNameAliases>;
 
 export interface DigitalObjectInstanceAliases extends AliasedData {
-    name: DigitalObjectName;
+    name?: DigitalObjectName;
     content?: DigitalObjectContent;
-    resourceinstanceid: string;
     statement?: ConceptStatement;
 }
 
@@ -220,7 +221,7 @@ export interface ConceptInstance {
     aliased_data: {
         appellative_status?: AppellativeStatus[];
         concept_statement?: ConceptStatement[];
-        depicting_digital_asset_internal?: ConceptImages[];
+        depicting_digital_asset_internal?: ConceptImages;
         classification_status?: ConceptClassificationStatusAliases[];
     };
 }
@@ -283,6 +284,11 @@ export interface NodeAndParentInstruction {
 export interface IconLabels {
     concept: string;
     scheme: string;
+}
+
+export interface SideNavMenuItem extends MenuItem {
+    component?: Component;
+    showIconIfCollapsed?: boolean;
 }
 
 export interface SearchResultItem {
