@@ -155,8 +155,8 @@ async function save(e: FormSubmitEvent) {
             };
         } else {
             digitalObjectInstanceAliases.content.aliased_data.content = [
-                ...(digitalObjectInstanceAliases.content.aliased_data.content ??
-                    []),
+                ...(digitalObjectInstanceAliases.content.aliased_data.content
+                    ?.interchange_value ?? []),
                 ...fileJsonObjects,
             ];
         }
@@ -266,7 +266,7 @@ function resetForm() {
                 :mode="EDIT"
                 :initial-value="
                     digitalObjectResource?.aliased_data.name?.aliased_data
-                        .name_content
+                        .name_content?.interchange_value
                 "
             />
             <NonLocalizedStringWidget
@@ -275,7 +275,7 @@ function resetForm() {
                 :mode="EDIT"
                 :initial-value="
                     digitalObjectResource?.aliased_data.statement?.aliased_data
-                        .statement_content
+                        .statement_content?.interchange_value
                 "
             />
             <FileListWidget
@@ -283,7 +283,7 @@ function resetForm() {
                 graph-slug="digital_object_rdm_system"
                 :initial-value="
                     digitalObjectResource?.aliased_data?.content?.aliased_data
-                        .content
+                        .content?.interchange_value
                 "
                 :mode="EDIT"
                 :show-label="false"

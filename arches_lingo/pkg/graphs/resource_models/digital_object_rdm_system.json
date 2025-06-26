@@ -235,20 +235,6 @@
                     "card_id": "78fc2246-11e8-11ef-9493-0a58a9feac02",
                     "config": {
                         "defaultValue": {
-                            "__ko_mapping__": {
-                                "copiedProperties": {},
-                                "copy": [],
-                                "ignore": [],
-                                "include": [
-                                    "_destroy"
-                                ],
-                                "mappedProperties": {
-                                    "en": true,
-                                    "en.direction": true,
-                                    "en.value": true
-                                },
-                                "observe": []
-                            },
                             "en": {
                                 "direction": "ltr",
                                 "value": null
@@ -477,20 +463,6 @@
                     "card_id": "8278e4e4-11e8-11ef-9493-0a58a9feac02",
                     "config": {
                         "defaultValue": {
-                            "__ko_mapping__": {
-                                "copiedProperties": {},
-                                "copy": [],
-                                "ignore": [],
-                                "include": [
-                                    "_destroy"
-                                ],
-                                "mappedProperties": {
-                                    "en": true,
-                                    "en.direction": true,
-                                    "en.value": true
-                                },
-                                "observe": []
-                            },
                             "en": {
                                 "direction": "ltr",
                                 "value": ""
