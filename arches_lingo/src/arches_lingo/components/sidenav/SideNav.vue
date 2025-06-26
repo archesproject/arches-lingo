@@ -10,6 +10,8 @@ import NavAuthorityEditors from "@/arches_lingo/components/sidenav/components/Na
 import NavReferenceData from "@/arches_lingo/components/sidenav/components/NavReferenceData.vue";
 import NavSettings from "@/arches_lingo/components/sidenav/components/NavSettings.vue";
 
+import ArchesLingoBadge from "@/arches_lingo/components/header/PageHeader/components/ArchesLingoBadge.vue";
+
 import type { SideNavMenuItem } from "@/arches_lingo/types.ts";
 
 const { $gettext } = useGettext();
@@ -44,19 +46,29 @@ const items = ref<SideNavMenuItem[]>([
     },
 ]);
 
+const buttonKey = ref(0);
+
 function toggleAll() {
     isNavExpanded.value = !isNavExpanded.value;
+    emit("update:isNavExpanded", isNavExpanded.value);
+
+    buttonKey.value += 1; // Force re-render of the button to remove tooltip
 }
+
+const emit = defineEmits(["update:isNavExpanded"]);
 </script>
 
 <template>
     <aside class="sidenav">
         <Button
-            v-tooltip="{
+            :key="buttonKey"
+            v-tooltip.bottom="{
                 value: $gettext('Expand navigation'),
                 disabled: isNavExpanded,
                 pt: {
+                    root: { style: { marginInlineStart: '6rem' } },
                     text: { style: { fontFamily: '--p-lingo-font-family' } },
+                    arrow: { style: { display: 'none' } },
                 },
             }"
             class="nav-button"
@@ -64,8 +76,17 @@ function toggleAll() {
             @click="toggleAll"
         >
             <i class="pi pi-bars toggle-icon"></i>
+
+            <ArchesLingoBadge
+                v-if="isNavExpanded"
+                :is-link="false"
+                style="margin-inline-start: 3rem; margin-inline-end: 1rem"
+            />
         </Button>
-        <PanelMenu :model="items">
+        <PanelMenu
+            :model="items"
+            :class="{ expanded: isNavExpanded }"
+        >
             <template #item="{ item }">
                 <component
                     :is="item.component"
@@ -78,9 +99,7 @@ function toggleAll() {
 
 <style scoped>
 .sidenav {
-    border-right: 1px solid var(--p-menubar-border-color);
     background: var(--p-primary-950);
-    width: 3.125rem;
 }
 
 .p-button {
@@ -91,22 +110,14 @@ function toggleAll() {
     border-radius: 0;
 }
 
-i {
-    color: var(--p-surface-0);
-}
-
-.p-button:hover {
-    background: var(--p-button-primary-hover-background) !important;
-    min-width: max-content;
-}
-
-.p-panelmenu {
-    gap: 0;
+.expanded {
+    min-width: 12rem;
 }
 
 :deep(.p-panelmenu-panel) {
     padding: 0;
     border-style: none;
+    border-radius: 0 !important;
 }
 
 :deep(.nav-button) {

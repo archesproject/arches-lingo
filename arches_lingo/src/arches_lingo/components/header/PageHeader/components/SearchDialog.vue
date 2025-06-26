@@ -24,6 +24,7 @@ const toggleModal = () => {
     <Button
         class="basic-search-button"
         icon="pi pi-search"
+        variant="text"
         :label="$gettext('Search')"
         @click="toggleModal"
     />
@@ -61,8 +62,6 @@ const toggleModal = () => {
 <!-- NOT scoped because dialog gets appended to <body> and is unreachable via scoped styles -->
 <style>
 .basic-search-button {
-    background: var(--p-menubar-background) !important;
-    border: none !important;
     color: var(--p-menubar-text-color) !important;
 }
 
