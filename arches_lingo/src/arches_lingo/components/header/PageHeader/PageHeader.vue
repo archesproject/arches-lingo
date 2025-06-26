@@ -32,6 +32,7 @@ function activateHierarchyOverlay() {
             border-inline-start: 0;
             border-inline-end: 0;
             padding-inline-start: 1rem;
+            border-bottom: 0.125rem solid var(--p-primary-950);
         "
     >
         <template #start>

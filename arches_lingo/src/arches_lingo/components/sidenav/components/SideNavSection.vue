@@ -37,12 +37,15 @@ const isNavExpanded = inject("isNavExpanded", false);
                     value: child.label,
                     pt: {
                         text: {
-                            style: { fontFamily: '--p-lingo-font-family' },
+                            style: { fontFamily: 'var(--p-lingo-font-family)' },
                         },
                     },
                     disabled: isNavExpanded,
                 }"
                 :href="href"
+                :style="{
+                    paddingInlineStart: isNavExpanded ? '2rem' : '0.75rem',
+                }"
                 class="nav-button p-button"
                 @click="navigate"
             >
@@ -57,13 +60,16 @@ const isNavExpanded = inject("isNavExpanded", false);
 </template>
 
 <style scoped>
+.nav-child {
+    background-color: var(--p-primary-950);
+}
 .disabled {
     opacity: var(--p-disabled-opacity);
     cursor: default;
     user-select: none;
 }
 
-.nav-header {
+.p-button {
     justify-content: flex-start;
 }
 </style>

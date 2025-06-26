@@ -59,32 +59,41 @@ const emit = defineEmits(["update:isNavExpanded"]);
 </script>
 
 <template>
-    <aside class="sidenav">
+    <aside
+        class="sidenav"
+        :class="{ expanded: isNavExpanded }"
+    >
         <Button
             :key="buttonKey"
             v-tooltip.bottom="{
                 value: $gettext('Expand navigation'),
                 disabled: isNavExpanded,
                 pt: {
-                    root: { style: { marginInlineStart: '6rem' } },
-                    text: { style: { fontFamily: '--p-lingo-font-family' } },
+                    root: { style: { marginInlineStart: '7rem' } },
+                    text: {
+                        style: { fontFamily: 'var(--p-lingo-font-family)' },
+                    },
                     arrow: { style: { display: 'none' } },
                 },
             }"
             class="nav-button"
+            :class="{ expanded: isNavExpanded }"
             :aria-label="$gettext('Expand navigation')"
             @click="toggleAll"
         >
-            <i class="pi pi-bars toggle-icon"></i>
+            <i
+                v-if="!isNavExpanded"
+                class="pi pi-bars toggle-icon"
+            />
 
             <ArchesLingoBadge
                 v-if="isNavExpanded"
                 :is-link="false"
-                style="margin-inline-start: 3rem; margin-inline-end: 1rem"
             />
         </Button>
         <PanelMenu
             :model="items"
+            class="sidenav-panelmenu"
             :class="{ expanded: isNavExpanded }"
         >
             <template #item="{ item }">
@@ -99,19 +108,54 @@ const emit = defineEmits(["update:isNavExpanded"]);
 
 <style scoped>
 .sidenav {
+    width: 3rem;
     background: var(--p-primary-950);
+    border-right: 0.125rem solid var(--p-primary-950);
+    transition: width 0.3s ease-in-out;
+}
+
+.sidenav.expanded {
+    width: 16rem;
 }
 
 .p-button {
     height: 2.5rem;
     font-size: var(--p-lingo-font-size-large);
     background: var(--p-primary-950) !important;
-    border: none !important;
     border-radius: 0;
+    border: none;
 }
 
-.expanded {
-    min-width: 12rem;
+.sidenav-panelmenu {
+    width: 100%;
+    min-width: 3rem;
+    transition: min-width 0.3s ease-in-out;
+}
+
+.sidenav-panelmenu.expanded {
+    min-width: 16rem;
+}
+
+.nav-button {
+    border: 0 !important;
+    border-bottom: 0.125rem solid var(--p-primary-950) !important;
+}
+
+.nav-button.expanded {
+    background: var(--p-menubar-background) !important;
+    padding-inline-start: 0.6rem;
+}
+
+.nav-button:hover {
+    background: var(--p-button-primary-hover-background) !important;
+}
+
+:deep(.p-button) {
+    background-color: var(--p-primary-950) !important;
+    border-color: var(--p-primary-950) !important;
+}
+:deep(.p-button):hover {
+    background: var(--p-button-primary-hover-background) !important;
 }
 
 :deep(.p-panelmenu-panel) {
