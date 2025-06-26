@@ -7,7 +7,7 @@ Please see the [project page](http://archesproject.org/) for more information on
 
 ## Installation
 
-If you are installing Arches Lingo for the first time, we strongly recommend that you install it as an Arches application into a existing (or new) project. Running Arches Lingo as a standalone project can provide some convienience if you are a developer contributing to the Arches Lingo project but you risk conflicts when upgrading to the next version of Arches Lingo.
+If you are installing Arches Lingo for the first time, we strongly recommend that you install it as an Arches application into a existing (or new) project. Running Arches Lingo as a standalone project can provide some convenience if you are a developer contributing to the Arches Lingo project but you risk conflicts when upgrading to the next version of Arches Lingo.
 
 Install Arches Lingo using the following command:
 ```
