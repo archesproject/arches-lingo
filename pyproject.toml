@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "arches_lingo"
 readme = "README.md"
 authors = [
-    {"name": "Arches Project"}
+    {"name" = "Arches Project"}
 ]
 license = {text = "GNU AGPL3"}
 description = "An Arches application designed to support the creation of thesaurus/vocabulary data."
