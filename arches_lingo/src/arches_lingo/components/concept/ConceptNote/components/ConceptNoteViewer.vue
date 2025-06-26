@@ -5,7 +5,7 @@ import { useGettext } from "vue3-gettext";
 import Button from "primevue/button";
 
 import MetaStringViewer from "@/arches_lingo/components/generic/MetaStringViewer.vue";
-import NonLocalizedStringWidget from "@/arches_component_lab/widgets/NonLocalizedStringWidget/NonLocalizedStringWidget.vue";
+import NonLocalizedTextAreaWidget from "@/arches_component_lab/widgets/NonLocalizedTextAreaWidget/NonLocalizedTextAreaWidget.vue";
 import ReferenceSelectWidget from "@/arches_controlled_lists/widgets/ReferenceSelectWidget/ReferenceSelectWidget.vue";
 import ResourceInstanceMultiSelectWidget from "@/arches_component_lab/widgets/ResourceInstanceMultiSelectWidget/ResourceInstanceMultiSelectWidget.vue";
 
@@ -54,7 +54,7 @@ const metaStringLabel: MetaStringText = {
             :nodegroup-alias="props.nodegroupAlias"
         >
             <template #name="{ rowData }">
-                <NonLocalizedStringWidget
+                <NonLocalizedTextAreaWidget
                     node-alias="statement_content"
                     :graph-slug="props.graphSlug"
                     :initial-value="rowData.aliased_data.statement_content"

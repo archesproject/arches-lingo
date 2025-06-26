@@ -4,7 +4,7 @@ import { useGettext } from "vue3-gettext";
 
 import Button from "primevue/button";
 
-import NonLocalizedStringWidget from "@/arches_component_lab/widgets/NonLocalizedStringWidget/NonLocalizedStringWidget.vue";
+import NonLocalizedTextAreaWidget from "@/arches_component_lab/widgets/NonLocalizedTextAreaWidget/NonLocalizedTextAreaWidget.vue";
 import ReferenceSelectWidget from "@/arches_controlled_lists/widgets/ReferenceSelectWidget/ReferenceSelectWidget.vue";
 import ResourceInstanceMultiSelectWidget from "@/arches_component_lab/widgets/ResourceInstanceMultiSelectWidget/ResourceInstanceMultiSelectWidget.vue";
 
@@ -61,7 +61,7 @@ const buttonLabel = computed(() => {
                 :initial-value="props.tileData?.aliased_data.right_type"
                 :mode="VIEW"
             />
-            <NonLocalizedStringWidget
+            <NonLocalizedTextAreaWidget
                 node-alias="right_statement_content"
                 :graph-slug="props.graphSlug"
                 :initial-value="

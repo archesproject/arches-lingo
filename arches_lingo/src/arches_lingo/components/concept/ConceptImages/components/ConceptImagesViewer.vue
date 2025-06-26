@@ -10,6 +10,7 @@ import { useConfirm } from "primevue/useconfirm";
 
 import FileListWidget from "@/arches_component_lab/widgets/FileListWidget/FileListWidget.vue";
 import NonLocalizedStringWidget from "@/arches_component_lab/widgets/NonLocalizedStringWidget/NonLocalizedStringWidget.vue";
+import NonLocalizedTextAreaWidget from "@/arches_component_lab/widgets/NonLocalizedTextAreaWidget/NonLocalizedTextAreaWidget.vue";
 
 import { DANGER, SECONDARY, VIEW } from "@/arches_lingo/constants.ts";
 
@@ -230,7 +231,7 @@ function modifyResource(resourceInstanceId?: string) {
                         :show-label="false"
                     />
                     <div class="footer">
-                        <NonLocalizedStringWidget
+                        <NonLocalizedTextAreaWidget
                             node-alias="statement_content"
                             graph-slug="digital_object_rdm_system"
                             :mode="VIEW"
