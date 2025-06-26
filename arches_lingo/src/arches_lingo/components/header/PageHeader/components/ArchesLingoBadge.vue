@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useRouter, RouterLink } from "vue-router";
 import { useGettext } from "vue3-gettext";
 
 import { routeNames } from "@/arches_lingo/routes.ts";
@@ -15,6 +16,17 @@ const props = withDefaults(
 );
 
 const { $gettext } = useGettext();
+const router = useRouter();
+
+// This is to force a reload of the page when the badge is clicked
+// when the current route is the root route.
+function handleClick(navigate: () => void, isActive: boolean) {
+    navigate();
+
+    if (isActive) {
+        router.go(0);
+    }
+}
 </script>
 
 <template>
@@ -22,10 +34,15 @@ const { $gettext } = useGettext();
     <div>
         <RouterLink
             v-if="props.isLink"
+            v-slot="{ navigate, isActive }"
             :to="{ name: routeNames.root }"
+            :custom="true"
             style="text-decoration: none; color: inherit"
         >
-            <div class="lingo-badge">
+            <div
+                class="lingo-badge"
+                @click.prevent="handleClick(navigate, isActive)"
+            >
                 <img
                     :src="
                         generateArchesURL('static_url') +
@@ -58,6 +75,7 @@ const { $gettext } = useGettext();
 .lingo-badge {
     display: flex;
     align-items: center;
+    cursor: pointer;
 }
 
 .lingo-title {
