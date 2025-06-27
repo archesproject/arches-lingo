@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { provide, ref } from "vue";
+import { provide, ref, watch } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { useGettext } from "vue3-gettext";
 
@@ -18,8 +18,7 @@ import {
 
 import { routeNames } from "@/arches_lingo/routes.ts";
 import { fetchUser } from "@/arches_lingo/api.ts";
-import HierarchySplitter from "@/arches_lingo/components/tree/HierarchySplitter.vue";
-import PageHeader from "@/arches_lingo/components/header/PageHeader.vue";
+import PageHeader from "@/arches_lingo/components/header/PageHeader/PageHeader.vue";
 import SideNav from "@/arches_lingo/components/sidenav/SideNav.vue";
 
 import type { Ref } from "vue";
@@ -43,6 +42,11 @@ const route = useRoute();
 const toast = useToast();
 const { $gettext } = useGettext();
 
+const isNavExpanded = ref(false);
+watch(isNavExpanded, (newValue) => {
+    console.log("isNavExpanded changed:", newValue);
+});
+
 async function checkUserAuthentication(
     to: RouteLocationNormalizedLoadedGeneric,
 ) {
@@ -57,35 +61,9 @@ async function checkUserAuthentication(
     }
 }
 
-function carryOverShowHierarchy(to: RouteLocationNormalizedLoadedGeneric) {
-    const currentUrl = new URL(window.location.href);
-    const currentShowHierarchy = currentUrl.searchParams.get("showHierarchy");
-
-    if (
-        currentShowHierarchy &&
-        to.matched.some((record) => record.meta.shouldShowHierarchy) &&
-        !to.query.showHierarchy
-    ) {
-        return {
-            name: to.name,
-            params: to.params,
-            query: {
-                ...to.query,
-                showHierarchy: currentShowHierarchy,
-            },
-        };
-    }
-    return null;
-}
-
 router.beforeEach(async (to, _from, next) => {
     try {
         await checkUserAuthentication(to);
-        const newLocation = carryOverShowHierarchy(to);
-
-        if (newLocation) {
-            return next(newLocation);
-        }
 
         next();
     } catch (error) {
@@ -104,15 +82,17 @@ router.beforeEach(async (to, _from, next) => {
 
 <template>
     <main>
-        <PageHeader v-if="route.meta.shouldShowNavigation" />
+        <SideNav
+            v-if="route.meta.shouldShowNavigation"
+            @update:is-nav-expanded="isNavExpanded = $event"
+        />
 
         <div class="main-content">
-            <SideNav v-if="route.meta.shouldShowNavigation" />
-
-            <div class="content-panel">
-                <HierarchySplitter v-if="route.meta.shouldShowHierarchy" />
-                <RouterView v-else />
-            </div>
+            <PageHeader
+                v-if="route.meta.shouldShowNavigation"
+                :is-nav-expanded="isNavExpanded"
+            />
+            <RouterView :key="route.fullPath" />
         </div>
     </main>
     <Toast
@@ -133,19 +113,12 @@ main {
     width: 100vw;
     overflow: hidden;
     display: flex;
-    flex-direction: column;
 }
 
 .main-content {
     display: flex;
-    flex: 1 1 auto;
-    overflow: hidden;
-}
-
-.content-panel {
-    display: flex;
     flex-direction: column;
     flex: 1 1 auto;
-    min-width: 0;
+    overflow: hidden;
 }
 </style>

@@ -53,6 +53,7 @@ onMounted(async () => {
 <style scoped>
 .scheme-cards-container {
     padding: 0rem 1rem;
+    overflow: auto;
 }
 .scheme-cards {
     display: flex;

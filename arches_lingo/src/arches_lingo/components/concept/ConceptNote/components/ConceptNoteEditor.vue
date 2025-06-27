@@ -10,7 +10,7 @@ import { Form } from "@primevue/forms";
 import ProgressSpinner from "primevue/progressspinner";
 
 import DateWidget from "@/arches_component_lab/widgets/DateWidget/DateWidget.vue";
-import NonLocalizedStringWidget from "@/arches_component_lab/widgets/NonLocalizedStringWidget/NonLocalizedStringWidget.vue";
+import NonLocalizedTextAreaWidget from "@/arches_component_lab/widgets/NonLocalizedTextAreaWidget/NonLocalizedTextAreaWidget.vue";
 import ReferenceSelectWidget from "@/arches_controlled_lists/widgets/ReferenceSelectWidget/ReferenceSelectWidget.vue";
 import ResourceInstanceMultiSelectWidget from "@/arches_component_lab/widgets/ResourceInstanceMultiSelectWidget/ResourceInstanceMultiSelectWidget.vue";
 
@@ -44,8 +44,6 @@ const { $gettext } = useGettext();
 const componentEditorFormRef = inject<Ref<Component | null>>(
     "componentEditorFormRef",
 );
-
-const refreshConceptTree = inject<() => null>("refreshConceptTree");
 
 const openEditor =
     inject<(componentName: string, tileid?: string) => void>("openEditor");
@@ -87,7 +85,6 @@ async function save(e: FormSubmitEvent) {
         }
 
         refreshReportSection!(props.componentName);
-        refreshConceptTree!();
     } catch (error) {
         toast.add({
             severity: ERROR,
@@ -114,29 +111,30 @@ async function save(e: FormSubmitEvent) {
             ref="form"
             @submit="save"
         >
-            <NonLocalizedStringWidget
+            <NonLocalizedTextAreaWidget
                 :graph-slug="props.graphSlug"
                 node-alias="statement_content"
-                :initial-value="props.tileData?.aliased_data.statement_content"
-                :mode="EDIT"
-            />
-            <ReferenceSelectWidget
-                :graph-slug="props.graphSlug"
-                node-alias="statement_language"
-                :initial-value="props.tileData?.aliased_data.statement_language"
+                :initial-value="
+                    props.tileData?.aliased_data.statement_content
+                        ?.interchange_value
+                "
                 :mode="EDIT"
             />
             <ReferenceSelectWidget
                 :graph-slug="props.graphSlug"
                 node-alias="statement_type"
-                :initial-value="props.tileData?.aliased_data.statement_type"
+                :initial-value="
+                    props.tileData?.aliased_data.statement_type
+                        ?.interchange_value
+                "
                 :mode="EDIT"
             />
             <ReferenceSelectWidget
                 :graph-slug="props.graphSlug"
-                node-alias="statement_type_metatype"
+                node-alias="statement_language"
                 :initial-value="
-                    props.tileData?.aliased_data.statement_type_metatype
+                    props.tileData?.aliased_data.statement_language
+                        ?.interchange_value
                 "
                 :mode="EDIT"
             />
@@ -146,6 +144,7 @@ async function save(e: FormSubmitEvent) {
                 :initial-value="
                     props.tileData?.aliased_data
                         .statement_data_assignment_timespan_begin_of_the_begin
+                        ?.interchange_value
                 "
                 :mode="EDIT"
             />
@@ -155,6 +154,7 @@ async function save(e: FormSubmitEvent) {
                 :initial-value="
                     props.tileData?.aliased_data
                         .statement_data_assignment_timespan_end_of_the_end
+                        ?.interchange_value
                 "
                 :mode="EDIT"
             />
@@ -163,6 +163,7 @@ async function save(e: FormSubmitEvent) {
                 node-alias="statement_data_assignment_actor"
                 :initial-value="
                     props.tileData?.aliased_data.statement_data_assignment_actor
+                        ?.interchange_value
                 "
                 :mode="EDIT"
             />
@@ -172,14 +173,7 @@ async function save(e: FormSubmitEvent) {
                 :initial-value="
                     props.tileData?.aliased_data
                         .statement_data_assignment_object_used
-                "
-                :mode="EDIT"
-            />
-            <ReferenceSelectWidget
-                :graph-slug="props.graphSlug"
-                node-alias="statement_data_assignment_type"
-                :initial-value="
-                    props.tileData?.aliased_data.statement_data_assignment_type
+                        ?.interchange_value
                 "
                 :mode="EDIT"
             />

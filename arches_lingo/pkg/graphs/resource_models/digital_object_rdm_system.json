@@ -10,13 +10,21 @@
                     "config": null,
                     "constraints": [],
                     "cssclass": "bigger",
-                    "description": "{\"en\": \"\"}",
+                    "description": "",
                     "graph_id": "ce57ee93-1f08-11ee-9071-214dbb482912",
                     "helpenabled": false,
-                    "helptext": "",
-                    "helptitle": "",
-                    "instructions": "",
-                    "name": "Name",
+                    "helptext": {
+                        "en": ""
+                    },
+                    "helptitle": {
+                        "en": ""
+                    },
+                    "instructions": {
+                        "en": ""
+                    },
+                    "name": {
+                        "en": "Name"
+                    },
                     "nodegroup_id": "78fc1ff8-11e8-11ef-9493-0a58a9feac02",
                     "sortorder": 0,
                     "source_identifier_id": null,
@@ -29,13 +37,21 @@
                     "config": null,
                     "constraints": [],
                     "cssclass": "big",
-                    "description": "{\"en\": \"\"}",
+                    "description": "",
                     "graph_id": "ce57ee93-1f08-11ee-9071-214dbb482912",
                     "helpenabled": false,
-                    "helptext": "",
-                    "helptitle": "",
-                    "instructions": "",
-                    "name": "Identifier",
+                    "helptext": {
+                        "en": ""
+                    },
+                    "helptitle": {
+                        "en": ""
+                    },
+                    "instructions": {
+                        "en": ""
+                    },
+                    "name": {
+                        "en": "Identifier"
+                    },
                     "nodegroup_id": "7d8f3db6-11e8-11ef-9493-0a58a9feac02",
                     "sortorder": 1,
                     "source_identifier_id": null,
@@ -48,13 +64,21 @@
                     "config": null,
                     "constraints": [],
                     "cssclass": "big",
-                    "description": "{\"en\": \"\"}",
+                    "description": "",
                     "graph_id": "ce57ee93-1f08-11ee-9071-214dbb482912",
                     "helpenabled": false,
-                    "helptext": "",
-                    "helptitle": "",
-                    "instructions": "",
-                    "name": "Statement",
+                    "helptext": {
+                        "en": ""
+                    },
+                    "helptitle": {
+                        "en": ""
+                    },
+                    "instructions": {
+                        "en": ""
+                    },
+                    "name": {
+                        "en": "Statement"
+                    },
                     "nodegroup_id": "8278e3c2-11e8-11ef-9493-0a58a9feac02",
                     "sortorder": 3,
                     "source_identifier_id": null,
@@ -67,13 +91,21 @@
                     "config": null,
                     "constraints": [],
                     "cssclass": null,
-                    "description": "{\"en\": \"\"}",
+                    "description": "",
                     "graph_id": "ce57ee93-1f08-11ee-9071-214dbb482912",
                     "helpenabled": false,
-                    "helptext": "",
-                    "helptitle": "",
-                    "instructions": "",
-                    "name": "Type",
+                    "helptext": {
+                        "en": ""
+                    },
+                    "helptitle": {
+                        "en": ""
+                    },
+                    "instructions": {
+                        "en": ""
+                    },
+                    "name": {
+                        "en": "Type"
+                    },
                     "nodegroup_id": "8880237a-11e8-11ef-9493-0a58a9feac02",
                     "sortorder": 2,
                     "source_identifier_id": null,
@@ -89,10 +121,18 @@
                     "description": null,
                     "graph_id": "ce57ee93-1f08-11ee-9071-214dbb482912",
                     "helpenabled": false,
-                    "helptext": "",
-                    "helptitle": "",
-                    "instructions": "",
-                    "name": "content",
+                    "helptext": {
+                        "en": ""
+                    },
+                    "helptitle": {
+                        "en": ""
+                    },
+                    "instructions": {
+                        "en": ""
+                    },
+                    "name": {
+                        "en": "content"
+                    },
                     "nodegroup_id": "f522c448-1778-11ef-b270-0a58a9feac02",
                     "sortorder": null,
                     "source_identifier_id": null,
@@ -118,6 +158,56 @@
                     "source_identifier_id": null,
                     "visible": true,
                     "widget_id": "10000000-0000-0000-0000-000000000019"
+                },
+                {
+                    "card_id": "78fc2246-11e8-11ef-9493-0a58a9feac02",
+                    "config": {
+                        "defaultValue": "",
+                        "i18n_properties": [
+                            "placeholder"
+                        ],
+                        "label": "Name Content",
+                        "maxLength": null,
+                        "placeholder": {
+                            "en": "Enter text"
+                        },
+                        "uneditable": false,
+                        "width": "100%"
+                    },
+                    "id": "4dbebec9-e9c8-425e-ba9c-46fbe73b7915",
+                    "label": {
+                        "en": "Name Content"
+                    },
+                    "node_id": "95522790-08fc-11f0-9797-b33468cba848",
+                    "sortorder": null,
+                    "source_identifier_id": null,
+                    "visible": true,
+                    "widget_id": "46ef064b-2611-4708-9f52-60136bd8a65b"
+                },
+                {
+                    "card_id": "8278e4e4-11e8-11ef-9493-0a58a9feac02",
+                    "config": {
+                        "defaultValue": "",
+                        "i18n_properties": [
+                            "placeholder"
+                        ],
+                        "label": "Statement Content",
+                        "maxLength": null,
+                        "placeholder": {
+                            "en": "Enter text"
+                        },
+                        "uneditable": false,
+                        "width": "100%"
+                    },
+                    "id": "5ac25ac7-15f5-45bb-88fc-5305b8552c1c",
+                    "label": {
+                        "en": "Statement Content"
+                    },
+                    "node_id": "4e995163-08fc-11f0-b111-b33468cba848",
+                    "sortorder": null,
+                    "source_identifier_id": null,
+                    "visible": true,
+                    "widget_id": "46ef064b-2611-4708-9f52-60136bd8a65b"
                 },
                 {
                     "card_id": "78fc2246-11e8-11ef-9493-0a58a9feac02",
@@ -462,7 +552,9 @@
             "config": {},
             "deploymentdate": null,
             "deploymentfile": null,
-            "description": "",
+            "description": {
+                "en": ""
+            },
             "edges": [
                 {
                     "description": null,
@@ -648,13 +740,15 @@
             "functions_x_graphs": [],
             "graphid": "ce57ee93-1f08-11ee-9071-214dbb482912",
             "group_permissions": {},
-            "has_unpublished_changes": false,
+            "has_unpublished_changes": true,
             "iconclass": "fa fa-file",
             "is_active": true,
             "is_copy_immutable": false,
             "isresource": true,
             "jsonldcontext": null,
-            "name": "digital_object_rdm_system",
+            "name": {
+                "en": "digital_object_rdm_system"
+            },
             "nodegroups": [
                 {
                     "cardinality": "1",
@@ -1178,15 +1272,21 @@
             "resource_2_resource_constraints": [],
             "resource_instance_lifecycle": {
                 "id": "7e3cce56-fbfb-4a4b-8e83-59b9f9e7cb75",
-                "name": "Standard",
+                "name": {
+                    "en": "Standard"
+                },
                 "resource_instance_lifecycle_states": [
                     {
-                        "action_label": "Revert to Draft",
+                        "action_label": {
+                            "en": "Revert to Draft"
+                        },
                         "can_delete_resource_instances": true,
                         "can_edit_resource_instances": true,
                         "id": "9375c9a7-dad2-4f14-a5c1-d7e329fdde4f",
                         "is_initial_state": true,
-                        "name": "Draft",
+                        "name": {
+                            "en": "Draft"
+                        },
                         "next_resource_instance_lifecycle_states": [
                             "f75bb034-36e3-4ab4-8167-f520cf0b4c58"
                         ],
@@ -1194,12 +1294,16 @@
                         "resource_instance_lifecycle_id": "7e3cce56-fbfb-4a4b-8e83-59b9f9e7cb75"
                     },
                     {
-                        "action_label": "Make Active",
+                        "action_label": {
+                            "en": "Make Active"
+                        },
                         "can_delete_resource_instances": false,
                         "can_edit_resource_instances": true,
                         "id": "f75bb034-36e3-4ab4-8167-f520cf0b4c58",
                         "is_initial_state": false,
-                        "name": "Active",
+                        "name": {
+                            "en": "Active"
+                        },
                         "next_resource_instance_lifecycle_states": [
                             "d95d9c0e-0e2c-4450-93a3-d788b91abcc8"
                         ],
@@ -1209,12 +1313,16 @@
                         "resource_instance_lifecycle_id": "7e3cce56-fbfb-4a4b-8e83-59b9f9e7cb75"
                     },
                     {
-                        "action_label": "Retire",
+                        "action_label": {
+                            "en": "Retire"
+                        },
                         "can_delete_resource_instances": false,
                         "can_edit_resource_instances": false,
                         "id": "d95d9c0e-0e2c-4450-93a3-d788b91abcc8",
                         "is_initial_state": false,
-                        "name": "Retired",
+                        "name": {
+                            "en": "Retired"
+                        },
                         "next_resource_instance_lifecycle_states": [],
                         "previous_resource_instance_lifecycle_states": [
                             "f75bb034-36e3-4ab4-8167-f520cf0b4c58"
@@ -1247,16 +1355,19 @@
             },
             "slug": "digital_object_rdm_system",
             "source_identifier_id": null,
-            "subtitle": "",
+            "spatial_views": [],
+            "subtitle": {
+                "en": ""
+            },
             "template_id": "50000000-0000-0000-0000-000000000001",
             "user_permissions": {},
             "version": ""
         }
     ],
     "metadata": {
-        "db": "PostgreSQL 16.4 (Debian 16.4-1.pgdg110+2) on x86_64-pc-linux-gnu, compiled by gcc (Debian 10.2.1-6) 10.2.1 20210110, 64-bit",
-        "git hash": "4f69be0d1 2025-03-06 12:37:55 -0500",
-        "os": "Linux",
-        "os version": "6.10.14-linuxkit"
+        "db": "PostgreSQL 17.4 (Postgres.app) on aarch64-apple-darwin23.6.0, compiled by Apple clang version 15.0.0 (clang-1500.3.9.4), 64-bit",
+        "git hash": "5a3811e3b3 2025-06-16 14:06:45 -0400",
+        "os": "Darwin",
+        "os version": "24.5.0"
     }
 }

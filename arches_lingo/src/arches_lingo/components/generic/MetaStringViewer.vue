@@ -144,7 +144,6 @@ async function deleteSectionValue(tileId: string) {
                         />
                         <Button
                             icon="pi pi-trash"
-                            class="label-delete-button"
                             :aria-label="$gettext('delete')"
                             severity="danger"
                             rounded

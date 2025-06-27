@@ -158,7 +158,6 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                     <!-- TODO: Allow resource multiselect to route within lingo, not to resource pg -->
                     <ResourceInstanceMultiSelectWidget
                         :graph-slug="props.graphSlug"
-                        class="concept-uri"
                         node-alias="part_of_scheme"
                         :initial-value="data?.partOfScheme"
                         :mode="VIEW"

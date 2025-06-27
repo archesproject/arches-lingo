@@ -45,8 +45,6 @@ const componentEditorFormRef = inject<Ref<Component | null>>(
     "componentEditorFormRef",
 );
 
-const refreshConceptTree = inject<() => null>("refreshConceptTree");
-
 const openEditor =
     inject<(componentName: string, tileid?: string) => void>("openEditor");
 
@@ -87,7 +85,6 @@ async function save(e: FormSubmitEvent) {
         }
 
         refreshReportSection!(props.componentName);
-        refreshConceptTree!();
     } catch (error) {
         toast.add({
             severity: ERROR,
@@ -120,53 +117,7 @@ async function save(e: FormSubmitEvent) {
                 :initial-value="
                     props.tileData?.aliased_data
                         ?.appellative_status_ascribed_name_content
-                "
-                :mode="EDIT"
-            />
-            <DateWidget
-                :graph-slug="props.graphSlug"
-                node-alias="appellative_status_timespan_begin_of_the_begin"
-                :initial-value="
-                    props.tileData?.aliased_data
-                        ?.appellative_status_timespan_begin_of_the_begin
-                "
-                :mode="EDIT"
-            />
-            <DateWidget
-                :graph-slug="props.graphSlug"
-                node-alias="appellative_status_timespan_end_of_the_end"
-                :initial-value="
-                    props.tileData?.aliased_data
-                        ?.appellative_status_timespan_end_of_the_end
-                "
-                :mode="EDIT"
-            />
-
-            <ResourceInstanceMultiSelectWidget
-                :graph-slug="props.graphSlug"
-                node-alias="appellative_status_data_assignment_actor"
-                :initial-value="
-                    props.tileData?.aliased_data
-                        ?.appellative_status_data_assignment_actor
-                "
-                :mode="EDIT"
-            />
-            <ResourceInstanceMultiSelectWidget
-                :graph-slug="props.graphSlug"
-                node-alias="appellative_status_data_assignment_object_used"
-                :initial-value="
-                    props.tileData?.aliased_data
-                        ?.appellative_status_data_assignment_object_used
-                "
-                :mode="EDIT"
-            />
-
-            <ReferenceSelectWidget
-                :graph-slug="props.graphSlug"
-                node-alias="appellative_status_ascribed_name_language"
-                :initial-value="
-                    props.tileData?.aliased_data
-                        ?.appellative_status_ascribed_name_language
+                        ?.interchange_value
                 "
                 :mode="EDIT"
             />
@@ -176,6 +127,37 @@ async function save(e: FormSubmitEvent) {
                 :initial-value="
                     props.tileData?.aliased_data
                         ?.appellative_status_ascribed_relation
+                        ?.interchange_value
+                "
+                :mode="EDIT"
+            />
+            <ReferenceSelectWidget
+                :graph-slug="props.graphSlug"
+                node-alias="appellative_status_ascribed_name_language"
+                :initial-value="
+                    props.tileData?.aliased_data
+                        ?.appellative_status_ascribed_name_language
+                        ?.interchange_value
+                "
+                :mode="EDIT"
+            />
+            <DateWidget
+                :graph-slug="props.graphSlug"
+                node-alias="appellative_status_timespan_begin_of_the_begin"
+                :initial-value="
+                    props.tileData?.aliased_data
+                        ?.appellative_status_timespan_begin_of_the_begin
+                        ?.interchange_value
+                "
+                :mode="EDIT"
+            />
+            <DateWidget
+                :graph-slug="props.graphSlug"
+                node-alias="appellative_status_timespan_end_of_the_end"
+                :initial-value="
+                    props.tileData?.aliased_data
+                        ?.appellative_status_timespan_end_of_the_end
+                        ?.interchange_value
                 "
                 :mode="EDIT"
             />
@@ -184,24 +166,27 @@ async function save(e: FormSubmitEvent) {
                 node-alias="appellative_status_status"
                 :initial-value="
                     props.tileData?.aliased_data?.appellative_status_status
+                        ?.interchange_value
                 "
                 :mode="EDIT"
             />
-            <ReferenceSelectWidget
+            <ResourceInstanceMultiSelectWidget
                 :graph-slug="props.graphSlug"
-                node-alias="appellative_status_status_metatype"
+                node-alias="appellative_status_data_assignment_actor"
                 :initial-value="
                     props.tileData?.aliased_data
-                        ?.appellative_status_status_metatype
+                        ?.appellative_status_data_assignment_actor
+                        ?.interchange_value
                 "
                 :mode="EDIT"
             />
-            <ReferenceSelectWidget
+            <ResourceInstanceMultiSelectWidget
                 :graph-slug="props.graphSlug"
-                node-alias="appellative_status_data_assignment_type"
+                node-alias="appellative_status_data_assignment_object_used"
                 :initial-value="
                     props.tileData?.aliased_data
-                        ?.appellative_status_data_assignment_type
+                        ?.appellative_status_data_assignment_object_used
+                        ?.interchange_value
                 "
                 :mode="EDIT"
             />

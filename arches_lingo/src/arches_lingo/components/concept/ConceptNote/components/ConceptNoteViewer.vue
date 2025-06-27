@@ -5,7 +5,7 @@ import { useGettext } from "vue3-gettext";
 import Button from "primevue/button";
 
 import MetaStringViewer from "@/arches_lingo/components/generic/MetaStringViewer.vue";
-import NonLocalizedStringWidget from "@/arches_component_lab/widgets/NonLocalizedStringWidget/NonLocalizedStringWidget.vue";
+import NonLocalizedTextAreaWidget from "@/arches_component_lab/widgets/NonLocalizedTextAreaWidget/NonLocalizedTextAreaWidget.vue";
 import ReferenceSelectWidget from "@/arches_controlled_lists/widgets/ReferenceSelectWidget/ReferenceSelectWidget.vue";
 import ResourceInstanceMultiSelectWidget from "@/arches_component_lab/widgets/ResourceInstanceMultiSelectWidget/ResourceInstanceMultiSelectWidget.vue";
 
@@ -54,10 +54,12 @@ const metaStringLabel: MetaStringText = {
             :nodegroup-alias="props.nodegroupAlias"
         >
             <template #name="{ rowData }">
-                <NonLocalizedStringWidget
+                <NonLocalizedTextAreaWidget
                     node-alias="statement_content"
                     :graph-slug="props.graphSlug"
-                    :initial-value="rowData.aliased_data.statement_content"
+                    :initial-value="
+                        rowData.aliased_data.statement_content?.display_value
+                    "
                     :mode="VIEW"
                     :show-label="false"
                 />
@@ -66,7 +68,9 @@ const metaStringLabel: MetaStringText = {
                 <ReferenceSelectWidget
                     node-alias="statement_type"
                     :graph-slug="props.graphSlug"
-                    :initial-value="rowData.aliased_data.statement_type"
+                    :initial-value="
+                        rowData.aliased_data.statement_type?.interchange_value
+                    "
                     :mode="VIEW"
                     :show-label="false"
                 />
@@ -75,7 +79,10 @@ const metaStringLabel: MetaStringText = {
                 <ReferenceSelectWidget
                     node-alias="statement_language"
                     :graph-slug="props.graphSlug"
-                    :initial-value="rowData.aliased_data.statement_language"
+                    :initial-value="
+                        rowData.aliased_data.statement_language
+                            ?.interchange_value
+                    "
                     :mode="VIEW"
                     :show-label="false"
                 />
@@ -86,13 +93,17 @@ const metaStringLabel: MetaStringText = {
                     :graph-slug="props.graphSlug"
                     :initial-value="
                         rowData.statement_data_assignment_object_used
+                            ?.interchange_value
                     "
                     :mode="VIEW"
                 />
                 <ResourceInstanceMultiSelectWidget
                     node-alias="statement_data_assignment_actor"
                     :graph-slug="props.graphSlug"
-                    :initial-value="rowData.statement_data_assignment_actor"
+                    :initial-value="
+                        rowData.statement_data_assignment_actor
+                            ?.interchange_value
+                    "
                     :mode="VIEW"
                 />
             </template>

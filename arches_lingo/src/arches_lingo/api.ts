@@ -4,6 +4,7 @@ import { generateArchesURL } from "@/arches/utils/generate-arches-url.ts";
 
 import type {
     ConceptInstance,
+    DigitalObjectInstance,
     SchemeInstance,
     TileData,
 } from "@/arches_lingo/types";
@@ -81,13 +82,13 @@ export const fetchLingoResourcesBatch = async (
 
 export const fetchLingoResourcePartial = async (
     graphSlug: string,
-    schemeId: string,
+    resourceId: string,
     nodegroupAlias: string,
 ) => {
     const response = await fetch(
         arches.urls.api_lingo_resource_partial(
             graphSlug,
-            schemeId,
+            resourceId,
             nodegroupAlias,
         ),
     );
@@ -96,20 +97,43 @@ export const fetchLingoResourcePartial = async (
     return parsed;
 };
 
-export const updateLingoResource = async (
+export const updateLingoResourceFromForm = async (
     graphSlug: string,
-    schemeId: string,
-    schemeInstance: SchemeInstance,
+    resourceId: string,
+    formData: FormData,
 ) => {
+    const headers = {
+        "X-CSRFTOKEN": getToken(),
+    };
     const response = await fetch(
-        arches.urls.api_lingo_resource(graphSlug, schemeId),
+        arches.urls.api_lingo_resource(graphSlug, resourceId),
         {
             method: "PATCH",
-            headers: {
-                "X-CSRFTOKEN": getToken(),
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(schemeInstance),
+            headers: headers,
+            body: formData,
+        },
+    );
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
+export const updateLingoResource = async (
+    graphSlug: string,
+    resourceId: string,
+    instance: SchemeInstance | ConceptInstance | DigitalObjectInstance,
+) => {
+    const headers = {
+        "X-CSRFTOKEN": getToken(),
+        "Content-Type": "application/json",
+    };
+
+    const response = await fetch(
+        arches.urls.api_lingo_resource(graphSlug, resourceId),
+        {
+            method: "PATCH",
+            headers: headers,
+            body: JSON.stringify(instance),
         },
     );
     const parsed = await response.json();
@@ -167,18 +191,45 @@ export const deleteLingoTile = async (
     }
 };
 
-export const createLingoResource = async (
-    newResource: SchemeInstance | ConceptInstance,
+export const createLingoResourceFromForm = async (
+    newResource: FormData,
     graphSlug: string,
 ) => {
+    const headers = {
+        "X-CSRFTOKEN": getToken(),
+    };
+
     const response = await fetch(arches.urls.api_lingo_resources(graphSlug), {
         method: "POST",
-        headers: {
-            "X-CSRFTOKEN": getToken(),
-            "Content-Type": "application/json",
-        },
+        headers: headers,
+        body: newResource,
+    });
+
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
+export const createLingoResource = async (
+    newResource: SchemeInstance | ConceptInstance | DigitalObjectInstance,
+    graphSlug: string,
+) => {
+    type headerType = {
+        "X-CSRFTOKEN": string;
+        "Content-Type"?: string;
+    };
+    const headers: headerType = {
+        "X-CSRFTOKEN": getToken(),
+    };
+
+    headers["Content-Type"] = "application/json";
+
+    const response = await fetch(arches.urls.api_lingo_resources(graphSlug), {
+        method: "POST",
+        headers: headers,
         body: JSON.stringify(newResource),
     });
+
     const parsed = await response.json();
     if (!response.ok) throw new Error(parsed.message || response.statusText);
     return parsed;

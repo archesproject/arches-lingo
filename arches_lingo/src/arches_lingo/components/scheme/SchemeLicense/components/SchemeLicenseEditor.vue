@@ -16,7 +16,7 @@ import { Form } from "@primevue/forms";
 
 import ProgressSpinner from "primevue/progressspinner";
 
-import NonLocalizedStringWidget from "@/arches_component_lab/widgets/NonLocalizedStringWidget/NonLocalizedStringWidget.vue";
+import NonLocalizedTextAreaWidget from "@/arches_component_lab/widgets/NonLocalizedTextAreaWidget/NonLocalizedTextAreaWidget.vue";
 import ReferenceSelectWidget from "@/arches_controlled_lists/widgets/ReferenceSelectWidget/ReferenceSelectWidget.vue";
 import ResourceInstanceMultiSelectWidget from "@/arches_component_lab/widgets/ResourceInstanceMultiSelectWidget/ResourceInstanceMultiSelectWidget.vue";
 
@@ -149,33 +149,12 @@ async function save(e: FormSubmitEvent) {
             ref="form"
             @submit="save"
         >
-            <ResourceInstanceMultiSelectWidget
-                node-alias="right_holder"
-                :graph-slug="props.graphSlug"
-                :initial-value="props.tileData?.aliased_data.right_holder"
-                :mode="EDIT"
-            />
-            <ReferenceSelectWidget
-                node-alias="right_type"
-                :graph-slug="props.graphSlug"
-                :initial-value="props.tileData?.aliased_data.right_type"
-                :mode="EDIT"
-            />
-            <NonLocalizedStringWidget
+            <NonLocalizedTextAreaWidget
                 node-alias="right_statement_content"
                 :graph-slug="props.graphSlug"
                 :initial-value="
                     props.tileData?.aliased_data.right_statement?.aliased_data
-                        .right_statement_content
-                "
-                :mode="EDIT"
-            />
-            <ReferenceSelectWidget
-                node-alias="right_statement_language"
-                :graph-slug="props.graphSlug"
-                :initial-value="
-                    props.tileData?.aliased_data.right_statement?.aliased_data
-                        .right_statement_language
+                        .right_statement_content?.interchange_value
                 "
                 :mode="EDIT"
             />
@@ -184,16 +163,32 @@ async function save(e: FormSubmitEvent) {
                 :graph-slug="props.graphSlug"
                 :initial-value="
                     props.tileData?.aliased_data.right_statement?.aliased_data
-                        .right_statement_type
+                        .right_statement_type?.interchange_value
                 "
                 :mode="EDIT"
             />
             <ReferenceSelectWidget
-                node-alias="right_statement_type_metatype"
+                node-alias="right_statement_language"
                 :graph-slug="props.graphSlug"
                 :initial-value="
                     props.tileData?.aliased_data.right_statement?.aliased_data
-                        .right_statement_type_metatype
+                        .right_statement_language?.interchange_value
+                "
+                :mode="EDIT"
+            />
+            <ResourceInstanceMultiSelectWidget
+                node-alias="right_holder"
+                :graph-slug="props.graphSlug"
+                :initial-value="
+                    props.tileData?.aliased_data.right_holder?.interchange_value
+                "
+                :mode="EDIT"
+            />
+            <ReferenceSelectWidget
+                node-alias="right_type"
+                :graph-slug="props.graphSlug"
+                :initial-value="
+                    props.tileData?.aliased_data.right_type?.interchange_value
                 "
                 :mode="EDIT"
             />

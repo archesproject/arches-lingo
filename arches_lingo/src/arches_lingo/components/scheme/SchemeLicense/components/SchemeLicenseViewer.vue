@@ -4,7 +4,7 @@ import { useGettext } from "vue3-gettext";
 
 import Button from "primevue/button";
 
-import NonLocalizedStringWidget from "@/arches_component_lab/widgets/NonLocalizedStringWidget/NonLocalizedStringWidget.vue";
+import NonLocalizedTextAreaWidget from "@/arches_component_lab/widgets/NonLocalizedTextAreaWidget/NonLocalizedTextAreaWidget.vue";
 import ReferenceSelectWidget from "@/arches_controlled_lists/widgets/ReferenceSelectWidget/ReferenceSelectWidget.vue";
 import ResourceInstanceMultiSelectWidget from "@/arches_component_lab/widgets/ResourceInstanceMultiSelectWidget/ResourceInstanceMultiSelectWidget.vue";
 
@@ -52,21 +52,25 @@ const buttonLabel = computed(() => {
             <ResourceInstanceMultiSelectWidget
                 node-alias="right_holder"
                 :graph-slug="props.graphSlug"
-                :initial-value="props.tileData?.aliased_data.right_holder"
+                :initial-value="
+                    props.tileData?.aliased_data.right_holder?.interchange_value
+                "
                 :mode="VIEW"
             />
             <ReferenceSelectWidget
                 node-alias="right_type"
                 :graph-slug="props.graphSlug"
-                :initial-value="props.tileData?.aliased_data.right_type"
+                :initial-value="
+                    props.tileData?.aliased_data.right_type?.interchange_value
+                "
                 :mode="VIEW"
             />
-            <NonLocalizedStringWidget
+            <NonLocalizedTextAreaWidget
                 node-alias="right_statement_content"
                 :graph-slug="props.graphSlug"
                 :initial-value="
                     props.tileData?.aliased_data.right_statement?.aliased_data
-                        .right_statement_content
+                        ?.right_statement_content?.display_value
                 "
                 :mode="VIEW"
             />
@@ -75,7 +79,7 @@ const buttonLabel = computed(() => {
                 :graph-slug="props.graphSlug"
                 :initial-value="
                     props.tileData?.aliased_data.right_statement?.aliased_data
-                        .right_statement_language
+                        .right_statement_language?.interchange_value
                 "
                 :mode="VIEW"
             />
@@ -84,7 +88,7 @@ const buttonLabel = computed(() => {
                 :graph-slug="props.graphSlug"
                 :initial-value="
                     props.tileData?.aliased_data.right_statement?.aliased_data
-                        .right_statement_type
+                        .right_statement_type?.interchange_value
                 "
                 :mode="VIEW"
             />
@@ -93,7 +97,7 @@ const buttonLabel = computed(() => {
                 :graph-slug="props.graphSlug"
                 :initial-value="
                     props.tileData?.aliased_data.right_statement?.aliased_data
-                        .right_statement_type_metatype
+                        .right_statement_type_metatype?.interchange_value
                 "
                 :mode="VIEW"
             />

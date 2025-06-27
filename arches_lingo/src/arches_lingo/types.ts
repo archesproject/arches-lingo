@@ -1,4 +1,5 @@
-import type { Ref } from "vue";
+import type { Component, Ref } from "vue";
+import type { MenuItem } from "primevue/menuitem";
 import type { TreeNode } from "primevue/treenode";
 import type { Label } from "@/arches_component_lab/types.ts";
 import type { EDIT, VIEW } from "@/arches_lingo/constants.ts";
@@ -13,6 +14,7 @@ export interface User {
     first_name: string;
     last_name: string;
     username: string;
+    email: string;
 }
 
 // Prop injection types
@@ -105,51 +107,71 @@ export interface TileData<T extends AliasedData = AliasedData> {
 }
 
 export interface ResourceData<T extends AliasedData = AliasedData> {
+    display_value?: string;
     resourceinstanceid: string;
     aliased_data: T;
 }
 
+interface QuerysetsString {
+    display_value: string;
+    interchange_value: string;
+}
+
+interface QuerysetsReferenceSelectFetchedOption {
+    display_value: string;
+    interchange_value: ReferenceSelectFetchedOption[];
+}
+
+interface QuerysetsResourceInstanceReference {
+    display_value: string;
+    interchange_value: ResourceInstanceReference[];
+}
+
 export interface AppellativeStatusAliases extends AliasedData {
-    appellative_status_ascribed_name_content: string;
-    appellative_status_ascribed_name_language?: ReferenceSelectFetchedOption[];
-    appellative_status_ascribed_relation?: ReferenceSelectFetchedOption[];
-    appellative_status_status_metatype?: ReferenceSelectFetchedOption[];
-    appellative_status_status?: ReferenceSelectFetchedOption[];
-    appellative_status_data_assignment_object_used: ResourceInstanceReference[];
-    appellative_status_data_assignment_actor: ResourceInstanceReference[];
-    appellative_status_data_assignment_type: ReferenceSelectFetchedOption[];
-    appellative_status_timespan_begin_of_the_begin: string;
-    appellative_status_timespan_end_of_the_end: string;
+    appellative_status_ascribed_name_content: QuerysetsString;
+    appellative_status_ascribed_name_language?: QuerysetsReferenceSelectFetchedOption;
+    appellative_status_ascribed_relation?: QuerysetsReferenceSelectFetchedOption;
+    appellative_status_status_metatype?: QuerysetsReferenceSelectFetchedOption;
+    appellative_status_status?: QuerysetsReferenceSelectFetchedOption;
+    appellative_status_data_assignment_object_used: QuerysetsResourceInstanceReference;
+    appellative_status_data_assignment_actor: QuerysetsResourceInstanceReference;
+    appellative_status_data_assignment_type: QuerysetsReferenceSelectFetchedOption;
+    appellative_status_timespan_begin_of_the_begin: QuerysetsString;
+    appellative_status_timespan_end_of_the_end: QuerysetsString;
 }
 
 export interface ConceptNameAlises extends AliasedData {
-    name: string;
+    name: QuerysetsString;
 }
 
 export type ConceptName = TileData<ConceptNameAlises>;
 
+interface QuerysetsFileReference {
+    display_value: string;
+    interchange_value: FileReference[];
+}
+
 export interface DigitalObjectContentAliases extends AliasedData {
-    content: FileReference[];
+    content: QuerysetsFileReference[];
 }
 
 export type DigitalObjectContent = TileData<DigitalObjectContentAliases>;
 
 export interface ConceptImagesAliases extends AliasedData {
-    depicting_digital_asset_internal: ResourceInstanceReference[];
+    depicting_digital_asset_internal: QuerysetsResourceInstanceReference;
 }
 
 export type ConceptImages = TileData<ConceptImagesAliases>;
 
 export interface DigitalObjectNameAliases extends AliasedData {
-    name_content: string;
+    name_content: QuerysetsString;
 }
 
 export type DigitalObjectName = TileData<DigitalObjectNameAliases>;
 
 export interface DigitalObjectInstanceAliases extends AliasedData {
-    name: DigitalObjectName;
+    name?: DigitalObjectName;
     content?: DigitalObjectContent;
-    resourceinstanceid: string;
     statement?: ConceptStatement;
 }
 
@@ -158,15 +180,15 @@ export type DigitalObjectInstance = ResourceData<DigitalObjectInstanceAliases>;
 export type AppellativeStatus = TileData<AppellativeStatusAliases>;
 
 export interface ConceptStatementAliases extends AliasedData {
-    statement_content: string;
-    statement_language?: ReferenceSelectFetchedOption[];
-    statement_type?: ReferenceSelectFetchedOption[];
-    statement_type_metatype?: ReferenceSelectFetchedOption[];
-    statement_data_assignment_object_used?: ResourceInstanceReference[];
-    statement_data_assignment_actor?: ResourceInstanceReference[];
-    statement_data_assignment_type?: ReferenceSelectFetchedOption[];
-    statement_data_assignment_timespan_begin_of_the_begin?: string | null;
-    statement_data_assignment_timespan_end_of_the_end?: string | null;
+    statement_content: QuerysetsString;
+    statement_language?: QuerysetsReferenceSelectFetchedOption;
+    statement_type?: QuerysetsReferenceSelectFetchedOption;
+    statement_type_metatype?: QuerysetsReferenceSelectFetchedOption;
+    statement_data_assignment_object_used?: QuerysetsResourceInstanceReference;
+    statement_data_assignment_actor?: QuerysetsResourceInstanceReference;
+    statement_data_assignment_type?: QuerysetsReferenceSelectFetchedOption;
+    statement_data_assignment_timespan_begin_of_the_begin?: QuerysetsString | null;
+    statement_data_assignment_timespan_end_of_the_end?: QuerysetsString | null;
 }
 
 export type ConceptStatement = TileData<ConceptStatementAliases>;
@@ -216,46 +238,46 @@ export type ConceptClassificationStatus =
     TileData<ConceptClassificationStatusAliases>;
 
 export interface SchemeStatementAliases extends AliasedData {
-    statement_content_n1: string;
-    statement_language_n1?: ReferenceSelectFetchedOption[];
-    statement_type_n1?: ReferenceSelectFetchedOption[];
-    statement_type_metatype_n1?: ReferenceSelectFetchedOption[];
-    statement_data_assignment_object_used?: ResourceInstanceReference[];
-    statement_data_assignment_actor?: ResourceInstanceReference[];
-    statement_data_assignment_type?: ReferenceSelectFetchedOption[];
-    statement_data_assignment_timespan_begin_of_the_begin?: string | null;
-    statement_data_assignment_timespan_end_of_the_end?: string | null;
+    statement_content_n1: QuerysetsString;
+    statement_language_n1?: QuerysetsReferenceSelectFetchedOption;
+    statement_type_n1?: QuerysetsReferenceSelectFetchedOption;
+    statement_type_metatype_n1?: QuerysetsReferenceSelectFetchedOption;
+    statement_data_assignment_object_used?: QuerysetsResourceInstanceReference;
+    statement_data_assignment_actor?: QuerysetsResourceInstanceReference;
+    statement_data_assignment_type?: QuerysetsReferenceSelectFetchedOption;
+    statement_data_assignment_timespan_begin_of_the_begin?: QuerysetsString | null;
+    statement_data_assignment_timespan_end_of_the_end?: QuerysetsString | null;
 }
 
 export type SchemeStatement = TileData<SchemeStatementAliases>;
 
 export interface SchemeRightsAliases extends TileData {
-    right_holder?: ResourceInstanceReference[];
-    right_type?: ReferenceSelectFetchedOption[];
+    right_holder?: QuerysetsResourceInstanceReference;
+    right_type?: QuerysetsReferenceSelectFetchedOption;
     right_statement?: SchemeRightStatement;
 }
 
 export type SchemeRights = TileData<SchemeRightsAliases>;
 
 export interface SchemeRightStatementAliases extends AliasedData {
-    right_statement_content?: string;
-    right_statement_label?: string;
-    right_statement_language?: ReferenceSelectFetchedOption[];
-    right_statement_type?: ReferenceSelectFetchedOption[];
-    right_statement_type_metatype?: ReferenceSelectFetchedOption[];
+    right_statement_content?: QuerysetsString;
+    right_statement_label?: QuerysetsString;
+    right_statement_language?: QuerysetsReferenceSelectFetchedOption;
+    right_statement_type?: QuerysetsReferenceSelectFetchedOption;
+    right_statement_type_metatype?: QuerysetsReferenceSelectFetchedOption;
 }
 
 export type SchemeRightStatement = TileData<SchemeRightStatementAliases>;
 
 export interface SchemeNamespaceAliases extends AliasedData {
-    namespace_name: string;
-    namespace_type: ReferenceSelectFetchedOption[];
+    namespace_name: QuerysetsString;
+    namespace_type: QuerysetsReferenceSelectFetchedOption;
 }
 
 export type SchemeNamespace = TileData<SchemeNamespaceAliases>;
 
 export interface SchemeCreationAliases extends AliasedData {
-    creation_sources: ResourceInstanceReference[];
+    creation_sources: QuerysetsResourceInstanceReference;
 }
 
 export type SchemeCreation = TileData<SchemeCreationAliases>;
@@ -264,22 +286,22 @@ export interface ConceptInstance {
     aliased_data: {
         appellative_status?: AppellativeStatus[];
         concept_statement?: ConceptStatement[];
-        depicting_digital_asset_internal?: ConceptImages[];
+        depicting_digital_asset_internal?: ConceptImages;
         classification_status?: ConceptClassificationStatusAliases[];
     };
 }
 
 export interface ConceptClassificationStatusAliases extends AliasedData {
     aliased_data: {
-        classification_status_ascribed_classification?: ResourceInstanceReference[];
-        classification_status_ascribed_relation?: ReferenceSelectFetchedOption[];
-        classification_status_data_assignment_actor?: ResourceInstanceReference[];
-        classification_status_data_assignment_object_used?: ResourceInstanceReference[];
-        classification_status_data_assignment_type?: ReferenceSelectFetchedOption[];
-        classification_status_timespan_end_of_the_end?: string | null;
-        classification_status_timespan_begin_of_the_begin?: string | null;
-        classification_status_type?: ReferenceSelectFetchedOption[];
-        classification_status_type_metatype?: ReferenceSelectFetchedOption[];
+        classification_status_ascribed_classification?: QuerysetsResourceInstanceReference;
+        classification_status_ascribed_relation?: QuerysetsReferenceSelectFetchedOption;
+        classification_status_data_assignment_actor?: QuerysetsResourceInstanceReference;
+        classification_status_data_assignment_object_used?: QuerysetsResourceInstanceReference;
+        classification_status_data_assignment_type?: QuerysetsReferenceSelectFetchedOption;
+        classification_status_timespan_end_of_the_end?: QuerysetsString | null;
+        classification_status_timespan_begin_of_the_begin?: QuerysetsString | null;
+        classification_status_type?: QuerysetsReferenceSelectFetchedOption;
+        classification_status_type_metatype?: QuerysetsReferenceSelectFetchedOption;
     };
 }
 
@@ -327,6 +349,11 @@ export interface NodeAndParentInstruction {
 export interface IconLabels {
     concept: string;
     scheme: string;
+}
+
+export interface SideNavMenuItem extends MenuItem {
+    component?: Component;
+    showIconIfCollapsed?: boolean;
 }
 
 export interface SearchResultItem {

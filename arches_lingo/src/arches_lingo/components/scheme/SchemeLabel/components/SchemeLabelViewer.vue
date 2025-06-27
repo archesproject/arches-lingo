@@ -64,6 +64,7 @@ const metaStringLabel: MetaStringText = {
                     :initial-value="
                         rowData.aliased_data
                             .appellative_status_ascribed_name_content
+                            .display_value
                     "
                     :mode="VIEW"
                     :show-label="false"
@@ -76,6 +77,7 @@ const metaStringLabel: MetaStringText = {
                     :initial-value="
                         rowData.aliased_data
                             .appellative_status_ascribed_relation
+                            .interchange_value
                     "
                     :mode="VIEW"
                     :show-label="false"
@@ -88,6 +90,7 @@ const metaStringLabel: MetaStringText = {
                     :initial-value="
                         rowData.aliased_data
                             .appellative_status_ascribed_name_language
+                            .interchange_value
                     "
                     :mode="VIEW"
                     :show-label="false"
@@ -100,6 +103,7 @@ const metaStringLabel: MetaStringText = {
                     :initial-value="
                         rowData.aliased_data
                             .appellative_status_data_assignment_object_used
+                            .interchange_value
                     "
                     :mode="VIEW"
                 />
@@ -109,6 +113,7 @@ const metaStringLabel: MetaStringText = {
                     :initial-value="
                         rowData.aliased_data
                             .appellative_status_data_assignment_actor
+                            .interchange_value
                     "
                     :mode="VIEW"
                 />
