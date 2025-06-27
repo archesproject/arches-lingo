@@ -7,13 +7,10 @@ import { useToast } from "primevue/usetoast";
 import Button from "primevue/button";
 import ProgressSpinner from "primevue/progressspinner";
 
-import ResourceInstanceMultiSelectWidget from "@/arches_component_lab/widgets/ResourceInstanceMultiSelectWidget/ResourceInstanceMultiSelectWidget.vue";
-
 import {
     DEFAULT_ERROR_TOAST_LIFE,
     ERROR,
     systemLanguageKey,
-    VIEW,
 } from "@/arches_lingo/constants.ts";
 
 import { fetchLingoResource } from "@/arches_lingo/api.ts";
@@ -155,14 +152,12 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                     <span class="header-item-label">
                         {{ $gettext("Scheme:") }}
                     </span>
-                    <!-- TODO: Allow resource multiselect to route within lingo, not to resource pg -->
-                    <ResourceInstanceMultiSelectWidget
-                        :graph-slug="props.graphSlug"
-                        node-alias="part_of_scheme"
-                        :initial-value="data?.partOfScheme"
-                        :mode="VIEW"
-                        :show-label="false"
-                    ></ResourceInstanceMultiSelectWidget>
+                    <span class="header-item-value">
+                        <RouterLink
+                            :to="`/scheme/${data?.partOfScheme?.interchange_value}`"
+                            >{{ data?.partOfScheme?.display_value }}</RouterLink
+                        >
+                    </span>
                 </div>
 
                 <!-- TODO: Life Cycle mgmt functionality goes here -->
@@ -180,14 +175,16 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                     <span class="header-item-label">
                         {{ $gettext("Parent Concept(s):") }}
                     </span>
-                    <!-- TODO: Allow resource multiselect to route within lingo, not to resource pg -->
-                    <ResourceInstanceMultiSelectWidget
-                        :graph-slug="props.graphSlug"
-                        node-alias="classification_status_ascribed_classification"
-                        :initial-value="data?.parentConcepts"
-                        :mode="VIEW"
-                        :show-label="false"
-                    ></ResourceInstanceMultiSelectWidget>
+                    <span
+                        v-for="parent in data?.parentConcepts"
+                        :key="parent.interchange_value"
+                        class="header-item-value"
+                    >
+                        <RouterLink
+                            :to="`/concept/${parent.interchange_value}`"
+                            >{{ parent.display_value }}</RouterLink
+                        >
+                    </span>
                 </div>
                 <div class="header-item">
                     <span class="header-item-label">
@@ -234,11 +231,13 @@ h2 {
     padding: 0;
     margin: 0;
 }
+
 .header-row {
     display: flex;
     justify-content: space-between;
     align-items: baseline;
 }
+
 .uri-container {
     justify-content: flex-start;
 }
@@ -248,6 +247,7 @@ h2 {
     margin-inline-end: 1rem;
     align-items: baseline;
 }
+
 .header-item-label {
     font-weight: var(--p-lingo-font-weight-normal);
     font-size: var(--p-lingo-font-size-smallnormal);
