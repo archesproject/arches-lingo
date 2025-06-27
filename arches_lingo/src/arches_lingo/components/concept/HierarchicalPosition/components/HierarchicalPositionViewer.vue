@@ -134,13 +134,21 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
             ></Button>
         </div>
 
-        <div>
+        <div class="lineage-section">
             <div
                 v-for="(hierarchy, index) in props.data"
                 :key="index"
             >
-                <div>
-                    <span>{{ $gettext("Lineage " + (index + 1)) }}</span>
+                <div style="margin-bottom: 0.5rem">
+                    <span
+                        style="
+                            color: var(--p-neutral-500);
+                            font-weight: var(--p-lingo-font-weight-normal);
+                            font-size: var(--p-lingo-font-size-medium);
+                        "
+                    >
+                        {{ $gettext("Lineage " + (index + 1)) }}
+                    </span>
                 </div>
                 <div
                     v-for="(item, subindex) in hierarchy.searchResults"
@@ -149,12 +157,9 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
                 >
                     <span
                         :class="getIcon(item)"
-                        :style="{
-                            'margin-inline-start': subindex + 'rem',
-                            'margin-inline-end': '0.5rem',
-                        }"
+                        :style="{ 'margin-inline-start': subindex * 2 + 'rem' }"
                     ></span>
-                    <span>
+                    <span style="margin-inline-start: 0.5rem">
                         {{
                             getItemLabel(
                                 item,
@@ -163,9 +168,9 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
                             ).value
                         }}
                     </span>
-                    <span
+                    <div
                         v-if="subindex === hierarchy.searchResults.length - 1"
-                        class="current-position"
+                        style="margin-inline-start: 0.5rem"
                     >
                         <Button
                             icon="pi pi-file-edit"
@@ -186,7 +191,7 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
                             size="small"
                             @click="confirmDelete(hierarchy)"
                         />
-                    </span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -194,11 +199,16 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
 </template>
 
 <style scoped>
-.section-item {
-    padding: var(--p-tree-node-padding);
+.lineage-section {
+    margin-inline-start: 5rem;
+    margin-top: 1rem;
 }
-.section-item .current-position button {
-    width: 2rem;
-    margin-inline-start: 0.5rem;
+
+.section-item {
+    display: flex;
+    height: 100%;
+    align-items: center;
+    padding: 0.25rem 0;
+    min-height: 2.5rem;
 }
 </style>
