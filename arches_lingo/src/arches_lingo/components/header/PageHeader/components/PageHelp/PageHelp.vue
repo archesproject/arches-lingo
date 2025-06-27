@@ -20,7 +20,7 @@ function activateHierarchyOverlay() {
             icon="pi pi-question-circle"
             variant="text"
             class="page-help-button"
-            :label="$gettext('Page Help')"
+            :label="$gettext('Help')"
             @click="activateHierarchyOverlay"
         />
         <PageHelpPanel
