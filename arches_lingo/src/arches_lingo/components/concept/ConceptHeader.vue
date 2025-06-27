@@ -178,7 +178,7 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                     <span
                         v-for="parent in data?.parentConcepts"
                         :key="parent.interchange_value"
-                        class="header-item-value"
+                        class="header-item-value parent-concept"
                     >
                         <RouterLink
                             :to="`/concept/${parent.interchange_value}`"
@@ -259,5 +259,9 @@ h2 {
 :deep(a) {
     font-size: var(--p-lingo-font-size-smallnormal);
     color: var(--p-primary-500);
+}
+
+.parent-concept {
+    margin-inline-end: 0.5rem;
 }
 </style>
