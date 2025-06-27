@@ -26,9 +26,7 @@ function openLanguageSelector(event: MouseEvent) {
             :aria-label="$gettext('Open language selector')"
             @click="openLanguageSelector"
         >
-            <div class="language-abbreviation-circle">
-                {{ selectedLanguage?.code }}
-            </div>
+            <i class="pi pi-language" />
             <span>{{ selectedLanguage?.name }}</span>
         </Button>
 
@@ -50,15 +48,5 @@ function openLanguageSelector(event: MouseEvent) {
 
 .p-button:hover {
     background: var(--p-button-primary-hover-background) !important;
-}
-.language-abbreviation-circle {
-    width: 2rem;
-    height: 2rem;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: var(--p-amber-800);
-    border: 0.09rem solid var(--p-primary-950);
 }
 </style>
