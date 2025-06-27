@@ -205,6 +205,11 @@ provide("refreshReportSection", refreshReportSection);
     border-radius: 0.125rem;
 }
 
+.p-splitter .p-splitterpanel .splitter-panel-content .p-skeleton {
+    min-height: 5rem;
+    margin-top: 1rem;
+}
+
 .p-splitterpanel:has(> .splitter-panel-content) {
     overflow-y: auto;
 }
