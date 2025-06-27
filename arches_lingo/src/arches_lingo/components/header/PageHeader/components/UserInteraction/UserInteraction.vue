@@ -5,7 +5,7 @@ import { useGettext } from "vue3-gettext";
 import Button from "primevue/button";
 import Popover from "primevue/popover";
 
-import UserInteractionMenu from "@/arches_lingo/components/user/UserInteraction/components/UserInteractionMenu/UserInteractionMenu.vue";
+import UserInteractionMenu from "@/arches_lingo/components/header/PageHeader/components/UserInteraction/components/UserInteractionMenu/UserInteractionMenu.vue";
 
 import { USER_KEY } from "@/arches_lingo/constants.ts";
 

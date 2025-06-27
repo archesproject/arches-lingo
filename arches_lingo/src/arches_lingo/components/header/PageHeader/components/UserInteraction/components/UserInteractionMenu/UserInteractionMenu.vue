@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import Divider from "primevue/divider";
 
-import ThemeSelector from "@/arches_lingo/components/user/UserInteraction/components/UserInteractionMenu/components/ThemeSelector.vue";
-import UserInteractionTools from "@/arches_lingo/components/user/UserInteraction/components/UserInteractionMenu/components/UserInteractionTools.vue";
+import ThemeSelector from "@/arches_lingo/components/header/PageHeader/components/UserInteraction/components/UserInteractionMenu/components/ThemeSelector.vue";
+import UserInteractionTools from "@/arches_lingo/components/header/PageHeader/components/UserInteraction/components/UserInteractionMenu/components/UserInteractionTools.vue";
 
 defineProps<{
     displayName: string;
