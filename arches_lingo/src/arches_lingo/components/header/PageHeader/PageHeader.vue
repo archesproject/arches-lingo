@@ -1,100 +1,89 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { useGettext } from "vue3-gettext";
 
-import Menubar from "primevue/menubar";
 import Button from "primevue/button";
-import HierarchyOverlay from "@/arches_lingo/components/tree/HierarchyOverlay.vue";
-import UserInteraction from "@/arches_lingo/components/user/UserInteraction/UserInteraction.vue";
-import SearchDialog from "@/arches_lingo/components/header/PageHeader/components/SearchDialog.vue";
+import Menubar from "primevue/menubar";
+import OverlayPanel from "primevue/overlaypanel";
 
 import ArchesLingoBadge from "@/arches_lingo/components/header/PageHeader/components/ArchesLingoBadge.vue";
-
-const { $gettext } = useGettext();
+import LanguageSelector from "@/arches_lingo/components/header/PageHeader/components/LanguageSelector.vue";
+import NotificationInteraction from "@/arches_lingo/components/header/PageHeader/components/NotificationsInteraction/NotificationInteraction.vue";
+import PageHelp from "@/arches_lingo/components/header/PageHeader/components/PageHelp/PageHelp.vue";
+import SchemeHierarchy from "@/arches_lingo/components/header/PageHeader/components/SchemeHierarchy/SchemeHierarchy.vue";
+import SearchDialog from "@/arches_lingo/components/header/PageHeader/components/SearchDialog.vue";
+import UserInteraction from "@/arches_lingo/components/header/PageHeader/components/UserInteraction/UserInteraction.vue";
 
 const props = defineProps<{
     isNavExpanded: boolean;
 }>();
 
-const showHierarchy = ref();
-const items = ref([]);
-
-function activateHierarchyOverlay() {
-    showHierarchy.value = true;
-}
+const mobileMenu = ref();
 </script>
 
 <template>
-    <Menubar
-        :model="items"
-        style="
-            border-radius: 0;
-            border-inline-start: 0;
-            border-inline-end: 0;
-            padding-inline-start: 1rem;
-            border-bottom: 0.125rem solid var(--p-primary-950);
-        "
-    >
+    <Menubar>
         <template #start>
             <ArchesLingoBadge v-if="!props.isNavExpanded" />
-
-            <Button
-                icon="pi pi-globe"
-                variant="text"
-                class="explore-button"
-                :label="$gettext('Explore')"
-                @click="activateHierarchyOverlay"
-            />
-
+            <SchemeHierarchy />
             <SearchDialog />
         </template>
-        <template #item="{ item }">
-            <RouterLink
-                :to="{ name: item.name }"
-                class="p-button p-component p-button-primary"
-                style="text-decoration: none"
-            >
-                <i
-                    :class="item.icon"
-                    aria-hidden="true"
-                ></i>
-                <span style="font-weight: var(--p-button-label-font-weight)">
-                    {{ item.label }}
-                </span>
-            </RouterLink>
-        </template>
         <template #end>
-            <div style="display: flex; align-items: center; gap: 1rem">
-                <!-- <DarkModeToggle /> -->
+            <div class="end-items">
                 <UserInteraction />
+                <LanguageSelector />
+                <NotificationInteraction />
+                <PageHelp />
             </div>
+            <Button
+                icon="pi pi-bars"
+                class="mobile-menu-button p-button-text"
+                @click="mobileMenu?.toggle($event)"
+            />
+            <OverlayPanel
+                ref="mobileMenu"
+                show-close-icon
+            >
+                <div class="mobile-menu-items">
+                    <UserInteraction />
+                    <LanguageSelector />
+                    <NotificationInteraction />
+                    <PageHelp />
+                </div>
+            </OverlayPanel>
         </template>
     </Menubar>
-    <HierarchyOverlay v-model:show-hierarchy="showHierarchy" />
 </template>
 
 <style scoped>
-.explore-button {
-    color: var(--p-menubar-text-color) !important;
+.p-menubar {
+    border-radius: 0;
+    border-inline-start: 0;
+    border-inline-end: 0;
+    padding-inline-start: 1rem;
+    border-bottom: 0.125rem solid var(--p-primary-950) !important;
+    height: 3.125rem;
+    border: none;
 }
-
-.explore-button:hover {
-    background: var(--p-button-primary-hover-background) !important;
-}
-
 :deep(.p-menubar-start) {
     gap: var(--p-menubar-gap);
 }
 
-.p-menubar {
-    height: 3.125rem;
-    border-radius: 0;
-    border: none;
+.end-items {
+    display: flex;
+    align-items: center;
+    gap: var(--p-menubar-gap);
+}
+.mobile-menu-button {
+    display: none;
+    color: var(--p-menubar-color) !important;
 }
 
 @media screen and (max-width: 960px) {
-    :deep(.p-menubar-button) {
+    .end-items {
         display: none !important;
+    }
+    .mobile-menu-button {
+        display: inline-flex !important;
     }
 }
 </style>
