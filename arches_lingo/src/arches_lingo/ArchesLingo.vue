@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { provide, ref, watch } from "vue";
+import { provide, ref } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { useGettext } from "vue3-gettext";
 
@@ -43,9 +43,6 @@ const toast = useToast();
 const { $gettext } = useGettext();
 
 const isNavExpanded = ref(false);
-watch(isNavExpanded, (newValue) => {
-    console.log("isNavExpanded changed:", newValue);
-});
 
 async function checkUserAuthentication(
     to: RouteLocationNormalizedLoadedGeneric,

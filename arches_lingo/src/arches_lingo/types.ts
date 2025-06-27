@@ -7,6 +7,7 @@ import type { ReferenceSelectFetchedOption } from "@/arches_controlled_lists/wid
 import type {
     ResourceInstanceReference,
     FileReference,
+    URLDatatype,
 } from "@/arches_component_lab/widgets/types.ts";
 
 export interface User {
@@ -192,6 +193,50 @@ export interface ConceptStatementAliases extends AliasedData {
 
 export type ConceptStatement = TileData<ConceptStatementAliases>;
 
+export interface ConceptRelationAliases extends AliasedData {
+    relation_status_ascribed_comparate: ResourceInstanceReference[];
+    relation_status_ascribed_relation: ReferenceSelectFetchedOption[];
+    relation_status_status: ReferenceSelectFetchedOption[];
+    relation_status_status_metatype: ReferenceSelectFetchedOption[];
+    relation_status_timespan_begin_of_the_begin: string;
+    relation_status_timespan_end_of_the_end: string;
+    relation_status_data_assignment_actor: ResourceInstanceReference[];
+    relation_status_data_assignment_object_used: ResourceInstanceReference[];
+    relation_status_data_assignment_type: ReferenceSelectFetchedOption[];
+}
+
+export type ConceptRelationStatus = TileData<ConceptRelationAliases>;
+
+export interface ConceptMatchAliases extends AliasedData {
+    match_status_ascribed_comparate: ResourceInstanceReference[];
+    match_status_ascribed_relation: ReferenceSelectFetchedOption[];
+    match_status_status: ReferenceSelectFetchedOption[];
+    match_status_status_metatype: ReferenceSelectFetchedOption[];
+    match_status_timespan_begin_of_the_begin: string;
+    match_status_timespan_end_of_the_end: string;
+    match_status_data_assignment_actor: ResourceInstanceReference[];
+    match_status_data_assignment_object_used: ResourceInstanceReference[];
+    match_status_data_assignment_type: ReferenceSelectFetchedOption[];
+    uri: URLDatatype;
+}
+
+export type ConceptMatchStatus = TileData<ConceptMatchAliases>;
+
+export interface ConceptClassificationStatusAliases extends AliasedData {
+    classification_status_ascribed_classification: ResourceInstanceReference[];
+    classification_status_ascribed_relation: ReferenceSelectFetchedOption[];
+    classification_status_data_assignment_actor: ResourceInstanceReference[];
+    classification_status_data_assignment_object_used: ResourceInstanceReference[];
+    classification_status_data_assignment_type: ReferenceSelectFetchedOption[];
+    classification_status_timespan_begin_of_the_begin: string;
+    classification_status_timespan_end_of_the_end: string;
+    classification_status_type: ReferenceSelectFetchedOption[];
+    classification_status_type_metatype: ReferenceSelectFetchedOption[];
+}
+
+export type ConceptClassificationStatus =
+    TileData<ConceptClassificationStatusAliases>;
+
 export interface SchemeStatementAliases extends AliasedData {
     statement_content_n1: QuerysetsString;
     statement_language_n1?: QuerysetsReferenceSelectFetchedOption;
@@ -266,7 +311,7 @@ export interface ConceptHeaderData {
     descriptor?: ResourceDescriptor;
     principalUser?: number | string;
     lifeCycleState: string;
-    partOfScheme?: ResourceInstanceReference[];
+    partOfScheme?: ResourceInstanceReference;
     parentConcepts?: ResourceInstanceReference[];
     type?: ReferenceSelectFetchedOption[];
     status?: ReferenceSelectFetchedOption[];
@@ -314,6 +359,7 @@ export interface SideNavMenuItem extends MenuItem {
 export interface SearchResultItem {
     id: string;
     labels: Label[];
+    label?: string;
     parents: {
         id: string;
         labels: Label[];
@@ -321,6 +367,11 @@ export interface SearchResultItem {
     polyhierarchical: boolean;
 }
 
+export interface SearchResultHierarchy {
+    tileid?: string;
+    searchResults: SearchResultItem[];
+    isTopConcept?: boolean;
+}
 export interface archesPreset {
     arches: {
         legacy: {
