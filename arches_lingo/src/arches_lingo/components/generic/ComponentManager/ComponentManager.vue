@@ -163,6 +163,7 @@ provide("refreshReportSection", refreshReportSection);
 <style scoped>
 .content {
     overflow: auto;
+    padding-bottom: 2rem;
 }
 
 .splitter-panel-content {
@@ -206,12 +207,11 @@ provide("refreshReportSection", refreshReportSection);
 }
 
 .p-splitter .p-splitterpanel .splitter-panel-content .p-skeleton {
-    min-height: 5rem;
+    min-height: 9rem;
     margin-top: 1rem;
 }
 
 .p-splitterpanel:has(> .splitter-panel-content) {
     overflow-y: auto;
-    padding-bottom: 2rem;
 }
 </style>
