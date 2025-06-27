@@ -7,7 +7,6 @@ import { Form } from "@primevue/forms";
 import DateWidget from "@/arches_component_lab/widgets/DateWidget/DateWidget.vue";
 import ReferenceSelectWidget from "@/arches_controlled_lists/widgets/ReferenceSelectWidget/ReferenceSelectWidget.vue";
 import ResourceInstanceMultiSelectWidget from "@/arches_component_lab/widgets/ResourceInstanceMultiSelectWidget/ResourceInstanceMultiSelectWidget.vue";
-import ConceptResourceSelectWidget from "@/arches_lingo/components/widgets/ConceptResourceSelectWidget/ConceptResourceSelectWidget.vue";
 
 import { createLingoResource, upsertLingoTile } from "@/arches_lingo/api.ts";
 import { EDIT } from "@/arches_lingo/constants.ts";
@@ -108,13 +107,12 @@ async function save(e: FormSubmitEvent) {
             ref="form"
             @submit="save"
         >
-            <ConceptResourceSelectWidget
+            <ResourceInstanceMultiSelectWidget
                 :graph-slug="props.graphSlug"
                 node-alias="match_status_ascribed_comparate"
-                :scheme="props.scheme"
-                :exclude="props.exclude"
                 :initial-value="
                     props.tileData?.aliased_data.match_status_ascribed_comparate
+                        ?.interchange_value
                 "
                 :mode="EDIT"
             />
@@ -123,6 +121,7 @@ async function save(e: FormSubmitEvent) {
                 node-alias="match_status_ascribed_relation"
                 :initial-value="
                     props.tileData?.aliased_data.match_status_ascribed_relation
+                        ?.interchange_value
                 "
                 :mode="EDIT"
             />
@@ -131,6 +130,7 @@ async function save(e: FormSubmitEvent) {
                 node-alias="match_status_status"
                 :initial-value="
                     props.tileData?.aliased_data.match_status_status
+                        ?.interchange_value
                 "
                 :mode="EDIT"
             />
@@ -139,6 +139,7 @@ async function save(e: FormSubmitEvent) {
                 node-alias="match_status_status_metatype"
                 :initial-value="
                     props.tileData?.aliased_data.match_status_status_metatype
+                        ?.interchange_value
                 "
                 :mode="EDIT"
             />
@@ -148,6 +149,7 @@ async function save(e: FormSubmitEvent) {
                 :initial-value="
                     props.tileData?.aliased_data
                         .match_status_timespan_begin_of_the_begin
+                        ?.interchange_value
                 "
                 :mode="EDIT"
             />
@@ -156,7 +158,7 @@ async function save(e: FormSubmitEvent) {
                 node-alias="match_status_timespan_end_of_the_end"
                 :initial-value="
                     props.tileData?.aliased_data
-                        .match_status_timespan_end_of_the_end
+                        .match_status_timespan_end_of_the_end?.interchange_value
                 "
                 :mode="EDIT"
             />
@@ -165,7 +167,7 @@ async function save(e: FormSubmitEvent) {
                 node-alias="match_status_data_assignment_actor"
                 :initial-value="
                     props.tileData?.aliased_data
-                        .match_status_data_assignment_actor
+                        .match_status_data_assignment_actor?.interchange_value
                 "
                 :mode="EDIT"
             />
@@ -175,6 +177,7 @@ async function save(e: FormSubmitEvent) {
                 :initial-value="
                     props.tileData?.aliased_data
                         .match_status_data_assignment_object_used
+                        ?.interchange_value
                 "
                 :mode="EDIT"
             />
@@ -183,7 +186,7 @@ async function save(e: FormSubmitEvent) {
                 node-alias="match_status_data_assignment_type"
                 :initial-value="
                     props.tileData?.aliased_data
-                        .match_status_data_assignment_type
+                        .match_status_data_assignment_type?.interchange_value
                 "
                 :mode="EDIT"
             />

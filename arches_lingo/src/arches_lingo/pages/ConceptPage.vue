@@ -45,17 +45,17 @@ const componentData = [
     {
         component: ConceptRelationship,
         componentName: "ConceptRelationship",
-        sectionTitle: $gettext("Associative Relationship"),
+        sectionTitle: $gettext("Associated Concepts"),
         graphSlug: "concept",
         nodegroupAlias: "relation_status",
     },
-    // {
-    //     component: ConceptMatch,
-    //     componentName: "ConceptMatch",
-    //     sectionTitle: $gettext("Matched"),
-    //     graphSlug: "concept",
-    //     nodegroupAlias: "match_status",
-    // },
+    {
+        component: ConceptMatch,
+        componentName: "ConceptMatch",
+        sectionTitle: $gettext("Matched Concepts"),
+        graphSlug: "concept",
+        nodegroupAlias: "match_status",
+    },
     // {
     //     component: HierarchicalPosition,
     //     componentName: "HierarchicalPosition",

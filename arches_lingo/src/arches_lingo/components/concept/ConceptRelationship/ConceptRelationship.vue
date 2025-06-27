@@ -28,14 +28,12 @@ const props = defineProps<{
 
 const isLoading = ref(true);
 const tileData = ref<ConceptRelationStatus[]>([]);
-const schemeId = ref<string>();
 const fetchError = ref();
 
 onMounted(async () => {
     if (props.resourceInstanceId) {
         const sectionValue = await getSectionValue();
         tileData.value = sectionValue?.data;
-        schemeId.value = sectionValue.scheme_id;
     }
     isLoading.value = false;
 });
@@ -79,7 +77,6 @@ async function getSectionValue() {
             :tile-data="
                 tileData.find((tileDatum) => tileDatum.tileid === props.tileId)
             "
-            :scheme="schemeId"
             :component-name="props.componentName"
             :section-title="props.sectionTitle"
             :graph-slug="props.graphSlug"

@@ -9,7 +9,6 @@ import URLWidget from "@/arches_component_lab/widgets/URLWidget/URLWidget.vue";
 
 import ReferenceSelectWidget from "@/arches_controlled_lists/widgets/ReferenceSelectWidget/ReferenceSelectWidget.vue";
 import ResourceInstanceMultiSelectWidget from "@/arches_component_lab/widgets/ResourceInstanceMultiSelectWidget/ResourceInstanceMultiSelectWidget.vue";
-import ConceptResourceSelectWidget from "@/arches_lingo/components/widgets/ConceptResourceSelectWidget/ConceptResourceSelectWidget.vue";
 
 import { VIEW } from "@/arches_lingo/constants.ts";
 
@@ -24,7 +23,6 @@ const props = defineProps<{
     sectionTitle: string;
     graphSlug: string;
     nodegroupAlias: string;
-    scheme?: string;
 }>();
 
 const { $gettext } = useGettext();
@@ -44,79 +42,78 @@ const metaStringLabel: MetaStringText = {
 </script>
 
 <template>
-    <div class="section-header">
-        <h2>{{ props.sectionTitle }}</h2>
+    <div class="viewer-section">
+        <div class="section-header">
+            <h2>{{ props.sectionTitle }}</h2>
 
-        <Button
-            :label="$gettext('Add New Matched Concept')"
-            @click="openEditor!(props.componentName)"
-        ></Button>
+            <Button
+                class="add-button"
+                style="min-width: 14rem"
+                :label="$gettext('Add Matched Concept')"
+                @click="openEditor!(props.componentName)"
+            ></Button>
+        </div>
+
+        <MetaStringViewer
+            :meta-strings="props.tileData"
+            :meta-string-text="metaStringLabel"
+            :component-name="props.componentName"
+            :graph-slug="props.graphSlug"
+            :nodegroup-alias="props.nodegroupAlias"
+        >
+            <template #name="{ rowData }">
+                <ReferenceSelectWidget
+                    :graph-slug="props.graphSlug"
+                    node-alias="match_status_ascribed_relation"
+                    :initial-value="
+                        rowData.aliased_data.match_status_ascribed_relation
+                            ?.interchange_value
+                    "
+                    :mode="VIEW"
+                    :show-label="false"
+                />
+            </template>
+            <template #type="{ rowData }">
+                <URLWidget
+                    :graph-slug="props.graphSlug"
+                    node-alias="uri_content"
+                    :initial-value="rowData.aliased_data.uri?.interchange_value"
+                    :mode="VIEW"
+                    :show-label="false"
+                />
+            </template>
+            <template #language="{ rowData }">
+                <ResourceInstanceMultiSelectWidget
+                    :graph-slug="props.graphSlug"
+                    node-alias="match_status_ascribed_comparate"
+                    :initial-value="
+                        rowData.aliased_data.match_status_ascribed_comparate
+                            ?.interchange_value
+                    "
+                    :mode="VIEW"
+                    :show-label="false"
+                />
+            </template>
+            <template #drawer="{ rowData }">
+                <ResourceInstanceMultiSelectWidget
+                    :graph-slug="props.graphSlug"
+                    node-alias="match_status_data_assignment_actor"
+                    :initial-value="
+                        rowData.aliased_data.match_status_data_assignment_actor
+                            ?.interchange_value
+                    "
+                    :mode="VIEW"
+                />
+                <ResourceInstanceMultiSelectWidget
+                    :graph-slug="props.graphSlug"
+                    node-alias="match_status_data_assignment_object_used"
+                    :initial-value="
+                        rowData.match_status_data_assignment_object_used
+                            ?.interchange_value
+                    "
+                    :mode="VIEW"
+                />
+            </template>
+        </MetaStringViewer>
     </div>
-
-    <MetaStringViewer
-        :meta-strings="props.tileData"
-        :meta-string-text="metaStringLabel"
-        :component-name="props.componentName"
-        :graph-slug="props.graphSlug"
-        :nodegroup-alias="props.nodegroupAlias"
-    >
-        <template #name="{ rowData }">
-            <ReferenceSelectWidget
-                :graph-slug="props.graphSlug"
-                node-alias="match_status_ascribed_relation"
-                :initial-value="
-                    rowData.aliased_data.match_status_ascribed_relation
-                "
-                :mode="VIEW"
-                :show-label="false"
-            />
-        </template>
-        <template #type="{ rowData }">
-            <URLWidget
-                :graph-slug="props.graphSlug"
-                node-alias="uri_content"
-                :initial-value="rowData.aliased_data.uri"
-                :mode="VIEW"
-                :show-label="false"
-            />
-        </template>
-        <template #language="{ rowData }">
-            <ConceptResourceSelectWidget
-                :graph-slug="props.graphSlug"
-                node-alias="match_status_ascribed_comparate"
-                :initial-value="
-                    rowData.aliased_data.match_status_ascribed_comparate
-                "
-                :mode="VIEW"
-                :show-label="false"
-            />
-        </template>
-        <template #drawer="{ rowData }">
-            <ResourceInstanceMultiSelectWidget
-                :graph-slug="props.graphSlug"
-                node-alias="match_status_data_assignment_actor"
-                :initial-value="
-                    rowData.aliased_data.match_status_data_assignment_actor
-                "
-                :mode="VIEW"
-            />
-            <ResourceInstanceMultiSelectWidget
-                :graph-slug="props.graphSlug"
-                node-alias="match_status_data_assignment_object_used"
-                :initial-value="
-                    rowData.match_status_data_assignment_object_used
-                "
-                :mode="VIEW"
-            />
-        </template>
-    </MetaStringViewer>
 </template>
-
-<style scoped>
-.section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 0.125rem solid var(--p-menubar-border-color);
-}
-</style>
