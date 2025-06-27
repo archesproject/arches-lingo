@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { inject, ref } from "vue";
+import { useGettext } from "vue3-gettext";
 import { systemLanguageKey, NEW } from "@/arches_lingo/constants.ts";
 import { routeNames } from "@/arches_lingo/routes.ts";
 
@@ -11,6 +12,7 @@ import { extractDescriptors } from "@/arches_lingo/utils.ts";
 import type { Language } from "@/arches_component_lab/types";
 import type { ResourceInstanceResult } from "@/arches_lingo/types";
 
+const { $gettext } = useGettext();
 const systemLanguage = inject(systemLanguageKey) as Language;
 
 const { scheme } = defineProps<{ scheme: ResourceInstanceResult }>();
@@ -23,52 +25,52 @@ const schemeDescriptor = extractDescriptors(scheme, systemLanguage);
 
 const items = ref([
     {
-        label: "Manage",
+        label: $gettext("Manage"),
         icon: "pi pi-cog",
         items: [
             {
-                label: "Settings",
-                description: "Manage scheme metadata",
+                label: $gettext("Settings"),
+                description: $gettext("Manage scheme metadata"),
                 route: "/theming/styled",
             },
             {
-                label: "Edit Scheme",
-                description: "Create edit version and lock scheme",
+                label: $gettext("Edit Scheme"),
+                description: $gettext("Create edit version and lock scheme"),
                 route: "/theming/unstyled",
             },
             {
-                label: "Copy Scheme",
-                description: "Copy to a new scheme",
+                label: $gettext("Copy Scheme"),
+                description: $gettext("Copy to a new scheme"),
                 route: "/theming/unstyled",
             },
             {
-                label: "Delete Unpublished Scheme",
-                description: "Permanently remove scheme",
+                label: $gettext("Delete Unpublished Scheme"),
+                description: $gettext("Permanently remove scheme"),
                 route: "/theming/unstyled",
             },
             {
-                label: "Publish Scheme",
-                description: "Make scheme available for access",
+                label: $gettext("Publish Scheme"),
+                description: $gettext("Make scheme available for access"),
                 route: "/theming/unstyled",
             },
             {
-                label: "Save Edited Scheme",
-                description: "Make scheme available for access",
+                label: $gettext("Save Edited Scheme"),
+                description: $gettext("Make scheme available for access"),
                 route: "/theming/unstyled",
             },
             {
-                label: "Deprecate Published Scheme",
-                description: "Prohibit editing a published scheme",
+                label: $gettext("Deprecate Published Scheme"),
+                description: $gettext("Prohibit editing a published scheme"),
                 route: "/theming/unstyled",
             },
             {
                 label: "Un-deprecate Scheme",
-                description: "Revive a deprecated scheme",
+                description: $gettext("Revive a deprecated scheme"),
                 route: "/theming/unstyled",
             },
             {
-                label: "View Scheme Statistics",
-                description: "Summary of scheme content",
+                label: $gettext("View Scheme Statistics"),
+                description: $gettext("Summary of scheme content"),
                 route: "/theming/unstyled",
             },
         ],
@@ -124,7 +126,7 @@ const items = ref([
                 style="display: flex; width: 100%"
             >
                 <Menubar :model="items">
-                    <template #start> Status </template>
+                    <template #start>{{ $gettext("Status") }}</template>
                     <template #item="{ item, props, hasSubmenu }">
                         <RouterLink
                             v-if="item.route"
@@ -166,8 +168,6 @@ const items = ref([
                         </a>
                     </template>
                 </Menubar>
-                <!-- <div class="footer-component">Status</div>
-                    <div class="footer-component"><div style="display: flex;align-items: center;justify-content: center;"><span style="width: 1.5rem;" class="pi pi-cog"></span> Manage</div></div> -->
             </div>
         </template>
     </Card>
