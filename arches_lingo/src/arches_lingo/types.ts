@@ -266,7 +266,7 @@ export interface ConceptHeaderData {
     descriptor?: ResourceDescriptor;
     principalUser?: number | string;
     lifeCycleState: string;
-    partOfScheme?: ResourceInstanceReference[];
+    partOfScheme?: ResourceInstanceReference;
     parentConcepts?: ResourceInstanceReference[];
     type?: ReferenceSelectFetchedOption[];
     status?: ReferenceSelectFetchedOption[];
