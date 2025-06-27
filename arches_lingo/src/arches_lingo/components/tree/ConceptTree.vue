@@ -341,7 +341,7 @@ function onNodeSelect(node: TreeNode) {
     />
     <div
         v-if="!tree.length"
-        class="skeleton"
+        class="skeleton-container"
     >
         <Skeleton height="1.75rem" />
         <Skeleton height="1.75rem" />
@@ -421,12 +421,12 @@ function onNodeSelect(node: TreeNode) {
     height: 100%;
 }
 
-.skeleton {
+.skeleton-container {
     padding: var(--p-tree-padding);
-    width: 29rem;
+    width: 100%;
 }
 
-.skeleton :deep(.p-skeleton) {
+.skeleton-container :deep(.p-skeleton) {
     margin: 0.5rem 0;
     height: var(--p-tree-node-toggle-button-size);
 }
