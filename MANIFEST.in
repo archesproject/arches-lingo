@@ -1,1 +1,1 @@
-graft *
+exclude arches_lingo/settings_local.py
