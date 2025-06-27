@@ -9,6 +9,7 @@ import { Form } from "@primevue/forms";
 import ProgressSpinner from "primevue/progressspinner";
 import FileListWidget from "@/arches_component_lab/widgets/FileListWidget/FileListWidget.vue";
 import NonLocalizedStringWidget from "@/arches_component_lab/widgets/NonLocalizedStringWidget/NonLocalizedStringWidget.vue";
+import NonLocalizedTextAreaWidget from "@/arches_component_lab/widgets/NonLocalizedTextAreaWidget/NonLocalizedTextAreaWidget.vue";
 
 import { DIGITAL_OBJECT_GRAPH_SLUG } from "@/arches_lingo/components/concept/ConceptImages/components/constants.ts";
 import {
@@ -269,7 +270,7 @@ function resetForm() {
                         .name_content?.interchange_value
                 "
             />
-            <NonLocalizedStringWidget
+            <NonLocalizedTextAreaWidget
                 node-alias="statement_content"
                 graph-slug="digital_object_rdm_system"
                 :mode="EDIT"
