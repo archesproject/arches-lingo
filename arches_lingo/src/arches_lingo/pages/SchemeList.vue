@@ -55,6 +55,7 @@ onMounted(async () => {
     padding: 0rem 1rem;
     overflow: auto;
 }
+
 .scheme-cards {
     display: flex;
     flex-wrap: wrap;

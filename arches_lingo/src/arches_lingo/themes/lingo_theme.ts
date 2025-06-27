@@ -3,9 +3,11 @@ import { ArchesPreset, DEFAULT_THEME } from "@/arches/themes/default.ts";
 import type { archesPreset } from "@/arches_lingo/types.ts";
 
 const lingoColors = Object.freeze({
+    darkBlue: "#1f4788",
     lightBlueGray: "#ebeef0",
-    lightGray: "#ebeef0",
+    veryLightGray: "#fafafa",
     gray: "#dddddd",
+    mediumBlueGray: "#6b7280",
 });
 
 const archesPrimitives = ArchesPreset.primitive as archesPreset;
@@ -41,12 +43,18 @@ export const LingoPreset = definePreset(ArchesPreset, {
                 primary: palette(archesPrimitives.arches.blue),
                 surface: palette("{slate}"),
                 checkbox: {
-                    background: "{light-gray}",
+                    background: "{light-blue-gray}",
                 },
                 header: {
                     background: "{surface.50}",
                     border: "{neutral.300}",
                     itemLabel: "{surface.500}",
+                },
+                schemeCardHeader: {
+                    color: "{dark-blue}",
+                },
+                schemeCardDescription: {
+                    color: "{medium-blue-gray}",
                 },
                 searchResult: {
                     color: "{sky.600}",
