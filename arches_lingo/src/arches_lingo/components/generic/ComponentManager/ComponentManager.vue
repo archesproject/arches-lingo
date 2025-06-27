@@ -207,5 +207,6 @@ provide("refreshReportSection", refreshReportSection);
 
 .p-splitterpanel:has(> .splitter-panel-content) {
     overflow-y: auto;
+    padding-bottom: 2rem;
 }
 </style>
