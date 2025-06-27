@@ -106,13 +106,12 @@ async function save(e: FormSubmitEvent) {
             ref="form"
             @submit="save"
         >
-            <ConceptResourceSelectWidget
+            <ResourceInstanceMultiSelectWidget
                 :graph-slug="props.graphSlug"
                 node-alias="relation_status_ascribed_comparate"
-                :scheme="props.scheme"
                 :initial-value="
                     props.tileData?.aliased_data
-                        .relation_status_ascribed_comparate
+                        .relation_status_ascribed_comparate?.interchange_value
                 "
                 :mode="EDIT"
             />
@@ -121,7 +120,7 @@ async function save(e: FormSubmitEvent) {
                 node-alias="relation_status_ascribed_relation"
                 :initial-value="
                     props.tileData?.aliased_data
-                        .relation_status_ascribed_relation
+                        .relation_status_ascribed_relation?.interchange_value
                 "
                 :mode="EDIT"
             />
@@ -130,6 +129,7 @@ async function save(e: FormSubmitEvent) {
                 node-alias="relation_status_status"
                 :initial-value="
                     props.tileData?.aliased_data.relation_status_status
+                        ?.interchange_value
                 "
                 :mode="EDIT"
             />
@@ -138,6 +138,7 @@ async function save(e: FormSubmitEvent) {
                 node-alias="relation_status_status_metatype"
                 :initial-value="
                     props.tileData?.aliased_data.relation_status_status_metatype
+                        ?.interchange_value
                 "
                 :mode="EDIT"
             />
@@ -147,6 +148,7 @@ async function save(e: FormSubmitEvent) {
                 :initial-value="
                     props.tileData?.aliased_data
                         .relation_status_timespan_begin_of_the_begin
+                        ?.interchange_value
                 "
                 :mode="EDIT"
             />
@@ -156,6 +158,7 @@ async function save(e: FormSubmitEvent) {
                 :initial-value="
                     props.tileData?.aliased_data
                         .relation_status_timespan_end_of_the_end
+                        ?.interchange_value
                 "
                 :mode="EDIT"
             />
@@ -165,6 +168,7 @@ async function save(e: FormSubmitEvent) {
                 :initial-value="
                     props.tileData?.aliased_data
                         .relation_status_data_assignment_actor
+                        ?.interchange_value
                 "
                 :mode="EDIT"
             />
@@ -174,6 +178,7 @@ async function save(e: FormSubmitEvent) {
                 :initial-value="
                     props.tileData?.aliased_data
                         .relation_status_data_assignment_object_used
+                        ?.interchange_value
                 "
                 :mode="EDIT"
             />
@@ -182,7 +187,7 @@ async function save(e: FormSubmitEvent) {
                 node-alias="relation_status_data_assignment_type"
                 :initial-value="
                     props.tileData?.aliased_data
-                        .relation_status_data_assignment_type
+                        .relation_status_data_assignment_type?.interchange_value
                 "
                 :mode="EDIT"
             />

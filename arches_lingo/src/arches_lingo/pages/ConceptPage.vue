@@ -36,33 +36,33 @@ const componentData = [
         nodegroupAlias: "statement",
     },
     {
-        component: ConceptRelationship,
-        componentName: "ConceptRelationship",
-        sectionTitle: $gettext("Associative Relationship"),
-        graphSlug: "concept",
-        nodegroupAlias: "relation_status",
-    },
-    {
-        component: ConceptMatch,
-        componentName: "ConceptMatch",
-        sectionTitle: $gettext("Matched"),
-        graphSlug: "concept",
-        nodegroupAlias: "match_status",
-    },
-    {
-        component: HierarchicalPosition,
-        componentName: "HierarchicalPosition",
-        sectionTitle: $gettext("Hierarchical Position"),
-        graphSlug: "concept",
-        nodegroupAlias: "classification_status",
-    },
-    {
         component: ConceptImages,
         componentName: "ConceptImages",
         sectionTitle: $gettext("Concept Images"),
         graphSlug: "concept",
         nodegroupAlias: "depicting_digital_asset_internal",
     },
+    {
+        component: ConceptRelationship,
+        componentName: "ConceptRelationship",
+        sectionTitle: $gettext("Associative Relationship"),
+        graphSlug: "concept",
+        nodegroupAlias: "relation_status",
+    },
+    // {
+    //     component: ConceptMatch,
+    //     componentName: "ConceptMatch",
+    //     sectionTitle: $gettext("Matched"),
+    //     graphSlug: "concept",
+    //     nodegroupAlias: "match_status",
+    // },
+    // {
+    //     component: HierarchicalPosition,
+    //     componentName: "HierarchicalPosition",
+    //     sectionTitle: $gettext("Hierarchical Position"),
+    //     graphSlug: "concept",
+    //     nodegroupAlias: "classification_status",
+    // },
 ];
 </script>
 

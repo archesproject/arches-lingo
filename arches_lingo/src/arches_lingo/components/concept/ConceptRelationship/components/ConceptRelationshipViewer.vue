@@ -4,9 +4,7 @@ import { useGettext } from "vue3-gettext";
 
 import Button from "primevue/button";
 
-import ConceptResourceSelectWidget from "@/arches_lingo/components/widgets/ConceptResourceSelectWidget/ConceptResourceSelectWidget.vue";
 import MetaStringViewer from "@/arches_lingo/components/generic/MetaStringViewer.vue";
-
 import ReferenceSelectWidget from "@/arches_controlled_lists/widgets/ReferenceSelectWidget/ReferenceSelectWidget.vue";
 import ResourceInstanceMultiSelectWidget from "@/arches_component_lab/widgets/ResourceInstanceMultiSelectWidget/ResourceInstanceMultiSelectWidget.vue";
 import NonLocalizedStringWidget from "@/arches_component_lab/widgets/NonLocalizedStringWidget/NonLocalizedStringWidget.vue";
@@ -42,79 +40,81 @@ const metaStringLabel: MetaStringText = {
 </script>
 
 <template>
-    <div class="section-header">
-        <h2>{{ props.sectionTitle }}</h2>
+    <div class="viewer-section">
+        <div class="section-header">
+            <h2>{{ props.sectionTitle }}</h2>
 
-        <Button
-            :label="$gettext('Add New Associated Concept')"
-            @click="openEditor!(props.componentName)"
-        ></Button>
+            <Button
+                :label="$gettext('Add Associated Concept')"
+                @click="openEditor!(props.componentName)"
+            ></Button>
+        </div>
+
+        <MetaStringViewer
+            :meta-strings="props.tileData"
+            :meta-string-text="metaStringLabel"
+            :component-name="props.componentName"
+            :graph-slug="props.graphSlug"
+            :nodegroup-alias="props.nodegroupAlias"
+        >
+            <template #name="{ rowData }">
+                <!-- non-standard -- we only want to display the resource ID -->
+                <NonLocalizedStringWidget
+                    :graph-slug="props.graphSlug"
+                    node-alias="relation_status_ascribed_comparate"
+                    :initial-value="
+                        rowData.aliased_data?.relation_status_ascribed_comparate
+                            ?.interchange_value[0].resource_id
+                    "
+                    :mode="VIEW"
+                    :show-label="false"
+                />
+            </template>
+            <template #type="{ rowData }">
+                <ReferenceSelectWidget
+                    :graph-slug="props.graphSlug"
+                    node-alias="relation_status_ascribed_relation"
+                    :initial-value="
+                        rowData.aliased_data.relation_status_ascribed_relation
+                            ?.interchange_value
+                    "
+                    :mode="VIEW"
+                    :show-label="false"
+                />
+            </template>
+            <template #language="{ rowData }">
+                <ResourceInstanceMultiSelectWidget
+                    :graph-slug="props.graphSlug"
+                    node-alias="relation_status_ascribed_comparate"
+                    :initial-value="
+                        rowData.aliased_data?.relation_status_ascribed_comparate
+                            ?.interchange_value
+                    "
+                    :mode="VIEW"
+                    :show-label="false"
+                />
+            </template>
+            <template #drawer="{ rowData }">
+                <ResourceInstanceMultiSelectWidget
+                    :graph-slug="props.graphSlug"
+                    node-alias="relation_status_data_assignment_actor"
+                    :initial-value="
+                        rowData.aliased_data
+                            .relation_status_data_assignment_actor
+                            ?.interchange_value
+                    "
+                    :mode="VIEW"
+                />
+                <ResourceInstanceMultiSelectWidget
+                    :graph-slug="props.graphSlug"
+                    node-alias="relation_status_data_assignment_object_used"
+                    :initial-value="
+                        rowData.relation_status_data_assignment_object_used
+                            ?.interchange_value
+                    "
+                    :mode="VIEW"
+                />
+            </template>
+        </MetaStringViewer>
     </div>
-
-    <MetaStringViewer
-        :meta-strings="props.tileData"
-        :meta-string-text="metaStringLabel"
-        :component-name="props.componentName"
-        :graph-slug="props.graphSlug"
-        :nodegroup-alias="props.nodegroupAlias"
-    >
-        <template #name="{ rowData }">
-            <NonLocalizedStringWidget
-                :graph-slug="props.graphSlug"
-                node-alias="relation_status_ascribed_comparate"
-                :initial-value="rowData.aliased_data.relationshipId"
-                :mode="VIEW"
-                :show-label="false"
-            />
-        </template>
-        <template #type="{ rowData }">
-            <ReferenceSelectWidget
-                :graph-slug="props.graphSlug"
-                node-alias="relation_status_ascribed_relation"
-                :initial-value="
-                    rowData.aliased_data.relation_status_ascribed_relation
-                "
-                :mode="VIEW"
-                :show-label="false"
-            />
-        </template>
-        <template #language="{ rowData }">
-            <ConceptResourceSelectWidget
-                :graph-slug="props.graphSlug"
-                node-alias="relation_status_ascribed_comparate"
-                :initial-value="
-                    rowData.aliased_data.relation_status_ascribed_comparate
-                "
-                :mode="VIEW"
-                :show-label="false"
-            />
-        </template>
-        <template #drawer="{ rowData }">
-            <ResourceInstanceMultiSelectWidget
-                :graph-slug="props.graphSlug"
-                node-alias="relation_status_data_assignment_actor"
-                :initial-value="
-                    rowData.aliased_data.relation_status_data_assignment_actor
-                "
-                :mode="VIEW"
-            />
-            <ResourceInstanceMultiSelectWidget
-                :graph-slug="props.graphSlug"
-                node-alias="relation_status_data_assignment_object_used"
-                :initial-value="
-                    rowData.relation_status_data_assignment_object_used
-                "
-                :mode="VIEW"
-            />
-        </template>
-    </MetaStringViewer>
 </template>
-
-<style scoped>
-.section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 0.125rem solid var(--p-menubar-border-color);
-}
-</style>

@@ -86,14 +86,14 @@ async function getConceptHierarchy(conceptIds: string[]) {
         </label>
 
         <div v-if="mode === EDIT">
-            <ConceptResourceSelectWidgetEditor
+            <!-- <ConceptResourceSelectWidgetEditor
                 :initial-value="searchResult"
                 :node-alias="props.nodeAlias"
                 :graph-slug="props.graphSlug"
                 :scheme="props.scheme"
                 :exclude="props.exclude"
                 :scheme-selectable="props.schemeSelectable"
-            />
+            /> -->
         </div>
         <div v-if="mode === VIEW">
             <ConceptResourceSelectWidgetViewer :value="searchResult" />

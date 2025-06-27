@@ -55,6 +55,8 @@ const refreshReportSection = inject<(componentName: string) => void>(
 const formRef = useTemplateRef("form");
 const isSaving = ref(false);
 
+console.log("ConceptNoteEditor", props.tileData);
+
 watch(
     () => formRef.value,
     (formComponent) => (componentEditorFormRef!.value = formComponent),

@@ -73,7 +73,6 @@ async function getSectionValue() {
             :graph-slug="props.graphSlug"
             :nodegroup-alias="props.nodegroupAlias"
             :component-name="props.componentName"
-            :scheme="schemeId"
         />
         <ConceptRelationshipEditor
             v-else-if="mode === EDIT"
