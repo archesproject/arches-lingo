@@ -5,7 +5,7 @@ import { useGettext } from "vue3-gettext";
 import Button from "primevue/button";
 import ConfirmDialog from "primevue/confirmdialog";
 import Message from "primevue/message";
-import ProgressSpinner from "primevue/progressspinner";
+import Skeleton from "primevue/skeleton";
 import { useConfirm } from "primevue/useconfirm";
 
 import FileListWidget from "@/arches_component_lab/widgets/FileListWidget/FileListWidget.vue";
@@ -157,7 +157,7 @@ function modifyResource(resourceInstanceId?: string) {
             ></Button>
         </div>
 
-        <ProgressSpinner
+        <Skeleton
             v-if="isLoading"
             style="width: 100%"
         />

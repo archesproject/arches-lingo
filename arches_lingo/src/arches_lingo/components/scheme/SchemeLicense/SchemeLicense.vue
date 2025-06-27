@@ -2,7 +2,7 @@
 import { onMounted, ref } from "vue";
 
 import Message from "primevue/message";
-import ProgressSpinner from "primevue/progressspinner";
+import Skeleton from "primevue/skeleton";
 
 import SchemeLicenseViewer from "@/arches_lingo/components/scheme/SchemeLicense/components/SchemeLicenseViewer.vue";
 import SchemeLicenseEditor from "@/arches_lingo/components/scheme/SchemeLicense/components/SchemeLicenseEditor.vue";
@@ -54,7 +54,7 @@ async function getSectionValue() {
 </script>
 
 <template>
-    <ProgressSpinner
+    <Skeleton
         v-if="isLoading"
         style="width: 100%"
     />

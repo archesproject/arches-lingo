@@ -4,7 +4,7 @@ import { computed, inject, ref, useTemplateRef, watch } from "vue";
 import { useRouter } from "vue-router";
 import { Form } from "@primevue/forms";
 
-import ProgressSpinner from "primevue/progressspinner";
+import Skeleton from "primevue/skeleton";
 
 import ResourceInstanceSelectWidget from "@/arches_component_lab/widgets/ResourceInstanceSelectWidget/ResourceInstanceSelectWidget.vue";
 
@@ -128,7 +128,7 @@ async function save(e: FormSubmitEvent) {
 </script>
 
 <template>
-    <ProgressSpinner
+    <Skeleton
         v-if="isSaving"
         style="width: 100%"
     />

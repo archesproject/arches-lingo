@@ -7,7 +7,7 @@ import { useToast } from "primevue/usetoast";
 
 import { Form } from "@primevue/forms";
 
-import ProgressSpinner from "primevue/progressspinner";
+import Skeleton from "primevue/skeleton";
 
 import DateWidget from "@/arches_component_lab/widgets/DateWidget/DateWidget.vue";
 import NonLocalizedTextAreaWidget from "@/arches_component_lab/widgets/NonLocalizedTextAreaWidget/NonLocalizedTextAreaWidget.vue";
@@ -99,7 +99,7 @@ async function save(e: FormSubmitEvent) {
 </script>
 
 <template>
-    <ProgressSpinner
+    <Skeleton
         v-show="isSaving"
         style="width: 100%"
     />

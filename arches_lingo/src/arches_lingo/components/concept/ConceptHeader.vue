@@ -5,7 +5,7 @@ import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
 
 import Button from "primevue/button";
-import ProgressSpinner from "primevue/progressspinner";
+import Skeleton from "primevue/skeleton";
 
 import {
     DEFAULT_ERROR_TOAST_LIFE,
@@ -97,7 +97,7 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
 </script>
 
 <template>
-    <ProgressSpinner
+    <Skeleton
         v-if="isLoading"
         style="width: 100%"
     />

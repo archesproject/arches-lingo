@@ -2,7 +2,7 @@
 import { onMounted, ref } from "vue";
 
 import Message from "primevue/message";
-import ProgressSpinner from "primevue/progressspinner";
+import Skeleton from "primevue/skeleton";
 
 import ConceptLabelEditor from "@/arches_lingo/components/concept/ConceptLabel/components/ConceptLabelEditor.vue";
 import ConceptLabelViewer from "@/arches_lingo/components/concept/ConceptLabel/components/ConceptLabelViewer.vue";
@@ -57,7 +57,7 @@ async function getSectionValue() {
 </script>
 
 <template>
-    <ProgressSpinner
+    <Skeleton
         v-if="isLoading"
         style="width: 100%"
     />

@@ -2,7 +2,7 @@
 import { onMounted, ref } from "vue";
 
 import Message from "primevue/message";
-import ProgressSpinner from "primevue/progressspinner";
+import Skeleton from "primevue/skeleton";
 
 import ConceptNoteEditor from "@/arches_lingo/components/concept/ConceptNote/components/ConceptNoteEditor.vue";
 import ConceptNoteViewer from "@/arches_lingo/components/concept/ConceptNote/components/ConceptNoteViewer.vue";
@@ -57,7 +57,7 @@ async function getSectionValue() {
 </script>
 
 <template>
-    <ProgressSpinner
+    <Skeleton
         v-if="isLoading"
         style="width: 100%"
     />
