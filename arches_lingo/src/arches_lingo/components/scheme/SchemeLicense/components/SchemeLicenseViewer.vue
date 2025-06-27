@@ -52,13 +52,17 @@ const buttonLabel = computed(() => {
             <ResourceInstanceMultiSelectWidget
                 node-alias="right_holder"
                 :graph-slug="props.graphSlug"
-                :initial-value="props.tileData?.aliased_data.right_holder"
+                :initial-value="
+                    props.tileData?.aliased_data.right_holder?.interchange_value
+                "
                 :mode="VIEW"
             />
             <ReferenceSelectWidget
                 node-alias="right_type"
                 :graph-slug="props.graphSlug"
-                :initial-value="props.tileData?.aliased_data.right_type"
+                :initial-value="
+                    props.tileData?.aliased_data.right_type?.interchange_value
+                "
                 :mode="VIEW"
             />
             <NonLocalizedTextAreaWidget
@@ -66,7 +70,7 @@ const buttonLabel = computed(() => {
                 :graph-slug="props.graphSlug"
                 :initial-value="
                     props.tileData?.aliased_data.right_statement?.aliased_data
-                        .right_statement_content
+                        ?.right_statement_content?.display_value
                 "
                 :mode="VIEW"
             />
@@ -75,7 +79,7 @@ const buttonLabel = computed(() => {
                 :graph-slug="props.graphSlug"
                 :initial-value="
                     props.tileData?.aliased_data.right_statement?.aliased_data
-                        .right_statement_language
+                        .right_statement_language?.interchange_value
                 "
                 :mode="VIEW"
             />
@@ -84,7 +88,7 @@ const buttonLabel = computed(() => {
                 :graph-slug="props.graphSlug"
                 :initial-value="
                     props.tileData?.aliased_data.right_statement?.aliased_data
-                        .right_statement_type
+                        .right_statement_type?.interchange_value
                 "
                 :mode="VIEW"
             />
@@ -93,7 +97,7 @@ const buttonLabel = computed(() => {
                 :graph-slug="props.graphSlug"
                 :initial-value="
                     props.tileData?.aliased_data.right_statement?.aliased_data
-                        .right_statement_type_metatype
+                        .right_statement_type_metatype?.interchange_value
                 "
                 :mode="VIEW"
             />

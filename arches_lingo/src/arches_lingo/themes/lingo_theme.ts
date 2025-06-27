@@ -61,9 +61,6 @@ export const LingoPreset = definePreset(ArchesPreset, {
                 searchResultHierarchy: {
                     color: "{zinc.400}",
                 },
-                sidenav: {
-                    backgroundColor: "{arches.legacy.sidebar}",
-                },
                 sortAndFilterControls: {
                     background: "{light-blue-gray}",
                     border: "{gray}",
@@ -95,9 +92,6 @@ export const LingoPreset = definePreset(ArchesPreset, {
                 searchResultHierarchy: {
                     color: "{zinc.400}",
                 },
-                sidenav: {
-                    background: "{surface.800}",
-                },
                 sortAndFilterControls: {
                     background: "{surface.700}",
                     border: "{surface.900}",
@@ -116,6 +110,10 @@ export const LingoPreset = definePreset(ArchesPreset, {
                     primary: {
                         background: "{primary-800}",
                         borderColor: "{button-primary-background}",
+                        hover: {
+                            background: "{primary-700}",
+                            borderColor: "{primary-700}",
+                        },
                     },
                     danger: {
                         background: "{orange-700}",
@@ -139,6 +137,12 @@ export const LingoPreset = definePreset(ArchesPreset, {
             // @ts-expect-error: primevue does have border on inputtext
             border: {
                 radius: "0.25rem",
+            },
+        },
+        menubar: {
+            root: {
+                color: "{surface-0}",
+                background: "{primary-900}",
             },
         },
         splitter: {
