@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<!-- <script setup lang="ts">
 import { onMounted, ref } from "vue";
 
 import Message from "primevue/message";
@@ -22,7 +22,7 @@ import type {
 const props = withDefaults(
     defineProps<{
         mode: WidgetMode;
-        initialValue: ResourceInstanceReference[] | null | undefined;
+        initialValue: ResourceInstanceReference | null | undefined;
         nodeAlias: string;
         graphSlug: string;
         scheme?: string;
@@ -40,7 +40,7 @@ const isLoading = ref(true);
 const nodeData = ref();
 const widgetData = ref();
 const configurationError = ref();
-const conceptIds = props.initialValue?.map((value) => value.resourceId);
+const conceptIds = [props.initialValue?.resource_id] as string[] | undefined;
 const searchResult = ref();
 
 onMounted(async () => {
@@ -86,14 +86,14 @@ async function getConceptHierarchy(conceptIds: string[]) {
         </label>
 
         <div v-if="mode === EDIT">
-            <!-- <ConceptResourceSelectWidgetEditor
+            <ConceptResourceSelectWidgetEditor
                 :initial-value="searchResult"
                 :node-alias="props.nodeAlias"
                 :graph-slug="props.graphSlug"
                 :scheme="props.scheme"
                 :exclude="props.exclude"
                 :scheme-selectable="props.schemeSelectable"
-            /> -->
+            />
         </div>
         <div v-if="mode === VIEW">
             <ConceptResourceSelectWidgetViewer :value="searchResult" />
@@ -106,4 +106,4 @@ async function getConceptHierarchy(conceptIds: string[]) {
             {{ configurationError.message }}
         </Message>
     </template>
-</template>
+</template> -->

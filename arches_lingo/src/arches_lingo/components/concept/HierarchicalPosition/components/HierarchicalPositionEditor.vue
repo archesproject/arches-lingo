@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { inject, ref, useTemplateRef, watch } from "vue";
+import { computed, inject, ref, useTemplateRef, watch } from "vue";
 
 import { useRouter } from "vue-router";
 import { Form } from "@primevue/forms";
 
-import ConceptResourceSelectWidget from "@/arches_lingo/components/widgets/ConceptResourceSelectWidget/ConceptResourceSelectWidget.vue";
+import ProgressSpinner from "primevue/progressspinner";
+
+import ResourceInstanceSelectWidget from "@/arches_component_lab/widgets/ResourceInstanceSelectWidget/ResourceInstanceSelectWidget.vue";
 
 import { createLingoResource, upsertLingoTile } from "@/arches_lingo/api.ts";
 import { EDIT } from "@/arches_lingo/constants.ts";
@@ -12,10 +14,11 @@ import { EDIT } from "@/arches_lingo/constants.ts";
 import type { Component, Ref } from "vue";
 import type { FormSubmitEvent } from "@primevue/forms";
 import type { ConceptClassificationStatus } from "@/arches_lingo/types.ts";
+import type { ResourceInstanceReference } from "@/arches_component_lab/widgets/types.ts";
 
 const props = defineProps<{
     tileData: ConceptClassificationStatus | undefined;
-    scheme?: string;
+    schemeId?: string;
     exclude?: boolean;
     componentName: string;
     sectionTitle: string;
@@ -39,6 +42,22 @@ const refreshReportSection = inject<(componentName: string) => void>(
 
 const formRef = useTemplateRef("form");
 const isSaving = ref(false);
+
+// this is a workaround to make ResourceInstanceSelectWidget work
+const computedValue = computed(() => {
+    if (
+        props.tileData?.aliased_data
+            .classification_status_ascribed_classification?.interchange_value
+    ) {
+        return {
+            resource_id:
+                props.tileData.aliased_data
+                    .classification_status_ascribed_classification
+                    .interchange_value,
+        } as ResourceInstanceReference;
+    }
+    return null;
+});
 
 watch(
     () => formRef.value,
@@ -74,7 +93,7 @@ async function save(e: FormSubmitEvent) {
             let values;
             if (
                 formData.classification_status_ascribed_classification[0]
-                    .resourceId == props.scheme
+                    .resourceId == props.schemeId
             ) {
                 nodegroupAlias = "top_concept_of";
                 values = {
@@ -110,27 +129,21 @@ async function save(e: FormSubmitEvent) {
 
 <template>
     <ProgressSpinner
-        v-show="isSaving"
+        v-if="isSaving"
         style="width: 100%"
     />
 
-    <div v-show="!isSaving">
+    <div v-else>
         <h3>{{ props.sectionTitle }}</h3>
 
         <Form
             ref="form"
             @submit="save"
         >
-            <ConceptResourceSelectWidget
+            <ResourceInstanceSelectWidget
                 :graph-slug="props.graphSlug"
                 node-alias="classification_status_ascribed_classification"
-                :scheme="props.scheme"
-                :exclude="props.exclude"
-                :scheme-selectable="true"
-                :initial-value="
-                    props.tileData?.aliased_data
-                        .classification_status_ascribed_classification
-                "
+                :initial-value="computedValue"
                 :mode="EDIT"
             />
         </Form>

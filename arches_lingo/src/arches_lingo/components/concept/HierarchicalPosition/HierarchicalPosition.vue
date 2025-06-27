@@ -40,13 +40,22 @@ const shouldCreateNewTile = Boolean(props.mode === EDIT && !props.tileId);
 
 onMounted(async () => {
     if (props.resourceInstanceId) {
+        let sectionPromise;
         if (props.mode === VIEW || !shouldCreateNewTile) {
-            const sectionValue = await getSectionValue();
-            tileData.value = sectionValue.aliased_data[props.nodegroupAlias];
+            sectionPromise = getSectionValue();
         }
-        const currentPosition = await getHierarchicalData([
+
+        const currentPositionPromise = getHierarchicalData([
             props.resourceInstanceId,
         ]);
+
+        if (sectionPromise) {
+            const sectionValue = await sectionPromise;
+            tileData.value = sectionValue.aliased_data[props.nodegroupAlias];
+        }
+
+        const currentPosition = await currentPositionPromise;
+
         schemeId.value = currentPosition.data[0].parents[0][0].id;
 
         hierarchicalData.value = currentPosition.data[0].parents.map(
@@ -55,12 +64,13 @@ onMounted(async () => {
 
         if (hierarchicalData.value && tileData.value) {
             for (const datum of hierarchicalData.value) {
-                const parentConceptResourceId =datum.searchResults[datum.searchResults.length - 2].id;
+                const parentConceptResourceId =
+                    datum.searchResults[datum.searchResults.length - 2].id;
                 const parentConceptTile = tileData.value.find(
                     (tile) =>
                         tile.aliased_data
-                            .classification_status_ascribed_classification[0]
-                            .resourceId === parentConceptResourceId,
+                            .classification_status_ascribed_classification
+                            .interchange_value === parentConceptResourceId,
                 );
                 if (parentConceptTile) {
                     datum.tileid = parentConceptTile.tileid;
@@ -136,7 +146,7 @@ async function getSectionValue() {
             :graph-slug="props.graphSlug"
             :nodegroup-alias="props.nodegroupAlias"
             :resource-instance-id="props.resourceInstanceId"
-            :scheme="schemeId"
+            :scheme-id="schemeId"
         />
         <HierarchicalPositionEditor
             v-else-if="mode === EDIT"
@@ -148,7 +158,7 @@ async function getSectionValue() {
             :graph-slug="props.graphSlug"
             :nodegroup-alias="props.nodegroupAlias"
             :resource-instance-id="props.resourceInstanceId"
-            :scheme="schemeId"
+            :scheme-id="schemeId"
             :tile-id="props.tileId"
         />
     </template>

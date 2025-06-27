@@ -31,7 +31,7 @@ const props = defineProps<{
     graphSlug: string;
     nodegroupAlias: string;
     resourceInstanceId: string | undefined;
-    scheme?: string;
+    schemeId?: string;
 }>();
 const { $gettext } = useGettext();
 const confirm = useConfirm();
@@ -53,7 +53,7 @@ const refreshReportSection = inject<(componentName: string) => void>(
 
 function getIcon(item: SearchResultItem) {
     //TODO need a better way to determine if item is a scheme or not
-    return item.id === props.scheme ? "pi pi-folder" : "pi pi-tag";
+    return item.id === props.schemeId ? "pi pi-folder" : "pi pi-tag";
 }
 
 function confirmDelete(hierarchy: SearchResultHierarchy) {
@@ -117,67 +117,77 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
 </script>
 
 <template>
-    <div class="section-header">
-        <h2>{{ props.sectionTitle }}</h2>
+    <div class="viewer-section">
+        <ConfirmDialog
+            :pt="{ root: { style: { fontFamily: 'sans-serif' } } }"
+            group="delete-parent"
+        ></ConfirmDialog>
 
-        <Button
-            :label="$gettext('Add to New Parent Concept')"
-            @click="openEditor!(props.componentName)"
-        ></Button>
-    </div>
-    <ConfirmDialog
-        :pt="{ root: { style: { fontFamily: 'sans-serif' } } }"
-        group="delete-parent"
-    ></ConfirmDialog>
-    <div>
-        <div
-            v-for="(hierarchy, index) in props.data"
-            :key="index"
-        >
-            <div>
-                <span>{{ $gettext("Lineage " + (index + 1)) }}</span>
-            </div>
+        <div class="section-header">
+            <h2>{{ props.sectionTitle }}</h2>
+
+            <Button
+                class="add-button"
+                style="min-width: 15rem"
+                :label="$gettext('Add Hierarchical Parent')"
+                @click="openEditor!(props.componentName)"
+            ></Button>
+        </div>
+
+        <div>
             <div
-                v-for="(item, subindex) in hierarchy.searchResults"
-                :key="item.id"
-                class="section-item"
+                v-for="(hierarchy, index) in props.data"
+                :key="index"
             >
-                <span
-                    :class="getIcon(item)"
-                    :style="{
-                        'margin-left': subindex + 'rem',
-                        'margin-right': '0.5rem',
-                    }"
-                ></span>
-                <span>
-                    {{ getItemLabel(
-                        item,
-                        selectedLanguage.code,
-                        systemLanguage.code
-                        ).value
-                    }}
-                </span>
-                <span
-                    v-if="subindex === hierarchy.searchResults.length - 1"
-                    class="current-position"
+                <div>
+                    <span>{{ $gettext("Lineage " + (index + 1)) }}</span>
+                </div>
+                <div
+                    v-for="(item, subindex) in hierarchy.searchResults"
+                    :key="item.id"
+                    class="section-item"
                 >
-                    <Button
-                        icon="pi pi-file-edit"
-                        :aria-label="$gettext('edit')"
-                        :disabled="hierarchy.isTopConcept"
-                        size="small"
-                        @click="openEditor!(componentName, hierarchy.tileid)"
-                    />
-                    <Button
-                        v-if="hierarchy.tileid"
-                        icon="pi pi-trash"
-                        :aria-label="$gettext('delete')"
-                        severity="danger"
-                        size="small"
-                        outlined
-                        @click="confirmDelete(hierarchy)"
-                    />
-                </span>
+                    <span
+                        :class="getIcon(item)"
+                        :style="{
+                            'margin-inline-start': subindex + 'rem',
+                            'margin-inline-end': '0.5rem',
+                        }"
+                    ></span>
+                    <span>
+                        {{
+                            getItemLabel(
+                                item,
+                                selectedLanguage.code,
+                                systemLanguage.code,
+                            ).value
+                        }}
+                    </span>
+                    <span
+                        v-if="subindex === hierarchy.searchResults.length - 1"
+                        class="current-position"
+                    >
+                        <Button
+                            icon="pi pi-file-edit"
+                            variant="text"
+                            :aria-label="$gettext('edit')"
+                            :disabled="hierarchy.isTopConcept"
+                            size="small"
+                            @click="
+                                openEditor!(componentName, hierarchy.tileid)
+                            "
+                        />
+                        <Button
+                            v-if="hierarchy.tileid"
+                            icon="pi pi-trash"
+                            variant="text"
+                            :aria-label="$gettext('delete')"
+                            severity="danger"
+                            size="small"
+                            @click="confirmDelete(hierarchy)"
+                        />
+                    </span>
+                </div>
             </div>
         </div>
     </div>
@@ -187,15 +197,8 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
 .section-item {
     padding: var(--p-tree-node-padding);
 }
-.section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 0.125rem solid var(--p-menubar-border-color);
-}
-
 .section-item .current-position button {
     width: 2rem;
-    margin-left: 0.5rem;
+    margin-inline-start: 0.5rem;
 }
 </style>

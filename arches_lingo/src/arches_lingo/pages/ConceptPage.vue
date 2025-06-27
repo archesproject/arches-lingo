@@ -56,13 +56,13 @@ const componentData = [
         graphSlug: "concept",
         nodegroupAlias: "match_status",
     },
-    // {
-    //     component: HierarchicalPosition,
-    //     componentName: "HierarchicalPosition",
-    //     sectionTitle: $gettext("Hierarchical Position"),
-    //     graphSlug: "concept",
-    //     nodegroupAlias: "classification_status",
-    // },
+    {
+        component: HierarchicalPosition,
+        componentName: "HierarchicalPosition",
+        sectionTitle: $gettext("Hierarchical Position"),
+        graphSlug: "concept",
+        nodegroupAlias: "classification_status",
+    },
 ];
 </script>
 

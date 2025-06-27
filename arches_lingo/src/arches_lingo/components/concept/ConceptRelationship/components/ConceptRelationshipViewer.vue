@@ -46,7 +46,7 @@ const metaStringLabel: MetaStringText = {
 
             <Button
                 class="add-button"
-                style="min-width: 14rem"
+                style="min-width: 15rem"
                 :label="$gettext('Add Associated Concept')"
                 @click="openEditor!(props.componentName)"
             ></Button>

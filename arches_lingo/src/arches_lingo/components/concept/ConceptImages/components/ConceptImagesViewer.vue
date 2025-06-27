@@ -49,7 +49,7 @@ onMounted(async () => {
     if (props.tileData) {
         try {
             const digitalObjectInstances =
-                props.tileData.aliased_data.depicting_digital_asset_internal?.interchange_value.map(
+                props.tileData.aliased_data.depicting_digital_asset_internal?.interchange_value?.map(
                     (resource) => resource.resource_id,
                 );
             if (digitalObjectInstances) {
