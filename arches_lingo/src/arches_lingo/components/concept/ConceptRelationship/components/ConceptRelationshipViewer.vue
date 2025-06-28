@@ -64,7 +64,7 @@ const metaStringLabel: MetaStringText = {
                 <NonLocalizedStringWidget
                     :graph-slug="props.graphSlug"
                     node-alias="relation_status_ascribed_comparate"
-                    :initial-value="
+                    :value="
                         rowData.aliased_data?.relation_status_ascribed_comparate
                             ?.interchange_value[0].resource_id
                     "
@@ -76,7 +76,7 @@ const metaStringLabel: MetaStringText = {
                 <ReferenceSelectWidget
                     :graph-slug="props.graphSlug"
                     node-alias="relation_status_ascribed_relation"
-                    :initial-value="
+                    :value="
                         rowData.aliased_data.relation_status_ascribed_relation
                             ?.interchange_value
                     "
@@ -88,7 +88,7 @@ const metaStringLabel: MetaStringText = {
                 <ResourceInstanceMultiSelectWidget
                     :graph-slug="props.graphSlug"
                     node-alias="relation_status_ascribed_comparate"
-                    :initial-value="
+                    :value="
                         rowData.aliased_data?.relation_status_ascribed_comparate
                             ?.interchange_value
                     "
@@ -100,7 +100,7 @@ const metaStringLabel: MetaStringText = {
                 <ResourceInstanceMultiSelectWidget
                     :graph-slug="props.graphSlug"
                     node-alias="relation_status_data_assignment_actor"
-                    :initial-value="
+                    :value="
                         rowData.aliased_data
                             .relation_status_data_assignment_actor
                             ?.interchange_value
@@ -110,7 +110,7 @@ const metaStringLabel: MetaStringText = {
                 <ResourceInstanceMultiSelectWidget
                     :graph-slug="props.graphSlug"
                     node-alias="relation_status_data_assignment_object_used"
-                    :initial-value="
+                    :value="
                         rowData.relation_status_data_assignment_object_used
                             ?.interchange_value
                     "

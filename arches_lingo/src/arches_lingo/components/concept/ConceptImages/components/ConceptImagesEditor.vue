@@ -265,7 +265,7 @@ function resetForm() {
                 node-alias="name_content"
                 graph-slug="digital_object_rdm_system"
                 :mode="EDIT"
-                :initial-value="
+                :value="
                     digitalObjectResource?.aliased_data.name?.aliased_data
                         .name_content?.interchange_value
                 "
@@ -274,7 +274,7 @@ function resetForm() {
                 node-alias="statement_content"
                 graph-slug="digital_object_rdm_system"
                 :mode="EDIT"
-                :initial-value="
+                :value="
                     digitalObjectResource?.aliased_data.statement?.aliased_data
                         .statement_content?.interchange_value
                 "
@@ -282,7 +282,7 @@ function resetForm() {
             <FileListWidget
                 node-alias="content"
                 graph-slug="digital_object_rdm_system"
-                :initial-value="
+                :value="
                     digitalObjectResource?.aliased_data?.content?.aliased_data
                         .content?.interchange_value
                 "

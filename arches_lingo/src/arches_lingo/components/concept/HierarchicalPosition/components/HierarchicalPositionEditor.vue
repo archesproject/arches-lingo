@@ -143,7 +143,7 @@ async function save(e: FormSubmitEvent) {
             <ResourceInstanceSelectWidget
                 :graph-slug="props.graphSlug"
                 node-alias="classification_status_ascribed_classification"
-                :initial-value="computedValue"
+                :value="computedValue"
                 :mode="EDIT"
             />
         </Form>

@@ -196,7 +196,7 @@ function modifyResource(resourceInstanceId?: string) {
                                 node-alias="name_content"
                                 graph-slug="digital_object_rdm_system"
                                 :mode="VIEW"
-                                :initial-value="
+                                :value="
                                     resource.aliased_data.name?.aliased_data
                                         .name_content?.display_value
                                 "
@@ -224,7 +224,7 @@ function modifyResource(resourceInstanceId?: string) {
                     <FileListWidget
                         node-alias="content"
                         graph-slug="digital_object_rdm_system"
-                        :initial-value="
+                        :value="
                             resource.aliased_data.content?.aliased_data.content
                                 ?.interchange_value
                         "
@@ -236,7 +236,7 @@ function modifyResource(resourceInstanceId?: string) {
                             node-alias="statement_content"
                             graph-slug="digital_object_rdm_system"
                             :mode="VIEW"
-                            :initial-value="
+                            :value="
                                 resource.aliased_data.statement?.aliased_data
                                     .statement_content?.display_value
                             "

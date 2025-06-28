@@ -129,7 +129,7 @@ async function save(e: FormSubmitEvent) {
             <NonLocalizedStringWidget
                 :graph-slug="props.graphSlug"
                 node-alias="appellative_status_ascribed_name_content"
-                :initial-value="
+                :value="
                     props.tileData?.aliased_data
                         .appellative_status_ascribed_name_content
                         ?.interchange_value
@@ -139,7 +139,7 @@ async function save(e: FormSubmitEvent) {
             <ReferenceSelectWidget
                 :graph-slug="props.graphSlug"
                 node-alias="appellative_status_ascribed_relation"
-                :initial-value="
+                :value="
                     props.tileData?.aliased_data
                         .appellative_status_ascribed_relation?.interchange_value
                 "
@@ -148,7 +148,7 @@ async function save(e: FormSubmitEvent) {
             <ReferenceSelectWidget
                 :graph-slug="props.graphSlug"
                 node-alias="appellative_status_ascribed_name_language"
-                :initial-value="
+                :value="
                     props.tileData?.aliased_data
                         .appellative_status_ascribed_name_language
                         ?.interchange_value
@@ -158,7 +158,7 @@ async function save(e: FormSubmitEvent) {
             <ResourceInstanceMultiSelectWidget
                 :graph-slug="props.graphSlug"
                 node-alias="appellative_status_data_assignment_actor"
-                :initial-value="
+                :value="
                     props.tileData?.aliased_data
                         ?.appellative_status_data_assignment_actor
                         ?.interchange_value
@@ -168,7 +168,7 @@ async function save(e: FormSubmitEvent) {
             <ResourceInstanceMultiSelectWidget
                 :graph-slug="props.graphSlug"
                 node-alias="appellative_status_data_assignment_object_used"
-                :initial-value="
+                :value="
                     props.tileData?.aliased_data
                         ?.appellative_status_data_assignment_object_used
                         ?.interchange_value
