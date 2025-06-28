@@ -57,7 +57,7 @@ const metaStringLabel: MetaStringText = {
                 <NonLocalizedTextAreaWidget
                     node-alias="statement_content_n1"
                     :graph-slug="props.graphSlug"
-                    :initial-value="
+                    :value="
                         rowData.aliased_data.statement_content_n1.display_value
                     "
                     :mode="VIEW"
@@ -68,7 +68,7 @@ const metaStringLabel: MetaStringText = {
                 <ReferenceSelectWidget
                     node-alias="statement_type_n1"
                     :graph-slug="props.graphSlug"
-                    :initial-value="
+                    :value="
                         rowData.aliased_data.statement_type_n1.interchange_value
                     "
                     :mode="VIEW"
@@ -79,7 +79,7 @@ const metaStringLabel: MetaStringText = {
                 <ReferenceSelectWidget
                     node-alias="statement_language_n1"
                     :graph-slug="props.graphSlug"
-                    :initial-value="
+                    :value="
                         rowData.aliased_data.statement_language_n1
                             .interchange_value
                     "
@@ -91,7 +91,7 @@ const metaStringLabel: MetaStringText = {
                 <ResourceInstanceMultiSelectWidget
                     node-alias="statement_data_assignment_object_used"
                     :graph-slug="props.graphSlug"
-                    :initial-value="
+                    :value="
                         rowData.aliased_data
                             .statement_data_assignment_object_used
                             .interchange_value
@@ -101,7 +101,7 @@ const metaStringLabel: MetaStringText = {
                 <ResourceInstanceMultiSelectWidget
                     node-alias="statement_data_assignment_actor"
                     :graph-slug="props.graphSlug"
-                    :initial-value="
+                    :value="
                         rowData.aliased_data.statement_data_assignment_actor
                             .interchange_value
                     "

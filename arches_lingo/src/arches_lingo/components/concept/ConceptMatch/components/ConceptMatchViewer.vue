@@ -65,7 +65,7 @@ const metaStringLabel: MetaStringText = {
                 <ReferenceSelectWidget
                     :graph-slug="props.graphSlug"
                     node-alias="match_status_ascribed_relation"
-                    :initial-value="
+                    :value="
                         rowData.aliased_data.match_status_ascribed_relation
                             ?.interchange_value
                     "
@@ -77,7 +77,7 @@ const metaStringLabel: MetaStringText = {
                 <URLWidget
                     :graph-slug="props.graphSlug"
                     node-alias="uri_content"
-                    :initial-value="rowData.aliased_data.uri?.interchange_value"
+                    :value="rowData.aliased_data.uri?.interchange_value"
                     :mode="VIEW"
                     :show-label="false"
                 />
@@ -86,7 +86,7 @@ const metaStringLabel: MetaStringText = {
                 <ResourceInstanceMultiSelectWidget
                     :graph-slug="props.graphSlug"
                     node-alias="match_status_ascribed_comparate"
-                    :initial-value="
+                    :value="
                         rowData.aliased_data.match_status_ascribed_comparate
                             ?.interchange_value
                     "
@@ -98,7 +98,7 @@ const metaStringLabel: MetaStringText = {
                 <ResourceInstanceMultiSelectWidget
                     :graph-slug="props.graphSlug"
                     node-alias="match_status_data_assignment_actor"
-                    :initial-value="
+                    :value="
                         rowData.aliased_data.match_status_data_assignment_actor
                             ?.interchange_value
                     "
@@ -107,7 +107,7 @@ const metaStringLabel: MetaStringText = {
                 <ResourceInstanceMultiSelectWidget
                     :graph-slug="props.graphSlug"
                     node-alias="match_status_data_assignment_object_used"
-                    :initial-value="
+                    :value="
                         rowData.match_status_data_assignment_object_used
                             ?.interchange_value
                     "

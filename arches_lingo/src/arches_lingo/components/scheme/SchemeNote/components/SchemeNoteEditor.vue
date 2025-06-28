@@ -130,7 +130,7 @@ async function save(e: FormSubmitEvent) {
             <NonLocalizedTextAreaWidget
                 :graph-slug="props.graphSlug"
                 node-alias="statement_content_n1"
-                :initial-value="
+                :value="
                     props.tileData?.aliased_data?.statement_content_n1
                         ?.interchange_value
                 "
@@ -139,7 +139,7 @@ async function save(e: FormSubmitEvent) {
             <ReferenceSelectWidget
                 :graph-slug="props.graphSlug"
                 node-alias="statement_type_n1"
-                :initial-value="
+                :value="
                     props.tileData?.aliased_data?.statement_type_n1
                         ?.interchange_value
                 "
@@ -148,7 +148,7 @@ async function save(e: FormSubmitEvent) {
             <ReferenceSelectWidget
                 :graph-slug="props.graphSlug"
                 node-alias="statement_language_n1"
-                :initial-value="
+                :value="
                     props.tileData?.aliased_data?.statement_language_n1
                         ?.interchange_value
                 "
@@ -157,7 +157,7 @@ async function save(e: FormSubmitEvent) {
             <ResourceInstanceMultiSelectWidget
                 :graph-slug="props.graphSlug"
                 node-alias="statement_data_assignment_actor"
-                :initial-value="
+                :value="
                     props.tileData?.aliased_data
                         ?.statement_data_assignment_actor?.interchange_value
                 "
@@ -166,7 +166,7 @@ async function save(e: FormSubmitEvent) {
             <ResourceInstanceMultiSelectWidget
                 :graph-slug="props.graphSlug"
                 node-alias="statement_data_assignment_object_used"
-                :initial-value="
+                :value="
                     props.tileData?.aliased_data
                         ?.statement_data_assignment_object_used
                         ?.interchange_value

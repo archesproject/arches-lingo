@@ -52,7 +52,7 @@ const buttonLabel = computed(() => {
             <ResourceInstanceMultiSelectWidget
                 node-alias="right_holder"
                 :graph-slug="props.graphSlug"
-                :initial-value="
+                :value="
                     props.tileData?.aliased_data.right_holder?.interchange_value
                 "
                 :mode="VIEW"
@@ -60,7 +60,7 @@ const buttonLabel = computed(() => {
             <ReferenceSelectWidget
                 node-alias="right_type"
                 :graph-slug="props.graphSlug"
-                :initial-value="
+                :value="
                     props.tileData?.aliased_data.right_type?.interchange_value
                 "
                 :mode="VIEW"
@@ -68,7 +68,7 @@ const buttonLabel = computed(() => {
             <NonLocalizedTextAreaWidget
                 node-alias="right_statement_content"
                 :graph-slug="props.graphSlug"
-                :initial-value="
+                :value="
                     props.tileData?.aliased_data.right_statement?.aliased_data
                         ?.right_statement_content?.display_value
                 "
@@ -77,7 +77,7 @@ const buttonLabel = computed(() => {
             <ReferenceSelectWidget
                 node-alias="right_statement_language"
                 :graph-slug="props.graphSlug"
-                :initial-value="
+                :value="
                     props.tileData?.aliased_data.right_statement?.aliased_data
                         .right_statement_language?.interchange_value
                 "
@@ -86,7 +86,7 @@ const buttonLabel = computed(() => {
             <ReferenceSelectWidget
                 node-alias="right_statement_type"
                 :graph-slug="props.graphSlug"
-                :initial-value="
+                :value="
                     props.tileData?.aliased_data.right_statement?.aliased_data
                         .right_statement_type?.interchange_value
                 "
@@ -95,7 +95,7 @@ const buttonLabel = computed(() => {
             <ReferenceSelectWidget
                 node-alias="right_statement_type_metatype"
                 :graph-slug="props.graphSlug"
-                :initial-value="
+                :value="
                     props.tileData?.aliased_data.right_statement?.aliased_data
                         .right_statement_type_metatype?.interchange_value
                 "

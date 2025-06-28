@@ -49,7 +49,11 @@ const fetchError = ref<string | null>(null);
 const searchResultsCurrentCount = computed(() => options.value.length);
 
 props.initialValue?.forEach((option) => {
-    option.label = getItemLabel(option, selectedLanguage.value.code, systemLanguage.code).value;
+    option.label = getItemLabel(
+        option,
+        selectedLanguage.value.code,
+        systemLanguage.code,
+    ).value;
 });
 
 function clearOptions() {
@@ -178,7 +182,7 @@ function validate(e: FormFieldResolverOptions) {
         ref="formFieldRef"
         v-slot="$field"
         :name="props.nodeAlias"
-        :initial-value="props.initialValue?.map((concept) => concept.id)"
+        :value="props.initialValue?.map((concept) => concept.id)"
         :resolver="resolver"
     >
         <MultiSelect

@@ -152,7 +152,7 @@ async function save(e: FormSubmitEvent) {
             <NonLocalizedTextAreaWidget
                 node-alias="right_statement_content"
                 :graph-slug="props.graphSlug"
-                :initial-value="
+                :value="
                     props.tileData?.aliased_data.right_statement?.aliased_data
                         .right_statement_content?.interchange_value
                 "
@@ -161,7 +161,7 @@ async function save(e: FormSubmitEvent) {
             <ReferenceSelectWidget
                 node-alias="right_statement_type"
                 :graph-slug="props.graphSlug"
-                :initial-value="
+                :value="
                     props.tileData?.aliased_data.right_statement?.aliased_data
                         .right_statement_type?.interchange_value
                 "
@@ -170,7 +170,7 @@ async function save(e: FormSubmitEvent) {
             <ReferenceSelectWidget
                 node-alias="right_statement_language"
                 :graph-slug="props.graphSlug"
-                :initial-value="
+                :value="
                     props.tileData?.aliased_data.right_statement?.aliased_data
                         .right_statement_language?.interchange_value
                 "
@@ -179,7 +179,7 @@ async function save(e: FormSubmitEvent) {
             <ResourceInstanceMultiSelectWidget
                 node-alias="right_holder"
                 :graph-slug="props.graphSlug"
-                :initial-value="
+                :value="
                     props.tileData?.aliased_data.right_holder?.interchange_value
                 "
                 :mode="EDIT"
@@ -187,7 +187,7 @@ async function save(e: FormSubmitEvent) {
             <ReferenceSelectWidget
                 node-alias="right_type"
                 :graph-slug="props.graphSlug"
-                :initial-value="
+                :value="
                     props.tileData?.aliased_data.right_type?.interchange_value
                 "
                 :mode="EDIT"
