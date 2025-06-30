@@ -29,7 +29,7 @@ dependencies = [
     "arches==8.0.1",
     "arches-component-lab==0.0.1a0",
     "arches-querysets[drf]==1.0.0b0",
-    "arches_controlled_lists==1.0.0b1",
+    "arches-controlled-lists==1.0.0b1",
 ]
 version = "1.0.0a0"
 
