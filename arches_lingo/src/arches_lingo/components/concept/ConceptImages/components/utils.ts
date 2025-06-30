@@ -66,7 +66,7 @@ export async function addDigitalObjectToConceptImageCollection(
         if (
             !conceptDigitalObjectRelationshipList?.aliased_data
                 .depicting_digital_asset_internal?.aliased_data
-                .depicting_digital_asset_internal
+                .depicting_digital_asset_internal.interchange_value
         ) {
             conceptDigitalObjectRelationshipList.aliased_data.depicting_digital_asset_internal.aliased_data.depicting_digital_asset_internal.interchange_value =
                 [];
