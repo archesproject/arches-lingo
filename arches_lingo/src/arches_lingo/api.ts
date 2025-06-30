@@ -141,6 +141,25 @@ export const updateLingoResource = async (
     return parsed;
 };
 
+export const deleteLingoResource = async (
+    graphSlug: string,
+    resourceId: string,
+) => {
+    const response = await fetch(
+        arches.urls.api_lingo_resource(graphSlug, resourceId),
+        {
+            method: "DELETE",
+            headers: { "X-CSRFTOKEN": getToken() },
+        },
+    );
+    if (!response.ok) {
+        const parsed = await response.json();
+        throw new Error(parsed.message || response.statusText);
+    } else {
+        return true;
+    }
+};
+
 export const upsertLingoTile = async (
     graphSlug: string,
     nodegroupAlias: string,

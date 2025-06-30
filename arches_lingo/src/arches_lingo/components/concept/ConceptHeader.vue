@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import { inject, onMounted, ref } from "vue";
 
+import { useConfirm } from "primevue/useconfirm";
 import { useGettext } from "vue3-gettext";
+import { useRouter } from "vue-router";
 import { useToast } from "primevue/usetoast";
 
+import ConfirmDialog from "primevue/confirmdialog";
 import Button from "primevue/button";
 import Skeleton from "primevue/skeleton";
 
@@ -13,8 +16,9 @@ import {
     systemLanguageKey,
 } from "@/arches_lingo/constants.ts";
 
-import { fetchLingoResource } from "@/arches_lingo/api.ts";
+import { fetchLingoResource, deleteLingoResource } from "@/arches_lingo/api.ts";
 import { extractDescriptors } from "@/arches_lingo/utils.ts";
+import { DANGER, SECONDARY } from "@/arches_lingo/constants.ts";
 
 import type {
     ConceptHeaderData,
@@ -24,6 +28,7 @@ import type {
 } from "@/arches_lingo/types.ts";
 
 import type { Language } from "@/arches_component_lab/types.ts";
+import { routeNames } from "@/arches_lingo/routes.ts";
 
 const props = defineProps<{
     mode: DataComponentMode;
@@ -36,6 +41,9 @@ const props = defineProps<{
 
 const toast = useToast();
 const { $gettext } = useGettext();
+const confirm = useConfirm();
+const router = useRouter();
+
 const systemLanguage = inject(systemLanguageKey) as Language;
 
 const concept = ref<ResourceInstanceResult>();
@@ -65,6 +73,57 @@ onMounted(async () => {
         isLoading.value = false;
     }
 });
+
+function confirmDelete() {
+    confirm.require({
+        header: $gettext("Confirmation"),
+        message: $gettext("Are you sure you want to delete this concept?"),
+        group: "delete-concept",
+        accept: () => {
+            if (!concept.value) {
+                return;
+            }
+
+            try {
+                deleteLingoResource(
+                    props.graphSlug,
+                    concept.value.resourceinstanceid,
+                ).then(() => {
+                    const schemeIdentifier =
+                        concept.value!.aliased_data?.part_of_scheme
+                            ?.aliased_data.part_of_scheme?.interchange_value;
+
+                    const targetRouteLocation = {
+                        name: routeNames.scheme,
+                        params: { id: schemeIdentifier },
+                    };
+
+                    const absoluteUrlForSchemePage =
+                        router.resolve(targetRouteLocation).href;
+
+                    // Force full page reload to ensure the Hierarchy Viewer is refreshed
+                    window.location.replace(absoluteUrlForSchemePage);
+                });
+            } catch (error) {
+                toast.add({
+                    severity: ERROR,
+                    life: DEFAULT_ERROR_TOAST_LIFE,
+                    summary: $gettext("Error deleting concept"),
+                    detail: error instanceof Error ? error.message : undefined,
+                });
+            }
+        },
+        rejectProps: {
+            label: $gettext("Cancel"),
+            severity: SECONDARY,
+            outlined: true,
+        },
+        acceptProps: {
+            label: $gettext("Delete"),
+            severity: DANGER,
+        },
+    });
+}
 
 function extractConceptHeaderData(concept: ResourceInstanceResult) {
     const aliased_data = concept?.aliased_data;
@@ -97,6 +156,7 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
 </script>
 
 <template>
+    <ConfirmDialog group="delete-concept" />
     <Skeleton
         v-if="isLoading"
         style="width: 100%"
@@ -105,31 +165,40 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
         v-else
         class="concept-header"
     >
-        <div class="concept-header-panel">
-            <div class="header-row">
-                <h2 v-if="data?.descriptor?.name">
-                    <span>
-                        {{ data?.descriptor?.name }}
+        <div class="header-row">
+            <h2 v-if="data?.descriptor?.name">
+                <Button
+                    icon="pi pi-trash"
+                    severity="danger"
+                    rounded
+                    style="margin-inline-end: 0.75rem"
+                    :aria-label="$gettext('Delete Concept')"
+                    @click="confirmDelete"
+                />
+                <span>
+                    {{ data?.descriptor?.name }}
 
-                        <span
-                            v-if="data?.descriptor?.language"
-                            class="concept-label-lang"
-                        >
-                            ({{ data?.descriptor?.language }})
-                        </span>
+                    <span
+                        v-if="data?.descriptor?.language"
+                        class="concept-label-lang"
+                    >
+                        ({{ data?.descriptor?.language }})
                     </span>
-                </h2>
+                </span>
+            </h2>
 
-                <!-- TODO: export to rdf/skos/json-ld buttons go here -->
-                <div class="header-item">
-                    <span class="header-item-label">
-                        {{ $gettext("Export:") }}
-                    </span>
-                    <span class="header-item-value">
-                        CSV | SKOS | RDF | JSON-LD
-                    </span>
-                </div>
+            <!-- TODO: export to rdf/skos/json-ld buttons go here -->
+            <div class="header-item">
+                <span class="header-item-label">
+                    {{ $gettext("Export:") }}
+                </span>
+                <span class="header-item-value">
+                    CSV | SKOS | RDF | JSON-LD
+                </span>
             </div>
+        </div>
+
+        <div class="concept-header-section">
             <div class="header-row uri-container">
                 <span class="header-item-label">{{ $gettext("URI:") }}</span>
                 <Button
@@ -143,9 +212,6 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                     :disabled="!data?.uri"
                 ></Button>
             </div>
-        </div>
-
-        <div class="concept-header-section">
             <div class="header-row">
                 <!-- TODO: Human-reable conceptid to be displayed here -->
                 <div class="header-item">
@@ -201,17 +267,14 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
 
 <style scoped>
 .concept-header {
-    padding: 1rem 1rem 1.25rem 1rem;
+    padding-inline-start: 1rem;
+    padding-inline-end: 1.5rem;
+    padding-bottom: 1rem;
     background: var(--p-header-background);
     border-bottom: 0.06rem solid var(--p-header-border);
 }
 
-.concept-header-panel {
-    padding-bottom: 0.5rem;
-}
-
 h2 {
-    margin: 0;
     font-size: var(--p-lingo-font-size-large);
     font-weight: var(--p-lingo-font-weight-normal);
 }
@@ -244,7 +307,6 @@ h2 {
 
 .header-item {
     display: inline-flex;
-    margin-inline-end: 1rem;
     align-items: baseline;
 }
 
