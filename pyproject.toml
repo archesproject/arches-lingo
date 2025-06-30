@@ -9,6 +9,7 @@ authors = [
     {"name" = "Arches Project"}
 ]
 license = "AGPL-3.0-or-later"
+license-files = ["LICENSE"]
 description = "An Arches application designed to support the creation of thesaurus/vocabulary data."
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -25,10 +26,10 @@ classifiers = [
 ]
 requires-python = ">=3.11"
 dependencies = [
-    "arches @ git+https://github.com/archesproject/arches@dev/8.0.x",
-    "arches_component_lab @ git+https://github.com/archesproject/arches-component-lab.git@main",
-    "arches_querysets @ git+https://github.com/archesproject/arches-querysets@main",
-    "arches_controlled_lists @ git+https://github.com/archesproject/arches-controlled-lists.git@main",
+    "arches==8.0.1",
+    "arches-component-lab==0.0.1a0",
+    "arches-querysets[drf]==1.0.0b0",
+    "arches_controlled_lists==1.0.0b1",
 ]
 version = "1.0.0a0"
 
