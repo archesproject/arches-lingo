@@ -54,6 +54,14 @@ const resourceInstanceId = computed<string | undefined>(() => {
     return undefined;
 });
 
+window.addEventListener("keyup", (event) => {
+    if (event.key === "Escape") {
+        if (editorState.value !== CLOSED) {
+            closeEditor();
+        }
+    }
+});
+
 function closeEditor() {
     selectedComponentDatum.value = null;
     editorState.value = CLOSED;
