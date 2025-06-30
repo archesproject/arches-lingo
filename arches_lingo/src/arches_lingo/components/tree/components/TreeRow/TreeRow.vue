@@ -2,6 +2,8 @@
 import TreeRowLabel from "@/arches_lingo/components/tree/components/TreeRow/components/TreeRowLabel.vue";
 import FocusIcon from "@/arches_lingo/components/tree/components/TreeRow/components/FocusIcon.vue";
 import AddChildIcon from "@/arches_lingo/components/tree/components/TreeRow/components/AddChildIcon.vue";
+import DeleteIcon from "@/arches_lingo/components/tree/components/TreeRow/components/DeleteIcon.vue";
+import ExportIcon from "@/arches_lingo/components/tree/components/TreeRow/components/ExportIcon.vue";
 
 import type { TreeNode } from "primevue/treenode";
 
@@ -11,6 +13,8 @@ const { node, focusLabel, unfocusLabel, addChildLabel, filterValue } =
         focusLabel: string;
         unfocusLabel: string;
         addChildLabel: string;
+        deleteLabel: string;
+        exportLabel: string;
         filterValue: string;
     }>();
 
@@ -32,6 +36,14 @@ const focusedNode = defineModel<TreeNode | null>("focusedNode");
         <AddChildIcon
             :node="node"
             :add-child-label="addChildLabel"
+        />
+        <DeleteIcon
+            :node="node"
+            :delete-label="deleteLabel"
+        />
+        <ExportIcon
+            :node="node"
+            :export-label="exportLabel"
         />
     </div>
 </template>
