@@ -1,5 +1,12 @@
 <script setup lang="ts">
-import { computed, provide, ref } from "vue";
+import {
+    computed,
+    nextTick,
+    onMounted,
+    provide,
+    ref,
+    useTemplateRef,
+} from "vue";
 
 import { useGettext } from "vue3-gettext";
 
@@ -15,6 +22,8 @@ const { $gettext } = useGettext();
 
 const emit = defineEmits([MAXIMIZE, MINIMIZE, CLOSE]);
 
+const toggleSizeButton = useTemplateRef("toggleSizeButton");
+
 const formKey = ref(0);
 const componentEditorFormRef = ref();
 provide("componentEditorFormRef", componentEditorFormRef);
@@ -28,6 +37,13 @@ const isFormDirty = computed(() => {
         return states.some((state) => state === true);
     }
     return false;
+});
+
+onMounted(() => {
+    nextTick(() => {
+        // @ts-expect-error This is an error in PrimeVue types
+        toggleSizeButton.value!.$el.focus();
+    });
 });
 
 function toggleSize() {
@@ -46,6 +62,7 @@ function toggleSize() {
 
             <div class="controls">
                 <Button
+                    ref="toggleSizeButton"
                     :aria-label="$gettext('toggle editor size')"
                     rounded
                     @click="toggleSize"
