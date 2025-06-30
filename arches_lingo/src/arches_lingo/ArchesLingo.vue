@@ -119,3 +119,11 @@ main {
     overflow: hidden;
 }
 </style>
+
+<!-- NOT scoped because dialog gets appended to <body> and is unreachable via scoped styles -->
+<style>
+.p-tree-node-label,
+.p-toast {
+    font-family: var(--p-lingo-font-family) !important;
+}
+</style>

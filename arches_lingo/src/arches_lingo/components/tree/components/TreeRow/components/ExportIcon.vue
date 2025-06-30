@@ -1,33 +1,22 @@
 <script setup lang="ts">
-import { useRouter } from "vue-router";
-
 import Button from "primevue/button";
 
-import { NEW_CONCEPT } from "@/arches_lingo/constants.ts";
-import { navigateToSchemeOrConcept } from "@/arches_lingo/utils.ts";
 import { NEW } from "@/arches_lingo/constants.ts";
 
 import type { TreeNode } from "primevue/treenode";
 
-const { node, addChildLabel } = defineProps<{
+const { node, exportLabel } = defineProps<{
     node: TreeNode;
-    addChildLabel?: string;
+    exportLabel: string;
 }>();
 
-const router = useRouter();
-
-function onAddChild() {
-    navigateToSchemeOrConcept(router, NEW_CONCEPT, {
-        scheme: node.data.schemeId,
-        parent: node.data.id,
-    });
-}
+function onExportItem() {}
 </script>
 
 <template>
     <Button
         v-tooltip="{
-            value: addChildLabel,
+            value: exportLabel,
             pt: {
                 text: {
                     style: { fontFamily: 'sans-serif' },
@@ -35,7 +24,7 @@ function onAddChild() {
             },
         }"
         :disabled="node.data.id === NEW"
-        icon="pi pi-plus"
+        icon="pi pi-download"
         role="button"
         size="small"
         style="
@@ -45,9 +34,9 @@ function onAddChild() {
         "
         tabindex="1"
         variant="text"
-        :aria-label="addChildLabel"
+        :aria-label="exportLabel"
         :rounded="true"
-        @click.stop="onAddChild"
-        @keyup.enter.stop="onAddChild"
+        @click.stop="onExportItem"
+        @keyup.enter.stop="onExportItem"
     />
 </template>

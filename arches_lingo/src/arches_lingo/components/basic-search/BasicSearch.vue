@@ -59,6 +59,12 @@ const fetchData = async (searchTerm: string, items: number, page: number) => {
             page,
         );
 
+        // This handles for when the user types a query and then
+        // changes it before the request is completed.
+        if (searchTerm !== query.value) {
+            return;
+        }
+
         if (query.value) {
             if (page === 1) {
                 searchResults.value = parsedResponse.data;

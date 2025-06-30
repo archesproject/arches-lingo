@@ -39,6 +39,17 @@ import type { TreeNode } from "primevue/treenode";
 import type { Language } from "@/arches_component_lab/types";
 import type { IconLabels, Scheme, Concept } from "@/arches_lingo/types";
 
+const props = withDefaults(
+    defineProps<{
+        concepts?: {
+            schemes: Scheme[];
+        };
+    }>(),
+    {
+        concepts: undefined,
+    },
+);
+
 const toast = useToast();
 const { $gettext } = useGettext();
 const route = useRoute();
@@ -49,6 +60,8 @@ const NEW = "new";
 const FOCUS = $gettext("Focus");
 const UNFOCUS = $gettext("Unfocus");
 const ADD_CHILD = $gettext("Add child");
+const DELETE = $gettext("Delete");
+const EXPORT = $gettext("Export");
 
 const iconLabels: IconLabels = Object.freeze({
     concept: $gettext("Concept"),
@@ -84,26 +97,31 @@ watch(route, (newRoute) => {
 });
 
 onMounted(async () => {
-    try {
-        const priorSortedSchemeIds = tree.value.map((node) => node.key);
-        const concepts = await fetchConcepts();
+    let concepts = props.concepts;
 
-        schemes.value = (concepts.schemes as Scheme[]).sort((a, b) => {
-            return (
-                priorSortedSchemeIds.indexOf(a.id) -
-                priorSortedSchemeIds.indexOf(b.id)
-            );
-        });
-
-        selectNodeFromRoute(route);
-    } catch (error) {
-        toast.add({
-            severity: ERROR,
-            life: DEFAULT_ERROR_TOAST_LIFE,
-            summary: $gettext("Unable to fetch concepts"),
-            detail: (error as Error).message,
-        });
+    if (!props.concepts) {
+        try {
+            concepts = await fetchConcepts();
+        } catch (error) {
+            toast.add({
+                severity: ERROR,
+                life: DEFAULT_ERROR_TOAST_LIFE,
+                summary: $gettext("Unable to fetch concepts"),
+                detail: (error as Error).message,
+            });
+        }
     }
+
+    const priorSortedSchemeIds = tree.value.map((node) => node.key);
+
+    schemes.value = (concepts!.schemes as Scheme[]).sort((a, b) => {
+        return (
+            priorSortedSchemeIds.indexOf(a.id) -
+            priorSortedSchemeIds.indexOf(b.id)
+        );
+    });
+
+    selectNodeFromRoute(route);
 });
 
 function expandAll() {
@@ -347,6 +365,9 @@ function onNodeSelect(node: TreeNode) {
         <Skeleton height="1.75rem" />
         <Skeleton height="1.75rem" />
         <Skeleton height="1.75rem" />
+        <Skeleton height="1.75rem" />
+        <Skeleton height="1.75rem" />
+        <Skeleton height="1.75rem" />
     </div>
     <Tree
         v-if="tree"
@@ -399,6 +420,8 @@ function onNodeSelect(node: TreeNode) {
                 :focus-label="FOCUS"
                 :unfocus-label="UNFOCUS"
                 :add-child-label="ADD_CHILD"
+                :delete-label="DELETE"
+                :export-label="EXPORT"
             />
         </template>
     </Tree>
