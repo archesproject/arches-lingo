@@ -2,19 +2,17 @@ from http import HTTPStatus
 
 from django.core.paginator import Paginator
 from django.utils.decorators import method_decorator
-from django.utils.translation import get_language, gettext as _
+from django.utils.translation import gettext as _
 from django.views.generic import View
 
 from arches.app.models.system_settings import settings
-from arches.app.models.resource import Resource
 from arches.app.utils.betterJSONSerializer import JSONDeserializer, JSONSerializer
 from arches.app.utils.decorators import group_required
 from arches.app.utils.response import JSONErrorResponse, JSONResponse
 
-from arches_querysets.models import SemanticTile
+from arches_querysets.models import ResourceTileTree, TileTree
 from arches_lingo.querysets import fuzzy_search
 from arches_lingo.utils.concept_builder import ConceptBuilder
-from arches_querysets.models import SemanticResource
 
 
 @method_decorator(
@@ -42,7 +40,7 @@ class ValueSearchView(ConceptTreeView):
         page_number = request.GET.get("page", 1)
         items_per_page = request.GET.get("items", 25)
 
-        labels = SemanticTile.as_nodegroup("appellative_status", graph_slug="concept")
+        labels = TileTree.get_tiles("concept", nodegroup_alias="appellative_status")
 
         if exact:
             concept_query = labels.filter(
@@ -111,7 +109,7 @@ class ConceptResourceView(ConceptTreeView):
         items_per_page = request.GET.get("items", 25)
         concepts = request.GET.get("concepts", None)
         concept_ids = concepts.split(",") if concepts else None
-        Concept = SemanticResource.as_model("concept")
+        Concept = ResourceTileTree.get_tiles("concept")
 
         if not concept_ids:
             if scheme:
@@ -160,7 +158,7 @@ class ConceptRelationshipView(ConceptTreeView):
     def get(self, request):
         concept_id = request.GET.get("concept")
         relationship_type = request.GET.get("type")
-        Concept = SemanticResource.as_model("concept", as_representation=True)
+        Concept = ResourceTileTree.get_tiles("concept", as_representation=True)
 
         concept = Concept.get(pk=concept_id)
 
