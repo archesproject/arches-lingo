@@ -54,6 +54,13 @@ const resourceInstanceId = computed<string | undefined>(() => {
     return undefined;
 });
 
+const firstComponentDatum = computed(() => {
+    return processedComponentData.value[0];
+});
+const remainingComponentData = computed(() => {
+    return processedComponentData.value.slice(1);
+});
+
 window.addEventListener("keyup", (event) => {
     if (event.key === "Escape") {
         if (editorState.value !== CLOSED) {
@@ -125,18 +132,32 @@ provide("refreshReportSection", refreshReportSection);
         >
             <div class="splitter-panel-content">
                 <component
-                    :is="componentDatum.component"
-                    v-for="componentDatum in processedComponentData"
-                    :key="
-                        componentDatum.componentName + '-' + componentDatum.key
-                    "
-                    :graph-slug="componentDatum.graphSlug"
-                    :nodegroup-alias="componentDatum.nodegroupAlias"
+                    :is="firstComponentDatum.component"
+                    :graph-slug="firstComponentDatum.graphSlug"
+                    :nodegroup-alias="firstComponentDatum.nodegroupAlias"
                     :resource-instance-id="resourceInstanceId"
-                    :section-title="componentDatum.sectionTitle"
-                    :component-name="componentDatum.componentName"
+                    :section-title="firstComponentDatum.sectionTitle"
+                    :component-name="firstComponentDatum.componentName"
                     :mode="VIEW"
                 />
+
+                <div class="scroll-container">
+                    <component
+                        :is="componentDatum.component"
+                        v-for="componentDatum in remainingComponentData"
+                        :key="
+                            componentDatum.componentName +
+                            '-' +
+                            componentDatum.key
+                        "
+                        :graph-slug="componentDatum.graphSlug"
+                        :nodegroup-alias="componentDatum.nodegroupAlias"
+                        :resource-instance-id="resourceInstanceId"
+                        :section-title="componentDatum.sectionTitle"
+                        :component-name="componentDatum.componentName"
+                        :mode="VIEW"
+                    />
+                </div>
             </div>
         </SplitterPanel>
 
@@ -175,7 +196,14 @@ provide("refreshReportSection", refreshReportSection);
 }
 
 .splitter-panel-content {
-    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.scroll-container {
+    flex: 1;
+    overflow-y: auto;
 }
 
 :deep(.p-splitter) {
