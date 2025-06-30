@@ -7,10 +7,9 @@ import { useToast } from "primevue/usetoast";
 
 import { Form } from "@primevue/forms";
 
-import ProgressSpinner from "primevue/progressspinner";
+import Skeleton from "primevue/skeleton";
 
-import DateWidget from "@/arches_component_lab/widgets/DateWidget/DateWidget.vue";
-import NonLocalizedStringWidget from "@/arches_component_lab/widgets/NonLocalizedStringWidget/NonLocalizedStringWidget.vue";
+import NonLocalizedTextAreaWidget from "@/arches_component_lab/widgets/NonLocalizedTextAreaWidget/NonLocalizedTextAreaWidget.vue";
 import ReferenceSelectWidget from "@/arches_controlled_lists/widgets/ReferenceSelectWidget/ReferenceSelectWidget.vue";
 import ResourceInstanceMultiSelectWidget from "@/arches_component_lab/widgets/ResourceInstanceMultiSelectWidget/ResourceInstanceMultiSelectWidget.vue";
 
@@ -116,7 +115,7 @@ async function save(e: FormSubmitEvent) {
 </script>
 
 <template>
-    <ProgressSpinner
+    <Skeleton
         v-show="isSaving"
         style="width: 100%"
     />
@@ -128,77 +127,49 @@ async function save(e: FormSubmitEvent) {
             ref="form"
             @submit="save"
         >
-            <NonLocalizedStringWidget
+            <NonLocalizedTextAreaWidget
                 :graph-slug="props.graphSlug"
                 node-alias="statement_content_n1"
-                :initial-value="
+                :value="
                     props.tileData?.aliased_data?.statement_content_n1
-                "
-                :mode="EDIT"
-            />
-            <ReferenceSelectWidget
-                :graph-slug="props.graphSlug"
-                node-alias="statement_language_n1"
-                :initial-value="
-                    props.tileData?.aliased_data?.statement_language_n1
+                        ?.interchange_value
                 "
                 :mode="EDIT"
             />
             <ReferenceSelectWidget
                 :graph-slug="props.graphSlug"
                 node-alias="statement_type_n1"
-                :initial-value="props.tileData?.aliased_data?.statement_type_n1"
+                :value="
+                    props.tileData?.aliased_data?.statement_type_n1
+                        ?.interchange_value
+                "
                 :mode="EDIT"
             />
             <ReferenceSelectWidget
                 :graph-slug="props.graphSlug"
-                node-alias="statement_type_metatype_n1"
-                :initial-value="
-                    props.tileData?.aliased_data?.statement_type_metatype_n1
-                "
-                :mode="EDIT"
-            />
-            <DateWidget
-                :graph-slug="props.graphSlug"
-                node-alias="statement_data_assignment_timespan_begin_of_the_begin"
-                :initial-value="
-                    props.tileData?.aliased_data
-                        ?.statement_data_assignment_timespan_begin_of_the_begin
-                "
-                :mode="EDIT"
-            />
-            <DateWidget
-                :graph-slug="props.graphSlug"
-                node-alias="statement_data_assignment_timespan_end_of_the_end"
-                :initial-value="
-                    props.tileData?.aliased_data
-                        ?.statement_data_assignment_timespan_end_of_the_end
+                node-alias="statement_language_n1"
+                :value="
+                    props.tileData?.aliased_data?.statement_language_n1
+                        ?.interchange_value
                 "
                 :mode="EDIT"
             />
             <ResourceInstanceMultiSelectWidget
                 :graph-slug="props.graphSlug"
                 node-alias="statement_data_assignment_actor"
-                :initial-value="
+                :value="
                     props.tileData?.aliased_data
-                        ?.statement_data_assignment_actor
+                        ?.statement_data_assignment_actor?.interchange_value
                 "
                 :mode="EDIT"
             />
             <ResourceInstanceMultiSelectWidget
                 :graph-slug="props.graphSlug"
                 node-alias="statement_data_assignment_object_used"
-                :initial-value="
+                :value="
                     props.tileData?.aliased_data
                         ?.statement_data_assignment_object_used
-                "
-                :mode="EDIT"
-            />
-            <ReferenceSelectWidget
-                :graph-slug="props.graphSlug"
-                node-alias="statement_data_assignment_type"
-                :initial-value="
-                    props.tileData?.aliased_data?.statement_data_assignment_type
+                        ?.interchange_value
                 "
                 :mode="EDIT"
             />

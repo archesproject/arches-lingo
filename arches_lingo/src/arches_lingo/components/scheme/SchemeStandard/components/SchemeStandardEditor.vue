@@ -7,7 +7,7 @@ import { useToast } from "primevue/usetoast";
 
 import { Form } from "@primevue/forms";
 
-import ProgressSpinner from "primevue/progressspinner";
+import Skeleton from "primevue/skeleton";
 
 import ResourceInstanceMultiSelectWidget from "@/arches_component_lab/widgets/ResourceInstanceMultiSelectWidget/ResourceInstanceMultiSelectWidget.vue";
 
@@ -112,7 +112,7 @@ async function save(e: FormSubmitEvent) {
 </script>
 
 <template>
-    <ProgressSpinner
+    <Skeleton
         v-show="isSaving"
         style="width: 100%"
     />
@@ -127,7 +127,10 @@ async function save(e: FormSubmitEvent) {
             <ResourceInstanceMultiSelectWidget
                 graph-slug="scheme"
                 node-alias="creation_sources"
-                :initial-value="props.tileData?.aliased_data.creation_sources"
+                :value="
+                    props.tileData?.aliased_data.creation_sources
+                        ?.interchange_value
+                "
                 :mode="EDIT"
             />
         </Form>

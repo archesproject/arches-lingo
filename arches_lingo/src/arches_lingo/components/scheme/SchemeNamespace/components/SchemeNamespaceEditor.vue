@@ -14,7 +14,7 @@ import { useToast } from "primevue/usetoast";
 
 import { Form } from "@primevue/forms";
 
-import ProgressSpinner from "primevue/progressspinner";
+import Skeleton from "primevue/skeleton";
 
 import NonLocalizedStringWidget from "@/arches_component_lab/widgets/NonLocalizedStringWidget/NonLocalizedStringWidget.vue";
 
@@ -118,7 +118,7 @@ async function save(e: FormSubmitEvent) {
 </script>
 
 <template>
-    <ProgressSpinner
+    <Skeleton
         v-show="isSaving"
         style="width: 100%"
     />
@@ -133,7 +133,10 @@ async function save(e: FormSubmitEvent) {
             <NonLocalizedStringWidget
                 node-alias="namespace_name"
                 :graph-slug="props.graphSlug"
-                :initial-value="props.tileData?.aliased_data.namespace_name"
+                :value="
+                    props.tileData?.aliased_data.namespace_name
+                        ?.interchange_value
+                "
                 :mode="EDIT"
             />
         </Form>

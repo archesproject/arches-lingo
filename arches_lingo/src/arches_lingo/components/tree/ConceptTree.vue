@@ -4,6 +4,7 @@ import { computed, inject, nextTick, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
+import Skeleton from "primevue/skeleton";
 
 import Tree from "primevue/tree";
 
@@ -26,7 +27,6 @@ import {
     treeFromSchemes,
     navigateToSchemeOrConcept,
 } from "@/arches_lingo/utils.ts";
-import { getItemLabel } from "@/arches_component_lab/utils.ts";
 
 import type { ComponentPublicInstance, Ref } from "vue";
 import type { RouteLocationNormalizedLoadedGeneric } from "vue-router";
@@ -39,6 +39,17 @@ import type { TreeNode } from "primevue/treenode";
 import type { Language } from "@/arches_component_lab/types";
 import type { IconLabels, Scheme, Concept } from "@/arches_lingo/types";
 
+const props = withDefaults(
+    defineProps<{
+        concepts?: {
+            schemes: Scheme[];
+        };
+    }>(),
+    {
+        concepts: undefined,
+    },
+);
+
 const toast = useToast();
 const { $gettext } = useGettext();
 const route = useRoute();
@@ -49,6 +60,8 @@ const NEW = "new";
 const FOCUS = $gettext("Focus");
 const UNFOCUS = $gettext("Unfocus");
 const ADD_CHILD = $gettext("Add child");
+const DELETE = $gettext("Delete");
+const EXPORT = $gettext("Export");
 
 const iconLabels: IconLabels = Object.freeze({
     concept: $gettext("Concept"),
@@ -84,26 +97,31 @@ watch(route, (newRoute) => {
 });
 
 onMounted(async () => {
-    try {
-        const priorSortedSchemeIds = tree.value.map((node) => node.key);
-        const concepts = await fetchConcepts();
+    let concepts = props.concepts;
 
-        schemes.value = (concepts.schemes as Scheme[]).sort((a, b) => {
-            return (
-                priorSortedSchemeIds.indexOf(a.id) -
-                priorSortedSchemeIds.indexOf(b.id)
-            );
-        });
-
-        selectNodeFromRoute(route);
-    } catch (error) {
-        toast.add({
-            severity: ERROR,
-            life: DEFAULT_ERROR_TOAST_LIFE,
-            summary: $gettext("Unable to fetch concepts"),
-            detail: (error as Error).message,
-        });
+    if (!props.concepts) {
+        try {
+            concepts = await fetchConcepts();
+        } catch (error) {
+            toast.add({
+                severity: ERROR,
+                life: DEFAULT_ERROR_TOAST_LIFE,
+                summary: $gettext("Unable to fetch concepts"),
+                detail: (error as Error).message,
+            });
+        }
     }
+
+    const priorSortedSchemeIds = tree.value.map((node) => node.key);
+
+    schemes.value = (concepts!.schemes as Scheme[]).sort((a, b) => {
+        return (
+            priorSortedSchemeIds.indexOf(a.id) -
+            priorSortedSchemeIds.indexOf(b.id)
+        );
+    });
+
+    selectNodeFromRoute(route);
 });
 
 function expandAll() {
@@ -175,14 +193,6 @@ function snoopOnFilterValue() {
         expandPathsToFilterResults(inputEl.value);
         filterValue.value = inputEl.value;
     }
-}
-
-function lazyLabelLookup(node: TreeNode) {
-    return getItemLabel(
-        node.data,
-        selectedLanguage.value.code,
-        systemLanguage.code,
-    ).value;
 }
 
 function updateSelectedAndExpanded(node: TreeNode) {
@@ -347,6 +357,18 @@ function onNodeSelect(node: TreeNode) {
         :expand-all
         :collapse-all
     />
+    <div
+        v-if="!tree.length"
+        class="skeleton-container"
+    >
+        <Skeleton height="1.75rem" />
+        <Skeleton height="1.75rem" />
+        <Skeleton height="1.75rem" />
+        <Skeleton height="1.75rem" />
+        <Skeleton height="1.75rem" />
+        <Skeleton height="1.75rem" />
+        <Skeleton height="1.75rem" />
+    </div>
     <Tree
         v-if="tree"
         ref="treeDOMRef"
@@ -354,18 +376,15 @@ function onNodeSelect(node: TreeNode) {
         v-model:selection-keys="selectedKeys"
         v-model:expanded-keys="expandedKeys"
         :value="tree"
-        :filter="true"
-        :filter-by="lazyLabelLookup"
-        filter-mode="lenient"
-        :filter-placeholder="$gettext('Find')"
+        class="concept-tree"
         selection-mode="single"
-        style="display: flex; flex-direction: column; overflow-y: hidden"
         :pt="{
             pcFilter: {
                 root: {
                     ariaLabel: $gettext('Find'),
                     style: {
                         width: '100%',
+                        height: '100%',
                         marginBottom: '1rem',
                         display: 'flex',
                     },
@@ -395,13 +414,43 @@ function onNodeSelect(node: TreeNode) {
         <template #default="slotProps">
             <TreeRow
                 :id="slotProps.node.data.id"
-                :focused-node="focusedNode"
+                v-model:focused-node="focusedNode"
                 :filter-value="filterValue"
                 :node="slotProps.node"
                 :focus-label="FOCUS"
                 :unfocus-label="UNFOCUS"
                 :add-child-label="ADD_CHILD"
+                :delete-label="DELETE"
+                :export-label="EXPORT"
             />
         </template>
     </Tree>
 </template>
+<style scoped>
+.concept-tree {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow-y: hidden;
+    padding: 0;
+    font-size: var(--p-lingo-font-size-smallnormal);
+}
+
+:deep(.p-tree-filter-input) {
+    border-radius: 0.125rem;
+}
+
+:deep(.p-tree-root) {
+    height: 100%;
+}
+
+.skeleton-container {
+    padding: var(--p-tree-padding);
+    width: 100%;
+}
+
+.skeleton-container :deep(.p-skeleton) {
+    margin: 0.5rem 0;
+    height: var(--p-tree-node-toggle-button-size);
+}
+</style>

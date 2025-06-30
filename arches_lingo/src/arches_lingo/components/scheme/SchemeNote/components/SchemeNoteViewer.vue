@@ -5,7 +5,7 @@ import { useGettext } from "vue3-gettext";
 import Button from "primevue/button";
 
 import MetaStringViewer from "@/arches_lingo/components/generic/MetaStringViewer.vue";
-import NonLocalizedStringWidget from "@/arches_component_lab/widgets/NonLocalizedStringWidget/NonLocalizedStringWidget.vue";
+import NonLocalizedTextAreaWidget from "@/arches_component_lab/widgets/NonLocalizedTextAreaWidget/NonLocalizedTextAreaWidget.vue";
 import ReferenceSelectWidget from "@/arches_controlled_lists/widgets/ReferenceSelectWidget/ReferenceSelectWidget.vue";
 import ResourceInstanceMultiSelectWidget from "@/arches_component_lab/widgets/ResourceInstanceMultiSelectWidget/ResourceInstanceMultiSelectWidget.vue";
 
@@ -35,75 +35,79 @@ const metaStringLabel: MetaStringText = {
 </script>
 
 <template>
-    <div class="section-header">
-        <h2>{{ props.sectionTitle }}</h2>
+    <div class="viewer-section">
+        <div class="section-header">
+            <h2>{{ props.sectionTitle }}</h2>
 
-        <Button
-            :label="$gettext('Add New Scheme Note')"
-            @click="openEditor!(props.componentName)"
-        ></Button>
+            <Button
+                :label="$gettext('Add Note')"
+                class="add-button"
+                @click="openEditor!(props.componentName)"
+            ></Button>
+        </div>
+
+        <MetaStringViewer
+            :meta-strings="props.tileData"
+            :meta-string-text="metaStringLabel"
+            :component-name="props.componentName"
+            :graph-slug="props.graphSlug"
+            :nodegroup-alias="props.nodegroupAlias"
+        >
+            <template #name="{ rowData }">
+                <NonLocalizedTextAreaWidget
+                    node-alias="statement_content_n1"
+                    :graph-slug="props.graphSlug"
+                    :value="
+                        rowData.aliased_data.statement_content_n1.display_value
+                    "
+                    :mode="VIEW"
+                    :show-label="false"
+                />
+            </template>
+            <template #type="{ rowData }">
+                <ReferenceSelectWidget
+                    node-alias="statement_type_n1"
+                    :graph-slug="props.graphSlug"
+                    :value="
+                        rowData.aliased_data.statement_type_n1.interchange_value
+                    "
+                    :mode="VIEW"
+                    :show-label="false"
+                />
+            </template>
+            <template #language="{ rowData }">
+                <ReferenceSelectWidget
+                    node-alias="statement_language_n1"
+                    :graph-slug="props.graphSlug"
+                    :value="
+                        rowData.aliased_data.statement_language_n1
+                            .interchange_value
+                    "
+                    :mode="VIEW"
+                    :show-label="false"
+                />
+            </template>
+            <template #drawer="{ rowData }">
+                <ResourceInstanceMultiSelectWidget
+                    node-alias="statement_data_assignment_object_used"
+                    :graph-slug="props.graphSlug"
+                    :value="
+                        rowData.aliased_data
+                            .statement_data_assignment_object_used
+                            .interchange_value
+                    "
+                    :mode="VIEW"
+                />
+                <ResourceInstanceMultiSelectWidget
+                    node-alias="statement_data_assignment_actor"
+                    :graph-slug="props.graphSlug"
+                    :value="
+                        rowData.aliased_data.statement_data_assignment_actor
+                            .interchange_value
+                    "
+                    :mode="VIEW"
+                />
+            </template>
+        </MetaStringViewer>
     </div>
-
-    <MetaStringViewer
-        :meta-strings="props.tileData"
-        :meta-string-text="metaStringLabel"
-        :component-name="props.componentName"
-        :graph-slug="props.graphSlug"
-        :nodegroup-alias="props.nodegroupAlias"
-    >
-        <template #name="{ rowData }">
-            <NonLocalizedStringWidget
-                node-alias="statement_content_n1"
-                :graph-slug="props.graphSlug"
-                :initial-value="rowData.aliased_data.statement_content_n1"
-                :mode="VIEW"
-                :show-label="false"
-            />
-        </template>
-        <template #type="{ rowData }">
-            <ReferenceSelectWidget
-                node-alias="statement_type_n1"
-                :graph-slug="props.graphSlug"
-                :initial-value="rowData.aliased_data.statement_type_n1"
-                :mode="VIEW"
-                :show-label="false"
-            />
-        </template>
-        <template #language="{ rowData }">
-            <ReferenceSelectWidget
-                node-alias="statement_language_n1"
-                :graph-slug="props.graphSlug"
-                :initial-value="rowData.aliased_data.statement_language_n1"
-                :mode="VIEW"
-                :show-label="false"
-            />
-        </template>
-        <template #drawer="{ rowData }">
-            <ResourceInstanceMultiSelectWidget
-                node-alias="statement_data_assignment_object_used"
-                :graph-slug="props.graphSlug"
-                :initial-value="
-                    rowData.aliased_data.statement_data_assignment_object_used
-                "
-                :mode="VIEW"
-            />
-            <ResourceInstanceMultiSelectWidget
-                node-alias="statement_data_assignment_actor"
-                :graph-slug="props.graphSlug"
-                :initial-value="
-                    rowData.aliased_data.statement_data_assignment_actor
-                "
-                :mode="VIEW"
-            />
-        </template>
-    </MetaStringViewer>
 </template>
-
-<style scoped>
-.section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 0.125rem solid var(--p-menubar-border-color);
-}
-</style>

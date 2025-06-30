@@ -35,7 +35,7 @@ function onAddChild() {
             },
         }"
         :disabled="node.data.id === NEW"
-        icon="fa fa-plus"
+        icon="pi pi-plus"
         role="button"
         size="small"
         style="

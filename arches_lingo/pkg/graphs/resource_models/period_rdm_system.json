@@ -10,13 +10,21 @@
                     "config": null,
                     "constraints": [],
                     "cssclass": null,
-                    "description": "{\"en\": \"\"}",
+                    "description": "",
                     "graph_id": "20ea7ad3-4965-11ed-bebb-bf1b0a06275c",
                     "helpenabled": false,
-                    "helptext": "",
-                    "helptitle": "",
-                    "instructions": "",
-                    "name": "Label",
+                    "helptext": {
+                        "en": ""
+                    },
+                    "helptitle": {
+                        "en": ""
+                    },
+                    "instructions": {
+                        "en": ""
+                    },
+                    "name": {
+                        "en": "Label"
+                    },
                     "nodegroup_id": "a95ce2f0-11e7-11ef-9493-0a58a9feac02",
                     "sortorder": 1,
                     "source_identifier_id": null,
@@ -32,10 +40,18 @@
                     "description": null,
                     "graph_id": "20ea7ad3-4965-11ed-bebb-bf1b0a06275c",
                     "helpenabled": false,
-                    "helptext": "",
-                    "helptitle": "",
-                    "instructions": "",
-                    "name": "Period Place",
+                    "helptext": {
+                        "en": ""
+                    },
+                    "helptitle": {
+                        "en": ""
+                    },
+                    "instructions": {
+                        "en": ""
+                    },
+                    "name": {
+                        "en": "Period Place"
+                    },
                     "nodegroup_id": "a96d3c8c-a397-11ed-a312-9f6013b9061f",
                     "sortorder": 8,
                     "source_identifier_id": null,
@@ -48,13 +64,21 @@
                     "config": null,
                     "constraints": [],
                     "cssclass": "big",
-                    "description": "{\"en\": \"\"}",
+                    "description": "",
                     "graph_id": "20ea7ad3-4965-11ed-bebb-bf1b0a06275c",
                     "helpenabled": false,
-                    "helptext": "",
-                    "helptitle": "",
-                    "instructions": "",
-                    "name": "Identifer",
+                    "helptext": {
+                        "en": ""
+                    },
+                    "helptitle": {
+                        "en": ""
+                    },
+                    "instructions": {
+                        "en": ""
+                    },
+                    "name": {
+                        "en": "Identifer"
+                    },
                     "nodegroup_id": "ba3605ac-11e7-11ef-9493-0a58a9feac02",
                     "sortorder": 1,
                     "source_identifier_id": null,
@@ -70,10 +94,18 @@
                     "description": null,
                     "graph_id": "20ea7ad3-4965-11ed-bebb-bf1b0a06275c",
                     "helpenabled": false,
-                    "helptext": "",
-                    "helptitle": "",
-                    "instructions": "",
-                    "name": "statement",
+                    "helptext": {
+                        "en": ""
+                    },
+                    "helptitle": {
+                        "en": ""
+                    },
+                    "instructions": {
+                        "en": ""
+                    },
+                    "name": {
+                        "en": "statement"
+                    },
                     "nodegroup_id": "c031282e-11e7-11ef-9493-0a58a9feac02",
                     "sortorder": null,
                     "source_identifier_id": null,
@@ -86,13 +118,21 @@
                     "config": null,
                     "constraints": [],
                     "cssclass": "big",
-                    "description": "{\"en\": \"\"}",
+                    "description": "",
                     "graph_id": "20ea7ad3-4965-11ed-bebb-bf1b0a06275c",
                     "helpenabled": false,
-                    "helptext": "",
-                    "helptitle": "",
-                    "instructions": "",
-                    "name": "Statement",
+                    "helptext": {
+                        "en": ""
+                    },
+                    "helptitle": {
+                        "en": ""
+                    },
+                    "instructions": {
+                        "en": ""
+                    },
+                    "name": {
+                        "en": "Statement"
+                    },
                     "nodegroup_id": "c0312bc6-11e7-11ef-9493-0a58a9feac02",
                     "sortorder": 3,
                     "source_identifier_id": null,
@@ -105,13 +145,21 @@
                     "config": null,
                     "constraints": [],
                     "cssclass": null,
-                    "description": "{\"en\": \"\"}",
+                    "description": "",
                     "graph_id": "20ea7ad3-4965-11ed-bebb-bf1b0a06275c",
                     "helpenabled": false,
-                    "helptext": "",
-                    "helptitle": "",
-                    "instructions": "",
-                    "name": "Type",
+                    "helptext": {
+                        "en": ""
+                    },
+                    "helptitle": {
+                        "en": ""
+                    },
+                    "instructions": {
+                        "en": ""
+                    },
+                    "name": {
+                        "en": "Type"
+                    },
                     "nodegroup_id": "c7991720-11e7-11ef-9493-0a58a9feac02",
                     "sortorder": 2,
                     "source_identifier_id": null,
@@ -124,13 +172,23 @@
                     "config": null,
                     "constraints": [],
                     "cssclass": null,
-                    "description": "* Collection_id: \n* Field_id: \n* Category_id: ",
+                    "description": {
+                        "en": "* Collection_id: \n* Field_id: \n* Category_id: "
+                    },
                     "graph_id": "20ea7ad3-4965-11ed-bebb-bf1b0a06275c",
                     "helpenabled": false,
-                    "helptext": "",
-                    "helptitle": "",
-                    "instructions": "",
-                    "name": "Period Timespan",
+                    "helptext": {
+                        "en": ""
+                    },
+                    "helptitle": {
+                        "en": ""
+                    },
+                    "instructions": {
+                        "en": ""
+                    },
+                    "name": {
+                        "en": "Period Timespan"
+                    },
                     "nodegroup_id": "e08b13c5-9032-11ed-a689-1ff50755770b",
                     "sortorder": 4,
                     "source_identifier_id": null,
@@ -143,13 +201,23 @@
                     "config": null,
                     "constraints": [],
                     "cssclass": null,
-                    "description": "This field is used to link the documented period to a part of it.",
+                    "description": {
+                        "en": "This field is used to link the documented period to a part of it."
+                    },
                     "graph_id": "20ea7ad3-4965-11ed-bebb-bf1b0a06275c",
                     "helpenabled": false,
-                    "helptext": "",
-                    "helptitle": "",
-                    "instructions": "",
-                    "name": "Period Part",
+                    "helptext": {
+                        "en": ""
+                    },
+                    "helptitle": {
+                        "en": ""
+                    },
+                    "instructions": {
+                        "en": ""
+                    },
+                    "name": {
+                        "en": "Period Part"
+                    },
                     "nodegroup_id": "eb17dd5e-a397-11ed-a312-9f6013b9061f",
                     "sortorder": 6,
                     "source_identifier_id": null,
@@ -192,6 +260,28 @@
                     "source_identifier_id": null,
                     "visible": true,
                     "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
+                },
+                {
+                    "card_id": "a96d3c8e-a397-11ed-a312-9f6013b9061f",
+                    "config": {
+                        "defaultResourceInstance": [],
+                        "i18n_properties": [
+                            "placeholder"
+                        ],
+                        "label": "Period Place",
+                        "placeholder": {
+                            "en": ""
+                        }
+                    },
+                    "id": "a323c6fc-2855-4167-9581-d24977501983",
+                    "label": {
+                        "en": "Period Place"
+                    },
+                    "node_id": "a96d3c8c-a397-11ed-a312-9f6013b9061f",
+                    "sortorder": null,
+                    "source_identifier_id": null,
+                    "visible": true,
+                    "widget_id": "ff3c400a-76ec-11e7-a793-784f435179ea"
                 },
                 {
                     "card_id": "a95ce53e-11e7-11ef-9493-0a58a9feac02",
@@ -1052,7 +1142,9 @@
             "config": {},
             "deploymentdate": null,
             "deploymentfile": null,
-            "description": "A historical or archaeological period, which has a specific time-span and is associated with a specific geographic area..",
+            "description": {
+                "en": "A historical or archaeological period, which has a specific time-span and is associated with a specific geographic area.."
+            },
             "edges": [
                 {
                     "description": null,
@@ -1531,13 +1623,15 @@
             ],
             "graphid": "20ea7ad3-4965-11ed-bebb-bf1b0a06275c",
             "group_permissions": {},
-            "has_unpublished_changes": false,
+            "has_unpublished_changes": true,
             "iconclass": "fa fa-align-center",
             "is_active": true,
             "is_copy_immutable": false,
             "isresource": true,
             "jsonldcontext": null,
-            "name": "period_rdm_system",
+            "name": {
+                "en": "period_rdm_system"
+            },
             "nodegroups": [
                 {
                     "cardinality": "1",
@@ -2813,15 +2907,21 @@
             "resource_2_resource_constraints": [],
             "resource_instance_lifecycle": {
                 "id": "7e3cce56-fbfb-4a4b-8e83-59b9f9e7cb75",
-                "name": "Standard",
+                "name": {
+                    "en": "Standard"
+                },
                 "resource_instance_lifecycle_states": [
                     {
-                        "action_label": "Revert to Draft",
+                        "action_label": {
+                            "en": "Revert to Draft"
+                        },
                         "can_delete_resource_instances": true,
                         "can_edit_resource_instances": true,
                         "id": "9375c9a7-dad2-4f14-a5c1-d7e329fdde4f",
                         "is_initial_state": true,
-                        "name": "Draft",
+                        "name": {
+                            "en": "Draft"
+                        },
                         "next_resource_instance_lifecycle_states": [
                             "f75bb034-36e3-4ab4-8167-f520cf0b4c58"
                         ],
@@ -2829,12 +2929,16 @@
                         "resource_instance_lifecycle_id": "7e3cce56-fbfb-4a4b-8e83-59b9f9e7cb75"
                     },
                     {
-                        "action_label": "Make Active",
+                        "action_label": {
+                            "en": "Make Active"
+                        },
                         "can_delete_resource_instances": false,
                         "can_edit_resource_instances": true,
                         "id": "f75bb034-36e3-4ab4-8167-f520cf0b4c58",
                         "is_initial_state": false,
-                        "name": "Active",
+                        "name": {
+                            "en": "Active"
+                        },
                         "next_resource_instance_lifecycle_states": [
                             "d95d9c0e-0e2c-4450-93a3-d788b91abcc8"
                         ],
@@ -2844,12 +2948,16 @@
                         "resource_instance_lifecycle_id": "7e3cce56-fbfb-4a4b-8e83-59b9f9e7cb75"
                     },
                     {
-                        "action_label": "Retire",
+                        "action_label": {
+                            "en": "Retire"
+                        },
                         "can_delete_resource_instances": false,
                         "can_edit_resource_instances": false,
                         "id": "d95d9c0e-0e2c-4450-93a3-d788b91abcc8",
                         "is_initial_state": false,
-                        "name": "Retired",
+                        "name": {
+                            "en": "Retired"
+                        },
                         "next_resource_instance_lifecycle_states": [],
                         "previous_resource_instance_lifecycle_states": [
                             "f75bb034-36e3-4ab4-8167-f520cf0b4c58"
@@ -2882,16 +2990,19 @@
             },
             "slug": "period_rdm_system",
             "source_identifier_id": null,
-            "subtitle": "A historical or archaeological period, which has a specific time-span and is associated with a specific geographic area..",
+            "spatial_views": [],
+            "subtitle": {
+                "en": "A historical or archaeological period, which has a specific time-span and is associated with a specific geographic area.."
+            },
             "template_id": "50000000-0000-0000-0000-000000000001",
             "user_permissions": {},
             "version": ""
         }
     ],
     "metadata": {
-        "db": "PostgreSQL 17.0 (Postgres.app) on aarch64-apple-darwin23.6.0, compiled by Apple clang version 15.0.0 (clang-1500.3.9.4), 64-bit",
-        "git hash": "4b6f74160 2025-01-31 17:56:30 -0500",
+        "db": "PostgreSQL 17.4 (Postgres.app) on aarch64-apple-darwin23.6.0, compiled by Apple clang version 15.0.0 (clang-1500.3.9.4), 64-bit",
+        "git hash": "5a3811e3b3 2025-06-16 14:06:45 -0400",
         "os": "Darwin",
-        "os version": "24.2.0"
+        "os version": "24.5.0"
     }
 }

@@ -6,6 +6,8 @@ import Button from "primevue/button";
 
 import type { TreeNode } from "primevue/treenode";
 
+import { NEW } from "@/arches_lingo/constants.ts";
+
 const { node, focusLabel, unfocusLabel } = defineProps<{
     node: TreeNode;
     focusLabel: string;
@@ -39,8 +41,8 @@ function toggleFocus() {
                 },
             },
         }"
-        :disabled="route.params.id === 'new' && node.data.id !== 'new'"
-        :icon="isFocused ? 'fa fa-search-minus' : 'fa fa-bullseye'"
+        :disabled="route.params.id === NEW && node.data.id !== NEW"
+        :icon="isFocused ? 'pi pi-search-minus' : 'pi pi-bullseye'"
         role="button"
         size="small"
         style="

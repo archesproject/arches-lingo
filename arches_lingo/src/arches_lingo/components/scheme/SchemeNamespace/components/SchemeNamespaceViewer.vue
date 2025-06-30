@@ -26,40 +26,39 @@ const openEditor =
 
 const buttonLabel = computed(() => {
     if (props.tileData) {
-        return $gettext("Edit Scheme Namespace");
+        return $gettext("Edit Namespace");
     } else {
-        return $gettext("Add New Scheme Namespace");
+        return $gettext("Add Namespace");
     }
 });
 </script>
 
 <template>
-    <div class="section-header">
-        <h2>{{ props.sectionTitle }}</h2>
+    <div class="viewer-section">
+        <div class="section-header">
+            <h2>{{ props.sectionTitle }}</h2>
 
-        <Button
-            :label="buttonLabel"
-            @click="openEditor!(props.componentName, props.tileData?.tileid)"
-        ></Button>
-    </div>
+            <Button
+                :label="buttonLabel"
+                class="add-button"
+                @click="
+                    openEditor!(props.componentName, props.tileData?.tileid)
+                "
+            ></Button>
+        </div>
 
-    <NonLocalizedStringWidget
-        v-if="props.tileData"
-        node-alias="namespace_name"
-        :graph-slug="props.graphSlug"
-        :initial-value="props.tileData.aliased_data.namespace_name"
-        :mode="VIEW"
-    />
-    <div v-else>
-        <p>{{ $gettext("No Scheme Namespaces were found.") }}</p>
+        <NonLocalizedStringWidget
+            v-if="props.tileData"
+            node-alias="namespace_name"
+            :graph-slug="props.graphSlug"
+            :value="props.tileData.aliased_data.namespace_name.display_value"
+            :mode="VIEW"
+        />
+        <div
+            v-else
+            class="section-message"
+        >
+            {{ $gettext("No Scheme Namespaces were found.") }}
+        </div>
     </div>
 </template>
-
-<style scoped>
-.section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 0.125rem solid var(--p-menubar-border-color);
-}
-</style>

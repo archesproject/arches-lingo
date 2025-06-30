@@ -1,57 +1,186 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { markRaw, provide, ref } from "vue";
 import { useGettext } from "vue3-gettext";
 
-import { routeNames } from "@/arches_lingo/routes.ts";
+import Button from "primevue/button";
+import PanelMenu from "primevue/panelmenu";
+
+import NavNavigation from "@/arches_lingo/components/sidenav/components/NavNavigation.vue";
+import NavAuthorityEditors from "@/arches_lingo/components/sidenav/components/NavAuthorityEditors.vue";
+import NavReferenceData from "@/arches_lingo/components/sidenav/components/NavReferenceData.vue";
+import NavSettings from "@/arches_lingo/components/sidenav/components/NavSettings.vue";
+
+import ArchesLingoBadge from "@/arches_lingo/components/header/PageHeader/components/ArchesLingoBadge.vue";
+
+import type { SideNavMenuItem } from "@/arches_lingo/types.ts";
 
 const { $gettext } = useGettext();
 
-const items = ref([
+const isNavExpanded = ref(false);
+provide("isNavExpanded", isNavExpanded);
+
+const items = ref<SideNavMenuItem[]>([
     {
-        icon: "fa fa-home",
-        routeName: routeNames.root,
-        linkName: $gettext("Home"),
+        component: markRaw(NavNavigation),
+        key: "navigation",
+        label: $gettext("Navigation"),
+        items: [],
+    },
+    {
+        component: markRaw(NavAuthorityEditors),
+        key: "editors",
+        label: $gettext("Authority Editors"),
+        items: [],
+    },
+    {
+        component: markRaw(NavReferenceData),
+        key: "reference-data",
+        label: $gettext("Reference Data"),
+        items: [],
+    },
+    {
+        component: markRaw(NavSettings),
+        key: "settings",
+        label: $gettext("Settings"),
+        items: [],
     },
 ]);
+
+const buttonKey = ref(0);
+
+function toggleAll() {
+    isNavExpanded.value = !isNavExpanded.value;
+    emit("update:isNavExpanded", isNavExpanded.value);
+
+    buttonKey.value += 1; // Force re-render of the button to remove tooltip
+}
+
+const emit = defineEmits(["update:isNavExpanded"]);
 </script>
 
 <template>
-    <aside class="sidenav">
-        <div
-            v-for="item in items"
-            :key="item.routeName"
+    <aside
+        class="sidenav"
+        :class="{ expanded: isNavExpanded }"
+    >
+        <Button
+            :key="buttonKey"
+            v-tooltip.bottom="{
+                value: $gettext('Expand navigation'),
+                disabled: isNavExpanded,
+                showDelay: 300,
+                pt: {
+                    root: { style: { marginInlineStart: '7rem' } },
+                    text: {
+                        style: { fontFamily: 'var(--p-lingo-font-family)' },
+                    },
+                    arrow: { style: { display: 'none' } },
+                },
+            }"
+            class="nav-button"
+            :class="{ expanded: isNavExpanded }"
+            :aria-label="$gettext('Expand navigation')"
+            @click="toggleAll"
         >
-            <RouterLink
-                v-tooltip="{
-                    value: item.linkName,
-                    pt: { text: { style: { fontFamily: 'sans-serif' } } },
-                }"
-                :to="{ name: item.routeName }"
-                class="p-button p-component p-button-primary"
-                style="text-decoration: none"
-            >
-                <i
-                    :class="item.icon"
-                    aria-hidden="true"
-                ></i>
-            </RouterLink>
-        </div>
+            <i
+                v-if="!isNavExpanded"
+                class="pi pi-bars toggle-icon"
+            />
+
+            <ArchesLingoBadge
+                v-if="isNavExpanded"
+                :is-link="false"
+            />
+        </Button>
+        <PanelMenu
+            :model="items"
+            class="sidenav-panelmenu"
+            :class="{ expanded: isNavExpanded }"
+        >
+            <template #item="{ item }">
+                <component
+                    :is="item.component"
+                    :item="item"
+                />
+            </template>
+        </PanelMenu>
     </aside>
 </template>
 
 <style scoped>
 .sidenav {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    border-right: 1px solid var(--p-menubar-border-color);
+    width: 3rem;
+    background: var(--p-primary-950);
+    border-right: 0.125rem solid var(--p-primary-950);
+    transition: width 0.3s ease-in-out;
+}
+
+.sidenav.expanded {
+    width: 16rem;
 }
 
 .p-button {
-    min-height: var(--p-button-icon-only-width);
-    min-width: var(--p-button-icon-only-width);
+    height: 2.5rem;
+    font-size: var(--p-lingo-font-size-large);
+    background: var(--p-primary-950) !important;
     border-radius: 0;
-    font-size: 1.5rem;
+    border: none;
+}
+
+.sidenav-panelmenu {
+    width: 100%;
+    min-width: 3rem;
+    transition: min-width 0.3s ease-in-out;
+    border-right: 0.125rem solid var(--p-primary-950);
+    gap: 0.1rem;
+    background-color: var(--p-surface-950);
+}
+
+.sidenav-panelmenu.expanded {
+    min-width: 16rem;
+}
+
+.nav-button {
+    border: 0 !important;
+    border-bottom: 0.125rem solid var(--p-primary-950) !important;
+    cursor: pointer;
+}
+
+.nav-button.expanded {
+    background: var(--p-menubar-background) !important;
+    padding-inline-start: 0.6rem;
+}
+
+.nav-button:hover {
+    background: var(--p-button-primary-hover-background) !important;
+}
+
+:deep(.p-button) {
+    background-color: var(--p-primary-950) !important;
+    border-color: var(--p-primary-950) !important;
+    color: var(--p-menubar-color) !important;
+}
+:deep(.p-button):hover {
+    background: var(--p-button-primary-hover-background) !important;
+}
+
+:deep(.p-panelmenu-panel) {
+    padding: 0;
+    border-style: none;
+    border-radius: 0 !important;
+}
+
+:deep(.nav-button) {
+    height: 3.125rem;
+    width: 100%;
+    border-radius: 0;
+    text-decoration: none;
+    justify-content: flex-start;
+    font-size: var(--p-lingo-font-size-xsmall);
+
+    i {
+        font-size: var(--p-lingo-font-size-medium);
+    }
 }
 
 @media screen and (max-width: 960px) {

@@ -2,9 +2,9 @@
 import { onMounted, ref } from "vue";
 
 import Message from "primevue/message";
-import ProgressSpinner from "primevue/progressspinner";
+import Skeleton from "primevue/skeleton";
 
-//import ConceptImagesEditor from "@/arches_lingo/components/concept/ConceptImages/components/ConceptImagesEditor.vue";
+import ConceptImagesEditor from "@/arches_lingo/components/concept/ConceptImages/components/ConceptImagesEditor.vue";
 import ConceptImagesViewer from "@/arches_lingo/components/concept/ConceptImages/components/ConceptImagesViewer.vue";
 
 import { EDIT, VIEW } from "@/arches_lingo/constants.ts";
@@ -55,7 +55,7 @@ async function getSectionValue() {
 </script>
 
 <template>
-    <ProgressSpinner
+    <Skeleton
         v-if="isLoading"
         style="width: 100%"
     />
@@ -75,16 +75,15 @@ async function getSectionValue() {
             :section-title="props.sectionTitle"
             :nodegroup-alias="props.nodegroupAlias"
         />
-        <!-- <ConceptImagesEditor
+        <ConceptImagesEditor
             v-else-if="mode === EDIT"
-            :tile-data="tileData?.find((tileDatum) => tileDatum.tileid === props.tileId)
-                "
             :component-name="props.componentName"
             :section-title="props.sectionTitle"
             :graph-slug="props.graphSlug"
+            :tile-data="tileData"
             :nodegroup-alias="props.nodegroupAlias"
             :resource-instance-id="props.resourceInstanceId"
             :tile-id="props.tileId"
-        /> -->
+        />
     </template>
 </template>

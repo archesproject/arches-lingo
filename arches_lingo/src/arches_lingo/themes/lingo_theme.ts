@@ -16,53 +16,111 @@ export const LingoPreset = definePreset(ArchesPreset, {
         ...lingoColors,
     },
     semantic: {
+        lingoFont: {
+            family: "'Open Sans','Lucida Sans','Lucida Sans Regular','Lucida Grande','Lucida Sans Unicode',Geneva,Verdana,sans-serif",
+            size: {
+                xxsmall: "0.75rem",
+                xsmall: "0.8rem",
+                small: "0.875rem",
+                smallnormal: "0.95rem",
+                normal: "1rem",
+                medium: "1.15rem",
+                large: "1.25rem",
+                xlarge: "1.5rem",
+                xxlarge: "2rem",
+            },
+            weight: {
+                light: "300",
+                normal: "400",
+                medium: "500",
+                bold: "600",
+            },
+        },
         colorScheme: {
             light: {
                 primary: palette(archesPrimitives.arches.blue),
                 surface: palette("{slate}"),
-                sidenav: {
-                    background: "{arches.legacy.sidebar}",
+                checkbox: {
+                    background: "{light-gray}",
+                },
+                header: {
+                    background: "{surface.50}",
+                    border: "{neutral.300}",
+                    itemLabel: "{surface.500}",
+                },
+                searchResult: {
+                    color: "{sky.600}",
+                    borderBottom: "{zinc.200}",
+                    isEven: {
+                        background: "{surface.100}",
+                    },
+                    focus: {
+                        background: "{sky.100}",
+                    },
+                },
+                searchResultHierarchy: {
+                    color: "{zinc.400}",
                 },
                 sortAndFilterControls: {
                     background: "{light-blue-gray}",
                     border: "{gray}",
                 },
-                checkbox: {
-                    background: "{light-gray}",
-                },
             },
             dark: {
-                // DRW: develop Arches blue color for dark mode
                 primary: palette(archesPrimitives.arches.blue),
                 surface: palette("{zinc}"),
-                sidenav: {
-                    background: "{surface.800}",
-                },
-                header: {
-                    background: "{surface.900}",
+                checkbox: {
+                    background: "{surface.500}",
                 },
                 footer: {
                     background: "{surface.900}",
                 },
+                header: {
+                    background: "{surface.700}",
+                    border: "{neutral.500}",
+                    itemLabel: "{surface.400}",
+                },
+                searchResult: {
+                    borderBottom: "{surface.900}",
+                    isEven: {
+                        background: "{surface.800}",
+                    },
+                    focus: {
+                        background: "{sky.900}",
+                    },
+                },
+                searchResultHierarchy: {
+                    color: "{zinc.400}",
+                },
                 sortAndFilterControls: {
                     background: "{surface.700}",
-                    border: "{#surface.900}",
-                },
-                checkbox: {
-                    background: "{surface.500}",
+                    border: "{surface.900}",
                 },
             },
         },
     },
     components: {
         button: {
+            border: {
+                radius: "0.25rem",
+            },
             colorScheme: {
                 light: {
                     // @ts-expect-error: Ignoring type mismatch for button primary background
                     primary: {
                         background: "{primary-800}",
-                        border: {
-                            color: "{button-primary-background}",
+                        borderColor: "{button-primary-background}",
+                        hover: {
+                            background: "{primary-700}",
+                            borderColor: "{primary-700}",
+                        },
+                    },
+                    danger: {
+                        background: "{orange-700}",
+                        borderColor: "{orange-700}",
+                        hover: {
+                            background: "{orange-500}",
+                            borderColor: "{orange-500}",
                         },
                     },
                 },
@@ -70,11 +128,21 @@ export const LingoPreset = definePreset(ArchesPreset, {
                     // @ts-expect-error: Ignoring type mismatch for button primary background
                     primary: {
                         background: "{primary-100}",
-                        border: {
-                            color: "{button-primary-background}",
-                        },
+                        borderColor: "{button-primary-background}",
                     },
                 },
+            },
+        },
+        inputtext: {
+            // @ts-expect-error: primevue does have border on inputtext
+            border: {
+                radius: "0.25rem",
+            },
+        },
+        menubar: {
+            root: {
+                color: "{surface-0}",
+                background: "{primary-900}",
             },
         },
         splitter: {

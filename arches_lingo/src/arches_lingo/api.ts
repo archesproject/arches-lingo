@@ -1,8 +1,10 @@
 import arches from "arches";
 import Cookies from "js-cookie";
+import { generateArchesURL } from "@/arches/utils/generate-arches-url.ts";
 
 import type {
     ConceptInstance,
+    DigitalObjectInstance,
     SchemeInstance,
     TileData,
 } from "@/arches_lingo/types";
@@ -80,13 +82,13 @@ export const fetchLingoResourcesBatch = async (
 
 export const fetchLingoResourcePartial = async (
     graphSlug: string,
-    schemeId: string,
+    resourceId: string,
     nodegroupAlias: string,
 ) => {
     const response = await fetch(
         arches.urls.api_lingo_resource_partial(
             graphSlug,
-            schemeId,
+            resourceId,
             nodegroupAlias,
         ),
     );
@@ -95,20 +97,43 @@ export const fetchLingoResourcePartial = async (
     return parsed;
 };
 
-export const updateLingoResource = async (
+export const updateLingoResourceFromForm = async (
     graphSlug: string,
-    schemeId: string,
-    schemeInstance: SchemeInstance,
+    resourceId: string,
+    formData: FormData,
 ) => {
+    const headers = {
+        "X-CSRFTOKEN": getToken(),
+    };
     const response = await fetch(
-        arches.urls.api_lingo_resource(graphSlug, schemeId),
+        arches.urls.api_lingo_resource(graphSlug, resourceId),
         {
             method: "PATCH",
-            headers: {
-                "X-CSRFTOKEN": getToken(),
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(schemeInstance),
+            headers: headers,
+            body: formData,
+        },
+    );
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
+export const updateLingoResource = async (
+    graphSlug: string,
+    resourceId: string,
+    instance: SchemeInstance | ConceptInstance | DigitalObjectInstance,
+) => {
+    const headers = {
+        "X-CSRFTOKEN": getToken(),
+        "Content-Type": "application/json",
+    };
+
+    const response = await fetch(
+        arches.urls.api_lingo_resource(graphSlug, resourceId),
+        {
+            method: "PATCH",
+            headers: headers,
+            body: JSON.stringify(instance),
         },
     );
     const parsed = await response.json();
@@ -146,12 +171,12 @@ export const upsertLingoTile = async (
 };
 
 export const deleteLingoTile = async (
-    schemeId: string,
+    graphSlug: string,
     nodegroupAlias: string,
     tileId: string,
 ) => {
     const response = await fetch(
-        arches.urls.api_lingo_tile(schemeId, nodegroupAlias, tileId),
+        arches.urls.api_lingo_tile(graphSlug, nodegroupAlias, tileId),
         {
             method: "DELETE",
             headers: { "X-CSRFTOKEN": getToken() },
@@ -166,18 +191,45 @@ export const deleteLingoTile = async (
     }
 };
 
-export const createLingoResource = async (
-    newResource: SchemeInstance | ConceptInstance,
+export const createLingoResourceFromForm = async (
+    newResource: FormData,
     graphSlug: string,
 ) => {
+    const headers = {
+        "X-CSRFTOKEN": getToken(),
+    };
+
     const response = await fetch(arches.urls.api_lingo_resources(graphSlug), {
         method: "POST",
-        headers: {
-            "X-CSRFTOKEN": getToken(),
-            "Content-Type": "application/json",
-        },
+        headers: headers,
+        body: newResource,
+    });
+
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
+export const createLingoResource = async (
+    newResource: SchemeInstance | ConceptInstance | DigitalObjectInstance,
+    graphSlug: string,
+) => {
+    type headerType = {
+        "X-CSRFTOKEN": string;
+        "Content-Type"?: string;
+    };
+    const headers: headerType = {
+        "X-CSRFTOKEN": getToken(),
+    };
+
+    headers["Content-Type"] = "application/json";
+
+    const response = await fetch(arches.urls.api_lingo_resources(graphSlug), {
+        method: "POST",
+        headers: headers,
         body: JSON.stringify(newResource),
     });
+
     const parsed = await response.json();
     if (!response.ok) throw new Error(parsed.message || response.statusText);
     return parsed;
@@ -195,6 +247,46 @@ export const fetchSearchResults = async (
     });
 
     const url = `${arches.urls.api_search}?${params.toString()}`;
+    const response = await fetch(url);
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
+export const fetchConceptResources = async (
+    searchTerm: string,
+    items: number,
+    page: number,
+    schemeResource: string = "",
+    exclude: boolean = false,
+    conceptIds: string[] = [],
+) => {
+    const params = new URLSearchParams({
+        term: searchTerm,
+        scheme: schemeResource,
+        exclude: exclude.toString(),
+        items: items.toString(),
+        page: page.toString(),
+        concepts: conceptIds.join(","),
+    });
+
+    const url = `${generateArchesURL("api-lingo-concept-resources")}?${params.toString()}`;
+    const response = await fetch(url);
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
+export const fetchConceptRelationships = async (
+    conceptId: string,
+    type: string,
+) => {
+    const params = new URLSearchParams({
+        concept: conceptId,
+        type: type,
+    });
+
+    const url = `${generateArchesURL("api-lingo-concept-relationships")}?${params.toString()}`;
     const response = await fetch(url);
     const parsed = await response.json();
     if (!response.ok) throw new Error(parsed.message || response.statusText);

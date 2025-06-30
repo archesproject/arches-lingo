@@ -28,39 +28,40 @@ const buttonLabel = computed(() => {
     if (props.tileData) {
         return $gettext("Edit Scheme Standard");
     } else {
-        return $gettext("Add New Scheme Standard");
+        return $gettext("Add Standard");
     }
 });
 </script>
 
 <template>
-    <div class="section-header">
-        <h2>{{ props.sectionTitle }}</h2>
+    <div class="viewer-section">
+        <div class="section-header">
+            <h2>{{ props.sectionTitle }}</h2>
 
-        <Button
-            :label="buttonLabel"
-            @click="openEditor!(props.componentName, props.tileData?.tileid)"
-        ></Button>
-    </div>
+            <Button
+                :label="buttonLabel"
+                class="add-button"
+                @click="
+                    openEditor!(props.componentName, props.tileData?.tileid)
+                "
+            ></Button>
+        </div>
 
-    <ResourceInstanceMultiSelectWidget
-        v-if="props.tileData"
-        node-alias="creation_sources"
-        :graph-slug="props.graphSlug"
-        :initial-value="props.tileData.aliased_data.creation_sources"
-        :mode="VIEW"
-    />
+        <ResourceInstanceMultiSelectWidget
+            v-if="props.tileData"
+            node-alias="creation_sources"
+            :graph-slug="props.graphSlug"
+            :value="
+                props.tileData.aliased_data.creation_sources.interchange_value
+            "
+            :mode="VIEW"
+        />
 
-    <div v-else>
-        <p>{{ $gettext("No Scheme Standards were found.") }}</p>
+        <div
+            v-else
+            class="section-message"
+        >
+            {{ $gettext("No Scheme Standards were found.") }}
+        </div>
     </div>
 </template>
-
-<style scoped>
-.section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 0.125rem solid var(--p-menubar-border-color);
-}
-</style>

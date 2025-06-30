@@ -7,9 +7,8 @@ import { useToast } from "primevue/usetoast";
 
 import { Form } from "@primevue/forms";
 
-import ProgressSpinner from "primevue/progressspinner";
+import Skeleton from "primevue/skeleton";
 
-import DateWidget from "@/arches_component_lab/widgets/DateWidget/DateWidget.vue";
 import NonLocalizedStringWidget from "@/arches_component_lab/widgets/NonLocalizedStringWidget/NonLocalizedStringWidget.vue";
 import ReferenceSelectWidget from "@/arches_controlled_lists/widgets/ReferenceSelectWidget/ReferenceSelectWidget.vue";
 import ResourceInstanceMultiSelectWidget from "@/arches_component_lab/widgets/ResourceInstanceMultiSelectWidget/ResourceInstanceMultiSelectWidget.vue";
@@ -115,7 +114,7 @@ async function save(e: FormSubmitEvent) {
 </script>
 
 <template>
-    <ProgressSpinner
+    <Skeleton
         v-show="isSaving"
         style="width: 100%"
     />
@@ -130,91 +129,49 @@ async function save(e: FormSubmitEvent) {
             <NonLocalizedStringWidget
                 :graph-slug="props.graphSlug"
                 node-alias="appellative_status_ascribed_name_content"
-                :initial-value="
+                :value="
                     props.tileData?.aliased_data
                         .appellative_status_ascribed_name_content
-                "
-                :mode="EDIT"
-            />
-            <DateWidget
-                :graph-slug="props.graphSlug"
-                node-alias="appellative_status_timespan_begin_of_the_begin"
-                :initial-value="
-                    props.tileData?.aliased_data
-                        ?.appellative_status_timespan_begin_of_the_begin
-                "
-                :mode="EDIT"
-            />
-            <DateWidget
-                :graph-slug="props.graphSlug"
-                node-alias="appellative_status_timespan_end_of_the_end"
-                :initial-value="
-                    props.tileData?.aliased_data
-                        ?.appellative_status_timespan_end_of_the_end
-                "
-                :mode="EDIT"
-            />
-
-            <ResourceInstanceMultiSelectWidget
-                :graph-slug="props.graphSlug"
-                node-alias="appellative_status_data_assignment_actor"
-                :initial-value="
-                    props.tileData?.aliased_data
-                        ?.appellative_status_data_assignment_actor
-                "
-                :mode="EDIT"
-            />
-            <ResourceInstanceMultiSelectWidget
-                :graph-slug="props.graphSlug"
-                node-alias="appellative_status_data_assignment_object_used"
-                :initial-value="
-                    props.tileData?.aliased_data
-                        ?.appellative_status_data_assignment_object_used
-                "
-                :mode="EDIT"
-            />
-
-            <ReferenceSelectWidget
-                :graph-slug="props.graphSlug"
-                node-alias="appellative_status_ascribed_name_language"
-                :initial-value="
-                    props.tileData?.aliased_data
-                        .appellative_status_ascribed_name_language
+                        ?.interchange_value
                 "
                 :mode="EDIT"
             />
             <ReferenceSelectWidget
                 :graph-slug="props.graphSlug"
                 node-alias="appellative_status_ascribed_relation"
-                :initial-value="
+                :value="
                     props.tileData?.aliased_data
-                        .appellative_status_ascribed_relation
+                        .appellative_status_ascribed_relation?.interchange_value
                 "
                 :mode="EDIT"
             />
             <ReferenceSelectWidget
                 :graph-slug="props.graphSlug"
-                node-alias="appellative_status_status"
-                :initial-value="
-                    props.tileData?.aliased_data.appellative_status_status
+                node-alias="appellative_status_ascribed_name_language"
+                :value="
+                    props.tileData?.aliased_data
+                        .appellative_status_ascribed_name_language
+                        ?.interchange_value
                 "
                 :mode="EDIT"
             />
-            <ReferenceSelectWidget
+            <ResourceInstanceMultiSelectWidget
                 :graph-slug="props.graphSlug"
-                node-alias="appellative_status_status_metatype"
-                :initial-value="
+                node-alias="appellative_status_data_assignment_actor"
+                :value="
                     props.tileData?.aliased_data
-                        .appellative_status_status_metatype
+                        ?.appellative_status_data_assignment_actor
+                        ?.interchange_value
                 "
                 :mode="EDIT"
             />
-            <ReferenceSelectWidget
+            <ResourceInstanceMultiSelectWidget
                 :graph-slug="props.graphSlug"
-                node-alias="appellative_status_data_assignment_type"
-                :initial-value="
+                node-alias="appellative_status_data_assignment_object_used"
+                :value="
                     props.tileData?.aliased_data
-                        .appellative_status_data_assignment_type
+                        ?.appellative_status_data_assignment_object_used
+                        ?.interchange_value
                 "
                 :mode="EDIT"
             />

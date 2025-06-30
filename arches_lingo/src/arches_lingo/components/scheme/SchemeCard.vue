@@ -25,13 +25,31 @@ const schemeDescriptor = extractDescriptors(scheme, systemLanguage);
     <RouterLink :to="schemeURL">
         <Card>
             <template #title>
-                <p v-if="scheme.resourceinstanceid === NEW">
-                    {{ $gettext("Create a new scheme") }}
-                </p>
-                <p v-else>{{ schemeDescriptor.name }}</p>
+                <div v-if="scheme.resourceinstanceid === NEW">
+                    {{ $gettext("New Scheme") }}
+                </div>
+                <div
+                    v-else
+                    class="scheme-card"
+                >
+                    {{ schemeDescriptor.name }}
+                </div>
             </template>
             <template #content>
-                <p>{{ schemeDescriptor.description }}</p>
+                <div v-if="scheme.resourceinstanceid === NEW">
+                    <div class="scheme-circle">
+                        <i class="pi pi-share-alt new-scheme-icon"></i>
+                    </div>
+                </div>
+                <span>{{ schemeDescriptor.description }}</span>
+            </template>
+            <template
+                v-if="scheme.resourceinstanceid === NEW"
+                #footer
+            >
+                <span>{{
+                    $gettext("Add a new thesaurus, manage concept hierarchies")
+                }}</span>
             </template>
         </Card>
     </RouterLink>
@@ -47,13 +65,16 @@ a {
     color: var(--p-button-primary-color);
     width: 15rem;
     height: 15rem;
-    margin: 0.5rem;
+    margin: 0.25rem;
+    border-radius: 0.125rem;
 }
 
 :deep(.p-card-body) {
     flex-grow: 1;
     text-align: center;
     overflow: hidden;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
 }
 
 :deep(.p-card-content) {
@@ -61,7 +82,22 @@ a {
     text-overflow: ellipsis;
 }
 
-:deep(.p-card-content > p) {
-    margin: 0;
+:deep(.p-card-content > span),
+:deep(.p-card-footer > span) {
+    font-size: var(--p-lingo-font-size-xsmall);
+}
+
+.scheme-circle {
+    display: inline-block;
+    text-align: center;
+    padding: 1.25rem;
+    margin: 1rem;
+    border-radius: 50%;
+    background: var(--p-surface-400);
+    border: 0.06rem solid var(--p-surface-900);
+}
+
+.new-scheme-icon {
+    font-size: var(--p-lingo-font-size-xxlarge);
 }
 </style>

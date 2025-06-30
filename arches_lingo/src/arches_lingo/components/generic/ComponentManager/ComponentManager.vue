@@ -109,9 +109,10 @@ provide("refreshReportSection", refreshReportSection);
 </script>
 
 <template>
-    <Splitter style="height: 100%">
+    <Splitter style="height: 100%; min-height: 0; border-radius: 0">
         <SplitterPanel
             v-show="editorState !== MAXIMIZED"
+            class="content"
             :size="50"
         >
             <div class="splitter-panel-content">
@@ -134,6 +135,7 @@ provide("refreshReportSection", refreshReportSection);
         <SplitterPanel
             v-if="editorState !== CLOSED"
             :size="50"
+            class="splitter-panel-parent"
         >
             <ComponentEditor
                 :key="editorKey"
@@ -159,9 +161,57 @@ provide("refreshReportSection", refreshReportSection);
 </template>
 
 <style scoped>
+.content {
+    overflow: auto;
+    padding-bottom: 2rem;
+}
+
 .splitter-panel-content {
     overflow: auto;
-    padding: 1rem;
-    padding-top: 0;
+}
+
+:deep(.p-splitter) {
+    border-radius: 0;
+}
+
+:deep(.viewer-section) {
+    padding: 1rem 1rem 1.25rem 1rem;
+}
+
+:deep(.section-message) {
+    padding: 0.5rem 0;
+    color: var(--p-inputtext-placeholder-color);
+}
+
+:deep(.section-header) {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 0.06rem solid var(--p-form-field-border-color);
+    padding-bottom: 0.5rem;
+}
+
+:deep(.section-header h2) {
+    margin: 0;
+    font-size: var(--p-lingo-font-size-large);
+    font-weight: var(--p-lingo-font-weight-normal);
+    color: var(--p-neutral-500);
+}
+
+:deep(.section-header .add-button) {
+    height: 2rem;
+    font-size: var(--p-lingo-font-size-smallnormal);
+    font-weight: var(--p-lingo-font-weight-normal);
+    min-width: 10rem;
+    border-radius: 0.125rem;
+}
+
+.p-splitter .p-splitterpanel .splitter-panel-content .p-skeleton {
+    min-height: 9rem;
+    margin-top: 1rem;
+}
+
+.p-splitterpanel:has(> .splitter-panel-content) {
+    overflow-y: auto;
 }
 </style>

@@ -6,9 +6,10 @@ build-backend = "setuptools.build_meta"
 name = "arches_lingo"
 readme = "README.md"
 authors = [
-    {name = "Farallon Geographics, Inc", email = "dev@fargeo.com"}
+    {"name" = "Arches Project"}
 ]
-license = {text = "GNU AGPL3"}
+license = "AGPL-3.0-or-later"
+description = "An Arches application designed to support the creation of thesaurus/vocabulary data."
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Programming Language :: Python",
@@ -21,7 +22,6 @@ classifiers = [
     "Framework :: Django :: 5.1",
     "Intended Audience :: Developers",
     "Intended Audience :: Information Technology",
-    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
 ]
 requires-python = ">=3.11"
 dependencies = [
@@ -30,7 +30,13 @@ dependencies = [
     "arches_querysets @ git+https://github.com/archesproject/arches-querysets@main",
     "arches_controlled_lists @ git+https://github.com/archesproject/arches-controlled-lists.git@main",
 ]
-version = "0.0.1"
+version = "1.0.0a0"
+
+[project.urls]
+Homepage = "https://archesproject.org/"
+Documentation = "https://arches.readthedocs.io"
+Repository = "https://github.com/archesproject/arches-lingo.git"
+Issues = "https://github.com/archesproject/arches-lingo/issues"
 
 [dependency-groups]
 dev = [
