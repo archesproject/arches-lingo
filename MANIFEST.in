@@ -1,1 +1,2 @@
 exclude arches_lingo/settings_local.py
+global-exclude *.pyc
