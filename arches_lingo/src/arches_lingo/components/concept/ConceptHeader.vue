@@ -266,6 +266,7 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
 <style scoped>
 .concept-header {
     padding-inline-start: 1rem;
+    padding-top: 1rem;
     padding-inline-end: 1.5rem;
     padding-bottom: 1rem;
     background: var(--p-header-background);
@@ -273,6 +274,7 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
 }
 
 h2 {
+    margin-top: 0;
     font-size: var(--p-lingo-font-size-large);
     font-weight: var(--p-lingo-font-weight-normal);
 }

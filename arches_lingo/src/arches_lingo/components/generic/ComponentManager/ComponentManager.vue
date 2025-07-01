@@ -119,6 +119,7 @@ function refreshReportSection(componentName: string) {
 }
 
 provide("openEditor", openEditor);
+provide("closeEditor", closeEditor);
 provide("updateAfterComponentDeletion", updateAfterComponentDeletion);
 provide("refreshReportSection", refreshReportSection);
 </script>
