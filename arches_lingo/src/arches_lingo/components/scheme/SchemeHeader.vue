@@ -2,16 +2,23 @@
 import { inject, onMounted, ref } from "vue";
 import { useGettext } from "vue3-gettext";
 
+import { useConfirm } from "primevue/useconfirm";
+import { useRouter } from "vue-router";
 import { useToast } from "primevue/usetoast";
 import Skeleton from "primevue/skeleton";
 
+import ConfirmDialog from "primevue/confirmdialog";
+import Button from "primevue/button";
+
 import {
+    DANGER,
     DEFAULT_ERROR_TOAST_LIFE,
     ERROR,
+    SECONDARY,
     systemLanguageKey,
 } from "@/arches_lingo/constants.ts";
 
-import { fetchLingoResource } from "@/arches_lingo/api.ts";
+import { deleteLingoResource, fetchLingoResource } from "@/arches_lingo/api.ts";
 import { extractDescriptors } from "@/arches_lingo/utils.ts";
 
 import type {
@@ -20,6 +27,7 @@ import type {
     SchemeHeader,
 } from "@/arches_lingo/types.ts";
 import type { Language } from "@/arches_component_lab/types.ts";
+import { routeNames } from "@/arches_lingo/routes.ts";
 
 const props = defineProps<{
     mode: DataComponentMode;
@@ -30,6 +38,8 @@ const props = defineProps<{
     nodegroupAlias: string;
 }>();
 
+const confirm = useConfirm();
+const router = useRouter();
 const toast = useToast();
 const { $gettext } = useGettext();
 const systemLanguage = inject(systemLanguageKey) as Language;
@@ -77,9 +87,51 @@ onMounted(async () => {
         isLoading.value = false;
     }
 });
+
+function confirmDelete() {
+    confirm.require({
+        header: $gettext("Confirmation"),
+        message: $gettext("Are you sure you want to delete this scheme?"),
+        group: "delete-scheme",
+        accept: () => {
+            if (!scheme.value) {
+                return;
+            }
+
+            try {
+                deleteLingoResource(
+                    props.graphSlug,
+                    scheme.value.resourceinstanceid,
+                ).then(() => {
+                    router.push({
+                        name: routeNames.schemes,
+                    });
+                });
+            } catch (error) {
+                toast.add({
+                    severity: ERROR,
+                    life: DEFAULT_ERROR_TOAST_LIFE,
+                    summary: $gettext("Error deleting scheme"),
+                    detail: error instanceof Error ? error.message : undefined,
+                });
+            }
+        },
+        rejectProps: {
+            label: $gettext("Cancel"),
+            severity: SECONDARY,
+            outlined: true,
+        },
+        acceptProps: {
+            label: $gettext("Delete"),
+            severity: DANGER,
+        },
+    });
+}
 </script>
 
 <template>
+    <ConfirmDialog group="delete-scheme" />
+
     <Skeleton
         v-if="isLoading"
         style="width: 100%"
@@ -92,6 +144,14 @@ onMounted(async () => {
         <div class="scheme-header-panel">
             <div class="header-row">
                 <h2 v-if="data?.descriptor?.name">
+                    <Button
+                        icon="pi pi-trash"
+                        severity="danger"
+                        rounded
+                        style="margin-inline-end: 0.75rem"
+                        :aria-label="$gettext('Delete Scheme')"
+                        @click="confirmDelete"
+                    />
                     <span>
                         {{ data?.descriptor?.name }}
 
@@ -162,17 +222,17 @@ onMounted(async () => {
 
 <style scoped>
 .scheme-header {
-    padding: 1rem 1rem 1.25rem 1rem;
     background: var(--p-header-background);
+    padding-inline-start: 1rem;
+    padding-inline-end: 1.25rem;
+    padding-bottom: 1rem;
     border-bottom: 0.06rem solid var(--p-header-border);
 }
 
 .scheme-header-panel {
-    padding-bottom: 0.5rem;
 }
 
 h2 {
-    margin: 0;
     font-size: var(--p-lingo-font-size-large);
     font-weight: var(--p-lingo-font-weight-normal);
 }
@@ -225,7 +285,6 @@ h2 {
 
 .header-item {
     display: inline-flex;
-    margin-inline-end: 1rem;
     align-items: baseline;
 }
 
