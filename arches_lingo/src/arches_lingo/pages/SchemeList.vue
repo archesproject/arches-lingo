@@ -2,6 +2,8 @@
 import { onMounted, ref } from "vue";
 import { useGettext } from "vue3-gettext";
 
+import Skeleton from "primevue/skeleton";
+
 import { useToast } from "primevue/usetoast";
 import {
     DEFAULT_ERROR_TOAST_LIFE,
@@ -17,6 +19,7 @@ import type { ResourceInstanceResult } from "@/arches_lingo/types";
 const toast = useToast();
 const { $gettext } = useGettext();
 
+const isLoading = ref(true);
 const schemes = ref<ResourceInstanceResult[]>([]);
 
 onMounted(async () => {
@@ -30,14 +33,46 @@ onMounted(async () => {
             detail: error instanceof Error ? error.message : undefined,
         });
     }
+
     schemes.value.unshift({
         resourceinstanceid: NEW,
         descriptors: {},
     });
+
+    isLoading.value = false;
 });
 </script>
 
 <template>
+    <Skeleton
+        v-if="isLoading"
+        style="margin: 1rem; height: 2rem"
+    />
+    <Skeleton
+        v-if="isLoading"
+        style="margin: 1rem; height: 2rem"
+    />
+    <Skeleton
+        v-if="isLoading"
+        style="margin: 1rem; height: 2rem"
+    />
+    <Skeleton
+        v-if="isLoading"
+        style="margin: 1rem; height: 2rem"
+    />
+    <Skeleton
+        v-if="isLoading"
+        style="margin: 1rem; height: 2rem"
+    />
+    <Skeleton
+        v-if="isLoading"
+        style="margin: 1rem; height: 2rem"
+    />
+    <Skeleton
+        v-if="isLoading"
+        style="margin: 1rem; height: 2rem"
+    />
+
     <div class="scheme-cards-container">
         <ul class="scheme-cards">
             <li

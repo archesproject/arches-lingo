@@ -184,6 +184,10 @@ export function getParentLabels(
 ): string {
     const arrowIcon = " → ";
 
+    if (!item.parents || item.parents.length === 0) {
+        return "";
+    }
+
     return item.parents[0].reduce((acc, parent, index) => {
         const label = getItemLabel(
             parent,

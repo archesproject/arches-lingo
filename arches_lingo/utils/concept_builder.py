@@ -138,7 +138,8 @@ class ConceptBuilder:
         ).annotate(labels=self.labels_subquery(SCHEME_NAME_NODEGROUP))
 
     def lookup_scheme(self, scheme_id: str):
-        return [scheme for scheme in self.schemes if str(scheme.pk) == scheme_id][0]
+        schemes = [scheme for scheme in self.schemes if str(scheme.pk) == scheme_id]
+        return schemes[0] if schemes else None
 
     def serialize_scheme(self, scheme: ResourceInstance, *, children=True):
         scheme_id: str = str(scheme.pk)
@@ -192,14 +193,20 @@ class ConceptBuilder:
             if len(paths) > 1:
                 self.polyhierarchical_concepts.add(conceptid)
 
-            data["parents"] = [
-                [self.serialize_scheme(self.lookup_scheme(scheme_id), children=False)]
-                + [
-                    self.serialize_concept(parent_id, children=False)
-                    for parent_id in concept_ids
+            data["parents"] = []
+            for scheme_id, *parent_concept_ids in paths:
+                scheme_object = self.lookup_scheme(scheme_id)
+                if scheme_object is None:
+                    # skip any path whose scheme_id isn’t found
+                    continue
+
+                serialized_scheme = self.serialize_scheme(scheme_object, children=False)
+                serialized_parent_concepts = [
+                    self.serialize_concept(parent_concept_id, children=False)
+                    for parent_concept_id in parent_concept_ids
                 ]
-                for scheme_id, *concept_ids in paths
-            ]
+
+                data["parents"].append([serialized_scheme] + serialized_parent_concepts)
 
             self_and_parent_ids = set()
             for path in paths:
