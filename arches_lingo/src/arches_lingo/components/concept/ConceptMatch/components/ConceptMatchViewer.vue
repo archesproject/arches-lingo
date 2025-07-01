@@ -85,22 +85,23 @@ const metaStringLabel: MetaStringText = {
                 />
             </template>
             <template #language="{ rowData }">
-                <RouterLink
-                    :to="{
-                        name: routeNames.concept,
-                        params: {
-                            id: rowData.aliased_data
-                                .match_status_ascribed_comparate
-                                ?.interchange_value[0].resource_id,
-                        },
-                    }"
-                    class="text-link"
+                <div
+                    v-for="item in rowData.aliased_data
+                        .match_status_ascribed_comparate?.interchange_value"
+                    :key="item.resource_id"
                 >
-                    {{
-                        rowData.aliased_data.match_status_ascribed_comparate
-                            ?.display_value
-                    }}
-                </RouterLink>
+                    <RouterLink
+                        :to="{
+                            name: routeNames.concept,
+                            params: {
+                                id: item.resource_id,
+                            },
+                        }"
+                        class="text-link"
+                    >
+                        {{ item.display_value }}
+                    </RouterLink>
+                </div>
             </template>
             <template #drawer="{ rowData }">
                 <ResourceInstanceMultiSelectWidget
