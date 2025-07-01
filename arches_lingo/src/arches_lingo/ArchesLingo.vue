@@ -122,8 +122,16 @@ main {
 
 <!-- NOT scoped because dialog gets appended to <body> and is unreachable via scoped styles -->
 <style>
+.p-datepicker-panel,
 .p-tree-node-label,
-.p-toast {
+.p-toast,
+.p-inputtext,
+.p-treeselect-empty-message,
+.p-treeselect-option,
+.p-select-option,
+.p-select-empty-message,
+.p-multiselect-empty-message,
+.p-multiselect-option {
     font-family: var(--p-lingo-font-family) !important;
 }
 </style>
