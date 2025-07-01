@@ -119,6 +119,7 @@ function refreshReportSection(componentName: string) {
 }
 
 provide("openEditor", openEditor);
+provide("closeEditor", closeEditor);
 provide("updateAfterComponentDeletion", updateAfterComponentDeletion);
 provide("refreshReportSection", refreshReportSection);
 </script>
@@ -192,7 +193,6 @@ provide("refreshReportSection", refreshReportSection);
 <style scoped>
 .content {
     overflow: auto;
-    padding-bottom: 2rem;
 }
 
 .splitter-panel-content {

@@ -10,6 +10,7 @@ import ResourceInstanceMultiSelectWidget from "@/arches_component_lab/widgets/Re
 import NonLocalizedStringWidget from "@/arches_component_lab/widgets/NonLocalizedStringWidget/NonLocalizedStringWidget.vue";
 
 import { VIEW } from "@/arches_lingo/constants.ts";
+import { routeNames } from "@/arches_lingo/routes.ts";
 
 import type {
     ConceptRelationStatus,
@@ -60,17 +61,21 @@ const metaStringLabel: MetaStringText = {
             :nodegroup-alias="props.nodegroupAlias"
         >
             <template #name="{ rowData }">
-                <!-- non-standard -- we only want to display the resource ID -->
-                <NonLocalizedStringWidget
-                    :graph-slug="props.graphSlug"
-                    node-alias="relation_status_ascribed_comparate"
-                    :value="
-                        rowData.aliased_data?.relation_status_ascribed_comparate
-                            ?.interchange_value[0].resource_id
-                    "
-                    :mode="VIEW"
-                    :show-label="false"
-                />
+                <div
+                    v-for="item in rowData.aliased_data
+                        .relation_status_ascribed_comparate?.interchange_value"
+                    :key="item.resource_id"
+                    style="white-space: nowrap"
+                >
+                    <!-- non-standard -- we only want to display the resource ID -->
+                    <NonLocalizedStringWidget
+                        :graph-slug="props.graphSlug"
+                        node-alias="relation_status_ascribed_comparate"
+                        :value="item.resource_id"
+                        :mode="VIEW"
+                        :show-label="false"
+                    />
+                </div>
             </template>
             <template #type="{ rowData }">
                 <ReferenceSelectWidget
@@ -85,16 +90,23 @@ const metaStringLabel: MetaStringText = {
                 />
             </template>
             <template #language="{ rowData }">
-                <ResourceInstanceMultiSelectWidget
-                    :graph-slug="props.graphSlug"
-                    node-alias="relation_status_ascribed_comparate"
-                    :value="
-                        rowData.aliased_data?.relation_status_ascribed_comparate
-                            ?.interchange_value
-                    "
-                    :mode="VIEW"
-                    :show-label="false"
-                />
+                <div
+                    v-for="item in rowData.aliased_data
+                        .relation_status_ascribed_comparate?.interchange_value"
+                    :key="item.resource_id"
+                >
+                    <RouterLink
+                        :to="{
+                            name: routeNames.concept,
+                            params: {
+                                id: item.resource_id,
+                            },
+                        }"
+                        class="text-link"
+                    >
+                        {{ item.display_value }}
+                    </RouterLink>
+                </div>
             </template>
             <template #drawer="{ rowData }">
                 <ResourceInstanceMultiSelectWidget
@@ -120,3 +132,9 @@ const metaStringLabel: MetaStringText = {
         </MetaStringViewer>
     </div>
 </template>
+
+<style scoped>
+.text-link {
+    color: var(--p-primary-500);
+}
+</style>

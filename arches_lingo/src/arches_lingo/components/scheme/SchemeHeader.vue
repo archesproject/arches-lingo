@@ -38,6 +38,8 @@ const props = defineProps<{
     nodegroupAlias: string;
 }>();
 
+const refreshSchemeHierarchy = inject<() => void>("refreshSchemeHierarchy");
+
 const confirm = useConfirm();
 const router = useRouter();
 const toast = useToast();
@@ -106,6 +108,8 @@ function confirmDelete() {
                     router.push({
                         name: routeNames.schemes,
                     });
+
+                    refreshSchemeHierarchy!();
                 });
             } catch (error) {
                 toast.add({
@@ -224,15 +228,14 @@ function confirmDelete() {
 .scheme-header {
     background: var(--p-header-background);
     padding-inline-start: 1rem;
+    padding-top: 1rem;
     padding-inline-end: 1.25rem;
     padding-bottom: 1rem;
     border-bottom: 0.06rem solid var(--p-header-border);
 }
 
-.scheme-header-panel {
-}
-
 h2 {
+    margin-top: 0;
     font-size: var(--p-lingo-font-size-large);
     font-weight: var(--p-lingo-font-weight-normal);
 }
