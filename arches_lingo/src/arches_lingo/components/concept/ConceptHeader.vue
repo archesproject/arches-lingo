@@ -218,9 +218,12 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                     </span>
                     <span class="header-item-value">
                         <RouterLink
+                            v-if="data?.partOfScheme?.interchange_value"
                             :to="`/scheme/${data?.partOfScheme?.interchange_value}`"
-                            >{{ data?.partOfScheme?.display_value }}</RouterLink
                         >
+                            {{ data?.partOfScheme?.display_value }}
+                        </RouterLink>
+                        <span v-else>--</span>
                     </span>
                 </div>
 
