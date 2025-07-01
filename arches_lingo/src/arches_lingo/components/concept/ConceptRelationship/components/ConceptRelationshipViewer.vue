@@ -10,6 +10,7 @@ import ResourceInstanceMultiSelectWidget from "@/arches_component_lab/widgets/Re
 import NonLocalizedStringWidget from "@/arches_component_lab/widgets/NonLocalizedStringWidget/NonLocalizedStringWidget.vue";
 
 import { VIEW } from "@/arches_lingo/constants.ts";
+import { routeNames } from "@/arches_lingo/routes.ts";
 
 import type {
     ConceptRelationStatus,
@@ -85,16 +86,22 @@ const metaStringLabel: MetaStringText = {
                 />
             </template>
             <template #language="{ rowData }">
-                <ResourceInstanceMultiSelectWidget
-                    :graph-slug="props.graphSlug"
-                    node-alias="relation_status_ascribed_comparate"
-                    :value="
-                        rowData.aliased_data?.relation_status_ascribed_comparate
-                            ?.interchange_value
-                    "
-                    :mode="VIEW"
-                    :show-label="false"
-                />
+                <RouterLink
+                    :to="{
+                        name: routeNames.concept,
+                        params: {
+                            id: rowData.aliased_data
+                                .relation_status_ascribed_comparate
+                                ?.interchange_value[0].resource_id,
+                        },
+                    }"
+                    class="text-link"
+                >
+                    {{
+                        rowData.aliased_data.relation_status_ascribed_comparate
+                            ?.display_value
+                    }}
+                </RouterLink>
             </template>
             <template #drawer="{ rowData }">
                 <ResourceInstanceMultiSelectWidget
@@ -120,3 +127,9 @@ const metaStringLabel: MetaStringText = {
         </MetaStringViewer>
     </div>
 </template>
+
+<style scoped>
+.text-link {
+    color: var(--p-primary-500);
+}
+</style>

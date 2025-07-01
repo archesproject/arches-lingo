@@ -216,6 +216,7 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
 .lineage-section {
     margin-inline-start: 1rem;
     margin-top: 1rem;
+    margin-bottom: 1rem;
     display: flex;
     flex-direction: row;
     align-items: start;

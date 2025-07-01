@@ -12,6 +12,8 @@ import ResourceInstanceMultiSelectWidget from "@/arches_component_lab/widgets/Re
 
 import { VIEW } from "@/arches_lingo/constants.ts";
 
+import { routeNames } from "@/arches_lingo/routes.ts";
+
 import type {
     ConceptMatchStatus,
     MetaStringText,
@@ -83,16 +85,22 @@ const metaStringLabel: MetaStringText = {
                 />
             </template>
             <template #language="{ rowData }">
-                <ResourceInstanceMultiSelectWidget
-                    :graph-slug="props.graphSlug"
-                    node-alias="match_status_ascribed_comparate"
-                    :value="
+                <RouterLink
+                    :to="{
+                        name: routeNames.concept,
+                        params: {
+                            id: rowData.aliased_data
+                                .match_status_ascribed_comparate
+                                ?.interchange_value[0].resource_id,
+                        },
+                    }"
+                    class="text-link"
+                >
+                    {{
                         rowData.aliased_data.match_status_ascribed_comparate
-                            ?.interchange_value
-                    "
-                    :mode="VIEW"
-                    :show-label="false"
-                />
+                            ?.display_value
+                    }}
+                </RouterLink>
             </template>
             <template #drawer="{ rowData }">
                 <ResourceInstanceMultiSelectWidget
@@ -117,3 +125,13 @@ const metaStringLabel: MetaStringText = {
         </MetaStringViewer>
     </div>
 </template>
+
+<style scoped>
+.text-link {
+    color: var(--p-primary-500);
+}
+
+:deep(a) {
+    color: var(--p-primary-500);
+}
+</style>
