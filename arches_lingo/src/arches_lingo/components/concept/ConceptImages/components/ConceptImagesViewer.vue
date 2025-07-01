@@ -35,9 +35,7 @@ const props = defineProps<{
 
 const openEditor =
     inject<(componentName: string, tileId?: string) => void>("openEditor");
-const updateAfterComponentDeletion = inject<
-    (componentName: string, tileId: string) => void
->("updateAfterComponentDeletion");
+const closeEditor = inject<(() => void) | undefined>("closeEditor");
 
 const configurationError = ref();
 const isLoading = ref(true);
@@ -104,10 +102,7 @@ function confirmDelete(removedResourceInstanceId: string) {
                         resource,
                     );
 
-                    updateAfterComponentDeletion!(
-                        props.componentName,
-                        props.tileData.tileid!,
-                    );
+                    closeEditor!();
                 }
             }
         },

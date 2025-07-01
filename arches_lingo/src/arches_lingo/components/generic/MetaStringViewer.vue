@@ -40,6 +40,7 @@ const updateAfterComponentDeletion = inject<
 const refreshReportSection = inject<(componentName: string) => void>(
     "refreshReportSection",
 );
+const refreshSchemeHierarchy = inject<() => void>("refreshSchemeHierarchy");
 
 const expandedRows = ref([]);
 
@@ -69,6 +70,7 @@ async function deleteSectionValue(tileId: string) {
 
         refreshReportSection!(props.componentName);
         updateAfterComponentDeletion!(props.componentName, tileId);
+        refreshSchemeHierarchy!();
     } catch (error) {
         toast.add({
             severity: ERROR,

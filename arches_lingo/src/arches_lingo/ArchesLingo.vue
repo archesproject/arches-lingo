@@ -44,6 +44,14 @@ const { $gettext } = useGettext();
 
 const isNavExpanded = ref(false);
 
+const schemeHierarchyKey = ref(0);
+
+const refreshSchemeHierarchy = function () {
+    schemeHierarchyKey.value++;
+};
+provide("schemeHierarchyKey", schemeHierarchyKey);
+provide("refreshSchemeHierarchy", refreshSchemeHierarchy);
+
 async function checkUserAuthentication(
     to: RouteLocationNormalizedLoadedGeneric,
 ) {

@@ -48,6 +48,8 @@ const refreshReportSection = inject<(componentName: string) => void>(
     "refreshReportSection",
 );
 
+const refreshSchemeHierarchy = inject<() => void>("refreshSchemeHierarchy");
+
 const formRef = useTemplateRef("form");
 const isSaving = ref(false);
 
@@ -100,6 +102,7 @@ async function save(e: FormSubmitEvent) {
         }
 
         refreshReportSection!(props.componentName);
+        refreshSchemeHierarchy!();
     } catch (error) {
         toast.add({
             severity: ERROR,

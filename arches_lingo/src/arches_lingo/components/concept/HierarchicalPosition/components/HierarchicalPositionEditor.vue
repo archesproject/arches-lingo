@@ -39,6 +39,7 @@ const openEditor =
 const refreshReportSection = inject<(componentName: string) => void>(
     "refreshReportSection",
 );
+const refreshSchemeHierarchy = inject<() => void>("refreshSchemeHierarchy");
 
 const formRef = useTemplateRef("form");
 const isSaving = ref(false);
@@ -69,6 +70,7 @@ async function save(e: FormSubmitEvent) {
 
     try {
         const formData = e.values;
+        console.log(props.resourceInstanceId, formData);
 
         let updatedTileId;
 
@@ -92,8 +94,8 @@ async function save(e: FormSubmitEvent) {
             let nodegroupAlias;
             let values;
             if (
-                formData.classification_status_ascribed_classification[0]
-                    .resourceId == props.schemeId
+                formData.classification_status_ascribed_classification
+                    .resource_id == props.schemeId
             ) {
                 nodegroupAlias = "top_concept_of";
                 values = {
@@ -119,6 +121,7 @@ async function save(e: FormSubmitEvent) {
         }
 
         openEditor!(props.componentName, updatedTileId);
+        refreshSchemeHierarchy!();
     } catch (error) {
         console.error(error);
     } finally {

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { inject, ref } from "vue";
 
 import Button from "primevue/button";
 import Menubar from "primevue/menubar";
@@ -17,6 +17,8 @@ const props = defineProps<{
     isNavExpanded: boolean;
 }>();
 
+const schemeHierarchyKey = inject<number>("schemeHierarchyKey");
+
 const mobileMenu = ref();
 </script>
 
@@ -24,7 +26,7 @@ const mobileMenu = ref();
     <Menubar>
         <template #start>
             <ArchesLingoBadge v-if="!props.isNavExpanded" />
-            <SchemeHierarchy />
+            <SchemeHierarchy :key="schemeHierarchyKey" />
             <SearchDialog />
         </template>
         <template #end>

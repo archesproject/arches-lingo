@@ -53,6 +53,14 @@ function toggleSize() {
         emit(MAXIMIZE);
     }
 }
+
+function onCancel() {
+    if (isFormDirty.value) {
+        componentEditorFormRef.value.onReset();
+    } else {
+        emit(CLOSE);
+    }
+}
 </script>
 
 <template>
@@ -103,7 +111,7 @@ function toggleSize() {
             <Button
                 :label="$gettext('Cancel')"
                 severity="danger"
-                @click="componentEditorFormRef.onReset()"
+                @click="onCancel"
             />
         </div>
     </div>
