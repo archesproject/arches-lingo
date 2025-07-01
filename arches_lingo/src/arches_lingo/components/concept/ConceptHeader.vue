@@ -39,6 +39,8 @@ const props = defineProps<{
     nodegroupAlias: string;
 }>();
 
+const refreshSchemeHierarchy = inject<() => void>("refreshSchemeHierarchy");
+
 const toast = useToast();
 const { $gettext } = useGettext();
 const confirm = useConfirm();
@@ -93,16 +95,12 @@ function confirmDelete() {
                         concept.value!.aliased_data?.part_of_scheme
                             ?.aliased_data.part_of_scheme?.interchange_value;
 
-                    const targetRouteLocation = {
+                    router.push({
                         name: routeNames.scheme,
                         params: { id: schemeIdentifier },
-                    };
+                    });
 
-                    const absoluteUrlForSchemePage =
-                        router.resolve(targetRouteLocation).href;
-
-                    // Force full page reload to ensure the Hierarchy Viewer is refreshed
-                    window.location.replace(absoluteUrlForSchemePage);
+                    refreshSchemeHierarchy!();
                 });
             } catch (error) {
                 toast.add({

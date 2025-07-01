@@ -51,6 +51,8 @@ const refreshReportSection = inject<(componentName: string) => void>(
     "refreshReportSection",
 );
 
+const refreshSchemeHierarchy = inject<() => void>("refreshSchemeHierarchy");
+
 function getIcon(item: SearchResultItem) {
     //TODO need a better way to determine if item is a scheme or not
     return item.id === props.schemeId ? "pi pi-folder" : "pi pi-tag";
@@ -95,6 +97,8 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
                     hierarchy.tileid!,
                 );
             }
+
+            refreshSchemeHierarchy!();
         } else {
             toast.add({
                 severity: ERROR,

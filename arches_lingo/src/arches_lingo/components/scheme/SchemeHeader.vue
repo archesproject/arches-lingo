@@ -38,6 +38,8 @@ const props = defineProps<{
     nodegroupAlias: string;
 }>();
 
+const refreshSchemeHierarchy = inject<() => void>("refreshSchemeHierarchy");
+
 const confirm = useConfirm();
 const router = useRouter();
 const toast = useToast();
@@ -106,6 +108,8 @@ function confirmDelete() {
                     router.push({
                         name: routeNames.schemes,
                     });
+
+                    refreshSchemeHierarchy!();
                 });
             } catch (error) {
                 toast.add({
