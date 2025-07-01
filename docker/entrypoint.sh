@@ -144,6 +144,7 @@ run_gunicorn() {
 	echo ""
 	cd ${APP_ROOT}
     echo "Running Django"
+	service memcached start&
 	exec /bin/bash -c "source ../ENV/bin/activate && (/etc/init.d/nginx start&) && gunicorn arches_lingo.wsgi"
 }
 
@@ -157,6 +158,7 @@ reset_database() {
 	(test $(echo "SELECT FROM pg_database WHERE datname = 'template_postgis'" | ../ENV/bin/python manage.py dbshell | grep -c "1 row") = 1 || \
 	(echo "CREATE DATABASE template_postgis" | ../ENV/bin/python manage.py dbshell --database postgres && \
 	echo "CREATE EXTENSION postgis" | ../ENV/bin/python manage.py dbshell --database postgres))
+	service memcached start&
 	../ENV/bin/python manage.py packages -o load_package -a arches_lingo -db -dev -y
 	../ENV/bin/python manage.py loaddata tests/fixtures/data/FISH_Thesauri_example_data_resources.json tests/fixtures/data/FISH_Thesauri_example_data_tiles.json
 	../ENV/bin/python manage.py es reindex_database -mp

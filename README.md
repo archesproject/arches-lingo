@@ -73,8 +73,8 @@ For developer install instructions, see the [Developer Setup](#developer-setup-f
 4. Next ensure arches and arches_lingo are included as dependencies in package.json
     ```
     "dependencies": {
-        "arches": "archesproject/arches#stable/8.0.1",
-        "arches_lingo": "archesproject/arches-lingo#alpha/1.0.0a0"
+        "arches": "archesproject/arches#dev/8.0.x",
+        "arches_lingo": "archesproject/arches-lingo#main"
     }
     ```
 
