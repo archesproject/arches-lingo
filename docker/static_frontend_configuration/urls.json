@@ -1343,9 +1343,48 @@
             "params": []
         }
     ],
+    "api-card-data": [
+        {
+            "url": "/arches-component-lab/api/card-data/{graph_slug}/{nodegroup_grouping_node_alias}",
+            "params": [
+                "graph_slug",
+                "nodegroup_grouping_node_alias"
+            ]
+        }
+    ],
+    "api-card-x-node-x-widget": [
+        {
+            "url": "/arches-component-lab/api/widget-data/{graph_slug}/{node_alias}",
+            "params": [
+                "graph_slug",
+                "node_alias"
+            ]
+        }
+    ],
+    "api-card-x-node-x-widget-list-from-nodegroup": [
+        {
+            "url": "/arches-component-lab/api/card-x-node-x-widget-list-from-nodegroup/{graph_slug}/{nodegroup_grouping_node_alias}",
+            "params": [
+                "graph_slug",
+                "nodegroup_grouping_node_alias"
+            ]
+        }
+    ],
     "api-concepts": [
         {
             "url": "/api/concept-tree",
+            "params": []
+        }
+    ],
+    "api-lingo-concept-relationships": [
+        {
+            "url": "/api/lingo/concept-relationships",
+            "params": []
+        }
+    ],
+    "api-lingo-concept-resources": [
+        {
+            "url": "/api/lingo/concept-resources",
             "params": []
         }
     ],
@@ -1419,12 +1458,20 @@
             "params": []
         }
     ],
-    "api-widget-data": [
+    "api-tile": [
         {
-            "url": "/arches-component-lab/api/widget-data/{graph_slug}/{node_alias}",
+            "url": "/arches-component-lab/api/tile/{graph}/{nodegroup_alias}/{pk}",
             "params": [
-                "graph_slug",
-                "node_alias"
+                "graph",
+                "nodegroup_alias",
+                "pk"
+            ]
+        },
+        {
+            "url": "/arches-component-lab/api/tile/{graph}/{nodegroup_alias}",
+            "params": [
+                "graph",
+                "nodegroup_alias"
             ]
         }
     ],
@@ -1858,6 +1905,14 @@
         {
             "url": "/tiles/download_files",
             "params": []
+        }
+    ],
+    "draft_graph_api": [
+        {
+            "url": "/draft_graph/{graph_id}",
+            "params": [
+                "graph_id"
+            ]
         }
     ],
     "dropdown": [
@@ -2380,6 +2435,12 @@
     "oauth2:revoke-token": [
         {
             "url": "/o/revoke_token/",
+            "params": []
+        }
+    ],
+    "oauth2:rp-initiated-logout": [
+        {
+            "url": "/o/logout/",
             "params": []
         }
     ],
