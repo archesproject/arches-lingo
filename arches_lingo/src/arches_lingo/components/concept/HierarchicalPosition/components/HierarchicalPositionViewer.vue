@@ -121,7 +121,10 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
 </script>
 
 <template>
-    <div class="viewer-section">
+    <div
+        class="viewer-section"
+        style="padding-bottom: 0"
+    >
         <ConfirmDialog
             :pt="{ root: { style: { fontFamily: 'sans-serif' } } }"
             group="delete-parent"
@@ -138,63 +141,70 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
             ></Button>
         </div>
 
-        <div class="lineage-section">
-            <div
-                v-for="(hierarchy, index) in props.data"
-                :key="index"
-            >
-                <div style="margin-bottom: 0.5rem">
-                    <span
-                        style="
-                            color: var(--p-neutral-500);
-                            font-weight: var(--p-lingo-font-weight-normal);
-                            font-size: var(--p-lingo-font-size-medium);
-                        "
-                    >
-                        {{ $gettext("Lineage " + (index + 1)) }}
-                    </span>
-                </div>
+        <div style="overflow-x: auto">
+            <div class="lineage-section">
                 <div
-                    v-for="(item, subindex) in hierarchy.searchResults"
-                    :key="item.id"
-                    class="section-item"
+                    v-for="(hierarchy, index) in props.data"
+                    :key="index"
+                    class="lineage-item"
                 >
-                    <span
-                        :class="getIcon(item)"
-                        :style="{ 'margin-inline-start': subindex * 2 + 'rem' }"
-                    ></span>
-                    <span style="margin-inline-start: 0.5rem">
-                        {{
-                            getItemLabel(
-                                item,
-                                selectedLanguage.code,
-                                systemLanguage.code,
-                            ).value
-                        }}
-                    </span>
-                    <div
-                        v-if="subindex === hierarchy.searchResults.length - 1"
-                        style="margin-inline-start: 0.5rem"
-                    >
-                        <Button
-                            icon="pi pi-file-edit"
-                            variant="text"
-                            :aria-label="$gettext('edit')"
-                            :disabled="hierarchy.isTopConcept"
-                            size="small"
-                            @click="
-                                openEditor!(componentName, hierarchy.tileid)
+                    <div style="margin-bottom: 0.5rem">
+                        <span
+                            style="
+                                color: var(--p-neutral-500);
+                                font-weight: var(--p-lingo-font-weight-normal);
+                                font-size: var(--p-lingo-font-size-medium);
                             "
-                        />
-                        <Button
-                            v-if="hierarchy.tileid"
-                            icon="pi pi-trash"
-                            variant="text"
-                            :aria-label="$gettext('delete')"
-                            severity="danger"
-                            size="small"
-                            @click="confirmDelete(hierarchy)"
-                        />
+                        >
+                            {{ $gettext("Lineage " + (index + 1)) }}
+                        </span>
+                    </div>
+                    <div
+                        v-for="(item, subindex) in hierarchy.searchResults"
+                        :key="item.id"
+                        class="section-item"
+                    >
+                        <span
+                            :class="getIcon(item)"
+                            :style="{
+                                'margin-inline-start': subindex * 2 + 'rem',
+                            }"
+                        ></span>
+                        <span style="margin-inline-start: 0.5rem">
+                            {{
+                                getItemLabel(
+                                    item,
+                                    selectedLanguage.code,
+                                    systemLanguage.code,
+                                ).value
+                            }}
+                        </span>
+                        <div
+                            v-if="
+                                subindex === hierarchy.searchResults.length - 1
+                            "
+                            style="margin-inline-start: 0.5rem; display: flex"
+                        >
+                            <Button
+                                icon="pi pi-file-edit"
+                                variant="text"
+                                :aria-label="$gettext('edit')"
+                                :disabled="hierarchy.isTopConcept"
+                                size="small"
+                                @click="
+                                    openEditor!(componentName, hierarchy.tileid)
+                                "
+                            />
+                            <Button
+                                v-if="hierarchy.tileid"
+                                icon="pi pi-trash"
+                                variant="text"
+                                :aria-label="$gettext('delete')"
+                                severity="danger"
+                                size="small"
+                                @click="confirmDelete(hierarchy)"
+                            />
+                        </div>
                     </div>
                 </div>
             </div>
@@ -204,15 +214,23 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
 
 <style scoped>
 .lineage-section {
-    margin-inline-start: 5rem;
+    margin-inline-start: 1rem;
     margin-top: 1rem;
+    display: flex;
+    flex-direction: row;
+    align-items: start;
+    width: fit-content;
+}
+
+.lineage-item {
+    margin-inline-end: 4rem;
 }
 
 .section-item {
     display: flex;
     height: 100%;
     align-items: center;
-    padding: 0.25rem 0;
     min-height: 2.5rem;
+    white-space: nowrap;
 }
 </style>
