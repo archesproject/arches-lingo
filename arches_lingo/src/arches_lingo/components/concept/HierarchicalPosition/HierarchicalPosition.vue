@@ -56,7 +56,7 @@ onMounted(async () => {
 
         const currentPosition = await currentPositionPromise;
 
-        schemeId.value = currentPosition.data[0].parents[0][0].id;
+        schemeId.value = currentPosition.data[0]?.parents?.[0]?.[0]?.id;
 
         hierarchicalData.value = currentPosition.data[0].parents.map(
             (parent: SearchResultItem) => ({ searchResults: parent }),
