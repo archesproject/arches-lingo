@@ -45,7 +45,7 @@ watchEffect(async () => {
         <Drawer
             v-model:visible="showHierarchy"
             class="hierarchy-container"
-            style="min-width: 32rem"
+            style="min-width: 36rem"
             :header="$gettext('Explore Hierarchies')"
             :pt="{
                 content: {
