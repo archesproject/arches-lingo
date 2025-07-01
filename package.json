@@ -4,6 +4,7 @@
     "scripts": {
         "build_development_unsafe": "cross-env webpack --config ./webpack/webpack.config.dev.js",
         "build_development": "npm run eslint:check && npm run ts:check && cross-env webpack --config ./webpack/webpack.config.dev.js",
+        "build_production_unsafe": "cross-env webpack --config ./webpack/webpack.config.prod.js",
         "build_production": "npm run eslint:check && npm run ts:check && cross-env webpack --config ./webpack/webpack.config.prod.js",
         "build_test": "npm run eslint:check && npm run ts:check && cross-env webpack --config ./webpack/webpack.config.dev.js --env test=true",
         "eslint:check": "eslint **/src",
