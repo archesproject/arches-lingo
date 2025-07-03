@@ -145,7 +145,7 @@ run_gunicorn() {
 	cd ${APP_ROOT}
     echo "Running Django"
 	service memcached start&
-	exec /bin/bash -c "source ../ENV/bin/activate && (/etc/init.d/nginx start&) && gunicorn --workers=$(($(nproc --all)+1)) arches_lingo.wsgi"
+	exec /bin/bash -c "source ../ENV/bin/activate && (/etc/init.d/nginx start&) && gunicorn --workers=$(($(nproc)+1)) arches_lingo.wsgi"
 }
 
 
