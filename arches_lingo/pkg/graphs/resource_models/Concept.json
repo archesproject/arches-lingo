@@ -502,14 +502,14 @@
                         "i18n_properties": [
                             "placeholder"
                         ],
-                        "label": "Conitrbutor",
+                        "label": "Contributor",
                         "placeholder": {
                             "en": ""
                         }
                     },
                     "id": "05f93875-2ca2-43bb-b448-e80daf57e1df",
                     "label": {
-                        "en": "Conitrbutor"
+                        "en": "Contributor"
                     },
                     "node_id": "ad93bf72-0ed3-11ef-9493-0a58a9feac02",
                     "sortorder": 6,
