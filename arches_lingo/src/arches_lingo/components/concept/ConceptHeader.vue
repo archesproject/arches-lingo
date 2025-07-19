@@ -8,6 +8,13 @@ import { useToast } from "primevue/usetoast";
 
 import ConfirmDialog from "primevue/confirmdialog";
 import Button from "primevue/button";
+import SelectButton from 'primevue/selectbutton';
+import RadioButton from 'primevue/radiobutton';
+
+
+//Placeholder for export button panel
+import Popover from "primevue/popover";
+
 import Skeleton from "primevue/skeleton";
 
 import {
@@ -123,6 +130,21 @@ function confirmDelete() {
     });
 }
 
+
+//Placeholder for export button panel
+const exportdialog = ref();
+const toggle = (event) => {
+    exportdialog.value.toggle(event);
+}
+
+//Placeholder for export type
+const exporter = ref('Concept Only');
+const exporteroptions = ref(['Concept Only', 'Concept + Children']);
+
+//Placeholder for export format radio button group
+const exportformat = ref('');
+
+
 function extractConceptHeaderData(concept: ResourceInstanceResult) {
     const aliased_data = concept?.aliased_data;
 
@@ -150,6 +172,10 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
         partOfScheme: partOfScheme,
         parentConcepts: parentConcepts,
     };
+
+    function openExportMenu(event: MouseEvent) {
+    popover.value!.toggle(event);
+}
 }
 </script>
 
@@ -163,16 +189,9 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
         v-else
         class="concept-header"
     >
-        <div class="header-row">
+        <div class="concept-header-toolbar">
             <h2 v-if="data?.descriptor?.name">
-                <Button
-                    icon="pi pi-trash"
-                    severity="danger"
-                    rounded
-                    style="margin-inline-end: 0.75rem"
-                    :aria-label="$gettext('Delete Concept')"
-                    @click="confirmDelete"
-                />
+                
                 <span>
                     {{ data?.descriptor?.name }}
 
@@ -184,57 +203,145 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                     </span>
                 </span>
             </h2>
+            <div class="header-buttons">
 
-            <!-- TODO: export to rdf/skos/json-ld buttons go here -->
-            <div class="header-item">
-                <span class="header-item-label">
-                    {{ $gettext("Export:") }}
-                </span>
-                <span class="header-item-value">
-                    CSV | SKOS | RDF | JSON-LD
-                </span>
-            </div>
-        </div>
-
-        <div class="concept-header-section">
-            <div class="header-row uri-container">
-                <span class="header-item-label">{{ $gettext("URI:") }}</span>
+                <!-- Placeholder export button -->
                 <Button
-                    :label="data?.uri || '--'"
-                    class="concept-uri"
-                    variant="link"
-                    as="a"
-                    :href="data?.uri"
-                    target="_blank"
-                    rel="noopener"
-                    :disabled="!data?.uri"
+                    :aria-label="$gettext('Export')"
+                    @click="toggle"
+                    class="add-button"
+                >
+                    <span><i class="pi pi-cloud-download"></i></span>
+                    <span>Export</span>
+                </Button>
+                <Popover
+                    ref="exportdialog"
+                    class="export-panel"
+                >
+                    <div class="exports-panel-container">
+                        <div class="container-title">
+                            <h3>
+                                Concept Export
+                            </h3>
+                        </div>
+                        <div class="options-container">
+                            <h4>
+                                Export Options
+                            </h4>
+                            <!-- TODO: export options go here -->
+                            <SelectButton v-model="exporter" :options="exporteroptions" />
+                        </div>
+                        <div class="formats-container">
+                            <h4>
+                                Export Formats
+                            </h4>
+                            <!-- TODO: export format selection goes here -->
+                            <div>
+                                <div class="export-selection">
+                                    <RadioButton v-model="exportformat" inputId="format1" name="pizza" value="csv" />
+                                    <label for="ingredient1">csv</label>
+                                </div>
+                                <div class="export-selection">
+                                    <RadioButton v-model="exportformat" inputId="format2" name="pizza" value="SKOS" />
+                                    <label for="ingredient2">SKOS</label>
+                                </div>
+                                <div class="export-selection">
+                                    <RadioButton v-model="exportformat" inputId="format3" name="pizza" value="rdf" />
+                                    <label for="ingredient3">rdf</label>
+                                </div>
+                                <div class="export-selection">
+                                    <RadioButton v-model="exportformat" inputId="format4" name="pizza" value="JSON-LD" />
+                                    <label for="ingredient4">JSON-LD</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="export-footer">
+                            <Button
+                                icon="pi pi-trash"
+                                :label="$gettext('Export')"
+                                class="add-button"
+                            ></Button>
+                            <Button
+                                icon="pi pi-trash"
+                                :label="$gettext('Cancel')"
+                                class="add-button"
+                            ></Button>
+                        </div>
+                    </div>
+                </Popover>
+
+                <Button
+                    icon="pi pi-plus-circle"
+                    :label="$gettext('Add Child')"
+                    class="add-button"
                 ></Button>
+
+                <!-- TODO: button should reflect published state of concept: delete if draft, deprecate if URI is present -->
+                <Button
+                        icon="pi pi-trash"
+                        severity="danger"
+                        class="delete-button"
+                        :label="$gettext('Delete')"
+                        :aria-label="$gettext('Delete Concept')"
+                        @click="confirmDelete"
+                    />
             </div>
-            <div class="header-row">
-                <!-- TODO: Human-reable conceptid to be displayed here -->
-                <div class="header-item">
-                    <span class="header-item-label">
-                        {{ $gettext("Scheme:") }}
-                    </span>
-                    <span class="header-item-value">
-                        <RouterLink
-                            v-if="data?.partOfScheme?.node_value"
-                            :to="`/scheme/${data?.partOfScheme?.node_value}`"
-                        >
-                            {{ data?.partOfScheme?.display_value }}
-                        </RouterLink>
-                        <span v-else>--</span>
-                    </span>
+
+        </div>
+        
+        <div class="header-content">
+            <div class="concept-header-section">
+                <div class="header-row">
+                    <!-- TODO: Life Cycle mgmt functionality goes here -->
+                    <div class="header-item">
+                        <span class="header-item-label">
+                            {{ $gettext("Identifier:") }}
+                        </span>
+                        <span class="header-item-value">
+                            0032775
+                        </span>
+                    </div>
+                    <div>
+                        <span class="header-item-label">{{ $gettext("URI (provisonal): ") }}</span>
+                        <Button
+                            :label="data?.uri || 'https://fgi.lingo.com/concepts/0032775'"
+                            class="concept-uri"
+                            variant="link"
+                            as="a"
+                            :href="data?.uri"
+                            target="_blank"
+                            rel="noopener"
+                            :disabled="!data?.uri"
+                        ></Button>
+                    </div>
                 </div>
 
-                <!-- TODO: Life Cycle mgmt functionality goes here -->
-                <div class="header-item">
-                    <span class="header-item-label">
-                        {{ $gettext("Life cycle state:") }}
-                    </span>
-                    <span class="header-item-value">
-                        {{ data?.lifeCycleState ? data?.lifeCycleState : "--" }}
-                    </span>
+                <div class="header-row">
+                    <!-- TODO: Human-reable conceptid to be displayed here -->
+                    <div class="header-item">
+                        <span class="header-item-label">
+                            {{ $gettext("Scheme:") }}
+                        </span>
+                        <span class="header-item-value">
+                            <RouterLink
+                                v-if="data?.partOfScheme?.node_value"
+                                :to="`/scheme/${data?.partOfScheme?.node_value}`"
+                            >
+                                {{ data?.partOfScheme?.display_value }}
+                            </RouterLink>
+                            <span v-else>--</span>
+                        </span>
+                    </div>
+
+                    <!-- TODO: Life Cycle mgmt functionality goes here -->
+                    <div class="header-item">
+                        <span class="header-item-label">
+                            {{ $gettext("Life cycle state:") }}
+                        </span>
+                        <span class="header-item-value">
+                            {{ data?.lifeCycleState ? data?.lifeCycleState : "--" }}
+                        </span>
+                    </div>
                 </div>
             </div>
             <div class="header-row">
@@ -251,15 +358,16 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                             :to="`/concept/${parent.details[0].resource_id}`"
                             >{{ parent.details[0].display_value }}</RouterLink
                         >
-                    </span>
-                </div>
-                <div class="header-item">
-                    <span class="header-item-label">
-                        {{ $gettext("Owner:") }}
-                    </span>
-                    <span class="header-item-value">
-                        {{ data?.principalUser || $gettext("Anonymous") }}
-                    </span>
+                        </span>
+                    </div>
+                    <div class="header-item">
+                        <span class="header-item-label">
+                            {{ $gettext("Owner:") }}
+                        </span>
+                        <span class="header-item-value">
+                            {{ data?.principalUser || $gettext("Anonymous") }}
+                        </span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -268,17 +376,105 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
 
 <style scoped>
 .concept-header {
-    padding-inline-start: 1rem;
-    padding-top: 1rem;
-    padding-inline-end: 1.5rem;
+    padding-top: 0 rem;
     padding-bottom: 1rem;
     background: var(--p-header-background);
     border-bottom: 0.06rem solid var(--p-header-border);
 }
 
+.header-content {
+    padding-top: .75rem;
+    padding-inline-start: 1rem;
+    padding-inline-end: 1.5rem;
+}
+
+.concept-header-toolbar {
+    height: 3rem;
+    background: var(--p-header-toolbar-background);
+    border-bottom: 1px solid var(--p-header-toolbar-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-inline-start: 1rem;
+    padding-inline-end: 1rem;
+}
+
 h2 {
     margin-top: 0;
+    margin-bottom: 0;
     font-size: var(--p-lingo-font-size-large);
+    font-weight: var(--p-lingo-font-weight-normal);
+}
+
+.add-button {
+    background: var(--p-header-button-background);
+    color: var(--p-header-button-color);
+    border-color: var(--p-header-button-border);
+    font-size: var(--p-lingo-font-size-small);
+}
+
+.delete-button {
+    font-size: var(--p-lingo-font-size-small);
+}
+
+.header-buttons {
+    display: flex;
+    gap: .25rem;
+}
+
+.export-panel {
+    padding: 1rem;
+}
+
+.exports-panel-container {
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+    font-weight: 300;
+    padding: 0 1rem;
+}
+
+.options-container {
+    padding: 0 0 .75rem 0;
+}
+
+.options-container h4 {
+    margin: 0;
+    padding-bottom: .4rem;
+}
+
+.formats-container {
+    padding: 0 0 .75rem 0;
+}
+
+.formats-container h4 {
+    margin: 0;
+}
+
+.export-selection {
+    display: flex;
+    gap: .5rem;
+    padding: .2rem;
+    font-size: var(--p-lingo-font-size-smallnormal);
+    align-items: center;
+    color: var(--p-list-option-icon-color);
+}
+
+.export-footer {
+    display: flex;
+    flex-direction: row-reverse;
+    gap: .25rem;
+    border-top: 0.06rem solid var(--p-header-border);
+    padding: .5rem 0 0 0;
+}
+
+.container-title {
+    font-size: var(--p-lingo-font-size-normal);
+    border-bottom: 0.0625rem solid var(--p-header-border);
+    margin-bottom: 0.5rem;
+}
+
+.container-title h3 {
+    padding-top: .5rem;
+    margin: 0rem 0rem .25rem 0rem;
     font-weight: var(--p-lingo-font-weight-normal);
 }
 
@@ -288,7 +484,7 @@ h2 {
 }
 
 .concept-uri {
-    font-size: var(--p-lingo-font-size-xsmall);
+    font-size: var(--p-lingo-font-size-small);
     font-weight: var(--p-lingo-font-weight-normal);
     color: var(--p-primary-500);
 }
@@ -304,10 +500,6 @@ h2 {
     align-items: baseline;
 }
 
-.uri-container {
-    justify-content: flex-start;
-}
-
 .header-item {
     display: inline-flex;
     align-items: baseline;
@@ -320,10 +512,29 @@ h2 {
     margin-inline-end: 0.25rem;
 }
 
+.header-item-value {
+    font-weight: var(--p-lingo-font-weight-normal);
+    font-size: var(--p-lingo-font-size-smallnormal);
+    color: var(--p-header-item-label);
+    margin-inline-end: 0.25rem;
+}
+
 .header-item-value,
 :deep(a) {
     font-size: var(--p-lingo-font-size-smallnormal);
     color: var(--p-primary-500);
+}
+
+:deep(.p-selectbutton) {
+    border-radius: .125rem;
+}
+
+:deep(.p-togglebutton-checked .p-togglebutton-content) {
+    border-radius: .125rem;
+}
+
+:deep(.p-selectbutton .p-togglebutton:first-child){
+    border-radius: .125rem;
 }
 
 .parent-concept {
