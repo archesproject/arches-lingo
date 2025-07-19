@@ -229,17 +229,18 @@ provide("refreshReportSection", refreshReportSection);
 
 :deep(.section-header h2) {
     margin: 0;
-    font-size: var(--p-lingo-font-size-large);
+    font-size: var(--p-lingo-font-size-medium);
     font-weight: var(--p-lingo-font-weight-normal);
     color: var(--p-neutral-500);
 }
 
 :deep(.section-header .add-button) {
-    height: 2rem;
-    font-size: var(--p-lingo-font-size-smallnormal);
+    font-size: var(--p-lingo-font-size-small);
     font-weight: var(--p-lingo-font-weight-normal);
+    border-color: var(--p-header-button-border);
     min-width: 10rem;
     border-radius: 0.125rem;
+    padding: .5rem 0rem;
 }
 
 .p-splitter .p-splitterpanel .splitter-panel-content .p-skeleton {

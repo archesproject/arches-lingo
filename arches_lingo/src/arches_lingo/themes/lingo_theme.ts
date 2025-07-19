@@ -30,6 +30,7 @@ export const LingoPreset = definePreset(ArchesPreset, {
                 xxlarge: "2rem",
             },
             weight: {
+                extralight: "100",
                 light: "300",
                 normal: "400",
                 medium: "500",
@@ -47,6 +48,14 @@ export const LingoPreset = definePreset(ArchesPreset, {
                     background: "{surface.50}",
                     border: "{neutral.300}",
                     itemLabel: "{surface.500}",
+                },
+                headerToolbar: {
+                    background: "{surface.100}",
+                    border: "{surface.300}",
+                },
+                headerButton: {
+                    background: "#D1DDE8",
+                    border: "#A1B6CB",
                 },
                 searchResult: {
                     color: "{sky.600}",
@@ -80,6 +89,16 @@ export const LingoPreset = definePreset(ArchesPreset, {
                     border: "{neutral.500}",
                     itemLabel: "{surface.400}",
                 },
+                headerToolbar: {
+                    background: "{surface.800}",
+                    border: "{neutral.600}",
+                    itemLabel: "{surface.500}",
+                },
+                 headerButton: {
+                    background: "#d7e7f6",
+                    border: "#486A8B",
+                    color: "#18181b",
+                },
                 searchResult: {
                     borderBottom: "{surface.900}",
                     isEven: {
@@ -102,14 +121,15 @@ export const LingoPreset = definePreset(ArchesPreset, {
     components: {
         button: {
             border: {
-                radius: "0.25rem",
+                radius: "0.125rem",
             },
             colorScheme: {
                 light: {
                     // @ts-expect-error: Ignoring type mismatch for button primary background
                     primary: {
-                        background: "{primary-800}",
+                        background: "{button-secondary-background}",
                         borderColor: "{button-primary-background}",
+                        color: "{button-secondary-color}",
                         hover: {
                             background: "{primary-700}",
                             borderColor: "{primary-700}",
