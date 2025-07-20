@@ -183,7 +183,11 @@ async function deleteSectionValue(tileId: string) {
 }
 
 .controls button {
-    margin: 0 0.25rem;
+    margin: 0 0.2rem;
+}
+
+.controls button:first-child {
+    border: 1px solid var(--p-header-button-border);
 }
 
 .no-data {
@@ -205,7 +209,7 @@ async function deleteSectionValue(tileId: string) {
 
 :deep(.p-datatable-column-title) {
     font-weight: var(--p-lingo-font-weight-normal);
-    color: var(--p-neutral-500);
+    color: var(--p-neutral-400);
 }
 
 :deep(.p-datatable-row-expansion td) {
