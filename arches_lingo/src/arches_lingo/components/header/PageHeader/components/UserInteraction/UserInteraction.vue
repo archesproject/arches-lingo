@@ -67,7 +67,7 @@ function openUserMenu(event: MouseEvent) {
 
         <Popover
             ref="popover"
-            style="padding: 1rem 0.5rem"
+            style="padding: 0.5rem"
         >
             <UserInteractionMenu
                 :display-name="displayName"

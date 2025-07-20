@@ -23,19 +23,19 @@ watch(
 const options = ref([
     {
         icon: "pi pi-sun",
-        label: $gettext("Bright Mode"),
+        label: $gettext("Bright"),
         value: false,
         disabled: false,
     },
     {
         icon: "pi pi-moon",
-        label: $gettext("Dark Mode"),
+        label: $gettext("Dark"),
         value: true,
         disabled: false,
     },
     {
         icon: "pi pi-users",
-        label: $gettext("Accessible Mode"),
+        label: $gettext("Accessible"),
         value: "",
         disabled: true,
     },
@@ -65,7 +65,6 @@ function setTheme(value: boolean) {
             :allow-empty="false"
             :aria-label="$gettext('Theme Selector')"
             :options="options"
-            style="width: max-content"
         >
             <template #option="slotProps">
                 <i :class="slotProps.option.icon"></i>
@@ -82,7 +81,6 @@ function setTheme(value: boolean) {
 }
 
 .p-selectbutton {
-    flex-direction: column;
     color: var(--p-text-muted-color);
 }
 
@@ -97,5 +95,6 @@ function setTheme(value: boolean) {
 
 :deep(.p-togglebutton-content) {
     justify-content: flex-start;
+    font-size: var(--p-lingo-font-size-xsmall);
 }
 </style>

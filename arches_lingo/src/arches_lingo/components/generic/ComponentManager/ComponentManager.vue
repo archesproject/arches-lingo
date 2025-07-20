@@ -223,7 +223,7 @@ provide("refreshReportSection", refreshReportSection);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 0.06rem solid var(--p-form-field-border-color);
+    border-bottom: 0.06rem solid var(--p-highlight-focus-background);
     padding-bottom: 0.5rem;
 }
 
