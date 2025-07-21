@@ -235,7 +235,7 @@ provide("refreshReportSection", refreshReportSection);
 }
 
 :deep(.section-header .add-button) {
-    font-size: var(--p-lingo-font-size-small);
+    font-size: var(--p-lingo-font-size-xsmall);
     font-weight: var(--p-lingo-font-weight-normal);
     border-color: var(--p-header-button-border);
     min-width: 10rem;
