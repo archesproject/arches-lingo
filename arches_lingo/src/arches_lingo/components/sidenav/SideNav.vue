@@ -179,7 +179,8 @@ const emit = defineEmits(["update:isNavExpanded"]);
     font-size: var(--p-lingo-font-size-xsmall);
 
     i {
-        font-size: var(--p-lingo-font-size-medium);
+        font-size: var(--p-lingo-font-size-xsmall);
+        padding: 0rem 0rem 0rem .25rem;
     }
 }
 

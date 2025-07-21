@@ -237,20 +237,20 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                             </h4>
                             <!-- TODO: export format selection goes here -->
                             <div>
-                                <div class="export-selection">
-                                    <RadioButton v-model="exportformat" inputId="format1" name="pizza" value="csv" />
+                                <div class="selection">
+                                    <RadioButton v-model="exportformat" inputId="format1" name="csv" value="csv" />
                                     <label for="ingredient1">csv</label>
                                 </div>
-                                <div class="export-selection">
-                                    <RadioButton v-model="exportformat" inputId="format2" name="pizza" value="SKOS" />
+                                <div class="selection">
+                                    <RadioButton v-model="exportformat" inputId="format2" name="skos" value="SKOS" />
                                     <label for="ingredient2">SKOS</label>
                                 </div>
-                                <div class="export-selection">
-                                    <RadioButton v-model="exportformat" inputId="format3" name="pizza" value="rdf" />
+                                <div class="selection">
+                                    <RadioButton v-model="exportformat" inputId="format3" name="rdf" value="rdf" />
                                     <label for="ingredient3">rdf</label>
                                 </div>
-                                <div class="export-selection">
-                                    <RadioButton v-model="exportformat" inputId="format4" name="pizza" value="JSON-LD" />
+                                <div class="selection">
+                                    <RadioButton v-model="exportformat" inputId="format4" name="json" value="JSON-LD" />
                                     <label for="ingredient4">JSON-LD</label>
                                 </div>
                             </div>
@@ -448,7 +448,7 @@ h2 {
     margin: 0;
 }
 
-.export-selection {
+.selection {
     display: flex;
     gap: .5rem;
     padding: .2rem;
