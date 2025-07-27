@@ -131,14 +131,15 @@ function onCancel() {
 h2 {
     font-size: var(--p-lingo-font-size-large);
     font-weight: var(--p-lingo-font-weight-normal);
+    margin: .75rem 0rem;
 }
 
 .header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 0.125rem solid var(--p-menubar-border-color);
-    background: var(--p-header-background);
+    border-bottom: 0.0625rem solid var(--p-header-toolbar-border);
+    background: var(--p-header-toolbar-background);
     padding: 0 1rem;
 }
 
@@ -165,7 +166,7 @@ h2 {
 .editor-content {
     overflow-y: auto;
     flex: 1;
-    padding: 0 1rem 0 1rem;
+    padding: 0;
 }
 
 .footer {

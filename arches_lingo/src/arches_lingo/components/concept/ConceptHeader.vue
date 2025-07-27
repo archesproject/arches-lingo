@@ -10,6 +10,7 @@ import ConfirmDialog from "primevue/confirmdialog";
 import Button from "primevue/button";
 import SelectButton from 'primevue/selectbutton';
 import RadioButton from 'primevue/radiobutton';
+import Select from 'primevue/select';
 
 
 //Placeholder for export button panel
@@ -144,6 +145,13 @@ const exporteroptions = ref(['Concept Only', 'Concept + Children']);
 //Placeholder for export format radio button group
 const exportformat = ref('');
 
+//Placeholder for concept Type
+const conceptType = ref();
+const ctype = ref([
+    { name: 'Concept', code: 'c' },
+    { name: 'Guide Term', code: 'gt' },
+]);
+
 
 function extractConceptHeaderData(concept: ResourceInstanceResult) {
     const aliased_data = concept?.aliased_data;
@@ -190,19 +198,28 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
         class="concept-header"
     >
         <div class="concept-header-toolbar">
-            <h2 v-if="data?.descriptor?.name">
-                
-                <span>
-                    {{ data?.descriptor?.name }}
+            <div class="concept-details">
+                <h2 v-if="data?.descriptor?.name">
+                    <div class="concept-name">
 
-                    <span
-                        v-if="data?.descriptor?.language"
-                        class="concept-label-lang"
-                    >
-                        ({{ data?.descriptor?.language }})
-                    </span>
-                </span>
-            </h2>
+                        <!-- To do: change icon based on concept type -->
+                        <i class="pi pi-tag"></i>
+                        <span>
+                            {{ data?.descriptor?.name }}
+
+                            <span
+                                v-if="data?.descriptor?.language"
+                                class="concept-label-lang"
+                            >
+                                ({{ data?.descriptor?.language }})
+                            </span>
+                        </span>
+                    </div>
+                </h2>
+                <div class="card flex justify-center">
+                    <Select v-model="conceptType" :options="ctype" optionLabel="name" placeholder="Concept" checkmark :highlightOnSelect="false" />
+                </div>
+            </div>
             <div class="header-buttons">
 
                 <!-- Placeholder export button -->
@@ -375,10 +392,11 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
 
 <style scoped>
 .concept-header {
-    padding-top: 0 rem;
+    padding-top: 0rem;
     padding-bottom: 1rem;
     background: var(--p-header-background);
     border-bottom: 0.06rem solid var(--p-header-border);
+    min-height: 8.5rem;
 }
 
 .header-content {
@@ -396,6 +414,25 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
     align-items: center;
     padding-inline-start: 1rem;
     padding-inline-end: 1rem;
+}
+
+.concept-details {
+    display: flex;
+    align-items: anchor-center;
+    gap: .5rem;
+}
+
+.concept-name {
+    display: flex;
+    align-items: anchor-center;
+    gap: .25rem;
+}
+
+.p-select {
+    margin: 0rem .5rem;
+    border-radius: .125rem;
+    box-shadow: none;
+    width: 10rem;
 }
 
 h2 {
@@ -538,5 +575,9 @@ h2 {
 
 .parent-concept {
     margin-inline-end: 0.5rem;
+}
+
+.parent-concept:hover a {
+    color: var(--p-primary-700);
 }
 </style>
