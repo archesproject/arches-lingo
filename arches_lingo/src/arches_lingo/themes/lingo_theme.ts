@@ -17,7 +17,7 @@ export const LingoPreset = definePreset(ArchesPreset, {
     },
     semantic: {
         lingoFont: {
-            family: "'Open Sans','Lucida Sans','Lucida Sans Regular','Lucida Grande','Lucida Sans Unicode',Geneva,Verdana,sans-serif",
+            family: "'Open Sans',sans-serif",
             size: {
                 xxsmall: "0.75rem",
                 xsmall: "0.8rem",
@@ -30,11 +30,12 @@ export const LingoPreset = definePreset(ArchesPreset, {
                 xxlarge: "2rem",
             },
             weight: {
-                extralight: "100",
-                light: "300",
+                lite: "300",
                 normal: "400",
                 medium: "500",
-                bold: "600",
+                semibold: "600",
+                bold: "700",
+                extrabold: "800",
             },
         },
         colorScheme: {

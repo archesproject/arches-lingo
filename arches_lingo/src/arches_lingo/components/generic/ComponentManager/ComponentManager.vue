@@ -217,6 +217,7 @@ provide("refreshReportSection", refreshReportSection);
 :deep(.section-message) {
     padding: 0.5rem 0;
     color: var(--p-inputtext-placeholder-color);
+    font-weight: var(--p-lingo-font-weight-lite);
 }
 
 :deep(.section-header) {
