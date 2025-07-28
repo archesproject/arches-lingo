@@ -200,6 +200,7 @@ async function modifyResource(resourceInstanceId?: string) {
                         <div class="buttons">
                             <Button
                                 icon="pi pi-file-edit"
+                                style="border: 1px solid var(--p-header-button-border);"
                                 rounded
                                 @click="
                                     editResource(resource.resourceinstanceid)
@@ -246,7 +247,7 @@ async function modifyResource(resourceInstanceId?: string) {
 .buttons {
     display: flex;
     justify-content: center;
-    gap: 1rem;
+    gap: .25rem;
 }
 
 .concept-images {
@@ -281,5 +282,9 @@ async function modifyResource(resourceInstanceId?: string) {
 
 .concept-images :deep(.p-galleria) {
     border: none;
+}
+
+:deep(.p-galleria) {
+    border-radius: .125rem;
 }
 </style>
