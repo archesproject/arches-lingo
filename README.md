@@ -210,7 +210,7 @@ NOTE: Changes are committed to the arches-lingo repository.
 
 6. Navigate to https://github.com/archesproject/arches-lingo/pulls to see and commit the pull request
 
-## Lingo Roadmap
+## Roadmap
 
 ### 1.0.0alpha (Released June 2025)
 
@@ -238,6 +238,7 @@ NOTE: Changes are committed to the arches-lingo repository.
 
 ### Future Releases
 
+- SPARQL endpoint for querying thesauri and their terms
 - Support for splitting and merging concepts within thesauri
 - Saved searches and search results for managing lists of terms 
 - A "candidate scheme" for managing terms before they are added to a thesaurus
