@@ -233,6 +233,19 @@ NOTE: Changes are committed to the arches-lingo repository.
 
 - Adds support for additional import/export formats
 - Advanced search and filtering capabilities for thesauri and their terms
+- Allow users to view edit log for thesauri and their terms and revert changes as part of a draft edit
+- Public search interface for searching over published thesauri and their terms even during draft edits
+
+### Future Releases
+
+- Support for splitting and merging concepts within thesauri
+- Saved searches and search results for managing lists of terms 
+- A "candidate scheme" for managing terms before they are added to a thesaurus
+- Managing hierarchies of additional models:
+  - People and groups
+  - Places
+  - Time periods
 
 ## References
+
 - [1] Contains information from the J. Paul Getty Trust, Getty Research Institute, the Art & Architecture Thesaurus, which is made available under the ODC Attribution License.
