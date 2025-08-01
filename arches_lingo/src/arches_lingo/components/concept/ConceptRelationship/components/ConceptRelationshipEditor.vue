@@ -112,7 +112,12 @@ async function save(e: FormSubmitEvent) {
     />
 
     <div v-show="!isSaving">
-        <h3>{{ props.sectionTitle }}</h3>
+        <div class="form-header">
+            <h3>{{ props.sectionTitle }}</h3>
+            <div class="form-description">
+                {{ $gettext("Define associated concepts in this scheme.") }}
+            </div>
+        </div>
 
         <Form
             ref="form"
@@ -200,3 +205,32 @@ async function save(e: FormSubmitEvent) {
         </Form>
     </div>
 </template>
+
+<style scoped>
+.form-header {
+    padding-top: 0rem;
+    padding-bottom: 1rem;
+    background: var(--p-header-background);
+    border-bottom: 0.06rem solid var(--p-header-border);
+    min-height: 5.5rem;
+}
+
+.form-header h3 {
+    margin: 0;
+    padding: 0.5rem 1rem 0 1rem;
+}
+
+.form-container {
+    padding: 0.5rem 1rem;
+}
+
+.form-description {
+    padding: 0.125rem 1rem;
+    font-weight: var(--p-lingo-font-weight-normal);
+    font-size: var(--p-lingo-font-size-smallnormal);
+    color: var(--p-header-item-label);
+    margin-inline-end: 0.25rem;
+}
+
+
+</style>
