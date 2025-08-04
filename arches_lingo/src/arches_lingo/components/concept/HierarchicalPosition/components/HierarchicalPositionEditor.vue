@@ -174,6 +174,7 @@ async function save(e: FormSubmitEvent) {
 
 .form-container {
     padding: 0.5rem 1rem;
+    background: var(--p-editor-form-background);
 }
 
 .form-description {
