@@ -121,94 +121,112 @@ async function save(e: FormSubmitEvent) {
         <div class="form-header">
             <h3>{{ props.sectionTitle }}</h3>
             <div class="form-description">
-                {{ $gettext("Define associated concepts in this scheme.") }}
+                {{ $gettext("Identify concepts in this scheme that may be associated with this concept.") }}
             </div>
         </div>
 
-        <Form
-            ref="form"
-            @submit="save"
-        >
-            <GenericWidget
-                :graph-slug="props.graphSlug"
-                node-alias="relation_status_ascribed_comparate"
-                :aliased-node-data="
-                    props.tileData?.aliased_data
-                        .relation_status_ascribed_comparate
-                "
-                :mode="EDIT"
-            />
-            <GenericWidget
-                :graph-slug="props.graphSlug"
-                node-alias="relation_status_ascribed_relation"
-                :aliased-node-data="
-                    props.tileData?.aliased_data
-                        .relation_status_ascribed_relation
-                "
-                :mode="EDIT"
-            />
-            <GenericWidget
-                :graph-slug="props.graphSlug"
-                node-alias="relation_status_status"
-                :aliased-node-data="
-                    props.tileData?.aliased_data.relation_status_status
-                "
-                :mode="EDIT"
-            />
-            <GenericWidget
-                :graph-slug="props.graphSlug"
-                node-alias="relation_status_status_metatype"
-                :aliased-node-data="
-                    props.tileData?.aliased_data.relation_status_status_metatype
-                "
-                :mode="EDIT"
-            />
-            <GenericWidget
-                :graph-slug="props.graphSlug"
-                node-alias="relation_status_timespan_begin_of_the_begin"
-                :aliased-node-data="
-                    props.tileData?.aliased_data
-                        .relation_status_timespan_begin_of_the_begin
-                "
-                :mode="EDIT"
-            />
-            <GenericWidget
-                :graph-slug="props.graphSlug"
-                node-alias="relation_status_timespan_end_of_the_end"
-                :aliased-node-data="
-                    props.tileData?.aliased_data
-                        .relation_status_timespan_end_of_the_end
-                "
-                :mode="EDIT"
-            />
-            <GenericWidget
-                :graph-slug="props.graphSlug"
-                node-alias="relation_status_data_assignment_actor"
-                :aliased-node-data="
-                    props.tileData?.aliased_data
-                        .relation_status_data_assignment_actor
-                "
-                :mode="EDIT"
-            />
-            <GenericWidget
-                :graph-slug="props.graphSlug"
-                node-alias="relation_status_data_assignment_object_used"
-                :aliased-node-data="
-                    props.tileData?.aliased_data
-                        .relation_status_data_assignment_object_used
-                "
-                :mode="EDIT"
-            />
-            <GenericWidget
-                :graph-slug="props.graphSlug"
-                node-alias="relation_status_data_assignment_type"
-                :aliased-node-data="
-                    props.tileData?.aliased_data
-                        .relation_status_data_assignment_type
-                "
-                :mode="EDIT"
-            />
-        </Form>
+        <div class="form-container">
+            <Form
+                ref="form"
+                @submit="save"
+            >
+                <div class="widget-container column">
+                    <GenericWidget
+                        :graph-slug="props.graphSlug"
+                        node-alias="relation_status_ascribed_comparate"
+                        :aliased-node-data="
+                            props.tileData?.aliased_data
+                                .relation_status_ascribed_comparate
+                        "
+                        :mode="EDIT"
+                    />
+                </div>
+                <div class="widget-container column">
+                    <GenericWidget
+                        :graph-slug="props.graphSlug"
+                        node-alias="relation_status_ascribed_relation"
+                        :aliased-node-data="
+                            props.tileData?.aliased_data
+                                .relation_status_ascribed_relation
+                        "
+                        :mode="EDIT"
+                    />
+                </div>
+                <div class="widget-container column">
+                    <GenericWidget
+                        :graph-slug="props.graphSlug"
+                        node-alias="relation_status_status"
+                        :aliased-node-data="
+                            props.tileData?.aliased_data.relation_status_status
+                        "
+                        :mode="EDIT"
+                    />
+                </div>
+                <div class="widget-container column">
+                    <GenericWidget
+                        :graph-slug="props.graphSlug"
+                        node-alias="relation_status_status_metatype"
+                        :aliased-node-data="
+                            props.tileData?.aliased_data.relation_status_status_metatype
+                        "
+                        :mode="EDIT"
+                    />
+                </div>
+                <div class="widget-container">
+                    <GenericWidget
+                        :graph-slug="props.graphSlug"
+                        node-alias="relation_status_timespan_begin_of_the_begin"
+                        :aliased-node-data="
+                            props.tileData?.aliased_data
+                                .relation_status_timespan_begin_of_the_begin
+                        "
+                        :mode="EDIT"
+                    />
+                    <GenericWidget
+                        :graph-slug="props.graphSlug"
+                        node-alias="relation_status_timespan_end_of_the_end"
+                        :aliased-node-data="
+                            props.tileData?.aliased_data
+                                .relation_status_timespan_end_of_the_end
+                        "
+                        :mode="EDIT"
+                    />
+                </div>
+                <div class="widget-container column">
+                    <GenericWidget
+                        :graph-slug="props.graphSlug"
+                        node-alias="relation_status_data_assignment_actor"
+                        :aliased-node-data="
+                            props.tileData?.aliased_data
+                                .relation_status_data_assignment_actor
+                        "
+                        :mode="EDIT"
+                    />
+                </div>
+                <div class="widget-container column">
+                    <GenericWidget
+                        :graph-slug="props.graphSlug"
+                        node-alias="relation_status_data_assignment_object_used"
+                        :aliased-node-data="
+                            props.tileData?.aliased_data
+                                .relation_status_data_assignment_object_used
+                        "
+                        :mode="EDIT"
+                    />
+                </div>
+                <div class="widget-container column">
+                    <GenericWidget
+                        :graph-slug="props.graphSlug"
+                        node-alias="relation_status_data_assignment_type"
+                        :aliased-node-data="
+                            props.tileData?.aliased_data
+                                .relation_status_data_assignment_type
+                        "
+                        :mode="EDIT"
+                    />
+                </div>
+            </Form>
+        </div>
     </div>
 </template>
 
@@ -238,5 +256,26 @@ async function save(e: FormSubmitEvent) {
     margin-inline-end: 0.25rem;
 }
 
+.widget-container {
+    display: flex; 
+    gap: .25rem; 
+    padding: .5rem 0rem 0.25rem 0rem;
+    color: var(--p-header-item-label);
+}
 
+.column {
+    flex-direction: column;
+}
+
+:deep(.p-inputtext) {
+    border-radius: .125rem;
+}
+
+:deep(.p-treeselect) {
+    border-radius: .125rem;
+}
+
+:deep(.p-multiselect) {
+    border-radius: .125rem;
+}
 </style>

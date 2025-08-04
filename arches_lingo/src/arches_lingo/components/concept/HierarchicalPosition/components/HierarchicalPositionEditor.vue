@@ -132,21 +132,70 @@ async function save(e: FormSubmitEvent) {
     />
 
     <div v-else>
-        <h3>{{ props.sectionTitle }}</h3>
+        <div class="form-header">
+            <h3>{{ props.sectionTitle }}</h3>
+            <div class="form-description">
+                {{ $gettext("Identify this concept's parent(s).") }}
+            </div>
+        </div>
 
-        <Form
-            ref="form"
-            @submit="save"
-        >
-            <GenericWidget
-                :graph-slug="props.graphSlug"
-                node-alias="classification_status_ascribed_classification"
-                :aliased-node-data="
-                    props.tileData?.aliased_data
-                        .classification_status_ascribed_classification
-                "
-                :mode="EDIT"
-            />
-        </Form>
+        <div class="form-container">
+            <Form
+                ref="form"
+                @submit="save"
+            >
+                <GenericWidget
+                    :graph-slug="props.graphSlug"
+                    node-alias="classification_status_ascribed_classification"
+                    :aliased-node-data="
+                        props.tileData?.aliased_data
+                            .classification_status_ascribed_classification
+                    "
+                    :mode="EDIT"
+                    class="widget-container column"
+                />
+            </Form>
+        </div>
     </div>
 </template>
+<style scoped>
+.form-header {
+    padding-top: 0rem;
+    padding-bottom: 1rem;
+    background: var(--p-header-background);
+    border-bottom: 0.06rem solid var(--p-header-border);
+    min-height: 5.5rem;
+}
+
+.form-header h3 {
+    margin: 0;
+    padding: 0.5rem 1rem 0 1rem;
+}
+
+.form-container {
+    padding: 0.5rem 1rem;
+}
+
+.form-description {
+    padding: 0.125rem 1rem;
+    font-weight: var(--p-lingo-font-weight-normal);
+    font-size: var(--p-lingo-font-size-smallnormal);
+    color: var(--p-header-item-label);
+    margin-inline-end: 0.25rem;
+}
+
+.widget-container {
+    display: flex; 
+    gap: .25rem; 
+    padding: .5rem 0rem 0.25rem 0rem;
+    color: var(--p-header-item-label);
+}
+
+.column {
+    flex-direction: column;
+}
+
+:deep(.p-select) {
+    border-radius: .125rem;
+}
+</style>
