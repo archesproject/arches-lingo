@@ -103,100 +103,118 @@ async function save(e: FormSubmitEvent) {
         <div class="form-header">
             <h3>{{ props.sectionTitle }}</h3>
             <div class="form-description">
-                {{ $gettext("Define associated concepts in this scheme.") }}
+                {{ $gettext("Identify concepts in this scheme that may be associated with this concept.") }}
             </div>
         </div>
 
-        <Form
-            ref="form"
-            @submit="save"
-        >
-            <ResourceInstanceMultiSelectWidget
-                :graph-slug="props.graphSlug"
-                node-alias="relation_status_ascribed_comparate"
-                :value="
-                    props.tileData?.aliased_data
-                        .relation_status_ascribed_comparate?.interchange_value
-                "
-                :mode="EDIT"
-            />
-            <ReferenceSelectWidget
-                :graph-slug="props.graphSlug"
-                node-alias="relation_status_ascribed_relation"
-                :value="
-                    props.tileData?.aliased_data
-                        .relation_status_ascribed_relation?.interchange_value
-                "
-                :mode="EDIT"
-            />
-            <ReferenceSelectWidget
-                :graph-slug="props.graphSlug"
-                node-alias="relation_status_status"
-                :value="
-                    props.tileData?.aliased_data.relation_status_status
-                        ?.interchange_value
-                "
-                :mode="EDIT"
-            />
-            <ReferenceSelectWidget
-                :graph-slug="props.graphSlug"
-                node-alias="relation_status_status_metatype"
-                :value="
-                    props.tileData?.aliased_data.relation_status_status_metatype
-                        ?.interchange_value
-                "
-                :mode="EDIT"
-            />
-            <DateWidget
-                :graph-slug="props.graphSlug"
-                node-alias="relation_status_timespan_begin_of_the_begin"
-                :value="
-                    props.tileData?.aliased_data
-                        .relation_status_timespan_begin_of_the_begin
-                        ?.interchange_value
-                "
-                :mode="EDIT"
-            />
-            <DateWidget
-                :graph-slug="props.graphSlug"
-                node-alias="relation_status_timespan_end_of_the_end"
-                :value="
-                    props.tileData?.aliased_data
-                        .relation_status_timespan_end_of_the_end
-                        ?.interchange_value
-                "
-                :mode="EDIT"
-            />
-            <ResourceInstanceMultiSelectWidget
-                :graph-slug="props.graphSlug"
-                node-alias="relation_status_data_assignment_actor"
-                :value="
-                    props.tileData?.aliased_data
-                        .relation_status_data_assignment_actor
-                        ?.interchange_value
-                "
-                :mode="EDIT"
-            />
-            <ResourceInstanceMultiSelectWidget
-                :graph-slug="props.graphSlug"
-                node-alias="relation_status_data_assignment_object_used"
-                :value="
-                    props.tileData?.aliased_data
-                        .relation_status_data_assignment_object_used
-                        ?.interchange_value
-                "
-                :mode="EDIT"
-            />
-            <ReferenceSelectWidget
-                :graph-slug="props.graphSlug"
-                node-alias="relation_status_data_assignment_type"
-                :value="
-                    props.tileData?.aliased_data
-                        .relation_status_data_assignment_type?.interchange_value
-                "
-                :mode="EDIT"
-            />
-        </Form>
+        <div class="form-container">
+            <Form
+                ref="form"
+                @submit="save"
+            >
+                <div class="widget-container column">
+                    <ResourceInstanceMultiSelectWidget
+                        :graph-slug="props.graphSlug"
+                        node-alias="relation_status_ascribed_comparate"
+                        :value="
+                            props.tileData?.aliased_data
+                                .relation_status_ascribed_comparate?.interchange_value
+                        "
+                        :mode="EDIT"
+                    />
+                </div>
+                <div class="widget-container column">
+                    <ReferenceSelectWidget
+                        :graph-slug="props.graphSlug"
+                        node-alias="relation_status_ascribed_relation"
+                        :value="
+                            props.tileData?.aliased_data
+                                .relation_status_ascribed_relation?.interchange_value
+                        "
+                        :mode="EDIT"
+                    />
+                </div>
+                <div class="widget-container column">
+                    <ReferenceSelectWidget
+                        :graph-slug="props.graphSlug"
+                        node-alias="relation_status_status"
+                        :value="
+                            props.tileData?.aliased_data.relation_status_status
+                                ?.interchange_value
+                        "
+                        :mode="EDIT"
+                    />
+                </div>
+                <div class="widget-container column">
+                    <ReferenceSelectWidget
+                        :graph-slug="props.graphSlug"
+                        node-alias="relation_status_status_metatype"
+                        :value="
+                            props.tileData?.aliased_data.relation_status_status_metatype
+                                ?.interchange_value
+                        "
+                        :mode="EDIT"
+                    />
+                </div>
+                <div class="widget-container">
+                    <DateWidget
+                        :graph-slug="props.graphSlug"
+                        node-alias="relation_status_timespan_begin_of_the_begin"
+                        :value="
+                            props.tileData?.aliased_data
+                                .relation_status_timespan_begin_of_the_begin
+                                ?.interchange_value
+                        "
+                        :mode="EDIT"
+                    />
+                    <DateWidget
+                        :graph-slug="props.graphSlug"
+                        node-alias="relation_status_timespan_end_of_the_end"
+                        :value="
+                            props.tileData?.aliased_data
+                                .relation_status_timespan_end_of_the_end
+                                ?.interchange_value
+                        "
+                        :mode="EDIT"
+                    />
+                </div>
+                <div class="widget-container column">
+                    <ResourceInstanceMultiSelectWidget
+                        :graph-slug="props.graphSlug"
+                        node-alias="relation_status_data_assignment_actor"
+                        :value="
+                            props.tileData?.aliased_data
+                                .relation_status_data_assignment_actor
+                                ?.interchange_value
+                        "
+                        :mode="EDIT"
+                    />
+                </div>
+                <div class="widget-container column">
+                    <ResourceInstanceMultiSelectWidget
+                        :graph-slug="props.graphSlug"
+                        node-alias="relation_status_data_assignment_object_used"
+                        :value="
+                            props.tileData?.aliased_data
+                                .relation_status_data_assignment_object_used
+                                ?.interchange_value
+                        "
+                        :mode="EDIT"
+                    />
+                </div>
+                <div class="widget-container column">
+                    <ReferenceSelectWidget
+                        :graph-slug="props.graphSlug"
+                        node-alias="relation_status_data_assignment_type"
+                        :value="
+                            props.tileData?.aliased_data
+                                .relation_status_data_assignment_type?.interchange_value
+                        "
+                        :mode="EDIT"
+                    />
+                </div>
+            </Form>
+        </div>
     </div>
 </template>
 
@@ -226,5 +244,26 @@ async function save(e: FormSubmitEvent) {
     margin-inline-end: 0.25rem;
 }
 
+.widget-container {
+    display: flex; 
+    gap: .25rem; 
+    padding: .5rem 0rem 0.25rem 0rem;
+    color: var(--p-header-item-label);
+}
 
+.column {
+    flex-direction: column;
+}
+
+:deep(.p-inputtext) {
+    border-radius: .125rem;
+}
+
+:deep(.p-treeselect) {
+    border-radius: .125rem;
+}
+
+:deep(.p-multiselect) {
+    border-radius: .125rem;
+}
 </style>
