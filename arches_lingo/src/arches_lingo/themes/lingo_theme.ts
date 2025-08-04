@@ -74,6 +74,9 @@ export const LingoPreset = definePreset(ArchesPreset, {
                     background: "{light-blue-gray}",
                     border: "{gray}",
                 },
+                editorForm: {
+                    background: "#fbfbfb",
+                },
             },
             dark: {
                 primary: palette(archesPrimitives.arches.blue),
@@ -114,6 +117,9 @@ export const LingoPreset = definePreset(ArchesPreset, {
                 sortAndFilterControls: {
                     background: "{surface.700}",
                     border: "{surface.900}",
+                },
+                editorForm: {
+                    background: "#18181B",
                 },
             },
         },
