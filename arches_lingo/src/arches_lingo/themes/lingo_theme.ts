@@ -77,6 +77,9 @@ export const LingoPreset = definePreset(ArchesPreset, {
                 editorForm: {
                     background: "#fbfbfb",
                 },
+                schemeCircle: {
+                    background: "#4682b4",
+                },
             },
             dark: {
                 primary: palette(archesPrimitives.arches.blue),

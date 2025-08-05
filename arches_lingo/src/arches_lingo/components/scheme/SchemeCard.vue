@@ -56,12 +56,23 @@ const schemeDescriptor = extractDescriptors(scheme, systemLanguage);
 </template>
 
 <style scoped>
+ul:first-child li:first-child .p-card {
+    color: var(--p-button-contrast-color);
+    background: var(--p-arches-blue);
+    border: 0.0625rem solid var(--p-surface-900);
+}
+
+ul:first-child li:first-child .p-card .scheme-circle {
+    background: steelblue;
+}
+
 a {
     text-decoration: none;
 }
 
 :deep(.p-card) {
     background-color: var(--p-button-primary-background);
+    border: 0.0625rem solid var(--p-header-border);
     color: var(--p-button-primary-color);
     width: 15rem;
     height: 15rem;
