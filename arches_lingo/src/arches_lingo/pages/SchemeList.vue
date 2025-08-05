@@ -96,4 +96,8 @@ onMounted(async () => {
     list-style-type: none;
     padding: 0;
 }
+
+.scheme-cards .p-card:first-child {
+    background: var(--p-scheme-circle-background);
+}
 </style>
