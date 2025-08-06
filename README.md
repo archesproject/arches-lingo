@@ -212,7 +212,7 @@ NOTE: Changes are committed to the arches-lingo repository.
 
 ## Roadmap
 
-### 1.0.0alpha (Released June 2025)
+### 1.0.0 alpha (Released June 2025)
 
 - Adds resource  models and controlled lists for managing thesauri and their terms as Arches resource data
 - Introduces the Arches Lingo UI, a dedicated, custom experience for creating and managing thesauri and their terms including:
@@ -220,17 +220,17 @@ NOTE: Changes are committed to the arches-lingo repository.
   - Basic search for finding terms in thesauri
   - Scheme and Concept reports and editors for editing thesauri and their terms
 
-### 1.0.0beta (To Be Released September 2025)
+### 1.0.0 beta (To Be Released September 2025)
 
 - Adds support for managing scheme and concept lifecycles including
   - Publishing schemes and their concepts to create new versions of schemes
   - Managing the automatic generation and assignment of friendly identifiers and URIs for schemes and concepts
   - Deprecating concepts and schemes
-- Enhances the Lingo UI with user dashboards
 - Adds support for bulk import and export of thesauri and their terms as SKOS RDF
 
 ### 1.0.0 (To Be Released December 2025)
 
+- Enhances the Lingo UI with user dashboards
 - Adds support for additional import/export formats
 - Advanced search and filtering capabilities for thesauri and their terms
 - Allow users to view edit log for thesauri and their terms and revert changes as part of a draft edit
