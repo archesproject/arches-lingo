@@ -149,51 +149,122 @@ async function save(e: FormSubmitEvent) {
     />
 
     <div v-show="!isSaving">
-        <h3>{{ props.sectionTitle }}</h3>
-
-        <Form
-            ref="form"
-            @submit="save"
-        >
-            <GenericWidget
-                node-alias="right_statement_content"
-                :graph-slug="props.graphSlug"
-                :aliased-node-data="
-                    props.tileData?.aliased_data.right_statement?.aliased_data
-                        .right_statement_content
-                "
-                :mode="EDIT"
-            />
-            <GenericWidget
-                node-alias="right_statement_type"
-                :graph-slug="props.graphSlug"
-                :aliased-node-data="
-                    props.tileData?.aliased_data.right_statement?.aliased_data
-                        .right_statement_type
-                "
-                :mode="EDIT"
-            />
-            <GenericWidget
-                node-alias="right_statement_language"
-                :graph-slug="props.graphSlug"
-                :aliased-node-data="
-                    props.tileData?.aliased_data.right_statement?.aliased_data
-                        .right_statement_language
-                "
-                :mode="EDIT"
-            />
-            <GenericWidget
-                node-alias="right_holder"
-                :graph-slug="props.graphSlug"
-                :aliased-node-data="props.tileData?.aliased_data.right_holder"
-                :mode="EDIT"
-            />
-            <GenericWidget
-                node-alias="right_type"
-                :graph-slug="props.graphSlug"
-                :aliased-node-data="props.tileData?.aliased_data.right_type"
-                :mode="EDIT"
-            />
-        </Form>
+        <div class="form-header">
+            <h3>{{ props.sectionTitle }}</h3>
+            <div class="form-description">
+                {{ $gettext("Define the rights or license under which this scheme is managed.") }}
+            </div>
+        </div>
+        <div class="form-container">
+            <Form
+                ref="form"
+                @submit="save"
+            >
+                <div class="widget-container column">
+                    <GenericWidget
+                        node-alias="right_statement_content"
+                        :graph-slug="props.graphSlug"
+                        :aliased-node-data="
+                            props.tileData?.aliased_data.right_statement?.aliased_data
+                                .right_statement_content
+                        "
+                        :mode="EDIT"
+                    />
+                </div>
+                <div class="widget-container column">
+                    <GenericWidget
+                        node-alias="right_statement_type"
+                        :graph-slug="props.graphSlug"
+                        :aliased-node-data="
+                            props.tileData?.aliased_data.right_statement?.aliased_data
+                                .right_statement_type
+                        "
+                        :mode="EDIT"
+                    />
+                </div>
+                <div class="widget-container column">
+                    <GenericWidget
+                        node-alias="right_statement_language"
+                        :graph-slug="props.graphSlug"
+                        :aliased-node-data="
+                            props.tileData?.aliased_data.right_statement?.aliased_data
+                                .right_statement_language
+                        "
+                        :mode="EDIT"
+                    />
+                </div>
+                <div class="widget-container column">
+                    <GenericWidget
+                        node-alias="right_holder"
+                        :graph-slug="props.graphSlug"
+                        :aliased-node-data="props.tileData?.aliased_data.right_holder"
+                        :mode="EDIT"
+                    />
+                </div>
+                <div class="widget-container column">
+                    <GenericWidget
+                        node-alias="right_type"
+                        :graph-slug="props.graphSlug"
+                        :aliased-node-data="props.tileData?.aliased_data.right_type"
+                        :mode="EDIT"
+                    />
+                </div>
+            </Form>
+        </div>
     </div>
 </template>
+<style scoped>
+.widget-container {
+    display: flex; 
+    gap: .25rem; 
+    padding: .5rem 0rem 0.25rem 0rem;
+    color: var(--p-header-item-label);
+}
+
+.form-header {
+    padding-top: 0rem;
+    padding-bottom: 1rem;
+    background: var(--p-header-background);
+    border-bottom: 0.06rem solid var(--p-header-border);
+    min-height: 5.5rem;
+}
+
+.form-header h3 {
+    margin: 0;
+    padding: 0.5rem 1rem 0 1rem;
+}
+
+.form-container {
+    padding: 0.5rem 1rem;
+    background: var(--p-editor-form-background);
+}
+
+.form-description {
+    padding: 0.125rem 1rem;
+    font-weight: var(--p-lingo-font-weight-normal);
+    font-size: var(--p-lingo-font-size-smallnormal);
+    color: var(--p-header-item-label);
+    margin-inline-end: 0.25rem;
+}
+
+.column {
+    flex-direction: column;
+}
+
+:deep(.p-inputtext) {
+    border-radius: .125rem;
+}
+
+:deep(.p-textarea) {
+    border-radius: .125rem;
+}
+
+:deep(.p-treeselect) {
+    border-radius: .125rem;
+}
+
+:deep(.p-multiselect) {
+    border-radius: .125rem;
+}
+
+</style>
