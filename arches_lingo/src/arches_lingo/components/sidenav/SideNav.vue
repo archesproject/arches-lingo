@@ -171,7 +171,7 @@ const emit = defineEmits(["update:isNavExpanded"]);
 }
 
 :deep(.nav-button) {
-    height: 3.125rem;
+    height: 2.75rem;
     width: 100%;
     border-radius: 0;
     text-decoration: none;
