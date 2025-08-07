@@ -71,8 +71,8 @@ function onCancel() {
             <div class="controls">
                 <Button
                     ref="toggleSizeButton"
+                    class="panel-control-button"
                     :aria-label="$gettext('toggle editor size')"
-                    rounded
                     @click="toggleSize"
                 >
                     <i
@@ -86,7 +86,7 @@ function onCancel() {
                 </Button>
                 <Button
                     :aria-label="$gettext('close editor')"
-                    rounded
+                    class="panel-control-button"
                     @click="$emit(CLOSE)"
                 >
                     <i
@@ -122,6 +122,15 @@ function onCancel() {
     display: flex;
     flex-direction: column;
     height: 100%;
+}
+
+.panel-control-button {
+    border-radius: 50%;
+    height: 2.25rem;
+    width: 2.25rem;
+    background: var(--p-primary-contrast-color);
+    border: 0.0625rem solid var(--p-header-button-border);
+    color: var(--p-editor-form-color);
 }
 
 .controls button {
