@@ -238,19 +238,19 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                     <div class="exports-panel-container">
                         <div class="container-title">
                             <h3>
-                                Concept Export
+                                {{ $gettext("Concept Export") }}
                             </h3>
                         </div>
                         <div class="options-container">
                             <h4>
-                                Export Options
+                                {{ $gettext("Export Options") }}
                             </h4>
                             <!-- TODO: export options go here -->
                             <SelectButton v-model="exporter" :options="exporteroptions" />
                         </div>
                         <div class="formats-container">
                             <h4>
-                                Export Formats
+                                 {{ $gettext("Export Formats") }}
                             </h4>
                             <!-- TODO: export format selection goes here -->
                             <div>
@@ -303,7 +303,6 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                         @click="confirmDelete"
                     />
             </div>
-
         </div>
         
         <div class="header-content">
