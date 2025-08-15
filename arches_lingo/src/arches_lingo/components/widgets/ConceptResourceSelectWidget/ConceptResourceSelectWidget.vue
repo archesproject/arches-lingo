@@ -73,8 +73,8 @@
 // }
 </script>
 
-<template>
-    <!-- <ProgressSpinner
+<!-- <template>
+    <ProgressSpinner
         v-if="isLoading"
         style="width: 2em; height: 2em"
     />
@@ -105,5 +105,5 @@
         >
             {{ configurationError.message }}
         </Message>
-    </template> -->
-</template>
+    </template>
+</template> -->

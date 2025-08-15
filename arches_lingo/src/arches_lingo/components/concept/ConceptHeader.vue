@@ -244,12 +244,13 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                     </span>
                     <span
                         v-for="parent in data?.parentConcepts"
-                        :key="parent.node_value"
+                        :key="parent.details[0].resource_id"
                         class="header-item-value parent-concept"
                     >
-                        <RouterLink :to="`/concept/${parent.node_value}`">{{
-                            parent.display_value
-                        }}</RouterLink>
+                        <RouterLink
+                            :to="`/concept/${parent.details[0].resource_id}`"
+                            >{{ parent.details[0].display_value }}</RouterLink
+                        >
                     </span>
                 </div>
                 <div class="header-item">

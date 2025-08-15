@@ -6,7 +6,7 @@ import { Form } from "@primevue/forms";
 
 import Skeleton from "primevue/skeleton";
 
-import ResourceInstanceSelectWidget from "@/arches_component_lab/widgets/ResourceInstanceSelectWidget/ResourceInstanceSelectWidget.vue";
+import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
 
 import { createLingoResource, upsertLingoTile } from "@/arches_lingo/api.ts";
 import { EDIT } from "@/arches_lingo/constants.ts";
@@ -14,7 +14,6 @@ import { EDIT } from "@/arches_lingo/constants.ts";
 import type { Component, Ref } from "vue";
 import type { FormSubmitEvent } from "@primevue/forms";
 import type { ConceptClassificationStatus } from "@/arches_lingo/types.ts";
-import type { ResourceInstanceReference } from "@/arches_component_lab/widgets/types.ts";
 
 const props = defineProps<{
     tileData: ConceptClassificationStatus | undefined;
@@ -54,7 +53,7 @@ const computedValue = computed(() => {
             resource_id:
                 props.tileData.aliased_data
                     .classification_status_ascribed_classification.node_value,
-        } as ResourceInstanceReference;
+        };
     }
     return null;
 });
@@ -142,7 +141,7 @@ async function save(e: FormSubmitEvent) {
             ref="form"
             @submit="save"
         >
-            <ResourceInstanceSelectWidget
+            <GenericWidget
                 :graph-slug="props.graphSlug"
                 node-alias="classification_status_ascribed_classification"
                 :value="computedValue"

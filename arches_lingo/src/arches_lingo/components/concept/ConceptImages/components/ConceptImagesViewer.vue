@@ -46,7 +46,7 @@ onMounted(async () => {
         try {
             const digitalObjectInstances =
                 props.tileData.aliased_data.depicting_digital_asset_internal?.node_value?.map(
-                    (resource) => resource.resource_id,
+                    (resource) => resource.resourceId,
                 );
             if (digitalObjectInstances) {
                 resources.value = await fetchLingoResourcesBatch(
@@ -86,7 +86,7 @@ function confirmDelete(removedResourceInstanceId: string) {
                     depictingDigitalAssetInternalData.depicting_digital_asset_internal.node_value =
                         depictingDigitalAssetInternalData.depicting_digital_asset_internal.node_value.filter(
                             (assetReference) =>
-                                assetReference.resource_id !==
+                                assetReference.resourceId !==
                                 removedResourceInstanceId,
                         );
                     resources.value = resources.value?.filter(
