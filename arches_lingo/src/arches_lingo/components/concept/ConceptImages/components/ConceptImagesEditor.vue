@@ -155,8 +155,8 @@ async function save(e: FormSubmitEvent) {
             };
         } else {
             digitalObjectInstanceAliases.content.aliased_data.content = [
-                ...(digitalObjectInstanceAliases.content.aliased_data.content
-                    ?.node_value ?? []),
+                ...(digitalObjectInstanceAliases.content.aliased_data
+                    .content?.[0].node_value ?? []),
                 ...fileJsonObjects,
             ];
         }

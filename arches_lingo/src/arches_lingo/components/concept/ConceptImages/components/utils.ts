@@ -72,9 +72,9 @@ export async function addDigitalObjectToConceptImageCollection(
             conceptDigitalObjectRelationshipList.aliased_data.depicting_digital_asset_internal.aliased_data.depicting_digital_asset_internal.node_value =
                 [];
         }
-        conceptDigitalObjectRelationshipList.aliased_data.depicting_digital_asset_internal.aliased_data.depicting_digital_asset_internal.node_value.push(
+        conceptDigitalObjectRelationshipList.aliased_data.depicting_digital_asset_internal.aliased_data.depicting_digital_asset_internal.details.push(
             {
-                display_value: digitalObjectResource.display_value,
+                display_value: digitalObjectResource.display_value!,
                 resource_id: digitalObjectResource.resourceinstanceid,
             },
         );

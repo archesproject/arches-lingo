@@ -66,12 +66,15 @@ onMounted(async () => {
             for (const datum of hierarchicalData.value) {
                 const parentConceptResourceId =
                     datum.searchResults[datum.searchResults.length - 2].id;
-                const parentConceptTile = tileData.value.find(
-                    (tile) =>
+                const parentConceptTile = tileData.value.find((tile) => {
+                    const ascribedValues =
                         tile.aliased_data
                             .classification_status_ascribed_classification
-                            .node_value === parentConceptResourceId,
-                );
+                            .node_value;
+                    return ascribedValues.some(
+                        (value) => value.resourceId === parentConceptResourceId,
+                    );
+                });
                 if (parentConceptTile) {
                     datum.tileid = parentConceptTile.tileid;
                 } else if (topConceptOfTileId.value) {

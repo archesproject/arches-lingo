@@ -22,8 +22,6 @@ const props = defineProps<{
     nodegroupAlias: string;
 }>();
 
-console.log("(DD(D(D(D(D)))))", props.tileData);
-
 const { $gettext } = useGettext();
 
 const openEditor = inject<(componentName: string) => void>("openEditor");
