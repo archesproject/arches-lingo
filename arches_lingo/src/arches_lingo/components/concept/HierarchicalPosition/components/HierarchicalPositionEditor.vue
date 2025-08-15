@@ -48,13 +48,12 @@ const isSaving = ref(false);
 const computedValue = computed(() => {
     if (
         props.tileData?.aliased_data
-            .classification_status_ascribed_classification?.interchange_value
+            .classification_status_ascribed_classification?.node_value
     ) {
         return {
             resource_id:
                 props.tileData.aliased_data
-                    .classification_status_ascribed_classification
-                    .interchange_value,
+                    .classification_status_ascribed_classification.node_value,
         } as ResourceInstanceReference;
     }
     return null;

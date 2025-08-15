@@ -70,7 +70,7 @@ onMounted(async () => {
                     (tile) =>
                         tile.aliased_data
                             .classification_status_ascribed_classification
-                            .interchange_value === parentConceptResourceId,
+                            .node_value === parentConceptResourceId,
                 );
                 if (parentConceptTile) {
                     datum.tileid = parentConceptTile.tileid;

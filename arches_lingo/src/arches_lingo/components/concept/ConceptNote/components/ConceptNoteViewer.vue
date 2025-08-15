@@ -55,9 +55,7 @@ const metaStringLabel: MetaStringText = {
                 <GenericWidget
                     node-alias="statement_content"
                     :graph-slug="props.graphSlug"
-                    :value="
-                        rowData.aliased_data.statement_content?.display_value
-                    "
+                    :value="rowData.aliased_data.statement_content"
                     :mode="VIEW"
                     :should-show-label="false"
                 />
@@ -66,9 +64,7 @@ const metaStringLabel: MetaStringText = {
                 <GenericWidget
                     node-alias="statement_type"
                     :graph-slug="props.graphSlug"
-                    :value="
-                        rowData.aliased_data.statement_type?.interchange_value
-                    "
+                    :value="rowData.aliased_data.statement_type"
                     :mode="VIEW"
                     :should-show-label="false"
                 />
@@ -77,10 +73,7 @@ const metaStringLabel: MetaStringText = {
                 <GenericWidget
                     node-alias="statement_language"
                     :graph-slug="props.graphSlug"
-                    :value="
-                        rowData.aliased_data.statement_language
-                            ?.interchange_value
-                    "
+                    :value="rowData.aliased_data.statement_language"
                     :mode="VIEW"
                     :should-show-label="false"
                 />
@@ -89,19 +82,13 @@ const metaStringLabel: MetaStringText = {
                 <GenericWidget
                     node-alias="statement_data_assignment_object_used"
                     :graph-slug="props.graphSlug"
-                    :value="
-                        rowData.statement_data_assignment_object_used
-                            ?.interchange_value
-                    "
+                    :value="rowData.statement_data_assignment_object_used"
                     :mode="VIEW"
                 />
                 <GenericWidget
                     node-alias="statement_data_assignment_actor"
                     :graph-slug="props.graphSlug"
-                    :value="
-                        rowData.statement_data_assignment_actor
-                            ?.interchange_value
-                    "
+                    :value="rowData.statement_data_assignment_actor"
                     :mode="VIEW"
                 />
             </template>

@@ -111,28 +111,19 @@ async function save(e: FormSubmitEvent) {
             <GenericWidget
                 :graph-slug="props.graphSlug"
                 node-alias="statement_content"
-                :value="
-                    props.tileData?.aliased_data.statement_content
-                        ?.interchange_value
-                "
+                :value="props.tileData?.aliased_data.statement_content"
                 :mode="EDIT"
             />
             <GenericWidget
                 :graph-slug="props.graphSlug"
                 node-alias="statement_type"
-                :value="
-                    props.tileData?.aliased_data.statement_type
-                        ?.interchange_value
-                "
+                :value="props.tileData?.aliased_data.statement_type"
                 :mode="EDIT"
             />
             <GenericWidget
                 :graph-slug="props.graphSlug"
                 node-alias="statement_language"
-                :value="
-                    props.tileData?.aliased_data.statement_language
-                        ?.interchange_value
-                "
+                :value="props.tileData?.aliased_data.statement_language"
                 :mode="EDIT"
             />
             <GenericWidget
@@ -141,7 +132,6 @@ async function save(e: FormSubmitEvent) {
                 :value="
                     props.tileData?.aliased_data
                         .statement_data_assignment_timespan_begin_of_the_begin
-                        ?.interchange_value
                 "
                 :mode="EDIT"
             />
@@ -151,7 +141,6 @@ async function save(e: FormSubmitEvent) {
                 :value="
                     props.tileData?.aliased_data
                         .statement_data_assignment_timespan_end_of_the_end
-                        ?.interchange_value
                 "
                 :mode="EDIT"
             />
@@ -160,7 +149,6 @@ async function save(e: FormSubmitEvent) {
                 node-alias="statement_data_assignment_actor"
                 :value="
                     props.tileData?.aliased_data.statement_data_assignment_actor
-                        ?.interchange_value
                 "
                 :mode="EDIT"
             />
@@ -170,7 +158,6 @@ async function save(e: FormSubmitEvent) {
                 :value="
                     props.tileData?.aliased_data
                         .statement_data_assignment_object_used
-                        ?.interchange_value
                 "
                 :mode="EDIT"
             />

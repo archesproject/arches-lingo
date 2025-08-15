@@ -61,7 +61,7 @@ const metaStringLabel: MetaStringText = {
             <template #name="{ rowData }">
                 <div
                     v-for="item in rowData.aliased_data
-                        .relation_status_ascribed_comparate?.interchange_value"
+                        .relation_status_ascribed_comparate?.node_value"
                     :key="item.resource_id"
                     style="white-space: nowrap"
                 >
@@ -81,7 +81,6 @@ const metaStringLabel: MetaStringText = {
                     node-alias="relation_status_ascribed_relation"
                     :value="
                         rowData.aliased_data.relation_status_ascribed_relation
-                            ?.interchange_value
                     "
                     :mode="VIEW"
                     :should-show-label="false"
@@ -90,7 +89,7 @@ const metaStringLabel: MetaStringText = {
             <template #language="{ rowData }">
                 <div
                     v-for="item in rowData.aliased_data
-                        .relation_status_ascribed_comparate?.interchange_value"
+                        .relation_status_ascribed_comparate.node_value"
                     :key="item.resource_id"
                 >
                     <RouterLink
@@ -113,17 +112,13 @@ const metaStringLabel: MetaStringText = {
                     :value="
                         rowData.aliased_data
                             .relation_status_data_assignment_actor
-                            ?.interchange_value
                     "
                     :mode="VIEW"
                 />
                 <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="relation_status_data_assignment_object_used"
-                    :value="
-                        rowData.relation_status_data_assignment_object_used
-                            ?.interchange_value
-                    "
+                    :value="rowData.relation_status_data_assignment_object_used"
                     :mode="VIEW"
                 />
             </template>

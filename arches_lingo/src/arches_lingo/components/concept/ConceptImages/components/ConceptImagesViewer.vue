@@ -45,7 +45,7 @@ onMounted(async () => {
     if (props.tileData) {
         try {
             const digitalObjectInstances =
-                props.tileData.aliased_data.depicting_digital_asset_internal?.interchange_value?.map(
+                props.tileData.aliased_data.depicting_digital_asset_internal?.node_value?.map(
                     (resource) => resource.resource_id,
                 );
             if (digitalObjectInstances) {
@@ -83,8 +83,8 @@ function confirmDelete(removedResourceInstanceId: string) {
                 if (
                     depictingDigitalAssetInternalData?.depicting_digital_asset_internal
                 ) {
-                    depictingDigitalAssetInternalData.depicting_digital_asset_internal.interchange_value =
-                        depictingDigitalAssetInternalData.depicting_digital_asset_internal.interchange_value.filter(
+                    depictingDigitalAssetInternalData.depicting_digital_asset_internal.node_value =
+                        depictingDigitalAssetInternalData.depicting_digital_asset_internal.node_value.filter(
                             (assetReference) =>
                                 assetReference.resource_id !==
                                 removedResourceInstanceId,
@@ -191,7 +191,7 @@ function modifyResource(resourceInstanceId?: string) {
                                 :mode="VIEW"
                                 :value="
                                     resource.aliased_data.name?.aliased_data
-                                        .name_content?.display_value
+                                        .name_content
                                 "
                             />
                         </label>
@@ -219,7 +219,6 @@ function modifyResource(resourceInstanceId?: string) {
                         graph-slug="digital_object_rdm_system"
                         :value="
                             resource.aliased_data.content?.aliased_data.content
-                                ?.interchange_value
                         "
                         :mode="VIEW"
                         :should-show-label="false"
@@ -231,7 +230,7 @@ function modifyResource(resourceInstanceId?: string) {
                             :mode="VIEW"
                             :value="
                                 resource.aliased_data.statement?.aliased_data
-                                    .statement_content?.display_value
+                                    .statement_content
                             "
                         />
                     </div>

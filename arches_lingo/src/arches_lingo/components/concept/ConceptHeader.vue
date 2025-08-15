@@ -93,7 +93,7 @@ function confirmDelete() {
                 ).then(() => {
                     const schemeIdentifier =
                         concept.value!.aliased_data?.part_of_scheme
-                            ?.aliased_data.part_of_scheme?.interchange_value;
+                            ?.aliased_data.part_of_scheme?.node_value;
 
                     router.push({
                         name: routeNames.scheme,
@@ -218,8 +218,8 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                     </span>
                     <span class="header-item-value">
                         <RouterLink
-                            v-if="data?.partOfScheme?.interchange_value"
-                            :to="`/scheme/${data?.partOfScheme?.interchange_value}`"
+                            v-if="data?.partOfScheme?.node_value"
+                            :to="`/scheme/${data?.partOfScheme?.node_value}`"
                         >
                             {{ data?.partOfScheme?.display_value }}
                         </RouterLink>
@@ -244,13 +244,12 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                     </span>
                     <span
                         v-for="parent in data?.parentConcepts"
-                        :key="parent.interchange_value"
+                        :key="parent.node_value"
                         class="header-item-value parent-concept"
                     >
-                        <RouterLink
-                            :to="`/concept/${parent.interchange_value}`"
-                            >{{ parent.display_value }}</RouterLink
-                        >
+                        <RouterLink :to="`/concept/${parent.node_value}`">{{
+                            parent.display_value
+                        }}</RouterLink>
                     </span>
                 </div>
                 <div class="header-item">

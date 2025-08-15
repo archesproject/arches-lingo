@@ -50,17 +50,13 @@ const buttonLabel = computed(() => {
             <GenericWidget
                 node-alias="right_holder"
                 :graph-slug="props.graphSlug"
-                :value="
-                    props.tileData?.aliased_data.right_holder?.interchange_value
-                "
+                :value="props.tileData?.aliased_data.right_holder"
                 :mode="VIEW"
             />
             <GenericWidget
                 node-alias="right_type"
                 :graph-slug="props.graphSlug"
-                :value="
-                    props.tileData?.aliased_data.right_type?.interchange_value
-                "
+                :value="props.tileData?.aliased_data.right_type"
                 :mode="VIEW"
             />
             <GenericWidget
@@ -68,7 +64,7 @@ const buttonLabel = computed(() => {
                 :graph-slug="props.graphSlug"
                 :value="
                     props.tileData?.aliased_data.right_statement?.aliased_data
-                        ?.right_statement_content?.display_value
+                        ?.right_statement_content
                 "
                 :mode="VIEW"
             />
@@ -77,7 +73,7 @@ const buttonLabel = computed(() => {
                 :graph-slug="props.graphSlug"
                 :value="
                     props.tileData?.aliased_data.right_statement?.aliased_data
-                        .right_statement_language?.interchange_value
+                        .right_statement_language
                 "
                 :mode="VIEW"
             />
@@ -86,7 +82,7 @@ const buttonLabel = computed(() => {
                 :graph-slug="props.graphSlug"
                 :value="
                     props.tileData?.aliased_data.right_statement?.aliased_data
-                        .right_statement_type?.interchange_value
+                        .right_statement_type
                 "
                 :mode="VIEW"
             />
@@ -95,7 +91,7 @@ const buttonLabel = computed(() => {
                 :graph-slug="props.graphSlug"
                 :value="
                     props.tileData?.aliased_data.right_statement?.aliased_data
-                        .right_statement_type_metatype?.interchange_value
+                        .right_statement_type_metatype
                 "
                 :mode="VIEW"
             />
