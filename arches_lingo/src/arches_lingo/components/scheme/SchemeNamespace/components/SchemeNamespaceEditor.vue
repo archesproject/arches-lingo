@@ -16,7 +16,7 @@ import { Form } from "@primevue/forms";
 
 import Skeleton from "primevue/skeleton";
 
-import NonLocalizedStringWidget from "@/arches_component_lab/widgets/NonLocalizedStringWidget/NonLocalizedStringWidget.vue";
+import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
 
 import { createLingoResource, upsertLingoTile } from "@/arches_lingo/api.ts";
 import {
@@ -130,7 +130,7 @@ async function save(e: FormSubmitEvent) {
             ref="form"
             @submit="save"
         >
-            <NonLocalizedStringWidget
+            <GenericWidget
                 node-alias="namespace_name"
                 :graph-slug="props.graphSlug"
                 :value="

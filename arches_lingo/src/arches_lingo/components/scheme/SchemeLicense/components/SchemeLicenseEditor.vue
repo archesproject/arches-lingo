@@ -16,9 +16,7 @@ import { Form } from "@primevue/forms";
 
 import Skeleton from "primevue/skeleton";
 
-import NonLocalizedTextAreaWidget from "@/arches_component_lab/widgets/NonLocalizedTextAreaWidget/NonLocalizedTextAreaWidget.vue";
-import ReferenceSelectWidget from "@/arches_controlled_lists/widgets/ReferenceSelectWidget/ReferenceSelectWidget.vue";
-import ResourceInstanceMultiSelectWidget from "@/arches_component_lab/widgets/ResourceInstanceMultiSelectWidget/ResourceInstanceMultiSelectWidget.vue";
+import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
 
 import { createLingoResource, upsertLingoTile } from "@/arches_lingo/api.ts";
 
@@ -149,7 +147,7 @@ async function save(e: FormSubmitEvent) {
             ref="form"
             @submit="save"
         >
-            <NonLocalizedTextAreaWidget
+            <GenericWidget
                 node-alias="right_statement_content"
                 :graph-slug="props.graphSlug"
                 :value="
@@ -158,7 +156,7 @@ async function save(e: FormSubmitEvent) {
                 "
                 :mode="EDIT"
             />
-            <ReferenceSelectWidget
+            <GenericWidget
                 node-alias="right_statement_type"
                 :graph-slug="props.graphSlug"
                 :value="
@@ -167,7 +165,7 @@ async function save(e: FormSubmitEvent) {
                 "
                 :mode="EDIT"
             />
-            <ReferenceSelectWidget
+            <GenericWidget
                 node-alias="right_statement_language"
                 :graph-slug="props.graphSlug"
                 :value="
@@ -176,7 +174,7 @@ async function save(e: FormSubmitEvent) {
                 "
                 :mode="EDIT"
             />
-            <ResourceInstanceMultiSelectWidget
+            <GenericWidget
                 node-alias="right_holder"
                 :graph-slug="props.graphSlug"
                 :value="
@@ -184,7 +182,7 @@ async function save(e: FormSubmitEvent) {
                 "
                 :mode="EDIT"
             />
-            <ReferenceSelectWidget
+            <GenericWidget
                 node-alias="right_type"
                 :graph-slug="props.graphSlug"
                 :value="

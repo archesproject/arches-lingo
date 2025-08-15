@@ -9,9 +9,7 @@ import { Form } from "@primevue/forms";
 
 import Skeleton from "primevue/skeleton";
 
-import NonLocalizedStringWidget from "@/arches_component_lab/widgets/NonLocalizedStringWidget/NonLocalizedStringWidget.vue";
-import ReferenceSelectWidget from "@/arches_controlled_lists/widgets/ReferenceSelectWidget/ReferenceSelectWidget.vue";
-import ResourceInstanceMultiSelectWidget from "@/arches_component_lab/widgets/ResourceInstanceMultiSelectWidget/ResourceInstanceMultiSelectWidget.vue";
+import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
 
 import { createLingoResource, upsertLingoTile } from "@/arches_lingo/api.ts";
 import {
@@ -129,7 +127,7 @@ async function save(e: FormSubmitEvent) {
             ref="form"
             @submit="save"
         >
-            <NonLocalizedStringWidget
+            <GenericWidget
                 :graph-slug="props.graphSlug"
                 node-alias="appellative_status_ascribed_name_content"
                 :value="
@@ -139,7 +137,7 @@ async function save(e: FormSubmitEvent) {
                 "
                 :mode="EDIT"
             />
-            <ReferenceSelectWidget
+            <GenericWidget
                 :graph-slug="props.graphSlug"
                 node-alias="appellative_status_ascribed_relation"
                 :value="
@@ -148,7 +146,7 @@ async function save(e: FormSubmitEvent) {
                 "
                 :mode="EDIT"
             />
-            <ReferenceSelectWidget
+            <GenericWidget
                 :graph-slug="props.graphSlug"
                 node-alias="appellative_status_ascribed_name_language"
                 :value="
@@ -158,7 +156,7 @@ async function save(e: FormSubmitEvent) {
                 "
                 :mode="EDIT"
             />
-            <ResourceInstanceMultiSelectWidget
+            <GenericWidget
                 :graph-slug="props.graphSlug"
                 node-alias="appellative_status_data_assignment_actor"
                 :value="
@@ -168,7 +166,7 @@ async function save(e: FormSubmitEvent) {
                 "
                 :mode="EDIT"
             />
-            <ResourceInstanceMultiSelectWidget
+            <GenericWidget
                 :graph-slug="props.graphSlug"
                 node-alias="appellative_status_data_assignment_object_used"
                 :value="

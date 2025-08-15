@@ -8,9 +8,7 @@ import Message from "primevue/message";
 import Skeleton from "primevue/skeleton";
 import { useConfirm } from "primevue/useconfirm";
 
-import FileListWidget from "@/arches_component_lab/widgets/FileListWidget/FileListWidget.vue";
-import NonLocalizedStringWidget from "@/arches_component_lab/widgets/NonLocalizedStringWidget/NonLocalizedStringWidget.vue";
-import NonLocalizedTextAreaWidget from "@/arches_component_lab/widgets/NonLocalizedTextAreaWidget/NonLocalizedTextAreaWidget.vue";
+import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
 
 import { DANGER, SECONDARY, VIEW } from "@/arches_lingo/constants.ts";
 
@@ -187,7 +185,7 @@ function modifyResource(resourceInstanceId?: string) {
                             for="concept-image"
                             class="text"
                         >
-                            <NonLocalizedStringWidget
+                            <GenericWidget
                                 node-alias="name_content"
                                 graph-slug="digital_object_rdm_system"
                                 :mode="VIEW"
@@ -216,7 +214,7 @@ function modifyResource(resourceInstanceId?: string) {
                             />
                         </div>
                     </div>
-                    <FileListWidget
+                    <GenericWidget
                         node-alias="content"
                         graph-slug="digital_object_rdm_system"
                         :value="
@@ -224,10 +222,10 @@ function modifyResource(resourceInstanceId?: string) {
                                 ?.interchange_value
                         "
                         :mode="VIEW"
-                        :show-label="false"
+                        :should-show-label="false"
                     />
                     <div class="footer">
-                        <NonLocalizedTextAreaWidget
+                        <GenericWidget
                             node-alias="statement_content"
                             graph-slug="digital_object_rdm_system"
                             :mode="VIEW"

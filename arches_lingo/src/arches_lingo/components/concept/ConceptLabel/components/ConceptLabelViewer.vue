@@ -5,10 +5,7 @@ import { useGettext } from "vue3-gettext";
 import Button from "primevue/button";
 
 import MetaStringViewer from "@/arches_lingo/components/generic/MetaStringViewer.vue";
-
-import NonLocalizedStringWidget from "@/arches_component_lab/widgets/NonLocalizedStringWidget/NonLocalizedStringWidget.vue";
-import ReferenceSelectWidget from "@/arches_controlled_lists/widgets/ReferenceSelectWidget/ReferenceSelectWidget.vue";
-import ResourceInstanceMultiSelectWidget from "@/arches_component_lab/widgets/ResourceInstanceMultiSelectWidget/ResourceInstanceMultiSelectWidget.vue";
+import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
 
 import { VIEW } from "@/arches_lingo/constants.ts";
 
@@ -58,7 +55,7 @@ const metaStringLabel: MetaStringText = {
             :nodegroup-alias="props.nodegroupAlias"
         >
             <template #name="{ rowData }">
-                <NonLocalizedStringWidget
+                <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="appellative_status_ascribed_name_content"
                     :value="
@@ -67,11 +64,11 @@ const metaStringLabel: MetaStringText = {
                             .display_value
                     "
                     :mode="VIEW"
-                    :show-label="false"
+                    :should-show-label="false"
                 />
             </template>
             <template #type="{ rowData }">
-                <ReferenceSelectWidget
+                <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="appellative_status_ascribed_relation"
                     :value="
@@ -80,11 +77,11 @@ const metaStringLabel: MetaStringText = {
                             .interchange_value
                     "
                     :mode="VIEW"
-                    :show-label="false"
+                    :should-show-label="false"
                 />
             </template>
             <template #language="{ rowData }">
-                <ReferenceSelectWidget
+                <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="appellative_status_ascribed_name_language"
                     :value="
@@ -93,11 +90,11 @@ const metaStringLabel: MetaStringText = {
                             .interchange_value
                     "
                     :mode="VIEW"
-                    :show-label="false"
+                    :should-show-label="false"
                 />
             </template>
             <template #drawer="{ rowData }">
-                <ResourceInstanceMultiSelectWidget
+                <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="appellative_status_data_assignment_object_used"
                     :value="
@@ -107,7 +104,7 @@ const metaStringLabel: MetaStringText = {
                     "
                     :mode="VIEW"
                 />
-                <ResourceInstanceMultiSelectWidget
+                <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="appellative_status_data_assignment_actor"
                     :value="

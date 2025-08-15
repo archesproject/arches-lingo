@@ -1,4 +1,4 @@
-import { fetchNodeData } from "@/arches_component_lab/widgets/api.ts";
+import { fetchCardXNodeXWidgetData } from "@/arches_component_lab/generics/GenericWidget/api.ts";
 import {
     createLingoResource,
     createLingoResourceFromForm,
@@ -98,7 +98,7 @@ export async function createFormDataForFileUpload(
         !Array.isArray(testObject) &&
         Object.prototype.toString.call(testObject) === "[object Object]";
     const digitalObjectContentNodeId = (
-        await fetchNodeData(DIGITAL_OBJECT_GRAPH_SLUG, "content")
+        await fetchCardXNodeXWidgetData(DIGITAL_OBJECT_GRAPH_SLUG, "content")
     ).nodeid;
 
     if (resource.value) {

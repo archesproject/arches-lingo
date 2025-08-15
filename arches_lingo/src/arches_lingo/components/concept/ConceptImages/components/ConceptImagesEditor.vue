@@ -7,9 +7,8 @@ import { useToast } from "primevue/usetoast";
 import { Form } from "@primevue/forms";
 
 import Skeleton from "primevue/skeleton";
-import FileListWidget from "@/arches_component_lab/widgets/FileListWidget/FileListWidget.vue";
-import NonLocalizedStringWidget from "@/arches_component_lab/widgets/NonLocalizedStringWidget/NonLocalizedStringWidget.vue";
-import NonLocalizedTextAreaWidget from "@/arches_component_lab/widgets/NonLocalizedTextAreaWidget/NonLocalizedTextAreaWidget.vue";
+
+import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
 
 import { DIGITAL_OBJECT_GRAPH_SLUG } from "@/arches_lingo/components/concept/ConceptImages/components/constants.ts";
 import {
@@ -261,7 +260,7 @@ function resetForm() {
             @submit="save"
             @reset="resetForm"
         >
-            <NonLocalizedStringWidget
+            <GenericWidget
                 node-alias="name_content"
                 graph-slug="digital_object_rdm_system"
                 :mode="EDIT"
@@ -270,7 +269,7 @@ function resetForm() {
                         .name_content?.interchange_value
                 "
             />
-            <NonLocalizedTextAreaWidget
+            <GenericWidget
                 node-alias="statement_content"
                 graph-slug="digital_object_rdm_system"
                 :mode="EDIT"
@@ -279,7 +278,7 @@ function resetForm() {
                         .statement_content?.interchange_value
                 "
             />
-            <FileListWidget
+            <GenericWidget
                 node-alias="content"
                 graph-slug="digital_object_rdm_system"
                 :value="
@@ -287,7 +286,7 @@ function resetForm() {
                         .content?.interchange_value
                 "
                 :mode="EDIT"
-                :show-label="false"
+                :should-show-label="false"
             />
         </Form>
     </div>

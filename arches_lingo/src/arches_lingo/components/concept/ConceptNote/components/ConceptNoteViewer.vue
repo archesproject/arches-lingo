@@ -5,9 +5,7 @@ import { useGettext } from "vue3-gettext";
 import Button from "primevue/button";
 
 import MetaStringViewer from "@/arches_lingo/components/generic/MetaStringViewer.vue";
-import NonLocalizedTextAreaWidget from "@/arches_component_lab/widgets/NonLocalizedTextAreaWidget/NonLocalizedTextAreaWidget.vue";
-import ReferenceSelectWidget from "@/arches_controlled_lists/widgets/ReferenceSelectWidget/ReferenceSelectWidget.vue";
-import ResourceInstanceMultiSelectWidget from "@/arches_component_lab/widgets/ResourceInstanceMultiSelectWidget/ResourceInstanceMultiSelectWidget.vue";
+import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
 
 import { VIEW } from "@/arches_lingo/constants.ts";
 
@@ -54,29 +52,29 @@ const metaStringLabel: MetaStringText = {
             :nodegroup-alias="props.nodegroupAlias"
         >
             <template #name="{ rowData }">
-                <NonLocalizedTextAreaWidget
+                <GenericWidget
                     node-alias="statement_content"
                     :graph-slug="props.graphSlug"
                     :value="
                         rowData.aliased_data.statement_content?.display_value
                     "
                     :mode="VIEW"
-                    :show-label="false"
+                    :should-show-label="false"
                 />
             </template>
             <template #type="{ rowData }">
-                <ReferenceSelectWidget
+                <GenericWidget
                     node-alias="statement_type"
                     :graph-slug="props.graphSlug"
                     :value="
                         rowData.aliased_data.statement_type?.interchange_value
                     "
                     :mode="VIEW"
-                    :show-label="false"
+                    :should-show-label="false"
                 />
             </template>
             <template #language="{ rowData }">
-                <ReferenceSelectWidget
+                <GenericWidget
                     node-alias="statement_language"
                     :graph-slug="props.graphSlug"
                     :value="
@@ -84,11 +82,11 @@ const metaStringLabel: MetaStringText = {
                             ?.interchange_value
                     "
                     :mode="VIEW"
-                    :show-label="false"
+                    :should-show-label="false"
                 />
             </template>
             <template #drawer="{ rowData }">
-                <ResourceInstanceMultiSelectWidget
+                <GenericWidget
                     node-alias="statement_data_assignment_object_used"
                     :graph-slug="props.graphSlug"
                     :value="
@@ -97,7 +95,7 @@ const metaStringLabel: MetaStringText = {
                     "
                     :mode="VIEW"
                 />
-                <ResourceInstanceMultiSelectWidget
+                <GenericWidget
                     node-alias="statement_data_assignment_actor"
                     :graph-slug="props.graphSlug"
                     :value="
