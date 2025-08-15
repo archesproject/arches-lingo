@@ -55,9 +55,7 @@ const metaStringLabel: MetaStringText = {
                 <GenericWidget
                     node-alias="statement_content_n1"
                     :graph-slug="props.graphSlug"
-                    :value="
-                        rowData.aliased_data.statement_content_n1.display_value
-                    "
+                    :value="rowData.aliased_data.statement_content_n1"
                     :mode="VIEW"
                     :should-show-label="false"
                 />
@@ -66,9 +64,7 @@ const metaStringLabel: MetaStringText = {
                 <GenericWidget
                     node-alias="statement_type_n1"
                     :graph-slug="props.graphSlug"
-                    :value="
-                        rowData.aliased_data.statement_type_n1.interchange_value
-                    "
+                    :value="rowData.aliased_data.statement_type_n1"
                     :mode="VIEW"
                     :should-show-label="false"
                 />
@@ -77,10 +73,7 @@ const metaStringLabel: MetaStringText = {
                 <GenericWidget
                     node-alias="statement_language_n1"
                     :graph-slug="props.graphSlug"
-                    :value="
-                        rowData.aliased_data.statement_language_n1
-                            .interchange_value
-                    "
+                    :value="rowData.aliased_data.statement_language_n1"
                     :mode="VIEW"
                     :should-show-label="false"
                 />
@@ -92,7 +85,6 @@ const metaStringLabel: MetaStringText = {
                     :value="
                         rowData.aliased_data
                             .statement_data_assignment_object_used
-                            .interchange_value
                     "
                     :mode="VIEW"
                 />
@@ -101,7 +93,6 @@ const metaStringLabel: MetaStringText = {
                     :graph-slug="props.graphSlug"
                     :value="
                         rowData.aliased_data.statement_data_assignment_actor
-                            .interchange_value
                     "
                     :mode="VIEW"
                 />

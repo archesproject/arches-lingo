@@ -114,17 +114,17 @@ export interface ResourceData<T extends AliasedData = AliasedData> {
 
 interface QuerysetsString {
     display_value: string;
-    interchange_value: string;
+    node_value: string;
 }
 
 interface QuerysetsReferenceSelectFetchedOption {
     display_value: string;
-    interchange_value: ReferenceSelectFetchedOption[];
+    node_value: ReferenceSelectFetchedOption[];
 }
 
 interface QuerysetsResourceInstanceReference {
     display_value: string;
-    interchange_value: ResourceInstanceReference[];
+    node_value: ResourceInstanceReference[];
 }
 
 export interface AppellativeStatusAliases extends AliasedData {
@@ -148,7 +148,7 @@ export type ConceptName = TileData<ConceptNameAlises>;
 
 interface QuerysetsFileReference {
     display_value: string;
-    interchange_value: FileReference[];
+    node_value: FileReference[];
 }
 
 export interface DigitalObjectContentAliases extends AliasedData {

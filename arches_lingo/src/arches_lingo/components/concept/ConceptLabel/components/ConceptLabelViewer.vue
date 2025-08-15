@@ -22,6 +22,8 @@ const props = defineProps<{
     nodegroupAlias: string;
 }>();
 
+console.log("(DD(D(D(D(D)))))", props.tileData);
+
 const { $gettext } = useGettext();
 
 const openEditor = inject<(componentName: string) => void>("openEditor");
@@ -61,7 +63,6 @@ const metaStringLabel: MetaStringText = {
                     :value="
                         rowData.aliased_data
                             .appellative_status_ascribed_name_content
-                            .display_value
                     "
                     :mode="VIEW"
                     :should-show-label="false"
@@ -74,7 +75,6 @@ const metaStringLabel: MetaStringText = {
                     :value="
                         rowData.aliased_data
                             .appellative_status_ascribed_relation
-                            .interchange_value
                     "
                     :mode="VIEW"
                     :should-show-label="false"
@@ -87,7 +87,6 @@ const metaStringLabel: MetaStringText = {
                     :value="
                         rowData.aliased_data
                             .appellative_status_ascribed_name_language
-                            .interchange_value
                     "
                     :mode="VIEW"
                     :should-show-label="false"
@@ -100,7 +99,6 @@ const metaStringLabel: MetaStringText = {
                     :value="
                         rowData.aliased_data
                             .appellative_status_data_assignment_object_used
-                            .interchange_value
                     "
                     :mode="VIEW"
                 />
@@ -110,7 +108,6 @@ const metaStringLabel: MetaStringText = {
                     :value="
                         rowData.aliased_data
                             .appellative_status_data_assignment_actor
-                            .interchange_value
                     "
                     :mode="VIEW"
                 />

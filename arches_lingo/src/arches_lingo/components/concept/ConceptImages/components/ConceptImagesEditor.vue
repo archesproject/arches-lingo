@@ -156,7 +156,7 @@ async function save(e: FormSubmitEvent) {
         } else {
             digitalObjectInstanceAliases.content.aliased_data.content = [
                 ...(digitalObjectInstanceAliases.content.aliased_data.content
-                    ?.interchange_value ?? []),
+                    ?.node_value ?? []),
                 ...fileJsonObjects,
             ];
         }
@@ -266,7 +266,7 @@ function resetForm() {
                 :mode="EDIT"
                 :value="
                     digitalObjectResource?.aliased_data.name?.aliased_data
-                        .name_content?.interchange_value
+                        .name_content
                 "
             />
             <GenericWidget
@@ -275,7 +275,7 @@ function resetForm() {
                 :mode="EDIT"
                 :value="
                     digitalObjectResource?.aliased_data.statement?.aliased_data
-                        .statement_content?.interchange_value
+                        .statement_content
                 "
             />
             <GenericWidget
@@ -283,7 +283,7 @@ function resetForm() {
                 graph-slug="digital_object_rdm_system"
                 :value="
                     digitalObjectResource?.aliased_data?.content?.aliased_data
-                        .content?.interchange_value
+                        .content
                 "
                 :mode="EDIT"
                 :should-show-label="false"

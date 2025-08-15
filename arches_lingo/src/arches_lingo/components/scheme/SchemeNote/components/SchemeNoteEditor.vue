@@ -128,28 +128,19 @@ async function save(e: FormSubmitEvent) {
             <GenericWidget
                 :graph-slug="props.graphSlug"
                 node-alias="statement_content_n1"
-                :value="
-                    props.tileData?.aliased_data?.statement_content_n1
-                        ?.interchange_value
-                "
+                :value="props.tileData?.aliased_data?.statement_content_n1"
                 :mode="EDIT"
             />
             <GenericWidget
                 :graph-slug="props.graphSlug"
                 node-alias="statement_type_n1"
-                :value="
-                    props.tileData?.aliased_data?.statement_type_n1
-                        ?.interchange_value
-                "
+                :value="props.tileData?.aliased_data?.statement_type_n1"
                 :mode="EDIT"
             />
             <GenericWidget
                 :graph-slug="props.graphSlug"
                 node-alias="statement_language_n1"
-                :value="
-                    props.tileData?.aliased_data?.statement_language_n1
-                        ?.interchange_value
-                "
+                :value="props.tileData?.aliased_data?.statement_language_n1"
                 :mode="EDIT"
             />
             <GenericWidget
@@ -157,7 +148,7 @@ async function save(e: FormSubmitEvent) {
                 node-alias="statement_data_assignment_actor"
                 :value="
                     props.tileData?.aliased_data
-                        ?.statement_data_assignment_actor?.interchange_value
+                        ?.statement_data_assignment_actor
                 "
                 :mode="EDIT"
             />
@@ -167,7 +158,6 @@ async function save(e: FormSubmitEvent) {
                 :value="
                     props.tileData?.aliased_data
                         ?.statement_data_assignment_object_used
-                        ?.interchange_value
                 "
                 :mode="EDIT"
             />
