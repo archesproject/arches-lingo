@@ -6,9 +6,7 @@ import { Form } from "@primevue/forms";
 
 import Skeleton from "primevue/skeleton";
 
-import DateWidget from "@/arches_component_lab/widgets/DateWidget/DateWidget.vue";
-import ReferenceSelectWidget from "@/arches_controlled_lists/widgets/ReferenceSelectWidget/ReferenceSelectWidget.vue";
-import ResourceInstanceMultiSelectWidget from "@/arches_component_lab/widgets/ResourceInstanceMultiSelectWidget/ResourceInstanceMultiSelectWidget.vue";
+import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
 
 import { createLingoResource, upsertLingoTile } from "@/arches_lingo/api.ts";
 import { EDIT } from "@/arches_lingo/constants.ts";
@@ -106,7 +104,7 @@ async function save(e: FormSubmitEvent) {
             ref="form"
             @submit="save"
         >
-            <ResourceInstanceMultiSelectWidget
+            <GenericWidget
                 :graph-slug="props.graphSlug"
                 node-alias="relation_status_ascribed_comparate"
                 :value="
@@ -115,7 +113,7 @@ async function save(e: FormSubmitEvent) {
                 "
                 :mode="EDIT"
             />
-            <ReferenceSelectWidget
+            <GenericWidget
                 :graph-slug="props.graphSlug"
                 node-alias="relation_status_ascribed_relation"
                 :value="
@@ -124,7 +122,7 @@ async function save(e: FormSubmitEvent) {
                 "
                 :mode="EDIT"
             />
-            <ReferenceSelectWidget
+            <GenericWidget
                 :graph-slug="props.graphSlug"
                 node-alias="relation_status_status"
                 :value="
@@ -133,7 +131,7 @@ async function save(e: FormSubmitEvent) {
                 "
                 :mode="EDIT"
             />
-            <ReferenceSelectWidget
+            <GenericWidget
                 :graph-slug="props.graphSlug"
                 node-alias="relation_status_status_metatype"
                 :value="
@@ -142,7 +140,7 @@ async function save(e: FormSubmitEvent) {
                 "
                 :mode="EDIT"
             />
-            <DateWidget
+            <GenericWidget
                 :graph-slug="props.graphSlug"
                 node-alias="relation_status_timespan_begin_of_the_begin"
                 :value="
@@ -152,7 +150,7 @@ async function save(e: FormSubmitEvent) {
                 "
                 :mode="EDIT"
             />
-            <DateWidget
+            <GenericWidget
                 :graph-slug="props.graphSlug"
                 node-alias="relation_status_timespan_end_of_the_end"
                 :value="
@@ -162,7 +160,7 @@ async function save(e: FormSubmitEvent) {
                 "
                 :mode="EDIT"
             />
-            <ResourceInstanceMultiSelectWidget
+            <GenericWidget
                 :graph-slug="props.graphSlug"
                 node-alias="relation_status_data_assignment_actor"
                 :value="
@@ -172,7 +170,7 @@ async function save(e: FormSubmitEvent) {
                 "
                 :mode="EDIT"
             />
-            <ResourceInstanceMultiSelectWidget
+            <GenericWidget
                 :graph-slug="props.graphSlug"
                 node-alias="relation_status_data_assignment_object_used"
                 :value="
@@ -182,7 +180,7 @@ async function save(e: FormSubmitEvent) {
                 "
                 :mode="EDIT"
             />
-            <ReferenceSelectWidget
+            <GenericWidget
                 :graph-slug="props.graphSlug"
                 node-alias="relation_status_data_assignment_type"
                 :value="

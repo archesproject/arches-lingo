@@ -4,7 +4,7 @@ import { useGettext } from "vue3-gettext";
 
 import Button from "primevue/button";
 
-import ResourceInstanceMultiSelectWidget from "@/arches_component_lab/widgets/ResourceInstanceMultiSelectWidget/ResourceInstanceMultiSelectWidget.vue";
+import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
 
 import { VIEW } from "@/arches_lingo/constants.ts";
 
@@ -47,7 +47,7 @@ const buttonLabel = computed(() => {
             ></Button>
         </div>
 
-        <ResourceInstanceMultiSelectWidget
+        <GenericWidget
             v-if="props.tileData"
             node-alias="creation_sources"
             :graph-slug="props.graphSlug"

@@ -4,7 +4,7 @@ import { useGettext } from "vue3-gettext";
 
 import Button from "primevue/button";
 
-import NonLocalizedStringWidget from "@/arches_component_lab/widgets/NonLocalizedStringWidget/NonLocalizedStringWidget.vue";
+import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
 
 import { VIEW } from "@/arches_lingo/constants.ts";
 
@@ -47,7 +47,7 @@ const buttonLabel = computed(() => {
             ></Button>
         </div>
 
-        <NonLocalizedStringWidget
+        <GenericWidget
             v-if="props.tileData"
             node-alias="namespace_name"
             :graph-slug="props.graphSlug"

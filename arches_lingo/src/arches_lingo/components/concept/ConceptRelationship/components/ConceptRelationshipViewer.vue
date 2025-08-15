@@ -5,9 +5,7 @@ import { useGettext } from "vue3-gettext";
 import Button from "primevue/button";
 
 import MetaStringViewer from "@/arches_lingo/components/generic/MetaStringViewer.vue";
-import ReferenceSelectWidget from "@/arches_controlled_lists/widgets/ReferenceSelectWidget/ReferenceSelectWidget.vue";
-import ResourceInstanceMultiSelectWidget from "@/arches_component_lab/widgets/ResourceInstanceMultiSelectWidget/ResourceInstanceMultiSelectWidget.vue";
-import NonLocalizedStringWidget from "@/arches_component_lab/widgets/NonLocalizedStringWidget/NonLocalizedStringWidget.vue";
+import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
 
 import { VIEW } from "@/arches_lingo/constants.ts";
 import { routeNames } from "@/arches_lingo/routes.ts";
@@ -68,17 +66,17 @@ const metaStringLabel: MetaStringText = {
                     style="white-space: nowrap"
                 >
                     <!-- non-standard -- we only want to display the resource ID -->
-                    <NonLocalizedStringWidget
+                    <GenericWidget
                         :graph-slug="props.graphSlug"
                         node-alias="relation_status_ascribed_comparate"
                         :value="item.resource_id"
                         :mode="VIEW"
-                        :show-label="false"
+                        :should-show-label="false"
                     />
                 </div>
             </template>
             <template #type="{ rowData }">
-                <ReferenceSelectWidget
+                <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="relation_status_ascribed_relation"
                     :value="
@@ -86,7 +84,7 @@ const metaStringLabel: MetaStringText = {
                             ?.interchange_value
                     "
                     :mode="VIEW"
-                    :show-label="false"
+                    :should-show-label="false"
                 />
             </template>
             <template #language="{ rowData }">
@@ -109,7 +107,7 @@ const metaStringLabel: MetaStringText = {
                 </div>
             </template>
             <template #drawer="{ rowData }">
-                <ResourceInstanceMultiSelectWidget
+                <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="relation_status_data_assignment_actor"
                     :value="
@@ -119,7 +117,7 @@ const metaStringLabel: MetaStringText = {
                     "
                     :mode="VIEW"
                 />
-                <ResourceInstanceMultiSelectWidget
+                <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="relation_status_data_assignment_object_used"
                     :value="
