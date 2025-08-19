@@ -552,17 +552,6 @@ SHOW_LANGUAGE_SWITCH = len(LANGUAGES) > 1
 # TODO: remove when finalizing release
 SILENCED_SYSTEM_CHECKS += ["arches.E002"]
 
-REST_FRAMEWORK = {
-    # TODO: choose most appropriate default.
-    # Use Django's standard `django.contrib.auth` permissions,
-    # or allow read-only access for unauthenticated users.
-    "DEFAULT_PERMISSION_CLASSES": [
-        "rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly"
-    ],
-    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
-    "PAGE_SIZE": API_MAX_PAGE_SIZE,
-}
-
 REFERENCES_INDEX_NAME = "references"
 ELASTICSEARCH_CUSTOM_INDEXES = [
     {
