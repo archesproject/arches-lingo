@@ -130,6 +130,7 @@ main {
 
 <!-- NOT scoped because dialog gets appended to <body> and is unreachable via scoped styles -->
 <style>
+.p-confirmdialog,
 .p-datepicker-panel,
 .p-tree-node-label,
 .p-toast,
