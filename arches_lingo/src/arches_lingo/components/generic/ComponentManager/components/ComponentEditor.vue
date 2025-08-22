@@ -71,8 +71,8 @@ function onCancel() {
             <div class="controls">
                 <Button
                     ref="toggleSizeButton"
+                    class="panel-control-button"
                     :aria-label="$gettext('toggle editor size')"
-                    rounded
                     @click="toggleSize"
                 >
                     <i
@@ -86,7 +86,7 @@ function onCancel() {
                 </Button>
                 <Button
                     :aria-label="$gettext('close editor')"
-                    rounded
+                    class="panel-control-button"
                     @click="$emit(CLOSE)"
                 >
                     <i
@@ -124,6 +124,15 @@ function onCancel() {
     height: 100%;
 }
 
+.panel-control-button {
+    border-radius: 50%;
+    height: 2.25rem;
+    width: 2.25rem;
+    background: var(--p-primary-contrast-color);
+    border: 0.0625rem solid var(--p-header-button-border);
+    color: var(--p-editor-form-color);
+}
+
 .controls button {
     margin: 0 0.125rem;
 }
@@ -131,14 +140,15 @@ function onCancel() {
 h2 {
     font-size: var(--p-lingo-font-size-large);
     font-weight: var(--p-lingo-font-weight-normal);
+    margin: .75rem 0rem;
 }
 
 .header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 0.125rem solid var(--p-menubar-border-color);
-    background: var(--p-header-background);
+    border-bottom: 0.0625rem solid var(--p-header-toolbar-border);
+    background: var(--p-header-toolbar-background);
     padding: 0 1rem;
 }
 
@@ -165,7 +175,8 @@ h2 {
 .editor-content {
     overflow-y: auto;
     flex: 1;
-    padding: 0 1rem 0 1rem;
+    padding: 0;
+    background: var(--p-editor-form-background);
 }
 
 .footer {

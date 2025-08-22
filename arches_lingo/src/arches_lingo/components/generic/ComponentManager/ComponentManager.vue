@@ -223,23 +223,24 @@ provide("refreshReportSection", refreshReportSection);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 0.06rem solid var(--p-form-field-border-color);
+    border-bottom: 0.06rem solid var(--p-highlight-focus-background);
     padding-bottom: 0.5rem;
 }
 
 :deep(.section-header h2) {
     margin: 0;
-    font-size: var(--p-lingo-font-size-large);
+    font-size: var(--p-lingo-font-size-medium);
     font-weight: var(--p-lingo-font-weight-normal);
     color: var(--p-neutral-500);
 }
 
 :deep(.section-header .add-button) {
-    height: 2rem;
-    font-size: var(--p-lingo-font-size-smallnormal);
+    font-size: var(--p-lingo-font-size-xsmall);
     font-weight: var(--p-lingo-font-weight-normal);
+    border-color: var(--p-header-button-border);
     min-width: 10rem;
     border-radius: 0.125rem;
+    padding: .5rem 0rem;
 }
 
 .p-splitter .p-splitterpanel .splitter-panel-content .p-skeleton {
@@ -249,5 +250,6 @@ provide("refreshReportSection", refreshReportSection);
 
 .p-splitterpanel:has(> .splitter-panel-content) {
     overflow-y: auto;
+    width: 12rem;
 }
 </style>

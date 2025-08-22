@@ -31,11 +31,11 @@ defineProps<{
 
 <style scoped>
 .application-version {
-    font-size: var(--p-lingo-font-size-small);
+    font-size: var(--p-lingo-font-size-xsmall);
     color: var(--p-text-muted-color);
 }
 .display-name {
-    font-size: var(--p-lingo-font-size-medium);
+    font-size: var(--p-lingo-font-size-normal);
 }
 .email {
     font-size: var(--p-lingo-font-size-small);
@@ -51,5 +51,7 @@ defineProps<{
 .user-interactions {
     display: flex;
     justify-content: space-between;
+    flex-direction: column;
+    gap: 1rem;
 }
 </style>
