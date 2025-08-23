@@ -55,7 +55,9 @@ const metaStringLabel: MetaStringText = {
                 <GenericWidget
                     node-alias="statement_content_n1"
                     :graph-slug="props.graphSlug"
-                    :value="rowData.aliased_data.statement_content_n1"
+                    :aliased-node-data="
+                        rowData.aliased_data.statement_content_n1
+                    "
                     :mode="VIEW"
                     :should-show-label="false"
                 />
@@ -64,7 +66,7 @@ const metaStringLabel: MetaStringText = {
                 <GenericWidget
                     node-alias="statement_type_n1"
                     :graph-slug="props.graphSlug"
-                    :value="rowData.aliased_data.statement_type_n1"
+                    :aliased-node-data="rowData.aliased_data.statement_type_n1"
                     :mode="VIEW"
                     :should-show-label="false"
                 />
@@ -73,7 +75,9 @@ const metaStringLabel: MetaStringText = {
                 <GenericWidget
                     node-alias="statement_language_n1"
                     :graph-slug="props.graphSlug"
-                    :value="rowData.aliased_data.statement_language_n1"
+                    :aliased-node-data="
+                        rowData.aliased_data.statement_language_n1
+                    "
                     :mode="VIEW"
                     :should-show-label="false"
                 />
@@ -82,7 +86,7 @@ const metaStringLabel: MetaStringText = {
                 <GenericWidget
                     node-alias="statement_data_assignment_object_used"
                     :graph-slug="props.graphSlug"
-                    :value="
+                    :aliased-node-data="
                         rowData.aliased_data
                             .statement_data_assignment_object_used
                     "
@@ -91,7 +95,7 @@ const metaStringLabel: MetaStringText = {
                 <GenericWidget
                     node-alias="statement_data_assignment_actor"
                     :graph-slug="props.graphSlug"
-                    :value="
+                    :aliased-node-data="
                         rowData.aliased_data.statement_data_assignment_actor
                     "
                     :mode="VIEW"

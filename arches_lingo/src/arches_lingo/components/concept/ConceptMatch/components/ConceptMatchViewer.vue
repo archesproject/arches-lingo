@@ -64,7 +64,9 @@ const metaStringLabel: MetaStringText = {
                 <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="match_status_ascribed_relation"
-                    :value="rowData.aliased_data.match_status_ascribed_relation"
+                    :aliased-node-data="
+                        rowData.aliased_data.match_status_ascribed_relation
+                    "
                     :mode="VIEW"
                     :should-show-label="false"
                 />
@@ -73,7 +75,7 @@ const metaStringLabel: MetaStringText = {
                 <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="uri_content"
-                    :value="rowData.aliased_data.uri"
+                    :aliased-node-data="rowData.aliased_data.uri"
                     :mode="VIEW"
                     :should-show-label="false"
                 />
@@ -101,7 +103,7 @@ const metaStringLabel: MetaStringText = {
                 <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="match_status_data_assignment_actor"
-                    :value="
+                    :aliased-node-data="
                         rowData.aliased_data.match_status_data_assignment_actor
                     "
                     :mode="VIEW"
@@ -109,7 +111,9 @@ const metaStringLabel: MetaStringText = {
                 <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="match_status_data_assignment_object_used"
-                    :value="rowData.match_status_data_assignment_object_used"
+                    :aliased-node-data="
+                        rowData.match_status_data_assignment_object_used
+                    "
                     :mode="VIEW"
                 />
             </template>

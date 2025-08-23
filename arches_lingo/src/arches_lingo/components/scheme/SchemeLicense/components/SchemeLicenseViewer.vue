@@ -50,19 +50,19 @@ const buttonLabel = computed(() => {
             <GenericWidget
                 node-alias="right_holder"
                 :graph-slug="props.graphSlug"
-                :value="props.tileData?.aliased_data.right_holder"
+                :aliased-node-data="props.tileData?.aliased_data.right_holder"
                 :mode="VIEW"
             />
             <GenericWidget
                 node-alias="right_type"
                 :graph-slug="props.graphSlug"
-                :value="props.tileData?.aliased_data.right_type"
+                :aliased-node-data="props.tileData?.aliased_data.right_type"
                 :mode="VIEW"
             />
             <GenericWidget
                 node-alias="right_statement_content"
                 :graph-slug="props.graphSlug"
-                :value="
+                :aliased-node-data="
                     props.tileData?.aliased_data.right_statement?.aliased_data
                         ?.right_statement_content
                 "
@@ -71,7 +71,7 @@ const buttonLabel = computed(() => {
             <GenericWidget
                 node-alias="right_statement_language"
                 :graph-slug="props.graphSlug"
-                :value="
+                :aliased-node-data="
                     props.tileData?.aliased_data.right_statement?.aliased_data
                         .right_statement_language
                 "
@@ -80,7 +80,7 @@ const buttonLabel = computed(() => {
             <GenericWidget
                 node-alias="right_statement_type"
                 :graph-slug="props.graphSlug"
-                :value="
+                :aliased-node-data="
                     props.tileData?.aliased_data.right_statement?.aliased_data
                         .right_statement_type
                 "
@@ -89,7 +89,7 @@ const buttonLabel = computed(() => {
             <GenericWidget
                 node-alias="right_statement_type_metatype"
                 :graph-slug="props.graphSlug"
-                :value="
+                :aliased-node-data="
                     props.tileData?.aliased_data.right_statement?.aliased_data
                         .right_statement_type_metatype
                 "

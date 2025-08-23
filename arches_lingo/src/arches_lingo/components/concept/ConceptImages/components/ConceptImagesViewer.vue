@@ -189,7 +189,7 @@ function modifyResource(resourceInstanceId?: string) {
                                 node-alias="name_content"
                                 graph-slug="digital_object_rdm_system"
                                 :mode="VIEW"
-                                :value="
+                                :aliased-node-data="
                                     resource.aliased_data.name?.aliased_data
                                         .name_content
                                 "
@@ -217,7 +217,7 @@ function modifyResource(resourceInstanceId?: string) {
                     <GenericWidget
                         node-alias="content"
                         graph-slug="digital_object_rdm_system"
-                        :value="
+                        :aliased-node-data="
                             resource.aliased_data.content?.aliased_data.content
                         "
                         :mode="VIEW"
@@ -228,7 +228,7 @@ function modifyResource(resourceInstanceId?: string) {
                             node-alias="statement_content"
                             graph-slug="digital_object_rdm_system"
                             :mode="VIEW"
-                            :value="
+                            :aliased-node-data="
                                 resource.aliased_data.statement?.aliased_data
                                     .statement_content
                             "
