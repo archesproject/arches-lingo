@@ -68,7 +68,17 @@ async function save(e: FormSubmitEvent) {
 
     try {
         const formData = e.values;
-        console.log(props.resourceInstanceId, formData);
+
+        const aliasedTileData = props.tileData?.aliased_data || {};
+
+        const updatedTileData = {
+            ...aliasedTileData,
+            ...Object.fromEntries(
+                Object.entries(formData).filter(
+                    ([key]) => key in aliasedTileData,
+                ),
+            ),
+        };
 
         let updatedTileId;
 
@@ -76,7 +86,7 @@ async function save(e: FormSubmitEvent) {
             const updatedConcept = await createLingoResource(
                 {
                     aliased_data: {
-                        [props.nodegroupAlias]: [formData],
+                        [props.nodegroupAlias]: [updatedTileData],
                     },
                 },
                 props.graphSlug,
@@ -102,7 +112,7 @@ async function save(e: FormSubmitEvent) {
                 };
             } else {
                 nodegroupAlias = props.nodegroupAlias;
-                values = formData;
+                values = updatedTileData;
             }
 
             const updatedConcept = await upsertLingoTile(
@@ -144,7 +154,7 @@ async function save(e: FormSubmitEvent) {
             <GenericWidget
                 :graph-slug="props.graphSlug"
                 node-alias="classification_status_ascribed_classification"
-                :value="computedValue"
+                :aliased-node-data="computedValue"
                 :mode="EDIT"
             />
         </Form>

@@ -3,7 +3,7 @@ import type { MenuItem } from "primevue/menuitem";
 import type { TreeNode } from "primevue/treenode";
 import type { EDIT, VIEW } from "@/arches_lingo/constants.ts";
 
-import type { ReferenceSelectFetchedOption } from "@/arches_controlled_lists/widgets/types.ts";
+import type { ReferenceSelectTreeNode } from "@/arches_controlled_lists/datatypes/reference-select/types.ts";
 import type { Label } from "@/arches_controlled_lists/types.ts";
 
 import type { StringValue } from "@/arches_component_lab/datatypes/string/types.ts";
@@ -48,7 +48,7 @@ export interface Scheme {
 export interface ControlledListResult {
     id: string;
     name: string;
-    items: ReferenceSelectFetchedOption[];
+    items: ReferenceSelectTreeNode[];
 }
 
 export interface ControlledListItemLabelValue {
@@ -115,7 +115,7 @@ export interface ResourceData<T extends AliasedData = AliasedData> {
 
 interface QuerysetsReferenceSelectFetchedOption {
     display_value: string;
-    node_value: ReferenceSelectFetchedOption[];
+    node_value: ReferenceSelectTreeNode[];
 }
 
 export interface AppellativeStatusAliases extends AliasedData {
@@ -181,28 +181,28 @@ export type ConceptStatement = TileData<ConceptStatementAliases>;
 
 export interface ConceptRelationAliases extends AliasedData {
     relation_status_ascribed_comparate: ResourceInstanceListValue;
-    relation_status_ascribed_relation: ReferenceSelectFetchedOption[];
-    relation_status_status: ReferenceSelectFetchedOption[];
-    relation_status_status_metatype: ReferenceSelectFetchedOption[];
+    relation_status_ascribed_relation: ReferenceSelectTreeNode[];
+    relation_status_status: ReferenceSelectTreeNode[];
+    relation_status_status_metatype: ReferenceSelectTreeNode[];
     relation_status_timespan_begin_of_the_begin: string;
     relation_status_timespan_end_of_the_end: string;
     relation_status_data_assignment_actor: ResourceInstanceListValue;
     relation_status_data_assignment_object_used: ResourceInstanceListValue;
-    relation_status_data_assignment_type: ReferenceSelectFetchedOption[];
+    relation_status_data_assignment_type: ReferenceSelectTreeNode[];
 }
 
 export type ConceptRelationStatus = TileData<ConceptRelationAliases>;
 
 export interface ConceptMatchAliases extends AliasedData {
     match_status_ascribed_comparate: ResourceInstanceListValue;
-    match_status_ascribed_relation: ReferenceSelectFetchedOption[];
-    match_status_status: ReferenceSelectFetchedOption[];
-    match_status_status_metatype: ReferenceSelectFetchedOption[];
+    match_status_ascribed_relation: ReferenceSelectTreeNode[];
+    match_status_status: ReferenceSelectTreeNode[];
+    match_status_status_metatype: ReferenceSelectTreeNode[];
     match_status_timespan_begin_of_the_begin: string;
     match_status_timespan_end_of_the_end: string;
     match_status_data_assignment_actor: ResourceInstanceListValue;
     match_status_data_assignment_object_used: ResourceInstanceListValue;
-    match_status_data_assignment_type: ReferenceSelectFetchedOption[];
+    match_status_data_assignment_type: ReferenceSelectTreeNode[];
     uri: URLValue;
 }
 
@@ -210,14 +210,14 @@ export type ConceptMatchStatus = TileData<ConceptMatchAliases>;
 
 export interface ConceptClassificationStatusAliases extends AliasedData {
     classification_status_ascribed_classification: ResourceInstanceListValue;
-    classification_status_ascribed_relation: ReferenceSelectFetchedOption[];
+    classification_status_ascribed_relation: ReferenceSelectTreeNode[];
     classification_status_data_assignment_actor: ResourceInstanceListValue;
     classification_status_data_assignment_object_used: ResourceInstanceListValue;
-    classification_status_data_assignment_type: ReferenceSelectFetchedOption[];
+    classification_status_data_assignment_type: ReferenceSelectTreeNode[];
     classification_status_timespan_begin_of_the_begin: string;
     classification_status_timespan_end_of_the_end: string;
-    classification_status_type: ReferenceSelectFetchedOption[];
-    classification_status_type_metatype: ReferenceSelectFetchedOption[];
+    classification_status_type: ReferenceSelectTreeNode[];
+    classification_status_type_metatype: ReferenceSelectTreeNode[];
 }
 
 export type ConceptClassificationStatus =
@@ -299,8 +299,8 @@ export interface ConceptHeaderData {
     lifeCycleState: string;
     partOfScheme?: ResourceInstanceListValue;
     parentConcepts?: ResourceInstanceListValue[];
-    type?: ReferenceSelectFetchedOption[];
-    status?: ReferenceSelectFetchedOption[];
+    type?: ReferenceSelectTreeNode[];
+    status?: ReferenceSelectTreeNode[];
 }
 
 export interface SchemeHeader {

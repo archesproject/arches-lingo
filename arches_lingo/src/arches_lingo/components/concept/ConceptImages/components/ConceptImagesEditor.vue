@@ -264,7 +264,7 @@ function resetForm() {
                 node-alias="name_content"
                 graph-slug="digital_object_rdm_system"
                 :mode="EDIT"
-                :value="
+                :aliased-node-data="
                     digitalObjectResource?.aliased_data.name?.aliased_data
                         .name_content
                 "
@@ -273,7 +273,7 @@ function resetForm() {
                 node-alias="statement_content"
                 graph-slug="digital_object_rdm_system"
                 :mode="EDIT"
-                :value="
+                :aliased-node-data="
                     digitalObjectResource?.aliased_data.statement?.aliased_data
                         .statement_content
                 "
@@ -281,7 +281,7 @@ function resetForm() {
             <GenericWidget
                 node-alias="content"
                 graph-slug="digital_object_rdm_system"
-                :value="
+                :aliased-node-data="
                     digitalObjectResource?.aliased_data?.content?.aliased_data
                         .content
                 "

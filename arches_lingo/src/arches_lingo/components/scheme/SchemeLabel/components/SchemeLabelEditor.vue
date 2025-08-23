@@ -62,13 +62,24 @@ async function save(e: FormSubmitEvent) {
     try {
         const formData = e.values;
 
+        const aliasedTileData = props.tileData?.aliased_data || {};
+
+        const updatedTileData = {
+            ...aliasedTileData,
+            ...Object.fromEntries(
+                Object.entries(formData).filter(
+                    ([key]) => key in aliasedTileData,
+                ),
+            ),
+        };
+
         let updatedTileId;
 
         if (!props.resourceInstanceId) {
             const updatedScheme = await createLingoResource(
                 {
                     aliased_data: {
-                        [props.nodegroupAlias]: [formData],
+                        [props.nodegroupAlias]: [updatedTileData],
                     },
                 },
                 props.graphSlug,
@@ -87,7 +98,7 @@ async function save(e: FormSubmitEvent) {
                 props.nodegroupAlias,
                 {
                     resourceinstance: props.resourceInstanceId,
-                    aliased_data: { ...formData },
+                    aliased_data: { ...updatedTileData },
                     tileid: props.tileId,
                 },
             );
@@ -130,7 +141,7 @@ async function save(e: FormSubmitEvent) {
             <GenericWidget
                 :graph-slug="props.graphSlug"
                 node-alias="appellative_status_ascribed_name_content"
-                :value="
+                :aliased-node-data="
                     props.tileData?.aliased_data
                         .appellative_status_ascribed_name_content
                 "
@@ -139,7 +150,7 @@ async function save(e: FormSubmitEvent) {
             <GenericWidget
                 :graph-slug="props.graphSlug"
                 node-alias="appellative_status_ascribed_relation"
-                :value="
+                :aliased-node-data="
                     props.tileData?.aliased_data
                         .appellative_status_ascribed_relation
                 "
@@ -148,7 +159,7 @@ async function save(e: FormSubmitEvent) {
             <GenericWidget
                 :graph-slug="props.graphSlug"
                 node-alias="appellative_status_ascribed_name_language"
-                :value="
+                :aliased-node-data="
                     props.tileData?.aliased_data
                         .appellative_status_ascribed_name_language
                 "
@@ -157,7 +168,7 @@ async function save(e: FormSubmitEvent) {
             <GenericWidget
                 :graph-slug="props.graphSlug"
                 node-alias="appellative_status_data_assignment_actor"
-                :value="
+                :aliased-node-data="
                     props.tileData?.aliased_data
                         ?.appellative_status_data_assignment_actor
                 "
@@ -166,7 +177,7 @@ async function save(e: FormSubmitEvent) {
             <GenericWidget
                 :graph-slug="props.graphSlug"
                 node-alias="appellative_status_data_assignment_object_used"
-                :value="
+                :aliased-node-data="
                     props.tileData?.aliased_data
                         ?.appellative_status_data_assignment_object_used
                 "

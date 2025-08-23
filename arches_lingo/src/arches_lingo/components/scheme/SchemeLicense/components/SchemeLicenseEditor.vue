@@ -150,7 +150,7 @@ async function save(e: FormSubmitEvent) {
             <GenericWidget
                 node-alias="right_statement_content"
                 :graph-slug="props.graphSlug"
-                :value="
+                :aliased-node-data="
                     props.tileData?.aliased_data.right_statement?.aliased_data
                         .right_statement_content
                 "
@@ -159,7 +159,7 @@ async function save(e: FormSubmitEvent) {
             <GenericWidget
                 node-alias="right_statement_type"
                 :graph-slug="props.graphSlug"
-                :value="
+                :aliased-node-data="
                     props.tileData?.aliased_data.right_statement?.aliased_data
                         .right_statement_type
                 "
@@ -168,7 +168,7 @@ async function save(e: FormSubmitEvent) {
             <GenericWidget
                 node-alias="right_statement_language"
                 :graph-slug="props.graphSlug"
-                :value="
+                :aliased-node-data="
                     props.tileData?.aliased_data.right_statement?.aliased_data
                         .right_statement_language
                 "
@@ -177,13 +177,13 @@ async function save(e: FormSubmitEvent) {
             <GenericWidget
                 node-alias="right_holder"
                 :graph-slug="props.graphSlug"
-                :value="props.tileData?.aliased_data.right_holder"
+                :aliased-node-data="props.tileData?.aliased_data.right_holder"
                 :mode="EDIT"
             />
             <GenericWidget
                 node-alias="right_type"
                 :graph-slug="props.graphSlug"
-                :value="props.tileData?.aliased_data.right_type"
+                :aliased-node-data="props.tileData?.aliased_data.right_type"
                 :mode="EDIT"
             />
         </Form>

@@ -33,6 +33,8 @@ const props = defineProps<{
     tileId?: string;
 }>();
 
+console.log("AAAAA", props.tileData);
+
 const route = useRoute();
 const router = useRouter();
 const toast = useToast();
@@ -65,11 +67,22 @@ async function save(e: FormSubmitEvent) {
     try {
         const formData = e.values;
 
+        const aliasedTileData = props.tileData?.aliased_data || {};
+
+        const updatedTileData = {
+            ...aliasedTileData,
+            ...Object.fromEntries(
+                Object.entries(formData).filter(
+                    ([key]) => key in aliasedTileData,
+                ),
+            ),
+        };
+
         const scheme = route.query.scheme as string;
         const parent = route.query.parent as string;
 
         const updatedTileId = await createOrUpdateConcept(
-            formData,
+            updatedTileData,
             props.graphSlug,
             props.nodegroupAlias,
             scheme,
@@ -114,7 +127,7 @@ async function save(e: FormSubmitEvent) {
             <GenericWidget
                 :graph-slug="props.graphSlug"
                 node-alias="appellative_status_ascribed_name_content"
-                :value="
+                :aliased-node-data="
                     props.tileData?.aliased_data
                         ?.appellative_status_ascribed_name_content
                 "
@@ -123,7 +136,7 @@ async function save(e: FormSubmitEvent) {
             <GenericWidget
                 :graph-slug="props.graphSlug"
                 node-alias="appellative_status_ascribed_relation"
-                :value="
+                :aliased-node-data="
                     props.tileData?.aliased_data
                         ?.appellative_status_ascribed_relation
                 "
@@ -132,7 +145,7 @@ async function save(e: FormSubmitEvent) {
             <GenericWidget
                 :graph-slug="props.graphSlug"
                 node-alias="appellative_status_ascribed_name_language"
-                :value="
+                :aliased-node-data="
                     props.tileData?.aliased_data
                         ?.appellative_status_ascribed_name_language
                 "
@@ -141,7 +154,7 @@ async function save(e: FormSubmitEvent) {
             <GenericWidget
                 :graph-slug="props.graphSlug"
                 node-alias="appellative_status_timespan_begin_of_the_begin"
-                :value="
+                :aliased-node-data="
                     props.tileData?.aliased_data
                         ?.appellative_status_timespan_begin_of_the_begin
                 "
@@ -150,7 +163,7 @@ async function save(e: FormSubmitEvent) {
             <GenericWidget
                 :graph-slug="props.graphSlug"
                 node-alias="appellative_status_timespan_end_of_the_end"
-                :value="
+                :aliased-node-data="
                     props.tileData?.aliased_data
                         ?.appellative_status_timespan_end_of_the_end
                 "
@@ -159,13 +172,15 @@ async function save(e: FormSubmitEvent) {
             <GenericWidget
                 :graph-slug="props.graphSlug"
                 node-alias="appellative_status_status"
-                :value="props.tileData?.aliased_data?.appellative_status_status"
+                :aliased-node-data="
+                    props.tileData?.aliased_data?.appellative_status_status
+                "
                 :mode="EDIT"
             />
             <GenericWidget
                 :graph-slug="props.graphSlug"
                 node-alias="appellative_status_data_assignment_actor"
-                :value="
+                :aliased-node-data="
                     props.tileData?.aliased_data
                         ?.appellative_status_data_assignment_actor
                 "
@@ -174,7 +189,7 @@ async function save(e: FormSubmitEvent) {
             <GenericWidget
                 :graph-slug="props.graphSlug"
                 node-alias="appellative_status_data_assignment_object_used"
-                :value="
+                :aliased-node-data="
                     props.tileData?.aliased_data
                         ?.appellative_status_data_assignment_object_used
                 "

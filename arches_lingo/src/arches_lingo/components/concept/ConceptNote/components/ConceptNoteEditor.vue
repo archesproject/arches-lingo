@@ -63,11 +63,22 @@ async function save(e: FormSubmitEvent) {
     try {
         const formData = e.values;
 
+        const aliasedTileData = props.tileData?.aliased_data || {};
+
+        const updatedTileData = {
+            ...aliasedTileData,
+            ...Object.fromEntries(
+                Object.entries(formData).filter(
+                    ([key]) => key in aliasedTileData,
+                ),
+            ),
+        };
+
         const scheme = route.query.scheme as string;
         const parent = route.query.parent as string;
 
         const updatedTileId = await createOrUpdateConcept(
-            formData,
+            updatedTileData,
             props.graphSlug,
             props.nodegroupAlias,
             scheme,
@@ -111,25 +122,29 @@ async function save(e: FormSubmitEvent) {
             <GenericWidget
                 :graph-slug="props.graphSlug"
                 node-alias="statement_content"
-                :value="props.tileData?.aliased_data.statement_content"
+                :aliased-node-data="
+                    props.tileData?.aliased_data.statement_content
+                "
                 :mode="EDIT"
             />
             <GenericWidget
                 :graph-slug="props.graphSlug"
                 node-alias="statement_type"
-                :value="props.tileData?.aliased_data.statement_type"
+                :aliased-node-data="props.tileData?.aliased_data.statement_type"
                 :mode="EDIT"
             />
             <GenericWidget
                 :graph-slug="props.graphSlug"
                 node-alias="statement_language"
-                :value="props.tileData?.aliased_data.statement_language"
+                :aliased-node-data="
+                    props.tileData?.aliased_data.statement_language
+                "
                 :mode="EDIT"
             />
             <GenericWidget
                 :graph-slug="props.graphSlug"
                 node-alias="statement_data_assignment_timespan_begin_of_the_begin"
-                :value="
+                :aliased-node-data="
                     props.tileData?.aliased_data
                         .statement_data_assignment_timespan_begin_of_the_begin
                 "
@@ -138,7 +153,7 @@ async function save(e: FormSubmitEvent) {
             <GenericWidget
                 :graph-slug="props.graphSlug"
                 node-alias="statement_data_assignment_timespan_end_of_the_end"
-                :value="
+                :aliased-node-data="
                     props.tileData?.aliased_data
                         .statement_data_assignment_timespan_end_of_the_end
                 "
@@ -147,7 +162,7 @@ async function save(e: FormSubmitEvent) {
             <GenericWidget
                 :graph-slug="props.graphSlug"
                 node-alias="statement_data_assignment_actor"
-                :value="
+                :aliased-node-data="
                     props.tileData?.aliased_data.statement_data_assignment_actor
                 "
                 :mode="EDIT"
@@ -155,7 +170,7 @@ async function save(e: FormSubmitEvent) {
             <GenericWidget
                 :graph-slug="props.graphSlug"
                 node-alias="statement_data_assignment_object_used"
-                :value="
+                :aliased-node-data="
                     props.tileData?.aliased_data
                         .statement_data_assignment_object_used
                 "

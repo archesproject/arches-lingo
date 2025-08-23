@@ -53,13 +53,24 @@ async function save(e: FormSubmitEvent) {
     try {
         const formData = e.values;
 
+        const aliasedTileData = props.tileData?.aliased_data || {};
+
+        const updatedTileData = {
+            ...aliasedTileData,
+            ...Object.fromEntries(
+                Object.entries(formData).filter(
+                    ([key]) => key in aliasedTileData,
+                ),
+            ),
+        };
+
         let updatedTileId;
 
         if (!props.resourceInstanceId) {
             const updatedConcept = await createLingoResource(
                 {
                     aliased_data: {
-                        [props.nodegroupAlias]: [formData],
+                        [props.nodegroupAlias]: [updatedTileData],
                     },
                 },
                 props.graphSlug,
@@ -77,7 +88,7 @@ async function save(e: FormSubmitEvent) {
                 props.nodegroupAlias,
                 {
                     resourceinstance: props.resourceInstanceId,
-                    aliased_data: { ...formData },
+                    aliased_data: { ...updatedTileData },
                     tileid: props.tileId,
                 },
             );
@@ -110,7 +121,7 @@ async function save(e: FormSubmitEvent) {
             <GenericWidget
                 :graph-slug="props.graphSlug"
                 node-alias="match_status_ascribed_comparate"
-                :value="
+                :aliased-node-data="
                     props.tileData?.aliased_data.match_status_ascribed_comparate
                 "
                 :mode="EDIT"
@@ -118,7 +129,7 @@ async function save(e: FormSubmitEvent) {
             <GenericWidget
                 :graph-slug="props.graphSlug"
                 node-alias="match_status_ascribed_relation"
-                :value="
+                :aliased-node-data="
                     props.tileData?.aliased_data.match_status_ascribed_relation
                 "
                 :mode="EDIT"
@@ -126,13 +137,15 @@ async function save(e: FormSubmitEvent) {
             <GenericWidget
                 :graph-slug="props.graphSlug"
                 node-alias="match_status_status"
-                :value="props.tileData?.aliased_data.match_status_status"
+                :aliased-node-data="
+                    props.tileData?.aliased_data.match_status_status
+                "
                 :mode="EDIT"
             />
             <GenericWidget
                 :graph-slug="props.graphSlug"
                 node-alias="match_status_status_metatype"
-                :value="
+                :aliased-node-data="
                     props.tileData?.aliased_data.match_status_status_metatype
                 "
                 :mode="EDIT"
@@ -140,7 +153,7 @@ async function save(e: FormSubmitEvent) {
             <GenericWidget
                 :graph-slug="props.graphSlug"
                 node-alias="match_status_timespan_begin_of_the_begin"
-                :value="
+                :aliased-node-data="
                     props.tileData?.aliased_data
                         .match_status_timespan_begin_of_the_begin
                 "
@@ -149,7 +162,7 @@ async function save(e: FormSubmitEvent) {
             <GenericWidget
                 :graph-slug="props.graphSlug"
                 node-alias="match_status_timespan_end_of_the_end"
-                :value="
+                :aliased-node-data="
                     props.tileData?.aliased_data
                         .match_status_timespan_end_of_the_end
                 "
@@ -158,7 +171,7 @@ async function save(e: FormSubmitEvent) {
             <GenericWidget
                 :graph-slug="props.graphSlug"
                 node-alias="match_status_data_assignment_actor"
-                :value="
+                :aliased-node-data="
                     props.tileData?.aliased_data
                         .match_status_data_assignment_actor
                 "
@@ -167,7 +180,7 @@ async function save(e: FormSubmitEvent) {
             <GenericWidget
                 :graph-slug="props.graphSlug"
                 node-alias="match_status_data_assignment_object_used"
-                :value="
+                :aliased-node-data="
                     props.tileData?.aliased_data
                         .match_status_data_assignment_object_used
                 "
@@ -176,7 +189,7 @@ async function save(e: FormSubmitEvent) {
             <GenericWidget
                 :graph-slug="props.graphSlug"
                 node-alias="match_status_data_assignment_type"
-                :value="
+                :aliased-node-data="
                     props.tileData?.aliased_data
                         .match_status_data_assignment_type
                 "

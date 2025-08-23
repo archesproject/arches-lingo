@@ -55,7 +55,7 @@ const metaStringLabel: MetaStringText = {
                 <GenericWidget
                     node-alias="statement_content"
                     :graph-slug="props.graphSlug"
-                    :value="rowData.aliased_data.statement_content"
+                    :aliased-node-data="rowData.aliased_data.statement_content"
                     :mode="VIEW"
                     :should-show-label="false"
                 />
@@ -64,7 +64,7 @@ const metaStringLabel: MetaStringText = {
                 <GenericWidget
                     node-alias="statement_type"
                     :graph-slug="props.graphSlug"
-                    :value="rowData.aliased_data.statement_type"
+                    :aliased-node-data="rowData.aliased_data.statement_type"
                     :mode="VIEW"
                     :should-show-label="false"
                 />
@@ -73,7 +73,7 @@ const metaStringLabel: MetaStringText = {
                 <GenericWidget
                     node-alias="statement_language"
                     :graph-slug="props.graphSlug"
-                    :value="rowData.aliased_data.statement_language"
+                    :aliased-node-data="rowData.aliased_data.statement_language"
                     :mode="VIEW"
                     :should-show-label="false"
                 />
@@ -82,13 +82,15 @@ const metaStringLabel: MetaStringText = {
                 <GenericWidget
                     node-alias="statement_data_assignment_object_used"
                     :graph-slug="props.graphSlug"
-                    :value="rowData.statement_data_assignment_object_used"
+                    :aliased-node-data="
+                        rowData.statement_data_assignment_object_used
+                    "
                     :mode="VIEW"
                 />
                 <GenericWidget
                     node-alias="statement_data_assignment_actor"
                     :graph-slug="props.graphSlug"
-                    :value="rowData.statement_data_assignment_actor"
+                    :aliased-node-data="rowData.statement_data_assignment_actor"
                     :mode="VIEW"
                 />
             </template>

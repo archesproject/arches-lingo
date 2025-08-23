@@ -66,13 +66,24 @@ async function save(e: FormSubmitEvent) {
     try {
         const formData = e.values;
 
+        const aliasedTileData = props.tileData?.aliased_data || {};
+
+        const updatedTileData = {
+            ...aliasedTileData,
+            ...Object.fromEntries(
+                Object.entries(formData).filter(
+                    ([key]) => key in aliasedTileData,
+                ),
+            ),
+        };
+
         let updatedTileId;
 
         if (!props.resourceInstanceId) {
             const updatedScheme = await createLingoResource(
                 {
                     aliased_data: {
-                        [props.nodegroupAlias]: [formData],
+                        [props.nodegroupAlias]: [updatedTileData],
                     },
                 },
                 props.graphSlug,
@@ -91,7 +102,7 @@ async function save(e: FormSubmitEvent) {
                 props.nodegroupAlias,
                 {
                     resourceinstance: props.resourceInstanceId,
-                    aliased_data: { ...formData },
+                    aliased_data: { ...updatedTileData },
                     tileid: props.tileId,
                 },
             );
@@ -133,7 +144,7 @@ async function save(e: FormSubmitEvent) {
             <GenericWidget
                 node-alias="namespace_name"
                 :graph-slug="props.graphSlug"
-                :value="props.tileData?.aliased_data.namespace_name"
+                :aliased-node-data="props.tileData?.aliased_data.namespace_name"
                 :mode="EDIT"
             />
         </Form>

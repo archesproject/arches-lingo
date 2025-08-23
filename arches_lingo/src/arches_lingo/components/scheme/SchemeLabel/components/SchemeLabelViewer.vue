@@ -59,7 +59,7 @@ const metaStringLabel: MetaStringText = {
                 <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="appellative_status_ascribed_name_content"
-                    :value="
+                    :aliased-node-data="
                         rowData.aliased_data
                             .appellative_status_ascribed_name_content
                     "
@@ -71,7 +71,7 @@ const metaStringLabel: MetaStringText = {
                 <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="appellative_status_ascribed_relation"
-                    :value="
+                    :aliased-node-data="
                         rowData.aliased_data
                             .appellative_status_ascribed_relation
                     "
@@ -83,7 +83,7 @@ const metaStringLabel: MetaStringText = {
                 <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="appellative_status_ascribed_name_language"
-                    :value="
+                    :aliased-node-data="
                         rowData.aliased_data
                             .appellative_status_ascribed_name_language
                     "
@@ -95,7 +95,7 @@ const metaStringLabel: MetaStringText = {
                 <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="appellative_status_data_assignment_object_used"
-                    :value="
+                    :aliased-node-data="
                         rowData.aliased_data
                             .appellative_status_data_assignment_object_used
                     "
@@ -104,7 +104,7 @@ const metaStringLabel: MetaStringText = {
                 <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="appellative_status_data_assignment_actor"
-                    :value="
+                    :aliased-node-data="
                         rowData.aliased_data
                             .appellative_status_data_assignment_actor
                     "
