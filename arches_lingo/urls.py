@@ -17,6 +17,11 @@ from arches_lingo.views.api.generic import (
     LingoTileListCreateView,
 )
 
+handler400 = "arches.app.views.main.custom_400"
+handler403 = "arches.app.views.main.custom_403"
+handler404 = "arches.app.views.main.custom_404"
+handler500 = "arches.app.views.main.custom_500"
+
 urlpatterns = [
     path("", LingoRootView.as_view(), name="root"),
     path("scheme/<uuid:id>", LingoRootView.as_view(), name="scheme-root"),
