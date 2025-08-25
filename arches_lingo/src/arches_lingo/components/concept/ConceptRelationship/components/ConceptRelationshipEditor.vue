@@ -6,9 +6,7 @@ import { Form } from "@primevue/forms";
 
 import Skeleton from "primevue/skeleton";
 
-import DateWidget from "@/arches_component_lab/widgets/DateWidget/DateWidget.vue";
-import ReferenceSelectWidget from "@/arches_controlled_lists/widgets/ReferenceSelectWidget/ReferenceSelectWidget.vue";
-import ResourceInstanceMultiSelectWidget from "@/arches_component_lab/widgets/ResourceInstanceMultiSelectWidget/ResourceInstanceMultiSelectWidget.vue";
+import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
 
 import { createLingoResource, upsertLingoTile } from "@/arches_lingo/api.ts";
 import { EDIT } from "@/arches_lingo/constants.ts";
@@ -52,13 +50,24 @@ async function save(e: FormSubmitEvent) {
     try {
         const formData = e.values;
 
+        const aliasedTileData = props.tileData?.aliased_data || {};
+
+        const updatedTileData = {
+            ...aliasedTileData,
+            ...Object.fromEntries(
+                Object.entries(formData).filter(
+                    ([key]) => key in aliasedTileData,
+                ),
+            ),
+        };
+
         let updatedTileId;
 
         if (!props.resourceInstanceId) {
             const updatedConcept = await createLingoResource(
                 {
                     aliased_data: {
-                        [props.nodegroupAlias]: [formData],
+                        [props.nodegroupAlias]: [updatedTileData],
                     },
                 },
                 props.graphSlug,
@@ -76,7 +85,7 @@ async function save(e: FormSubmitEvent) {
                 props.nodegroupAlias,
                 {
                     resourceinstance: props.resourceInstanceId,
-                    aliased_data: { ...formData },
+                    aliased_data: { ...updatedTileData },
                     tileid: props.tileId,
                 },
             );
@@ -106,88 +115,82 @@ async function save(e: FormSubmitEvent) {
             ref="form"
             @submit="save"
         >
-            <ResourceInstanceMultiSelectWidget
+            <GenericWidget
                 :graph-slug="props.graphSlug"
                 node-alias="relation_status_ascribed_comparate"
-                :value="
+                :aliased-node-data="
                     props.tileData?.aliased_data
-                        .relation_status_ascribed_comparate?.interchange_value
+                        .relation_status_ascribed_comparate
                 "
                 :mode="EDIT"
             />
-            <ReferenceSelectWidget
+            <GenericWidget
                 :graph-slug="props.graphSlug"
                 node-alias="relation_status_ascribed_relation"
-                :value="
+                :aliased-node-data="
                     props.tileData?.aliased_data
-                        .relation_status_ascribed_relation?.interchange_value
+                        .relation_status_ascribed_relation
                 "
                 :mode="EDIT"
             />
-            <ReferenceSelectWidget
+            <GenericWidget
                 :graph-slug="props.graphSlug"
                 node-alias="relation_status_status"
-                :value="
+                :aliased-node-data="
                     props.tileData?.aliased_data.relation_status_status
-                        ?.interchange_value
                 "
                 :mode="EDIT"
             />
-            <ReferenceSelectWidget
+            <GenericWidget
                 :graph-slug="props.graphSlug"
                 node-alias="relation_status_status_metatype"
-                :value="
+                :aliased-node-data="
                     props.tileData?.aliased_data.relation_status_status_metatype
-                        ?.interchange_value
                 "
                 :mode="EDIT"
             />
-            <DateWidget
+            <GenericWidget
                 :graph-slug="props.graphSlug"
                 node-alias="relation_status_timespan_begin_of_the_begin"
-                :value="
+                :aliased-node-data="
                     props.tileData?.aliased_data
                         .relation_status_timespan_begin_of_the_begin
-                        ?.interchange_value
                 "
                 :mode="EDIT"
             />
-            <DateWidget
+            <GenericWidget
                 :graph-slug="props.graphSlug"
                 node-alias="relation_status_timespan_end_of_the_end"
-                :value="
+                :aliased-node-data="
                     props.tileData?.aliased_data
                         .relation_status_timespan_end_of_the_end
-                        ?.interchange_value
                 "
                 :mode="EDIT"
             />
-            <ResourceInstanceMultiSelectWidget
+            <GenericWidget
                 :graph-slug="props.graphSlug"
                 node-alias="relation_status_data_assignment_actor"
-                :value="
+                :aliased-node-data="
                     props.tileData?.aliased_data
                         .relation_status_data_assignment_actor
-                        ?.interchange_value
                 "
                 :mode="EDIT"
             />
-            <ResourceInstanceMultiSelectWidget
+            <GenericWidget
                 :graph-slug="props.graphSlug"
                 node-alias="relation_status_data_assignment_object_used"
-                :value="
+                :aliased-node-data="
                     props.tileData?.aliased_data
                         .relation_status_data_assignment_object_used
-                        ?.interchange_value
                 "
                 :mode="EDIT"
             />
-            <ReferenceSelectWidget
+            <GenericWidget
                 :graph-slug="props.graphSlug"
                 node-alias="relation_status_data_assignment_type"
-                :value="
+                :aliased-node-data="
                     props.tileData?.aliased_data
-                        .relation_status_data_assignment_type?.interchange_value
+                        .relation_status_data_assignment_type
                 "
                 :mode="EDIT"
             />

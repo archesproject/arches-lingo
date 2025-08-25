@@ -8,9 +8,7 @@ import Message from "primevue/message";
 import Skeleton from "primevue/skeleton";
 import { useConfirm } from "primevue/useconfirm";
 
-import FileListWidget from "@/arches_component_lab/widgets/FileListWidget/FileListWidget.vue";
-import NonLocalizedStringWidget from "@/arches_component_lab/widgets/NonLocalizedStringWidget/NonLocalizedStringWidget.vue";
-import NonLocalizedTextAreaWidget from "@/arches_component_lab/widgets/NonLocalizedTextAreaWidget/NonLocalizedTextAreaWidget.vue";
+import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
 
 import { DANGER, SECONDARY, VIEW } from "@/arches_lingo/constants.ts";
 
@@ -47,8 +45,8 @@ onMounted(async () => {
     if (props.tileData) {
         try {
             const digitalObjectInstances =
-                props.tileData.aliased_data.depicting_digital_asset_internal?.interchange_value?.map(
-                    (resource) => resource.resource_id,
+                props.tileData.aliased_data.depicting_digital_asset_internal?.node_value?.map(
+                    (resource) => resource.resourceId,
                 );
             if (digitalObjectInstances) {
                 resources.value = await fetchLingoResourcesBatch(
@@ -85,10 +83,10 @@ function confirmDelete(removedResourceInstanceId: string) {
                 if (
                     depictingDigitalAssetInternalData?.depicting_digital_asset_internal
                 ) {
-                    depictingDigitalAssetInternalData.depicting_digital_asset_internal.interchange_value =
-                        depictingDigitalAssetInternalData.depicting_digital_asset_internal.interchange_value.filter(
+                    depictingDigitalAssetInternalData.depicting_digital_asset_internal.node_value =
+                        depictingDigitalAssetInternalData.depicting_digital_asset_internal.node_value.filter(
                             (assetReference) =>
-                                assetReference.resource_id !==
+                                assetReference.resourceId !==
                                 removedResourceInstanceId,
                         );
                     resources.value = resources.value?.filter(
@@ -187,13 +185,13 @@ function modifyResource(resourceInstanceId?: string) {
                             for="concept-image"
                             class="text"
                         >
-                            <NonLocalizedStringWidget
+                            <GenericWidget
                                 node-alias="name_content"
                                 graph-slug="digital_object_rdm_system"
                                 :mode="VIEW"
-                                :value="
+                                :aliased-node-data="
                                     resource.aliased_data.name?.aliased_data
-                                        .name_content?.display_value
+                                        .name_content
                                 "
                             />
                         </label>
@@ -216,24 +214,23 @@ function modifyResource(resourceInstanceId?: string) {
                             />
                         </div>
                     </div>
-                    <FileListWidget
+                    <GenericWidget
                         node-alias="content"
                         graph-slug="digital_object_rdm_system"
-                        :value="
+                        :aliased-node-data="
                             resource.aliased_data.content?.aliased_data.content
-                                ?.interchange_value
                         "
                         :mode="VIEW"
-                        :show-label="false"
+                        :should-show-label="false"
                     />
                     <div class="footer">
-                        <NonLocalizedTextAreaWidget
+                        <GenericWidget
                             node-alias="statement_content"
                             graph-slug="digital_object_rdm_system"
                             :mode="VIEW"
-                            :value="
+                            :aliased-node-data="
                                 resource.aliased_data.statement?.aliased_data
-                                    .statement_content?.display_value
+                                    .statement_content
                             "
                         />
                     </div>

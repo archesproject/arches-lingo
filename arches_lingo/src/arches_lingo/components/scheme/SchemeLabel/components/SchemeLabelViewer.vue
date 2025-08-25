@@ -6,9 +6,7 @@ import Button from "primevue/button";
 
 import MetaStringViewer from "@/arches_lingo/components/generic/MetaStringViewer.vue";
 
-import NonLocalizedStringWidget from "@/arches_component_lab/widgets/NonLocalizedStringWidget/NonLocalizedStringWidget.vue";
-import ReferenceSelectWidget from "@/arches_controlled_lists/widgets/ReferenceSelectWidget/ReferenceSelectWidget.vue";
-import ResourceInstanceMultiSelectWidget from "@/arches_component_lab/widgets/ResourceInstanceMultiSelectWidget/ResourceInstanceMultiSelectWidget.vue";
+import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
 
 import { VIEW } from "@/arches_lingo/constants.ts";
 
@@ -58,62 +56,57 @@ const metaStringLabel: MetaStringText = {
             :nodegroup-alias="props.nodegroupAlias"
         >
             <template #name="{ rowData }">
-                <NonLocalizedStringWidget
+                <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="appellative_status_ascribed_name_content"
-                    :value="
+                    :aliased-node-data="
                         rowData.aliased_data
                             .appellative_status_ascribed_name_content
-                            .display_value
                     "
                     :mode="VIEW"
-                    :show-label="false"
+                    :should-show-label="false"
                 />
             </template>
             <template #type="{ rowData }">
-                <ReferenceSelectWidget
+                <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="appellative_status_ascribed_relation"
-                    :value="
+                    :aliased-node-data="
                         rowData.aliased_data
                             .appellative_status_ascribed_relation
-                            .interchange_value
                     "
                     :mode="VIEW"
-                    :show-label="false"
+                    :should-show-label="false"
                 />
             </template>
             <template #language="{ rowData }">
-                <ReferenceSelectWidget
+                <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="appellative_status_ascribed_name_language"
-                    :value="
+                    :aliased-node-data="
                         rowData.aliased_data
                             .appellative_status_ascribed_name_language
-                            .interchange_value
                     "
                     :mode="VIEW"
-                    :show-label="false"
+                    :should-show-label="false"
                 />
             </template>
             <template #drawer="{ rowData }">
-                <ResourceInstanceMultiSelectWidget
+                <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="appellative_status_data_assignment_object_used"
-                    :value="
+                    :aliased-node-data="
                         rowData.aliased_data
                             .appellative_status_data_assignment_object_used
-                            .interchange_value
                     "
                     :mode="VIEW"
                 />
-                <ResourceInstanceMultiSelectWidget
+                <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="appellative_status_data_assignment_actor"
-                    :value="
+                    :aliased-node-data="
                         rowData.aliased_data
                             .appellative_status_data_assignment_actor
-                            .interchange_value
                     "
                     :mode="VIEW"
                 />

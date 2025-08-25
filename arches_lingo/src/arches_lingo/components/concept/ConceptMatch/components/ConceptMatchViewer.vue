@@ -5,10 +5,7 @@ import { useGettext } from "vue3-gettext";
 import Button from "primevue/button";
 
 import MetaStringViewer from "@/arches_lingo/components/generic/MetaStringViewer.vue";
-import URLWidget from "@/arches_component_lab/widgets/URLWidget/URLWidget.vue";
-
-import ReferenceSelectWidget from "@/arches_controlled_lists/widgets/ReferenceSelectWidget/ReferenceSelectWidget.vue";
-import ResourceInstanceMultiSelectWidget from "@/arches_component_lab/widgets/ResourceInstanceMultiSelectWidget/ResourceInstanceMultiSelectWidget.vue";
+import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
 
 import { VIEW } from "@/arches_lingo/constants.ts";
 
@@ -64,30 +61,29 @@ const metaStringLabel: MetaStringText = {
             :nodegroup-alias="props.nodegroupAlias"
         >
             <template #name="{ rowData }">
-                <ReferenceSelectWidget
+                <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="match_status_ascribed_relation"
-                    :value="
+                    :aliased-node-data="
                         rowData.aliased_data.match_status_ascribed_relation
-                            ?.interchange_value
                     "
                     :mode="VIEW"
-                    :show-label="false"
+                    :should-show-label="false"
                 />
             </template>
             <template #type="{ rowData }">
-                <URLWidget
+                <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="uri_content"
-                    :value="rowData.aliased_data.uri?.interchange_value"
+                    :aliased-node-data="rowData.aliased_data.uri"
                     :mode="VIEW"
-                    :show-label="false"
+                    :should-show-label="false"
                 />
             </template>
             <template #language="{ rowData }">
                 <div
                     v-for="item in rowData.aliased_data
-                        .match_status_ascribed_comparate?.interchange_value"
+                        .match_status_ascribed_comparate?.node_value"
                     :key="item.resource_id"
                 >
                     <RouterLink
@@ -104,21 +100,19 @@ const metaStringLabel: MetaStringText = {
                 </div>
             </template>
             <template #drawer="{ rowData }">
-                <ResourceInstanceMultiSelectWidget
+                <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="match_status_data_assignment_actor"
-                    :value="
+                    :aliased-node-data="
                         rowData.aliased_data.match_status_data_assignment_actor
-                            ?.interchange_value
                     "
                     :mode="VIEW"
                 />
-                <ResourceInstanceMultiSelectWidget
+                <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="match_status_data_assignment_object_used"
-                    :value="
+                    :aliased-node-data="
                         rowData.match_status_data_assignment_object_used
-                            ?.interchange_value
                     "
                     :mode="VIEW"
                 />

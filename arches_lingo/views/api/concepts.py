@@ -167,7 +167,7 @@ class ConceptRelationshipView(ConceptTreeView):
 
         return_data = {
             "scheme_id": concept.aliased_data.part_of_scheme.aliased_data.part_of_scheme[
-                "interchange_value"
+                "node_value"
             ],
             "data": [],
         }
@@ -182,13 +182,13 @@ class ConceptRelationshipView(ConceptTreeView):
             if relationship_type == "associated":
                 related_concept_resourceid = (
                     relationship.aliased_data.relation_status_ascribed_comparate[
-                        "interchange_value"
+                        "node_value"
                     ][0]["resource_id"]
                 )
             elif relationship_type == "matched":
                 related_concept_resourceid = (
                     relationship.aliased_data.match_status_ascribed_comparate[
-                        "interchange_value"
+                        "node_value"
                     ][0]["resource_id"]
                 )
 

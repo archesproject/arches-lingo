@@ -1,4 +1,4 @@
-import { fetchNodeData } from "@/arches_component_lab/widgets/api.ts";
+import { fetchCardXNodeXWidgetData } from "@/arches_component_lab/generics/GenericWidget/api.ts";
 import {
     createLingoResource,
     createLingoResourceFromForm,
@@ -56,8 +56,9 @@ export async function addDigitalObjectToConceptImageCollection(
                 {
                     aliased_data: {
                         depicting_digital_asset_internal: {
-                            interchange_value: [],
                             display_value: "",
+                            node_value: [],
+                            details: [],
                         },
                     },
                 };
@@ -66,14 +67,14 @@ export async function addDigitalObjectToConceptImageCollection(
         if (
             !conceptDigitalObjectRelationshipList?.aliased_data
                 .depicting_digital_asset_internal?.aliased_data
-                .depicting_digital_asset_internal.interchange_value
+                .depicting_digital_asset_internal.node_value
         ) {
-            conceptDigitalObjectRelationshipList.aliased_data.depicting_digital_asset_internal.aliased_data.depicting_digital_asset_internal.interchange_value =
+            conceptDigitalObjectRelationshipList.aliased_data.depicting_digital_asset_internal.aliased_data.depicting_digital_asset_internal.node_value =
                 [];
         }
-        conceptDigitalObjectRelationshipList.aliased_data.depicting_digital_asset_internal.aliased_data.depicting_digital_asset_internal.interchange_value.push(
+        conceptDigitalObjectRelationshipList.aliased_data.depicting_digital_asset_internal.aliased_data.depicting_digital_asset_internal.details.push(
             {
-                display_value: digitalObjectResource.display_value,
+                display_value: digitalObjectResource.display_value!,
                 resource_id: digitalObjectResource.resourceinstanceid,
             },
         );
@@ -98,7 +99,7 @@ export async function createFormDataForFileUpload(
         !Array.isArray(testObject) &&
         Object.prototype.toString.call(testObject) === "[object Object]";
     const digitalObjectContentNodeId = (
-        await fetchNodeData(DIGITAL_OBJECT_GRAPH_SLUG, "content")
+        await fetchCardXNodeXWidgetData(DIGITAL_OBJECT_GRAPH_SLUG, "content")
     ).nodeid;
 
     if (resource.value) {

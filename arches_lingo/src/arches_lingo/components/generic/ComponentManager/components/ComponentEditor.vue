@@ -56,7 +56,7 @@ function toggleSize() {
 
 function onCancel() {
     if (isFormDirty.value) {
-        componentEditorFormRef.value.onReset();
+        formKey.value += 1;
     } else {
         emit(CLOSE);
     }
@@ -106,7 +106,7 @@ function onCancel() {
                 :label="$gettext('Save Changes')"
                 severity="success"
                 :disabled="!isFormDirty"
-                @click="componentEditorFormRef.onSubmit()"
+                @click="componentEditorFormRef.submit()"
             />
             <Button
                 :label="$gettext('Cancel')"

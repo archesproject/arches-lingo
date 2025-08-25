@@ -9,9 +9,7 @@ import { Form } from "@primevue/forms";
 
 import Skeleton from "primevue/skeleton";
 
-import NonLocalizedStringWidget from "@/arches_component_lab/widgets/NonLocalizedStringWidget/NonLocalizedStringWidget.vue";
-import ReferenceSelectWidget from "@/arches_controlled_lists/widgets/ReferenceSelectWidget/ReferenceSelectWidget.vue";
-import ResourceInstanceMultiSelectWidget from "@/arches_component_lab/widgets/ResourceInstanceMultiSelectWidget/ResourceInstanceMultiSelectWidget.vue";
+import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
 
 import { createLingoResource, upsertLingoTile } from "@/arches_lingo/api.ts";
 import {
@@ -64,13 +62,24 @@ async function save(e: FormSubmitEvent) {
     try {
         const formData = e.values;
 
+        const aliasedTileData = props.tileData?.aliased_data || {};
+
+        const updatedTileData = {
+            ...aliasedTileData,
+            ...Object.fromEntries(
+                Object.entries(formData).filter(
+                    ([key]) => key in aliasedTileData,
+                ),
+            ),
+        };
+
         let updatedTileId;
 
         if (!props.resourceInstanceId) {
             const updatedScheme = await createLingoResource(
                 {
                     aliased_data: {
-                        [props.nodegroupAlias]: [formData],
+                        [props.nodegroupAlias]: [updatedTileData],
                     },
                 },
                 props.graphSlug,
@@ -89,7 +98,7 @@ async function save(e: FormSubmitEvent) {
                 props.nodegroupAlias,
                 {
                     resourceinstance: props.resourceInstanceId,
-                    aliased_data: { ...formData },
+                    aliased_data: { ...updatedTileData },
                     tileid: props.tileId,
                 },
             );
@@ -129,52 +138,48 @@ async function save(e: FormSubmitEvent) {
             ref="form"
             @submit="save"
         >
-            <NonLocalizedStringWidget
+            <GenericWidget
                 :graph-slug="props.graphSlug"
                 node-alias="appellative_status_ascribed_name_content"
-                :value="
+                :aliased-node-data="
                     props.tileData?.aliased_data
                         .appellative_status_ascribed_name_content
-                        ?.interchange_value
                 "
                 :mode="EDIT"
             />
-            <ReferenceSelectWidget
+            <GenericWidget
                 :graph-slug="props.graphSlug"
                 node-alias="appellative_status_ascribed_relation"
-                :value="
+                :aliased-node-data="
                     props.tileData?.aliased_data
-                        .appellative_status_ascribed_relation?.interchange_value
+                        .appellative_status_ascribed_relation
                 "
                 :mode="EDIT"
             />
-            <ReferenceSelectWidget
+            <GenericWidget
                 :graph-slug="props.graphSlug"
                 node-alias="appellative_status_ascribed_name_language"
-                :value="
+                :aliased-node-data="
                     props.tileData?.aliased_data
                         .appellative_status_ascribed_name_language
-                        ?.interchange_value
                 "
                 :mode="EDIT"
             />
-            <ResourceInstanceMultiSelectWidget
+            <GenericWidget
                 :graph-slug="props.graphSlug"
                 node-alias="appellative_status_data_assignment_actor"
-                :value="
+                :aliased-node-data="
                     props.tileData?.aliased_data
                         ?.appellative_status_data_assignment_actor
-                        ?.interchange_value
                 "
                 :mode="EDIT"
             />
-            <ResourceInstanceMultiSelectWidget
+            <GenericWidget
                 :graph-slug="props.graphSlug"
                 node-alias="appellative_status_data_assignment_object_used"
-                :value="
+                :aliased-node-data="
                     props.tileData?.aliased_data
                         ?.appellative_status_data_assignment_object_used
-                        ?.interchange_value
                 "
                 :mode="EDIT"
             />

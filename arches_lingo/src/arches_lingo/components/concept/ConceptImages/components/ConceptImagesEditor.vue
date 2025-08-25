@@ -7,9 +7,8 @@ import { useToast } from "primevue/usetoast";
 import { Form } from "@primevue/forms";
 
 import Skeleton from "primevue/skeleton";
-import FileListWidget from "@/arches_component_lab/widgets/FileListWidget/FileListWidget.vue";
-import NonLocalizedStringWidget from "@/arches_component_lab/widgets/NonLocalizedStringWidget/NonLocalizedStringWidget.vue";
-import NonLocalizedTextAreaWidget from "@/arches_component_lab/widgets/NonLocalizedTextAreaWidget/NonLocalizedTextAreaWidget.vue";
+
+import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
 
 import { DIGITAL_OBJECT_GRAPH_SLUG } from "@/arches_lingo/components/concept/ConceptImages/components/constants.ts";
 import {
@@ -156,8 +155,8 @@ async function save(e: FormSubmitEvent) {
             };
         } else {
             digitalObjectInstanceAliases.content.aliased_data.content = [
-                ...(digitalObjectInstanceAliases.content.aliased_data.content
-                    ?.interchange_value ?? []),
+                ...(digitalObjectInstanceAliases.content.aliased_data
+                    .content?.[0].node_value ?? []),
                 ...fileJsonObjects,
             ];
         }
@@ -261,33 +260,33 @@ function resetForm() {
             @submit="save"
             @reset="resetForm"
         >
-            <NonLocalizedStringWidget
+            <GenericWidget
                 node-alias="name_content"
                 graph-slug="digital_object_rdm_system"
                 :mode="EDIT"
-                :value="
+                :aliased-node-data="
                     digitalObjectResource?.aliased_data.name?.aliased_data
-                        .name_content?.interchange_value
+                        .name_content
                 "
             />
-            <NonLocalizedTextAreaWidget
+            <GenericWidget
                 node-alias="statement_content"
                 graph-slug="digital_object_rdm_system"
                 :mode="EDIT"
-                :value="
+                :aliased-node-data="
                     digitalObjectResource?.aliased_data.statement?.aliased_data
-                        .statement_content?.interchange_value
+                        .statement_content
                 "
             />
-            <FileListWidget
+            <GenericWidget
                 node-alias="content"
                 graph-slug="digital_object_rdm_system"
-                :value="
+                :aliased-node-data="
                     digitalObjectResource?.aliased_data?.content?.aliased_data
-                        .content?.interchange_value
+                        .content
                 "
                 :mode="EDIT"
-                :show-label="false"
+                :should-show-label="false"
             />
         </Form>
     </div>

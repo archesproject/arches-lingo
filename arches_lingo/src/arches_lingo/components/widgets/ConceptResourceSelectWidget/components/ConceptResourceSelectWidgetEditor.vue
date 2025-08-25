@@ -10,7 +10,7 @@ import MultiSelect from "primevue/multiselect";
 
 import { fetchConceptResources } from "@/arches_lingo/api.ts";
 import { generateArchesURL } from "@/arches/utils/generate-arches-url.ts";
-import { getItemLabel } from "@/arches_component_lab/utils.ts";
+import { getItemLabel } from "@/arches_lingo/utils.ts";
 import { getParentLabels } from "@/arches_lingo/utils.ts";
 import {
     selectedLanguageKey,

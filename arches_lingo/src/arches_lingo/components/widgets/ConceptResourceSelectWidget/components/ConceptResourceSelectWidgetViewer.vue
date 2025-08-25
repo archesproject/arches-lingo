@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { inject } from "vue";
-import { getItemLabel } from "@/arches_component_lab/utils.ts";
+import { getItemLabel } from "@/arches_lingo/utils.ts";
 import { getParentLabels } from "@/arches_lingo/utils.ts";
 import {
     selectedLanguageKey,
