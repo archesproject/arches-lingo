@@ -33,8 +33,6 @@ const props = defineProps<{
     tileId?: string;
 }>();
 
-console.log("AAAAA", props.tileData);
-
 const route = useRoute();
 const router = useRouter();
 const toast = useToast();

@@ -161,10 +161,9 @@ UPLOADED_FILES_DIR = "uploadedfiles"
 
 chars = "abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)"
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "foo"
-# SECRET_KEY = get_optional_env_variable(
-#     "ARCHES_SECRET_KEY", "django-insecure-" + get_random_string(50, chars)
-# )
+SECRET_KEY = get_optional_env_variable(
+    "ARCHES_SECRET_KEY", "django-insecure-" + get_random_string(50, chars)
+)
 
 ROOT_URLCONF = "arches_lingo.urls"
 
