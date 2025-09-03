@@ -21,7 +21,7 @@ import {
     selectedLanguageKey,
     systemLanguageKey,
 } from "@/arches_lingo/constants.ts";
-import { getItemLabel } from "@/arches_lingo/utils.ts";
+import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 import type { Language } from "@/arches_component_lab/types";
 
 const props = defineProps<{
