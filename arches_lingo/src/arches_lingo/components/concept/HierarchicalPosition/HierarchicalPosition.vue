@@ -25,7 +25,7 @@ const props = defineProps<{
     componentName: string;
     graphSlug: string;
     nodegroupAlias: string;
-    resourceInstanceId: string;
+    resourceInstanceId: string | undefined;
     tileId?: string;
 }>();
 
