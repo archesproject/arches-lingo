@@ -79,7 +79,9 @@ async function save(e: FormSubmitEvent) {
             const updatedScheme = await createLingoResource(
                 {
                     aliased_data: {
-                        [props.nodegroupAlias]: [updatedTileData],
+                        [props.nodegroupAlias]: [
+                            { aliased_data: updatedTileData },
+                        ],
                     },
                 },
                 props.graphSlug,

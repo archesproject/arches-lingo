@@ -9,6 +9,7 @@ import SchemeLabelViewer from "@/arches_lingo/components/scheme/SchemeLabel/comp
 
 import { EDIT, VIEW } from "@/arches_lingo/constants.ts";
 
+import { fetchTileData } from "@/arches_component_lab/generics/GenericCard/api.ts";
 import { fetchLingoResourcePartial } from "@/arches_lingo/api.ts";
 
 import type {
@@ -39,6 +40,12 @@ onMounted(async () => {
     ) {
         const sectionValue = await getSectionValue();
         tileData.value = sectionValue.aliased_data[props.nodegroupAlias];
+    } else if (shouldCreateNewTile) {
+        const blankTileData = await fetchTileData(
+            props.graphSlug,
+            props.nodegroupAlias,
+        );
+        tileData.value = [blankTileData as unknown as AppellativeStatus];
     }
     isLoading.value = false;
 });
@@ -80,7 +87,13 @@ async function getSectionValue() {
         <SchemeLabelEditor
             v-else-if="mode === EDIT"
             :tile-data="
-                tileData.find((tileDatum) => tileDatum.tileid === props.tileId)
+                tileData.find((tileDatum) => {
+                    if (shouldCreateNewTile) {
+                        return !tileDatum.tileid;
+                    }
+
+                    return tileDatum.tileid === props.tileId;
+                })
             "
             :component-name="props.componentName"
             :section-title="props.sectionTitle"
