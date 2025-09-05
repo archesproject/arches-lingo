@@ -89,7 +89,9 @@ async function save(e: FormSubmitEvent) {
             const updatedScheme = await createLingoResource(
                 {
                     aliased_data: {
-                        [props.nodegroupAlias]: expectedTileShape,
+                        [props.nodegroupAlias]: {
+                            aliased_data: expectedTileShape,
+                        },
                     },
                 },
                 props.graphSlug,
@@ -101,8 +103,14 @@ async function save(e: FormSubmitEvent) {
             });
 
             updatedTileId =
-                updatedScheme.aliased_data[props.nodegroupAlias][0].tileid;
+                updatedScheme.aliased_data[props.nodegroupAlias].tileid;
         } else {
+            if (props.tileData?.aliased_data.right_statement?.tileid) {
+                (
+                    expectedTileShape.right_statement as Record<string, unknown>
+                ).tileid = props.tileData.aliased_data.right_statement.tileid;
+            }
+
             const updatedTile = await upsertLingoTile(
                 props.graphSlug,
                 props.nodegroupAlias,
