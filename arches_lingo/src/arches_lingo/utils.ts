@@ -240,15 +240,25 @@ export async function createOrUpdateConcept(
         const isTop = scheme === parent;
 
         const aliased_data = {
-            [nodegroupAlias]: [formData],
-            part_of_scheme: { part_of_scheme: scheme },
+            [nodegroupAlias]: [{ aliased_data: formData }],
+            part_of_scheme: {
+                aliased_data: { part_of_scheme: scheme },
+            },
         };
 
         if (isTop) {
-            aliased_data.top_concept_of = [{ top_concept_of: parent }];
+            aliased_data.top_concept_of = [
+                {
+                    aliased_data: { top_concept_of: parent },
+                },
+            ];
         } else {
             aliased_data.classification_status = [
-                { classification_status_ascribed_classification: parent },
+                {
+                    aliased_data: {
+                        classification_status_ascribed_classification: parent,
+                    },
+                },
             ];
         }
 

@@ -74,6 +74,10 @@ async function save(e: FormSubmitEvent) {
             ),
         };
 
+        delete (updatedTileData as Record<string, unknown>)[
+            "statement_data_assignment_statement"
+        ];
+
         const scheme = route.query.scheme as string;
         const parent = route.query.parent as string;
 
