@@ -183,13 +183,13 @@ class ConceptRelationshipView(ConceptTreeView):
                 related_concept_resourceid = (
                     relationship.aliased_data.relation_status_ascribed_comparate[
                         "node_value"
-                    ][0]["resource_id"]
+                    ][0]["resourceId"]
                 )
             elif relationship_type == "matched":
                 related_concept_resourceid = (
                     relationship.aliased_data.match_status_ascribed_comparate[
                         "node_value"
-                    ][0]["resource_id"]
+                    ][0]["resourceId"]
                 )
 
             related_concept = Concept.get(pk=related_concept_resourceid)
