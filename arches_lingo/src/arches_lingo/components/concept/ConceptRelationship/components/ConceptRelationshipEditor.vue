@@ -1,15 +1,23 @@
 <script setup lang="ts">
 import { inject, ref, useTemplateRef, watch } from "vue";
 
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
+import { useGettext } from "vue3-gettext";
+import { useToast } from "primevue/usetoast";
+
 import { Form } from "@primevue/forms";
 
 import Skeleton from "primevue/skeleton";
 
 import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
 
-import { createLingoResource, upsertLingoTile } from "@/arches_lingo/api.ts";
-import { EDIT } from "@/arches_lingo/constants.ts";
+import { createOrUpdateConcept } from "@/arches_lingo/utils.ts";
+
+import {
+    DEFAULT_ERROR_TOAST_LIFE,
+    EDIT,
+    ERROR,
+} from "@/arches_lingo/constants.ts";
 
 import type { Component, Ref } from "vue";
 import type { FormSubmitEvent } from "@primevue/forms";
@@ -25,7 +33,10 @@ const props = defineProps<{
     tileId?: string;
 }>();
 
+const route = useRoute();
 const router = useRouter();
+const toast = useToast();
+const { $gettext } = useGettext();
 
 const componentEditorFormRef = inject<Ref<Component | null>>(
     "componentEditorFormRef",
@@ -47,6 +58,7 @@ watch(
 
 async function save(e: FormSubmitEvent) {
     isSaving.value = true;
+
     try {
         const formData = e.values;
 
@@ -61,43 +73,34 @@ async function save(e: FormSubmitEvent) {
             ),
         };
 
-        let updatedTileId;
+        const scheme = route.query.scheme as string;
+        const parent = route.query.parent as string;
 
-        if (!props.resourceInstanceId) {
-            const updatedConcept = await createLingoResource(
-                {
-                    aliased_data: {
-                        [props.nodegroupAlias]: [updatedTileData],
-                    },
-                },
-                props.graphSlug,
-            );
+        const updatedTileId = await createOrUpdateConcept(
+            updatedTileData,
+            props.graphSlug,
+            props.nodegroupAlias,
+            scheme,
+            parent,
+            router,
+            props.resourceInstanceId,
+            props.tileId,
+        );
 
-            await router.push({
-                name: props.graphSlug,
-                params: { id: updatedConcept.resourceinstanceid },
-            });
-
-            updatedTileId = updatedConcept[props.nodegroupAlias][0].tileid;
-        } else {
-            const updatedConcept = await upsertLingoTile(
-                props.graphSlug,
-                props.nodegroupAlias,
-                {
-                    resourceinstance: props.resourceInstanceId,
-                    aliased_data: { ...updatedTileData },
-                    tileid: props.tileId,
-                },
-            );
-
-            updatedTileId = updatedConcept.tileid;
+        if (updatedTileId !== props.tileId) {
+            openEditor!(props.componentName, updatedTileId);
         }
 
-        openEditor!(props.componentName, updatedTileId);
-    } catch (error) {
-        console.error(error);
-    } finally {
         refreshReportSection!(props.componentName);
+    } catch (error) {
+        toast.add({
+            severity: ERROR,
+            life: DEFAULT_ERROR_TOAST_LIFE,
+            summary: $gettext("Failed to save data."),
+            detail: error instanceof Error ? error.message : undefined,
+        });
+    } finally {
+        isSaving.value = false;
     }
 }
 </script>

@@ -9,6 +9,7 @@ import ConceptRelationshipViewer from "@/arches_lingo/components/concept/Concept
 
 import { EDIT, VIEW } from "@/arches_lingo/constants.ts";
 
+import { fetchTileData } from "@/arches_component_lab/generics/GenericCard/api.ts";
 import { fetchConceptRelationships } from "@/arches_lingo/api.ts";
 
 import type {
@@ -30,10 +31,21 @@ const isLoading = ref(true);
 const tileData = ref<ConceptRelationStatus[]>([]);
 const fetchError = ref();
 
+const shouldCreateNewTile = Boolean(props.mode === EDIT && !props.tileId);
+
 onMounted(async () => {
-    if (props.resourceInstanceId) {
+    if (
+        props.resourceInstanceId &&
+        (props.mode === VIEW || !shouldCreateNewTile)
+    ) {
         const sectionValue = await getSectionValue();
         tileData.value = sectionValue?.data;
+    } else if (shouldCreateNewTile) {
+        const blankTileData = await fetchTileData(
+            props.graphSlug,
+            props.nodegroupAlias,
+        );
+        tileData.value = [blankTileData as unknown as ConceptRelationStatus];
     }
     isLoading.value = false;
 });
@@ -75,7 +87,13 @@ async function getSectionValue() {
         <ConceptRelationshipEditor
             v-else-if="mode === EDIT"
             :tile-data="
-                tileData.find((tileDatum) => tileDatum.tileid === props.tileId)
+                tileData.find((tileDatum) => {
+                    if (shouldCreateNewTile) {
+                        return !tileDatum.tileid;
+                    }
+
+                    return tileDatum.tileid === props.tileId;
+                })
             "
             :component-name="props.componentName"
             :section-title="props.sectionTitle"
