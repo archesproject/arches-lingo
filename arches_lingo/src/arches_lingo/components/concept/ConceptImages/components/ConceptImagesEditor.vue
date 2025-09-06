@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject, nextTick, ref, useTemplateRef, watch } from "vue";
+import { inject, nextTick, onMounted, ref, useTemplateRef, watch } from "vue";
 
 import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
@@ -65,12 +65,15 @@ const refreshReportSection = inject<(componentName: string) => void>(
 const formRef = useTemplateRef("form");
 const isSaving = ref(false);
 
+onMounted(() => {
+    document.addEventListener("openConceptImagesEditor", getDigitalObjectInstance);
+    document.dispatchEvent(new Event("conceptImagesEditor:ready"));
+});
+
 watch(
     () => formRef.value,
     (formComponent) => (componentEditorFormRef!.value = formComponent),
 );
-
-document.addEventListener("openConceptImagesEditor", getDigitalObjectInstance);
 
 async function getDigitalObjectInstance(
     // custom event type is from global dom
@@ -156,7 +159,8 @@ async function save(e: FormSubmitEvent) {
         } else {
             digitalObjectInstanceAliases.content.aliased_data.content = [
                 ...(digitalObjectInstanceAliases.content.aliased_data
-                    .content?.[0].node_value ?? []),
+                // @ts-expect-error we must fix this type later
+                    .content?.node_value ?? []),
                 ...fileJsonObjects,
             ];
         }

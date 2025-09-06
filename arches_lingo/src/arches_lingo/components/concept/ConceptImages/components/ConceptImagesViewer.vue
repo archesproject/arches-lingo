@@ -124,15 +124,15 @@ function editResource(resourceInstanceId: string) {
     modifyResource(resourceInstanceId);
 }
 
-function modifyResource(resourceInstanceId?: string) {
+async function modifyResource(resourceInstanceId?: string) {
     openEditor!(props.componentName);
 
-    nextTick(() => {
-        const openConceptImagesEditor = new CustomEvent(
-            "openConceptImagesEditor",
-            { detail: { resourceInstanceId: resourceInstanceId } },
-        );
-        document.dispatchEvent(openConceptImagesEditor);
+    document.addEventListener("conceptImagesEditor:ready", async () => {
+        await nextTick();
+        const event = new CustomEvent("openConceptImagesEditor", {
+            detail: { resourceInstanceId },
+        });
+        document.dispatchEvent(event);
     });
 }
 </script>
