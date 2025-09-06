@@ -9,6 +9,7 @@ import ConceptImagesViewer from "@/arches_lingo/components/concept/ConceptImages
 
 import { EDIT, VIEW } from "@/arches_lingo/constants.ts";
 
+import { fetchTileData } from "@/arches_component_lab/generics/GenericCard/api.ts";
 import { fetchLingoResourcePartial } from "@/arches_lingo/api.ts";
 
 import type { ConceptImages, DataComponentMode } from "@/arches_lingo/types.ts";
@@ -36,8 +37,13 @@ onMounted(async () => {
     ) {
         const sectionValue = await getSectionValue();
         tileData.value = sectionValue.aliased_data[props.nodegroupAlias];
+    } else if (shouldCreateNewTile) {
+        const blankTileData = await fetchTileData(
+            props.graphSlug,
+            props.nodegroupAlias,
+        );
+        tileData.value = blankTileData as unknown as ConceptImages;
     }
-
     isLoading.value = false;
 });
 
