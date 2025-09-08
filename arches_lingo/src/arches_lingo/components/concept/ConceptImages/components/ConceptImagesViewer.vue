@@ -148,7 +148,7 @@ async function modifyResource(resourceInstanceId?: string) {
                 @click="newResource"
             >
                 <span><i class="pi pi-plus-circle"></i></span>
-                <span>{{$gettext('Add Image')}}</span>
+                <span>{{ $gettext("Add Image") }}</span>
             </Button>
         </div>
 
@@ -201,7 +201,10 @@ async function modifyResource(resourceInstanceId?: string) {
                         <div class="buttons">
                             <Button
                                 icon="pi pi-file-edit"
-                                style="border: 1px solid var(--p-header-button-border);"
+                                style="
+                                    border: 1px solid
+                                        var(--p-header-button-border);
+                                "
                                 rounded
                                 @click="
                                     editResource(resource.resourceinstanceid)
@@ -248,7 +251,7 @@ async function modifyResource(resourceInstanceId?: string) {
 .buttons {
     display: flex;
     justify-content: center;
-    gap: .25rem;
+    gap: 0.25rem;
 }
 
 .concept-images {
@@ -294,6 +297,6 @@ async function modifyResource(resourceInstanceId?: string) {
 }
 
 :deep(.p-galleria) {
-    border-radius: .125rem;
+    border-radius: 0.125rem;
 }
 </style>

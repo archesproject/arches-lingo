@@ -27,22 +27,20 @@ const shouldShowPageHelpPanel = defineModel("shouldShowPageHelpPanel", {
                     display: 'flex',
                     justifyContent: 'space-between',
                     backgroundColor: 'var(--p-header-toolbar-background)',
-                    borderBottom: '0.0625rem solid var(--p-header-toolbar-border)',
+                    borderBottom:
+                        '0.0625rem solid var(--p-header-toolbar-border)',
                     padding: '0.25rem 0.75rem',
                     fontFamily: 'var(--p-lingo-font-family)',
                 },
             },
         }"
     >
-         <div class="notifications-container">
-            HELLO FROM THE HELP PANEL
-        </div>
+        <div class="notifications-container">HELLO FROM THE HELP PANEL</div>
     </Drawer>
 </template>
 
 <style scoped>
 .notifications-container {
-    padding: .5rem .75rem;
+    padding: 0.5rem 0.75rem;
 }
-
 </style>

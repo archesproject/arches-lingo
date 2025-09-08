@@ -180,7 +180,7 @@ const emit = defineEmits(["update:isNavExpanded"]);
 
     i {
         font-size: var(--p-lingo-font-size-xsmall);
-        padding: 0rem 0rem 0rem .25rem;
+        padding: 0rem 0rem 0rem 0.25rem;
     }
 }
 

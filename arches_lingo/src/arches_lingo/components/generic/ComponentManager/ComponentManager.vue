@@ -240,7 +240,7 @@ provide("refreshReportSection", refreshReportSection);
     border-color: var(--p-header-button-border);
     min-width: 10rem;
     border-radius: 0.125rem;
-    padding: .5rem 0rem;
+    padding: 0.5rem 0rem;
 }
 
 .p-splitter .p-splitterpanel .splitter-panel-content .p-skeleton {

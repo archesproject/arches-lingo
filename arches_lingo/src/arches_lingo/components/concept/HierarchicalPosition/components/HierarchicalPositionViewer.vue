@@ -139,7 +139,7 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
                 @click="openEditor!(props.componentName)"
             >
                 <span><i class="pi pi-plus-circle"></i></span>
-                <span>{{$gettext('Add Hierarchical Parent')}}</span>
+                <span>{{ $gettext("Add Hierarchical Parent") }}</span>
             </Button>
         </div>
 
