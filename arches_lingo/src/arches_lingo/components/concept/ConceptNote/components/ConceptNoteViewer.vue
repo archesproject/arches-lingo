@@ -40,11 +40,9 @@ const metaStringLabel: MetaStringText = {
             <Button
                 :label="$gettext('Add Note')"
                 class="add-button"
+                icon="pi pi-plus-circle"
                 @click="openEditor!(props.componentName)"
-            >
-                <span><i class="pi pi-plus-circle"></i></span>
-                <span>{{ $gettext("Add Note") }}</span>
-            </Button>
+            ></Button>
         </div>
 
         <MetaStringViewer
