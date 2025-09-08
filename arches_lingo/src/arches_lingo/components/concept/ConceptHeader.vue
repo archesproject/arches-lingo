@@ -131,17 +131,23 @@ function confirmDelete() {
 }
 
 //Placeholder for export button panel
-const exportdialog = ref();
+const exportDialog = ref();
 const toggle = (event: Event) => {
-    exportdialog.value.toggle(event);
+    exportDialog.value.toggle(event);
 };
 
 //Placeholder for export type
 const exporter = ref("Concept Only");
-const exporteroptions = ref(["Concept Only", "Concept + Children"]);
+const exporterOptions = ref(["Concept Only", "Concept + Children"]);
 
 //Placeholder for export format radio button group
-const exportformat = ref("");
+const exportFormat = ref();
+const exportformatOptions = ref([
+    { label: "csv", value: "csv" },
+    { label: "SKOS", value: "skos" },
+    { label: "rdf", value: "rdf" },
+    { label: "JSON-LD", value: "jsonld" },
+]);
 
 //Placeholder for concept Type
 const conceptType = ref();
@@ -230,7 +236,7 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                     <span>Export</span>
                 </Button>
                 <Popover
-                    ref="exportdialog"
+                    ref="exportDialog"
                     class="export-panel"
                 >
                     <div class="exports-panel-container">
@@ -246,56 +252,35 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                             <!-- TODO: export options go here -->
                             <SelectButton
                                 v-model="exporter"
-                                :options="exporteroptions"
+                                :options="exporterOptions"
                             />
                         </div>
                         <div class="formats-container">
                             <h4>
-                                {{ $gettext("Export Formats") }}
+                                {{ $gettext("Export Format") }}
                             </h4>
-                            <!-- TODO: export format selection goes here -->
                             <div>
-                                <div class="selection">
+                                <span
+                                    v-for="option in exportformatOptions"
+                                    :key="option.value"
+                                    class="selection"
+                                >
                                     <RadioButton
-                                        v-model="exportformat"
-                                        input-id="format1"
-                                        name="csv"
-                                        value="csv"
-                                    />
-                                    <label for="ingredient1">csv</label>
-                                </div>
-                                <div class="selection">
-                                    <RadioButton
-                                        v-model="exportformat"
-                                        input-id="format2"
-                                        name="skos"
-                                        value="SKOS"
-                                    />
-                                    <label for="ingredient2">SKOS</label>
-                                </div>
-                                <div class="selection">
-                                    <RadioButton
-                                        v-model="exportformat"
-                                        input-id="format3"
-                                        name="rdf"
-                                        value="rdf"
-                                    />
-                                    <label for="ingredient3">rdf</label>
-                                </div>
-                                <div class="selection">
-                                    <RadioButton
-                                        v-model="exportformat"
-                                        input-id="format4"
-                                        name="json"
-                                        value="JSON-LD"
-                                    />
-                                    <label for="ingredient4">JSON-LD</label>
-                                </div>
+                                        :key="option.value"
+                                        v-model="exportFormat"
+                                        :input-id="option.value"
+                                        :value="option.value"
+                                        :label="option.label"
+                                    ></RadioButton>
+                                    <label :for="option.value">{{
+                                        option.label
+                                    }}</label>
+                                </span>
                             </div>
                         </div>
                         <div class="export-footer">
                             <Button
-                                icon="pi pi-trash"
+                                icon="pi pi-file-export"
                                 :label="$gettext('Export')"
                                 class="add-button"
                             ></Button>
@@ -469,13 +454,6 @@ h2 {
     font-weight: var(--p-lingo-font-weight-normal);
 }
 
-.add-button {
-    background: var(--p-header-button-background);
-    color: var(--p-header-button-color);
-    border-color: var(--p-header-button-border);
-    font-size: var(--p-lingo-font-size-small);
-}
-
 .delete-button {
     font-size: var(--p-lingo-font-size-small);
 }
@@ -490,8 +468,7 @@ h2 {
 }
 
 .exports-panel-container {
-    font-family: "Lucida Sans", "Lucida Sans Regular", "Lucida Grande",
-        "Lucida Sans Unicode", Geneva, Verdana, sans-serif;
+    font-family: var(--p-lingo-font-family);
     font-weight: 300;
     padding: 0 1rem;
 }
