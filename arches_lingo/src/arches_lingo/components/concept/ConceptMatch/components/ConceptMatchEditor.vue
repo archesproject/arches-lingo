@@ -119,7 +119,11 @@ async function save(e: FormSubmitEvent) {
         <div class="form-header">
             <h3>{{ props.sectionTitle }}</h3>
             <div class="form-description">
-                {{ $gettext("Match concepts from other schemes that may be associated with this concept.") }}
+                {{
+                    $gettext(
+                        "Match concepts from other schemes that may be associated with this concept.",
+                    )
+                }}
             </div>
         </div>
 
@@ -128,46 +132,45 @@ async function save(e: FormSubmitEvent) {
                 ref="form"
                 @submit="save"
             >
-                <div class="widget-container column">
-                    <GenericWidget
-                        :graph-slug="props.graphSlug"
-                        node-alias="match_status_ascribed_comparate"
-                        :aliased-node-data="
-                            props.tileData?.aliased_data.match_status_ascribed_comparate
-                        "
-                        :mode="EDIT"
-                    />
-                </div>
-                <div class="widget-container column">
-                    <GenericWidget
-                        :graph-slug="props.graphSlug"
-                        node-alias="match_status_ascribed_relation"
-                        :aliased-node-data="
-                            props.tileData?.aliased_data.match_status_ascribed_relation
-                        "
-                        :mode="EDIT"
-                    />
-                </div>
-                <div class="widget-container column">
-                    <GenericWidget
-                        :graph-slug="props.graphSlug"
-                        node-alias="match_status_status"
-                        :aliased-node-data="
-                            props.tileData?.aliased_data.match_status_status
-                        "
-                        :mode="EDIT"
-                    />
-                </div>
-                <div class="widget-container column">
-                    <GenericWidget
-                        :graph-slug="props.graphSlug"
-                        node-alias="match_status_status_metatype"
-                        :aliased-node-data="
-                            props.tileData?.aliased_data.match_status_status_metatype
-                        "
-                        :mode="EDIT"
-                    />
-                </div>
+                <GenericWidget
+                    :graph-slug="props.graphSlug"
+                    node-alias="match_status_ascribed_comparate"
+                    :aliased-node-data="
+                        props.tileData?.aliased_data
+                            .match_status_ascribed_comparate
+                    "
+                    :mode="EDIT"
+                    class="widget-container column"
+                />
+                <GenericWidget
+                    :graph-slug="props.graphSlug"
+                    node-alias="match_status_ascribed_relation"
+                    :aliased-node-data="
+                        props.tileData?.aliased_data
+                            .match_status_ascribed_relation
+                    "
+                    :mode="EDIT"
+                    class="widget-container column"
+                />
+                <GenericWidget
+                    :graph-slug="props.graphSlug"
+                    node-alias="match_status_status"
+                    :aliased-node-data="
+                        props.tileData?.aliased_data.match_status_status
+                    "
+                    :mode="EDIT"
+                    class="widget-container column"
+                />
+                <GenericWidget
+                    :graph-slug="props.graphSlug"
+                    node-alias="match_status_status_metatype"
+                    :aliased-node-data="
+                        props.tileData?.aliased_data
+                            .match_status_status_metatype
+                    "
+                    :mode="EDIT"
+                    class="widget-container column"
+                />
                 <div class="widget-container">
                     <GenericWidget
                         :graph-slug="props.graphSlug"
@@ -188,90 +191,37 @@ async function save(e: FormSubmitEvent) {
                         :mode="EDIT"
                     />
                 </div>
-                <div class="widget-container column">
-                    <GenericWidget
-                        :graph-slug="props.graphSlug"
-                        node-alias="match_status_data_assignment_actor"
-                        :aliased-node-data="
-                            props.tileData?.aliased_data
-                                .match_status_data_assignment_actor
-                        "
-                        :mode="EDIT"
-                    />
-                </div>
-                <div class="widget-container column">
-                    <GenericWidget
-                        :graph-slug="props.graphSlug"
-                        node-alias="match_status_data_assignment_object_used"
-                        :aliased-node-data="
-                            props.tileData?.aliased_data
-                                .match_status_data_assignment_object_used
-                        "
-                        :mode="EDIT"
-                    />
-                </div>
-                <div class="widget-container column">
-                    <GenericWidget
-                        :graph-slug="props.graphSlug"
-                        node-alias="match_status_data_assignment_type"
-                        :aliased-node-data="
-                            props.tileData?.aliased_data
-                                .match_status_data_assignment_type
-                        "
-                        :mode="EDIT"
-                    />
-                </div>
+                <GenericWidget
+                    :graph-slug="props.graphSlug"
+                    node-alias="match_status_data_assignment_actor"
+                    :aliased-node-data="
+                        props.tileData?.aliased_data
+                            .match_status_data_assignment_actor
+                    "
+                    :mode="EDIT"
+                    class="widget-container column"
+                />
+                <GenericWidget
+                    :graph-slug="props.graphSlug"
+                    node-alias="match_status_data_assignment_object_used"
+                    :aliased-node-data="
+                        props.tileData?.aliased_data
+                            .match_status_data_assignment_object_used
+                    "
+                    :mode="EDIT"
+                    class="widget-container column"
+                />
+                <GenericWidget
+                    :graph-slug="props.graphSlug"
+                    node-alias="match_status_data_assignment_type"
+                    :aliased-node-data="
+                        props.tileData?.aliased_data
+                            .match_status_data_assignment_type
+                    "
+                    :mode="EDIT"
+                    class="widget-container column"
+                />
             </Form>
         </div>
     </div>
 </template>
-<style scoped>
-.form-header {
-    padding-top: 0rem;
-    padding-bottom: 1rem;
-    background: var(--p-header-background);
-    border-bottom: 0.06rem solid var(--p-header-border);
-    min-height: 5.5rem;
-}
-
-.form-header h3 {
-    margin: 0;
-    padding: 0.5rem 1rem 0 1rem;
-}
-
-.form-container {
-    padding: 0.5rem 1rem;
-    background: var(--p-editor-form-background);
-}
-
-.form-description {
-    padding: 0.125rem 1rem;
-    font-weight: var(--p-lingo-font-weight-normal);
-    font-size: var(--p-lingo-font-size-smallnormal);
-    color: var(--p-header-item-label);
-    margin-inline-end: 0.25rem;
-}
-
-.widget-container {
-    display: flex; 
-    gap: .25rem; 
-    padding: .5rem 0rem 0.25rem 0rem;
-    color: var(--p-header-item-label);
-}
-
-.column {
-    flex-direction: column;
-}
-
-:deep(.p-inputtext) {
-    border-radius: .125rem;
-}
-
-:deep(.p-treeselect) {
-    border-radius: .125rem;
-}
-
-:deep(.p-multiselect) {
-    border-radius: .125rem;
-}
-</style>

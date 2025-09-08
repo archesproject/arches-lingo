@@ -263,109 +263,57 @@ function resetForm() {
         <div class="form-header">
             <h3>{{ props.sectionTitle }}</h3>
             <div class="form-description">
-                {{ $gettext("Add images, image titles, and descriptions to help illustrate features of the concept.") }}
+                {{
+                    $gettext(
+                        "Add images, image titles, and descriptions to help illustrate features of the concept.",
+                    )
+                }}
             </div>
         </div>
 
-         <div class="form-container">
+        <div class="form-container">
             <Form
                 v-if="digitalObjectLoaded"
                 ref="form"
                 @submit="save"
                 @reset="resetForm"
             >
-                <div class="widget-container column">
-                    <GenericWidget
-                        node-alias="name_content"
-                        graph-slug="digital_object_rdm_system"
-                        :mode="EDIT"
-                        :aliased-node-data="
-                            digitalObjectResource?.aliased_data.name?.aliased_data
-                                .name_content
-                        "
-                    />
-                </div>
-                <div class="widget-container column">
-                    <GenericWidget
-                        node-alias="statement_content"
-                        graph-slug="digital_object_rdm_system"
-                        :mode="EDIT"
-                        :aliased-node-data="
-                            digitalObjectResource?.aliased_data.statement?.aliased_data
-                                .statement_content
-                        "
-                    />
-                </div>
-                <div class="widget-container column">
-                    <GenericWidget
-                        node-alias="content"
-                        graph-slug="digital_object_rdm_system"
-                        :aliased-node-data="
-                            digitalObjectResource?.aliased_data?.content?.aliased_data
-                                .content
-                        "
-                        :mode="EDIT"
-                        :should-show-label="false"
-                    />
-                </div>
+                <GenericWidget
+                    node-alias="name_content"
+                    graph-slug="digital_object_rdm_system"
+                    :mode="EDIT"
+                    :aliased-node-data="
+                        digitalObjectResource?.aliased_data.name?.aliased_data
+                            .name_content
+                    "
+                    class="widget-container column"
+                />
+                <GenericWidget
+                    node-alias="statement_content"
+                    graph-slug="digital_object_rdm_system"
+                    :mode="EDIT"
+                    :aliased-node-data="
+                        digitalObjectResource?.aliased_data.statement
+                            ?.aliased_data.statement_content
+                    "
+                    class="widget-container column"
+                />
+                <GenericWidget
+                    node-alias="content"
+                    graph-slug="digital_object_rdm_system"
+                    :aliased-node-data="
+                        digitalObjectResource?.aliased_data?.content
+                            ?.aliased_data.content
+                    "
+                    :mode="EDIT"
+                    :should-show-label="false"
+                    class="widget-container column"
+                />
             </Form>
         </div>
     </div>
 </template>
 <style scoped>
-.widget-container {
-    display: flex; 
-    gap: .25rem; 
-    padding: .5rem 0rem 0.25rem 0rem;
-    color: var(--p-header-item-label);
-}
-
-.form-header {
-    padding-top: 0rem;
-    padding-bottom: 1rem;
-    background: var(--p-header-background);
-    border-bottom: 0.06rem solid var(--p-header-border);
-    min-height: 5.5rem;
-}
-
-.form-header h3 {
-    margin: 0;
-    padding: 0.5rem 1rem 0 1rem;
-}
-
-.form-container {
-    padding: 0.5rem 1rem;
-    background: var(--p-editor-form-background);
-}
-
-.form-description {
-    padding: 0.125rem 1rem;
-    font-weight: var(--p-lingo-font-weight-normal);
-    font-size: var(--p-lingo-font-size-smallnormal);
-    color: var(--p-header-item-label);
-    margin-inline-end: 0.25rem;
-}
-
-.column {
-    flex-direction: column;
-}
-
-:deep(.p-inputtext) {
-    border-radius: .125rem;
-}
-
-:deep(.p-textarea) {
-    border-radius: .125rem;
-}
-
-:deep(.p-treeselect) {
-    border-radius: .125rem;
-}
-
-:deep(.p-multiselect) {
-    border-radius: .125rem;
-}
-
 :deep(.p-fileupload-advanced) {
     border: none;
 }
@@ -380,7 +328,7 @@ function resetForm() {
     padding: 0;
 }
 
-:deep(.p-fileupload-file-info ) {
+:deep(.p-fileupload-file-info) {
     flex-direction: row;
 }
 
@@ -388,5 +336,4 @@ function resetForm() {
     padding: 0;
     margin-top: 1rem;
 }
-
 </style>
