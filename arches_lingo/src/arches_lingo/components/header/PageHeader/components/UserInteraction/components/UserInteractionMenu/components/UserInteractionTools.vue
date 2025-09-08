@@ -88,12 +88,12 @@ async function issueLogout() {
 <style scoped>
 .button-container {
     display: flex;
-    gap: .15rem;
+    gap: 0.15rem;
 }
 
 .p-button {
     font-size: var(--p-lingo-font-size-xsmall);
-    margin-bottom: .15rem;
+    margin-bottom: 0.15rem;
     width: 8rem;
     border: 0.0625rem solid var(--p-header-button-border);
 }

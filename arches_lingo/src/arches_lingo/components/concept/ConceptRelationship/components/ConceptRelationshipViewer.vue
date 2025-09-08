@@ -49,7 +49,7 @@ const metaStringLabel: MetaStringText = {
                 @click="openEditor!(props.componentName)"
             >
                 <span><i class="pi pi-plus-circle"></i></span>
-                <span>{{$gettext('Add Associated Concept')}}</span>
+                <span>{{ $gettext("Add Associated Concept") }}</span>
             </Button>
         </div>
 
