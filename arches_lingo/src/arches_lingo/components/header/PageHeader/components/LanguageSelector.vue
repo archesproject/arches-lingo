@@ -4,7 +4,7 @@ import { useGettext } from "vue3-gettext";
 
 import Button from "primevue/button";
 import Popover from "primevue/popover";
-import RadioButton from 'primevue/radiobutton';
+import RadioButton from "primevue/radiobutton";
 
 import { selectedLanguageKey } from "@/arches_lingo/constants.ts";
 
@@ -19,7 +19,6 @@ const popover = useTemplateRef<PopoverMethods>("popover");
 function openLanguageSelector(event: MouseEvent) {
     popover.value!.toggle(event);
 }
-
 </script>
 
 <template>
@@ -34,31 +33,44 @@ function openLanguageSelector(event: MouseEvent) {
             <span>{{ selectedLanguage?.name }}</span>
         </Button>
 
-        <Popover
-            ref="popover"
-        >
+        <Popover ref="popover">
             <div class="popover-header">
                 <h4 class="header-title">
                     {{ $gettext("Language Selection") }}
                 </h4>
                 <div class="formats-container">
-     
                     <!-- TODO: export format selection goes here -->
                     <div>
                         <div class="selection">
-                            <RadioButton v-model="language" inputId="format4" name="zh" value="Chinese" />
+                            <RadioButton
+                                input-id="format4"
+                                name="zh"
+                                value="Chinese"
+                            />
                             <label for="language1">Chinese (zh)</label>
                         </div>
                         <div class="selection">
-                            <RadioButton v-model="language" inputId="format1" name="en" value="English" />
+                            <RadioButton
+                                input-id="format1"
+                                name="en"
+                                value="English"
+                            />
                             <label for="language2">English (en)</label>
                         </div>
                         <div class="selection">
-                            <RadioButton v-model="language" inputId="format2" name="de" value="German" />
+                            <RadioButton
+                                input-id="format2"
+                                name="de"
+                                value="German"
+                            />
                             <label for="languaget3">German (de)</label>
                         </div>
                         <div class="selection">
-                            <RadioButton v-model="language" inputId="format3" name="es" value="Spanish" />
+                            <RadioButton
+                                input-id="format3"
+                                name="es"
+                                value="Spanish"
+                            />
                             <label for="language4">Spanish (es)</label>
                         </div>
                     </div>
@@ -94,20 +106,21 @@ function openLanguageSelector(event: MouseEvent) {
 }
 
 .popover-header {
-    font-family:'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+    font-family: "Lucida Sans", "Lucida Sans Regular", "Lucida Grande",
+        "Lucida Sans Unicode", Geneva, Verdana, sans-serif;
     padding: 0.5rem 0.5rem;
 }
 
 .header-title {
-    margin: 0rem 0rem .5rem 0rem;
-    padding-bottom: .5rem;
+    margin: 0rem 0rem 0.5rem 0rem;
+    padding-bottom: 0.5rem;
     border-bottom: 1px solid var(--p-header-toolbar-border);
 }
 
 .selection {
     display: flex;
-    gap: .5rem;
-    padding: .2rem;
+    gap: 0.5rem;
+    padding: 0.2rem;
     font-size: var(--p-lingo-font-size-smallnormal);
     align-items: center;
     color: var(--p-list-option-icon-color);
