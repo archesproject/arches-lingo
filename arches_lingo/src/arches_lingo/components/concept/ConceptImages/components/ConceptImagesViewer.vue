@@ -144,12 +144,11 @@ async function modifyResource(resourceInstanceId?: string) {
         <div class="section-header">
             <h2>{{ props.sectionTitle }}</h2>
             <Button
+                :label="$gettext('Add Image')"
                 class="add-button"
+                icon="pi pi-plus-circle"
                 @click="newResource"
-            >
-                <span><i class="pi pi-plus-circle"></i></span>
-                <span>{{ $gettext("Add Image") }}</span>
-            </Button>
+            ></Button>
         </div>
 
         <Skeleton
