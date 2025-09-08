@@ -9,8 +9,8 @@ import Skeleton from "primevue/skeleton";
 
 import ConfirmDialog from "primevue/confirmdialog";
 import Button from "primevue/button";
-import SelectButton from 'primevue/selectbutton';
-import RadioButton from 'primevue/radiobutton';
+import SelectButton from "primevue/selectbutton";
+import RadioButton from "primevue/radiobutton";
 import Popover from "primevue/popover";
 
 import {
@@ -137,17 +137,16 @@ function confirmDelete() {
 
 //Placeholder for export button panel
 const exportdialog = ref();
-const toggle = (event) => {
+const toggle = (event: Event) => {
     exportdialog.value.toggle(event);
-}
+};
 
 //Placeholder for export type
-const exporter = ref('Concept Only');
-const exporteroptions = ref(['Concept Only', 'Concept + Children']);
+const exporter = ref("Concept Only");
+const exporteroptions = ref(["Concept Only", "Concept + Children"]);
 
 //Placeholder for export format radio button group
-const exportformat = ref('');
-
+const exportformat = ref("");
 </script>
 
 <template>
@@ -167,7 +166,6 @@ const exportformat = ref('');
                 <div class="header-row">
                     <div>
                         <h2 v-if="data?.descriptor?.name">
-                            
                             <span>
                                 {{ data?.descriptor?.name }}
 
@@ -185,8 +183,8 @@ const exportformat = ref('');
                         <!-- Placeholder export button -->
                         <Button
                             :aria-label="$gettext('Export')"
-                            @click="toggle"
                             class="add-button"
+                            @click="toggle"
                         >
                             <span><i class="pi pi-cloud-download"></i></span>
                             <span>{{ $gettext("Export") }}</span>
@@ -206,7 +204,10 @@ const exportformat = ref('');
                                         {{ $gettext("Export Options") }}
                                     </h4>
                                     <!-- TODO: export options go here -->
-                                    <SelectButton v-model="exporter" :options="exporteroptions" />
+                                    <SelectButton
+                                        v-model="exporter"
+                                        :options="exporteroptions"
+                                    />
                                 </div>
                                 <div class="formats-container">
                                     <h4>
@@ -215,20 +216,44 @@ const exportformat = ref('');
                                     <!-- TODO: export format selection goes here -->
                                     <div>
                                         <div class="selection">
-                                            <RadioButton v-model="exportformat" inputId="format1" name="csv" value="csv" />
+                                            <RadioButton
+                                                v-model="exportformat"
+                                                input-id="format1"
+                                                name="csv"
+                                                value="csv"
+                                            />
                                             <label for="ingredient1">csv</label>
                                         </div>
                                         <div class="selection">
-                                            <RadioButton v-model="exportformat" inputId="format2" name="skos" value="SKOS" />
-                                            <label for="ingredient2">SKOS</label>
+                                            <RadioButton
+                                                v-model="exportformat"
+                                                input-id="format2"
+                                                name="skos"
+                                                value="SKOS"
+                                            />
+                                            <label for="ingredient2"
+                                                >SKOS</label
+                                            >
                                         </div>
                                         <div class="selection">
-                                            <RadioButton v-model="exportformat" inputId="format3" name="rdf" value="rdf" />
+                                            <RadioButton
+                                                v-model="exportformat"
+                                                input-id="format3"
+                                                name="rdf"
+                                                value="rdf"
+                                            />
                                             <label for="ingredient3">rdf</label>
                                         </div>
                                         <div class="selection">
-                                            <RadioButton v-model="exportformat" inputId="format4" name="json" value="JSON-LD" />
-                                            <label for="ingredient4">JSON-LD</label>
+                                            <RadioButton
+                                                v-model="exportformat"
+                                                input-id="format4"
+                                                name="json"
+                                                value="JSON-LD"
+                                            />
+                                            <label for="ingredient4"
+                                                >JSON-LD</label
+                                            >
                                         </div>
                                     </div>
                                 </div>
@@ -255,13 +280,13 @@ const exportformat = ref('');
 
                         <!-- TODO: button should reflect published state of concept: delete if draft, deprecate if URI is present -->
                         <Button
-                                icon="pi pi-trash"
-                                severity="danger"
-                                class="delete-button"
-                                :label="$gettext('Delete')"
-                                :aria-label="$gettext('Delete Concept')"
-                                @click="confirmDelete"
-                            />
+                            icon="pi pi-trash"
+                            severity="danger"
+                            class="delete-button"
+                            :label="$gettext('Delete')"
+                            :aria-label="$gettext('Delete Concept')"
+                            @click="confirmDelete"
+                        />
 
                         <!-- TODO: button should allow user to publish scheme if draft, retire scheme if published -->
                         <Button
@@ -281,14 +306,17 @@ const exportformat = ref('');
                         <span class="header-item-label">
                             {{ $gettext("Identifier:") }}
                         </span>
-                        <span class="header-item-value">
-                            0032775
-                        </span>
+                        <span class="header-item-value"> 0032775 </span>
                     </div>
                     <div>
-                        <span class="header-item-label">{{ $gettext("URI (provisonal): ") }}</span>
+                        <span class="header-item-label">{{
+                            $gettext("URI (provisonal): ")
+                        }}</span>
                         <Button
-                            :label="data?.uri || 'https://fgi.lingo.com/schemes/0032775'"
+                            :label="
+                                data?.uri ||
+                                'https://fgi.lingo.com/schemes/0032775'
+                            "
                             class="concept-uri"
                             variant="link"
                             as="a"
@@ -331,7 +359,9 @@ const exportformat = ref('');
                                 {{ $gettext("Owner:") }}
                             </span>
                             <span class="header-item-value">
-                                {{ data?.principalUser || $gettext("Anonymous") }}
+                                {{
+                                    data?.principalUser || $gettext("Anonymous")
+                                }}
                             </span>
                         </div>
                     </div>
@@ -370,14 +400,14 @@ h2 {
 }
 
 .header-content {
-    padding-top: .5rem;
+    padding-top: 0.5rem;
     padding-inline-start: 1rem;
     padding-inline-end: 1.5rem;
 }
 
 .header-buttons {
     display: flex;
-    gap: .25rem;
+    gap: 0.25rem;
 }
 
 .p-button-link {
@@ -389,7 +419,7 @@ h2 {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: .2rem 0 0 0;
+    padding: 0.2rem 0 0 0;
 }
 
 .metadata-container {
@@ -407,7 +437,7 @@ h2 {
 }
 
 .add-language:hover {
-    cursor: pointer; 
+    cursor: pointer;
 }
 
 .lifecycle-container {
@@ -454,22 +484,23 @@ h2 {
 }
 
 .exports-panel-container {
-    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+    font-family: "Lucida Sans", "Lucida Sans Regular", "Lucida Grande",
+        "Lucida Sans Unicode", Geneva, Verdana, sans-serif;
     font-weight: 300;
     padding: 0 1rem;
 }
 
 .options-container {
-    padding: 0 0 .75rem 0;
+    padding: 0 0 0.75rem 0;
 }
 
 .options-container h4 {
     margin: 0;
-    padding-bottom: .4rem;
+    padding-bottom: 0.4rem;
 }
 
 .formats-container {
-    padding: 0 0 .75rem 0;
+    padding: 0 0 0.75rem 0;
 }
 
 .formats-container h4 {
@@ -478,8 +509,8 @@ h2 {
 
 .selection {
     display: flex;
-    gap: .5rem;
-    padding: .2rem;
+    gap: 0.5rem;
+    padding: 0.2rem;
     font-size: var(--p-lingo-font-size-smallnormal);
     align-items: center;
     color: var(--p-list-option-icon-color);
@@ -488,9 +519,9 @@ h2 {
 .export-footer {
     display: flex;
     flex-direction: row-reverse;
-    gap: .25rem;
+    gap: 0.25rem;
     border-top: 0.06rem solid var(--p-header-border);
-    padding: .5rem 0 0 0;
+    padding: 0.5rem 0 0 0;
 }
 
 .container-title {
@@ -500,8 +531,8 @@ h2 {
 }
 
 .container-title h3 {
-    padding-top: .5rem;
-    margin: 0rem 0rem .25rem 0rem;
+    padding-top: 0.5rem;
+    margin: 0rem 0rem 0.25rem 0rem;
     font-weight: var(--p-lingo-font-weight-normal);
 }
 
