@@ -365,7 +365,7 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                         <span class="header-item-value">
                             <RouterLink
                                 v-if="data?.partOfScheme?.node_value"
-                                :to="`/scheme/${data?.partOfScheme?.node_value}`"
+                                :to="`/scheme/${data?.partOfScheme?.node_value?.[0]?.resourceId}`"
                             >
                                 {{ data?.partOfScheme?.display_value }}
                             </RouterLink>
