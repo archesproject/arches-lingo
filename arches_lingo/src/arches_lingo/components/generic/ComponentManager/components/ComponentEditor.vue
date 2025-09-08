@@ -140,7 +140,7 @@ function onCancel() {
 h2 {
     font-size: var(--p-lingo-font-size-large);
     font-weight: var(--p-lingo-font-weight-normal);
-    margin: .75rem 0rem;
+    margin: 0.75rem 0rem;
 }
 
 .header {
@@ -163,20 +163,65 @@ h2 {
     min-height: 0;
 }
 
+.editor-content {
+    overflow-y: auto;
+    flex: 1;
+    padding: 0;
+    background: var(--p-editor-form-background);
+}
+
+.editor-content :deep(.widget-container) {
+    display: flex;
+    gap: 0.25rem;
+    padding: 0.5rem 0 0.25rem 0;
+    color: var(--p-header-item-label);
+}
+
+.editor-content :deep(.column) {
+    flex-direction: column;
+}
+
+.editor-content :deep(.form-header) {
+    padding-top: 0;
+    padding-bottom: 1rem;
+    background: var(--p-header-background);
+    border-bottom: 0.06rem solid var(--p-header-border);
+    min-height: 5.5rem;
+}
+
 .editor-content :deep(h3) {
     font-size: var(--p-lingo-font-size-medium);
     font-weight: var(--p-lingo-font-weight-normal);
+}
+
+.editor-content :deep(.form-header h3) {
+    margin: 0;
+    padding: 0.5rem 1rem 0 1rem;
+}
+
+.editor-content :deep(.form-container) {
+    padding: 0.5rem 1rem;
+    background: var(--p-editor-form-background);
+}
+
+.editor-content :deep(.form-description) {
+    padding: 0.125rem 1rem;
+    font-weight: var(--p-lingo-font-weight-normal);
+    font-size: var(--p-lingo-font-size-smallnormal);
+    color: var(--p-header-item-label);
+    margin-inline-end: 0.25rem;
 }
 
 .editor-content :deep(.p-formfield) {
     margin-bottom: 0.65rem;
 }
 
-.editor-content {
-    overflow-y: auto;
-    flex: 1;
-    padding: 0;
-    background: var(--p-editor-form-background);
+.editor-content :deep(.p-inputtext),
+.editor-content :deep(.p-multiselect),
+.editor-content :deep(.p-textarea),
+.editor-content :deep(.p-treeselect),
+.editor-content :deep(.p-select) {
+    border-radius: 0.125rem;
 }
 
 .footer {
