@@ -243,6 +243,18 @@ provide("refreshReportSection", refreshReportSection);
     padding: 0.5rem 0rem;
 }
 
+:deep(.concept-header .p-button),
+:deep(.scheme-header .p-button) {
+    font-size: var(--p-lingo-font-size-small);
+}
+
+:deep(.concept-header .add-button),
+:deep(.scheme-header .add-button) {
+    background: var(--p-header-button-background);
+    color: var(--p-header-button-color);
+    border-color: var(--p-header-button-border);
+}
+
 .p-splitter .p-splitterpanel .splitter-panel-content .p-skeleton {
     min-height: 9rem;
     margin-top: 1rem;
