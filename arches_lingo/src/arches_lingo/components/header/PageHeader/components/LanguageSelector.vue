@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject, useTemplateRef } from "vue";
+import { inject, ref, useTemplateRef } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import Button from "primevue/button";
@@ -15,6 +15,16 @@ const { $gettext } = useGettext();
 const selectedLanguage = inject(selectedLanguageKey);
 
 const popover = useTemplateRef<PopoverMethods>("popover");
+
+// TODO: rm in favor of injected selectedLanguage to update across app
+const lang = ref(selectedLanguage?.value);
+// TODO: Fetch this list from the backend
+const languages = ref([
+    { code: "en", label: "English" },
+    { code: "zh", label: "Chinese" },
+    { code: "de", label: "German" },
+    { code: "es", label: "Spanish" },
+]);
 
 function openLanguageSelector(event: MouseEvent) {
     popover.value!.toggle(event);
@@ -39,41 +49,22 @@ function openLanguageSelector(event: MouseEvent) {
                     {{ $gettext("Language Selection") }}
                 </h4>
                 <div class="formats-container">
-                    <!-- TODO: export format selection goes here -->
-                    <div>
-                        <div class="selection">
-                            <RadioButton
-                                input-id="format4"
-                                name="zh"
-                                value="Chinese"
-                            />
-                            <label for="language1">Chinese (zh)</label>
-                        </div>
-                        <div class="selection">
-                            <RadioButton
-                                input-id="format1"
-                                name="en"
-                                value="English"
-                            />
-                            <label for="language2">English (en)</label>
-                        </div>
-                        <div class="selection">
-                            <RadioButton
-                                input-id="format2"
-                                name="de"
-                                value="German"
-                            />
-                            <label for="languaget3">German (de)</label>
-                        </div>
-                        <div class="selection">
-                            <RadioButton
-                                input-id="format3"
-                                name="es"
-                                value="Spanish"
-                            />
-                            <label for="language4">Spanish (es)</label>
-                        </div>
-                    </div>
+                    <span
+                        v-for="language in languages"
+                        :key="language.code"
+                        class="selection"
+                    >
+                        <RadioButton
+                            :key="language.code"
+                            v-model="lang"
+                            :input-id="`language-${language.code}`"
+                            :value="language.code"
+                            :label="language.label"
+                        />
+                        <label :for="`language-${language.code}`">
+                            {{ language.label }} ({{ language.code }})
+                        </label>
+                    </span>
                 </div>
             </div>
         </Popover>
