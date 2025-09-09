@@ -73,6 +73,12 @@ async function save(e: FormSubmitEvent) {
             ),
         };
 
+        if (Object.hasOwn(updatedTileData, "uri")) {
+            delete (updatedTileData as { uri?: string }).uri;
+        }
+
+        console.log({ updatedTileData }, { formData, aliasedTileData });
+
         const scheme = route.query.scheme as string;
         const parent = route.query.parent as string;
 

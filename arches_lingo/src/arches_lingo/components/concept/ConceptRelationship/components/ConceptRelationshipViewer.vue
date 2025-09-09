@@ -61,18 +61,11 @@ const metaStringLabel: MetaStringText = {
             <template #name="{ rowData }">
                 <div
                     v-for="item in rowData.aliased_data
-                        .relation_status_ascribed_comparate?.node_value"
+                        .relation_status_ascribed_comparate?.details"
                     :key="item.resource_id"
                     style="white-space: nowrap"
                 >
-                    <!-- non-standard -- we only want to display the resource ID -->
-                    <GenericWidget
-                        :graph-slug="props.graphSlug"
-                        node-alias="relation_status_ascribed_comparate"
-                        :aliased-node-data="item.resource_id"
-                        :mode="VIEW"
-                        :should-show-label="false"
-                    />
+                    {{ item.resource_id }}
                 </div>
             </template>
             <template #type="{ rowData }">
@@ -89,7 +82,7 @@ const metaStringLabel: MetaStringText = {
             <template #language="{ rowData }">
                 <div
                     v-for="item in rowData.aliased_data
-                        .relation_status_ascribed_comparate.node_value"
+                        .relation_status_ascribed_comparate.details"
                     :key="item.resource_id"
                 >
                     <RouterLink
