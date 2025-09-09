@@ -41,7 +41,7 @@ onMounted(async () => {
     ) {
         const sectionValue = await getSectionValue();
         tileData.value = sectionValue?.data;
-        schemeId.value = sectionValue?.scheme_id;
+        schemeId.value = sectionValue?.scheme_id[0].resourceId;
     } else if (shouldCreateNewTile) {
         const blankTileData = await fetchTileData(
             props.graphSlug,
@@ -97,7 +97,7 @@ async function getSectionValue() {
                     return tileDatum.tileid === props.tileId;
                 })
             "
-            :scheme="schemeId"
+            :scheme-id="schemeId"
             :exclude="true"
             :component-name="props.componentName"
             :section-title="props.sectionTitle"
