@@ -25,7 +25,7 @@ import type { ConceptMatchStatus } from "@/arches_lingo/types.ts";
 
 const props = defineProps<{
     tileData: ConceptMatchStatus | undefined;
-    scheme?: string;
+    schemeId?: string;
     exclude?: boolean;
     componentName: string;
     sectionTitle: string;
@@ -77,14 +77,14 @@ async function save(e: FormSubmitEvent) {
 
         delete (updatedTileData as Record<string, unknown>)["uri"];
 
-        const scheme = route.query.scheme as string;
+        const schemeId = route.query.schemeId as string;
         const parent = route.query.parent as string;
 
         const updatedTileId = await createOrUpdateConcept(
             updatedTileData,
             props.graphSlug,
             props.nodegroupAlias,
-            scheme,
+            schemeId,
             parent,
             router,
             props.resourceInstanceId,
