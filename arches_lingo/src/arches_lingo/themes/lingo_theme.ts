@@ -76,7 +76,7 @@ export const LingoPreset = definePreset(ArchesPreset, {
                 },
                 editorForm: {
                     background: "#fcfcfc",
-                     color: "#475569",
+                    color: "#475569",
                 },
                 schemeCircle: {
                     background: "#4682b4",
@@ -101,7 +101,7 @@ export const LingoPreset = definePreset(ArchesPreset, {
                     border: "{neutral.600}",
                     itemLabel: "{surface.500}",
                 },
-                 headerButton: {
+                headerButton: {
                     background: "#d7e7f6",
                     border: "#486A8B",
                     color: "#18181b",
