@@ -74,7 +74,7 @@ const metaStringLabel: MetaStringText = {
             <template #type="{ rowData }">
                 <GenericWidget
                     :graph-slug="props.graphSlug"
-                    node-alias="uri_content"
+                    node-alias="uri"
                     :aliased-node-data="rowData.aliased_data.uri"
                     :mode="VIEW"
                     :should-show-label="false"
@@ -83,7 +83,7 @@ const metaStringLabel: MetaStringText = {
             <template #language="{ rowData }">
                 <div
                     v-for="item in rowData.aliased_data
-                        .match_status_ascribed_comparate?.node_value"
+                        .match_status_ascribed_comparate?.details"
                     :key="item.resource_id"
                 >
                     <RouterLink
