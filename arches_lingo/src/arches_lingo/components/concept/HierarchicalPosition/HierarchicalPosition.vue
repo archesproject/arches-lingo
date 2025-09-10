@@ -41,50 +41,50 @@ const topConceptOfTileId = ref<string>();
 const shouldCreateNewTile = Boolean(props.mode === EDIT && !props.tileId);
 
 onMounted(async () => {
-    if (props.resourceInstanceId) {
-        if (props.mode === VIEW || !shouldCreateNewTile) {
-            const sectionValue = await getSectionValue();
-            tileData.value =
-                sectionValue.aliased_data[props.nodegroupAlias] || [];
-        } else if (shouldCreateNewTile) {
-            const blankTileData = await fetchTileData(
-                props.graphSlug,
-                props.nodegroupAlias,
-            );
-            tileData.value = [
-                blankTileData as unknown as ConceptClassificationStatus,
-            ];
-        }
+    if (
+        props.resourceInstanceId &&
+        (props.mode === VIEW || !shouldCreateNewTile)
+    ) {
+        const sectionValue = await getSectionValue();
+        tileData.value = sectionValue?.aliased_data[props.nodegroupAlias];
 
         const currentPosition = await getHierarchicalData([
-            props.resourceInstanceId,
+            props.resourceInstanceId!,
         ]);
 
         schemeId.value = currentPosition.data[0]?.parents?.[0]?.[0]?.id;
 
-        hierarchicalData.value = currentPosition.data[0].parents.map(
+        hierarchicalData.value = currentPosition.data[0]?.parents?.map(
             (parent: SearchResultItem) => ({ searchResults: parent }),
         );
+    } else if (shouldCreateNewTile) {
+        const blankTileData = await fetchTileData(
+            props.graphSlug,
+            props.nodegroupAlias,
+        );
+        tileData.value = [
+            blankTileData as unknown as ConceptClassificationStatus,
+        ];
+    }
 
-        if (hierarchicalData.value && tileData.value) {
-            for (const datum of hierarchicalData.value) {
-                const parentConceptResourceId =
-                    datum.searchResults[datum.searchResults.length - 2].id;
-                const parentConceptTile = tileData.value.find((tile) => {
-                    const ascribedValues =
-                        tile.aliased_data
-                            .classification_status_ascribed_classification
-                            .node_value;
-                    return ascribedValues?.some(
-                        (value) => value.resourceId === parentConceptResourceId,
-                    );
-                });
-                if (parentConceptTile) {
-                    datum.tileid = parentConceptTile.tileid;
-                } else if (topConceptOfTileId.value) {
-                    datum.tileid = topConceptOfTileId.value;
-                    datum.isTopConcept = true;
-                }
+    if (hierarchicalData.value && tileData.value) {
+        for (const datum of hierarchicalData.value) {
+            const parentConceptResourceId =
+                datum.searchResults[datum.searchResults.length - 2].id;
+            const parentConceptTile = tileData.value.find((tile) => {
+                const ascribedValues =
+                    tile.aliased_data
+                        .classification_status_ascribed_classification
+                        .node_value;
+                return ascribedValues?.some(
+                    (value) => value.resourceId === parentConceptResourceId,
+                );
+            });
+            if (parentConceptTile) {
+                datum.tileid = parentConceptTile.tileid;
+            } else if (topConceptOfTileId.value) {
+                datum.tileid = topConceptOfTileId.value;
+                datum.isTopConcept = true;
             }
         }
     }
