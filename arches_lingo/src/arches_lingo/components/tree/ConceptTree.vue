@@ -393,7 +393,8 @@ function onNodeSelect(node: TreeNode) {
             nodeContent: ({ instance }: TreePassThroughMethodOptions) => {
                 return {
                     style: instance.node.data.id === NEW && {
-                        backgroundColor: 'rgb(250 247 207)',
+                        backgroundColor: 'var(--p-yellow-100)',
+                        color: 'var(--p-button-primary-color)',
                     },
                 };
             },
