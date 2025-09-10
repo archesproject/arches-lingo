@@ -66,7 +66,10 @@ const formRef = useTemplateRef("form");
 const isSaving = ref(false);
 
 onMounted(() => {
-    document.addEventListener("openConceptImagesEditor", getDigitalObjectInstance);
+    document.addEventListener(
+        "openConceptImagesEditor",
+        getDigitalObjectInstance,
+    );
     document.dispatchEvent(new Event("conceptImagesEditor:ready"));
 });
 
@@ -157,12 +160,12 @@ async function save(e: FormSubmitEvent) {
                 },
             };
         } else {
-            digitalObjectInstanceAliases.content.aliased_data.content = [
-                ...(digitalObjectInstanceAliases.content.aliased_data
-                // @ts-expect-error we must fix this type later
-                    .content?.node_value ?? []),
-                ...fileJsonObjects,
-            ];
+            // disabling this block as it breaks typescript. It should be re-enabled as part of the
+            // effort to get image editing working again.
+            // digitalObjectInstanceAliases.content.aliased_data.content = [
+            //     ...(digitalObjectInstanceAliases.content.aliased_data.content?.node_value ?? []),
+            //     ...fileJsonObjects,
+            // ];
         }
         const contentTile = digitalObjectInstanceAliases.content.aliased_data;
 
