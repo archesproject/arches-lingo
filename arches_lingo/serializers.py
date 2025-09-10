@@ -18,7 +18,10 @@ class LingoTileSerializer(ArchesTileSerializer):
                 new_label_type = new_label_types[0]
 
             if new_label_lang and new_label_type:
-                resource_pk = self.instance.resourceinstance_id
+                resource_pk = (
+                    self.initial_data.get("resourceinstance")
+                    or self.instance.resourceinstance_id
+                )
                 scheme = ResourceTileTree.get_tiles(self.graph_slug).get(pk=resource_pk)
                 self._check_pref_label_uniqueness(
                     initial_tile_data, scheme, new_label_lang, new_label_type
