@@ -8,6 +8,8 @@ import HierarchicalPositionViewer from "@/arches_lingo/components/concept/Hierar
 import HierarchicalPositionEditor from "@/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionEditor.vue";
 
 import { EDIT, VIEW } from "@/arches_lingo/constants.ts";
+
+import { fetchTileData } from "@/arches_component_lab/generics/GenericCard/api.ts";
 import {
     fetchConceptResources,
     fetchLingoResourcePartial,
@@ -40,21 +42,23 @@ const shouldCreateNewTile = Boolean(props.mode === EDIT && !props.tileId);
 
 onMounted(async () => {
     if (props.resourceInstanceId) {
-        let sectionPromise;
         if (props.mode === VIEW || !shouldCreateNewTile) {
-            sectionPromise = getSectionValue();
+            const sectionValue = await getSectionValue();
+            tileData.value =
+                sectionValue.aliased_data[props.nodegroupAlias] || [];
+        } else if (shouldCreateNewTile) {
+            const blankTileData = await fetchTileData(
+                props.graphSlug,
+                props.nodegroupAlias,
+            );
+            tileData.value = [
+                blankTileData as unknown as ConceptClassificationStatus,
+            ];
         }
 
-        const currentPositionPromise = getHierarchicalData([
+        const currentPosition = await getHierarchicalData([
             props.resourceInstanceId,
         ]);
-
-        if (sectionPromise) {
-            const sectionValue = await sectionPromise;
-            tileData.value = sectionValue.aliased_data[props.nodegroupAlias];
-        }
-
-        const currentPosition = await currentPositionPromise;
 
         schemeId.value = currentPosition.data[0]?.parents?.[0]?.[0]?.id;
 
@@ -71,7 +75,7 @@ onMounted(async () => {
                         tile.aliased_data
                             .classification_status_ascribed_classification
                             .node_value;
-                    return ascribedValues.some(
+                    return ascribedValues?.some(
                         (value) => value.resourceId === parentConceptResourceId,
                     );
                 });
@@ -154,7 +158,13 @@ async function getSectionValue() {
         <HierarchicalPositionEditor
             v-else-if="mode === EDIT"
             :tile-data="
-                tileData?.find((tileDatum) => tileDatum.tileid === props.tileId)
+                tileData!.find((tileDatum) => {
+                    if (shouldCreateNewTile) {
+                        return !tileDatum.tileid;
+                    }
+
+                    return tileDatum.tileid === props.tileId;
+                })
             "
             :section-title="props.sectionTitle"
             :component-name="props.componentName"

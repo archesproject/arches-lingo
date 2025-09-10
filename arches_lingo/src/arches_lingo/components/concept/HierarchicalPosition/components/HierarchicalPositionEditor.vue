@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, inject, ref, useTemplateRef, watch } from "vue";
+import { inject, ref, useTemplateRef, watch } from "vue";
 
 import { useRouter } from "vue-router";
 import { Form } from "@primevue/forms";
@@ -26,6 +26,7 @@ const props = defineProps<{
     resourceInstanceId: string | undefined;
     tileId?: string;
 }>();
+
 const router = useRouter();
 
 const componentEditorFormRef = inject<Ref<Component | null>>(
@@ -42,21 +43,6 @@ const refreshSchemeHierarchy = inject<() => void>("refreshSchemeHierarchy");
 
 const formRef = useTemplateRef("form");
 const isSaving = ref(false);
-
-// this is a workaround to make ResourceInstanceSelectWidget work
-const computedValue = computed(() => {
-    if (
-        props.tileData?.aliased_data
-            .classification_status_ascribed_classification?.node_value
-    ) {
-        return {
-            resource_id:
-                props.tileData.aliased_data
-                    .classification_status_ascribed_classification.node_value,
-        };
-    }
-    return null;
-});
 
 watch(
     () => formRef.value,
@@ -103,12 +89,13 @@ async function save(e: FormSubmitEvent) {
             let values;
             if (
                 formData.classification_status_ascribed_classification
-                    .resource_id == props.schemeId
+                    .node_value.resourceId == props.schemeId
             ) {
                 nodegroupAlias = "top_concept_of";
                 values = {
                     top_concept_of:
-                        formData.classification_status_ascribed_classification,
+                        formData.classification_status_ascribed_classification
+                            .node_value,
                 };
             } else {
                 nodegroupAlias = props.nodegroupAlias;
@@ -154,7 +141,10 @@ async function save(e: FormSubmitEvent) {
             <GenericWidget
                 :graph-slug="props.graphSlug"
                 node-alias="classification_status_ascribed_classification"
-                :aliased-node-data="computedValue"
+                :aliased-node-data="
+                    props.tileData?.aliased_data
+                        .classification_status_ascribed_classification
+                "
                 :mode="EDIT"
             />
         </Form>
