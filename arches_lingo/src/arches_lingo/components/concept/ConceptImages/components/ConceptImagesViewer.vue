@@ -201,7 +201,7 @@ async function modifyResource(resourceInstanceId?: string) {
                             <Button
                                 icon="pi pi-file-edit"
                                 style="
-                                    border: 1px solid
+                                    border: 0.0625rem solid
                                         var(--p-header-button-border);
                                 "
                                 rounded

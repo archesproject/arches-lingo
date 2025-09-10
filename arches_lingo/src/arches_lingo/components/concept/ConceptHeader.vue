@@ -407,7 +407,7 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
     padding-top: 0rem;
     padding-bottom: 1rem;
     background: var(--p-header-background);
-    border-bottom: 0.06rem solid var(--p-header-border);
+    border-bottom: 0.0625rem solid var(--p-header-toolbar-border);
     min-height: 8.5rem;
 }
 
@@ -420,7 +420,7 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
 .concept-header-toolbar {
     height: 3rem;
     background: var(--p-header-toolbar-background);
-    border-bottom: 1px solid var(--p-header-toolbar-border);
+    border-bottom: 0.0625rem solid var(--p-header-toolbar-border);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -503,13 +503,13 @@ h2 {
     display: flex;
     flex-direction: row-reverse;
     gap: 0.25rem;
-    border-top: 0.06rem solid var(--p-header-border);
+    border-top: 0.0625rem solid var(--p-header-toolbar-border);
     padding: 0.5rem 0 0 0;
 }
 
 .container-title {
     font-size: var(--p-lingo-font-size-normal);
-    border-bottom: 0.0625rem solid var(--p-header-border);
+    border-bottom: 0.0625rem solid var(--p-header-toolbar-border);
     margin-bottom: 0.5rem;
 }
 

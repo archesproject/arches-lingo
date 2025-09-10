@@ -355,13 +355,13 @@ const exportformatOptions = ref([
 <style scoped>
 .scheme-header {
     background: var(--p-header-background);
-    border-bottom: 0.06rem solid var(--p-header-border);
+    border-bottom: 0.0625rem solid var(--p-header-toolbar-border);
 }
 
 .scheme-header-toolbar {
     height: 3rem;
     background: var(--p-header-toolbar-background);
-    border-bottom: 1px solid var(--p-header-toolbar-border);
+    border-bottom: 0.0625rem solid var(--p-header-toolbar-border);
     align-items: center;
     padding-inline-start: 1rem;
     padding-inline-end: 1rem;
@@ -454,7 +454,7 @@ h2 {
 .scheme-language {
     padding: 0.5rem 1rem;
     background: var(--p-menubar-item-icon-color);
-    border: 0.06rem solid var(--p-menubar-item-icon-color);
+    border: 0.0625rem solid var(--p-menubar-item-icon-color);
     border-radius: 0.125rem;
     font-size: var(--p-lingo-font-size-smallnormal);
     color: var(--p-content-color);
@@ -500,13 +500,13 @@ h2 {
     display: flex;
     flex-direction: row-reverse;
     gap: 0.25rem;
-    border-top: 0.06rem solid var(--p-header-border);
+    border-top: 0.0625rem solid var(--p-header-toolbar-border);
     padding: 0.5rem 0 0 0;
 }
 
 .container-title {
     font-size: var(--p-lingo-font-size-normal);
-    border-bottom: 0.0625rem solid var(--p-header-border);
+    border-bottom: 0.0625rem solid var(--p-header-toolbar-border);
     margin-bottom: 0.5rem;
 }
 

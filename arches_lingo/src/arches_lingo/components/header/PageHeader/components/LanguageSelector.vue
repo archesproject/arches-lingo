@@ -105,7 +105,7 @@ function openLanguageSelector(event: MouseEvent) {
 .header-title {
     margin: 0rem 0rem 0.5rem 0rem;
     padding-bottom: 0.5rem;
-    border-bottom: 1px solid var(--p-header-toolbar-border);
+    border-bottom: 0.0625rem solid var(--p-header-toolbar-border);
 }
 
 .selection {

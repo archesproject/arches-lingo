@@ -125,7 +125,7 @@ provide("refreshReportSection", refreshReportSection);
 </script>
 
 <template>
-    <Splitter style="height: 100%; min-height: 0; border-radius: 0">
+    <Splitter style="height: 100%; min-height: 0; border: none">
         <SplitterPanel
             v-show="editorState !== MAXIMIZED"
             class="content"
@@ -206,10 +206,6 @@ provide("refreshReportSection", refreshReportSection);
     overflow-y: auto;
 }
 
-:deep(.p-splitter) {
-    border-radius: 0;
-}
-
 :deep(.viewer-section) {
     padding: 1rem 1rem 1.25rem 1rem;
 }
@@ -224,7 +220,7 @@ provide("refreshReportSection", refreshReportSection);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 0.06rem solid var(--p-highlight-focus-background);
+    border-bottom: 0.0625rem solid var(--p-highlight-focus-background);
     padding-bottom: 0.5rem;
 }
 
@@ -239,9 +235,12 @@ provide("refreshReportSection", refreshReportSection);
     font-size: var(--p-lingo-font-size-xsmall);
     font-weight: var(--p-lingo-font-weight-normal);
     border-color: var(--p-header-button-border);
-    min-width: 10rem;
     border-radius: 0.125rem;
-    padding: 0.5rem 0rem;
+    min-width: 8rem;
+
+    &.wide {
+        min-width: 15rem;
+    }
 }
 
 :deep(.concept-header .p-button),

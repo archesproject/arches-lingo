@@ -185,7 +185,7 @@ h2 {
     padding-top: 0;
     padding-bottom: 1rem;
     background: var(--p-header-background);
-    border-bottom: 0.06rem solid var(--p-header-border);
+    border-bottom: 0.0625rem solid var(--p-header-toolbar-border);
     min-height: 5.5rem;
 }
 

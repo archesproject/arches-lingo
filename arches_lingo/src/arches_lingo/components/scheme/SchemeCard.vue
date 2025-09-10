@@ -72,7 +72,7 @@ a {
 
 :deep(.p-card) {
     background-color: var(--p-button-primary-background);
-    border: 0.0625rem solid var(--p-header-border);
+    border: 0.0625rem solid var(--p-header-toolbar-border);
     color: var(--p-button-primary-color);
     width: 15rem;
     height: 15rem;
@@ -105,7 +105,7 @@ a {
     margin: 1rem;
     border-radius: 50%;
     background: var(--p-surface-400);
-    border: 0.06rem solid var(--p-surface-900);
+    border: 0.0625rem solid var(--p-surface-900);
 }
 
 .new-scheme-icon {
