@@ -141,7 +141,10 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
             ></Button>
         </div>
 
-        <div style="overflow-x: auto">
+        <div
+            v-if="props.data.length"
+            style="overflow-x: auto"
+        >
             <div class="lineage-section">
                 <div
                     v-for="(hierarchy, index) in props.data"
@@ -208,6 +211,16 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
                     </div>
                 </div>
             </div>
+        </div>
+        <div
+            v-else
+            style="
+                padding-top: 0.5rem;
+                font-size: var(--p-lingo-font-size-smallnormal);
+                color: var(--p-inputtext-placeholder-color);
+            "
+        >
+            {{ $gettext("No hierarchical parents were found.") }}
         </div>
     </div>
 </template>
