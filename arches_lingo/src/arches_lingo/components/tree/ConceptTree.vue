@@ -392,10 +392,8 @@ function onNodeSelect(node: TreeNode) {
             },
             nodeContent: ({ instance }: TreePassThroughMethodOptions) => {
                 return {
-                    style: instance.node.data.id === NEW && {
-                        backgroundColor: 'var(--p-yellow-100)',
-                        color: 'var(--p-button-primary-color)',
-                    },
+                    class:
+                        instance.node.data.id === NEW ? 'new-node' : undefined,
                 };
             },
             nodeIcon: ({ instance }: TreePassThroughMethodOptions) => {
@@ -453,5 +451,11 @@ function onNodeSelect(node: TreeNode) {
 .skeleton-container :deep(.p-skeleton) {
     margin: 0.5rem 0;
     height: var(--p-tree-node-toggle-button-size);
+}
+
+:deep(.new-node),
+:deep(.new-node *) {
+    background-color: var(--p-yellow-500) !important;
+    color: var(--p-tree-node-color) !important;
 }
 </style>
