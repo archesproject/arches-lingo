@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { inject, ref } from "vue";
+import { useTemplateRef, watch } from "vue";
 
-import Button from "primevue/button";
+import { ToggleButton } from "primevue";
 import Menubar from "primevue/menubar";
 import OverlayPanel from "primevue/overlaypanel";
 
@@ -9,24 +9,42 @@ import ArchesLingoBadge from "@/arches_lingo/components/header/PageHeader/compon
 import LanguageSelector from "@/arches_lingo/components/header/PageHeader/components/LanguageSelector.vue";
 import NotificationInteraction from "@/arches_lingo/components/header/PageHeader/components/NotificationsInteraction/NotificationInteraction.vue";
 import PageHelp from "@/arches_lingo/components/header/PageHeader/components/PageHelp/PageHelp.vue";
-import SchemeHierarchy from "@/arches_lingo/components/header/PageHeader/components/SchemeHierarchy/SchemeHierarchy.vue";
 import SearchDialog from "@/arches_lingo/components/header/PageHeader/components/SearchDialog.vue";
 import UserInteraction from "@/arches_lingo/components/header/PageHeader/components/UserInteraction/UserInteraction.vue";
+
+const shouldShowHierarchy = defineModel<boolean>({
+    type: Boolean,
+    required: true,
+});
 
 const props = defineProps<{
     isNavExpanded: boolean;
 }>();
 
-const schemeHierarchyKey = inject<number>("schemeHierarchyKey");
+const emit = defineEmits<{
+    (e: "shouldShowHierarchy", value: boolean): void;
+}>();
 
-const mobileMenu = ref();
+watch(shouldShowHierarchy, (newValue) => {
+    emit("shouldShowHierarchy", newValue);
+});
+
+const overlayPanel = useTemplateRef("overlayPanel");
 </script>
 
 <template>
     <Menubar>
         <template #start>
             <ArchesLingoBadge v-if="!props.isNavExpanded" />
-            <SchemeHierarchy :key="schemeHierarchyKey" />
+
+            <ToggleButton
+                v-model="shouldShowHierarchy"
+                on-icon="pi pi-globe"
+                off-icon="pi pi-globe"
+                :on-label="$gettext('Explore')"
+                :off-label="$gettext('Explore')"
+                class="explore-button"
+            />
             <SearchDialog />
         </template>
         <template #end>
@@ -38,14 +56,14 @@ const mobileMenu = ref();
             </div>
             <Button
                 icon="pi pi-bars"
-                class="mobile-menu-button p-button-text"
-                @click="mobileMenu?.toggle($event)"
+                class="overlay-panel-button p-button-text"
+                @click="overlayPanel?.toggle($event)"
             />
             <OverlayPanel
-                ref="mobileMenu"
+                ref="overlayPanel"
                 show-close-icon
             >
-                <div class="mobile-menu-items">
+                <div class="overlay-panel-items">
                     <UserInteraction />
                     <LanguageSelector />
                     <NotificationInteraction />
@@ -57,6 +75,19 @@ const mobileMenu = ref();
 </template>
 
 <style scoped>
+.explore-button,
+.explore-button * {
+    background: var(--p-menubar-background) !important;
+    border: none !important;
+    color: var(--p-menubar-text-color) !important;
+}
+
+.explore-button.p-togglebutton-checked,
+.explore-button.p-togglebutton-checked * {
+    background: var(--p-togglebutton-checked-background) !important;
+    color: var(--p-togglebutton-checked-color) !important;
+}
+
 .p-menubar {
     border-radius: 0;
     border-inline-start: 0;
@@ -75,7 +106,7 @@ const mobileMenu = ref();
     align-items: center;
     gap: var(--p-menubar-gap);
 }
-.mobile-menu-button {
+.overlay-panel-button {
     display: none;
     color: var(--p-menubar-color) !important;
 }
@@ -84,7 +115,7 @@ const mobileMenu = ref();
     .end-items {
         display: none !important;
     }
-    .mobile-menu-button {
+    .overlay-panel-button {
         display: inline-flex !important;
     }
 }
