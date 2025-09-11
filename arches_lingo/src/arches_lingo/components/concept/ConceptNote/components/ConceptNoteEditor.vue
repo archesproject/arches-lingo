@@ -117,69 +117,90 @@ async function save(e: FormSubmitEvent) {
     />
 
     <div v-show="!isSaving">
-        <h3>{{ props.sectionTitle }}</h3>
+        <div class="form-header">
+            <h3>{{ props.sectionTitle }}</h3>
+            <div class="form-description">
+                {{
+                    $gettext(
+                        "Add notes to define and provide context for concept.",
+                    )
+                }}
+            </div>
+        </div>
 
-        <Form
-            ref="form"
-            @submit="save"
-        >
-            <GenericWidget
-                :graph-slug="props.graphSlug"
-                node-alias="statement_content"
-                :aliased-node-data="
-                    props.tileData?.aliased_data.statement_content
-                "
-                :mode="EDIT"
-            />
-            <GenericWidget
-                :graph-slug="props.graphSlug"
-                node-alias="statement_type"
-                :aliased-node-data="props.tileData?.aliased_data.statement_type"
-                :mode="EDIT"
-            />
-            <GenericWidget
-                :graph-slug="props.graphSlug"
-                node-alias="statement_language"
-                :aliased-node-data="
-                    props.tileData?.aliased_data.statement_language
-                "
-                :mode="EDIT"
-            />
-            <GenericWidget
-                :graph-slug="props.graphSlug"
-                node-alias="statement_data_assignment_timespan_begin_of_the_begin"
-                :aliased-node-data="
-                    props.tileData?.aliased_data
-                        .statement_data_assignment_timespan_begin_of_the_begin
-                "
-                :mode="EDIT"
-            />
-            <GenericWidget
-                :graph-slug="props.graphSlug"
-                node-alias="statement_data_assignment_timespan_end_of_the_end"
-                :aliased-node-data="
-                    props.tileData?.aliased_data
-                        .statement_data_assignment_timespan_end_of_the_end
-                "
-                :mode="EDIT"
-            />
-            <GenericWidget
-                :graph-slug="props.graphSlug"
-                node-alias="statement_data_assignment_actor"
-                :aliased-node-data="
-                    props.tileData?.aliased_data.statement_data_assignment_actor
-                "
-                :mode="EDIT"
-            />
-            <GenericWidget
-                :graph-slug="props.graphSlug"
-                node-alias="statement_data_assignment_object_used"
-                :aliased-node-data="
-                    props.tileData?.aliased_data
-                        .statement_data_assignment_object_used
-                "
-                :mode="EDIT"
-            />
-        </Form>
+        <div class="form-container">
+            <Form
+                ref="form"
+                @submit="save"
+            >
+                <GenericWidget
+                    :graph-slug="props.graphSlug"
+                    node-alias="statement_content"
+                    :aliased-node-data="
+                        props.tileData?.aliased_data.statement_content
+                    "
+                    :mode="EDIT"
+                    class="widget-container column"
+                />
+                <GenericWidget
+                    :graph-slug="props.graphSlug"
+                    node-alias="statement_type"
+                    :aliased-node-data="
+                        props.tileData?.aliased_data.statement_type
+                    "
+                    :mode="EDIT"
+                    class="widget-container column"
+                />
+                <GenericWidget
+                    :graph-slug="props.graphSlug"
+                    node-alias="statement_language"
+                    :aliased-node-data="
+                        props.tileData?.aliased_data.statement_language
+                    "
+                    :mode="EDIT"
+                    class="widget-container column"
+                />
+                <div class="widget-container">
+                    <GenericWidget
+                        :graph-slug="props.graphSlug"
+                        node-alias="statement_data_assignment_timespan_begin_of_the_begin"
+                        :aliased-node-data="
+                            props.tileData?.aliased_data
+                                .statement_data_assignment_timespan_begin_of_the_begin
+                        "
+                        :mode="EDIT"
+                    />
+                    <GenericWidget
+                        :graph-slug="props.graphSlug"
+                        node-alias="statement_data_assignment_timespan_end_of_the_end"
+                        :aliased-node-data="
+                            props.tileData?.aliased_data
+                                .statement_data_assignment_timespan_end_of_the_end
+                        "
+                        :mode="EDIT"
+                    />
+                </div>
+                <GenericWidget
+                    :graph-slug="props.graphSlug"
+                    node-alias="statement_data_assignment_actor"
+                    :aliased-node-data="
+                        props.tileData?.aliased_data
+                            .statement_data_assignment_actor
+                    "
+                    :mode="EDIT"
+                    class="widget-container column"
+                />
+                <GenericWidget
+                    :graph-slug="props.graphSlug"
+                    node-alias="statement_data_assignment_object_used"
+                    :aliased-node-data="
+                        props.tileData?.aliased_data
+                            .statement_data_assignment_object_used
+                    "
+                    :mode="EDIT"
+                    class="widget-container column"
+                />
+            </Form>
+        </div>
     </div>
 </template>

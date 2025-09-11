@@ -125,7 +125,7 @@ provide("refreshReportSection", refreshReportSection);
 </script>
 
 <template>
-    <Splitter style="height: 100%; min-height: 0; border-radius: 0">
+    <Splitter style="height: 100%; min-height: 0; border: none">
         <SplitterPanel
             v-show="editorState !== MAXIMIZED"
             class="content"
@@ -206,10 +206,6 @@ provide("refreshReportSection", refreshReportSection);
     overflow-y: auto;
 }
 
-:deep(.p-splitter) {
-    border-radius: 0;
-}
-
 :deep(.viewer-section) {
     padding: 1rem 1rem 1.25rem 1rem;
 }
@@ -217,29 +213,46 @@ provide("refreshReportSection", refreshReportSection);
 :deep(.section-message) {
     padding: 0.5rem 0;
     color: var(--p-inputtext-placeholder-color);
+    font-weight: var(--p-lingo-font-weight-light);
 }
 
 :deep(.section-header) {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 0.06rem solid var(--p-form-field-border-color);
+    border-bottom: 0.0625rem solid var(--p-highlight-focus-background);
     padding-bottom: 0.5rem;
 }
 
 :deep(.section-header h2) {
     margin: 0;
-    font-size: var(--p-lingo-font-size-large);
+    font-size: var(--p-lingo-font-size-medium);
     font-weight: var(--p-lingo-font-weight-normal);
     color: var(--p-neutral-500);
 }
 
 :deep(.section-header .add-button) {
-    height: 2rem;
-    font-size: var(--p-lingo-font-size-smallnormal);
+    font-size: var(--p-lingo-font-size-xsmall);
     font-weight: var(--p-lingo-font-weight-normal);
-    min-width: 10rem;
+    border-color: var(--p-header-button-border);
     border-radius: 0.125rem;
+    min-width: 8rem;
+
+    &.wide {
+        min-width: 15rem;
+    }
+}
+
+:deep(.concept-header .p-button),
+:deep(.scheme-header .p-button) {
+    font-size: var(--p-lingo-font-size-small);
+}
+
+:deep(.concept-header .add-button),
+:deep(.scheme-header .add-button) {
+    background: var(--p-header-button-background);
+    color: var(--p-header-button-color);
+    border-color: var(--p-header-button-border);
 }
 
 .p-splitter .p-splitterpanel .splitter-panel-content .p-skeleton {
@@ -249,5 +262,6 @@ provide("refreshReportSection", refreshReportSection);
 
 .p-splitterpanel:has(> .splitter-panel-content) {
     overflow-y: auto;
+    width: 12rem;
 }
 </style>

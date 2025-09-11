@@ -76,7 +76,7 @@ const querySortPreference = ref();
     align-items: flex-start;
     padding: 1rem;
     background-color: var(--p-sort-and-filter-controls-background);
-    border-top: 0.06rem solid var(--p-sort-and-filter-controls-border);
+    border-top: 0.0625rem solid var(--p-sort-and-filter-controls-border);
     gap: 1rem;
     flex-wrap: wrap;
 }
@@ -114,7 +114,7 @@ label {
 :deep(.p-radiobutton-box),
 :deep(.p-checkbox-box) {
     background-color: var(--p-checkbox-background);
-    border: 0.06rem solid;
+    border: 0.0625rem solid;
     border-color: var(--p-button-text-secondary-color);
 }
 
