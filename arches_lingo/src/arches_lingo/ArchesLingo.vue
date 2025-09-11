@@ -105,7 +105,7 @@ async function checkUserAuthentication(
                 :is-nav-expanded="isNavExpanded"
             />
             <Splitter
-                style="height: 100%; border: none"
+                style="height: 100%; border: none; overflow: hidden"
                 :pt="{
                     gutter: {
                         style: {
