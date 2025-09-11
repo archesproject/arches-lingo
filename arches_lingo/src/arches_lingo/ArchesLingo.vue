@@ -104,9 +104,27 @@ async function checkUserAuthentication(
                 v-model="shouldShowHierarchy"
                 :is-nav-expanded="isNavExpanded"
             />
-            <Splitter style="height: 100%; min-height: 0; border: none">
-                <SplitterPanel v-show="shouldShowHierarchy">
-                    <div style="height: 100%; overflow: auto">
+            <Splitter
+                style="height: 100%; border: none"
+                :pt="{
+                    gutter: {
+                        style: {
+                            display: shouldShowHierarchy ? 'flex' : 'none',
+                        },
+                    },
+                }"
+            >
+                <SplitterPanel
+                    v-show="shouldShowHierarchy"
+                    :size="30"
+                >
+                    <div
+                        style="
+                            height: 100%;
+                            display: flex;
+                            flex-direction: column;
+                        "
+                    >
                         <SchemeHierarchy
                             :key="schemeHierarchyKey"
                             @should-show-hierarchy="
@@ -115,7 +133,7 @@ async function checkUserAuthentication(
                         />
                     </div>
                 </SplitterPanel>
-                <SplitterPanel>
+                <SplitterPanel :size="70">
                     <RouterView :key="route.fullPath" />
                 </SplitterPanel>
             </Splitter>
