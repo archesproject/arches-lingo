@@ -30,7 +30,7 @@ export const LingoPreset = definePreset(ArchesPreset, {
                 xxlarge: "2rem",
             },
             weight: {
-                lite: "300",
+                light: "300",
                 normal: "400",
                 medium: "500",
                 semibold: "600",

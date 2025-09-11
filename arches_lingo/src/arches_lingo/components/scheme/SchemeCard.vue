@@ -63,7 +63,7 @@ ul:first-child li:first-child .p-card {
 }
 
 ul:first-child li:first-child .p-card .scheme-circle {
-    background: steelblue;
+    background: var(--p-blue-600);
 }
 
 a {

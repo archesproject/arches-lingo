@@ -97,8 +97,7 @@ function openLanguageSelector(event: MouseEvent) {
 }
 
 .popover-header {
-    font-family: "Lucida Sans", "Lucida Sans Regular", "Lucida Grande",
-        "Lucida Sans Unicode", Geneva, Verdana, sans-serif;
+    font-family: var(--p-lingo-font-family);
     padding: 0.5rem 0.5rem;
 }
 

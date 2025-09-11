@@ -194,7 +194,7 @@ async function deleteSectionValue(tileId: string) {
     padding: 0.5rem 0;
     margin: 0;
     font-size: var(--p-lingo-font-size-smallnormal);
-    font-weight: var(--p-lingo-font-weight-lite);
+    font-weight: var(--p-lingo-font-weight-light);
     color: var(--p-inputtext-placeholder-color);
 }
 

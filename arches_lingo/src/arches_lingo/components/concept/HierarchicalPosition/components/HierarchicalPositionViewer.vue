@@ -244,7 +244,7 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
     display: flex;
     height: 100%;
     align-items: center;
-    min-height: 1.5rem;
+    min-height: 2rem;
     white-space: nowrap;
 }
 </style>
