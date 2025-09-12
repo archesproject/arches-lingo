@@ -52,6 +52,12 @@ runs:
       run: |
           npx tsc -v         
           npx vue-tsc -v 
+
+          npx tsc -p tsconfig.json --showConfig | sed -n '1,200p' | grep -A8 '"paths"'
+
+          printf "import '@primeuix/themes/aura';\n" > __probe.ts
+          npx tsc --noEmit --traceResolution __probe.ts 2>&1 | sed -n '/@primeuix\/themes\/aura/,+30p'
+          
           npm run build_test
       shell: bash
 
