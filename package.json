@@ -22,7 +22,9 @@
         "vitest": "vitest --run --coverage"
     },
     "devDependencies": {
-        "arches-dev-dependencies": "archesproject/arches-dev-dependencies#dev/8.0.x"
+        "arches-dev-dependencies": "archesproject/arches-dev-dependencies#dev/8.0.x",
+        "typescript": "^5.6.3",
+        "vue-tsc": "^2.1.8"
     },
     "dependencies": {
         "@primeuix/styles": "^1.2.3",
