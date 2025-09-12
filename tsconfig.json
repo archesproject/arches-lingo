@@ -3,13 +3,12 @@
     "compilerOptions": {
         "target": "ES2022",
         "lib": ["ES2022", "DOM", "DOM.Iterable"],
-        "module": "ESNext",
-        "moduleResolution": "bundler",
+        "module": "preserve",
         "jsx": "preserve",
         "jsxImportSource": "vue",
         "strict": true,
         "noEmit": true,
-        "noImplicitThis": false,
+        "noImplicitThis": true,
         "verbatimModuleSyntax": true,
         "useDefineForClassFields": true,
         "esModuleInterop": true,
@@ -19,7 +18,8 @@
         "types": [
             "vitest/globals"
         ],
-        "allowImportingTsExtensions": true
+        "allowImportingTsExtensions": true,
+        "isolatedModules": true
     },
     "include": [
         "**/src/**/*.ts",
