@@ -18,7 +18,8 @@
         "types": [
             "vitest/globals"
         ],
-        "allowImportingTsExtensions": true
+        "allowImportingTsExtensions": true,
+        "allowJs": true
     },
     "exclude": [
         "**/*.test.ts",
