@@ -23,6 +23,7 @@
     "exclude": [
         "**/*.test.ts",
         "**/build/**",
-        "**/staticfiles/**"
+        "**/staticfiles/**",
+        "**/site-packages/**"
     ]
 }

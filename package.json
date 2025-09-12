@@ -16,7 +16,7 @@
         "prettier:check": "prettier arches_lingo/src --check",
         "prettier:fix": "prettier --write",
         "prettier:fix:all": "npm run prettier:fix arches_lingo/src",
-        "ts:check": "vue-tsc --noEmit",
+        "ts:check": "vue-tsc --noEmit -p tsconfig.json",
         "ts:watch": "vue-tsc --watch --noEmit",
         "start": "cross-env webpack serve --config ./webpack/webpack.config.dev.js",
         "vitest": "vitest --run --coverage"
