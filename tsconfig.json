@@ -1,6 +1,7 @@
 {
     "extends": "./frontend_configuration/tsconfig-paths.json",
     "compilerOptions": {
+        "baseUrl": ".",
         "target": "ESNext",
         "module": "ESNext",
         "moduleResolution": "bundler",
