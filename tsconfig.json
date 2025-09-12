@@ -1,6 +1,8 @@
 {
     "extends": "./frontend_configuration/tsconfig-paths.json",
     "compilerOptions": {
+        "resolvePackageJsonExports": false,
+        "resolvePackageJsonImports": false,
         "target": "ESNext",
         "module": "ESNext",
         "moduleResolution": "bundler",
