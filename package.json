@@ -27,7 +27,7 @@
     "dependencies": {
         "primevue": "4.3.7",
         "@primevue/forms": "4.3.7",
-        "arches": "archesproject/arches#dev/8.0.x",
+        "arches": "archesproject/arches#cbyrd-test",
         "arches-component-lab": "archesproject/arches-component-lab#main",
         "vue-router": "4.4.3"
     },
