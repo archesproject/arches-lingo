@@ -35,7 +35,10 @@
         "primevue": "4.3.7",
         "vue-router": "4.4.3"
     },
-    "nodeModulesPaths": {},
+    "nodeModulesPaths": {
+        "@primeuix/themes": "node_modules/@primeuix/themes/dist",
+        "@primeuix/styles": "node_modules/@primeuix/styles/dist"
+    },
     "overrides": {
         "moment-timezone": "^0.5.45",
         "nomnom": "npm:@gerhobbelt/nomnom",
