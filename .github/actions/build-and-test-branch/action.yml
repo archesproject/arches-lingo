@@ -35,12 +35,6 @@ runs:
       run: |
           npm cache clean --force
           npm ci
-
-          test -f node_modules/@primeuix/themes/dist/aura/base/index.d.ts && echo "HAS base dts" || echo "MISSING base dts"
-          test -f node_modules/@primeuix/themes/types/index.d.ts && echo "HAS types dts" || echo "MISSING types dts"
-
-          printf "import type {} from '@primeuix/themes/aura/base';\n" > __probe_base.ts
-          npx tsc -p tsconfig.json --noEmit --traceResolution __probe_base.ts 2>&1 | sed -n '/@primeuix\/themes\/aura\/base/,+40p'
       shell: bash
     
     - name: Ensure frontend configuration files exist
@@ -56,14 +50,6 @@ runs:
 
     - name: Webpack frontend files
       run: |
-          npx tsc -v         
-          npx vue-tsc -v 
-
-          npx tsc -p tsconfig.json --showConfig | sed -n '1,200p' | grep -A8 '"paths"'
-
-          printf "import '@primeuix/themes/aura';\n" > __probe.ts
-          npx tsc --noEmit --traceResolution __probe.ts 2>&1 | sed -n '/@primeuix\/themes\/aura/,+30p'
-
           npm run build_test
       shell: bash
 
