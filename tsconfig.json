@@ -1,7 +1,8 @@
 {
     "extends": "./frontend_configuration/tsconfig-paths.json",
     "compilerOptions": {
-        "target": "ESNext",
+        "target": "ES2022",
+        "lib": ["ES2022", "DOM", "DOM.Iterable"],
         "module": "ESNext",
         "moduleResolution": "bundler",
         "jsx": "preserve",
@@ -20,9 +21,20 @@
         ],
         "allowImportingTsExtensions": true
     },
+    "include": [
+        "**/src/**/*.ts",
+        "**/src/**/*.tsx",
+        "**/src/**/*.vue",
+        "**/env.d.ts"
+    ],
     "exclude": [
         "**/*.test.ts",
+        "**/*.spec.ts",
+        "**/__tests__/**",
+        "**/dist/**",
         "**/build/**",
+        "**/coverage/**",
         "**/staticfiles/**",
+        "**/node_modules/**"
     ]
 }
