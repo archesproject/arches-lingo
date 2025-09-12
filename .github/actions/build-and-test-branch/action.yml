@@ -44,7 +44,8 @@ runs:
 
     - name: Install frontend dependencies
       run: |
-          npm install
+          npm cache clean --force
+          npm ci
           node -e "console.log('arches ->', require.resolve('arches/package.json'))"
           node -e "console.log('@primeuix/themes ->', require.resolve('@primeuix/themes/package.json'))" || echo "MISSING"
           npm ls @primeuix/themes || true
