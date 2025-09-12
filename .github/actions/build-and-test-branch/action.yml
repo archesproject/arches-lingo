@@ -46,11 +46,12 @@ runs:
       run: |
           npm cache clean --force
           npm ci
-          node -e "console.log('arches ->', require.resolve('arches/package.json'))"
-          node -e "console.log('@primeuix/themes ->', require.resolve('@primeuix/themes/package.json'))" || echo "MISSING"
-          npm ls @primeuix/themes || true
-          npx tsc -p tsconfig.json --showConfig | sed -n '1,200p'
-          grep -R "site-packages" -n . || true
+          npx tsc -v || true
+          npx vue-tsc -v || true
+          node -p "require('./node_modules/@primeuix/themes/package.json').version"
+          node -p "require('./node_modules/@primeuix/themes/package.json').exports"
+          ls -la node_modules/@primeuix/themes/dist/aura || echo 'MISSING dist/aura'
+          node -e "console.log(require.resolve('@primeuix/themes/aura'))" || echo 'RESOLVE FAILED'
       shell: bash
 
     - name: Webpack frontend files
