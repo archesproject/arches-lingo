@@ -36,5 +36,8 @@
         "**/coverage/**",
         "**/staticfiles/**",
         "**/node_modules/**"
-    ]
+    ],
+    "vueCompilerOptions": {
+        "ignoreDiagnostics": [2307]
+    }
 }
