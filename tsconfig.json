@@ -1,6 +1,7 @@
 {
     "extends": "./frontend_configuration/tsconfig-paths.json",
     "compilerOptions": {
+        "baseUrl": "./frontend_configuration",
         "target": "ESNext",
         "module": "ESNext",
         "moduleResolution": "bundler",
@@ -15,15 +16,12 @@
         "forceConsistentCasingInFileNames": true,
         "resolveJsonModule": true,
         "skipLibCheck": true,
-        "types": [
-            "vitest/globals"
-        ],
-        "allowImportingTsExtensions": true,
-        "allowJs": true
+        "types": ["vitest/globals"],
+        "allowImportingTsExtensions": true
     },
     "exclude": [
         "**/*.test.ts",
         "**/build/**",
-        "**/staticfiles/**",
+        "**/staticfiles/**"
     ]
 }
