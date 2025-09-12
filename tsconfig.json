@@ -3,6 +3,10 @@
     "compilerOptions": {
         "module": "preserve",
         "moduleResolution": "bundler",
+        "lib": [
+            "esnext",
+            "dom"
+        ],
         "jsx": "preserve",
         "jsxImportSource": "vue",
         "strict": true,
