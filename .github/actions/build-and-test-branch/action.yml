@@ -45,6 +45,11 @@ runs:
     - name: Install frontend dependencies
       run: |
           npm install
+          node -e "console.log('arches ->', require.resolve('arches/package.json'))"
+          node -e "console.log('@primeuix/themes ->', require.resolve('@primeuix/themes/package.json'))" || echo "MISSING"
+          npm ls @primeuix/themes || true
+          npx tsc -p tsconfig.json --showConfig | sed -n '1,200p'
+          grep -R "site-packages" -n . || true
       shell: bash
 
     - name: Webpack frontend files
