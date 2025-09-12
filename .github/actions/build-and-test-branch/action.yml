@@ -30,17 +30,6 @@ runs:
         pip install . --group dev
         echo Python packages installed
       shell: bash
-    
-    - name: Ensure frontend configuration files exist
-      run: |
-        export ARCHES_DJANGO_DEBUG=True
-        python manage.py check
-      shell: bash
-
-    - name: Install Arches applications
-      uses: ./.github/actions/install-arches-applications
-      with:
-        secrets: ${{ inputs.secrets }}
 
     - name: Install frontend dependencies
       run: |
@@ -53,6 +42,17 @@ runs:
           printf "import type {} from '@primeuix/themes/aura/base';\n" > __probe_base.ts
           npx tsc -p tsconfig.json --noEmit --traceResolution __probe_base.ts 2>&1 | sed -n '/@primeuix\/themes\/aura\/base/,+40p'
       shell: bash
+    
+    - name: Ensure frontend configuration files exist
+      run: |
+        export ARCHES_DJANGO_DEBUG=True
+        python manage.py check
+      shell: bash
+
+    - name: Install Arches applications
+      uses: ./.github/actions/install-arches-applications
+      with:
+        secrets: ${{ inputs.secrets }}
 
     - name: Webpack frontend files
       run: |
