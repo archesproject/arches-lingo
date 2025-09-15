@@ -112,7 +112,7 @@ router.beforeEach(async (to, _from, next) => {
 </template>
 
 <style scoped>
-@import url("https://fonts.googleapis.com/css2?family=Open+Sans:ital,wdth,wght@0,75..100,300..800;1,75..100,300..800&display=swap");
+@import url("arches/arches/app/media/fonts/openSans.css");
 main {
     font-family: var(--p-lingo-font-family);
     height: 100vh;
@@ -131,7 +131,7 @@ main {
 
 <!-- NOT scoped because dialog gets appended to <body> and is unreachable via scoped styles -->
 <style>
-@import url("https://fonts.googleapis.com/css2?family=Open+Sans:ital,wdth,wght@0,75..100,300..800;1,75..100,300..800&display=swap");
+@import url("arches/arches/app/media/fonts/openSans.css");
 .p-confirmdialog,
 .p-datepicker-panel,
 .p-tree-node-label,
@@ -142,7 +142,8 @@ main {
 .p-select-option,
 .p-select-empty-message,
 .p-multiselect-empty-message,
-.p-multiselect-option {
+.p-multiselect-option,
+.p-popover {
     font-family: var(--p-lingo-font-family) !important;
 }
 </style>
