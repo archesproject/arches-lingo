@@ -172,15 +172,12 @@ const exportformatOptions = ref([
                 <div class="header-row">
                     <div>
                         <h2 v-if="data?.descriptor?.name">
-                            <span>
-                                {{ data?.descriptor?.name }}
-
-                                <span
-                                    v-if="data?.descriptor?.language"
-                                    class="scheme-label-lang"
-                                >
-                                    ({{ data?.descriptor?.language }})
-                                </span>
+                            <span>{{ data?.descriptor?.name }}</span>
+                            <span
+                                v-if="data?.descriptor?.language"
+                                class="scheme-label-lang"
+                            >
+                                ({{ data?.descriptor?.language }})
                             </span>
                         </h2>
                     </div>
@@ -294,18 +291,20 @@ const exportformatOptions = ref([
                             $gettext("URI (provisonal): ")
                         }}</span>
                         <Button
-                            :label="
-                                data?.uri ||
-                                'https://fgi.lingo.com/schemes/0032775'
-                            "
+                            v-if="data?.uri"
+                            :label="data?.uri"
                             class="concept-uri"
                             variant="link"
                             as="a"
                             :href="data?.uri"
                             target="_blank"
                             rel="noopener"
-                            :disabled="!data?.uri"
                         ></Button>
+                        <span
+                            v-else
+                            class="header-item-value"
+                            >{{ $gettext("No URI assigned") }}</span
+                        >
                     </div>
                 </div>
 
