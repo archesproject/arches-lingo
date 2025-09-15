@@ -326,10 +326,8 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                             $gettext("URI (provisonal): ")
                         }}</span>
                         <Button
-                            :label="
-                                data?.uri ||
-                                'https://fgi.lingo.com/concepts/0032775'
-                            "
+                            v-if="data?.uri"
+                            :label="data?.uri"
                             class="concept-uri"
                             variant="link"
                             as="a"
@@ -338,6 +336,11 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                             rel="noopener"
                             :disabled="!data?.uri"
                         ></Button>
+                        <span
+                            v-else
+                            class="header-item-value"
+                            >{{ $gettext("No URI assigned") }}</span
+                        >
                     </div>
                 </div>
 
