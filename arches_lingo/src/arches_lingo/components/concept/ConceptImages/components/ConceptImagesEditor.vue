@@ -156,16 +156,17 @@ async function save(e: FormSubmitEvent) {
         if (!digitalObjectInstanceAliases.content) {
             digitalObjectInstanceAliases.content = {
                 aliased_data: {
-                    content: fileJsonObjects,
+                    content: [{ node_value: fileJsonObjects }],
                 },
             };
         } else {
             // disabling this block as it breaks typescript. It should be re-enabled as part of the
             // effort to get image editing working again.
-            // digitalObjectInstanceAliases.content.aliased_data.content = [
-            //     ...(digitalObjectInstanceAliases.content.aliased_data.content?.node_value ?? []),
-            //     ...fileJsonObjects,
-            // ];
+            digitalObjectInstanceAliases.content.aliased_data.content = [
+                ...(digitalObjectInstanceAliases.content.aliased_data.content
+                    ?.node_value ?? []),
+                ...fileJsonObjects,
+            ];
         }
         const contentTile = digitalObjectInstanceAliases.content.aliased_data;
 
