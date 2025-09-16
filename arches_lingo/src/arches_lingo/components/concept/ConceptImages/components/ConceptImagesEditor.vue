@@ -160,8 +160,6 @@ async function save(e: FormSubmitEvent) {
                 },
             };
         } else {
-            // disabling this block as it breaks typescript. It should be re-enabled as part of the
-            // effort to get image editing working again.
             digitalObjectInstanceAliases.content.aliased_data.content = [
                 ...(digitalObjectInstanceAliases.content.aliased_data.content
                     ?.node_value ?? []),
