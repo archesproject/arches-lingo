@@ -161,8 +161,12 @@ UPLOADED_FILES_DIR = "uploadedfiles"
 
 chars = "abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)"
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = get_optional_env_variable(
-    "ARCHES_SECRET_KEY", "django-insecure-" + get_random_string(50, chars)
+SECRET_KEY = (
+    "debug"
+    if DEBUG
+    else get_optional_env_variable(
+        "ARCHES_SECRET_KEY", "django-insecure-" + get_random_string(50, chars)
+    )
 )
 
 ROOT_URLCONF = "arches_lingo.urls"
@@ -253,6 +257,7 @@ INSTALLED_APPS = (
     "oauth2_provider",
     "django_celery_results",
     "pgtrigger",
+    # "debug_toolbar",
     # "silk",
 )
 
@@ -262,6 +267,7 @@ ROOT_HOSTCONF = "arches_lingo.hosts"
 DEFAULT_HOST = "arches_lingo"
 
 MIDDLEWARE = [
+    # "debug_toolbar.middleware.DebugToolbarMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -278,6 +284,15 @@ MIDDLEWARE = [
     # "silk.middleware.SilkyMiddleware",
 ]
 
+
+# def show_toolbar(request):
+#     return True
+
+
+# DEBUG_TOOLBAR_CONFIG = {
+#     "SHOW_TOOLBAR_CALLBACK": show_toolbar,
+# }
+# UPDATE_ON_FETCH = True
 MIDDLEWARE.insert(
     0, "django_hosts.middleware.HostsRequestMiddleware"
 )  # this must resolve to first MIDDLEWARE entry
