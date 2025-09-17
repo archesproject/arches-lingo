@@ -9,6 +9,7 @@ import { Form } from "@primevue/forms";
 import Skeleton from "primevue/skeleton";
 
 import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
+import type { FileListValue } from "@/arches_component_lab/datatypes/file-list/types.ts";
 
 import { DIGITAL_OBJECT_GRAPH_SLUG } from "@/arches_lingo/components/concept/ConceptImages/components/constants.ts";
 import {
@@ -141,46 +142,65 @@ async function save(e: FormSubmitEvent) {
 
         // files do not respect json.stringify
         const fileJsonObjects =
-            submittedFormData.content.newFiles?.map((file: File) => {
-                return {
-                    name: file.name.replace(/ /g, "_"),
-                    lastModified: file.lastModified,
-                    size: file.size,
-                    type: file.type,
-                    url: null,
-                    file_id: null,
-                    content: URL.createObjectURL(file),
-                };
-            }) ?? [];
+            submittedFormData.content.node_value?.map(
+                (file: typeof FileListValue) => {
+                    if (!file?.file) {
+                        return file;
+                    } else {
+                        return {
+                            name: file.name.replace(/ /g, "_"),
+                            lastModified: file.lastModified,
+                            size: file.size,
+                            type: file.type,
+                            url: null,
+                            file_id: null,
+                            content: URL.createObjectURL(file?.file),
+                            altText: "Replaceable alt text",
+                        };
+                    }
+                },
+            ) ?? [];
 
         if (!digitalObjectInstanceAliases.content) {
             digitalObjectInstanceAliases.content = {
                 aliased_data: {
-                    content: [{ node_value: fileJsonObjects }],
+                    content: {
+                        node_value: [...fileJsonObjects],
+                    },
                 },
             };
         } else {
-            digitalObjectInstanceAliases.content.aliased_data.content = [
-                ...(digitalObjectInstanceAliases.content.aliased_data.content
-                    ?.node_value ?? []),
-                ...fileJsonObjects,
-            ];
+            digitalObjectInstanceAliases.content.aliased_data.content = {
+                node_value: [...fileJsonObjects],
+            };
         }
-        const contentTile = digitalObjectInstanceAliases.content.aliased_data;
+        // const contentTile = digitalObjectInstanceAliases.content.aliased_data;
 
-        contentTile.content.filter(
-            (file) => !submittedFormData.content?.deletedFiles?.includes(file),
-        );
+        // contentTile.content.filter(
+        //     (file) => !submittedFormData.content?.deletedFiles?.includes(file),
+        // );
 
         // this fork was requested because the multipartjson parser is unstable
         // if files go one way, if no files go the traditional way
-        if (submittedFormData.content.newFiles?.length) {
+        if (submittedFormData.content.node_value?.length) {
+            if (digitalObjectResource.value) {
+                digitalObjectResource.value.aliased_data = {
+                    ...digitalObjectInstanceAliases,
+                };
+            } else {
+                digitalObjectResource.value = {
+                    aliased_data: {
+                        ...digitalObjectInstanceAliases,
+                    },
+                };
+            }
+
             const formDataForDigitalObject = await createFormDataForFileUpload(
                 digitalObjectResource as Ref<DigitalObjectInstance>,
                 digitalObjectInstanceAliases,
                 submittedFormData,
             );
-            if (digitalObjectResource.value) {
+            if (digitalObjectResource.value?.resourceinstanceid) {
                 await updateLingoResourceFromForm(
                     DIGITAL_OBJECT_GRAPH_SLUG,
                     digitalObjectResource.value.resourceinstanceid,
