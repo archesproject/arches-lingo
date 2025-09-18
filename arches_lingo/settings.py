@@ -257,7 +257,6 @@ INSTALLED_APPS = (
     "oauth2_provider",
     "django_celery_results",
     "pgtrigger",
-    # "debug_toolbar",
     # "silk",
 )
 
@@ -267,7 +266,6 @@ ROOT_HOSTCONF = "arches_lingo.hosts"
 DEFAULT_HOST = "arches_lingo"
 
 MIDDLEWARE = [
-    # "debug_toolbar.middleware.DebugToolbarMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -284,15 +282,6 @@ MIDDLEWARE = [
     # "silk.middleware.SilkyMiddleware",
 ]
 
-
-# def show_toolbar(request):
-#     return True
-
-
-# DEBUG_TOOLBAR_CONFIG = {
-#     "SHOW_TOOLBAR_CALLBACK": show_toolbar,
-# }
-# UPDATE_ON_FETCH = True
 MIDDLEWARE.insert(
     0, "django_hosts.middleware.HostsRequestMiddleware"
 )  # this must resolve to first MIDDLEWARE entry
