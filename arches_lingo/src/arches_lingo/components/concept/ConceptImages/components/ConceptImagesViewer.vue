@@ -146,6 +146,7 @@ async function modifyResource(resourceInstanceId?: string) {
             <Button
                 :label="$gettext('Add Image')"
                 class="add-button"
+                icon="pi pi-plus-circle"
                 @click="newResource"
             ></Button>
         </div>
@@ -183,10 +184,11 @@ async function modifyResource(resourceInstanceId?: string) {
                     <div class="header">
                         <label
                             for="concept-image"
-                            class="text"
+                            class="image-title-label"
                         >
                             <GenericWidget
                                 node-alias="name_content"
+                                class="image-title"
                                 graph-slug="digital_object_rdm_system"
                                 :mode="VIEW"
                                 :aliased-node-data="
@@ -198,6 +200,10 @@ async function modifyResource(resourceInstanceId?: string) {
                         <div class="buttons">
                             <Button
                                 icon="pi pi-file-edit"
+                                style="
+                                    border: 0.0625rem solid
+                                        var(--p-header-button-border);
+                                "
                                 rounded
                                 @click="
                                     editResource(resource.resourceinstanceid)
@@ -244,7 +250,7 @@ async function modifyResource(resourceInstanceId?: string) {
 .buttons {
     display: flex;
     justify-content: center;
-    gap: 1rem;
+    gap: 0.25rem;
 }
 
 .concept-images {
@@ -259,6 +265,14 @@ async function modifyResource(resourceInstanceId?: string) {
 .concept-image {
     width: 30rem;
     margin: 0 1rem;
+}
+
+.image-title-label {
+    color: var(--p-header-item-label);
+}
+
+.image-title {
+    color: var(--p-header-item-label);
 }
 
 .concept-image .header {
@@ -279,5 +293,9 @@ async function modifyResource(resourceInstanceId?: string) {
 
 .concept-images :deep(.p-galleria) {
     border: none;
+}
+
+:deep(.p-galleria) {
+    border-radius: 0.125rem;
 }
 </style>

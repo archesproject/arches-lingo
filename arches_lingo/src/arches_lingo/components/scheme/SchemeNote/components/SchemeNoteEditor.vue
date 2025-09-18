@@ -132,54 +132,74 @@ async function save(e: FormSubmitEvent) {
     />
 
     <div v-show="!isSaving">
-        <h3>{{ props.sectionTitle }}</h3>
-
-        <Form
-            ref="form"
-            @submit="save"
-        >
-            <GenericWidget
-                :graph-slug="props.graphSlug"
-                node-alias="statement_content_n1"
-                :aliased-node-data="
-                    props.tileData?.aliased_data?.statement_content_n1
-                "
-                :mode="EDIT"
-            />
-            <GenericWidget
-                :graph-slug="props.graphSlug"
-                node-alias="statement_type_n1"
-                :aliased-node-data="
-                    props.tileData?.aliased_data?.statement_type_n1
-                "
-                :mode="EDIT"
-            />
-            <GenericWidget
-                :graph-slug="props.graphSlug"
-                node-alias="statement_language_n1"
-                :aliased-node-data="
-                    props.tileData?.aliased_data?.statement_language_n1
-                "
-                :mode="EDIT"
-            />
-            <GenericWidget
-                :graph-slug="props.graphSlug"
-                node-alias="statement_data_assignment_actor"
-                :aliased-node-data="
-                    props.tileData?.aliased_data
-                        ?.statement_data_assignment_actor
-                "
-                :mode="EDIT"
-            />
-            <GenericWidget
-                :graph-slug="props.graphSlug"
-                node-alias="statement_data_assignment_object_used"
-                :aliased-node-data="
-                    props.tileData?.aliased_data
-                        ?.statement_data_assignment_object_used
-                "
-                :mode="EDIT"
-            />
-        </Form>
+        <div class="form-header">
+            <h3>{{ props.sectionTitle }}</h3>
+            <div class="form-description">
+                {{
+                    $gettext(
+                        "Provide notes and descriptions describing the scope and usage of this scheme.",
+                    )
+                }}
+            </div>
+        </div>
+        <div class="form-container">
+            <Form
+                ref="form"
+                @submit="save"
+            >
+                <div class="widget-container column">
+                    <GenericWidget
+                        :graph-slug="props.graphSlug"
+                        node-alias="statement_content_n1"
+                        :aliased-node-data="
+                            props.tileData?.aliased_data?.statement_content_n1
+                        "
+                        :mode="EDIT"
+                    />
+                </div>
+                <div class="widget-container column">
+                    <GenericWidget
+                        :graph-slug="props.graphSlug"
+                        node-alias="statement_type_n1"
+                        :aliased-node-data="
+                            props.tileData?.aliased_data?.statement_type_n1
+                        "
+                        :mode="EDIT"
+                    />
+                </div>
+                <div class="widget-container column">
+                    <GenericWidget
+                        :graph-slug="props.graphSlug"
+                        node-alias="statement_language_n1"
+                        :aliased-node-data="
+                            props.tileData?.aliased_data?.statement_language_n1
+                        "
+                        :mode="EDIT"
+                    />
+                </div>
+                <div class="widget-container column">
+                    <GenericWidget
+                        :graph-slug="props.graphSlug"
+                        node-alias="statement_data_assignment_actor"
+                        :aliased-node-data="
+                            props.tileData?.aliased_data
+                                ?.statement_data_assignment_actor
+                        "
+                        :mode="EDIT"
+                    />
+                </div>
+                <div class="widget-container column">
+                    <GenericWidget
+                        :graph-slug="props.graphSlug"
+                        node-alias="statement_data_assignment_object_used"
+                        :aliased-node-data="
+                            props.tileData?.aliased_data
+                                ?.statement_data_assignment_object_used
+                        "
+                        :mode="EDIT"
+                    />
+                </div>
+            </Form>
+        </div>
     </div>
 </template>

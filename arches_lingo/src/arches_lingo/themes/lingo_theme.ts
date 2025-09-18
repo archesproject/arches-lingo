@@ -17,7 +17,7 @@ export const LingoPreset = definePreset(ArchesPreset, {
     },
     semantic: {
         lingoFont: {
-            family: "'Open Sans','Lucida Sans','Lucida Sans Regular','Lucida Grande','Lucida Sans Unicode',Geneva,Verdana,sans-serif",
+            family: "'Open Sans',sans-serif",
             size: {
                 xxsmall: "0.75rem",
                 xsmall: "0.8rem",
@@ -33,7 +33,9 @@ export const LingoPreset = definePreset(ArchesPreset, {
                 light: "300",
                 normal: "400",
                 medium: "500",
-                bold: "600",
+                semibold: "600",
+                bold: "700",
+                extrabold: "800",
             },
         },
         colorScheme: {
@@ -47,6 +49,14 @@ export const LingoPreset = definePreset(ArchesPreset, {
                     background: "{surface.50}",
                     border: "{neutral.300}",
                     itemLabel: "{surface.500}",
+                },
+                headerToolbar: {
+                    background: "{surface.100}",
+                    border: "{surface.300}",
+                },
+                headerButton: {
+                    background: "#D1DDE8",
+                    border: "#A1B6CB",
                 },
                 searchResult: {
                     color: "{sky.600}",
@@ -65,6 +75,13 @@ export const LingoPreset = definePreset(ArchesPreset, {
                     background: "{light-blue-gray}",
                     border: "{gray}",
                 },
+                editorForm: {
+                    background: "#fcfcfc",
+                    color: "#475569",
+                },
+                schemeCircle: {
+                    background: "#4682b4",
+                },
             },
             dark: {
                 primary: palette(archesPrimitives.arches.blue),
@@ -76,9 +93,19 @@ export const LingoPreset = definePreset(ArchesPreset, {
                     background: "{surface.900}",
                 },
                 header: {
-                    background: "{surface.700}",
+                    background: "#414A4F",
                     border: "{neutral.500}",
                     itemLabel: "{surface.400}",
+                },
+                headerToolbar: {
+                    background: "{surface.800}",
+                    border: "{neutral.600}",
+                    itemLabel: "{surface.500}",
+                },
+                headerButton: {
+                    background: "#d7e7f6",
+                    border: "#486A8B",
+                    color: "#18181b",
                 },
                 searchResult: {
                     borderBottom: "{surface.900}",
@@ -96,20 +123,25 @@ export const LingoPreset = definePreset(ArchesPreset, {
                     background: "{surface.700}",
                     border: "{surface.900}",
                 },
+                editorForm: {
+                    background: "#18181B",
+                    color: "#f2f2f2",
+                },
             },
         },
     },
     components: {
         button: {
             border: {
-                radius: "0.25rem",
+                radius: "0.125rem",
             },
             colorScheme: {
                 light: {
                     // @ts-expect-error: Ignoring type mismatch for button primary background
                     primary: {
-                        background: "{primary-800}",
+                        background: "{button-secondary-background}",
                         borderColor: "{button-primary-background}",
+                        color: "{button-secondary-color}",
                         hover: {
                             background: "{primary-700}",
                             borderColor: "{primary-700}",

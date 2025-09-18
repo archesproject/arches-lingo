@@ -112,6 +112,7 @@ router.beforeEach(async (to, _from, next) => {
 </template>
 
 <style scoped>
+@import url("arches/arches/app/media/fonts/openSans.css");
 main {
     font-family: var(--p-lingo-font-family);
     height: 100vh;
@@ -130,6 +131,7 @@ main {
 
 <!-- NOT scoped because dialog gets appended to <body> and is unreachable via scoped styles -->
 <style>
+@import url("arches/arches/app/media/fonts/openSans.css");
 .p-confirmdialog,
 .p-datepicker-panel,
 .p-tree-node-label,
@@ -140,7 +142,8 @@ main {
 .p-select-option,
 .p-select-empty-message,
 .p-multiselect-empty-message,
-.p-multiselect-option {
+.p-multiselect-option,
+.p-popover {
     font-family: var(--p-lingo-font-family) !important;
 }
 </style>
