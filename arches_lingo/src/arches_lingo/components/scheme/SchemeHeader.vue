@@ -111,35 +111,33 @@ onMounted(async () => {
                 class="add-button"
             ></Button>
         </template>
-    </LingoResourceHeader>
-    <div class="header-content">
-        <!-- TODO: show Scheme URI here -->
 
-        <div class="header-row metadata-container">
-            <!-- TODO: Load Scheme languages here -->
-            <div class="language-chip-container">
-                <span class="scheme-language">
-                    {{ $gettext("English (en)") }}
-                </span>
-                <span class="scheme-language">
-                    {{ $gettext("German (de)") }}
-                </span>
-                <span class="scheme-language">
-                    {{ $gettext("French (fr)") }}
-                </span>
-                <span class="add-language">
-                    {{ $gettext("Add Language") }}
-                </span>
+        <template #graph-specific-content>
+            <div class="header-row metadata-container">
+                <!-- TODO: Load Scheme languages here -->
+                <div class="language-chip-container">
+                    <span class="scheme-language">
+                        {{ $gettext("English (en)") }}
+                    </span>
+                    <span class="scheme-language">
+                        {{ $gettext("German (de)") }}
+                    </span>
+                    <span class="scheme-language">
+                        {{ $gettext("French (fr)") }}
+                    </span>
+                    <span class="add-language">
+                        {{ $gettext("Add Language") }}
+                    </span>
+                </div>
             </div>
-        </div>
-    </div>
+        </template>
+    </LingoResourceHeader>
 </template>
 
 <style scoped>
 .metadata-container {
     gap: 0.25rem;
     margin-top: 0;
-    padding-bottom: 1rem;
     justify-content: space-between;
     align-items: center;
 }
@@ -148,17 +146,6 @@ onMounted(async () => {
     display: flex;
     gap: 0.25rem;
     align-items: center;
-}
-
-.add-language:hover {
-    cursor: pointer;
-}
-
-.add-language {
-    font-size: var(--p-lingo-font-size-smallnormal);
-    color: var(--p-primary-500);
-    text-decoration: underline;
-    padding: 0 0.5rem;
 }
 
 .scheme-language {
@@ -170,64 +157,14 @@ onMounted(async () => {
     color: var(--p-content-color);
 }
 
-.export-panel {
-    padding: 1rem;
+.add-language:hover {
+    cursor: pointer;
 }
 
-.exports-panel-container {
-    font-family: var(--p-lingo-font-family);
-    font-weight: 300;
-    padding: 0 1rem;
-}
-
-.options-container {
-    padding: 0 0 0.75rem 0;
-}
-
-.options-container h4 {
-    margin: 0;
-    padding-bottom: 0.4rem;
-}
-
-.formats-container {
-    padding: 0 0 0.75rem 0;
-}
-
-.formats-container h4 {
-    margin: 0;
-}
-
-.selection {
-    display: flex;
-    gap: 0.5rem;
-    padding: 0.2rem;
+.add-language {
     font-size: var(--p-lingo-font-size-smallnormal);
-    align-items: center;
-    color: var(--p-list-option-icon-color);
-}
-
-.export-footer {
-    display: flex;
-    flex-direction: row-reverse;
-    gap: 0.25rem;
-    border-top: 0.0625rem solid var(--p-header-toolbar-border);
-    padding: 0.5rem 0 0 0;
-}
-
-.container-title {
-    font-size: var(--p-lingo-font-size-normal);
-    border-bottom: 0.0625rem solid var(--p-header-toolbar-border);
-    margin-bottom: 0.5rem;
-}
-
-.container-title h3 {
-    padding-top: 0.5rem;
-    margin: 0rem 0rem 0.25rem 0rem;
-    font-weight: var(--p-lingo-font-weight-normal);
-}
-
-.concept-label-lang {
-    font-size: var(--p-lingo-font-size-smallnormal);
-    color: var(--p-text-muted-color);
+    color: var(--p-primary-500);
+    text-decoration: underline;
+    padding: 0 0.5rem;
 }
 </style>

@@ -37,7 +37,6 @@ const exportformatOptions = ref([
     <!-- Placeholder export button -->
     <Button
         :aria-label="$gettext('Export')"
-        class="add-button"
         @click="toggle"
     >
         <span><i class="pi pi-cloud-download"></i></span>
@@ -88,14 +87,70 @@ const exportformatOptions = ref([
                 <Button
                     icon="pi pi-trash"
                     :label="$gettext('Export')"
-                    class="add-button"
                 ></Button>
                 <Button
                     icon="pi pi-trash"
                     :label="$gettext('Cancel')"
-                    class="add-button"
                 ></Button>
             </div>
         </div>
     </Popover>
 </template>
+
+<style scoped>
+.export-panel {
+    padding: 1rem;
+}
+
+.exports-panel-container {
+    font-family: var(--p-lingo-font-family);
+    font-weight: 300;
+    padding: 0 1rem;
+}
+
+.container-title {
+    font-size: var(--p-lingo-font-size-normal);
+    border-bottom: 0.0625rem solid var(--p-header-toolbar-border);
+    margin-bottom: 0.5rem;
+}
+
+.container-title h3 {
+    padding-top: 0.5rem;
+    margin: 0rem 0rem 0.25rem 0rem;
+    font-weight: var(--p-lingo-font-weight-normal);
+}
+
+.options-container {
+    padding: 0 0 0.75rem 0;
+}
+
+.options-container h4 {
+    margin: 0;
+    padding-bottom: 0.4rem;
+}
+
+.formats-container {
+    padding: 0 0 0.75rem 0;
+}
+
+.formats-container h4 {
+    margin: 0;
+}
+
+.selection {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.2rem;
+    font-size: var(--p-lingo-font-size-smallnormal);
+    align-items: center;
+    color: var(--p-list-option-icon-color);
+}
+
+.export-footer {
+    display: flex;
+    flex-direction: row-reverse;
+    gap: 0.25rem;
+    border-top: 0.0625rem solid var(--p-header-toolbar-border);
+    padding: 0.5rem 0 0 0;
+}
+</style>

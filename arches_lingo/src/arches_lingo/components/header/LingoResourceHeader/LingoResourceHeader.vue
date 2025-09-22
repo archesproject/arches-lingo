@@ -136,78 +136,80 @@ function confirmDelete() {
             </div>
         </div>
 
-        <slot name="content">
-            <div class="header-content">
-                <div class="header-row">
-                    <div class="header-item">
-                        <span class="header-item-label">
-                            {{ $gettext("Identifier:") }}
-                        </span>
-                        <span v-if="props.headerData?.identifier">
-                            <Button
-                                v-for="value in props.headerData?.identifier"
-                                :key="value"
-                                :label="value"
-                                class="uri-label"
-                                variant="link"
-                                as="a"
-                                :href="value"
-                                target="_blank"
-                                rel="noopener"
-                            ></Button>
-                        </span>
-                        <span
-                            v-else
-                            class="header-item-value"
-                            >{{ $gettext("No Identifier assigned") }}</span
-                        >
-                    </div>
-                    <div>
-                        <span class="header-item-label">{{
-                            $gettext("URI (provisonal): ")
-                        }}</span>
+        <div class="header-content">
+            <div class="header-row">
+                <div class="header-item">
+                    <span class="header-item-label">
+                        {{ $gettext("Identifier:") }}
+                    </span>
+                    <span v-if="props.headerData?.identifier">
                         <Button
-                            v-if="props.headerData?.uri"
-                            :label="props.headerData?.uri"
+                            v-for="value in props.headerData?.identifier"
+                            :key="value"
+                            :label="value"
                             class="uri-label"
                             variant="link"
                             as="a"
-                            :href="props.headerData?.uri"
+                            :href="value"
                             target="_blank"
                             rel="noopener"
                         ></Button>
-                        <span
-                            v-else
-                            class="header-item-value"
-                            >{{ $gettext("No URI assigned") }}</span
-                        >
-                    </div>
+                    </span>
+                    <span
+                        v-else
+                        class="header-item-value"
+                        >{{ $gettext("No Identifier assigned") }}</span
+                    >
+                </div>
+                <div class="header-item">
+                    <span class="header-item-label">{{
+                        $gettext("URI (provisonal): ")
+                    }}</span>
+                    <Button
+                        v-if="props.headerData?.uri"
+                        :label="props.headerData?.uri"
+                        class="uri-label"
+                        variant="link"
+                        as="a"
+                        :href="props.headerData?.uri"
+                        target="_blank"
+                        rel="noopener"
+                    ></Button>
+                    <span
+                        v-else
+                        class="header-item-value"
+                        >{{ $gettext("No URI assigned") }}</span
+                    >
+                </div>
+            </div>
+            <div class="header-row">
+                <!-- Scheme / Concept specific content rendered in slot -->
+                <slot name="graph-specific-content"></slot>
 
-                    <!-- TODO: Life Cycle mgmt functionality goes here -->
-                    <div class="lifecycle-container">
-                        <div class="header-item">
-                            <span class="header-item-label">
-                                {{ $gettext("Life cycle state:") }}
-                            </span>
-                            <span class="header-item-value">
-                                {{ props.headerData?.lifeCycleState }}
-                            </span>
-                        </div>
-                        <div class="header-item">
-                            <span class="header-item-label">
-                                {{ $gettext("Owner:") }}
-                            </span>
-                            <span class="header-item-value">
-                                {{
-                                    props.headerData?.principalUser ||
-                                    $gettext("Anonymous")
-                                }}
-                            </span>
-                        </div>
+                <!-- TODO: Life Cycle mgmt functionality goes here -->
+                <div class="lifecycle-container">
+                    <div class="header-item">
+                        <span class="header-item-label">
+                            {{ $gettext("Life cycle state:") }}
+                        </span>
+                        <span class="header-item-value">
+                            {{ props.headerData?.lifeCycleState }}
+                        </span>
+                    </div>
+                    <div class="header-item">
+                        <span class="header-item-label">
+                            {{ $gettext("Owner:") }}
+                        </span>
+                        <span class="header-item-value">
+                            {{
+                                props.headerData?.principalUser ||
+                                $gettext("Anonymous")
+                            }}
+                        </span>
                     </div>
                 </div>
             </div>
-        </slot>
+        </div>
     </div>
 </template>
 
@@ -234,9 +236,7 @@ h2 {
 }
 
 .header-content {
-    padding-top: 0.5rem;
-    padding-inline-start: 1rem;
-    padding-inline-end: 1.5rem;
+    padding: 0.5rem 1rem 1rem 1.5rem;
 }
 
 .header-row {
