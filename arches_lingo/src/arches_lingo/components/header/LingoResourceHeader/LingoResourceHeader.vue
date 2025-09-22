@@ -110,17 +110,16 @@ function confirmDelete() {
     >
         <div class="header-toolbar">
             <div class="header-row">
-                <div>
-                    <h2 v-if="props.headerData?.descriptor?.name">
-                        <span>{{ props.headerData?.descriptor?.name }}</span>
-                        <span
-                            v-if="props.headerData?.descriptor?.language"
-                            class="label-lang"
-                        >
-                            ({{ props.headerData?.descriptor?.language }})
-                        </span>
-                    </h2>
-                </div>
+                <h2 v-if="props.headerData?.descriptor?.name">
+                    <!-- TODO: display dynamic icon for resource type -->
+                    <span>{{ props.headerData?.descriptor?.name }}</span>
+                    <span
+                        v-if="props.headerData?.descriptor?.language"
+                        class="label-lang"
+                    >
+                        ({{ props.headerData?.descriptor?.language }})
+                    </span>
+                </h2>
                 <div class="header-buttons">
                     <slot name="controls"></slot>
                     <LingoResourceExport :resource="props.resource" />
@@ -185,6 +184,47 @@ function confirmDelete() {
             <div class="header-row">
                 <!-- Scheme / Concept specific content rendered in slot -->
                 <slot name="graph-specific-content"></slot>
+                <span v-if="props.headerData?.partOfScheme">
+                    <!-- TODO: Human-reable conceptid to be displayed here -->
+                    <div class="header-item">
+                        <span class="header-item-label">
+                            {{ $gettext("Scheme:") }}
+                        </span>
+                        <span class="header-item-value">
+                            <RouterLink
+                                v-if="
+                                    props.headerData?.partOfScheme?.node_value
+                                "
+                                :to="`/scheme/${props.headerData?.partOfScheme?.node_value?.[0]?.resourceId}`"
+                            >
+                                {{
+                                    props.headerData?.partOfScheme
+                                        ?.display_value
+                                }}
+                            </RouterLink>
+                            <span v-else>--</span>
+                        </span>
+                    </div>
+                </span>
+                <span v-if="props.headerData?.parentConcepts?.length">
+                    <div class="header-item">
+                        <span class="header-item-label">
+                            {{ $gettext("Parent Concept(s):") }}
+                        </span>
+                        <span
+                            v-for="parent in props.headerData?.parentConcepts"
+                            :key="parent.details[0].resource_id"
+                            class="header-item-value parent-concept"
+                        >
+                            <RouterLink
+                                :to="`/concept/${parent.details[0].resource_id}`"
+                                >{{
+                                    parent.details[0].display_value
+                                }}</RouterLink
+                            >
+                        </span>
+                    </div>
+                </span>
 
                 <!-- TODO: Life Cycle mgmt functionality goes here -->
                 <div class="lifecycle-container">
@@ -286,8 +326,21 @@ h2 {
     color: var(--p-primary-500);
 }
 
+.parent-concept {
+    margin-inline-end: 0.5rem;
+}
+
+.parent-concept:hover a {
+    color: var(--p-primary-700);
+}
+
 .p-button-link {
     padding: 0;
     margin: 0;
+}
+
+:deep(a) {
+    font-size: var(--p-lingo-font-size-smallnormal);
+    color: var(--p-primary-500);
 }
 </style>
