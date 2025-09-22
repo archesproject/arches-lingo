@@ -1,19 +1,11 @@
 <script setup lang="ts">
 import { inject, onMounted, ref } from "vue";
 
-import { useConfirm } from "primevue/useconfirm";
 import { useGettext } from "vue3-gettext";
-import { useRouter } from "vue-router";
 import { useToast } from "primevue/usetoast";
 
-import ConfirmDialog from "primevue/confirmdialog";
 import Button from "primevue/button";
-import SelectButton from "primevue/selectbutton";
-import RadioButton from "primevue/radiobutton";
 import Select from "primevue/select";
-
-//Placeholder for export button panel
-import Popover from "primevue/popover";
 
 import Skeleton from "primevue/skeleton";
 
@@ -23,19 +15,17 @@ import {
     systemLanguageKey,
 } from "@/arches_lingo/constants.ts";
 
-import { fetchLingoResource, deleteLingoResource } from "@/arches_lingo/api.ts";
+import { fetchLingoResource } from "@/arches_lingo/api.ts";
 import { extractDescriptors } from "@/arches_lingo/utils.ts";
-import { DANGER, SECONDARY } from "@/arches_lingo/constants.ts";
 
 import type {
-    ConceptHeaderData,
     ConceptClassificationStatusAliases,
-    ResourceInstanceResult,
     DataComponentMode,
+    ResourceInstanceResult,
+    ResourceHeaderData,
 } from "@/arches_lingo/types.ts";
 
 import type { Language } from "@/arches_component_lab/types.ts";
-import { routeNames } from "@/arches_lingo/routes.ts";
 
 const props = defineProps<{
     mode: DataComponentMode;
@@ -46,17 +36,13 @@ const props = defineProps<{
     nodegroupAlias: string;
 }>();
 
-const refreshSchemeHierarchy = inject<() => void>("refreshSchemeHierarchy");
-
 const toast = useToast();
 const { $gettext } = useGettext();
-const confirm = useConfirm();
-const router = useRouter();
 
 const systemLanguage = inject(systemLanguageKey) as Language;
 
 const concept = ref<ResourceInstanceResult>();
-const data = ref<ConceptHeaderData>();
+const data = ref<ResourceHeaderData>();
 const isLoading = ref(true);
 
 onMounted(async () => {
@@ -82,72 +68,6 @@ onMounted(async () => {
         isLoading.value = false;
     }
 });
-
-function confirmDelete() {
-    confirm.require({
-        header: $gettext("Confirmation"),
-        message: $gettext("Are you sure you want to delete this concept?"),
-        group: "delete-concept",
-        accept: () => {
-            if (!concept.value) {
-                return;
-            }
-
-            try {
-                deleteLingoResource(
-                    props.graphSlug,
-                    concept.value.resourceinstanceid,
-                ).then(() => {
-                    const schemeIdentifier =
-                        concept.value!.aliased_data?.part_of_scheme
-                            ?.aliased_data.part_of_scheme?.node_value;
-
-                    router.push({
-                        name: routeNames.scheme,
-                        params: { id: schemeIdentifier },
-                    });
-
-                    refreshSchemeHierarchy!();
-                });
-            } catch (error) {
-                toast.add({
-                    severity: ERROR,
-                    life: DEFAULT_ERROR_TOAST_LIFE,
-                    summary: $gettext("Error deleting concept"),
-                    detail: error instanceof Error ? error.message : undefined,
-                });
-            }
-        },
-        rejectProps: {
-            label: $gettext("Cancel"),
-            severity: SECONDARY,
-            outlined: true,
-        },
-        acceptProps: {
-            label: $gettext("Delete"),
-            severity: DANGER,
-        },
-    });
-}
-
-//Placeholder for export button panel
-const exportDialog = ref();
-const toggle = (event: Event) => {
-    exportDialog.value.toggle(event);
-};
-
-//Placeholder for export type
-const exporter = ref("Concept Only");
-const exporterOptions = ref(["Concept Only", "Concept + Children"]);
-
-//Placeholder for export format radio button group
-const exportFormat = ref();
-const exportformatOptions = ref([
-    { label: "csv", value: "csv" },
-    { label: "SKOS", value: "skos" },
-    { label: "rdf", value: "rdf" },
-    { label: "JSON-LD", value: "jsonld" },
-]);
 
 //Placeholder for concept Type
 const conceptType = ref();
@@ -187,7 +107,6 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
 </script>
 
 <template>
-    <ConfirmDialog group="delete-concept" />
     <Skeleton
         v-if="isLoading"
         style="width: 100%"
@@ -226,88 +145,11 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                 </div>
             </div>
             <div class="header-buttons">
-                <!-- Placeholder export button -->
-                <Button
-                    :aria-label="$gettext('Export')"
-                    class="add-button"
-                    @click="toggle"
-                >
-                    <span><i class="pi pi-cloud-download"></i></span>
-                    <span>Export</span>
-                </Button>
-                <Popover
-                    ref="exportDialog"
-                    class="export-panel"
-                >
-                    <div class="exports-panel-container">
-                        <div class="container-title">
-                            <h3>
-                                {{ $gettext("Concept Export") }}
-                            </h3>
-                        </div>
-                        <div class="options-container">
-                            <h4>
-                                {{ $gettext("Export Options") }}
-                            </h4>
-                            <!-- TODO: export options go here -->
-                            <SelectButton
-                                v-model="exporter"
-                                :options="exporterOptions"
-                            />
-                        </div>
-                        <div class="formats-container">
-                            <h4>
-                                {{ $gettext("Export Format") }}
-                            </h4>
-                            <div>
-                                <span
-                                    v-for="option in exportformatOptions"
-                                    :key="option.value"
-                                    class="selection"
-                                >
-                                    <RadioButton
-                                        :key="option.value"
-                                        v-model="exportFormat"
-                                        :input-id="option.value"
-                                        :value="option.value"
-                                        :label="option.label"
-                                    ></RadioButton>
-                                    <label :for="option.value">{{
-                                        option.label
-                                    }}</label>
-                                </span>
-                            </div>
-                        </div>
-                        <div class="export-footer">
-                            <Button
-                                icon="pi pi-file-export"
-                                :label="$gettext('Export')"
-                                class="add-button"
-                            ></Button>
-                            <Button
-                                icon="pi pi-trash"
-                                :label="$gettext('Cancel')"
-                                class="add-button"
-                            ></Button>
-                        </div>
-                    </div>
-                </Popover>
-
                 <Button
                     icon="pi pi-plus-circle"
                     :label="$gettext('Add Child')"
                     class="add-button"
                 ></Button>
-
-                <!-- TODO: button should reflect published state of concept: delete if draft, deprecate if URI is present -->
-                <Button
-                    icon="pi pi-trash"
-                    severity="danger"
-                    class="delete-button"
-                    :label="$gettext('Delete')"
-                    :aria-label="$gettext('Delete Concept')"
-                    @click="confirmDelete"
-                />
             </div>
         </div>
 
