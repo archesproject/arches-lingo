@@ -55,39 +55,49 @@ async function issueLogout() {
         <div class="section-title">{{ $gettext("Tools") }}</div>
 
         <ConfirmDialog @click.stop.prevent />
+        <div class="button-container">
+            <Button
+                as="a"
+                :aria-label="$gettext('Logout')"
+                @click="confirmLogout"
+            >
+                <i
+                    class="pi pi-sign-out"
+                    aria-hidden="true"
+                ></i>
+                <span>{{ $gettext("Logout") }}</span>
+            </Button>
 
-        <Button
-            severity="secondary"
-            :aria-label="$gettext('Logout')"
-            @click="confirmLogout"
-        >
-            <i
-                class="pi pi-sign-out"
-                aria-hidden="true"
-            ></i>
-            <span>{{ $gettext("Logout") }}</span>
-        </Button>
-
-        <Button
-            as="a"
-            severity="secondary"
-            style="text-decoration: none"
-            :href="generateArchesURL('user_profile_manager')"
-            :aria-label="$gettext('My Profile')"
-        >
-            <i
-                class="pi pi-user"
-                aria-hidden="true"
-            ></i>
-            <span>{{ $gettext("My Profile") }}</span>
-        </Button>
+            <Button
+                as="a"
+                class="action-button"
+                style="text-decoration: none"
+                :href="generateArchesURL('user_profile_manager')"
+                :aria-label="$gettext('My Profile')"
+            >
+                <i
+                    class="pi pi-user"
+                    aria-hidden="true"
+                ></i>
+                <span>{{ $gettext("My Profile") }}</span>
+            </Button>
+        </div>
     </div>
 </template>
 
 <style scoped>
-.p-button {
-    width: 100%;
+.button-container {
+    display: flex;
+    gap: 0.15rem;
 }
+
+.p-button {
+    font-size: var(--p-lingo-font-size-xsmall);
+    margin-bottom: 0.15rem;
+    width: 8rem;
+    border: 0.0625rem solid var(--p-header-button-border);
+}
+
 .section-title {
     color: var(--p-text-muted-color);
     margin-bottom: 0.5rem;

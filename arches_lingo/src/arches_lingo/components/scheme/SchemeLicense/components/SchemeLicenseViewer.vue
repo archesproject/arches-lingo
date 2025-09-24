@@ -40,6 +40,7 @@ const buttonLabel = computed(() => {
             <Button
                 :label="buttonLabel"
                 class="add-button"
+                icon="pi pi-plus-circle"
                 @click="
                     openEditor!(props.componentName, props.tileData?.tileid)
                 "

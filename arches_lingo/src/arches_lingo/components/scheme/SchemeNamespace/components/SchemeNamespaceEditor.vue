@@ -137,18 +137,28 @@ async function save(e: FormSubmitEvent) {
     />
 
     <div v-show="!isSaving">
-        <h3>{{ props.sectionTitle }}</h3>
-
-        <Form
-            ref="form"
-            @submit="save"
-        >
-            <GenericWidget
-                node-alias="namespace_name"
-                :graph-slug="props.graphSlug"
-                :aliased-node-data="props.tileData?.aliased_data.namespace_name"
-                :mode="EDIT"
-            />
-        </Form>
+        <div class="form-header">
+            <h3>{{ props.sectionTitle }}</h3>
+            <div class="form-description">
+                {{ $gettext("Define this scheme's unique namespaces.") }}
+            </div>
+        </div>
+        <div class="form-container">
+            <Form
+                ref="form"
+                @submit="save"
+            >
+                <div class="widget-container column">
+                    <GenericWidget
+                        node-alias="namespace_name"
+                        :graph-slug="props.graphSlug"
+                        :aliased-node-data="
+                            props.tileData?.aliased_data.namespace_name
+                        "
+                        :mode="EDIT"
+                    />
+                </div>
+            </Form>
+        </div>
     </div>
 </template>

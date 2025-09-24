@@ -54,7 +54,7 @@ defineProps({
     align-items: flex-start;
     flex-direction: column;
     background-color: var(--p-dialog-background);
-    border-bottom: 0.06rem solid var(--p-search-result-border-bottom);
+    border-bottom: 0.0625rem solid var(--p-search-result-border-bottom);
     color: var(--p-search-result-color);
 }
 
