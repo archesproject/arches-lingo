@@ -134,7 +134,7 @@ run_dev_server() {
 	echo ""
 	cd ${APP_FOLDER}
     echo "Running Django"
-	exec /bin/bash -c "source ../ENV/bin/activate && cd ../arches-component-lab/ && pip install -e . && cd ../arches-controlled-lists && pip install -e . && cd ../arches && pip install -e . && cd ../arches-lingo && pip3 install debugpy -t /tmp && python -Wdefault /tmp/debugpy --listen 0.0.0.0:5678 manage.py runserver 0.0.0.0:${DJANGO_PORT}"
+	exec /bin/bash -c "source ../ENV/bin/activate && cd ../arches-component-lab/ && pip install -e . && cd ../arches-controlled-lists && pip install -e . && cd ../arches-querysets && pip install -e .&& cd ../arches && pip install -e . && cd ../arches-lingo && service memcached start && pip3 install debugpy -t /tmp && python -Wdefault /tmp/debugpy --listen 0.0.0.0:5678 manage.py runserver 0.0.0.0:${DJANGO_PORT}"
 }
 
 # "exec" means that it will finish building???

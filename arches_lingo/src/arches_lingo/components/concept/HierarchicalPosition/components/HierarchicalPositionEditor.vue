@@ -132,21 +132,29 @@ async function save(e: FormSubmitEvent) {
     />
 
     <div v-else>
-        <h3>{{ props.sectionTitle }}</h3>
+        <div class="form-header">
+            <h3>{{ props.sectionTitle }}</h3>
+            <div class="form-description">
+                {{ $gettext("Identify this concept's parent(s).") }}
+            </div>
+        </div>
 
-        <Form
-            ref="form"
-            @submit="save"
-        >
-            <GenericWidget
-                :graph-slug="props.graphSlug"
-                node-alias="classification_status_ascribed_classification"
-                :aliased-node-data="
-                    props.tileData?.aliased_data
-                        .classification_status_ascribed_classification
-                "
-                :mode="EDIT"
-            />
-        </Form>
+        <div class="form-container">
+            <Form
+                ref="form"
+                @submit="save"
+            >
+                <GenericWidget
+                    :graph-slug="props.graphSlug"
+                    node-alias="classification_status_ascribed_classification"
+                    :aliased-node-data="
+                        props.tileData?.aliased_data
+                            .classification_status_ascribed_classification
+                    "
+                    :mode="EDIT"
+                    class="widget-container column"
+                />
+            </Form>
+        </div>
     </div>
 </template>

@@ -279,41 +279,80 @@ function resetForm() {
         style="width: 100%"
     />
     <div v-show="!isSaving">
-        <h3>{{ props.sectionTitle }}</h3>
-        <Form
-            v-if="digitalObjectLoaded"
-            ref="form"
-            @submit="save"
-            @reset="resetForm"
-        >
-            <GenericWidget
-                node-alias="name_content"
-                graph-slug="digital_object_rdm_system"
-                :mode="EDIT"
-                :aliased-node-data="
-                    digitalObjectResource?.aliased_data.name?.aliased_data
-                        .name_content
-                "
-            />
-            <GenericWidget
-                node-alias="statement_content"
-                graph-slug="digital_object_rdm_system"
-                :mode="EDIT"
-                :aliased-node-data="
-                    digitalObjectResource?.aliased_data.statement?.aliased_data
-                        .statement_content
-                "
-            />
-            <GenericWidget
-                node-alias="content"
-                graph-slug="digital_object_rdm_system"
-                :aliased-node-data="
-                    digitalObjectResource?.aliased_data?.content?.aliased_data
-                        .content
-                "
-                :mode="EDIT"
-                :should-show-label="false"
-            />
-        </Form>
+        <div class="form-header">
+            <h3>{{ props.sectionTitle }}</h3>
+            <div class="form-description">
+                {{
+                    $gettext(
+                        "Add images, image titles, and descriptions to help illustrate features of the concept.",
+                    )
+                }}
+            </div>
+        </div>
+
+        <div class="form-container">
+            <Form
+                v-if="digitalObjectLoaded"
+                ref="form"
+                @submit="save"
+                @reset="resetForm"
+            >
+                <GenericWidget
+                    node-alias="name_content"
+                    graph-slug="digital_object_rdm_system"
+                    :mode="EDIT"
+                    :aliased-node-data="
+                        digitalObjectResource?.aliased_data.name?.aliased_data
+                            .name_content
+                    "
+                    class="widget-container column"
+                />
+                <GenericWidget
+                    node-alias="statement_content"
+                    graph-slug="digital_object_rdm_system"
+                    :mode="EDIT"
+                    :aliased-node-data="
+                        digitalObjectResource?.aliased_data.statement
+                            ?.aliased_data.statement_content
+                    "
+                    class="widget-container column"
+                />
+                <GenericWidget
+                    node-alias="content"
+                    graph-slug="digital_object_rdm_system"
+                    :aliased-node-data="
+                        digitalObjectResource?.aliased_data?.content
+                            ?.aliased_data.content
+                    "
+                    :mode="EDIT"
+                    :should-show-label="false"
+                    class="widget-container column"
+                />
+            </Form>
+        </div>
     </div>
 </template>
+<style scoped>
+:deep(.p-fileupload-advanced) {
+    border: none;
+}
+
+:deep(.p-fileupload-header) {
+    padding: 0;
+}
+
+:deep(.p-fileupload-file) {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 0;
+}
+
+:deep(.p-fileupload-file-info) {
+    flex-direction: row;
+}
+
+:deep(.p-fileupload-content) {
+    padding: 0;
+    margin-top: 1rem;
+}
+</style>

@@ -134,57 +134,77 @@ async function save(e: FormSubmitEvent) {
     />
 
     <div v-show="!isSaving">
-        <h3>{{ props.sectionTitle }}</h3>
-
-        <Form
-            ref="form"
-            @submit="save"
-        >
-            <GenericWidget
-                :graph-slug="props.graphSlug"
-                node-alias="appellative_status_ascribed_name_content"
-                :aliased-node-data="
-                    props.tileData?.aliased_data
-                        .appellative_status_ascribed_name_content
-                "
-                :mode="EDIT"
-            />
-            <GenericWidget
-                :graph-slug="props.graphSlug"
-                node-alias="appellative_status_ascribed_relation"
-                :aliased-node-data="
-                    props.tileData?.aliased_data
-                        .appellative_status_ascribed_relation
-                "
-                :mode="EDIT"
-            />
-            <GenericWidget
-                :graph-slug="props.graphSlug"
-                node-alias="appellative_status_ascribed_name_language"
-                :aliased-node-data="
-                    props.tileData?.aliased_data
-                        .appellative_status_ascribed_name_language
-                "
-                :mode="EDIT"
-            />
-            <GenericWidget
-                :graph-slug="props.graphSlug"
-                node-alias="appellative_status_data_assignment_actor"
-                :aliased-node-data="
-                    props.tileData?.aliased_data
-                        ?.appellative_status_data_assignment_actor
-                "
-                :mode="EDIT"
-            />
-            <GenericWidget
-                :graph-slug="props.graphSlug"
-                node-alias="appellative_status_data_assignment_object_used"
-                :aliased-node-data="
-                    props.tileData?.aliased_data
-                        ?.appellative_status_data_assignment_object_used
-                "
-                :mode="EDIT"
-            />
-        </Form>
+        <div class="form-header">
+            <h3>{{ props.sectionTitle }}</h3>
+            <div class="form-description">
+                {{
+                    $gettext(
+                        "Define this scheme's labels, contributors, and sources.",
+                    )
+                }}
+            </div>
+        </div>
+        <div class="form-container">
+            <Form
+                ref="form"
+                @submit="save"
+            >
+                <div class="widget-container column">
+                    <GenericWidget
+                        :graph-slug="props.graphSlug"
+                        node-alias="appellative_status_ascribed_name_content"
+                        :aliased-node-data="
+                            props.tileData?.aliased_data
+                                .appellative_status_ascribed_name_content
+                        "
+                        :mode="EDIT"
+                    />
+                </div>
+                <div class="widget-container column">
+                    <GenericWidget
+                        :graph-slug="props.graphSlug"
+                        node-alias="appellative_status_ascribed_relation"
+                        :aliased-node-data="
+                            props.tileData?.aliased_data
+                                .appellative_status_ascribed_relation
+                        "
+                        :mode="EDIT"
+                    />
+                </div>
+                <div class="widget-container column">
+                    <GenericWidget
+                        :graph-slug="props.graphSlug"
+                        node-alias="appellative_status_ascribed_name_language"
+                        :aliased-node-data="
+                            props.tileData?.aliased_data
+                                .appellative_status_ascribed_name_language
+                        "
+                        :mode="EDIT"
+                    />
+                </div>
+                <div class="widget-container column">
+                    <GenericWidget
+                        :graph-slug="props.graphSlug"
+                        node-alias="appellative_status_data_assignment_actor"
+                        :aliased-node-data="
+                            props.tileData?.aliased_data
+                                ?.appellative_status_data_assignment_actor
+                        "
+                        :mode="EDIT"
+                    />
+                </div>
+                <div class="widget-container column">
+                    <GenericWidget
+                        :graph-slug="props.graphSlug"
+                        node-alias="appellative_status_data_assignment_object_used"
+                        :aliased-node-data="
+                            props.tileData?.aliased_data
+                                ?.appellative_status_data_assignment_object_used
+                        "
+                        :mode="EDIT"
+                    />
+                </div>
+            </Form>
+        </div>
     </div>
 </template>

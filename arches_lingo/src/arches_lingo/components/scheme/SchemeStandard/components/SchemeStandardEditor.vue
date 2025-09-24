@@ -131,20 +131,32 @@ async function save(e: FormSubmitEvent) {
     />
 
     <div v-show="!isSaving">
-        <h3>{{ props.sectionTitle }}</h3>
-
-        <Form
-            ref="form"
-            @submit="save"
-        >
-            <GenericWidget
-                graph-slug="scheme"
-                node-alias="creation_sources"
-                :aliased-node-data="
-                    props.tileData?.aliased_data.creation_sources
-                "
-                :mode="EDIT"
-            />
-        </Form>
+        <div class="form-header">
+            <h3>{{ props.sectionTitle }}</h3>
+            <div class="form-description">
+                {{
+                    $gettext(
+                        "Define the standards that this scheme implements.",
+                    )
+                }}
+            </div>
+        </div>
+        <div class="form-container">
+            <Form
+                ref="form"
+                @submit="save"
+            >
+                <div class="widget-container column">
+                    <GenericWidget
+                        graph-slug="scheme"
+                        node-alias="creation_sources"
+                        :aliased-node-data="
+                            props.tileData?.aliased_data.creation_sources
+                        "
+                        :mode="EDIT"
+                    />
+                </div>
+            </Form>
+        </div>
     </div>
 </template>

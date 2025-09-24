@@ -32,6 +32,7 @@ function activateHierarchyOverlay() {
 <style scoped>
 .page-help-button {
     color: var(--p-menubar-text-color) !important;
+    height: 3rem;
 }
 
 .page-help-button:hover {
