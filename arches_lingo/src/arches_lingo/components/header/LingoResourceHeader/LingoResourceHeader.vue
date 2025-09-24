@@ -109,9 +109,13 @@ function confirmDelete() {
         class="header"
     >
         <div class="header-toolbar">
-            <div class="header-row">
+            <div class="header-title">
                 <h2 v-if="props.headerData?.descriptor?.name">
                     <!-- TODO: display dynamic icon for resource type -->
+                    <i
+                        v-if="props.headerData?.partOfScheme?.node_value"
+                        class="pi pi-tag resource-icon"
+                    ></i>
                     <span>{{ props.headerData?.descriptor?.name }}</span>
                     <span
                         v-if="props.headerData?.descriptor?.language"
@@ -120,18 +124,19 @@ function confirmDelete() {
                         ({{ props.headerData?.descriptor?.language }})
                     </span>
                 </h2>
-                <div class="header-buttons">
-                    <slot name="controls"></slot>
-                    <LingoResourceExport :resource="props.resource" />
-                    <!-- TODO: button should reflect published state of concept: delete if draft, deprecate if URI is present -->
-                    <Button
-                        icon="pi pi-trash"
-                        severity="danger"
-                        :label="$gettext('Delete')"
-                        :aria-label="$gettext('Delete {SCHEME OR CONCEPT}')"
-                        @click="confirmDelete"
-                    />
-                </div>
+                <slot name="concept-controls"></slot>
+            </div>
+            <div class="header-buttons">
+                <slot name="general-controls"></slot>
+                <LingoResourceExport :resource="props.resource" />
+                <!-- TODO: button should reflect published state of concept: delete if draft, deprecate if URI is present -->
+                <Button
+                    icon="pi pi-trash"
+                    severity="danger"
+                    :label="$gettext('Delete')"
+                    :aria-label="$gettext('Delete {SCHEME OR CONCEPT}')"
+                    @click="confirmDelete"
+                />
             </div>
         </div>
 
@@ -184,47 +189,60 @@ function confirmDelete() {
             <div class="header-row">
                 <!-- Scheme / Concept specific content rendered in slot -->
                 <slot name="graph-specific-content"></slot>
-                <span v-if="props.headerData?.partOfScheme">
-                    <!-- TODO: Human-reable conceptid to be displayed here -->
-                    <div class="header-item">
-                        <span class="header-item-label">
-                            {{ $gettext("Scheme:") }}
-                        </span>
-                        <span class="header-item-value">
-                            <RouterLink
-                                v-if="
-                                    props.headerData?.partOfScheme?.node_value
-                                "
-                                :to="`/scheme/${props.headerData?.partOfScheme?.node_value?.[0]?.resourceId}`"
+
+                <div
+                    v-if="props.headerData?.partOfScheme"
+                    class="concept-relationships-container"
+                >
+                    <span>
+                        <!-- TODO: Human-reable conceptid to be displayed here -->
+                        <div class="header-item">
+                            <span class="header-item-label">
+                                {{ $gettext("Scheme:") }}
+                            </span>
+                            <span class="header-item-value">
+                                <RouterLink
+                                    v-if="
+                                        props.headerData?.partOfScheme
+                                            ?.node_value
+                                    "
+                                    :to="`/scheme/${props.headerData?.partOfScheme?.node_value?.[0]?.resourceId}`"
+                                >
+                                    {{
+                                        props.headerData?.partOfScheme
+                                            ?.display_value
+                                    }}
+                                </RouterLink>
+                                <span v-else>--</span>
+                            </span>
+                        </div>
+                    </span>
+                    <span>
+                        <div class="header-item">
+                            <span class="header-item-label">
+                                {{ $gettext("Parent Concept(s):") }}
+                            </span>
+                            <span
+                                v-if="props.headerData?.parentConcepts?.length"
                             >
-                                {{
-                                    props.headerData?.partOfScheme
-                                        ?.display_value
-                                }}
-                            </RouterLink>
+                                <span
+                                    v-for="parent in props.headerData
+                                        ?.parentConcepts"
+                                    :key="parent.details[0].resource_id"
+                                    class="header-item-value parent-concept"
+                                >
+                                    <RouterLink
+                                        :to="`/concept/${parent.details[0].resource_id}`"
+                                        >{{
+                                            parent.details[0].display_value
+                                        }}</RouterLink
+                                    >
+                                </span>
+                            </span>
                             <span v-else>--</span>
-                        </span>
-                    </div>
-                </span>
-                <span v-if="props.headerData?.parentConcepts?.length">
-                    <div class="header-item">
-                        <span class="header-item-label">
-                            {{ $gettext("Parent Concept(s):") }}
-                        </span>
-                        <span
-                            v-for="parent in props.headerData?.parentConcepts"
-                            :key="parent.details[0].resource_id"
-                            class="header-item-value parent-concept"
-                        >
-                            <RouterLink
-                                :to="`/concept/${parent.details[0].resource_id}`"
-                                >{{
-                                    parent.details[0].display_value
-                                }}</RouterLink
-                            >
-                        </span>
-                    </div>
-                </span>
+                        </div>
+                    </span>
+                </div>
 
                 <!-- TODO: Life Cycle mgmt functionality goes here -->
                 <div class="lifecycle-container">
@@ -267,12 +285,23 @@ h2 {
 }
 
 .header-toolbar {
-    height: 3rem;
+    min-height: 3rem;
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
     background: var(--p-header-toolbar-background);
     border-bottom: 0.0625rem solid var(--p-header-toolbar-border);
+    padding: 0.5rem 1rem;
+}
+
+.header-title {
+    display: flex;
     align-items: center;
-    padding-inline-start: 1rem;
-    padding-inline-end: 1rem;
+    gap: 1rem;
+}
+
+.resource-icon {
+    padding-inline-end: 0.25rem;
 }
 
 .header-content {
@@ -283,7 +312,6 @@ h2 {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0.2rem 0 0 0;
 }
 
 .header-item {
@@ -312,6 +340,11 @@ h2 {
     font-size: var(--p-lingo-font-size-smallnormal);
     color: var(--p-text-muted-color);
     vertical-align: baseline;
+}
+
+.concept-relationships-container {
+    display: flex;
+    flex-direction: column;
 }
 
 .lifecycle-container {

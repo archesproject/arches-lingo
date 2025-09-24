@@ -243,13 +243,11 @@ provide("refreshReportSection", refreshReportSection);
     }
 }
 
-:deep(.concept-header .p-button),
-:deep(.scheme-header .p-button) {
+:deep(.header-buttons .p-button) {
     font-size: var(--p-lingo-font-size-small);
 }
 
-:deep(.concept-header .add-button),
-:deep(.scheme-header .add-button) {
+:deep(.header-buttons .add-button) {
     background: var(--p-header-button-background);
     color: var(--p-header-button-color);
     border-color: var(--p-header-button-border);

@@ -37,6 +37,7 @@ const exportformatOptions = ref([
     <!-- Placeholder export button -->
     <Button
         :aria-label="$gettext('Export')"
+        class="add-button"
         @click="toggle"
     >
         <span><i class="pi pi-cloud-download"></i></span>

@@ -98,7 +98,7 @@ onMounted(async () => {
         :nodegroup-alias="props.nodegroupAlias"
         :is-loading="isLoading"
     >
-        <template #controls>
+        <template #general-controls>
             <Button
                 icon="pi pi-plus-circle"
                 :label="$gettext('Add Top Concept')"

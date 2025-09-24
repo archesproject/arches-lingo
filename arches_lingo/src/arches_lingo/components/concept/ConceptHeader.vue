@@ -123,25 +123,22 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
         :nodegroup-alias="props.nodegroupAlias"
         :is-loading="isLoading"
     >
-        <template #controls>
-            <div class="card flex justify-center">
-                <Select
-                    v-model="conceptType"
-                    :options="ctype"
-                    option-label="name"
-                    placeholder="Concept"
-                    checkmark
-                    :highlight-on-select="false"
-                />
-            </div>
-
-            <div class="header-buttons">
-                <Button
-                    icon="pi pi-plus-circle"
-                    :label="$gettext('Add Child')"
-                    class="add-button"
-                ></Button>
-            </div>
+        <template #concept-controls>
+            <Select
+                v-model="conceptType"
+                :options="ctype"
+                option-label="name"
+                placeholder="Concept"
+                checkmark
+                :highlight-on-select="false"
+            />
+        </template>
+        <template #general-controls>
+            <Button
+                icon="pi pi-plus-circle"
+                :label="$gettext('Add Child')"
+                class="add-button"
+            ></Button>
         </template>
     </LingoResourceHeader>
 </template>
