@@ -25,12 +25,12 @@ import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 import type { Language } from "@/arches_component_lab/types";
 
 const props = defineProps<{
-    data: SearchResultHierarchy[];
     componentName: string;
-    sectionTitle: string;
+    data: SearchResultHierarchy[];
     graphSlug: string;
     nodegroupAlias: string;
     resourceInstanceId: string | undefined;
+    sectionTitle: string;
     schemeId?: string;
 }>();
 const { $gettext } = useGettext();
@@ -134,6 +134,20 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
             <h2>{{ props.sectionTitle }}</h2>
 
             <Button
+                v-tooltip.top="{
+                    disabled: Boolean(props.resourceInstanceId),
+                    value: $gettext(
+                        'Create a Concept Label before adding hierarchical parents',
+                    ),
+                    showDelay: 300,
+                    pt: {
+                        text: {
+                            style: { fontFamily: 'var(--p-lingo-font-family)' },
+                        },
+                        arrow: { style: { display: 'none' } },
+                    },
+                }"
+                :disabled="Boolean(!props.resourceInstanceId)"
                 :label="$gettext('Add Hierarchical Parent')"
                 class="add-button wide"
                 icon="pi pi-plus-circle"

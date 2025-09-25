@@ -78,14 +78,20 @@ async function getSectionValue() {
     <template v-else>
         <ConceptNoteViewer
             v-if="mode === VIEW"
-            :tile-data="tileData"
-            :graph-slug="props.graphSlug"
             :component-name="props.componentName"
-            :section-title="props.sectionTitle"
+            :graph-slug="props.graphSlug"
             :nodegroup-alias="props.nodegroupAlias"
+            :section-title="props.sectionTitle"
+            :resource-instance-id="props.resourceInstanceId"
+            :tile-data="tileData"
         />
         <ConceptNoteEditor
             v-else-if="mode === EDIT"
+            :component-name="props.componentName"
+            :graph-slug="props.graphSlug"
+            :nodegroup-alias="props.nodegroupAlias"
+            :resource-instance-id="props.resourceInstanceId"
+            :section-title="props.sectionTitle"
             :tile-data="
                 tileData.find((tileDatum) => {
                     if (shouldCreateNewTile) {
@@ -95,11 +101,6 @@ async function getSectionValue() {
                     return tileDatum.tileid === props.tileId;
                 })
             "
-            :component-name="props.componentName"
-            :section-title="props.sectionTitle"
-            :graph-slug="props.graphSlug"
-            :nodegroup-alias="props.nodegroupAlias"
-            :resource-instance-id="props.resourceInstanceId"
             :tile-id="props.tileId"
         />
     </template>

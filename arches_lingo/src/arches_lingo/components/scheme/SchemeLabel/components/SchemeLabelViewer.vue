@@ -16,11 +16,12 @@ import type {
 } from "@/arches_lingo/types.ts";
 
 const props = defineProps<{
-    tileData: AppellativeStatus[];
     componentName: string;
-    sectionTitle: string;
     graphSlug: string;
     nodegroupAlias: string;
+    resourceInstanceId: string | undefined;
+    sectionTitle: string;
+    tileData: AppellativeStatus[];
 }>();
 
 const { $gettext } = useGettext();

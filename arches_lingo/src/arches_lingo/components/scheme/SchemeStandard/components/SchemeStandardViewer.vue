@@ -11,10 +11,11 @@ import { VIEW } from "@/arches_lingo/constants.ts";
 import type { SchemeCreation } from "@/arches_lingo/types.ts";
 
 const props = defineProps<{
-    tileData: SchemeCreation | undefined;
-    graphSlug: string;
     componentName: string;
+    graphSlug: string;
+    resourceInstanceId: string | undefined;
     sectionTitle: string;
+    tileData: SchemeCreation | undefined;
 }>();
 
 const { $gettext } = useGettext();
@@ -39,6 +40,20 @@ const buttonLabel = computed(() => {
             <h2>{{ props.sectionTitle }}</h2>
 
             <Button
+                v-tooltip.top="{
+                    disabled: Boolean(props.resourceInstanceId),
+                    value: $gettext(
+                        'Create a Scheme Label before adding standards',
+                    ),
+                    showDelay: 300,
+                    pt: {
+                        text: {
+                            style: { fontFamily: 'var(--p-lingo-font-family)' },
+                        },
+                        arrow: { style: { display: 'none' } },
+                    },
+                }"
+                :disabled="Boolean(!props.resourceInstanceId)"
                 :label="buttonLabel"
                 class="add-button"
                 icon="pi pi-plus-circle"

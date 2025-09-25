@@ -24,11 +24,12 @@ import {
 } from "@/arches_lingo/api.ts";
 
 const props = defineProps<{
-    tileData: ConceptImages | undefined;
     componentName: string;
-    sectionTitle: string;
     graphSlug: string;
     nodegroupAlias: string;
+    resourceInstanceId: string | undefined;
+    sectionTitle: string;
+    tileData: ConceptImages | undefined;
 }>();
 
 const openEditor =
@@ -159,6 +160,20 @@ function modifyResource(resourceInstanceId?: string) {
         <div class="section-header">
             <h2>{{ props.sectionTitle }}</h2>
             <Button
+                v-tooltip.top="{
+                    disabled: Boolean(props.resourceInstanceId),
+                    value: $gettext(
+                        'Create a Concept Label before adding images',
+                    ),
+                    showDelay: 300,
+                    pt: {
+                        text: {
+                            style: { fontFamily: 'var(--p-lingo-font-family)' },
+                        },
+                        arrow: { style: { display: 'none' } },
+                    },
+                }"
+                :disabled="Boolean(!props.resourceInstanceId)"
                 :label="$gettext('Add Image')"
                 class="add-button"
                 icon="pi pi-plus-circle"

@@ -83,6 +83,7 @@ async function getSectionValue() {
             :graph-slug="props.graphSlug"
             :nodegroup-alias="props.nodegroupAlias"
             :component-name="props.componentName"
+            :resource-instance-id="props.resourceInstanceId"
         />
         <SchemeLabelEditor
             v-else-if="mode === EDIT"
