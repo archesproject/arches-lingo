@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { useTemplateRef, watch } from "vue";
+import { useGettext } from "vue3-gettext";
 
 import { ToggleButton } from "primevue";
+import Button from "primevue/button";
 import Menubar from "primevue/menubar";
 import OverlayPanel from "primevue/overlaypanel";
 
@@ -11,6 +13,8 @@ import NotificationInteraction from "@/arches_lingo/components/header/PageHeader
 import PageHelp from "@/arches_lingo/components/header/PageHeader/components/PageHelp/PageHelp.vue";
 import SearchDialog from "@/arches_lingo/components/header/PageHeader/components/SearchDialog.vue";
 import UserInteraction from "@/arches_lingo/components/header/PageHeader/components/UserInteraction/UserInteraction.vue";
+
+const { $gettext } = useGettext();
 
 const shouldShowHierarchy = defineModel<boolean>({
     type: Boolean,
