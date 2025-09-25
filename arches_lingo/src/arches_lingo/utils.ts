@@ -56,8 +56,8 @@ export function navigateToSchemeOrConcept(
 // Tree builder
 export function treeFromSchemes(
     schemes: Scheme[],
-    selectedLanguage: typeof Language,
-    systemLanguage: typeof Language,
+    selectedLanguage: Language,
+    systemLanguage: Language,
     iconLabels: IconLabels,
     focusedNode: TreeNode | null,
 ): TreeNode[] {
@@ -203,7 +203,7 @@ export function getParentLabels(
 
 export function extractDescriptors(
     resource: ResourceInstanceResult | undefined,
-    selectedLanguage: typeof Language,
+    selectedLanguage: Language,
 ): ResourceDescriptor {
     const descriptors = resource?.descriptors;
     const schemeDescriptor: ResourceDescriptor = {

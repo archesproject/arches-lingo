@@ -95,10 +95,7 @@ watch(
     (formComponent) => (componentEditorFormRef!.value = formComponent),
 );
 
-async function getDigitalObjectInstance(
-    e?: CustomEventInit<{ resourceInstanceId?: string }>,
-) {
-    const customEvent = e as CustomEvent;
+async function getDigitalObjectInstance(customEvent: CustomEvent) {
     try {
         if (customEvent?.detail.resourceInstanceId === undefined) {
             digitalObjectResource.value = undefined;
