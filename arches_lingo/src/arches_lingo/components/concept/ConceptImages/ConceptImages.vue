@@ -75,20 +75,21 @@ async function getSectionValue() {
     <template v-else>
         <ConceptImagesViewer
             v-if="mode === VIEW"
-            :tile-data="tileData"
-            :graph-slug="props.graphSlug"
             :component-name="props.componentName"
-            :section-title="props.sectionTitle"
+            :graph-slug="props.graphSlug"
             :nodegroup-alias="props.nodegroupAlias"
+            :resource-instance-id="props.resourceInstanceId"
+            :section-title="props.sectionTitle"
+            :tile-data="tileData"
         />
         <ConceptImagesEditor
             v-else-if="mode === EDIT"
             :component-name="props.componentName"
-            :section-title="props.sectionTitle"
             :graph-slug="props.graphSlug"
-            :tile-data="tileData"
             :nodegroup-alias="props.nodegroupAlias"
             :resource-instance-id="props.resourceInstanceId"
+            :section-title="props.sectionTitle"
+            :tile-data="tileData"
             :tile-id="props.tileId"
         />
     </template>

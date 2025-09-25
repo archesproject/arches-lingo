@@ -147,16 +147,22 @@ async function getSectionValue() {
     <template v-else>
         <HierarchicalPositionViewer
             v-if="mode === VIEW"
-            :data="hierarchicalData"
-            :section-title="props.sectionTitle"
             :component-name="props.componentName"
+            :data="hierarchicalData"
             :graph-slug="props.graphSlug"
             :nodegroup-alias="props.nodegroupAlias"
             :resource-instance-id="props.resourceInstanceId"
+            :section-title="props.sectionTitle"
             :scheme-id="schemeId"
         />
         <HierarchicalPositionEditor
             v-else-if="mode === EDIT"
+            :component-name="props.componentName"
+            :graph-slug="props.graphSlug"
+            :nodegroup-alias="props.nodegroupAlias"
+            :resource-instance-id="props.resourceInstanceId"
+            :section-title="props.sectionTitle"
+            :scheme-id="schemeId"
             :tile-data="
                 tileData!.find((tileDatum) => {
                     if (shouldCreateNewTile) {
@@ -166,12 +172,6 @@ async function getSectionValue() {
                     return tileDatum.tileid === props.tileId;
                 })
             "
-            :section-title="props.sectionTitle"
-            :component-name="props.componentName"
-            :graph-slug="props.graphSlug"
-            :nodegroup-alias="props.nodegroupAlias"
-            :resource-instance-id="props.resourceInstanceId"
-            :scheme-id="schemeId"
             :tile-id="props.tileId"
         />
     </template>

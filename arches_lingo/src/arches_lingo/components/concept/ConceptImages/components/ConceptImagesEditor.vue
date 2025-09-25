@@ -169,7 +169,6 @@ async function save(e: FormSubmitEvent) {
         const fileJsonObjects =
             submittedFormData.content.node_value?.map(
                 (file: PossiblyNewFile) => {
-                    console.log(file.file);
                     if (!file?.file) {
                         return file;
                     } else {

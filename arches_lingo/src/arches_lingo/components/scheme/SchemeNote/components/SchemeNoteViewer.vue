@@ -12,11 +12,12 @@ import { VIEW } from "@/arches_lingo/constants.ts";
 import type { MetaStringText, SchemeStatement } from "@/arches_lingo/types.ts";
 
 const props = defineProps<{
-    tileData: SchemeStatement[] | undefined;
     componentName: string;
-    sectionTitle: string;
     graphSlug: string;
     nodegroupAlias: string;
+    resourceInstanceId: string | undefined;
+    sectionTitle: string;
+    tileData: SchemeStatement[] | undefined;
 }>();
 
 const { $gettext } = useGettext();
@@ -38,6 +39,20 @@ const metaStringLabel: MetaStringText = {
             <h2>{{ props.sectionTitle }}</h2>
 
             <Button
+                v-tooltip.top="{
+                    disabled: Boolean(props.resourceInstanceId),
+                    value: $gettext(
+                        'Create a Scheme Label before adding notes',
+                    ),
+                    showDelay: 300,
+                    pt: {
+                        text: {
+                            style: { fontFamily: 'var(--p-lingo-font-family)' },
+                        },
+                        arrow: { style: { display: 'none' } },
+                    },
+                }"
+                :disabled="Boolean(!props.resourceInstanceId)"
                 :label="$gettext('Add Note')"
                 class="add-button"
                 icon="pi pi-plus-circle"

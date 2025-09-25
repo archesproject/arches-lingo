@@ -75,19 +75,20 @@ async function getSectionValue() {
     <template v-else>
         <SchemeLicenseViewer
             v-if="mode === VIEW"
-            :tile-data="tileData"
             :component-name="props.componentName"
             :graph-slug="props.graphSlug"
+            :resource-instance-id="props.resourceInstanceId"
             :section-title="props.sectionTitle"
+            :tile-data="tileData"
         />
         <SchemeLicenseEditor
             v-else-if="mode === EDIT"
-            :tile-data="tileData"
-            :section-title="props.sectionTitle"
-            :graph-slug="props.graphSlug"
             :component-name="props.componentName"
-            :resource-instance-id="props.resourceInstanceId"
+            :graph-slug="props.graphSlug"
             :nodegroup-alias="props.nodegroupAlias"
+            :resource-instance-id="props.resourceInstanceId"
+            :section-title="props.sectionTitle"
+            :tile-data="tileData"
             :tile-id="props.tileId"
         />
     </template>

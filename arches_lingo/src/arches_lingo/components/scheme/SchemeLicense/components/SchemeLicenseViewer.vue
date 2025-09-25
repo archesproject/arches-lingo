@@ -11,10 +11,11 @@ import { VIEW } from "@/arches_lingo/constants.ts";
 import type { SchemeRights } from "@/arches_lingo/types";
 
 const props = defineProps<{
-    tileData: SchemeRights | undefined;
-    graphSlug: string;
     componentName: string;
+    graphSlug: string;
+    resourceInstanceId: string | undefined;
     sectionTitle: string;
+    tileData: SchemeRights | undefined;
 }>();
 
 const { $gettext } = useGettext();
@@ -38,6 +39,20 @@ const buttonLabel = computed(() => {
             <h2>{{ props.sectionTitle }}</h2>
 
             <Button
+                v-tooltip.top="{
+                    disabled: Boolean(props.resourceInstanceId),
+                    value: $gettext(
+                        'Create a Scheme Label before adding rights',
+                    ),
+                    showDelay: 300,
+                    pt: {
+                        text: {
+                            style: { fontFamily: 'var(--p-lingo-font-family)' },
+                        },
+                        arrow: { style: { display: 'none' } },
+                    },
+                }"
+                :disabled="Boolean(!props.resourceInstanceId)"
                 :label="buttonLabel"
                 class="add-button"
                 icon="pi pi-plus-circle"
