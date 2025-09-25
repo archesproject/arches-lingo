@@ -6,7 +6,7 @@ import {
     updateLingoResource,
 } from "@/arches_lingo/api.ts";
 import { DIGITAL_OBJECT_GRAPH_SLUG } from "@/arches_lingo/components/concept/ConceptImages/components/constants.ts";
-import { type Ref } from "vue";
+import { type Ref, toRaw } from "vue";
 import type {
     ConceptInstance,
     DigitalObjectInstance,
@@ -16,7 +16,7 @@ import type {
 export async function createDigitalObject(
     digitalObjectData: DigitalObjectInstanceAliases | FormData,
 ): Promise<DigitalObjectInstance> {
-    let digitalObjectResource;
+    let digitalObjectResource: DigitalObjectInstance;
 
     if (digitalObjectData instanceof FormData) {
         digitalObjectResource = await createLingoResourceFromForm(
@@ -31,7 +31,7 @@ export async function createDigitalObject(
             DIGITAL_OBJECT_GRAPH_SLUG,
         );
     }
-    return digitalObjectResource as DigitalObjectInstance;
+    return digitalObjectResource;
 }
 
 export async function addDigitalObjectToConceptImageCollection(
@@ -72,10 +72,9 @@ export async function addDigitalObjectToConceptImageCollection(
             conceptDigitalObjectRelationshipList.aliased_data.depicting_digital_asset_internal.aliased_data.depicting_digital_asset_internal.node_value =
                 [];
         }
-        conceptDigitalObjectRelationshipList.aliased_data.depicting_digital_asset_internal.aliased_data.depicting_digital_asset_internal.details.push(
+        conceptDigitalObjectRelationshipList.aliased_data.depicting_digital_asset_internal.aliased_data.depicting_digital_asset_internal.node_value.push(
             {
-                display_value: digitalObjectResource.display_value!,
-                resource_id: digitalObjectResource.resourceinstanceid,
+                resourceId: digitalObjectResource.resourceinstanceid,
             },
         );
         await updateLingoResource(
@@ -93,42 +92,25 @@ export async function createFormDataForFileUpload(
     submittedFormData: { [k: string]: any },
 ): Promise<FormData> {
     const formData = new FormData();
-    const isJsonObject = (testObject: unknown) =>
-        testObject &&
-        typeof testObject === "object" &&
-        !Array.isArray(testObject) &&
-        Object.prototype.toString.call(testObject) === "[object Object]";
-    const digitalObjectContentNodeId = (
-        await fetchCardXNodeXWidgetData(DIGITAL_OBJECT_GRAPH_SLUG, "content")
-    ).nodeid;
 
+    const cardXNodeXWidgetData = await fetchCardXNodeXWidgetData(
+        DIGITAL_OBJECT_GRAPH_SLUG,
+        "content",
+    );
+    const digitalObjectContentNodeId = cardXNodeXWidgetData.node.nodeid;
+    const val = toRaw(resource.value);
     if (resource.value) {
-        for (const [key, val] of Object.entries(resource.value)) {
-            if (["name", "descriptors", "legacyid"].includes(key)) {
-                // TODO: avoid need to skip these
-                continue;
-            }
-            if (isJsonObject(val)) {
-                formData.append(
-                    key,
-                    new Blob([JSON.stringify(val)], {
-                        type: "application/json",
-                    }),
-                );
-            } else {
-                formData.append(key, val);
-            }
-        }
+        formData.append("json", JSON.stringify(val));
     } else {
         formData.append(
-            "aliased_data",
+            "json",
             new Blob([JSON.stringify(digitalObjectInstanceAliases)], {
                 type: "application/json",
             }),
         );
     }
-    for (const file of submittedFormData.content.newFiles) {
-        formData.append(`file-list_${digitalObjectContentNodeId}`, file);
+    for (const file of submittedFormData.content.node_value) {
+        formData.append(`file-list_${digitalObjectContentNodeId}`, file.file);
     }
     return formData;
 }

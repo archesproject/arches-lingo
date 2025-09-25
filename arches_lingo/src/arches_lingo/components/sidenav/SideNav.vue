@@ -70,7 +70,7 @@ const emit = defineEmits(["update:isNavExpanded"]);
                 disabled: isNavExpanded,
                 showDelay: 300,
                 pt: {
-                    root: { style: { marginInlineStart: '7rem' } },
+                    root: { style: { marginInlineStart: '3rem' } },
                     text: {
                         style: { fontFamily: 'var(--p-lingo-font-family)' },
                     },
