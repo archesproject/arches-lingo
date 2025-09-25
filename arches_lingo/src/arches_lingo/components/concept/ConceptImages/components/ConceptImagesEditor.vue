@@ -1,5 +1,13 @@
 <script setup lang="ts">
-import { inject, nextTick, onMounted, ref, useTemplateRef, watch } from "vue";
+import {
+    inject,
+    nextTick,
+    onMounted,
+    onUnmounted,
+    ref,
+    useTemplateRef,
+    watch,
+} from "vue";
 
 import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
@@ -31,11 +39,21 @@ import {
 
 import type { Component, Ref } from "vue";
 import type { FormSubmitEvent } from "@primevue/forms";
+import type { FileListValue } from "@/arches_component_lab/datatypes/file-list/types.ts";
+
 import type {
     ConceptImages,
     DigitalObjectInstance,
     DigitalObjectInstanceAliases,
 } from "@/arches_lingo/types.ts";
+
+type PossiblyNewFile = FileListValue & {
+    file?: File;
+    name?: string;
+    lastModified?: number;
+    size?: number;
+    type?: string;
+};
 
 const props = defineProps<{
     tileData: ConceptImages | undefined;
@@ -63,7 +81,7 @@ const refreshReportSection = inject<(componentName: string) => void>(
 );
 
 const formRef = useTemplateRef("form");
-const isSaving = ref(false);
+const isLoading = ref(true);
 
 onMounted(() => {
     document.addEventListener(
@@ -73,34 +91,42 @@ onMounted(() => {
     document.dispatchEvent(new Event("conceptImagesEditor:ready"));
 });
 
+onUnmounted(() => {
+    document.removeEventListener(
+        "openConceptImagesEditor",
+        getDigitalObjectInstance,
+    );
+});
+
 watch(
     () => formRef.value,
     (formComponent) => (componentEditorFormRef!.value = formComponent),
 );
 
 async function getDigitalObjectInstance(
-    // custom event type is from global dom
-    // eslint-disable-next-line no-undef
-    e?: CustomEventInit<{ resourceInstanceId?: string }>,
+    customEvent: CustomEvent<{ resourceInstanceId?: string }> | Event,
 ) {
-    const customEvent = e as CustomEvent;
+    const typedEvent = customEvent as CustomEvent<{
+        resourceInstanceId?: string;
+    }>;
     try {
-        if (customEvent?.detail.resourceInstanceId === undefined) {
+        if (typedEvent?.detail?.resourceInstanceId === undefined) {
             digitalObjectResource.value = undefined;
         } else {
             digitalObjectResource.value = await fetchLingoResource(
                 "digital_object_rdm_system",
-                customEvent.detail.resourceInstanceId,
+                typedEvent.detail.resourceInstanceId,
             );
         }
         digitalObjectLoaded.value = true;
+        isLoading.value = false;
     } catch (error) {
         console.error(error);
     }
 }
 
 async function save(e: FormSubmitEvent) {
-    isSaving.value = true;
+    isLoading.value = true;
 
     try {
         const submittedFormData = Object.fromEntries(
@@ -141,47 +167,60 @@ async function save(e: FormSubmitEvent) {
 
         // files do not respect json.stringify
         const fileJsonObjects =
-            submittedFormData.content.newFiles?.map((file: File) => {
-                return {
-                    name: file.name.replace(/ /g, "_"),
-                    lastModified: file.lastModified,
-                    size: file.size,
-                    type: file.type,
-                    url: null,
-                    file_id: null,
-                    content: URL.createObjectURL(file),
-                };
-            }) ?? [];
+            submittedFormData.content.node_value?.map(
+                (file: PossiblyNewFile) => {
+                    if (!file?.file) {
+                        return file;
+                    } else {
+                        return {
+                            name: file.name?.replace(/ /g, "_"),
+                            lastModified: file.lastModified,
+                            size: file.size,
+                            type: file.type,
+                            url: null,
+                            file_id: null,
+                            content: URL.createObjectURL(file?.file),
+                            altText: "Replaceable alt text",
+                        };
+                    }
+                },
+            ) ?? [];
 
         if (!digitalObjectInstanceAliases.content) {
             digitalObjectInstanceAliases.content = {
                 aliased_data: {
-                    content: fileJsonObjects,
+                    content: {
+                        node_value: [...fileJsonObjects],
+                    } as unknown as FileListValue[],
                 },
             };
         } else {
-            // disabling this block as it breaks typescript. It should be re-enabled as part of the
-            // effort to get image editing working again.
-            // digitalObjectInstanceAliases.content.aliased_data.content = [
-            //     ...(digitalObjectInstanceAliases.content.aliased_data.content?.node_value ?? []),
-            //     ...fileJsonObjects,
-            // ];
+            digitalObjectInstanceAliases.content.aliased_data.content = {
+                node_value: [...fileJsonObjects],
+            } as unknown as FileListValue[];
         }
-        const contentTile = digitalObjectInstanceAliases.content.aliased_data;
-
-        contentTile.content.filter(
-            (file) => !submittedFormData.content?.deletedFiles?.includes(file),
-        );
 
         // this fork was requested because the multipartjson parser is unstable
         // if files go one way, if no files go the traditional way
-        if (submittedFormData.content.newFiles?.length) {
+        if (submittedFormData.content.node_value?.length) {
+            if (digitalObjectResource.value) {
+                digitalObjectResource.value.aliased_data = {
+                    ...digitalObjectInstanceAliases,
+                };
+            } else {
+                digitalObjectResource.value = {
+                    aliased_data: {
+                        ...digitalObjectInstanceAliases,
+                    },
+                } as unknown as DigitalObjectInstance;
+            }
+
             const formDataForDigitalObject = await createFormDataForFileUpload(
                 digitalObjectResource as Ref<DigitalObjectInstance>,
                 digitalObjectInstanceAliases,
                 submittedFormData,
             );
-            if (digitalObjectResource.value) {
+            if (digitalObjectResource.value?.resourceinstanceid) {
                 await updateLingoResourceFromForm(
                     DIGITAL_OBJECT_GRAPH_SLUG,
                     digitalObjectResource.value.resourceinstanceid,
@@ -222,8 +261,19 @@ async function save(e: FormSubmitEvent) {
             }
         }
 
-        // simulated click of the current resource
-        modifyResource(digitalObjectResource?.value?.resourceinstanceid);
+        nextTick(() => {
+            const openConceptImagesEditor = new CustomEvent(
+                "openConceptImagesEditor",
+                {
+                    detail: {
+                        resourceInstanceId:
+                            digitalObjectResource.value?.resourceinstanceid,
+                    },
+                },
+            );
+            document.dispatchEvent(openConceptImagesEditor);
+        });
+
         refreshReportSection!(props.componentName);
     } catch (error) {
         toast.add({
@@ -233,33 +283,34 @@ async function save(e: FormSubmitEvent) {
             detail: error instanceof Error ? error.message : undefined,
         });
     } finally {
-        isSaving.value = false;
+        isLoading.value = false;
     }
 }
 
-function modifyResource(resourceInstanceId?: string) {
+function resetForm() {
     openEditor!(props.componentName);
 
     nextTick(() => {
         const openConceptImagesEditor = new CustomEvent(
             "openConceptImagesEditor",
-            { detail: { resourceInstanceId: resourceInstanceId } },
+            {
+                detail: {
+                    resourceInstanceId:
+                        digitalObjectResource?.value?.resourceinstanceid,
+                },
+            },
         );
         document.dispatchEvent(openConceptImagesEditor);
     });
-}
-
-function resetForm() {
-    modifyResource(digitalObjectResource?.value?.resourceinstanceid);
 }
 </script>
 
 <template>
     <Skeleton
-        v-show="isSaving"
-        style="width: 100%"
+        v-show="isLoading"
+        style="width: 100%; height: 100%"
     />
-    <div v-show="!isSaving">
+    <div v-show="!isLoading">
         <div class="form-header">
             <h3>{{ props.sectionTitle }}</h3>
             <div class="form-description">
@@ -273,7 +324,7 @@ function resetForm() {
 
         <div class="form-container">
             <Form
-                v-if="digitalObjectLoaded"
+                v-if="!isLoading && digitalObjectLoaded"
                 ref="form"
                 @submit="save"
                 @reset="resetForm"

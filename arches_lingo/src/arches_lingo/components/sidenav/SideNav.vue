@@ -70,7 +70,7 @@ const emit = defineEmits(["update:isNavExpanded"]);
                 disabled: isNavExpanded,
                 showDelay: 300,
                 pt: {
-                    root: { style: { marginInlineStart: '7rem' } },
+                    root: { style: { marginInlineStart: '3rem' } },
                     text: {
                         style: { fontFamily: 'var(--p-lingo-font-family)' },
                     },
@@ -144,6 +144,7 @@ const emit = defineEmits(["update:isNavExpanded"]);
     border: 0 !important;
     border-bottom: 0.125rem solid var(--p-primary-950) !important;
     cursor: pointer;
+    height: 3.125rem !important;
 }
 
 .nav-button.expanded {

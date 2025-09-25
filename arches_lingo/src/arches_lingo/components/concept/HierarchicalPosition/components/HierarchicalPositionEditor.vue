@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { inject, ref, useTemplateRef, watch } from "vue";
+import { useGettext } from "vue3-gettext";
 
 import { useRouter } from "vue-router";
 import { Form } from "@primevue/forms";
@@ -14,6 +15,8 @@ import { EDIT } from "@/arches_lingo/constants.ts";
 import type { Component, Ref } from "vue";
 import type { FormSubmitEvent } from "@primevue/forms";
 import type { ConceptClassificationStatus } from "@/arches_lingo/types.ts";
+
+const { $gettext } = useGettext();
 
 const props = defineProps<{
     tileData: ConceptClassificationStatus | undefined;
@@ -128,7 +131,7 @@ async function save(e: FormSubmitEvent) {
 <template>
     <Skeleton
         v-if="isSaving"
-        style="width: 100%"
+        style="width: 100%; height: 100%"
     />
 
     <div v-else>

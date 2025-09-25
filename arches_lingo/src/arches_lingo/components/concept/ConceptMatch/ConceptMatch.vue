@@ -80,14 +80,22 @@ async function getSectionValue() {
     <template v-else>
         <ConceptMatchViewer
             v-if="mode === VIEW"
-            :tile-data="tileData"
-            :section-title="props.sectionTitle"
+            :component-name="props.componentName"
             :graph-slug="props.graphSlug"
             :nodegroup-alias="props.nodegroupAlias"
-            :component-name="props.componentName"
+            :resource-instance-id="props.resourceInstanceId"
+            :section-title="props.sectionTitle"
+            :tile-data="tileData"
         />
         <ConceptMatchEditor
             v-else-if="mode === EDIT"
+            :component-name="props.componentName"
+            :exclude="true"
+            :graph-slug="props.graphSlug"
+            :nodegroup-alias="props.nodegroupAlias"
+            :resource-instance-id="props.resourceInstanceId"
+            :scheme-id="schemeId"
+            :section-title="props.sectionTitle"
             :tile-data="
                 tileData.find((tileDatum) => {
                     if (shouldCreateNewTile) {
@@ -97,13 +105,6 @@ async function getSectionValue() {
                     return tileDatum.tileid === props.tileId;
                 })
             "
-            :scheme-id="schemeId"
-            :exclude="true"
-            :component-name="props.componentName"
-            :section-title="props.sectionTitle"
-            :graph-slug="props.graphSlug"
-            :nodegroup-alias="props.nodegroupAlias"
-            :resource-instance-id="props.resourceInstanceId"
             :tile-id="props.tileId"
         />
     </template>

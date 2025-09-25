@@ -24,16 +24,16 @@ import {
 } from "@/arches_lingo/api.ts";
 
 const props = defineProps<{
-    tileData: ConceptImages | undefined;
     componentName: string;
-    sectionTitle: string;
     graphSlug: string;
     nodegroupAlias: string;
+    resourceInstanceId: string | undefined;
+    sectionTitle: string;
+    tileData: ConceptImages | undefined;
 }>();
 
 const openEditor =
     inject<(componentName: string, tileId?: string) => void>("openEditor");
-const closeEditor = inject<(() => void) | undefined>("closeEditor");
 
 const configurationError = ref();
 const isLoading = ref(true);
@@ -68,7 +68,10 @@ function confirmDelete(removedResourceInstanceId: string) {
             "Do you want to remove this digital resource from concept images? (This does not delete the digital resource)",
         ),
         accept: async () => {
+            isLoading.value = true;
+
             const resourceInstanceId = props.tileData?.resourceinstance;
+
             if (resourceInstanceId) {
                 const resource: ConceptInstance =
                     await fetchLingoResourcePartial(
@@ -99,9 +102,10 @@ function confirmDelete(removedResourceInstanceId: string) {
                         resourceInstanceId,
                         resource,
                     );
-
-                    closeEditor!();
                 }
+
+                isLoading.value = false;
+                newResource();
             }
         },
         rejectProps: {
@@ -124,16 +128,28 @@ function editResource(resourceInstanceId: string) {
     modifyResource(resourceInstanceId);
 }
 
-async function modifyResource(resourceInstanceId?: string) {
+function modifyResource(resourceInstanceId?: string) {
+    async function openConceptImagesEditor() {
+        await nextTick();
+
+        document.dispatchEvent(
+            new CustomEvent("openConceptImagesEditor", {
+                detail: { resourceInstanceId },
+            }),
+        );
+    }
+
     openEditor!(props.componentName);
 
-    document.addEventListener("conceptImagesEditor:ready", async () => {
-        await nextTick();
-        const event = new CustomEvent("openConceptImagesEditor", {
-            detail: { resourceInstanceId },
-        });
-        document.dispatchEvent(event);
-    });
+    document.removeEventListener(
+        "conceptImagesEditor:ready",
+        openConceptImagesEditor,
+    );
+    document.addEventListener(
+        "conceptImagesEditor:ready",
+        openConceptImagesEditor,
+        { once: true },
+    );
 }
 </script>
 
@@ -144,6 +160,20 @@ async function modifyResource(resourceInstanceId?: string) {
         <div class="section-header">
             <h2>{{ props.sectionTitle }}</h2>
             <Button
+                v-tooltip.top="{
+                    disabled: Boolean(props.resourceInstanceId),
+                    value: $gettext(
+                        'Create a Concept Label before adding images',
+                    ),
+                    showDelay: 300,
+                    pt: {
+                        text: {
+                            style: { fontFamily: 'var(--p-lingo-font-family)' },
+                        },
+                        arrow: { style: { display: 'none' } },
+                    },
+                }"
+                :disabled="Boolean(!props.resourceInstanceId)"
                 :label="$gettext('Add Image')"
                 class="add-button"
                 icon="pi pi-plus-circle"
@@ -173,7 +203,7 @@ async function modifyResource(resourceInstanceId?: string) {
 
         <div
             v-else
-            style="overflow-x: auto"
+            style="overflow-x: auto; overflow-y: hidden"
         >
             <div class="concept-images">
                 <div
