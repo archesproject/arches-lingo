@@ -16,7 +16,7 @@ import type {
 export async function createDigitalObject(
     digitalObjectData: DigitalObjectInstanceAliases | FormData,
 ): Promise<DigitalObjectInstance> {
-    let digitalObjectResource;
+    let digitalObjectResource: DigitalObjectInstance;
 
     if (digitalObjectData instanceof FormData) {
         digitalObjectResource = await createLingoResourceFromForm(
@@ -31,7 +31,7 @@ export async function createDigitalObject(
             DIGITAL_OBJECT_GRAPH_SLUG,
         );
     }
-    return digitalObjectResource as DigitalObjectInstance;
+    return digitalObjectResource;
 }
 
 export async function addDigitalObjectToConceptImageCollection(
@@ -74,7 +74,6 @@ export async function addDigitalObjectToConceptImageCollection(
         }
         conceptDigitalObjectRelationshipList.aliased_data.depicting_digital_asset_internal.aliased_data.depicting_digital_asset_internal.node_value.push(
             {
-                display_value: digitalObjectResource.display_value!,
                 resourceId: digitalObjectResource.resourceinstanceid,
             },
         );
