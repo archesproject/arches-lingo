@@ -33,7 +33,6 @@ const props = defineProps<{
 
 const openEditor =
     inject<(componentName: string, tileId?: string) => void>("openEditor");
-const closeEditor = inject<(() => void) | undefined>("closeEditor");
 
 const configurationError = ref();
 const isLoading = ref(true);
@@ -68,7 +67,10 @@ function confirmDelete(removedResourceInstanceId: string) {
             "Do you want to remove this digital resource from concept images? (This does not delete the digital resource)",
         ),
         accept: async () => {
+            isLoading.value = true;
+
             const resourceInstanceId = props.tileData?.resourceinstance;
+
             if (resourceInstanceId) {
                 const resource: ConceptInstance =
                     await fetchLingoResourcePartial(
@@ -99,9 +101,10 @@ function confirmDelete(removedResourceInstanceId: string) {
                         resourceInstanceId,
                         resource,
                     );
-
-                    closeEditor!();
                 }
+
+                isLoading.value = false;
+                newResource();
             }
         },
         rejectProps: {
@@ -117,12 +120,10 @@ function confirmDelete(removedResourceInstanceId: string) {
 }
 
 function newResource() {
-    console.log("newResource");
     modifyResource();
 }
 
 function editResource(resourceInstanceId: string) {
-    console.log("editResource", resourceInstanceId);
     modifyResource(resourceInstanceId);
 }
 
