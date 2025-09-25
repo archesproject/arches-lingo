@@ -3,9 +3,19 @@ import { ArchesPreset, DEFAULT_THEME } from "@/arches/themes/default.ts";
 import type { archesPreset } from "@/arches_lingo/types.ts";
 
 const lingoColors = Object.freeze({
+    offWhite: "#fcfcfc",
     lightBlueGray: "#ebeef0",
     lightGray: "#ebeef0",
     gray: "#dddddd",
+    lightNeutralGray: "#f2f2f2",
+    paleBlue: "#d7e7f6",
+    softBlueGray: "#D1DDE8",
+    mutedBlueGray: "#A1B6CB",
+    steelBlue: "#4682b4",
+    deepSteelBlue: "#486A8B",
+    slateGray: "#475569",
+    charcoalGray: "#414A4F",
+    nearBlack: "#18181B",
 });
 
 const archesPrimitives = ArchesPreset.primitive as archesPreset;
@@ -55,8 +65,8 @@ export const LingoPreset = definePreset(ArchesPreset, {
                     border: "{surface.300}",
                 },
                 headerButton: {
-                    background: "#D1DDE8",
-                    border: "#A1B6CB",
+                    background: "{soft-blue-gray}",
+                    border: "{muted-blue-gray}",
                 },
                 searchResult: {
                     color: "{sky.600}",
@@ -76,11 +86,11 @@ export const LingoPreset = definePreset(ArchesPreset, {
                     border: "{gray}",
                 },
                 editorForm: {
-                    background: "#fcfcfc",
-                    color: "#475569",
+                    background: "{off-white}",
+                    color: "{slate-gray}",
                 },
                 schemeCircle: {
-                    background: "#4682b4",
+                    background: "{steel-blue}",
                 },
             },
             dark: {
@@ -93,7 +103,7 @@ export const LingoPreset = definePreset(ArchesPreset, {
                     background: "{surface.900}",
                 },
                 header: {
-                    background: "#414A4F",
+                    background: "{charcoal-gray}",
                     border: "{neutral.500}",
                     itemLabel: "{surface.400}",
                 },
@@ -103,9 +113,9 @@ export const LingoPreset = definePreset(ArchesPreset, {
                     itemLabel: "{surface.500}",
                 },
                 headerButton: {
-                    background: "#d7e7f6",
-                    border: "#486A8B",
-                    color: "#18181b",
+                    background: "{pale-blue}",
+                    border: "{deep-steel-blue}",
+                    color: "{near-black}",
                 },
                 searchResult: {
                     borderBottom: "{surface.900}",
@@ -124,8 +134,8 @@ export const LingoPreset = definePreset(ArchesPreset, {
                     border: "{surface.900}",
                 },
                 editorForm: {
-                    background: "#18181B",
-                    color: "#f2f2f2",
+                    background: "{near-black}",
+                    color: "{light-neutral-gray}",
                 },
             },
         },

@@ -117,23 +117,37 @@ function confirmDelete(removedResourceInstanceId: string) {
 }
 
 function newResource() {
+    console.log("newResource");
     modifyResource();
 }
 
 function editResource(resourceInstanceId: string) {
+    console.log("editResource", resourceInstanceId);
     modifyResource(resourceInstanceId);
 }
 
-async function modifyResource(resourceInstanceId?: string) {
+function modifyResource(resourceInstanceId?: string) {
+    async function openConceptImagesEditor() {
+        await nextTick();
+
+        document.dispatchEvent(
+            new CustomEvent("openConceptImagesEditor", {
+                detail: { resourceInstanceId },
+            }),
+        );
+    }
+
     openEditor!(props.componentName);
 
-    document.addEventListener("conceptImagesEditor:ready", async () => {
-        await nextTick();
-        const event = new CustomEvent("openConceptImagesEditor", {
-            detail: { resourceInstanceId },
-        });
-        document.dispatchEvent(event);
-    });
+    document.removeEventListener(
+        "conceptImagesEditor:ready",
+        openConceptImagesEditor,
+    );
+    document.addEventListener(
+        "conceptImagesEditor:ready",
+        openConceptImagesEditor,
+        { once: true },
+    );
 }
 </script>
 
@@ -173,7 +187,7 @@ async function modifyResource(resourceInstanceId?: string) {
 
         <div
             v-else
-            style="overflow-x: auto"
+            style="overflow-x: auto; overflow-y: hidden"
         >
             <div class="concept-images">
                 <div

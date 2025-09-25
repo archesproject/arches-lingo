@@ -3,7 +3,7 @@ ENV APP_ROOT=${WEB_ROOT}/arches-lingo
 ENV ARCHES_DJANGO_DEBUG=True
 
 WORKDIR ${WEB_ROOT}
-RUN apt-get install nginx -y && ENV/bin/pip install gunicorn botocore boto3 django-storages psutil
+RUN apt-get update && apt-get install nginx -y && ENV/bin/pip install gunicorn botocore boto3 django-storages psutil
 
 RUN openssl ecparam -out /etc/ssl/private/nginx-selfsigned.key -name prime256v1 -genkey && openssl req -x509 -nodes -days 365 -newkey rsa:2048 -key /etc/ssl/private/nginx-selfsigned.key -out /etc/ssl/certs/nginx-selfsigned.crt -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=localhost"
 
