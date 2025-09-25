@@ -47,6 +47,14 @@ import type {
     DigitalObjectInstanceAliases,
 } from "@/arches_lingo/types.ts";
 
+type PossiblyNewFile = FileListValue & {
+    file?: File;
+    name?: string;
+    lastModified?: number;
+    size?: number;
+    type?: string;
+};
+
 const props = defineProps<{
     tileData: ConceptImages | undefined;
     componentName: string;
@@ -95,14 +103,19 @@ watch(
     (formComponent) => (componentEditorFormRef!.value = formComponent),
 );
 
-async function getDigitalObjectInstance(customEvent: CustomEvent) {
+async function getDigitalObjectInstance(
+    customEvent: CustomEvent<{ resourceInstanceId?: string }> | Event,
+) {
+    const typedEvent = customEvent as CustomEvent<{
+        resourceInstanceId?: string;
+    }>;
     try {
-        if (customEvent?.detail.resourceInstanceId === undefined) {
+        if (typedEvent?.detail?.resourceInstanceId === undefined) {
             digitalObjectResource.value = undefined;
         } else {
             digitalObjectResource.value = await fetchLingoResource(
                 "digital_object_rdm_system",
-                customEvent.detail.resourceInstanceId,
+                typedEvent.detail.resourceInstanceId,
             );
         }
         digitalObjectLoaded.value = true;
@@ -154,35 +167,38 @@ async function save(e: FormSubmitEvent) {
 
         // files do not respect json.stringify
         const fileJsonObjects =
-            submittedFormData.content.node_value?.map((file: FileListValue) => {
-                if (!file?.file) {
-                    return file;
-                } else {
-                    return {
-                        name: file.name.replace(/ /g, "_"),
-                        lastModified: file.lastModified,
-                        size: file.size,
-                        type: file.type,
-                        url: null,
-                        file_id: null,
-                        content: URL.createObjectURL(file?.file),
-                        altText: "Replaceable alt text",
-                    };
-                }
-            }) ?? [];
+            submittedFormData.content.node_value?.map(
+                (file: PossiblyNewFile) => {
+                    console.log(file.file);
+                    if (!file?.file) {
+                        return file;
+                    } else {
+                        return {
+                            name: file.name?.replace(/ /g, "_"),
+                            lastModified: file.lastModified,
+                            size: file.size,
+                            type: file.type,
+                            url: null,
+                            file_id: null,
+                            content: URL.createObjectURL(file?.file),
+                            altText: "Replaceable alt text",
+                        };
+                    }
+                },
+            ) ?? [];
 
         if (!digitalObjectInstanceAliases.content) {
             digitalObjectInstanceAliases.content = {
                 aliased_data: {
                     content: {
                         node_value: [...fileJsonObjects],
-                    },
+                    } as unknown as FileListValue[],
                 },
             };
         } else {
             digitalObjectInstanceAliases.content.aliased_data.content = {
                 node_value: [...fileJsonObjects],
-            };
+            } as unknown as FileListValue[];
         }
 
         // this fork was requested because the multipartjson parser is unstable
@@ -197,7 +213,7 @@ async function save(e: FormSubmitEvent) {
                     aliased_data: {
                         ...digitalObjectInstanceAliases,
                     },
-                };
+                } as unknown as DigitalObjectInstance;
             }
 
             const formDataForDigitalObject = await createFormDataForFileUpload(
