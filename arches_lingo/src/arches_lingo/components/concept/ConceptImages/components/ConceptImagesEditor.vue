@@ -1,5 +1,13 @@
 <script setup lang="ts">
-import { inject, nextTick, onMounted, ref, useTemplateRef, watch } from "vue";
+import {
+    inject,
+    nextTick,
+    onMounted,
+    onUnmounted,
+    ref,
+    useTemplateRef,
+    watch,
+} from "vue";
 
 import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
@@ -9,7 +17,6 @@ import { Form } from "@primevue/forms";
 import Skeleton from "primevue/skeleton";
 
 import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
-import type { FileListValue } from "@/arches_component_lab/datatypes/file-list/types.ts";
 
 import { DIGITAL_OBJECT_GRAPH_SLUG } from "@/arches_lingo/components/concept/ConceptImages/components/constants.ts";
 import {
@@ -32,6 +39,8 @@ import {
 
 import type { Component, Ref } from "vue";
 import type { FormSubmitEvent } from "@primevue/forms";
+import type { FileListValue } from "@/arches_component_lab/datatypes/file-list/types.ts";
+
 import type {
     ConceptImages,
     DigitalObjectInstance,
@@ -64,7 +73,7 @@ const refreshReportSection = inject<(componentName: string) => void>(
 );
 
 const formRef = useTemplateRef("form");
-const isSaving = ref(false);
+const isLoading = ref(true);
 
 onMounted(() => {
     document.addEventListener(
@@ -74,14 +83,19 @@ onMounted(() => {
     document.dispatchEvent(new Event("conceptImagesEditor:ready"));
 });
 
+onUnmounted(() => {
+    document.removeEventListener(
+        "openConceptImagesEditor",
+        getDigitalObjectInstance,
+    );
+});
+
 watch(
     () => formRef.value,
     (formComponent) => (componentEditorFormRef!.value = formComponent),
 );
 
 async function getDigitalObjectInstance(
-    // custom event type is from global dom
-    // eslint-disable-next-line no-undef
     e?: CustomEventInit<{ resourceInstanceId?: string }>,
 ) {
     const customEvent = e as CustomEvent;
@@ -95,13 +109,14 @@ async function getDigitalObjectInstance(
             );
         }
         digitalObjectLoaded.value = true;
+        isLoading.value = false;
     } catch (error) {
         console.error(error);
     }
 }
 
 async function save(e: FormSubmitEvent) {
-    isSaving.value = true;
+    isLoading.value = true;
 
     try {
         const submittedFormData = Object.fromEntries(
@@ -142,24 +157,22 @@ async function save(e: FormSubmitEvent) {
 
         // files do not respect json.stringify
         const fileJsonObjects =
-            submittedFormData.content.node_value?.map(
-                (file: typeof FileListValue) => {
-                    if (!file?.file) {
-                        return file;
-                    } else {
-                        return {
-                            name: file.name.replace(/ /g, "_"),
-                            lastModified: file.lastModified,
-                            size: file.size,
-                            type: file.type,
-                            url: null,
-                            file_id: null,
-                            content: URL.createObjectURL(file?.file),
-                            altText: "Replaceable alt text",
-                        };
-                    }
-                },
-            ) ?? [];
+            submittedFormData.content.node_value?.map((file: FileListValue) => {
+                if (!file?.file) {
+                    return file;
+                } else {
+                    return {
+                        name: file.name.replace(/ /g, "_"),
+                        lastModified: file.lastModified,
+                        size: file.size,
+                        type: file.type,
+                        url: null,
+                        file_id: null,
+                        content: URL.createObjectURL(file?.file),
+                        altText: "Replaceable alt text",
+                    };
+                }
+            }) ?? [];
 
         if (!digitalObjectInstanceAliases.content) {
             digitalObjectInstanceAliases.content = {
@@ -174,11 +187,6 @@ async function save(e: FormSubmitEvent) {
                 node_value: [...fileJsonObjects],
             };
         }
-        // const contentTile = digitalObjectInstanceAliases.content.aliased_data;
-
-        // contentTile.content.filter(
-        //     (file) => !submittedFormData.content?.deletedFiles?.includes(file),
-        // );
 
         // this fork was requested because the multipartjson parser is unstable
         // if files go one way, if no files go the traditional way
@@ -241,8 +249,19 @@ async function save(e: FormSubmitEvent) {
             }
         }
 
-        // simulated click of the current resource
-        modifyResource(digitalObjectResource?.value?.resourceinstanceid);
+        nextTick(() => {
+            const openConceptImagesEditor = new CustomEvent(
+                "openConceptImagesEditor",
+                {
+                    detail: {
+                        resourceInstanceId:
+                            digitalObjectResource.value?.resourceinstanceid,
+                    },
+                },
+            );
+            document.dispatchEvent(openConceptImagesEditor);
+        });
+
         refreshReportSection!(props.componentName);
     } catch (error) {
         toast.add({
@@ -252,33 +271,34 @@ async function save(e: FormSubmitEvent) {
             detail: error instanceof Error ? error.message : undefined,
         });
     } finally {
-        isSaving.value = false;
+        isLoading.value = false;
     }
 }
 
-function modifyResource(resourceInstanceId?: string) {
+function resetForm() {
     openEditor!(props.componentName);
 
     nextTick(() => {
         const openConceptImagesEditor = new CustomEvent(
             "openConceptImagesEditor",
-            { detail: { resourceInstanceId: resourceInstanceId } },
+            {
+                detail: {
+                    resourceInstanceId:
+                        digitalObjectResource?.value?.resourceinstanceid,
+                },
+            },
         );
         document.dispatchEvent(openConceptImagesEditor);
     });
-}
-
-function resetForm() {
-    modifyResource(digitalObjectResource?.value?.resourceinstanceid);
 }
 </script>
 
 <template>
     <Skeleton
-        v-show="isSaving"
-        style="width: 100%"
+        v-show="isLoading"
+        style="width: 100%; height: 100%"
     />
-    <div v-show="!isSaving">
+    <div v-show="!isLoading">
         <div class="form-header">
             <h3>{{ props.sectionTitle }}</h3>
             <div class="form-description">
@@ -292,7 +312,7 @@ function resetForm() {
 
         <div class="form-container">
             <Form
-                v-if="digitalObjectLoaded"
+                v-if="!isLoading && digitalObjectLoaded"
                 ref="form"
                 @submit="save"
                 @reset="resetForm"

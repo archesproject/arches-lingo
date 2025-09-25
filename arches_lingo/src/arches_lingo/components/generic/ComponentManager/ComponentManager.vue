@@ -236,10 +236,10 @@ provide("refreshReportSection", refreshReportSection);
     font-weight: var(--p-lingo-font-weight-normal);
     border-color: var(--p-header-button-border);
     border-radius: 0.125rem;
-    min-width: 8rem;
+    min-width: 11rem;
 
     &.wide {
-        min-width: 15rem;
+        min-width: 14rem;
     }
 }
 
