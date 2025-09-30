@@ -75,7 +75,7 @@ For developer install instructions, see the [Developer Setup](#developer-setup-f
     ```
     "dependencies": {
         "arches": "archesproject/arches#alpha/8.1.0a3",
-        "arches_lingo": "archesproject/arches-lingo#beta/1.0.0.0b0"
+        "arches_lingo": "archesproject/arches-lingo#beta/1.0.0b0"
     }
     ```
 
