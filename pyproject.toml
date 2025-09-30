@@ -28,7 +28,7 @@ requires-python = ">=3.11"
 dependencies = [
     "arches==8.1.0a3",
     "arches_component_lab==0.0.1a3",
-    "arches_queryset==1.0.0",
+    "arches_querysets==1.0.0",
     "arches_controlled_lists==1.0.0",
 ]
 version = "1.0.0b0"
