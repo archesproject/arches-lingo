@@ -26,6 +26,7 @@ For developer install instructions, see the [Developer Setup](#developer-setup-f
     INSTALLED_APPS = (
         ...
         "my_project_name",
+        "django.contrib.postgres",
         "arches_querysets",
         "arches_component_lab",
         "arches_controlled_lists",
