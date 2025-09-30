@@ -27,11 +27,11 @@ classifiers = [
 requires-python = ">=3.11"
 dependencies = [
     "arches @ git+https://github.com/archesproject/arches@dev/8.1.x",
-    "arches_component_lab @ git+https://github.com/archesproject/arches-component-lab@main",
-    "arches_querysets @ git+https://github.com/archesproject/arches-querysets@main",
-    "arches_controlled_lists @ git+https://github.com/archesproject/arches-controlled-lists@main",
+    "arches_component_lab==0.0.1a3",
+    "arches_queryset==1.0.0",
+    "arches_controlled_lists==1.0.0",
 ]
-version = "1.0.0a0"
+version = "1.0.0b0"
 
 [project.urls]
 Homepage = "https://archesproject.org/"
