@@ -218,29 +218,31 @@ NOTE: Changes are committed to the arches-lingo repository.
 - Introduces the Arches Lingo UI, a dedicated, custom experience for creating and managing thesauri and their terms including:
   - Hierarchy viewer for exploring thesauri hierarchically
   - Basic search for finding terms in thesauri
-  - Scheme and Concept reports and editors for editing thesauri and their terms
+  - Basic Scheme and Concept reports and editors for editing thesauri and their terms
 
-### 1.0.0 beta (To Be Released September 2025)
+### 1.0.0 beta (Released September 2025)
+
+- Improves the Arches Lingo UI with improved hierarchy viewer and search
+- Extends the Scheme and Concept reports and editors with additional fields and features
+
+### 1.0.0 (To Be Released March 2025)
 
 - Adds support for managing scheme and concept lifecycles including
   - Publishing schemes and their concepts to create new versions of schemes
   - Managing the automatic generation and assignment of friendly identifiers and URIs for schemes and concepts
   - Deprecating concepts and schemes
 - Adds support for bulk import and export of thesauri and their terms as SKOS RDF
-
-### 1.0.0 (To Be Released December 2025)
-
 - Enhances the Lingo UI with user dashboards
-- Adds support for additional import/export formats
 - Advanced search and filtering capabilities for thesauri and their terms
 - Allow users to view edit log for thesauri and their terms and revert changes as part of a draft edit
-- Public search interface for searching over published thesauri and their terms even during draft edits
+- Saved searches and search results for managing lists of terms 
 
 ### Future Releases
 
+- Adds support for additional import/export formats
+- Public search interface for searching over published thesauri and their terms even during draft edits
 - SPARQL endpoint for querying thesauri and their terms
 - Support for splitting and merging concepts within thesauri
-- Saved searches and search results for managing lists of terms 
 - A "candidate scheme" for managing terms before they are added to a thesaurus
 - Managing hierarchies of additional models:
   - People and groups
