@@ -225,7 +225,7 @@ NOTE: Changes are committed to the arches-lingo repository.
 - Improves the Arches Lingo UI with improved hierarchy viewer and search
 - Extends the Scheme and Concept reports and editors with additional fields and features
 
-### 1.0.0 (To Be Released March 2025)
+### 1.0.0 (To Be Released March 2026)
 
 - Adds support for managing scheme and concept lifecycles including
   - Publishing schemes and their concepts to create new versions of schemes
