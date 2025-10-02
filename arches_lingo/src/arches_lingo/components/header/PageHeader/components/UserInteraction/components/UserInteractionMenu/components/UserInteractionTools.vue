@@ -72,7 +72,7 @@ async function issueLogout() {
                 as="a"
                 class="action-button"
                 style="text-decoration: none"
-                :href="generateArchesURL('user_profile_manager')"
+                :href="generateArchesURL('arches:user_profile_manager')"
                 :aria-label="$gettext('My Profile')"
             >
                 <i

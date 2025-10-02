@@ -44,7 +44,7 @@ function handleClick(navigate: () => void, isActive: boolean) {
             >
                 <img
                     :src="
-                        generateArchesURL('static_url') +
+                        generateArchesURL('arches_lingo:static_url') +
                         'img/arches_logo_light.png'
                     "
                     alt="Arches Logo"
@@ -59,7 +59,7 @@ function handleClick(navigate: () => void, isActive: boolean) {
         >
             <img
                 :src="
-                    generateArchesURL('static_url') +
+                    generateArchesURL('arches_lingo:static_url') +
                     'img/arches_logo_light.png'
                 "
                 alt="Arches Logo"

@@ -245,7 +245,7 @@ function validate(e: FormFieldResolverOptions) {
                         size="small"
                         style="text-decoration: none"
                         :href="
-                            generateArchesURL('resource_report', {
+                            generateArchesURL('arches:resource_report', {
                                 resourceid: slotProps.value,
                             })
                         "
@@ -259,7 +259,7 @@ function validate(e: FormFieldResolverOptions) {
                         size="small"
                         style="text-decoration: none"
                         :href="
-                            generateArchesURL('resource_editor', {
+                            generateArchesURL('arches:resource_editor', {
                                 resourceid: slotProps.value,
                             })
                         "

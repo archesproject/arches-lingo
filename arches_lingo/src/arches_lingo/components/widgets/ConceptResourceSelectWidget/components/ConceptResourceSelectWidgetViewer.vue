@@ -26,7 +26,7 @@ const systemLanguage = inject(systemLanguageKey) as Language;
         <span>
             <a
                 :href="
-                    generateArchesURL('resource_editor', {
+                    generateArchesURL('arches:resource_editor', {
                         resourceid: searchResult.id,
                     })
                 "
