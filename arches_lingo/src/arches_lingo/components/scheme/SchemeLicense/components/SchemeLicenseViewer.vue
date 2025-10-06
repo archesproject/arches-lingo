@@ -4,19 +4,18 @@ import { useGettext } from "vue3-gettext";
 
 import Button from "primevue/button";
 
-import NonLocalizedTextAreaWidget from "@/arches_component_lab/widgets/NonLocalizedTextAreaWidget/NonLocalizedTextAreaWidget.vue";
-import ReferenceSelectWidget from "@/arches_controlled_lists/widgets/ReferenceSelectWidget/ReferenceSelectWidget.vue";
-import ResourceInstanceMultiSelectWidget from "@/arches_component_lab/widgets/ResourceInstanceMultiSelectWidget/ResourceInstanceMultiSelectWidget.vue";
+import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
 
 import { VIEW } from "@/arches_lingo/constants.ts";
 
 import type { SchemeRights } from "@/arches_lingo/types";
 
 const props = defineProps<{
-    tileData: SchemeRights | undefined;
-    graphSlug: string;
     componentName: string;
+    graphSlug: string;
+    resourceInstanceId: string | undefined;
     sectionTitle: string;
+    tileData: SchemeRights | undefined;
 }>();
 
 const { $gettext } = useGettext();
@@ -40,8 +39,23 @@ const buttonLabel = computed(() => {
             <h2>{{ props.sectionTitle }}</h2>
 
             <Button
+                v-tooltip.top="{
+                    disabled: Boolean(props.resourceInstanceId),
+                    value: $gettext(
+                        'Create a Scheme Label before adding rights',
+                    ),
+                    showDelay: 300,
+                    pt: {
+                        text: {
+                            style: { fontFamily: 'var(--p-lingo-font-family)' },
+                        },
+                        arrow: { style: { display: 'none' } },
+                    },
+                }"
+                :disabled="Boolean(!props.resourceInstanceId)"
                 :label="buttonLabel"
                 class="add-button"
+                icon="pi pi-plus-circle"
                 @click="
                     openEditor!(props.componentName, props.tileData?.tileid)
                 "
@@ -49,55 +63,51 @@ const buttonLabel = computed(() => {
         </div>
 
         <div v-if="props.tileData">
-            <ResourceInstanceMultiSelectWidget
+            <GenericWidget
                 node-alias="right_holder"
                 :graph-slug="props.graphSlug"
-                :value="
-                    props.tileData?.aliased_data.right_holder?.interchange_value
-                "
+                :aliased-node-data="props.tileData?.aliased_data.right_holder"
                 :mode="VIEW"
             />
-            <ReferenceSelectWidget
+            <GenericWidget
                 node-alias="right_type"
                 :graph-slug="props.graphSlug"
-                :value="
-                    props.tileData?.aliased_data.right_type?.interchange_value
-                "
+                :aliased-node-data="props.tileData?.aliased_data.right_type"
                 :mode="VIEW"
             />
-            <NonLocalizedTextAreaWidget
+            <GenericWidget
                 node-alias="right_statement_content"
                 :graph-slug="props.graphSlug"
-                :value="
+                :aliased-node-data="
                     props.tileData?.aliased_data.right_statement?.aliased_data
-                        ?.right_statement_content?.display_value
+                        ?.right_statement_content
                 "
                 :mode="VIEW"
             />
-            <ReferenceSelectWidget
+            <GenericWidget
                 node-alias="right_statement_language"
                 :graph-slug="props.graphSlug"
-                :value="
+                :aliased-node-data="
                     props.tileData?.aliased_data.right_statement?.aliased_data
-                        .right_statement_language?.interchange_value
+                        .right_statement_language
                 "
                 :mode="VIEW"
             />
-            <ReferenceSelectWidget
+            <GenericWidget
                 node-alias="right_statement_type"
                 :graph-slug="props.graphSlug"
-                :value="
+                :aliased-node-data="
                     props.tileData?.aliased_data.right_statement?.aliased_data
-                        .right_statement_type?.interchange_value
+                        .right_statement_type
                 "
                 :mode="VIEW"
             />
-            <ReferenceSelectWidget
+            <GenericWidget
                 node-alias="right_statement_type_metatype"
                 :graph-slug="props.graphSlug"
-                :value="
+                :aliased-node-data="
                     props.tileData?.aliased_data.right_statement?.aliased_data
-                        .right_statement_type_metatype?.interchange_value
+                        .right_statement_type_metatype
                 "
                 :mode="VIEW"
             />

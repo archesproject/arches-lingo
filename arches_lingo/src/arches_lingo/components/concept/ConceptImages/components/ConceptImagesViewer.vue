@@ -8,9 +8,7 @@ import Message from "primevue/message";
 import Skeleton from "primevue/skeleton";
 import { useConfirm } from "primevue/useconfirm";
 
-import FileListWidget from "@/arches_component_lab/widgets/FileListWidget/FileListWidget.vue";
-import NonLocalizedStringWidget from "@/arches_component_lab/widgets/NonLocalizedStringWidget/NonLocalizedStringWidget.vue";
-import NonLocalizedTextAreaWidget from "@/arches_component_lab/widgets/NonLocalizedTextAreaWidget/NonLocalizedTextAreaWidget.vue";
+import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
 
 import { DANGER, SECONDARY, VIEW } from "@/arches_lingo/constants.ts";
 
@@ -26,16 +24,16 @@ import {
 } from "@/arches_lingo/api.ts";
 
 const props = defineProps<{
-    tileData: ConceptImages | undefined;
     componentName: string;
-    sectionTitle: string;
     graphSlug: string;
     nodegroupAlias: string;
+    resourceInstanceId: string | undefined;
+    sectionTitle: string;
+    tileData: ConceptImages | undefined;
 }>();
 
 const openEditor =
     inject<(componentName: string, tileId?: string) => void>("openEditor");
-const closeEditor = inject<(() => void) | undefined>("closeEditor");
 
 const configurationError = ref();
 const isLoading = ref(true);
@@ -47,8 +45,8 @@ onMounted(async () => {
     if (props.tileData) {
         try {
             const digitalObjectInstances =
-                props.tileData.aliased_data.depicting_digital_asset_internal?.interchange_value?.map(
-                    (resource) => resource.resource_id,
+                props.tileData.aliased_data.depicting_digital_asset_internal?.node_value?.map(
+                    (resource) => resource.resourceId,
                 );
             if (digitalObjectInstances) {
                 resources.value = await fetchLingoResourcesBatch(
@@ -70,7 +68,10 @@ function confirmDelete(removedResourceInstanceId: string) {
             "Do you want to remove this digital resource from concept images? (This does not delete the digital resource)",
         ),
         accept: async () => {
+            isLoading.value = true;
+
             const resourceInstanceId = props.tileData?.resourceinstance;
+
             if (resourceInstanceId) {
                 const resource: ConceptInstance =
                     await fetchLingoResourcePartial(
@@ -85,10 +86,10 @@ function confirmDelete(removedResourceInstanceId: string) {
                 if (
                     depictingDigitalAssetInternalData?.depicting_digital_asset_internal
                 ) {
-                    depictingDigitalAssetInternalData.depicting_digital_asset_internal.interchange_value =
-                        depictingDigitalAssetInternalData.depicting_digital_asset_internal.interchange_value.filter(
+                    depictingDigitalAssetInternalData.depicting_digital_asset_internal.node_value =
+                        depictingDigitalAssetInternalData.depicting_digital_asset_internal.node_value.filter(
                             (assetReference) =>
-                                assetReference.resource_id !==
+                                assetReference.resourceId !==
                                 removedResourceInstanceId,
                         );
                     resources.value = resources.value?.filter(
@@ -101,9 +102,10 @@ function confirmDelete(removedResourceInstanceId: string) {
                         resourceInstanceId,
                         resource,
                     );
-
-                    closeEditor!();
                 }
+
+                isLoading.value = false;
+                newResource();
             }
         },
         rejectProps: {
@@ -127,15 +129,27 @@ function editResource(resourceInstanceId: string) {
 }
 
 function modifyResource(resourceInstanceId?: string) {
+    async function openConceptImagesEditor() {
+        await nextTick();
+
+        document.dispatchEvent(
+            new CustomEvent("openConceptImagesEditor", {
+                detail: { resourceInstanceId },
+            }),
+        );
+    }
+
     openEditor!(props.componentName);
 
-    nextTick(() => {
-        const openConceptImagesEditor = new CustomEvent(
-            "openConceptImagesEditor",
-            { detail: { resourceInstanceId: resourceInstanceId } },
-        );
-        document.dispatchEvent(openConceptImagesEditor);
-    });
+    document.removeEventListener(
+        "conceptImagesEditor:ready",
+        openConceptImagesEditor,
+    );
+    document.addEventListener(
+        "conceptImagesEditor:ready",
+        openConceptImagesEditor,
+        { once: true },
+    );
 }
 </script>
 
@@ -146,8 +160,23 @@ function modifyResource(resourceInstanceId?: string) {
         <div class="section-header">
             <h2>{{ props.sectionTitle }}</h2>
             <Button
+                v-tooltip.top="{
+                    disabled: Boolean(props.resourceInstanceId),
+                    value: $gettext(
+                        'Create a Concept Label before adding images',
+                    ),
+                    showDelay: 300,
+                    pt: {
+                        text: {
+                            style: { fontFamily: 'var(--p-lingo-font-family)' },
+                        },
+                        arrow: { style: { display: 'none' } },
+                    },
+                }"
+                :disabled="Boolean(!props.resourceInstanceId)"
                 :label="$gettext('Add Image')"
                 class="add-button"
+                icon="pi pi-plus-circle"
                 @click="newResource"
             ></Button>
         </div>
@@ -174,7 +203,7 @@ function modifyResource(resourceInstanceId?: string) {
 
         <div
             v-else
-            style="overflow-x: auto"
+            style="overflow-x: auto; overflow-y: hidden"
         >
             <div class="concept-images">
                 <div
@@ -185,21 +214,26 @@ function modifyResource(resourceInstanceId?: string) {
                     <div class="header">
                         <label
                             for="concept-image"
-                            class="text"
+                            class="image-title-label"
                         >
-                            <NonLocalizedStringWidget
+                            <GenericWidget
                                 node-alias="name_content"
+                                class="image-title"
                                 graph-slug="digital_object_rdm_system"
                                 :mode="VIEW"
-                                :value="
+                                :aliased-node-data="
                                     resource.aliased_data.name?.aliased_data
-                                        .name_content?.display_value
+                                        .name_content
                                 "
                             />
                         </label>
                         <div class="buttons">
                             <Button
                                 icon="pi pi-file-edit"
+                                style="
+                                    border: 0.0625rem solid
+                                        var(--p-header-button-border);
+                                "
                                 rounded
                                 @click="
                                     editResource(resource.resourceinstanceid)
@@ -216,24 +250,23 @@ function modifyResource(resourceInstanceId?: string) {
                             />
                         </div>
                     </div>
-                    <FileListWidget
+                    <GenericWidget
                         node-alias="content"
                         graph-slug="digital_object_rdm_system"
-                        :value="
+                        :aliased-node-data="
                             resource.aliased_data.content?.aliased_data.content
-                                ?.interchange_value
                         "
                         :mode="VIEW"
-                        :show-label="false"
+                        :should-show-label="false"
                     />
                     <div class="footer">
-                        <NonLocalizedTextAreaWidget
+                        <GenericWidget
                             node-alias="statement_content"
                             graph-slug="digital_object_rdm_system"
                             :mode="VIEW"
-                            :value="
+                            :aliased-node-data="
                                 resource.aliased_data.statement?.aliased_data
-                                    .statement_content?.display_value
+                                    .statement_content
                             "
                         />
                     </div>
@@ -247,7 +280,7 @@ function modifyResource(resourceInstanceId?: string) {
 .buttons {
     display: flex;
     justify-content: center;
-    gap: 1rem;
+    gap: 0.25rem;
 }
 
 .concept-images {
@@ -262,6 +295,14 @@ function modifyResource(resourceInstanceId?: string) {
 .concept-image {
     width: 30rem;
     margin: 0 1rem;
+}
+
+.image-title-label {
+    color: var(--p-header-item-label);
+}
+
+.image-title {
+    color: var(--p-header-item-label);
 }
 
 .concept-image .header {
@@ -282,5 +323,9 @@ function modifyResource(resourceInstanceId?: string) {
 
 .concept-images :deep(.p-galleria) {
     border: none;
+}
+
+:deep(.p-galleria) {
+    border-radius: 0.125rem;
 }
 </style>

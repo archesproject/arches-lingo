@@ -9,6 +9,7 @@ import SchemeNamespaceViewer from "@/arches_lingo/components/scheme/SchemeNamesp
 
 import { EDIT, VIEW } from "@/arches_lingo/constants.ts";
 
+import { fetchTileData } from "@/arches_component_lab/generics/GenericCard/api.ts";
 import { fetchLingoResourcePartial } from "@/arches_lingo/api.ts";
 
 import type {
@@ -29,7 +30,7 @@ const props = defineProps<{
 const shouldCreateNewTile = Boolean(props.mode === EDIT && !props.tileId);
 
 const isLoading = ref(true);
-const tileData = ref<SchemeNamespace | undefined>();
+const tileData = ref<SchemeNamespace>();
 const fetchError = ref();
 
 onMounted(async () => {
@@ -39,6 +40,12 @@ onMounted(async () => {
     ) {
         const sectionValue = await getSectionValue();
         tileData.value = sectionValue.aliased_data[props.nodegroupAlias];
+    } else if (shouldCreateNewTile) {
+        const blankTileData = await fetchTileData(
+            props.graphSlug,
+            props.nodegroupAlias,
+        );
+        tileData.value = blankTileData as unknown as SchemeNamespace;
     }
     isLoading.value = false;
 });
@@ -71,19 +78,20 @@ async function getSectionValue() {
     <template v-else>
         <SchemeNamespaceViewer
             v-if="mode === VIEW"
-            :tile-data="tileData"
-            :graph-slug="props.graphSlug"
             :component-name="props.componentName"
+            :graph-slug="props.graphSlug"
+            :resource-instance-id="props.resourceInstanceId"
             :section-title="props.sectionTitle"
+            :tile-data="tileData"
         />
         <SchemeNamespaceEditor
             v-else-if="mode === EDIT"
-            :tile-data="shouldCreateNewTile ? undefined : tileData"
-            :section-title="props.sectionTitle"
-            :graph-slug="props.graphSlug"
             :component-name="props.componentName"
-            :resource-instance-id="props.resourceInstanceId"
+            :graph-slug="props.graphSlug"
             :nodegroup-alias="props.nodegroupAlias"
+            :resource-instance-id="props.resourceInstanceId"
+            :section-title="props.sectionTitle"
+            :tile-data="tileData"
             :tile-id="props.tileId"
         />
     </template>

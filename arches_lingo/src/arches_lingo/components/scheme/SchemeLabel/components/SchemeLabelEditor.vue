@@ -9,9 +9,7 @@ import { Form } from "@primevue/forms";
 
 import Skeleton from "primevue/skeleton";
 
-import NonLocalizedStringWidget from "@/arches_component_lab/widgets/NonLocalizedStringWidget/NonLocalizedStringWidget.vue";
-import ReferenceSelectWidget from "@/arches_controlled_lists/widgets/ReferenceSelectWidget/ReferenceSelectWidget.vue";
-import ResourceInstanceMultiSelectWidget from "@/arches_component_lab/widgets/ResourceInstanceMultiSelectWidget/ResourceInstanceMultiSelectWidget.vue";
+import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
 
 import { createLingoResource, upsertLingoTile } from "@/arches_lingo/api.ts";
 import {
@@ -64,13 +62,26 @@ async function save(e: FormSubmitEvent) {
     try {
         const formData = e.values;
 
+        const aliasedTileData = props.tileData?.aliased_data || {};
+
+        const updatedTileData = {
+            ...aliasedTileData,
+            ...Object.fromEntries(
+                Object.entries(formData).filter(
+                    ([key]) => key in aliasedTileData,
+                ),
+            ),
+        };
+
         let updatedTileId;
 
         if (!props.resourceInstanceId) {
             const updatedScheme = await createLingoResource(
                 {
                     aliased_data: {
-                        [props.nodegroupAlias]: [formData],
+                        [props.nodegroupAlias]: [
+                            { aliased_data: updatedTileData },
+                        ],
                     },
                 },
                 props.graphSlug,
@@ -89,7 +100,7 @@ async function save(e: FormSubmitEvent) {
                 props.nodegroupAlias,
                 {
                     resourceinstance: props.resourceInstanceId,
-                    aliased_data: { ...formData },
+                    aliased_data: { ...updatedTileData },
                     tileid: props.tileId,
                 },
             );
@@ -119,65 +130,81 @@ async function save(e: FormSubmitEvent) {
 <template>
     <Skeleton
         v-show="isSaving"
-        style="width: 100%"
+        style="width: 100%; height: 100%"
     />
 
     <div v-show="!isSaving">
-        <h3>{{ props.sectionTitle }}</h3>
-
-        <Form
-            ref="form"
-            @submit="save"
-        >
-            <NonLocalizedStringWidget
-                :graph-slug="props.graphSlug"
-                node-alias="appellative_status_ascribed_name_content"
-                :value="
-                    props.tileData?.aliased_data
-                        .appellative_status_ascribed_name_content
-                        ?.interchange_value
-                "
-                :mode="EDIT"
-            />
-            <ReferenceSelectWidget
-                :graph-slug="props.graphSlug"
-                node-alias="appellative_status_ascribed_relation"
-                :value="
-                    props.tileData?.aliased_data
-                        .appellative_status_ascribed_relation?.interchange_value
-                "
-                :mode="EDIT"
-            />
-            <ReferenceSelectWidget
-                :graph-slug="props.graphSlug"
-                node-alias="appellative_status_ascribed_name_language"
-                :value="
-                    props.tileData?.aliased_data
-                        .appellative_status_ascribed_name_language
-                        ?.interchange_value
-                "
-                :mode="EDIT"
-            />
-            <ResourceInstanceMultiSelectWidget
-                :graph-slug="props.graphSlug"
-                node-alias="appellative_status_data_assignment_actor"
-                :value="
-                    props.tileData?.aliased_data
-                        ?.appellative_status_data_assignment_actor
-                        ?.interchange_value
-                "
-                :mode="EDIT"
-            />
-            <ResourceInstanceMultiSelectWidget
-                :graph-slug="props.graphSlug"
-                node-alias="appellative_status_data_assignment_object_used"
-                :value="
-                    props.tileData?.aliased_data
-                        ?.appellative_status_data_assignment_object_used
-                        ?.interchange_value
-                "
-                :mode="EDIT"
-            />
-        </Form>
+        <div class="form-header">
+            <h3>{{ props.sectionTitle }}</h3>
+            <div class="form-description">
+                {{
+                    $gettext(
+                        "Define this scheme's labels, contributors, and sources.",
+                    )
+                }}
+            </div>
+        </div>
+        <div class="form-container">
+            <Form
+                ref="form"
+                @submit="save"
+            >
+                <div class="widget-container column">
+                    <GenericWidget
+                        :graph-slug="props.graphSlug"
+                        node-alias="appellative_status_ascribed_name_content"
+                        :aliased-node-data="
+                            props.tileData?.aliased_data
+                                .appellative_status_ascribed_name_content
+                        "
+                        :mode="EDIT"
+                    />
+                </div>
+                <div class="widget-container column">
+                    <GenericWidget
+                        :graph-slug="props.graphSlug"
+                        node-alias="appellative_status_ascribed_relation"
+                        :aliased-node-data="
+                            props.tileData?.aliased_data
+                                .appellative_status_ascribed_relation
+                        "
+                        :mode="EDIT"
+                    />
+                </div>
+                <div class="widget-container column">
+                    <GenericWidget
+                        :graph-slug="props.graphSlug"
+                        node-alias="appellative_status_ascribed_name_language"
+                        :aliased-node-data="
+                            props.tileData?.aliased_data
+                                .appellative_status_ascribed_name_language
+                        "
+                        :mode="EDIT"
+                    />
+                </div>
+                <div class="widget-container column">
+                    <GenericWidget
+                        :graph-slug="props.graphSlug"
+                        node-alias="appellative_status_data_assignment_actor"
+                        :aliased-node-data="
+                            props.tileData?.aliased_data
+                                ?.appellative_status_data_assignment_actor
+                        "
+                        :mode="EDIT"
+                    />
+                </div>
+                <div class="widget-container column">
+                    <GenericWidget
+                        :graph-slug="props.graphSlug"
+                        node-alias="appellative_status_data_assignment_object_used"
+                        :aliased-node-data="
+                            props.tileData?.aliased_data
+                                ?.appellative_status_data_assignment_object_used
+                        "
+                        :mode="EDIT"
+                    />
+                </div>
+            </Form>
+        </div>
     </div>
 </template>

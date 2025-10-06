@@ -9,6 +9,7 @@ import ConceptMatchViewer from "@/arches_lingo/components/concept/ConceptMatch/c
 
 import { EDIT, VIEW } from "@/arches_lingo/constants.ts";
 
+import { fetchTileData } from "@/arches_component_lab/generics/GenericCard/api.ts";
 import { fetchConceptRelationships } from "@/arches_lingo/api.ts";
 
 import type {
@@ -31,11 +32,22 @@ const tileData = ref<ConceptMatchStatus[]>([]);
 const schemeId = ref<string>();
 const fetchError = ref();
 
+const shouldCreateNewTile = Boolean(props.mode === EDIT && !props.tileId);
+
 onMounted(async () => {
-    if (props.resourceInstanceId) {
+    if (
+        props.resourceInstanceId &&
+        (props.mode === VIEW || !shouldCreateNewTile)
+    ) {
         const sectionValue = await getSectionValue();
         tileData.value = sectionValue?.data;
-        schemeId.value = sectionValue.scheme_id;
+        schemeId.value = sectionValue?.scheme_id[0].resourceId;
+    } else if (shouldCreateNewTile) {
+        const blankTileData = await fetchTileData(
+            props.graphSlug,
+            props.nodegroupAlias,
+        );
+        tileData.value = [blankTileData as unknown as ConceptMatchStatus];
     }
     isLoading.value = false;
 });
@@ -68,24 +80,31 @@ async function getSectionValue() {
     <template v-else>
         <ConceptMatchViewer
             v-if="mode === VIEW"
-            :tile-data="tileData"
-            :section-title="props.sectionTitle"
-            :graph-slug="props.graphSlug"
-            :nodegroup-alias="props.nodegroupAlias"
             :component-name="props.componentName"
-        />
-        <ConceptMatchEditor
-            v-else-if="mode === EDIT"
-            :tile-data="
-                tileData.find((tileDatum) => tileDatum.tileid === props.tileId)
-            "
-            :scheme="schemeId"
-            :exclude="true"
-            :component-name="props.componentName"
-            :section-title="props.sectionTitle"
             :graph-slug="props.graphSlug"
             :nodegroup-alias="props.nodegroupAlias"
             :resource-instance-id="props.resourceInstanceId"
+            :section-title="props.sectionTitle"
+            :tile-data="tileData"
+        />
+        <ConceptMatchEditor
+            v-else-if="mode === EDIT"
+            :component-name="props.componentName"
+            :exclude="true"
+            :graph-slug="props.graphSlug"
+            :nodegroup-alias="props.nodegroupAlias"
+            :resource-instance-id="props.resourceInstanceId"
+            :scheme-id="schemeId"
+            :section-title="props.sectionTitle"
+            :tile-data="
+                tileData.find((tileDatum) => {
+                    if (shouldCreateNewTile) {
+                        return !tileDatum.tileid;
+                    }
+
+                    return tileDatum.tileid === props.tileId;
+                })
+            "
             :tile-id="props.tileId"
         />
     </template>

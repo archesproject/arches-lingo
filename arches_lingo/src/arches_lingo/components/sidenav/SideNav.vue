@@ -70,7 +70,7 @@ const emit = defineEmits(["update:isNavExpanded"]);
                 disabled: isNavExpanded,
                 showDelay: 300,
                 pt: {
-                    root: { style: { marginInlineStart: '7rem' } },
+                    root: { style: { marginInlineStart: '3rem' } },
                     text: {
                         style: { fontFamily: 'var(--p-lingo-font-family)' },
                     },
@@ -144,6 +144,7 @@ const emit = defineEmits(["update:isNavExpanded"]);
     border: 0 !important;
     border-bottom: 0.125rem solid var(--p-primary-950) !important;
     cursor: pointer;
+    height: 3.125rem !important;
 }
 
 .nav-button.expanded {
@@ -171,7 +172,7 @@ const emit = defineEmits(["update:isNavExpanded"]);
 }
 
 :deep(.nav-button) {
-    height: 3.125rem;
+    height: 2.75rem;
     width: 100%;
     border-radius: 0;
     text-decoration: none;
@@ -179,7 +180,8 @@ const emit = defineEmits(["update:isNavExpanded"]);
     font-size: var(--p-lingo-font-size-xsmall);
 
     i {
-        font-size: var(--p-lingo-font-size-medium);
+        font-size: var(--p-lingo-font-size-xsmall);
+        padding: 0rem 0rem 0rem 0.25rem;
     }
 }
 

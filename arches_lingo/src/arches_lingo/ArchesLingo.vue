@@ -1,10 +1,14 @@
 <script setup lang="ts">
-import { provide, ref } from "vue";
+import { provide, ref, watchEffect } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { useGettext } from "vue3-gettext";
-
-import Toast from "primevue/toast";
 import { useToast } from "primevue/usetoast";
+
+import Splitter from "primevue/splitter";
+import SplitterPanel from "primevue/splitterpanel";
+import Toast from "primevue/toast";
+
+import SchemeHierarchy from "@/arches_lingo/components/header/PageHeader/components/SchemeHierarchy/SchemeHierarchy.vue";
 
 import {
     ANONYMOUS,
@@ -43,14 +47,33 @@ const toast = useToast();
 const { $gettext } = useGettext();
 
 const isNavExpanded = ref(false);
+const shouldShowHierarchy = ref(false);
 
 const schemeHierarchyKey = ref(0);
 
 const refreshSchemeHierarchy = function () {
     schemeHierarchyKey.value++;
 };
-provide("schemeHierarchyKey", schemeHierarchyKey);
 provide("refreshSchemeHierarchy", refreshSchemeHierarchy);
+
+watchEffect(() => {
+    router.beforeEach(async (to, _from, next) => {
+        try {
+            await checkUserAuthentication(to);
+            next();
+        } catch (error) {
+            if (to.name !== routeNames.root) {
+                toast.add({
+                    severity: ERROR,
+                    life: DEFAULT_ERROR_TOAST_LIFE,
+                    summary: $gettext("Login required."),
+                    detail: error instanceof Error ? error.message : undefined,
+                });
+            }
+            next({ name: routeNames.login });
+        }
+    });
+});
 
 async function checkUserAuthentication(
     to: RouteLocationNormalizedLoadedGeneric,
@@ -61,28 +84,11 @@ async function checkUserAuthentication(
     const requiresAuthentication = to.matched.some(
         (record) => record.meta.requiresAuthentication,
     );
+
     if (requiresAuthentication && userData.username === ANONYMOUS) {
         throw new Error($gettext("Authentication required."));
     }
 }
-
-router.beforeEach(async (to, _from, next) => {
-    try {
-        await checkUserAuthentication(to);
-
-        next();
-    } catch (error) {
-        if (to.name !== routeNames.root) {
-            toast.add({
-                severity: ERROR,
-                life: DEFAULT_ERROR_TOAST_LIFE,
-                summary: $gettext("Login required."),
-                detail: error instanceof Error ? error.message : undefined,
-            });
-        }
-        next({ name: routeNames.login });
-    }
-});
 </script>
 
 <template>
@@ -95,9 +101,42 @@ router.beforeEach(async (to, _from, next) => {
         <div class="main-content">
             <PageHeader
                 v-if="route.meta.shouldShowNavigation"
+                v-model="shouldShowHierarchy"
                 :is-nav-expanded="isNavExpanded"
             />
-            <RouterView :key="route.fullPath" />
+            <Splitter
+                style="height: 100%; border: none; overflow: hidden"
+                :pt="{
+                    gutter: {
+                        style: {
+                            display: shouldShowHierarchy ? 'flex' : 'none',
+                        },
+                    },
+                }"
+            >
+                <SplitterPanel
+                    v-show="shouldShowHierarchy"
+                    :size="30"
+                >
+                    <div
+                        style="
+                            height: 100%;
+                            display: flex;
+                            flex-direction: column;
+                        "
+                    >
+                        <SchemeHierarchy
+                            :key="schemeHierarchyKey"
+                            @should-show-hierarchy="
+                                shouldShowHierarchy = $event
+                            "
+                        />
+                    </div>
+                </SplitterPanel>
+                <SplitterPanel :size="70">
+                    <RouterView :key="route.fullPath" />
+                </SplitterPanel>
+            </Splitter>
         </div>
     </main>
     <Toast
@@ -112,6 +151,7 @@ router.beforeEach(async (to, _from, next) => {
 </template>
 
 <style scoped>
+@import url("arches/arches/app/media/fonts/openSans.css");
 main {
     font-family: var(--p-lingo-font-family);
     height: 100vh;
@@ -130,6 +170,8 @@ main {
 
 <!-- NOT scoped because dialog gets appended to <body> and is unreachable via scoped styles -->
 <style>
+@import url("arches/arches/app/media/fonts/openSans.css");
+.p-confirmdialog,
 .p-datepicker-panel,
 .p-tree-node-label,
 .p-toast,
@@ -139,7 +181,8 @@ main {
 .p-select-option,
 .p-select-empty-message,
 .p-multiselect-empty-message,
-.p-multiselect-option {
+.p-multiselect-option,
+.p-popover {
     font-family: var(--p-lingo-font-family) !important;
 }
 </style>

@@ -21,16 +21,16 @@ import {
     selectedLanguageKey,
     systemLanguageKey,
 } from "@/arches_lingo/constants.ts";
-import { getItemLabel } from "@/arches_component_lab/utils.ts";
+import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 import type { Language } from "@/arches_component_lab/types";
 
 const props = defineProps<{
-    data: SearchResultHierarchy[];
     componentName: string;
-    sectionTitle: string;
+    data: SearchResultHierarchy[];
     graphSlug: string;
     nodegroupAlias: string;
     resourceInstanceId: string | undefined;
+    sectionTitle: string;
     schemeId?: string;
 }>();
 const { $gettext } = useGettext();
@@ -134,14 +134,31 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
             <h2>{{ props.sectionTitle }}</h2>
 
             <Button
-                class="add-button"
-                style="min-width: 15rem"
+                v-tooltip.top="{
+                    disabled: Boolean(props.resourceInstanceId),
+                    value: $gettext(
+                        'Create a Concept Label before adding hierarchical parents',
+                    ),
+                    showDelay: 300,
+                    pt: {
+                        text: {
+                            style: { fontFamily: 'var(--p-lingo-font-family)' },
+                        },
+                        arrow: { style: { display: 'none' } },
+                    },
+                }"
+                :disabled="Boolean(!props.resourceInstanceId)"
                 :label="$gettext('Add Hierarchical Parent')"
+                class="add-button wide"
+                icon="pi pi-plus-circle"
                 @click="openEditor!(props.componentName)"
             ></Button>
         </div>
 
-        <div style="overflow-x: auto">
+        <div
+            v-if="props.data.length"
+            style="overflow-x: auto"
+        >
             <div class="lineage-section">
                 <div
                     v-for="(hierarchy, index) in props.data"
@@ -209,6 +226,16 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
                 </div>
             </div>
         </div>
+        <div
+            v-else
+            style="
+                padding-top: 0.5rem;
+                font-size: var(--p-lingo-font-size-smallnormal);
+                color: var(--p-inputtext-placeholder-color);
+            "
+        >
+            {{ $gettext("No hierarchical parents were found.") }}
+        </div>
     </div>
 </template>
 
@@ -231,7 +258,7 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
     display: flex;
     height: 100%;
     align-items: center;
-    min-height: 2.5rem;
+    min-height: 2rem;
     white-space: nowrap;
 }
 </style>

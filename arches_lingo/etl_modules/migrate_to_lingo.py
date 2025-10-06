@@ -30,6 +30,16 @@ from arches_lingo.const import (
     CLASSIFICATION_STATUS_ASSIGNMENT_TYPE_NODEID,
     CLASSIFICATION_STATUS_TIMESPAN_END_OF_END_NODEID,
     CLASSIFICATION_STATUS_TIMESPAN_BEGIN_OF_BEGIN_NODEID,
+    RELATION_STATUS_NODEGROUP,
+    RELATION_STATUS_ASCRIBED_COMPARATE_NODEID,
+    RELATION_STATUS_ASCRIBED_RELATION_NODEID,
+    RELATION_STATUS_STATUS_NODEID,
+    RELATION_STATUS_STATUS_METATYPE_NODEID,
+    RELATION_STATUS_TIMESPAN_BEGIN_OF_THE_BEGIN_NODEID,
+    RELATION_STATUS_TIMESPAN_END_OF_THE_END_NODEID,
+    RELATION_STATUS_DATA_ASSIGNMENT_ACTOR_NODEID,
+    RELATION_STATUS_DATA_ASSIGNMENT_OBJECT_USED_NODEID,
+    RELATION_STATUS_DATA_ASSIGNMENT_TYPE_NODEID,
     CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID,
 )
 
@@ -429,7 +439,7 @@ class RDMMtoLingoMigrator(BaseImportModule):
                 uuid_generate_v4() as tileid,
                 true as passes_validation,
                 0 as nodegroup_depth,
-                'Scheme: top_concept_of' as source_description,
+                'Concept: narrower' as source_description,
                 %s::uuid as loadid,
                 %s::uuid as nodegroupid,
                 'insert' as operation,
@@ -452,6 +462,72 @@ class RDMMtoLingoMigrator(BaseImportModule):
                 CLASSIFICATION_STATUS_TIMESPAN_BEGIN_OF_BEGIN_NODEID,
                 loadid,
                 CLASSIFICATION_STATUS_NODEGROUP,
+                concepts_to_migrate,
+            ),
+        )
+
+        # Create related relationships (derived from relations with 'related' relationtype)
+        # Related relationships are modeled with conceptidfrom as the source and conceptidto as the target
+        # In Lingo, this relationship is stored on the source (conceptidfrom), pointing to the target (conceptidto)
+        cursor.execute(
+            """
+           insert into load_staging(
+                value,
+                resourceid,
+                tileid,
+                passes_validation,
+                nodegroup_depth,
+                source_description,
+                loadid,
+                nodegroupid,
+                operation,
+                sortorder
+            )
+            select 
+                json_build_object(%s::uuid,
+                    json_build_object(
+                        'notes', '',
+                        'valid', true,
+                        'value', json_build_array(json_build_object('resourceId', conceptidto, 'ontologyProperty', '', 'resourceXresourceId', '', 'inverseOntologyProperty', '')),
+                        'source', conceptidto,
+                        'datatype', 'resource-instance-list'
+                    ),
+                    %s, null,
+                    %s, null,
+                    %s, null,
+                    %s, null,
+                    %s, null,
+                    %s, null,
+                    %s, null,
+                    %s, null
+                ) as value,
+                conceptidfrom as resourceinstanceid,
+                uuid_generate_v4() as tileid,
+                true as passes_validation,
+                0 as nodegroup_depth,
+                'Concept: related' as source_description,
+                %s::uuid as loadid,
+                %s::uuid as nodegroupid,
+                'insert' as operation,
+                (rank() over (partition by conceptidto order by v.value)-1) as sortorter
+            from relations r
+            left join values v on r.conceptidto = v.conceptid
+            where relationtype = 'related'
+                and v.valuetype = 'prefLabel'
+                and conceptidfrom = ANY(%s);
+        """,
+            (
+                RELATION_STATUS_ASCRIBED_COMPARATE_NODEID,
+                RELATION_STATUS_ASCRIBED_RELATION_NODEID,
+                RELATION_STATUS_STATUS_NODEID,
+                RELATION_STATUS_STATUS_METATYPE_NODEID,
+                RELATION_STATUS_TIMESPAN_BEGIN_OF_THE_BEGIN_NODEID,
+                RELATION_STATUS_TIMESPAN_END_OF_THE_END_NODEID,
+                RELATION_STATUS_DATA_ASSIGNMENT_ACTOR_NODEID,
+                RELATION_STATUS_DATA_ASSIGNMENT_OBJECT_USED_NODEID,
+                RELATION_STATUS_DATA_ASSIGNMENT_TYPE_NODEID,
+                loadid,
+                RELATION_STATUS_NODEGROUP,
                 concepts_to_migrate,
             ),
         )

@@ -114,11 +114,9 @@ class ConceptResourceView(ConceptTreeView):
         if not concept_ids:
             if scheme:
                 if exclude == "true":
-                    concept_query = Concept.exclude(
-                        part_of_scheme__0__resourceId=scheme
-                    )
+                    concept_query = Concept.exclude(part_of_scheme__id=scheme)
                 else:
-                    concept_query = Concept.filter(part_of_scheme__0__resourceId=scheme)
+                    concept_query = Concept.filter(part_of_scheme__id=scheme)
             else:
                 concept_query = Concept.all()
 
@@ -169,7 +167,7 @@ class ConceptRelationshipView(ConceptTreeView):
 
         return_data = {
             "scheme_id": concept.aliased_data.part_of_scheme.aliased_data.part_of_scheme[
-                "interchange_value"
+                "node_value"
             ],
             "data": [],
         }
@@ -184,14 +182,14 @@ class ConceptRelationshipView(ConceptTreeView):
             if relationship_type == "associated":
                 related_concept_resourceid = (
                     relationship.aliased_data.relation_status_ascribed_comparate[
-                        "interchange_value"
-                    ][0]["resource_id"]
+                        "node_value"
+                    ][0]["resourceId"]
                 )
             elif relationship_type == "matched":
                 related_concept_resourceid = (
                     relationship.aliased_data.match_status_ascribed_comparate[
-                        "interchange_value"
-                    ][0]["resource_id"]
+                        "node_value"
+                    ][0]["resourceId"]
                 )
 
             related_concept = Concept.get(pk=related_concept_resourceid)

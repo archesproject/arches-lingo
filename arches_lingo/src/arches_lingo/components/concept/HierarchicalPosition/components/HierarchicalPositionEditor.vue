@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { computed, inject, ref, useTemplateRef, watch } from "vue";
+import { inject, ref, useTemplateRef, watch } from "vue";
+import { useGettext } from "vue3-gettext";
 
 import { useRouter } from "vue-router";
 import { Form } from "@primevue/forms";
 
 import Skeleton from "primevue/skeleton";
 
-import ResourceInstanceSelectWidget from "@/arches_component_lab/widgets/ResourceInstanceSelectWidget/ResourceInstanceSelectWidget.vue";
+import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
 
 import { createLingoResource, upsertLingoTile } from "@/arches_lingo/api.ts";
 import { EDIT } from "@/arches_lingo/constants.ts";
@@ -14,7 +15,8 @@ import { EDIT } from "@/arches_lingo/constants.ts";
 import type { Component, Ref } from "vue";
 import type { FormSubmitEvent } from "@primevue/forms";
 import type { ConceptClassificationStatus } from "@/arches_lingo/types.ts";
-import type { ResourceInstanceReference } from "@/arches_component_lab/widgets/types.ts";
+
+const { $gettext } = useGettext();
 
 const props = defineProps<{
     tileData: ConceptClassificationStatus | undefined;
@@ -27,6 +29,7 @@ const props = defineProps<{
     resourceInstanceId: string | undefined;
     tileId?: string;
 }>();
+
 const router = useRouter();
 
 const componentEditorFormRef = inject<Ref<Component | null>>(
@@ -44,22 +47,6 @@ const refreshSchemeHierarchy = inject<() => void>("refreshSchemeHierarchy");
 const formRef = useTemplateRef("form");
 const isSaving = ref(false);
 
-// this is a workaround to make ResourceInstanceSelectWidget work
-const computedValue = computed(() => {
-    if (
-        props.tileData?.aliased_data
-            .classification_status_ascribed_classification?.interchange_value
-    ) {
-        return {
-            resource_id:
-                props.tileData.aliased_data
-                    .classification_status_ascribed_classification
-                    .interchange_value,
-        } as ResourceInstanceReference;
-    }
-    return null;
-});
-
 watch(
     () => formRef.value,
     (formComponent) => (componentEditorFormRef!.value = formComponent),
@@ -70,7 +57,17 @@ async function save(e: FormSubmitEvent) {
 
     try {
         const formData = e.values;
-        console.log(props.resourceInstanceId, formData);
+
+        const aliasedTileData = props.tileData?.aliased_data || {};
+
+        const updatedTileData = {
+            ...aliasedTileData,
+            ...Object.fromEntries(
+                Object.entries(formData).filter(
+                    ([key]) => key in aliasedTileData,
+                ),
+            ),
+        };
 
         let updatedTileId;
 
@@ -78,7 +75,7 @@ async function save(e: FormSubmitEvent) {
             const updatedConcept = await createLingoResource(
                 {
                     aliased_data: {
-                        [props.nodegroupAlias]: [formData],
+                        [props.nodegroupAlias]: [updatedTileData],
                     },
                 },
                 props.graphSlug,
@@ -95,16 +92,17 @@ async function save(e: FormSubmitEvent) {
             let values;
             if (
                 formData.classification_status_ascribed_classification
-                    .resource_id == props.schemeId
+                    .node_value.resourceId == props.schemeId
             ) {
                 nodegroupAlias = "top_concept_of";
                 values = {
                     top_concept_of:
-                        formData.classification_status_ascribed_classification,
+                        formData.classification_status_ascribed_classification
+                            .node_value,
                 };
             } else {
                 nodegroupAlias = props.nodegroupAlias;
-                values = formData;
+                values = updatedTileData;
             }
 
             const updatedConcept = await upsertLingoTile(
@@ -133,22 +131,33 @@ async function save(e: FormSubmitEvent) {
 <template>
     <Skeleton
         v-if="isSaving"
-        style="width: 100%"
+        style="width: 100%; height: 100%"
     />
 
     <div v-else>
-        <h3>{{ props.sectionTitle }}</h3>
+        <div class="form-header">
+            <h3>{{ props.sectionTitle }}</h3>
+            <div class="form-description">
+                {{ $gettext("Identify this concept's parent(s).") }}
+            </div>
+        </div>
 
-        <Form
-            ref="form"
-            @submit="save"
-        >
-            <ResourceInstanceSelectWidget
-                :graph-slug="props.graphSlug"
-                node-alias="classification_status_ascribed_classification"
-                :value="computedValue"
-                :mode="EDIT"
-            />
-        </Form>
+        <div class="form-container">
+            <Form
+                ref="form"
+                @submit="save"
+            >
+                <GenericWidget
+                    :graph-slug="props.graphSlug"
+                    node-alias="classification_status_ascribed_classification"
+                    :aliased-node-data="
+                        props.tileData?.aliased_data
+                            .classification_status_ascribed_classification
+                    "
+                    :mode="EDIT"
+                    class="widget-container column"
+                />
+            </Form>
+        </div>
     </div>
 </template>

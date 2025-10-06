@@ -1,14 +1,15 @@
 import type { Component, Ref } from "vue";
 import type { MenuItem } from "primevue/menuitem";
 import type { TreeNode } from "primevue/treenode";
-import type { Label } from "@/arches_component_lab/types.ts";
 import type { EDIT, VIEW } from "@/arches_lingo/constants.ts";
-import type { ReferenceSelectFetchedOption } from "@/arches_controlled_lists/widgets/types.ts";
-import type {
-    ResourceInstanceReference,
-    FileReference,
-    URLDatatype,
-} from "@/arches_component_lab/widgets/types.ts";
+
+import type { ReferenceSelectTreeNode } from "@/arches_controlled_lists/datatypes/reference-select/types.ts";
+import type { Label } from "@/arches_controlled_lists/types.ts";
+
+import type { StringValue } from "@/arches_component_lab/datatypes/string/types.ts";
+import type { ResourceInstanceListValue } from "@/arches_component_lab/datatypes/resource-instance-list/types.ts";
+import type { FileListValue } from "@/arches_component_lab/datatypes/file-list/types.ts";
+import type { URLValue } from "@/arches_component_lab/datatypes/url/types.ts";
 
 export interface User {
     first_name: string;
@@ -47,7 +48,7 @@ export interface Scheme {
 export interface ControlledListResult {
     id: string;
     name: string;
-    items: ReferenceSelectFetchedOption[];
+    items: ReferenceSelectTreeNode[];
 }
 
 export interface ControlledListItemLabelValue {
@@ -112,59 +113,44 @@ export interface ResourceData<T extends AliasedData = AliasedData> {
     aliased_data: T;
 }
 
-interface QuerysetsString {
-    display_value: string;
-    interchange_value: string;
-}
-
 interface QuerysetsReferenceSelectFetchedOption {
     display_value: string;
-    interchange_value: ReferenceSelectFetchedOption[];
-}
-
-interface QuerysetsResourceInstanceReference {
-    display_value: string;
-    interchange_value: ResourceInstanceReference[];
+    node_value: ReferenceSelectTreeNode[];
 }
 
 export interface AppellativeStatusAliases extends AliasedData {
-    appellative_status_ascribed_name_content: QuerysetsString;
+    appellative_status_ascribed_name_content: StringValue;
     appellative_status_ascribed_name_language?: QuerysetsReferenceSelectFetchedOption;
     appellative_status_ascribed_relation?: QuerysetsReferenceSelectFetchedOption;
     appellative_status_status_metatype?: QuerysetsReferenceSelectFetchedOption;
     appellative_status_status?: QuerysetsReferenceSelectFetchedOption;
-    appellative_status_data_assignment_object_used: QuerysetsResourceInstanceReference;
-    appellative_status_data_assignment_actor: QuerysetsResourceInstanceReference;
+    appellative_status_data_assignment_object_used: ResourceInstanceListValue;
+    appellative_status_data_assignment_actor: ResourceInstanceListValue;
     appellative_status_data_assignment_type: QuerysetsReferenceSelectFetchedOption;
-    appellative_status_timespan_begin_of_the_begin: QuerysetsString;
-    appellative_status_timespan_end_of_the_end: QuerysetsString;
+    appellative_status_timespan_begin_of_the_begin: StringValue;
+    appellative_status_timespan_end_of_the_end: StringValue;
 }
 
 export interface ConceptNameAlises extends AliasedData {
-    name: QuerysetsString;
+    name: StringValue;
 }
 
 export type ConceptName = TileData<ConceptNameAlises>;
 
-interface QuerysetsFileReference {
-    display_value: string;
-    interchange_value: FileReference[];
-}
-
 export interface DigitalObjectContentAliases extends AliasedData {
-    content: QuerysetsFileReference[];
+    content: FileListValue[];
 }
 
 export type DigitalObjectContent = TileData<DigitalObjectContentAliases>;
 
 export interface ConceptImagesAliases extends AliasedData {
-    depicting_digital_asset_internal: QuerysetsResourceInstanceReference;
+    depicting_digital_asset_internal: ResourceInstanceListValue;
 }
 
 export type ConceptImages = TileData<ConceptImagesAliases>;
 
 export interface DigitalObjectNameAliases extends AliasedData {
-    name_content: QuerysetsString;
+    name_content: StringValue;
 }
 
 export type DigitalObjectName = TileData<DigitalObjectNameAliases>;
@@ -180,79 +166,79 @@ export type DigitalObjectInstance = ResourceData<DigitalObjectInstanceAliases>;
 export type AppellativeStatus = TileData<AppellativeStatusAliases>;
 
 export interface ConceptStatementAliases extends AliasedData {
-    statement_content: QuerysetsString;
+    statement_content: StringValue;
     statement_language?: QuerysetsReferenceSelectFetchedOption;
     statement_type?: QuerysetsReferenceSelectFetchedOption;
     statement_type_metatype?: QuerysetsReferenceSelectFetchedOption;
-    statement_data_assignment_object_used?: QuerysetsResourceInstanceReference;
-    statement_data_assignment_actor?: QuerysetsResourceInstanceReference;
+    statement_data_assignment_object_used?: ResourceInstanceListValue;
+    statement_data_assignment_actor?: ResourceInstanceListValue;
     statement_data_assignment_type?: QuerysetsReferenceSelectFetchedOption;
-    statement_data_assignment_timespan_begin_of_the_begin?: QuerysetsString | null;
-    statement_data_assignment_timespan_end_of_the_end?: QuerysetsString | null;
+    statement_data_assignment_timespan_begin_of_the_begin?: StringValue | null;
+    statement_data_assignment_timespan_end_of_the_end?: StringValue | null;
 }
 
 export type ConceptStatement = TileData<ConceptStatementAliases>;
 
 export interface ConceptRelationAliases extends AliasedData {
-    relation_status_ascribed_comparate: ResourceInstanceReference[];
-    relation_status_ascribed_relation: ReferenceSelectFetchedOption[];
-    relation_status_status: ReferenceSelectFetchedOption[];
-    relation_status_status_metatype: ReferenceSelectFetchedOption[];
+    relation_status_ascribed_comparate: ResourceInstanceListValue;
+    relation_status_ascribed_relation: ReferenceSelectTreeNode[];
+    relation_status_status: ReferenceSelectTreeNode[];
+    relation_status_status_metatype: ReferenceSelectTreeNode[];
     relation_status_timespan_begin_of_the_begin: string;
     relation_status_timespan_end_of_the_end: string;
-    relation_status_data_assignment_actor: ResourceInstanceReference[];
-    relation_status_data_assignment_object_used: ResourceInstanceReference[];
-    relation_status_data_assignment_type: ReferenceSelectFetchedOption[];
+    relation_status_data_assignment_actor: ResourceInstanceListValue;
+    relation_status_data_assignment_object_used: ResourceInstanceListValue;
+    relation_status_data_assignment_type: ReferenceSelectTreeNode[];
 }
 
 export type ConceptRelationStatus = TileData<ConceptRelationAliases>;
 
 export interface ConceptMatchAliases extends AliasedData {
-    match_status_ascribed_comparate: ResourceInstanceReference[];
-    match_status_ascribed_relation: ReferenceSelectFetchedOption[];
-    match_status_status: ReferenceSelectFetchedOption[];
-    match_status_status_metatype: ReferenceSelectFetchedOption[];
+    match_status_ascribed_comparate: ResourceInstanceListValue;
+    match_status_ascribed_relation: ReferenceSelectTreeNode[];
+    match_status_status: ReferenceSelectTreeNode[];
+    match_status_status_metatype: ReferenceSelectTreeNode[];
     match_status_timespan_begin_of_the_begin: string;
     match_status_timespan_end_of_the_end: string;
-    match_status_data_assignment_actor: ResourceInstanceReference[];
-    match_status_data_assignment_object_used: ResourceInstanceReference[];
-    match_status_data_assignment_type: ReferenceSelectFetchedOption[];
-    uri: URLDatatype;
+    match_status_data_assignment_actor: ResourceInstanceListValue;
+    match_status_data_assignment_object_used: ResourceInstanceListValue;
+    match_status_data_assignment_type: ReferenceSelectTreeNode[];
+    uri: URLValue;
 }
 
 export type ConceptMatchStatus = TileData<ConceptMatchAliases>;
 
 export interface ConceptClassificationStatusAliases extends AliasedData {
-    classification_status_ascribed_classification: ResourceInstanceReference[];
-    classification_status_ascribed_relation: ReferenceSelectFetchedOption[];
-    classification_status_data_assignment_actor: ResourceInstanceReference[];
-    classification_status_data_assignment_object_used: ResourceInstanceReference[];
-    classification_status_data_assignment_type: ReferenceSelectFetchedOption[];
+    classification_status_ascribed_classification: ResourceInstanceListValue;
+    classification_status_ascribed_relation: ReferenceSelectTreeNode[];
+    classification_status_data_assignment_actor: ResourceInstanceListValue;
+    classification_status_data_assignment_object_used: ResourceInstanceListValue;
+    classification_status_data_assignment_type: ReferenceSelectTreeNode[];
     classification_status_timespan_begin_of_the_begin: string;
     classification_status_timespan_end_of_the_end: string;
-    classification_status_type: ReferenceSelectFetchedOption[];
-    classification_status_type_metatype: ReferenceSelectFetchedOption[];
+    classification_status_type: ReferenceSelectTreeNode[];
+    classification_status_type_metatype: ReferenceSelectTreeNode[];
 }
 
 export type ConceptClassificationStatus =
     TileData<ConceptClassificationStatusAliases>;
 
 export interface SchemeStatementAliases extends AliasedData {
-    statement_content_n1: QuerysetsString;
+    statement_content_n1: StringValue;
     statement_language_n1?: QuerysetsReferenceSelectFetchedOption;
     statement_type_n1?: QuerysetsReferenceSelectFetchedOption;
     statement_type_metatype_n1?: QuerysetsReferenceSelectFetchedOption;
-    statement_data_assignment_object_used?: QuerysetsResourceInstanceReference;
-    statement_data_assignment_actor?: QuerysetsResourceInstanceReference;
+    statement_data_assignment_object_used?: ResourceInstanceListValue;
+    statement_data_assignment_actor?: ResourceInstanceListValue;
     statement_data_assignment_type?: QuerysetsReferenceSelectFetchedOption;
-    statement_data_assignment_timespan_begin_of_the_begin?: QuerysetsString | null;
-    statement_data_assignment_timespan_end_of_the_end?: QuerysetsString | null;
+    statement_data_assignment_timespan_begin_of_the_begin?: StringValue | null;
+    statement_data_assignment_timespan_end_of_the_end?: StringValue | null;
 }
 
 export type SchemeStatement = TileData<SchemeStatementAliases>;
 
 export interface SchemeRightsAliases extends TileData {
-    right_holder?: QuerysetsResourceInstanceReference;
+    right_holder?: ResourceInstanceListValue;
     right_type?: QuerysetsReferenceSelectFetchedOption;
     right_statement?: SchemeRightStatement;
 }
@@ -260,8 +246,8 @@ export interface SchemeRightsAliases extends TileData {
 export type SchemeRights = TileData<SchemeRightsAliases>;
 
 export interface SchemeRightStatementAliases extends AliasedData {
-    right_statement_content?: QuerysetsString;
-    right_statement_label?: QuerysetsString;
+    right_statement_content?: StringValue;
+    right_statement_label?: StringValue;
     right_statement_language?: QuerysetsReferenceSelectFetchedOption;
     right_statement_type?: QuerysetsReferenceSelectFetchedOption;
     right_statement_type_metatype?: QuerysetsReferenceSelectFetchedOption;
@@ -270,14 +256,14 @@ export interface SchemeRightStatementAliases extends AliasedData {
 export type SchemeRightStatement = TileData<SchemeRightStatementAliases>;
 
 export interface SchemeNamespaceAliases extends AliasedData {
-    namespace_name: QuerysetsString;
+    namespace_name: StringValue;
     namespace_type: QuerysetsReferenceSelectFetchedOption;
 }
 
 export type SchemeNamespace = TileData<SchemeNamespaceAliases>;
 
 export interface SchemeCreationAliases extends AliasedData {
-    creation_sources: QuerysetsResourceInstanceReference;
+    creation_sources: ResourceInstanceListValue;
 }
 
 export type SchemeCreation = TileData<SchemeCreationAliases>;
@@ -293,13 +279,13 @@ export interface ConceptInstance {
 
 export interface ConceptClassificationStatusAliases extends AliasedData {
     aliased_data: {
-        classification_status_ascribed_classification?: QuerysetsResourceInstanceReference;
+        classification_status_ascribed_classification?: ResourceInstanceListValue;
         classification_status_ascribed_relation?: QuerysetsReferenceSelectFetchedOption;
-        classification_status_data_assignment_actor?: QuerysetsResourceInstanceReference;
-        classification_status_data_assignment_object_used?: QuerysetsResourceInstanceReference;
+        classification_status_data_assignment_actor?: ResourceInstanceListValue;
+        classification_status_data_assignment_object_used?: ResourceInstanceListValue;
         classification_status_data_assignment_type?: QuerysetsReferenceSelectFetchedOption;
-        classification_status_timespan_end_of_the_end?: QuerysetsString | null;
-        classification_status_timespan_begin_of_the_begin?: QuerysetsString | null;
+        classification_status_timespan_end_of_the_end?: StringValue | null;
+        classification_status_timespan_begin_of_the_begin?: StringValue | null;
         classification_status_type?: QuerysetsReferenceSelectFetchedOption;
         classification_status_type_metatype?: QuerysetsReferenceSelectFetchedOption;
     };
@@ -311,10 +297,10 @@ export interface ConceptHeaderData {
     descriptor?: ResourceDescriptor;
     principalUser?: number | string;
     lifeCycleState: string;
-    partOfScheme?: ResourceInstanceReference;
-    parentConcepts?: ResourceInstanceReference[];
-    type?: ReferenceSelectFetchedOption[];
-    status?: ReferenceSelectFetchedOption[];
+    partOfScheme?: ResourceInstanceListValue;
+    parentConcepts?: ResourceInstanceListValue[];
+    type?: ReferenceSelectTreeNode[];
+    status?: ReferenceSelectTreeNode[];
 }
 
 export interface SchemeHeader {

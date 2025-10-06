@@ -884,7 +884,7 @@
                             "en": "Enter text"
                         },
                         "uneditable": false,
-                        "width": "100%%"
+                        "width": "100%"
                     },
                     "id": "7131cd3e-11e0-11ef-9493-0a58a9feac02",
                     "label": {
@@ -1092,7 +1092,7 @@
                             "en": "Enter text"
                         },
                         "uneditable": false,
-                        "width": "100%%"
+                        "width": "100%"
                     },
                     "id": "87fac840-423c-11ee-8a8d-11afefc4bff7",
                     "label": {
@@ -1159,12 +1159,7 @@
                 {
                     "card_id": "8e34b481-423c-11ee-8a8d-11afefc4bff7",
                     "config": {
-                        "defaultValue": {
-                            "en": {
-                                "direction": "ltr",
-                                "value": ""
-                            }
-                        },
+                        "defaultValue": "",
                         "i18n_properties": [
                             "placeholder"
                         ],
@@ -1184,7 +1179,7 @@
                     "sortorder": 0,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "10000000-0000-0000-0000-000000000001"
+                    "widget_id": "46ef064b-2611-4708-9f52-60136bd8a65b"
                 },
                 {
                     "card_id": "8e34b481-423c-11ee-8a8d-11afefc4bff7",
@@ -1418,7 +1413,7 @@
                             "en": "Enter text"
                         },
                         "uneditable": false,
-                        "width": "100%%"
+                        "width": "100%"
                     },
                     "id": "ef87b84e-11de-11ef-9493-0a58a9feac02",
                     "label": {
@@ -3160,7 +3155,7 @@
                 {
                     "alias": "identifier_content",
                     "config": {},
-                    "datatype": "string",
+                    "datatype": "non-localized-string",
                     "description": "* Collection_id: LAP.2_Identifier\n* Field_id: LAF.10_identifier_content\n* Category_id: CAT.1_Names_and_Classifications",
                     "exportable": false,
                     "fieldname": null,

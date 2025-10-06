@@ -161,8 +161,12 @@ UPLOADED_FILES_DIR = "uploadedfiles"
 
 chars = "abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)"
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = get_optional_env_variable(
-    "ARCHES_SECRET_KEY", "django-insecure-" + get_random_string(50, chars)
+SECRET_KEY = (
+    "debug"
+    if DEBUG
+    else get_optional_env_variable(
+        "ARCHES_SECRET_KEY", "django-insecure-" + get_random_string(50, chars)
+    )
 )
 
 ROOT_URLCONF = "arches_lingo.urls"
@@ -233,6 +237,7 @@ INSTALLED_APPS = (
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
+    "django.contrib.postgres",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
@@ -551,17 +556,6 @@ SHOW_LANGUAGE_SWITCH = len(LANGUAGES) > 1
 
 # TODO: remove when finalizing release
 SILENCED_SYSTEM_CHECKS += ["arches.E002"]
-
-REST_FRAMEWORK = {
-    # TODO: choose most appropriate default.
-    # Use Django's standard `django.contrib.auth` permissions,
-    # or allow read-only access for unauthenticated users.
-    "DEFAULT_PERMISSION_CLASSES": [
-        "rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly"
-    ],
-    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
-    "PAGE_SIZE": API_MAX_PAGE_SIZE,
-}
 
 REFERENCES_INDEX_NAME = "references"
 ELASTICSEARCH_CUSTOM_INDEXES = [

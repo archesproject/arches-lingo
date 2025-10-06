@@ -1,17 +1,23 @@
 <script setup lang="ts">
 import { inject, ref, useTemplateRef, watch } from "vue";
 
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
+import { useGettext } from "vue3-gettext";
+import { useToast } from "primevue/usetoast";
+
 import { Form } from "@primevue/forms";
 
 import Skeleton from "primevue/skeleton";
 
-import DateWidget from "@/arches_component_lab/widgets/DateWidget/DateWidget.vue";
-import ReferenceSelectWidget from "@/arches_controlled_lists/widgets/ReferenceSelectWidget/ReferenceSelectWidget.vue";
-import ResourceInstanceMultiSelectWidget from "@/arches_component_lab/widgets/ResourceInstanceMultiSelectWidget/ResourceInstanceMultiSelectWidget.vue";
+import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
 
-import { createLingoResource, upsertLingoTile } from "@/arches_lingo/api.ts";
-import { EDIT } from "@/arches_lingo/constants.ts";
+import { createOrUpdateConcept } from "@/arches_lingo/utils.ts";
+
+import {
+    DEFAULT_ERROR_TOAST_LIFE,
+    EDIT,
+    ERROR,
+} from "@/arches_lingo/constants.ts";
 
 import type { Component, Ref } from "vue";
 import type { FormSubmitEvent } from "@primevue/forms";
@@ -27,7 +33,10 @@ const props = defineProps<{
     tileId?: string;
 }>();
 
+const route = useRoute();
 const router = useRouter();
+const toast = useToast();
+const { $gettext } = useGettext();
 
 const componentEditorFormRef = inject<Ref<Component | null>>(
     "componentEditorFormRef",
@@ -49,46 +58,55 @@ watch(
 
 async function save(e: FormSubmitEvent) {
     isSaving.value = true;
+
     try {
         const formData = e.values;
 
-        let updatedTileId;
+        const aliasedTileData = props.tileData?.aliased_data || {};
 
-        if (!props.resourceInstanceId) {
-            const updatedConcept = await createLingoResource(
-                {
-                    aliased_data: {
-                        [props.nodegroupAlias]: [formData],
-                    },
-                },
-                props.graphSlug,
-            );
+        const updatedTileData = {
+            ...aliasedTileData,
+            ...Object.fromEntries(
+                Object.entries(formData).filter(
+                    ([key]) => key in aliasedTileData,
+                ),
+            ),
+        };
 
-            await router.push({
-                name: props.graphSlug,
-                params: { id: updatedConcept.resourceinstanceid },
-            });
-
-            updatedTileId = updatedConcept[props.nodegroupAlias][0].tileid;
-        } else {
-            const updatedConcept = await upsertLingoTile(
-                props.graphSlug,
-                props.nodegroupAlias,
-                {
-                    resourceinstance: props.resourceInstanceId,
-                    aliased_data: { ...formData },
-                    tileid: props.tileId,
-                },
-            );
-
-            updatedTileId = updatedConcept.tileid;
+        if (Object.hasOwn(updatedTileData, "uri")) {
+            delete (updatedTileData as { uri?: string }).uri;
         }
 
-        openEditor!(props.componentName, updatedTileId);
-    } catch (error) {
-        console.error(error);
-    } finally {
+        console.log({ updatedTileData }, { formData, aliasedTileData });
+
+        const scheme = route.query.scheme as string;
+        const parent = route.query.parent as string;
+
+        const updatedTileId = await createOrUpdateConcept(
+            updatedTileData,
+            props.graphSlug,
+            props.nodegroupAlias,
+            scheme,
+            parent,
+            router,
+            props.resourceInstanceId,
+            props.tileId,
+        );
+
+        if (updatedTileId !== props.tileId) {
+            openEditor!(props.componentName, updatedTileId);
+        }
+
         refreshReportSection!(props.componentName);
+    } catch (error) {
+        toast.add({
+            severity: ERROR,
+            life: DEFAULT_ERROR_TOAST_LIFE,
+            summary: $gettext("Failed to save data."),
+            detail: error instanceof Error ? error.message : undefined,
+        });
+    } finally {
+        isSaving.value = false;
     }
 }
 </script>
@@ -96,101 +114,116 @@ async function save(e: FormSubmitEvent) {
 <template>
     <Skeleton
         v-show="isSaving"
-        style="width: 100%"
+        style="width: 100%; height: 100%"
     />
 
     <div v-show="!isSaving">
-        <h3>{{ props.sectionTitle }}</h3>
+        <div class="form-header">
+            <h3>{{ props.sectionTitle }}</h3>
+            <div class="form-description">
+                {{
+                    $gettext(
+                        "Identify concepts in this scheme that may be associated with this concept.",
+                    )
+                }}
+            </div>
+        </div>
 
-        <Form
-            ref="form"
-            @submit="save"
-        >
-            <ResourceInstanceMultiSelectWidget
-                :graph-slug="props.graphSlug"
-                node-alias="relation_status_ascribed_comparate"
-                :value="
-                    props.tileData?.aliased_data
-                        .relation_status_ascribed_comparate?.interchange_value
-                "
-                :mode="EDIT"
-            />
-            <ReferenceSelectWidget
-                :graph-slug="props.graphSlug"
-                node-alias="relation_status_ascribed_relation"
-                :value="
-                    props.tileData?.aliased_data
-                        .relation_status_ascribed_relation?.interchange_value
-                "
-                :mode="EDIT"
-            />
-            <ReferenceSelectWidget
-                :graph-slug="props.graphSlug"
-                node-alias="relation_status_status"
-                :value="
-                    props.tileData?.aliased_data.relation_status_status
-                        ?.interchange_value
-                "
-                :mode="EDIT"
-            />
-            <ReferenceSelectWidget
-                :graph-slug="props.graphSlug"
-                node-alias="relation_status_status_metatype"
-                :value="
-                    props.tileData?.aliased_data.relation_status_status_metatype
-                        ?.interchange_value
-                "
-                :mode="EDIT"
-            />
-            <DateWidget
-                :graph-slug="props.graphSlug"
-                node-alias="relation_status_timespan_begin_of_the_begin"
-                :value="
-                    props.tileData?.aliased_data
-                        .relation_status_timespan_begin_of_the_begin
-                        ?.interchange_value
-                "
-                :mode="EDIT"
-            />
-            <DateWidget
-                :graph-slug="props.graphSlug"
-                node-alias="relation_status_timespan_end_of_the_end"
-                :value="
-                    props.tileData?.aliased_data
-                        .relation_status_timespan_end_of_the_end
-                        ?.interchange_value
-                "
-                :mode="EDIT"
-            />
-            <ResourceInstanceMultiSelectWidget
-                :graph-slug="props.graphSlug"
-                node-alias="relation_status_data_assignment_actor"
-                :value="
-                    props.tileData?.aliased_data
-                        .relation_status_data_assignment_actor
-                        ?.interchange_value
-                "
-                :mode="EDIT"
-            />
-            <ResourceInstanceMultiSelectWidget
-                :graph-slug="props.graphSlug"
-                node-alias="relation_status_data_assignment_object_used"
-                :value="
-                    props.tileData?.aliased_data
-                        .relation_status_data_assignment_object_used
-                        ?.interchange_value
-                "
-                :mode="EDIT"
-            />
-            <ReferenceSelectWidget
-                :graph-slug="props.graphSlug"
-                node-alias="relation_status_data_assignment_type"
-                :value="
-                    props.tileData?.aliased_data
-                        .relation_status_data_assignment_type?.interchange_value
-                "
-                :mode="EDIT"
-            />
-        </Form>
+        <div class="form-container">
+            <Form
+                ref="form"
+                @submit="save"
+            >
+                <GenericWidget
+                    :graph-slug="props.graphSlug"
+                    node-alias="relation_status_ascribed_comparate"
+                    :aliased-node-data="
+                        props.tileData?.aliased_data
+                            .relation_status_ascribed_comparate
+                    "
+                    :mode="EDIT"
+                    class="widget-container column"
+                />
+                <GenericWidget
+                    :graph-slug="props.graphSlug"
+                    node-alias="relation_status_ascribed_relation"
+                    :aliased-node-data="
+                        props.tileData?.aliased_data
+                            .relation_status_ascribed_relation
+                    "
+                    :mode="EDIT"
+                    class="widget-container column"
+                />
+                <GenericWidget
+                    :graph-slug="props.graphSlug"
+                    node-alias="relation_status_status"
+                    :aliased-node-data="
+                        props.tileData?.aliased_data.relation_status_status
+                    "
+                    :mode="EDIT"
+                    class="widget-container column"
+                />
+                <GenericWidget
+                    :graph-slug="props.graphSlug"
+                    node-alias="relation_status_status_metatype"
+                    :aliased-node-data="
+                        props.tileData?.aliased_data
+                            .relation_status_status_metatype
+                    "
+                    :mode="EDIT"
+                    class="widget-container column"
+                />
+                <div class="widget-container">
+                    <GenericWidget
+                        :graph-slug="props.graphSlug"
+                        node-alias="relation_status_timespan_begin_of_the_begin"
+                        :aliased-node-data="
+                            props.tileData?.aliased_data
+                                .relation_status_timespan_begin_of_the_begin
+                        "
+                        :mode="EDIT"
+                    />
+                    <GenericWidget
+                        :graph-slug="props.graphSlug"
+                        node-alias="relation_status_timespan_end_of_the_end"
+                        :aliased-node-data="
+                            props.tileData?.aliased_data
+                                .relation_status_timespan_end_of_the_end
+                        "
+                        :mode="EDIT"
+                    />
+                </div>
+                <GenericWidget
+                    :graph-slug="props.graphSlug"
+                    node-alias="relation_status_data_assignment_actor"
+                    :aliased-node-data="
+                        props.tileData?.aliased_data
+                            .relation_status_data_assignment_actor
+                    "
+                    :mode="EDIT"
+                    class="widget-container column"
+                />
+                <GenericWidget
+                    :graph-slug="props.graphSlug"
+                    node-alias="relation_status_data_assignment_object_used"
+                    :aliased-node-data="
+                        props.tileData?.aliased_data
+                            .relation_status_data_assignment_object_used
+                    "
+                    :mode="EDIT"
+                    class="widget-container column"
+                />
+                <GenericWidget
+                    :graph-slug="props.graphSlug"
+                    node-alias="relation_status_data_assignment_type"
+                    :aliased-node-data="
+                        props.tileData?.aliased_data
+                            .relation_status_data_assignment_type
+                    "
+                    :mode="EDIT"
+                    class="widget-container column"
+                />
+            </Form>
+        </div>
     </div>
 </template>

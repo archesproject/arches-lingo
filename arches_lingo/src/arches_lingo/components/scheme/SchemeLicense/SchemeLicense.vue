@@ -9,6 +9,7 @@ import SchemeLicenseEditor from "@/arches_lingo/components/scheme/SchemeLicense/
 
 import { EDIT, VIEW } from "@/arches_lingo/constants.ts";
 
+import { fetchTileData } from "@/arches_component_lab/generics/GenericCard/api.ts";
 import { fetchLingoResourcePartial } from "@/arches_lingo/api.ts";
 
 import type { DataComponentMode, SchemeRights } from "@/arches_lingo/types";
@@ -36,6 +37,12 @@ onMounted(async () => {
     ) {
         const sectionValue = await getSectionValue();
         tileData.value = sectionValue.aliased_data[props.nodegroupAlias];
+    } else if (shouldCreateNewTile) {
+        const blankTileData = await fetchTileData(
+            props.graphSlug,
+            props.nodegroupAlias,
+        );
+        tileData.value = blankTileData as unknown as SchemeRights;
     }
     isLoading.value = false;
 });
@@ -68,19 +75,20 @@ async function getSectionValue() {
     <template v-else>
         <SchemeLicenseViewer
             v-if="mode === VIEW"
-            :tile-data="tileData"
             :component-name="props.componentName"
             :graph-slug="props.graphSlug"
+            :resource-instance-id="props.resourceInstanceId"
             :section-title="props.sectionTitle"
+            :tile-data="tileData"
         />
         <SchemeLicenseEditor
             v-else-if="mode === EDIT"
-            :tile-data="shouldCreateNewTile ? undefined : tileData"
-            :section-title="props.sectionTitle"
-            :graph-slug="props.graphSlug"
             :component-name="props.componentName"
-            :resource-instance-id="props.resourceInstanceId"
+            :graph-slug="props.graphSlug"
             :nodegroup-alias="props.nodegroupAlias"
+            :resource-instance-id="props.resourceInstanceId"
+            :section-title="props.sectionTitle"
+            :tile-data="tileData"
             :tile-id="props.tileId"
         />
     </template>

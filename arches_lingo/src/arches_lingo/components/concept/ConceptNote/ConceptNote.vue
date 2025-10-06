@@ -9,6 +9,7 @@ import ConceptNoteViewer from "@/arches_lingo/components/concept/ConceptNote/com
 
 import { EDIT, VIEW } from "@/arches_lingo/constants.ts";
 
+import { fetchTileData } from "@/arches_component_lab/generics/GenericCard/api.ts";
 import { fetchLingoResourcePartial } from "@/arches_lingo/api.ts";
 
 import type {
@@ -39,6 +40,12 @@ onMounted(async () => {
     ) {
         const sectionValue = await getSectionValue();
         tileData.value = sectionValue.aliased_data[props.nodegroupAlias];
+    } else if (shouldCreateNewTile) {
+        const blankTileData = await fetchTileData(
+            props.graphSlug,
+            props.nodegroupAlias,
+        );
+        tileData.value = [blankTileData as unknown as ConceptStatement];
     }
     isLoading.value = false;
 });
@@ -71,22 +78,29 @@ async function getSectionValue() {
     <template v-else>
         <ConceptNoteViewer
             v-if="mode === VIEW"
-            :tile-data="tileData"
-            :graph-slug="props.graphSlug"
             :component-name="props.componentName"
-            :section-title="props.sectionTitle"
+            :graph-slug="props.graphSlug"
             :nodegroup-alias="props.nodegroupAlias"
+            :section-title="props.sectionTitle"
+            :resource-instance-id="props.resourceInstanceId"
+            :tile-data="tileData"
         />
         <ConceptNoteEditor
             v-else-if="mode === EDIT"
-            :tile-data="
-                tileData.find((tileDatum) => tileDatum.tileid === props.tileId)
-            "
             :component-name="props.componentName"
-            :section-title="props.sectionTitle"
             :graph-slug="props.graphSlug"
             :nodegroup-alias="props.nodegroupAlias"
             :resource-instance-id="props.resourceInstanceId"
+            :section-title="props.sectionTitle"
+            :tile-data="
+                tileData.find((tileDatum) => {
+                    if (shouldCreateNewTile) {
+                        return !tileDatum.tileid;
+                    }
+
+                    return tileDatum.tileid === props.tileId;
+                })
+            "
             :tile-id="props.tileId"
         />
     </template>

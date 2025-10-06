@@ -9,6 +9,7 @@ import ConceptImagesViewer from "@/arches_lingo/components/concept/ConceptImages
 
 import { EDIT, VIEW } from "@/arches_lingo/constants.ts";
 
+import { fetchTileData } from "@/arches_component_lab/generics/GenericCard/api.ts";
 import { fetchLingoResourcePartial } from "@/arches_lingo/api.ts";
 
 import type { ConceptImages, DataComponentMode } from "@/arches_lingo/types.ts";
@@ -36,8 +37,13 @@ onMounted(async () => {
     ) {
         const sectionValue = await getSectionValue();
         tileData.value = sectionValue.aliased_data[props.nodegroupAlias];
+    } else if (shouldCreateNewTile) {
+        const blankTileData = await fetchTileData(
+            props.graphSlug,
+            props.nodegroupAlias,
+        );
+        tileData.value = blankTileData as unknown as ConceptImages;
     }
-
     isLoading.value = false;
 });
 
@@ -69,20 +75,21 @@ async function getSectionValue() {
     <template v-else>
         <ConceptImagesViewer
             v-if="mode === VIEW"
-            :tile-data="tileData"
-            :graph-slug="props.graphSlug"
             :component-name="props.componentName"
-            :section-title="props.sectionTitle"
+            :graph-slug="props.graphSlug"
             :nodegroup-alias="props.nodegroupAlias"
+            :resource-instance-id="props.resourceInstanceId"
+            :section-title="props.sectionTitle"
+            :tile-data="tileData"
         />
         <ConceptImagesEditor
             v-else-if="mode === EDIT"
             :component-name="props.componentName"
-            :section-title="props.sectionTitle"
             :graph-slug="props.graphSlug"
-            :tile-data="tileData"
             :nodegroup-alias="props.nodegroupAlias"
             :resource-instance-id="props.resourceInstanceId"
+            :section-title="props.sectionTitle"
+            :tile-data="tileData"
             :tile-id="props.tileId"
         />
     </template>

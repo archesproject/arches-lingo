@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { inject } from "vue";
-import { getItemLabel } from "@/arches_component_lab/utils.ts";
+import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 import { getParentLabels } from "@/arches_lingo/utils.ts";
 import {
     selectedLanguageKey,
@@ -26,7 +26,7 @@ const systemLanguage = inject(systemLanguageKey) as Language;
         <span>
             <a
                 :href="
-                    generateArchesURL('resource_editor', {
+                    generateArchesURL('arches:resource_editor', {
                         resourceid: searchResult.id,
                     })
                 "

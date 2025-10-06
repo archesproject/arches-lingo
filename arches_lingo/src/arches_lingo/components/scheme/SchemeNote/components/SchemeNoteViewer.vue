@@ -5,20 +5,19 @@ import { useGettext } from "vue3-gettext";
 import Button from "primevue/button";
 
 import MetaStringViewer from "@/arches_lingo/components/generic/MetaStringViewer.vue";
-import NonLocalizedTextAreaWidget from "@/arches_component_lab/widgets/NonLocalizedTextAreaWidget/NonLocalizedTextAreaWidget.vue";
-import ReferenceSelectWidget from "@/arches_controlled_lists/widgets/ReferenceSelectWidget/ReferenceSelectWidget.vue";
-import ResourceInstanceMultiSelectWidget from "@/arches_component_lab/widgets/ResourceInstanceMultiSelectWidget/ResourceInstanceMultiSelectWidget.vue";
+import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
 
 import { VIEW } from "@/arches_lingo/constants.ts";
 
 import type { MetaStringText, SchemeStatement } from "@/arches_lingo/types.ts";
 
 const props = defineProps<{
-    tileData: SchemeStatement[] | undefined;
     componentName: string;
-    sectionTitle: string;
     graphSlug: string;
     nodegroupAlias: string;
+    resourceInstanceId: string | undefined;
+    sectionTitle: string;
+    tileData: SchemeStatement[] | undefined;
 }>();
 
 const { $gettext } = useGettext();
@@ -40,8 +39,23 @@ const metaStringLabel: MetaStringText = {
             <h2>{{ props.sectionTitle }}</h2>
 
             <Button
+                v-tooltip.top="{
+                    disabled: Boolean(props.resourceInstanceId),
+                    value: $gettext(
+                        'Create a Scheme Label before adding notes',
+                    ),
+                    showDelay: 300,
+                    pt: {
+                        text: {
+                            style: { fontFamily: 'var(--p-lingo-font-family)' },
+                        },
+                        arrow: { style: { display: 'none' } },
+                    },
+                }"
+                :disabled="Boolean(!props.resourceInstanceId)"
                 :label="$gettext('Add Note')"
                 class="add-button"
+                icon="pi pi-plus-circle"
                 @click="openEditor!(props.componentName)"
             ></Button>
         </div>
@@ -54,56 +68,51 @@ const metaStringLabel: MetaStringText = {
             :nodegroup-alias="props.nodegroupAlias"
         >
             <template #name="{ rowData }">
-                <NonLocalizedTextAreaWidget
+                <GenericWidget
                     node-alias="statement_content_n1"
                     :graph-slug="props.graphSlug"
-                    :value="
-                        rowData.aliased_data.statement_content_n1.display_value
+                    :aliased-node-data="
+                        rowData.aliased_data.statement_content_n1
                     "
                     :mode="VIEW"
-                    :show-label="false"
+                    :should-show-label="false"
                 />
             </template>
             <template #type="{ rowData }">
-                <ReferenceSelectWidget
+                <GenericWidget
                     node-alias="statement_type_n1"
                     :graph-slug="props.graphSlug"
-                    :value="
-                        rowData.aliased_data.statement_type_n1.interchange_value
-                    "
+                    :aliased-node-data="rowData.aliased_data.statement_type_n1"
                     :mode="VIEW"
-                    :show-label="false"
+                    :should-show-label="false"
                 />
             </template>
             <template #language="{ rowData }">
-                <ReferenceSelectWidget
+                <GenericWidget
                     node-alias="statement_language_n1"
                     :graph-slug="props.graphSlug"
-                    :value="
+                    :aliased-node-data="
                         rowData.aliased_data.statement_language_n1
-                            .interchange_value
                     "
                     :mode="VIEW"
-                    :show-label="false"
+                    :should-show-label="false"
                 />
             </template>
             <template #drawer="{ rowData }">
-                <ResourceInstanceMultiSelectWidget
+                <GenericWidget
                     node-alias="statement_data_assignment_object_used"
                     :graph-slug="props.graphSlug"
-                    :value="
+                    :aliased-node-data="
                         rowData.aliased_data
                             .statement_data_assignment_object_used
-                            .interchange_value
                     "
                     :mode="VIEW"
                 />
-                <ResourceInstanceMultiSelectWidget
+                <GenericWidget
                     node-alias="statement_data_assignment_actor"
                     :graph-slug="props.graphSlug"
-                    :value="
+                    :aliased-node-data="
                         rowData.aliased_data.statement_data_assignment_actor
-                            .interchange_value
                     "
                     :mode="VIEW"
                 />

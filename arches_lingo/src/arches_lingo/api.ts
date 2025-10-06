@@ -289,7 +289,7 @@ export const fetchConceptResources = async (
         concepts: conceptIds.join(","),
     });
 
-    const url = `${generateArchesURL("api-lingo-concept-resources")}?${params.toString()}`;
+    const url = `${generateArchesURL("arches_lingo:api-lingo-concept-resources")}?${params.toString()}`;
     const response = await fetch(url);
     const parsed = await response.json();
     if (!response.ok) throw new Error(parsed.message || response.statusText);
@@ -305,7 +305,7 @@ export const fetchConceptRelationships = async (
         type: type,
     });
 
-    const url = `${generateArchesURL("api-lingo-concept-relationships")}?${params.toString()}`;
+    const url = `${generateArchesURL("arches_lingo:api-lingo-concept-relationships")}?${params.toString()}`;
     const response = await fetch(url);
     const parsed = await response.json();
     if (!response.ok) throw new Error(parsed.message || response.statusText);

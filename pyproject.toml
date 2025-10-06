@@ -20,16 +20,16 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Framework :: Django",
-    "Framework :: Django :: 5.1",
+    "Framework :: Django :: 5.2",
     "Intended Audience :: Developers",
     "Intended Audience :: Information Technology",
 ]
 requires-python = ">=3.11"
 dependencies = [
-    "arches~=8.0",
-    "arches_component_lab @ git+https://github.com/archesproject/arches-component-lab.git@main",
+    "arches @ git+https://github.com/archesproject/arches@dev/8.1.x",
+    "arches_component_lab @ git+https://github.com/archesproject/arches-component-lab@main",
     "arches_querysets @ git+https://github.com/archesproject/arches-querysets@main",
-    "arches_controlled_lists @ git+https://github.com/archesproject/arches-controlled-lists.git@main",
+    "arches_controlled_lists @ git+https://github.com/archesproject/arches-controlled-lists@main",
 ]
 version = "1.0.0a0"
 

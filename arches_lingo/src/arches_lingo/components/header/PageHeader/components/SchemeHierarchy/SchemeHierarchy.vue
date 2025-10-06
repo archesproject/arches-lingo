@@ -5,7 +5,6 @@ import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
 
 import Button from "primevue/button";
-import Drawer from "primevue/drawer";
 
 import ConceptTree from "@/arches_lingo/components/tree/ConceptTree.vue";
 
@@ -15,9 +14,12 @@ import { ERROR, DEFAULT_ERROR_TOAST_LIFE } from "@/arches_lingo/constants.ts";
 const { $gettext } = useGettext();
 const toast = useToast();
 
-const showHierarchy = ref(false);
 const conceptTreeKey = ref(0);
 const concepts = ref();
+
+const emit = defineEmits<{
+    (e: "shouldShowHierarchy", value: boolean): void;
+}>();
 
 watchEffect(async () => {
     try {
@@ -34,54 +36,29 @@ watchEffect(async () => {
 </script>
 
 <template>
-    <div>
+    <div
+        style="
+            display: flex;
+            width: 100%;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 0.75rem;
+        "
+    >
+        <h2>{{ $gettext("Explore Hierarchies") }}</h2>
+
         <Button
-            icon="pi pi-globe"
-            variant="text"
-            class="explore-button"
-            :label="$gettext('Explore')"
-            @click="showHierarchy = true"
+            icon="pi pi-times"
+            rounded
+            text
+            severity="contrast"
+            :aria-label="$gettext('Close')"
+            @click="emit('shouldShowHierarchy', false)"
         />
-        <Drawer
-            v-model:visible="showHierarchy"
-            class="hierarchy-container"
-            style="min-width: 36rem"
-            :header="$gettext('Explore Hierarchies')"
-            :pt="{
-                content: {
-                    style: {
-                        padding: '0',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        fontFamily: 'var(--p-lingo-font-family)',
-                    },
-                },
-                header: {
-                    style: {
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        backgroundColor:
-                            'var(--p-form-field-filled-background)',
-                        paddingBottom: '0.5rem',
-                        fontFamily: 'var(--p-lingo-font-family)',
-                    },
-                },
-            }"
-        >
-            <ConceptTree
-                :key="conceptTreeKey"
-                :concepts="concepts"
-            />
-        </Drawer>
     </div>
+
+    <ConceptTree
+        :key="conceptTreeKey"
+        :concepts="concepts"
+    />
 </template>
-
-<style scoped>
-.explore-button {
-    color: var(--p-menubar-text-color) !important;
-}
-
-.explore-button:hover {
-    background: var(--p-button-primary-hover-background) !important;
-}
-</style>
