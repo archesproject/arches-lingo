@@ -291,7 +291,15 @@ export interface ConceptClassificationStatusAliases extends AliasedData {
     };
 }
 
-export interface ConceptHeaderData {
+export interface IdentifierAliases extends AliasedData {
+    aliased_data: {
+        identifier_content?: URLValue;
+        identifier_type?: QuerysetsReferenceSelectFetchedOption;
+        identifier_label?: URLValue;
+    };
+}
+
+export interface ResourceHeaderData {
     uri?: string;
     name?: string;
     descriptor?: ResourceDescriptor;
@@ -301,14 +309,7 @@ export interface ConceptHeaderData {
     parentConcepts?: ResourceInstanceListValue[];
     type?: ReferenceSelectTreeNode[];
     status?: ReferenceSelectTreeNode[];
-}
-
-export interface SchemeHeader {
-    uri?: string;
-    name?: string;
-    descriptor?: ResourceDescriptor;
-    principalUser?: number | string;
-    lifeCycleState: string;
+    identifier?: string[];
 }
 
 export interface SchemeInstance {
