@@ -97,6 +97,16 @@ STORAGES = {
     },
 }
 
+chars = "abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)"
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = (
+    "debug"
+    if DEBUG
+    else get_optional_env_variable(
+        "ARCHES_SECRET_KEY", "django-insecure-" + get_random_string(50, chars)
+    )
+)
+
 if SECRETS_MODE == "AWS":
     try:
         import boto3
@@ -106,12 +116,20 @@ if SECRETS_MODE == "AWS":
         ES_SECRET_ID = get_env_variable("ARCHES_ES_SECRET_ID")
         DB_SECRET_ID = get_env_variable("ARCHES_DB_SECRET_ID")
         client = boto3.client("secretsmanager", region_name=AWS_REGION)
+        ssm_client = boto3.client("ssm", region_name=AWS_REGION)
         es_secret = json.loads(
             client.get_secret_value(SecretId=ES_SECRET_ID)["SecretString"]
         )
         db_secret = json.loads(
             client.get_secret_value(SecretId=DB_SECRET_ID)["SecretString"]
         )
+
+        arches_secret_key_id = get_optional_env_variable("ARCHES_SECRET_KEY_ID", None)
+        if arches_secret_key_id is not None:
+            SECRET_KEY = ssm_client.get_parameter(
+                Name=arches_secret_key_id, WithDecryption=True
+            )["Parameter"]["Value"]
+
         DB_NAME = APP_NAME
         DB_USER = db_secret["username"]
         DB_PASSWORD = db_secret["password"]
@@ -159,15 +177,6 @@ FILE_TYPES = [
 FILENAME_GENERATOR = "arches.app.utils.storage_filename_generator.generate_filename"
 UPLOADED_FILES_DIR = "uploadedfiles"
 
-chars = "abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)"
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = (
-    "debug"
-    if DEBUG
-    else get_optional_env_variable(
-        "ARCHES_SECRET_KEY", "django-insecure-" + get_random_string(50, chars)
-    )
-)
 
 ROOT_URLCONF = "arches_lingo.urls"
 

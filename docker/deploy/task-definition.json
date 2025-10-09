@@ -25,6 +25,10 @@
                     "value": "archesDbSecretC996653C-9RvtCl4Ud1ud"
                 },
                 {
+                    "name": "ARCHES_SECRET_KEY_ID",
+                    "value": "/prod/lingo/session-key"
+                },
+                {
                     "name": "ARCHES_PUBLIC_SERVER_ADDRESS",
                     "value": "https://lingo.dev.fargeo.com"
                 },
