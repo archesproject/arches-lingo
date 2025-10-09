@@ -98,7 +98,7 @@ class RDMMtoLingoMigrator(BaseImportModule):
         schemes_json = list(schemes.values("conceptid", "prefLabel"))
         return {"success": True, "data": schemes_json}
 
-    def etl_schemes(self, cursor, nodegroup_lookup, node_lookup, scheme_conceptid):
+    def extract_schemes_from_rdm_tables(self, scheme_conceptid):
         schemes = []
         for concept in models.Concept.objects.filter(
             pk=scheme_conceptid
@@ -110,49 +110,13 @@ class RDMMtoLingoMigrator(BaseImportModule):
                 scheme_to_load["resourceinstanceid"] = (
                     concept.pk
                 )  # use old conceptid as new resourceinstanceid
-
-                if (
-                    value.valuetype_id == "prefLabel"
-                    or value.valuetype_id == "altLabel"
-                    or value.valuetype_id == "hiddenLabel"
-                ):
-                    appellative_status = {}
-                    appellative_status["appellative_status_ascribed_name_content"] = (
-                        value.value
-                    )
-                    appellative_status["appellative_status_ascribed_name_language"] = (
-                        value.language.name
-                    )
-                    appellative_status["appellative_status_ascribed_relation"] = (
-                        value.valuetype_id
-                    )
-                    scheme_to_load["tile_data"].append(
-                        {"appellative_status": appellative_status}
-                    )
-                elif value.valuetype_id == "identifier":
-                    identifier = {}
-                    identifier["identifier_content"] = value.value
-                    identifier["identifier_type"] = value.valuetype_id
-                    scheme_to_load["tile_data"].append({"identifier": identifier})
-                elif (
-                    value.valuetype_id == "note"
-                    or value.valuetype_id == "changeNote"
-                    or value.valuetype_id == "definition"
-                    or value.valuetype_id == "description"
-                    or value.valuetype_id == "editorialNote"
-                    or value.valuetype_id == "example"
-                    or value.valuetype_id == "historyNote"
-                    or value.valuetype_id == "scopeNote"
-                ):
-                    statement = {}
-                    statement["statement_content_n1"] = value.value
-                    statement["statement_type_n1"] = value.valuetype_id
-                    statement["statement_language_n1"] = value.language.name
-                    scheme_to_load["tile_data"].append({"statement": statement})
+                mock_tile = self.create_mock_tile_from_value(value, isScheme=True)
+                if mock_tile.values():
+                    scheme_to_load["tile_data"].append(mock_tile)
             schemes.append(scheme_to_load)
-        self.populate_staging_table(cursor, schemes, nodegroup_lookup, node_lookup)
+        return schemes
 
-    def etl_concepts(self, cursor, nodegroup_lookup, node_lookup, concepts_to_migrate):
+    def extract_concepts_from_rdm_tables(self, concepts_to_migrate):
         concepts = []
         for concept in models.Concept.objects.filter(
             nodetype="Concept", pk__in=concepts_to_migrate
@@ -164,47 +128,48 @@ class RDMMtoLingoMigrator(BaseImportModule):
                 concept_to_load["resourceinstanceid"] = (
                     concept.pk
                 )  # use old conceptid as new resourceinstanceid
+                mock_tile = self.create_mock_tile_from_value(value)
+                if mock_tile.values():
+                    concept_to_load["tile_data"].append(mock_tile)
 
-                if (
-                    value.valuetype_id == "prefLabel"
-                    or value.valuetype_id == "altLabel"
-                    or value.valuetype_id == "hiddenLabel"
-                ):
-                    appellative_status = {}
-                    appellative_status["appellative_status_ascribed_name_content"] = (
-                        value.value
-                    )
-                    appellative_status["appellative_status_ascribed_name_language"] = (
-                        value.language.name
-                    )
-                    appellative_status["appellative_status_ascribed_relation"] = (
-                        value.valuetype_id
-                    )
-                    concept_to_load["tile_data"].append(
-                        {"appellative_status": appellative_status}
-                    )
-                elif value.valuetype_id == "identifier":
-                    identifier = {}
-                    identifier["identifier_content"] = value.value
-                    identifier["identifier_type"] = value.valuetype_id
-                    concept_to_load["tile_data"].append({"identifier": identifier})
-                elif (
-                    value.valuetype_id == "note"
-                    or value.valuetype_id == "changeNote"
-                    or value.valuetype_id == "definition"
-                    or value.valuetype_id == "description"
-                    or value.valuetype_id == "editorialNote"
-                    or value.valuetype_id == "example"
-                    or value.valuetype_id == "historyNote"
-                    or value.valuetype_id == "scopeNote"
-                ):
-                    statement = {}
-                    statement["statement_content"] = value.value
-                    statement["statement_type"] = value.valuetype_id
-                    statement["statement_language"] = value.language.name
-                    concept_to_load["tile_data"].append({"statement": statement})
             concepts.append(concept_to_load)
-        self.populate_staging_table(cursor, concepts, nodegroup_lookup, node_lookup)
+        return concepts
+
+    def create_mock_tile_from_value(self, value, isScheme=False):
+        mock_tile = {}
+        if (
+            value.valuetype_id == "prefLabel"
+            or value.valuetype_id == "altLabel"
+            or value.valuetype_id == "hiddenLabel"
+        ):
+            mock_tile["appellative_status_ascribed_name_content"] = value.value
+            mock_tile["appellative_status_ascribed_name_language"] = value.language.name
+            mock_tile["appellative_status_ascribed_relation"] = value.valuetype_id
+            return {"appellative_status": mock_tile}
+        elif value.valuetype_id == "identifier":
+            mock_tile["identifier_content"] = value.value
+            mock_tile["identifier_type"] = value.valuetype_id
+            return {"identifier": mock_tile}
+        elif (
+            value.valuetype_id == "note"
+            or value.valuetype_id == "changeNote"
+            or value.valuetype_id == "definition"
+            or value.valuetype_id == "description"
+            or value.valuetype_id == "editorialNote"
+            or value.valuetype_id == "example"
+            or value.valuetype_id == "historyNote"
+            or value.valuetype_id == "scopeNote"
+        ):
+            if isScheme:
+                mock_tile["statement_content_n1"] = value.value
+                mock_tile["statement_type_n1"] = value.valuetype_id
+                mock_tile["statement_language_n1"] = value.language.name
+            else:
+                mock_tile["statement_content"] = value.value
+                mock_tile["statement_type"] = value.valuetype_id
+                mock_tile["statement_language"] = value.language.name
+            return {"statement": mock_tile}
+        pass
 
     def populate_staging_table(
         self, cursor, concepts_to_load, nodegroup_lookup, node_lookup
@@ -645,28 +610,31 @@ class RDMMtoLingoMigrator(BaseImportModule):
 
         with connection.cursor() as cursor:
 
-            # Gather and load schemes and concepts
-            schemes_nodegroup_lookup, schemes_nodes = self.get_graph_tree(
-                SCHEMES_GRAPH_ID
-            )
-            schemes_node_lookup = self.get_node_lookup(schemes_nodes)
-            self.etl_schemes(
-                cursor, schemes_nodegroup_lookup, schemes_node_lookup, scheme_conceptid
-            )
+            # Extract schemes and concepts to be migrated
+            schemes = self.extract_schemes_from_rdm_tables(scheme_conceptid)
 
-            concepts_nodegroup_lookup, concepts_nodes = self.get_graph_tree(
-                CONCEPTS_GRAPH_ID
-            )
-            concepts_node_lookup = self.get_node_lookup(concepts_nodes)
             # Prefetch concept hierarchy to avoid building it multiple times
             concept_hierarchy, concepts_to_migrate = self.build_concept_hierarchy(
                 cursor, self.scheme_conceptid
             )
-            self.etl_concepts(
-                cursor,
-                concepts_nodegroup_lookup,
-                concepts_node_lookup,
-                concepts_to_migrate,
+            concepts = self.extract_concepts_from_rdm_tables(concepts_to_migrate)
+
+            # Gather nodegroup and node lookups
+            schemes_nodegroup_lookup, schemes_nodes = self.get_graph_tree(
+                SCHEMES_GRAPH_ID
+            )
+            schemes_node_lookup = self.get_node_lookup(schemes_nodes)
+            concepts_nodegroup_lookup, concepts_nodes = self.get_graph_tree(
+                CONCEPTS_GRAPH_ID
+            )
+            concepts_node_lookup = self.get_node_lookup(concepts_nodes)
+
+            # Populate staging table with schemes and concepts
+            self.populate_staging_table(
+                cursor, schemes, schemes_nodegroup_lookup, schemes_node_lookup
+            )
+            self.populate_staging_table(
+                cursor, concepts, concepts_nodegroup_lookup, concepts_node_lookup
             )
 
             # Create relationships
