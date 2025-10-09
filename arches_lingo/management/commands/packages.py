@@ -21,4 +21,6 @@ class Command(PackagesCommand):
     def import_lingo_resources(self, source, overwrite_options):
         skos = SKOSReader()
         rdf = skos.read_file(source)
-        skos.save_lingo_resources_from_skos(rdf, overwrite_options=overwrite_options)
+        skos.extract_concepts_from_skos_for_lingo_import(
+            rdf, overwrite_options=overwrite_options
+        )

@@ -4,13 +4,7 @@ from django.db.models import Q
 from rdflib import Literal, Namespace, RDF
 from rdflib.namespace import SKOS, DCTERMS
 from rdflib.graph import Graph
-from arches.app.models.models import (
-    DValueType,
-    Graph as ArchesGraphModel,
-    Language,
-    ResourceInstance,
-    ResourceInstanceLifecycleState,
-)
+from arches.app.models import models
 from arches.app.models.system_settings import settings
 from arches_querysets.models import ResourceTileTree
 
@@ -26,18 +20,19 @@ class SKOSReader(SKOSReader):
 
     """
 
-    def save_lingo_resources_from_skos(self, graph, overwrite_options="overwrite"):
+    def extract_concepts_from_skos_for_lingo_import(
+        self, graph, overwrite_options="overwrite"
+    ):
         baseuuid = uuid.uuid4()
         allowed_languages = {}
-        for lang in Language.objects.all():
+        for lang in models.Language.objects.all():
             allowed_languages[lang.code] = lang
         default_lang = allowed_languages[settings.LANGUAGE_CODE]
 
-        # scheme_model = ArchesGraphModel.objects.get(slug="scheme")
         if isinstance(graph, Graph):
 
             # Create lookups for valuetypes used during Concept processing
-            value_types = DValueType.objects.all()
+            value_types = models.DValueType.objects.all()
             skos_value_types = value_types.filter(
                 Q(namespace="skos") | Q(namespace="arches")
             )
@@ -77,7 +72,7 @@ class SKOSReader(SKOSReader):
                         "valuetype", flat=True
                     ):
                         if not self.language_exists(object, allowed_languages):
-                            for lang in Language.objects.all():
+                            for lang in models.Language.objects.all():
                                 allowed_languages[lang.code] = lang
 
                         value_type = dcterms_value_types.get(valuetype=predicate_str)
@@ -142,7 +137,7 @@ class SKOSReader(SKOSReader):
 
                         if str(SKOS) in predicate or str(ARCHES) in predicate:
                             if not self.language_exists(object, allowed_languages):
-                                for lang in Language.objects.all():
+                                for lang in models.Language.objects.all():
                                     allowed_languages[lang.code] = lang
 
                             if predicate_str in skos_value_types:
