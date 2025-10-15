@@ -53,7 +53,7 @@ details = {
     "component": "views/components/etl_modules/migrate-to-lingo",
     "componentname": "migrate-to-lingo",
     "modulename": "migrate_to_lingo.py",
-    "classname": "RDMMtoLingoMigrator",
+    "classname": "LingoResourceImporter",
     "config": {"bgColor": "#ffa564", "circleColor": "#ffd2b1", "show": True},
     "icon": "fa fa-usb",
     "slug": "migrate-to-lingo",
@@ -62,14 +62,29 @@ details = {
 }
 
 
-class RDMMtoLingoMigrator(BaseImportModule):
-    def __init__(self, request=None, loadid=None):
-        self.request = request if request else None
-        self.userid = request.user.id if request else None
-        self.moduleid = request.POST.get("module") if request else None
-        self.loadid = request.POST.get("loadid") if request else loadid
-        self.datatype_factory = DataTypeFactory()
+class LingoResourceImporter(BaseImportModule):
+    def __init__(self, request=None, loadid=None, userid=None):
+        if request:
+            loadid = request.POST.get("loadid")
+        elif loadid:
+            loadid = loadid
+        else:
+            loadid = str(uuid.uuid4())
+
+        if request:
+            moduleid = request.POST.get("module")
+        else:
+            moduleid = models.ETLModule.objects.get(slug="migrate-to-lingo").pk
+
+        super().__init__(
+            request=request, loadid=loadid, userid=userid, moduleid=moduleid
+        )
+
         self.scheme_conceptid = request.POST.get("scheme") if request else None
+        self.language_lookup = {
+            lang.code: lang.name for lang in models.Language.objects.all()
+        }
+        self.load_event = None
 
     def get_schemes(self, request):
         schemes = (

@@ -12,7 +12,7 @@ def migrate_rdm_to_lingo_task(userid, loadid, scheme_conceptid):
     logger = logging.getLogger(__name__)
 
     try:
-        Migrator = migrate_to_lingo.RDMMtoLingoMigrator(loadid=loadid)
+        Migrator = migrate_to_lingo.LingoResourceImporter(loadid=loadid)
         Migrator.run_load_task(userid, loadid, scheme_conceptid)
 
         load_event = models.LoadEvent.objects.get(loadid=loadid)
