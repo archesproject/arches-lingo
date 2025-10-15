@@ -63,21 +63,17 @@ details = {
 
 
 class LingoResourceImporter(BaseImportModule):
-    def __init__(self, request=None, loadid=None, userid=None):
-        if request:
-            loadid = request.POST.get("loadid")
-        elif loadid:
-            loadid = loadid
-        else:
-            loadid = str(uuid.uuid4())
-
+    def __init__(self, request=None, loadid=None, userid=None, **kwargs):
         if request:
             moduleid = request.POST.get("module")
         else:
             moduleid = models.ETLModule.objects.get(slug="migrate-to-lingo").pk
 
         super().__init__(
-            request=request, loadid=loadid, userid=userid, moduleid=moduleid
+            request=request,
+            loadid=loadid,
+            userid=userid,
+            moduleid=moduleid,
         )
 
         self.scheme_conceptid = request.POST.get("scheme") if request else None
@@ -85,6 +81,7 @@ class LingoResourceImporter(BaseImportModule):
             lang.code: lang.name for lang in models.Language.objects.all()
         }
         self.load_event = None
+        self.mode = kwargs.get("mode", "cli")
 
     def get_schemes(self, request):
         schemes = (
@@ -113,6 +110,17 @@ class LingoResourceImporter(BaseImportModule):
         schemes_json = list(schemes.values("conceptid", "prefLabel"))
         return {"success": True, "data": schemes_json}
 
+    def extract_schemes_and_concepts_from_rdm(self, cursor, scheme_conceptid):
+        schemes = self.extract_schemes_from_rdm_tables(scheme_conceptid)
+
+        # Prefetch concept hierarchy to avoid building it multiple times
+        concept_hierarchy, concepts_to_migrate = self.build_concept_hierarchy(
+            cursor, self.scheme_conceptid
+        )
+        concepts = self.extract_concepts_from_rdm_tables(concepts_to_migrate)
+
+        return schemes, concepts, concepts_to_migrate, concept_hierarchy
+
     def extract_schemes_from_rdm_tables(self, scheme_conceptid):
         schemes = []
         for concept in models.Concept.objects.filter(
@@ -125,7 +133,9 @@ class LingoResourceImporter(BaseImportModule):
                 scheme_to_load["resourceinstanceid"] = (
                     concept.pk
                 )  # use old conceptid as new resourceinstanceid
-                mock_tile = self.create_mock_tile_from_value(value, isScheme=True)
+                mock_tile = self.create_mock_tile_from_value(
+                    value, isScheme=True, lang_lookup=self.language_lookup
+                )
                 if mock_tile.values():
                     scheme_to_load["tile_data"].append(mock_tile)
             schemes.append(scheme_to_load)
@@ -143,46 +153,64 @@ class LingoResourceImporter(BaseImportModule):
                 concept_to_load["resourceinstanceid"] = (
                     concept.pk
                 )  # use old conceptid as new resourceinstanceid
-                mock_tile = self.create_mock_tile_from_value(value)
+                mock_tile = self.create_mock_tile_from_value(
+                    value, lang_lookup=self.language_lookup
+                )
                 if mock_tile.values():
                     concept_to_load["tile_data"].append(mock_tile)
 
             concepts.append(concept_to_load)
         return concepts
 
-    def create_mock_tile_from_value(self, value, isScheme=False):
+    @staticmethod
+    def create_mock_tile_from_value(value, isScheme=False, lang_lookup=None):
+        # Values coming directly from RDM models are django model instances
+        if isinstance(value, models.Value):
+            value = {
+                "value": value.value,
+                "valuetype_id": value.valuetype_id,
+                "language": value.language.name,
+            }
+        # Values coming from SKOS import are dicts
+        # TODO: https://github.com/archesproject/arches-lingo/issues/472
+        elif isinstance(value, dict):
+            try:
+                value["language"] = lang_lookup[value["language_id"]]
+            except KeyError:
+                pass
         mock_tile = {}
         if (
-            value.valuetype_id == "prefLabel"
-            or value.valuetype_id == "altLabel"
-            or value.valuetype_id == "hiddenLabel"
+            value["valuetype_id"] == "prefLabel"
+            or value["valuetype_id"] == "altLabel"
+            or value["valuetype_id"] == "hiddenLabel"
+            or value["valuetype_id"] == "title"
         ):
-            mock_tile["appellative_status_ascribed_name_content"] = value.value
-            mock_tile["appellative_status_ascribed_name_language"] = value.language.name
-            mock_tile["appellative_status_ascribed_relation"] = value.valuetype_id
+            mock_tile["appellative_status_ascribed_name_content"] = value["value"]
+            mock_tile["appellative_status_ascribed_name_language"] = value["language"]
+            mock_tile["appellative_status_ascribed_relation"] = value["valuetype_id"]
             return {"appellative_status": mock_tile}
-        elif value.valuetype_id == "identifier":
-            mock_tile["identifier_content"] = value.value
-            mock_tile["identifier_type"] = value.valuetype_id
+        elif value["valuetype_id"] == "identifier":
+            mock_tile["identifier_content"] = value["value"]
+            mock_tile["identifier_type"] = value["valuetype_id"]
             return {"identifier": mock_tile}
         elif (
-            value.valuetype_id == "note"
-            or value.valuetype_id == "changeNote"
-            or value.valuetype_id == "definition"
-            or value.valuetype_id == "description"
-            or value.valuetype_id == "editorialNote"
-            or value.valuetype_id == "example"
-            or value.valuetype_id == "historyNote"
-            or value.valuetype_id == "scopeNote"
+            value["valuetype_id"] == "note"
+            or value["valuetype_id"] == "changeNote"
+            or value["valuetype_id"] == "definition"
+            or value["valuetype_id"] == "description"
+            or value["valuetype_id"] == "editorialNote"
+            or value["valuetype_id"] == "example"
+            or value["valuetype_id"] == "historyNote"
+            or value["valuetype_id"] == "scopeNote"
         ):
             if isScheme:
-                mock_tile["statement_content_n1"] = value.value
-                mock_tile["statement_type_n1"] = value.valuetype_id
-                mock_tile["statement_language_n1"] = value.language.name
+                mock_tile["statement_content_n1"] = value["value"]
+                mock_tile["statement_type_n1"] = value["valuetype_id"]
+                mock_tile["statement_language_n1"] = value["language"]
             else:
-                mock_tile["statement_content"] = value.value
-                mock_tile["statement_type"] = value.valuetype_id
-                mock_tile["statement_language"] = value.language.name
+                mock_tile["statement_content"] = value["value"]
+                mock_tile["statement_type"] = value["valuetype_id"]
+                mock_tile["statement_language"] = value["language"]
             return {"statement": mock_tile}
         pass
 
@@ -207,7 +235,7 @@ class LingoResourceImporter(BaseImportModule):
                 sortorder_counter[resourceid][nodegroup_id] += 1
                 tiles_to_load.append(
                     LoadStaging(
-                        load_event=LoadEvent(self.loadid),
+                        load_event=self.load_event or LoadEvent(self.loadid),
                         nodegroup=NodeGroup(nodegroup_id),
                         resourceid=resourceid,
                         tileid=tile_id,
@@ -580,36 +608,36 @@ class LingoResourceImporter(BaseImportModule):
         LoadStaging.objects.bulk_create(part_of_scheme_tiles)
 
     def start(self, request):
-        load_details = {"operation": "RDM to Lingo Migration"}
-        cursor = connection.cursor()
-        cursor.execute(
-            """INSERT INTO load_event (
-                loadid,
-                complete,
-                status,
-                etl_module_id,
-                load_details,
-                load_start_time,
-                user_id
-                ) 
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
-            """,
-            (
-                self.loadid,
-                False,
-                "running",
-                self.moduleid,
-                json.dumps(load_details),
-                datetime.now(),
-                self.userid,
-            ),
+        load_details = {"operation": "Bulk Lingo Resource Import"}
+        if not self.loadid:
+            self.loadid = request.POST.get("loadid")
+        load_event = models.LoadEvent.objects.create(
+            loadid=self.loadid,
+            user=models.User.objects.get(id=self.userid),
+            etl_module=models.ETLModule.objects.get(pk=self.moduleid),
+            status="running",
+            load_details=json.dumps(load_details),
+            load_start_time=datetime.now(),
+            complete=False,
         )
+        self.load_event = load_event
         message = "load event created"
         return {"success": True, "data": message}
 
-    def write(self, request):
-        self.loadid = request.POST.get("loadid")
-        self.scheme_conceptid = request.POST.get("scheme")
+    def write(self, request, **kwargs):
+        # scheme_conceptid is indicator of the entrypoint -
+        # if it's present, we're migrating from the RDM
+        # if absent, we're loading data from an external SKOS file
+        try:
+            self.scheme_conceptid = request.POST.get("scheme", None)
+            self.loadid = request.POST.get("loadid")
+        except:
+            self.scheme_conceptid = None
+            self.loadid = kwargs.get("loadid", None)
+
+        self.schemes = kwargs.get("schemes", [])
+        self.concepts = kwargs.get("concepts", [])
+
         if models.Concept.objects.count() < 500000:
             response = self.run_load_task(
                 self.userid, self.loadid, self.scheme_conceptid
@@ -625,16 +653,19 @@ class LingoResourceImporter(BaseImportModule):
 
         with connection.cursor() as cursor:
 
-            # Extract schemes and concepts to be migrated
-            schemes = self.extract_schemes_from_rdm_tables(scheme_conceptid)
+            if self.scheme_conceptid:
+                # If importing data from the RDM, extract the resources & mock tiles
+                schemes, concepts, concepts_to_migrate, concept_hierarchy = (
+                    self.extract_schemes_and_concepts_from_rdm(
+                        cursor, self.scheme_conceptid
+                    )
+                )
+            else:
+                # Get schemes and concepts already parsed from SKOS file
+                schemes = self.schemes
+                concepts = self.concepts
 
-            # Prefetch concept hierarchy to avoid building it multiple times
-            concept_hierarchy, concepts_to_migrate = self.build_concept_hierarchy(
-                cursor, self.scheme_conceptid
-            )
-            concepts = self.extract_concepts_from_rdm_tables(concepts_to_migrate)
-
-            # Gather nodegroup and node lookups
+            # Create node and nodegroup lookups
             schemes_nodegroup_lookup, schemes_nodes = self.get_graph_tree(
                 SCHEMES_GRAPH_ID
             )
@@ -653,18 +684,19 @@ class LingoResourceImporter(BaseImportModule):
             )
 
             # Create relationships
-            self.init_relationships(
-                cursor, loadid, concepts_to_migrate, concept_hierarchy
-            )
+            if self.scheme_conceptid:
+                self.init_relationships(
+                    cursor, self.loadid, concepts_to_migrate, concept_hierarchy
+                )
 
             # Validate and save to tiles
-            validation = self.validate(loadid)
+            validation = self.validate(self.loadid)
             if len(validation["data"]) == 0:
                 cursor.execute(
                     """UPDATE load_event SET status = %s WHERE loadid = %s""",
-                    ("validated", loadid),
+                    ("validated", self.loadid),
                 )
-                response = save_to_tiles(userid, loadid)
+                response = save_to_tiles(userid, self.loadid)
                 cursor.execute(
                     """CALL __arches_update_resource_x_resource_with_graphids();"""
                 )
