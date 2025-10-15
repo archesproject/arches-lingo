@@ -10,6 +10,8 @@ from arches_querysets.models import ResourceTileTree
 
 from arches_controlled_lists.utils.skos import SKOSReader, SKOSWriter
 
+from arches_lingo.etl_modules.migrate_to_lingo import LingoResourceImporter
+
 # define the ARCHES namespace
 ARCHES = Namespace(settings.ARCHES_NAMESPACE_FOR_DATA_EXPORT)
 
@@ -17,8 +19,13 @@ ARCHES = Namespace(settings.ARCHES_NAMESPACE_FOR_DATA_EXPORT)
 class SKOSReader(SKOSReader):
     """
     Extends the SKOSReader class from Arches Controlled Lists to import RDF graphs as Lingo resources.
-
     """
+
+    def __init__(self):
+        super().__init__()
+        self.schemes = []
+        self.concepts = []
+        self.relations = defaultdict(list)
 
     def extract_concepts_from_skos_for_lingo_import(
         self, graph, overwrite_options="overwrite"
@@ -27,7 +34,10 @@ class SKOSReader(SKOSReader):
         allowed_languages = {}
         for lang in models.Language.objects.all():
             allowed_languages[lang.code] = lang
-        default_lang = allowed_languages[settings.LANGUAGE_CODE]
+        default_lang = settings.LANGUAGE_CODE
+        self.language_lookup = {
+            lang.code: lang.name for lang in models.Language.objects.all()
+        }
 
         if isinstance(graph, Graph):
 
@@ -56,7 +66,7 @@ class SKOSReader(SKOSReader):
                     "resourceinstanceid": scheme_pk,
                     "legacyid": str(scheme),
                     "type": "Scheme",
-                    "tile_data": defaultdict(list),
+                    "tile_data": [],
                 }
 
                 for predicate, object in graph.predicate_objects(scheme):
@@ -71,19 +81,23 @@ class SKOSReader(SKOSReader):
                     ) in predicate and predicate_str in dcterms_value_types.values_list(
                         "valuetype", flat=True
                     ):
-                        if not self.language_exists(object, allowed_languages):
-                            for lang in models.Language.objects.all():
-                                allowed_languages[lang.code] = lang
+                        # TODO: This should check if the language is in the Languages controlled list, not in models.Language
+                        # re. https://github.com/archesproject/arches-lingo/issues/472
+                        # if not self.language_exists(object, allowed_languages):
+                        #     for lang in models.Language.objects.all():
+                        #         allowed_languages[lang.code] = lang
 
-                        value_type = dcterms_value_types.get(valuetype=predicate_str)
                         val = self.unwrapJsonLiteral(object)
                         mock_tile = {
                             "id": val["value_id"],
                             "value": val["value"],
-                            "language": object.language or default_lang,
-                            "value_type": value_type,
+                            "language_id": object.language or default_lang,
+                            "valuetype_id": predicate_str,
                         }
-                        new_scheme["tile_data"][predicate].append(mock_tile)
+                        mock_tile = LingoResourceImporter.create_mock_tile_from_value(
+                            mock_tile, lang_lookup=self.language_lookup
+                        )
+                        new_scheme["tile_data"].append(mock_tile)
 
                     elif predicate == SKOS.hasTopConcept:
                         top_concept_id = self.generate_uuidv5_from_subject(
@@ -97,18 +111,22 @@ class SKOSReader(SKOSReader):
                             }
                         )
 
-                if len(new_scheme["tile_data"][DCTERMS.identifier]) == 0:
+                if "identifier" not in [
+                    key for val in new_scheme["tile_data"] for key in val.keys()
+                ]:
                     identifier = self.unwrapJsonLiteral(str(scheme))
                     mock_tile = {
                         "id": identifier["value_id"],
                         "value": identifier["value"],
-                        "language": default_lang,
-                        "type": "identifier",
-                        "category": "identifiers",
+                        "language_id": default_lang,
+                        "valuetype_id": "identifier",
                     }
-                    new_scheme["tile_data"][DCTERMS.identifier].append(mock_tile)
+                    mock_tile = LingoResourceImporter.create_mock_tile_from_value(
+                        mock_tile, lang_lookup=self.language_lookup
+                    )
+                    new_scheme["tile_data"].append(mock_tile)
 
-                self.nodes.append(new_scheme)
+                self.schemes.append(new_scheme)
 
                 ### Concepts ###
                 for concept, v, o in graph.triples((None, SKOS.inScheme, scheme)):
@@ -117,16 +135,16 @@ class SKOSReader(SKOSReader):
                         "resourceinstanceid": concept_pk,
                         "legacyid": str(concept),
                         "type": "Concept",
-                        "tile_data": defaultdict(list),
+                        "tile_data": [],
                     }
 
-                    new_concept["tile_data"][SKOS.inScheme].append(
-                        {
-                            "id": scheme_pk,
-                            "value": scheme_pk,
-                            "value_type": skos_value_types.get("inScheme"),
-                        }
-                    )
+                    # new_concept["tile_data"][SKOS.inScheme].append(
+                    #     {
+                    #         "id": scheme_pk,
+                    #         "value": scheme_pk,
+                    #         "valuetype_id": skos_value_types.get("inScheme"),
+                    #     }
+                    # )
 
                     for predicate, object in graph.predicate_objects(concept):
                         predicate_str = (
@@ -136,20 +154,26 @@ class SKOSReader(SKOSReader):
                         )
 
                         if str(SKOS) in predicate or str(ARCHES) in predicate:
-                            if not self.language_exists(object, allowed_languages):
-                                for lang in models.Language.objects.all():
-                                    allowed_languages[lang.code] = lang
+                            # TODO: This should check if the language is in the Languages controlled list, not in models.Language
+                            # re. https://github.com/archesproject/arches-lingo/issues/472
+                            # if not self.language_exists(object, allowed_languages):
+                            #     for lang in models.Language.objects.all():
+                            #         allowed_languages[lang.code] = lang
 
                             if predicate_str in skos_value_types:
-                                value_type = skos_value_types.get(predicate_str)
                                 val = self.unwrapJsonLiteral(object)
                                 mock_tile = {
                                     "id": val["value_id"],
                                     "value": val["value"],
-                                    "language": object.language or default_lang,
-                                    "value_type": value_type,
+                                    "language_id": object.language or default_lang,
+                                    "valuetype_id": predicate_str,
                                 }
-                                new_concept["tile_data"][predicate].append(mock_tile)
+                                mock_tile = (
+                                    LingoResourceImporter.create_mock_tile_from_value(
+                                        mock_tile, lang_lookup=self.language_lookup
+                                    )
+                                )
+                                new_concept["tile_data"].append(mock_tile)
 
                             elif predicate == SKOS.broader:
                                 broader_concept_id = self.generate_uuidv5_from_subject(
@@ -183,16 +207,39 @@ class SKOSReader(SKOSReader):
                                     }
                                 )
 
-                    if len(new_concept["tile_data"][DCTERMS.identifier]) == 0:
+                    if "identifier" not in [
+                        key for val in new_concept["tile_data"] for key in val.keys()
+                    ]:
                         identifier = self.unwrapJsonLiteral(str(scheme))
                         mock_tile = {
                             "id": identifier["value_id"],
                             "value": identifier["value"],
-                            "language": default_lang,
-                            "type": "identifier",
-                            "category": "identifiers",
+                            "language_id": default_lang,
+                            "valuetype_id": "identifier",
                         }
-                        new_concept["tile_data"][DCTERMS.identifier].append(mock_tile)
+                        mock_tile = LingoResourceImporter.create_mock_tile_from_value(
+                            mock_tile, lang_lookup=self.language_lookup
+                        )
+                        new_concept["tile_data"].append(mock_tile)
 
-                    self.nodes.append(new_concept)
-        self.save_nodes_and_relations(overwrite_options=overwrite_options)
+                    self.concepts.append(new_concept)
+
+    def orchestrate_bulk_import_from_skos(self, graph, overwrite_options):
+        self.loadid = str(uuid.uuid4())
+        bulk_loader = LingoResourceImporter(
+            loadid=self.loadid,
+            userid=models.User.objects.get(username="admin").pk,
+            mode="cli",
+        )
+
+        # TODO: BDM error handling
+        start_request = bulk_loader.start(request=None)
+        self.extract_concepts_from_skos_for_lingo_import(
+            graph, overwrite_options=overwrite_options
+        )
+        write_request = bulk_loader.write(
+            request=None,
+            schemes=self.schemes,
+            concepts=self.concepts,
+            relations=self.relations,
+        )
