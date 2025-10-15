@@ -52,7 +52,7 @@ const viewModel = function(params) {
             return;
         }
         self.loading(true);
-        self.formData.append('scheme', self.selectedScheme());          
+        self.formData.append('scheme', self.selectedScheme());
         self.submit('start').then(data => {
             params.activeTab("import");
             self.formData.append('async', true);
