@@ -178,6 +178,8 @@ class LingoResourceImporter(BaseImportModule):
                 value["language"] = lang_lookup[value["language_id"]]
             except KeyError:
                 pass
+        if value["valuetype_id"] == "title":
+            value["valuetype_id"] = "prefLabel"
         mock_tile = {}
         if (
             value["valuetype_id"] == "prefLabel"
