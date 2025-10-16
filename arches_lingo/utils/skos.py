@@ -96,9 +96,10 @@ class SKOSReader(SKOSReader):
                             "valuetype_id": predicate_str,
                         }
                         mock_tile = LingoResourceImporter.create_mock_tile_from_value(
-                            mock_tile, lang_lookup=self.language_lookup
+                            mock_tile, isScheme=True, lang_lookup=self.language_lookup
                         )
-                        new_scheme["tile_data"].append(mock_tile)
+                        if mock_tile:
+                            new_scheme["tile_data"].append(mock_tile)
 
                     elif predicate == SKOS.hasTopConcept:
                         top_concept_id = self.generate_uuidv5_from_subject(
@@ -130,7 +131,8 @@ class SKOSReader(SKOSReader):
                     mock_tile = LingoResourceImporter.create_mock_tile_from_value(
                         mock_tile, lang_lookup=self.language_lookup
                     )
-                    new_scheme["tile_data"].append(mock_tile)
+                    if mock_tile:
+                        new_scheme["tile_data"].append(mock_tile)
 
                 self.schemes.append(new_scheme)
 
@@ -159,7 +161,8 @@ class SKOSReader(SKOSReader):
                             }
                         )
                     )
-                    new_concept["tile_data"].append(mock_tile)
+                    if mock_tile:
+                        new_concept["tile_data"].append(mock_tile)
 
                     for predicate, object in graph.predicate_objects(concept):
                         predicate_str = (
@@ -188,7 +191,8 @@ class SKOSReader(SKOSReader):
                                         mock_tile, lang_lookup=self.language_lookup
                                     )
                                 )
-                                new_concept["tile_data"].append(mock_tile)
+                                if mock_tile:
+                                    new_concept["tile_data"].append(mock_tile)
 
                             elif predicate in [
                                 SKOS.broader,
@@ -237,7 +241,8 @@ class SKOSReader(SKOSReader):
                         mock_tile = LingoResourceImporter.create_mock_tile_from_value(
                             mock_tile, lang_lookup=self.language_lookup
                         )
-                        new_concept["tile_data"].append(mock_tile)
+                        if mock_tile:
+                            new_concept["tile_data"].append(mock_tile)
 
                     self.concepts.append(new_concept)
 
