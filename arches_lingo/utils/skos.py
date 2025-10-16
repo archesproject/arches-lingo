@@ -59,6 +59,7 @@ class SKOSReader(SKOSReader):
             dcterms_value_types = value_types.filter(namespace="dcterms")
 
             ### Schemes ###
+            top_concept_mock_tiles = {}
             for scheme, v, o in graph.triples((None, RDF.type, SKOS.ConceptScheme)):
                 scheme_pk = self.generate_uuidv5_from_subject(baseuuid, scheme)
 
@@ -103,13 +104,18 @@ class SKOSReader(SKOSReader):
                         top_concept_id = self.generate_uuidv5_from_subject(
                             baseuuid, object
                         )
-                        self.relations[scheme_pk].append(
-                            {
-                                "source": scheme_pk,
-                                "type": "hasTopConcept",
-                                "target": top_concept_id,
-                            }
+
+                        top_concept_mock_tile = (
+                            LingoResourceImporter.create_mock_tile_from_relationship(
+                                {
+                                    "resourceId": scheme_pk,
+                                    "node_alias": "top_concept_of",
+                                    "nodegroup_alias": "top_concept_of",
+                                    "resourceinstanceid": top_concept_id,
+                                }
+                            )
                         )
+                        top_concept_mock_tiles[top_concept_id] = top_concept_mock_tile
 
                 if "identifier" not in [
                     key for val in new_scheme["tile_data"] for key in val.keys()
@@ -138,13 +144,22 @@ class SKOSReader(SKOSReader):
                         "tile_data": [],
                     }
 
-                    # new_concept["tile_data"][SKOS.inScheme].append(
-                    #     {
-                    #         "id": scheme_pk,
-                    #         "value": scheme_pk,
-                    #         "valuetype_id": skos_value_types.get("inScheme"),
-                    #     }
-                    # )
+                    if top_concept_mock_tiles.get(concept_pk):
+                        new_concept["tile_data"].append(
+                            top_concept_mock_tiles.get(concept_pk)
+                        )
+
+                    mock_tile = (
+                        LingoResourceImporter.create_mock_tile_from_relationship(
+                            {
+                                "resourceId": scheme_pk,
+                                "node_alias": "part_of_scheme",
+                                "nodegroup_alias": "part_of_scheme",
+                                "resourceinstanceid": concept_pk,
+                            }
+                        )
+                    )
+                    new_concept["tile_data"].append(mock_tile)
 
                     for predicate, object in graph.predicate_objects(concept):
                         predicate_str = (
@@ -175,37 +190,39 @@ class SKOSReader(SKOSReader):
                                 )
                                 new_concept["tile_data"].append(mock_tile)
 
-                            elif predicate == SKOS.broader:
-                                broader_concept_id = self.generate_uuidv5_from_subject(
+                            elif predicate in [
+                                SKOS.broader,
+                                SKOS.narrower,
+                                SKOS.related,
+                            ]:
+                                related_concept_id = self.generate_uuidv5_from_subject(
                                     baseuuid, object
                                 )
-                                self.relations[broader_concept_id].append(
-                                    {
-                                        "source": broader_concept_id,
-                                        "type": "narrower",
-                                        "target": concept_pk,
+                                if predicate == SKOS.broader:
+                                    relationship = {
+                                        "resourceId": related_concept_id,
+                                        "node_alias": "classification_status_ascribed_classification",
+                                        "nodegroup_alias": "classification_status",
                                     }
-                                )
-                            elif predicate == SKOS.narrower:
-                                self.relations[concept_pk].append(
-                                    {
-                                        "source": concept_pk,
-                                        "type": "narrower",
-                                        "target": self.generate_uuidv5_from_subject(
-                                            baseuuid, object
-                                        ),
+                                    resourceinstanceid = concept_pk
+                                elif predicate == SKOS.narrower:
+                                    relationship = {
+                                        "resourceId": concept_pk,
+                                        "node_alias": "classification_status_ascribed_classification",
+                                        "nodegroup_alias": "classification_status",
                                     }
-                                )
-                            elif predicate == SKOS.related:
-                                self.relations[concept_pk].append(
-                                    {
-                                        "source": concept_pk,
-                                        "type": "related",
-                                        "target": self.generate_uuidv5_from_subject(
-                                            baseuuid, object
-                                        ),
+                                    resourceinstanceid = related_concept_id
+                                elif predicate == SKOS.related:
+                                    relationship = {
+                                        "resourceId": concept_pk,
+                                        "node_alias": "relation_status_ascribed_comparate",
+                                        "nodegroup_alias": "relation_status",
                                     }
+                                    resourceinstanceid = related_concept_id
+                                mock_tile = LingoResourceImporter.create_mock_tile_from_relationship(
+                                    relationship
                                 )
+                                self.relations[resourceinstanceid].append(mock_tile)
 
                     if "identifier" not in [
                         key for val in new_concept["tile_data"] for key in val.keys()
@@ -223,6 +240,13 @@ class SKOSReader(SKOSReader):
                         new_concept["tile_data"].append(mock_tile)
 
                     self.concepts.append(new_concept)
+
+            # Map relationships to their respective concept resources
+            for concept in self.concepts:
+                if self.relations.get(concept["resourceinstanceid"]):
+                    concept["tile_data"].extend(
+                        self.relations.get(concept["resourceinstanceid"])
+                    )
 
     def orchestrate_bulk_import_from_skos(self, graph, overwrite_options):
         self.loadid = str(uuid.uuid4())
