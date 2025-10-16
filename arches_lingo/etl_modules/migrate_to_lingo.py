@@ -214,6 +214,19 @@ class LingoResourceImporter(BaseImportModule):
             return {"statement": mock_tile}
         pass
 
+    @staticmethod
+    def create_mock_tile_from_relationship(relationship):
+        mock_tile = {
+            relationship["node_alias"]: {
+                "resourceId": str(relationship["resourceId"]),
+                # TODO: populate ontologyProperty & inverseOntologyProperty
+                "ontologyProperty": "",
+                "resourceXresourceId": "",
+                "inverseOntologyProperty": "",
+            }
+        }
+        return {relationship["nodegroup_alias"]: mock_tile}
+
     def populate_staging_table(
         self, cursor, concepts_to_load, nodegroup_lookup, node_lookup
     ):
@@ -630,13 +643,15 @@ class LingoResourceImporter(BaseImportModule):
         # if absent, we're loading data from an external SKOS file
         try:
             self.scheme_conceptid = request.POST.get("scheme", None)
-            self.loadid = request.POST.get("loadid")
         except:
             self.scheme_conceptid = None
-            self.loadid = kwargs.get("loadid", None)
 
-        self.schemes = kwargs.get("schemes", [])
-        self.concepts = kwargs.get("concepts", [])
+        if not self.loadid:
+            self.loadid = request.POST.get("loadid", kwargs.get("loadid", None))
+
+        self.schemes = kwargs.get("schemes", None)
+        self.concepts = kwargs.get("concepts", None)
+        self.relations = kwargs.get("relations", None)
 
         if models.Concept.objects.count() < 500000:
             response = self.run_load_task(
