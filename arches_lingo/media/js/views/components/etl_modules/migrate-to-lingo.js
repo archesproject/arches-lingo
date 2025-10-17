@@ -9,7 +9,20 @@ import migrateRDMTemplate from 'templates/views/components/etl_modules/migrate-t
 const viewModel = function(params) {
     const self = this;
 
-    this.loadDetails = params.load_details;
+    if(Array.isArray(params.load_details)){
+        let details = {};
+        this.loadDetails = params.load_details.map(item => {
+            if(typeof item === 'string'){
+                details = {...details, ...JSON.parse(item)};
+            }
+            else {
+                details = {...details, ...item};
+            }
+        });
+        this.loadDetails = ko.observable(details);
+    } else {
+        this.loadDetails = ko.observable(params.load_details);
+    }
     this.state = params.state;
     this.loading = params.loading || ko.observable();
     this.alert = params.alert;
