@@ -325,3 +325,32 @@ export const fetchControlledListOptions = async (controlledListId: string) => {
     if (!response.ok) throw new Error(parsed.message || response.statusText);
     return parsed;
 };
+
+export const importThesaurus = async (
+    skosFile: File,
+    overwriteOption: string,
+) => {
+    const formData = new FormData();
+    // Arches-Querysets MultiPartParser requires 'json' field along with file(s)
+    const jsonData = {
+        overwrite_option: overwriteOption,
+    };
+    formData.append("json", JSON.stringify(jsonData));
+    formData.append("skosfile", skosFile);
+
+    const response = await fetch(arches.urls.api_import_thesaurus, {
+        method: "POST",
+        headers: { "X-CSRFTOKEN": getToken() },
+        body: formData,
+    });
+
+    try {
+        const parsed = await response.json();
+        if (response.ok) {
+            return parsed;
+        }
+        throw new Error(parsed.message);
+    } catch (error) {
+        throw new Error((error as Error).message || response.statusText);
+    }
+};

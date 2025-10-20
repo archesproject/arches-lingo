@@ -1,3 +1,4 @@
+import filetype
 from http import HTTPStatus
 
 from django.core.paginator import Paginator
@@ -13,6 +14,7 @@ from arches.app.utils.response import JSONErrorResponse, JSONResponse
 from arches_querysets.models import ResourceTileTree, TileTree
 from arches_lingo.querysets import fuzzy_search
 from arches_lingo.utils.concept_builder import ConceptBuilder
+from arches_lingo.utils.skos import SKOSReader
 
 
 @method_decorator(
@@ -205,3 +207,40 @@ class ConceptRelationshipView(ConceptTreeView):
             return_data["data"].append(data)
 
         return JSONResponse(return_data)
+
+
+@method_decorator(
+    group_required("RDM Administrator", raise_exception=True), name="dispatch"
+)
+class ThesaurusImportView(View):
+    def post(self, request):
+        skosfile = request.FILES.get("skosfile", None)
+        overwrite_option = (
+            JSONDeserializer()
+            .deserialize(request.POST.get("json"))
+            .get("overwrite_option", None)
+        )
+        if skosfile and overwrite_option:
+            try:
+                # Do minimal file validation to mock file checking in FileValidator
+                extension = skosfile.name.split(".")[-1]
+                guessed_file_type = filetype.guess(skosfile)
+
+                # guessed_file_type will be None if the file is xml
+                if extension != "xml" or guessed_file_type is not None:
+                    return JSONErrorResponse(
+                        message=(
+                            f"File extension {extension}/{guessed_file_type.extension} not allowed"
+                        ),
+                        status=HTTPStatus.BAD_REQUEST,
+                    )
+
+                skos = SKOSReader()
+                rdf = skos.read_file(skosfile)
+                concepts = skos.orchestrate_bulk_import_from_skos(rdf, overwrite_option)
+            # Wide catch is because Arches SKOSReader raises generic Exceptions
+            except Exception as error:
+                return JSONErrorResponse(
+                    message=(str(error)), status=HTTPStatus.BAD_REQUEST
+                )
+            return JSONResponse(concepts, status=HTTPStatus.OK)
