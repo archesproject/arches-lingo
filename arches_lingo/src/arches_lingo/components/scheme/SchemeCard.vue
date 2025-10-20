@@ -34,7 +34,7 @@ function openImportDialog() {
 
 <template>
     <RouterLink :to="schemeURL">
-        <Card>
+        <Card :class="scheme.resourceinstanceid === NEW ? 'new-scheme' : ''">
             <template #title>
                 <div v-if="scheme.resourceinstanceid === NEW">
                     {{ $gettext("New Scheme") }}
@@ -110,6 +110,16 @@ a {
     overflow: hidden;
     margin-top: 0.5rem;
     margin-bottom: 0.5rem;
+}
+
+.new-scheme > :deep(.p-card-body) {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    gap: 0;
+
+    :deep(.p-card-footer) {
+        margin-top: 1rem;
+    }
 }
 
 :deep(.p-card-content) {

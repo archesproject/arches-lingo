@@ -81,14 +81,16 @@ async function submit() {
         v-model:visible="visible"
         position="center"
         :draggable="false"
-        :header="$gettext('Import Controlled Lists from SKOS File')"
+        :header="$gettext('Import Lingo Resources from SKOS File')"
         :close-on-escape="true"
         :modal="true"
         :pt="{
             root: {
                 style: {
-                    minWidth: '50rem',
+                    minWidth: '40rem',
                     borderRadius: '0',
+                    fontFamily: 'var(--p-lingo-font-family)',
+                    fontSize: 'var(--p-lingo-font-size-small)',
                 },
             },
             header: {
