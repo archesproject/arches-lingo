@@ -55,6 +55,9 @@ export const LingoPreset = definePreset(ArchesPreset, {
                 checkbox: {
                     background: "{light-gray}",
                 },
+                dialog: {
+                    headerTextColor: "{slate.50}",
+                },
                 header: {
                     background: "{surface.50}",
                     border: "{neutral.300}",
@@ -98,6 +101,9 @@ export const LingoPreset = definePreset(ArchesPreset, {
                 surface: palette("{zinc}"),
                 checkbox: {
                     background: "{surface.500}",
+                },
+                dialog: {
+                    headerTextColor: "{slate.50}",
                 },
                 footer: {
                     background: "{surface.900}",
@@ -173,6 +179,11 @@ export const LingoPreset = definePreset(ArchesPreset, {
                         borderColor: "{button-primary-background}",
                     },
                 },
+            },
+        },
+        dialog: {
+            title: {
+                fontSize: "{lingo-font-size-normal}",
             },
         },
         inputtext: {
