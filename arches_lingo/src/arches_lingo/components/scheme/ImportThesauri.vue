@@ -21,27 +21,30 @@ const emit = defineEmits<{
 }>();
 
 const file = ref<File | null>(null);
-const overwriteOption = ref("ignore");
+const overwriteOption = ref("overwrite");
 
 const overwriteOptions = ref([
     {
         label: $gettext("Ignore"),
         value: "ignore",
-        tooltip: $gettext("Do nothing if the list or list item already exists"),
+        tooltip: $gettext("Do nothing if the Scheme or Concept already exists"),
+        disabled: true,
     },
-    {
-        label: $gettext("Duplicate"),
-        value: "duplicate",
-        tooltip: $gettext(
-            "Create a new list or list item if it already exists",
-        ),
-    },
+    // {
+    //     label: $gettext("Duplicate"),
+    //     value: "duplicate",
+    //     tooltip: $gettext(
+    //         "Create a new Scheme or Concept if it already exists",
+    //     ),
+    //     disabled: true,
+    // },
     {
         label: $gettext("Overwrite"),
         value: "overwrite",
         tooltip: $gettext(
-            "If a list already exists, replace it with the new one",
+            "If a Scheme or Concept already exists, replace it with the new one",
         ),
+        disabled: false,
     },
 ]);
 
@@ -143,6 +146,7 @@ async function submit() {
                             :initial-value="option.value"
                             :aria-label="option.tooltip"
                             :invalid="!overwriteOption"
+                            :disabled="option.disabled"
                         />
                         <label
                             :for="option.value"
