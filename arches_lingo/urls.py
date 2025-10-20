@@ -9,6 +9,7 @@ from arches_lingo.views.api.concepts import (
     ValueSearchView,
     ConceptResourceView,
     ConceptRelationshipView,
+    ThesaurusImportView,
 )
 from arches_lingo.views.api.generic import (
     LingoResourceDetailView,
@@ -68,6 +69,11 @@ urlpatterns = [
         "api/lingo/<slug:graph>/<slug:nodegroup_alias>/<uuid:pk>",
         LingoTileDetailView.as_view(),
         name="api-lingo-tile",
+    ),
+    path(
+        "api/import-thesaurus",
+        ThesaurusImportView.as_view(),
+        name="api-import-thesaurus",
     ),
     path("", include("arches_controlled_lists.urls")),
     path("", include("arches_component_lab.urls")),

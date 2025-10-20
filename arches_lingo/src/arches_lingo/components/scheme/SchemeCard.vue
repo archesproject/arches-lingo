@@ -1,9 +1,12 @@
 <script setup lang="ts">
-import { inject } from "vue";
+import { inject, ref } from "vue";
 import { systemLanguageKey, NEW } from "@/arches_lingo/constants.ts";
 import { routeNames } from "@/arches_lingo/routes.ts";
 
 import Card from "primevue/card";
+import Button from "primevue/button";
+
+import ImportThesauri from "@/arches_lingo/components/scheme/ImportThesauri.vue";
 
 import { extractDescriptors } from "@/arches_lingo/utils.ts";
 
@@ -19,6 +22,14 @@ const schemeURL = {
 };
 
 const schemeDescriptor = extractDescriptors(scheme, systemLanguage);
+
+const showImportDialog = ref(false);
+const importDialogKey = ref(0);
+
+function openImportDialog() {
+    importDialogKey.value++;
+    showImportDialog.value = true;
+}
 </script>
 
 <template>
@@ -40,6 +51,13 @@ const schemeDescriptor = extractDescriptors(scheme, systemLanguage);
                     <div class="scheme-circle">
                         <i class="pi pi-share-alt new-scheme-icon"></i>
                     </div>
+                    <div>
+                        <span>{{
+                            $gettext(
+                                "Add a new thesaurus, manage concept hierarchies",
+                            )
+                        }}</span>
+                    </div>
                 </div>
                 <span>{{ schemeDescriptor.description }}</span>
             </template>
@@ -47,12 +65,18 @@ const schemeDescriptor = extractDescriptors(scheme, systemLanguage);
                 v-if="scheme.resourceinstanceid === NEW"
                 #footer
             >
-                <span>{{
-                    $gettext("Add a new thesaurus, manage concept hierarchies")
-                }}</span>
+                <Button
+                    :label="$gettext('Import Thesauri')"
+                    type="button"
+                    @click.stop.prevent="openImportDialog"
+                />
             </template>
         </Card>
     </RouterLink>
+    <ImportThesauri
+        v-if="showImportDialog"
+        :key="importDialogKey"
+    />
 </template>
 
 <style scoped>
@@ -93,8 +117,8 @@ a {
     text-overflow: ellipsis;
 }
 
-:deep(.p-card-content > span),
-:deep(.p-card-footer > span) {
+:deep(.p-card-content),
+:deep(.p-card-footer) {
     font-size: var(--p-lingo-font-size-xsmall);
 }
 
@@ -102,7 +126,7 @@ a {
     display: inline-block;
     text-align: center;
     padding: 1.25rem;
-    margin: 1rem;
+    margin: 0.75rem;
     border-radius: 50%;
     background: var(--p-surface-400);
     border: 0.0625rem solid var(--p-surface-900);
