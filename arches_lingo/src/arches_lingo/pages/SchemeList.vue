@@ -23,6 +23,8 @@ const isLoading = ref(true);
 const schemes = ref<ResourceInstanceResult[]>([]);
 
 async function fetchSchemes() {
+    schemes.value = [];
+    isLoading.value = true;
     try {
         schemes.value = await fetchLingoResources("scheme");
     } catch (error) {
