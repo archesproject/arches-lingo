@@ -68,6 +68,7 @@ function openImportDialog() {
                 <Button
                     :label="$gettext('Import Thesauri')"
                     type="button"
+                    outlined
                     @click.stop.prevent="openImportDialog"
                 />
             </template>
@@ -119,7 +120,20 @@ a {
 
     :deep(.p-card-footer) {
         margin-top: 1rem;
+        display: flex;
     }
+}
+
+.new-scheme :deep(.p-button) {
+    border-radius: 0;
+    flex-grow: 1;
+    font-size: var(--p-lingo-font-size-xsmall);
+    color: var(--p-button-contrast-color);
+    background: var(--p-button-primary-hover-background);
+}
+
+.new-scheme :deep(.p-button:hover) {
+    background: var(--p-primary-active-color);
 }
 
 :deep(.p-card-content) {
