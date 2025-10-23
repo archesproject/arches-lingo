@@ -14,6 +14,7 @@ from arches.app.etl_modules.decorators import load_data_async
 from arches.app.etl_modules.base_import_module import BaseImportModule
 from arches.app.models import models
 from arches.app.models.models import LoadStaging, NodeGroup, LoadEvent
+from arches.app.models.concept import Concept
 from arches.app.models.system_settings import settings
 import arches_lingo.tasks as tasks
 from arches_lingo.const import (
@@ -640,34 +641,46 @@ class LingoResourceImporter(BaseImportModule):
         return {"success": True, "data": message}
 
     def write(self, request, **kwargs):
+        if not self.loadid:
+            self.loadid = request.POST.get("loadid", kwargs.get("loadid", None))
+
         # scheme_conceptid is indicator of the entrypoint -
         # if it's present, we're migrating from the RDM
         # if absent, we're loading data from an external SKOS file
         try:
             self.scheme_conceptid = request.POST.get("scheme", None)
+            if self.scheme_conceptid:
+                num_concepts_to_import = len(
+                    Concept()
+                    .get(
+                        id=self.scheme_conceptid,
+                        include_subconcepts=True,
+                        include_parentconcepts=False,
+                        include_relatedconcepts=True,
+                        depth_limit=None,
+                        up_depth_limit=None,
+                    )
+                    .flatten()
+                )
         except:
             self.scheme_conceptid = None
-
-        if not self.loadid:
-            self.loadid = request.POST.get("loadid", kwargs.get("loadid", None))
 
         self.schemes = kwargs.get("schemes", None)
         self.concepts = kwargs.get("concepts", None)
         self.relations = kwargs.get("relations", None)
 
-        if models.Concept.objects.count() < 500000:
-            response = self.run_load_task(
-                self.userid, self.loadid, self.scheme_conceptid
-            )
-        else:
-            response = self.run_load_task_async(request, self.loadid)
+        if (self.scheme_conceptid and num_concepts_to_import <= 1000) or (
+            len(self.concepts) <= 1000
+        ):
+            response = self.run_load_task()
+        elif (self.scheme_conceptid and num_concepts_to_import > 1000) or (
+            len(self.concepts) > 1000
+        ):
+            response = self.run_load_task_async(request or {}, self.loadid)
         message = "Schemes and Concept Migration to Lingo Models Complete"
         return {"success": True, "data": message}
 
-    def run_load_task(self, userid, loadid, scheme_conceptid):
-        self.loadid = loadid  # currently redundant, but be certain
-        self.scheme_conceptid = scheme_conceptid
-
+    def run_load_task(self):
         with connection.cursor() as cursor:
 
             if self.scheme_conceptid:
@@ -713,7 +726,7 @@ class LingoResourceImporter(BaseImportModule):
                     """UPDATE load_event SET status = %s WHERE loadid = %s""",
                     ("validated", self.loadid),
                 )
-                response = save_to_tiles(userid, self.loadid)
+                response = save_to_tiles(self.userid, self.loadid)
                 cursor.execute(
                     """CALL __arches_update_resource_x_resource_with_graphids();"""
                 )
@@ -725,17 +738,15 @@ class LingoResourceImporter(BaseImportModule):
             else:
                 cursor.execute(
                     """UPDATE load_event SET status = %s, load_end_time = %s WHERE loadid = %s""",
-                    ("failed", datetime.now(), loadid),
+                    ("failed", datetime.now(), self.loadid),
                 )
                 return {"success": False, "data": "failed"}
 
     @load_data_async
     def run_load_task_async(self, request):
-        migrate_rdm_to_lingo_task = tasks.migrate_rdm_to_lingo_task.apply_async(
-            (self.userid, self.loadid, self.scheme_conceptid),
-        )
+        task = tasks.load_lingo_resources_task.apply_async(kwargs={"importer": self})
         with connection.cursor() as cursor:
             cursor.execute(
                 """UPDATE load_event SET taskid = %s WHERE loadid = %s""",
-                (migrate_rdm_to_lingo_task.task_id, self.loadid),
+                (task.task_id, self.loadid),
             )

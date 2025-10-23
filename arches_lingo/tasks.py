@@ -8,22 +8,21 @@ from arches.app.tasks import notify_completion
 
 
 @shared_task
-def migrate_rdm_to_lingo_task(userid, loadid, scheme_conceptid):
+def load_lingo_resources_task(**kwargs):
     logger = logging.getLogger(__name__)
 
     try:
-        Migrator = migrate_to_lingo.LingoResourceImporter(loadid=loadid)
-        Migrator.run_load_task(userid, loadid, scheme_conceptid)
-
-        load_event = models.LoadEvent.objects.get(loadid=loadid)
+        importer = kwargs.get("importer")
+        importer.run_load_task()
+        load_event = models.LoadEvent.objects.get(loadid=importer.loadid)
         status = _("Completed") if load_event.status == "indexed" else _("Failed")
     except Exception as e:
         logger.error(e)
-        load_event = models.LoadEvent.objects.get(loadid=loadid)
+        load_event = models.LoadEvent.objects.get(loadid=importer.loadid)
         load_event.status = "failed"
         load_event.save()
         status = _("Failed")
     finally:
-        msg = _("RDM to Lingo Migration: [{}]").format(status)
-        user = User.objects.get(id=userid)
+        msg = _("Lingo Resource Importer: [{}]").format(status)
+        user = User.objects.get(id=importer.userid)
         notify_completion(msg, user)
