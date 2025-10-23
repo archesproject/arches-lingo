@@ -170,11 +170,13 @@ async function submit() {
             <Button
                 :label="$gettext('Cancel')"
                 type="button"
+                class="footer-button"
                 @click="visible = false"
             />
             <Button
                 :label="$gettext('Upload File')"
                 type="submit"
+                class="footer-button"
                 :disabled="isValid === false || loading"
                 @click="submit"
             />
@@ -204,7 +206,8 @@ async function submit() {
     margin-inline-start: 0.5rem;
 }
 
-:deep(.p-fileupload-choose-button) {
+:deep(.p-fileupload-choose-button),
+.footer-button {
     font-size: var(--p-lingo-font-size-small);
 }
 </style>
