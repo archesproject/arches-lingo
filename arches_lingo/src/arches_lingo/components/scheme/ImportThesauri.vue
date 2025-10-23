@@ -7,6 +7,7 @@ import Button from "primevue/button";
 import Dialog from "primevue/dialog";
 import InputFile from "primevue/fileupload";
 import RadioButton from "primevue/radiobutton";
+import ProgressSpinner from "primevue/progressspinner";
 
 import { importThesaurus } from "@/arches_lingo/api.ts";
 import { DEFAULT_ERROR_TOAST_LIFE, ERROR } from "@/arches_lingo/constants.ts";
@@ -14,12 +15,12 @@ import { DEFAULT_ERROR_TOAST_LIFE, ERROR } from "@/arches_lingo/constants.ts";
 const { $gettext } = useGettext();
 const toast = useToast();
 
-const visible = ref(true);
-
 const emit = defineEmits<{
     (e: "imported"): void;
 }>();
 
+const visible = ref(true);
+const loading = ref(false);
 const file = ref<File | null>(null);
 const overwriteOption = ref("overwrite");
 
@@ -64,6 +65,7 @@ async function submit() {
     if (!isValid.value || !file.value) {
         return;
     }
+    loading.value = true;
     await importThesaurus(file.value, overwriteOption.value)
         .then(() => {
             emit("imported");
@@ -75,6 +77,7 @@ async function submit() {
                 summary: $gettext("Unable to import SKOS file"),
                 detail: error.message,
             });
+            loading.value = false;
         });
 }
 </script>
@@ -106,54 +109,60 @@ async function submit() {
         }"
     >
         <template #default>
-            <div class="form-field">
-                <label for="skos-file-upload">{{
-                    $gettext("SKOS File")
-                }}</label>
-                <InputFile
-                    v-model="file"
-                    accept=".xml"
-                    mode="basic"
-                    :auto="false"
-                    :choose-label="$gettext('Choose File')"
-                    :multiple="false"
-                    :pt="{ input: { id: 'skos-file-upload' } }"
-                    @select="updateFileValue"
-                />
-            </div>
-            <div class="form-field">
-                <label id="overwrite-options-label">{{
-                    $gettext("Overwrite Options")
-                }}</label>
-                <div
-                    role="radiogroup"
-                    aria-labelledby="overwrite-options-label"
-                >
-                    <span
-                        v-for="option in overwriteOptions"
-                        :key="option.value"
-                        v-tooltip.bottom="{
-                            value: option.tooltip,
-                            showDelay: 1000,
-                            hideDelay: 300,
-                        }"
-                        class="radio-button-and-label"
+            <ProgressSpinner
+                v-if="loading"
+                style="display: flex"
+            />
+            <div v-else>
+                <div class="form-field">
+                    <label for="skos-file-upload">{{
+                        $gettext("SKOS File")
+                    }}</label>
+                    <InputFile
+                        v-model="file"
+                        accept=".xml"
+                        mode="basic"
+                        :auto="false"
+                        :choose-label="$gettext('Choose File')"
+                        :multiple="false"
+                        :pt="{ input: { id: 'skos-file-upload' } }"
+                        @select="updateFileValue"
+                    />
+                </div>
+                <div class="form-field">
+                    <label id="overwrite-options-label">{{
+                        $gettext("Overwrite Options")
+                    }}</label>
+                    <div
+                        role="radiogroup"
+                        aria-labelledby="overwrite-options-label"
                     >
-                        <RadioButton
-                            v-model="overwriteOption"
-                            :input-id="option.value"
-                            :value="option.value"
-                            :initial-value="option.value"
-                            :aria-label="option.tooltip"
-                            :invalid="!overwriteOption"
-                            :disabled="option.disabled"
-                        />
-                        <label
-                            :for="option.value"
-                            class="radio-label"
-                            >{{ option.label }}</label
+                        <span
+                            v-for="option in overwriteOptions"
+                            :key="option.value"
+                            v-tooltip.bottom="{
+                                value: option.tooltip,
+                                showDelay: 1000,
+                                hideDelay: 300,
+                            }"
+                            class="radio-button-and-label"
                         >
-                    </span>
+                            <RadioButton
+                                v-model="overwriteOption"
+                                :input-id="option.value"
+                                :value="option.value"
+                                :initial-value="option.value"
+                                :aria-label="option.tooltip"
+                                :invalid="!overwriteOption"
+                                :disabled="option.disabled"
+                            />
+                            <label
+                                :for="option.value"
+                                class="radio-label"
+                                >{{ option.label }}</label
+                            >
+                        </span>
+                    </div>
                 </div>
             </div>
         </template>
@@ -166,7 +175,7 @@ async function submit() {
             <Button
                 :label="$gettext('Upload File')"
                 type="submit"
-                :disabled="isValid === false"
+                :disabled="isValid === false || loading"
                 @click="submit"
             />
         </template>
@@ -193,5 +202,9 @@ async function submit() {
 }
 .radio-label {
     margin-inline-start: 0.5rem;
+}
+
+:deep(.p-fileupload-choose-button) {
+    font-size: var(--p-lingo-font-size-small);
 }
 </style>

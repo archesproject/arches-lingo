@@ -16,6 +16,10 @@ import type { ResourceInstanceResult } from "@/arches_lingo/types";
 const systemLanguage = inject(systemLanguageKey) as Language;
 
 const { scheme } = defineProps<{ scheme: ResourceInstanceResult }>();
+const emit = defineEmits<{
+    (e: "imported"): void;
+}>();
+
 const schemeURL = {
     name: routeNames.scheme,
     params: { id: scheme.resourceinstanceid },
@@ -29,6 +33,11 @@ const importDialogKey = ref(0);
 function openImportDialog() {
     importDialogKey.value++;
     showImportDialog.value = true;
+}
+
+function onImport() {
+    showImportDialog.value = false;
+    emit("imported");
 }
 </script>
 
@@ -77,6 +86,7 @@ function openImportDialog() {
     <ImportThesauri
         v-if="showImportDialog"
         :key="importDialogKey"
+        @imported="onImport"
     />
 </template>
 
