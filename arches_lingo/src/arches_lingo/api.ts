@@ -326,31 +326,43 @@ export const fetchControlledListOptions = async (controlledListId: string) => {
     return parsed;
 };
 
-export const importThesaurus = async (
-    skosFile: File,
-    overwriteOption: string,
-) => {
+export const importThesaurus = async (file: File, overwriteOption: string) => {
     const formData = new FormData();
-    // Arches-Querysets MultiPartParser requires 'json' field along with file(s)
-    const jsonData = {
-        overwrite_option: overwriteOption,
-    };
-    formData.append("json", JSON.stringify(jsonData));
-    formData.append("skosfile", skosFile);
+    formData.append("action", "start");
+    formData.append("mode", "ui");
+    // moduleId normally fetched in context of BDM, but needed to get throough ETLManagerView POST
+    const lingoImporterModuleId = "11cad3ca-e155-44b1-9910-c50b3def47f6";
+    formData.append("module", lingoImporterModuleId);
 
-    const response = await fetch(arches.urls.api_import_thesaurus, {
+    // Mimic Bulk Data Manager behavior - 'Start' request initializes new load event
+    const startResponse = await fetch(arches.urls.etl_manager, {
         method: "POST",
         headers: { "X-CSRFTOKEN": getToken() },
         body: formData,
     });
 
-    try {
-        const parsed = await response.json();
-        if (response.ok) {
-            return parsed;
+    if (startResponse.ok) {
+        const parsed = await startResponse.json();
+        const loadId = parsed.result.load_id;
+        formData.append("load_id", loadId);
+        formData.append("overwrite_option", overwriteOption);
+        formData.append("file", file);
+        formData.set("action", "write");
+        // Subsequent 'Write' request to actually upload the file and start the import
+        const response = await fetch(arches.urls.etl_manager, {
+            method: "POST",
+            headers: { "X-CSRFTOKEN": getToken() },
+            body: formData,
+        });
+
+        try {
+            const parsed = await response.json();
+            if (response.ok) {
+                return parsed;
+            }
+            throw new Error(parsed.message);
+        } catch (error) {
+            throw new Error((error as Error).message || response.statusText);
         }
-        throw new Error(parsed.message);
-    } catch (error) {
-        throw new Error((error as Error).message || response.statusText);
     }
 };
