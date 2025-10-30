@@ -16,6 +16,5 @@
     api_lingo_resource_partial='(graphslug, resourceinstanceid, nodegroupAlias) => { return "{% url "api-lingo-resource-partial" "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa" "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb" "cccccccc-cccc-cccc-cccc-cccccccccccc" %}".replace("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", graphslug).replace("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", resourceinstanceid).replace("cccccccc-cccc-cccc-cccc-cccccccccccc", nodegroupAlias)}'
     api_lingo_tiles='(graphslug, nodegroupAlias) => { return "{% url "api-lingo-tiles" "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa" "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb" %}".replace("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", graphslug).replace("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", nodegroupAlias)}'
     api_lingo_tile='(graphslug, nodegroupAlias, tileid) => { return "{% url "api-lingo-tile" "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa" "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb" "cccccccc-cccc-cccc-cccc-cccccccccccc" %}".replace("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", graphslug).replace("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", nodegroupAlias).replace("cccccccc-cccc-cccc-cccc-cccccccccccc", tileid)}'
-    api_import_thesaurus="{% url 'api-import-thesaurus' %}"
 ></div>
 {% endblock arches_urls %}
