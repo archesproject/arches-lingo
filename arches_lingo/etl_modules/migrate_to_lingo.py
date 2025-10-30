@@ -67,22 +67,25 @@ class LingoResourceImporter(BaseImportModule):
     def __init__(self, request=None, loadid=None, userid=None, **kwargs):
         if request:
             moduleid = request.POST.get("module")
-        else:
+            loadid = request.POST.get("load_id")
+            userid = request.user.id if userid is None else userid
+        if moduleid is None:
             moduleid = models.ETLModule.objects.get(slug="migrate-to-lingo").pk
-
         super().__init__(
             request=request,
-            loadid=loadid,
             userid=userid,
             moduleid=moduleid,
         )
-
+        if loadid is None and self.loadid is None:
+            # Mints a loadid if one was not minted by frontend
+            loadid = str(uuid.uuid4())
+        self.loadid = loadid
+        self.load_event = None
+        self.mode = kwargs.get("mode", "cli")
         self.scheme_conceptid = request.POST.get("scheme") if request else None
         self.language_lookup = {
             lang.code: lang.name for lang in models.Language.objects.all()
         }
-        self.load_event = None
-        self.mode = kwargs.get("mode", "cli")
 
     def get_schemes(self, request):
         schemes = (
@@ -626,7 +629,7 @@ class LingoResourceImporter(BaseImportModule):
     def start(self, request):
         load_details = {"operation": "Bulk Lingo Resource Import"}
         if not self.loadid:
-            self.loadid = request.POST.get("loadid")
+            self.loadid = request.POST.get("load_id")
         load_event = models.LoadEvent.objects.create(
             loadid=self.loadid,
             user=models.User.objects.get(id=self.userid),
@@ -637,12 +640,16 @@ class LingoResourceImporter(BaseImportModule):
             complete=False,
         )
         self.load_event = load_event
-        message = "load event created"
-        return {"success": True, "data": message}
+        data = {
+            "message": "load event created",
+            "load_id": self.loadid,
+            "module": self.moduleid,
+        }
+        return {"success": True, "data": data}
 
     def write(self, request, **kwargs):
         if not self.loadid:
-            self.loadid = request.POST.get("loadid", kwargs.get("loadid", None))
+            self.loadid = request.POST.get("load_id", kwargs.get("loadid", None))
 
         # scheme_conceptid is indicator of the entrypoint -
         # if it's present, we're migrating from the RDM
