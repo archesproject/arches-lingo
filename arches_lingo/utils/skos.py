@@ -7,8 +7,7 @@ from rdflib.graph import Graph
 from arches.app.models import models
 from arches.app.models.system_settings import settings
 from arches_querysets.models import ResourceTileTree
-
-from arches_controlled_lists.utils.skos import SKOSReader, SKOSWriter
+from arches_controlled_lists.utils.skos import SKOSReader
 
 from arches_lingo.etl_modules.migrate_to_lingo import LingoResourceImporter
 
@@ -253,22 +252,4 @@ class SKOSReader(SKOSReader):
                         self.relations.get(concept["resourceinstanceid"])
                     )
 
-    def orchestrate_bulk_import_from_skos(self, graph, overwrite_options):
-        self.loadid = str(uuid.uuid4())
-        bulk_loader = LingoResourceImporter(
-            loadid=self.loadid,
-            userid=models.User.objects.get(username="admin").pk,
-            mode="cli",
-        )
-
-        # TODO: BDM error handling
-        start_request = bulk_loader.start(request=None)
-        self.extract_concepts_from_skos_for_lingo_import(
-            graph, overwrite_options=overwrite_options
-        )
-        write_request = bulk_loader.write(
-            request=None,
-            schemes=self.schemes,
-            concepts=self.concepts,
-            relations=self.relations,
-        )
+            return self.schemes, self.concepts
