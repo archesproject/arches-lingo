@@ -1,13 +1,17 @@
-from datetime import datetime
+import filetype
 import json
 import logging
+import os
 import uuid
-
+from datetime import datetime
 from collections import defaultdict
+
+from django.core.files.storage import default_storage
 from django.db import connection
 from django.db.models import OuterRef, Prefetch, Subquery
 from django.db.models.functions import Coalesce
 from django.utils.translation import gettext as _
+
 from arches.app.datatypes.datatypes import DataTypeFactory
 from arches.app.etl_modules.save import save_to_tiles
 from arches.app.etl_modules.decorators import load_data_async
@@ -16,6 +20,7 @@ from arches.app.models import models
 from arches.app.models.models import LoadStaging, NodeGroup, LoadEvent
 from arches.app.models.concept import Concept
 from arches.app.models.system_settings import settings
+
 import arches_lingo.tasks as tasks
 from arches_lingo.const import (
     SCHEMES_GRAPH_ID,
@@ -69,6 +74,8 @@ class LingoResourceImporter(BaseImportModule):
             moduleid = request.POST.get("module")
             loadid = request.POST.get("load_id")
             userid = request.user.id if userid is None else userid
+        else:
+            moduleid = kwargs.get("moduleid", None)
         if moduleid is None:
             moduleid = models.ETLModule.objects.get(slug="migrate-to-lingo").pk
         super().__init__(
@@ -82,7 +89,12 @@ class LingoResourceImporter(BaseImportModule):
         self.loadid = loadid
         self.load_event = None
         self.mode = kwargs.get("mode", "cli")
-        self.scheme_conceptid = request.POST.get("scheme") if request else None
+        self.temp_file_path = kwargs.get("temp_file_path", None)
+        self.scheme_conceptid = (
+            request.POST.get("scheme")
+            if request
+            else kwargs.get("scheme_conceptid", None)
+        )
         self.language_lookup = {
             lang.code: lang.name for lang in models.Language.objects.all()
         }
@@ -647,61 +659,87 @@ class LingoResourceImporter(BaseImportModule):
         }
         return {"success": True, "data": data}
 
-    def write(self, request, **kwargs):
-        if not self.loadid:
-            self.loadid = request.POST.get("load_id", kwargs.get("loadid", None))
+    def write(self, request):
 
         # scheme_conceptid is indicator of the entrypoint -
-        # if it's present, we're migrating from the RDM
+        # if it's present, we're migrating a thesaurus from the RDM
         # if absent, we're loading data from an external SKOS file
-        try:
-            self.scheme_conceptid = request.POST.get("scheme", None)
-            if self.scheme_conceptid:
-                num_concepts_to_import = len(
-                    Concept()
-                    .get(
-                        id=self.scheme_conceptid,
-                        include_subconcepts=True,
-                        include_parentconcepts=False,
-                        include_relatedconcepts=True,
-                        depth_limit=None,
-                        up_depth_limit=None,
-                    )
-                    .flatten()
+        self.scheme_conceptid = request.POST.get("scheme", None)
+        file = request.FILES["file"] if "file" in request.FILES else None
+
+        if self.scheme_conceptid:
+            num_concepts_to_import = len(
+                Concept()
+                .get(
+                    id=self.scheme_conceptid,
+                    include_subconcepts=True,
+                    include_parentconcepts=False,
+                    include_relatedconcepts=True,
+                    depth_limit=None,
+                    up_depth_limit=None,
                 )
-        except:
-            self.scheme_conceptid = None
+                .flatten()
+            )
+            try:
+                if num_concepts_to_import <= 1000:
+                    response = self.run_load_task()
+                elif num_concepts_to_import > 1000:
+                    response = self.run_load_task_async(request, self.loadid)
+                message = "Schemes and Concept Migration to Lingo Models Complete"
+                return {"success": True, "data": message}
+            except Exception as error:
+                return self.return_with_error(error)
 
-        self.schemes = kwargs.get("schemes", None)
-        self.concepts = kwargs.get("concepts", None)
-        self.relations = kwargs.get("relations", None)
+        elif file is not None:
+            # Do minimal file validation to mock file checking in FileValidator
+            extension = file.name.split(".")[-1]
+            guessed_file_type = filetype.guess(file)
 
-        if (self.scheme_conceptid and num_concepts_to_import <= 1000) or (
-            len(self.concepts) <= 1000
-        ):
-            response = self.run_load_task()
-        elif (self.scheme_conceptid and num_concepts_to_import > 1000) or (
-            len(self.concepts) > 1000
-        ):
-            response = self.run_load_task_async(request or {}, self.loadid)
-        message = "Schemes and Concept Migration to Lingo Models Complete"
-        return {"success": True, "data": message}
+            # guessed_file_type will be None if the file is xml
+            if extension != "xml" or guessed_file_type is not None:
+                message = f"File extension {extension}/{guessed_file_type.extension} not allowed"
+                return self.return_with_error(message)
+
+            use_celery_file_size_threshold = self.config.get(
+                "celeryByteSizeLimit", 100000
+            )
+            try:
+                if file.size <= use_celery_file_size_threshold:
+                    # Prevent circular import
+                    from arches_lingo.utils.skos import SKOSReader
+
+                    skos_reader = SKOSReader()
+                    rdf = skos_reader.read_file(file)
+                    self.schemes, self.concepts = (
+                        skos_reader.extract_concepts_from_skos_for_lingo_import(rdf)
+                    )
+                    response = self.run_load_task()
+
+                elif file.size > use_celery_file_size_threshold:
+                    # Save file to temp storage so it can be accessed by celery worker
+                    temp_dir = os.path.join(
+                        settings.UPLOADED_FILES_DIR, "tmp", self.loadid
+                    )
+                    os.makedirs(temp_dir, exist_ok=True)
+                    self.temp_file_path = os.path.join(temp_dir, file.name)
+                    default_storage.save(self.temp_file_path, file)
+                    file.close()
+                    response = self.run_load_task_async(request, self.loadid)
+
+                message = "Schemes and Concept Migration to Lingo Models Complete"
+                return {"success": True, "data": message}
+            except Exception as error:
+                return self.return_with_error(error)
+
+        else:
+            return self.return_with_error(
+                _(
+                    "No file uploaded or Scheme selected. Please provide a SKOS file or select a Scheme to migrate."
+                )
+            )
 
     def run_load_task(self):
         with connection.cursor() as cursor:
-
-            if self.scheme_conceptid:
-                # If importing data from the RDM, extract the resources & mock tiles
-                schemes, concepts, concepts_to_migrate, concept_hierarchy = (
-                    self.extract_schemes_and_concepts_from_rdm(
-                        cursor, self.scheme_conceptid
-                    )
-                )
-            else:
-                # Get schemes and concepts already parsed from SKOS file
-                schemes = self.schemes
-                concepts = self.concepts
-
             # Create node and nodegroup lookups
             schemes_nodegroup_lookup, schemes_nodes = self.get_graph_tree(
                 SCHEMES_GRAPH_ID
@@ -712,12 +750,31 @@ class LingoResourceImporter(BaseImportModule):
             )
             concepts_node_lookup = self.get_node_lookup(concepts_nodes)
 
+            # If importing data from the RDM, extract the resources & mock tiles
+            if self.scheme_conceptid:
+                self.schemes, self.concepts, concepts_to_migrate, concept_hierarchy = (
+                    self.extract_schemes_and_concepts_from_rdm(
+                        cursor, self.scheme_conceptid
+                    )
+                )
+            # If using celery and importing from SKOS file, read from temp file path
+            elif self.temp_file_path:
+                file = default_storage.open(self.temp_file_path, "rb")
+                # Prevent circular import
+                from arches_lingo.utils.skos import SKOSReader
+
+                skos_reader = SKOSReader()
+                rdf = skos_reader.read_file(file)
+                self.schemes, self.concepts = (
+                    skos_reader.extract_concepts_from_skos_for_lingo_import(rdf)
+                )
+
             # Populate staging table with schemes and concepts
             self.populate_staging_table(
-                cursor, schemes, schemes_nodegroup_lookup, schemes_node_lookup
+                cursor, self.schemes, schemes_nodegroup_lookup, schemes_node_lookup
             )
             self.populate_staging_table(
-                cursor, concepts, concepts_nodegroup_lookup, concepts_node_lookup
+                cursor, self.concepts, concepts_nodegroup_lookup, concepts_node_lookup
             )
 
             # Create relationships
@@ -751,9 +808,25 @@ class LingoResourceImporter(BaseImportModule):
 
     @load_data_async
     def run_load_task_async(self, request):
-        task = tasks.load_lingo_resources_task.apply_async(kwargs={"importer": self})
+        task = tasks.load_lingo_resources_task.apply_async(
+            args=[
+                self.loadid,
+                self.userid,
+                {
+                    "scheme_conceptid": self.scheme_conceptid,
+                    "temp_file_path": self.temp_file_path,
+                    "mode": self.mode,
+                },
+            ]
+        )
         with connection.cursor() as cursor:
             cursor.execute(
                 """UPDATE load_event SET taskid = %s WHERE loadid = %s""",
                 (task.task_id, self.loadid),
             )
+
+    def return_with_error(self, error):
+        return {
+            "success": False,
+            "data": {"title": _("Error"), "message": error},
+        }
