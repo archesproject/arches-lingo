@@ -1,4 +1,3 @@
-import filetype
 from http import HTTPStatus
 
 from django.core.paginator import Paginator
@@ -14,7 +13,6 @@ from arches.app.utils.response import JSONErrorResponse, JSONResponse
 from arches_querysets.models import ResourceTileTree, TileTree
 from arches_lingo.querysets import fuzzy_search
 from arches_lingo.utils.concept_builder import ConceptBuilder
-from arches_lingo.utils.skos import SKOSReader
 
 
 @method_decorator(
