@@ -664,8 +664,9 @@ class LingoResourceImporter(BaseImportModule):
         # scheme_conceptid is indicator of the entrypoint -
         # if it's present, we're migrating a thesaurus from the RDM
         # if absent, we're loading data from an external SKOS file
-        self.scheme_conceptid = request.POST.get("scheme", None)
-        file = request.FILES["file"] if "file" in request.FILES else None
+        if request:
+            self.scheme_conceptid = request.POST.get("scheme", None)
+            self.file = request.FILES["file"] if "file" in request.FILES else None
 
         if self.scheme_conceptid:
             num_concepts_to_import = len(
@@ -690,10 +691,10 @@ class LingoResourceImporter(BaseImportModule):
             except Exception as error:
                 return self.return_with_error(error)
 
-        elif file is not None:
+        elif self.file is not None:
             # Do minimal file validation to mock file checking in FileValidator
-            extension = file.name.split(".")[-1]
-            guessed_file_type = filetype.guess(file)
+            extension = self.file.name.split(".")[-1]
+            guessed_file_type = filetype.guess(self.file)
 
             # guessed_file_type will be None if the file is xml
             if extension != "xml" or guessed_file_type is not None:
@@ -704,26 +705,26 @@ class LingoResourceImporter(BaseImportModule):
                 "celeryByteSizeLimit", 100000
             )
             try:
-                if file.size <= use_celery_file_size_threshold:
+                if self.file.size <= use_celery_file_size_threshold:
                     # Prevent circular import
                     from arches_lingo.utils.skos import SKOSReader
 
                     skos_reader = SKOSReader()
-                    rdf = skos_reader.read_file(file)
+                    rdf = skos_reader.read_file(self.file)
                     self.schemes, self.concepts = (
                         skos_reader.extract_concepts_from_skos_for_lingo_import(rdf)
                     )
                     response = self.run_load_task()
 
-                elif file.size > use_celery_file_size_threshold:
+                elif self.file.size > use_celery_file_size_threshold:
                     # Save file to temp storage so it can be accessed by celery worker
                     temp_dir = os.path.join(
                         settings.UPLOADED_FILES_DIR, "tmp", self.loadid
                     )
                     os.makedirs(temp_dir, exist_ok=True)
-                    self.temp_file_path = os.path.join(temp_dir, file.name)
-                    default_storage.save(self.temp_file_path, file)
-                    file.close()
+                    self.temp_file_path = os.path.join(temp_dir, self.file.name)
+                    default_storage.save(self.temp_file_path, self.file)
+                    self.file.close()
                     response = self.run_load_task_async(request, self.loadid)
 
                 message = "Schemes and Concept Migration to Lingo Models Complete"
