@@ -28,7 +28,7 @@
         "@primevue/forms": "4.3.7",
         "arches": "archesproject/arches#dev/8.1.x",
         "arches-component-lab": "archesproject/arches-component-lab#main",
-        "vue-router": "4.4.3"
+        "vue-router": "4.6.3"
     },
     "nodeModulesPaths": {},
     "overrides": {
