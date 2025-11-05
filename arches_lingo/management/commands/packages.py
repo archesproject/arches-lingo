@@ -7,7 +7,6 @@ from arches_controlled_lists.management.commands.packages import (
     Command as PackagesCommand,
 )
 from arches_lingo.etl_modules.migrate_to_lingo import LingoResourceImporter
-from arches_lingo.utils.skos import SKOSReader
 
 
 class Command(PackagesCommand):
