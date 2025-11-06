@@ -458,7 +458,7 @@ class LingoResourceImporter(BaseImportModule):
                 operation,
                 sortorder
             )
-            select 
+            select distinct on (conceptidfrom, conceptidto)
                 json_build_object(%s::uuid,
                     json_build_object(
                         'notes', '',
@@ -524,7 +524,7 @@ class LingoResourceImporter(BaseImportModule):
                 operation,
                 sortorder
             )
-            select 
+            select distinct on (conceptidfrom, conceptidto)
                 json_build_object(%s::uuid,
                     json_build_object(
                         'notes', '',
