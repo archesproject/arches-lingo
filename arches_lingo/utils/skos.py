@@ -1,13 +1,16 @@
 import uuid
 from collections import defaultdict
-from django.db.models import Q
+from django.db import transaction
+from django.db.models import Max, Q
+from django.utils import translation
 from rdflib import Literal, Namespace, RDF
 from rdflib.namespace import SKOS, DCTERMS
 from rdflib.graph import Graph
 from arches.app.models import models
 from arches.app.models.system_settings import settings
-from arches_querysets.models import ResourceTileTree
+
 from arches_controlled_lists.utils.skos import SKOSReader
+from arches_controlled_lists.models import List, ListItem, ListItemValue
 
 from arches_lingo.etl_modules.migrate_to_lingo import LingoResourceImporter
 
@@ -25,6 +28,8 @@ class SKOSReader(SKOSReader):
         self.schemes = []
         self.concepts = []
         self.relations = defaultdict(list)
+        self.languages_controlled_list = List.objects.get(name="Languages")
+        self.prefLabel_valuetype = models.DValueType.objects.get(valuetype="prefLabel")
 
     def extract_concepts_from_skos_for_lingo_import(
         self, graph, overwrite_options="overwrite"
@@ -34,9 +39,6 @@ class SKOSReader(SKOSReader):
         for lang in models.Language.objects.all():
             allowed_languages[lang.code] = lang
         default_lang = settings.LANGUAGE_CODE
-        self.language_lookup = {
-            lang.code: lang.name for lang in models.Language.objects.all()
-        }
 
         if isinstance(graph, Graph):
 
@@ -81,11 +83,9 @@ class SKOSReader(SKOSReader):
                     ) in predicate and predicate_str in dcterms_value_types.values_list(
                         "valuetype", flat=True
                     ):
-                        # TODO: This should check if the language is in the Languages controlled list, not in models.Language
-                        # re. https://github.com/archesproject/arches-lingo/issues/472
-                        # if not self.language_exists(object, allowed_languages):
-                        #     for lang in models.Language.objects.all():
-                        #         allowed_languages[lang.code] = lang
+                        if not self.language_exists(object, allowed_languages):
+                            for lang in models.Language.objects.all():
+                                allowed_languages[lang.code] = lang
 
                         val = self.unwrapJsonLiteral(object)
                         mock_tile = {
@@ -95,7 +95,7 @@ class SKOSReader(SKOSReader):
                             "valuetype_id": predicate_str,
                         }
                         mock_tile = LingoResourceImporter.create_mock_tile_from_value(
-                            mock_tile, isScheme=True, lang_lookup=self.language_lookup
+                            mock_tile, isScheme=True, lang_lookup=allowed_languages
                         )
                         if mock_tile:
                             new_scheme["tile_data"].append(mock_tile)
@@ -128,7 +128,7 @@ class SKOSReader(SKOSReader):
                         "valuetype_id": "identifier",
                     }
                     mock_tile = LingoResourceImporter.create_mock_tile_from_value(
-                        mock_tile, lang_lookup=self.language_lookup
+                        mock_tile, lang_lookup=allowed_languages
                     )
                     if mock_tile:
                         new_scheme["tile_data"].append(mock_tile)
@@ -171,11 +171,9 @@ class SKOSReader(SKOSReader):
                         )
 
                         if str(SKOS) in predicate or str(ARCHES) in predicate:
-                            # TODO: This should check if the language is in the Languages controlled list, not in models.Language
-                            # re. https://github.com/archesproject/arches-lingo/issues/472
-                            # if not self.language_exists(object, allowed_languages):
-                            #     for lang in models.Language.objects.all():
-                            #         allowed_languages[lang.code] = lang
+                            if not self.language_exists(object, allowed_languages):
+                                for lang in models.Language.objects.all():
+                                    allowed_languages[lang.code] = lang
 
                             if predicate_str in skos_value_types:
                                 val = self.unwrapJsonLiteral(object)
@@ -187,7 +185,7 @@ class SKOSReader(SKOSReader):
                                 }
                                 mock_tile = (
                                     LingoResourceImporter.create_mock_tile_from_value(
-                                        mock_tile, lang_lookup=self.language_lookup
+                                        mock_tile, lang_lookup=allowed_languages
                                     )
                                 )
                                 if mock_tile:
@@ -238,7 +236,7 @@ class SKOSReader(SKOSReader):
                             "valuetype_id": "identifier",
                         }
                         mock_tile = LingoResourceImporter.create_mock_tile_from_value(
-                            mock_tile, lang_lookup=self.language_lookup
+                            mock_tile, lang_lookup=allowed_languages
                         )
                         if mock_tile:
                             new_concept["tile_data"].append(mock_tile)
@@ -253,3 +251,36 @@ class SKOSReader(SKOSReader):
                     )
 
             return self.schemes, self.concepts
+
+    def language_exists(self, rdf_tag, allowed_languages):
+        # TODO: When creating new Language datatype, remove this logic to add new list items
+        # re. https://github.com/archesproject/arches-lingo/issues/472
+        with transaction.atomic():
+            lang_exists = super().language_exists(rdf_tag, allowed_languages)
+            default_lang = allowed_languages[settings.LANGUAGE_CODE]
+            if not lang_exists:
+                lang_list_items = ListItem.objects.filter(
+                    list=self.languages_controlled_list
+                )
+                lang_code = rdf_tag.language
+                lang_name = translation.get_language_info(lang_code)
+                new_list_item = ListItem.objects.create(
+                    list=self.languages_controlled_list,
+                    parent=None,
+                    guide=False,
+                    sortorder=lang_list_items.aggregate(Max("sortorder"))[
+                        "sortorder__max"
+                    ]
+                    + 1,
+                )
+                new_list_item.clean()  # force generation of URI
+                new_list_item_value = ListItemValue.objects.create(
+                    list_item=new_list_item,
+                    valuetype=self.prefLabel_valuetype,
+                    language=default_lang,
+                    value=lang_name or lang_code,
+                )
+                # Re-sort of list items after addition
+                sorted = new_list_item.sort_siblings(root_siblings=lang_list_items)
+                ListItem.objects.bulk_update(sorted, ["sortorder"])
+            return lang_exists
