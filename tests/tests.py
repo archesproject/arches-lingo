@@ -300,7 +300,6 @@ class ImportTests(TransactionTestCase):
         ViewTests.load_graphs()
         cls.register_lingo_resource_importer()
         cls.moduleid = ETLModule.objects.get(slug="migrate-to-lingo").pk
-        cls.admin = User.objects.get(username="admin")
         cls.file_name = "skos_rdf_import_example.xml"
         cls.fixture_path = Path(PROJECT_TEST_ROOT) / "fixtures" / "data" / cls.file_name
 
@@ -358,7 +357,7 @@ class ImportTests(TransactionTestCase):
 
         request = HttpRequest()
         request.method = "POST"
-        request.user = self.admin
+        request.user = User.objects.get(username="admin")
         request.POST["load_id"] = str(start_event.loadid)
         request.POST["module"] = str(self.moduleid)
         request.POST["overwrite_option"] = "overwrite"
@@ -397,7 +396,7 @@ class ImportTests(TransactionTestCase):
 
         request = HttpRequest()
         request.method = "POST"
-        request.user = self.admin
+        request.user = User.objects.get(username="admin")
         request.POST["load_id"] = str(start_event.loadid)
         request.POST["module"] = str(self.moduleid)
         request.POST["overwrite_option"] = "overwrite"
