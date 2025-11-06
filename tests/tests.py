@@ -1,11 +1,12 @@
 import json
+from io import StringIO
 from http import HTTPStatus
 from pathlib import Path
 
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core import management
-from django.test import TestCase
+from django.test import TestCase, TransactionTestCase
 from django.test.utils import captured_stdout
 from django.urls import reverse
 
@@ -15,6 +16,8 @@ from arches.app.utils.betterJSONSerializer import JSONDeserializer
 from arches.app.utils.data_management.resource_graphs.importer import (
     import_graph as ResourceGraphImporter,
 )
+
+from arches_querysets.models import ResourceTileTree, TileTree
 
 from arches_lingo.const import (
     CONCEPTS_GRAPH_ID,
@@ -33,6 +36,8 @@ from arches_lingo.const import (
     LANGUAGES_LIST_ID,
     LABEL_LIST_ID,
 )
+
+from .test_settings import PROJECT_TEST_ROOT
 
 # these tests can be run from the command line via
 # python manage.py test tests.tests --settings="tests.test_settings"
@@ -265,3 +270,75 @@ class ViewTests(TestCase):
             "Edit distance could not be converted to an integer.",
             status_code=HTTPStatus.BAD_REQUEST,
         )
+
+
+class ImportTests(TransactionTestCase):
+
+    @classmethod
+    def register_lingo_resource_importer(cls):
+        # management.call_command("etl_module", "register", source=str(Path(settings.APP_ROOT) / "etl_modules" / "migrate_to_lingo.py"))
+        from arches.management.commands.etl_module import Command as ETLModuleCommand
+
+        cmd = ETLModuleCommand()
+        cmd.register(
+            source=str(Path(settings.APP_ROOT) / "etl_modules" / "migrate_to_lingo.py")
+        )
+
+    def setUp(cls):
+        """setUpClass doesn't work because the rollback fixture is applied after that."""
+        ViewTests.load_ontology()
+        ViewTests.load_graphs()
+        cls.register_lingo_resource_importer()
+        cls.admin = User.objects.get(username="admin")
+
+    def assert_resources_loaded(self, schemes, concepts):
+        self.assertEqual(schemes.count(), 1)
+        self.assertEqual(concepts.count(), 16)
+
+        # Use Junk Sculpture because it has English and German labels & statements
+        junk_sculpture = concepts.filter(
+            appellative_status_ascribed_name_content__any_contains="Gerümpelplastik"
+        )
+        self.assertEqual(junk_sculpture.count(), 1)
+        junk_sculpture = junk_sculpture.first()
+
+        # Labels
+        self.assertEqual(len(junk_sculpture.aliased_data.appellative_status), 2)
+
+        # Statements
+        self.assertEqual(len(junk_sculpture.aliased_data.statement), 2)
+
+        # Part of scheme
+        scheme = junk_sculpture.aliased_data.part_of_scheme.aliased_data.part_of_scheme
+        self.assertEqual(scheme.name["en"], "Test Thesaurus")
+
+        # Hierarchical Relationship(s)
+        hierarchy = junk_sculpture.aliased_data.classification_status
+        self.assertEqual(len(hierarchy), 1)
+        hierarchy = hierarchy[0]
+        parent = hierarchy.aliased_data.classification_status_ascribed_classification
+        self.assertIn(parent.name["en"], "Top Concept")
+
+    def test_cli_import_from_skos(self):
+        self.assertEqual(ResourceTileTree.get_tiles(graph_slug="scheme").count(), 0)
+        self.assertEqual(ResourceTileTree.get_tiles(graph_slug="concept").count(), 0)
+        stdout = StringIO()
+        management.call_command(
+            "packages",
+            operation="import_lingo_resources",
+            source=str(
+                Path(PROJECT_TEST_ROOT)
+                / "fixtures"
+                / "data"
+                / "skos_rdf_import_example.xml"
+            ),
+            overwrite=True,
+            stdout=stdout,
+        )
+        schemes = ResourceTileTree.get_tiles(graph_slug="scheme")
+        concepts = ResourceTileTree.get_tiles(graph_slug="concept")
+        self.assert_resources_loaded(schemes, concepts)
+
+    def test_import_via_etl_module(self):
+        self.assertEqual(ResourceTileTree.get_tiles(graph_slug="scheme").count(), 0)
+        self.assertEqual(ResourceTileTree.get_tiles(graph_slug="concept").count(), 0)
