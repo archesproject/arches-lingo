@@ -192,6 +192,8 @@ class LingoResourceImporter(BaseImportModule):
         elif isinstance(value, dict):
             try:
                 value["language"] = lang_lookup[value["language_id"]]
+                if type(value["language"]) is models.Language:
+                    value["language"] = value["language"].name
             except KeyError:
                 pass
         if value["valuetype_id"] == "title":
