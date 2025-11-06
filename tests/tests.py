@@ -1,24 +1,27 @@
 import json
-from io import StringIO
+from io import BytesIO, StringIO
 from http import HTTPStatus
 from pathlib import Path
 
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core import management
+from django.core.files.uploadedfile import InMemoryUploadedFile
+from django.http import HttpRequest
 from django.test import TestCase, TransactionTestCase
 from django.test.utils import captured_stdout
 from django.urls import reverse
 
 from arches.app.datatypes.datatypes import DataTypeFactory
-from arches.app.models.models import ResourceInstance, TileModel
+from arches.app.models.models import ETLModule, LoadEvent, ResourceInstance, TileModel
 from arches.app.utils.betterJSONSerializer import JSONDeserializer
 from arches.app.utils.data_management.resource_graphs.importer import (
     import_graph as ResourceGraphImporter,
 )
 
-from arches_querysets.models import ResourceTileTree, TileTree
+from arches_querysets.models import ResourceTileTree
 
+from arches_lingo.etl_modules.migrate_to_lingo import LingoResourceImporter
 from arches_lingo.const import (
     CONCEPTS_GRAPH_ID,
     SCHEMES_GRAPH_ID,
@@ -289,6 +292,7 @@ class ImportTests(TransactionTestCase):
         ViewTests.load_ontology()
         ViewTests.load_graphs()
         cls.register_lingo_resource_importer()
+        cls.moduleid = ETLModule.objects.get(slug="migrate-to-lingo").pk
         cls.admin = User.objects.get(username="admin")
 
     def assert_resources_loaded(self, schemes, concepts):
@@ -339,6 +343,40 @@ class ImportTests(TransactionTestCase):
         concepts = ResourceTileTree.get_tiles(graph_slug="concept")
         self.assert_resources_loaded(schemes, concepts)
 
-    def test_import_via_etl_module(self):
+    def test_etl_module_import_from_skos(self):
         self.assertEqual(ResourceTileTree.get_tiles(graph_slug="scheme").count(), 0)
         self.assertEqual(ResourceTileTree.get_tiles(graph_slug="concept").count(), 0)
+
+        self.client.login(username="admin", password="admin")
+        start_event = LoadEvent.objects.create(
+            user_id=1, etl_module_id=self.moduleid, status="running"
+        )
+
+        request = HttpRequest()
+        request.method = "POST"
+        request.user = self.admin
+        request.POST["load_id"] = str(start_event.loadid)
+        request.POST["module"] = str(self.moduleid)
+        request.POST["overwrite_option"] = "overwrite"
+        request.POST["action"] = "write"
+
+        file_name = "skos_rdf_import_example.xml"
+        path = Path(PROJECT_TEST_ROOT) / "fixtures" / "data" / file_name
+        with open(path, "rb") as file:
+            file_data = file.read()
+        inmemory_file = InMemoryUploadedFile(
+            file=BytesIO(file_data),
+            field_name="file",
+            name=file_name,
+            content_type="application/xml",
+            size=len(file_data),
+            charset=None,
+        )
+        request.FILES = {"file": inmemory_file}
+
+        importer = LingoResourceImporter(request=request)
+        write_request = importer.write(request=request)
+        self.assertTrue(write_request["success"])
+        schemes = ResourceTileTree.get_tiles(graph_slug="scheme")
+        concepts = ResourceTileTree.get_tiles(graph_slug="concept")
+        self.assert_resources_loaded(schemes, concepts)
