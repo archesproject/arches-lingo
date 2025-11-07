@@ -333,9 +333,22 @@ class ImportTests(TransactionTestCase):
         parent = hierarchy.aliased_data.classification_status_ascribed_classification
         self.assertIn(parent.name["en"], "Top Concept")
 
-    def test_cli_import_from_skos(self):
+    def test_lingo_resource_importer(self):
+        """
+        This test is really three tests in one, but due to trouble with TransactionTestCase
+        & database rollbacks, they have to be run sequentially in one test method, relying
+        on the reverse load functionality of the base importer to clean up between tests.
+
+        There are three import paths being tested here:
+        1. Management command path, importing from a SKOS RDF file.
+        2. HTTP Request path, importing from a SKOS RDF file upload.
+        3. Migrate Concepts & Schemes from RDM
+        """
+
+        # 1. Test Import from SKOS via management command path
         self.assertEqual(ResourceTileTree.get_tiles(graph_slug="scheme").count(), 0)
         self.assertEqual(ResourceTileTree.get_tiles(graph_slug="concept").count(), 0)
+        self.assertEqual(LoadEvent.objects.count(), 0)
         stdout = StringIO()
         management.call_command(
             "packages",
@@ -346,22 +359,27 @@ class ImportTests(TransactionTestCase):
         )
         self.assert_resources_loaded()
 
-    def test_etl_module_import_from_skos(self):
+        # Reverse load to clear out the loaded resources
+        loadid = LoadEvent.objects.first().loadid
+        importer = LingoResourceImporter(load_id=loadid, userid=1)
+        importer.reverse_load(loadid=loadid)
+
+        # Confirm resources have been removed before moving on to next test
         self.assertEqual(ResourceTileTree.get_tiles(graph_slug="scheme").count(), 0)
         self.assertEqual(ResourceTileTree.get_tiles(graph_slug="concept").count(), 0)
 
+        # 2. Test Import from SKOS via HTTP Request path
         self.client.login(username="admin", password="admin")
-        start_event = LoadEvent.objects.create(
+        start_event0 = LoadEvent.objects.create(
             user_id=1, etl_module_id=self.moduleid, status="running"
         )
-
-        request = HttpRequest()
-        request.method = "POST"
-        request.user = User.objects.get(username="admin")
-        request.POST["load_id"] = str(start_event.loadid)
-        request.POST["module"] = str(self.moduleid)
-        request.POST["overwrite_option"] = "overwrite"
-        request.POST["action"] = "write"
+        request0 = HttpRequest()
+        request0.method = "POST"
+        request0.user = User.objects.get(username="admin")
+        request0.POST["load_id"] = str(start_event0.loadid)
+        request0.POST["module"] = str(self.moduleid)
+        request0.POST["overwrite_option"] = "overwrite"
+        request0.POST["action"] = "write"
 
         with open(self.fixture_path, "rb") as file:
             file_data = file.read()
@@ -373,37 +391,41 @@ class ImportTests(TransactionTestCase):
             size=len(file_data),
             charset=None,
         )
-        request.FILES = {"file": inmemory_file}
+        request0.FILES = {"file": inmemory_file}
 
-        importer = LingoResourceImporter(request=request)
-        write_request = importer.write(request=request)
-        self.assertTrue(write_request["success"])
+        importer = LingoResourceImporter(request=request0)
+        write_request0 = importer.write(request=request0)
+        self.assertTrue(write_request0["success"])
         self.assert_resources_loaded()
 
-    def test_migrate_from_rdm(self):
+        # Reverse load to clear out the loaded resources
+        importer.reverse_load(loadid=start_event0.loadid)
+
+        # Confirm resources have been removed before moving on to next test
         self.assertEqual(ResourceTileTree.get_tiles(graph_slug="scheme").count(), 0)
         self.assertEqual(ResourceTileTree.get_tiles(graph_slug="concept").count(), 0)
 
+        # 3. Test Migrate Concepts & Schemes from RDM
         skos = SKOSReader()
         rdf = skos.read_file(str(self.fixture_path))
         skos.save_concepts_from_skos(rdf)
         test_scheme = Value.objects.get(value="Test Thesaurus")
 
-        self.client.login(username="admin", password="admin")
-        start_event = LoadEvent.objects.create(
+        start_event1 = LoadEvent.objects.create(
             user_id=1, etl_module_id=self.moduleid, status="running"
         )
+        request1 = HttpRequest()
+        request1.method = "POST"
+        request1.user = User.objects.get(username="admin")
+        request1.POST["load_id"] = str(start_event1.loadid)
+        request1.POST["module"] = str(self.moduleid)
+        request1.POST["overwrite_option"] = "overwrite"
+        request1.POST["action"] = "write"
+        request1.POST["scheme"] = str(test_scheme.concept_id)
 
-        request = HttpRequest()
-        request.method = "POST"
-        request.user = User.objects.get(username="admin")
-        request.POST["load_id"] = str(start_event.loadid)
-        request.POST["module"] = str(self.moduleid)
-        request.POST["overwrite_option"] = "overwrite"
-        request.POST["action"] = "write"
-        request.POST["scheme"] = str(test_scheme.concept_id)
-
-        importer = LingoResourceImporter(request=request)
-        write_request = importer.write(request=request)
-        self.assertTrue(write_request["success"])
+        importer = LingoResourceImporter(request=request1)
+        write_request1 = importer.write(request=request1)
+        self.assertTrue(write_request1["success"])
         self.assert_resources_loaded()
+
+        # No need to reverse load because tearDown will reset the DB
