@@ -29,7 +29,7 @@ dependencies = [
     "arches @ git+https://github.com/archesproject/arches@dev/8.1.x",
     "arches_component_lab @ git+https://github.com/archesproject/arches-component-lab@main",
     "arches_querysets @ git+https://github.com/archesproject/arches-querysets@main",
-    "arches_controlled_lists @ git+https://github.com/archesproject/arches-controlled-lists@main",
+    "arches_controlled_lists @ git+https://github.com/archesproject/arches-controlled-lists@dev/1.1.x",
 ]
 version = "1.0.0a0"
 
