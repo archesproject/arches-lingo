@@ -224,10 +224,10 @@ export type ConceptClassificationStatus =
     TileData<ConceptClassificationStatusAliases>;
 
 export interface SchemeStatementAliases extends AliasedData {
-    statement_content_n1: StringValue;
-    statement_language_n1?: QuerysetsReferenceSelectFetchedOption;
-    statement_type_n1?: QuerysetsReferenceSelectFetchedOption;
-    statement_type_metatype_n1?: QuerysetsReferenceSelectFetchedOption;
+    statement_content: StringValue;
+    statement_language?: QuerysetsReferenceSelectFetchedOption;
+    statement_type?: QuerysetsReferenceSelectFetchedOption;
+    statement_type_metatype?: QuerysetsReferenceSelectFetchedOption;
     statement_data_assignment_object_used?: ResourceInstanceListValue;
     statement_data_assignment_actor?: ResourceInstanceListValue;
     statement_data_assignment_type?: QuerysetsReferenceSelectFetchedOption;
