@@ -223,14 +223,9 @@ class LingoResourceImporter(BaseImportModule):
             or value["valuetype_id"] == "historyNote"
             or value["valuetype_id"] == "scopeNote"
         ):
-            if isScheme:
-                mock_tile["statement_content_n1"] = value["value"]
-                mock_tile["statement_type_n1"] = value["valuetype_id"]
-                mock_tile["statement_language_n1"] = value["language"]
-            else:
-                mock_tile["statement_content"] = value["value"]
-                mock_tile["statement_type"] = value["valuetype_id"]
-                mock_tile["statement_language"] = value["language"]
+            mock_tile["statement_content"] = value["value"]
+            mock_tile["statement_type"] = value["valuetype_id"]
+            mock_tile["statement_language"] = value["language"]
             return {"statement": mock_tile}
         pass
 

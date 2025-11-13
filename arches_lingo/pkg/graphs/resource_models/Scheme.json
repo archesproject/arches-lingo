@@ -91,7 +91,7 @@
                     "config": null,
                     "constraints": [],
                     "cssclass": "big",
-                    "description": "{\"en\": \"\"}",
+                    "description": "",
                     "graph_id": "56788995-423b-11ee-8a8d-11afefc4bff7",
                     "helpenabled": false,
                     "helptext": {
@@ -334,7 +334,7 @@
                     "config": null,
                     "constraints": [],
                     "cssclass": null,
-                    "description": "{\"en\": \"\"}",
+                    "description": "",
                     "graph_id": "56788995-423b-11ee-8a8d-11afefc4bff7",
                     "helpenabled": false,
                     "helptext": {
@@ -2608,7 +2608,7 @@
                     "sourcebranchpublication_id": null
                 },
                 {
-                    "alias": "statement_language_n1",
+                    "alias": "statement_language",
                     "config": {
                         "controlledList": "55ce793b-a51a-4b25-811d-d08ea797f8c3",
                         "multiValue": false
@@ -2618,7 +2618,7 @@
                     "exportable": false,
                     "fieldname": null,
                     "graph_id": "56788995-423b-11ee-8a8d-11afefc4bff7",
-                    "hascustomalias": false,
+                    "hascustomalias": true,
                     "is_collector": false,
                     "is_immutable": false,
                     "isrequired": false,
@@ -2634,7 +2634,7 @@
                     "sourcebranchpublication_id": null
                 },
                 {
-                    "alias": "statement_type_metatype_n1",
+                    "alias": "statement_type_metatype",
                     "config": {
                         "controlledList": "ef69e772-de53-45fe-98d4-bf3e7b10eb57",
                         "multiValue": false
@@ -2644,7 +2644,7 @@
                     "exportable": false,
                     "fieldname": null,
                     "graph_id": "56788995-423b-11ee-8a8d-11afefc4bff7",
-                    "hascustomalias": false,
+                    "hascustomalias": true,
                     "is_collector": false,
                     "is_immutable": false,
                     "isrequired": false,
@@ -2660,7 +2660,7 @@
                     "sourcebranchpublication_id": null
                 },
                 {
-                    "alias": "statement_type_n1",
+                    "alias": "statement_type",
                     "config": {
                         "controlledList": "aba2a0b4-75a4-45ba-8b57-021f3ca92a6a",
                         "multiValue": true
@@ -2670,7 +2670,7 @@
                     "exportable": false,
                     "fieldname": null,
                     "graph_id": "56788995-423b-11ee-8a8d-11afefc4bff7",
-                    "hascustomalias": false,
+                    "hascustomalias": true,
                     "is_collector": false,
                     "is_immutable": false,
                     "isrequired": false,
@@ -2686,14 +2686,14 @@
                     "sourcebranchpublication_id": null
                 },
                 {
-                    "alias": "statement_label_n1",
+                    "alias": "statement_label",
                     "config": {},
                     "datatype": "string",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
                     "graph_id": "56788995-423b-11ee-8a8d-11afefc4bff7",
-                    "hascustomalias": false,
+                    "hascustomalias": true,
                     "is_collector": false,
                     "is_immutable": false,
                     "isrequired": false,
@@ -2709,14 +2709,14 @@
                     "sourcebranchpublication_id": null
                 },
                 {
-                    "alias": "statement_content_n1",
+                    "alias": "statement_content",
                     "config": {},
                     "datatype": "non-localized-string",
                     "description": "* Collection_id: LAP.4_Statement\n* Field_id: LAF.15_statement_content\n* Category_id: CAT.4_Description",
                     "exportable": false,
                     "fieldname": null,
                     "graph_id": "56788995-423b-11ee-8a8d-11afefc4bff7",
-                    "hascustomalias": false,
+                    "hascustomalias": true,
                     "is_collector": false,
                     "is_immutable": false,
                     "isrequired": true,
@@ -3965,23 +3965,29 @@
             "publication": {
                 "graph_id": "56788995-423b-11ee-8a8d-11afefc4bff7",
                 "most_recent_edit_id": null,
-                "notes": "rm extra cardxnodexwidget records",
-                "publicationid": "d8a81977-3fb4-4632-aae9-b04a697d207b",
-                "published_time": "2025-05-22T09:04:29.573"
+                "notes": "standardize statment node aliases for scheme & concept graphs",
+                "publicationid": "508d186c-06fc-48f3-86a5-894b90a2792f",
+                "published_time": "2025-11-13T15:47:12.242"
             },
             "relatable_resource_model_ids": [],
             "resource_2_resource_constraints": [],
             "resource_instance_lifecycle": {
                 "id": "7e3cce56-fbfb-4a4b-8e83-59b9f9e7cb75",
-                "name": "Standard",
+                "name": {
+                    "en": "Standard"
+                },
                 "resource_instance_lifecycle_states": [
                     {
-                        "action_label": "Revert to Draft",
+                        "action_label": {
+                            "en": "Revert to Draft"
+                        },
                         "can_delete_resource_instances": true,
                         "can_edit_resource_instances": true,
                         "id": "9375c9a7-dad2-4f14-a5c1-d7e329fdde4f",
                         "is_initial_state": true,
-                        "name": "Draft",
+                        "name": {
+                            "en": "Draft"
+                        },
                         "next_resource_instance_lifecycle_states": [
                             "f75bb034-36e3-4ab4-8167-f520cf0b4c58"
                         ],
@@ -3989,12 +3995,16 @@
                         "resource_instance_lifecycle_id": "7e3cce56-fbfb-4a4b-8e83-59b9f9e7cb75"
                     },
                     {
-                        "action_label": "Make Active",
+                        "action_label": {
+                            "en": "Make Active"
+                        },
                         "can_delete_resource_instances": false,
                         "can_edit_resource_instances": true,
                         "id": "f75bb034-36e3-4ab4-8167-f520cf0b4c58",
                         "is_initial_state": false,
-                        "name": "Active",
+                        "name": {
+                            "en": "Active"
+                        },
                         "next_resource_instance_lifecycle_states": [
                             "d95d9c0e-0e2c-4450-93a3-d788b91abcc8"
                         ],
@@ -4004,12 +4014,16 @@
                         "resource_instance_lifecycle_id": "7e3cce56-fbfb-4a4b-8e83-59b9f9e7cb75"
                     },
                     {
-                        "action_label": "Retire",
+                        "action_label": {
+                            "en": "Retire"
+                        },
                         "can_delete_resource_instances": false,
                         "can_edit_resource_instances": false,
                         "id": "d95d9c0e-0e2c-4450-93a3-d788b91abcc8",
                         "is_initial_state": false,
-                        "name": "Retired",
+                        "name": {
+                            "en": "Retired"
+                        },
                         "next_resource_instance_lifecycle_states": [],
                         "previous_resource_instance_lifecycle_states": [
                             "f75bb034-36e3-4ab4-8167-f520cf0b4c58"
@@ -4042,6 +4056,7 @@
             },
             "slug": "scheme",
             "source_identifier_id": null,
+            "spatial_views": [],
             "subtitle": {
                 "en": ""
             },
@@ -4052,8 +4067,8 @@
     ],
     "metadata": {
         "db": "PostgreSQL 17.4 (Postgres.app) on aarch64-apple-darwin23.6.0, compiled by Apple clang version 15.0.0 (clang-1500.3.9.4), 64-bit",
-        "git hash": "0d2e19dc9b 2025-05-22 09:37:22 -0400",
+        "git hash": "9f9ec13a2e 2025-11-11 12:24:07 -0800",
         "os": "Darwin",
-        "os version": "24.4.0"
+        "os version": "24.6.0"
     }
 }
