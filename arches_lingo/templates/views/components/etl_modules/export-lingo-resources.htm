@@ -1,0 +1,48 @@
+{% load i18n %}
+
+{% block task_details %}
+<!-- ko ifnot: loading() -->
+<!-- ko if: activeTab() === 'details' -->
+<div class="etl-module-component-container">
+    <div class="etl-module-body">
+        <h2>Lingo SKOS Exporter</h2>
+        <p class="pad-btm">
+            {% blocktrans %}Export Arches Lingo Schemes and Concepts to SKOS RDF file{% endblocktrans %}
+        </p>
+        <!-- <p class="pad-btm">
+            {% blocktrans %}{% endblocktrans %}
+        </p> -->
+        <div class="etl-module-component-block">
+            <div class="h4">
+                <label for="resource-model-select" data-bind="text: $root.translations.selectASchemeToExport"></label>
+            </div>
+            <select id="resource-model-select" data-bind="
+                value: selectedScheme,
+                options: schemes,
+                optionsText: 'name',
+                optionsValue: 'resourceinstanceid',
+                optionsCaption: $root.translations.select + '...',
+                valueAllowUnset: true,
+                chosen: {width: '500px'}"
+            ></select>
+        </div>
+    </div>
+    <div class="tabbed-workflow-footer, etl-module-footer">
+        <button class="btn btn-success"
+            style="margin-right: 8px;"
+            data-bind="
+                click: executeExport,
+                css: {disabled: !ready()},
+                attr: { disabled: !ready()}
+        ">
+            <span data-bind="text: $root.translations.start"></span>
+        </button>
+    </div>
+</div>
+<!-- /ko -->
+<!-- /ko -->
+{% endblock task_details %}
+
+{% block loading_status %}
+{% endblock loading_status %}
+
