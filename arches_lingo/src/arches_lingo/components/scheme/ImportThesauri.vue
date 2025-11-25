@@ -31,14 +31,6 @@ const overwriteOptions = ref([
         tooltip: $gettext("Do nothing if the Scheme or Concept already exists"),
         disabled: true,
     },
-    // {
-    //     label: $gettext("Duplicate"),
-    //     value: "duplicate",
-    //     tooltip: $gettext(
-    //         "Create a new Scheme or Concept if it already exists",
-    //     ),
-    //     disabled: true,
-    // },
     {
         label: $gettext("Overwrite"),
         value: "overwrite",
