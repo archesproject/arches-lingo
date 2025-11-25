@@ -302,7 +302,7 @@ class SKOSWriter:
         return rdf_graph.serialize(format=format)
 
     def extract_predicate_object(self, triple):
-        predicates = self.get_predicate_values(triple.get("predicate"))
+        predicates = self.transform_predicate_values(triple.get("predicate"))
         object = triple.get("object")
 
         object_language = triple.get("object_language")
@@ -317,7 +317,7 @@ class SKOSWriter:
 
         return predicates, object
 
-    def get_predicate_values(self, predicate_references):
+    def transform_predicate_values(self, predicate_references):
         if isinstance(predicate_references, str):
             return [SKOS[predicate_references]]
         elif isinstance(predicate_references, list):
