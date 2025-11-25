@@ -3,7 +3,7 @@ from collections import defaultdict
 from django.db import transaction
 from django.db.models import Max, Q
 from django.utils import translation
-from rdflib import Literal, Namespace, RDF
+from rdflib import Literal, Namespace, RDF, URIRef
 from rdflib.namespace import SKOS, DCTERMS
 from rdflib.graph import Graph
 from arches.app.models import models
@@ -270,3 +270,92 @@ class SKOSReader(SKOSReader):
                 sorted = new_list_item.sort_siblings(root_siblings=lang_list_items)
                 ListItem.objects.bulk_update(sorted, ["sortorder"])
             return lang_exists
+
+
+class SKOSWriter:
+    def write_skos_from_triples(self, schemes_triples, concepts_triples, format):
+        rdf_graph = Graph()
+        rdf_graph.bind("skos", SKOS)
+        rdf_graph.bind("dcterms", DCTERMS)
+        rdf_graph.bind("arches", ARCHES)
+
+        self.language_lookup = {
+            lang.name: lang.code for lang in models.Language.objects.all()
+        }
+
+        for scheme_id, triples in schemes_triples.items():
+            rdf_scheme_id = ARCHES[str(scheme_id)]
+            rdf_graph.add((rdf_scheme_id, RDF.type, SKOS.ConceptScheme))
+            for triple in triples:
+                predicates, object = self.extract_predicate_object(triple)
+                for predicate in predicates:
+                    rdf_graph.add((rdf_scheme_id, predicate, object))
+
+        for concept_id, triples in concepts_triples.items():
+            rdf_concept_id = ARCHES[str(concept_id)]
+            rdf_graph.add((rdf_concept_id, RDF.type, SKOS.Concept))
+            for triple in triples:
+                predicates, object = self.extract_predicate_object(triple)
+                for predicate in predicates:
+                    rdf_graph.add((rdf_concept_id, predicate, object))
+
+        return rdf_graph.serialize(format=format)
+
+    def extract_predicate_object(self, triple):
+        predicates = self.get_predicate_values(triple.get("predicate"))
+        object = triple.get("object")
+
+        object_language = triple.get("object_language")
+        if object_language:
+            object = Literal(
+                object, lang=self.get_language_code_from_references(object_language)
+            )
+        if isinstance(object, models.ResourceInstance):
+            object = ARCHES[str(object.resourceinstanceid)]
+        if not isinstance(object, Literal) and not isinstance(object, URIRef):
+            object = Literal(object)
+
+        return predicates, object
+
+    def get_predicate_values(self, predicate_references):
+        if isinstance(predicate_references, str):
+            return [SKOS[predicate_references]]
+        elif isinstance(predicate_references, list):
+            predicates = []
+            for predicate in predicate_references:
+                predicate = self.check_predicate_namespace(predicate)
+                predicates.append(predicate)
+                # TODO: do we need to need to fall back on values? e.g. identifier
+            return predicates
+
+    def check_predicate_namespace(self, predicate):
+        uri = predicate.uri
+        if not (SKOS in uri or ARCHES in uri or DCTERMS in uri):
+            predicate_label = [
+                label.value
+                for label in predicate.labels
+                if label.valuetype_id == "prefLabel"
+            ][0]
+            if predicate_label == "identifier":
+                predicate = DCTERMS.identifier
+            else:
+                predicate = SKOS[predicate_label]
+        else:
+            predicate = URIRef(uri)
+        return predicate
+
+    # TODO: remove when implementing language datatype
+    # re. https://github.com/archesproject/arches-lingo/issues/472
+    def get_language_code_from_references(self, language_references):
+        for language_reference in language_references:
+            language_name = (
+                [
+                    lang.value
+                    for lang in language_reference.labels
+                    if lang.valuetype_id == "prefLabel"
+                ]
+            )[0]
+            language_code = self.language_lookup.get(language_name)
+            if language_code:
+                return language_code
+        return None
