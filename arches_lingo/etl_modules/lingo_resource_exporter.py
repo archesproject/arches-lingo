@@ -3,12 +3,12 @@ import logging
 import uuid
 from collections import defaultdict
 from datetime import datetime
+from django.utils.translation import gettext as _
 
-from arches.app.models.models import ETLModule, LoadEvent, ResourceInstance, User
-
+from arches.app.models.models import ETLModule, LoadEvent, User
 from arches_querysets.models import ResourceTileTree
-from arches_lingo.views.api.concepts import ConceptTreeView
-from arches_lingo.utils.concept_builder import ConceptBuilder
+
+from arches_lingo.utils.skos import SKOSWriter
 
 from arches_lingo.const import (
     SCHEMES_GRAPH_ID,
@@ -85,11 +85,13 @@ TILE_TREE_TO_TRIPLE_MAPPING = {
     "classification_status": {
         "predicate": "classification_status_ascribed_relation",
         "object": "classification_status_ascribed_classification",
+        "default_predicate": "broader",
     },
     # Associated Concepts
     "relation_status": {
         "predicate": "relation_status_ascribed_relation",
         "object": "relation_status_ascribed_comparate",
+        "default_predicate": "related",
     },
 }
 
@@ -134,7 +136,7 @@ class LingoResourceExporter:
 
         self.run_export_task(self.resourceid, filename=filename)
 
-    def run_export_task(self, resourceid, filename=None):
+    def run_export_task(self, resourceid, format="pretty-xml", filename=None):
         schemes = ResourceTileTree.get_tiles(
             graph_slug="scheme", resource_ids=[resourceid]
         )
@@ -142,26 +144,28 @@ class LingoResourceExporter:
             part_of_scheme__id=resourceid
         )
 
-        triples = defaultdict(list)
+        scheme_triples = defaultdict(list)
         for scheme in schemes:
             for nodegroup_alias, tile_trees in scheme.aliased_data:
                 if tile_trees:
-                    triples[scheme.resourceinstanceid].extend(
+                    scheme_triples[scheme.resourceinstanceid].extend(
                         self.extract_triples_from_aliased_tiles(
                             nodegroup_alias, tile_trees
                         )
                     )
 
+        concept_triples = defaultdict(list)
         for concept in concepts:
             for nodegroup_alias, tile_trees in concept.aliased_data:
                 if tile_trees:
-                    triples[concept.resourceinstanceid].extend(
+                    concept_triples[concept.resourceinstanceid].extend(
                         self.extract_triples_from_aliased_tiles(
                             nodegroup_alias, tile_trees
                         )
                     )
 
-        print(triples)
+        writer = SKOSWriter()
+        writer.write_skos_from_triples(scheme_triples, concept_triples, format=format)
 
     def extract_triples_from_aliased_tiles(self, nodegroup_alias, tile_trees):
         triples = []
@@ -178,9 +182,14 @@ class LingoResourceExporter:
                     # Predicate for concept -> scheme relationship are not stored as a node value
                     # but instead derived from the relationship itself
                     triple[triple_component] = node_alias
-                else:
-                    triple[triple_component] = tile_tree.aliased_data.serialize()[
-                        node_alias
-                    ]
+                elif (
+                    triple_component == "default_predicate"
+                    and triple["predicate"] is None
+                ):
+                    # Fall back on default predicates for relationships if none was found
+                    triple["predicate"] = node_alias
+                elif triple_component != "default_predicate":
+                    predicate = getattr(tile_tree.aliased_data, node_alias)
+                    triple[triple_component] = predicate
             triples.append(triple)
         return triples
