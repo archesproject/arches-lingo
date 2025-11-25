@@ -302,9 +302,11 @@ class SKOSWriter:
         return rdf_graph.serialize(format=format)
 
     def extract_predicate_object(self, triple):
+        # Some predicates are multivalue reference datatype fields, so process all predicates
+        # as lists for ease of handling
         predicates = self.transform_predicate_values(triple.get("predicate"))
-        object = triple.get("object")
 
+        object = triple.get("object")
         object_language = triple.get("object_language")
         if object_language:
             object = Literal(
@@ -323,12 +325,11 @@ class SKOSWriter:
         elif isinstance(predicate_references, list):
             predicates = []
             for predicate in predicate_references:
-                predicate = self.check_predicate_namespace(predicate)
+                predicate = self.reformat_predicate_based_on_namespace(predicate)
                 predicates.append(predicate)
-                # TODO: do we need to need to fall back on values? e.g. identifier
             return predicates
 
-    def check_predicate_namespace(self, predicate):
+    def reformat_predicate_based_on_namespace(self, predicate):
         uri = predicate.uri
         if not (SKOS in uri or ARCHES in uri or DCTERMS in uri):
             predicate_label = [
