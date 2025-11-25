@@ -274,7 +274,7 @@ class SKOSReader(SKOSReader):
                     + 1,
                 )
                 new_list_item.clean()  # force generation of URI
-                new_list_item_value = ListItemValue.objects.create(
+                ListItemValue.objects.create(
                     list_item=new_list_item,
                     valuetype=self.prefLabel_valuetype,
                     language=default_lang,
