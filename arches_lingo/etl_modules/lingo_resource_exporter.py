@@ -47,13 +47,16 @@ details = {
 }
 
 """
-Mapping dict consists of nodegroup aliases as top level key with 
+Mapping dict consists of nodegroup aliases as top level key that matches a nodegroup alias
+the key/value pairs of the subdict map node aliases to their role in the triple, with 
+option to define a default predicate if a predicate is not found in the tile tree.
+Some predicates are hardcoded SKOS predicates for specific relationships.
 
 nodegroup_alias: {
-    "type": "string" | "resource",
-    "predicate": "<predicate_node_alias>",
+    "predicate": "<predicate_node_alias>" | "<skos_predicate_value>",
     "object": "<object_node_alias>",
     "object_language": "<object_language_node_alias>" (optional)
+    "default_predicate": "<default_predicate_value>" (optional)
 }
 """
 TILE_TREE_TO_TRIPLE_MAPPING = {
@@ -74,11 +77,11 @@ TILE_TREE_TO_TRIPLE_MAPPING = {
     },
     # Concept Mappings:
     "top_concept_of": {
-        "predicate": "hasTopConcept",
+        "predicate": "hasTopConcept",  # hardcoded SKOS predicate
         "object": "top_concept_of",
     },
     "part_of_scheme": {
-        "predicate": "inScheme",
+        "predicate": "inScheme",  # hardcoded SKOS predicate
         "object": "part_of_scheme",
     },
     # Hierarchy
