@@ -15,30 +15,12 @@ from arches_querysets.models import ResourceTileTree
 
 from arches_lingo.utils.skos import SKOSWriter
 
-from arches_lingo.const import (
-    SCHEMES_GRAPH_ID,
-    TOP_CONCEPT_OF_NODE_AND_NODEGROUP,
-    CLASSIFICATION_STATUS_NODEGROUP,
-    CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID,
-    CONCEPT_NAME_NODEGROUP,
-    CONCEPT_NAME_CONTENT_NODE,
-    CONCEPT_NAME_LANGUAGE_NODE,
-    CONCEPT_NAME_TYPE_NODE,
-    ALT_LABEL_VALUE,
-    HIDDEN_LABEL_VALUE,
-    PREF_LABEL_VALUE,
-    SCHEME_NAME_NODEGROUP,
-    SCHEME_NAME_CONTENT_NODE,
-    SCHEME_NAME_LANGUAGE_NODE,
-    SCHEME_NAME_TYPE_NODE,
-)
-
 logger = logging.getLogger(__name__)
 
 details = {
     "etlmoduleid": "4302e334-33ed-4e85-99f2-fdac7c7c32fa",
-    "name": "Lingo SKOS Exporter",
-    "description": "Export Arches Lingo schemes and concepts to SKOS RDF",
+    "name": "Lingo Thesaurus Exporter",
+    "description": "Export Arches Lingo schemes and concepts to a linked data file",
     "etl_type": "export",
     "component": "views/components/etl_modules/export-lingo-resources",
     "componentname": "export-lingo-resources",
@@ -52,9 +34,10 @@ details = {
 }
 
 """
-Mapping dict consists of nodegroup aliases as top level key that matches a nodegroup alias
-the key/value pairs of the subdict map node aliases to their role in the triple, with 
-option to define a default predicate if a predicate is not found in the tile tree.
+Mapping dict consists of nodegroup aliases as top level key. Their values are dicts where
+the key indicates the component of a triple and the value are node aliases which are used
+to extract data from Arches Queryset TileTrees. There is also an option to define a 
+default predicate if a predicate is not found in the tile tree.
 Some predicates are hardcoded SKOS predicates for specific relationships.
 
 nodegroup_alias: {
