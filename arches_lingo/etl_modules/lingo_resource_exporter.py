@@ -1,10 +1,15 @@
+import os
 import json
 import logging
 import uuid
 from collections import defaultdict
 from datetime import datetime
+from slugify import slugify
+
+from django.core.files.storage import default_storage
 from django.utils.translation import gettext as _
 
+from arches.app.models.system_settings import settings
 from arches.app.models.models import ETLModule, LoadEvent, User
 from arches_querysets.models import ResourceTileTree
 
@@ -120,6 +125,7 @@ class LingoResourceExporter:
             else kwargs.get("resourceid", None)
         )
         filename = request.POST.get("filename") if request else None
+        filename = None if filename == "null" else filename
 
         load_details = {
             "operation": "Export Lingo Resources",
@@ -140,42 +146,49 @@ class LingoResourceExporter:
         self.run_export_task(self.resourceid, filename=filename)
 
     def run_export_task(self, resourceid, format="pretty-xml", filename=None):
-        schemes = ResourceTileTree.get_tiles(
+        self.schemes = ResourceTileTree.get_tiles(
             graph_slug="scheme", resource_ids=[resourceid]
         )
         concepts = ResourceTileTree.get_tiles(graph_slug="concept").filter(
             part_of_scheme__id=resourceid
         )
 
-        scheme_triples = defaultdict(list)
-        for scheme in schemes:
+        self.scheme_triples = defaultdict(list)
+        for scheme in self.schemes:
             for nodegroup_alias, tile_trees in scheme.aliased_data:
                 if tile_trees:
-                    scheme_triples[scheme.resourceinstanceid].extend(
+                    self.scheme_triples[scheme.resourceinstanceid].extend(
                         self.extract_triples_from_aliased_tiles(
                             nodegroup_alias, tile_trees
                         )
                     )
 
-        concept_triples = defaultdict(list)
+        self.concept_triples = defaultdict(list)
         for concept in concepts:
             for nodegroup_alias, tile_trees in concept.aliased_data:
                 if tile_trees:
-                    concept_triples[concept.resourceinstanceid].extend(
+                    self.concept_triples[concept.resourceinstanceid].extend(
                         self.extract_triples_from_aliased_tiles(
                             nodegroup_alias, tile_trees
                         )
                     )
 
         writer = SKOSWriter()
-        writer.write_skos_from_triples(scheme_triples, concept_triples, format=format)
+        rdf_graph = writer.write_skos_from_triples(
+            self.scheme_triples, self.concept_triples, format=format
+        )
+
+        file_path = self.save_file(rdf_graph, filename)
+        if file_path:
+            message = "export completed successfully"
+            return {"success": True, "message": message, "file_path": file_path}
 
     def extract_triples_from_aliased_tiles(self, nodegroup_alias, tile_trees):
         triples = []
         mapping = TILE_TREE_TO_TRIPLE_MAPPING.get(nodegroup_alias)
         if mapping is None:
             logger.error(f"No mapping found for nodegroup alias: {nodegroup_alias}")
-            return triples
+            return None
         if type(tile_trees) is not list:
             tile_trees = [tile_trees]
         for tile_tree in tile_trees:
@@ -196,3 +209,17 @@ class LingoResourceExporter:
                     triple[triple_component] = predicate
             triples.append(triple)
         return triples
+
+    def save_file(self, rdf_graph, filename):
+        if not filename:
+            scheme_name = self.schemes.first().name[settings.LANGUAGE_CODE]
+            filename = f"{slugify(scheme_name, separator='_')}.xml"
+        # TODO: sanitize filename
+
+        # Save file to temp storage so it can be accessed by celery worker
+        temp_dir = os.path.join(settings.UPLOADED_FILES_DIR, "tmp", self.loadid)
+        os.makedirs(temp_dir, exist_ok=True)
+        temp_file_path = os.path.join(temp_dir, filename)
+
+        rdf_graph.serialize(destination=temp_file_path, format="pretty-xml")
+        return temp_file_path

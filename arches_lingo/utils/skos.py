@@ -297,9 +297,12 @@ class SKOSWriter:
             for triple in triples:
                 predicates, object = self.extract_predicate_object(triple)
                 for predicate in predicates:
-                    rdf_graph.add((rdf_concept_id, predicate, object))
+                    if predicate == SKOS.hasTopConcept:
+                        rdf_graph.add((object, SKOS.inScheme, rdf_concept_id))
+                    else:
+                        rdf_graph.add((rdf_concept_id, predicate, object))
 
-        return rdf_graph.serialize(format=format)
+        return rdf_graph
 
     def extract_predicate_object(self, triple):
         # Some predicates are multivalue reference datatype fields, so process all predicates
