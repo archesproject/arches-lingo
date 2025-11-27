@@ -2,19 +2,13 @@
 import { ref } from "vue";
 import { useGettext } from "vue3-gettext";
 
-import Checkbox from "primevue/checkbox";
+// import Checkbox from "primevue/checkbox";
 import RadioButton from "primevue/radiobutton";
 
 const { $gettext } = useGettext();
 
-const filters = [
-    { value: "Concepts", label: $gettext("Concepts") },
-    { value: "Places", label: $gettext("Places") },
-    { value: "People", label: $gettext("People") },
-    { value: "Groups", label: $gettext("Groups") },
-    { value: "Periods", label: $gettext("Periods") },
-];
-const queryFilters = ref([]);
+// const filters = [{ value: "Concepts", label: $gettext("Concepts") }];
+// const queryFilters = ref([]);
 
 const sortOptions = [
     { value: "Unsorted", label: $gettext("Unsorted") },
@@ -46,7 +40,7 @@ const querySortPreference = ref();
             </div>
         </div>
 
-        <div class="filter-container">
+        <!-- <div class="filter-container">
             <div class="label">{{ $gettext("Include:") }}</div>
 
             <div
@@ -64,7 +58,7 @@ const querySortPreference = ref();
                     filter.label
                 }}</label>
             </div>
-        </div>
+        </div> -->
     </div>
 </template>
 
