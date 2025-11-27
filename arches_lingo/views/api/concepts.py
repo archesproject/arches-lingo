@@ -1,6 +1,7 @@
 from http import HTTPStatus
 
 from django.core.paginator import Paginator
+from django.db.models import Case, When, Value, IntegerField, Min
 from django.utils.decorators import method_decorator
 from django.utils.translation import gettext as _
 from django.views.generic import View
@@ -33,8 +34,9 @@ class ConceptTreeView(View):
 class ValueSearchView(ConceptTreeView):
     def get(self, request):
         term = request.GET.get("term")
-        max_edit_distance = request.GET.get(
-            "maxEditDistance", self.default_sensitivity()
+        max_edit_distance = self.resolve_max_edit_distance(
+            term,
+            request.GET.get("maxEditDistance"),
         )
         exact = request.GET.get("exact", False)
         page_number = request.GET.get("page", 1)
@@ -42,39 +44,52 @@ class ValueSearchView(ConceptTreeView):
 
         labels = TileTree.get_tiles("concept", nodegroup_alias="appellative_status")
 
-        if exact:
+        if exact and term:
             concept_query = labels.filter(
                 appellative_status_ascribed_name_content=term
             ).order_by("resourceinstance")
+            concept_ids = concept_query.values_list(
+                "resourceinstance",
+                flat=True,
+            ).distinct()
         elif term:
             try:
-                concept_query = fuzzy_search(labels, term, max_edit_distance)
-            except ValueError as ve:
+                concept_ids = self.build_ranked_concept_ids_for_term(
+                    labels,
+                    term,
+                    max_edit_distance,
+                )
+            except ValueError as value_error:
                 return JSONErrorResponse(
                     title=_("Unable to perform search."),
-                    message=ve.args[0],
+                    message=value_error.args[0],
                     status=HTTPStatus.BAD_REQUEST,
                 )
         else:
             concept_query = labels.order_by("resourceinstance")
-        concept_ids = concept_query.values_list(
-            "resourceinstance", flat=True
-        ).distinct()
+            concept_ids = concept_query.values_list(
+                "resourceinstance",
+                flat=True,
+            ).distinct()
+
+        paginator = Paginator(concept_ids, items_per_page)
+        page = paginator.get_page(page_number)
 
         data = []
-        paginator = Paginator(concept_ids, items_per_page)
         if paginator.count:
-            builder = ConceptBuilder()
+            concept_builder = ConceptBuilder()
             data = [
-                builder.serialize_concept(
-                    str(concept_uuid), parents=True, children=False
+                concept_builder.serialize_concept(
+                    str(concept_uuid),
+                    parents=True,
+                    children=False,
                 )
-                for concept_uuid in paginator.get_page(page_number)
+                for concept_uuid in page
             ]
 
         return JSONResponse(
             {
-                "current_page": paginator.get_page(page_number).number,
+                "current_page": page.number,
                 "total_pages": paginator.num_pages,
                 "results_per_page": paginator.per_page,
                 "total_results": paginator.count,
@@ -83,18 +98,63 @@ class ValueSearchView(ConceptTreeView):
         )
 
     @staticmethod
-    def default_sensitivity():
-        """Remains to be seen whether the existing elastic sensitivity setting
-        should be the fallback, but stub something out for now.
-        This sensitivity setting is actually inversely related to edit distance,
-        because it's prefix_length in elastic, not fuzziness, so invert it.
-        """
-        elastic_prefix_length = settings.SEARCH_TERM_SENSITIVITY
-        if elastic_prefix_length <= 0:
-            return 5
-        if elastic_prefix_length >= 5:
+    def resolve_max_edit_distance(term, raw_max_edit_distance):
+        if raw_max_edit_distance is not None:
+            base_max_edit_distance = int(raw_max_edit_distance)
+        else:
+            elastic_prefix_length = settings.SEARCH_TERM_SENSITIVITY
+
+            if elastic_prefix_length <= 0:
+                base_max_edit_distance = 5
+            elif elastic_prefix_length >= 5:
+                base_max_edit_distance = 0
+            else:
+                base_max_edit_distance = int(5 - elastic_prefix_length)
+
+        if not term:
+            return base_max_edit_distance
+
+        term_length = len(term)
+
+        if term_length <= 3:
             return 0
-        return int(5 - elastic_prefix_length)
+
+        if term_length <= 5:
+            return min(base_max_edit_distance, 1)
+
+        return min(base_max_edit_distance, 2)
+
+    @staticmethod
+    def build_ranked_concept_ids_for_term(labels, term, max_edit_distance):
+        fuzzy_tiles = fuzzy_search(labels, term, max_edit_distance)
+
+        ranked_tiles = fuzzy_tiles.annotate(
+            label_rank=Case(
+                When(
+                    appellative_status_ascribed_name_content__iexact=term,
+                    then=Value(0),
+                ),
+                When(
+                    appellative_status_ascribed_name_content__istartswith=term,
+                    then=Value(1),
+                ),
+                When(
+                    appellative_status_ascribed_name_content__icontains=term,
+                    then=Value(2),
+                ),
+                default=Value(3),
+                output_field=IntegerField(),
+            )
+        )
+
+        concept_ids = (
+            ranked_tiles.values("resourceinstance")
+            .annotate(best_rank=Min("label_rank"))
+            .order_by("best_rank", "resourceinstance")
+            .values_list("resourceinstance", flat=True)
+        )
+
+        return concept_ids
 
 
 @method_decorator(
