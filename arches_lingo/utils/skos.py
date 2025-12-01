@@ -273,7 +273,7 @@ class SKOSReader(SKOSReader):
 
 
 class SKOSWriter:
-    def write_skos_from_triples(self, schemes_triples, concepts_triples, format):
+    def write_skos_from_triples(self, schemes_triples, concepts_triples):
         rdf_graph = Graph()
         rdf_graph.bind("skos", SKOS)
         rdf_graph.bind("dcterms", DCTERMS)
