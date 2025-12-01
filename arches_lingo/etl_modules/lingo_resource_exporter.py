@@ -2,15 +2,15 @@ import os
 import json
 import logging
 import uuid
+from io import BytesIO
 from collections import defaultdict
 from datetime import datetime
 from slugify import slugify
 
-from django.core.files.storage import default_storage
 from django.utils.translation import gettext as _
 
 from arches.app.models.system_settings import settings
-from arches.app.models.models import ETLModule, LoadEvent, User
+from arches.app.models.models import ETLModule, LoadEvent, TempFile, User
 from arches_querysets.models import ResourceTileTree
 
 from arches_lingo.utils.skos import SKOSWriter
@@ -108,27 +108,32 @@ class LingoResourceExporter:
             else kwargs.get("resourceid", None)
         )
         filename = request.POST.get("filename") if request else None
-        filename = None if filename == "null" else filename
+        format = request.POST.get("format", "xml") if request else "xml"
 
         load_details = {
             "operation": "Export Lingo Resources",
-            "resourceid": self.resourceid,
-            "filename": filename,
+            "scheme_resourceid": self.resourceid,
         }
         load_event = LoadEvent.objects.create(
             loadid=self.loadid,
             user=User.objects.get(id=self.userid),
             etl_module=ETLModule.objects.get(pk=self.moduleid),
-            status="running",
+            status="validated",
             load_details=json.dumps(load_details),
             load_start_time=datetime.now(),
             complete=False,
         )
         self.load_event = load_event
 
-        self.run_export_task(self.resourceid, filename=filename)
+        try:
+            response = self.run_export_task(self.resourceid, filename, format)
+            return response
+        except:
+            self.load_event.status = "failed"
+            self.load_event.save()
+            raise
 
-    def run_export_task(self, resourceid, format="pretty-xml", filename=None):
+    def run_export_task(self, resourceid, filename=None, format="xml"):
         self.schemes = ResourceTileTree.get_tiles(
             graph_slug="scheme", resource_ids=[resourceid]
         )
@@ -138,7 +143,7 @@ class LingoResourceExporter:
 
         self.scheme_triples = defaultdict(list)
         for scheme in self.schemes:
-            for nodegroup_alias, tile_trees in scheme.aliased_data:
+            for nodegroup_alias, tile_trees in scheme.aliased_data._items():
                 if tile_trees:
                     self.scheme_triples[scheme.resourceinstanceid].extend(
                         self.extract_triples_from_aliased_tiles(
@@ -148,7 +153,7 @@ class LingoResourceExporter:
 
         self.concept_triples = defaultdict(list)
         for concept in concepts:
-            for nodegroup_alias, tile_trees in concept.aliased_data:
+            for nodegroup_alias, tile_trees in concept.aliased_data._items():
                 if tile_trees:
                     self.concept_triples[concept.resourceinstanceid].extend(
                         self.extract_triples_from_aliased_tiles(
@@ -156,15 +161,42 @@ class LingoResourceExporter:
                         )
                     )
 
-        writer = SKOSWriter()
-        rdf_graph = writer.write_skos_from_triples(
-            self.scheme_triples, self.concept_triples, format=format
-        )
+        # TODO: support other linked data formats
+        if format == "xml":
+            writer = SKOSWriter()
+            rdf_graph = writer.write_skos_from_triples(
+                self.scheme_triples, self.concept_triples
+            )
+            serialized_graph = rdf_graph.serialize(format="pretty-xml")
 
-        file_path = self.save_file(rdf_graph, filename)
-        if file_path:
-            message = "export completed successfully"
-            return {"success": True, "message": message, "file_path": file_path}
+        file = self.save_file(serialized_graph, filename, format)
+        if file:
+            filename = os.path.basename(file.path.name)
+            file_url = os.path.join(settings.MEDIA_URL, filename)
+            existing_details = json.loads(self.load_event.load_details)
+            load_details = {
+                **existing_details,
+                "file": {
+                    "name": filename,
+                    "url": file_url,
+                    "fileid": str(file.fileid),
+                },
+                # TODO: support multiple schemes export to individual files
+                "scheme_name": self.schemes.first().name[settings.LANGUAGE_CODE],
+            }
+            self.load_event.complete = True
+            self.load_event.status = (
+                "indexed"  # in BDM UI, 'indexed' maps to 'completed'
+            )
+            self.load_event.load_details = json.dumps(load_details)
+            self.load_event.save()
+
+            return {"success": True, "data": {"message": "success"}}
+        else:
+            self.load_event.status = "failed"
+            self.load_event.save()
+            error = _("File could not be saved.")
+            return {"success": False, "data": {"message": error}}
 
     def extract_triples_from_aliased_tiles(self, nodegroup_alias, tile_trees):
         triples = []
@@ -193,16 +225,21 @@ class LingoResourceExporter:
             triples.append(triple)
         return triples
 
-    def save_file(self, rdf_graph, filename):
-        if not filename:
+    def save_file(self, serialized_rdf, filename, format):
+        # TODO: support multiple schemes export to individual files
+        if filename:
+            filename = filename.replace(" ", "_")
+            if not filename.endswith(f".{format}"):
+                filename = f"{filename}.{format}"
+        else:
             scheme_name = self.schemes.first().name[settings.LANGUAGE_CODE]
-            filename = f"{slugify(scheme_name, separator='_')}.xml"
-        # TODO: sanitize filename
+            filename = (
+                f"{slugify(scheme_name, separator='_', lowercase=False)}.{format}"
+            )
 
-        # Save file to temp storage so it can be accessed by celery worker
-        temp_dir = os.path.join(settings.UPLOADED_FILES_DIR, "tmp", self.loadid)
-        os.makedirs(temp_dir, exist_ok=True)
-        temp_file_path = os.path.join(temp_dir, filename)
+        # TODO: support saving associated files (e.g. images) in zip archive
+        file = TempFile(source="lingo_resource_exporter")
+        stream = BytesIO(serialized_rdf)
+        file.path.save(filename, stream)
 
-        rdf_graph.serialize(destination=temp_file_path, format="pretty-xml")
-        return temp_file_path
+        return file
