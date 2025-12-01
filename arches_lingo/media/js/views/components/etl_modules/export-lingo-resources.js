@@ -8,7 +8,11 @@ import exportLingoResources from 'templates/views/components/etl_modules/export-
 const viewModel = function(params) {
     const self = this;
 
-    this.loadDetails = params.load_details;
+    if(typeof params.load_details === 'string'){
+        this.loadDetails = JSON.parse(params.load_details);
+    } else {
+        this.loadDetails = params.load_details;
+    }
     this.state = params.state;
     this.loading = params.loading || ko.observable();
     this.alert = params.alert;
@@ -18,12 +22,13 @@ const viewModel = function(params) {
     this.formatTime = params.formatTime;
     this.timeDifference = params.timeDifference;
     this.activeTab = params.activeTab || ko.observable();
-    this.editHistoryUrl = `${arches.urls.edit_history}?transactionid=${ko.unwrap(params.selectedLoadEvent)?.loadid}`;
-    
+        
     this.formData = new window.FormData();
     this.schemes = ko.observable();
     this.selectedScheme = ko.observable();
     this.selectedSchemeName = ko.observable();
+    this.filename = ko.observable();
+    this.format = ko.observable();
     
     this.getSchemes = async function(){
         try {
@@ -63,7 +68,12 @@ const viewModel = function(params) {
         }
         self.loading(true);
         self.formData.append('resourceid', self.selectedScheme());
-        self.formData.append('filename', null);
+        if (self.filename()) {
+            self.formData.append('filename', self.filename());
+        }
+        if (self.format()) {
+            self.formData.append('format', self.format());
+        }
         self.submit('start').then(data => {
             params.activeTab("import");
             self.formData.append('async', true);
