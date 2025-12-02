@@ -25,7 +25,7 @@
         "arches-dev-dependencies": "archesproject/arches-dev-dependencies#dev/8.1.x"
     },
     "dependencies": {
-        "@primevue/forms": "4.3.7",
+        "@primevue/forms": "4.5.0",
         "arches": "archesproject/arches#dev/8.1.x",
         "arches-component-lab": "archesproject/arches-component-lab#main",
         "vue-router": "4.4.3"
