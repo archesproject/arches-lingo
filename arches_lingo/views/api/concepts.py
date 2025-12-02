@@ -1,20 +1,21 @@
 from http import HTTPStatus
 
 from django.core.paginator import Paginator
-from django.db.models import Min, Case, When, Value, IntegerField
-from django.db.models.functions import Lower
 from django.utils.decorators import method_decorator
 from django.utils.translation import gettext as _
 from django.views.generic import View
 
-from arches.app.models.system_settings import settings
 from arches.app.utils.betterJSONSerializer import JSONDeserializer, JSONSerializer
 from arches.app.utils.decorators import group_required
 from arches.app.utils.response import JSONErrorResponse, JSONResponse
 
 from arches_querysets.models import ResourceTileTree, TileTree
-from arches_lingo.querysets import fuzzy_search
 from arches_lingo.utils.concept_builder import ConceptBuilder
+from arches_lingo.utils.concepts import (
+    resolve_max_edit_distance,
+    build_ranked_concept_ids_for_term,
+    build_concept_ids_for_non_fuzzy,
+)
 
 
 @method_decorator(
@@ -35,26 +36,31 @@ class ConceptTreeView(View):
 class ValueSearchView(ConceptTreeView):
     def get(self, request):
         term = request.GET.get("term")
-        max_edit_distance = self.resolve_max_edit_distance(
-            term,
-            request.GET.get("maxEditDistance"),
-        )
+        raw_max_edit_distance = request.GET.get("maxEditDistance")
         exact = request.GET.get("exact", False)
         page_number = request.GET.get("page", 1)
         items_per_page = request.GET.get("items", 25)
+
         order_mode = request.GET.get("order", "unsorted")
+        if order_mode not in ("alphabetical", "reverse-alphabetical", "unsorted"):
+            order_mode = "unsorted"
 
         labels = TileTree.get_tiles("concept", nodegroup_alias="appellative_status")
 
+        if raw_max_edit_distance is None:
+            max_edit_distance = resolve_max_edit_distance(term)
+        else:
+            max_edit_distance = raw_max_edit_distance
+
         if exact and term:
             concept_query = labels.filter(appellative_status_ascribed_name_content=term)
-            concept_ids = self.build_concept_ids_for_non_fuzzy(
+            concept_ids = build_concept_ids_for_non_fuzzy(
                 concept_query,
                 order_mode,
             )
         elif term:
             try:
-                concept_ids = self.build_ranked_concept_ids_for_term(
+                concept_ids = build_ranked_concept_ids_for_term(
                     labels,
                     term,
                     max_edit_distance,
@@ -68,7 +74,7 @@ class ValueSearchView(ConceptTreeView):
                 )
         else:
             concept_query = labels
-            concept_ids = self.build_concept_ids_for_non_fuzzy(
+            concept_ids = build_concept_ids_for_non_fuzzy(
                 concept_query,
                 order_mode,
             )
@@ -97,99 +103,6 @@ class ValueSearchView(ConceptTreeView):
                 "data": data,
             }
         )
-
-    @staticmethod
-    def resolve_max_edit_distance(term, raw_max_edit_distance):
-        if raw_max_edit_distance is not None:
-            base_max_edit_distance = int(raw_max_edit_distance)
-        else:
-            elastic_prefix_length = settings.SEARCH_TERM_SENSITIVITY
-
-            if elastic_prefix_length <= 0:
-                base_max_edit_distance = 5
-            elif elastic_prefix_length >= 5:
-                base_max_edit_distance = 0
-            else:
-                base_max_edit_distance = int(5 - elastic_prefix_length)
-
-        if not term:
-            return base_max_edit_distance
-
-        term_length = len(term)
-
-        if term_length <= 3:
-            return 0
-
-        if term_length <= 5:
-            return min(base_max_edit_distance, 1)
-
-        return min(base_max_edit_distance, 2)
-
-    @staticmethod
-    def build_ranked_concept_ids_for_term(
-        labels,
-        term,
-        max_edit_distance,
-        order_mode,
-    ):
-        fuzzy_tiles = fuzzy_search(labels, term, max_edit_distance)
-
-        ranked_tiles = fuzzy_tiles.annotate(
-            text_rank=Case(
-                When(
-                    appellative_status_ascribed_name_content__iexact=term,
-                    then=Value(0),
-                ),
-                When(
-                    appellative_status_ascribed_name_content__istartswith=term,
-                    then=Value(1),
-                ),
-                When(
-                    appellative_status_ascribed_name_content__icontains=term,
-                    then=Value(2),
-                ),
-                default=Value(3),
-                output_field=IntegerField(),
-            )
-        )
-
-        base_query = ranked_tiles.values("resourceinstance").annotate(
-            best_text_rank=Min("text_rank"),
-            best_label_rank=Min("label_rank"),
-            sort_label=Min(Lower("appellative_status_ascribed_name_content")),
-        )
-
-        if order_mode == "alphabetical":
-            ordered_query = base_query.order_by("sort_label", "resourceinstance")
-        elif order_mode == "reverse-alphabetical":
-            ordered_query = base_query.order_by("-sort_label", "resourceinstance")
-        else:
-            ordered_query = base_query.order_by(
-                "best_text_rank",
-                "best_label_rank",
-                "resourceinstance",
-            )
-
-        return ordered_query.values_list("resourceinstance", flat=True)
-
-    @staticmethod
-    def build_concept_ids_for_non_fuzzy(labels_queryset, order_mode):
-        base_query = labels_queryset.values("resourceinstance").annotate(
-            best_label_rank=Min("label_rank"),
-            sort_label=Min(Lower("appellative_status_ascribed_name_content")),
-        )
-
-        if order_mode == "alphabetical":
-            ordered_query = base_query.order_by("sort_label", "resourceinstance")
-        elif order_mode == "reverse-alphabetical":
-            ordered_query = base_query.order_by("-sort_label", "resourceinstance")
-        else:
-            ordered_query = base_query.order_by(
-                "best_label_rank",
-                "resourceinstance",
-            )
-
-        return ordered_query.values_list("resourceinstance", flat=True)
 
 
 @method_decorator(
