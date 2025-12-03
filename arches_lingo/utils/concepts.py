@@ -14,11 +14,6 @@ VALUETYPE_PREF_LABEL = "prefLabel"
 VALUETYPE_ALT_LABEL = "altLabel"
 VALUETYPE_OTHER = "other"
 
-MAX_MATCH_RANK = 7
-MAX_LANGUAGE_RANK = 2
-MAX_LABEL_RANK = 0
-WORST_SCORE = (MAX_MATCH_RANK, MAX_LANGUAGE_RANK, MAX_LABEL_RANK, "\uffff")
-
 # text_match_rank indices:
 # 0 = exact, 1 = prefix, 2 = substring, 3 = no match
 MATCH_RANK_TABLE = {
@@ -117,7 +112,7 @@ def score_concept_for_term(
     system_language,
 ):
     search_term_lower = (search_term or "").lower()
-    best_score = WORST_SCORE
+    best_score = None
 
     for label_data in concept_data.get("labels", []):
         raw_label_value = label_data.get("value") or ""
@@ -150,7 +145,8 @@ def score_concept_for_term(
 
         valuetype = label_data.get("valuetype_id") or VALUETYPE_OTHER
         match_ranks_for_type = MATCH_RANK_TABLE.get(
-            valuetype, MATCH_RANK_TABLE[VALUETYPE_OTHER]
+            valuetype,
+            MATCH_RANK_TABLE[VALUETYPE_OTHER],
         )
         match_rank = match_ranks_for_type[text_match_rank]
 
@@ -161,7 +157,7 @@ def score_concept_for_term(
             label_value_lower,
         )
 
-        if label_score < best_score:
+        if best_score is None or label_score < best_score:
             best_score = label_score
 
     return best_score
