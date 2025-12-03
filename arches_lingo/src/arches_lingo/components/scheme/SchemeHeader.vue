@@ -380,6 +380,7 @@ h2 {
 }
 
 .header-content {
+    min-height: 5.45rem;
     padding-top: 0.5rem;
     padding-inline-start: 1rem;
     padding-inline-end: 1.5rem;
