@@ -3,7 +3,7 @@ import { useGettext } from "vue3-gettext";
 
 import ComponentManager from "@/arches_lingo/components/generic/ComponentManager/ComponentManager.vue";
 
-import SchemeHeader from "@/arches_lingo/components/scheme/SchemeHeader.vue";
+import SchemeHeader from "@/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue";
 import SchemeLabel from "@/arches_lingo/components/scheme/SchemeLabel/SchemeLabel.vue";
 import SchemeNamespace from "@/arches_lingo/components/scheme/SchemeNamespace/SchemeNamespace.vue";
 import SchemeNote from "@/arches_lingo/components/scheme/SchemeNote/SchemeNote.vue";
