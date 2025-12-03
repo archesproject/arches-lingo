@@ -1,8 +1,9 @@
 from http import HTTPStatus
 
+from django.conf import settings
 from django.core.paginator import Paginator
 from django.utils.decorators import method_decorator
-from django.utils.translation import gettext as _
+from django.utils.translation import get_language, gettext as _
 from django.views.generic import View
 
 from arches.app.utils.betterJSONSerializer import JSONDeserializer, JSONSerializer
@@ -15,6 +16,7 @@ from arches_lingo.utils.concepts import (
     resolve_max_edit_distance,
     build_ranked_concept_ids_for_term,
     build_concept_ids_for_non_fuzzy,
+    rank_concepts_for_unsorted_term,
 )
 
 
@@ -79,20 +81,38 @@ class ValueSearchView(ConceptTreeView):
                 order_mode,
             )
 
-        paginator = Paginator(concept_ids, items_per_page)
-        page = paginator.get_page(page_number)
-
         data = []
-        if paginator.count:
-            concept_builder = ConceptBuilder()
-            data = [
-                concept_builder.serialize_concept(
-                    str(concept_uuid),
-                    parents=True,
-                    children=False,
-                )
-                for concept_uuid in page
-            ]
+
+        if term and order_mode == "unsorted":
+            active_language = get_language() or settings.LANGUAGE_CODE
+            system_language = settings.LANGUAGE_CODE
+
+            ordered_concepts = rank_concepts_for_unsorted_term(
+                concept_ids,
+                term,
+                active_language,
+                system_language,
+            )
+
+            paginator = Paginator(ordered_concepts, items_per_page)
+            page = paginator.get_page(page_number)
+
+            if paginator.count:
+                data = list(page.object_list)
+        else:
+            paginator = Paginator(concept_ids, items_per_page)
+            page = paginator.get_page(page_number)
+
+            if paginator.count:
+                concept_builder = ConceptBuilder()
+                data = [
+                    concept_builder.serialize_concept(
+                        str(concept_uuid),
+                        parents=True,
+                        children=False,
+                    )
+                    for concept_uuid in page
+                ]
 
         return JSONResponse(
             {
