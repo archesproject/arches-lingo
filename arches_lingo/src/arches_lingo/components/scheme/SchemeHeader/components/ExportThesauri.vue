@@ -4,8 +4,9 @@ import { useGettext } from "vue3-gettext";
 
 import { useToast } from "primevue/usetoast";
 import Button from "primevue/button";
+import Dialog from "primevue/dialog";
 import InputText from "primevue/inputtext";
-import Popover from "primevue/popover";
+import ProgressSpinner from "primevue/progressspinner";
 import RadioButton from "primevue/radiobutton";
 import SelectButton from "primevue/selectbutton";
 
@@ -26,11 +27,7 @@ const props = defineProps<{
 console.log(props.resource);
 
 const loading = ref(false);
-
-const exportDialog = ref();
-const toggle = (event: Event) => {
-    exportDialog.value.toggle(event);
-};
+const visible = ref(false);
 
 const exportDepth = ref("complete");
 const exportDepthOptions = ref([
@@ -77,7 +74,7 @@ async function exportThesauri() {
                         "Your thesaurus export is being processed. You will be notified when it is complete.",
                     ),
                 });
-                exportDialog.value.toggle();
+                visible.value = false;
             })
             .catch((error: Error) => {
                 toast.add({
@@ -93,46 +90,82 @@ async function exportThesauri() {
 </script>
 
 <template>
-    <!-- Placeholder export button -->
     <Button
         :aria-label="$gettext('Export')"
         class="add-button"
-        @click="toggle"
+        @click="visible = !visible"
     >
         <span><i class="pi pi-cloud-download"></i></span>
         <span>{{ $gettext("Export") }}</span>
     </Button>
-    <Popover
-        ref="exportDialog"
-        class="export-panel"
+    <Dialog
+        v-model:visible="visible"
+        position="center"
+        :draggable="false"
+        :header="$gettext('Export Thesauri')"
+        :close-on-escape="true"
+        :modal="true"
+        :pt="{
+            root: {
+                style: {
+                    minWidth: '40rem',
+                    borderRadius: '0',
+                    fontFamily: 'var(--p-lingo-font-family)',
+                    fontSize: 'var(--p-lingo-font-size-small)',
+                },
+            },
+            header: {
+                style: {
+                    background: 'var(--p-navigation-header-color)',
+                    color: 'var(--p-dialog-header-text-color)',
+                    borderRadius: '0',
+                },
+            },
+            content: {
+                style: {
+                    paddingTop: '0.5rem',
+                },
+            },
+        }"
     >
-        <div class="exports-panel-container">
-            <div class="container-title">
-                <h3>
-                    {{ $gettext("Export Thesaurus") }}
-                </h3>
-            </div>
-            <div class="options-container">
-                <h4>
+        <template #default>
+            <ProgressSpinner
+                v-if="loading"
+                style="display: flex"
+            />
+            <div class="form-item-container">
+                <label
+                    class="form-item-label"
+                    for="export-depth-select"
+                >
                     {{ $gettext("Hierarchy Options") }}
-                </h4>
+                </label>
                 <SelectButton
+                    id="export-depth-select"
                     v-model="exportDepth"
                     :options="exportDepthOptions"
                     option-label="label"
                     option-value="value"
                     option-disabled="disabled"
+                    aria-labelledby="export-depth-select-label"
+                    class="selection-button"
                 />
             </div>
-            <div class="formats-container">
-                <h4>
+            <div class="form-item-container">
+                <label
+                    class="form-item-label"
+                    for="export-format-select"
+                >
                     {{ $gettext("Export Format") }}
-                </h4>
-                <div>
+                </label>
+                <div
+                    id="export-format-select"
+                    role="radiogroup"
+                >
                     <span
                         v-for="option in exportformatOptions"
                         :key="option.value"
-                        class="selection"
+                        class="radio-button-and-label"
                     >
                         <RadioButton
                             :key="option.value"
@@ -141,90 +174,72 @@ async function exportThesauri() {
                             :value="option.value"
                             :label="option.label"
                         ></RadioButton>
-                        <label :for="option.value">{{ option.label }}</label>
+                        <label
+                            :for="option.value"
+                            class="radio-label"
+                            >{{ option.label }}</label
+                        >
                     </span>
                 </div>
             </div>
-            <div class="file-name-container">
-                <h4>
+            <div class="form-item-container">
+                <label
+                    class="form-item-label"
+                    for="file-name-input"
+                >
                     {{ $gettext("File Name (optional)") }}
-                </h4>
+                </label>
                 <InputText
+                    id="file-name-input"
                     v-model="fileName"
                     :placeholder="$gettext('Enter file name')"
                 />
             </div>
-            <div class="export-footer">
-                <Button
-                    icon="pi pi-trash"
-                    :label="$gettext('Cancel')"
-                ></Button>
-                <Button
-                    icon="pi pi-file-export"
-                    :label="$gettext('Export')"
-                    :disabled="isValid === false || loading"
-                    @click="exportThesauri"
-                ></Button>
-            </div>
-        </div>
-    </Popover>
+        </template>
+        <template #footer>
+            <Button
+                icon="pi pi-trash"
+                :label="$gettext('Cancel')"
+                type="button"
+                class="footer-button"
+                @click="visible = false"
+            ></Button>
+            <Button
+                icon="pi pi-file-export"
+                :label="$gettext('Export')"
+                type="submit"
+                class="footer-button"
+                :disabled="isValid === false || loading"
+                @click="exportThesauri"
+            ></Button>
+        </template>
+    </Dialog>
 </template>
 
 <style scoped>
-.export-panel {
-    padding: 1rem;
+.form-item-container {
+    margin-bottom: 0.75rem;
 }
-
-.exports-panel-container {
-    font-family: var(--p-lingo-font-family);
-    font-weight: 300;
-    padding: 0 1rem;
+.form-item-label {
+    display: block;
+    margin-bottom: 0.25rem;
+    font-weight: var(--p-lingo-font-weight-bold);
 }
-
-.container-title {
-    font-size: var(--p-lingo-font-size-normal);
-    border-bottom: 0.0625rem solid var(--p-header-toolbar-border);
+:deep(.p-selectbutton .p-togglebutton) {
+    font-size: var(--p-lingo-font-size-small);
+    margin: 0 0.5rem;
+}
+.p-radiobutton {
+    vertical-align: unset;
+}
+.radio-button-and-label {
+    margin-right: 1.5rem;
     margin-bottom: 0.5rem;
 }
-
-.container-title h3 {
-    padding-top: 0.5rem;
-    margin: 0rem 0rem 0.25rem 0rem;
-    font-weight: var(--p-lingo-font-weight-normal);
+.radio-label {
+    margin-inline-start: 0.5rem;
 }
-
-.options-container {
-    padding: 0 0 0.75rem 0;
-}
-
-.options-container h4,
-.file-name-container h4 {
-    margin: 0;
-    padding-bottom: 0.4rem;
-}
-
-.formats-container {
-    padding: 0 0 0.75rem 0;
-}
-
-.formats-container h4 {
-    margin: 0;
-}
-
-.selection {
-    display: flex;
-    gap: 0.5rem;
-    padding: 0.2rem;
-    font-size: var(--p-lingo-font-size-smallnormal);
-    align-items: center;
-    color: var(--p-list-option-icon-color);
-}
-
-.export-footer {
-    display: flex;
-    justify-content: flex-end;
-    gap: 0.25rem;
-    border-top: 0.0625rem solid var(--p-header-toolbar-border);
-    padding: 0.5rem 0 0 0;
+.footer-button {
+    font-size: var(--p-lingo-font-size-small);
 }
 </style>
