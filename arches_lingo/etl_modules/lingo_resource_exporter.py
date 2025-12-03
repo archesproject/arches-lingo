@@ -109,6 +109,7 @@ class LingoResourceExporter:
         )
         filename = request.POST.get("filename") if request else None
         format = request.POST.get("format", "xml") if request else "xml"
+        depth = request.POST.get("depth", "complete") if request else "complete"
 
         load_details = {
             "operation": "Export Lingo Resources",
@@ -167,20 +168,21 @@ class LingoResourceExporter:
             rdf_graph = writer.write_skos_from_triples(
                 self.scheme_triples, self.concept_triples
             )
-            serialized_graph = rdf_graph.serialize(format="pretty-xml")
+            serialized_rdf = rdf_graph.serialize(format="pretty-xml")
 
-        file = self.save_file(serialized_graph, filename, format)
+        file = self.save_file(serialized_rdf, filename, format)
         if file:
             filename = os.path.basename(file.path.name)
             file_url = os.path.join(settings.MEDIA_URL, filename)
             existing_details = json.loads(self.load_event.load_details)
+            file_details = {
+                "name": filename,
+                "url": file_url,
+                "fileid": str(file.fileid),
+            }
             load_details = {
                 **existing_details,
-                "file": {
-                    "name": filename,
-                    "url": file_url,
-                    "fileid": str(file.fileid),
-                },
+                "file": file_details,
                 # TODO: support multiple schemes export to individual files
                 "scheme_name": self.schemes.first().name[settings.LANGUAGE_CODE],
             }
@@ -191,7 +193,13 @@ class LingoResourceExporter:
             self.load_event.load_details = json.dumps(load_details)
             self.load_event.save()
 
-            return {"success": True, "data": {"message": "success"}}
+            return {
+                "success": True,
+                "data": {
+                    "message": "success",
+                    "load_details": json.dumps(self.load_event.load_details),
+                },
+            }
         else:
             self.load_event.status = "failed"
             self.load_event.save()

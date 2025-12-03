@@ -368,3 +368,37 @@ export const importThesaurus = async (file: File, overwriteOption: string) => {
         }
     }
 };
+
+export const exportThesaurus = async (
+    resourceid: string,
+    depth: string,
+    format: string,
+    fileName?: string,
+) => {
+    const formData = new FormData();
+    formData.append("action", "start");
+    // formData.append("mode", "ui");
+    // moduleId normally fetched in context of BDM, but needed to get throough ETLManagerView POST
+    const lingoImporterModuleId = "4302e334-33ed-4e85-99f2-fdac7c7c32fa";
+    formData.append("module", lingoImporterModuleId);
+    formData.append("resourceid", resourceid);
+    formData.append("depth", depth);
+    formData.append("format", format);
+    if (fileName) {
+        formData.append("filename", fileName);
+    }
+    const response = await fetch(arches.urls.etl_manager, {
+        method: "POST",
+        headers: { "X-CSRFTOKEN": getToken() },
+        body: formData,
+    });
+    try {
+        const parsed = await response.json();
+        if (response.ok) {
+            return parsed;
+        }
+        throw new Error(parsed.message);
+    } catch (error) {
+        throw new Error((error as Error).message || response.statusText);
+    }
+};
