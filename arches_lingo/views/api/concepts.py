@@ -1,18 +1,23 @@
 from http import HTTPStatus
 
+from django.conf import settings
 from django.core.paginator import Paginator
 from django.utils.decorators import method_decorator
-from django.utils.translation import gettext as _
+from django.utils.translation import get_language, gettext as _
 from django.views.generic import View
 
-from arches.app.models.system_settings import settings
 from arches.app.utils.betterJSONSerializer import JSONDeserializer, JSONSerializer
 from arches.app.utils.decorators import group_required
 from arches.app.utils.response import JSONErrorResponse, JSONResponse
 
 from arches_querysets.models import ResourceTileTree, TileTree
-from arches_lingo.querysets import fuzzy_search
 from arches_lingo.utils.concept_builder import ConceptBuilder
+from arches_lingo.utils.concepts import (
+    resolve_max_edit_distance,
+    build_ranked_concept_ids_for_term,
+    build_concept_ids_for_non_fuzzy,
+    rank_concepts_for_unsorted_term,
+)
 
 
 @method_decorator(
@@ -33,68 +38,91 @@ class ConceptTreeView(View):
 class ValueSearchView(ConceptTreeView):
     def get(self, request):
         term = request.GET.get("term")
-        max_edit_distance = request.GET.get(
-            "maxEditDistance", self.default_sensitivity()
-        )
+        raw_max_edit_distance = request.GET.get("maxEditDistance")
         exact = request.GET.get("exact", False)
         page_number = request.GET.get("page", 1)
         items_per_page = request.GET.get("items", 25)
 
+        order_mode = request.GET.get("order", "unsorted")
+        if order_mode not in ("alphabetical", "reverse-alphabetical", "unsorted"):
+            order_mode = "unsorted"
+
         labels = TileTree.get_tiles("concept", nodegroup_alias="appellative_status")
 
-        if exact:
-            concept_query = labels.filter(
-                appellative_status_ascribed_name_content=term
-            ).order_by("resourceinstance")
+        if raw_max_edit_distance is None:
+            max_edit_distance = resolve_max_edit_distance(term)
+        else:
+            max_edit_distance = raw_max_edit_distance
+
+        if exact and term:
+            concept_query = labels.filter(appellative_status_ascribed_name_content=term)
+            concept_ids = build_concept_ids_for_non_fuzzy(
+                concept_query,
+                order_mode,
+            )
         elif term:
             try:
-                concept_query = fuzzy_search(labels, term, max_edit_distance)
-            except ValueError as ve:
+                concept_ids = build_ranked_concept_ids_for_term(
+                    labels,
+                    term,
+                    max_edit_distance,
+                    order_mode,
+                )
+            except ValueError as value_error:
                 return JSONErrorResponse(
                     title=_("Unable to perform search."),
-                    message=ve.args[0],
+                    message=value_error.args[0],
                     status=HTTPStatus.BAD_REQUEST,
                 )
         else:
-            concept_query = labels.order_by("resourceinstance")
-        concept_ids = concept_query.values_list(
-            "resourceinstance", flat=True
-        ).distinct()
+            concept_query = labels
+            concept_ids = build_concept_ids_for_non_fuzzy(
+                concept_query,
+                order_mode,
+            )
 
         data = []
-        paginator = Paginator(concept_ids, items_per_page)
-        if paginator.count:
-            builder = ConceptBuilder()
-            data = [
-                builder.serialize_concept(
-                    str(concept_uuid), parents=True, children=False
-                )
-                for concept_uuid in paginator.get_page(page_number)
-            ]
+
+        if term and order_mode == "unsorted":
+            active_language = get_language() or settings.LANGUAGE_CODE
+            system_language = settings.LANGUAGE_CODE
+
+            ordered_concepts = rank_concepts_for_unsorted_term(
+                concept_ids,
+                term,
+                active_language,
+                system_language,
+            )
+
+            paginator = Paginator(ordered_concepts, items_per_page)
+            page = paginator.get_page(page_number)
+
+            if paginator.count:
+                data = list(page.object_list)
+        else:
+            paginator = Paginator(concept_ids, items_per_page)
+            page = paginator.get_page(page_number)
+
+            if paginator.count:
+                concept_builder = ConceptBuilder()
+                data = [
+                    concept_builder.serialize_concept(
+                        str(concept_uuid),
+                        parents=True,
+                        children=False,
+                    )
+                    for concept_uuid in page
+                ]
 
         return JSONResponse(
             {
-                "current_page": paginator.get_page(page_number).number,
+                "current_page": page.number,
                 "total_pages": paginator.num_pages,
                 "results_per_page": paginator.per_page,
                 "total_results": paginator.count,
                 "data": data,
             }
         )
-
-    @staticmethod
-    def default_sensitivity():
-        """Remains to be seen whether the existing elastic sensitivity setting
-        should be the fallback, but stub something out for now.
-        This sensitivity setting is actually inversely related to edit distance,
-        because it's prefix_length in elastic, not fuzziness, so invert it.
-        """
-        elastic_prefix_length = settings.SEARCH_TERM_SENSITIVITY
-        if elastic_prefix_length <= 0:
-            return 5
-        if elastic_prefix_length >= 5:
-            return 0
-        return int(5 - elastic_prefix_length)
 
 
 @method_decorator(

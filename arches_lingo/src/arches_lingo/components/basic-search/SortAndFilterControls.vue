@@ -1,27 +1,30 @@
 <script setup lang="ts">
-import { ref } from "vue";
 import { useGettext } from "vue3-gettext";
-
-import Checkbox from "primevue/checkbox";
 import RadioButton from "primevue/radiobutton";
 
 const { $gettext } = useGettext();
 
-const filters = [
-    { value: "Concepts", label: $gettext("Concepts") },
-    { value: "Places", label: $gettext("Places") },
-    { value: "People", label: $gettext("People") },
-    { value: "Groups", label: $gettext("Groups") },
-    { value: "Periods", label: $gettext("Periods") },
-];
-const queryFilters = ref([]);
+const ORDER_MODE_UNSORTED = "unsorted";
+const ORDER_MODE_ALPHABETICAL = "alphabetical";
+const ORDER_MODE_REVERSE_ALPHABETICAL = "reverse-alphabetical";
 
 const sortOptions = [
-    { value: "Unsorted", label: $gettext("Unsorted") },
-    { value: "A to Z", label: $gettext("A to Z") },
-    { value: "Z to A", label: $gettext("Z to A") },
+    { value: ORDER_MODE_UNSORTED, label: $gettext("Unsorted") },
+    { value: ORDER_MODE_ALPHABETICAL, label: $gettext("A to Z") },
+    { value: ORDER_MODE_REVERSE_ALPHABETICAL, label: $gettext("Z to A") },
 ];
-const querySortPreference = ref();
+
+const { orderMode } = defineProps<{
+    orderMode: string;
+}>();
+
+const emit = defineEmits<{
+    (event: "update:orderMode", value: string): void;
+}>();
+
+function onOrderModeChange(newOrderMode: string) {
+    emit("update:orderMode", newOrderMode);
+}
 </script>
 
 <template>
@@ -31,38 +34,19 @@ const querySortPreference = ref();
 
             <div
                 v-for="(sortOption, index) in sortOptions"
-                :key="index"
+                :key="sortOption.value"
                 class="query-sort-preference"
             >
                 <RadioButton
-                    v-model="querySortPreference"
+                    :model-value="orderMode"
                     :input-id="`querySortPreference${index + 1}`"
-                    :name="`querySortPreference${index + 1}`"
+                    name="querySortPreference"
                     :value="sortOption.value"
+                    @update:model-value="onOrderModeChange"
                 />
-                <label :for="`querySortPreference${index + 1}`">{{
-                    sortOption.label
-                }}</label>
-            </div>
-        </div>
-
-        <div class="filter-container">
-            <div class="label">{{ $gettext("Include:") }}</div>
-
-            <div
-                v-for="(filter, index) in filters"
-                :key="index"
-                class="query-filter"
-            >
-                <Checkbox
-                    v-model="queryFilters"
-                    :input-id="`queryFilter${index + 1}`"
-                    :name="`queryFilter${index + 1}`"
-                    :value="filter.value"
-                />
-                <label :for="`queryFilter${index + 1}`">{{
-                    filter.label
-                }}</label>
+                <label :for="`querySortPreference${index + 1}`">
+                    {{ sortOption.label }}
+                </label>
             </div>
         </div>
     </div>

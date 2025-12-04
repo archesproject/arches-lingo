@@ -6,7 +6,6 @@ import { useRouter } from "vue-router";
 import AutoComplete from "primevue/autocomplete";
 import Button from "primevue/button";
 import ProgressBar from "primevue/progressbar";
-
 import { useToast } from "primevue/usetoast";
 
 import SortAndFilterControls from "@/arches_lingo/components/basic-search/SortAndFilterControls.vue";
@@ -36,37 +35,45 @@ const autoCompleteKey = ref(0);
 const computedSearchResultsHeight = ref("");
 const isLoading = ref(false);
 const isLoadingAdditionalResults = ref(false);
+const orderMode = ref<string>("unsorted");
+const query = ref("");
 const searchResults = ref<SearchResultItem[]>([]);
 const searchResultsPage = ref(1);
 const searchResultsTotalCount = ref(0);
-const query = ref("");
 const shouldShowClearInputButton = ref(false);
 
 const clearInput = () => {
     query.value = "";
     shouldShowClearInputButton.value = false;
+    searchResults.value = [];
+    searchResultsPage.value = 1;
+    searchResultsTotalCount.value = 0;
     focusInput();
 };
 
-const fetchData = async (searchTerm: string, items: number, page: number) => {
+const fetchData = async (
+    searchTerm: string,
+    items: number,
+    pageNumber: number,
+    orderModeValue: string,
+) => {
     isLoading.value = true;
-    shouldShowClearInputButton.value = Boolean(page !== 1);
+    shouldShowClearInputButton.value = Boolean(pageNumber !== 1);
 
     try {
         const parsedResponse = await fetchSearchResults(
             searchTerm,
             items,
-            page,
+            pageNumber,
+            orderModeValue,
         );
 
-        // This handles for when the user types a query and then
-        // changes it before the request is completed.
         if (searchTerm !== query.value) {
             return;
         }
 
         if (query.value) {
-            if (page === 1) {
+            if (pageNumber === 1) {
                 searchResults.value = parsedResponse.data;
             } else {
                 searchResults.value = [
@@ -127,6 +134,7 @@ const loadAdditionalSearchResults = (event: VirtualScrollerLazyEvent) => {
             query.value,
             props.searchResultsPerPage,
             searchResultsPage.value,
+            orderMode.value,
         );
     }
 };
@@ -142,30 +150,41 @@ const navigateToReport = async (event: AutoCompleteOptionSelectEvent) => {
 
 onMounted(focusInput);
 
-// handles the edge case of inputting a query then clearing the input before the data is fetched.
-watch(query, (query) => {
-    if (!query) {
+watch(query, (newQueryValue) => {
+    if (!newQueryValue) {
         autoCompleteKey.value += 1;
+
         nextTick(() => {
             focusInput();
         });
     }
 });
 
-/**
- * This isn't fantastic but it's the best way I can find to get around PrimeVue's lack of support for
- * updating the height of a `VirtualScroller` overlay, much less updating the height dynamically.
- */
-watch(searchResults, (searchResults) => {
-    if (searchResults?.length) {
+watch(orderMode, async (newOrderMode, previousOrderMode) => {
+    if (!query.value || newOrderMode === previousOrderMode) {
+        return;
+    }
+
+    searchResultsPage.value = 1;
+
+    await fetchData(query.value, props.searchResultsPerPage, 1, newOrderMode);
+
+    if (searchResults.value.length && autoCompleteInstance.value) {
+        // @ts-expect-error - autoCompleteInstance is mistyped in PrimeVue
+        nextTick(() => autoCompleteInstance.value?.show());
+    }
+});
+
+watch(searchResults, (newSearchResults) => {
+    if (newSearchResults?.length) {
         const rootFontSize = parseFloat(
             getComputedStyle(document.documentElement).fontSize,
         );
-        const itemHeightInRem = props.searchResultItemSize / rootFontSize; // Convert to rem based on the root font size
-        const computedHeightInRem = searchResults.length * itemHeightInRem;
+        const itemHeightInRem = props.searchResultItemSize / rootFontSize;
+        const computedHeightInRem = newSearchResults.length * itemHeightInRem;
 
         const viewHeightInPixels = window.innerHeight * 0.6;
-        const viewHeightInRem = viewHeightInPixels / rootFontSize; // Convert 60vh to rem
+        const viewHeightInRem = viewHeightInPixels / rootFontSize;
 
         if (computedHeightInRem > viewHeightInRem) {
             computedSearchResultsHeight.value = "60vh";
@@ -231,7 +250,12 @@ watch(searchResults, (searchResults) => {
                     () => {
                         // @ts-expect-error - autoCompleteInstance is mistyped in PrimeVue
                         autoCompleteInstance?.hide();
-                        fetchData(query, props.searchResultsPerPage, 1);
+                        fetchData(
+                            query,
+                            props.searchResultsPerPage,
+                            1,
+                            orderMode,
+                        );
                     }
                 "
                 @option-select="navigateToReport"
@@ -277,7 +301,8 @@ watch(searchResults, (searchResults) => {
             mode="indeterminate"
             style="height: 0.25rem"
         />
-        <SortAndFilterControls />
+
+        <SortAndFilterControls v-model:order-mode="orderMode" />
     </div>
 </template>
 
