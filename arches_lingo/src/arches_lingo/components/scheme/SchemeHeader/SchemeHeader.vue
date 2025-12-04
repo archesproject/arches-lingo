@@ -51,6 +51,13 @@ const systemLanguage = inject(systemLanguageKey) as Language;
 const scheme = ref<ResourceInstanceResult>();
 const data = ref<SchemeHeader>();
 const isLoading = ref(true);
+const showExportDialog = ref(false);
+const exportDialogKey = ref(0);
+
+function openExportDialog() {
+    exportDialogKey.value++;
+    showExportDialog.value = true;
+}
 
 function extractSchemeHeaderData(scheme: ResourceInstanceResult) {
     const name = scheme?.name;
@@ -137,7 +144,12 @@ function confirmDelete() {
 
 <template>
     <ConfirmDialog group="delete-scheme" />
-
+    <ExportThesauri
+        v-if="scheme && showExportDialog"
+        :key="exportDialogKey"
+        :resource-id="scheme.resourceinstanceid"
+        :resource-name="scheme?.name"
+    />
     <Skeleton
         v-if="isLoading"
         style="width: 100%"
@@ -163,11 +175,14 @@ function confirmDelete() {
                     </div>
 
                     <div class="header-buttons">
-                        <ExportThesauri
-                            v-if="scheme"
-                            :resource="scheme"
-                        />
-
+                        <Button
+                            :aria-label="$gettext('Export')"
+                            class="add-button"
+                            @click="openExportDialog"
+                        >
+                            <span><i class="pi pi-cloud-download"></i></span>
+                            <span>{{ $gettext("Export") }}</span>
+                        </Button>
                         <Button
                             icon="pi pi-plus-circle"
                             :label="$gettext('Add Top Concept')"

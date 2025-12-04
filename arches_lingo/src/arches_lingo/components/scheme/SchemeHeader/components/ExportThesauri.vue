@@ -16,18 +16,17 @@ import {
     DEFAULT_ERROR_TOAST_LIFE,
     ERROR,
 } from "@/arches_lingo/constants.ts";
-import type { ResourceInstanceResult } from "@/arches_lingo/types.ts";
 
 const { $gettext } = useGettext();
 const toast = useToast();
 
 const props = defineProps<{
-    resource: ResourceInstanceResult;
+    resourceId: string;
+    resourceName: string | undefined;
 }>();
-console.log(props.resource);
 
 const loading = ref(false);
-const visible = ref(false);
+const visible = ref(true);
 
 const exportDepth = ref("complete");
 const exportDepthOptions = ref([
@@ -60,7 +59,7 @@ async function exportThesauri() {
     } else {
         loading.value = true;
         await exportThesaurus(
-            props.resource.resourceinstanceid,
+            props.resourceId,
             exportDepth.value,
             exportFormat.value,
             fileName.value || undefined,
@@ -90,14 +89,6 @@ async function exportThesauri() {
 </script>
 
 <template>
-    <Button
-        :aria-label="$gettext('Export')"
-        class="add-button"
-        @click="visible = !visible"
-    >
-        <span><i class="pi pi-cloud-download"></i></span>
-        <span>{{ $gettext("Export") }}</span>
-    </Button>
     <Dialog
         v-model:visible="visible"
         position="center"
@@ -133,7 +124,10 @@ async function exportThesauri() {
                 v-if="loading"
                 style="display: flex"
             />
-            <div class="form-item-container">
+            <div
+                v-if="!loading"
+                class="form-item-container"
+            >
                 <label
                     id="export-depth-select-label"
                     class="form-item-label"
@@ -151,7 +145,10 @@ async function exportThesauri() {
                     class="selection-button"
                 />
             </div>
-            <div class="form-item-container">
+            <div
+                v-if="!loading"
+                class="form-item-container"
+            >
                 <label
                     id="export-format-select-label"
                     class="form-item-label"
@@ -180,7 +177,10 @@ async function exportThesauri() {
                     </span>
                 </div>
             </div>
-            <div class="form-item-container">
+            <div
+                v-if="!loading"
+                class="form-item-container"
+            >
                 <label
                     class="form-item-label"
                     for="file-name-input"
