@@ -135,8 +135,8 @@ async function exportThesauri() {
             />
             <div class="form-item-container">
                 <label
+                    id="export-depth-select-label"
                     class="form-item-label"
-                    for="export-depth-select"
                 >
                     {{ $gettext("Hierarchy Options") }}
                 </label>
@@ -153,15 +153,12 @@ async function exportThesauri() {
             </div>
             <div class="form-item-container">
                 <label
+                    id="export-format-select-label"
                     class="form-item-label"
-                    for="export-format-select"
                 >
                     {{ $gettext("Export Format") }}
                 </label>
-                <div
-                    id="export-format-select"
-                    role="radiogroup"
-                >
+                <div role="radiogroup">
                     <span
                         v-for="option in exportformatOptions"
                         :key="option.value"
@@ -173,6 +170,7 @@ async function exportThesauri() {
                             :input-id="option.value"
                             :value="option.value"
                             :label="option.label"
+                            aria-labelledby="export-format-select-label"
                         ></RadioButton>
                         <label
                             :for="option.value"
