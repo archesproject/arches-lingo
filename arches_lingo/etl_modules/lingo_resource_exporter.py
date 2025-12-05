@@ -10,9 +10,16 @@ from slugify import slugify
 from django.utils.translation import gettext as _
 
 from arches.app.models.system_settings import settings
-from arches.app.models.models import ETLModule, LoadEvent, TempFile, User
+from arches.app.models.models import (
+    ETLModule,
+    LoadEvent,
+    ResourceInstance,
+    TempFile,
+    User,
+)
 from arches_querysets.models import ResourceTileTree
 
+from arches_lingo.utils.concept_builder import ConceptBuilder
 from arches_lingo.utils.skos import SKOSWriter
 
 logger = logging.getLogger(__name__)
@@ -135,12 +142,9 @@ class LingoResourceExporter:
             raise
 
     def run_export_task(self, resourceid, filename=None, format="xml"):
-        self.schemes = ResourceTileTree.get_tiles(
-            graph_slug="scheme", resource_ids=[resourceid]
-        )
-        concepts = ResourceTileTree.get_tiles(graph_slug="concept").filter(
-            part_of_scheme__id=resourceid
-        )
+        schemes, concepts = self.gather_hierarchy_for_export(resourceid)
+        self.schemes = schemes
+        self.concepts = concepts
 
         self.scheme_triples = defaultdict(list)
         for scheme in self.schemes:
@@ -153,7 +157,7 @@ class LingoResourceExporter:
                     )
 
         self.concept_triples = defaultdict(list)
-        for concept in concepts:
+        for concept in self.concepts:
             for nodegroup_alias, tile_trees in concept.aliased_data._items():
                 if tile_trees:
                     self.concept_triples[concept.resourceinstanceid].extend(
@@ -161,6 +165,13 @@ class LingoResourceExporter:
                             nodegroup_alias, tile_trees
                         )
                     )
+
+        if len(self.scheme_triples) == 0 and len(self.concept_triples) == 0:
+            self.load_event.status = "failed"
+            self.load_event.save()
+            error = _("The thesaurus could not be mapped to triples for export.")
+            logger.error(error)
+            return {"success": False, "data": {"message": error}}
 
         # TODO: support other linked data formats
         if format == "xml":
@@ -184,7 +195,7 @@ class LingoResourceExporter:
                 **existing_details,
                 "file": file_details,
                 # TODO: support multiple schemes export to individual files
-                "scheme_name": self.schemes.first().name[settings.LANGUAGE_CODE],
+                "scheme_name": self.scheme_name,
             }
             self.load_event.complete = True
             self.load_event.status = (
@@ -204,7 +215,86 @@ class LingoResourceExporter:
             self.load_event.status = "failed"
             self.load_event.save()
             error = _("File could not be saved.")
+            logger.error(error)
             return {"success": False, "data": {"message": error}}
+
+    def gather_hierarchy_for_export(self, resourceid):
+        """
+        Depending on whether the resourceid provided is a scheme or a concept,
+        we're either exporting a full hierarchy or a partial hierarchy.
+        If we're exporting a partial hierarchy, we need to map the root concept to
+        `SKOS:ConceptScheme` and its children as `SKOS:HasTopConcept`'s
+        """
+        schemes = ResourceTileTree.get_tiles(
+            graph_slug="scheme", resource_ids=[resourceid]
+        )
+        #  Full Hierarchy Export
+        if len(schemes) > 0:
+            concepts = ResourceTileTree.get_tiles(graph_slug="concept").filter(
+                part_of_scheme__id=resourceid
+            )
+            self.scheme_name = schemes.first().name[settings.LANGUAGE_CODE]
+        # Partial Hierarchy Export
+        else:
+            root_concept = ResourceTileTree.get_tiles(
+                graph_slug="concept", resource_ids=[resourceid]
+            ).first()
+            scheme_id = (
+                root_concept.aliased_data.part_of_scheme.aliased_data.part_of_scheme.pk
+            )
+            self.scheme_name = root_concept.name[settings.LANGUAGE_CODE]
+
+            # use ConceptBuilder to identify correct hierarchy to export
+            concept_builder = ConceptBuilder()
+            direct_descendants = set()
+            indirect_descendants = set()
+            # concepts can only be part of one scheme, so we can filter by scheme here
+            potential_descendants = ResourceTileTree.get_tiles(
+                graph_slug="concept"
+            ).filter(part_of_scheme__id=str(scheme_id))
+            for concept in potential_descendants:
+                # direct descendants will need to be marked as top concepts
+                parents_of_potential_descendants = (
+                    concept.aliased_data.classification_status
+                )
+                for parent in parents_of_potential_descendants:
+                    if (
+                        root_concept.pk
+                        == parent.aliased_data.classification_status_ascribed_classification.pk
+                    ):
+                        direct_descendants.add(concept)
+                # indirect descendants do not need to mapped before export
+                if concept not in direct_descendants:
+                    paths = concept_builder.find_paths_to_root([], str(concept.pk))
+                    for path in paths:
+                        if resourceid in path:
+                            indirect_descendants.add(concept)
+                            break
+
+            # CAUTION: below are only temporary modifications to the in-memory objects
+            # for the purpose of export. These changes are NOT saved to the database.
+
+            # Remove relationships held by root concept that do not apply to ConceptScheme
+            del root_concept.aliased_data.part_of_scheme
+            del root_concept.aliased_data.top_concept_of
+            del root_concept.aliased_data.classification_status
+            del root_concept.aliased_data.relation_status
+            schemes = [root_concept]
+            root_concept_instance = ResourceInstance.objects.get(pk=root_concept.pk)
+
+            concepts = []
+            for concept in direct_descendants:
+                # mark direct descendants as top concepts & remove their parentage
+                concept.aliased_data.part_of_scheme = root_concept_instance
+                concept.aliased_data.top_concept_of = root_concept_instance
+                concept.aliased_data.classification_status = []
+                concepts.append(concept)
+            for concept in indirect_descendants:
+                # indirect descendants only need their scheme relationship set
+                concept.aliased_data.part_of_scheme = root_concept_instance
+                concepts.append(concept)
+
+        return schemes, concepts
 
     def extract_triples_from_aliased_tiles(self, nodegroup_alias, tile_trees):
         triples = []
@@ -228,7 +318,13 @@ class LingoResourceExporter:
                     # Fall back on default predicates for relationships if none was found
                     triple["predicate"] = node_alias
                 elif triple_component != "default_predicate":
-                    predicate = getattr(tile_tree.aliased_data, node_alias)
+                    try:
+                        predicate = getattr(tile_tree.aliased_data, node_alias)
+                    except AttributeError:
+                        # Expected when we've directly mapped a relationship
+                        # that won't be wrapped as AliasedData as returned from a queryset
+                        # (e.g. top_concept_of and part_of_scheme during partial hierarchy export)
+                        predicate = tile_tree
                     triple[triple_component] = predicate
             triples.append(triple)
         return triples
@@ -240,9 +336,8 @@ class LingoResourceExporter:
             if not filename.endswith(f".{format}"):
                 filename = f"{filename}.{format}"
         else:
-            scheme_name = self.schemes.first().name[settings.LANGUAGE_CODE]
             filename = (
-                f"{slugify(scheme_name, separator='_', lowercase=False)}.{format}"
+                f"{slugify(self.scheme_name, separator='_', lowercase=False)}.{format}"
             )
 
         # TODO: support saving associated files (e.g. images) in zip archive
