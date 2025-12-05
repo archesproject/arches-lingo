@@ -31,7 +31,7 @@ const visible = ref(true);
 const exportDepth = ref("complete");
 const exportDepthOptions = ref([
     {
-        label: $gettext("Complete Thesaurus"),
+        label: $gettext("Complete Hierarchy"),
         value: "complete",
         disabled: false,
     },
