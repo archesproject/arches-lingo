@@ -298,7 +298,7 @@ class SKOSWriter:
                 predicates, object = self.extract_predicate_object(triple)
                 for predicate in predicates:
                     if predicate == SKOS.hasTopConcept:
-                        rdf_graph.add((object, SKOS.inScheme, rdf_concept_id))
+                        rdf_graph.add((object, SKOS.hasTopConcept, rdf_concept_id))
                     else:
                         rdf_graph.add((rdf_concept_id, predicate, object))
 
