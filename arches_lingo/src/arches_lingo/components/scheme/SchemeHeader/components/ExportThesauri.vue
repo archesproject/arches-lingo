@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { ref } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import { useToast } from "primevue/usetoast";
@@ -8,7 +8,6 @@ import Dialog from "primevue/dialog";
 import InputText from "primevue/inputtext";
 import ProgressSpinner from "primevue/progressspinner";
 import RadioButton from "primevue/radiobutton";
-import SelectButton from "primevue/selectbutton";
 
 import { exportThesaurus } from "@/arches_lingo/api.ts";
 import {
@@ -28,19 +27,6 @@ const props = defineProps<{
 const loading = ref(false);
 const visible = ref(true);
 
-const exportDepth = ref("complete");
-const exportDepthOptions = ref([
-    {
-        label: $gettext("Complete Hierarchy"),
-        value: "complete",
-        disabled: false,
-    },
-    {
-        label: $gettext("Concept Only"),
-        value: "individual",
-        disabled: true,
-    },
-]);
 const exportFormat = ref("xml");
 const exportformatOptions = ref([
     { label: "csv", value: "csv", disabled: true },
@@ -49,18 +35,14 @@ const exportformatOptions = ref([
     { label: "JSON-LD", value: "jsonld", disabled: true },
 ]);
 const fileName = ref();
-const isValid = computed(() => {
-    return Boolean(exportDepth.value && exportFormat.value);
-});
 
 async function exportThesauri() {
-    if (!exportDepth.value || !exportFormat.value) {
+    if (!exportFormat.value) {
         return;
     } else {
         loading.value = true;
         await exportThesaurus(
             props.resourceId,
-            exportDepth.value,
             exportFormat.value,
             fileName.value || undefined,
         )
@@ -129,27 +111,6 @@ async function exportThesauri() {
                 class="form-item-container"
             >
                 <label
-                    id="export-depth-select-label"
-                    class="form-item-label"
-                >
-                    {{ $gettext("Hierarchy Options") }}
-                </label>
-                <SelectButton
-                    id="export-depth-select"
-                    v-model="exportDepth"
-                    :options="exportDepthOptions"
-                    option-label="label"
-                    option-value="value"
-                    option-disabled="disabled"
-                    aria-labelledby="export-depth-select-label"
-                    class="selection-button"
-                />
-            </div>
-            <div
-                v-if="!loading"
-                class="form-item-container"
-            >
-                <label
                     id="export-format-select-label"
                     class="form-item-label"
                 >
@@ -207,7 +168,7 @@ async function exportThesauri() {
                 :label="$gettext('Export')"
                 type="submit"
                 class="footer-button"
-                :disabled="isValid === false || loading"
+                :disabled="!exportFormat || loading"
                 @click="exportThesauri"
             ></Button>
         </template>
