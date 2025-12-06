@@ -160,12 +160,14 @@ async function submit() {
         </template>
         <template #footer>
             <Button
+                icon="pi pi-trash"
                 :label="$gettext('Cancel')"
                 type="button"
                 class="footer-button"
                 @click="visible = false"
             />
             <Button
+                icon="pi pi-file-import"
                 :label="$gettext('Upload File')"
                 type="submit"
                 class="footer-button"
