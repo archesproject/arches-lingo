@@ -2,6 +2,7 @@ import os
 import json
 import logging
 import uuid
+import zipfile
 from io import BytesIO
 from collections import defaultdict
 from datetime import datetime
@@ -338,10 +339,16 @@ class LingoResourceExporter:
             filename = (
                 f"{slugify(self.scheme_name, separator='_', lowercase=False)}.{format}"
             )
+        zip_name = filename.replace(
+            f".{format}", f"_{slugify(str(datetime.now()))}.zip"
+        )
 
         # TODO: support saving associated files (e.g. images) in zip archive
-        file = TempFile(source="lingo_resource_exporter")
-        stream = BytesIO(serialized_rdf)
-        file.path.save(filename, stream)
+        data_stream = BytesIO(serialized_rdf)
+        zip_stream = BytesIO()
+        with zipfile.ZipFile(zip_stream, "w") as zip:
+            zip.writestr(filename, data_stream.read())
+        zip_file = TempFile(source="lingo_resource_exporter")
+        zip_file.path.save(zip_name, zip_stream)
 
-        return file
+        return zip_file
