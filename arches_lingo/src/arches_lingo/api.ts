@@ -371,7 +371,6 @@ export const importThesaurus = async (file: File, overwriteOption: string) => {
 
 export const exportThesaurus = async (
     resourceid: string,
-    depth: string,
     format: string,
     fileName?: string,
 ) => {
@@ -382,7 +381,6 @@ export const exportThesaurus = async (
     const lingoImporterModuleId = "4302e334-33ed-4e85-99f2-fdac7c7c32fa";
     formData.append("module", lingoImporterModuleId);
     formData.append("resourceid", resourceid);
-    formData.append("depth", depth);
     formData.append("format", format);
     if (fileName) {
         formData.append("filename", fileName);

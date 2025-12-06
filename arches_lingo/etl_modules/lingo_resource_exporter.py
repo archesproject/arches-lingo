@@ -116,7 +116,6 @@ class LingoResourceExporter:
         )
         filename = request.POST.get("filename") if request else None
         format = request.POST.get("format", "xml") if request else "xml"
-        depth = request.POST.get("depth", "complete") if request else "complete"
 
         load_details = {
             "operation": "Export Lingo Resources",
