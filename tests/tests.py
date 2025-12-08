@@ -22,6 +22,7 @@ from arches_lingo.const import (
     TOP_CONCEPT_OF_NODE_AND_NODEGROUP,
     CLASSIFICATION_STATUS_NODEGROUP,
     CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID,
+    CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID,
     CONCEPT_NAME_NODEGROUP,
     CONCEPT_NAME_CONTENT_NODE,
     CONCEPT_NAME_LANGUAGE_NODE,
@@ -95,52 +96,74 @@ class ViewTests(TestCase):
         for concept in cls.concepts:
             concept.save()
 
+        concept_tiles = []
         for i, concept in enumerate(cls.concepts):
             # Create label tile
-            TileModel.objects.create(
-                resourceinstance=concept,
-                nodegroup_id=CONCEPT_NAME_NODEGROUP,
-                data={
-                    CONCEPT_NAME_CONTENT_NODE: f"Concept {i + 1}",
-                    CONCEPT_NAME_TYPE_NODE: prefLabel_reference_dt,
-                    CONCEPT_NAME_LANGUAGE_NODE: en_reference_dt,
-                },
-            )
-            # Create top concept/narrower tile
-            if i == 0:
-                TileModel.objects.create(
+            concept_tiles.append(
+                TileModel(
                     resourceinstance=concept,
-                    nodegroup_id=TOP_CONCEPT_OF_NODE_AND_NODEGROUP,
+                    nodegroup_id=CONCEPT_NAME_NODEGROUP,
                     data={
-                        TOP_CONCEPT_OF_NODE_AND_NODEGROUP: [
+                        CONCEPT_NAME_CONTENT_NODE: f"Concept {i + 1}",
+                        CONCEPT_NAME_TYPE_NODE: prefLabel_reference_dt,
+                        CONCEPT_NAME_LANGUAGE_NODE: en_reference_dt,
+                    },
+                )
+            )
+            # Create part of scheme tile
+            concept_tiles.append(
+                TileModel(
+                    resourceinstance=concept,
+                    nodegroup_id=CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID,
+                    data={
+                        CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID: [
                             {"resourceId": str(cls.scheme.pk)},
                         ],
                     },
                 )
+            )
+            # Create top concept/narrower tile
+            if i == 0:
+                concept_tiles.append(
+                    TileModel(
+                        resourceinstance=concept,
+                        nodegroup_id=TOP_CONCEPT_OF_NODE_AND_NODEGROUP,
+                        data={
+                            TOP_CONCEPT_OF_NODE_AND_NODEGROUP: [
+                                {"resourceId": str(cls.scheme.pk)},
+                            ],
+                        },
+                    )
+                )
             elif i < MAX_DEPTH:
-                TileModel.objects.create(
-                    resourceinstance=concept,
-                    nodegroup_id=CLASSIFICATION_STATUS_NODEGROUP,
-                    data={
-                        CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID: [
-                            # Previous concept
-                            {"resourceId": str(cls.concepts[i - 1].pk)},
-                            # Also add top concept
-                            {"resourceId": str(cls.concepts[0].pk)},
-                        ],
-                    },
+                concept_tiles.append(
+                    TileModel(
+                        resourceinstance=concept,
+                        nodegroup_id=CLASSIFICATION_STATUS_NODEGROUP,
+                        data={
+                            CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID: [
+                                # Previous concept
+                                {"resourceId": str(cls.concepts[i - 1].pk)},
+                                # Also add top concept
+                                {"resourceId": str(cls.concepts[0].pk)},
+                            ],
+                        },
+                    )
                 )
             else:
-                TileModel.objects.create(
-                    resourceinstance=concept,
-                    nodegroup_id=CLASSIFICATION_STATUS_NODEGROUP,
-                    data={
-                        CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID: [
-                            # Top concept only
-                            {"resourceId": str(cls.concepts[0].pk)},
-                        ],
-                    },
+                concept_tiles.append(
+                    TileModel(
+                        resourceinstance=concept,
+                        nodegroup_id=CLASSIFICATION_STATUS_NODEGROUP,
+                        data={
+                            CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID: [
+                                # Top concept only
+                                {"resourceId": str(cls.concepts[0].pk)},
+                            ],
+                        },
+                    )
                 )
+        TileModel.objects.bulk_create(concept_tiles)
 
     def setUp(self):
         self.client.force_login(self.admin)
