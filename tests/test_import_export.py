@@ -1,3 +1,5 @@
+import json
+import os
 from io import BytesIO, StringIO
 from pathlib import Path
 
@@ -6,13 +8,14 @@ from django.contrib.auth.models import User
 from django.core import management
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.http import HttpRequest
-from django.test import TransactionTestCase
+from django.test import TestCase, TransactionTestCase
 
-from arches.app.models.models import ETLModule, LoadEvent, Value
+from arches.app.models.models import ETLModule, LoadEvent, ResourceInstance, Value
 from arches.app.utils.skos import SKOSReader
 from arches_querysets.models import ResourceTileTree
 
 from arches_lingo.etl_modules.migrate_to_lingo import LingoResourceImporter
+from arches_lingo.etl_modules.lingo_resource_exporter import LingoResourceExporter
 from tests.tests import ViewTests
 
 from .test_settings import PROJECT_TEST_ROOT
@@ -165,3 +168,51 @@ class ImportTests(TransactionTestCase):
         self.assert_resources_loaded()
 
         # No need to reverse load because tearDown will reset the DB
+
+
+class ExportTests(TestCase):
+
+    @classmethod
+    def setUpTestData(cls):
+        ViewTests.setUpTestData()
+        cls.register_lingo_resource_exporter()
+        cls.moduleid = ETLModule.objects.get(slug="export-lingo-resources").pk
+        cls.test_scheme = ResourceInstance.objects.get(name="Test Scheme")
+        cls.tempfile_dir = os.path.join(PROJECT_TEST_ROOT, "data/archestemp")
+
+    @classmethod
+    def register_lingo_resource_exporter(cls):
+        from arches.management.commands.etl_module import Command as ETLModuleCommand
+
+        cmd = ETLModuleCommand()
+        cmd.register(
+            source=str(
+                Path(settings.APP_ROOT) / "etl_modules" / "lingo_resource_exporter.py"
+            )
+        )
+
+    def tearDown(self):
+        if os.path.exists(self.file_path):
+            os.remove(self.file_path)
+        return super().tearDown()
+
+    def test_export_full_hierarchy_to_skos(self):
+        self.client.login(username="admin", password="admin")
+        request = HttpRequest()
+        request.method = "POST"
+        request.user = User.objects.get(username="admin")
+        request.POST["module"] = str(self.moduleid)
+        request.POST["action"] = "start"
+        request.POST["resourceid"] = str(self.test_scheme.pk)
+        request.POST["format"] = "xml"
+
+        exporter = LingoResourceExporter(request=request)
+        response = exporter.start(request=request)
+        self.assertTrue(response["success"])
+        load_details = json.loads(json.loads(response["data"]["load_details"]))
+        self.assertIn("scheme_name", load_details)
+        file_details = load_details["file"]
+        self.assertIn("name", file_details)
+        self.assertIn("fileid", file_details)
+        self.file_path = os.path.join(self.tempfile_dir, file_details["name"])
+        self.assertTrue(os.path.exists(self.file_path))
