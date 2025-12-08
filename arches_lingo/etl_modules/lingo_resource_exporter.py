@@ -137,8 +137,8 @@ class LingoResourceExporter:
             response = self.run_export_task(self.resourceid, filename, format)
             return response
         except:
-            self.load_event.status = "failed"
-            self.load_event.save()
+            error = _("An unexpected error occurred during export.")
+            self.handle_error(error)
             raise
 
     def run_export_task(self, resourceid, filename=None, format="xml"):
@@ -167,19 +167,19 @@ class LingoResourceExporter:
                     )
 
         if len(self.scheme_triples) == 0 and len(self.concept_triples) == 0:
-            self.load_event.status = "failed"
-            self.load_event.save()
             error = _("The thesaurus could not be mapped to triples for export.")
-            logger.error(error)
-            return {"success": False, "data": {"message": error}}
+            return self.handle_error(error)
 
-        # TODO: support other linked data formats
         if format == "xml":
             writer = SKOSWriter()
             rdf_graph = writer.write_skos_from_triples(
                 self.scheme_triples, self.concept_triples
             )
             serialized_rdf = rdf_graph.serialize(format="pretty-xml")
+        # TODO: support other linked data formats
+        else:
+            error = _("The requested export format is not supported.")
+            return self.handle_error(error)
 
         file = self.save_file(serialized_rdf, filename, format)
         if file:
@@ -212,11 +212,8 @@ class LingoResourceExporter:
                 },
             }
         else:
-            self.load_event.status = "failed"
-            self.load_event.save()
             error = _("File could not be saved.")
-            logger.error(error)
-            return {"success": False, "data": {"message": error}}
+            return self.handle_error(error)
 
     def gather_hierarchy_for_export(self, resourceid):
         """
@@ -352,3 +349,10 @@ class LingoResourceExporter:
         zip_file.path.save(zip_name, zip_stream)
 
         return zip_file
+
+    def handle_error(self, error):
+        self.load_event.status = "failed"
+        self.load_event.error_message = str(error)
+        self.load_event.save()
+        logger.error(error)
+        return {"success": False, "data": {"message": error}}

@@ -129,6 +129,7 @@ async function exportThesauri() {
                             :value="option.value"
                             :label="option.label"
                             aria-labelledby="export-format-select-label"
+                            :disabled="option.disabled"
                         ></RadioButton>
                         <label
                             :for="option.value"
