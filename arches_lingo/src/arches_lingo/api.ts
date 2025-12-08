@@ -395,7 +395,7 @@ export const exportThesaurus = async (
         if (response.ok) {
             return parsed;
         }
-        throw new Error(parsed.message);
+        throw new Error(parsed.message || parsed.data?.message);
     } catch (error) {
         throw new Error((error as Error).message || response.statusText);
     }
