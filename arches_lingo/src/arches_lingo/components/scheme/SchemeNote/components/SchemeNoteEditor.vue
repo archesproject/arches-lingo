@@ -150,9 +150,9 @@ async function save(e: FormSubmitEvent) {
                 <div class="widget-container column">
                     <GenericWidget
                         :graph-slug="props.graphSlug"
-                        node-alias="statement_content_n1"
+                        node-alias="statement_content"
                         :aliased-node-data="
-                            props.tileData?.aliased_data?.statement_content_n1
+                            props.tileData?.aliased_data?.statement_content
                         "
                         :mode="EDIT"
                     />
@@ -160,9 +160,9 @@ async function save(e: FormSubmitEvent) {
                 <div class="widget-container column">
                     <GenericWidget
                         :graph-slug="props.graphSlug"
-                        node-alias="statement_type_n1"
+                        node-alias="statement_type"
                         :aliased-node-data="
-                            props.tileData?.aliased_data?.statement_type_n1
+                            props.tileData?.aliased_data?.statement_type
                         "
                         :mode="EDIT"
                     />
@@ -170,9 +170,9 @@ async function save(e: FormSubmitEvent) {
                 <div class="widget-container column">
                     <GenericWidget
                         :graph-slug="props.graphSlug"
-                        node-alias="statement_language_n1"
+                        node-alias="statement_language"
                         :aliased-node-data="
-                            props.tileData?.aliased_data?.statement_language_n1
+                            props.tileData?.aliased_data?.statement_language
                         "
                         :mode="EDIT"
                     />

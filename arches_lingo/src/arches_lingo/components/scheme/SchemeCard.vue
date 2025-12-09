@@ -1,9 +1,12 @@
 <script setup lang="ts">
-import { inject } from "vue";
+import { inject, ref } from "vue";
 import { systemLanguageKey, NEW } from "@/arches_lingo/constants.ts";
 import { routeNames } from "@/arches_lingo/routes.ts";
 
 import Card from "primevue/card";
+import Button from "primevue/button";
+
+import ImportThesauri from "@/arches_lingo/components/scheme/ImportThesauri.vue";
 
 import { extractDescriptors } from "@/arches_lingo/utils.ts";
 
@@ -13,17 +16,34 @@ import type { ResourceInstanceResult } from "@/arches_lingo/types";
 const systemLanguage = inject(systemLanguageKey) as Language;
 
 const { scheme } = defineProps<{ scheme: ResourceInstanceResult }>();
+const emit = defineEmits<{
+    (e: "imported"): void;
+}>();
+
 const schemeURL = {
     name: routeNames.scheme,
     params: { id: scheme.resourceinstanceid },
 };
 
 const schemeDescriptor = extractDescriptors(scheme, systemLanguage);
+
+const showImportDialog = ref(false);
+const importDialogKey = ref(0);
+
+function openImportDialog() {
+    importDialogKey.value++;
+    showImportDialog.value = true;
+}
+
+function onImport() {
+    showImportDialog.value = false;
+    emit("imported");
+}
 </script>
 
 <template>
     <RouterLink :to="schemeURL">
-        <Card>
+        <Card :class="scheme.resourceinstanceid === NEW ? 'new-scheme' : ''">
             <template #title>
                 <div v-if="scheme.resourceinstanceid === NEW">
                     {{ $gettext("New Scheme") }}
@@ -40,6 +60,13 @@ const schemeDescriptor = extractDescriptors(scheme, systemLanguage);
                     <div class="scheme-circle">
                         <i class="pi pi-share-alt new-scheme-icon"></i>
                     </div>
+                    <div>
+                        <span>{{
+                            $gettext(
+                                "Add a new thesaurus, manage concept hierarchies",
+                            )
+                        }}</span>
+                    </div>
                 </div>
                 <span>{{ schemeDescriptor.description }}</span>
             </template>
@@ -47,12 +74,20 @@ const schemeDescriptor = extractDescriptors(scheme, systemLanguage);
                 v-if="scheme.resourceinstanceid === NEW"
                 #footer
             >
-                <span>{{
-                    $gettext("Add a new thesaurus, manage concept hierarchies")
-                }}</span>
+                <Button
+                    :label="$gettext('Import Thesauri')"
+                    type="button"
+                    outlined
+                    @click.stop.prevent="openImportDialog"
+                />
             </template>
         </Card>
     </RouterLink>
+    <ImportThesauri
+        v-if="showImportDialog"
+        :key="importDialogKey"
+        @imported="onImport"
+    />
 </template>
 
 <style scoped>
@@ -88,13 +123,36 @@ a {
     margin-bottom: 0.5rem;
 }
 
+.new-scheme > :deep(.p-card-body) {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    gap: 0;
+
+    :deep(.p-card-footer) {
+        margin-top: 1rem;
+        display: flex;
+    }
+}
+
+.new-scheme :deep(.p-button) {
+    border-radius: 0;
+    flex-grow: 1;
+    font-size: var(--p-lingo-font-size-xsmall);
+    color: var(--p-button-contrast-color);
+    background: var(--p-button-primary-hover-background);
+}
+
+.new-scheme :deep(.p-button:hover) {
+    background: var(--p-primary-active-color);
+}
+
 :deep(.p-card-content) {
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-:deep(.p-card-content > span),
-:deep(.p-card-footer > span) {
+:deep(.p-card-content),
+:deep(.p-card-footer) {
     font-size: var(--p-lingo-font-size-xsmall);
 }
 
@@ -102,7 +160,7 @@ a {
     display: inline-block;
     text-align: center;
     padding: 1.25rem;
-    margin: 1rem;
+    margin: 0.75rem;
     border-radius: 50%;
     background: var(--p-surface-400);
     border: 0.0625rem solid var(--p-surface-900);
