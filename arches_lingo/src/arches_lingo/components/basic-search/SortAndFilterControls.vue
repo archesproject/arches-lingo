@@ -9,7 +9,7 @@ const ORDER_MODE_ALPHABETICAL = "alphabetical";
 const ORDER_MODE_REVERSE_ALPHABETICAL = "reverse-alphabetical";
 
 const sortOptions = [
-    { value: ORDER_MODE_UNSORTED, label: $gettext("Unsorted") },
+    { value: ORDER_MODE_UNSORTED, label: $gettext("Best Match") },
     { value: ORDER_MODE_ALPHABETICAL, label: $gettext("A to Z") },
     { value: ORDER_MODE_REVERSE_ALPHABETICAL, label: $gettext("Z to A") },
 ];
