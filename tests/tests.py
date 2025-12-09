@@ -1,4 +1,5 @@
 import json
+import datetime
 from http import HTTPStatus
 from pathlib import Path
 
@@ -10,7 +11,7 @@ from django.test.utils import captured_stdout
 from django.urls import reverse
 
 from arches.app.datatypes.datatypes import DataTypeFactory
-from arches.app.models.models import ResourceInstance, TileModel
+from arches.app.models.models import ResourceInstance, ResourceXResource, TileModel
 from arches.app.utils.betterJSONSerializer import JSONDeserializer
 from arches.app.utils.data_management.resource_graphs.importer import (
     import_graph as ResourceGraphImporter,
@@ -97,6 +98,7 @@ class ViewTests(TestCase):
             concept.save()
 
         concept_tiles = []
+        resource_x_resource_records = []
         for i, concept in enumerate(cls.concepts):
             # Create label tile
             concept_tiles.append(
@@ -111,31 +113,73 @@ class ViewTests(TestCase):
                 )
             )
             # Create part of scheme tile
+            part_of_scheme_rxr = ResourceXResource(
+                from_resource=concept,
+                from_resource_graph_id=CONCEPTS_GRAPH_ID,
+                to_resource=cls.scheme,
+                to_resource_graph_id=SCHEMES_GRAPH_ID,
+                created=datetime.datetime.now(),
+                modified=datetime.datetime.now(),
+            )
+            resource_x_resource_records.append(part_of_scheme_rxr)
             concept_tiles.append(
                 TileModel(
                     resourceinstance=concept,
                     nodegroup_id=CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID,
                     data={
                         CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID: [
-                            {"resourceId": str(cls.scheme.pk)},
+                            {
+                                "resourceId": str(cls.scheme.pk),
+                                "resourceXresourceId": str(part_of_scheme_rxr.pk),
+                            },
                         ],
                     },
                 )
             )
             # Create top concept/narrower tile
             if i == 0:
+                top_concept_rxr = ResourceXResource(
+                    from_resource=concept,
+                    from_resource_graph_id=CONCEPTS_GRAPH_ID,
+                    to_resource=cls.scheme,
+                    to_resource_graph_id=SCHEMES_GRAPH_ID,
+                    created=datetime.datetime.now(),
+                    modified=datetime.datetime.now(),
+                )
+                resource_x_resource_records.append(top_concept_rxr)
                 concept_tiles.append(
                     TileModel(
                         resourceinstance=concept,
                         nodegroup_id=TOP_CONCEPT_OF_NODE_AND_NODEGROUP,
                         data={
                             TOP_CONCEPT_OF_NODE_AND_NODEGROUP: [
-                                {"resourceId": str(cls.scheme.pk)},
+                                {
+                                    "resourceId": str(cls.scheme.pk),
+                                    "resourceXresourceId": str(top_concept_rxr.pk),
+                                },
                             ],
                         },
                     )
                 )
             elif i < MAX_DEPTH:
+                narrower_hierarchy_rxr = ResourceXResource(
+                    from_resource=concept,
+                    from_resource_graph_id=CONCEPTS_GRAPH_ID,
+                    to_resource=cls.concepts[i - 1],
+                    to_resource_graph_id=CONCEPTS_GRAPH_ID,
+                    created=datetime.datetime.now(),
+                    modified=datetime.datetime.now(),
+                )
+                broader_hierarchy_rxr = ResourceXResource(
+                    from_resource=concept,
+                    from_resource_graph_id=CONCEPTS_GRAPH_ID,
+                    to_resource=cls.concepts[0],
+                    to_resource_graph_id=CONCEPTS_GRAPH_ID,
+                    created=datetime.datetime.now(),
+                    modified=datetime.datetime.now(),
+                )
+                resource_x_resource_records.append(narrower_hierarchy_rxr)
+                resource_x_resource_records.append(broader_hierarchy_rxr)
                 concept_tiles.append(
                     TileModel(
                         resourceinstance=concept,
@@ -143,14 +187,33 @@ class ViewTests(TestCase):
                         data={
                             CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID: [
                                 # Previous concept
-                                {"resourceId": str(cls.concepts[i - 1].pk)},
+                                {
+                                    "resourceId": str(cls.concepts[i - 1].pk),
+                                    "resourceXresourceId": str(
+                                        narrower_hierarchy_rxr.pk
+                                    ),
+                                },
                                 # Also add top concept
-                                {"resourceId": str(cls.concepts[0].pk)},
+                                {
+                                    "resourceId": str(cls.concepts[0].pk),
+                                    "resourceXresourceId": str(
+                                        broader_hierarchy_rxr.pk
+                                    ),
+                                },
                             ],
                         },
                     )
                 )
             else:
+                broader_hierarchy_rxr = ResourceXResource(
+                    from_resource=concept,
+                    from_resource_graph_id=CONCEPTS_GRAPH_ID,
+                    to_resource=cls.concepts[0],
+                    to_resource_graph_id=CONCEPTS_GRAPH_ID,
+                    created=datetime.datetime.now(),
+                    modified=datetime.datetime.now(),
+                )
+                resource_x_resource_records.append(broader_hierarchy_rxr)
                 concept_tiles.append(
                     TileModel(
                         resourceinstance=concept,
@@ -158,12 +221,18 @@ class ViewTests(TestCase):
                         data={
                             CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID: [
                                 # Top concept only
-                                {"resourceId": str(cls.concepts[0].pk)},
+                                {
+                                    "resourceId": str(cls.concepts[0].pk),
+                                    "resourceXresourceId": str(
+                                        broader_hierarchy_rxr.pk
+                                    ),
+                                },
                             ],
                         },
                     )
                 )
         TileModel.objects.bulk_create(concept_tiles)
+        ResourceXResource.objects.bulk_create(resource_x_resource_records)
 
     def setUp(self):
         self.client.force_login(self.admin)
