@@ -258,11 +258,13 @@ export const fetchSearchResults = async (
     searchTerm: string,
     items: number,
     page: number,
+    orderMode: string = "unsorted",
 ) => {
     const params = new URLSearchParams({
         term: searchTerm,
         items: items.toString(),
         page: page.toString(),
+        order: orderMode,
     });
 
     const url = `${arches.urls.api_search}?${params.toString()}`;
