@@ -236,9 +236,15 @@ class LingoResourceExporter:
             root_concept = ResourceTileTree.get_tiles(
                 graph_slug="concept", resource_ids=[resourceid]
             ).first()
-            scheme_id = (
-                root_concept.aliased_data.part_of_scheme.aliased_data.part_of_scheme.pk
-            )
+            part_of_scheme = root_concept.aliased_data.part_of_scheme
+            if not part_of_scheme:
+                error = _(
+                    "The selected concept is not part of a Scheme and cannot be exported."
+                )
+                return self.handle_error(error)
+            else:
+                scheme_id = part_of_scheme.aliased_data.part_of_scheme.pk
+
             self.scheme_name = root_concept.name[settings.LANGUAGE_CODE]
 
             # use ConceptBuilder to identify correct hierarchy to export
