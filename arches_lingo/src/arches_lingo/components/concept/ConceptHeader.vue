@@ -8,14 +8,10 @@ import { useToast } from "primevue/usetoast";
 
 import ConfirmDialog from "primevue/confirmdialog";
 import Button from "primevue/button";
-import SelectButton from "primevue/selectbutton";
-import RadioButton from "primevue/radiobutton";
 import Select from "primevue/select";
-
-//Placeholder for export button panel
-import Popover from "primevue/popover";
-
 import Skeleton from "primevue/skeleton";
+
+import ExportThesauri from "@/arches_lingo/components/scheme/SchemeHeader/components/ExportThesauri.vue";
 
 import {
     DEFAULT_ERROR_TOAST_LIFE,
@@ -58,6 +54,15 @@ const systemLanguage = inject(systemLanguageKey) as Language;
 const concept = ref<ResourceInstanceResult>();
 const data = ref<ConceptHeaderData>();
 const isLoading = ref(true);
+const showExportDialog = ref(false);
+const exportDialogKey = ref(0);
+
+//Placeholder for concept Type
+const conceptType = ref();
+const ctype = ref([
+    { name: "Concept", code: "c" },
+    { name: "Guide Term", code: "gt" },
+]);
 
 onMounted(async () => {
     try {
@@ -130,31 +135,10 @@ function confirmDelete() {
     });
 }
 
-//Placeholder for export button panel
-const exportDialog = ref();
-const toggle = (event: Event) => {
-    exportDialog.value.toggle(event);
-};
-
-//Placeholder for export type
-const exporter = ref("Concept Only");
-const exporterOptions = ref(["Concept Only", "Concept + Children"]);
-
-//Placeholder for export format radio button group
-const exportFormat = ref();
-const exportformatOptions = ref([
-    { label: "csv", value: "csv" },
-    { label: "SKOS", value: "skos" },
-    { label: "rdf", value: "rdf" },
-    { label: "JSON-LD", value: "jsonld" },
-]);
-
-//Placeholder for concept Type
-const conceptType = ref();
-const ctype = ref([
-    { name: "Concept", code: "c" },
-    { name: "Guide Term", code: "gt" },
-]);
+function openExportDialog() {
+    exportDialogKey.value++;
+    showExportDialog.value = true;
+}
 
 function extractConceptHeaderData(concept: ResourceInstanceResult) {
     const aliased_data = concept?.aliased_data;
@@ -188,6 +172,12 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
 
 <template>
     <ConfirmDialog group="delete-concept" />
+    <ExportThesauri
+        v-if="concept && showExportDialog"
+        :key="exportDialogKey"
+        :resource-id="concept.resourceinstanceid"
+        :resource-name="concept?.name"
+    />
     <Skeleton
         v-if="isLoading"
         style="width: 100%"
@@ -226,73 +216,14 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                 </div>
             </div>
             <div class="header-buttons">
-                <!-- Placeholder export button -->
                 <Button
                     :aria-label="$gettext('Export')"
                     class="add-button"
-                    @click="toggle"
+                    @click="openExportDialog"
                 >
                     <span><i class="pi pi-cloud-download"></i></span>
-                    <span>Export</span>
+                    <span>{{ $gettext("Export") }}</span>
                 </Button>
-                <Popover
-                    ref="exportDialog"
-                    class="export-panel"
-                >
-                    <div class="exports-panel-container">
-                        <div class="container-title">
-                            <h3>
-                                {{ $gettext("Concept Export") }}
-                            </h3>
-                        </div>
-                        <div class="options-container">
-                            <h4>
-                                {{ $gettext("Export Options") }}
-                            </h4>
-                            <!-- TODO: export options go here -->
-                            <SelectButton
-                                v-model="exporter"
-                                :options="exporterOptions"
-                            />
-                        </div>
-                        <div class="formats-container">
-                            <h4>
-                                {{ $gettext("Export Format") }}
-                            </h4>
-                            <div>
-                                <span
-                                    v-for="option in exportformatOptions"
-                                    :key="option.value"
-                                    class="selection"
-                                >
-                                    <RadioButton
-                                        :key="option.value"
-                                        v-model="exportFormat"
-                                        :input-id="option.value"
-                                        :value="option.value"
-                                        :label="option.label"
-                                    ></RadioButton>
-                                    <label :for="option.value">{{
-                                        option.label
-                                    }}</label>
-                                </span>
-                            </div>
-                        </div>
-                        <div class="export-footer">
-                            <Button
-                                icon="pi pi-file-export"
-                                :label="$gettext('Export')"
-                                class="add-button"
-                            ></Button>
-                            <Button
-                                icon="pi pi-trash"
-                                :label="$gettext('Cancel')"
-                                class="add-button"
-                            ></Button>
-                        </div>
-                    </div>
-                </Popover>
-
                 <Button
                     icon="pi pi-plus-circle"
                     :label="$gettext('Add Child')"
