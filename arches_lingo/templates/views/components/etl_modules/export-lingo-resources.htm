@@ -1,0 +1,88 @@
+{% load i18n %}
+
+{% block task_details %}
+<!-- ko ifnot: loading() -->
+<!-- ko if: activeTab() === 'details' -->
+<div class="etl-module-component-container">
+    <div class="etl-module-body">
+        <h2>Lingo Thesaurus Exporter</h2>
+        <p class="pad-btm">
+            {% blocktrans %}Export Arches Lingo Scheme and Concepts to a linked data file{% endblocktrans %}
+        </p>
+        <!-- <p class="pad-btm">
+            {% blocktrans %}{% endblocktrans %}
+        </p> -->
+        <div class="etl-module-component-block">
+            <div class="h4">
+                <label for="resource-model-select" data-bind="text: $root.translations.selectASchemeToExport"></label>
+            </div>
+            <select id="resource-model-select" data-bind="
+                value: selectedScheme,
+                options: schemes,
+                optionsText: 'name',
+                optionsValue: 'resourceinstanceid',
+                optionsCaption: $root.translations.select + '...',
+                valueAllowUnset: true,
+                chosen: {width: '500px'}"
+            ></select>
+        </div>
+    </div>
+    <div class="tabbed-workflow-footer, etl-module-footer">
+        <button class="btn btn-success"
+            style="margin-right: 8px;"
+            data-bind="
+                click: executeExport,
+                css: {disabled: !ready()},
+                attr: { disabled: !ready()}
+        ">
+            <span data-bind="text: $root.translations.start"></span>
+        </button>
+    </div>
+</div>
+<!-- /ko -->
+<!-- /ko -->
+{% endblock task_details %}
+
+{% block loading_status %}
+<!-- ko ifnot: loading() -->
+<div class="bulk-load-status">
+    <h4 class="summary-title">{% trans "Lingo Thesaurus Exporter Summary" %}</h4>
+    <div>
+        <span class="etl-loading-metadata-key" data-bind="text: $root.translations.loadingStatus + ':'"></span>
+        <!-- ko if: selectedLoadEvent()?.status -->
+        <span class="etl-loading-metadata-value" data-bind="
+            text: selectedLoadEvent().status == 'indexed' ? $root.translations.completed
+                : selectedLoadEvent().status == 'validated' ? $root.translations.running
+                : selectedLoadEvent().status == 'running' ? $root.translations.validating
+                : selectedLoadEvent().status == 'reversing' ? $root.translations.unloading
+                : selectedLoadEvent().status == 'unloaded' ? $root.translations.unloaded
+                : selectedLoadEvent().status == 'cancelled' ? $root.translations.cancelled
+                : $root.translations.failed
+        "></span>
+        <!-- /ko -->
+    </div>
+    <div>
+        <!-- ko if: loadDetails?.scheme_name -->
+        <span class="etl-loading-metadata-key" data-bind="text: $root.translations.exportedThesaurus + ':'"></span>
+        <span class="etl-loading-metadata-value" data-bind="text: loadDetails.scheme_name"></span>
+        <!-- /ko -->
+    </div>
+    <!-- ko if: loadDetails?.file -->
+    <div class="summary-header">
+        <span data-bind="text: $root.translations.download"></span>
+    </div>
+    <div class="summary-contents" style="padding-bottom: 20px;">
+            <div class="etl-loading-metadata-value">
+                <a 
+                    class="file-listing-link" 
+                    style="color: blue;"
+                    download 
+                    data-bind="text: loadDetails.file.name, attr: { href: '/temp_file/'+loadDetails.file.fileid }"
+                ></a>
+            </div>
+        </div>
+    <!-- /ko -->
+</div>
+<!-- /ko -->
+{% endblock loading_status %}
+

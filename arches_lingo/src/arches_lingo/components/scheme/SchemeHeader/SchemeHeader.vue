@@ -5,13 +5,12 @@ import { useGettext } from "vue3-gettext";
 import { useConfirm } from "primevue/useconfirm";
 import { useRouter } from "vue-router";
 import { useToast } from "primevue/usetoast";
-import Skeleton from "primevue/skeleton";
 
+import Skeleton from "primevue/skeleton";
 import ConfirmDialog from "primevue/confirmdialog";
 import Button from "primevue/button";
-import SelectButton from "primevue/selectbutton";
-import RadioButton from "primevue/radiobutton";
-import Popover from "primevue/popover";
+
+import ExportThesauri from "@/arches_lingo/components/scheme/SchemeHeader/components/ExportThesauri.vue";
 
 import {
     DANGER,
@@ -52,6 +51,13 @@ const systemLanguage = inject(systemLanguageKey) as Language;
 const scheme = ref<ResourceInstanceResult>();
 const data = ref<SchemeHeader>();
 const isLoading = ref(true);
+const showExportDialog = ref(false);
+const exportDialogKey = ref(0);
+
+function openExportDialog() {
+    exportDialogKey.value++;
+    showExportDialog.value = true;
+}
 
 function extractSchemeHeaderData(scheme: ResourceInstanceResult) {
     const name = scheme?.name;
@@ -134,30 +140,16 @@ function confirmDelete() {
         },
     });
 }
-
-//Placeholder for export button panel
-const exportDialog = ref();
-const toggle = (event: Event) => {
-    exportDialog.value.toggle(event);
-};
-
-//Placeholder for export type
-const exporter = ref("Concept Only");
-const exporterOptions = ref(["Concept Only", "Concept + Children"]);
-
-//Placeholder for export format radio button group
-const exportFormat = ref();
-const exportformatOptions = ref([
-    { label: "csv", value: "csv" },
-    { label: "SKOS", value: "skos" },
-    { label: "rdf", value: "rdf" },
-    { label: "JSON-LD", value: "jsonld" },
-]);
 </script>
 
 <template>
     <ConfirmDialog group="delete-scheme" />
-
+    <ExportThesauri
+        v-if="scheme && showExportDialog"
+        :key="exportDialogKey"
+        :resource-id="scheme.resourceinstanceid"
+        :resource-name="scheme?.name"
+    />
     <Skeleton
         v-if="isLoading"
         style="width: 100%"
@@ -183,73 +175,14 @@ const exportformatOptions = ref([
                     </div>
 
                     <div class="header-buttons">
-                        <!-- Placeholder export button -->
                         <Button
                             :aria-label="$gettext('Export')"
                             class="add-button"
-                            @click="toggle"
+                            @click="openExportDialog"
                         >
                             <span><i class="pi pi-cloud-download"></i></span>
                             <span>{{ $gettext("Export") }}</span>
                         </Button>
-                        <Popover
-                            ref="exportDialog"
-                            class="export-panel"
-                        >
-                            <div class="exports-panel-container">
-                                <div class="container-title">
-                                    <h3>
-                                        {{ $gettext("Scheme Export") }}
-                                    </h3>
-                                </div>
-                                <div class="options-container">
-                                    <h4>
-                                        {{ $gettext("Export Options") }}
-                                    </h4>
-                                    <!-- TODO: export options go here -->
-                                    <SelectButton
-                                        v-model="exporter"
-                                        :options="exporterOptions"
-                                    />
-                                </div>
-                                <div class="formats-container">
-                                    <h4>
-                                        {{ $gettext("Export Format") }}
-                                    </h4>
-                                    <div>
-                                        <span
-                                            v-for="option in exportformatOptions"
-                                            :key="option.value"
-                                            class="selection"
-                                        >
-                                            <RadioButton
-                                                :key="option.value"
-                                                v-model="exportFormat"
-                                                :input-id="option.value"
-                                                :value="option.value"
-                                                :label="option.label"
-                                            ></RadioButton>
-                                            <label :for="option.value">{{
-                                                option.label
-                                            }}</label>
-                                        </span>
-                                    </div>
-                                </div>
-                                <div class="export-footer">
-                                    <Button
-                                        icon="pi pi-trash"
-                                        :label="$gettext('Export')"
-                                        class="add-button"
-                                    ></Button>
-                                    <Button
-                                        icon="pi pi-trash"
-                                        :label="$gettext('Cancel')"
-                                        class="add-button"
-                                    ></Button>
-                                </div>
-                            </div>
-                        </Popover>
-
                         <Button
                             icon="pi pi-plus-circle"
                             :label="$gettext('Add Top Concept')"
