@@ -86,38 +86,33 @@ watchEffect(() => {
         }"
     >
         <template #default>
-            <div class="notifications-container">
-                <Skeleton
-                    v-if="isLoading"
-                    style="width: 100%"
-                />
-                <span v-else>
-                    <div
-                        v-if="
-                            showUnreadOnly &&
-                            notifications.filter(
-                                (notif) => notif.isread === false,
-                            ).length === 0
-                        "
-                        class="notification-row"
-                    >
-                        {{ $gettext("You do not have any notifications.") }}
-                    </div>
-                    <div
-                        v-for="notification in notifications"
-                        v-else
-                        :key="notification.id"
-                        class="notification-row"
-                    >
-                        <NotificationRow
-                            v-if="
-                                !showUnreadOnly || notification.isread === false
-                            "
-                            :notification="notification"
-                        />
-                    </div>
-                </span>
-            </div>
+            <Skeleton
+                v-if="isLoading"
+                style="width: 100%"
+            />
+            <span v-else>
+                <div
+                    v-if="
+                        showUnreadOnly &&
+                        notifications.filter((notif) => notif.isread === false)
+                            .length === 0
+                    "
+                    class="notification-row"
+                >
+                    {{ $gettext("You do not have any notifications.") }}
+                </div>
+                <div
+                    v-for="notification in notifications"
+                    v-else
+                    :key="notification.id"
+                    class="notification-row"
+                >
+                    <NotificationRow
+                        v-if="!showUnreadOnly || notification.isread === false"
+                        :notification="notification"
+                    />
+                </div>
+            </span>
         </template>
 
         <template #footer>
@@ -143,9 +138,6 @@ watchEffect(() => {
 </template>
 
 <style scoped>
-.notifications-container {
-    padding: 0.5rem 0.75rem;
-}
 .notification-row {
     display: flex;
     justify-content: space-between;
