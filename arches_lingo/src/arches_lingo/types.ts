@@ -358,6 +358,7 @@ export interface SearchResultHierarchy {
     searchResults: SearchResultItem[];
     isTopConcept?: boolean;
 }
+
 export interface archesPreset {
     arches: {
         legacy: {
@@ -367,4 +368,12 @@ export interface archesPreset {
         green: string;
         red: string;
     };
+}
+
+export interface Notification {
+    id: string;
+    created: string;
+    isread: boolean;
+    message: string;
+    recipient_id: string;
 }

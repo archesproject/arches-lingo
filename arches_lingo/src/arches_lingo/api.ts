@@ -399,3 +399,33 @@ export const exportThesaurus = async (
         throw new Error((error as Error).message || response.statusText);
     }
 };
+
+export const fetchUserNotifications = async (unreadOnly: boolean) => {
+    let url: string;
+    if (unreadOnly) {
+        const params = new URLSearchParams({
+            unread_only: unreadOnly.toString(),
+        });
+        url = `${arches.urls.get_notifications}?${params.toString()}`;
+    } else {
+        url = `${arches.urls.get_notifications}`;
+    }
+    const response = await fetch(url);
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
+export const dismissNotifications = async (notificationIds: string[]) => {
+    const params = new URLSearchParams({
+        notification_ids: JSON.stringify(notificationIds),
+    });
+    const url = `${arches.urls.dismiss_notifications}?${params.toString()}`;
+    const response = await fetch(url, {
+        method: "POST",
+        headers: { "X-CSRFTOKEN": getToken() },
+    });
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
