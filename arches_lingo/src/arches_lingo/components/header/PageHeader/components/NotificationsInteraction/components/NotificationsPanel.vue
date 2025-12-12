@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { ref, watchEffect } from "vue";
+import { onMounted, ref, watch } from "vue";
 
 import Button from "primevue/button";
 import Drawer from "primevue/drawer";
-import Skeleton from "primevue/skeleton";
+import ProgressBar from "primevue/progressbar";
 import ToggleSwitch from "primevue/toggleswitch";
+import VirtualScroller from "primevue/virtualscroller";
 
 import NotificationRow from "@/arches_lingo/components/header/PageHeader/components/NotificationsInteraction/components/NotificationRow.vue";
 
@@ -12,11 +13,18 @@ import {
     fetchUserNotifications,
     dismissNotifications,
 } from "@/arches_lingo/api.ts";
-import type { Notification } from "@/arches_lingo/types.ts";
+import type { Notification, PaginatorDetails } from "@/arches_lingo/types.ts";
 
-const isLoading = ref(false);
+import {
+    SEARCH_RESULTS_PER_PAGE,
+    SEARCH_RESULT_ITEM_SIZE,
+} from "@/arches_lingo/constants.ts";
+
 const notifications = ref<Notification[]>([]);
+const isLoading = ref(false);
 const showUnreadOnly = ref(true);
+const currentPageNumber = ref(1);
+const paginator = ref<PaginatorDetails | null>(null);
 
 const shouldShowNotificationsPanel = defineModel(
     "shouldShowNotificationsPanel",
@@ -26,10 +34,19 @@ const shouldShowNotificationsPanel = defineModel(
     },
 );
 
-async function loadNotifications(unreadOnly: boolean) {
+async function loadNotifications(
+    items: number,
+    pageNumber: number,
+    unreadOnly: boolean,
+) {
     isLoading.value = true;
-    const parsed = await fetchUserNotifications(unreadOnly);
-    notifications.value = parsed?.notifications;
+    const parsed = await fetchUserNotifications(items, pageNumber, unreadOnly);
+    notifications.value = [
+        ...notifications.value,
+        ...(parsed?.notifications ?? []),
+    ];
+    paginator.value = parsed.paginator;
+    currentPageNumber.value += 1;
     isLoading.value = false;
 }
 
@@ -38,10 +55,28 @@ function dismissAllNotifications() {
     notifications.value = [];
 }
 
-watchEffect(() => {
-    if (shouldShowNotificationsPanel.value) {
-        loadNotifications(false); // Load all notifications (even read ones)
+function loadAdditionalNotifications() {
+    if (paginator.value?.has_next) {
+        loadNotifications(
+            SEARCH_RESULTS_PER_PAGE,
+            currentPageNumber.value + 1,
+            showUnreadOnly.value,
+        );
     }
+}
+
+watch(showUnreadOnly, () => {
+    notifications.value = [];
+    currentPageNumber.value = 1;
+    loadNotifications(
+        SEARCH_RESULTS_PER_PAGE,
+        1, // start from beginning if we're changing the unread filter
+        showUnreadOnly.value,
+    );
+});
+
+onMounted(() => {
+    loadNotifications(SEARCH_RESULTS_PER_PAGE, 1, showUnreadOnly.value);
 });
 </script>
 
@@ -86,33 +121,24 @@ watchEffect(() => {
         }"
     >
         <template #default>
-            <Skeleton
+            <VirtualScroller
+                :items="notifications"
+                :item-size="SEARCH_RESULT_ITEM_SIZE"
+                style="height: 100%"
+                lazy
+                @lazy-load="loadAdditionalNotifications"
+            >
+                <template #item="{ item: notification }">
+                    <div class="notification-row">
+                        <NotificationRow :notification="notification" />
+                    </div>
+                </template>
+            </VirtualScroller>
+            <ProgressBar
                 v-if="isLoading"
-                style="width: 100%"
+                mode="indeterminate"
+                style="height: 0.5rem"
             />
-            <span v-else>
-                <div
-                    v-if="
-                        showUnreadOnly &&
-                        notifications.filter((notif) => notif.isread === false)
-                            .length === 0
-                    "
-                    class="notification-row"
-                >
-                    {{ $gettext("You do not have any notifications.") }}
-                </div>
-                <div
-                    v-for="notification in notifications"
-                    v-else
-                    :key="notification.id"
-                    class="notification-row"
-                >
-                    <NotificationRow
-                        v-if="!showUnreadOnly || notification.isread === false"
-                        :notification="notification"
-                    />
-                </div>
-            </span>
         </template>
 
         <template #footer>
@@ -140,11 +166,15 @@ watchEffect(() => {
 <style scoped>
 .notification-row {
     display: flex;
+    align-items: center;
     justify-content: space-between;
     border-bottom: 0.0625rem solid var(--p-header-toolbar-border);
     padding: 1rem;
 }
 .footer-btn {
     font-family: var(--p-lingo-font-family);
+}
+:deep(.p-progressbar .p-progressbar-value) {
+    background: var(--p-primary-800);
 }
 </style>
