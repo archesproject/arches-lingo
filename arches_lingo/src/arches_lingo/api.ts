@@ -400,16 +400,19 @@ export const exportThesaurus = async (
     }
 };
 
-export const fetchUserNotifications = async (unreadOnly: boolean) => {
-    let url: string;
+export const fetchUserNotifications = async (
+    items: number,
+    page: number,
+    unreadOnly: boolean,
+) => {
+    const params = new URLSearchParams({
+        items: items.toString(),
+        page: page.toString(),
+    });
     if (unreadOnly) {
-        const params = new URLSearchParams({
-            unread_only: unreadOnly.toString(),
-        });
-        url = `${arches.urls.get_notifications}?${params.toString()}`;
-    } else {
-        url = `${arches.urls.get_notifications}`;
+        params.append("unread_only", unreadOnly.toString());
     }
+    const url = `${arches.urls.get_notifications}?${params.toString()}`;
     const response = await fetch(url);
     const parsed = await response.json();
     if (!response.ok) throw new Error(parsed.message || response.statusText);

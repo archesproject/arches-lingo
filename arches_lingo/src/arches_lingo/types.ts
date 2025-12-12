@@ -377,3 +377,19 @@ export interface Notification {
     message: string;
     recipient_id: string;
 }
+
+export interface PaginatorDetails {
+    current_page: {
+        number: number;
+        object_list: Array<number>;
+    };
+    has_next: boolean;
+    has_previous: boolean;
+    next_page_number: number | null;
+    previous_page_number: number | null;
+    start_index: number;
+    end_index: number;
+    pages: Array<number>;
+    total_notifications: number;
+    unread_notifications: number;
+}
