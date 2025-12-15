@@ -5,7 +5,9 @@ import Button from "primevue/button";
 import Drawer from "primevue/drawer";
 import ProgressBar from "primevue/progressbar";
 import ToggleSwitch from "primevue/toggleswitch";
-import VirtualScroller from "primevue/virtualscroller";
+import VirtualScroller, {
+    type VirtualScrollerLazyEvent,
+} from "primevue/virtualscroller";
 
 import NotificationRow from "@/arches_lingo/components/header/PageHeader/components/NotificationsInteraction/components/NotificationRow.vue";
 
@@ -25,6 +27,7 @@ const isLoading = ref(false);
 const showUnreadOnly = ref(true);
 const currentPageNumber = ref(1);
 const paginator = ref<PaginatorDetails | null>(null);
+const resultsPerPage = ref(SEARCH_RESULTS_PER_PAGE);
 
 const shouldShowNotificationsPanel = defineModel(
     "shouldShowNotificationsPanel",
@@ -46,7 +49,6 @@ async function loadNotifications(
         ...(parsed?.notifications ?? []),
     ];
     paginator.value = parsed.paginator;
-    currentPageNumber.value += 1;
     isLoading.value = false;
 }
 
@@ -55,28 +57,36 @@ function dismissAllNotifications() {
     notifications.value = [];
 }
 
-function loadAdditionalNotifications() {
-    if (paginator.value?.has_next) {
+function loadAdditionalNotifications(event: VirtualScrollerLazyEvent) {
+    if (
+        paginator.value?.has_next &&
+        event.last >= notifications.value.length - 1
+    ) {
         loadNotifications(
-            SEARCH_RESULTS_PER_PAGE,
-            currentPageNumber.value + 1,
+            resultsPerPage.value,
+            (currentPageNumber.value += 1),
             showUnreadOnly.value,
         );
     }
 }
 
-watch(showUnreadOnly, () => {
+function resetNotifications() {
     notifications.value = [];
     currentPageNumber.value = 1;
+}
+
+watch(showUnreadOnly, () => {
+    resetNotifications();
     loadNotifications(
-        SEARCH_RESULTS_PER_PAGE,
+        resultsPerPage.value,
         1, // start from beginning if we're changing the unread filter
         showUnreadOnly.value,
     );
 });
 
 onMounted(() => {
-    loadNotifications(SEARCH_RESULTS_PER_PAGE, 1, showUnreadOnly.value);
+    resetNotifications();
+    loadNotifications(resultsPerPage.value, 1, showUnreadOnly.value);
 });
 </script>
 
@@ -126,6 +136,7 @@ onMounted(() => {
                 :item-size="SEARCH_RESULT_ITEM_SIZE"
                 style="height: 100%"
                 lazy
+                :num-tolerated-items="1"
                 @lazy-load="loadAdditionalNotifications"
             >
                 <template #item="{ item: notification }">
