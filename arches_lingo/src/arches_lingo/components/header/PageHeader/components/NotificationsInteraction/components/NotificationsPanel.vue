@@ -60,6 +60,7 @@ function dismissAllNotifications() {
 function loadAdditionalNotifications(event: VirtualScrollerLazyEvent) {
     if (
         paginator.value?.has_next &&
+        paginator.value?.total_pages !== currentPageNumber.value &&
         event.last >= notifications.value.length - 1
     ) {
         loadNotifications(
