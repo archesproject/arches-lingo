@@ -29,6 +29,16 @@ function formatDate(dateString: string): string {
     <span class="notification-item">
         <div class="date">{{ formatDate(notification.created) }}</div>
         <div>{{ notification.message }}</div>
+        <div
+            v-for="file in notification.files"
+            :key="file.fileid"
+        >
+            <a
+                :href="'/temp_file/' + file.fileid"
+                target="_blank"
+                >{{ file.name }}</a
+            >
+        </div>
     </span>
     <i
         v-if="notification.isread === false"
