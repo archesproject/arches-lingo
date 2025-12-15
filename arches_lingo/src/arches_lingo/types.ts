@@ -376,6 +376,12 @@ export interface Notification {
     isread: boolean;
     message: string;
     recipient_id: string;
+    link?: string;
+    files?: Array<{
+        fileid: string;
+        name: string;
+        url: string;
+    }>;
 }
 
 export interface PaginatorDetails {
