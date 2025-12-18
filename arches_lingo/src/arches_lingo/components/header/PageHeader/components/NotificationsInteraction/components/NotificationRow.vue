@@ -53,7 +53,13 @@ function formatDate(dateString: string): string {
 .date {
     color: var(--p-search-result-color);
 }
+.message {
+    text-overflow: ellipsis;
+    margin-top: 0.5rem;
+    margin-bottom: 0.25rem;
+}
 .notification-item {
     font-size: var(--p-lingo-font-size-small);
+    padding-inline-end: 0.25rem;
 }
 </style>
