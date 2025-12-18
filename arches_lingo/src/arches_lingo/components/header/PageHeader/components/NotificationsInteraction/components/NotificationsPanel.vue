@@ -108,7 +108,10 @@ function dismissAllNotifications() {
             >
                 <template #item="{ item: notification }">
                     <div class="notification-row">
-                        <NotificationRow :notification="notification" />
+                        <NotificationRow
+                            :notification="notification"
+                            :show-unread-only="showUnreadOnly"
+                        />
                     </div>
                 </template>
             </VirtualScroller>
@@ -132,7 +135,9 @@ function dismissAllNotifications() {
             </span>
             <Button
                 :label="$gettext('Dismiss All')"
-                :disabled="notifications.length === 0"
+                :disabled="
+                    notifications.length === 0 || showUnreadOnly === false
+                "
                 severity="danger"
                 class="footer-btn"
                 @click="dismissAllNotifications"

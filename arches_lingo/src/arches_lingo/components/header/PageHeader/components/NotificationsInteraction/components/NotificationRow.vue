@@ -2,8 +2,9 @@
 import { dismissNotifications } from "@/arches_lingo/api.ts";
 import type { Notification } from "@/arches_lingo/types.ts";
 
-const { notification } = defineProps<{
+const { notification, showUnreadOnly } = defineProps<{
     notification: Notification;
+    showUnreadOnly: boolean;
 }>();
 
 function formatDate(dateString: string): string {
@@ -41,7 +42,7 @@ function formatDate(dateString: string): string {
         </div>
     </span>
     <i
-        v-if="notification.isread === false"
+        v-if="notification.isread === false && showUnreadOnly"
         class="pi pi-times"
         @click="dismissNotifications([notification.id])"
     ></i>
