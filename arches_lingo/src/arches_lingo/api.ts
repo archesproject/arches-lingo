@@ -432,3 +432,14 @@ export const dismissNotifications = async (notificationIds: string[]) => {
     if (!response.ok) throw new Error(parsed.message || response.statusText);
     return parsed;
 };
+
+export const getSearchExportFile = async (exportId: string) => {
+    const params = new URLSearchParams({
+        exportid: exportId,
+    });
+    const url = `${arches.urls.get_export_file}?${params.toString()}`;
+    const response = await fetch(url);
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
