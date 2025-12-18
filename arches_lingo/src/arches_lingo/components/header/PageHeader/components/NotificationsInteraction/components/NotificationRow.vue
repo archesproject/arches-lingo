@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import NotificationFileViewer from "@/arches_lingo/components/header/PageHeader/components/NotificationsInteraction/components/NotificationFileViewer.vue";
+import NotificationLinkViewer from "@/arches_lingo/components/header/PageHeader/components/NotificationsInteraction/components/NotificationLinkViewer.vue";
 import { dismissNotifications } from "@/arches_lingo/api.ts";
 import type { Notification } from "@/arches_lingo/types.ts";
 
@@ -29,17 +31,16 @@ function formatDate(dateString: string): string {
 <template>
     <span class="notification-item">
         <div class="date">{{ formatDate(notification.created) }}</div>
-        <div>{{ notification.message }}</div>
-        <div
+        <div class="message">{{ notification.message }}</div>
+        <NotificationFileViewer
             v-for="file in notification.files"
             :key="file.fileid"
-        >
-            <a
-                :href="'/temp_file/' + file.fileid"
-                target="_blank"
-                >{{ file.name }}</a
-            >
-        </div>
+            :file="file"
+        />
+        <NotificationLinkViewer
+            v-if="notification.link"
+            :link="notification.link"
+        />
     </span>
     <i
         v-if="notification.isread === false && showUnreadOnly"

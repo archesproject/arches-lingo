@@ -376,7 +376,7 @@ export interface Notification {
     isread: boolean;
     message: string;
     recipient_id: string;
-    link?: string;
+    link?: string; // pk for a SearchExportHistory instance
     files?: Array<{
         fileid: string;
         name: string;
