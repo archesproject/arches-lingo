@@ -134,6 +134,15 @@ onMounted(() => {
         }"
     >
         <template #default>
+            <div
+                v-if="notifications.length === 0 && !isLoading"
+                class="notification-row"
+            >
+                <span v-if="showUnreadOnly">{{
+                    $gettext("You have no new notifications")
+                }}</span>
+                <span v-else>{{ $gettext("You have no notifications") }}</span>
+            </div>
             <VirtualScroller
                 :items="notifications"
                 :item-size="SEARCH_RESULT_ITEM_SIZE"
