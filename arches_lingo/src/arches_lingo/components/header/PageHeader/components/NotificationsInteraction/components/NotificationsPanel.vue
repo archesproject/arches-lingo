@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from "vue";
-
 import Button from "primevue/button";
 import Drawer from "primevue/drawer";
 import ProgressBar from "primevue/progressbar";
@@ -10,24 +8,9 @@ import VirtualScroller, {
 } from "primevue/virtualscroller";
 
 import NotificationRow from "@/arches_lingo/components/header/PageHeader/components/NotificationsInteraction/components/NotificationRow.vue";
-
-import {
-    fetchUserNotifications,
-    dismissNotifications,
-} from "@/arches_lingo/api.ts";
-import type { Notification, PaginatorDetails } from "@/arches_lingo/types.ts";
-
-import {
-    SEARCH_RESULTS_PER_PAGE,
-    SEARCH_RESULT_ITEM_SIZE,
-} from "@/arches_lingo/constants.ts";
-
-const notifications = ref<Notification[]>([]);
-const isLoading = ref(false);
-const showUnreadOnly = ref(true);
-const currentPageNumber = ref(1);
-const paginator = ref<PaginatorDetails | null>(null);
-const resultsPerPage = ref(SEARCH_RESULTS_PER_PAGE);
+import { dismissNotifications } from "@/arches_lingo/api.ts";
+import type { Notification } from "@/arches_lingo/types.ts";
+import { SEARCH_RESULT_ITEM_SIZE } from "@/arches_lingo/constants.ts";
 
 const shouldShowNotificationsPanel = defineModel(
     "shouldShowNotificationsPanel",
@@ -36,20 +19,23 @@ const shouldShowNotificationsPanel = defineModel(
         default: false,
     },
 );
+const showUnreadOnly = defineModel("showUnreadOnly", {
+    type: Boolean,
+    default: true,
+});
+const isLoading = defineModel("isLoading", {
+    type: Boolean,
+    default: false,
+});
+const notifications = defineModel("notifications", {
+    type: Array as () => Notification[],
+    default: () => [],
+});
 
-async function loadNotifications(
-    items: number,
-    pageNumber: number,
-    unreadOnly: boolean,
-) {
-    isLoading.value = true;
-    const parsed = await fetchUserNotifications(items, pageNumber, unreadOnly);
-    notifications.value = [
-        ...notifications.value,
-        ...(parsed?.notifications ?? []),
-    ];
-    paginator.value = parsed.paginator;
-    isLoading.value = false;
+const emit = defineEmits(["load-additional-notifications"]);
+
+function loadAdditionalNotifications(event: VirtualScrollerLazyEvent) {
+    emit("load-additional-notifications", event);
 }
 
 function dismissAllNotifications() {
@@ -58,39 +44,6 @@ function dismissAllNotifications() {
     );
     notifications.value = [];
 }
-
-function loadAdditionalNotifications(event: VirtualScrollerLazyEvent) {
-    if (
-        paginator.value?.has_next &&
-        paginator.value?.total_pages !== currentPageNumber.value &&
-        event.last >= notifications.value.length - 1
-    ) {
-        loadNotifications(
-            resultsPerPage.value,
-            (currentPageNumber.value += 1),
-            showUnreadOnly.value,
-        );
-    }
-}
-
-function resetNotifications() {
-    notifications.value = [];
-    currentPageNumber.value = 1;
-}
-
-watch(showUnreadOnly, () => {
-    resetNotifications();
-    loadNotifications(
-        resultsPerPage.value,
-        1, // start from beginning if we're changing the unread filter
-        showUnreadOnly.value,
-    );
-});
-
-onMounted(() => {
-    resetNotifications();
-    loadNotifications(resultsPerPage.value, 1, showUnreadOnly.value);
-});
 </script>
 
 <template>
