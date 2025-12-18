@@ -53,7 +53,9 @@ async function loadNotifications(
 }
 
 function dismissAllNotifications() {
-    dismissNotifications(notifications.value.map((n) => n.id));
+    dismissNotifications(
+        notifications.value.map((notification) => notification.id),
+    );
     notifications.value = [];
 }
 

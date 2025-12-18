@@ -420,13 +420,13 @@ export const fetchUserNotifications = async (
 };
 
 export const dismissNotifications = async (notificationIds: string[]) => {
-    const params = new URLSearchParams({
-        notification_ids: JSON.stringify(notificationIds),
-    });
-    const url = `${arches.urls.dismiss_notifications}?${params.toString()}`;
+    const formData = new FormData();
+    formData.append("dismissals", JSON.stringify(notificationIds));
+    const url = arches.urls.dismiss_notifications;
     const response = await fetch(url, {
         method: "POST",
         headers: { "X-CSRFTOKEN": getToken() },
+        body: formData,
     });
     const parsed = await response.json();
     if (!response.ok) throw new Error(parsed.message || response.statusText);
