@@ -19,6 +19,7 @@ from arches.app.models.models import (
     User,
 )
 from arches_querysets.models import ResourceTileTree
+from arches.app.tasks import notify_completion
 
 from arches_lingo.utils.concept_builder import ConceptBuilder
 from arches_lingo.utils.skos import SKOSWriter
@@ -100,7 +101,7 @@ class LingoResourceExporter:
         self.request = request
 
     def start(self, request, **kwargs):
-        self.userid = request.user.id if request else None
+        self.user = User.objects.get(id=request.user.id)
         self.moduleid = request.POST.get("module")
         if self.moduleid is None:
             self.moduleid = ETLModule.objects.get(slug="export-lingo-resources").pk
@@ -124,7 +125,7 @@ class LingoResourceExporter:
         }
         load_event = LoadEvent.objects.create(
             loadid=self.loadid,
-            user=User.objects.get(id=self.userid),
+            user=self.user,
             etl_module=ETLModule.objects.get(pk=self.moduleid),
             status="validated",
             load_details=json.dumps(load_details),
@@ -203,6 +204,11 @@ class LingoResourceExporter:
             )
             self.load_event.load_details = json.dumps(load_details)
             self.load_event.save()
+
+            # Always notify user of completion
+            msg = _("{name} export completed").format(name=self.scheme_name)
+            # TODO: add notification type for Lingo exports
+            notify_completion(msg, self.user, context={"files": [file_details]})
 
             return {
                 "success": True,
