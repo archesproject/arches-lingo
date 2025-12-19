@@ -6,6 +6,7 @@ import Button from "primevue/button";
 
 import MetaStringViewer from "@/arches_lingo/components/generic/MetaStringViewer.vue";
 import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
+import ConceptResourceSelectWidget from "@/arches_lingo/components/widgets/ConceptResourceSelectWidget/ConceptResourceSelectWidget.vue";
 
 import { VIEW } from "@/arches_lingo/constants.ts";
 

@@ -10,6 +10,7 @@ import { Form } from "@primevue/forms";
 import Skeleton from "primevue/skeleton";
 
 import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
+import ConceptResourceSelectWidget from "@/arches_lingo/components/widgets/ConceptResourceSelectWidget/ConceptResourceSelectWidget.vue";
 
 import { createOrUpdateConcept } from "@/arches_lingo/utils.ts";
 
@@ -132,7 +133,7 @@ async function save(e: FormSubmitEvent) {
                 ref="form"
                 @submit="save"
             >
-                <GenericWidget
+                <ConceptResourceSelectWidget
                     :graph-slug="props.graphSlug"
                     node-alias="match_status_ascribed_comparate"
                     :aliased-node-data="

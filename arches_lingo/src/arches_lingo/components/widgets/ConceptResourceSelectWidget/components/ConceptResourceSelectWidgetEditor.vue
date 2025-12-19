@@ -29,7 +29,7 @@ const props = defineProps<{
     initialValue: SearchResultItem[] | null | undefined;
     graphSlug: string;
     nodeAlias: string;
-    scheme: string;
+    schemeId: string;
     exclude: boolean;
     schemeSelectable: boolean;
 }>();

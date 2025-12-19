@@ -7,7 +7,7 @@ import { Form } from "@primevue/forms";
 
 import Skeleton from "primevue/skeleton";
 
-import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
+import ConceptResourceSelectWidget from "@/arches_lingo/components/widgets/ConceptResourceSelectWidget/ConceptResourceSelectWidget.vue";
 
 import { createLingoResource, upsertLingoTile } from "@/arches_lingo/api.ts";
 import { EDIT } from "@/arches_lingo/constants.ts";
@@ -147,7 +147,7 @@ async function save(e: FormSubmitEvent) {
                 ref="form"
                 @submit="save"
             >
-                <GenericWidget
+                <ConceptResourceSelectWidget
                     :graph-slug="props.graphSlug"
                     node-alias="classification_status_ascribed_classification"
                     :aliased-node-data="

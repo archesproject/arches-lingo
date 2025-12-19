@@ -6,6 +6,7 @@ import Button from "primevue/button";
 
 import MetaStringViewer from "@/arches_lingo/components/generic/MetaStringViewer.vue";
 import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
+import ConceptResourceSelectWidget from "@/arches_lingo/components/widgets/ConceptResourceSelectWidget/ConceptResourceSelectWidget.vue";
 
 import { VIEW } from "@/arches_lingo/constants.ts";
 import { routeNames } from "@/arches_lingo/routes.ts";
@@ -74,14 +75,15 @@ const metaStringLabel: MetaStringText = {
             :nodegroup-alias="props.nodegroupAlias"
         >
             <template #name="{ rowData }">
-                <div
-                    v-for="item in rowData.aliased_data
-                        .relation_status_ascribed_comparate?.details"
-                    :key="item.resource_id"
-                    style="white-space: nowrap"
-                >
-                    {{ item.resource_id }}
-                </div>
+                <ConceptResourceSelectWidget
+                    :graph-slug="props.graphSlug"
+                    node-alias="relation_status_ascribed_comparate"
+                    :initial-value="
+                        rowData.aliased_data.relation_status_ascribed_comparate
+                    "
+                    :mode="VIEW"
+                    :show-label="false"
+                />
             </template>
             <template #type="{ rowData }">
                 <GenericWidget

@@ -30,6 +30,7 @@ const props = defineProps<{
 const isLoading = ref(true);
 const tileData = ref<ConceptRelationStatus[]>([]);
 const fetchError = ref();
+const schemeId = ref<string>();
 
 const shouldCreateNewTile = Boolean(props.mode === EDIT && !props.tileId);
 
@@ -40,6 +41,8 @@ onMounted(async () => {
     ) {
         const sectionValue = await getSectionValue();
         tileData.value = sectionValue?.data;
+        tileData.value = sectionValue?.data;
+        schemeId.value = sectionValue.scheme_id;
     } else if (shouldCreateNewTile) {
         const blankTileData = await fetchTileData(
             props.graphSlug,
@@ -84,6 +87,7 @@ async function getSectionValue() {
             :resource-instance-id="props.resourceInstanceId"
             :section-title="props.sectionTitle"
             :tile-data="tileData"
+            :scheme="schemeId"
         />
         <ConceptRelationshipEditor
             v-else-if="mode === EDIT"
@@ -102,6 +106,7 @@ async function getSectionValue() {
                 })
             "
             :tile-id="props.tileId"
+            :scheme="schemeId"
         />
     </template>
 </template>
