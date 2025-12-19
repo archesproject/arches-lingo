@@ -6,6 +6,7 @@ import Button from "primevue/button";
 
 import MetaStringViewer from "@/arches_lingo/components/generic/MetaStringViewer.vue";
 import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
+import ConceptResourceSelectWidget from "@/arches_lingo/components/widgets/ConceptResourceSelectWidget/ConceptResourceSelectWidget.vue";
 
 import { VIEW } from "@/arches_lingo/constants.ts";
 
@@ -87,7 +88,8 @@ const metaStringLabel: MetaStringText = {
                 />
             </template>
             <template #type="{ rowData }">
-                <GenericWidget
+                <span>{{ rowData.aliased_data.uri }}</span>
+                <URLWidget
                     :graph-slug="props.graphSlug"
                     node-alias="uri"
                     :aliased-node-data="rowData.aliased_data.uri"
@@ -96,23 +98,15 @@ const metaStringLabel: MetaStringText = {
                 />
             </template>
             <template #language="{ rowData }">
-                <div
-                    v-for="item in rowData.aliased_data
-                        .match_status_ascribed_comparate?.details"
-                    :key="item.resource_id"
-                >
-                    <RouterLink
-                        :to="{
-                            name: routeNames.concept,
-                            params: {
-                                id: item.resource_id,
-                            },
-                        }"
-                        class="text-link"
-                    >
-                        {{ item.display_value }}
-                    </RouterLink>
-                </div>
+                <ConceptResourceSelectWidget
+                    :graph-slug="props.graphSlug"
+                    node-alias="match_status_ascribed_comparate"
+                    :initial-value="
+                        rowData.aliased_data.match_status_ascribed_comparate
+                    "
+                    :mode="VIEW"
+                    :show-label="false"
+                />
             </template>
             <template #drawer="{ rowData }">
                 <GenericWidget

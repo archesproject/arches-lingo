@@ -86,6 +86,7 @@ async function getSectionValue() {
             :resource-instance-id="props.resourceInstanceId"
             :section-title="props.sectionTitle"
             :tile-data="tileData"
+            :scheme="schemeId"
         />
         <ConceptMatchEditor
             v-else-if="mode === EDIT"
