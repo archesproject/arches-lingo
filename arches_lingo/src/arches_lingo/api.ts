@@ -376,7 +376,6 @@ export const exportThesaurus = async (
 ) => {
     const formData = new FormData();
     formData.append("action", "start");
-    // formData.append("mode", "ui");
     // moduleId normally fetched in context of BDM, but needed to get throough ETLManagerView POST
     const lingoImporterModuleId = "4302e334-33ed-4e85-99f2-fdac7c7c32fa";
     formData.append("module", lingoImporterModuleId);
