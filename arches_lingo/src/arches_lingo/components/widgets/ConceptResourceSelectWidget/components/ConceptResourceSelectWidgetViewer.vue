@@ -6,8 +6,9 @@ import {
     selectedLanguageKey,
     systemLanguageKey,
 } from "@/arches_lingo/constants.ts";
+import { routeNames } from "@/arches_lingo/routes.ts";
+
 import type { SearchResultItem } from "@/arches_lingo/types.ts";
-import { generateArchesURL } from "@/arches/utils/generate-arches-url.ts";
 import type { Ref } from "vue";
 import type { Language } from "@/arches_component_lab/types";
 
@@ -24,12 +25,14 @@ const systemLanguage = inject(systemLanguageKey) as Language;
         :key="searchResult.id"
     >
         <span>
-            <a
-                :href="
-                    generateArchesURL('arches:resource_editor', {
-                        resourceid: searchResult.id,
-                    })
-                "
+            <RouterLink
+                :to="{
+                    name: routeNames.concept,
+                    params: {
+                        id: searchResult.id,
+                    },
+                }"
+                class="text-link"
             >
                 {{
                     getItemLabel(
@@ -38,7 +41,7 @@ const systemLanguage = inject(systemLanguageKey) as Language;
                         systemLanguage.code,
                     ).value
                 }}
-            </a>
+            </RouterLink>
         </span>
         <span class="concept-hierarchy">
             [{{

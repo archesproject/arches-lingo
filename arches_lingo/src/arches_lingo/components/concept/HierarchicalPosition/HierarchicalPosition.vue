@@ -153,7 +153,7 @@ async function getSectionValue() {
             :nodegroup-alias="props.nodegroupAlias"
             :resource-instance-id="props.resourceInstanceId"
             :section-title="props.sectionTitle"
-            :scheme-id="schemeId"
+            :scheme="schemeId"
         />
         <HierarchicalPositionEditor
             v-else-if="mode === EDIT"
@@ -162,7 +162,7 @@ async function getSectionValue() {
             :nodegroup-alias="props.nodegroupAlias"
             :resource-instance-id="props.resourceInstanceId"
             :section-title="props.sectionTitle"
-            :scheme-id="schemeId"
+            :scheme="schemeId"
             :tile-data="
                 tileData!.find((tileDatum) => {
                     if (shouldCreateNewTile) {

@@ -10,8 +10,6 @@ import ConceptResourceSelectWidget from "@/arches_lingo/components/widgets/Conce
 
 import { VIEW } from "@/arches_lingo/constants.ts";
 
-import { routeNames } from "@/arches_lingo/routes.ts";
-
 import type {
     ConceptMatchStatus,
     MetaStringText,
@@ -101,7 +99,7 @@ const metaStringLabel: MetaStringText = {
                 <ConceptResourceSelectWidget
                     :graph-slug="props.graphSlug"
                     node-alias="match_status_ascribed_comparate"
-                    :initial-value="
+                    :value="
                         rowData.aliased_data.match_status_ascribed_comparate
                     "
                     :mode="VIEW"

@@ -26,11 +26,11 @@ import type { SearchResultItem } from "@/arches_lingo/types.ts";
 import type { Language } from "@/arches_component_lab/types";
 
 const props = defineProps<{
-    initialValue: SearchResultItem[] | null | undefined;
+    value: SearchResultItem[] | null | undefined;
     graphSlug: string;
     nodeAlias: string;
-    schemeId: string;
-    exclude: boolean;
+    scheme?: string;
+    exclude?: boolean;
     schemeSelectable: boolean;
 }>();
 
@@ -40,7 +40,7 @@ const itemSize = 36; // in future iteration this should be declared in the CardX
 
 const selectedLanguage = inject(selectedLanguageKey) as Ref<Language>;
 const systemLanguage = inject(systemLanguageKey) as Language;
-const options = ref<SearchResultItem[]>(props.initialValue || []);
+const options = ref<SearchResultItem[]>(props.value || []);
 const isLoading = ref(false);
 const searchResultsPage = ref(0);
 const searchResultsTotalCount = ref(0);
@@ -48,7 +48,7 @@ const fetchError = ref<string | null>(null);
 
 const searchResultsCurrentCount = computed(() => options.value.length);
 
-props.initialValue?.forEach((option) => {
+props.value?.forEach((option) => {
     option.label = getItemLabel(
         option,
         selectedLanguage.value.code,
@@ -57,7 +57,7 @@ props.initialValue?.forEach((option) => {
 });
 
 function clearOptions() {
-    options.value = props.initialValue || [];
+    options.value = props.value || [];
 }
 
 function onFilter(event: MultiSelectFilterEvent) {
@@ -182,7 +182,7 @@ function validate(e: FormFieldResolverOptions) {
         ref="formFieldRef"
         v-slot="$field"
         :name="props.nodeAlias"
-        :value="props.initialValue?.map((concept) => concept.id)"
+        :value="props.value?.map((concept) => concept.id)"
         :resolver="resolver"
     >
         <MultiSelect

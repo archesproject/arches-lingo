@@ -20,7 +20,7 @@ const { $gettext } = useGettext();
 
 const props = defineProps<{
     tileData: ConceptClassificationStatus | undefined;
-    schemeId?: string;
+    scheme?: string;
     exclude?: boolean;
     componentName: string;
     sectionTitle: string;
@@ -92,7 +92,7 @@ async function save(e: FormSubmitEvent) {
             let values;
             if (
                 formData.classification_status_ascribed_classification
-                    .node_value.resourceId == props.schemeId
+                    .node_value.resourceId == props.scheme
             ) {
                 nodegroupAlias = "top_concept_of";
                 values = {
@@ -150,7 +150,7 @@ async function save(e: FormSubmitEvent) {
                 <ConceptResourceSelectWidget
                     :graph-slug="props.graphSlug"
                     node-alias="classification_status_ascribed_classification"
-                    :aliased-node-data="
+                    :value="
                         props.tileData?.aliased_data
                             .classification_status_ascribed_classification
                     "
