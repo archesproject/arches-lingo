@@ -78,7 +78,7 @@ const metaStringLabel: MetaStringText = {
                 <ConceptResourceSelectWidget
                     :graph-slug="props.graphSlug"
                     node-alias="relation_status_ascribed_comparate"
-                    :initial-value="
+                    :value="
                         rowData.aliased_data.relation_status_ascribed_comparate
                     "
                     :mode="VIEW"

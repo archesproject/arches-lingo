@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { watchEffect, ref } from "vue";
 
 import Message from "primevue/message";
 import Skeleton from "primevue/skeleton";
@@ -10,7 +10,7 @@ import ConceptMatchViewer from "@/arches_lingo/components/concept/ConceptMatch/c
 import { EDIT, VIEW } from "@/arches_lingo/constants.ts";
 
 import { fetchTileData } from "@/arches_component_lab/generics/GenericCard/api.ts";
-import { fetchLingoResourcePartial } from "@/arches_lingo/api.ts";
+import { fetchConceptRelationships } from "@/arches_lingo/api.ts";
 
 import type {
     ConceptMatchStatus,
@@ -34,13 +34,15 @@ const fetchError = ref();
 
 const shouldCreateNewTile = Boolean(props.mode === EDIT && !props.tileId);
 
-onMounted(async () => {
+watchEffect(async () => {
+    isLoading.value = true;
     if (
         props.resourceInstanceId &&
         (props.mode === VIEW || !shouldCreateNewTile)
     ) {
         const sectionValue = await getSectionValue();
-        tileData.value = sectionValue.aliased_data[props.nodegroupAlias];
+        tileData.value = sectionValue?.data;
+        schemeId.value = sectionValue?.scheme_id;
     } else if (shouldCreateNewTile) {
         const blankTileData = await fetchTileData(
             props.graphSlug,
@@ -53,11 +55,11 @@ onMounted(async () => {
 
 async function getSectionValue() {
     try {
-        return await fetchLingoResourcePartial(
-            props.graphSlug,
+        const sectionValue = await fetchConceptRelationships(
             props.resourceInstanceId as string,
-            props.nodegroupAlias,
+            "matched",
         );
+        return sectionValue;
     } catch (error) {
         fetchError.value = error;
     }
@@ -93,7 +95,7 @@ async function getSectionValue() {
             :graph-slug="props.graphSlug"
             :nodegroup-alias="props.nodegroupAlias"
             :resource-instance-id="props.resourceInstanceId"
-            :scheme-id="schemeId"
+            :scheme="schemeId"
             :section-title="props.sectionTitle"
             :tile-data="
                 tileData.find((tileDatum) => {

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { watchEffect, ref } from "vue";
 
 import Message from "primevue/message";
 import ProgressSpinner from "primevue/progressspinner";
@@ -11,13 +11,14 @@ import { fetchCardXNodeXWidgetData } from "@/arches_component_lab/generics/Gener
 import { fetchConceptResources } from "@/arches_lingo/api.ts";
 import { EDIT, VIEW } from "@/arches_component_lab/widgets/constants.ts";
 
+import type { CardXNodeXWidgetData } from "@/arches_component_lab/types.ts";
 import type { WidgetMode } from "@/arches_component_lab/widgets/types.ts";
-import type { ResourceInstanceReference } from "@/arches_component_lab/datatypes/resource-instance-list/types";
+import type { ResourceInstanceListValue } from "@/arches_component_lab/datatypes/resource-instance-list/types";
 
 const props = withDefaults(
     defineProps<{
         mode: WidgetMode;
-        initialValue: ResourceInstanceReference | null | undefined;
+        value: ResourceInstanceListValue | null | undefined;
         nodeAlias: string;
         graphSlug: string;
         scheme?: string;
@@ -32,21 +33,22 @@ const props = withDefaults(
 );
 
 const isLoading = ref(true);
-const nodeData = ref();
-const cardXNodeXWidgetData = ref<CardXNodeXWidgetData[]>([]);
+const cardXNodeXWidgetData = ref<CardXNodeXWidgetData>();
 const configurationError = ref();
-const conceptIds = [props.initialValue?.resource_id] as string[] | undefined;
+const conceptIds = props.value?.details.map((resource: { display_value: string; resource_id: string }) => resource.resource_id) as string[] | undefined;
 const searchResult = ref();
 
-onMounted(async () => {
+watchEffect(async () => {
+    isLoading.value = true;
     try {
         if (conceptIds) {
-            await getConceptHierarchy(conceptIds);
+            searchResult.value = await getConceptHierarchy(conceptIds);
         }
         cardXNodeXWidgetData.value = await fetchCardXNodeXWidgetData(
             props.graphSlug,
             props.nodeAlias,
         );
+        console.log("cardXNodeXWidgetData", cardXNodeXWidgetData.value);
     } catch (error) {
         configurationError.value = error;
     } finally {
@@ -63,7 +65,7 @@ async function getConceptHierarchy(conceptIds: string[]) {
         undefined,
         conceptIds,
     );
-    searchResult.value = parsedResponse.data;
+    return parsedResponse.data;
 }
 </script>
 
@@ -75,8 +77,9 @@ async function getConceptHierarchy(conceptIds: string[]) {
 
     <template v-else>
         <label v-if="props.showLabel">
-            <span>{{ cardXNodeXWidgetData.label }}</span>
-            <span v-if="cardXNodeXWidgetData.node.isrequired && props.mode === EDIT">*</span>
+            <span>{{ cardXNodeXWidgetData }}</span>
+            <!-- <span>{{ cardXNodeXWidgetData!.label }}</span>
+            <span v-if="cardXNodeXWidgetData!.node.isrequired && props.mode === EDIT">*</span> -->
         </label>
 
         <div v-if="mode === EDIT">

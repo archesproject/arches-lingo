@@ -26,7 +26,8 @@ import type { ConceptMatchStatus } from "@/arches_lingo/types.ts";
 
 const props = defineProps<{
     tileData: ConceptMatchStatus | undefined;
-    schemeId?: string;
+    scheme?: string;
+    exclude?: boolean;
     componentName: string;
     sectionTitle: string;
     graphSlug: string;
@@ -136,11 +137,13 @@ async function save(e: FormSubmitEvent) {
                 <ConceptResourceSelectWidget
                     :graph-slug="props.graphSlug"
                     node-alias="match_status_ascribed_comparate"
-                    :aliased-node-data="
+                    :value="
                         props.tileData?.aliased_data
                             .match_status_ascribed_comparate
                     "
                     :mode="EDIT"
+                    :scheme="scheme"
+                    :exclude="exclude"
                     class="widget-container column"
                 />
                 <GenericWidget
