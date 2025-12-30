@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, watch } from "vue";
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import Button from "primevue/button";
@@ -21,6 +21,10 @@ const paginator = ref<PaginatorDetails | null>(null);
 const resultsPerPage = ref(SEARCH_RESULTS_PER_PAGE);
 const pollInterval = ref<ReturnType<typeof setInterval> | null>(null);
 const pollTimeInterval = 60000; // 1 minute
+
+const hasUnreadNotifications = computed(() =>
+    notifications.value.some((notif) => !notif.isread),
+);
 
 function activateHierarchyOverlay() {
     shouldShowNotificationsPanel.value = true;
@@ -97,13 +101,20 @@ onUnmounted(() => {
 
 <template>
     <div>
-        <Button
-            icon="pi pi-bell"
-            variant="text"
-            class="notifications-button"
-            :label="$gettext('Notifications')"
-            @click="activateHierarchyOverlay"
-        />
+        <div style="position: relative; display: inline-flex">
+            <span
+                v-if="hasUnreadNotifications"
+                class="unread-notifications-badge"
+                aria-hidden="true"
+            ></span>
+            <Button
+                icon="pi pi-bell"
+                variant="text"
+                class="notifications-button"
+                :label="$gettext('Notifications')"
+                @click="activateHierarchyOverlay"
+            />
+        </div>
         <NotificationsPanel
             v-model:should-show-notifications-panel="
                 shouldShowNotificationsPanel
@@ -124,5 +135,17 @@ onUnmounted(() => {
 
 .notifications-button:hover {
     background: var(--p-button-primary-hover-background) !important;
+}
+
+.unread-notifications-badge {
+    position: absolute;
+    top: 0.65rem;
+    left: 0.65rem;
+    width: 0.55rem;
+    height: 0.55rem;
+    border-radius: 50%;
+    background-color: #ff4d4f;
+    box-shadow: 0 0 0 2px var(--p-menubar-bg, #fff);
+    z-index: 2;
 }
 </style>
