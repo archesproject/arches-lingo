@@ -144,8 +144,8 @@ onUnmounted(() => {
     width: 0.55rem;
     height: 0.55rem;
     border-radius: 50%;
-    background-color: #ff4d4f;
-    box-shadow: 0 0 0 2px var(--p-menubar-bg, #fff);
+    background-color: var(--p-button-danger-background);
+    box-shadow: 0 0 0 0.125rem var(--p-menubar-bg, var(--p-off-white));
     z-index: 2;
 }
 </style>
