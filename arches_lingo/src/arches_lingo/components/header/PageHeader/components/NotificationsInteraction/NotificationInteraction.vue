@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from "vue";
+import { onMounted, onUnmounted, ref, watch } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import Button from "primevue/button";
@@ -19,6 +19,8 @@ const showUnreadOnly = ref(true);
 const currentPageNumber = ref(1);
 const paginator = ref<PaginatorDetails | null>(null);
 const resultsPerPage = ref(SEARCH_RESULTS_PER_PAGE);
+const pollInterval = ref<ReturnType<typeof setInterval> | null>(null);
+const pollTimeInterval = 60000; // 1 minute
 
 function activateHierarchyOverlay() {
     shouldShowNotificationsPanel.value = true;
@@ -59,6 +61,20 @@ function resetNotifications() {
     currentPageNumber.value = 1;
 }
 
+function startPolling() {
+    pollInterval.value = setInterval(() => {
+        resetNotifications();
+        loadNotifications(resultsPerPage.value, 1, showUnreadOnly.value);
+    }, pollTimeInterval);
+}
+
+function stopPolling() {
+    if (pollInterval.value) {
+        clearInterval(pollInterval.value);
+        pollInterval.value = null;
+    }
+}
+
 watch(showUnreadOnly, () => {
     resetNotifications();
     loadNotifications(
@@ -71,6 +87,11 @@ watch(showUnreadOnly, () => {
 onMounted(() => {
     resetNotifications();
     loadNotifications(resultsPerPage.value, 1, showUnreadOnly.value);
+    startPolling();
+});
+
+onUnmounted(() => {
+    stopPolling();
 });
 </script>
 
