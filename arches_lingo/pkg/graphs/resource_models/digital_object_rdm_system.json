@@ -1234,7 +1234,7 @@
                 {
                     "alias": "content",
                     "config": {
-                        "activateMax": false,
+                        "activateMax": true,
                         "imagesOnly": true,
                         "maxFileSize": null,
                         "maxFiles": 1
