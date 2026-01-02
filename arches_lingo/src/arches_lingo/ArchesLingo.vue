@@ -134,7 +134,9 @@ async function checkUserAuthentication(
                     </div>
                 </SplitterPanel>
                 <SplitterPanel :size="70">
-                    <RouterView :key="route.fullPath" />
+                    <div style="height: 100%; overflow: auto">
+                        <RouterView :key="route.fullPath" />
+                    </div>
                 </SplitterPanel>
             </Splitter>
         </div>

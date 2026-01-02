@@ -50,34 +50,13 @@ onMounted(async () => {
 </script>
 
 <template>
-    <Skeleton
-        v-if="isLoading"
-        style="margin: 1rem; height: 2rem"
-    />
-    <Skeleton
-        v-if="isLoading"
-        style="margin: 1rem; height: 2rem"
-    />
-    <Skeleton
-        v-if="isLoading"
-        style="margin: 1rem; height: 2rem"
-    />
-    <Skeleton
-        v-if="isLoading"
-        style="margin: 1rem; height: 2rem"
-    />
-    <Skeleton
-        v-if="isLoading"
-        style="margin: 1rem; height: 2rem"
-    />
-    <Skeleton
-        v-if="isLoading"
-        style="margin: 1rem; height: 2rem"
-    />
-    <Skeleton
-        v-if="isLoading"
-        style="margin: 1rem; height: 2rem"
-    />
+    <template v-if="isLoading">
+        <Skeleton
+            v-for="idx in 8"
+            :key="idx"
+            style="margin: 1rem; height: 2rem; width: 98%"
+        />
+    </template>
 
     <div class="scheme-cards-container">
         <ul class="scheme-cards">
