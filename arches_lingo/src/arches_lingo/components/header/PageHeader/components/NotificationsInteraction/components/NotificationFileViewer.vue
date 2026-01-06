@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { generateArchesURL } from "@/arches/utils/generate-arches-url.ts";
 const { file } = defineProps<{
     file: {
         fileid: string;
@@ -6,11 +7,13 @@ const { file } = defineProps<{
         url: string;
     };
 }>();
+
+const fileURL = generateArchesURL("arches:temp_file", { file_id: file.fileid });
 </script>
 
 <template>
     <a
-        :href="'/temp_file/' + file.fileid"
+        :href="fileURL"
         target="_blank"
         >{{ file.name }}</a
     >
