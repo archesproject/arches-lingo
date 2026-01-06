@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import Button from "primevue/button";
+
 import NotificationFileViewer from "@/arches_lingo/components/header/PageHeader/components/NotificationsInteraction/components/NotificationFileViewer.vue";
 import NotificationLinkViewer from "@/arches_lingo/components/header/PageHeader/components/NotificationsInteraction/components/NotificationLinkViewer.vue";
 import { dismissNotifications } from "@/arches_lingo/api.ts";
@@ -22,14 +24,13 @@ function formatDate(dateString: string): string {
         date.toLocaleTimeString(undefined, {
             hour: "2-digit",
             minute: "2-digit",
-            hour12: true,
         })
     );
 }
 </script>
 
 <template>
-    <span class="notification-item">
+    <div class="notification-item">
         <div class="date">{{ formatDate(notification.created) }}</div>
         <div class="message">{{ notification.message }}</div>
         <NotificationFileViewer
@@ -41,12 +42,15 @@ function formatDate(dateString: string): string {
             v-if="notification.link"
             :link="notification.link"
         />
-    </span>
-    <i
+    </div>
+    <Button
         v-if="notification.isread === false && showUnreadOnly"
-        class="pi pi-times"
+        icon="pi pi-times"
+        severity="danger"
+        rounded
+        size="small"
         @click="dismissNotifications([notification.id])"
-    ></i>
+    ></Button>
 </template>
 
 <style scoped>
