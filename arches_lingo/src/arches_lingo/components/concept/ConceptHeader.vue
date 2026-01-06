@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject, onMounted, ref } from "vue";
+import { inject, onMounted, ref, type Ref } from "vue";
 
 import { useConfirm } from "primevue/useconfirm";
 import { useGettext } from "vue3-gettext";
@@ -14,14 +14,21 @@ import Skeleton from "primevue/skeleton";
 import ExportThesauri from "@/arches_lingo/components/scheme/SchemeHeader/components/ExportThesauri.vue";
 
 import {
+    DANGER,
     DEFAULT_ERROR_TOAST_LIFE,
     ERROR,
+    SECONDARY,
     systemLanguageKey,
+    selectedLanguageKey,
 } from "@/arches_lingo/constants.ts";
+import { PREF_LABEL } from "@/arches_controlled_lists/constants.ts";
 
 import { fetchLingoResource, deleteLingoResource } from "@/arches_lingo/api.ts";
-import { extractDescriptors } from "@/arches_lingo/utils.ts";
-import { DANGER, SECONDARY } from "@/arches_lingo/constants.ts";
+import {
+    extractDescriptors,
+    getLabelsForSchemeOrConcept,
+} from "@/arches_lingo/utils.ts";
+import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 
 import type {
     ConceptHeaderData,
@@ -29,6 +36,7 @@ import type {
     ResourceInstanceResult,
     DataComponentMode,
 } from "@/arches_lingo/types.ts";
+import type { Label } from "@/arches_controlled_lists/types";
 
 import type { Language } from "@/arches_component_lab/types.ts";
 import { routeNames } from "@/arches_lingo/routes.ts";
@@ -45,13 +53,15 @@ const props = defineProps<{
 const refreshSchemeHierarchy = inject<() => void>("refreshSchemeHierarchy");
 
 const toast = useToast();
-const { $gettext } = useGettext();
+const { $gettext, available } = useGettext();
 const confirm = useConfirm();
 const router = useRouter();
 
 const systemLanguage = inject(systemLanguageKey) as Language;
+const selectedLanguage = inject(selectedLanguageKey) as Ref<Language>;
 
 const concept = ref<ResourceInstanceResult>();
+const label = ref<Label>();
 const data = ref<ConceptHeaderData>();
 const isLoading = ref(true);
 const showExportDialog = ref(false);
@@ -67,12 +77,23 @@ const ctype = ref([
 onMounted(async () => {
     try {
         if (!props.resourceInstanceId) {
+            label.value = {
+                value: $gettext("New Concept"),
+                language_id: selectedLanguage.value.code,
+                valuetype_id: PREF_LABEL,
+            };
             return;
         }
 
         concept.value = await fetchLingoResource(
             props.graphSlug,
             props.resourceInstanceId,
+        );
+
+        label.value = getItemLabel(
+            getLabelsForSchemeOrConcept(concept.value!, available),
+            selectedLanguage.value.code,
+            systemLanguage.code,
         );
 
         extractConceptHeaderData(concept.value!);
@@ -188,18 +209,18 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
     >
         <div class="concept-header-toolbar">
             <div class="concept-details">
-                <h2 v-if="data?.descriptor?.name">
+                <h2>
                     <div class="concept-name">
                         <!-- To do: change icon based on concept type -->
                         <i class="pi pi-tag"></i>
                         <span>
-                            {{ data?.descriptor?.name }}
+                            {{ label?.value }}
 
                             <span
-                                v-if="data?.descriptor?.language"
+                                v-if="label?.language_id"
                                 class="concept-label-lang"
                             >
-                                ({{ data?.descriptor?.language }})
+                                ({{ label?.language_id }})
                             </span>
                         </span>
                     </div>
