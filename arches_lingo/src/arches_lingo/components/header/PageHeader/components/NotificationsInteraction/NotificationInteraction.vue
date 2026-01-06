@@ -20,7 +20,7 @@ const currentPageNumber = ref(1);
 const pageDetails = ref<PaginatorDetails | null>(null);
 const resultsPerPage = ref(SEARCH_RESULTS_PER_PAGE);
 const pollInterval = ref<ReturnType<typeof setInterval> | null>(null);
-const pollTimeInterval = 60000; // 1 minute
+const POLLING_TIME_INTERVAL = 60000; // 1 minute
 
 const hasUnreadNotifications = computed(() =>
     notifications.value.some((notif) => !notif.isread),
@@ -51,11 +51,15 @@ function loadAdditionalNotifications(event: VirtualScrollerLazyEvent) {
         pageDetails.value?.total_pages !== currentPageNumber.value &&
         event.last >= notifications.value.length - 1
     ) {
+        if (pollInterval.value) {
+            clearInterval(pollInterval.value);
+        }
         loadNotifications(
             resultsPerPage.value,
             (currentPageNumber.value += 1),
             showUnreadOnly.value,
         );
+        startPolling();
     }
 }
 
@@ -69,7 +73,7 @@ function startPolling() {
     pollInterval.value = setInterval(() => {
         resetNotifications();
         loadNotifications(resultsPerPage.value, 1, showUnreadOnly.value);
-    }, pollTimeInterval);
+    }, POLLING_TIME_INTERVAL);
 }
 
 function stopPolling() {
@@ -81,11 +85,15 @@ function stopPolling() {
 
 watch(showUnreadOnly, () => {
     resetNotifications();
+    if (pollInterval.value) {
+        clearInterval(pollInterval.value);
+    }
     loadNotifications(
         resultsPerPage.value,
         1, // start from beginning if we're changing the unread filter
         showUnreadOnly.value,
     );
+    startPolling();
 });
 
 onMounted(() => {
