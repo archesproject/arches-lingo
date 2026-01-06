@@ -17,7 +17,7 @@ const notifications = ref<Notification[]>([]);
 const isLoading = ref(false);
 const showUnreadOnly = ref(true);
 const currentPageNumber = ref(1);
-const paginator = ref<PaginatorDetails | null>(null);
+const pageDetails = ref<PaginatorDetails | null>(null);
 const resultsPerPage = ref(SEARCH_RESULTS_PER_PAGE);
 const pollInterval = ref<ReturnType<typeof setInterval> | null>(null);
 const pollTimeInterval = 60000; // 1 minute
@@ -41,14 +41,14 @@ async function loadNotifications(
         ...notifications.value,
         ...(parsed?.notifications ?? []),
     ];
-    paginator.value = parsed.paginator;
+    pageDetails.value = parsed.paginator;
     isLoading.value = false;
 }
 
 function loadAdditionalNotifications(event: VirtualScrollerLazyEvent) {
     if (
-        paginator.value?.has_next &&
-        paginator.value?.total_pages !== currentPageNumber.value &&
+        pageDetails.value?.has_next &&
+        pageDetails.value?.total_pages !== currentPageNumber.value &&
         event.last >= notifications.value.length - 1
     ) {
         loadNotifications(
@@ -60,7 +60,7 @@ function loadAdditionalNotifications(event: VirtualScrollerLazyEvent) {
 }
 
 function resetNotifications() {
-    paginator.value = null;
+    pageDetails.value = null;
     notifications.value = [];
     currentPageNumber.value = 1;
 }
@@ -120,8 +120,8 @@ onUnmounted(() => {
                 shouldShowNotificationsPanel
             "
             v-model:notifications="notifications"
-            v-model:is-loading="isLoading"
             v-model:show-unread-only="showUnreadOnly"
+            :is-loading="isLoading"
             @load-additional-notifications="loadAdditionalNotifications"
         />
     </div>

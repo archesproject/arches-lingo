@@ -12,6 +12,9 @@ import { dismissNotifications } from "@/arches_lingo/api.ts";
 import type { Notification } from "@/arches_lingo/types.ts";
 import { SEARCH_RESULT_ITEM_SIZE } from "@/arches_lingo/constants.ts";
 
+const { isLoading } = defineProps<{ isLoading: boolean }>();
+const emit = defineEmits(["load-additional-notifications"]);
+
 const shouldShowNotificationsPanel = defineModel(
     "shouldShowNotificationsPanel",
     {
@@ -19,20 +22,14 @@ const shouldShowNotificationsPanel = defineModel(
         default: false,
     },
 );
-const showUnreadOnly = defineModel("showUnreadOnly", {
-    type: Boolean,
-    default: true,
-});
-const isLoading = defineModel("isLoading", {
-    type: Boolean,
-    default: false,
-});
 const notifications = defineModel("notifications", {
     type: Array as () => Notification[],
     default: () => [],
 });
-
-const emit = defineEmits(["load-additional-notifications"]);
+const showUnreadOnly = defineModel("showUnreadOnly", {
+    type: Boolean,
+    default: true,
+});
 
 function loadAdditionalNotifications(event: VirtualScrollerLazyEvent) {
     emit("load-additional-notifications", event);
