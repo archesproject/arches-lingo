@@ -22,11 +22,12 @@ import {
 } from "@/arches_lingo/constants.ts";
 import { PREF_LABEL } from "@/arches_controlled_lists/constants.ts";
 
-import { deleteLingoResource, fetchLingoResource } from "@/arches_lingo/api.ts";
 import {
-    extractDescriptors,
-    getLabelsForSchemeOrConcept,
-} from "@/arches_lingo/utils.ts";
+    deleteLingoResource,
+    fetchLingoResource,
+    fetchSchemeResource,
+} from "@/arches_lingo/api.ts";
+import { extractDescriptors } from "@/arches_lingo/utils.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 
 import type {
@@ -52,7 +53,7 @@ const refreshSchemeHierarchy = inject<() => void>("refreshSchemeHierarchy");
 const confirm = useConfirm();
 const router = useRouter();
 const toast = useToast();
-const { $gettext, available } = useGettext();
+const { $gettext } = useGettext();
 const systemLanguage = inject(systemLanguageKey) as Language;
 const selectedLanguage = inject(selectedLanguageKey) as Ref<Language>;
 
@@ -100,8 +101,12 @@ onMounted(async () => {
             props.resourceInstanceId,
         );
 
+        const schemeResource = await fetchSchemeResource(
+            props.resourceInstanceId,
+        );
+
         label.value = getItemLabel(
-            getLabelsForSchemeOrConcept(scheme.value!, available),
+            schemeResource,
             selectedLanguage.value.code,
             systemLanguage.code,
         );
@@ -168,7 +173,7 @@ function confirmDelete() {
         v-if="scheme && showExportDialog"
         :key="exportDialogKey"
         :resource-id="scheme.resourceinstanceid"
-        :resource-name="scheme?.name"
+        :resource-name="label?.value"
     />
     <Skeleton
         v-if="isLoading"

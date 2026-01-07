@@ -23,11 +23,12 @@ import {
 } from "@/arches_lingo/constants.ts";
 import { PREF_LABEL } from "@/arches_controlled_lists/constants.ts";
 
-import { fetchLingoResource, deleteLingoResource } from "@/arches_lingo/api.ts";
 import {
-    extractDescriptors,
-    getLabelsForSchemeOrConcept,
-} from "@/arches_lingo/utils.ts";
+    fetchLingoResource,
+    deleteLingoResource,
+    fetchConceptResource,
+} from "@/arches_lingo/api.ts";
+import { extractDescriptors } from "@/arches_lingo/utils.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 
 import type {
@@ -53,7 +54,7 @@ const props = defineProps<{
 const refreshSchemeHierarchy = inject<() => void>("refreshSchemeHierarchy");
 
 const toast = useToast();
-const { $gettext, available } = useGettext();
+const { $gettext } = useGettext();
 const confirm = useConfirm();
 const router = useRouter();
 
@@ -89,9 +90,12 @@ onMounted(async () => {
             props.graphSlug,
             props.resourceInstanceId,
         );
+        const conceptResource = await fetchConceptResource(
+            props.resourceInstanceId,
+        );
 
         label.value = getItemLabel(
-            getLabelsForSchemeOrConcept(concept.value!, available),
+            conceptResource,
             selectedLanguage.value.code,
             systemLanguage.code,
         );
@@ -197,7 +201,7 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
         v-if="concept && showExportDialog"
         :key="exportDialogKey"
         :resource-id="concept.resourceinstanceid"
-        :resource-name="concept?.name"
+        :resource-name="label?.value"
     />
     <Skeleton
         v-if="isLoading"

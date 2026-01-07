@@ -19,10 +19,6 @@ export const MINIMIZED = "minimized";
 export const CLOSE = "close";
 export const CLOSED = "closed";
 export const NEW_CONCEPT = "newConcept";
-export const PREF_LABEL_URI = "http://www.w3.org/2004/02/skos/core#prefLabel";
-export const ALT_LABEL_URI = "http://www.w3.org/2004/02/skos/core#altLabel";
-export const HIDDEN_LABEL_URI =
-    "http://www.w3.org/2004/02/skos/core#hiddenLabel";
 
 export const DEFAULT_TOAST_LIFE = 5000;
 export const DEFAULT_ERROR_TOAST_LIFE = 8000;
