@@ -64,7 +64,7 @@
                     "config": null,
                     "constraints": [],
                     "cssclass": null,
-                    "description": "{\"en\": \"\"}",
+                    "description": "",
                     "graph_id": "bf73e576-4888-11ee-8a8d-11afefc4bff7",
                     "helpenabled": false,
                     "helptext": {
@@ -1063,13 +1063,17 @@
                 {
                     "card_id": "4cfaac3a-0ed7-11ef-9493-0a58a9feac02",
                     "config": {
-                        "defaultResourceInstance": [],
                         "i18n_properties": [
-                            "placeholder"
+                            "url_label_placeholder",
+                            "url_placeholder"
                         ],
                         "label": "Matched Concept",
-                        "placeholder": {
-                            "en": ""
+                        "link_color": "#0055a0",
+                        "url_label_placeholder": {
+                            "en": "Enter Matched Concept Name..."
+                        },
+                        "url_placeholder": {
+                            "en": "Enter Matched Concept URI..."
                         }
                     },
                     "id": "4cfab3ec-0ed7-11ef-9493-0a58a9feac02",
@@ -1080,7 +1084,7 @@
                     "sortorder": 0,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "ff3c400a-76ec-11e7-a793-784f435179ea"
+                    "widget_id": "ca0c43ff-af73-4349-bafd-53ff9f22eebd"
                 },
                 {
                     "card_id": "4cfaac3a-0ed7-11ef-9493-0a58a9feac02",
@@ -4271,20 +4275,11 @@
                 {
                     "alias": "match_status_ascribed_comparate",
                     "config": {
-                        "graphs": [
-                            {
-                                "graphid": "bf73e576-4888-11ee-8a8d-11afefc4bff7",
-                                "inverseRelationshipConcept": "ac41d9be-79db-4256-b368-2f4559cfbe55",
-                                "name": "Concept",
-                                "relationshipCollection": "00000000-0000-0000-0000-000000000005",
-                                "relationshipConcept": "ac41d9be-79db-4256-b368-2f4559cfbe55",
-                                "useOntologyRelationship": false
-                            }
-                        ],
+                        "graphs": [],
                         "searchDsl": "",
                         "searchString": ""
                     },
-                    "datatype": "resource-instance-list",
+                    "datatype": "url",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -6871,15 +6866,21 @@
             "resource_2_resource_constraints": [],
             "resource_instance_lifecycle": {
                 "id": "7e3cce56-fbfb-4a4b-8e83-59b9f9e7cb75",
-                "name": "Standard",
+                "name": {
+                    "en": "Standard"
+                },
                 "resource_instance_lifecycle_states": [
                     {
-                        "action_label": "Revert to Draft",
+                        "action_label": {
+                            "en": "Revert to Draft"
+                        },
                         "can_delete_resource_instances": true,
                         "can_edit_resource_instances": true,
                         "id": "9375c9a7-dad2-4f14-a5c1-d7e329fdde4f",
                         "is_initial_state": true,
-                        "name": "Draft",
+                        "name": {
+                            "en": "Draft"
+                        },
                         "next_resource_instance_lifecycle_states": [
                             "f75bb034-36e3-4ab4-8167-f520cf0b4c58"
                         ],
@@ -6887,12 +6888,16 @@
                         "resource_instance_lifecycle_id": "7e3cce56-fbfb-4a4b-8e83-59b9f9e7cb75"
                     },
                     {
-                        "action_label": "Make Active",
+                        "action_label": {
+                            "en": "Make Active"
+                        },
                         "can_delete_resource_instances": false,
                         "can_edit_resource_instances": true,
                         "id": "f75bb034-36e3-4ab4-8167-f520cf0b4c58",
                         "is_initial_state": false,
-                        "name": "Active",
+                        "name": {
+                            "en": "Active"
+                        },
                         "next_resource_instance_lifecycle_states": [
                             "d95d9c0e-0e2c-4450-93a3-d788b91abcc8"
                         ],
@@ -6902,12 +6907,16 @@
                         "resource_instance_lifecycle_id": "7e3cce56-fbfb-4a4b-8e83-59b9f9e7cb75"
                     },
                     {
-                        "action_label": "Retire",
+                        "action_label": {
+                            "en": "Retire"
+                        },
                         "can_delete_resource_instances": false,
                         "can_edit_resource_instances": false,
                         "id": "d95d9c0e-0e2c-4450-93a3-d788b91abcc8",
                         "is_initial_state": false,
-                        "name": "Retired",
+                        "name": {
+                            "en": "Retired"
+                        },
                         "next_resource_instance_lifecycle_states": [],
                         "previous_resource_instance_lifecycle_states": [
                             "f75bb034-36e3-4ab4-8167-f520cf0b4c58"
@@ -6940,6 +6949,7 @@
             },
             "slug": "concept",
             "source_identifier_id": null,
+            "spatial_views": [],
             "subtitle": {
                 "en": ""
             },
