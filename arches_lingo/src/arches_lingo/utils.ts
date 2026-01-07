@@ -1,17 +1,7 @@
 import { routeNames } from "@/arches_lingo/routes.ts";
 
 import { createLingoResource, upsertLingoTile } from "@/arches_lingo/api.ts";
-import {
-    NEW_CONCEPT,
-    PREF_LABEL_URI,
-    ALT_LABEL_URI,
-    HIDDEN_LABEL_URI,
-} from "@/arches_lingo/constants.ts";
-import {
-    PREF_LABEL,
-    ALT_LABEL,
-    HIDDEN_LABEL,
-} from "@/arches_controlled_lists/constants.ts";
+import { NEW_CONCEPT } from "@/arches_lingo/constants.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 
 import type { TreeNode } from "primevue/treenode";
@@ -25,7 +15,6 @@ import type {
     Scheme,
     SearchResultItem,
 } from "@/arches_lingo/types";
-import type { Labellable } from "@/arches_controlled_lists/types";
 import type { Router } from "vue-router/dist/vue-router";
 import type { ConceptInstance } from "@/arches_lingo/types.ts";
 
@@ -293,40 +282,4 @@ export async function createOrUpdateConcept(
 
         return tile.tileid;
     }
-}
-
-export function getLabelsForSchemeOrConcept(
-    conceptResource: ResourceInstanceResult,
-    languages: Record<string, unknown>,
-): Labellable {
-    const labels = [];
-    const tiles = conceptResource.aliased_data?.appellative_status || [];
-    for (const tile of tiles) {
-        const uri =
-            tile.aliased_data.appellative_status_ascribed_relation.node_value[0]
-                .uri;
-        const uriToValueTypeMap: Record<string, string> = {
-            [PREF_LABEL_URI]: PREF_LABEL,
-            [ALT_LABEL_URI]: ALT_LABEL,
-            [HIDDEN_LABEL_URI]: HIDDEN_LABEL,
-        };
-        const valueType = uriToValueTypeMap[uri] || "";
-        let language =
-            tile.aliased_data.appellative_status_ascribed_name_language
-                .display_value;
-        for (const languageId in languages) {
-            if (languages[languageId] === language) {
-                language = languageId;
-                break;
-            }
-        }
-
-        labels.push({
-            value: tile.aliased_data.appellative_status_ascribed_name_content
-                .node_value,
-            language_id: language,
-            valuetype_id: valueType,
-        });
-    }
-    return { labels };
 }
