@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject, onMounted, ref } from "vue";
+import { inject, onMounted, ref, type Ref } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import { useConfirm } from "primevue/useconfirm";
@@ -18,10 +18,17 @@ import {
     ERROR,
     SECONDARY,
     systemLanguageKey,
+    selectedLanguageKey,
 } from "@/arches_lingo/constants.ts";
+import { PREF_LABEL } from "@/arches_controlled_lists/constants.ts";
 
-import { deleteLingoResource, fetchLingoResource } from "@/arches_lingo/api.ts";
+import {
+    deleteLingoResource,
+    fetchLingoResource,
+    fetchSchemeResource,
+} from "@/arches_lingo/api.ts";
 import { extractDescriptors } from "@/arches_lingo/utils.ts";
+import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 
 import type {
     DataComponentMode,
@@ -29,6 +36,7 @@ import type {
     SchemeHeader,
 } from "@/arches_lingo/types.ts";
 import type { Language } from "@/arches_component_lab/types.ts";
+import type { Label } from "@/arches_controlled_lists/types";
 import { routeNames } from "@/arches_lingo/routes.ts";
 
 const props = defineProps<{
@@ -47,8 +55,10 @@ const router = useRouter();
 const toast = useToast();
 const { $gettext } = useGettext();
 const systemLanguage = inject(systemLanguageKey) as Language;
+const selectedLanguage = inject(selectedLanguageKey) as Ref<Language>;
 
 const scheme = ref<ResourceInstanceResult>();
+const label = ref<Label>();
 const data = ref<SchemeHeader>();
 const isLoading = ref(true);
 const showExportDialog = ref(false);
@@ -78,12 +88,27 @@ function extractSchemeHeaderData(scheme: ResourceInstanceResult) {
 onMounted(async () => {
     try {
         if (!props.resourceInstanceId) {
+            label.value = {
+                value: $gettext("New Scheme"),
+                language_id: selectedLanguage.value.code,
+                valuetype_id: PREF_LABEL,
+            };
             return;
         }
 
         scheme.value = await fetchLingoResource(
             props.graphSlug,
             props.resourceInstanceId,
+        );
+
+        const schemeResource = await fetchSchemeResource(
+            props.resourceInstanceId,
+        );
+
+        label.value = getItemLabel(
+            schemeResource,
+            selectedLanguage.value.code,
+            systemLanguage.code,
         );
 
         extractSchemeHeaderData(scheme.value!);
@@ -148,11 +173,11 @@ function confirmDelete() {
         v-if="scheme && showExportDialog"
         :key="exportDialogKey"
         :resource-id="scheme.resourceinstanceid"
-        :resource-name="scheme?.name"
+        :resource-name="label?.value"
     />
     <Skeleton
         v-if="isLoading"
-        style="width: 100%"
+        style="width: 100%; height: 9rem"
     />
 
     <div
@@ -163,13 +188,13 @@ function confirmDelete() {
             <div class="scheme-header-toolbar">
                 <div class="header-row">
                     <div>
-                        <h2 v-if="data?.descriptor?.name">
-                            <span>{{ data?.descriptor?.name }}</span>
+                        <h2>
+                            <span>{{ label?.value }}</span>
                             <span
-                                v-if="data?.descriptor?.language"
+                                v-if="label?.language_id"
                                 class="scheme-label-lang"
                             >
-                                ({{ data?.descriptor?.language }})
+                                ({{ label?.language_id }})
                             </span>
                         </h2>
                     </div>

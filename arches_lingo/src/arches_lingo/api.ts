@@ -304,6 +304,25 @@ export const fetchConceptResources = async (
     return parsed;
 };
 
+export const fetchConceptResource = async (conceptId: string) => {
+    const parsed = await fetchConceptResources("", 1, 1, undefined, undefined, [
+        conceptId,
+    ]);
+    return parsed.data[0];
+};
+
+export const fetchSchemeResource = async (schemeId: string) => {
+    const parsed = await fetchConceptResources(
+        "",
+        1,
+        1,
+        schemeId,
+        undefined,
+        [],
+    );
+    return parsed.data[0].parents[0][0];
+};
+
 export const fetchConceptRelationships = async (
     conceptId: string,
     type: string,
