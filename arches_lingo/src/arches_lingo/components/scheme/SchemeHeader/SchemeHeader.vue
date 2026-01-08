@@ -177,7 +177,7 @@ function confirmDelete() {
     />
     <Skeleton
         v-if="isLoading"
-        style="width: 100%"
+        style="width: 100%; height: 9rem"
     />
 
     <div
