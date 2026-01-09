@@ -2,6 +2,7 @@ import filetype
 import json
 import logging
 import os
+import re
 import uuid
 from datetime import datetime
 from collections import defaultdict
@@ -67,12 +68,16 @@ details = {
     "helptemplate": "migrate-to-lingo-help",
 }
 
+URL_REGEX = re.compile(
+    r"https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)"
+)
+
 
 class LingoResourceImporter(BaseImportModule):
     def __init__(self, request=None, loadid=None, userid=None, **kwargs):
         if request:
             moduleid = request.POST.get("module")
-            loadid = request.POST.get("load_id")
+            loadid = request.POST.get("load_id") or request.POST.get("loadid")
             userid = request.user.id if userid is None else userid
         else:
             moduleid = kwargs.get("moduleid", None)
@@ -152,7 +157,9 @@ class LingoResourceImporter(BaseImportModule):
                 mock_tile = self.create_mock_tile_from_value(
                     value, isScheme=True, lang_lookup=self.language_lookup
                 )
-                if mock_tile.values():
+                if isinstance(mock_tile, list):
+                    scheme_to_load["tile_data"].extend(mock_tile)
+                elif mock_tile:
                     scheme_to_load["tile_data"].append(mock_tile)
             schemes.append(scheme_to_load)
         return schemes
@@ -172,7 +179,9 @@ class LingoResourceImporter(BaseImportModule):
                 mock_tile = self.create_mock_tile_from_value(
                     value, lang_lookup=self.language_lookup
                 )
-                if mock_tile.values():
+                if isinstance(mock_tile, list):
+                    concept_to_load["tile_data"].extend(mock_tile)
+                elif mock_tile:
                     concept_to_load["tile_data"].append(mock_tile)
 
             concepts.append(concept_to_load)
@@ -210,9 +219,28 @@ class LingoResourceImporter(BaseImportModule):
             mock_tile["appellative_status_ascribed_relation"] = value["valuetype_id"]
             return {"appellative_status": mock_tile}
         elif value["valuetype_id"] == "identifier":
-            mock_tile["identifier_content"] = value["value"]
-            mock_tile["identifier_type"] = value["valuetype_id"]
-            return {"identifier": mock_tile}
+            val = value["value"]
+            value_type_id = value["valuetype_id"]
+            if URL_REGEX.match(val) and not isScheme:
+                mock_tiles = [
+                    {
+                        "uri": {
+                            "uri_content": val,
+                            "uri_type": value_type_id,
+                        }
+                    },
+                    {
+                        "identifier": {
+                            "identifier_content": val.rstrip("/").split("/")[-1],
+                            "identifier_type": value_type_id,
+                        }
+                    },
+                ]
+                return mock_tiles
+            else:
+                mock_tile["identifier_content"] = val
+                mock_tile["identifier_type"] = value_type_id
+                return {"identifier": mock_tile}
         elif (
             value["valuetype_id"] == "note"
             or value["valuetype_id"] == "changeNote"
@@ -824,7 +852,10 @@ class LingoResourceImporter(BaseImportModule):
             )
 
     def return_with_error(self, error):
-        return {
-            "success": False,
-            "data": {"title": _("Error"), "message": error},
-        }
+        if not self.load_event:
+            self.load_event = models.LoadEvent.objects.get(loadid=self.loadid)
+        self.load_event.status = "failed"
+        self.load_event.error_message = str(error)
+        self.load_event.save()
+        logger.error(error)
+        return {"success": False, "data": {"message": error}}
