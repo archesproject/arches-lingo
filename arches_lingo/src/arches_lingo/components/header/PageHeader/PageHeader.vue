@@ -5,7 +5,7 @@ import { useGettext } from "vue3-gettext";
 import { ToggleButton } from "primevue";
 import Button from "primevue/button";
 import Menubar from "primevue/menubar";
-import OverlayPanel from "primevue/overlaypanel";
+import Popover from "primevue/popover";
 
 import ArchesLingoBadge from "@/arches_lingo/components/header/PageHeader/components/ArchesLingoBadge.vue";
 import LanguageSelector from "@/arches_lingo/components/header/PageHeader/components/LanguageSelector.vue";
@@ -63,7 +63,7 @@ const overlayPanel = useTemplateRef("overlayPanel");
                 class="overlay-panel-button p-button-text"
                 @click="overlayPanel?.toggle($event)"
             />
-            <OverlayPanel
+            <Popover
                 ref="overlayPanel"
                 show-close-icon
             >
@@ -73,17 +73,27 @@ const overlayPanel = useTemplateRef("overlayPanel");
                     <NotificationInteraction />
                     <PageHelp />
                 </div>
-            </OverlayPanel>
+            </Popover>
         </template>
     </Menubar>
 </template>
 
 <style scoped>
-.explore-button,
-.explore-button * {
+.explore-button {
     background: var(--p-menubar-background) !important;
     border: none !important;
     color: var(--p-menubar-text-color) !important;
+}
+
+:deep(.explore-button .p-togglebutton-content),
+:deep(.explore-button .p-togglebutton-label),
+:deep(.explore-button .p-togglebutton-icon) {
+    background: transparent !important;
+    color: var(--p-menubar-text-color) !important;
+}
+
+.explore-button:not(.p-togglebutton-checked):hover {
+    background: var(--p-button-primary-hover-background) !important;
 }
 
 .explore-button.p-togglebutton-checked,

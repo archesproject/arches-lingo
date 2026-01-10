@@ -1,15 +1,24 @@
 <script setup lang="ts">
-import { computed, inject, nextTick, onMounted, ref, watch } from "vue";
+import {
+    computed,
+    inject,
+    nextTick,
+    onMounted,
+    onUnmounted,
+    ref,
+    watch,
+} from "vue";
 
 import { useRoute, useRouter } from "vue-router";
 import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
 import Skeleton from "primevue/skeleton";
+import InputText from "primevue/inputtext";
+import Message from "primevue/message";
 
 import Tree from "primevue/tree";
 
 import TreeRow from "@/arches_lingo/components/tree/components/TreeRow/TreeRow.vue";
-import PresentationControls from "@/arches_controlled_lists/components/tree/PresentationControls.vue";
 
 import {
     DEFAULT_ERROR_TOAST_LIFE,
@@ -28,7 +37,9 @@ import {
     navigateToSchemeOrConcept,
 } from "@/arches_lingo/utils.ts";
 
-import type { ComponentPublicInstance, Ref } from "vue";
+import { useCappedTreeFilter } from "@/arches_lingo/components/tree/utils/capped-filter.ts";
+
+import type { Ref } from "vue";
 import type { RouteLocationNormalizedLoadedGeneric } from "vue-router";
 import type {
     TreePassThroughMethodOptions,
@@ -55,13 +66,15 @@ const { $gettext } = useGettext();
 const route = useRoute();
 const router = useRouter();
 
-// Defining these in the parent avoids re-running $gettext in thousands of children.
 const NEW = "new";
 const FOCUS = $gettext("Focus");
 const UNFOCUS = $gettext("Unfocus");
 const ADD_CHILD = $gettext("Add child");
 const DELETE = $gettext("Delete");
 const EXPORT = $gettext("Export");
+
+const FILTER_CONCEPTS = $gettext("Filter concepts");
+const FILTER_CAPPED_MESSAGE = $gettext("Please refine your query.");
 
 const iconLabels: IconLabels = Object.freeze({
     concept: $gettext("Concept"),
@@ -73,13 +86,17 @@ const focusedNode: Ref<TreeNode | null> = ref(null);
 const selectedKeys: Ref<TreeSelectionKeys> = ref({});
 const expandedKeys: Ref<TreeExpandedKeys> = ref({});
 const filterValue = ref("");
-const treeDOMRef: Ref<ComponentPublicInstance | null> = ref(null);
 const selectedLanguage = inject(selectedLanguageKey) as Ref<Language>;
 const systemLanguage = inject(systemLanguageKey) as Language;
-const nextFilterChangeNeedsExpandAll = ref(false);
-const expandedKeysSnapshotBeforeSearch = ref<TreeExpandedKeys>({});
-const rerenderTree = ref(0);
 const newTreeItemParentPath = ref<Concept[] | Scheme[]>([]);
+
+const treeContainer = ref<HTMLElement | null>(null);
+let conceptTreeVisibilityObserver: IntersectionObserver | null = null;
+let wasTreeVisible = false;
+
+const FILTER_RENDER_CAP = 2500;
+const FILTER_DEBOUNCE_MS = 500;
+const SKELETON_ROW_COUNT = 14;
 
 const tree = computed(() => {
     return treeFromSchemes(
@@ -91,7 +108,31 @@ const tree = computed(() => {
     );
 });
 
-// React to route changes.
+function getSearchableText(treeNode: TreeNode) {
+    const nodeData = treeNode.data as unknown as Scheme | Concept;
+
+    if ("top_concepts" in nodeData) {
+        return "";
+    }
+
+    const nodeLabelText = (treeNode.label ?? "").toString();
+    const labelValuesFromData = (nodeData.labels ?? [])
+        .map((labelItem) => (labelItem?.value ?? "").toString())
+        .join(" ");
+
+    return `${nodeLabelText} ${labelValuesFromData}`.toLowerCase();
+}
+
+const { debouncedFilterValue, filteredTree, isFilterCapped } =
+    useCappedTreeFilter(
+        tree,
+        expandedKeys,
+        filterValue,
+        FILTER_DEBOUNCE_MS,
+        FILTER_RENDER_CAP,
+        getSearchableText,
+    );
+
 watch(route, (newRoute) => {
     selectNodeFromRoute(newRoute);
 });
@@ -112,88 +153,49 @@ onMounted(async () => {
         }
     }
 
-    const priorSortedSchemeIds = tree.value.map((node) => node.key);
+    const priorSortedSchemeIds = tree.value.map((treeNode) => treeNode.key);
 
-    schemes.value = (concepts!.schemes as Scheme[]).sort((a, b) => {
+    schemes.value = (concepts!.schemes as Scheme[]).sort((schemeA, schemeB) => {
         return (
-            priorSortedSchemeIds.indexOf(a.id) -
-            priorSortedSchemeIds.indexOf(b.id)
+            priorSortedSchemeIds.indexOf(schemeA.id) -
+            priorSortedSchemeIds.indexOf(schemeB.id)
         );
     });
 
+    await nextTick();
+
     selectNodeFromRoute(route);
+
+    conceptTreeVisibilityObserver = new IntersectionObserver(
+        (intersectionEntries) => {
+            const hasVisibleEntry = intersectionEntries.some(
+                (intersectionEntry) => intersectionEntry.isIntersecting,
+            );
+
+            if (hasVisibleEntry && !wasTreeVisible) {
+                wasTreeVisible = true;
+                scrollToItemInTree(route.params.id as string);
+                return;
+            }
+
+            if (!hasVisibleEntry) {
+                wasTreeVisible = false;
+            }
+        },
+        { threshold: 0.01 },
+    );
+
+    if (treeContainer.value) {
+        conceptTreeVisibilityObserver.observe(treeContainer.value);
+    }
 });
 
-function expandAll() {
-    for (const node of tree.value) {
-        expandNode(node);
+onUnmounted(() => {
+    if (conceptTreeVisibilityObserver) {
+        conceptTreeVisibilityObserver.disconnect();
+        conceptTreeVisibilityObserver = null;
     }
-    expandedKeys.value = { ...expandedKeys.value };
-}
-
-function collapseAll() {
-    expandedKeys.value = {};
-}
-
-function expandNode(node: TreeNode) {
-    if (node.children && node.children.length) {
-        expandedKeys.value[node.key] = true;
-        for (const child of node.children) {
-            expandNode(child);
-        }
-    }
-}
-
-function expandPathsToFilterResults(newFilterValue: string) {
-    // https://github.com/primefaces/primevue/issues/3996
-    if (filterValue.value && !newFilterValue) {
-        expandedKeys.value = { ...expandedKeysSnapshotBeforeSearch.value };
-        expandedKeysSnapshotBeforeSearch.value = {};
-        // Rerender to avoid error emitted in PrimeVue tree re: aria-selected.
-        rerenderTree.value += 1;
-    }
-    // Expand all on the first interaction with the filter, or if the user
-    // has collapsed a node and changes the filter.
-    if (
-        (!filterValue.value && newFilterValue) ||
-        (nextFilterChangeNeedsExpandAll.value &&
-            filterValue.value !== newFilterValue)
-    ) {
-        expandedKeysSnapshotBeforeSearch.value = { ...expandedKeys.value };
-        expandAll();
-    }
-    nextFilterChangeNeedsExpandAll.value = false;
-}
-
-function getInputElement() {
-    if (treeDOMRef.value !== null) {
-        return treeDOMRef.value.$el.ownerDocument.querySelector(
-            'input[data-pc-name="pcfilterinput"]',
-        ) as HTMLInputElement;
-    }
-}
-
-function restoreFocusToInput() {
-    // The current implementation of collapsing all nodes when
-    // backspacing out the search value relies on rerendering the
-    // <Tree> component. Restore focus to the input element.
-    if (rerenderTree.value > 0) {
-        const inputEl = getInputElement();
-        if (inputEl) {
-            inputEl.focus();
-        }
-    }
-}
-
-function snoopOnFilterValue() {
-    // If we wait to react to the emitted filter event, the templated rows
-    // will have already rendered. (<TreeRow> bolds search terms.)
-    const inputEl = getInputElement();
-    if (inputEl) {
-        expandPathsToFilterResults(inputEl.value);
-        filterValue.value = inputEl.value;
-    }
-}
+});
 
 function updateSelectedAndExpanded(node: TreeNode) {
     expandedKeys.value = {
@@ -353,81 +355,108 @@ function onNodeSelect(node: TreeNode) {
 </script>
 
 <template>
-    <PresentationControls
-        :expand-all
-        :collapse-all
-    />
     <div
-        v-if="!tree.length"
-        class="skeleton-container"
+        ref="treeContainer"
+        class="concept-tree-layout"
     >
-        <Skeleton height="1.75rem" />
-        <Skeleton height="1.75rem" />
-        <Skeleton height="1.75rem" />
-        <Skeleton height="1.75rem" />
-        <Skeleton height="1.75rem" />
-        <Skeleton height="1.75rem" />
-        <Skeleton height="1.75rem" />
-    </div>
-    <Tree
-        v-if="tree"
-        ref="treeDOMRef"
-        :key="rerenderTree"
-        v-model:selection-keys="selectedKeys"
-        v-model:expanded-keys="expandedKeys"
-        :value="tree"
-        class="concept-tree"
-        selection-mode="single"
-        :pt="{
-            pcFilter: {
-                root: {
-                    ariaLabel: $gettext('Find'),
-                    style: {
-                        width: '100%',
-                        height: '100%',
-                        marginBottom: '1rem',
-                        display: 'flex',
-                    },
-                },
-            },
-            nodeContent: ({ instance }: TreePassThroughMethodOptions) => {
-                return {
-                    class:
-                        instance.node.data.id === NEW ? 'new-node' : undefined,
-                };
-            },
-            nodeIcon: ({ instance }: TreePassThroughMethodOptions) => {
-                return { ariaLabel: instance.node.iconLabel };
-            },
-            nodeLabel: {
-                style: { textWrap: 'nowrap' },
-            },
-            hooks: {
-                onBeforeUpdate: snoopOnFilterValue,
-                onMounted: restoreFocusToInput,
-            },
-        }"
-        @node-collapse="nextFilterChangeNeedsExpandAll = true"
-        @node-select="onNodeSelect"
-    >
-        <template #default="slotProps">
-            <TreeRow
-                :id="slotProps.node.data.id"
-                v-model:focused-node="focusedNode"
-                :filter-value="filterValue"
-                :node="slotProps.node"
-                :focus-label="FOCUS"
-                :unfocus-label="UNFOCUS"
-                :add-child-label="ADD_CHILD"
-                :delete-label="DELETE"
-                :export-label="EXPORT"
+        <div class="filter-container">
+            <InputText
+                v-model="filterValue"
+                class="tree-filter-input"
+                type="text"
+                :placeholder="FILTER_CONCEPTS"
+                :aria-label="FILTER_CONCEPTS"
             />
-        </template>
-    </Tree>
+            <Message
+                v-if="isFilterCapped"
+                severity="warn"
+                :closable="false"
+                class="filter-cap-message"
+            >
+                {{ FILTER_CAPPED_MESSAGE }}
+            </Message>
+        </div>
+
+        <div
+            v-if="!tree.length"
+            class="skeleton-container"
+        >
+            <Skeleton
+                v-for="number in SKELETON_ROW_COUNT"
+                :key="number"
+                class="skeleton-row"
+            />
+        </div>
+
+        <Tree
+            v-else
+            v-model:selection-keys="selectedKeys"
+            v-model:expanded-keys="expandedKeys"
+            :value="filteredTree"
+            class="concept-tree"
+            selection-mode="single"
+            :pt="{
+                nodeContent: ({ instance }: TreePassThroughMethodOptions) => {
+                    return {
+                        class:
+                            instance.node.data.id === NEW
+                                ? 'new-node'
+                                : undefined,
+                    };
+                },
+                nodeIcon: ({ instance }: TreePassThroughMethodOptions) => {
+                    return { ariaLabel: instance.node.iconLabel };
+                },
+                nodeLabel: {
+                    style: { textWrap: 'nowrap' },
+                },
+            }"
+            @node-select="onNodeSelect"
+        >
+            <template #default="slotProps">
+                <TreeRow
+                    :id="slotProps.node.data.id"
+                    v-model:focused-node="focusedNode"
+                    :filter-value="debouncedFilterValue"
+                    :node="slotProps.node"
+                    :focus-label="FOCUS"
+                    :unfocus-label="UNFOCUS"
+                    :add-child-label="ADD_CHILD"
+                    :delete-label="DELETE"
+                    :export-label="EXPORT"
+                />
+            </template>
+        </Tree>
+    </div>
 </template>
+
 <style scoped>
-.concept-tree {
+.concept-tree-layout {
     height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.filter-container {
+    padding-top: 1rem;
+    padding-inline: 0.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 0.0625rem solid var(--p-menubar-border-color);
+}
+
+.tree-filter-input {
+    border-radius: 0.125rem;
+    width: 100%;
+}
+
+.filter-cap-message {
+    margin-top: 1rem;
+}
+
+.concept-tree {
+    flex: 1 1 auto;
+    min-height: 0;
     display: flex;
     flex-direction: column;
     overflow-y: hidden;
@@ -435,22 +464,25 @@ function onNodeSelect(node: TreeNode) {
     font-size: var(--p-lingo-font-size-smallnormal);
 }
 
-:deep(.p-tree-filter-input) {
-    border-radius: 0.125rem;
-}
-
 :deep(.p-tree-root) {
     height: 100%;
 }
 
 .skeleton-container {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
     padding: var(--p-tree-padding);
     width: 100%;
+    gap: 1rem;
+    padding-top: 1rem;
 }
 
-.skeleton-container :deep(.p-skeleton) {
-    margin: 0.5rem 0;
-    height: var(--p-tree-node-toggle-button-size);
+.skeleton-container :deep(.p-skeleton.skeleton-row) {
+    flex: 1 1 0;
+    min-height: 1.75rem;
+    height: 100%;
 }
 
 :deep(.new-node),

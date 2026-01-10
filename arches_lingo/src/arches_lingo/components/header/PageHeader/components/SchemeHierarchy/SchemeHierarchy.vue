@@ -36,15 +36,7 @@ watchEffect(async () => {
 </script>
 
 <template>
-    <div
-        style="
-            display: flex;
-            width: 100%;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 0.75rem;
-        "
-    >
+    <div class="hierarchy-header">
         <h2>{{ $gettext("Explore Hierarchies") }}</h2>
 
         <Button
@@ -62,3 +54,15 @@ watchEffect(async () => {
         :concepts="concepts"
     />
 </template>
+
+<style scoped>
+.hierarchy-header {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+    padding-inline-start: 1rem;
+    padding-inline-end: 0.5rem;
+    border-bottom: 0.125rem solid var(--p-menubar-border-color);
+}
+</style>
