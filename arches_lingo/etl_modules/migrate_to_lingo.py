@@ -68,6 +68,8 @@ details = {
     "helptemplate": "migrate-to-lingo-help",
 }
 
+# TODO: swap out for URLValidator?
+# from django.core.validators import URLValidator
 URL_REGEX = re.compile(
     r"https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)"
 )
@@ -205,22 +207,17 @@ class LingoResourceImporter(BaseImportModule):
                     value["language"] = value["language"].name
             except KeyError:
                 pass
-        if value["valuetype_id"] == "title":
-            value["valuetype_id"] = "prefLabel"
+        value_type_id = value["valuetype_id"]
+        if value_type_id == "title":
+            value_type_id = "prefLabel"
         mock_tile = {}
-        if (
-            value["valuetype_id"] == "prefLabel"
-            or value["valuetype_id"] == "altLabel"
-            or value["valuetype_id"] == "hiddenLabel"
-            or value["valuetype_id"] == "title"
-        ):
+        if value_type_id in set(["prefLabel", "altLabel", "hiddenLabel", "title"]):
             mock_tile["appellative_status_ascribed_name_content"] = value["value"]
             mock_tile["appellative_status_ascribed_name_language"] = value["language"]
-            mock_tile["appellative_status_ascribed_relation"] = value["valuetype_id"]
+            mock_tile["appellative_status_ascribed_relation"] = value_type_id
             return {"appellative_status": mock_tile}
-        elif value["valuetype_id"] == "identifier":
+        elif value_type_id == "identifier":
             val = value["value"]
-            value_type_id = value["valuetype_id"]
             if URL_REGEX.match(val) and not isScheme:
                 mock_tiles = [
                     {
@@ -241,20 +238,36 @@ class LingoResourceImporter(BaseImportModule):
                 mock_tile["identifier_content"] = val
                 mock_tile["identifier_type"] = value_type_id
                 return {"identifier": mock_tile}
-        elif (
-            value["valuetype_id"] == "note"
-            or value["valuetype_id"] == "changeNote"
-            or value["valuetype_id"] == "definition"
-            or value["valuetype_id"] == "description"
-            or value["valuetype_id"] == "editorialNote"
-            or value["valuetype_id"] == "example"
-            or value["valuetype_id"] == "historyNote"
-            or value["valuetype_id"] == "scopeNote"
+        elif value_type_id in set(
+            [
+                "note",
+                "changeNote",
+                "definition",
+                "description",
+                "editorialNote",
+                "example",
+                "historyNote",
+                "scopeNote",
+            ]
         ):
             mock_tile["statement_content"] = value["value"]
-            mock_tile["statement_type"] = value["valuetype_id"]
+            mock_tile["statement_type"] = value_type_id
             mock_tile["statement_language"] = value["language"]
             return {"statement": mock_tile}
+        elif value_type_id in set(
+            [
+                "broadMatch",
+                "closeMatch",
+                "exactMatch",
+                "inverseOf",
+                "mappingRelation",
+                "narrowMatch",
+                "relatedMatch",
+            ]
+        ):
+            mock_tile["match_status_ascribed_comparate"] = value["value"]
+            mock_tile["match_status_ascribed_relation"] = value_type_id
+            return {"match_status": mock_tile}
         pass
 
     @staticmethod
