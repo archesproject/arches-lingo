@@ -301,6 +301,7 @@ class ConceptBuilder:
         return data
 
     def find_paths_to_root(self, working_path, conceptid) -> list[list[str]]:
+        """Return an array of paths (path: an array of scheme & concept ids)."""
         concept_and_scheme_parents = sorted(self.broader_concepts[conceptid]) + sorted(
             self.schemes_by_top_concept[conceptid]
         )
