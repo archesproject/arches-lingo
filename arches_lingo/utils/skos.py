@@ -57,6 +57,9 @@ class SKOSReader(SKOSReader):
             self.dcterms_value_types = value_types.filter(
                 namespace="dcterms"
             ).values_list("valuetype", flat=True)
+            self.match_types = models.DRelationType.objects.filter(
+                category="Mapping Properties"
+            ).values_list("relationtype", flat=True)
 
             ### Schemes ###
             top_concept_mock_tiles = {}
@@ -188,6 +191,28 @@ class SKOSReader(SKOSReader):
                                 relationship
                             )
                             self.relations[resourceinstanceid].append(mock_tile)
+                        elif predicate in [
+                            SKOS.broadMatch,
+                            SKOS.closeMatch,
+                            SKOS.exactMatch,
+                            SKOS.inverseOf,
+                            SKOS.mappingRelation,
+                            SKOS.narrowMatch,
+                            SKOS.relatedMatch,
+                        ]:
+                            matched_URI = None
+                            for (
+                                matched_predicate,
+                                matched_object,
+                            ) in graph.predicate_objects(object):
+                                if matched_predicate == DCTERMS.identifier:
+                                    matched_URI = matched_object
+                                    break
+                            if matched_URI:
+                                mock_tile = self.map_predicate_object_to_mock_tile(
+                                    matched_URI, predicate_str, isScheme
+                                )
+                                new_concept["tile_data"].append(mock_tile)
                         else:
                             mock_tile = self.map_predicate_object_to_mock_tile(
                                 object, predicate_str, isScheme
@@ -225,6 +250,7 @@ class SKOSReader(SKOSReader):
         if (
             predicate not in self.dcterms_value_types
             and predicate not in self.skos_value_types
+            and predicate not in self.match_types
         ):
             return None
 
