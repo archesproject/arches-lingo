@@ -23,32 +23,7 @@ from arches.app.models.concept import Concept
 from arches.app.models.system_settings import settings
 
 import arches_lingo.tasks as tasks
-from arches_lingo.const import (
-    SCHEMES_GRAPH_ID,
-    CONCEPTS_GRAPH_ID,
-    TOP_CONCEPT_OF_NODE_AND_NODEGROUP,
-    CLASSIFICATION_STATUS_NODEGROUP,
-    CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID,
-    CLASSIFICATION_STATUS_ASCRIBED_RELATION_NODEID,
-    CLASSIFICATION_STATUS_TYPE_NODEID,
-    CLASSIFICATION_STATUS_TYPE_METATYPE_NODEID,
-    CLASSIFICATION_STATUS_ASSIGNMENT_ACTOR_NODEID,
-    CLASSIFICATION_STATUS_ASSIGNMENT_OBJ_USED_NODEID,
-    CLASSIFICATION_STATUS_ASSIGNMENT_TYPE_NODEID,
-    CLASSIFICATION_STATUS_TIMESPAN_END_OF_END_NODEID,
-    CLASSIFICATION_STATUS_TIMESPAN_BEGIN_OF_BEGIN_NODEID,
-    RELATION_STATUS_NODEGROUP,
-    RELATION_STATUS_ASCRIBED_COMPARATE_NODEID,
-    RELATION_STATUS_ASCRIBED_RELATION_NODEID,
-    RELATION_STATUS_STATUS_NODEID,
-    RELATION_STATUS_STATUS_METATYPE_NODEID,
-    RELATION_STATUS_TIMESPAN_BEGIN_OF_THE_BEGIN_NODEID,
-    RELATION_STATUS_TIMESPAN_END_OF_THE_END_NODEID,
-    RELATION_STATUS_DATA_ASSIGNMENT_ACTOR_NODEID,
-    RELATION_STATUS_DATA_ASSIGNMENT_OBJECT_USED_NODEID,
-    RELATION_STATUS_DATA_ASSIGNMENT_TYPE_NODEID,
-    CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID,
-)
+import arches_lingo.const as const
 
 logger = logging.getLogger(__name__)
 
@@ -472,9 +447,9 @@ class LingoResourceImporter(BaseImportModule):
                 and conceptidto = ANY(%s);
         """,
             (
-                TOP_CONCEPT_OF_NODE_AND_NODEGROUP,
+                const.TOP_CONCEPT_OF_NODE_AND_NODEGROUP,
                 loadid,
-                TOP_CONCEPT_OF_NODE_AND_NODEGROUP,
+                const.TOP_CONCEPT_OF_NODE_AND_NODEGROUP,
                 concepts_to_migrate,
             ),
         )
@@ -528,17 +503,17 @@ class LingoResourceImporter(BaseImportModule):
                 and conceptidto = ANY(%s);
         """,
             (
-                CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID,
-                CLASSIFICATION_STATUS_ASCRIBED_RELATION_NODEID,
-                CLASSIFICATION_STATUS_TYPE_NODEID,
-                CLASSIFICATION_STATUS_TYPE_METATYPE_NODEID,
-                CLASSIFICATION_STATUS_ASSIGNMENT_ACTOR_NODEID,
-                CLASSIFICATION_STATUS_ASSIGNMENT_OBJ_USED_NODEID,
-                CLASSIFICATION_STATUS_ASSIGNMENT_TYPE_NODEID,
-                CLASSIFICATION_STATUS_TIMESPAN_END_OF_END_NODEID,
-                CLASSIFICATION_STATUS_TIMESPAN_BEGIN_OF_BEGIN_NODEID,
+                const.CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID,
+                const.CLASSIFICATION_STATUS_ASCRIBED_RELATION_NODEID,
+                const.CLASSIFICATION_STATUS_TYPE_NODEID,
+                const.CLASSIFICATION_STATUS_TYPE_METATYPE_NODEID,
+                const.CLASSIFICATION_STATUS_ASSIGNMENT_ACTOR_NODEID,
+                const.CLASSIFICATION_STATUS_ASSIGNMENT_OBJ_USED_NODEID,
+                const.CLASSIFICATION_STATUS_ASSIGNMENT_TYPE_NODEID,
+                const.CLASSIFICATION_STATUS_TIMESPAN_END_OF_END_NODEID,
+                const.CLASSIFICATION_STATUS_TIMESPAN_BEGIN_OF_BEGIN_NODEID,
                 loadid,
-                CLASSIFICATION_STATUS_NODEGROUP,
+                const.CLASSIFICATION_STATUS_NODEGROUP,
                 concepts_to_migrate,
             ),
         )
@@ -594,17 +569,17 @@ class LingoResourceImporter(BaseImportModule):
                 and conceptidfrom = ANY(%s);
         """,
             (
-                RELATION_STATUS_ASCRIBED_COMPARATE_NODEID,
-                RELATION_STATUS_ASCRIBED_RELATION_NODEID,
-                RELATION_STATUS_STATUS_NODEID,
-                RELATION_STATUS_STATUS_METATYPE_NODEID,
-                RELATION_STATUS_TIMESPAN_BEGIN_OF_THE_BEGIN_NODEID,
-                RELATION_STATUS_TIMESPAN_END_OF_THE_END_NODEID,
-                RELATION_STATUS_DATA_ASSIGNMENT_ACTOR_NODEID,
-                RELATION_STATUS_DATA_ASSIGNMENT_OBJECT_USED_NODEID,
-                RELATION_STATUS_DATA_ASSIGNMENT_TYPE_NODEID,
+                const.RELATION_STATUS_ASCRIBED_COMPARATE_NODEID,
+                const.RELATION_STATUS_ASCRIBED_RELATION_NODEID,
+                const.RELATION_STATUS_STATUS_NODEID,
+                const.RELATION_STATUS_STATUS_METATYPE_NODEID,
+                const.RELATION_STATUS_TIMESPAN_BEGIN_OF_THE_BEGIN_NODEID,
+                const.RELATION_STATUS_TIMESPAN_END_OF_THE_END_NODEID,
+                const.RELATION_STATUS_DATA_ASSIGNMENT_ACTOR_NODEID,
+                const.RELATION_STATUS_DATA_ASSIGNMENT_OBJECT_USED_NODEID,
+                const.RELATION_STATUS_DATA_ASSIGNMENT_TYPE_NODEID,
                 loadid,
-                RELATION_STATUS_NODEGROUP,
+                const.RELATION_STATUS_NODEGROUP,
                 concepts_to_migrate,
             ),
         )
@@ -613,7 +588,7 @@ class LingoResourceImporter(BaseImportModule):
         # concepts with their schemes
         part_of_scheme_tiles = []
         part_of_scheme_nodegroup = NodeGroup.objects.get(
-            nodegroupid=CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID
+            nodegroupid=const.CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID
         )
         concepts_with_scheme = {}
         for concept in concept_hierarchy:
@@ -643,7 +618,7 @@ class LingoResourceImporter(BaseImportModule):
                 }
 
             value_obj = {
-                str(CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID): {
+                str(const.CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID): {
                     "notes": "",
                     "valid": True,
                     "value": [
@@ -781,11 +756,11 @@ class LingoResourceImporter(BaseImportModule):
         with connection.cursor() as cursor:
             # Create node and nodegroup lookups
             schemes_nodegroup_lookup, schemes_nodes = self.get_graph_tree(
-                SCHEMES_GRAPH_ID
+                const.SCHEMES_GRAPH_ID
             )
             schemes_node_lookup = self.get_node_lookup(schemes_nodes)
             concepts_nodegroup_lookup, concepts_nodes = self.get_graph_tree(
-                CONCEPTS_GRAPH_ID
+                const.CONCEPTS_GRAPH_ID
             )
             concepts_node_lookup = self.get_node_lookup(concepts_nodes)
 
