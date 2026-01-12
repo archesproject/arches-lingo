@@ -37,10 +37,20 @@ async function loadNotifications(
 ) {
     isLoading.value = true;
     const parsed = await fetchUserNotifications(items, pageNumber, unreadOnly);
-    notifications.value = [
-        ...notifications.value,
-        ...(parsed?.notifications ?? []),
-    ];
+    parsed.notifications.forEach((newNotif: Notification) => {
+        if (
+            !notifications.value.some(
+                (existingNotif) => existingNotif.id === newNotif.id,
+            )
+        ) {
+            notifications.value.push(newNotif);
+        }
+    });
+    notifications.value.sort(
+        (first, second) =>
+            new Date(second.created).getTime() -
+            new Date(first.created).getTime(),
+    );
     pageDetails.value = parsed.paginator;
     isLoading.value = false;
 }
@@ -71,7 +81,6 @@ function resetNotifications() {
 
 function startPolling() {
     pollInterval.value = setInterval(() => {
-        resetNotifications();
         loadNotifications(resultsPerPage.value, 1, showUnreadOnly.value);
     }, POLLING_TIME_INTERVAL);
 }
