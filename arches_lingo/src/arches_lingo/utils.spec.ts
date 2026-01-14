@@ -55,7 +55,7 @@ describe("Build scheme hierarchy", () => {
             ENGLISH,
             ENGLISH,
             iconLabels,
-            focusedNode,
+            focusedNode as unknown as string,
         );
         const scheme = nodesAfterFocus[0];
         expect(scheme.children!.length).toEqual(1);

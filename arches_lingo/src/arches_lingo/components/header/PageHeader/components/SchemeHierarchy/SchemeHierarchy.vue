@@ -11,6 +11,15 @@ import ConceptTree from "@/arches_lingo/components/tree/ConceptTree.vue";
 import { fetchConcepts } from "@/arches_lingo/api.ts";
 import { ERROR, DEFAULT_ERROR_TOAST_LIFE } from "@/arches_lingo/constants.ts";
 
+const props = withDefaults(
+    defineProps<{
+        isOpen?: boolean;
+    }>(),
+    {
+        isOpen: true,
+    },
+);
+
 const { $gettext } = useGettext();
 const toast = useToast();
 
@@ -37,7 +46,9 @@ watchEffect(async () => {
 
 <template>
     <div class="hierarchy-header">
-        <h2>{{ $gettext("Explore Hierarchies") }}</h2>
+        <h2 style="font-size: 1.46rem">
+            {{ $gettext("Explore Hierarchies") }}
+        </h2>
 
         <Button
             icon="pi pi-times"
@@ -52,6 +63,7 @@ watchEffect(async () => {
     <ConceptTree
         :key="conceptTreeKey"
         :concepts="concepts"
+        :is-open="props.isOpen"
     />
 </template>
 
@@ -63,6 +75,6 @@ watchEffect(async () => {
     align-items: center;
     padding-inline-start: 1rem;
     padding-inline-end: 0.5rem;
-    border-bottom: 0.125rem solid var(--p-menubar-border-color);
+    border-bottom: 0.0625rem solid var(--p-menubar-border-color);
 }
 </style>

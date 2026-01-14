@@ -59,15 +59,25 @@ export function treeFromSchemes(
     selectedLanguage: Language,
     systemLanguage: Language,
     iconLabels: IconLabels,
-    focusedNode: TreeNode | null,
+    focusedOccurrenceKey: string | null,
 ): TreeNode[] {
+    function buildOccurrenceKey(schemeId: string, pathIds: string[]) {
+        return `${schemeId}::${pathIds.join(">")}`;
+    }
+
     function buildNode(
         item: Concept | Scheme,
         childNodes: TreeNode[],
         schemeId: string,
+        pathIds: string[],
     ): TreeNode {
+        const key =
+            "top_concepts" in item
+                ? item.id
+                : buildOccurrenceKey(schemeId, pathIds);
+
         return {
-            key: item.id,
+            key,
             label: getItemLabel(
                 item,
                 selectedLanguage.code,
@@ -91,40 +101,57 @@ export function treeFromSchemes(
         item: Concept | Scheme,
         children: Concept[],
         schemeId: string,
+        pathIds: string[],
     ): NodeAndParentInstruction {
-        let childrenAsNodes: TreeNode[];
         const nodesAndInstructions = children.map((child) =>
-            processItem(child, child.narrower, schemeId),
+            processItem(child, child.narrower, schemeId, [
+                ...pathIds,
+                child.id,
+            ]),
         );
+
         const parentOfFocusedNode = nodesAndInstructions.find(
             (obj) => obj.shouldHideSiblings,
         );
-        if (parentOfFocusedNode) {
-            childrenAsNodes = [parentOfFocusedNode.node];
-        } else {
-            childrenAsNodes = nodesAndInstructions.map((obj) => obj.node);
-        }
 
-        const node: TreeNode = buildNode(item, childrenAsNodes, schemeId);
+        const childrenAsNodes = parentOfFocusedNode
+            ? [parentOfFocusedNode.node]
+            : nodesAndInstructions.map((obj) => obj.node);
+
+        const node: TreeNode = buildNode(
+            item,
+            childrenAsNodes,
+            schemeId,
+            pathIds,
+        );
+
         let shouldHideSiblings = !!parentOfFocusedNode;
-        if (!shouldHideSiblings) {
-            const focalNode = node.children!.find(
-                (child: TreeNode) => child.data.id === focusedNode?.data?.id,
+
+        if (!shouldHideSiblings && focusedOccurrenceKey) {
+            const focalChild = (node.children ?? []).find(
+                (childNode: TreeNode) => childNode.key === focusedOccurrenceKey,
             );
-            if (focalNode) {
-                node.children = [focalNode];
+            if (focalChild) {
+                node.children = [focalChild];
                 shouldHideSiblings = true;
             }
         }
+
         return { node, shouldHideSiblings };
     }
 
     // If this scheme is focused, immediately process and return it.
-    const focalScheme = schemes.find((sch) => sch.id === focusedNode?.data?.id);
+    const focalScheme = schemes.find(
+        (schemeItem) => schemeItem.id === focusedOccurrenceKey,
+    );
     if (focalScheme) {
         return [
-            processItem(focalScheme, focalScheme.top_concepts, focalScheme.id)
-                .node,
+            processItem(
+                focalScheme,
+                focalScheme.top_concepts,
+                focalScheme.id,
+                [],
+            ).node,
         ];
     }
 
@@ -135,6 +162,7 @@ export function treeFromSchemes(
             scheme,
             scheme.top_concepts,
             scheme.id,
+            [],
         );
         if (shouldHideSiblings) {
             return [node];

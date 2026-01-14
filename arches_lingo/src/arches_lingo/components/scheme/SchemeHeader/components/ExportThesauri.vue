@@ -81,7 +81,6 @@ async function exportThesauri() {
         :pt="{
             root: {
                 style: {
-                    minWidth: '40rem',
                     borderRadius: '0',
                     fontFamily: 'var(--p-lingo-font-family)',
                     fontSize: 'var(--p-lingo-font-size-small)',
@@ -92,114 +91,182 @@ async function exportThesauri() {
                     background: 'var(--p-navigation-header-color)',
                     color: 'var(--p-dialog-header-text-color)',
                     borderRadius: '0',
+                    paddingBlock: '1.25rem',
+                    paddingInline: '1.5rem',
+                },
+            },
+            title: {
+                style: {
+                    fontSize: 'var(--p-lingo-font-size-large)',
+                    fontWeight: 'var(--p-lingo-font-weight-bold)',
+                    lineHeight: '1.2',
                 },
             },
             content: {
                 style: {
-                    paddingTop: '0.5rem',
+                    padding: '1.25rem',
+                    paddingTop: '1rem',
                 },
             },
         }"
     >
         <template #default>
-            <ProgressSpinner
-                v-if="loading"
-                style="display: flex"
-            />
             <div
-                v-if="!loading"
-                class="form-item-container"
+                v-if="loading"
+                class="loading"
             >
-                <label
-                    id="export-format-select-label"
-                    class="form-item-label"
-                >
-                    {{ $gettext("Export Format") }}
-                </label>
-                <div role="radiogroup">
-                    <span
-                        v-for="option in exportformatOptions"
-                        :key="option.value"
-                        class="radio-button-and-label"
+                <ProgressSpinner />
+            </div>
+
+            <div
+                v-else
+                class="form"
+            >
+                <div class="field">
+                    <label
+                        id="export-format-select-label"
+                        class="label"
                     >
-                        <RadioButton
-                            :key="option.value"
-                            v-model="exportFormat"
-                            :input-id="option.value"
-                            :value="option.value"
-                            :label="option.label"
-                            aria-labelledby="export-format-select-label"
-                            :disabled="option.disabled"
-                        ></RadioButton>
-                        <label
-                            :for="option.value"
-                            class="radio-label"
-                            >{{ option.label }}</label
-                        >
-                    </span>
+                        {{ $gettext("Export Format") }}
+                    </label>
+
+                    <div
+                        class="control"
+                        role="radiogroup"
+                        aria-labelledby="export-format-select-label"
+                    >
+                        <div class="radio-grid">
+                            <span
+                                v-for="option in exportformatOptions"
+                                :key="option.value"
+                                class="radio-option"
+                            >
+                                <RadioButton
+                                    v-model="exportFormat"
+                                    :input-id="option.value"
+                                    :value="option.value"
+                                    :disabled="option.disabled"
+                                />
+                                <label
+                                    :for="option.value"
+                                    class="radio-label"
+                                >
+                                    {{ option.label }}
+                                </label>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label
+                        class="label"
+                        for="file-name-input"
+                    >
+                        {{ $gettext("File Name (optional)") }}
+                    </label>
+
+                    <div class="control">
+                        <InputText
+                            id="file-name-input"
+                            v-model="fileName"
+                            :placeholder="$gettext('Enter file name')"
+                            class="text-input"
+                        />
+                    </div>
                 </div>
             </div>
-            <div
-                v-if="!loading"
-                class="form-item-container"
-            >
-                <label
-                    class="form-item-label"
-                    for="file-name-input"
-                >
-                    {{ $gettext("File Name (optional)") }}
-                </label>
-                <InputText
-                    id="file-name-input"
-                    v-model="fileName"
-                    :placeholder="$gettext('Enter file name')"
+        </template>
+
+        <template #footer>
+            <div class="footer">
+                <Button
+                    icon="pi pi-times"
+                    :label="$gettext('Cancel')"
+                    type="button"
+                    severity="danger"
+                    class="footer-button"
+                    @click="visible = false"
+                />
+                <Button
+                    icon="pi pi-file-export"
+                    :label="$gettext('Export')"
+                    type="submit"
+                    class="footer-button"
+                    :disabled="!exportFormat || loading"
+                    :loading="loading"
+                    @click="exportThesauri"
                 />
             </div>
-        </template>
-        <template #footer>
-            <Button
-                icon="pi pi-trash"
-                :label="$gettext('Cancel')"
-                type="button"
-                class="footer-button"
-                @click="visible = false"
-            ></Button>
-            <Button
-                icon="pi pi-file-export"
-                :label="$gettext('Export')"
-                type="submit"
-                class="footer-button"
-                :disabled="!exportFormat || loading"
-                @click="exportThesauri"
-            ></Button>
         </template>
     </Dialog>
 </template>
 
 <style scoped>
-.form-item-container {
-    margin-bottom: 0.75rem;
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
 }
-.form-item-label {
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.label {
     display: block;
-    margin-bottom: 0.25rem;
+    margin: 0;
     font-weight: var(--p-lingo-font-weight-bold);
 }
-:deep(.p-selectbutton .p-togglebutton) {
-    font-size: var(--p-lingo-font-size-small);
-    margin: 0 0.5rem;
+
+.control {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
 }
-.p-radiobutton {
-    vertical-align: unset;
+
+.radio-grid {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    border: 1px solid var(--p-content-border-color);
+    border-radius: var(--p-border-radius);
+    background: var(--p-content-background);
 }
-.radio-button-and-label {
-    margin-right: 1.5rem;
-    margin-bottom: 0.5rem;
+
+.radio-option {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    white-space: nowrap;
 }
+
 .radio-label {
-    margin-inline-start: 0.5rem;
+    margin: 0;
+    cursor: pointer;
 }
+
+.text-input {
+    width: 100%;
+}
+
+.footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+}
+
 .footer-button {
     font-size: var(--p-lingo-font-size-small);
+}
+
+.loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 </style>

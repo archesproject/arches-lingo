@@ -58,20 +58,34 @@ const overlayPanel = useTemplateRef("overlayPanel");
                 <NotificationInteraction />
                 <PageHelp />
             </div>
+
             <Button
                 icon="pi pi-bars"
                 class="overlay-panel-button p-button-text"
                 @click="overlayPanel?.toggle($event)"
             />
+
             <Popover
                 ref="overlayPanel"
                 show-close-icon
+                :pt="{
+                    root: { class: 'overlay-panel-popover-root' },
+                    content: { class: 'overlay-panel-popover-content' },
+                }"
             >
                 <div class="overlay-panel-items">
-                    <UserInteraction />
-                    <LanguageSelector />
-                    <NotificationInteraction />
-                    <PageHelp />
+                    <div class="overlay-panel-item">
+                        <UserInteraction />
+                    </div>
+                    <div class="overlay-panel-item">
+                        <LanguageSelector />
+                    </div>
+                    <div class="overlay-panel-item">
+                        <NotificationInteraction />
+                    </div>
+                    <div class="overlay-panel-item">
+                        <PageHelp />
+                    </div>
                 </div>
             </Popover>
         </template>
@@ -111,6 +125,7 @@ const overlayPanel = useTemplateRef("overlayPanel");
     height: 3.125rem;
     border: none;
 }
+
 :deep(.p-menubar-start) {
     gap: var(--p-menubar-gap);
 }
@@ -118,11 +133,22 @@ const overlayPanel = useTemplateRef("overlayPanel");
 .end-items {
     display: flex;
     align-items: center;
-    gap: var(--p-menubar-gap);
 }
+
 .overlay-panel-button {
     display: none;
     color: var(--p-menubar-color) !important;
+}
+
+.overlay-panel-items {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+}
+
+:deep(.overlay-panel-item .p-button) {
+    width: 100%;
+    justify-content: flex-start;
 }
 
 @media screen and (max-width: 960px) {

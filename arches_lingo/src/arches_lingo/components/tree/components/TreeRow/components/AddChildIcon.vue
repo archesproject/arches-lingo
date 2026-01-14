@@ -20,6 +20,7 @@ function onAddChild() {
     navigateToSchemeOrConcept(router, NEW_CONCEPT, {
         scheme: node.data.schemeId,
         parent: node.data.id,
+        parentTreeKey: node.key,
     });
 }
 </script>

@@ -35,6 +35,7 @@ function activateHierarchyOverlay() {
 .notifications-button {
     color: var(--p-menubar-text-color) !important;
     height: 3rem;
+    border-radius: 0;
 }
 
 .notifications-button:hover {

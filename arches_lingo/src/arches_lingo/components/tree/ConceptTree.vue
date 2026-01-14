@@ -1,13 +1,5 @@
 <script setup lang="ts">
-import {
-    computed,
-    inject,
-    nextTick,
-    onMounted,
-    onUnmounted,
-    ref,
-    watch,
-} from "vue";
+import { computed, inject, nextTick, onMounted, ref, watch } from "vue";
 
 import { useRoute, useRouter } from "vue-router";
 import { useGettext } from "vue3-gettext";
@@ -29,7 +21,6 @@ import {
     systemLanguageKey,
 } from "@/arches_lingo/constants.ts";
 
-import { findNodeInTree } from "@/arches_controlled_lists/utils.ts";
 import { fetchConcepts } from "@/arches_lingo/api.ts";
 
 import {
@@ -40,7 +31,6 @@ import {
 import { useCappedTreeFilter } from "@/arches_lingo/components/tree/utils/capped-filter.ts";
 
 import type { Ref } from "vue";
-import type { RouteLocationNormalizedLoadedGeneric } from "vue-router";
 import type {
     TreePassThroughMethodOptions,
     TreeExpandedKeys,
@@ -55,9 +45,11 @@ const props = withDefaults(
         concepts?: {
             schemes: Scheme[];
         };
+        isOpen?: boolean;
     }>(),
     {
         concepts: undefined,
+        isOpen: true,
     },
 );
 
@@ -81,61 +73,24 @@ const iconLabels: IconLabels = Object.freeze({
     scheme: $gettext("Scheme"),
 });
 
-const schemes: Ref<Scheme[]> = ref([]);
-const focusedNode: Ref<TreeNode | null> = ref(null);
-const selectedKeys: Ref<TreeSelectionKeys> = ref({});
-const expandedKeys: Ref<TreeExpandedKeys> = ref({});
+const schemes = ref<Scheme[]>([]);
+const focusedNode = ref<TreeNode | null>(null);
+const focusedOccurrenceKey = ref<string | null>(null);
+
+const selectedKeys = ref<TreeSelectionKeys>({});
+const lastNonEmptySelectedKeys = ref<TreeSelectionKeys>({});
+const expandedKeys = ref<TreeExpandedKeys>({});
 const filterValue = ref("");
+
 const selectedLanguage = inject(selectedLanguageKey) as Ref<Language>;
 const systemLanguage = inject(systemLanguageKey) as Language;
-const newTreeItemParentPath = ref<Concept[] | Scheme[]>([]);
-
-const treeContainer = ref<HTMLElement | null>(null);
-let conceptTreeVisibilityObserver: IntersectionObserver | null = null;
-let wasTreeVisible = false;
 
 const FILTER_RENDER_CAP = 2500;
 const FILTER_DEBOUNCE_MS = 500;
 const SKELETON_ROW_COUNT = 14;
 
-const tree = computed(() => {
-    return treeFromSchemes(
-        schemes.value,
-        selectedLanguage.value,
-        systemLanguage,
-        iconLabels,
-        focusedNode.value,
-    );
-});
-
-function getSearchableText(treeNode: TreeNode) {
-    const nodeData = treeNode.data as unknown as Scheme | Concept;
-
-    if ("top_concepts" in nodeData) {
-        return "";
-    }
-
-    const nodeLabelText = (treeNode.label ?? "").toString();
-    const labelValuesFromData = (nodeData.labels ?? [])
-        .map((labelItem) => (labelItem?.value ?? "").toString())
-        .join(" ");
-
-    return `${nodeLabelText} ${labelValuesFromData}`.toLowerCase();
-}
-
-const { debouncedFilterValue, filteredTree, isFilterCapped } =
-    useCappedTreeFilter(
-        tree,
-        expandedKeys,
-        filterValue,
-        FILTER_DEBOUNCE_MS,
-        FILTER_RENDER_CAP,
-        getSearchableText,
-    );
-
-watch(route, (newRoute) => {
-    selectNodeFromRoute(newRoute);
-});
+const suppressScrollOnNextRouteSelect = ref(false);
+const hasCompletedInitialLoad = ref(false);
 
 onMounted(async () => {
     let concepts = props.concepts;
@@ -163,129 +118,356 @@ onMounted(async () => {
     });
 
     await nextTick();
+    await selectNodeFromRoute(route, false);
 
-    selectNodeFromRoute(route);
+    if (props.isOpen) {
+        await handleTreeOpened();
+    }
 
-    conceptTreeVisibilityObserver = new IntersectionObserver(
-        (intersectionEntries) => {
-            const hasVisibleEntry = intersectionEntries.some(
-                (intersectionEntry) => intersectionEntry.isIntersecting,
+    hasCompletedInitialLoad.value = true;
+});
+
+const tree = computed(() => {
+    return treeFromSchemes(
+        schemes.value,
+        selectedLanguage.value,
+        systemLanguage,
+        iconLabels,
+        focusedOccurrenceKey.value,
+    );
+});
+
+const { debouncedFilterValue, filteredTree, isFilterCapped } =
+    useCappedTreeFilter(
+        tree,
+        expandedKeys,
+        filterValue,
+        FILTER_DEBOUNCE_MS,
+        FILTER_RENDER_CAP,
+        getSearchableText,
+    );
+
+const displayTree = computed<TreeNode[]>(() => {
+    const parentKeyToNewChild = new Map<string, TreeNode>();
+    const sourceQueue = [...tree.value];
+
+    for (const currentSourceNode of sourceQueue) {
+        const sourceChildren = (currentSourceNode.children ?? []) as TreeNode[];
+
+        const sourceNewChild = sourceChildren.find(
+            (childNode) => childNode.data.id === NEW,
+        );
+
+        if (sourceNewChild) {
+            parentKeyToNewChild.set(currentSourceNode.key, sourceNewChild);
+        }
+
+        sourceQueue.push(...sourceChildren);
+    }
+
+    const filteredQueue = [...filteredTree.value];
+
+    for (const currentFilteredNode of filteredQueue) {
+        const newChildFromSource = parentKeyToNewChild.get(
+            currentFilteredNode.key,
+        );
+
+        if (newChildFromSource) {
+            const currentChildren = (currentFilteredNode.children ??
+                []) as TreeNode[];
+            const alreadyHasNew = currentChildren.some(
+                (childNode) => childNode.data.id === NEW,
             );
 
-            if (hasVisibleEntry && !wasTreeVisible) {
-                wasTreeVisible = true;
-                scrollToItemInTree(route.params.id as string);
+            if (!alreadyHasNew) {
+                currentFilteredNode.children = [
+                    newChildFromSource,
+                    ...currentChildren,
+                ];
+            }
+        }
+
+        filteredQueue.push(
+            ...((currentFilteredNode.children ?? []) as TreeNode[]),
+        );
+    }
+
+    return filteredTree.value;
+});
+
+watch(route, async (newRoute) => {
+    const shouldScroll = !suppressScrollOnNextRouteSelect.value;
+    suppressScrollOnNextRouteSelect.value = false;
+
+    await selectNodeFromRoute(newRoute, shouldScroll);
+});
+
+watch(
+    () => props.isOpen,
+    async (nextIsOpen) => {
+        if (!nextIsOpen) {
+            return;
+        }
+
+        await handleTreeOpened();
+    },
+);
+
+watch(
+    selectedKeys,
+    (nextSelectedKeys) => {
+        if (Object.keys(nextSelectedKeys).length) {
+            lastNonEmptySelectedKeys.value = nextSelectedKeys;
+            return;
+        }
+
+        if (Object.keys(lastNonEmptySelectedKeys.value).length) {
+            selectedKeys.value = lastNonEmptySelectedKeys.value;
+        }
+    },
+    { deep: true },
+);
+
+watch(focusedNode, async (nextFocusedNode, previousFocusedNode) => {
+    if (!props.isOpen) {
+        return;
+    }
+
+    if (!previousFocusedNode && nextFocusedNode) {
+        focusedOccurrenceKey.value = nextFocusedNode.key;
+
+        await nextTick();
+        scrollToOccurrenceKeyInTree(nextFocusedNode.key, false);
+        await ensureFilterParentsExpanded();
+        return;
+    }
+
+    if (previousFocusedNode && !nextFocusedNode) {
+        const priorOccurrenceKey = previousFocusedNode.key;
+
+        focusedOccurrenceKey.value = null;
+
+        await nextTick();
+        scrollToOccurrenceKeyInTree(priorOccurrenceKey, true);
+        await ensureFilterParentsExpanded();
+    }
+});
+
+watch(
+    debouncedFilterValue,
+    async (nextDebouncedFilterValue, previousDebouncedFilterValue) => {
+        if (previousDebouncedFilterValue && !nextDebouncedFilterValue) {
+            if (!props.isOpen) {
                 return;
             }
 
-            if (!hasVisibleEntry) {
-                wasTreeVisible = false;
-            }
-        },
-        { threshold: 0.01 },
-    );
+            await nextTick();
+            scrollToItemInTree(route.params.id as string, true);
+            return;
+        }
 
-    if (treeContainer.value) {
-        conceptTreeVisibilityObserver.observe(treeContainer.value);
+        if (!nextDebouncedFilterValue) {
+            return;
+        }
+
+        await nextTick();
+        expandVisibleParentsWithNewChild(displayTree.value);
+    },
+    { flush: "post" },
+);
+
+function getSearchableText(treeNode: TreeNode) {
+    const nodeData = treeNode.data as unknown as Scheme | Concept;
+
+    if ("top_concepts" in nodeData) {
+        return "";
     }
-});
 
-onUnmounted(() => {
-    if (conceptTreeVisibilityObserver) {
-        conceptTreeVisibilityObserver.disconnect();
-        conceptTreeVisibilityObserver = null;
+    const nodeLabelText = (treeNode.label ?? "").toString();
+    const labelValuesFromData = (nodeData.labels ?? [])
+        .map((labelItem) => (labelItem?.value ?? "").toString())
+        .join(" ");
+
+    return `${nodeLabelText} ${labelValuesFromData}`.toLowerCase();
+}
+
+function setExpandedKeysToOnly(theseExpandedKeys: Set<string>) {
+    expandedKeys.value = Object.fromEntries(
+        [...theseExpandedKeys].map((expandedKey) => [expandedKey, true]),
+    ) as TreeExpandedKeys;
+}
+
+function findAllNewOccurrencesInTree() {
+    const foundOccurrences: Array<{
+        occurrenceKey: string;
+        pathKeys: string[];
+    }> = [];
+
+    const matchQueue = tree.value.map((rootTreeNode) => ({
+        treeNode: rootTreeNode,
+        path: [rootTreeNode],
+    }));
+
+    for (const matchItem of matchQueue) {
+        const currentTreeNode = matchItem.treeNode;
+        const currentPath = matchItem.path;
+
+        if (currentTreeNode.data.id === NEW) {
+            const pathKeys = currentPath.map((pathNode) => pathNode.key);
+            const parentPathKeys = pathKeys.slice(
+                0,
+                Math.max(0, pathKeys.length - 1),
+            );
+
+            foundOccurrences.push({
+                occurrenceKey: currentTreeNode.key,
+                pathKeys: parentPathKeys,
+            });
+        }
+
+        const children = (currentTreeNode.children ?? []) as TreeNode[];
+        matchQueue.push(
+            ...children.map((childNode) => ({
+                treeNode: childNode,
+                path: [...currentPath, childNode],
+            })),
+        );
     }
-});
 
-function updateSelectedAndExpanded(node: TreeNode) {
+    return foundOccurrences;
+}
+
+function scrollOccurrenceIntoView(occurrenceKey: string) {
+    nextTick(() => {
+        document
+            .getElementById(`tree-node-${occurrenceKey}`)
+            ?.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+}
+
+function expandAndSelectOccurrences(
+    newOccurrences: Array<{ occurrenceKey: string; pathKeys: string[] }>,
+) {
+    const keysToExpand = new Set<string>();
+
+    for (const occurrenceItem of newOccurrences) {
+        for (const pathKey of occurrenceItem.pathKeys) {
+            keysToExpand.add(pathKey);
+        }
+        keysToExpand.add(occurrenceItem.occurrenceKey);
+    }
+
+    setExpandedKeysToOnly(keysToExpand);
+    selectedKeys.value = { [newOccurrences[0].occurrenceKey]: true };
+}
+
+function expandVisibleParentsWithNewChild(treeNodes: TreeNode[]) {
+    const keysToExpand = new Set<string>();
+    const queue = [...treeNodes];
+
+    for (const currentNode of queue) {
+        const children = currentNode.children ?? [];
+
+        if (children.some((childNode) => childNode.data.id === NEW)) {
+            keysToExpand.add(currentNode.key);
+        }
+
+        queue.push(...children);
+    }
+
+    if (!keysToExpand.size) {
+        return;
+    }
+
     expandedKeys.value = {
         ...expandedKeys.value,
-        [node.key]: true,
+        ...Object.fromEntries(
+            [...keysToExpand].map((keyItem) => [keyItem, true]),
+        ),
     };
 }
 
-function findNodeById(concepts: Concept | Concept[], targetId: string) {
-    const queue = [];
-
-    if (Array.isArray(concepts)) {
-        for (const node of concepts) {
-            queue.push({ node, path: [node] });
-        }
-    } else {
-        queue.push({ node: concepts, path: [concepts] });
+async function ensureFilterParentsExpanded() {
+    if (!debouncedFilterValue.value) {
+        return;
     }
 
-    while (queue.length > 0) {
-        const queueItem = queue.shift() as
-            | { node: Concept; path: Concept[] }
-            | undefined;
+    await nextTick();
+    expandVisibleParentsWithNewChild(displayTree.value);
+}
 
-        if (!queueItem) {
-            continue;
-        }
+async function handleTreeOpened() {
+    await nextTick();
 
-        const { node: currentNode, path: path } = queueItem;
+    const newOccurrences = findAllNewOccurrencesInTree();
 
-        if (currentNode.id === targetId) {
-            return { node: currentNode, path: path };
-        }
+    if (newOccurrences.length) {
+        expandAndSelectOccurrences(newOccurrences);
+        await nextTick();
+        scrollOccurrenceIntoView(newOccurrences[0].occurrenceKey);
+        return;
+    }
 
-        if (currentNode.narrower && Array.isArray(currentNode.narrower)) {
-            for (const childNode of currentNode.narrower) {
-                queue.push({ node: childNode, path: [...path, childNode] });
+    scrollToItemInTree(route.params.id as string, true);
+}
+
+function scrollToOccurrenceKeyInTree(
+    occurrenceKey: string,
+    shouldScroll: boolean,
+) {
+    const matchQueue = tree.value.map((rootTreeNode) => ({
+        treeNode: rootTreeNode,
+        path: [rootTreeNode],
+    }));
+
+    for (const matchItem of matchQueue) {
+        const currentTreeNode = matchItem.treeNode;
+        const currentPath = matchItem.path;
+
+        if (currentTreeNode.key === occurrenceKey) {
+            const keysToExpand = new Set<string>();
+
+            for (const pathNode of currentPath) {
+                keysToExpand.add(pathNode.key);
             }
-        }
-    }
 
-    return null;
-}
+            keysToExpand.add(occurrenceKey);
+            setExpandedKeysToOnly(keysToExpand);
 
-function resetNewTreeItemParentPath() {
-    if (newTreeItemParentPath.value.length) {
-        const parent = newTreeItemParentPath.value.at(-1);
+            selectedKeys.value = { [occurrenceKey]: true };
 
-        if ("top_concepts" in parent!) {
-            parent.top_concepts.shift();
-        } else if ("narrower" in parent!) {
-            parent.narrower.shift();
+            if (shouldScroll) {
+                scrollOccurrenceIntoView(occurrenceKey);
+            }
+
+            return;
         }
 
-        newTreeItemParentPath.value = [];
+        const children = currentTreeNode.children ?? [];
+        matchQueue.push(
+            ...children.map((childNode) => ({
+                treeNode: childNode,
+                path: [...currentPath, childNode],
+            })),
+        );
     }
 }
 
-function scrollToItemInTree(nodeId: string) {
-    try {
-        const { found, path } = findNodeInTree(tree.value, nodeId);
+function removeAllNewNodes() {
+    for (const schemeItem of schemes.value) {
+        schemeItem.top_concepts = (schemeItem.top_concepts ?? []).filter(
+            (conceptItem) => conceptItem.id !== NEW,
+        );
 
-        if (found) {
-            const itemsToExpandIds = path.map(
-                (itemInPath: TreeNode) => itemInPath.key,
+        const traversalQueue = [...(schemeItem.top_concepts ?? [])];
+
+        for (const currentConcept of traversalQueue) {
+            currentConcept.narrower = (currentConcept.narrower ?? []).filter(
+                (childConcept) => childConcept.id !== NEW,
             );
 
-            expandedKeys.value = {
-                ...expandedKeys.value,
-                ...Object.fromEntries(
-                    itemsToExpandIds.map((item: string) => [item, true]),
-                ),
-                [found.key]: true,
-            };
-            selectedKeys.value = { [found.data.id]: true };
-
-            nextTick(() => {
-                const element = document.getElementById(found.data.id);
-
-                if (element) {
-                    element.scrollIntoView({
-                        behavior: "smooth",
-                        block: "center",
-                    });
-                }
-            });
+            traversalQueue.push(...(currentConcept.narrower ?? []));
         }
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (error) {
-        return null;
     }
 }
 
@@ -293,9 +475,12 @@ function addNewConceptToTree(schemeId: string, parentId: string) {
     const targetScheme = schemes.value.find(
         (schemeItem) => schemeItem.id === schemeId,
     );
-    if (!targetScheme) return;
 
-    const newConcept = {
+    if (!targetScheme) {
+        return;
+    }
+
+    const newConcept: Concept = {
         id: NEW,
         labels: [
             {
@@ -307,41 +492,174 @@ function addNewConceptToTree(schemeId: string, parentId: string) {
         narrower: [],
     };
 
-    let parentPath = [targetScheme];
-
     if (schemeId === parentId) {
-        // adding top concept to scheme
-        targetScheme.top_concepts.unshift(newConcept);
-    } else {
-        // adding narrower concept to existing concept
-        const searchResult = findNodeById(targetScheme.top_concepts, parentId);
-        if (!searchResult) return;
+        targetScheme.top_concepts = targetScheme.top_concepts ?? [];
 
-        searchResult.node.narrower.unshift(newConcept);
-        parentPath = [
-            targetScheme,
-            ...(searchResult.path as unknown as Scheme[]),
-        ];
+        const alreadyHasNew = targetScheme.top_concepts.some(
+            (conceptItem) => conceptItem.id === NEW,
+        );
+
+        if (!alreadyHasNew) {
+            targetScheme.top_concepts.unshift(newConcept);
+        }
+
+        schemes.value = schemes.value.map((existingScheme) => {
+            return existingScheme.id === schemeId
+                ? targetScheme
+                : existingScheme;
+        });
+
+        return;
     }
 
-    newTreeItemParentPath.value = parentPath;
+    const visitedConceptObjects = new Set<Concept>();
+    const traversalQueue = [...(targetScheme.top_concepts ?? [])];
+
+    for (const currentConcept of traversalQueue) {
+        if (visitedConceptObjects.has(currentConcept)) {
+            continue;
+        }
+
+        visitedConceptObjects.add(currentConcept);
+
+        if (currentConcept.id === parentId) {
+            currentConcept.narrower = currentConcept.narrower ?? [];
+
+            const alreadyHasNew = currentConcept.narrower.some(
+                (childConcept) => childConcept.id === NEW,
+            );
+
+            if (!alreadyHasNew) {
+                currentConcept.narrower.unshift(newConcept);
+            }
+        }
+
+        traversalQueue.push(...(currentConcept.narrower ?? []));
+    }
 
     schemes.value = schemes.value.map((existingScheme) => {
         return existingScheme.id === schemeId ? targetScheme : existingScheme;
     });
 }
 
-function selectNodeFromRoute(newRoute: RouteLocationNormalizedLoadedGeneric) {
-    resetNewTreeItemParentPath();
+function scrollToItemInTree(
+    nodeId: string,
+    shouldScroll: boolean,
+    preferredOccurrenceKey?: string,
+) {
+    const matchQueue = tree.value.map((rootTreeNode) => ({
+        treeNode: rootTreeNode,
+        path: [rootTreeNode],
+    }));
 
-    if (newRoute.params.id === NEW) {
+    const matches: Array<{ treeNode: TreeNode; path: TreeNode[] }> = [];
+
+    for (const matchItem of matchQueue) {
+        const currentTreeNode = matchItem.treeNode;
+        const currentPath = matchItem.path;
+
+        if (currentTreeNode.data.id === nodeId) {
+            matches.push({ treeNode: currentTreeNode, path: currentPath });
+        }
+
+        const children = currentTreeNode.children ?? [];
+        matchQueue.push(
+            ...children.map((childNode) => ({
+                treeNode: childNode,
+                path: [...currentPath, childNode],
+            })),
+        );
+    }
+
+    if (!matches.length) {
+        return;
+    }
+
+    const keysToExpand = new Set<string>();
+    for (const matchItem of matches) {
+        for (const pathNode of matchItem.path) {
+            keysToExpand.add(pathNode.key);
+        }
+        keysToExpand.add(matchItem.treeNode.key);
+    }
+
+    setExpandedKeysToOnly(keysToExpand);
+
+    const matchedKeysInOrder = matches.map(
+        (matchItem) => matchItem.treeNode.key,
+    );
+
+    const currentSelectedPrimaryKey = Object.keys(selectedKeys.value)[0];
+    const preferredIsValid =
+        preferredOccurrenceKey &&
+        matchedKeysInOrder.includes(preferredOccurrenceKey);
+
+    const retainedIsValid =
+        !shouldScroll &&
+        currentSelectedPrimaryKey &&
+        matchedKeysInOrder.includes(currentSelectedPrimaryKey);
+
+    let primaryOccurrenceKey = matchedKeysInOrder[0];
+
+    if (retainedIsValid) {
+        primaryOccurrenceKey = currentSelectedPrimaryKey!;
+    }
+    if (preferredIsValid) {
+        primaryOccurrenceKey = preferredOccurrenceKey!;
+    }
+
+    const orderedSelectedKeys = [
+        primaryOccurrenceKey,
+        ...matchedKeysInOrder.filter(
+            (keyItem) => keyItem !== primaryOccurrenceKey,
+        ),
+    ];
+
+    selectedKeys.value = Object.fromEntries(
+        orderedSelectedKeys.map((keyItem) => [keyItem, true]),
+    );
+
+    if (!shouldScroll) {
+        return;
+    }
+
+    scrollOccurrenceIntoView(primaryOccurrenceKey);
+}
+
+async function selectNodeFromRoute(
+    newRoute: typeof route,
+    shouldScroll: boolean,
+) {
+    const routeNodeId = newRoute.params.id as string;
+
+    removeAllNewNodes();
+
+    if (routeNodeId === NEW) {
         addNewConceptToTree(
             newRoute.query.scheme as string,
             newRoute.query.parent as string,
         );
+
+        await nextTick();
+
+        if (hasCompletedInitialLoad.value && props.isOpen) {
+            await handleTreeOpened();
+        }
+
+        await ensureFilterParentsExpanded();
+        return;
     }
 
-    scrollToItemInTree(newRoute.params.id as string);
+    const priorSelectedPrimaryKey = Object.keys(selectedKeys.value)[0] ?? null;
+
+    let preferredOccurrenceKey: string | undefined;
+    if (!shouldScroll) {
+        preferredOccurrenceKey = priorSelectedPrimaryKey ?? undefined;
+    }
+
+    scrollToItemInTree(routeNodeId, shouldScroll, preferredOccurrenceKey);
+
+    await ensureFilterParentsExpanded();
 }
 
 function onNodeSelect(node: TreeNode) {
@@ -349,16 +667,15 @@ function onNodeSelect(node: TreeNode) {
         return;
     }
 
-    updateSelectedAndExpanded(node);
+    scrollToItemInTree(node.data.id, false, node.key);
+
+    suppressScrollOnNextRouteSelect.value = true;
     navigateToSchemeOrConcept!(router, node.data);
 }
 </script>
 
 <template>
-    <div
-        ref="treeContainer"
-        class="concept-tree-layout"
-    >
+    <div class="concept-tree-layout">
         <div class="filter-container">
             <InputText
                 v-model="filterValue"
@@ -392,17 +709,18 @@ function onNodeSelect(node: TreeNode) {
             v-else
             v-model:selection-keys="selectedKeys"
             v-model:expanded-keys="expandedKeys"
-            :value="filteredTree"
+            :value="displayTree"
             class="concept-tree"
             selection-mode="single"
             :pt="{
                 nodeContent: ({ instance }: TreePassThroughMethodOptions) => {
-                    return {
-                        class:
-                            instance.node.data.id === NEW
-                                ? 'new-node'
-                                : undefined,
-                    };
+                    let className;
+
+                    if (instance.node.data.id === NEW) {
+                        className = 'new-node';
+                    }
+
+                    return { class: className };
                 },
                 nodeIcon: ({ instance }: TreePassThroughMethodOptions) => {
                     return { ariaLabel: instance.node.iconLabel };
@@ -414,17 +732,21 @@ function onNodeSelect(node: TreeNode) {
             @node-select="onNodeSelect"
         >
             <template #default="slotProps">
-                <TreeRow
-                    :id="slotProps.node.data.id"
-                    v-model:focused-node="focusedNode"
-                    :filter-value="debouncedFilterValue"
-                    :node="slotProps.node"
-                    :focus-label="FOCUS"
-                    :unfocus-label="UNFOCUS"
-                    :add-child-label="ADD_CHILD"
-                    :delete-label="DELETE"
-                    :export-label="EXPORT"
-                />
+                <div :id="`tree-node-${slotProps.node.key}`">
+                    <TreeRow
+                        :id="slotProps.node.data.id"
+                        v-model:focused-node="focusedNode"
+                        :filter-value="
+                            isFilterCapped ? '' : debouncedFilterValue
+                        "
+                        :node="slotProps.node"
+                        :focus-label="FOCUS"
+                        :unfocus-label="UNFOCUS"
+                        :add-child-label="ADD_CHILD"
+                        :delete-label="DELETE"
+                        :export-label="EXPORT"
+                    />
+                </div>
             </template>
         </Tree>
     </div>
@@ -489,5 +811,9 @@ function onNodeSelect(node: TreeNode) {
 :deep(.new-node *) {
     background-color: var(--p-yellow-500) !important;
     color: var(--p-tree-node-color) !important;
+}
+
+:deep(.p-tree-node-content) {
+    width: fit-content;
 }
 </style>
