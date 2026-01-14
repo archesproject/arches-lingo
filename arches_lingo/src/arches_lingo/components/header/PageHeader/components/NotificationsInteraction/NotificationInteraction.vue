@@ -1,32 +1,145 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import Button from "primevue/button";
+import type { VirtualScrollerLazyEvent } from "primevue/virtualscroller";
+
 import NotificationsPanel from "@/arches_lingo/components/header/PageHeader/components/NotificationsInteraction/components/NotificationsPanel.vue";
+import { fetchUserNotifications } from "@/arches_lingo/api.ts";
+import type { Notification, PaginatorDetails } from "@/arches_lingo/types.ts";
+import { SEARCH_RESULTS_PER_PAGE } from "@/arches_lingo/constants.ts";
 
 const { $gettext } = useGettext();
 
 const shouldShowNotificationsPanel = ref(false);
+const notifications = ref<Notification[]>([]);
+const isLoading = ref(false);
+const showUnreadOnly = ref(true);
+const currentPageNumber = ref(1);
+const pageDetails = ref<PaginatorDetails | null>(null);
+const resultsPerPage = ref(SEARCH_RESULTS_PER_PAGE);
+const pollInterval = ref<ReturnType<typeof setInterval> | null>(null);
+const POLLING_TIME_INTERVAL = 60000; // 1 minute
+
+const hasUnreadNotifications = computed(() =>
+    notifications.value.some((notif) => !notif.isread),
+);
 
 function activateHierarchyOverlay() {
     shouldShowNotificationsPanel.value = true;
 }
+
+async function loadNotifications(
+    items: number,
+    pageNumber: number,
+    unreadOnly: boolean,
+) {
+    isLoading.value = true;
+    const parsed = await fetchUserNotifications(items, pageNumber, unreadOnly);
+    parsed.notifications.forEach((newNotif: Notification) => {
+        if (
+            !notifications.value.some(
+                (existingNotif) => existingNotif.id === newNotif.id,
+            )
+        ) {
+            notifications.value.push(newNotif);
+        }
+    });
+    notifications.value.sort(
+        (first, second) =>
+            new Date(second.created).getTime() -
+            new Date(first.created).getTime(),
+    );
+    pageDetails.value = parsed.paginator;
+    isLoading.value = false;
+}
+
+function loadAdditionalNotifications(event: VirtualScrollerLazyEvent) {
+    if (
+        pageDetails.value?.has_next &&
+        pageDetails.value?.total_pages !== currentPageNumber.value &&
+        event.last >= notifications.value.length - 1
+    ) {
+        if (pollInterval.value) {
+            clearInterval(pollInterval.value);
+        }
+        loadNotifications(
+            resultsPerPage.value,
+            (currentPageNumber.value += 1),
+            showUnreadOnly.value,
+        );
+        startPolling();
+    }
+}
+
+function resetNotifications() {
+    pageDetails.value = null;
+    notifications.value = [];
+    currentPageNumber.value = 1;
+}
+
+function startPolling() {
+    pollInterval.value = setInterval(() => {
+        loadNotifications(resultsPerPage.value, 1, showUnreadOnly.value);
+    }, POLLING_TIME_INTERVAL);
+}
+
+function stopPolling() {
+    if (pollInterval.value) {
+        clearInterval(pollInterval.value);
+        pollInterval.value = null;
+    }
+}
+
+watch(showUnreadOnly, () => {
+    resetNotifications();
+    if (pollInterval.value) {
+        clearInterval(pollInterval.value);
+    }
+    loadNotifications(
+        resultsPerPage.value,
+        1, // start from beginning if we're changing the unread filter
+        showUnreadOnly.value,
+    );
+    startPolling();
+});
+
+onMounted(() => {
+    resetNotifications();
+    loadNotifications(resultsPerPage.value, 1, showUnreadOnly.value);
+    startPolling();
+});
+
+onUnmounted(() => {
+    stopPolling();
+});
 </script>
 
 <template>
     <div>
-        <Button
-            icon="pi pi-bell"
-            variant="text"
-            class="notifications-button"
-            :label="$gettext('Notifications')"
-            @click="activateHierarchyOverlay"
-        />
+        <div style="position: relative; display: inline-flex">
+            <span
+                v-if="hasUnreadNotifications"
+                class="unread-notifications-badge"
+                aria-hidden="true"
+            ></span>
+            <Button
+                icon="pi pi-bell"
+                variant="text"
+                class="notifications-button"
+                :label="$gettext('Notifications')"
+                @click="activateHierarchyOverlay"
+            />
+        </div>
         <NotificationsPanel
             v-model:should-show-notifications-panel="
                 shouldShowNotificationsPanel
             "
+            v-model:notifications="notifications"
+            v-model:show-unread-only="showUnreadOnly"
+            :is-loading="isLoading"
+            @load-additional-notifications="loadAdditionalNotifications"
         />
     </div>
 </template>
@@ -39,5 +152,17 @@ function activateHierarchyOverlay() {
 
 .notifications-button:hover {
     background: var(--p-button-primary-hover-background) !important;
+}
+
+.unread-notifications-badge {
+    position: absolute;
+    top: 0.65rem;
+    left: 0.65rem;
+    width: 0.55rem;
+    height: 0.55rem;
+    border-radius: 50%;
+    background-color: var(--p-button-danger-background);
+    box-shadow: 0 0 0 0.125rem var(--p-menubar-bg, var(--p-off-white));
+    z-index: 2;
 }
 </style>

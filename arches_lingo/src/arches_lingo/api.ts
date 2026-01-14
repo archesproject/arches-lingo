@@ -424,3 +424,47 @@ export const exportThesaurus = async (
         throw new Error((error as Error).message || response.statusText);
     }
 };
+
+export const fetchUserNotifications = async (
+    items: number,
+    page: number,
+    unreadOnly: boolean,
+) => {
+    const params = new URLSearchParams({
+        items: items.toString(),
+        page: page.toString(),
+    });
+    if (unreadOnly) {
+        params.append("unread_only", unreadOnly.toString());
+    }
+    const url = `${arches.urls.get_notifications}?${params.toString()}`;
+    const response = await fetch(url);
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
+export const dismissNotifications = async (notificationIds: string[]) => {
+    const formData = new FormData();
+    formData.append("dismissals", JSON.stringify(notificationIds));
+    const url = arches.urls.dismiss_notifications;
+    const response = await fetch(url, {
+        method: "POST",
+        headers: { "X-CSRFTOKEN": getToken() },
+        body: formData,
+    });
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
+export const getSearchExportFile = async (exportId: string) => {
+    const params = new URLSearchParams({
+        exportid: exportId,
+    });
+    const url = `${arches.urls.get_export_file}?${params.toString()}`;
+    const response = await fetch(url);
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};

@@ -358,6 +358,7 @@ export interface SearchResultHierarchy {
     searchResults: SearchResultItem[];
     isTopConcept?: boolean;
 }
+
 export interface archesPreset {
     arches: {
         legacy: {
@@ -367,4 +368,27 @@ export interface archesPreset {
         green: string;
         red: string;
     };
+}
+
+export interface Notification {
+    id: string;
+    created: string;
+    isread: boolean;
+    message: string;
+    recipient_id: string;
+    link?: string; // pk for a SearchExportHistory instance
+    files?: Array<{
+        fileid: string;
+        name: string;
+        url: string;
+    }>;
+}
+
+export interface PaginatorDetails {
+    current_page: number;
+    total_pages: number;
+    results_per_page: number;
+    has_next: boolean;
+    total_notifications: number;
+    unread_notifications: number;
 }
