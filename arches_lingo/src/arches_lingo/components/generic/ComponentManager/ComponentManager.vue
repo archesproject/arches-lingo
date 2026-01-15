@@ -125,72 +125,162 @@ provide("refreshReportSection", refreshReportSection);
 </script>
 
 <template>
-    <Splitter style="height: 100%; min-height: 0; border: none">
-        <SplitterPanel
-            v-show="editorState !== MAXIMIZED"
-            class="content"
-            :size="50"
-        >
-            <div class="splitter-panel-content">
-                <component
-                    :is="firstComponentDatum.component"
-                    :graph-slug="firstComponentDatum.graphSlug"
-                    :nodegroup-alias="firstComponentDatum.nodegroupAlias"
-                    :resource-instance-id="resourceInstanceId"
-                    :section-title="firstComponentDatum.sectionTitle"
-                    :component-name="firstComponentDatum.componentName"
-                    :mode="VIEW"
-                />
-
-                <div class="scroll-container">
+    <div class="component-manager">
+        <!-- only shown on large screens -->
+        <Splitter class="component-splitter component-splitter-horizontal">
+            <SplitterPanel
+                v-show="editorState !== MAXIMIZED"
+                class="content"
+                :size="50"
+            >
+                <div class="splitter-panel-content">
                     <component
-                        :is="componentDatum.component"
-                        v-for="componentDatum in remainingComponentData"
-                        :key="
-                            componentDatum.componentName +
-                            '-' +
-                            componentDatum.key
-                        "
-                        :graph-slug="componentDatum.graphSlug"
-                        :nodegroup-alias="componentDatum.nodegroupAlias"
+                        :is="firstComponentDatum.component"
+                        :graph-slug="firstComponentDatum.graphSlug"
+                        :nodegroup-alias="firstComponentDatum.nodegroupAlias"
                         :resource-instance-id="resourceInstanceId"
-                        :section-title="componentDatum.sectionTitle"
-                        :component-name="componentDatum.componentName"
+                        :section-title="firstComponentDatum.sectionTitle"
+                        :component-name="firstComponentDatum.componentName"
                         :mode="VIEW"
                     />
-                </div>
-            </div>
-        </SplitterPanel>
 
-        <SplitterPanel
-            v-if="editorState !== CLOSED"
-            :size="50"
-            class="splitter-panel-parent"
-        >
-            <ComponentEditor
-                :key="editorKey"
-                class="splitter-panel-content"
-                :is-editor-maximized="editorState === MAXIMIZED"
-                @maximize="maximizeEditor"
-                @minimize="minimizeEditor"
-                @close="closeEditor"
+                    <div class="scroll-container">
+                        <component
+                            :is="componentDatum.component"
+                            v-for="componentDatum in remainingComponentData"
+                            :key="
+                                componentDatum.componentName +
+                                '-' +
+                                componentDatum.key
+                            "
+                            :graph-slug="componentDatum.graphSlug"
+                            :nodegroup-alias="componentDatum.nodegroupAlias"
+                            :resource-instance-id="resourceInstanceId"
+                            :section-title="componentDatum.sectionTitle"
+                            :component-name="componentDatum.componentName"
+                            :mode="VIEW"
+                        />
+                    </div>
+                </div>
+            </SplitterPanel>
+
+            <SplitterPanel
+                v-if="editorState !== CLOSED"
+                :size="50"
+                class="splitter-panel-parent"
             >
-                <component
-                    :is="selectedComponentDatum.component"
-                    :graph-slug="selectedComponentDatum.graphSlug"
-                    :nodegroup-alias="selectedComponentDatum.nodegroupAlias"
-                    :resource-instance-id="resourceInstanceId"
-                    :tile-id="editorTileId"
-                    :section-title="selectedComponentDatum.sectionTitle"
-                    :component-name="selectedComponentDatum.componentName"
-                    :mode="EDIT"
-                />
-            </ComponentEditor>
-        </SplitterPanel>
-    </Splitter>
+                <ComponentEditor
+                    :key="editorKey"
+                    class="splitter-panel-content"
+                    :is-editor-maximized="editorState === MAXIMIZED"
+                    @maximize="maximizeEditor"
+                    @minimize="minimizeEditor"
+                    @close="closeEditor"
+                >
+                    <component
+                        :is="selectedComponentDatum.component"
+                        :graph-slug="selectedComponentDatum.graphSlug"
+                        :nodegroup-alias="selectedComponentDatum.nodegroupAlias"
+                        :resource-instance-id="resourceInstanceId"
+                        :tile-id="editorTileId"
+                        :section-title="selectedComponentDatum.sectionTitle"
+                        :component-name="selectedComponentDatum.componentName"
+                        :mode="EDIT"
+                    />
+                </ComponentEditor>
+            </SplitterPanel>
+        </Splitter>
+
+        <!-- only shown on small screens -->
+        <Splitter
+            class="component-splitter component-splitter-vertical"
+            layout="vertical"
+        >
+            <SplitterPanel
+                v-show="editorState !== MAXIMIZED"
+                class="content"
+                :size="50"
+            >
+                <div class="splitter-panel-content">
+                    <component
+                        :is="firstComponentDatum.component"
+                        :graph-slug="firstComponentDatum.graphSlug"
+                        :nodegroup-alias="firstComponentDatum.nodegroupAlias"
+                        :resource-instance-id="resourceInstanceId"
+                        :section-title="firstComponentDatum.sectionTitle"
+                        :component-name="firstComponentDatum.componentName"
+                        :mode="VIEW"
+                    />
+
+                    <div class="scroll-container">
+                        <component
+                            :is="componentDatum.component"
+                            v-for="componentDatum in remainingComponentData"
+                            :key="
+                                componentDatum.componentName +
+                                '-' +
+                                componentDatum.key
+                            "
+                            :graph-slug="componentDatum.graphSlug"
+                            :nodegroup-alias="componentDatum.nodegroupAlias"
+                            :resource-instance-id="resourceInstanceId"
+                            :section-title="componentDatum.sectionTitle"
+                            :component-name="componentDatum.componentName"
+                            :mode="VIEW"
+                        />
+                    </div>
+                </div>
+            </SplitterPanel>
+
+            <SplitterPanel
+                v-if="editorState !== CLOSED"
+                :size="50"
+                class="splitter-panel-parent"
+            >
+                <ComponentEditor
+                    :key="editorKey"
+                    class="splitter-panel-content"
+                    :is-editor-maximized="editorState === MAXIMIZED"
+                    @maximize="maximizeEditor"
+                    @minimize="minimizeEditor"
+                    @close="closeEditor"
+                >
+                    <component
+                        :is="selectedComponentDatum.component"
+                        :graph-slug="selectedComponentDatum.graphSlug"
+                        :nodegroup-alias="selectedComponentDatum.nodegroupAlias"
+                        :resource-instance-id="resourceInstanceId"
+                        :tile-id="editorTileId"
+                        :section-title="selectedComponentDatum.sectionTitle"
+                        :component-name="selectedComponentDatum.componentName"
+                        :mode="EDIT"
+                    />
+                </ComponentEditor>
+            </SplitterPanel>
+        </Splitter>
+    </div>
 </template>
 
 <style scoped>
+.component-manager {
+    height: 100%;
+    min-height: 0;
+}
+
+.component-splitter {
+    height: 100%;
+    min-height: 0;
+    border: none;
+}
+
+.component-splitter-horizontal {
+    display: flex;
+}
+
+.component-splitter-vertical {
+    display: none;
+}
+
 .content {
     overflow: auto;
 }
@@ -199,11 +289,13 @@ provide("refreshReportSection", refreshReportSection);
     display: flex;
     flex-direction: column;
     height: 100%;
+    min-height: 0;
 }
 
 .scroll-container {
     flex: 1;
     overflow-y: auto;
+    min-height: 0;
 }
 
 :deep(.viewer-section) {
@@ -234,8 +326,8 @@ provide("refreshReportSection", refreshReportSection);
 :deep(.section-header .add-button) {
     font-size: var(--p-lingo-font-size-xsmall);
     font-weight: var(--p-lingo-font-weight-normal);
-    border-color: var(--p-header-button-border);
-    border-radius: 0.125rem;
+    border-color: var(--p-button-primary-border-color);
+    border-radius: var(--p-button-border-radius);
     min-width: 11rem;
 
     &.wide {
@@ -260,8 +352,21 @@ provide("refreshReportSection", refreshReportSection);
     margin-top: 1rem;
 }
 
-.p-splitterpanel:has(> .splitter-panel-content) {
+:deep(
+        .component-splitter-horizontal
+            .p-splitterpanel:has(> .splitter-panel-content)
+    ) {
     overflow-y: auto;
     width: 12rem;
+}
+
+@media (max-width: 960px) {
+    .component-splitter-horizontal {
+        display: none;
+    }
+
+    .component-splitter-vertical {
+        display: flex;
+    }
 }
 </style>

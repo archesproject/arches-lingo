@@ -1,16 +1,17 @@
 <script setup lang="ts">
+import { useRouter } from "vue-router";
+
 import Button from "primevue/button";
 
-import { NEW } from "@/arches_lingo/constants.ts";
-
-import type { TreeNode } from "primevue/treenode";
-
-const { node, deleteLabel } = defineProps<{
-    node: TreeNode;
+const { deleteLabel } = defineProps<{
     deleteLabel: string;
 }>();
 
-function onDeleteItem() {}
+const router = useRouter();
+
+function onDeleteItem() {
+    router.go(-1);
+}
 </script>
 
 <template>
@@ -23,7 +24,6 @@ function onDeleteItem() {}
                 },
             },
         }"
-        :disabled="node.data.id === NEW"
         icon="pi pi-trash"
         role="button"
         size="small"

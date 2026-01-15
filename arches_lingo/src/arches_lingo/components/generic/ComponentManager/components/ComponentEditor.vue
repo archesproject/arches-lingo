@@ -150,6 +150,7 @@ h2 {
     border-bottom: 0.0625rem solid var(--p-header-toolbar-border);
     background: var(--p-header-toolbar-background);
     padding: 0 1rem;
+    padding-bottom: 0.1rem;
 }
 
 .header > Button {
@@ -186,7 +187,7 @@ h2 {
     padding-bottom: 1rem;
     background: var(--p-header-background);
     border-bottom: 0.0625rem solid var(--p-header-toolbar-border);
-    min-height: 5.5rem;
+    min-height: 5.4rem;
 }
 
 .editor-content :deep(h3) {

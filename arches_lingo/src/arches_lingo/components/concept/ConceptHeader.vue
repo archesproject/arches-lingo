@@ -368,42 +368,63 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
     background: var(--p-header-background);
     border-bottom: 0.0625rem solid var(--p-header-toolbar-border);
     min-height: 8.5rem;
+    box-sizing: border-box;
 }
 
 .header-content {
     padding-top: 0.75rem;
     padding-inline-start: 1rem;
-    padding-inline-end: 1.5rem;
+    padding-inline-end: 1rem;
+    box-sizing: border-box;
 }
 
 .concept-header-toolbar {
-    height: 3rem;
+    min-height: 3rem;
+    height: auto;
     background: var(--p-header-toolbar-background);
     border-bottom: 0.0625rem solid var(--p-header-toolbar-border);
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-wrap: wrap;
+    row-gap: 0.5rem;
     padding-inline-start: 1rem;
     padding-inline-end: 1rem;
+    padding-top: 0.375rem;
+    padding-bottom: 0.375rem;
+    box-sizing: border-box;
 }
 
 .concept-details {
     display: flex;
-    align-items: anchor-center;
+    align-items: center;
     gap: 0.5rem;
+    min-width: 0;
 }
 
 .concept-name {
     display: flex;
-    align-items: anchor-center;
+    align-items: center;
     gap: 0.25rem;
+    min-width: 0;
+}
+
+.concept-name > span {
+    min-width: 0;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 .p-select {
     margin: 0rem 0.5rem;
     border-radius: 0.125rem;
     box-shadow: none;
-    width: 10rem;
+    width: auto;
+    max-width: 100%;
+    min-width: 0;
 }
 
 h2 {
@@ -411,6 +432,7 @@ h2 {
     margin-bottom: 0;
     font-size: var(--p-lingo-font-size-large);
     font-weight: var(--p-lingo-font-weight-normal);
+    min-width: 0;
 }
 
 .delete-button {
@@ -420,6 +442,9 @@ h2 {
 .header-buttons {
     display: flex;
     gap: 0.25rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    min-width: 0;
 }
 
 .export-panel {
@@ -498,11 +523,16 @@ h2 {
     display: flex;
     justify-content: space-between;
     align-items: baseline;
+    flex-wrap: wrap;
+    column-gap: 1rem;
+    row-gap: 0.25rem;
+    min-width: 0;
 }
 
 .header-item {
     display: inline-flex;
     align-items: baseline;
+    min-width: 0;
 }
 
 .header-item-label {
@@ -517,6 +547,7 @@ h2 {
     font-size: var(--p-lingo-font-size-smallnormal);
     color: var(--p-header-item-label);
     margin-inline-end: 0.25rem;
+    min-width: 0;
 }
 
 .header-item-value,

@@ -187,9 +187,11 @@ function confirmDelete() {
         <div class="scheme-header-panel">
             <div class="scheme-header-toolbar">
                 <div class="header-row">
-                    <div>
+                    <div class="scheme-title">
                         <h2>
-                            <span>{{ label?.value }}</span>
+                            <span class="scheme-title-text">{{
+                                label?.value
+                            }}</span>
                             <span
                                 v-if="label?.language_id"
                                 class="scheme-label-lang"
@@ -313,15 +315,36 @@ function confirmDelete() {
 .scheme-header {
     background: var(--p-header-background);
     border-bottom: 0.0625rem solid var(--p-header-toolbar-border);
+    box-sizing: border-box;
+}
+
+.scheme-header-panel {
+    box-sizing: border-box;
 }
 
 .scheme-header-toolbar {
-    height: 3rem;
+    min-height: 3rem;
+    height: auto;
     background: var(--p-header-toolbar-background);
     border-bottom: 0.0625rem solid var(--p-header-toolbar-border);
-    align-items: center;
     padding-inline-start: 1rem;
     padding-inline-end: 1rem;
+    padding-top: 0.375rem;
+    padding-bottom: 0.375rem;
+    box-sizing: border-box;
+}
+
+.scheme-title {
+    min-width: 0;
+}
+
+.scheme-title-text {
+    min-width: 0;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 h2 {
@@ -329,6 +352,11 @@ h2 {
     margin-bottom: 0;
     font-size: var(--p-lingo-font-size-large);
     font-weight: var(--p-lingo-font-weight-normal);
+    min-width: 0;
+}
+
+h2 > span {
+    min-width: 0;
 }
 
 .scheme-label-lang {
@@ -341,12 +369,20 @@ h2 {
     min-height: 5.45rem;
     padding-top: 0.5rem;
     padding-inline-start: 1rem;
-    padding-inline-end: 1.5rem;
+    padding-inline-end: 1rem;
+    box-sizing: border-box;
 }
 
 .header-buttons {
     display: flex;
     gap: 0.25rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    min-width: 0;
+}
+
+.delete-button {
+    font-size: var(--p-lingo-font-size-small);
 }
 
 .p-button-link {
@@ -358,7 +394,11 @@ h2 {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-wrap: wrap;
+    column-gap: 1rem;
+    row-gap: 0.5rem;
     padding: 0.2rem 0 0 0;
+    min-width: 0;
 }
 
 .metadata-container {
@@ -366,13 +406,15 @@ h2 {
     margin-top: 0;
     padding-bottom: 1rem;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
 }
 
 .language-chip-container {
     display: flex;
     gap: 0.25rem;
     align-items: center;
+    flex-wrap: wrap;
+    min-width: 0;
 }
 
 .add-language:hover {
@@ -382,7 +424,8 @@ h2 {
 .lifecycle-container {
     display: flex;
     flex-direction: column;
-    align-items: end;
+    align-items: flex-end;
+    min-width: 0;
 }
 
 .add-language {
@@ -395,6 +438,7 @@ h2 {
 .header-item {
     display: inline-flex;
     align-items: baseline;
+    min-width: 0;
 }
 
 .header-item-label {
@@ -407,6 +451,7 @@ h2 {
 .header-item-value {
     font-size: var(--p-lingo-font-size-smallnormal);
     color: var(--p-primary-500);
+    min-width: 0;
 }
 
 .scheme-language {

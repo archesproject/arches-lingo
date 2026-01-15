@@ -133,8 +133,8 @@ class ConceptResourceView(ConceptTreeView):
         scheme = request.GET.get("scheme", None)
         exclude = request.GET.get("exclude", None)
         term = request.GET.get("term", None)
-        page_number = request.GET.get("page", 1)
-        items_per_page = request.GET.get("items", 25)
+        page_number = int(request.GET.get("page", 1))
+        items_per_page = int(request.GET.get("items", 25))
         concepts = request.GET.get("concepts", None)
         concept_ids = concepts.split(",") if concepts else None
         Concept = ResourceTileTree.get_tiles("concept")
@@ -155,23 +155,25 @@ class ConceptResourceView(ConceptTreeView):
 
             concept_ids = concept_query.order_by("pk").values_list("pk", flat=True)
 
-        data = []
         paginator = Paginator(concept_ids, items_per_page)
-        if paginator.count:
-            builder = ConceptBuilder()
+        page = paginator.get_page(page_number)
+        total_results = paginator.count
+
+        data = []
+        if total_results:
+            page_concept_ids = [str(concept_uuid) for concept_uuid in page]
+            builder = ConceptBuilder(page_concept_ids, include_parents=True)
             data = [
-                builder.serialize_concept(
-                    str(concept_uuid), parents=True, children=False
-                )
-                for concept_uuid in paginator.get_page(page_number)
+                builder.serialize_concept(concept_id, parents=True, children=False)
+                for concept_id in page_concept_ids
             ]
 
         return JSONResponse(
             {
-                "current_page": paginator.get_page(page_number).number,
+                "current_page": page.number,
                 "total_pages": paginator.num_pages,
                 "results_per_page": paginator.per_page,
-                "total_results": paginator.count,
+                "total_results": total_results,
                 "data": data,
             }
         )
