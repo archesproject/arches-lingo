@@ -2899,7 +2899,7 @@
             "publication": {
                 "graph_id": "20ea7ad3-4965-11ed-bebb-bf1b0a06275c",
                 "most_recent_edit_id": null,
-                "notes": "Migrated concept/concept-list nodes to reference datatype",
+                "notes": "Lingo initial model version",
                 "publicationid": "8793c93e-e240-11ef-9dba-0aa766c61b66",
                 "published_time": "2025-02-03T09:07:05.216"
             },

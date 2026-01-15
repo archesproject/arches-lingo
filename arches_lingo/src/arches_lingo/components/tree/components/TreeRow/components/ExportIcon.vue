@@ -1,6 +1,9 @@
 <script setup lang="ts">
+import { ref } from "vue";
+
 import Button from "primevue/button";
 
+import ExportThesauri from "@/arches_lingo/components/scheme/SchemeHeader/components/ExportThesauri.vue";
 import { NEW } from "@/arches_lingo/constants.ts";
 
 import type { TreeNode } from "primevue/treenode";
@@ -10,7 +13,13 @@ const { node, exportLabel } = defineProps<{
     exportLabel: string;
 }>();
 
-function onExportItem() {}
+const showExportDialog = ref(false);
+const exportDialogKey = ref(0);
+
+function openExportDialog() {
+    exportDialogKey.value++;
+    showExportDialog.value = true;
+}
 </script>
 
 <template>
@@ -36,7 +45,13 @@ function onExportItem() {}
         variant="text"
         :aria-label="exportLabel"
         :rounded="true"
-        @click.stop="onExportItem"
-        @keyup.enter.stop="onExportItem"
+        @click.stop="openExportDialog"
+        @keyup.enter.stop="openExportDialog"
+    />
+    <ExportThesauri
+        v-if="showExportDialog"
+        :key="exportDialogKey"
+        :resource-id="node.key"
+        :resource-name="node.label"
     />
 </template>

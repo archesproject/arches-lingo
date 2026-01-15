@@ -1266,7 +1266,7 @@
             "publication": {
                 "graph_id": "6dad61aa-b4b5-11ea-84f7-3af9d3b32b71",
                 "most_recent_edit_id": null,
-                "notes": "Migrated concept/concept-list nodes to reference datatype",
+                "notes": "Lingo initial model version",
                 "publicationid": "c209a69c-e240-11ef-b860-0aa766c61b66",
                 "published_time": "2025-02-03T09:08:43.297"
             },

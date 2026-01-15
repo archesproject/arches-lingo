@@ -32,7 +32,7 @@ function openLanguageSelector(event: MouseEvent) {
 </script>
 
 <template>
-    <div style="display: flex; align-items: center; gap: 0.5rem">
+    <div class="language-selector">
         <Button
             :aria-label="$gettext('Open language selector')"
             @click="openLanguageSelector"
@@ -72,15 +72,26 @@ function openLanguageSelector(event: MouseEvent) {
 </template>
 
 <style scoped>
+.language-selector {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
 .p-button {
-    background: var(--p-menubar-background) !important;
+    background: transparent !important;
     border: none !important;
-    color: var(--p-menubar-text-color) !important;
+    color: inherit !important;
+    border-radius: 0;
 }
 
 .p-button:hover {
-    background: var(--p-button-primary-hover-background) !important;
+    background: var(
+        --p-button-text-hover-background,
+        var(--p-button-primary-hover-background)
+    ) !important;
 }
+
 .language-abbreviation-circle {
     width: 2rem;
     height: 2rem;

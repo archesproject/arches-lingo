@@ -69,31 +69,27 @@ const metaStringLabel: MetaStringText = {
         >
             <template #name="{ rowData }">
                 <GenericWidget
-                    node-alias="statement_content_n1"
+                    node-alias="statement_content"
                     :graph-slug="props.graphSlug"
-                    :aliased-node-data="
-                        rowData.aliased_data.statement_content_n1
-                    "
+                    :aliased-node-data="rowData.aliased_data.statement_content"
                     :mode="VIEW"
                     :should-show-label="false"
                 />
             </template>
             <template #type="{ rowData }">
                 <GenericWidget
-                    node-alias="statement_type_n1"
+                    node-alias="statement_type"
                     :graph-slug="props.graphSlug"
-                    :aliased-node-data="rowData.aliased_data.statement_type_n1"
+                    :aliased-node-data="rowData.aliased_data.statement_type"
                     :mode="VIEW"
                     :should-show-label="false"
                 />
             </template>
             <template #language="{ rowData }">
                 <GenericWidget
-                    node-alias="statement_language_n1"
+                    node-alias="statement_language"
                     :graph-slug="props.graphSlug"
-                    :aliased-node-data="
-                        rowData.aliased_data.statement_language_n1
-                    "
+                    :aliased-node-data="rowData.aliased_data.statement_language"
                     :mode="VIEW"
                     :should-show-label="false"
                 />

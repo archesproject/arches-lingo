@@ -35,28 +35,33 @@ BROADER_LOOKUP = f"data__{CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID}"
 
 
 class ConceptBuilder:
-    def __init__(self):
+    def __init__(
+        self, concept_ids: list[str] | None = None, *, include_parents: bool = False
+    ):
         self.schemes = ResourceInstance.objects.none()
+        self.schemes_by_id: dict[str, ResourceInstance] = {}
 
-        # key=scheme resourceid (str) val=set of concept resourceids (str)
         self.top_concepts: dict[str, set[str]] = defaultdict(set)
-        # key=concept resourceid (str) val=set of concept resourceids (str)
         self.narrower_concepts: dict[str, set[str]] = defaultdict(set)
-        # key=resourceid (str) val=list of label dicts
-        self.labels: dict[str, list[dict]] = defaultdict(set)
+        self.labels: dict[str, list[dict]] = defaultdict(list)
 
-        # Maps representing a reverse (leaf-first) tree
-        # key=resourceid (str) val=set of concept resourceids (str)
         self.broader_concepts: dict[str, set[str]] = defaultdict(set)
-        # key=resourceid (str) val=set of scheme resourceids (str)
         self.schemes_by_top_concept: dict[str, set[str]] = defaultdict(set)
-
-        self.top_concepts_map()
-        self.narrower_concepts_map()
-        self.populate_schemes()
 
         self.polyhierarchical_concepts = set()
         self.language_lookup = {lang.name: lang.code for lang in Language.objects.all()}
+
+        if concept_ids is None:
+            self.top_concepts_map()
+            self.narrower_concepts_map()
+            self.populate_schemes()
+            return
+
+        if include_parents:
+            self.build_scoped_parents(concept_ids)
+            return
+
+        self.populate_concept_labels(concept_ids)
 
     @staticmethod
     def find_valuetype_id_from_value(value):
@@ -104,6 +109,33 @@ class ConceptBuilder:
             .values("data")
         )
 
+    def populate_schemes(self, scheme_ids: list[str] | None = None):
+        schemes_query = ResourceInstance.objects.filter(graph_id=SCHEMES_GRAPH_ID)
+        if scheme_ids is not None:
+            schemes_query = schemes_query.filter(pk__in=scheme_ids)
+
+        schemes_list = list(
+            schemes_query.annotate(labels=self.labels_subquery(SCHEME_NAME_NODEGROUP))
+        )
+        self.schemes = schemes_list
+        self.schemes_by_id = {str(scheme.pk): scheme for scheme in schemes_list}
+
+    def lookup_scheme(self, scheme_id: str):
+        return self.schemes_by_id.get(scheme_id)
+
+    def populate_concept_labels(self, concept_ids: list[str]):
+        label_tiles = (
+            TileModel.objects.filter(
+                nodegroup_id=CONCEPT_NAME_NODEGROUP, resourceinstance_id__in=concept_ids
+            )
+            .exclude(**{f"data__{CONCEPT_NAME_TYPE_NODE}": None})
+            .exclude(**{f"data__{CONCEPT_NAME_LANGUAGE_NODE}": None})
+            .values("resourceinstance_id", "data")
+        )
+        for tile in label_tiles.iterator():
+            concept_id = str(tile["resourceinstance_id"])
+            self.labels[concept_id].append(tile["data"])
+
     def top_concepts_map(self):
         top_concept_of_tiles = (
             TileModel.objects.filter(nodegroup_id=TOP_CONCEPT_OF_NODE_AND_NODEGROUP)
@@ -111,7 +143,7 @@ class ConceptBuilder:
             .annotate(labels=self.labels_subquery(CONCEPT_NAME_NODEGROUP))
             .values("resourceinstance_id", "top_concept_of", "labels")
         )
-        for tile in top_concept_of_tiles:
+        for tile in top_concept_of_tiles.iterator():
             scheme_id = tile["top_concept_of"]
             top_concept_id = str(tile["resourceinstance_id"])
             self.top_concepts[scheme_id].add(top_concept_id)
@@ -132,14 +164,65 @@ class ConceptBuilder:
             self.broader_concepts[narrower_concept_id].add(broader_concept_id)
             self.labels[narrower_concept_id] = tile["labels"]
 
-    def populate_schemes(self):
-        self.schemes = ResourceInstance.objects.filter(
-            graph_id=SCHEMES_GRAPH_ID
-        ).annotate(labels=self.labels_subquery(SCHEME_NAME_NODEGROUP))
+    def build_scoped_parents(self, concept_ids: list[str]):
+        closure_concept_ids: set[str] = set(concept_ids)
+        frontier_concept_ids: set[str] = set(concept_ids)
 
-    def lookup_scheme(self, scheme_id: str):
-        schemes = [scheme for scheme in self.schemes if str(scheme.pk) == scheme_id]
-        return schemes[0] if schemes else None
+        while frontier_concept_ids:
+            broader_concept_tiles = (
+                TileModel.objects.filter(
+                    nodegroup_id=CLASSIFICATION_STATUS_NODEGROUP,
+                    resourceinstance_id__in=frontier_concept_ids,
+                )
+                .annotate(broader_concept=self.resources_from_tiles(BROADER_LOOKUP))
+                .values("resourceinstance_id", "broader_concept")
+            )
+
+            next_frontier_concept_ids: set[str] = set()
+
+            for tile in broader_concept_tiles.iterator():
+                broader_concept_id = tile["broader_concept"]
+                if not broader_concept_id:
+                    continue
+
+                narrower_concept_id = str(tile["resourceinstance_id"])
+                broader_concept_id_string = str(broader_concept_id)
+
+                self.broader_concepts[narrower_concept_id].add(
+                    broader_concept_id_string
+                )
+
+                if broader_concept_id_string not in closure_concept_ids:
+                    closure_concept_ids.add(broader_concept_id_string)
+                    next_frontier_concept_ids.add(broader_concept_id_string)
+
+            top_concept_of_tiles = (
+                TileModel.objects.filter(
+                    nodegroup_id=TOP_CONCEPT_OF_NODE_AND_NODEGROUP,
+                    resourceinstance_id__in=frontier_concept_ids,
+                )
+                .annotate(
+                    top_concept_of=self.resources_from_tiles(TOP_CONCEPT_OF_LOOKUP)
+                )
+                .values("resourceinstance_id", "top_concept_of")
+            )
+
+            for tile in top_concept_of_tiles.iterator():
+                scheme_id = tile["top_concept_of"]
+                if not scheme_id:
+                    continue
+
+                top_concept_id = str(tile["resourceinstance_id"])
+                self.schemes_by_top_concept[top_concept_id].add(str(scheme_id))
+
+            frontier_concept_ids = next_frontier_concept_ids
+
+        scheme_ids = set()
+        for scheme_id_set in self.schemes_by_top_concept.values():
+            scheme_ids |= scheme_id_set
+
+        self.populate_schemes(list(scheme_ids))
+        self.populate_concept_labels(list(closure_concept_ids))
 
     def serialize_scheme(self, scheme: ResourceInstance, *, children=True):
         scheme_id: str = str(scheme.pk)

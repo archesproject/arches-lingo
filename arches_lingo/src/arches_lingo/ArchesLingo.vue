@@ -38,7 +38,7 @@ provide(USER_KEY, { user, setUser });
 
 const selectedLanguage: Ref<Language> = ref(ENGLISH);
 provide(selectedLanguageKey, selectedLanguage);
-const systemLanguage = ENGLISH; // TODO: get from settings
+const systemLanguage = ENGLISH;
 provide(systemLanguageKey, systemLanguage);
 
 const router = useRouter();
@@ -105,7 +105,7 @@ async function checkUserAuthentication(
                 :is-nav-expanded="isNavExpanded"
             />
             <Splitter
-                style="height: 100%; border: none; overflow: hidden"
+                class="main-splitter"
                 :pt="{
                     gutter: {
                         style: {
@@ -116,24 +116,19 @@ async function checkUserAuthentication(
             >
                 <SplitterPanel
                     v-show="shouldShowHierarchy"
-                    :size="30"
+                    :size="40"
                 >
-                    <div
-                        style="
-                            height: 100%;
-                            display: flex;
-                            flex-direction: column;
-                        "
-                    >
+                    <div class="hierarchy-panel">
                         <SchemeHierarchy
                             :key="schemeHierarchyKey"
+                            :is-open="shouldShowHierarchy"
                             @should-show-hierarchy="
                                 shouldShowHierarchy = $event
                             "
                         />
                     </div>
                 </SplitterPanel>
-                <SplitterPanel :size="70">
+                <SplitterPanel :size="60">
                     <RouterView :key="route.fullPath" />
                 </SplitterPanel>
             </Splitter>
@@ -151,9 +146,7 @@ async function checkUserAuthentication(
 </template>
 
 <style scoped>
-@import url("arches/arches/app/media/fonts/openSans.css");
 main {
-    font-family: var(--p-lingo-font-family);
     height: 100vh;
     width: 100vw;
     overflow: hidden;
@@ -166,23 +159,34 @@ main {
     flex: 1 1 auto;
     overflow: hidden;
 }
+
+.main-splitter {
+    height: 100%;
+    border: none;
+    overflow: hidden;
+    border-radius: 0;
+}
+
+.hierarchy-panel {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
 </style>
 
-<!-- NOT scoped because dialog gets appended to <body> and is unreachable via scoped styles -->
 <style>
 @import url("arches/arches/app/media/fonts/openSans.css");
-.p-confirmdialog,
-.p-datepicker-panel,
-.p-tree-node-label,
-.p-toast,
-.p-inputtext,
-.p-treeselect-empty-message,
-.p-treeselect-option,
-.p-select-option,
-.p-select-empty-message,
-.p-multiselect-empty-message,
-.p-multiselect-option,
-.p-popover {
-    font-family: var(--p-lingo-font-family) !important;
+
+:root {
+    --p-font-family: var(--p-lingo-font-family);
+}
+
+html,
+body {
+    font-family: var(--p-lingo-font-family);
+}
+
+.p-component {
+    font-family: var(--p-lingo-font-family);
 }
 </style>
