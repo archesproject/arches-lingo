@@ -9,8 +9,6 @@ import GenericWidget from "@/arches_component_lab/generics/GenericWidget/Generic
 
 import { VIEW } from "@/arches_lingo/constants.ts";
 
-import { routeNames } from "@/arches_lingo/routes.ts";
-
 import type {
     ConceptMatchStatus,
     MetaStringText,
@@ -96,23 +94,18 @@ const metaStringLabel: MetaStringText = {
                 />
             </template>
             <template #language="{ rowData }">
-                <div
-                    v-for="item in rowData.aliased_data
-                        .match_status_ascribed_comparate?.details"
-                    :key="item.resource_id"
+                <RouterLink
+                    :to="{
+                        name: rowData.aliased_data
+                            .match_status_ascribed_comparate?.url as string,
+                    }"
+                    class="text-link"
                 >
-                    <RouterLink
-                        :to="{
-                            name: routeNames.concept,
-                            params: {
-                                id: item.resource_id,
-                            },
-                        }"
-                        class="text-link"
-                    >
-                        {{ item.display_value }}
-                    </RouterLink>
-                </div>
+                    {{
+                        rowData.aliased_data.match_status_ascribed_comparate
+                            ?.url_label
+                    }}
+                </RouterLink>
             </template>
             <template #drawer="{ rowData }">
                 <GenericWidget

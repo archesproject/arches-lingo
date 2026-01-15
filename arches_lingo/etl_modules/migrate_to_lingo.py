@@ -2,6 +2,7 @@ import filetype
 import json
 import logging
 import os
+import re
 import uuid
 from datetime import datetime
 from collections import defaultdict
@@ -22,32 +23,7 @@ from arches.app.models.concept import Concept
 from arches.app.models.system_settings import settings
 
 import arches_lingo.tasks as tasks
-from arches_lingo.const import (
-    SCHEMES_GRAPH_ID,
-    CONCEPTS_GRAPH_ID,
-    TOP_CONCEPT_OF_NODE_AND_NODEGROUP,
-    CLASSIFICATION_STATUS_NODEGROUP,
-    CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID,
-    CLASSIFICATION_STATUS_ASCRIBED_RELATION_NODEID,
-    CLASSIFICATION_STATUS_TYPE_NODEID,
-    CLASSIFICATION_STATUS_TYPE_METATYPE_NODEID,
-    CLASSIFICATION_STATUS_ASSIGNMENT_ACTOR_NODEID,
-    CLASSIFICATION_STATUS_ASSIGNMENT_OBJ_USED_NODEID,
-    CLASSIFICATION_STATUS_ASSIGNMENT_TYPE_NODEID,
-    CLASSIFICATION_STATUS_TIMESPAN_END_OF_END_NODEID,
-    CLASSIFICATION_STATUS_TIMESPAN_BEGIN_OF_BEGIN_NODEID,
-    RELATION_STATUS_NODEGROUP,
-    RELATION_STATUS_ASCRIBED_COMPARATE_NODEID,
-    RELATION_STATUS_ASCRIBED_RELATION_NODEID,
-    RELATION_STATUS_STATUS_NODEID,
-    RELATION_STATUS_STATUS_METATYPE_NODEID,
-    RELATION_STATUS_TIMESPAN_BEGIN_OF_THE_BEGIN_NODEID,
-    RELATION_STATUS_TIMESPAN_END_OF_THE_END_NODEID,
-    RELATION_STATUS_DATA_ASSIGNMENT_ACTOR_NODEID,
-    RELATION_STATUS_DATA_ASSIGNMENT_OBJECT_USED_NODEID,
-    RELATION_STATUS_DATA_ASSIGNMENT_TYPE_NODEID,
-    CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID,
-)
+import arches_lingo.const as const
 
 logger = logging.getLogger(__name__)
 
@@ -67,12 +43,18 @@ details = {
     "helptemplate": "migrate-to-lingo-help",
 }
 
+# TODO: swap out for URLValidator?
+# from django.core.validators import URLValidator
+URL_REGEX = re.compile(
+    r"https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)"
+)
+
 
 class LingoResourceImporter(BaseImportModule):
     def __init__(self, request=None, loadid=None, userid=None, **kwargs):
         if request:
             moduleid = request.POST.get("module")
-            loadid = request.POST.get("load_id")
+            loadid = request.POST.get("load_id") or request.POST.get("loadid")
             userid = request.user.id if userid is None else userid
         else:
             moduleid = kwargs.get("moduleid", None)
@@ -152,7 +134,9 @@ class LingoResourceImporter(BaseImportModule):
                 mock_tile = self.create_mock_tile_from_value(
                     value, isScheme=True, lang_lookup=self.language_lookup
                 )
-                if mock_tile.values():
+                if isinstance(mock_tile, list):
+                    scheme_to_load["tile_data"].extend(mock_tile)
+                elif mock_tile:
                     scheme_to_load["tile_data"].append(mock_tile)
             schemes.append(scheme_to_load)
         return schemes
@@ -172,7 +156,9 @@ class LingoResourceImporter(BaseImportModule):
                 mock_tile = self.create_mock_tile_from_value(
                     value, lang_lookup=self.language_lookup
                 )
-                if mock_tile.values():
+                if isinstance(mock_tile, list):
+                    concept_to_load["tile_data"].extend(mock_tile)
+                elif mock_tile:
                     concept_to_load["tile_data"].append(mock_tile)
 
             concepts.append(concept_to_load)
@@ -196,37 +182,67 @@ class LingoResourceImporter(BaseImportModule):
                     value["language"] = value["language"].name
             except KeyError:
                 pass
-        if value["valuetype_id"] == "title":
-            value["valuetype_id"] = "prefLabel"
+        value_type_id = value["valuetype_id"]
+        if value_type_id == "title":
+            value_type_id = "prefLabel"
         mock_tile = {}
-        if (
-            value["valuetype_id"] == "prefLabel"
-            or value["valuetype_id"] == "altLabel"
-            or value["valuetype_id"] == "hiddenLabel"
-            or value["valuetype_id"] == "title"
-        ):
+        if value_type_id in set(["prefLabel", "altLabel", "hiddenLabel", "title"]):
             mock_tile["appellative_status_ascribed_name_content"] = value["value"]
             mock_tile["appellative_status_ascribed_name_language"] = value["language"]
-            mock_tile["appellative_status_ascribed_relation"] = value["valuetype_id"]
+            mock_tile["appellative_status_ascribed_relation"] = value_type_id
             return {"appellative_status": mock_tile}
-        elif value["valuetype_id"] == "identifier":
-            mock_tile["identifier_content"] = value["value"]
-            mock_tile["identifier_type"] = value["valuetype_id"]
-            return {"identifier": mock_tile}
-        elif (
-            value["valuetype_id"] == "note"
-            or value["valuetype_id"] == "changeNote"
-            or value["valuetype_id"] == "definition"
-            or value["valuetype_id"] == "description"
-            or value["valuetype_id"] == "editorialNote"
-            or value["valuetype_id"] == "example"
-            or value["valuetype_id"] == "historyNote"
-            or value["valuetype_id"] == "scopeNote"
+        elif value_type_id == "identifier":
+            val = value["value"]
+            if URL_REGEX.match(val) and not isScheme:
+                mock_tiles = [
+                    {
+                        "uri": {
+                            "uri_content": val,
+                            "uri_type": value_type_id,
+                        }
+                    },
+                    {
+                        "identifier": {
+                            "identifier_content": val.rstrip("/").split("/")[-1],
+                            "identifier_type": value_type_id,
+                        }
+                    },
+                ]
+                return mock_tiles
+            else:
+                mock_tile["identifier_content"] = val
+                mock_tile["identifier_type"] = value_type_id
+                return {"identifier": mock_tile}
+        elif value_type_id in set(
+            [
+                "note",
+                "changeNote",
+                "definition",
+                "description",
+                "editorialNote",
+                "example",
+                "historyNote",
+                "scopeNote",
+            ]
         ):
             mock_tile["statement_content"] = value["value"]
-            mock_tile["statement_type"] = value["valuetype_id"]
+            mock_tile["statement_type"] = value_type_id
             mock_tile["statement_language"] = value["language"]
             return {"statement": mock_tile}
+        elif value_type_id in set(
+            [
+                "broadMatch",
+                "closeMatch",
+                "exactMatch",
+                "inverseOf",
+                "mappingRelation",
+                "narrowMatch",
+                "relatedMatch",
+            ]
+        ):
+            mock_tile["match_status_ascribed_comparate"] = value["value"]
+            mock_tile["match_status_ascribed_relation"] = value_type_id
+            return {"match_status": mock_tile}
         pass
 
     @staticmethod
@@ -431,9 +447,9 @@ class LingoResourceImporter(BaseImportModule):
                 and conceptidto = ANY(%s);
         """,
             (
-                TOP_CONCEPT_OF_NODE_AND_NODEGROUP,
+                const.TOP_CONCEPT_OF_NODE_AND_NODEGROUP,
                 loadid,
-                TOP_CONCEPT_OF_NODE_AND_NODEGROUP,
+                const.TOP_CONCEPT_OF_NODE_AND_NODEGROUP,
                 concepts_to_migrate,
             ),
         )
@@ -487,17 +503,17 @@ class LingoResourceImporter(BaseImportModule):
                 and conceptidto = ANY(%s);
         """,
             (
-                CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID,
-                CLASSIFICATION_STATUS_ASCRIBED_RELATION_NODEID,
-                CLASSIFICATION_STATUS_TYPE_NODEID,
-                CLASSIFICATION_STATUS_TYPE_METATYPE_NODEID,
-                CLASSIFICATION_STATUS_ASSIGNMENT_ACTOR_NODEID,
-                CLASSIFICATION_STATUS_ASSIGNMENT_OBJ_USED_NODEID,
-                CLASSIFICATION_STATUS_ASSIGNMENT_TYPE_NODEID,
-                CLASSIFICATION_STATUS_TIMESPAN_END_OF_END_NODEID,
-                CLASSIFICATION_STATUS_TIMESPAN_BEGIN_OF_BEGIN_NODEID,
+                const.CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID,
+                const.CLASSIFICATION_STATUS_ASCRIBED_RELATION_NODEID,
+                const.CLASSIFICATION_STATUS_TYPE_NODEID,
+                const.CLASSIFICATION_STATUS_TYPE_METATYPE_NODEID,
+                const.CLASSIFICATION_STATUS_ASSIGNMENT_ACTOR_NODEID,
+                const.CLASSIFICATION_STATUS_ASSIGNMENT_OBJ_USED_NODEID,
+                const.CLASSIFICATION_STATUS_ASSIGNMENT_TYPE_NODEID,
+                const.CLASSIFICATION_STATUS_TIMESPAN_END_OF_END_NODEID,
+                const.CLASSIFICATION_STATUS_TIMESPAN_BEGIN_OF_BEGIN_NODEID,
                 loadid,
-                CLASSIFICATION_STATUS_NODEGROUP,
+                const.CLASSIFICATION_STATUS_NODEGROUP,
                 concepts_to_migrate,
             ),
         )
@@ -553,17 +569,17 @@ class LingoResourceImporter(BaseImportModule):
                 and conceptidfrom = ANY(%s);
         """,
             (
-                RELATION_STATUS_ASCRIBED_COMPARATE_NODEID,
-                RELATION_STATUS_ASCRIBED_RELATION_NODEID,
-                RELATION_STATUS_STATUS_NODEID,
-                RELATION_STATUS_STATUS_METATYPE_NODEID,
-                RELATION_STATUS_TIMESPAN_BEGIN_OF_THE_BEGIN_NODEID,
-                RELATION_STATUS_TIMESPAN_END_OF_THE_END_NODEID,
-                RELATION_STATUS_DATA_ASSIGNMENT_ACTOR_NODEID,
-                RELATION_STATUS_DATA_ASSIGNMENT_OBJECT_USED_NODEID,
-                RELATION_STATUS_DATA_ASSIGNMENT_TYPE_NODEID,
+                const.RELATION_STATUS_ASCRIBED_COMPARATE_NODEID,
+                const.RELATION_STATUS_ASCRIBED_RELATION_NODEID,
+                const.RELATION_STATUS_STATUS_NODEID,
+                const.RELATION_STATUS_STATUS_METATYPE_NODEID,
+                const.RELATION_STATUS_TIMESPAN_BEGIN_OF_THE_BEGIN_NODEID,
+                const.RELATION_STATUS_TIMESPAN_END_OF_THE_END_NODEID,
+                const.RELATION_STATUS_DATA_ASSIGNMENT_ACTOR_NODEID,
+                const.RELATION_STATUS_DATA_ASSIGNMENT_OBJECT_USED_NODEID,
+                const.RELATION_STATUS_DATA_ASSIGNMENT_TYPE_NODEID,
                 loadid,
-                RELATION_STATUS_NODEGROUP,
+                const.RELATION_STATUS_NODEGROUP,
                 concepts_to_migrate,
             ),
         )
@@ -572,7 +588,7 @@ class LingoResourceImporter(BaseImportModule):
         # concepts with their schemes
         part_of_scheme_tiles = []
         part_of_scheme_nodegroup = NodeGroup.objects.get(
-            nodegroupid=CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID
+            nodegroupid=const.CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID
         )
         concepts_with_scheme = {}
         for concept in concept_hierarchy:
@@ -602,7 +618,7 @@ class LingoResourceImporter(BaseImportModule):
                 }
 
             value_obj = {
-                str(CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID): {
+                str(const.CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID): {
                     "notes": "",
                     "valid": True,
                     "value": [
@@ -740,11 +756,11 @@ class LingoResourceImporter(BaseImportModule):
         with connection.cursor() as cursor:
             # Create node and nodegroup lookups
             schemes_nodegroup_lookup, schemes_nodes = self.get_graph_tree(
-                SCHEMES_GRAPH_ID
+                const.SCHEMES_GRAPH_ID
             )
             schemes_node_lookup = self.get_node_lookup(schemes_nodes)
             concepts_nodegroup_lookup, concepts_nodes = self.get_graph_tree(
-                CONCEPTS_GRAPH_ID
+                const.CONCEPTS_GRAPH_ID
             )
             concepts_node_lookup = self.get_node_lookup(concepts_nodes)
 
@@ -824,7 +840,10 @@ class LingoResourceImporter(BaseImportModule):
             )
 
     def return_with_error(self, error):
-        return {
-            "success": False,
-            "data": {"title": _("Error"), "message": error},
-        }
+        if not self.load_event:
+            self.load_event = models.LoadEvent.objects.get(loadid=self.loadid)
+        self.load_event.status = "failed"
+        self.load_event.error_message = str(error)
+        self.load_event.save()
+        logger.error(error)
+        return {"success": False, "data": {"message": error}}
