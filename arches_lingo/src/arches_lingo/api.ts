@@ -114,7 +114,10 @@ export const updateLingoResourceFromForm = async (
         },
     );
     const parsed = await response.json();
-    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    if (!response.ok)
+        throw new Error(
+            parsed.message || parsed.content || response.statusText,
+        );
     return parsed;
 };
 
@@ -225,7 +228,10 @@ export const createLingoResourceFromForm = async (
     });
 
     const parsed = await response.json();
-    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    if (!response.ok)
+        throw new Error(
+            parsed.message || parsed.content || response.statusText,
+        );
     return parsed;
 };
 
@@ -258,11 +264,13 @@ export const fetchSearchResults = async (
     searchTerm: string,
     items: number,
     page: number,
+    orderMode: string = "unsorted",
 ) => {
     const params = new URLSearchParams({
         term: searchTerm,
         items: items.toString(),
         page: page.toString(),
+        order: orderMode,
     });
 
     const url = `${arches.urls.api_search}?${params.toString()}`;
@@ -296,6 +304,25 @@ export const fetchConceptResources = async (
     return parsed;
 };
 
+export const fetchConceptResource = async (conceptId: string) => {
+    const parsed = await fetchConceptResources("", 1, 1, undefined, undefined, [
+        conceptId,
+    ]);
+    return parsed.data[0];
+};
+
+export const fetchSchemeResource = async (schemeId: string) => {
+    const parsed = await fetchConceptResources(
+        "",
+        1,
+        1,
+        schemeId,
+        undefined,
+        [],
+    );
+    return parsed.data[0].parents[0][0];
+};
+
 export const fetchConceptRelationships = async (
     conceptId: string,
     type: string,
@@ -321,6 +348,122 @@ export const fetchConcepts = async () => {
 
 export const fetchControlledListOptions = async (controlledListId: string) => {
     const response = await fetch(arches.urls.controlled_list(controlledListId));
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
+export const importThesaurus = async (file: File, overwriteOption: string) => {
+    const formData = new FormData();
+    formData.append("action", "start");
+    formData.append("mode", "ui");
+    // moduleId normally fetched in context of BDM, but needed to get throough ETLManagerView POST
+    const lingoImporterModuleId = "11cad3ca-e155-44b1-9910-c50b3def47f6";
+    formData.append("module", lingoImporterModuleId);
+
+    // Mimic Bulk Data Manager behavior - 'Start' request initializes new load event
+    const startResponse = await fetch(arches.urls.etl_manager, {
+        method: "POST",
+        headers: { "X-CSRFTOKEN": getToken() },
+        body: formData,
+    });
+
+    if (startResponse.ok) {
+        const parsed = await startResponse.json();
+        const loadId = parsed.result.load_id;
+        formData.append("load_id", loadId);
+        formData.append("overwrite_option", overwriteOption);
+        formData.append("file", file);
+        formData.set("action", "write");
+        // Subsequent 'Write' request to actually upload the file and start the import
+        const response = await fetch(arches.urls.etl_manager, {
+            method: "POST",
+            headers: { "X-CSRFTOKEN": getToken() },
+            body: formData,
+        });
+
+        try {
+            const parsed = await response.json();
+            if (response.ok) {
+                return parsed;
+            }
+            throw new Error(parsed.message);
+        } catch (error) {
+            throw new Error((error as Error).message || response.statusText);
+        }
+    }
+};
+
+export const exportThesaurus = async (
+    resourceid: string,
+    format: string,
+    fileName?: string,
+) => {
+    const formData = new FormData();
+    formData.append("action", "start");
+    // moduleId normally fetched in context of BDM, but needed to get throough ETLManagerView POST
+    const lingoImporterModuleId = "4302e334-33ed-4e85-99f2-fdac7c7c32fa";
+    formData.append("module", lingoImporterModuleId);
+    formData.append("resourceid", resourceid);
+    formData.append("format", format);
+    if (fileName) {
+        formData.append("filename", fileName);
+    }
+    const response = await fetch(arches.urls.etl_manager, {
+        method: "POST",
+        headers: { "X-CSRFTOKEN": getToken() },
+        body: formData,
+    });
+    try {
+        const parsed = await response.json();
+        if (response.ok) {
+            return parsed;
+        }
+        throw new Error(parsed.message || parsed.data?.message);
+    } catch (error) {
+        throw new Error((error as Error).message || response.statusText);
+    }
+};
+
+export const fetchUserNotifications = async (
+    items: number,
+    page: number,
+    unreadOnly: boolean,
+) => {
+    const params = new URLSearchParams({
+        items: items.toString(),
+        page: page.toString(),
+    });
+    if (unreadOnly) {
+        params.append("unread_only", unreadOnly.toString());
+    }
+    const url = `${arches.urls.get_notifications}?${params.toString()}`;
+    const response = await fetch(url);
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
+export const dismissNotifications = async (notificationIds: string[]) => {
+    const formData = new FormData();
+    formData.append("dismissals", JSON.stringify(notificationIds));
+    const url = arches.urls.dismiss_notifications;
+    const response = await fetch(url, {
+        method: "POST",
+        headers: { "X-CSRFTOKEN": getToken() },
+        body: formData,
+    });
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
+export const getSearchExportFile = async (exportId: string) => {
+    const params = new URLSearchParams({
+        exportid: exportId,
+    });
+    const url = `${arches.urls.get_export_file}?${params.toString()}`;
+    const response = await fetch(url);
     const parsed = await response.json();
     if (!response.ok) throw new Error(parsed.message || response.statusText);
     return parsed;

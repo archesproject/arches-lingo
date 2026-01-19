@@ -51,7 +51,7 @@ function openUserMenu(event: MouseEvent) {
 </script>
 
 <template>
-    <div style="display: flex; align-items: center; gap: 0.5rem">
+    <div class="user-interaction">
         <Button
             :aria-label="$gettext('Open user menu')"
             @click="openUserMenu"
@@ -67,7 +67,7 @@ function openUserMenu(event: MouseEvent) {
 
         <Popover
             ref="popover"
-            style="padding: 0.5rem"
+            class="user-interaction-popover"
         >
             <UserInteractionMenu
                 :display-name="displayName"
@@ -78,15 +78,30 @@ function openUserMenu(event: MouseEvent) {
 </template>
 
 <style scoped>
+.user-interaction {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.user-interaction-popover {
+    padding: 0.5rem;
+}
+
 .p-button {
-    background: var(--p-menubar-background) !important;
+    background: transparent !important;
     border: none !important;
-    color: var(--p-menubar-text-color) !important;
+    color: inherit !important;
+    border-radius: 0;
 }
 
 .p-button:hover {
-    background: var(--p-button-primary-hover-background) !important;
+    background: var(
+        --p-button-text-hover-background,
+        var(--p-button-primary-hover-background)
+    ) !important;
 }
+
 .initials-circle {
     width: 2rem;
     height: 2rem;

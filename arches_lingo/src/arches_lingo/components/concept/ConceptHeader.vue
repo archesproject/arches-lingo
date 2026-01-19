@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject, onMounted, ref } from "vue";
+import { inject, onMounted, ref, type Ref } from "vue";
 
 import { useConfirm } from "primevue/useconfirm";
 import { useGettext } from "vue3-gettext";
@@ -8,24 +8,28 @@ import { useToast } from "primevue/usetoast";
 
 import ConfirmDialog from "primevue/confirmdialog";
 import Button from "primevue/button";
-import SelectButton from "primevue/selectbutton";
-import RadioButton from "primevue/radiobutton";
 import Select from "primevue/select";
-
-//Placeholder for export button panel
-import Popover from "primevue/popover";
-
 import Skeleton from "primevue/skeleton";
 
+import ExportThesauri from "@/arches_lingo/components/scheme/SchemeHeader/components/ExportThesauri.vue";
+
 import {
+    DANGER,
     DEFAULT_ERROR_TOAST_LIFE,
     ERROR,
+    SECONDARY,
     systemLanguageKey,
+    selectedLanguageKey,
 } from "@/arches_lingo/constants.ts";
+import { PREF_LABEL } from "@/arches_controlled_lists/constants.ts";
 
-import { fetchLingoResource, deleteLingoResource } from "@/arches_lingo/api.ts";
+import {
+    fetchLingoResource,
+    deleteLingoResource,
+    fetchConceptResource,
+} from "@/arches_lingo/api.ts";
 import { extractDescriptors } from "@/arches_lingo/utils.ts";
-import { DANGER, SECONDARY } from "@/arches_lingo/constants.ts";
+import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 
 import type {
     ConceptHeaderData,
@@ -33,6 +37,7 @@ import type {
     ResourceInstanceResult,
     DataComponentMode,
 } from "@/arches_lingo/types.ts";
+import type { Label } from "@/arches_controlled_lists/types";
 
 import type { Language } from "@/arches_component_lab/types.ts";
 import { routeNames } from "@/arches_lingo/routes.ts";
@@ -54,20 +59,45 @@ const confirm = useConfirm();
 const router = useRouter();
 
 const systemLanguage = inject(systemLanguageKey) as Language;
+const selectedLanguage = inject(selectedLanguageKey) as Ref<Language>;
 
 const concept = ref<ResourceInstanceResult>();
+const label = ref<Label>();
 const data = ref<ConceptHeaderData>();
 const isLoading = ref(true);
+const showExportDialog = ref(false);
+const exportDialogKey = ref(0);
+
+//Placeholder for concept Type
+const conceptType = ref();
+const ctype = ref([
+    { name: "Concept", code: "c" },
+    { name: "Guide Term", code: "gt" },
+]);
 
 onMounted(async () => {
     try {
         if (!props.resourceInstanceId) {
+            label.value = {
+                value: $gettext("New Concept"),
+                language_id: selectedLanguage.value.code,
+                valuetype_id: PREF_LABEL,
+            };
             return;
         }
 
         concept.value = await fetchLingoResource(
             props.graphSlug,
             props.resourceInstanceId,
+        );
+        const conceptResource = await fetchConceptResource(
+            props.resourceInstanceId,
+        );
+
+        label.value = getItemLabel(
+            conceptResource,
+            selectedLanguage.value.code,
+            systemLanguage.code,
         );
 
         extractConceptHeaderData(concept.value!);
@@ -130,31 +160,10 @@ function confirmDelete() {
     });
 }
 
-//Placeholder for export button panel
-const exportDialog = ref();
-const toggle = (event: Event) => {
-    exportDialog.value.toggle(event);
-};
-
-//Placeholder for export type
-const exporter = ref("Concept Only");
-const exporterOptions = ref(["Concept Only", "Concept + Children"]);
-
-//Placeholder for export format radio button group
-const exportFormat = ref();
-const exportformatOptions = ref([
-    { label: "csv", value: "csv" },
-    { label: "SKOS", value: "skos" },
-    { label: "rdf", value: "rdf" },
-    { label: "JSON-LD", value: "jsonld" },
-]);
-
-//Placeholder for concept Type
-const conceptType = ref();
-const ctype = ref([
-    { name: "Concept", code: "c" },
-    { name: "Guide Term", code: "gt" },
-]);
+function openExportDialog() {
+    exportDialogKey.value++;
+    showExportDialog.value = true;
+}
 
 function extractConceptHeaderData(concept: ResourceInstanceResult) {
     const aliased_data = concept?.aliased_data;
@@ -188,9 +197,15 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
 
 <template>
     <ConfirmDialog group="delete-concept" />
+    <ExportThesauri
+        v-if="concept && showExportDialog"
+        :key="exportDialogKey"
+        :resource-id="concept.resourceinstanceid"
+        :resource-name="label?.value"
+    />
     <Skeleton
         v-if="isLoading"
-        style="width: 100%"
+        style="width: 100%; height: 9rem"
     />
     <div
         v-else
@@ -198,18 +213,18 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
     >
         <div class="concept-header-toolbar">
             <div class="concept-details">
-                <h2 v-if="data?.descriptor?.name">
+                <h2>
                     <div class="concept-name">
                         <!-- To do: change icon based on concept type -->
                         <i class="pi pi-tag"></i>
                         <span>
-                            {{ data?.descriptor?.name }}
+                            {{ label?.value }}
 
                             <span
-                                v-if="data?.descriptor?.language"
+                                v-if="label?.language_id"
                                 class="concept-label-lang"
                             >
-                                ({{ data?.descriptor?.language }})
+                                ({{ label?.language_id }})
                             </span>
                         </span>
                     </div>
@@ -226,73 +241,14 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                 </div>
             </div>
             <div class="header-buttons">
-                <!-- Placeholder export button -->
                 <Button
                     :aria-label="$gettext('Export')"
                     class="add-button"
-                    @click="toggle"
+                    @click="openExportDialog"
                 >
                     <span><i class="pi pi-cloud-download"></i></span>
-                    <span>Export</span>
+                    <span>{{ $gettext("Export") }}</span>
                 </Button>
-                <Popover
-                    ref="exportDialog"
-                    class="export-panel"
-                >
-                    <div class="exports-panel-container">
-                        <div class="container-title">
-                            <h3>
-                                {{ $gettext("Concept Export") }}
-                            </h3>
-                        </div>
-                        <div class="options-container">
-                            <h4>
-                                {{ $gettext("Export Options") }}
-                            </h4>
-                            <!-- TODO: export options go here -->
-                            <SelectButton
-                                v-model="exporter"
-                                :options="exporterOptions"
-                            />
-                        </div>
-                        <div class="formats-container">
-                            <h4>
-                                {{ $gettext("Export Format") }}
-                            </h4>
-                            <div>
-                                <span
-                                    v-for="option in exportformatOptions"
-                                    :key="option.value"
-                                    class="selection"
-                                >
-                                    <RadioButton
-                                        :key="option.value"
-                                        v-model="exportFormat"
-                                        :input-id="option.value"
-                                        :value="option.value"
-                                        :label="option.label"
-                                    ></RadioButton>
-                                    <label :for="option.value">{{
-                                        option.label
-                                    }}</label>
-                                </span>
-                            </div>
-                        </div>
-                        <div class="export-footer">
-                            <Button
-                                icon="pi pi-file-export"
-                                :label="$gettext('Export')"
-                                class="add-button"
-                            ></Button>
-                            <Button
-                                icon="pi pi-trash"
-                                :label="$gettext('Cancel')"
-                                class="add-button"
-                            ></Button>
-                        </div>
-                    </div>
-                </Popover>
-
                 <Button
                     icon="pi pi-plus-circle"
                     :label="$gettext('Add Child')"
@@ -412,42 +368,63 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
     background: var(--p-header-background);
     border-bottom: 0.0625rem solid var(--p-header-toolbar-border);
     min-height: 8.5rem;
+    box-sizing: border-box;
 }
 
 .header-content {
     padding-top: 0.75rem;
     padding-inline-start: 1rem;
-    padding-inline-end: 1.5rem;
+    padding-inline-end: 1rem;
+    box-sizing: border-box;
 }
 
 .concept-header-toolbar {
-    height: 3rem;
+    min-height: 3rem;
+    height: auto;
     background: var(--p-header-toolbar-background);
     border-bottom: 0.0625rem solid var(--p-header-toolbar-border);
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-wrap: wrap;
+    row-gap: 0.5rem;
     padding-inline-start: 1rem;
     padding-inline-end: 1rem;
+    padding-top: 0.375rem;
+    padding-bottom: 0.375rem;
+    box-sizing: border-box;
 }
 
 .concept-details {
     display: flex;
-    align-items: anchor-center;
+    align-items: center;
     gap: 0.5rem;
+    min-width: 0;
 }
 
 .concept-name {
     display: flex;
-    align-items: anchor-center;
+    align-items: center;
     gap: 0.25rem;
+    min-width: 0;
+}
+
+.concept-name > span {
+    min-width: 0;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 .p-select {
     margin: 0rem 0.5rem;
     border-radius: 0.125rem;
     box-shadow: none;
-    width: 10rem;
+    width: auto;
+    max-width: 100%;
+    min-width: 0;
 }
 
 h2 {
@@ -455,6 +432,7 @@ h2 {
     margin-bottom: 0;
     font-size: var(--p-lingo-font-size-large);
     font-weight: var(--p-lingo-font-weight-normal);
+    min-width: 0;
 }
 
 .delete-button {
@@ -464,6 +442,9 @@ h2 {
 .header-buttons {
     display: flex;
     gap: 0.25rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    min-width: 0;
 }
 
 .export-panel {
@@ -542,11 +523,16 @@ h2 {
     display: flex;
     justify-content: space-between;
     align-items: baseline;
+    flex-wrap: wrap;
+    column-gap: 1rem;
+    row-gap: 0.25rem;
+    min-width: 0;
 }
 
 .header-item {
     display: inline-flex;
     align-items: baseline;
+    min-width: 0;
 }
 
 .header-item-label {
@@ -561,6 +547,7 @@ h2 {
     font-size: var(--p-lingo-font-size-smallnormal);
     color: var(--p-header-item-label);
     margin-inline-end: 0.25rem;
+    min-width: 0;
 }
 
 .header-item-value,

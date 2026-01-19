@@ -1234,7 +1234,6 @@
                 {
                     "alias": "content",
                     "config": {
-                        "activateMax": false,
                         "imagesOnly": true,
                         "maxFileSize": null,
                         "maxFiles": 1
@@ -1264,7 +1263,7 @@
             "publication": {
                 "graph_id": "ce57ee93-1f08-11ee-9071-214dbb482912",
                 "most_recent_edit_id": null,
-                "notes": null,
+                "notes": "Lingo initial model version",
                 "publicationid": "99a09bb6-a9bb-4203-887b-1fb84c0ca880",
                 "published_time": "2025-03-24T17:10:01.644"
             },

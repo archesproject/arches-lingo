@@ -22,7 +22,9 @@ const { $gettext } = useGettext();
 const isLoading = ref(true);
 const schemes = ref<ResourceInstanceResult[]>([]);
 
-onMounted(async () => {
+async function fetchSchemes() {
+    schemes.value = [];
+    isLoading.value = true;
     try {
         schemes.value = await fetchLingoResources("scheme");
     } catch (error) {
@@ -40,6 +42,10 @@ onMounted(async () => {
     });
 
     isLoading.value = false;
+}
+
+onMounted(async () => {
+    await fetchSchemes();
 });
 </script>
 
@@ -79,7 +85,10 @@ onMounted(async () => {
                 v-for="scheme in schemes"
                 :key="scheme.resourceinstanceid"
             >
-                <SchemeCard :scheme="scheme" />
+                <SchemeCard
+                    :scheme="scheme"
+                    @imported="fetchSchemes"
+                />
             </li>
         </ul>
     </div>

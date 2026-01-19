@@ -20,6 +20,7 @@ export const CLOSE = "close";
 export const CLOSED = "closed";
 export const NEW_CONCEPT = "newConcept";
 
+export const DEFAULT_TOAST_LIFE = 5000;
 export const DEFAULT_ERROR_TOAST_LIFE = 8000;
 export const SEARCH_RESULTS_PER_PAGE = 25;
 export const SEARCH_RESULT_ITEM_SIZE = 50;

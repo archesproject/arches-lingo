@@ -163,16 +163,6 @@ async function save(e: FormSubmitEvent) {
                     :mode="EDIT"
                     class="widget-container column"
                 />
-                <GenericWidget
-                    :graph-slug="props.graphSlug"
-                    node-alias="relation_status_status_metatype"
-                    :aliased-node-data="
-                        props.tileData?.aliased_data
-                            .relation_status_status_metatype
-                    "
-                    :mode="EDIT"
-                    class="widget-container column"
-                />
                 <div class="widget-container">
                     <GenericWidget
                         :graph-slug="props.graphSlug"
@@ -209,16 +199,6 @@ async function save(e: FormSubmitEvent) {
                     :aliased-node-data="
                         props.tileData?.aliased_data
                             .relation_status_data_assignment_object_used
-                    "
-                    :mode="EDIT"
-                    class="widget-container column"
-                />
-                <GenericWidget
-                    :graph-slug="props.graphSlug"
-                    node-alias="relation_status_data_assignment_type"
-                    :aliased-node-data="
-                        props.tileData?.aliased_data
-                            .relation_status_data_assignment_type
                     "
                     :mode="EDIT"
                     class="widget-container column"
