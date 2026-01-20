@@ -155,6 +155,7 @@ async function save(e: FormSubmitEvent) {
                             .classification_status_ascribed_classification
                     "
                     :mode="EDIT"
+                    :scheme-selectable="true"
                     class="widget-container column"
                 />
             </Form>

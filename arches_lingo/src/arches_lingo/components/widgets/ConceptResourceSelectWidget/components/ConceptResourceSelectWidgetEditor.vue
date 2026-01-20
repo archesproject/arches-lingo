@@ -2,10 +2,8 @@
 import { computed, inject, ref } from "vue";
 
 import { useGettext } from "vue3-gettext";
-import { FormField } from "@primevue/forms";
 
 import Button from "primevue/button";
-import Message from "primevue/message";
 import MultiSelect from "primevue/multiselect";
 
 import { fetchConceptResources } from "@/arches_lingo/api.ts";
@@ -19,9 +17,11 @@ import {
 
 import type { Ref } from "vue";
 import type { MultiSelectFilterEvent } from "primevue/multiselect";
-import type { FormFieldResolverOptions } from "@primevue/forms";
 import type { VirtualScrollerLazyEvent } from "primevue/virtualscroller";
-
+import type {
+    ResourceInstanceListValue,
+    ResourceInstanceReference,
+} from "@/arches_component_lab/datatypes/resource-instance-list/types";
 import type { SearchResultItem } from "@/arches_lingo/types.ts";
 import type { Language } from "@/arches_component_lab/types";
 
@@ -32,6 +32,10 @@ const props = defineProps<{
     scheme?: string;
     exclude?: boolean;
     schemeSelectable: boolean;
+}>();
+
+const emit = defineEmits<{
+    (event: "update:value", updatedValue: ResourceInstanceListValue): void;
 }>();
 
 const { $gettext } = useGettext();
@@ -45,6 +49,7 @@ const isLoading = ref(false);
 const searchResultsPage = ref(0);
 const searchResultsTotalCount = ref(0);
 const fetchError = ref<string | null>(null);
+const emptyFilterMessage = ref($gettext("Search returned no results"));
 
 const searchResultsCurrentCount = computed(() => options.value.length);
 
@@ -54,6 +59,15 @@ props.value?.forEach((option) => {
         selectedLanguage.value.code,
         systemLanguage.code,
     ).value;
+});
+
+const initialValueFromTileData = computed(() => {
+    if (props.value) {
+        return props.value.map((option) => {
+            return option.id;
+        });
+    }
+    return [];
 });
 
 function clearOptions() {
@@ -68,6 +82,8 @@ function onFilter(event: MultiSelectFilterEvent) {
 async function getOptions(page: number, filterTerm?: string) {
     try {
         isLoading.value = true;
+        emptyFilterMessage.value = $gettext("Searching...");
+
         const parsedResponse = await fetchConceptResources(
             filterTerm || "",
             itemSize,
@@ -139,154 +155,130 @@ function getOption(value: string): SearchResultItem | undefined {
     return option;
 }
 
-function resolver(e: FormFieldResolverOptions) {
-    validate(e);
+function onUpdateModelValue(updatedValue: string[]) {
+    const options = updatedValue.map((resourceId: string) => {
+        return getOption(resourceId);
+    });
 
-    let value = e.value;
-
-    if (!Array.isArray(value)) {
-        value = [value];
-    }
-
-    return {
-        values: {
-            [props.nodeAlias]: options.value
-                .filter((option) => {
-                    return value?.includes(option.id);
-                })
-                .map((option) => {
-                    return {
-                        resourceId: option.id,
-                        ontologyProperty: "",
-                        inverseOntologyProperty: "",
-                    };
-                }),
+    const formattedNodeValues: ResourceInstanceReference[] = updatedValue.map(
+        (value) => {
+            return {
+                inverseOntologyProperty: "",
+                ontologyProperty: "",
+                resourceId: value ?? "",
+                resourceXresourceId: "",
+            } as ResourceInstanceReference;
         },
-    };
-}
+    );
 
-function validate(e: FormFieldResolverOptions) {
-    console.log("validate", e);
+    const formattedValue = {
+        display_value: options.map((option) => option?.label).join(", "),
+        node_value: formattedNodeValues,
+        details: [],
+    } as ResourceInstanceListValue;
+
+    emit("update:value", formattedValue);
 }
 </script>
 
 <template>
-    <Message
-        v-if="fetchError"
-        severity="error"
+    <MultiSelect
+        display="chip"
+        option-label="label"
+        option-value="id"
+        :filter="true"
+        :filter-fields="['label', 'id']"
+        :empty-filter-message="emptyFilterMessage"
+        :filter-placeholder="$gettext('Filter Concepts')"
+        :fluid="true"
+        :loading="isLoading"
+        :model-value="initialValueFromTileData"
+        :options="options"
+        :placeholder="$gettext('Select Concepts')"
+        :reset-filter-on-hide="true"
+        :virtual-scroller-options="{
+            itemSize: itemSize,
+            lazy: true,
+            loading: isLoading,
+            onLazyLoad: onLazyLoadResources,
+            resizeDelay: 200,
+        }"
+        @before-show="getOptions(1)"
+        @filter="onFilter"
+        @update:model-value="onUpdateModelValue($event)"
     >
-        {{ fetchError }}
-    </Message>
-    <FormField
-        v-else
-        ref="formFieldRef"
-        v-slot="$field"
-        :name="props.nodeAlias"
-        :value="props.value?.map((concept) => concept.id)"
-        :resolver="resolver"
-    >
-        <MultiSelect
-            display="chip"
-            option-label="label"
-            option-value="id"
-            :filter="true"
-            :filter-placeholder="$gettext('Filter Concepts')"
-            :fluid="true"
-            :loading="isLoading"
-            :options
-            :placeholder="$gettext('Select Concepts')"
-            :reset-filter-on-hide="true"
-            :virtual-scroller-options="{
-                itemSize: itemSize,
-                lazy: true,
-                loading: isLoading,
-                onLazyLoad: onLazyLoadResources,
-                resizeDelay: 200,
-            }"
-            @before-show="getOptions(1)"
-            @filter="onFilter"
-        >
-            <template #option="slotProps">
-                <div>
-                    <span>
-                        {{
-                            getItemLabel(
-                                slotProps.option,
-                                selectedLanguage.code,
-                                systemLanguage.code,
-                            ).value
-                        }}
-                    </span>
-                    <span class="concept-hierarchy">
-                        [
-                        {{
-                            getParentLabels(
-                                slotProps.option,
-                                selectedLanguage.code,
-                                systemLanguage.code,
-                            )
-                        }}
-                        ]
-                    </span>
+        <template #option="slotProps">
+            <div>
+                <span>
+                    {{
+                        getItemLabel(
+                            slotProps.option,
+                            selectedLanguage.code,
+                            systemLanguage.code,
+                        ).value
+                    }}
+                </span>
+                <span class="concept-hierarchy">
+                    [
+                    {{
+                        getParentLabels(
+                            slotProps.option,
+                            selectedLanguage.code,
+                            systemLanguage.code,
+                        )
+                    }}
+                    ]
+                </span>
+            </div>
+        </template>
+        <template #chip="slotProps">
+            <div style="width: 100%">
+                <div class="chip-text">
+                    {{ getOption(slotProps.value)?.label }}
                 </div>
-            </template>
-            <template #chip="slotProps">
-                <div style="width: 100%">
-                    <div class="chip-text">
-                        {{ getOption(slotProps.value)?.label }}
-                    </div>
-                </div>
-                <div class="button-container">
-                    <Button
-                        as="a"
-                        icon="pi pi-info-circle"
-                        target="_blank"
-                        variant="text"
-                        size="small"
-                        style="text-decoration: none"
-                        :href="
-                            generateArchesURL('arches:resource_report', {
-                                resourceid: slotProps.value,
-                            })
-                        "
-                        @click.stop
-                    />
-                    <Button
-                        as="a"
-                        icon="pi pi-pencil"
-                        target="_blank"
-                        variant="text"
-                        size="small"
-                        style="text-decoration: none"
-                        :href="
-                            generateArchesURL('arches:resource_editor', {
-                                resourceid: slotProps.value,
-                            })
-                        "
-                        @click.stop
-                    />
-                    <Button
-                        icon="pi pi-times"
-                        variant="text"
-                        size="small"
-                        @click.stop="
-                            (e) => {
-                                slotProps.removeCallback(e, slotProps.value);
-                            }
-                        "
-                    />
-                </div>
-            </template>
-        </MultiSelect>
-        <Message
-            v-for="error in $field.errors"
-            :key="error.message"
-            severity="error"
-            size="small"
-        >
-            {{ error.message }}
-        </Message>
-    </FormField>
+            </div>
+            <div class="button-container">
+                <Button
+                    as="a"
+                    icon="pi pi-info-circle"
+                    target="_blank"
+                    variant="text"
+                    size="small"
+                    style="text-decoration: none"
+                    :href="
+                        generateArchesURL('arches:resource_report', {
+                            resourceid: slotProps.value,
+                        })
+                    "
+                    @click.stop
+                />
+                <Button
+                    as="a"
+                    icon="pi pi-pencil"
+                    target="_blank"
+                    variant="text"
+                    size="small"
+                    style="text-decoration: none"
+                    :href="
+                        generateArchesURL('arches:resource_editor', {
+                            resourceid: slotProps.value,
+                        })
+                    "
+                    @click.stop
+                />
+                <Button
+                    icon="pi pi-times"
+                    variant="text"
+                    size="small"
+                    @click.stop="
+                        (e) => {
+                            slotProps.removeCallback(e, slotProps.value);
+                        }
+                    "
+                />
+            </div>
+        </template>
+    </MultiSelect>
 </template>
 <style scoped>
 .button-container {
@@ -314,6 +306,7 @@ function validate(e: FormFieldResolverOptions) {
     padding: 0.25rem;
     border-radius: 0.5rem;
     margin: 0.25rem;
+    display: flex;
 }
 
 :deep(.p-multiselect-label-container) {
