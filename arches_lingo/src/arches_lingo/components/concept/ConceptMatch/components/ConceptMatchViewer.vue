@@ -86,10 +86,9 @@ const metaStringLabel: MetaStringText = {
                 />
             </template>
             <template #type="{ rowData }">
-                <span>{{ rowData.aliased_data.uri }}</span>
-                <URLWidget
+                <GenericWidget
                     :graph-slug="props.graphSlug"
-                    node-alias="uri"
+                    node-alias="uri_content"
                     :aliased-node-data="rowData.aliased_data.uri"
                     :mode="VIEW"
                     :should-show-label="false"
@@ -99,11 +98,11 @@ const metaStringLabel: MetaStringText = {
                 <ConceptResourceSelectWidget
                     :graph-slug="props.graphSlug"
                     node-alias="match_status_ascribed_comparate"
-                    :value="
+                    :aliased-node-data="
                         rowData.aliased_data.match_status_ascribed_comparate
                     "
                     :mode="VIEW"
-                    :show-label="false"
+                    :should-show-label="false"
                 />
             </template>
             <template #drawer="{ rowData }">

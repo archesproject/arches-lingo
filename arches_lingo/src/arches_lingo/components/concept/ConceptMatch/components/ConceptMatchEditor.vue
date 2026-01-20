@@ -136,7 +136,7 @@ async function save(e: FormSubmitEvent) {
                 <ConceptResourceSelectWidget
                     :graph-slug="props.graphSlug"
                     node-alias="match_status_ascribed_comparate"
-                    :value="
+                    :aliased-node-data="
                         props.tileData?.aliased_data
                             .match_status_ascribed_comparate
                     "

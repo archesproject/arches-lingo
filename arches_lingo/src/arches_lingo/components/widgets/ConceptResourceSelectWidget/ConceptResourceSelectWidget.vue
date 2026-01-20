@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { watchEffect, ref } from "vue";
+import { computed, watchEffect, ref } from "vue";
 
 import Message from "primevue/message";
-import ProgressSpinner from "primevue/progressspinner";
+import Skeleton from "primevue/skeleton";
 
+import GenericWidgetLabel from "@/arches_component_lab/generics/GenericWidget/components/GenericWidgetLabel.vue";
+import GenericFormField from "@/arches_component_lab/generics/GenericWidget/components/GenericFormField.vue";
 import ConceptResourceSelectWidgetEditor from "@/arches_lingo/components/widgets/ConceptResourceSelectWidget/components/ConceptResourceSelectWidgetEditor.vue";
 import ConceptResourceSelectWidgetViewer from "@/arches_lingo/components/widgets/ConceptResourceSelectWidget/components/ConceptResourceSelectWidgetViewer.vue";
 
@@ -11,44 +13,75 @@ import { fetchCardXNodeXWidgetData } from "@/arches_component_lab/generics/Gener
 import { fetchConceptResources } from "@/arches_lingo/api.ts";
 import { EDIT, VIEW } from "@/arches_component_lab/widgets/constants.ts";
 
-import type { CardXNodeXWidgetData } from "@/arches_component_lab/types.ts";
+import type {
+    AliasedNodeData,
+    CardXNodeXWidgetData,
+} from "@/arches_component_lab/types.ts";
 import type { WidgetMode } from "@/arches_component_lab/widgets/types.ts";
 import type { ResourceInstanceListValue } from "@/arches_component_lab/datatypes/resource-instance-list/types";
 
-const props = withDefaults(
-    defineProps<{
-        mode: WidgetMode;
-        value: ResourceInstanceListValue | null | undefined;
-        nodeAlias: string;
-        graphSlug: string;
-        scheme?: string;
-        exclude?: boolean | false;
-        showLabel?: boolean;
-        schemeSelectable?: boolean | false;
-    }>(),
-    {
-        scheme: "",
-        showLabel: true,
-    },
-);
+const {
+    graphSlug,
+    mode,
+    nodeAlias,
+    aliasedNodeData,
+    shouldShowLabel = true,
+    isDirty = false,
+    scheme = "",
+    exclude = false,
+    schemeSelectable = false,
+} = defineProps<{
+    graphSlug: string;
+    isDirty?: boolean;
+    mode: WidgetMode;
+    nodeAlias: string;
+    aliasedNodeData: ResourceInstanceListValue | null | undefined;
+    shouldShowLabel?: boolean;
+    scheme?: string;
+    exclude?: boolean | false;
+    schemeSelectable?: boolean | false;
+}>();
+
+const emit = defineEmits([
+    "update:isDirty",
+    "update:isFocused",
+    "update:value",
+]);
 
 const isLoading = ref(true);
 const cardXNodeXWidgetData = ref<CardXNodeXWidgetData>();
 const configurationError = ref();
-const conceptIds = props.value?.details.map((resource: { display_value: string; resource_id: string }) => resource.resource_id) as string[] | undefined;
+const conceptIds = aliasedNodeData?.details.map(
+    (resource: { display_value: string; resource_id: string }) =>
+        resource.resource_id,
+) as string[] | undefined;
 const searchResult = ref();
 
+const widgetValue = computed(() => {
+    if (aliasedNodeData !== undefined) {
+        return aliasedNodeData as AliasedNodeData;
+    } else if (cardXNodeXWidgetData.value?.config?.defaultValue) {
+        return cardXNodeXWidgetData.value.config
+            .defaultValue as AliasedNodeData;
+    } else {
+        return null;
+    }
+});
+
 watchEffect(async () => {
+    if (cardXNodeXWidgetData.value) {
+        return;
+    }
+
     isLoading.value = true;
     try {
         if (conceptIds) {
             searchResult.value = await getConceptHierarchy(conceptIds);
         }
         cardXNodeXWidgetData.value = await fetchCardXNodeXWidgetData(
-            props.graphSlug,
-            props.nodeAlias,
+            graphSlug,
+            nodeAlias,
         );
-        console.log("cardXNodeXWidgetData", cardXNodeXWidgetData.value);
     } catch (error) {
         configurationError.value = error;
     } finally {
@@ -57,6 +90,9 @@ watchEffect(async () => {
 });
 
 async function getConceptHierarchy(conceptIds: string[]) {
+    if (conceptIds.length === 0) {
+        return;
+    }
     const parsedResponse = await fetchConceptResources(
         "",
         conceptIds.length,
@@ -70,37 +106,45 @@ async function getConceptHierarchy(conceptIds: string[]) {
 </script>
 
 <template>
-    <ProgressSpinner
+    <Skeleton
         v-if="isLoading"
-        style="width: 2em; height: 2em"
+        style="height: 2rem"
     />
-
-    <template v-else>
-        <label v-if="props.showLabel">
-            <span>{{ cardXNodeXWidgetData }}</span>
-            <!-- <span>{{ cardXNodeXWidgetData!.label }}</span>
-            <span v-if="cardXNodeXWidgetData!.node.isrequired && props.mode === EDIT">*</span> -->
-        </label>
-
-        <div v-if="mode === EDIT">
+    <Message
+        v-else-if="configurationError"
+        severity="error"
+        size="small"
+    >
+        {{ configurationError.message }}
+    </Message>
+    <template v-else-if="cardXNodeXWidgetData">
+        <GenericWidgetLabel
+            v-if="shouldShowLabel"
+            :mode="mode"
+            :card-x-node-x-widget-data="cardXNodeXWidgetData"
+        />
+        <GenericFormField
+            v-if="mode === EDIT"
+            v-slot="{ onUpdateValue }"
+            :aliased-node-data="widgetValue!"
+            :is-dirty="isDirty"
+            :node-alias="nodeAlias"
+            @update:is-dirty="emit('update:isDirty', $event)"
+            @update:value="emit('update:value', $event)"
+        >
             <ConceptResourceSelectWidgetEditor
                 :value="searchResult"
-                :node-alias="props.nodeAlias"
-                :graph-slug="props.graphSlug"
-                :scheme="props.scheme"
-                :exclude="props.exclude"
-                :scheme-selectable="props.schemeSelectable"
+                :node-alias="nodeAlias"
+                :graph-slug="graphSlug"
+                :scheme="scheme"
+                :exclude="exclude"
+                :scheme-selectable="schemeSelectable"
+                @update:value="onUpdateValue($event)"
             />
-        </div>
-        <div v-if="mode === VIEW">
-            <ConceptResourceSelectWidgetViewer :value="searchResult" />
-        </div>
-        <Message
-            v-if="configurationError"
-            severity="error"
-            size="small"
-        >
-            {{ configurationError.message }}
-        </Message>
+        </GenericFormField>
+        <ConceptResourceSelectWidgetViewer
+            v-else-if="mode === VIEW"
+            :value="searchResult"
+        />
     </template>
 </template>
