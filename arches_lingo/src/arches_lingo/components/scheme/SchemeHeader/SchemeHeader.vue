@@ -9,6 +9,7 @@ import { useToast } from "primevue/usetoast";
 import Skeleton from "primevue/skeleton";
 import ConfirmDialog from "primevue/confirmdialog";
 import Button from "primevue/button";
+import InputText from "primevue/inputtext";
 
 import ExportThesauri from "@/arches_lingo/components/scheme/SchemeHeader/components/ExportThesauri.vue";
 
@@ -26,6 +27,8 @@ import {
     deleteLingoResource,
     fetchLingoResource,
     fetchSchemeResource,
+    fetchResourceIdentifiers,
+    upsertResourceIdentifier,
 } from "@/arches_lingo/api.ts";
 import { extractDescriptors } from "@/arches_lingo/utils.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
@@ -63,27 +66,12 @@ const data = ref<SchemeHeader>();
 const isLoading = ref(true);
 const showExportDialog = ref(false);
 const exportDialogKey = ref(0);
+const identifierValue = ref<string>();
 
-function openExportDialog() {
-    exportDialogKey.value++;
-    showExportDialog.value = true;
-}
-
-function extractSchemeHeaderData(scheme: ResourceInstanceResult) {
-    const name = scheme?.name;
-    const descriptor = extractDescriptors(scheme, systemLanguage);
-    // TODO: get human-readable user name from resource endpoint
-    const principalUser = "Anonymous"; //scheme?.principalUser; // returns userid int
-    // TODO: get human-readable life cycle state from resource endpoint
-    const lifeCycleState = $gettext("Draft");
-
-    data.value = {
-        name: name,
-        descriptor: descriptor,
-        principalUser: principalUser,
-        lifeCycleState: lifeCycleState,
-    };
-}
+const resourceIdentifierId = ref<number | undefined>();
+const isEditingIdentifier = ref(false);
+const identifierDraft = ref("");
+const isSavingIdentifier = ref(false);
 
 onMounted(async () => {
     try {
@@ -111,6 +99,12 @@ onMounted(async () => {
             systemLanguage.code,
         );
 
+        const resourceIdentifiers = await fetchResourceIdentifiers(
+            props.resourceInstanceId,
+        );
+        identifierValue.value = resourceIdentifiers?.[0]?.identifier;
+        resourceIdentifierId.value = resourceIdentifiers?.[0]?.id;
+
         extractSchemeHeaderData(scheme.value!);
     } catch (error) {
         toast.add({
@@ -123,6 +117,69 @@ onMounted(async () => {
         isLoading.value = false;
     }
 });
+
+function openExportDialog() {
+    exportDialogKey.value++;
+    showExportDialog.value = true;
+}
+
+function extractSchemeHeaderData(scheme: ResourceInstanceResult) {
+    const name = scheme?.name;
+    const descriptor = extractDescriptors(scheme, systemLanguage);
+    // TODO: get human-readable user name from resource endpoint
+    const principalUser = "Anonymous"; //scheme?.principalUser; // returns userid int
+    // TODO: get human-readable life cycle state from resource endpoint
+    const lifeCycleState = $gettext("Draft");
+
+    data.value = {
+        name: name,
+        descriptor: descriptor,
+        principalUser: principalUser,
+        lifeCycleState: lifeCycleState,
+    };
+}
+
+function editIdentifier() {
+    identifierDraft.value = identifierValue.value || "";
+    isEditingIdentifier.value = true;
+}
+
+function cancelEditingIdentifier() {
+    identifierDraft.value = "";
+    isEditingIdentifier.value = false;
+}
+
+async function saveIdentifier() {
+    if (!props.resourceInstanceId) {
+        return;
+    }
+
+    isSavingIdentifier.value = true;
+
+    try {
+        const identifierData = await upsertResourceIdentifier(
+            props.resourceInstanceId,
+            {
+                id: resourceIdentifierId.value,
+                identifier: identifierDraft.value,
+                source: "arches-lingo",
+            },
+        );
+
+        identifierValue.value = identifierData.identifier;
+        resourceIdentifierId.value = identifierData.id;
+        cancelEditingIdentifier();
+    } catch (error) {
+        toast.add({
+            severity: ERROR,
+            life: DEFAULT_ERROR_TOAST_LIFE,
+            summary: $gettext("Unable to save identifier"),
+            detail: error instanceof Error ? error.message : undefined,
+        });
+    } finally {
+        isSavingIdentifier.value = false;
+    }
+}
 
 function confirmDelete() {
     confirm.require({
@@ -240,11 +297,53 @@ function confirmDelete() {
                 <!-- TODO: show Scheme URI here -->
                 <div class="header-row">
                     <!-- TODO: Life Cycle mgmt functionality goes here -->
-                    <div class="header-item">
+                    <div class="header-item identifier-item">
                         <span class="header-item-label">
                             {{ $gettext("Identifier:") }}
                         </span>
-                        <span class="header-item-value"> 0032775 </span>
+
+                        <template v-if="isEditingIdentifier">
+                            <InputText
+                                v-model="identifierDraft"
+                                size="small"
+                            />
+                            <Button
+                                icon="pi pi-check"
+                                variant="text"
+                                severity="success"
+                                size="small"
+                                :rounded="true"
+                                :aria-label="$gettext('Save Identifier')"
+                                :loading="isSavingIdentifier"
+                                @click="saveIdentifier"
+                            />
+                            <Button
+                                icon="pi pi-times"
+                                variant="text"
+                                severity="danger"
+                                size="small"
+                                :rounded="true"
+                                :aria-label="$gettext('Cancel')"
+                                :disabled="isSavingIdentifier"
+                                @click="cancelEditingIdentifier"
+                            />
+                        </template>
+
+                        <template v-else>
+                            <span class="header-item-value identifier-value">
+                                {{ identifierValue || $gettext("None") }}
+                            </span>
+                            <Button
+                                v-if="props.resourceInstanceId"
+                                icon="pi pi-pencil"
+                                variant="text"
+                                size="small"
+                                class="identifier-edit-button"
+                                :rounded="true"
+                                :aria-label="$gettext('Edit Identifier')"
+                                @click="editIdentifier"
+                            />
+                        </template>
                     </div>
                     <div>
                         <span class="header-item-label">{{
@@ -437,7 +536,7 @@ h2 > span {
 
 .header-item {
     display: inline-flex;
-    align-items: baseline;
+    align-items: center;
     min-width: 0;
 }
 
