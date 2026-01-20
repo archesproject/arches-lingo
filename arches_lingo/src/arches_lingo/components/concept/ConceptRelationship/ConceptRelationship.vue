@@ -42,10 +42,7 @@ watchEffect(async () => {
         props.resourceInstanceId &&
         (props.mode === VIEW || !shouldCreateNewTile)
     ) {
-        const sectionValue = await getSectionValue();
         tileData.value = sectionValue?.data;
-        tileData.value = sectionValue?.data;
-        schemeId.value = sectionValue.scheme_id;
     } else if (shouldCreateNewTile) {
         const blankTileData = await fetchTileData(
             props.graphSlug,
