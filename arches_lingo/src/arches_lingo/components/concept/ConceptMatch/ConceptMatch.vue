@@ -36,13 +36,13 @@ const shouldCreateNewTile = Boolean(props.mode === EDIT && !props.tileId);
 
 watchEffect(async () => {
     isLoading.value = true;
+    const sectionValue = await getSectionValue();
+    schemeId.value = sectionValue?.scheme_id;
     if (
         props.resourceInstanceId &&
         (props.mode === VIEW || !shouldCreateNewTile)
     ) {
-        const sectionValue = await getSectionValue();
         tileData.value = sectionValue?.data;
-        schemeId.value = sectionValue?.scheme_id;
     } else if (shouldCreateNewTile) {
         const blankTileData = await fetchTileData(
             props.graphSlug,
