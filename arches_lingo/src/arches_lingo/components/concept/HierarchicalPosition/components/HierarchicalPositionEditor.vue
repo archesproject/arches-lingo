@@ -150,11 +150,12 @@ async function save(e: FormSubmitEvent) {
                 <ConceptResourceSelectWidget
                     :graph-slug="props.graphSlug"
                     node-alias="classification_status_ascribed_classification"
-                    :value="
+                    :aliased-node-data="
                         props.tileData?.aliased_data
                             .classification_status_ascribed_classification
                     "
                     :mode="EDIT"
+                    :scheme="props.scheme"
                     :scheme-selectable="true"
                     class="widget-container column"
                 />
