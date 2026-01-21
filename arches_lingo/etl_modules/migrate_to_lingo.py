@@ -9,7 +9,7 @@ from collections import defaultdict
 
 from django.core.files.storage import default_storage
 from django.db import connection
-from django.db.models import OuterRef, Prefetch, Subquery
+from django.db.models import FilteredRelation, OuterRef, Prefetch, Q, Subquery
 from django.db.models.functions import Coalesce
 from django.utils.translation import gettext as _
 
@@ -143,11 +143,12 @@ class LingoResourceImporter(BaseImportModule):
 
     def extract_concepts_from_rdm_tables(self, concepts_to_migrate):
         concepts = []
-        for concept in models.Concept.objects.filter(
+        concepts_qs = models.Concept.objects.filter(
             nodetype="Concept", pk__in=concepts_to_migrate
         ).prefetch_related(
             Prefetch("value_set", queryset=models.Value.objects.order_by("value"))
-        ):
+        )
+        for concept in concepts_qs:
             concept_to_load = {"type": "Concept", "tile_data": []}
             for value in concept.value_set.all():
                 concept_to_load["resourceinstanceid"] = (
@@ -162,6 +163,41 @@ class LingoResourceImporter(BaseImportModule):
                     concept_to_load["tile_data"].append(mock_tile)
 
             concepts.append(concept_to_load)
+
+        # Extract matched concept relationships
+        mapping_types = models.DRelationType.objects.filter(
+            category="Mapping Properties"
+        ).values("relationtype")
+
+        relations_for_matched_concepts = (
+            models.Relation.objects.annotate(
+                identifier_value=FilteredRelation(
+                    "conceptto",
+                    condition=Q(conceptto__values__valuetype="identifier"),
+                )
+            )
+            .filter(
+                relationtype__in=mapping_types,
+            )
+            .annotate(
+                uri=Subquery(
+                    models.Value.objects.filter(
+                        concept_id=OuterRef("conceptto_id"),
+                        valuetype_id="identifier",
+                    ).values("value")[:1]
+                )
+            )
+        )
+        for relation in relations_for_matched_concepts:
+            mock_tile = self.create_mock_tile_from_value(
+                {"value": relation.uri, "valuetype_id": relation.relationtype_id},
+            )
+            if mock_tile:
+                for concept in concepts:
+                    if concept["resourceinstanceid"] == relation.conceptfrom_id:
+                        concept["tile_data"].append(mock_tile)
+                        break
+
         return concepts
 
     @staticmethod
