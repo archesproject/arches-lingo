@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject, onMounted, ref, type Ref } from "vue";
+import { computed, inject, onMounted, ref, type Ref } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import { useConfirm } from "primevue/useconfirm";
@@ -103,6 +103,32 @@ const conceptIdentifierCounter = ref<ConceptIdentifierCounter | undefined>();
 const isEditingConceptIdentifierCounter = ref(false);
 const conceptIdentifierCounterStartNumberDraft = ref("1");
 const isSavingConceptIdentifierCounter = ref(false);
+
+const canEditResourceInstances = computed(() => {
+    return Boolean(
+        props.resourceInstanceId &&
+            resourceInstanceLifecycleState?.value?.can_edit_resource_instances,
+    );
+});
+
+const shouldShowIdentifierEditButton = computed(() => {
+    return canEditResourceInstances.value;
+});
+
+const shouldShowConceptIdentifierCounterEditButton = computed(() => {
+    if (!canEditResourceInstances.value) {
+        return false;
+    }
+
+    if (!conceptIdentifierCounter.value) {
+        return true;
+    }
+
+    return (
+        conceptIdentifierCounter.value.start_number ===
+        conceptIdentifierCounter.value.next_number
+    );
+});
 
 onMounted(async () => {
     try {
@@ -422,11 +448,7 @@ function onLifecycleStateChange(
                                 {{ identifierValue || $gettext("None") }}
                             </span>
                             <Button
-                                v-if="
-                                    props.resourceInstanceId &&
-                                    resourceInstanceLifecycleState?.value
-                                        ?.can_edit_resource_instances
-                                "
+                                v-if="shouldShowIdentifierEditButton"
                                 icon="pi pi-pencil"
                                 variant="text"
                                 size="small"
@@ -508,12 +530,7 @@ function onLifecycleStateChange(
                             </span>
                             <Button
                                 v-if="
-                                    props.resourceInstanceId &&
-                                    resourceInstanceLifecycleState?.value
-                                        ?.can_edit_resource_instances &&
-                                    (!conceptIdentifierCounter ||
-                                        conceptIdentifierCounter.start_number ===
-                                            conceptIdentifierCounter.next_number)
+                                    shouldShowConceptIdentifierCounterEditButton
                                 "
                                 icon="pi pi-pencil"
                                 variant="text"
