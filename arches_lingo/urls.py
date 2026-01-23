@@ -10,11 +10,15 @@ from arches_lingo.views.api.concepts import (
     ConceptResourceView,
     ConceptRelationshipView,
 )
+from arches_lingo.views.api.schemes import SchemeResourceView
 from arches_lingo.views.api.generic import (
     LingoResourceDetailView,
     LingoResourceListCreateView,
     LingoTileDetailView,
     LingoTileListCreateView,
+)
+from arches_lingo.views.api.concept_identifier_counter import (
+    ConceptIdentifierCounterView,
 )
 
 handler400 = "arches.app.views.main.custom_400"
@@ -34,6 +38,16 @@ urlpatterns = [
     path("concept/new", LingoRootView.as_view(), name="new-concept"),
     path("api/concept-tree", ConceptTreeView.as_view(), name="api-concepts"),
     path("api/search", ValueSearchView.as_view(), name="api-search"),
+    path(
+        "api/scheme/<uuid:scheme_resource_instance_id>/concept-identifier-counter",
+        ConceptIdentifierCounterView.as_view(),
+        name="api-concept-identifier-counter",
+    ),
+    path(
+        "api/lingo/scheme-resource",
+        SchemeResourceView.as_view(),
+        name="api-lingo-scheme-resource",
+    ),
     path(
         "api/lingo/concept-resources",
         ConceptResourceView.as_view(),

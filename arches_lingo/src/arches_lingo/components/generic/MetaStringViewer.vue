@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject, ref } from "vue";
+import { computed, inject, ref } from "vue";
 
 import { useConfirm } from "primevue/useconfirm";
 import { useGettext } from "vue3-gettext";
@@ -41,6 +41,21 @@ const refreshReportSection = inject<(componentName: string) => void>(
     "refreshReportSection",
 );
 const refreshSchemeHierarchy = inject<() => void>("refreshSchemeHierarchy");
+
+const resourceInstanceLifecycleState = inject<{
+    value:
+        | {
+              can_edit_resource_instances: boolean;
+              can_delete_resource_instances: boolean;
+          }
+        | undefined;
+}>("resourceInstanceLifecycleState");
+
+const canEditResourceInstances = computed(() => {
+    return Boolean(
+        resourceInstanceLifecycleState?.value?.can_edit_resource_instances,
+    );
+});
 
 const expandedRows = ref([]);
 
@@ -130,10 +145,12 @@ async function deleteSectionValue(tileId: string) {
                     ></slot>
                 </template>
             </Column>
+
             <Column>
                 <template #body="slotProps">
                     <div class="controls">
                         <Button
+                            v-if="canEditResourceInstances"
                             icon="pi pi-file-edit"
                             :aria-label="$gettext('edit')"
                             rounded
@@ -145,6 +162,7 @@ async function deleteSectionValue(tileId: string) {
                             "
                         />
                         <Button
+                            v-if="canEditResourceInstances"
                             icon="pi pi-trash"
                             :aria-label="$gettext('delete')"
                             severity="danger"
@@ -154,6 +172,7 @@ async function deleteSectionValue(tileId: string) {
                     </div>
                 </template>
             </Column>
+
             <template #expansion="slotProps">
                 <div class="drawer">
                     <slot
@@ -171,6 +190,7 @@ async function deleteSectionValue(tileId: string) {
         {{ props.metaStringText.noRecords }}
     </div>
 </template>
+
 <style scoped>
 :deep(.drawer) {
     padding: 1rem 2rem;
