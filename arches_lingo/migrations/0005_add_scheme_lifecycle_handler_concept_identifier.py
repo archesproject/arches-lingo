@@ -24,7 +24,9 @@ def register_update_concept_lifecycle_states_for_scheme_function(apps, schema_ed
         },
     )
 
-    scheme_graph_instance = graph_model.objects.get(slug="scheme")
+    scheme_graph_instance = graph_model.objects.filter(slug="scheme").first()
+    if scheme_graph_instance is None:
+        return
 
     function_x_graph_model.objects.update_or_create(
         function=function_instance,
