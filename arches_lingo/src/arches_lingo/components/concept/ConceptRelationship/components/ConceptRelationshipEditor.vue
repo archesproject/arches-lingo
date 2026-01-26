@@ -10,6 +10,7 @@ import { Form } from "@primevue/forms";
 import Skeleton from "primevue/skeleton";
 
 import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
+import ConceptResourceSelectWidget from "@/arches_lingo/components/widgets/ConceptResourceSelectWidget/ConceptResourceSelectWidget.vue";
 
 import { createOrUpdateConcept } from "@/arches_lingo/utils.ts";
 
@@ -31,6 +32,8 @@ const props = defineProps<{
     nodegroupAlias: string;
     resourceInstanceId: string | undefined;
     tileId?: string;
+    scheme?: string;
+    exclude?: boolean;
 }>();
 
 const route = useRoute();
@@ -76,8 +79,6 @@ async function save(e: FormSubmitEvent) {
         if (Object.hasOwn(updatedTileData, "uri")) {
             delete (updatedTileData as { uri?: string }).uri;
         }
-
-        console.log({ updatedTileData }, { formData, aliasedTileData });
 
         const scheme = route.query.scheme as string;
         const parent = route.query.parent as string;
@@ -134,13 +135,15 @@ async function save(e: FormSubmitEvent) {
                 ref="form"
                 @submit="save"
             >
-                <GenericWidget
+                <ConceptResourceSelectWidget
                     :graph-slug="props.graphSlug"
                     node-alias="relation_status_ascribed_comparate"
                     :aliased-node-data="
                         props.tileData?.aliased_data
                             .relation_status_ascribed_comparate
                     "
+                    :scheme="props.scheme"
+                    :exclude="props.exclude"
                     :mode="EDIT"
                     class="widget-container column"
                 />
