@@ -1,3 +1,4 @@
+import copy
 import filetype
 import json
 import logging
@@ -80,6 +81,7 @@ class LingoResourceImporter(BaseImportModule):
         self.language_lookup = {
             lang.code: lang.name for lang in models.Language.objects.all()
         }
+        self.blank_tile_lookup = {}
 
     def get_schemes(self, request):
         schemes = (
@@ -349,8 +351,8 @@ class LingoResourceImporter(BaseImportModule):
     def create_tile_value(
         self, cursor, mock_tile, nodegroup_alias, nodegroup_lookup, node_lookup
     ):
-        tile_value = {}
-        tile_valid = True
+        tile_value = self.get_blank_tile_lookup(node_lookup[nodegroup_alias]["nodeid"])
+        tile_valid = False
         for node_alias in mock_tile[nodegroup_alias].keys():
             try:
                 nodeid = node_lookup[node_alias]["nodeid"]
@@ -366,8 +368,7 @@ class LingoResourceImporter(BaseImportModule):
                     datatype_instance, source_value, config
                 )
                 valid = True if len(validation_errors) == 0 else False
-                if not valid:
-                    tile_valid = False
+                tile_valid = True if valid else False
                 error_message = ""
                 for error in validation_errors:
                     error_message = error["message"]
@@ -385,17 +386,33 @@ class LingoResourceImporter(BaseImportModule):
                         ),
                     )
 
-                tile_value[nodeid] = {
-                    "value": value,
-                    "valid": valid,
-                    "source": source_value,
-                    "notes": error_message,
-                    "datatype": datatype,
-                }
+                tile_value[nodeid]["value"] = value
+                tile_value[nodeid]["valid"] = valid
+                tile_value[nodeid]["source"] = source_value
+                if error_message:
+                    tile_value[nodeid]["notes"] = error_message
             except KeyError:
                 pass
 
         return tile_value, tile_valid
+
+    def get_blank_tile_lookup(self, nodegroupid):
+        if nodegroupid not in self.blank_tile_lookup.keys():
+            blank_tile = {}
+            nodes = models.Node.objects.filter(nodegroup_id=nodegroupid).exclude(
+                datatype="semantic"
+            )
+            for node in nodes:
+                # TODO: get default value from cardxnodexwidget if exists
+                blank_tile[str(node.nodeid)] = {
+                    "value": None,
+                    "valid": True,
+                    "source": "",
+                    "notes": "",
+                    "datatype": node.datatype,
+                }
+            self.blank_tile_lookup[nodegroupid] = blank_tile
+        return copy.deepcopy(self.blank_tile_lookup[nodegroupid])
 
     def build_concept_hierarchy(self, cursor, scheme_conceptid):
         cursor.execute(
