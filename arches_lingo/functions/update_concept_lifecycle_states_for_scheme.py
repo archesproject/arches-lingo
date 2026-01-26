@@ -85,7 +85,7 @@ class UpdateConceptLifecycleStatesForScheme(BaseFunction):
 
         if is_scheme_promoting_to_active:
             ConceptIdentifierCounter.objects.get_or_create(
-                scheme_resource_instance_id=scheme_resource_instance_id
+                scheme_id=scheme_resource_instance_id
             )
 
             draft_concepts_queryset = related_concepts_queryset.filter(

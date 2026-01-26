@@ -8,12 +8,12 @@ from arches_lingo.models import ConceptIdentifierCounter
 class ConceptIdentifierCounterView(APIBase):
     def get(self, request, scheme_resource_instance_id):
         concept_identifier_counter = ConceptIdentifierCounter.objects.filter(
-            scheme_resource_instance_id=scheme_resource_instance_id
+            scheme_id=scheme_resource_instance_id
         ).first()
 
         if not concept_identifier_counter:
             return JSONErrorResponse(
-                "ConceptIdentifierCounter not found for the given scheme_resource_instance_id.",
+                "ConceptIdentifierCounter not found for the given scheme.",
                 status=404,
             )
 
@@ -23,7 +23,7 @@ class ConceptIdentifierCounterView(APIBase):
         request_json = JSONDeserializer().deserialize(request.body)
 
         current_concept_identifier_counter = ConceptIdentifierCounter.objects.filter(
-            scheme_resource_instance_id=scheme_resource_instance_id
+            scheme_id=scheme_resource_instance_id
         ).first()
 
         start_number = request_json.get("start_number", 1)
@@ -47,7 +47,7 @@ class ConceptIdentifierCounterView(APIBase):
             return JSONResponse(current_concept_identifier_counter)
 
         concept_identifier_counter = ConceptIdentifierCounter.objects.create(
-            scheme_resource_instance_id=scheme_resource_instance_id,
+            scheme_id=scheme_resource_instance_id,
             start_number=start_number,
             next_number=start_number,
         )
