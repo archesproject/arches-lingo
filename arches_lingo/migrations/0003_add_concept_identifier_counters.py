@@ -29,11 +29,10 @@ class Migration(migrations.Migration):
                 (
                     "scheme",
                     models.OneToOneField(
-                        to="models.resourceinstance",
-                        to_field="resourceinstanceid",
                         db_column="scheme_resource_instance_id",
                         on_delete=django.db.models.deletion.CASCADE,
                         related_name="concept_identifier_counter",
+                        to="models.resourceinstance",
                     ),
                 ),
                 ("start_number", models.BigIntegerField(default=1)),
