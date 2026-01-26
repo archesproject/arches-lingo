@@ -399,8 +399,10 @@ class LingoResourceImporter(BaseImportModule):
     def get_blank_tile_lookup(self, nodegroupid):
         if nodegroupid not in self.blank_tile_lookup.keys():
             blank_tile = {}
-            nodes = models.Node.objects.filter(nodegroup_id=nodegroupid).exclude(
-                datatype="semantic"
+            nodes = (
+                models.Node.objects.filter(nodegroup_id=nodegroupid)
+                .exclude(datatype="semantic")
+                .prefetch_related("cardxnodexwidget_set")
             )
             for node in nodes:
                 # TODO: get default value from cardxnodexwidget if exists
@@ -411,6 +413,10 @@ class LingoResourceImporter(BaseImportModule):
                     "notes": "",
                     "datatype": node.datatype,
                 }
+                for cross_record in node.cardxnodexwidget_set.all():
+                    default_value = cross_record.config.get("defaultValue", None)
+                    if default_value is not None:
+                        blank_tile[str(node.nodeid)]["value"] = default_value
             self.blank_tile_lookup[nodegroupid] = blank_tile
         return copy.deepcopy(self.blank_tile_lookup[nodegroupid])
 
