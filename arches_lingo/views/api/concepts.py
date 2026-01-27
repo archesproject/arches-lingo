@@ -192,8 +192,6 @@ class ConceptRelationshipView(ConceptTreeView):
 
         if relationship_type == "associated":
             relationships = concept.aliased_data.relation_status
-        elif relationship_type == "matched":
-            relationships = concept.aliased_data.match_status
 
         return_data = {
             "scheme_id": concept.aliased_data.part_of_scheme.aliased_data.part_of_scheme[
@@ -214,12 +212,6 @@ class ConceptRelationshipView(ConceptTreeView):
                     relationship.aliased_data.relation_status_ascribed_comparate[
                         "node_value"
                     ][0]["resourceId"]
-                )
-            elif relationship_type == "matched":
-                related_concept_resourceid = (
-                    relationship.aliased_data.match_status_ascribed_comparate[
-                        "node_value"
-                    ]
                 )
 
             related_concept = Concept.get(pk=related_concept_resourceid)
