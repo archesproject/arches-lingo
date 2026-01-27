@@ -19372,7 +19372,7 @@
                         "graphs": [
                             {
                                 "graphid": "aac34849-19a2-11ee-8f04-cd21e680a247",
-                                "name": "concept _rdm_system"
+                                "name": "concept_rdm_system"
                             }
                         ],
                         "searchDsl": {
