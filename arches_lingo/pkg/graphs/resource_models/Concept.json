@@ -1063,18 +1063,17 @@
                 {
                     "card_id": "4cfaac3a-0ed7-11ef-9493-0a58a9feac02",
                     "config": {
+                        "defaultValue": "",
                         "i18n_properties": [
-                            "url_label_placeholder",
-                            "url_placeholder"
+                            "placeholder"
                         ],
                         "label": "Matched Concept",
-                        "link_color": "#0055a0",
-                        "url_label_placeholder": {
-                            "en": "Enter Matched Concept Name..."
-                        },
-                        "url_placeholder": {
+                        "maxLength": null,
+                        "placeholder": {
                             "en": "Enter Matched Concept URI..."
-                        }
+                        },
+                        "uneditable": false,
+                        "width": "100%"
                     },
                     "id": "4cfab3ec-0ed7-11ef-9493-0a58a9feac02",
                     "label": {
@@ -1084,7 +1083,7 @@
                     "sortorder": 0,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "ca0c43ff-af73-4349-bafd-53ff9f22eebd"
+                    "widget_id": "46ef064b-2611-4708-9f52-60136bd8a65b"
                 },
                 {
                     "card_id": "4cfaac3a-0ed7-11ef-9493-0a58a9feac02",
@@ -4275,11 +4274,9 @@
                 {
                     "alias": "match_status_ascribed_comparate",
                     "config": {
-                        "graphs": [],
-                        "searchDsl": "",
-                        "searchString": ""
+                        "en": ""
                     },
-                    "datatype": "url",
+                    "datatype": "non-localized-string",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
