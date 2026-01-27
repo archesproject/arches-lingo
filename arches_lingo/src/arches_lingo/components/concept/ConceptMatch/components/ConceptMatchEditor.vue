@@ -26,7 +26,6 @@ import type { ConceptMatchStatus } from "@/arches_lingo/types.ts";
 const props = defineProps<{
     tileData: ConceptMatchStatus | undefined;
     schemeId?: string;
-    exclude?: boolean;
     componentName: string;
     sectionTitle: string;
     graphSlug: string;
@@ -46,6 +45,7 @@ const componentEditorFormRef = inject<Ref<Component | null>>(
 
 const openEditor =
     inject<(componentName: string, tileid?: string) => void>("openEditor");
+
 const refreshReportSection = inject<(componentName: string) => void>(
     "refreshReportSection",
 );
