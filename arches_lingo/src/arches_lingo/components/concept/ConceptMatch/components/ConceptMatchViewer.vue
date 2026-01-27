@@ -34,7 +34,6 @@ const metaStringLabel: MetaStringText = {
     ),
     name: $gettext("Match Type"),
     type: $gettext("Related URI"),
-    language: $gettext("Related Label"),
     noRecords: $gettext("No matched concepts were found."),
 };
 </script>
@@ -87,25 +86,13 @@ const metaStringLabel: MetaStringText = {
             <template #type="{ rowData }">
                 <GenericWidget
                     :graph-slug="props.graphSlug"
-                    node-alias="uri"
-                    :aliased-node-data="rowData.aliased_data.uri"
+                    node-alias="match_status_ascribed_comparate"
+                    :aliased-node-data="
+                        rowData.aliased_data.match_status_ascribed_comparate
+                    "
                     :mode="VIEW"
                     :should-show-label="false"
                 />
-            </template>
-            <template #language="{ rowData }">
-                <RouterLink
-                    :to="{
-                        name: rowData.aliased_data
-                            .match_status_ascribed_comparate?.url as string,
-                    }"
-                    class="text-link"
-                >
-                    {{
-                        rowData.aliased_data.match_status_ascribed_comparate
-                            ?.url_label
-                    }}
-                </RouterLink>
             </template>
             <template #drawer="{ rowData }">
                 <GenericWidget
@@ -120,7 +107,8 @@ const metaStringLabel: MetaStringText = {
                     :graph-slug="props.graphSlug"
                     node-alias="match_status_data_assignment_object_used"
                     :aliased-node-data="
-                        rowData.match_status_data_assignment_object_used
+                        rowData.aliased_data
+                            .match_status_data_assignment_object_used
                     "
                     :mode="VIEW"
                 />
