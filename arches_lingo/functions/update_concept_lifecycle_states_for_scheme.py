@@ -27,6 +27,17 @@ ACTIVE_RESOURCE_INSTANCE_LIFECYCLE_STATE_ID = uuid.UUID(
     "6b0f1a7b-5b3d-4b2a-8a5b-7c3a1b0f2d9e"
 )
 
+details = {
+    "name": "Update Concept Lifecycle States For Scheme",
+    "functiontype": "lifecyclehandler",
+    "type": "node",
+    "description": "Updates concept lifecycle state tiles for all concepts in a scheme.",
+    "defaultconfig": {},
+    "component": "",
+    "modulename": "update_concept_lifecycle_states_for_scheme.py",
+    "classname": "UpdateConceptLifecycleStatesForScheme",
+}
+
 
 class UpdateConceptLifecycleStatesForScheme(BaseFunction):
     def on_update_lifecycle_state(
