@@ -93,7 +93,7 @@ export type DataComponentMode = typeof EDIT | typeof VIEW;
 export interface MetaStringText {
     name: string;
     type: string;
-    language: string;
+    language?: string;
     deleteConfirm: string;
     noRecords: string;
 }
