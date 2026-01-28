@@ -63,10 +63,20 @@ class ImportTests(TransactionTestCase):
         junk_sculpture = junk_sculpture.first()
 
         # Labels
-        self.assertEqual(len(junk_sculpture.aliased_data.appellative_status), 2)
+        label_tile_trees = junk_sculpture.aliased_data.appellative_status
+        self.assertEqual(len(label_tile_trees), 2)
+        # ensure default values for hidden nodes have been assigned
+        self.assertIn("informational status", str(label_tile_trees[0].aliased_data))
+        self.assertIn("warrant assertion event", str(label_tile_trees[0].aliased_data))
 
         # Statements
-        self.assertEqual(len(junk_sculpture.aliased_data.statement), 2)
+        statement_tile_trees = junk_sculpture.aliased_data.statement
+        self.assertEqual(len(statement_tile_trees), 2)
+        self.assertIn("scope note", str(statement_tile_trees[0].aliased_data))
+        self.assertIn("brief texts", str(statement_tile_trees[0].aliased_data))
+        self.assertIn(
+            "warrant assertion event", str(statement_tile_trees[0].aliased_data)
+        )
 
         # Part of scheme
         scheme = junk_sculpture.aliased_data.part_of_scheme.aliased_data.part_of_scheme
@@ -75,9 +85,10 @@ class ImportTests(TransactionTestCase):
         # Hierarchical Relationship(s)
         hierarchy = junk_sculpture.aliased_data.classification_status
         self.assertEqual(len(hierarchy), 1)
-        hierarchy = hierarchy[0]
-        parent = hierarchy.aliased_data.classification_status_ascribed_classification
-        self.assertIn(parent.name["en"], "Top Concept")
+        hierarchy = hierarchy[0].aliased_data
+        self.assertIn("warrant assertion event", str(hierarchy))
+        parent = hierarchy.classification_status_ascribed_classification
+        self.assertEqual(parent.name["en"], "Top Concept")
 
         # Matched Concept
         self.assertEqual(len(junk_sculpture.aliased_data.match_status), 1)
@@ -107,6 +118,7 @@ class ImportTests(TransactionTestCase):
             stdout=stdout,
         )
         self.assert_resources_loaded()
+        print("Test import from CLI completed.\n")
 
         # Reverse load to clear out the loaded resources
         loadid = LoadEvent.objects.first().loadid
@@ -146,6 +158,7 @@ class ImportTests(TransactionTestCase):
         write_request0 = importer.write(request=request0)
         self.assertTrue(write_request0["success"])
         self.assert_resources_loaded()
+        print("Test import from Lingo UI completed.\n")
 
         # Reverse load to clear out the loaded resources
         importer.reverse_load(loadid=start_event0.loadid)
@@ -186,6 +199,7 @@ class ImportTests(TransactionTestCase):
         write_request1 = importer.write(request=request1)
         self.assertTrue(write_request1["success"])
         self.assert_resources_loaded()
+        print("Test migrate from RDM completed.\n")
 
         # No need to reverse load because tearDown will reset the DB
 
