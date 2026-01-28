@@ -464,6 +464,19 @@ class LingoResourceImporter(BaseImportModule):
     def init_relationships(
         self, cursor, loadid, concepts_to_migrate, concept_hierarchy
     ):
+        # prefetch default values for hidden nodes
+        reference_datatype = self.datatype_factory.get_instance("reference")
+        WARRANT_ASSERTION_EVENT = json.dumps(
+            reference_datatype.transform_value_for_tile(
+                "warrant assertion event", controlledList=const.EVENT_TYPES_LIST_ID
+            )
+        )
+        INFORMATIONAL_STATUS = json.dumps(
+            reference_datatype.transform_value_for_tile(
+                "informational status", controlledList=const.METATYPES_LIST_ID
+            )
+        )
+
         # Create top concept of scheme relationships (derived from relations with 'hasTopConcept' relationtype)
         cursor.execute(
             """
@@ -537,14 +550,21 @@ class LingoResourceImporter(BaseImportModule):
                         'source', conceptidfrom,
                         'datatype', 'resource-instance-list'
                     ),
-                    %s, null,
-                    %s, null,
-                    %s, null,
-                    %s, null,
-                    %s, null,
-                    %s, null,
-                    %s, null,
-                    %s, null
+                    %s::uuid, null,
+                    %s::uuid, null,
+                    %s::uuid, null,
+                    %s::uuid, null,
+                    %s::uuid, null,
+                    %s::uuid, 
+                    json_build_object(
+                        'notes', '',
+                        'valid', true,
+                        'value', %s::jsonb,
+                        'source', 'default value',
+                        'datatype', 'reference'
+                    ),
+                    %s::uuid, null,
+                    %s::uuid, null
                 ) as value,
                 conceptidto as resourceinstanceid, -- map target concept's new resourceinstanceid to its existing conceptid
                 uuid_generate_v4() as tileid,
@@ -569,6 +589,7 @@ class LingoResourceImporter(BaseImportModule):
                 const.CLASSIFICATION_STATUS_ASSIGNMENT_ACTOR_NODEID,
                 const.CLASSIFICATION_STATUS_ASSIGNMENT_OBJ_USED_NODEID,
                 const.CLASSIFICATION_STATUS_ASSIGNMENT_TYPE_NODEID,
+                WARRANT_ASSERTION_EVENT,
                 const.CLASSIFICATION_STATUS_TIMESPAN_END_OF_END_NODEID,
                 const.CLASSIFICATION_STATUS_TIMESPAN_BEGIN_OF_BEGIN_NODEID,
                 loadid,
@@ -603,14 +624,28 @@ class LingoResourceImporter(BaseImportModule):
                         'source', conceptidto,
                         'datatype', 'resource-instance-list'
                     ),
-                    %s, null,
-                    %s, null,
-                    %s, null,
-                    %s, null,
-                    %s, null,
-                    %s, null,
-                    %s, null,
-                    %s, null
+                    %s::uuid, null,
+                    %s::uuid, null,
+                    %s::uuid,
+                    json_build_object(
+                        'notes', '',
+                        'valid', true,
+                        'value', %s::jsonb,
+                        'source', 'default value',
+                        'datatype', 'reference'
+                    ),
+                    %s::uuid, null,
+                    %s::uuid, null,
+                    %s::uuid, null,
+                    %s::uuid, null,
+                    %s::uuid, 
+                    json_build_object(
+                        'notes', '',
+                        'valid', true,
+                        'value', %s::jsonb,
+                        'source', 'default value',
+                        'datatype', 'reference'
+                    )
                 ) as value,
                 conceptidfrom as resourceinstanceid,
                 uuid_generate_v4() as tileid,
@@ -632,11 +667,13 @@ class LingoResourceImporter(BaseImportModule):
                 const.RELATION_STATUS_ASCRIBED_RELATION_NODEID,
                 const.RELATION_STATUS_STATUS_NODEID,
                 const.RELATION_STATUS_STATUS_METATYPE_NODEID,
+                INFORMATIONAL_STATUS,
                 const.RELATION_STATUS_TIMESPAN_BEGIN_OF_THE_BEGIN_NODEID,
                 const.RELATION_STATUS_TIMESPAN_END_OF_THE_END_NODEID,
                 const.RELATION_STATUS_DATA_ASSIGNMENT_ACTOR_NODEID,
                 const.RELATION_STATUS_DATA_ASSIGNMENT_OBJECT_USED_NODEID,
                 const.RELATION_STATUS_DATA_ASSIGNMENT_TYPE_NODEID,
+                WARRANT_ASSERTION_EVENT,
                 loadid,
                 const.RELATION_STATUS_NODEGROUP,
                 concepts_to_migrate,
