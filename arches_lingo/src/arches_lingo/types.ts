@@ -9,7 +9,6 @@ import type { Label } from "@/arches_controlled_lists/types.ts";
 import type { StringValue } from "@/arches_component_lab/datatypes/string/types.ts";
 import type { ResourceInstanceListValue } from "@/arches_component_lab/datatypes/resource-instance-list/types.ts";
 import type { FileListValue } from "@/arches_component_lab/datatypes/file-list/types.ts";
-import type { URLValue } from "@/arches_component_lab/datatypes/url/types.ts";
 
 export interface User {
     first_name: string;
@@ -194,7 +193,7 @@ export interface ConceptRelationAliases extends AliasedData {
 export type ConceptRelationStatus = TileData<ConceptRelationAliases>;
 
 export interface ConceptMatchAliases extends AliasedData {
-    match_status_ascribed_comparate: ResourceInstanceListValue;
+    match_status_ascribed_comparate: StringValue;
     match_status_ascribed_relation: ReferenceSelectTreeNode[];
     match_status_status: ReferenceSelectTreeNode[];
     match_status_status_metatype: ReferenceSelectTreeNode[];
@@ -203,7 +202,6 @@ export interface ConceptMatchAliases extends AliasedData {
     match_status_data_assignment_actor: ResourceInstanceListValue;
     match_status_data_assignment_object_used: ResourceInstanceListValue;
     match_status_data_assignment_type: ReferenceSelectTreeNode[];
-    uri: URLValue;
 }
 
 export type ConceptMatchStatus = TileData<ConceptMatchAliases>;

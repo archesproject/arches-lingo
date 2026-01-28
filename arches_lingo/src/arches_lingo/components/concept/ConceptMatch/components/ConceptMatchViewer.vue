@@ -36,6 +36,12 @@ const metaStringLabel: MetaStringText = {
     type: $gettext("Related URI"),
     noRecords: $gettext("No matched concepts were found."),
 };
+
+function matchedConceptURIIsLink(rowData: ConceptMatchStatus): boolean {
+    const uri = rowData.aliased_data.match_status_ascribed_comparate
+        .display_value as string;
+    return uri.startsWith("http");
+}
 </script>
 
 <template>
@@ -84,15 +90,24 @@ const metaStringLabel: MetaStringText = {
                 />
             </template>
             <template #type="{ rowData }">
-                <GenericWidget
-                    :graph-slug="props.graphSlug"
-                    node-alias="match_status_ascribed_comparate"
-                    :aliased-node-data="
+                <RouterLink
+                    v-if="matchedConceptURIIsLink(rowData)"
+                    :to="
                         rowData.aliased_data.match_status_ascribed_comparate
+                            .display_value
                     "
-                    :mode="VIEW"
-                    :should-show-label="false"
-                />
+                    class="text-link"
+                    >{{
+                        rowData.aliased_data.match_status_ascribed_comparate
+                            .display_value
+                    }}
+                </RouterLink>
+                <span v-else>
+                    {{
+                        rowData.aliased_data.match_status_ascribed_comparate
+                            .display_value
+                    }}
+                </span>
             </template>
             <template #drawer="{ rowData }">
                 <GenericWidget
