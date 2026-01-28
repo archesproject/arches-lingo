@@ -10,7 +10,14 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.http import HttpRequest
 from django.test import TestCase, TransactionTestCase
 
-from arches.app.models.models import ETLModule, LoadEvent, ResourceInstance, Value
+from arches.app.models.models import (
+    DRelationType,
+    ETLModule,
+    LoadEvent,
+    Relation,
+    ResourceInstance,
+    Value,
+)
 from arches.app.utils.skos import SKOSReader
 from arches_querysets.models import ResourceTileTree
 
@@ -71,6 +78,9 @@ class ImportTests(TransactionTestCase):
         hierarchy = hierarchy[0]
         parent = hierarchy.aliased_data.classification_status_ascribed_classification
         self.assertIn(parent.name["en"], "Top Concept")
+
+        # Matched Concept
+        self.assertEqual(len(junk_sculpture.aliased_data.match_status), 1)
 
     def test_lingo_resource_importer(self):
         """
@@ -149,6 +159,16 @@ class ImportTests(TransactionTestCase):
         rdf = skos.read_file(str(self.fixture_path))
         skos.save_concepts_from_skos(rdf)
         test_scheme = Value.objects.get(value="Test Thesaurus")
+
+        # 3a. mock matched concept relation because skos import doesn't create it
+        related_match = DRelationType.objects.get(relationtype="relatedMatch")
+        junk_sculpture = Value.objects.get(value="junk sculpture").concept
+        example_concept_1 = Value.objects.get(value="Example Concept 1").concept
+        Relation(
+            conceptfrom=junk_sculpture,
+            conceptto=example_concept_1,
+            relationtype=related_match,
+        ).save()
 
         start_event1 = LoadEvent.objects.create(
             user_id=1, etl_module_id=self.moduleid, status="running"
