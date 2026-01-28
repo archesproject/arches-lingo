@@ -415,7 +415,7 @@ class LingoResourceImporter(BaseImportModule):
                 }
                 for cross_record in node.cardxnodexwidget_set.all():
                     default_value = cross_record.config.get("defaultValue", None)
-                    if default_value is not None:
+                    if default_value != "" and default_value is not None:
                         blank_tile[str(node.nodeid)]["value"] = default_value
             self.blank_tile_lookup[nodegroupid] = blank_tile
         return copy.deepcopy(self.blank_tile_lookup[nodegroupid])
