@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject } from "vue";
+import { inject, computed } from "vue";
 import { useGettext } from "vue3-gettext";
 import { useConfirm } from "primevue/useconfirm";
 import { useToast } from "primevue/usetoast";
@@ -52,6 +52,43 @@ const refreshReportSection = inject<(componentName: string) => void>(
 );
 
 const refreshSchemeHierarchy = inject<() => void>("refreshSchemeHierarchy");
+
+const resourceInstanceLifecycleState = inject<{
+    value:
+        | {
+              can_edit_resource_instances: boolean;
+              can_delete_resource_instances: boolean;
+          }
+        | undefined;
+}>("resourceInstanceLifecycleState");
+
+const canEditResourceInstances = computed(() => {
+    return Boolean(
+        resourceInstanceLifecycleState?.value?.can_edit_resource_instances,
+    );
+});
+
+const isCreateDisabled = computed(() => {
+    return Boolean(
+        !props.resourceInstanceId || !canEditResourceInstances.value,
+    );
+});
+
+const createTooltipText = computed(() => {
+    if (!isCreateDisabled.value) {
+        return "";
+    }
+
+    if (!props.resourceInstanceId) {
+        return $gettext(
+            "Create a Concept Label before adding hierarchical parents",
+        );
+    }
+
+    return $gettext(
+        "This concept is not editable in its current lifecycle state",
+    );
+});
 
 function getIcon(item: SearchResultItem) {
     //TODO need a better way to determine if item is a scheme or not
@@ -135,10 +172,8 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
 
             <Button
                 v-tooltip.top="{
-                    disabled: Boolean(props.resourceInstanceId),
-                    value: $gettext(
-                        'Create a Concept Label before adding hierarchical parents',
-                    ),
+                    disabled: Boolean(!isCreateDisabled),
+                    value: createTooltipText,
                     showDelay: 300,
                     pt: {
                         text: {
@@ -147,7 +182,7 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
                         arrow: { style: { display: 'none' } },
                     },
                 }"
-                :disabled="Boolean(!props.resourceInstanceId)"
+                :disabled="isCreateDisabled"
                 :label="$gettext('Add Hierarchical Parent')"
                 class="add-button wide"
                 icon="pi pi-plus-circle"
@@ -203,6 +238,7 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
                             style="margin-inline-start: 0.5rem; display: flex"
                         >
                             <Button
+                                v-if="canEditResourceInstances"
                                 icon="pi pi-file-edit"
                                 variant="text"
                                 :aria-label="$gettext('edit')"
@@ -213,7 +249,9 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
                                 "
                             />
                             <Button
-                                v-if="hierarchy.tileid"
+                                v-if="
+                                    canEditResourceInstances && hierarchy.tileid
+                                "
                                 icon="pi pi-trash"
                                 variant="text"
                                 :aria-label="$gettext('delete')"

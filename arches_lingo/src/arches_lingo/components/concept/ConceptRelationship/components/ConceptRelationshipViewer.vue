@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject } from "vue";
+import { inject, computed } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import Button from "primevue/button";
@@ -28,6 +28,43 @@ const { $gettext } = useGettext();
 
 const openEditor = inject<(componentName: string) => void>("openEditor");
 
+const resourceInstanceLifecycleState = inject<{
+    value:
+        | {
+              can_edit_resource_instances: boolean;
+              can_delete_resource_instances: boolean;
+          }
+        | undefined;
+}>("resourceInstanceLifecycleState");
+
+const canEditResourceInstances = computed(() => {
+    return Boolean(
+        resourceInstanceLifecycleState?.value?.can_edit_resource_instances,
+    );
+});
+
+const isCreateDisabled = computed(() => {
+    return Boolean(
+        !props.resourceInstanceId || !canEditResourceInstances.value,
+    );
+});
+
+const createTooltipText = computed(() => {
+    if (!isCreateDisabled.value) {
+        return "";
+    }
+
+    if (!props.resourceInstanceId) {
+        return $gettext(
+            "Create a Concept Label before adding associated concepts",
+        );
+    }
+
+    return $gettext(
+        "This concept is not editable in its current lifecycle state",
+    );
+});
+
 const metaStringLabel: MetaStringText = {
     deleteConfirm: $gettext(
         "Are you sure you want to delete this relationship?",
@@ -46,10 +83,8 @@ const metaStringLabel: MetaStringText = {
 
             <Button
                 v-tooltip.top="{
-                    disabled: Boolean(props.resourceInstanceId),
-                    value: $gettext(
-                        'Create a Concept Label before adding associated concepts',
-                    ),
+                    disabled: Boolean(!isCreateDisabled),
+                    value: createTooltipText,
                     showDelay: 300,
                     pt: {
                         text: {
@@ -58,7 +93,7 @@ const metaStringLabel: MetaStringText = {
                         arrow: { style: { display: 'none' } },
                     },
                 }"
-                :disabled="Boolean(!props.resourceInstanceId)"
+                :disabled="isCreateDisabled"
                 :label="$gettext('Add Associated Concept')"
                 class="add-button wide"
                 icon="pi pi-plus-circle"
