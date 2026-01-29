@@ -57,6 +57,31 @@ COPY docker/nginx/default.conf /etc/nginx/sites-available/default
 #TODO: remove pymemcacheD from this image
 RUN source ${WEB_ROOT}/ENV/bin/activate && pip install . && pip install gunicorn pymemcache boto boto3 django-storages psutil
 
+#TODO: remove rabbitmq from this image
+RUN <<EOF
+apt-get install curl gnupg apt-transport-https -y 
+curl -1sLf "https://keys.openpgp.org/vks/v1/by-fingerprint/0A9AF2115F4687BD29803A206B73A36E6026DFCA" | sudo gpg --dearmor | sudo tee /usr/share/keyrings/com.rabbitmq.team.gpg > /dev/null 
+tee /etc/apt/sources.list.d/rabbitmq.list <<EOF1 
+  ## Modern Erlang/OTP releases 
+  ## 
+  deb [arch=amd64 signed-by=/usr/share/keyrings/com.rabbitmq.team.gpg] https://deb1.rabbitmq.com/rabbitmq-erlang/ubuntu/noble noble main 
+  deb [arch=amd64 signed-by=/usr/share/keyrings/com.rabbitmq.team.gpg] https://deb2.rabbitmq.com/rabbitmq-erlang/ubuntu/noble noble main 
+
+  ## Latest RabbitMQ releases
+  ##
+  deb [arch=amd64 signed-by=/usr/share/keyrings/com.rabbitmq.team.gpg] https://deb1.rabbitmq.com/rabbitmq-server/ubuntu/noble noble main
+  deb [arch=amd64 signed-by=/usr/share/keyrings/com.rabbitmq.team.gpg] https://deb2.rabbitmq.com/rabbitmq-server/ubuntu/noble noble main 
+EOF1
+apt-get update -y
+apt-get install -y erlang-base \
+  erlang-asn1 erlang-crypto erlang-eldap erlang-ftp erlang-inets \
+  erlang-mnesia erlang-os-mon erlang-parsetools erlang-public-key \
+  erlang-runtime-tools erlang-snmp erlang-ssl \
+  erlang-syntax-tools erlang-tftp erlang-tools erlang-xmerl
+apt-get install rabbitmq-server -y --fix-missing
+
+EOF
+
 # # Set entrypoint
 ENTRYPOINT ["../entrypoint.sh"]
 CMD ["run_gunicorn"]
