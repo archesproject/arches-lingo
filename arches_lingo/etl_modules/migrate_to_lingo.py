@@ -1,14 +1,16 @@
+import copy
 import filetype
 import json
 import logging
 import os
+import re
 import uuid
 from datetime import datetime
 from collections import defaultdict
 
 from django.core.files.storage import default_storage
 from django.db import connection
-from django.db.models import OuterRef, Prefetch, Subquery
+from django.db.models import FilteredRelation, OuterRef, Prefetch, Q, Subquery
 from django.db.models.functions import Coalesce
 from django.utils.translation import gettext as _
 
@@ -22,32 +24,7 @@ from arches.app.models.concept import Concept
 from arches.app.models.system_settings import settings
 
 import arches_lingo.tasks as tasks
-from arches_lingo.const import (
-    SCHEMES_GRAPH_ID,
-    CONCEPTS_GRAPH_ID,
-    TOP_CONCEPT_OF_NODE_AND_NODEGROUP,
-    CLASSIFICATION_STATUS_NODEGROUP,
-    CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID,
-    CLASSIFICATION_STATUS_ASCRIBED_RELATION_NODEID,
-    CLASSIFICATION_STATUS_TYPE_NODEID,
-    CLASSIFICATION_STATUS_TYPE_METATYPE_NODEID,
-    CLASSIFICATION_STATUS_ASSIGNMENT_ACTOR_NODEID,
-    CLASSIFICATION_STATUS_ASSIGNMENT_OBJ_USED_NODEID,
-    CLASSIFICATION_STATUS_ASSIGNMENT_TYPE_NODEID,
-    CLASSIFICATION_STATUS_TIMESPAN_END_OF_END_NODEID,
-    CLASSIFICATION_STATUS_TIMESPAN_BEGIN_OF_BEGIN_NODEID,
-    RELATION_STATUS_NODEGROUP,
-    RELATION_STATUS_ASCRIBED_COMPARATE_NODEID,
-    RELATION_STATUS_ASCRIBED_RELATION_NODEID,
-    RELATION_STATUS_STATUS_NODEID,
-    RELATION_STATUS_STATUS_METATYPE_NODEID,
-    RELATION_STATUS_TIMESPAN_BEGIN_OF_THE_BEGIN_NODEID,
-    RELATION_STATUS_TIMESPAN_END_OF_THE_END_NODEID,
-    RELATION_STATUS_DATA_ASSIGNMENT_ACTOR_NODEID,
-    RELATION_STATUS_DATA_ASSIGNMENT_OBJECT_USED_NODEID,
-    RELATION_STATUS_DATA_ASSIGNMENT_TYPE_NODEID,
-    CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID,
-)
+import arches_lingo.const as const
 
 logger = logging.getLogger(__name__)
 
@@ -67,12 +44,18 @@ details = {
     "helptemplate": "migrate-to-lingo-help",
 }
 
+# TODO: swap out for URLValidator?
+# from django.core.validators import URLValidator
+URL_REGEX = re.compile(
+    r"https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)"
+)
+
 
 class LingoResourceImporter(BaseImportModule):
     def __init__(self, request=None, loadid=None, userid=None, **kwargs):
         if request:
             moduleid = request.POST.get("module")
-            loadid = request.POST.get("load_id")
+            loadid = request.POST.get("load_id") or request.POST.get("loadid")
             userid = request.user.id if userid is None else userid
         else:
             moduleid = kwargs.get("moduleid", None)
@@ -98,6 +81,7 @@ class LingoResourceImporter(BaseImportModule):
         self.language_lookup = {
             lang.code: lang.name for lang in models.Language.objects.all()
         }
+        self.blank_tile_lookup = {}
 
     def get_schemes(self, request):
         schemes = (
@@ -152,18 +136,21 @@ class LingoResourceImporter(BaseImportModule):
                 mock_tile = self.create_mock_tile_from_value(
                     value, isScheme=True, lang_lookup=self.language_lookup
                 )
-                if mock_tile.values():
+                if isinstance(mock_tile, list):
+                    scheme_to_load["tile_data"].extend(mock_tile)
+                elif mock_tile:
                     scheme_to_load["tile_data"].append(mock_tile)
             schemes.append(scheme_to_load)
         return schemes
 
     def extract_concepts_from_rdm_tables(self, concepts_to_migrate):
         concepts = []
-        for concept in models.Concept.objects.filter(
+        concepts_qs = models.Concept.objects.filter(
             nodetype="Concept", pk__in=concepts_to_migrate
         ).prefetch_related(
             Prefetch("value_set", queryset=models.Value.objects.order_by("value"))
-        ):
+        )
+        for concept in concepts_qs:
             concept_to_load = {"type": "Concept", "tile_data": []}
             for value in concept.value_set.all():
                 concept_to_load["resourceinstanceid"] = (
@@ -172,10 +159,47 @@ class LingoResourceImporter(BaseImportModule):
                 mock_tile = self.create_mock_tile_from_value(
                     value, lang_lookup=self.language_lookup
                 )
-                if mock_tile.values():
+                if isinstance(mock_tile, list):
+                    concept_to_load["tile_data"].extend(mock_tile)
+                elif mock_tile:
                     concept_to_load["tile_data"].append(mock_tile)
 
             concepts.append(concept_to_load)
+
+        # Extract matched concept relationships
+        mapping_types = models.DRelationType.objects.filter(
+            category="Mapping Properties"
+        ).values("relationtype")
+
+        relations_for_matched_concepts = (
+            models.Relation.objects.annotate(
+                identifier_value=FilteredRelation(
+                    "conceptto",
+                    condition=Q(conceptto__values__valuetype="identifier"),
+                )
+            )
+            .filter(
+                relationtype__in=mapping_types,
+            )
+            .annotate(
+                uri=Subquery(
+                    models.Value.objects.filter(
+                        concept_id=OuterRef("conceptto_id"),
+                        valuetype_id="identifier",
+                    ).values("value")[:1]
+                )
+            )
+        )
+        for relation in relations_for_matched_concepts:
+            mock_tile = self.create_mock_tile_from_value(
+                {"value": relation.uri, "valuetype_id": relation.relationtype_id},
+            )
+            if mock_tile:
+                for concept in concepts:
+                    if concept["resourceinstanceid"] == relation.conceptfrom_id:
+                        concept["tile_data"].append(mock_tile)
+                        break
+
         return concepts
 
     @staticmethod
@@ -196,37 +220,67 @@ class LingoResourceImporter(BaseImportModule):
                     value["language"] = value["language"].name
             except KeyError:
                 pass
-        if value["valuetype_id"] == "title":
-            value["valuetype_id"] = "prefLabel"
+        value_type_id = value["valuetype_id"]
+        if value_type_id == "title":
+            value_type_id = "prefLabel"
         mock_tile = {}
-        if (
-            value["valuetype_id"] == "prefLabel"
-            or value["valuetype_id"] == "altLabel"
-            or value["valuetype_id"] == "hiddenLabel"
-            or value["valuetype_id"] == "title"
-        ):
+        if value_type_id in set(["prefLabel", "altLabel", "hiddenLabel", "title"]):
             mock_tile["appellative_status_ascribed_name_content"] = value["value"]
             mock_tile["appellative_status_ascribed_name_language"] = value["language"]
-            mock_tile["appellative_status_ascribed_relation"] = value["valuetype_id"]
+            mock_tile["appellative_status_ascribed_relation"] = value_type_id
             return {"appellative_status": mock_tile}
-        elif value["valuetype_id"] == "identifier":
-            mock_tile["identifier_content"] = value["value"]
-            mock_tile["identifier_type"] = value["valuetype_id"]
-            return {"identifier": mock_tile}
-        elif (
-            value["valuetype_id"] == "note"
-            or value["valuetype_id"] == "changeNote"
-            or value["valuetype_id"] == "definition"
-            or value["valuetype_id"] == "description"
-            or value["valuetype_id"] == "editorialNote"
-            or value["valuetype_id"] == "example"
-            or value["valuetype_id"] == "historyNote"
-            or value["valuetype_id"] == "scopeNote"
+        elif value_type_id == "identifier":
+            val = value["value"]
+            if URL_REGEX.match(val) and not isScheme:
+                mock_tiles = [
+                    {
+                        "uri": {
+                            "uri_content": val,
+                            "uri_type": value_type_id,
+                        }
+                    },
+                    {
+                        "identifier": {
+                            "identifier_content": val.rstrip("/").split("/")[-1],
+                            "identifier_type": value_type_id,
+                        }
+                    },
+                ]
+                return mock_tiles
+            else:
+                mock_tile["identifier_content"] = val
+                mock_tile["identifier_type"] = value_type_id
+                return {"identifier": mock_tile}
+        elif value_type_id in set(
+            [
+                "note",
+                "changeNote",
+                "definition",
+                "description",
+                "editorialNote",
+                "example",
+                "historyNote",
+                "scopeNote",
+            ]
         ):
             mock_tile["statement_content"] = value["value"]
-            mock_tile["statement_type"] = value["valuetype_id"]
+            mock_tile["statement_type"] = value_type_id
             mock_tile["statement_language"] = value["language"]
             return {"statement": mock_tile}
+        elif value_type_id in set(
+            [
+                "broadMatch",
+                "closeMatch",
+                "exactMatch",
+                "inverseOf",
+                "mappingRelation",
+                "narrowMatch",
+                "relatedMatch",
+            ]
+        ):
+            mock_tile["match_status_ascribed_comparate"] = value["value"]
+            mock_tile["match_status_ascribed_relation"] = value_type_id
+            return {"match_status": mock_tile}
         pass
 
     @staticmethod
@@ -297,8 +351,8 @@ class LingoResourceImporter(BaseImportModule):
     def create_tile_value(
         self, cursor, mock_tile, nodegroup_alias, nodegroup_lookup, node_lookup
     ):
-        tile_value = {}
-        tile_valid = True
+        tile_value = self.get_blank_tile_lookup(node_lookup[nodegroup_alias]["nodeid"])
+        tile_valid = False
         for node_alias in mock_tile[nodegroup_alias].keys():
             try:
                 nodeid = node_lookup[node_alias]["nodeid"]
@@ -314,8 +368,7 @@ class LingoResourceImporter(BaseImportModule):
                     datatype_instance, source_value, config
                 )
                 valid = True if len(validation_errors) == 0 else False
-                if not valid:
-                    tile_valid = False
+                tile_valid = True if valid else False
                 error_message = ""
                 for error in validation_errors:
                     error_message = error["message"]
@@ -333,17 +386,39 @@ class LingoResourceImporter(BaseImportModule):
                         ),
                     )
 
-                tile_value[nodeid] = {
-                    "value": value,
-                    "valid": valid,
-                    "source": source_value,
-                    "notes": error_message,
-                    "datatype": datatype,
-                }
+                tile_value[nodeid]["value"] = value
+                tile_value[nodeid]["valid"] = valid
+                tile_value[nodeid]["source"] = source_value
+                if error_message:
+                    tile_value[nodeid]["notes"] = error_message
             except KeyError:
                 pass
 
         return tile_value, tile_valid
+
+    def get_blank_tile_lookup(self, nodegroupid):
+        if nodegroupid not in self.blank_tile_lookup.keys():
+            blank_tile = {}
+            nodes = (
+                models.Node.objects.filter(nodegroup_id=nodegroupid)
+                .exclude(datatype="semantic")
+                .prefetch_related("cardxnodexwidget_set")
+            )
+            for node in nodes:
+                # TODO: get default value from cardxnodexwidget if exists
+                blank_tile[str(node.nodeid)] = {
+                    "value": None,
+                    "valid": True,
+                    "source": "",
+                    "notes": "",
+                    "datatype": node.datatype,
+                }
+                for cross_record in node.cardxnodexwidget_set.all():
+                    default_value = cross_record.config.get("defaultValue", None)
+                    if default_value != "" and default_value is not None:
+                        blank_tile[str(node.nodeid)]["value"] = default_value
+            self.blank_tile_lookup[nodegroupid] = blank_tile
+        return copy.deepcopy(self.blank_tile_lookup[nodegroupid])
 
     def build_concept_hierarchy(self, cursor, scheme_conceptid):
         cursor.execute(
@@ -389,6 +464,19 @@ class LingoResourceImporter(BaseImportModule):
     def init_relationships(
         self, cursor, loadid, concepts_to_migrate, concept_hierarchy
     ):
+        # prefetch default values for hidden nodes
+        reference_datatype = self.datatype_factory.get_instance("reference")
+        WARRANT_ASSERTION_EVENT = json.dumps(
+            reference_datatype.transform_value_for_tile(
+                "warrant assertion event", controlledList=const.EVENT_TYPES_LIST_ID
+            )
+        )
+        INFORMATIONAL_STATUS = json.dumps(
+            reference_datatype.transform_value_for_tile(
+                "informational status", controlledList=const.METATYPES_LIST_ID
+            )
+        )
+
         # Create top concept of scheme relationships (derived from relations with 'hasTopConcept' relationtype)
         cursor.execute(
             """
@@ -431,9 +519,9 @@ class LingoResourceImporter(BaseImportModule):
                 and conceptidto = ANY(%s);
         """,
             (
-                TOP_CONCEPT_OF_NODE_AND_NODEGROUP,
+                const.TOP_CONCEPT_OF_NODE_AND_NODEGROUP,
                 loadid,
-                TOP_CONCEPT_OF_NODE_AND_NODEGROUP,
+                const.TOP_CONCEPT_OF_NODE_AND_NODEGROUP,
                 concepts_to_migrate,
             ),
         )
@@ -462,14 +550,21 @@ class LingoResourceImporter(BaseImportModule):
                         'source', conceptidfrom,
                         'datatype', 'resource-instance-list'
                     ),
-                    %s, null,
-                    %s, null,
-                    %s, null,
-                    %s, null,
-                    %s, null,
-                    %s, null,
-                    %s, null,
-                    %s, null
+                    %s::uuid, null,
+                    %s::uuid, null,
+                    %s::uuid, null,
+                    %s::uuid, null,
+                    %s::uuid, null,
+                    %s::uuid, 
+                    json_build_object(
+                        'notes', '',
+                        'valid', true,
+                        'value', %s::jsonb,
+                        'source', 'default value',
+                        'datatype', 'reference'
+                    ),
+                    %s::uuid, null,
+                    %s::uuid, null
                 ) as value,
                 conceptidto as resourceinstanceid, -- map target concept's new resourceinstanceid to its existing conceptid
                 uuid_generate_v4() as tileid,
@@ -487,17 +582,18 @@ class LingoResourceImporter(BaseImportModule):
                 and conceptidto = ANY(%s);
         """,
             (
-                CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID,
-                CLASSIFICATION_STATUS_ASCRIBED_RELATION_NODEID,
-                CLASSIFICATION_STATUS_TYPE_NODEID,
-                CLASSIFICATION_STATUS_TYPE_METATYPE_NODEID,
-                CLASSIFICATION_STATUS_ASSIGNMENT_ACTOR_NODEID,
-                CLASSIFICATION_STATUS_ASSIGNMENT_OBJ_USED_NODEID,
-                CLASSIFICATION_STATUS_ASSIGNMENT_TYPE_NODEID,
-                CLASSIFICATION_STATUS_TIMESPAN_END_OF_END_NODEID,
-                CLASSIFICATION_STATUS_TIMESPAN_BEGIN_OF_BEGIN_NODEID,
+                const.CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID,
+                const.CLASSIFICATION_STATUS_ASCRIBED_RELATION_NODEID,
+                const.CLASSIFICATION_STATUS_TYPE_NODEID,
+                const.CLASSIFICATION_STATUS_TYPE_METATYPE_NODEID,
+                const.CLASSIFICATION_STATUS_ASSIGNMENT_ACTOR_NODEID,
+                const.CLASSIFICATION_STATUS_ASSIGNMENT_OBJ_USED_NODEID,
+                const.CLASSIFICATION_STATUS_ASSIGNMENT_TYPE_NODEID,
+                WARRANT_ASSERTION_EVENT,
+                const.CLASSIFICATION_STATUS_TIMESPAN_END_OF_END_NODEID,
+                const.CLASSIFICATION_STATUS_TIMESPAN_BEGIN_OF_BEGIN_NODEID,
                 loadid,
-                CLASSIFICATION_STATUS_NODEGROUP,
+                const.CLASSIFICATION_STATUS_NODEGROUP,
                 concepts_to_migrate,
             ),
         )
@@ -528,14 +624,28 @@ class LingoResourceImporter(BaseImportModule):
                         'source', conceptidto,
                         'datatype', 'resource-instance-list'
                     ),
-                    %s, null,
-                    %s, null,
-                    %s, null,
-                    %s, null,
-                    %s, null,
-                    %s, null,
-                    %s, null,
-                    %s, null
+                    %s::uuid, null,
+                    %s::uuid, null,
+                    %s::uuid,
+                    json_build_object(
+                        'notes', '',
+                        'valid', true,
+                        'value', %s::jsonb,
+                        'source', 'default value',
+                        'datatype', 'reference'
+                    ),
+                    %s::uuid, null,
+                    %s::uuid, null,
+                    %s::uuid, null,
+                    %s::uuid, null,
+                    %s::uuid, 
+                    json_build_object(
+                        'notes', '',
+                        'valid', true,
+                        'value', %s::jsonb,
+                        'source', 'default value',
+                        'datatype', 'reference'
+                    )
                 ) as value,
                 conceptidfrom as resourceinstanceid,
                 uuid_generate_v4() as tileid,
@@ -553,17 +663,19 @@ class LingoResourceImporter(BaseImportModule):
                 and conceptidfrom = ANY(%s);
         """,
             (
-                RELATION_STATUS_ASCRIBED_COMPARATE_NODEID,
-                RELATION_STATUS_ASCRIBED_RELATION_NODEID,
-                RELATION_STATUS_STATUS_NODEID,
-                RELATION_STATUS_STATUS_METATYPE_NODEID,
-                RELATION_STATUS_TIMESPAN_BEGIN_OF_THE_BEGIN_NODEID,
-                RELATION_STATUS_TIMESPAN_END_OF_THE_END_NODEID,
-                RELATION_STATUS_DATA_ASSIGNMENT_ACTOR_NODEID,
-                RELATION_STATUS_DATA_ASSIGNMENT_OBJECT_USED_NODEID,
-                RELATION_STATUS_DATA_ASSIGNMENT_TYPE_NODEID,
+                const.RELATION_STATUS_ASCRIBED_COMPARATE_NODEID,
+                const.RELATION_STATUS_ASCRIBED_RELATION_NODEID,
+                const.RELATION_STATUS_STATUS_NODEID,
+                const.RELATION_STATUS_STATUS_METATYPE_NODEID,
+                INFORMATIONAL_STATUS,
+                const.RELATION_STATUS_TIMESPAN_BEGIN_OF_THE_BEGIN_NODEID,
+                const.RELATION_STATUS_TIMESPAN_END_OF_THE_END_NODEID,
+                const.RELATION_STATUS_DATA_ASSIGNMENT_ACTOR_NODEID,
+                const.RELATION_STATUS_DATA_ASSIGNMENT_OBJECT_USED_NODEID,
+                const.RELATION_STATUS_DATA_ASSIGNMENT_TYPE_NODEID,
+                WARRANT_ASSERTION_EVENT,
                 loadid,
-                RELATION_STATUS_NODEGROUP,
+                const.RELATION_STATUS_NODEGROUP,
                 concepts_to_migrate,
             ),
         )
@@ -572,7 +684,7 @@ class LingoResourceImporter(BaseImportModule):
         # concepts with their schemes
         part_of_scheme_tiles = []
         part_of_scheme_nodegroup = NodeGroup.objects.get(
-            nodegroupid=CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID
+            nodegroupid=const.CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID
         )
         concepts_with_scheme = {}
         for concept in concept_hierarchy:
@@ -602,7 +714,7 @@ class LingoResourceImporter(BaseImportModule):
                 }
 
             value_obj = {
-                str(CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID): {
+                str(const.CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID): {
                     "notes": "",
                     "valid": True,
                     "value": [
@@ -740,11 +852,11 @@ class LingoResourceImporter(BaseImportModule):
         with connection.cursor() as cursor:
             # Create node and nodegroup lookups
             schemes_nodegroup_lookup, schemes_nodes = self.get_graph_tree(
-                SCHEMES_GRAPH_ID
+                const.SCHEMES_GRAPH_ID
             )
             schemes_node_lookup = self.get_node_lookup(schemes_nodes)
             concepts_nodegroup_lookup, concepts_nodes = self.get_graph_tree(
-                CONCEPTS_GRAPH_ID
+                const.CONCEPTS_GRAPH_ID
             )
             concepts_node_lookup = self.get_node_lookup(concepts_nodes)
 
@@ -824,7 +936,10 @@ class LingoResourceImporter(BaseImportModule):
             )
 
     def return_with_error(self, error):
-        return {
-            "success": False,
-            "data": {"title": _("Error"), "message": error},
-        }
+        if not self.load_event:
+            self.load_event = models.LoadEvent.objects.get(loadid=self.loadid)
+        self.load_event.status = "failed"
+        self.load_event.error_message = str(error)
+        self.load_event.save()
+        logger.error(error)
+        return {"success": False, "data": {"message": error}}

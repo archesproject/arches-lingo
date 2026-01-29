@@ -120,6 +120,7 @@ async function deleteSectionValue(tileId: string) {
                 </template>
             </Column>
             <Column
+                v-if="props.metaStringText?.language"
                 :header="props.metaStringText.language"
                 sortable
             >
