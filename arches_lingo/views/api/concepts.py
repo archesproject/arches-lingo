@@ -198,6 +198,10 @@ class ConceptRelationshipView(ConceptTreeView):
         return_data = {
             "scheme_id": concept.aliased_data.part_of_scheme.aliased_data.part_of_scheme[
                 "node_value"
+            ][
+                0
+            ][
+                "resourceId"
             ],
             "data": [],
         }
