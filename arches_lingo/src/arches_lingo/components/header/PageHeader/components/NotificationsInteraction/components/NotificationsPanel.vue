@@ -56,6 +56,7 @@ function dismissAllNotifications() {
                     display: 'flex',
                     flexDirection: 'column',
                     fontFamily: 'var(--p-lingo-font-family)',
+                    fontWeight: '400',
                 },
             },
             header: {

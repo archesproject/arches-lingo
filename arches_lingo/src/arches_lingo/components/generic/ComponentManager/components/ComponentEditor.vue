@@ -226,6 +226,14 @@ h2 {
     border-radius: 0.125rem;
 }
 
+:deep(.p-inputtext) {
+    font-size: 0.875rem !important;
+}
+
+:deep(.p-treeselect-label) {
+    font-size: 0.875rem !important;
+}
+
 .footer {
     background: var(--p-header-background);
     border-top: 0.125rem solid var(--p-menubar-border-color);

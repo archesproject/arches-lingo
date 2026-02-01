@@ -187,7 +187,7 @@ async function deleteSectionValue(tileId: string) {
 }
 
 .controls button:first-child {
-    border: 0.0625rem solid var(--p-header-button-border);
+    border: 0.0625rem solid var(--p-button-primary-active-border-color);
 }
 
 .no-data {
