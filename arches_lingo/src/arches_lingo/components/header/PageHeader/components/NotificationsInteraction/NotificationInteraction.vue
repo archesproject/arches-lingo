@@ -149,6 +149,7 @@ onUnmounted(() => {
     color: var(--p-menubar-text-color) !important;
     height: 3rem;
     border-radius: 0;
+    font-size: 0.875rem;
 }
 
 .notifications-button:hover {
