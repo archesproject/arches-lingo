@@ -116,7 +116,7 @@ async function checkUserAuthentication(
             >
                 <SplitterPanel
                     v-show="shouldShowHierarchy"
-                    :size="40"
+                    :size="30"
                 >
                     <div class="hierarchy-panel">
                         <SchemeHierarchy
@@ -128,7 +128,7 @@ async function checkUserAuthentication(
                         />
                     </div>
                 </SplitterPanel>
-                <SplitterPanel :size="60">
+                <SplitterPanel :size="70">
                     <RouterView :key="route.fullPath" />
                 </SplitterPanel>
             </Splitter>
@@ -172,6 +172,7 @@ main {
     display: flex;
     flex-direction: column;
 }
+
 </style>
 
 <style>

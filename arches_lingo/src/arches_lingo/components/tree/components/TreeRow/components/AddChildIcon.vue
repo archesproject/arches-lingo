@@ -31,7 +31,13 @@ function onAddChild() {
             value: addChildLabel,
             pt: {
                 text: {
-                    style: { fontFamily: 'sans-serif' },
+                    style: {
+                        style: { fontFamily: 'sans-serif' },
+                        fontSize: '0.875rem',
+                        paddingBottom: '0.75rem',
+                        marginLeft: '0.5rem',
+                        paddingInlineStart: '0.65rem',
+                    },
                 },
             },
         }"
