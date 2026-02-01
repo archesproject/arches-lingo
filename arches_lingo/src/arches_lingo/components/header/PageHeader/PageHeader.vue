@@ -116,8 +116,7 @@ const overlayPanel = useTemplateRef("overlayPanel");
 
 .explore-button.p-togglebutton-checked,
 .explore-button.p-togglebutton-checked * {
-    background: var(--p-togglebutton-checked-background) !important;
-    color: var(--p-togglebutton-checked-color) !important;
+    background: var(--p-button-primary-hover-background) !important;
 }
 
 .p-menubar {
