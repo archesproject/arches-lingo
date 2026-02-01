@@ -816,4 +816,25 @@ function onNodeSelect(node: TreeNode) {
 :deep(.p-tree-node-content) {
     width: fit-content;
 }
+
+:deep(.p-tree-node-content) {
+    border-radius: 0.25rem !important;
+}
+
+:deep(.p-tree-node-selected) {
+    background: var(--p-header-button-background) !important;
+    color: var(--p-header-button-color) !important;
+}
+
+:deep(.p-tree-node-selected .p-tree-node-icon) {
+    color: var(--p-header-button-color) !important;
+}
+
+:deep(.p-tree-node-selected button) {
+    color: var(--p-header-button-color) !important;
+}
+
+:deep(.p-tree-node-selected button:hover) {
+     background: var(--p-header-button-background) !important;
+}
 </style>
