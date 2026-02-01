@@ -327,7 +327,7 @@ provide("refreshReportSection", refreshReportSection);
     font-size: var(--p-lingo-font-size-xsmall);
     font-weight: var(--p-lingo-font-weight-normal);
     border-color: var(--p-button-primary-border-color);
-    border-radius: var(--p-button-border-radius);
+    border-radius: 0.125rem;
     min-width: 11rem;
 
     &.wide {
@@ -338,6 +338,7 @@ provide("refreshReportSection", refreshReportSection);
 :deep(.concept-header .p-button),
 :deep(.scheme-header .p-button) {
     font-size: var(--p-lingo-font-size-small);
+    border-radius: 0.125rem;
 }
 
 :deep(.concept-header .add-button),
@@ -345,6 +346,7 @@ provide("refreshReportSection", refreshReportSection);
     background: var(--p-header-button-background);
     color: var(--p-header-button-color);
     border-color: var(--p-header-button-border);
+    border-radius: 0.125rem;
 }
 
 .p-splitter .p-splitterpanel .splitter-panel-content .p-skeleton {

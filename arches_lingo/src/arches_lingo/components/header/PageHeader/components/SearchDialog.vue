@@ -63,6 +63,10 @@ const toggleModal = () => {
 <style>
 .basic-search-button {
     color: var(--p-menubar-text-color) !important;
+    border-radius: 0px !important;
+    padding: var(--p-button-padding-x) var(--p-button-padding-y) !important;
+    font-size: 0.875rem !important;
+    height: 3rem;
 }
 
 .basic-search-button:hover {

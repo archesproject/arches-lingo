@@ -36,6 +36,7 @@ defineProps<{
 }
 .display-name {
     font-size: var(--p-lingo-font-size-normal);
+    font-weight: 400;
 }
 .email {
     font-size: var(--p-lingo-font-size-small);

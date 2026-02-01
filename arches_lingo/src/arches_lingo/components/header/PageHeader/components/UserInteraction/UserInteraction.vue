@@ -93,6 +93,7 @@ function openUserMenu(event: MouseEvent) {
     border: none !important;
     color: inherit !important;
     border-radius: 0;
+    font-size: 0.875rem;
 }
 
 .p-button:hover {
