@@ -310,6 +310,7 @@ watch(searchResults, (newSearchResults) => {
 #basic-search-container {
     width: 100%;
     font-family: var(--p-lingo-font-family);
+    padding: 0.25rem;
 }
 
 .clear-button {
@@ -328,6 +329,9 @@ watch(searchResults, (newSearchResults) => {
 
 .p-autocomplete {
     width: 100%;
+    border: 1px solid var(--p-header-button-border);
+    border-radius: 0.25rem;
+    margin-bottom: 0.25rem;
 }
 
 :deep(.p-autocomplete-loader) {

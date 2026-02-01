@@ -46,7 +46,7 @@ watchEffect(async () => {
 
 <template>
     <div class="hierarchy-header">
-        <h2 style="font-size: 1.46rem">
+        <h2 class="title">
             {{ $gettext("Explore Hierarchies") }}
         </h2>
 
@@ -76,5 +76,10 @@ watchEffect(async () => {
     padding-inline-start: 1rem;
     padding-inline-end: 0.5rem;
     border-bottom: 0.0625rem solid var(--p-menubar-border-color);
+}
+
+.title {
+    font-size: var(--p-lingo-font-size-large);
+    font-weight: var(--p-lingo-font-weight-normal);
 }
 </style>

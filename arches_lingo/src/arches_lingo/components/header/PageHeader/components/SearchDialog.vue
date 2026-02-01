@@ -75,7 +75,8 @@ const toggleModal = () => {
 
 .basic-search-dialog {
     margin-top: 6rem !important;
-    border-radius: 0 !important;
+    border-radius: 0.25rem !important;
+    border: 0.125rem solid var(--p-dialog-color) !important;
 }
 
 @media screen and (max-width: 960px) {
