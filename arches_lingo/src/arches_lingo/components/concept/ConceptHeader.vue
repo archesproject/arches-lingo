@@ -427,6 +427,10 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
     min-width: 0;
 }
 
+:deep(.p-select-label) {
+    font-size: 0.875rem !important;
+}
+
 h2 {
     margin-top: 0;
     margin-bottom: 0;

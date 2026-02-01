@@ -349,6 +349,11 @@ provide("refreshReportSection", refreshReportSection);
     border-radius: 0.125rem;
 }
 
+:deep(.concept-header .add-button:hover),
+:deep(.scheme-header .add-button:hover) {
+    background: var(--p-highlight-background);
+}
+
 .p-splitter .p-splitterpanel .splitter-panel-content .p-skeleton {
     min-height: 9rem;
     margin-top: 1rem;
