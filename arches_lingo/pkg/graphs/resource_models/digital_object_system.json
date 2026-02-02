@@ -264,14 +264,16 @@
                 {
                     "card_id": "78fc2246-11e8-11ef-9493-0a58a9feac02",
                     "config": {
-                        "defaultValue": "",
+                        "defaultValue": null,
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Name Language",
                         "placeholder": {
-                            "en": "Select an option"
-                        }
+                            "en": "Select a language"
+                        },
+                        "width": "100%",
+                        "uneditable": false
                     },
                     "id": "78fc26ec-11e8-11ef-9493-0a58a9feac02",
                     "label": {
@@ -281,7 +283,7 @@
                     "sortorder": 2,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
+                    "widget_id": "b1f4d6e2-3c4a-4f5b-8f6d-7e8f9a0b1c2d"
                 },
                 {
                     "card_id": "7d8f3fdc-11e8-11ef-9493-0a58a9feac02",
@@ -440,14 +442,16 @@
                 {
                     "card_id": "8278e4e4-11e8-11ef-9493-0a58a9feac02",
                     "config": {
-                        "defaultValue": "",
+                        "defaultValue": null,
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Statement Language",
                         "placeholder": {
-                            "en": "Select an option"
-                        }
+                            "en": "Select a language"
+                        },
+                        "width": "100%",
+                        "uneditable": false
                     },
                     "id": "8278f3d0-11e8-11ef-9493-0a58a9feac02",
                     "label": {
@@ -457,7 +461,7 @@
                     "sortorder": 1,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
+                    "widget_id": "b1f4d6e2-3c4a-4f5b-8f6d-7e8f9a0b1c2d"
                 },
                 {
                     "card_id": "8278e4e4-11e8-11ef-9493-0a58a9feac02",
@@ -860,11 +864,8 @@
                 },
                 {
                     "alias": "name_language",
-                    "config": {
-                        "controlledList": "55ce793b-a51a-4b25-811d-d08ea797f8c3",
-                        "multiValue": true
-                    },
-                    "datatype": "reference",
+                    "config": null,
+                    "datatype": "language",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -1034,11 +1035,8 @@
                 },
                 {
                     "alias": "statement_language",
-                    "config": {
-                        "controlledList": "55ce793b-a51a-4b25-811d-d08ea797f8c3",
-                        "multiValue": true
-                    },
-                    "datatype": "reference",
+                    "config": null,
+                    "datatype": "language",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
