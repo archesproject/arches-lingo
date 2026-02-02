@@ -49,6 +49,7 @@ defineProps({
 .search-result {
     height: 100%;
     width: 100%;
+    font-size: 0.875rem;
     padding: 0.5rem;
     display: flex;
     align-items: flex-start;
@@ -56,6 +57,7 @@ defineProps({
     background-color: var(--p-dialog-background);
     border-bottom: 0.0625rem solid var(--p-search-result-border-bottom);
     color: var(--p-search-result-color);
+    gap: 0.125rem;
 }
 
 .search-result-hierarchy {
