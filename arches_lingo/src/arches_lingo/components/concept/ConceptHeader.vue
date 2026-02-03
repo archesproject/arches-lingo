@@ -265,7 +265,9 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                         :node-alias="TYPE_NODE_ALIAS"
                         :graph-slug="props.graphSlug"
                         :mode="EDIT"
-                        :aliased-node-data="conceptTypeTile?.aliased_data?.type"
+                        :aliased-node-data="
+                            conceptTypeTile?.aliased_data?.[TYPE_NODE_ALIAS]
+                        "
                         :should-show-label="false"
                         @update:value="onConceptTypeChange"
                     />
