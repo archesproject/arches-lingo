@@ -761,15 +761,18 @@ function onNodeSelect(node: TreeNode) {
 }
 
 .filter-container {
-    padding-top: 1rem;
-    padding-inline: 0.5rem;
+    padding-top: 0;
+    padding-inline: 1rem;
     padding-bottom: 1rem;
+    background: var(--p-header-toolbar-background);
     border-bottom: 0.0625rem solid var(--p-menubar-border-color);
+    margin-bottom: 0.5rem;
 }
 
 .tree-filter-input {
     border-radius: 0.125rem;
     width: 100%;
+    font-size: 0.875rem;
 }
 
 .filter-cap-message {

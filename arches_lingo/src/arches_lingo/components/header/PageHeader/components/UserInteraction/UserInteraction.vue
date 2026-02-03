@@ -92,7 +92,6 @@ function openUserMenu(event: MouseEvent) {
     background: transparent !important;
     border: none !important;
     color: inherit !important;
-    border-radius: 0;
     font-size: 0.875rem;
 }
 

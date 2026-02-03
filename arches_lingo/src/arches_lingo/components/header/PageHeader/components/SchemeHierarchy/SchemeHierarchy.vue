@@ -45,21 +45,22 @@ watchEffect(async () => {
 </script>
 
 <template>
-    <div class="hierarchy-header">
-        <h2 class="title">
-            {{ $gettext("Explore Hierarchies") }}
-        </h2>
+    <div class="hierarchy-header-container">
+        <div class="hierarchy-header">
+            <h2 class="title">
+                {{ $gettext("Explore Hierarchies") }}
+            </h2>
 
-        <Button
-            icon="pi pi-times"
-            rounded
-            text
-            severity="contrast"
-            :aria-label="$gettext('Close')"
-            @click="emit('shouldShowHierarchy', false)"
-        />
+            <Button
+                icon="pi pi-times"
+                rounded
+                text
+                severity="contrast"
+                :aria-label="$gettext('Close')"
+                @click="emit('shouldShowHierarchy', false)"
+            />
+        </div>
     </div>
-
     <ConceptTree
         :key="conceptTreeKey"
         :concepts="concepts"
@@ -68,6 +69,9 @@ watchEffect(async () => {
 </template>
 
 <style scoped>
+.hierarchy-header-container {
+    background: var(--p-header-toolbar-background);
+}
 .hierarchy-header {
     display: flex;
     width: 100%;
@@ -75,10 +79,13 @@ watchEffect(async () => {
     align-items: center;
     padding-inline-start: 1rem;
     padding-inline-end: 0.5rem;
-    border-bottom: 0.0625rem solid var(--p-menubar-border-color);
 }
 
 .title {
+    margin-top: 0px;
+    margin-bottom: 0px;
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
     font-size: var(--p-lingo-font-size-large);
     font-weight: var(--p-lingo-font-weight-normal);
 }

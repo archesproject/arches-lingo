@@ -96,6 +96,7 @@ async function issueLogout() {
     margin-bottom: 0.15rem;
     width: 8rem;
     border: 0.0625rem solid var(--p-header-button-border);
+    border-radius: 0.125rem;
 }
 
 .section-title {
