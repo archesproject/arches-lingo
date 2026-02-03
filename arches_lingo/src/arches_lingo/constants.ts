@@ -4,6 +4,7 @@ import type { Concept, UserRefAndSetter } from "@/arches_lingo/types.ts";
 
 export const ANONYMOUS = "anonymous";
 export const ERROR = "error";
+export const SUCCESS = "success";
 export const DANGER = "danger";
 export const SECONDARY = "secondary";
 export const CONTRAST = "contrast";

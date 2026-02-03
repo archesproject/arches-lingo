@@ -17,9 +17,11 @@ import ExportThesauri from "@/arches_lingo/components/scheme/SchemeHeader/compon
 import {
     DANGER,
     DEFAULT_ERROR_TOAST_LIFE,
+    DEFAULT_TOAST_LIFE,
     EDIT,
     ERROR,
     SECONDARY,
+    SUCCESS,
     systemLanguageKey,
     selectedLanguageKey,
 } from "@/arches_lingo/constants.ts";
@@ -88,9 +90,9 @@ async function onConceptTypeChange(newValue: ReferenceSelectValue) {
             },
         );
         toast.add({
-            severity: "success",
+            severity: SUCCESS,
             summary: $gettext("Concept type updated"),
-            life: 2000,
+            life: DEFAULT_TOAST_LIFE,
         });
     } catch (error) {
         toast.add({
