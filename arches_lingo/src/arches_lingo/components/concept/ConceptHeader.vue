@@ -271,6 +271,7 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                             conceptTypeTile?.aliased_data?.[TYPE_NODE_ALIAS]
                         "
                         :should-show-label="false"
+                        class="concept-type-widget"
                         @update:value="onConceptTypeChange"
                     />
                 </div>
@@ -611,7 +612,7 @@ h2 {
     color: var(--p-primary-700);
 }
 
-:deep(.p-icon.p-treeselect-clear-icon) {
+:deep(.concept-type-widget .p-icon.p-treeselect-clear-icon) {
     display: none;
 }
 </style>
