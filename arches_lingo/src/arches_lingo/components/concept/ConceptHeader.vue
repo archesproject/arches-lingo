@@ -610,4 +610,8 @@ h2 {
 .parent-concept:hover a {
     color: var(--p-primary-700);
 }
+
+:deep(.p-icon.p-treeselect-clear-icon) {
+    display: none;
+}
 </style>
