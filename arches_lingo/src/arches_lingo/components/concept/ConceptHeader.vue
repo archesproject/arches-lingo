@@ -24,6 +24,7 @@ import {
     SUCCESS,
     systemLanguageKey,
     selectedLanguageKey,
+    CONCEPT_TYPE_NODE_ALIAS,
 } from "@/arches_lingo/constants.ts";
 import { PREF_LABEL } from "@/arches_controlled_lists/constants.ts";
 
@@ -73,18 +74,17 @@ const isLoading = ref(true);
 const showExportDialog = ref(false);
 const exportDialogKey = ref(0);
 
-const TYPE_NODE_ALIAS = "type";
 const conceptTypeTile = ref();
 
 async function onConceptTypeChange(newValue: ReferenceSelectValue) {
     try {
         conceptTypeTile.value = await upsertLingoTile(
             props.graphSlug,
-            TYPE_NODE_ALIAS,
+            CONCEPT_TYPE_NODE_ALIAS,
             {
                 resourceinstance: props.resourceInstanceId,
                 aliased_data: {
-                    [TYPE_NODE_ALIAS]: newValue,
+                    [CONCEPT_TYPE_NODE_ALIAS]: newValue,
                 },
                 tileid: conceptTypeTile.value?.tileid,
             },
@@ -120,7 +120,8 @@ onMounted(async () => {
             props.resourceInstanceId,
         );
 
-        conceptTypeTile.value = concept.value?.aliased_data?.[TYPE_NODE_ALIAS];
+        conceptTypeTile.value =
+            concept.value?.aliased_data?.[CONCEPT_TYPE_NODE_ALIAS];
 
         const conceptResource = await fetchConceptResource(
             props.resourceInstanceId,
@@ -264,11 +265,13 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                 <div class="card flex justify-center">
                     <GenericWidget
                         v-if="concept && concept.resourceinstanceid"
-                        :node-alias="TYPE_NODE_ALIAS"
+                        :node-alias="CONCEPT_TYPE_NODE_ALIAS"
                         :graph-slug="props.graphSlug"
                         :mode="EDIT"
                         :aliased-node-data="
-                            conceptTypeTile?.aliased_data?.[TYPE_NODE_ALIAS]
+                            conceptTypeTile?.aliased_data?.[
+                                CONCEPT_TYPE_NODE_ALIAS
+                            ]
                         "
                         :should-show-label="false"
                         class="concept-type-widget"

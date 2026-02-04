@@ -20,6 +20,7 @@ export const MINIMIZED = "minimized";
 export const CLOSE = "close";
 export const CLOSED = "closed";
 export const NEW_CONCEPT = "newConcept";
+export const CONCEPT_TYPE_NODE_ALIAS = "type";
 
 export const DEFAULT_TOAST_LIFE = 5000;
 export const DEFAULT_ERROR_TOAST_LIFE = 8000;
