@@ -21,15 +21,17 @@ class Migration(migrations.Migration):
 
     def forward(apps, schema_editor):
         Language = apps.get_model("models", "Language")
+        existing_languages = Language.objects.values_list("code", flat=True)
         new_languages = []
         for lang in Migration.LANGUAGES:
-            new_languages.append(
-                Language(
-                    code=lang["code"],
-                    name=lang["name"],
-                    default_direction=lang.get("default_direction", "ltr"),
+            if lang["code"] not in existing_languages:
+                new_languages.append(
+                    Language(
+                        code=lang["code"],
+                        name=lang["name"],
+                        default_direction=lang.get("default_direction", "ltr"),
+                    )
                 )
-            )
         Language.objects.bulk_create(new_languages)
 
     operations = [
