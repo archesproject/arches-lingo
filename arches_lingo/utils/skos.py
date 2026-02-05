@@ -312,9 +312,7 @@ class SKOSWriter:
         object = triple.get("object")
         object_language = triple.get("object_language")
         if object_language:
-            object = Literal(
-                object, lang=self.get_language_code_from_references(object_language)
-            )
+            object = Literal(object, lang=object_language)
         if isinstance(object, models.ResourceInstance):
             object = ARCHES[str(object.resourceinstanceid)]
         if not isinstance(object, Literal) and not isinstance(object, URIRef):
@@ -347,19 +345,3 @@ class SKOSWriter:
         else:
             predicate = URIRef(uri)
         return predicate
-
-    # TODO: remove when implementing language datatype
-    # re. https://github.com/archesproject/arches-lingo/issues/472
-    def get_language_code_from_references(self, language_references):
-        for language_reference in language_references:
-            language_name = (
-                [
-                    lang.value
-                    for lang in language_reference.labels
-                    if lang.valuetype_id == "prefLabel"
-                ]
-            )[0]
-            language_code = self.language_lookup.get(language_name)
-            if language_code:
-                return language_code
-        return None
