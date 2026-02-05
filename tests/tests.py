@@ -69,13 +69,9 @@ class ViewTests(TestCase):
         )
 
         reference = DataTypeFactory().get_instance("reference")
-        language_config = {"controlledList": LANGUAGES_LIST_ID}
         label_config = {"controlledList": LABEL_LIST_ID}
         prefLabel_reference_dt = reference.transform_value_for_tile(
             "prefLabel", **label_config
-        )
-        en_reference_dt = reference.transform_value_for_tile(
-            "English", **language_config
         )
 
         TileModel.objects.create(
@@ -84,7 +80,7 @@ class ViewTests(TestCase):
             data={
                 SCHEME_NAME_CONTENT_NODE: "Test Scheme",
                 SCHEME_NAME_TYPE_NODE: prefLabel_reference_dt,
-                SCHEME_NAME_LANGUAGE_NODE: en_reference_dt,
+                SCHEME_NAME_LANGUAGE_NODE: "en",
             },
         )
 
@@ -108,7 +104,7 @@ class ViewTests(TestCase):
                     data={
                         CONCEPT_NAME_CONTENT_NODE: f"Concept {i + 1}",
                         CONCEPT_NAME_TYPE_NODE: prefLabel_reference_dt,
-                        CONCEPT_NAME_LANGUAGE_NODE: en_reference_dt,
+                        CONCEPT_NAME_LANGUAGE_NODE: "en",
                     },
                 )
             )
