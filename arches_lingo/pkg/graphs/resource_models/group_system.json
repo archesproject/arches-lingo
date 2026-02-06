@@ -856,7 +856,7 @@
                 {
                     "alias": "name_type",
                     "config": {
-                        "controlledList": "891574cc-47bf-4395-a512-d246cd75c1a1",
+                        "controlledList": "afcfa02b-3529-46de-9ddf-2fc2d05b47a5",
                         "multiValue": true
                     },
                     "datatype": "reference",
@@ -907,7 +907,7 @@
                 {
                     "alias": "identifier_type",
                     "config": {
-                        "controlledList": "f028fe8e-5a23-40a7-8ffe-7865ebac9487",
+                        "controlledList": "a8da34eb-575b-498c-ada7-161ee745fd16",
                         "multiValue": false
                     },
                     "datatype": "reference",

@@ -3450,7 +3450,7 @@
                 {
                     "alias": "right_type",
                     "config": {
-                        "controlledList": "1c950e16-3fcf-4f33-9e5e-ce5c6c992cca",
+                        "controlledList": "e7e56dd5-b03c-4c70-a943-2af45f50135d",
                         "multiValue": false
                     },
                     "datatype": "reference",

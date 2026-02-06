@@ -2155,7 +2155,7 @@
                 {
                     "alias": "identifier_type",
                     "config": {
-                        "controlledList": "f028fe8e-5a23-40a7-8ffe-7865ebac9487",
+                        "controlledList": "a8da34eb-575b-498c-ada7-161ee745fd16",
                         "multiValue": false
                     },
                     "datatype": "reference",
