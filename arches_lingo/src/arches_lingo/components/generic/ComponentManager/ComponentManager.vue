@@ -274,6 +274,23 @@ function openPanelComponent(
     isFormEditor.value = false;
 }
 
+function initNewLabel() {
+    const labelComponent = processedComponentData.value.filter(
+        (componentDatum) => componentDatum.componentName.includes("Label"),
+    );
+    openEditor(labelComponent[0].componentName);
+}
+
+onMounted(() => {
+    if (route.params.id === NEW) {
+        initNewLabel();
+    }
+});
+
+provide("openEditor", openEditor);
+provide("closeEditor", closeEditor);
+provide("updateAfterComponentDeletion", updateAfterComponentDeletion);
+provide("refreshReportSection", refreshReportSection);
 provide(openPanelComponentKey, openPanelComponent);
 </script>
 
