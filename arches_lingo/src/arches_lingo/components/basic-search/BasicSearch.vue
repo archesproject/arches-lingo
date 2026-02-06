@@ -329,7 +329,7 @@ watch(searchResults, (newSearchResults) => {
 
 .p-autocomplete {
     width: 100%;
-    border: 1px solid var(--p-header-button-border);
+    border: 0.0625rem solid var(--p-header-button-border);
     border-radius: 0.25rem;
     margin-bottom: 0.25rem;
 }
