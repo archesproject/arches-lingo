@@ -86,9 +86,9 @@ async function submit() {
             root: {
                 style: {
                     minWidth: '40rem',
-                    borderRadius: '0',
+                    borderRadius: '0.25rem',
                     fontFamily: 'var(--p-lingo-font-family)',
-                    fontSize: 'var(--p-lingo-font-size-small)',
+                    border: '0.125rem solid var(--p-dialog-color)',
                 },
             },
             header: {
@@ -96,6 +96,13 @@ async function submit() {
                     background: 'var(--p-navigation-header-color)',
                     color: 'var(--p-dialog-header-text-color)',
                     borderRadius: '0',
+                },
+            },
+            title: {
+                style: {
+                    fontSize: 'var(--p-lingo-font-size-large)',
+                    fontWeight: 'var(--p-lingo-font-weight-normal)',
+                    lineHeight: '1.2',
                 },
             },
         }"
@@ -125,7 +132,7 @@ async function submit() {
                     <label id="overwrite-options-label">{{
                         $gettext("Overwrite Options")
                     }}</label>
-                    <div
+                    <div class="radiogroup"
                         role="radiogroup"
                         aria-labelledby="overwrite-options-label"
                     >
@@ -183,25 +190,38 @@ async function submit() {
 }
 .p-fileupload-basic {
     justify-content: flex-start;
+    padding-top: 0.25rem;
 }
 .form-field {
     margin-top: 1rem;
     padding-inline-start: 0.5rem;
 
     label {
-        margin-bottom: 0;
+        margin-bottom: 0.125rem;
     }
 }
+
+.radiogroup {
+    padding-top: 0.25rem;
+}
+
 .radio-button-and-label {
     margin-right: 1.5rem;
     margin-bottom: 0.5rem;
 }
 .radio-label {
     margin-inline-start: 0.5rem;
+    padding-bottom: 0.5rem;
+}
+
+:deep(.p-dialog-title) {
+    font-size: var(--p-lingo-font-size-large) !important;
+    font-weight: var(--p-lingo-font-weight-normal) !important;
 }
 
 :deep(.p-fileupload-choose-button),
 .footer-button {
     font-size: var(--p-lingo-font-size-small);
+    border-radius: 0.125rem;
 }
 </style>
