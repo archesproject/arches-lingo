@@ -99,7 +99,7 @@ const overlayPanel = useTemplateRef("overlayPanel");
     color: var(--p-menubar-text-color) !important;
     padding: var(--p-button-padding-y) var(--p-button-padding-x);
     height: 3rem;
-    border-radius: 0px;
+    border-radius: 0;
 }
 
 :deep(.explore-button .p-togglebutton-content),

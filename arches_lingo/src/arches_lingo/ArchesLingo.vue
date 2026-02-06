@@ -172,7 +172,6 @@ main {
     display: flex;
     flex-direction: column;
 }
-
 </style>
 
 <style>
