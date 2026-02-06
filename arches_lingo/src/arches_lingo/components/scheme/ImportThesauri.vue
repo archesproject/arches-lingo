@@ -132,7 +132,8 @@ async function submit() {
                     <label id="overwrite-options-label">{{
                         $gettext("Overwrite Options")
                     }}</label>
-                    <div class="radiogroup"
+                    <div
+                        class="radiogroup"
                         role="radiogroup"
                         aria-labelledby="overwrite-options-label"
                     >

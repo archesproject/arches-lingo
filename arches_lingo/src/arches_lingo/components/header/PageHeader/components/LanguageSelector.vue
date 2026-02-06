@@ -128,5 +128,4 @@ function openLanguageSelector(event: MouseEvent) {
     align-items: center;
     color: var(--p-list-option-icon-color);
 }
-
 </style>
