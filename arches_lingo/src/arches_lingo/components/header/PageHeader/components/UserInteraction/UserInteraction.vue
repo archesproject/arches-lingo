@@ -91,6 +91,7 @@ function openUserMenu(event: MouseEvent) {
 .p-button {
     background: transparent !important;
     border: none !important;
+    border-radius: 0 !important;
     color: inherit !important;
     font-size: 0.875rem;
 }
