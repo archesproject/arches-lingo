@@ -838,7 +838,7 @@ function onNodeSelect(node: TreeNode) {
 }
 
 :deep(.p-tree-node-selected button:hover) {
-     background: var(--p-header-button-background) !important;
+    background: var(--p-header-button-background) !important;
 }
 
 :deep(.p-tree-node-selected.new-node) {
