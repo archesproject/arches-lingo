@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, markRaw, nextTick, provide, ref } from "vue";
+import { computed, markRaw, nextTick, onMounted, provide, ref } from "vue";
 
 import { useRoute } from "vue-router";
 import { useGettext } from "vue3-gettext";
@@ -211,6 +211,19 @@ function openPanelComponent(
     editorState.value = MINIMIZED;
     isFormEditor.value = false;
 }
+
+function initNewLabel() {
+    const labelComponent = processedComponentData.value.filter(
+        (componentDatum) => componentDatum.componentName.includes("Label"),
+    );
+    openEditor(labelComponent[0].componentName);
+}
+
+onMounted(() => {
+    if (route.params.id === NEW) {
+        initNewLabel();
+    }
+});
 
 provide("openEditor", openEditor);
 provide("closeEditor", closeEditor);
