@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, markRaw, provide, ref } from "vue";
+import { computed, markRaw, onMounted, provide, ref } from "vue";
 
 import { useRoute } from "vue-router";
 
@@ -117,6 +117,19 @@ function refreshReportSection(componentName: string) {
         componentDatum.key += 1;
     }
 }
+
+function initNewLabel() {
+    const labelComponent = processedComponentData.value.filter(
+        (componentDatum) => componentDatum.componentName.includes("Label"),
+    );
+    openEditor(labelComponent[0].componentName);
+}
+
+onMounted(() => {
+    if (route.params.id === NEW) {
+        initNewLabel();
+    }
+});
 
 provide("openEditor", openEditor);
 provide("closeEditor", closeEditor);
