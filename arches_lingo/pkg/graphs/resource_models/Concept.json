@@ -1112,7 +1112,7 @@
                     "config": {
                         "dateFormat": "YYYY-MM-DD",
                         "defaultValue": "",
-                        "label": "Matched Concept Relation Validity Period End",
+                        "label": "Relation End Date",
                         "maxDate": false,
                         "minDate": false,
                         "placeholder": "Enter date",
@@ -1120,7 +1120,7 @@
                     },
                     "id": "4cfab496-0ed7-11ef-9493-0a58a9feac02",
                     "label": {
-                        "en": "Matched Concept Relation Validity Period End"
+                        "en": "Relation End Date"
                     },
                     "node_id": "4cfab270-0ed7-11ef-9493-0a58a9feac02",
                     "sortorder": 5,
@@ -1133,7 +1133,7 @@
                     "config": {
                         "dateFormat": "YYYY-MM-DD",
                         "defaultValue": "",
-                        "label": "Matched Concept Relation Validity Period Begin",
+                        "label": "Relation Begin Date",
                         "maxDate": false,
                         "minDate": false,
                         "placeholder": "Enter date",
@@ -1141,7 +1141,7 @@
                     },
                     "id": "4cfab4f0-0ed7-11ef-9493-0a58a9feac02",
                     "label": {
-                        "en": "Matched Concept Relation Validity Period Begin"
+                        "en": "Relation Begin Date"
                     },
                     "node_id": "4cfab13a-0ed7-11ef-9493-0a58a9feac02",
                     "sortorder": 4,
