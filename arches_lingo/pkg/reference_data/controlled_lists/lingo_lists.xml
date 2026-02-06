@@ -1,0 +1,708 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rdf:RDF
+  xmlns:skos="http://www.w3.org/2004/02/skos/core#"
+  xmlns:dcterms="http://purl.org/dc/terms/"
+  xmlns:arches="http://localhost:8000/"
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+>
+  <skos:Concept rdf:about="http://localhost:8000/97f89729-35ed-4780-aeea-d487717ffb65">
+    <skos:inScheme>
+      <skos:ConceptScheme rdf:about="http://localhost:8000/55ce793b-a51a-4b25-811d-d08ea797f8c3">
+        <dcterms:title>Languages</dcterms:title>
+      </skos:ConceptScheme>
+    </skos:inScheme>
+    <skos:prefLabel xml:lang="en">German</skos:prefLabel>
+    <dcterms:identifier>http://vocab.getty.edu/aat/300388344</dcterms:identifier>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">3</arches:sortorder>
+    <skos:scopeNote xml:lang="en">German</skos:scopeNote>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/12969a7e-20e5-43a5-a48a-285afd2599bd">
+    <skos:prefLabel xml:lang="en">Sobriquet</skos:prefLabel>
+    <dcterms:identifier>http://localhost:8000/12969a7e-20e5-43a5-a48a-285afd2599bd</dcterms:identifier>
+    <skos:inScheme>
+      <skos:ConceptScheme rdf:about="http://localhost:8000/afcfa02b-3529-46de-9ddf-2fc2d05b47a5">
+        <dcterms:title>Name Use Type</dcterms:title>
+      </skos:ConceptScheme>
+    </skos:inScheme>
+    <skos:altLabel xml:lang="en">Nickname</skos:altLabel>
+    <skos:altLabel xml:lang="en">SB</skos:altLabel>
+    <skos:scopeNote xml:lang="en">A nickname</skos:scopeNote>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">15</arches:sortorder>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/05967b72-5a51-4da1-90bb-5b53f62ec7ca">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/55ce793b-a51a-4b25-811d-d08ea797f8c3"/>
+    <skos:prefLabel xml:lang="en">Chinese</skos:prefLabel>
+    <dcterms:identifier>http://vocab.getty.edu/aat/300388113</dcterms:identifier>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/02a0fc69-9f92-4bef-b657-af1ed37c1d3e">
+    <dcterms:identifier>https://vocab.getty.edu/aat/300418049</dcterms:identifier>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</arches:sortorder>
+    <skos:inScheme>
+      <skos:ConceptScheme rdf:about="http://localhost:8000/ef69e772-de53-45fe-98d4-bf3e7b10eb57">
+        <dcterms:title>Metatypes</dcterms:title>
+      </skos:ConceptScheme>
+    </skos:inScheme>
+    <skos:scopeNote xml:lang="en">Documents comprising texts that are relatively short in length, sometimes but not always abbreviated versions of longer texts.</skos:scopeNote>
+    <skos:prefLabel xml:lang="en">brief texts</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/58695100-659c-48df-8c87-fa565dfef39e">
+    <skos:prefLabel xml:lang="en">Arabic</skos:prefLabel>
+    <dcterms:identifier>http://vocab.getty.edu/aat/300387843</dcterms:identifier>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/55ce793b-a51a-4b25-811d-d08ea797f8c3"/>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/9c7e055b-6ce8-45e2-a89f-3cef96503bc1">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">3</arches:sortorder>
+    <skos:prefLabel xml:lang="en">Crown Copyright</skos:prefLabel>
+    <skos:inScheme>
+      <skos:ConceptScheme rdf:about="http://localhost:8000/e7e56dd5-b03c-4c70-a943-2af45f50135d">
+        <dcterms:title>Right Types</dcterms:title>
+      </skos:ConceptScheme>
+    </skos:inScheme>
+    <dcterms:identifier>http://localhost:8000/9c7e055b-6ce8-45e2-a89f-3cef96503bc1</dcterms:identifier>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/2e3a2045-b44e-47fc-a27b-3078b17e08e4">
+    <skos:altLabel xml:lang="en">prefLabel</skos:altLabel>
+    <dcterms:identifier>http://www.w3.org/2004/02/skos/core#prefLabel</dcterms:identifier>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</arches:sortorder>
+    <skos:prefLabel xml:lang="en">preferred label</skos:prefLabel>
+    <skos:inScheme>
+      <skos:ConceptScheme rdf:about="http://localhost:8000/deb847fc-f4c3-4e82-be19-04641579f129">
+        <dcterms:title>label</dcterms:title>
+      </skos:ConceptScheme>
+    </skos:inScheme>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/9c93be63-b900-4f63-b0cf-7351e5129508">
+    <skos:prefLabel xml:lang="en">classification</skos:prefLabel>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</arches:sortorder>
+    <dcterms:identifier>https://vocab.getty.edu/aat/300435444</dcterms:identifier>
+    <skos:inScheme rdf:resource="http://localhost:8000/ef69e772-de53-45fe-98d4-bf3e7b10eb57"/>
+    <skos:scopeNote xml:lang="en">Indication of the placement of a work of art or architecture within a classification scheme that groups other, similar works together on the basis of similar characteristics</skos:scopeNote>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/647b7a46-d312-40be-9b26-172355e5339e">
+    <skos:altLabel xml:lang="en">FIA</skos:altLabel>
+    <skos:inScheme rdf:resource="http://localhost:8000/afcfa02b-3529-46de-9ddf-2fc2d05b47a5"/>
+    <dcterms:identifier>http://localhost:8000/647b7a46-d312-40be-9b26-172355e5339e</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">Formerly identified as</skos:prefLabel>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">6</arches:sortorder>
+    <skos:scopeNote xml:lang="en">Use for recording the names of vessels or sites that have since been identified correctly.</skos:scopeNote>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/df24d257-b547-4733-ae89-dfffa3597683">
+    <dcterms:identifier>http://www.w3.org/2004/02/skos/core#hiddenLabel</dcterms:identifier>
+    <skos:inScheme rdf:resource="http://localhost:8000/deb847fc-f4c3-4e82-be19-04641579f129"/>
+    <skos:prefLabel xml:lang="en">hidden label</skos:prefLabel>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</arches:sortorder>
+    <skos:altLabel xml:lang="en">hiddenLabel</skos:altLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/d4e3d550-6e2d-4734-88d4-3e781118048d">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">11</arches:sortorder>
+    <skos:prefLabel xml:lang="en">Primary</skos:prefLabel>
+    <skos:altLabel xml:lang="en">P</skos:altLabel>
+    <dcterms:identifier>http://localhost:8000/d4e3d550-6e2d-4734-88d4-3e781118048d</dcterms:identifier>
+    <skos:inScheme rdf:resource="http://localhost:8000/afcfa02b-3529-46de-9ddf-2fc2d05b47a5"/>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/c1d8c87d-183c-4c46-aa6f-7920825cba5e">
+    <dcterms:identifier>https://vocab.getty.edu/aat/300456596</dcterms:identifier>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</arches:sortorder>
+    <skos:inScheme>
+      <skos:ConceptScheme rdf:about="http://localhost:8000/2cc0e054-ef9b-41ae-8e86-e0c3b4e7ca00">
+        <dcterms:title>Information State Statuses</dcterms:title>
+      </skos:ConceptScheme>
+    </skos:inScheme>
+    <skos:prefLabel xml:lang="en">current</skos:prefLabel>
+    <skos:scopeNote xml:lang="en">The state that an information object possesses in the present; that is valid in a present context.</skos:scopeNote>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/710a5dbf-c445-40bf-b431-cc7f6802be32">
+    <skos:inScheme>
+      <skos:ConceptScheme rdf:about="http://localhost:8000/4f9b2c82-59c6-4173-99ea-2a6bfbab6aa2">
+        <dcterms:title>Term Types</dcterms:title>
+      </skos:ConceptScheme>
+    </skos:inScheme>
+    <dcterms:identifier>http://vocab.getty.edu/page/aat/300387516</dcterms:identifier>
+    <skos:definition xml:lang="en">The highest levels of hierarchies, from which all branches descend.</skos:definition>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</arches:sortorder>
+    <skos:prefLabel xml:lang="en">hierarchy roots</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/d98bfcab-fa26-4c8b-992d-a56eb7bbbaa2">
+    <dcterms:identifier>https://vocab.getty.edu/aat/300404629</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">uniform resource identifiers</skos:prefLabel>
+    <skos:inScheme>
+      <skos:ConceptScheme rdf:about="http://localhost:8000/a8da34eb-575b-498c-ada7-161ee745fd16">
+        <dcterms:title>Identifier Types</dcterms:title>
+      </skos:ConceptScheme>
+    </skos:inScheme>
+    <skos:scopeNote xml:lang="en">Strings of characters or numbers used to identify individual electronic resources online.</skos:scopeNote>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">19</arches:sortorder>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/6f8b9b3a-edb7-435b-b8cb-d6690bb1c9b6">
+    <dcterms:identifier>http://localhost:8000/6f8b9b3a-edb7-435b-b8cb-d6690bb1c9b6</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">Original</skos:prefLabel>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">10</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/afcfa02b-3529-46de-9ddf-2fc2d05b47a5"/>
+    <skos:altLabel xml:lang="en">O</skos:altLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/d8ba08f9-b265-4288-9412-857c77fe2581">
+    <dcterms:identifier>https://vocab.getty.edu/aat/300404012</dcterms:identifier>
+    <skos:scopeNote xml:lang="en">Numbers or alphanumeric codes that are not repeated within a given environment and used to unambiguously and uniquely identify an object, record, or data element.</skos:scopeNote>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">17</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/a8da34eb-575b-498c-ada7-161ee745fd16"/>
+    <skos:prefLabel xml:lang="en">identifier</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/5b633cd0-e407-4dce-9f7c-5657ae57408f">
+    <skos:prefLabel xml:lang="en">Spanish</skos:prefLabel>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">8</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/55ce793b-a51a-4b25-811d-d08ea797f8c3"/>
+    <dcterms:identifier>http://vocab.getty.edu/aat/300389311</dcterms:identifier>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/6c4828de-2dc7-4dbd-922b-2dc8e79f7efc">
+    <skos:prefLabel xml:lang="en">Maiden</skos:prefLabel>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">8</arches:sortorder>
+    <skos:altLabel xml:lang="en">M</skos:altLabel>
+    <dcterms:identifier>http://localhost:8000/6c4828de-2dc7-4dbd-922b-2dc8e79f7efc</dcterms:identifier>
+    <skos:inScheme rdf:resource="http://localhost:8000/afcfa02b-3529-46de-9ddf-2fc2d05b47a5"/>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/f0373651-e12b-4ea9-8e64-2eea9e6df73d">
+    <skos:prefLabel xml:lang="en">Copyright Licence (e.g. Creative Commons)</skos:prefLabel>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</arches:sortorder>
+    <dcterms:identifier>http://www.archesproject.org/f0373651-e12b-4ea9-8e64-2eea9e6df73d</dcterms:identifier>
+    <skos:inScheme rdf:resource="http://localhost:8000/e7e56dd5-b03c-4c70-a943-2af45f50135d"/>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/d1012561-bd8f-4498-b7b1-fea78cb73afa">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">3</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/4f9b2c82-59c6-4173-99ea-2a6bfbab6aa2"/>
+    <dcterms:identifier>http://vocab.getty.edu/page/aat/300387329</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">terms (controlled vocabulary)</skos:prefLabel>
+    <skos:definition xml:lang="en">A term is a word or group of words representing a single concept; a vocabulary record comprises terms and other information, including relationships, scope note, sources, etc. Additionally, in the jargon of thesaurus construction, the word term is often used as shorthand to actually refer to the concept that is represented by that term (for example, BT and NT actually refer to the relationships between concepts). The distinction between a term in the strict sense and term meaning a record must often be inferred from the context of the discussion.</skos:definition>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/4b20fbcd-a0d2-4a47-83e3-e8acd72b7182">
+    <dcterms:identifier>http://www.archesproject.org/4b20fbcd-a0d2-4a47-83e3-e8acd72b7182</dcterms:identifier>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/e7e56dd5-b03c-4c70-a943-2af45f50135d"/>
+    <skos:prefLabel xml:lang="en">Copyright - All Rights Reserved</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/2773d78c-1adc-494d-9df4-73a58966be85">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">14</arches:sortorder>
+    <skos:prefLabel xml:lang="en">Registered</skos:prefLabel>
+    <dcterms:identifier>http://localhost:8000/2773d78c-1adc-494d-9df4-73a58966be85</dcterms:identifier>
+    <skos:inScheme rdf:resource="http://localhost:8000/afcfa02b-3529-46de-9ddf-2fc2d05b47a5"/>
+    <skos:altLabel xml:lang="en">REG</skos:altLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/d1544a63-b04e-4ec6-b6b1-256cd70c4954">
+    <skos:prefLabel xml:lang="en">art</skos:prefLabel>
+    <skos:scopeNote xml:lang="en">General term for the broad genre of objects, environments, or experiences (as in performance art) that are visual in nature, were created by the use of skill and imagination, and possess an aesthetic that is valued and of a quality and type that would be collected by art museums. It may refer to the study or practice of the fine arts or the fine and decorative arts together. For the discipline of art including reference to expertise of art, use "art (discipline)."</skos:scopeNote>
+    <dcterms:identifier>https://vocab.getty.edu/aat/300417586</dcterms:identifier>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</arches:sortorder>
+    <skos:inScheme>
+      <skos:ConceptScheme rdf:about="http://localhost:8000/8fe1efd6-c90e-4f64-a125-14b2cc4d78e3">
+        <dcterms:title>Subject Types</dcterms:title>
+      </skos:ConceptScheme>
+    </skos:inScheme>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/e66bfcd6-cf68-4564-bcc1-ed0a36cfcf4f">
+    <skos:inScheme rdf:resource="http://localhost:8000/55ce793b-a51a-4b25-811d-d08ea797f8c3"/>
+    <skos:scopeNote xml:lang="en">Greek</skos:scopeNote>
+    <dcterms:identifier>http://vocab.getty.edu/aat/300388361</dcterms:identifier>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</arches:sortorder>
+    <skos:prefLabel xml:lang="en">Greek</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/a942fca4-2947-4096-8d83-873193f7b395">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">9</arches:sortorder>
+    <skos:prefLabel xml:lang="en">No Known Copyright Restriction</skos:prefLabel>
+    <dcterms:identifier>http://www.archesproject.org/a942fca4-2947-4096-8d83-873193f7b395</dcterms:identifier>
+    <skos:inScheme rdf:resource="http://localhost:8000/e7e56dd5-b03c-4c70-a943-2af45f50135d"/>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/c0fe6a60-ee6e-4738-a58b-74f8973c07b8">
+    <skos:inScheme rdf:resource="http://localhost:8000/55ce793b-a51a-4b25-811d-d08ea797f8c3"/>
+    <skos:prefLabel xml:lang="en">Portuguese</skos:prefLabel>
+    <skos:scopeNote xml:lang="en">Portuguese</skos:scopeNote>
+    <dcterms:identifier>http://vocab.getty.edu/aat/300389115</dcterms:identifier>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">6</arches:sortorder>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/b655c9b3-53f5-4d8a-a7e5-6751b4fc1d2c">
+    <skos:inScheme rdf:resource="http://localhost:8000/4f9b2c82-59c6-4173-99ea-2a6bfbab6aa2"/>
+    <skos:prefLabel xml:lang="en">facets (controlled vocabulary)</skos:prefLabel>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</arches:sortorder>
+    <skos:scopeNote xml:lang="en">A facet is a fundamental, homogeneous, and mutually exclusive category of information in a thesaurus (for example, the AAT has seven facets: Associated Concepts, Physical Attributes, Styles and Periods, Agents, Materials, Activities, Objects).</skos:scopeNote>
+    <dcterms:identifier>http://vocab.getty.edu/page/aat/300386699</dcterms:identifier>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/c047ea56-465a-479c-b85c-8de23766384a">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</arches:sortorder>
+    <skos:scopeNote xml:lang="en">The state that an information object possessed in the past, but that is no longer valid in a present context.</skos:scopeNote>
+    <skos:inScheme rdf:resource="http://localhost:8000/2cc0e054-ef9b-41ae-8e86-e0c3b4e7ca00"/>
+    <dcterms:identifier>https://vocab.getty.edu/aat/300456595</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">historic</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/19376b93-4bdc-4d48-a22a-71121506b70b">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</arches:sortorder>
+    <skos:prefLabel xml:lang="en">alternative label</skos:prefLabel>
+    <dcterms:identifier>http://www.w3.org/2004/02/skos/core#altLabel</dcterms:identifier>
+    <skos:inScheme rdf:resource="http://localhost:8000/deb847fc-f4c3-4e82-be19-04641579f129"/>
+    <skos:altLabel xml:lang="en">altLabel</skos:altLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/b402a3df-fd66-4179-a99d-2ce396bbfac5">
+    <dcterms:identifier>http://www.archesproject.org/b402a3df-fd66-4179-a99d-2ce396bbfac5</dcterms:identifier>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">13</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/e7e56dd5-b03c-4c70-a943-2af45f50135d"/>
+    <skos:prefLabel xml:lang="en">Public Domain</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/386b1c1a-a9b5-418c-b1d3-6aa518bb7cfb">
+    <dcterms:identifier>http://vocab.getty.edu/aat/300388277</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">English</skos:prefLabel>
+    <skos:inScheme rdf:resource="http://localhost:8000/55ce793b-a51a-4b25-811d-d08ea797f8c3"/>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</arches:sortorder>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/de263fe8-5ebd-4d6c-a7c7-8068598ba962">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">18</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/a8da34eb-575b-498c-ada7-161ee745fd16"/>
+    <skos:prefLabel xml:lang="en">namespaces</skos:prefLabel>
+    <skos:scopeNote xml:lang="en">Text elements that act as containers or environments created to hold a logical grouping of unique identifiers, as for a scheme or concept.</skos:scopeNote>
+    <dcterms:identifier>https://vocab.getty.edu/aat/300456599</dcterms:identifier>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/5c8f4b76-64bd-4718-a730-a8e4a1923df8">
+    <dcterms:identifier>http://localhost:8000/5c8f4b76-64bd-4718-a730-a8e4a1923df8</dcterms:identifier>
+    <skos:inScheme rdf:resource="http://localhost:8000/afcfa02b-3529-46de-9ddf-2fc2d05b47a5"/>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">16</arches:sortorder>
+    <skos:altLabel xml:lang="en">S</skos:altLabel>
+    <skos:prefLabel xml:lang="en">Statutory</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/edbf1916-af77-408d-94f4-09a58dd98825">
+    <skos:prefLabel xml:lang="en">Pseudonym</skos:prefLabel>
+    <skos:inScheme rdf:resource="http://localhost:8000/afcfa02b-3529-46de-9ddf-2fc2d05b47a5"/>
+    <skos:altLabel xml:lang="en">PSE</skos:altLabel>
+    <skos:scopeNote xml:lang="en">A fictitious name, especially one used by an author. A pen-name.</skos:scopeNote>
+    <skos:altLabel xml:lang="en">Pen name</skos:altLabel>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">12</arches:sortorder>
+    <dcterms:identifier>http://localhost:8000/edbf1916-af77-408d-94f4-09a58dd98825</dcterms:identifier>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/14751cb1-f7af-45d9-b32a-59d150bdac0f">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</arches:sortorder>
+    <skos:prefLabel xml:lang="en">warrant assertion event</skos:prefLabel>
+    <dcterms:identifier>https://vocab.getty.edu/aat/300456597</dcterms:identifier>
+    <skos:inScheme>
+      <skos:ConceptScheme rdf:about="http://localhost:8000/6eaa2c6f-af83-464c-9200-051c4cfe7e8e">
+        <dcterms:title>Event Types</dcterms:title>
+      </skos:ConceptScheme>
+    </skos:inScheme>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/7b873aed-1dbd-45e4-98e7-85143ee453c6">
+    <skos:prefLabel xml:lang="en">informational status</skos:prefLabel>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</arches:sortorder>
+    <skos:scopeNote xml:lang="en">The current state of an information object qua information at a particular time; the validity of a piece of data regarding its appropriateness, or rightness to use at the present historical moment. An implicit author is applied to all such judgments.</skos:scopeNote>
+    <dcterms:identifier>https://vocab.getty.edu/aat/300456594</dcterms:identifier>
+    <skos:inScheme rdf:resource="http://localhost:8000/ef69e772-de53-45fe-98d4-bf3e7b10eb57"/>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/f2a2710a-5a81-435a-9f2f-4eeddcdcd4af">
+    <skos:prefLabel xml:lang="en">Alternative</skos:prefLabel>
+    <dcterms:identifier>http://localhost:8000/f2a2710a-5a81-435a-9f2f-4eeddcdcd4af</dcterms:identifier>
+    <skos:altLabel xml:lang="en">ALT</skos:altLabel>
+    <skos:inScheme rdf:resource="http://localhost:8000/afcfa02b-3529-46de-9ddf-2fc2d05b47a5"/>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</arches:sortorder>
+    <skos:altLabel xml:lang="en">A</skos:altLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/77d2e4e4-3c5d-433f-ac84-4132b2e67aa8">
+    <skos:altLabel xml:lang="en">L</skos:altLabel>
+    <dcterms:identifier>http://localhost:8000/77d2e4e4-3c5d-433f-ac84-4132b2e67aa8</dcterms:identifier>
+    <skos:inScheme rdf:resource="http://localhost:8000/afcfa02b-3529-46de-9ddf-2fc2d05b47a5"/>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">7</arches:sortorder>
+    <skos:prefLabel xml:lang="en">Latest</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/d45d8db7-43d3-4731-a140-4890e8cc8fe5">
+    <skos:inScheme rdf:resource="http://localhost:8000/afcfa02b-3529-46de-9ddf-2fc2d05b47a5"/>
+    <skos:prefLabel xml:lang="en">For Correspondence</skos:prefLabel>
+    <dcterms:identifier>http://localhost:8000/d45d8db7-43d3-4731-a140-4890e8cc8fe5</dcterms:identifier>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</arches:sortorder>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/926aa6de-a7e6-4959-9fc4-5ea87c46d677">
+    <dcterms:identifier>https://vocab.getty.edu/aat/300456598</dcterms:identifier>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">20</arches:sortorder>
+    <skos:scopeNote xml:lang="en">Numeric identifiers which indicate unique iterative states of an object.</skos:scopeNote>
+    <skos:prefLabel xml:lang="en">version numbers</skos:prefLabel>
+    <skos:inScheme rdf:resource="http://localhost:8000/a8da34eb-575b-498c-ada7-161ee745fd16"/>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/be258618-a5f4-4420-b580-008d0e7f1d20">
+    <skos:prefLabel xml:lang="en">Former</skos:prefLabel>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">5</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/afcfa02b-3529-46de-9ddf-2fc2d05b47a5"/>
+    <skos:altLabel xml:lang="en">F</skos:altLabel>
+    <dcterms:identifier>http://localhost:8000/be258618-a5f4-4420-b580-008d0e7f1d20</dcterms:identifier>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/774994db-54d3-4793-baa1-2810410be8d0">
+    <skos:scopeNote xml:lang="en">Structures or parts of structures that are the result of conscious construction, are of practical use, are relatively stable and permanent, and are of a size and scale appropriate for--but not limited to--habitable buildings. Works of architecture are manifestations of the built environment that is typically classified as fine art, meaning it is generally considered to have aesthetic value, was designed by an architect (whether or not his or her name is known), and constructed with skilled labor. For the art or science of designing and building structures, use "architecture (discipline)."</skos:scopeNote>
+    <skos:prefLabel xml:lang="en">architecture</skos:prefLabel>
+    <skos:inScheme rdf:resource="http://localhost:8000/8fe1efd6-c90e-4f64-a125-14b2cc4d78e3"/>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</arches:sortorder>
+    <dcterms:identifier>https://vocab.getty.edu/aat/300263552</dcterms:identifier>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/15386a71-b8d6-4371-9bf7-69efb98c79ed">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">7</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/55ce793b-a51a-4b25-811d-d08ea797f8c3"/>
+    <skos:prefLabel xml:lang="en">Russian</skos:prefLabel>
+    <skos:scopeNote xml:lang="en">Russian</skos:scopeNote>
+    <dcterms:identifier>http://vocab.getty.edu/aat/300389168</dcterms:identifier>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/9baf3cd5-33d4-4fbc-b1d1-a2d218732f1e">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</arches:sortorder>
+    <dcterms:identifier>https://vocab.getty.edu/aat/300404012</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">identifier</skos:prefLabel>
+    <skos:inScheme>
+      <skos:ConceptScheme rdf:about="http://localhost:8000/38fc54d4-67ef-4183-8934-66669f1f504c">
+        <dcterms:title>Scheme Identifier Types</dcterms:title>
+      </skos:ConceptScheme>
+    </skos:inScheme>
+    <skos:scopeNote xml:lang="en">Numbers or alphanumeric codes that are not repeated within a given environment and used to unambiguously and uniquely identify an object, record, or data element.</skos:scopeNote>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/a6795899-3874-420e-bb8e-7f7bf87b66eb">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">5</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/55ce793b-a51a-4b25-811d-d08ea797f8c3"/>
+    <skos:prefLabel xml:lang="en">French</skos:prefLabel>
+    <dcterms:identifier>http://vocab.getty.edu/aat/300388306</dcterms:identifier>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/45fab276-7818-4c83-8dd8-43e4e862904c">
+    <skos:definition xml:lang="en"><![CDATA[A guide term is a record represented by a term or phrase that is created as a hierarchical level to provide order and structure to thesauri by grouping narrower terms according to a given logic. Guide terms are not used for indexing and are often enclosed in angled brackets or otherwise distinguished from other terms in displays (for example, <photographs by form>).]]></skos:definition>
+    <dcterms:identifier>http://vocab.getty.edu/page/aat/300386700</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">guide terms</skos:prefLabel>
+    <skos:inScheme rdf:resource="http://localhost:8000/4f9b2c82-59c6-4173-99ea-2a6bfbab6aa2"/>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</arches:sortorder>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/4062bbcd-bd0f-46c5-85ba-6479c1eac864">
+    <dcterms:identifier>http://www.w3.org/2004/02/skos/core#broadMatch</dcterms:identifier>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</arches:sortorder>
+    <skos:prefLabel xml:lang="en">test event</skos:prefLabel>
+    <skos:inScheme rdf:resource="http://localhost:8000/6eaa2c6f-af83-464c-9200-051c4cfe7e8e"/>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/dd9186a8-a591-4f40-914c-1f476e60f552">
+    <skos:broader>
+      <skos:Concept rdf:about="http://localhost:8000/44bb50fc-42d5-41a0-bc21-4ad8d2f8bf5e">
+        <skos:narrower rdf:resource="http://localhost:8000/970f7714-2df3-4c56-b248-9f1d022ab28c"/>
+        <skos:narrower rdf:resource="http://localhost:8000/713f38ea-b13c-4ea2-b7bb-35ec255bdf12"/>
+        <skos:narrower rdf:resource="http://localhost:8000/db222348-5dbc-4647-b649-52e0ae6df99a"/>
+        <skos:narrower rdf:resource="http://localhost:8000/67fff0cd-eae0-40bb-b58e-798150dae54a"/>
+        <skos:narrower rdf:resource="http://localhost:8000/dd9186a8-a591-4f40-914c-1f476e60f552"/>
+        <skos:narrower rdf:resource="http://localhost:8000/52eb8678-485d-418c-9ad2-aa97d077ac56"/>
+        <skos:narrower rdf:resource="http://localhost:8000/854e54ba-8a9e-4b7d-87ed-ce80e54506a4"/>
+        <skos:prefLabel xml:lang="en">note</skos:prefLabel>
+        <skos:inScheme rdf:resource="http://localhost:8000/aba2a0b4-75a4-45ba-8b57-021f3ca92a6a"/>
+        <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</arches:sortorder>
+        <dcterms:identifier>http://www.w3.org/2004/02/skos/core#note</dcterms:identifier>
+      </skos:Concept>
+    </skos:broader>
+    <dcterms:identifier>http://www.w3.org/2004/02/skos/core#example</dcterms:identifier>
+    <skos:inScheme>
+      <skos:ConceptScheme rdf:about="http://localhost:8000/aba2a0b4-75a4-45ba-8b57-021f3ca92a6a">
+        <dcterms:title>note</dcterms:title>
+      </skos:ConceptScheme>
+    </skos:inScheme>
+    <skos:prefLabel xml:lang="en">example</skos:prefLabel>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">5</arches:sortorder>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/4810df79-8bdd-4102-a067-fdb11dcff8b7">
+    <dcterms:identifier>http://www.w3.org/2004/02/skos/core#broader</dcterms:identifier>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</arches:sortorder>
+    <skos:narrower>
+      <skos:Concept rdf:about="http://localhost:8000/d8a07e1a-3c4a-4b09-a2d9-82754d6f95cf">
+        <skos:example xml:lang="en">A "bicycle wheel" for instance belongs uniquely to a "bicycle" while a "wheel" does not.
+A BTP/NTP relationship should not be established between "bicycles" and "wheels" because a wheel could be part of a motor car, a wheelbarrow or one of many other artefacts.</skos:example>
+        <skos:definition xml:lang="en">ISO 25964-1: BTP
+When the ISO 25964 standard is followed, the BTP/NTP relationship should qualify for a transitive closure.</skos:definition>
+        <skos:prefLabel xml:lang="en">broaderPartitive</skos:prefLabel>
+        <skos:altLabel xml:lang="en">BTP</skos:altLabel>
+        <skos:inScheme rdf:resource="http://localhost:8000/42e91d71-7d25-4e43-97df-8b43f46711cf"/>
+        <dcterms:identifier>http://purl.org/iso25964/skos-thes#broaderPartitive</dcterms:identifier>
+        <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">6</arches:sortorder>
+        <skos:altLabel xml:lang="en">broader term (partitive)</skos:altLabel>
+        <skos:broader rdf:resource="http://localhost:8000/4810df79-8bdd-4102-a067-fdb11dcff8b7"/>
+      </skos:Concept>
+    </skos:narrower>
+    <skos:narrower>
+      <skos:Concept rdf:about="http://localhost:8000/d7723ec7-a527-4a39-9ef5-cea3f99a7455">
+        <skos:prefLabel xml:lang="en">broadMatch</skos:prefLabel>
+        <skos:broader rdf:resource="http://localhost:8000/4810df79-8bdd-4102-a067-fdb11dcff8b7"/>
+        <skos:inScheme rdf:resource="http://localhost:8000/42e91d71-7d25-4e43-97df-8b43f46711cf"/>
+        <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">3</arches:sortorder>
+        <dcterms:identifier>http://www.w3.org/2004/02/skos/core#broadMatch</dcterms:identifier>
+      </skos:Concept>
+    </skos:narrower>
+    <skos:narrower>
+      <skos:Concept rdf:about="http://localhost:8000/0e53033b-49f0-4252-b9cc-e50f120c76f9">
+        <skos:definition xml:lang="en">ISO 25964-1: BTG
+The immediate (direct or one-step) class - generalized class relationship</skos:definition>
+        <skos:altLabel xml:lang="en">BTG</skos:altLabel>
+        <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</arches:sortorder>
+        <skos:prefLabel xml:lang="en">broaderGeneric</skos:prefLabel>
+        <skos:broader rdf:resource="http://localhost:8000/4810df79-8bdd-4102-a067-fdb11dcff8b7"/>
+        <dcterms:identifier>http://purl.org/iso25964/skos-thes#broaderGeneric</dcterms:identifier>
+        <skos:inScheme rdf:resource="http://localhost:8000/42e91d71-7d25-4e43-97df-8b43f46711cf"/>
+        <skos:altLabel xml:lang="en">broader term (generic)</skos:altLabel>
+      </skos:Concept>
+    </skos:narrower>
+    <skos:inScheme>
+      <skos:ConceptScheme rdf:about="http://localhost:8000/42e91d71-7d25-4e43-97df-8b43f46711cf">
+        <dcterms:title>broader properties</dcterms:title>
+      </skos:ConceptScheme>
+    </skos:inScheme>
+    <skos:prefLabel xml:lang="en">broader</skos:prefLabel>
+    <skos:narrower>
+      <skos:Concept rdf:about="http://localhost:8000/4a08c8ab-d909-4dd1-aa7f-e240c8712def">
+        <skos:altLabel xml:lang="en">BTI</skos:altLabel>
+        <skos:broader rdf:resource="http://localhost:8000/4810df79-8bdd-4102-a067-fdb11dcff8b7"/>
+        <dcterms:identifier>http://purl.org/iso25964/skos-thes#broaderInstantial</dcterms:identifier>
+        <skos:prefLabel xml:lang="en">broaderInstantial</skos:prefLabel>
+        <skos:definition xml:lang="en">ISO 25964-1: BTI
+The immediate (direct or one-step) instance - class relationship.</skos:definition>
+        <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">5</arches:sortorder>
+        <skos:inScheme rdf:resource="http://localhost:8000/42e91d71-7d25-4e43-97df-8b43f46711cf"/>
+        <skos:altLabel xml:lang="en">broader term (instantial)</skos:altLabel>
+      </skos:Concept>
+    </skos:narrower>
+    <skos:broader>
+      <skos:Concept rdf:about="http://localhost:8000/ad3bbf30-5fa6-43a3-b6cd-f5e874befd7e">
+        <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</arches:sortorder>
+        <dcterms:identifier>http://www.w3.org/2004/02/skos/core#broaderTransitive</dcterms:identifier>
+        <skos:inScheme rdf:resource="http://localhost:8000/42e91d71-7d25-4e43-97df-8b43f46711cf"/>
+        <skos:narrower rdf:resource="http://localhost:8000/4810df79-8bdd-4102-a067-fdb11dcff8b7"/>
+        <skos:prefLabel xml:lang="en">broaderTransitive</skos:prefLabel>
+      </skos:Concept>
+    </skos:broader>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/ea4de366-3459-4e97-a597-426cb7b9ab3d">
+    <skos:inScheme>
+      <skos:ConceptScheme rdf:about="http://localhost:8000/fb5dd406-33ef-4e83-a6a9-9ea02c1ada17">
+        <dcterms:title>Scheme Types</dcterms:title>
+      </skos:ConceptScheme>
+    </skos:inScheme>
+    <dcterms:identifier>http://vocab.getty.edu/aat/300444161</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">indexing languages</skos:prefLabel>
+    <skos:broader>
+      <skos:Concept rdf:about="http://localhost:8000/929bfdbf-a592-4f70-bd8b-9c11deb6bff9">
+        <skos:inScheme rdf:resource="http://localhost:8000/fb5dd406-33ef-4e83-a6a9-9ea02c1ada17"/>
+        <skos:narrower rdf:resource="http://localhost:8000/a9982494-aed2-428c-9792-b6ec7a88e550"/>
+        <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</arches:sortorder>
+        <skos:narrower rdf:resource="http://localhost:8000/ea4de366-3459-4e97-a597-426cb7b9ab3d"/>
+        <skos:definition xml:lang="en">A controlled vocabulary is an organized arrangement of words and phrases that are used to index content and/or to retrieve content through browsing or searching. It typically includes preferred and variant terms and has a limited scope or describes a specific domain. Controlled vocabulary is a broader concept than authority file, encompassing authority files as well as other controlled lists of terminology.</skos:definition>
+        <skos:narrower rdf:resource="http://localhost:8000/221b97ab-5344-4157-b661-6e8786198dff"/>
+        <skos:narrower rdf:resource="http://localhost:8000/f3464aca-b9d8-4667-a551-71fe5058f7fd"/>
+        <dcterms:identifier>http://vocab.getty.edu/aat/300265266</dcterms:identifier>
+        <skos:prefLabel xml:lang="en">controlled vocabularies</skos:prefLabel>
+      </skos:Concept>
+    </skos:broader>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">5</arches:sortorder>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/fd263a79-e808-49a0-a0da-b663978e4e68">
+    <skos:scopeNote xml:lang="en">This class is a specialization of E55 Type and comprises the types of measurement units: feet, inches, centimetres, litres, lumens, etc.
+
+This type is used categorically in the model without reference to instances of it, i.e. the model does not foresee the description of instances of instances of E58 Measurement Unit, e.g. “instances of cm”.
+
+Système International (SI) units or internationally recognized non-SI terms should be used whenever possible, such as those defined by ISO80000:2009. Archaic Measurement Units used in historical records should be preserved.</skos:scopeNote>
+    <skos:prefLabel xml:lang="en">E58 Measurement Unit</skos:prefLabel>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">5</arches:sortorder>
+    <skos:inScheme>
+      <skos:ConceptScheme rdf:about="http://localhost:8000/5f28f263-9d16-4c01-a146-80a97d7119a9">
+        <dcterms:title>Ontology Classes</dcterms:title>
+      </skos:ConceptScheme>
+    </skos:inScheme>
+    <dcterms:identifier>http://www.cidoc-crm.org/cidoc-crm/E58_Measurement_Unit</dcterms:identifier>
+    <skos:broader>
+      <skos:Concept rdf:about="http://localhost:8000/b80b3df5-39ce-4dd3-a979-a73aed2b362c">
+        <skos:narrower rdf:resource="http://localhost:8000/fd263a79-e808-49a0-a0da-b663978e4e68"/>
+        <dcterms:identifier>http://www.cidoc-crm.org/cidoc-crm/E55_Type</dcterms:identifier>
+        <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</arches:sortorder>
+        <skos:narrower rdf:resource="http://localhost:8000/36f1b686-c4ba-4c0e-b4f3-b8b190f3a88d"/>
+        <skos:narrower rdf:resource="http://localhost:8000/6abe2747-f53f-40d9-857a-3c027ccf2f79"/>
+        <skos:narrower rdf:resource="http://localhost:8000/bffe467f-5d22-4b3c-a6c7-9766165271b3"/>
+        <skos:inScheme rdf:resource="http://localhost:8000/5f28f263-9d16-4c01-a146-80a97d7119a9"/>
+        <skos:prefLabel xml:lang="en">E55 Type</skos:prefLabel>
+        <skos:scopeNote xml:lang="en">This class comprises concepts denoted by terms from thesauri and controlled vocabularies used to characterize and classify instances of CIDOC CRM classes. Instances of E55 Type represent concepts, in contrast to instances of E41 Appellation which are used to name instances of CIDOC CRM classes.
+
+E55 Type provides an interface to domain specific ontologies and thesauri. These can be represented in the CIDOC CRM as subclasses of E55 Type, forming hierarchies of terms, i.e. instances of E55 Type linked via P127 has broader term (has narrower term): E55 Type. Such hierarchies may be extended with additional properties.</skos:scopeNote>
+      </skos:Concept>
+    </skos:broader>
+  </skos:Concept>
+  <skos:ConceptScheme rdf:about="http://localhost:8000/769fa072-6247-4e23-b638-4e801f8c50dc">
+    <dcterms:title>Mapping properties</dcterms:title>
+  </skos:ConceptScheme>
+  <skos:Concept rdf:about="http://localhost:8000/6abe2747-f53f-40d9-857a-3c027ccf2f79">
+    <skos:broader rdf:resource="http://localhost:8000/b80b3df5-39ce-4dd3-a979-a73aed2b362c"/>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</arches:sortorder>
+    <skos:prefLabel xml:lang="en">E99 Product Type</skos:prefLabel>
+    <skos:inScheme rdf:resource="http://localhost:8000/5f28f263-9d16-4c01-a146-80a97d7119a9"/>
+    <dcterms:identifier>http://www.cidoc-crm.org/cidoc-crm/E99_Product_Type</dcterms:identifier>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/ed044298-b4a1-4455-b11a-81561fbf2fd8">
+    <skos:inScheme rdf:resource="http://localhost:8000/769fa072-6247-4e23-b638-4e801f8c50dc"/>
+    <skos:narrower>
+      <skos:Concept rdf:about="http://localhost:8000/cce4ce1c-0e47-453e-8a12-3e23c3dbb472">
+        <skos:prefLabel xml:lang="en">exactMatch</skos:prefLabel>
+        <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</arches:sortorder>
+        <skos:inScheme rdf:resource="http://localhost:8000/769fa072-6247-4e23-b638-4e801f8c50dc"/>
+        <skos:broader rdf:resource="http://localhost:8000/ed044298-b4a1-4455-b11a-81561fbf2fd8"/>
+        <dcterms:identifier>http://www.w3.org/2004/02/skos/core#exactMatch</dcterms:identifier>
+      </skos:Concept>
+    </skos:narrower>
+    <dcterms:identifier>http://www.w3.org/2004/02/skos/core#closeMatch</dcterms:identifier>
+    <skos:broader>
+      <skos:Concept rdf:about="http://localhost:8000/b3ffe5b4-21ba-4568-aec0-e6e0bd669c38">
+        <skos:prefLabel xml:lang="en">broadMatch</skos:prefLabel>
+        <skos:broader rdf:resource="http://localhost:8000/d6c5ca2f-04e3-4a61-9065-40193bce8d83"/>
+        <skos:inScheme rdf:resource="http://localhost:8000/769fa072-6247-4e23-b638-4e801f8c50dc"/>
+        <skos:narrower rdf:resource="http://localhost:8000/ed044298-b4a1-4455-b11a-81561fbf2fd8"/>
+        <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</arches:sortorder>
+        <dcterms:identifier>http://www.w3.org/2004/02/skos/core#broadMatch</dcterms:identifier>
+      </skos:Concept>
+    </skos:broader>
+    <skos:prefLabel xml:lang="en">closeMatch</skos:prefLabel>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">3</arches:sortorder>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/a9982494-aed2-428c-9792-b6ec7a88e550">
+    <skos:definition xml:lang="en">A controlled list is a simple list of terms used to control terminology. In a well-constructed controlled list, the following should be true: each term must be unique; terms should all be members of same class; terms should not be overlapping in meaning; terms should be equal in granularity/specificity; and terms should be arranged alphabetically or in another logical order.</skos:definition>
+    <dcterms:identifier>http://vocab.getty.edu/aat/300265267</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">controlled lists</skos:prefLabel>
+    <skos:inScheme rdf:resource="http://localhost:8000/fb5dd406-33ef-4e83-a6a9-9ea02c1ada17"/>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</arches:sortorder>
+    <skos:broader rdf:resource="http://localhost:8000/929bfdbf-a592-4f70-bd8b-9c11deb6bff9"/>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d">
+    <skos:inScheme>
+      <skos:ConceptScheme rdf:about="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97">
+        <dcterms:title>related properties</dcterms:title>
+      </skos:ConceptScheme>
+    </skos:inScheme>
+    <skos:narrower>
+      <skos:Concept rdf:about="http://localhost:8000/68792506-7b45-4008-9a12-15d63ea18f29">
+        <dcterms:identifier>http://www.w3.org/2004/02/skos/core#relatedMatch</dcterms:identifier>
+        <skos:prefLabel xml:lang="en">relatedMatch</skos:prefLabel>
+        <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</arches:sortorder>
+        <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+        <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+      </skos:Concept>
+    </skos:narrower>
+    <dcterms:identifier>http://www.w3.org/2004/02/skos/core#related</dcterms:identifier>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</arches:sortorder>
+    <skos:prefLabel xml:lang="en">related</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/f3464aca-b9d8-4667-a551-71fe5058f7fd">
+    <skos:inScheme rdf:resource="http://localhost:8000/fb5dd406-33ef-4e83-a6a9-9ea02c1ada17"/>
+    <skos:broader rdf:resource="http://localhost:8000/929bfdbf-a592-4f70-bd8b-9c11deb6bff9"/>
+    <skos:prefLabel xml:lang="en">authority files</skos:prefLabel>
+    <skos:narrower>
+      <skos:Concept rdf:about="http://localhost:8000/8a036544-6392-4ec2-8128-107b7e7cf151">
+        <skos:broader rdf:resource="http://localhost:8000/f3464aca-b9d8-4667-a551-71fe5058f7fd"/>
+        <skos:definition xml:lang="en">Electronic or physical files or other groupings of authorized cataloging entries for terminology appropriate for subject indexing.</skos:definition>
+        <skos:inScheme rdf:resource="http://localhost:8000/fb5dd406-33ef-4e83-a6a9-9ea02c1ada17"/>
+        <skos:prefLabel xml:lang="en">subject authority files</skos:prefLabel>
+        <dcterms:identifier>http://vocab.getty.edu/aat/300026966</dcterms:identifier>
+        <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">3</arches:sortorder>
+      </skos:Concept>
+    </skos:narrower>
+    <skos:narrower>
+      <skos:Concept rdf:about="http://localhost:8000/6abd4767-6959-41f9-9f36-95e8af6d5752">
+        <skos:prefLabel xml:lang="en">name authority files</skos:prefLabel>
+        <skos:broader rdf:resource="http://localhost:8000/f3464aca-b9d8-4667-a551-71fe5058f7fd"/>
+        <skos:definition xml:lang="en">Electronic or physical files or other groupings of authorized cataloging entries for names, particularly personal and corporate names, but the term could also be used for authorities containing other names, such as geographic names, titles of works of art, etc.</skos:definition>
+        <dcterms:identifier>http://vocab.getty.edu/aat/300026963</dcterms:identifier>
+        <skos:inScheme rdf:resource="http://localhost:8000/fb5dd406-33ef-4e83-a6a9-9ea02c1ada17"/>
+        <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</arches:sortorder>
+      </skos:Concept>
+    </skos:narrower>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</arches:sortorder>
+    <dcterms:identifier>http://vocab.getty.edu/aat/300026957</dcterms:identifier>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/bffe467f-5d22-4b3c-a6c7-9766165271b3">
+    <skos:inScheme rdf:resource="http://localhost:8000/5f28f263-9d16-4c01-a146-80a97d7119a9"/>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">3</arches:sortorder>
+    <skos:broader rdf:resource="http://localhost:8000/b80b3df5-39ce-4dd3-a979-a73aed2b362c"/>
+    <skos:scopeNote xml:lang="en">This class is a specialization of E55 Type and comprises the natural languages in the sense of concepts.
+
+This type is used categorically in the model without reference to instances of it, i.e. the Model does not foresee the description of instances of instances of E56 Language, e.g. “instances of Mandarin Chinese”.
+
+It is recommended that internationally or nationally agreed codes and terminology should be used to denote instances of E56 Language, such as those defined in ISO 639-3:2007 and later versions.</skos:scopeNote>
+    <dcterms:identifier>http://www.cidoc-crm.org/cidoc-crm/E56_Language</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">E56 Language</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/36f1b686-c4ba-4c0e-b4f3-b8b190f3a88d">
+    <skos:inScheme rdf:resource="http://localhost:8000/5f28f263-9d16-4c01-a146-80a97d7119a9"/>
+    <skos:broader rdf:resource="http://localhost:8000/b80b3df5-39ce-4dd3-a979-a73aed2b362c"/>
+    <skos:prefLabel xml:lang="en">E57 Material</skos:prefLabel>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</arches:sortorder>
+    <dcterms:identifier>http://www.cidoc-crm.org/cidoc-crm/E57_Material</dcterms:identifier>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/67fff0cd-eae0-40bb-b58e-798150dae54a">
+    <skos:prefLabel xml:lang="en">description</skos:prefLabel>
+    <skos:broader rdf:resource="http://localhost:8000/44bb50fc-42d5-41a0-bc21-4ad8d2f8bf5e"/>
+    <skos:inScheme rdf:resource="http://localhost:8000/aba2a0b4-75a4-45ba-8b57-021f3ca92a6a"/>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">3</arches:sortorder>
+    <dcterms:identifier>https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/67fff0cd-eae0-40bb-b58e-798150dae54a</dcterms:identifier>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/52eb8678-485d-418c-9ad2-aa97d077ac56">
+    <skos:inScheme rdf:resource="http://localhost:8000/aba2a0b4-75a4-45ba-8b57-021f3ca92a6a"/>
+    <skos:altLabel xml:lang="en">scopeNote</skos:altLabel>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">7</arches:sortorder>
+    <dcterms:identifier>http://www.w3.org/2004/02/skos/core#scopeNote</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">scope note</skos:prefLabel>
+    <skos:broader rdf:resource="http://localhost:8000/44bb50fc-42d5-41a0-bc21-4ad8d2f8bf5e"/>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/221b97ab-5344-4157-b661-6e8786198dff">
+    <skos:prefLabel xml:lang="en">subject headings</skos:prefLabel>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">6</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/fb5dd406-33ef-4e83-a6a9-9ea02c1ada17"/>
+    <skos:definition xml:lang="en">Access points to a bibliographical record based upon subject terminology, usually from a standardized or controlled vocabulary. Subject headings are words or phrases; pre-coordination of terminology is a characteristic of subject headings, meaning that they combine several unique concepts together in a string (e.g., "Medieval bronze vessels" combines a period, material, and work type in one heading).</skos:definition>
+    <skos:broader rdf:resource="http://localhost:8000/929bfdbf-a592-4f70-bd8b-9c11deb6bff9"/>
+    <dcterms:identifier>http://vocab.getty.edu/aat/300265269</dcterms:identifier>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/854e54ba-8a9e-4b7d-87ed-ce80e54506a4">
+    <skos:prefLabel xml:lang="en">definition</skos:prefLabel>
+    <skos:inScheme rdf:resource="http://localhost:8000/aba2a0b4-75a4-45ba-8b57-021f3ca92a6a"/>
+    <dcterms:identifier>http://www.w3.org/2004/02/skos/core#definition</dcterms:identifier>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</arches:sortorder>
+    <skos:broader rdf:resource="http://localhost:8000/44bb50fc-42d5-41a0-bc21-4ad8d2f8bf5e"/>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/970f7714-2df3-4c56-b248-9f1d022ab28c">
+    <dcterms:identifier>http://www.w3.org/2004/02/skos/core#historyNote</dcterms:identifier>
+    <skos:broader rdf:resource="http://localhost:8000/44bb50fc-42d5-41a0-bc21-4ad8d2f8bf5e"/>
+    <skos:prefLabel xml:lang="en">history note</skos:prefLabel>
+    <skos:inScheme rdf:resource="http://localhost:8000/aba2a0b4-75a4-45ba-8b57-021f3ca92a6a"/>
+    <skos:altLabel xml:lang="en">historyNote</skos:altLabel>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">6</arches:sortorder>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/d6c5ca2f-04e3-4a61-9065-40193bce8d83">
+    <skos:narrower rdf:resource="http://localhost:8000/b3ffe5b4-21ba-4568-aec0-e6e0bd669c38"/>
+    <skos:narrower>
+      <skos:Concept rdf:about="http://localhost:8000/bb125622-0256-4f28-902f-7c273d353bc9">
+        <skos:inScheme rdf:resource="http://localhost:8000/769fa072-6247-4e23-b638-4e801f8c50dc"/>
+        <skos:prefLabel xml:lang="en">narrowMatch</skos:prefLabel>
+        <skos:broader rdf:resource="http://localhost:8000/d6c5ca2f-04e3-4a61-9065-40193bce8d83"/>
+        <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">6</arches:sortorder>
+        <dcterms:identifier>http://www.w3.org/2004/02/skos/core#narrowMatch</dcterms:identifier>
+      </skos:Concept>
+    </skos:narrower>
+    <skos:narrower>
+      <skos:Concept rdf:about="http://localhost:8000/5ca7196a-2e9a-449c-b6fe-8ed42f604cba">
+        <skos:inScheme rdf:resource="http://localhost:8000/769fa072-6247-4e23-b638-4e801f8c50dc"/>
+        <dcterms:identifier>http://www.w3.org/2004/02/skos/core#relatedMatch</dcterms:identifier>
+        <skos:prefLabel xml:lang="en">relatedMatch</skos:prefLabel>
+        <skos:broader rdf:resource="http://localhost:8000/d6c5ca2f-04e3-4a61-9065-40193bce8d83"/>
+        <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">5</arches:sortorder>
+      </skos:Concept>
+    </skos:narrower>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/769fa072-6247-4e23-b638-4e801f8c50dc"/>
+    <dcterms:identifier>http://www.w3.org/2004/02/skos/core#mappingRelation</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">mappingRelation</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/db222348-5dbc-4647-b649-52e0ae6df99a">
+    <dcterms:identifier>http://www.w3.org/2004/02/skos/core#editorialNote</dcterms:identifier>
+    <skos:altLabel xml:lang="en">editorialNote</skos:altLabel>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</arches:sortorder>
+    <skos:prefLabel xml:lang="en">editorial note</skos:prefLabel>
+    <skos:broader rdf:resource="http://localhost:8000/44bb50fc-42d5-41a0-bc21-4ad8d2f8bf5e"/>
+    <skos:inScheme rdf:resource="http://localhost:8000/aba2a0b4-75a4-45ba-8b57-021f3ca92a6a"/>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/713f38ea-b13c-4ea2-b7bb-35ec255bdf12">
+    <skos:altLabel xml:lang="en">changeNote</skos:altLabel>
+    <skos:broader rdf:resource="http://localhost:8000/44bb50fc-42d5-41a0-bc21-4ad8d2f8bf5e"/>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</arches:sortorder>
+    <skos:prefLabel xml:lang="en">change note</skos:prefLabel>
+    <skos:inScheme rdf:resource="http://localhost:8000/aba2a0b4-75a4-45ba-8b57-021f3ca92a6a"/>
+    <dcterms:identifier>http://www.w3.org/2004/02/skos/core#changeNote</dcterms:identifier>
+  </skos:Concept>
+</rdf:RDF>
