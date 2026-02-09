@@ -135,37 +135,24 @@ class ConceptBuilder:
     def populate_resource_instance_lifecycle_state_ids(
         self, *, scheme_ids: list[str], concept_ids: list[str]
     ):
+        resource_instance_ids = [*scheme_ids, *concept_ids]
         self.resource_instance_lifecycle_state_ids_by_resource_instance_id = {}
-
-        chunk_size = 50000
-
-        resource_instance_ids = []
-        if scheme_ids:
-            resource_instance_ids.extend(scheme_ids)
-        if concept_ids:
-            resource_instance_ids.extend(concept_ids)
 
         if not resource_instance_ids:
             return
 
-        for start_index in range(0, len(resource_instance_ids), chunk_size):
-            resource_instance_id_chunk = resource_instance_ids[
-                start_index : start_index + chunk_size
-            ]
-
-            resource_instance_rows = (
-                ResourceInstance.objects.filter(pk__in=resource_instance_id_chunk)
-                .values_list(
+        self.resource_instance_lifecycle_state_ids_by_resource_instance_id = {
+            str(resource_instance_id): (
+                str(lifecycle_state_id) if lifecycle_state_id else None
+            )
+            for resource_instance_id, lifecycle_state_id in (
+                ResourceInstance.objects.filter(
+                    pk__in=resource_instance_ids
+                ).values_list(
                     "resourceinstanceid", "resource_instance_lifecycle_state_id"
                 )
-                .iterator()
             )
-
-            for resource_instance_id, lifecycle_state_id in resource_instance_rows:
-                resource_instance_id_string = str(resource_instance_id)
-                self.resource_instance_lifecycle_state_ids_by_resource_instance_id[
-                    resource_instance_id_string
-                ] = (str(lifecycle_state_id) if lifecycle_state_id else None)
+        }
 
     def lookup_scheme(self, scheme_id: str):
         return self.schemes_by_id.get(scheme_id)
@@ -337,6 +324,7 @@ class ConceptBuilder:
             for scheme_id, *parent_concept_ids in paths:
                 scheme_object = self.lookup_scheme(scheme_id)
                 if scheme_object is None:
+                    # skip any path whose scheme_id isn’t found
                     continue
 
                 serialized_scheme = self.serialize_scheme(scheme_object, children=False)

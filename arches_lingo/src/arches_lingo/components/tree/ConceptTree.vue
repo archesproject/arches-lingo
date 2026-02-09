@@ -46,7 +46,12 @@ import type {
 } from "primevue/tree";
 import type { TreeNode } from "primevue/treenode";
 import type { Language } from "@/arches_component_lab/types";
-import type { IconLabels, Scheme, Concept } from "@/arches_lingo/types";
+import type {
+    IconLabels,
+    Scheme,
+    Concept,
+    ResourceInstanceLifecycleState,
+} from "@/arches_lingo/types";
 
 const props = withDefaults(
     defineProps<{
@@ -93,31 +98,21 @@ const filterValue = ref("");
 const selectedLanguage = inject(selectedLanguageKey) as Ref<Language>;
 const systemLanguage = inject(systemLanguageKey) as Language;
 
-const resourceInstanceLifecycleStates = inject(
-    "resourceInstanceLifecycleStates",
-) as Ref<unknown[] | undefined>;
+const resourceInstanceLifecycleStates = inject<
+    Ref<ResourceInstanceLifecycleState[] | undefined>
+>("resourceInstanceLifecycleStates");
 
-const resourceInstanceLifecycleStateCanEditById = computed(() => {
-    const lifecycleStatesArray = resourceInstanceLifecycleStates?.value ?? [];
-    const canEditByLifecycleStateId: Record<string, boolean> = {};
-
-    for (const lifecycleStateItem of lifecycleStatesArray) {
-        const lifecycleStateObject = lifecycleStateItem as Record<
-            string,
-            unknown
-        >;
-        const lifecycleStateIdValue = lifecycleStateObject.id;
-
-        if (typeof lifecycleStateIdValue !== "string") {
-            continue;
-        }
-
-        canEditByLifecycleStateId[lifecycleStateIdValue] =
-            lifecycleStateObject.can_edit_resource_instances === true;
-    }
-
-    return canEditByLifecycleStateId;
-});
+const resourceInstanceLifecycleStateCanEditById = computed(() =>
+    Object.fromEntries(
+        (resourceInstanceLifecycleStates?.value ?? []).map(
+            (resourceInstanceLifecycleState) => [
+                resourceInstanceLifecycleState.id,
+                resourceInstanceLifecycleState.can_edit_resource_instances ===
+                    true,
+            ],
+        ),
+    ),
+);
 
 provide(
     "resourceInstanceLifecycleStateCanEditById",

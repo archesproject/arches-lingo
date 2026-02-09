@@ -43,6 +43,7 @@ import type {
     DataComponentMode,
     ResourceInstanceResult,
     SchemeHeader,
+    ResourceInstanceLifecycleState,
 } from "@/arches_lingo/types.ts";
 import type { Language } from "@/arches_component_lab/types.ts";
 import type { Label } from "@/arches_controlled_lists/types";
@@ -57,15 +58,6 @@ type ConceptIdentifierCounter = {
 type SchemeURITemplate = {
     scheme_resource_instance_id: string;
     url_template: string;
-};
-
-type ResourceInstanceLifecycleState = {
-    id: string;
-    name: string;
-    action_label: string;
-    can_edit_resource_instances?: boolean;
-    can_delete_resource_instances?: boolean;
-    next_resource_instance_lifecycle_states?: ResourceInstanceLifecycleState[];
 };
 
 const props = defineProps<{

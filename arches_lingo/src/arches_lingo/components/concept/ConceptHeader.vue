@@ -36,21 +36,13 @@ import type {
     ConceptHeaderData,
     ConceptClassificationStatusAliases,
     ResourceInstanceResult,
+    ResourceInstanceLifecycleState,
     DataComponentMode,
 } from "@/arches_lingo/types.ts";
 import type { Label } from "@/arches_controlled_lists/types";
 
 import type { Language } from "@/arches_component_lab/types.ts";
 import { routeNames } from "@/arches_lingo/routes.ts";
-
-type ResourceInstanceLifecycleState = {
-    id: string;
-    name: string;
-    action_label: string;
-    can_edit_resource_instances?: boolean;
-    can_delete_resource_instances?: boolean;
-    next_resource_instance_lifecycle_states?: ResourceInstanceLifecycleState[];
-};
 
 const props = defineProps<{
     mode: DataComponentMode;
@@ -80,6 +72,7 @@ const exportDialogKey = ref(0);
 
 const conceptIdentifierValue = ref<string>();
 
+// Placeholder for concept Type
 const conceptType = ref();
 const ctype = ref([
     { name: "Concept", code: "c" },
@@ -99,13 +92,9 @@ const lifecycleStateLabel = computed(() => {
     return state?.name || "--";
 });
 
-const hasPersistedResourceInstance = computed(() => {
-    return Boolean(props.resourceInstanceId);
-});
-
 const canEditResourceInstances = computed(() => {
     return (
-        hasPersistedResourceInstance.value &&
+        props.resourceInstanceId &&
         Boolean(
             resourceInstanceLifecycleState?.value?.can_edit_resource_instances,
         )
@@ -114,7 +103,7 @@ const canEditResourceInstances = computed(() => {
 
 const canDeleteResourceInstances = computed(() => {
     return (
-        hasPersistedResourceInstance.value &&
+        props.resourceInstanceId &&
         Boolean(
             resourceInstanceLifecycleState?.value
                 ?.can_delete_resource_instances,
@@ -124,7 +113,9 @@ const canDeleteResourceInstances = computed(() => {
 
 onMounted(async () => {
     try {
-        if (!props.resourceInstanceId) {
+        const resourceInstanceId = props.resourceInstanceId;
+
+        if (!resourceInstanceId) {
             label.value = {
                 value: $gettext("New Concept"),
                 language_id: selectedLanguage.value.code,
@@ -133,13 +124,14 @@ onMounted(async () => {
             return;
         }
 
-        concept.value = await fetchLingoResource(
-            props.graphSlug,
-            props.resourceInstanceId,
-        );
-        const conceptResource = await fetchConceptResource(
-            props.resourceInstanceId,
-        );
+        const [fetchedConcept, conceptResource, resourceIdentifiers] =
+            await Promise.all([
+                fetchLingoResource(props.graphSlug, resourceInstanceId),
+                fetchConceptResource(resourceInstanceId),
+                fetchResourceIdentifiers(resourceInstanceId),
+            ]);
+
+        concept.value = fetchedConcept;
 
         label.value = getItemLabel(
             conceptResource,
@@ -147,12 +139,9 @@ onMounted(async () => {
             systemLanguage.code,
         );
 
-        const resourceIdentifiers = await fetchResourceIdentifiers(
-            props.resourceInstanceId,
-        );
         conceptIdentifierValue.value = resourceIdentifiers?.[0]?.identifier;
 
-        extractConceptHeaderData(concept.value!);
+        extractConceptHeaderData(fetchedConcept);
     } catch (error) {
         toast.add({
             severity: ERROR,
@@ -222,6 +211,8 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
 
     const name = concept?.name;
     const descriptor = extractDescriptors(concept, systemLanguage);
+
+    // TODO: get human-readable user name from resource endpoint
     const principalUser = "Anonymous";
 
     const uri = aliased_data?.uri?.aliased_data?.uri_content?.node_value.url;
@@ -265,6 +256,7 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
             <div class="concept-details">
                 <h2>
                     <div class="concept-name">
+                        <!-- To do: change icon based on concept type -->
                         <i class="pi pi-tag"></i>
                         <span>
                             {{ label?.value }}
@@ -320,6 +312,7 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
         <div class="header-content">
             <div class="concept-header-section">
                 <div class="header-row">
+                    <!-- TODO: Human-reable conceptid to be displayed here -->
                     <div class="header-item">
                         <span class="header-item-label">
                             {{ $gettext("Identifier:") }}
