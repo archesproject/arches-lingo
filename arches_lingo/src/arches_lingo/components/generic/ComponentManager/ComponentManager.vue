@@ -74,6 +74,7 @@ const editorTileId = ref();
 const editorState = ref(CLOSED);
 const selectedComponentDatum = ref();
 const isFormEditor = ref(true);
+const isEditorLoading = ref(false);
 
 const resourceInstanceLifecycleState = ref<object | undefined>(undefined);
 const isFetchingResourceInstanceLifecycleState = ref(false);
@@ -156,6 +157,7 @@ function closeEditor() {
     selectedComponentDatum.value = null;
     editorState.value = CLOSED;
     editorTileId.value = null;
+    isEditorLoading.value = false;
 }
 
 function doOpenEditor(componentName: string, tileId?: string) {
@@ -344,6 +346,7 @@ provide(openPanelComponentKey, openPanelComponent);
                     class="splitter-panel-content"
                     :is-editor-maximized="editorState === MAXIMIZED"
                     :is-form-editor="isFormEditor"
+                    :is-editor-loading="isEditorLoading"
                     :header-title="selectedComponentDatum.sectionTitle"
                     @maximize="maximizeEditor"
                     @minimize="minimizeEditor"
@@ -357,6 +360,7 @@ provide(openPanelComponentKey, openPanelComponent);
                         :tile-id="editorTileId"
                         :section-title="selectedComponentDatum.sectionTitle"
                         :component-name="selectedComponentDatum.componentName"
+                        :is-editor-loading="isEditorLoading"
                         :mode="EDIT"
                     />
                 </ComponentEditor>
@@ -411,6 +415,7 @@ provide(openPanelComponentKey, openPanelComponent);
             >
                 <ComponentEditor
                     :key="editorKey"
+                    v-model:is-editor-loading="isEditorLoading"
                     class="splitter-panel-content"
                     :is-editor-maximized="editorState === MAXIMIZED"
                     :is-form-editor="isFormEditor"
@@ -421,6 +426,7 @@ provide(openPanelComponentKey, openPanelComponent);
                 >
                     <component
                         :is="selectedComponentDatum.component"
+                        v-model:is-editor-loading="isEditorLoading"
                         :graph-slug="selectedComponentDatum.graphSlug"
                         :nodegroup-alias="selectedComponentDatum.nodegroupAlias"
                         :resource-instance-id="resourceInstanceId"
