@@ -45,6 +45,7 @@ const editorKey = ref(0);
 const editorTileId = ref();
 const editorState = ref(CLOSED);
 const selectedComponentDatum = ref();
+const isEditorLoading = ref(false);
 
 const resourceInstanceId = computed<string | undefined>(() => {
     if (route.params.id !== NEW) {
@@ -73,9 +74,11 @@ function closeEditor() {
     selectedComponentDatum.value = null;
     editorState.value = CLOSED;
     editorTileId.value = null;
+    isEditorLoading.value = false;
 }
 
 function openEditor(componentName: string, tileId?: string) {
+    isEditorLoading.value = true;
     const componentDatum = processedComponentData.value.find(
         (componentDatum) => {
             return componentDatum.componentName === componentName;
@@ -186,6 +189,7 @@ provide("refreshReportSection", refreshReportSection);
                     :key="editorKey"
                     class="splitter-panel-content"
                     :is-editor-maximized="editorState === MAXIMIZED"
+                    :is-editor-loading="isEditorLoading"
                     @maximize="maximizeEditor"
                     @minimize="minimizeEditor"
                     @close="closeEditor"
@@ -198,6 +202,7 @@ provide("refreshReportSection", refreshReportSection);
                         :tile-id="editorTileId"
                         :section-title="selectedComponentDatum.sectionTitle"
                         :component-name="selectedComponentDatum.componentName"
+                        :is-editor-loading="isEditorLoading"
                         :mode="EDIT"
                     />
                 </ComponentEditor>
@@ -252,6 +257,7 @@ provide("refreshReportSection", refreshReportSection);
             >
                 <ComponentEditor
                     :key="editorKey"
+                    v-model:is-editor-loading="isEditorLoading"
                     class="splitter-panel-content"
                     :is-editor-maximized="editorState === MAXIMIZED"
                     @maximize="maximizeEditor"
@@ -260,6 +266,7 @@ provide("refreshReportSection", refreshReportSection);
                 >
                     <component
                         :is="selectedComponentDatum.component"
+                        v-model:is-editor-loading="isEditorLoading"
                         :graph-slug="selectedComponentDatum.graphSlug"
                         :nodegroup-alias="selectedComponentDatum.nodegroupAlias"
                         :resource-instance-id="resourceInstanceId"
