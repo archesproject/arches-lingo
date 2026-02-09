@@ -81,9 +81,10 @@ async function exportThesauri() {
         :pt="{
             root: {
                 style: {
-                    borderRadius: '0',
                     fontFamily: 'var(--p-lingo-font-family)',
                     fontSize: 'var(--p-lingo-font-size-small)',
+                    border: '0.125rem solid var(--p-dialog-color)',
+                    borderRadius: '0.25rem',
                 },
             },
             header: {
@@ -98,7 +99,7 @@ async function exportThesauri() {
             title: {
                 style: {
                     fontSize: 'var(--p-lingo-font-size-large)',
-                    fontWeight: 'var(--p-lingo-font-weight-bold)',
+                    fontWeight: 'var(--p-lingo-font-weight-normal)',
                     lineHeight: '1.2',
                 },
             },
@@ -218,7 +219,7 @@ async function exportThesauri() {
 .label {
     display: block;
     margin: 0;
-    font-weight: var(--p-lingo-font-weight-bold);
+    font-weight: var(--p-lingo-font-weight-normal);
 }
 
 .control {
@@ -254,6 +255,10 @@ async function exportThesauri() {
     width: 100%;
 }
 
+:deep(.p-inputtext) {
+    font-size: 0.875rem !important;
+}
+
 .footer {
     display: flex;
     justify-content: flex-end;
@@ -262,11 +267,16 @@ async function exportThesauri() {
 
 .footer-button {
     font-size: var(--p-lingo-font-size-small);
+    border-radius: 0.125rem;
 }
 
 .loading {
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+:deep(.p-dialog) {
+    border: 0.125rem solid #000 !important;
 }
 </style>

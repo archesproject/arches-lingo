@@ -52,7 +52,7 @@ async function issueLogout() {
 
 <template>
     <div>
-        <div class="section-title">{{ $gettext("Tools") }}</div>
+        <div class="section-title tools-section">{{ $gettext("Tools") }}</div>
 
         <ConfirmDialog @click.stop.prevent />
         <div class="button-container">
@@ -96,10 +96,16 @@ async function issueLogout() {
     margin-bottom: 0.15rem;
     width: 8rem;
     border: 0.0625rem solid var(--p-header-button-border);
+    border-radius: 0.125rem;
 }
 
 .section-title {
     color: var(--p-text-muted-color);
     margin-bottom: 0.5rem;
+    font-weight: 300;
+}
+
+.tools-section {
+    margin-top: 0.5rem;
 }
 </style>

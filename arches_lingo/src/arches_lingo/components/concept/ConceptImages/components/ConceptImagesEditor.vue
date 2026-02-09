@@ -114,7 +114,7 @@ async function getDigitalObjectInstance(
             digitalObjectResource.value = undefined;
         } else {
             digitalObjectResource.value = await fetchLingoResource(
-                "digital_object_rdm_system",
+                "digital_object_system",
                 typedEvent.detail.resourceInstanceId,
             );
         }
@@ -331,7 +331,7 @@ function resetForm() {
             >
                 <GenericWidget
                     node-alias="name_content"
-                    graph-slug="digital_object_rdm_system"
+                    graph-slug="digital_object_system"
                     :mode="EDIT"
                     :aliased-node-data="
                         digitalObjectResource?.aliased_data.name?.aliased_data
@@ -341,7 +341,7 @@ function resetForm() {
                 />
                 <GenericWidget
                     node-alias="statement_content"
-                    graph-slug="digital_object_rdm_system"
+                    graph-slug="digital_object_system"
                     :mode="EDIT"
                     :aliased-node-data="
                         digitalObjectResource?.aliased_data.statement
@@ -351,7 +351,7 @@ function resetForm() {
                 />
                 <GenericWidget
                     node-alias="content"
-                    graph-slug="digital_object_rdm_system"
+                    graph-slug="digital_object_system"
                     :aliased-node-data="
                         digitalObjectResource?.aliased_data?.content
                             ?.aliased_data.content

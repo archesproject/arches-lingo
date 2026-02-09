@@ -800,15 +800,18 @@ function onNodeSelect(node: TreeNode) {
 }
 
 .filter-container {
-    padding-top: 1rem;
-    padding-inline: 0.5rem;
+    padding-top: 0;
+    padding-inline: 1rem;
     padding-bottom: 1rem;
+    background: var(--p-header-toolbar-background);
     border-bottom: 0.0625rem solid var(--p-menubar-border-color);
+    margin-bottom: 0.5rem;
 }
 
 .tree-filter-input {
     border-radius: 0.125rem;
     width: 100%;
+    font-size: 0.875rem;
 }
 
 .filter-cap-message {
@@ -854,5 +857,30 @@ function onNodeSelect(node: TreeNode) {
 
 :deep(.p-tree-node-content) {
     width: fit-content;
+}
+
+:deep(.p-tree-node-content) {
+    border-radius: 0.25rem !important;
+}
+
+:deep(.p-tree-node-selected) {
+    background: var(--p-header-button-background) !important;
+    color: var(--p-header-button-color) !important;
+}
+
+:deep(.p-tree-node-selected .p-tree-node-icon) {
+    color: var(--p-header-button-color) !important;
+}
+
+:deep(.p-tree-node-selected button) {
+    color: var(--p-header-button-color) !important;
+}
+
+:deep(.p-tree-node-selected button:hover) {
+    background: var(--p-header-button-background) !important;
+}
+
+:deep(.p-tree-node-selected.new-node) {
+    background: var(--p-yellow-500) !important;
 }
 </style>

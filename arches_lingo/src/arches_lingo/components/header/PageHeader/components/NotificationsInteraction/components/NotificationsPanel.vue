@@ -56,6 +56,7 @@ function dismissAllNotifications() {
                     display: 'flex',
                     flexDirection: 'column',
                     fontFamily: 'var(--p-lingo-font-family)',
+                    fontWeight: '400',
                 },
             },
             header: {
@@ -67,7 +68,7 @@ function dismissAllNotifications() {
                         '0.0625rem solid var(--p-header-toolbar-border)',
                     padding: '0.25rem 0.75rem',
                     fontFamily: 'var(--p-lingo-font-family)',
-                    fontSize: 'var(--p-lingo-font-size-medium)',
+                    fontSize: 'var(--p-lingo-font-size-small)',
                 },
             },
             footer: {

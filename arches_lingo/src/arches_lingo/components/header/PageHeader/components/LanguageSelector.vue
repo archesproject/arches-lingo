@@ -83,6 +83,7 @@ function openLanguageSelector(event: MouseEvent) {
     border: none !important;
     color: inherit !important;
     border-radius: 0;
+    font-size: 0.875rem;
 }
 
 .p-button:hover {
@@ -116,13 +117,14 @@ function openLanguageSelector(event: MouseEvent) {
     margin: 0rem 0rem 0.5rem 0rem;
     padding-bottom: 0.5rem;
     border-bottom: 0.0625rem solid var(--p-header-toolbar-border);
+    font-weight: 400;
 }
 
 .selection {
     display: flex;
     gap: 0.5rem;
-    padding: 0.2rem;
-    font-size: var(--p-lingo-font-size-smallnormal);
+    padding: 0.2rem 0.2rem 0.4rem 0.2rem;
+    font-size: var(--p-lingo-font-size-small);
     align-items: center;
     color: var(--p-list-option-icon-color);
 }
