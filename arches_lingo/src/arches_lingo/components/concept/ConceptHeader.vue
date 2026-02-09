@@ -43,6 +43,15 @@ import type { Label } from "@/arches_controlled_lists/types";
 import type { Language } from "@/arches_component_lab/types.ts";
 import { routeNames } from "@/arches_lingo/routes.ts";
 
+type ResourceInstanceLifecycleState = {
+    id: string;
+    name: string;
+    action_label: string;
+    can_edit_resource_instances?: boolean;
+    can_delete_resource_instances?: boolean;
+    next_resource_instance_lifecycle_states?: ResourceInstanceLifecycleState[];
+};
+
 const props = defineProps<{
     mode: DataComponentMode;
     sectionTitle: string;
@@ -71,16 +80,15 @@ const exportDialogKey = ref(0);
 
 const conceptIdentifierValue = ref<string>();
 
-//Placeholder for concept Type
 const conceptType = ref();
 const ctype = ref([
     { name: "Concept", code: "c" },
     { name: "Guide Term", code: "gt" },
 ]);
 
-const resourceInstanceLifecycleState = inject<{
-    value: { name: string } | undefined;
-}>("resourceInstanceLifecycleState");
+const resourceInstanceLifecycleState = inject<
+    Ref<ResourceInstanceLifecycleState | undefined>
+>("resourceInstanceLifecycleState");
 
 const lifecycleStateLabel = computed(() => {
     const state = resourceInstanceLifecycleState?.value;
@@ -89,6 +97,29 @@ const lifecycleStateLabel = computed(() => {
     }
 
     return state?.name || "--";
+});
+
+const hasPersistedResourceInstance = computed(() => {
+    return Boolean(props.resourceInstanceId);
+});
+
+const canEditResourceInstances = computed(() => {
+    return (
+        hasPersistedResourceInstance.value &&
+        Boolean(
+            resourceInstanceLifecycleState?.value?.can_edit_resource_instances,
+        )
+    );
+});
+
+const canDeleteResourceInstances = computed(() => {
+    return (
+        hasPersistedResourceInstance.value &&
+        Boolean(
+            resourceInstanceLifecycleState?.value
+                ?.can_delete_resource_instances,
+        )
+    );
 });
 
 onMounted(async () => {
@@ -191,9 +222,9 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
 
     const name = concept?.name;
     const descriptor = extractDescriptors(concept, systemLanguage);
-    // TODO: get human-readable user name from resource endpoint
-    const principalUser = "Anonymous"; //concept?.principalUser; // returns userid int
-    const uri = aliased_data?.uri?.aliased_data?.uri_content?.url;
+    const principalUser = "Anonymous";
+
+    const uri = aliased_data?.uri?.aliased_data?.uri_content?.node_value.url;
     const partOfScheme =
         aliased_data?.part_of_scheme?.aliased_data?.part_of_scheme;
     const parentConcepts = (aliased_data?.classification_status || []).flatMap(
@@ -234,7 +265,6 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
             <div class="concept-details">
                 <h2>
                     <div class="concept-name">
-                        <!-- To do: change icon based on concept type -->
                         <i class="pi pi-tag"></i>
                         <span>
                             {{ label?.value }}
@@ -269,13 +299,14 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                     <span>{{ $gettext("Export") }}</span>
                 </Button>
                 <Button
+                    v-if="canEditResourceInstances"
                     icon="pi pi-plus-circle"
                     :label="$gettext('Add Child')"
                     class="add-button"
                 ></Button>
 
-                <!-- TODO: button should reflect published state of concept: delete if draft, deprecate if URI is present -->
                 <Button
+                    v-if="canDeleteResourceInstances"
                     icon="pi pi-trash"
                     severity="danger"
                     class="delete-button"
@@ -321,7 +352,6 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                 </div>
 
                 <div class="header-row">
-                    <!-- TODO: Human-reable conceptid to be displayed here -->
                     <div class="header-item">
                         <span class="header-item-label">
                             {{ $gettext("Scheme:") }}

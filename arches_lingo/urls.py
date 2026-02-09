@@ -20,6 +20,13 @@ from arches_lingo.views.api.generic import (
 from arches_lingo.views.api.concept_identifier_counter import (
     ConceptIdentifierCounterView,
 )
+from arches_lingo.views.api.scheme_uri_template import (
+    SchemeURITemplateView,
+)
+from arches_lingo.views.api.settings import (
+    PublicServerAddressView,
+)
+from arches_lingo.views.api.scheme_redirect import SchemeConceptRedirectView
 
 handler400 = "arches.app.views.main.custom_400"
 handler403 = "arches.app.views.main.custom_403"
@@ -36,12 +43,27 @@ urlpatterns = [
     path("scheme/new", LingoRootView.as_view(), name="new-scheme"),
     path("concept/<uuid:id>", LingoRootView.as_view(), name="concept"),
     path("concept/new", LingoRootView.as_view(), name="new-concept"),
+    path(
+        "schemes/<slug:scheme_identifier>/concepts/<slug:concept_identifier>",
+        SchemeConceptRedirectView.as_view(),
+        name="scheme-concept",
+    ),
     path("api/concept-tree", ConceptTreeView.as_view(), name="api-concepts"),
     path("api/search", ValueSearchView.as_view(), name="api-search"),
     path(
         "api/scheme/<uuid:scheme_resource_instance_id>/concept-identifier-counter",
         ConceptIdentifierCounterView.as_view(),
         name="api-concept-identifier-counter",
+    ),
+    path(
+        "api/scheme/<uuid:scheme_resource_instance_id>/url-template",
+        SchemeURITemplateView.as_view(),
+        name="api-scheme-url-template",
+    ),
+    path(
+        "api/settings/public-server-address",
+        PublicServerAddressView.as_view(),
+        name="api-public-server-address",
     ),
     path(
         "api/lingo/scheme-resource",

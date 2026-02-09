@@ -45,6 +45,15 @@ export const fetchUser = async () => {
     return parsed;
 };
 
+export const fetchPublicServerAddress = async () => {
+    const url = generateArchesURL("arches_lingo:api-public-server-address");
+
+    const response = await fetch(url);
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
 export const fetchLingoResources = async (graphSlug: string) => {
     const response = await fetch(arches.urls.api_lingo_resources(graphSlug));
     const parsed = await response.json();
@@ -550,6 +559,19 @@ export const createConceptIdentifierCounter = async (
     return parsed;
 };
 
+export const fetchResourceInstanceLifecycleStates = async () => {
+    const resourceInstanceLifecycleStateUrl = generateArchesURL(
+        "arches:api_resource_instance_lifecycle_states",
+    );
+
+    const response = await fetch(resourceInstanceLifecycleStateUrl);
+    const parsedResponseBody = await response.json();
+    if (!response.ok) {
+        throw new Error(parsedResponseBody.message || response.statusText);
+    }
+    return parsedResponseBody;
+};
+
 export const fetchResourceInstanceLifecycleState = async (
     resourceId: string,
 ) => {
@@ -593,4 +615,41 @@ export const updateResourceInstanceLifecycleState = async (
         throw new Error(parsedResponseBody.message || response.statusText);
     }
     return parsedResponseBody;
+};
+
+export const fetchSchemeURITemplate = async (
+    schemeResourceInstanceId: string,
+) => {
+    const url = generateArchesURL("arches_lingo:api-scheme-url-template", {
+        scheme_resource_instance_id: schemeResourceInstanceId,
+    });
+
+    const response = await fetch(url);
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
+export const upsertSchemeURITemplate = async (
+    schemeResourceInstanceId: string,
+    urlTemplate: string,
+) => {
+    const url = generateArchesURL("arches_lingo:api-scheme-url-template", {
+        scheme_resource_instance_id: schemeResourceInstanceId,
+    });
+
+    const response = await fetch(url, {
+        method: "POST",
+        headers: {
+            "X-CSRFTOKEN": getToken(),
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            url_template: urlTemplate,
+        }),
+    });
+
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
 };

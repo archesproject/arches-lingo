@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { computed, inject } from "vue";
+
 import TreeRowLabel from "@/arches_lingo/components/tree/components/TreeRow/components/TreeRowLabel.vue";
 import FocusIcon from "@/arches_lingo/components/tree/components/TreeRow/components/FocusIcon.vue";
 import AddChildIcon from "@/arches_lingo/components/tree/components/TreeRow/components/AddChildIcon.vue";
@@ -7,6 +9,7 @@ import ExportIcon from "@/arches_lingo/components/tree/components/TreeRow/compon
 
 import { NEW } from "@/arches_lingo/constants.ts";
 
+import type { Ref } from "vue";
 import type { TreeNode } from "primevue/treenode";
 
 const { node, focusLabel, unfocusLabel, addChildLabel, filterValue } =
@@ -21,6 +24,30 @@ const { node, focusLabel, unfocusLabel, addChildLabel, filterValue } =
     }>();
 
 const focusedNode = defineModel<TreeNode | null>("focusedNode");
+
+const resourceInstanceLifecycleStateCanEditById = inject(
+    "resourceInstanceLifecycleStateCanEditById",
+) as Ref<Record<string, boolean>>;
+
+const shouldShowAddChildButton = computed(() => {
+    if (node.data.id === NEW) {
+        return false;
+    }
+
+    const nodeDataObject = node.data as unknown as Record<string, unknown>;
+    const lifecycleStateIdValue =
+        nodeDataObject.resource_instance_lifecycle_state_id;
+
+    if (typeof lifecycleStateIdValue !== "string") {
+        return false;
+    }
+
+    return Boolean(
+        resourceInstanceLifecycleStateCanEditById?.value?.[
+            lifecycleStateIdValue
+        ],
+    );
+});
 </script>
 
 <template>
@@ -36,7 +63,7 @@ const focusedNode = defineModel<TreeNode | null>("focusedNode");
             :unfocus-label="unfocusLabel"
         />
         <AddChildIcon
-            v-if="node.data.id !== NEW"
+            v-if="shouldShowAddChildButton"
             :node="node"
             :add-child-label="addChildLabel"
         />

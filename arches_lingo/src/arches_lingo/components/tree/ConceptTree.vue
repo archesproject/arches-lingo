@@ -1,5 +1,13 @@
 <script setup lang="ts">
-import { computed, inject, nextTick, onMounted, ref, watch } from "vue";
+import {
+    computed,
+    inject,
+    nextTick,
+    onMounted,
+    provide,
+    ref,
+    watch,
+} from "vue";
 
 import { useRoute, useRouter } from "vue-router";
 import { useGettext } from "vue3-gettext";
@@ -84,6 +92,37 @@ const filterValue = ref("");
 
 const selectedLanguage = inject(selectedLanguageKey) as Ref<Language>;
 const systemLanguage = inject(systemLanguageKey) as Language;
+
+const resourceInstanceLifecycleStates = inject(
+    "resourceInstanceLifecycleStates",
+) as Ref<unknown[] | undefined>;
+
+const resourceInstanceLifecycleStateCanEditById = computed(() => {
+    const lifecycleStatesArray = resourceInstanceLifecycleStates?.value ?? [];
+    const canEditByLifecycleStateId: Record<string, boolean> = {};
+
+    for (const lifecycleStateItem of lifecycleStatesArray) {
+        const lifecycleStateObject = lifecycleStateItem as Record<
+            string,
+            unknown
+        >;
+        const lifecycleStateIdValue = lifecycleStateObject.id;
+
+        if (typeof lifecycleStateIdValue !== "string") {
+            continue;
+        }
+
+        canEditByLifecycleStateId[lifecycleStateIdValue] =
+            lifecycleStateObject.can_edit_resource_instances === true;
+    }
+
+    return canEditByLifecycleStateId;
+});
+
+provide(
+    "resourceInstanceLifecycleStateCanEditById",
+    resourceInstanceLifecycleStateCanEditById,
+);
 
 const FILTER_RENDER_CAP = 2500;
 const FILTER_DEBOUNCE_MS = 500;
