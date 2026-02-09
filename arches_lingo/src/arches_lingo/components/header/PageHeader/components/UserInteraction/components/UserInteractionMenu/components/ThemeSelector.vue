@@ -78,6 +78,7 @@ function setTheme(value: boolean) {
 .section-title {
     color: var(--p-text-muted-color);
     margin-bottom: 0.5rem;
+    font-weight: 300;
 }
 
 .p-selectbutton {

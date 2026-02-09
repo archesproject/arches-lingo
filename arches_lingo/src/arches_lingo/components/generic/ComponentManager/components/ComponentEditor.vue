@@ -198,6 +198,7 @@ h2 {
 .editor-content :deep(.form-header h3) {
     margin: 0;
     padding: 0.5rem 1rem 0 1rem;
+    font-size: 1.125rem;
 }
 
 .editor-content :deep(.form-container) {
@@ -208,7 +209,7 @@ h2 {
 .editor-content :deep(.form-description) {
     padding: 0.125rem 1rem;
     font-weight: var(--p-lingo-font-weight-normal);
-    font-size: var(--p-lingo-font-size-smallnormal);
+    font-size: var(--p-lingo-font-size-small);
     color: var(--p-header-item-label);
     margin-inline-end: 0.25rem;
 }
@@ -225,6 +226,14 @@ h2 {
     border-radius: 0.125rem;
 }
 
+:deep(.p-inputtext) {
+    font-size: 0.875rem !important;
+}
+
+:deep(.p-treeselect-label) {
+    font-size: 0.875rem !important;
+}
+
 .footer {
     background: var(--p-header-background);
     border-top: 0.125rem solid var(--p-menubar-border-color);
@@ -235,5 +244,6 @@ h2 {
 .footer > Button {
     margin: 0 0.5rem;
     flex: 1;
+    border-radius: 0.125rem;
 }
 </style>

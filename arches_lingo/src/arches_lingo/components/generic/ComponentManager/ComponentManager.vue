@@ -374,8 +374,8 @@ async function loadResourceInstanceLifecycleState() {
 :deep(.section-header .add-button) {
     font-size: var(--p-lingo-font-size-xsmall);
     font-weight: var(--p-lingo-font-weight-normal);
-    border-color: var(--p-button-primary-border-color);
-    border-radius: var(--p-button-border-radius);
+    border-color: var(--p-button-primary-active-border-color);
+    border-radius: 0.125rem;
     min-width: 11rem;
 
     &.wide {
@@ -386,6 +386,7 @@ async function loadResourceInstanceLifecycleState() {
 :deep(.concept-header .p-button),
 :deep(.scheme-header .p-button) {
     font-size: var(--p-lingo-font-size-small);
+    border-radius: 0.125rem;
 }
 
 :deep(.concept-header .add-button),
@@ -393,6 +394,12 @@ async function loadResourceInstanceLifecycleState() {
     background: var(--p-header-button-background);
     color: var(--p-header-button-color);
     border-color: var(--p-header-button-border);
+    border-radius: 0.125rem;
+}
+
+:deep(.concept-header .add-button:hover),
+:deep(.scheme-header .add-button:hover) {
+    background: var(--p-highlight-background);
 }
 
 .p-splitter .p-splitterpanel .splitter-panel-content .p-skeleton {

@@ -97,6 +97,9 @@ const overlayPanel = useTemplateRef("overlayPanel");
     background: var(--p-menubar-background) !important;
     border: none !important;
     color: var(--p-menubar-text-color) !important;
+    padding: var(--p-button-padding-y) var(--p-button-padding-x);
+    height: 3rem;
+    border-radius: 0;
 }
 
 :deep(.explore-button .p-togglebutton-content),
@@ -104,6 +107,7 @@ const overlayPanel = useTemplateRef("overlayPanel");
 :deep(.explore-button .p-togglebutton-icon) {
     background: transparent !important;
     color: var(--p-menubar-text-color) !important;
+    font-size: 0.875rem;
 }
 
 .explore-button:not(.p-togglebutton-checked):hover {
@@ -112,8 +116,7 @@ const overlayPanel = useTemplateRef("overlayPanel");
 
 .explore-button.p-togglebutton-checked,
 .explore-button.p-togglebutton-checked * {
-    background: var(--p-togglebutton-checked-background) !important;
-    color: var(--p-togglebutton-checked-color) !important;
+    background: var(--p-button-primary-hover-background) !important;
 }
 
 .p-menubar {

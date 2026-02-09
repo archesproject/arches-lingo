@@ -63,6 +63,10 @@ const toggleModal = () => {
 <style>
 .basic-search-button {
     color: var(--p-menubar-text-color) !important;
+    border-radius: 0 !important;
+    padding: var(--p-button-padding-x) var(--p-button-padding-y) !important;
+    font-size: 0.875rem !important;
+    height: 3rem;
 }
 
 .basic-search-button:hover {
@@ -71,7 +75,8 @@ const toggleModal = () => {
 
 .basic-search-dialog {
     margin-top: 6rem !important;
-    border-radius: 0 !important;
+    border-radius: 0.25rem !important;
+    border: 0.125rem solid var(--p-dialog-color) !important;
 }
 
 @media screen and (max-width: 960px) {

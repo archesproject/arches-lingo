@@ -1630,7 +1630,7 @@
             "isresource": true,
             "jsonldcontext": null,
             "name": {
-                "en": "period_rdm_system"
+                "en": "Period (system)"
             },
             "nodegroups": [
                 {
@@ -1705,7 +1705,7 @@
                     "isrequired": false,
                     "issearchable": true,
                     "istopnode": true,
-                    "name": "period_rdm_system",
+                    "name": "period_system",
                     "nodegroup_id": null,
                     "nodeid": "20ea7ad2-4965-11ed-bebb-bf1b0a06275c",
                     "ontologyclass": "http://www.cidoc-crm.org/cidoc-crm/E4_Period",
@@ -1873,12 +1873,12 @@
                         "graphs": [
                             {
                                 "graphid": "9ffb6fcc-b4b4-11ea-84f7-3af9d3b32b71",
-                                "name": "person_rdm_system"
+                                "name": "Person (system)"
                             },
                             {
                                 "graphid": "d6774bfc-b4b4-11ea-84f7-3af9d3b32b71",
                                 "inverseRelationshipConcept": "ac41d9be-79db-4256-b368-2f4559cfbe55",
-                                "name": "group_rdm_system",
+                                "name": "Group (system)",
                                 "relationshipCollection": "00000000-0000-0000-0000-000000000005",
                                 "relationshipConcept": "ac41d9be-79db-4256-b368-2f4559cfbe55",
                                 "useOntologyRelationship": false
@@ -2014,7 +2014,7 @@
                         "graphs": [
                             {
                                 "graphid": "6dad61aa-b4b5-11ea-84f7-3af9d3b32b71",
-                                "name": "textual_work_rdm_system"
+                                "name": "Textual Work (system)"
                             }
                         ],
                         "searchDsl": "",
@@ -2098,7 +2098,7 @@
                             {
                                 "graphid": "06903e8f-1a65-11ee-8f04-cd21e680a247",
                                 "inverseRelationshipConcept": "ac41d9be-79db-4256-b368-2f4559cfbe55",
-                                "name": "place_rdm_system",
+                                "name": "Place (system)",
                                 "relationshipCollection": "00000000-0000-0000-0000-000000000005",
                                 "relationshipConcept": "ac41d9be-79db-4256-b368-2f4559cfbe55",
                                 "useOntologyRelationship": false
@@ -2675,11 +2675,11 @@
                         "graphs": [
                             {
                                 "graphid": "9ffb6fcc-b4b4-11ea-84f7-3af9d3b32b71",
-                                "name": "person_rdm_system"
+                                "name": "Person (system)"
                             },
                             {
                                 "graphid": "d6774bfc-b4b4-11ea-84f7-3af9d3b32b71",
-                                "name": "group_rdm_system"
+                                "name": "Group (system)"
                             }
                         ],
                         "rdmCollection": null,
@@ -2980,7 +2980,7 @@
                 "isrequired": false,
                 "issearchable": true,
                 "istopnode": true,
-                "name": "period_rdm_system",
+                "name": "period_system",
                 "nodegroup_id": null,
                 "nodeid": "20ea7ad2-4965-11ed-bebb-bf1b0a06275c",
                 "ontologyclass": "http://www.cidoc-crm.org/cidoc-crm/E4_Period",
@@ -2988,7 +2988,7 @@
                 "source_identifier_id": null,
                 "sourcebranchpublication_id": null
             },
-            "slug": "period_rdm_system",
+            "slug": "period_system",
             "source_identifier_id": null,
             "spatial_views": [],
             "subtitle": {

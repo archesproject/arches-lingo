@@ -91,7 +91,7 @@ onMounted(async () => {
                 );
             if (digitalObjectInstances) {
                 resources.value = await fetchLingoResourcesBatch(
-                    "digital_object_rdm_system",
+                    "digital_object_system",
                     digitalObjectInstances,
                 );
             }
@@ -258,7 +258,7 @@ function modifyResource(resourceInstanceId?: string) {
                             <GenericWidget
                                 node-alias="name_content"
                                 class="image-title"
-                                graph-slug="digital_object_rdm_system"
+                                graph-slug="digital_object_system"
                                 :mode="VIEW"
                                 :aliased-node-data="
                                     resource.aliased_data.name?.aliased_data
@@ -299,7 +299,7 @@ function modifyResource(resourceInstanceId?: string) {
                     </div>
                     <GenericWidget
                         node-alias="content"
-                        graph-slug="digital_object_rdm_system"
+                        graph-slug="digital_object_system"
                         :aliased-node-data="
                             resource.aliased_data.content?.aliased_data.content
                         "
@@ -309,7 +309,7 @@ function modifyResource(resourceInstanceId?: string) {
                     <div class="footer">
                         <GenericWidget
                             node-alias="statement_content"
-                            graph-slug="digital_object_rdm_system"
+                            graph-slug="digital_object_system"
                             :mode="VIEW"
                             :aliased-node-data="
                                 resource.aliased_data.statement?.aliased_data
