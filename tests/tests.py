@@ -238,13 +238,14 @@ class ViewTests(TestCase):
         self.client.force_login(self.admin)
 
     def test_get_concept_trees(self):
-        with self.assertNumQueries(6):
+        with self.assertNumQueries(7):
             # 1: session
             # 2: auth
             # 3: select broader tiles, subquery for labels
             # 4: select top concept tiles, subquery for labels
             # 5: select schemes, subquery for labels
             # 6: languages
+            # 7: resource_instance_lifecycle_state
             response = self.client.get(reverse("api-concepts"))
 
         self.assertEqual(response.status_code, 200)
