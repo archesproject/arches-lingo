@@ -312,7 +312,6 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
         <div class="header-content">
             <div class="concept-header-section">
                 <div class="header-row">
-                    <!-- TODO: Human-reable conceptid to be displayed here -->
                     <div class="header-item">
                         <span class="header-item-label">
                             {{ $gettext("Identifier:") }}
