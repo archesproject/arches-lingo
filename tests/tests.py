@@ -32,7 +32,6 @@ from arches_lingo.const import (
     SCHEME_NAME_CONTENT_NODE,
     SCHEME_NAME_LANGUAGE_NODE,
     SCHEME_NAME_TYPE_NODE,
-    LANGUAGES_LIST_ID,
     LABEL_LIST_ID,
 )
 
