@@ -9,8 +9,6 @@ import GenericWidget from "@/arches_component_lab/generics/GenericWidget/Generic
 
 import { VIEW } from "@/arches_lingo/constants.ts";
 
-import { routeNames } from "@/arches_lingo/routes.ts";
-
 import type {
     ConceptMatchStatus,
     MetaStringText,
@@ -73,9 +71,14 @@ const metaStringLabel: MetaStringText = {
     ),
     name: $gettext("Match Type"),
     type: $gettext("Related URI"),
-    language: $gettext("Related Label"),
     noRecords: $gettext("No matched concepts were found."),
 };
+
+function matchedConceptURIIsLink(rowData: ConceptMatchStatus): boolean {
+    const uri = rowData.aliased_data.match_status_ascribed_comparate
+        .display_value as string;
+    return uri.startsWith("http");
+}
 </script>
 
 <template>
@@ -122,32 +125,24 @@ const metaStringLabel: MetaStringText = {
                 />
             </template>
             <template #type="{ rowData }">
-                <GenericWidget
-                    :graph-slug="props.graphSlug"
-                    node-alias="uri"
-                    :aliased-node-data="rowData.aliased_data.uri"
-                    :mode="VIEW"
-                    :should-show-label="false"
-                />
-            </template>
-            <template #language="{ rowData }">
-                <div
-                    v-for="item in rowData.aliased_data
-                        .match_status_ascribed_comparate?.details"
-                    :key="item.resource_id"
-                >
-                    <RouterLink
-                        :to="{
-                            name: routeNames.concept,
-                            params: {
-                                id: item.resource_id,
-                            },
-                        }"
-                        class="text-link"
-                    >
-                        {{ item.display_value }}
-                    </RouterLink>
-                </div>
+                <RouterLink
+                    v-if="matchedConceptURIIsLink(rowData)"
+                    :to="
+                        rowData.aliased_data.match_status_ascribed_comparate
+                            .display_value
+                    "
+                    class="text-link"
+                    >{{
+                        rowData.aliased_data.match_status_ascribed_comparate
+                            .display_value
+                    }}
+                </RouterLink>
+                <span v-else>
+                    {{
+                        rowData.aliased_data.match_status_ascribed_comparate
+                            .display_value
+                    }}
+                </span>
             </template>
             <template #drawer="{ rowData }">
                 <GenericWidget
@@ -162,7 +157,8 @@ const metaStringLabel: MetaStringText = {
                     :graph-slug="props.graphSlug"
                     node-alias="match_status_data_assignment_object_used"
                     :aliased-node-data="
-                        rowData.match_status_data_assignment_object_used
+                        rowData.aliased_data
+                            .match_status_data_assignment_object_used
                     "
                     :mode="VIEW"
                 />

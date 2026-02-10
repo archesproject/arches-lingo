@@ -57,9 +57,13 @@ class SKOSReader(SKOSReader):
             self.dcterms_value_types = value_types.filter(
                 namespace="dcterms"
             ).values_list("valuetype", flat=True)
+            self.match_types = models.DRelationType.objects.filter(
+                category="Mapping Properties"
+            ).values_list("relationtype", flat=True)
 
             ### Schemes ###
             top_concept_mock_tiles = {}
+            isScheme = True
             for scheme, v, o in graph.triples((None, RDF.type, SKOS.ConceptScheme)):
                 scheme_pk = self.generate_uuidv5_from_subject(baseuuid, scheme)
 
@@ -82,7 +86,7 @@ class SKOSReader(SKOSReader):
                         or predicate_str in self.skos_note_and_label_types
                     ):
                         mock_tile = self.map_predicate_object_to_mock_tile(
-                            object, predicate_str
+                            object, predicate_str, isScheme
                         )
                         if mock_tile:
                             new_scheme["tile_data"].append(mock_tile)
@@ -107,7 +111,7 @@ class SKOSReader(SKOSReader):
                     key for val in new_scheme["tile_data"] for key in val.keys()
                 ]:
                     mock_tile = self.map_predicate_object_to_mock_tile(
-                        str(scheme), "identifier"
+                        str(scheme), "identifier", isScheme
                     )
                     if mock_tile:
                         new_scheme["tile_data"].append(mock_tile)
@@ -115,6 +119,7 @@ class SKOSReader(SKOSReader):
                 self.schemes.append(new_scheme)
 
                 ### Concepts ###
+                isScheme = False
                 for concept, v, o in graph.triples((None, SKOS.inScheme, scheme)):
                     concept_pk = self.generate_uuidv5_from_subject(baseuuid, concept)
                     new_concept = {
@@ -143,60 +148,89 @@ class SKOSReader(SKOSReader):
                         new_concept["tile_data"].append(mock_tile)
 
                     for predicate, object in graph.predicate_objects(concept):
+                        # Cast dcterms:description to scopeNote (same behavior in RDM)
+                        if predicate == DCTERMS.description:
+                            predicate_str = "scopeNote"
+
                         predicate_str = (
                             predicate.replace(ARCHES, "")
                             .replace(SKOS, "")
                             .replace(DCTERMS, "")
                         )
 
-                        if str(SKOS) in predicate or str(ARCHES) in predicate:
-                            if predicate in [
-                                SKOS.broader,
-                                SKOS.narrower,
-                                SKOS.related,
-                            ]:
-                                related_concept_id = self.generate_uuidv5_from_subject(
-                                    baseuuid, object
-                                )
-                                if predicate == SKOS.broader:
-                                    relationship = {
-                                        "resourceId": related_concept_id,
-                                        "node_alias": "classification_status_ascribed_classification",
-                                        "nodegroup_alias": "classification_status",
-                                    }
-                                    resourceinstanceid = concept_pk
-                                elif predicate == SKOS.narrower:
-                                    relationship = {
-                                        "resourceId": concept_pk,
-                                        "node_alias": "classification_status_ascribed_classification",
-                                        "nodegroup_alias": "classification_status",
-                                    }
-                                    resourceinstanceid = related_concept_id
-                                elif predicate == SKOS.related:
-                                    relationship = {
-                                        "resourceId": concept_pk,
-                                        "node_alias": "relation_status_ascribed_comparate",
-                                        "nodegroup_alias": "relation_status",
-                                    }
-                                    resourceinstanceid = related_concept_id
-                                mock_tile = LingoResourceImporter.create_mock_tile_from_relationship(
-                                    relationship
-                                )
-                                self.relations[resourceinstanceid].append(mock_tile)
-                            else:
+                        if predicate in [
+                            SKOS.broader,
+                            SKOS.narrower,
+                            SKOS.related,
+                        ]:
+                            related_concept_id = self.generate_uuidv5_from_subject(
+                                baseuuid, object
+                            )
+                            if predicate == SKOS.broader:
+                                relationship = {
+                                    "resourceId": related_concept_id,
+                                    "node_alias": "classification_status_ascribed_classification",
+                                    "nodegroup_alias": "classification_status",
+                                }
+                                resourceinstanceid = concept_pk
+                            elif predicate == SKOS.narrower:
+                                relationship = {
+                                    "resourceId": concept_pk,
+                                    "node_alias": "classification_status_ascribed_classification",
+                                    "nodegroup_alias": "classification_status",
+                                }
+                                resourceinstanceid = related_concept_id
+                            elif predicate == SKOS.related:
+                                relationship = {
+                                    "resourceId": concept_pk,
+                                    "node_alias": "relation_status_ascribed_comparate",
+                                    "nodegroup_alias": "relation_status",
+                                }
+                                resourceinstanceid = related_concept_id
+                            mock_tile = LingoResourceImporter.create_mock_tile_from_relationship(
+                                relationship
+                            )
+                            self.relations[resourceinstanceid].append(mock_tile)
+                        elif predicate in [
+                            SKOS.broadMatch,
+                            SKOS.closeMatch,
+                            SKOS.exactMatch,
+                            SKOS.inverseOf,
+                            SKOS.mappingRelation,
+                            SKOS.narrowMatch,
+                            SKOS.relatedMatch,
+                        ]:
+                            matched_URI = None
+                            for (
+                                matched_predicate,
+                                matched_object,
+                            ) in graph.predicate_objects(object):
+                                if matched_predicate == DCTERMS.identifier:
+                                    matched_URI = matched_object
+                                    break
+                            if matched_URI:
                                 mock_tile = self.map_predicate_object_to_mock_tile(
-                                    object, predicate_str
+                                    matched_URI, predicate_str, isScheme
                                 )
-                                if mock_tile:
-                                    new_concept["tile_data"].append(mock_tile)
+                                new_concept["tile_data"].append(mock_tile)
+                        else:
+                            mock_tile = self.map_predicate_object_to_mock_tile(
+                                object, predicate_str, isScheme
+                            )
+                            if isinstance(mock_tile, list):
+                                new_concept["tile_data"].extend(mock_tile)
+                            elif mock_tile:
+                                new_concept["tile_data"].append(mock_tile)
 
                     if "identifier" not in [
                         key for val in new_concept["tile_data"] for key in val.keys()
                     ]:
                         mock_tile = self.map_predicate_object_to_mock_tile(
-                            str(concept), "identifier"
+                            str(concept), "identifier", isScheme
                         )
-                        if mock_tile:
+                        if isinstance(mock_tile, list):
+                            new_concept["tile_data"].extend(mock_tile)
+                        elif mock_tile:
                             new_concept["tile_data"].append(mock_tile)
 
                     self.concepts.append(new_concept)
@@ -211,11 +245,12 @@ class SKOSReader(SKOSReader):
             return self.schemes, self.concepts
 
     def map_predicate_object_to_mock_tile(
-        self, object: str | dict, predicate: str
+        self, object: str | dict, predicate: str, isScheme: bool = False
     ) -> dict:
         if (
             predicate not in self.dcterms_value_types
             and predicate not in self.skos_value_types
+            and predicate not in self.match_types
         ):
             return None
 
@@ -234,7 +269,7 @@ class SKOSReader(SKOSReader):
             "valuetype_id": predicate,
         }
         mock_tile = LingoResourceImporter.create_mock_tile_from_value(
-            mock_tile, isScheme=True, lang_lookup=self.allowed_languages
+            mock_tile, isScheme=isScheme, lang_lookup=self.allowed_languages
         )
         return mock_tile
 
@@ -312,9 +347,7 @@ class SKOSWriter:
         object = triple.get("object")
         object_language = triple.get("object_language")
         if object_language:
-            object = Literal(
-                object, lang=self.get_language_code_from_references(object_language)
-            )
+            object = Literal(object, lang=object_language)
         if isinstance(object, models.ResourceInstance):
             object = ARCHES[str(object.resourceinstanceid)]
         if not isinstance(object, Literal) and not isinstance(object, URIRef):
@@ -347,19 +380,3 @@ class SKOSWriter:
         else:
             predicate = URIRef(uri)
         return predicate
-
-    # TODO: remove when implementing language datatype
-    # re. https://github.com/archesproject/arches-lingo/issues/472
-    def get_language_code_from_references(self, language_references):
-        for language_reference in language_references:
-            language_name = (
-                [
-                    lang.value
-                    for lang in language_reference.labels
-                    if lang.valuetype_id == "prefLabel"
-                ]
-            )[0]
-            language_code = self.language_lookup.get(language_name)
-            if language_code:
-                return language_code
-        return None

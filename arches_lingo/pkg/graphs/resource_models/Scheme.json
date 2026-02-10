@@ -505,14 +505,16 @@
                 {
                     "card_id": "7b9b459f-bc56-41e4-a172-d0e3f289495e",
                     "config": {
-                        "defaultValue": "",
+                        "defaultValue": null,
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Language",
                         "placeholder": {
-                            "en": "Select an option"
-                        }
+                            "en": "Select a language"
+                        },
+                        "width": "100%",
+                        "uneditable": false
                     },
                     "id": "35a1956c-e8ea-4b31-88db-75b7d4f15b8d",
                     "label": {
@@ -522,7 +524,7 @@
                     "sortorder": 0,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
+                    "widget_id": "b1f4d6e2-3c4a-4f5b-8f6d-7e8f9a0b1c2d"
                 },
                 {
                     "card_id": "92c68f1f-423c-11ee-8a8d-11afefc4bff7",
@@ -757,14 +759,16 @@
                 {
                     "card_id": "7131bd94-11e0-11ef-9493-0a58a9feac02",
                     "config": {
-                        "defaultValue": "",
+                        "defaultValue": null,
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Statement Language",
                         "placeholder": {
-                            "en": "Select an option"
-                        }
+                            "en": "Select a language"
+                        },
+                        "width": "100%",
+                        "uneditable": false
                     },
                     "id": "7131cb90-11e0-11ef-9493-0a58a9feac02",
                     "label": {
@@ -774,7 +778,7 @@
                     "sortorder": 1,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
+                    "widget_id": "b1f4d6e2-3c4a-4f5b-8f6d-7e8f9a0b1c2d"
                 },
                 {
                     "card_id": "7131bd94-11e0-11ef-9493-0a58a9feac02",
@@ -1316,14 +1320,16 @@
                 {
                     "card_id": "ef87ae08-11de-11ef-9493-0a58a9feac02",
                     "config": {
-                        "defaultValue": "",
+                        "defaultValue": null,
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Label Language",
                         "placeholder": {
-                            "en": "Select an option"
-                        }
+                            "en": "Select a language"
+                        },
+                        "width": "100%",
+                        "uneditable": false
                     },
                     "id": "ef87b704-11de-11ef-9493-0a58a9feac02",
                     "label": {
@@ -1333,7 +1339,7 @@
                     "sortorder": 1,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
+                    "widget_id": "b1f4d6e2-3c4a-4f5b-8f6d-7e8f9a0b1c2d"
                 },
                 {
                     "card_id": "ef87ae08-11de-11ef-9493-0a58a9feac02",
@@ -1532,14 +1538,16 @@
                 {
                     "card_id": "87fac835-423c-11ee-8a8d-11afefc4bff7",
                     "config": {
-                        "defaultValue": "",
+                        "defaultValue": null,
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Rights Statement Language",
                         "placeholder": {
-                            "en": "Select an option"
-                        }
+                            "en": "Select a language"
+                        },
+                        "width": "100%",
+                        "uneditable": false
                     },
                     "id": "f58a77d1-a2e4-4360-b31c-c4b4844c9249",
                     "label": {
@@ -1549,7 +1557,7 @@
                     "sortorder": 3,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
+                    "widget_id": "b1f4d6e2-3c4a-4f5b-8f6d-7e8f9a0b1c2d"
                 },
                 {
                     "card_id": "ec1155f0-423b-11ee-8a8d-11afefc4bff7",
@@ -2382,11 +2390,8 @@
                 },
                 {
                     "alias": "right_statement_language",
-                    "config": {
-                        "controlledList": "55ce793b-a51a-4b25-811d-d08ea797f8c3",
-                        "multiValue": false
-                    },
-                    "datatype": "reference",
+                    "config": null,
+                    "datatype": "language",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -2609,11 +2614,8 @@
                 },
                 {
                     "alias": "statement_language",
-                    "config": {
-                        "controlledList": "55ce793b-a51a-4b25-811d-d08ea797f8c3",
-                        "multiValue": false
-                    },
-                    "datatype": "reference",
+                    "config": null,
+                    "datatype": "language",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -3322,11 +3324,8 @@
                 },
                 {
                     "alias": "text_language",
-                    "config": {
-                        "controlledList": "55ce793b-a51a-4b25-811d-d08ea797f8c3",
-                        "multiValue": true
-                    },
-                    "datatype": "reference",
+                    "config": null,
+                    "datatype": "language",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -3801,11 +3800,8 @@
                 },
                 {
                     "alias": "appellative_status_ascribed_name_language",
-                    "config": {
-                        "controlledList": "55ce793b-a51a-4b25-811d-d08ea797f8c3",
-                        "multiValue": false
-                    },
-                    "datatype": "reference",
+                    "config": null,
+                    "datatype": "language",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,

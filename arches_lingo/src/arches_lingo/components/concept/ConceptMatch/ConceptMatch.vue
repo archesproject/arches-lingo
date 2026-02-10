@@ -10,7 +10,7 @@ import ConceptMatchViewer from "@/arches_lingo/components/concept/ConceptMatch/c
 import { EDIT, VIEW } from "@/arches_lingo/constants.ts";
 
 import { fetchTileData } from "@/arches_component_lab/generics/GenericCard/api.ts";
-import { fetchConceptRelationships } from "@/arches_lingo/api.ts";
+import { fetchLingoResourcePartial } from "@/arches_lingo/api.ts";
 
 import type {
     ConceptMatchStatus,
@@ -40,8 +40,7 @@ onMounted(async () => {
         (props.mode === VIEW || !shouldCreateNewTile)
     ) {
         const sectionValue = await getSectionValue();
-        tileData.value = sectionValue?.data;
-        schemeId.value = sectionValue?.scheme_id[0].resourceId;
+        tileData.value = sectionValue.aliased_data[props.nodegroupAlias];
     } else if (shouldCreateNewTile) {
         const blankTileData = await fetchTileData(
             props.graphSlug,
@@ -54,11 +53,11 @@ onMounted(async () => {
 
 async function getSectionValue() {
     try {
-        const sectionValue = await fetchConceptRelationships(
+        return await fetchLingoResourcePartial(
+            props.graphSlug,
             props.resourceInstanceId as string,
-            "matched",
+            props.nodegroupAlias,
         );
-        return sectionValue;
     } catch (error) {
         fetchError.value = error;
     }
@@ -90,7 +89,6 @@ async function getSectionValue() {
         <ConceptMatchEditor
             v-else-if="mode === EDIT"
             :component-name="props.componentName"
-            :exclude="true"
             :graph-slug="props.graphSlug"
             :nodegroup-alias="props.nodegroupAlias"
             :resource-instance-id="props.resourceInstanceId"
