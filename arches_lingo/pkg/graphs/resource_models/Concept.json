@@ -520,14 +520,16 @@
                 {
                     "card_id": "bf73e5d9-4888-11ee-8a8d-11afefc4bff7",
                     "config": {
-                        "defaultValue": "",
+                        "defaultValue": null,
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Statement Language",
                         "placeholder": {
-                            "en": "Select an option"
-                        }
+                            "en": "Select a language"
+                        },
+                        "width": "100%",
+                        "uneditable": false
                     },
                     "id": "089b4a78-e5e3-481e-8016-ad842ac6ce5d",
                     "label": {
@@ -537,7 +539,7 @@
                     "sortorder": 1,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
+                    "widget_id": "b1f4d6e2-3c4a-4f5b-8f6d-7e8f9a0b1c2d"
                 },
                 {
                     "card_id": "dd3dca36-7d80-4827-92eb-d42cff9c1e2e",
@@ -744,14 +746,16 @@
                 {
                     "card_id": "32bc9136-f3f3-4424-b1cf-d0af4367980c",
                     "config": {
-                        "defaultValue": "",
+                        "defaultValue": null,
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Label Language",
                         "placeholder": {
-                            "en": "Select an option"
-                        }
+                            "en": "Select a language"
+                        },
+                        "width": "100%",
+                        "uneditable": false
                     },
                     "id": "26a178b9-1fe4-4343-b59d-c916593be4bc",
                     "label": {
@@ -761,7 +765,7 @@
                     "sortorder": 1,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
+                    "widget_id": "b1f4d6e2-3c4a-4f5b-8f6d-7e8f9a0b1c2d"
                 },
                 {
                     "card_id": "dabcc16e-2119-4e99-87bf-a2d4448bff04",
@@ -1506,14 +1510,16 @@
                 {
                     "card_id": "bf73e58b-4888-11ee-8a8d-11afefc4bff7",
                     "config": {
-                        "defaultValue": "",
+                        "defaultValue": null,
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Statement Language",
                         "placeholder": {
-                            "en": "Select an option"
-                        }
+                            "en": "Select a language"
+                        },
+                        "width": "100%",
+                        "uneditable": false
                     },
                     "id": "89b20635-f0bd-4e66-acc4-e168cef414b2",
                     "label": {
@@ -1523,7 +1529,7 @@
                     "sortorder": 3,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
+                    "widget_id": "b1f4d6e2-3c4a-4f5b-8f6d-7e8f9a0b1c2d"
                 },
                 {
                     "card_id": "32bc9136-f3f3-4424-b1cf-d0af4367980c",
@@ -2589,14 +2595,16 @@
                 {
                     "card_id": "bf73e59d-4888-11ee-8a8d-11afefc4bff7",
                     "config": {
-                        "defaultValue": "",
+                        "defaultValue": null,
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Statement Language",
                         "placeholder": {
-                            "en": "Select an option"
-                        }
+                            "en": "Select a language"
+                        },
+                        "width": "100%",
+                        "uneditable": false
                     },
                     "id": "ecfbc672-1aed-459d-ba85-bc0a9052ac6c",
                     "label": {
@@ -2606,7 +2614,7 @@
                     "sortorder": 4,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
+                    "widget_id": "b1f4d6e2-3c4a-4f5b-8f6d-7e8f9a0b1c2d"
                 },
                 {
                     "card_id": "dabcc16e-2119-4e99-87bf-a2d4448bff04",
@@ -4144,11 +4152,8 @@
                 },
                 {
                     "alias": "data_assignment_language",
-                    "config": {
-                        "controlledList": "55ce793b-a51a-4b25-811d-d08ea797f8c3",
-                        "multiValue": false
-                    },
-                    "datatype": "reference",
+                    "config": null,
+                    "datatype": "language",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -5094,11 +5099,8 @@
                 },
                 {
                     "alias": "statement_data_assignment_statement_language",
-                    "config": {
-                        "controlledList": "55ce793b-a51a-4b25-811d-d08ea797f8c3",
-                        "multiValue": false
-                    },
-                    "datatype": "reference",
+                    "config": null,
+                    "datatype": "language",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -5152,11 +5154,8 @@
                 },
                 {
                     "alias": "appellative_status_ascribed_name_language",
-                    "config": {
-                        "controlledList": "55ce793b-a51a-4b25-811d-d08ea797f8c3",
-                        "multiValue": false
-                    },
-                    "datatype": "reference",
+                    "config": null,
+                    "datatype": "language",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -6464,11 +6463,8 @@
                 },
                 {
                     "alias": "statement_language",
-                    "config": {
-                        "controlledList": "55ce793b-a51a-4b25-811d-d08ea797f8c3",
-                        "multiValue": false
-                    },
-                    "datatype": "reference",
+                    "config": null,
+                    "datatype": "language",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
