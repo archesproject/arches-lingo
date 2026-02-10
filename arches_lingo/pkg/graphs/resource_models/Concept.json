@@ -1294,13 +1294,27 @@
                 {
                     "card_id": "861024d2-798c-4f6e-9860-5141ac5f7b99",
                     "config": {
-                        "defaultValue": "",
+                        "defaultValue": [
+                            {
+                                "labels": [
+                                    {
+                                        "id": "ff0fe4ac-6828-4d9b-92fc-59a208cd1e80",
+                                        "language_id": "en",
+                                        "list_item_id": "d1012561-bd8f-4498-b7b1-fea78cb73afa",
+                                        "value": "concept",
+                                        "valuetype_id": "prefLabel"
+                                    }
+                                ],
+                                "list_id": "4f9b2c82-59c6-4173-99ea-2a6bfbab6aa2",
+                                "uri": "http://vocab.getty.edu/page/aat/300387329"
+                            }
+                        ],
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Type",
                         "placeholder": {
-                            "en": "Select an option"
+                            "en": "Select concept type"
                         }
                     },
                     "id": "62ccd207-f3ce-46a5-8a72-8cbbeb497313",

@@ -4,6 +4,7 @@ import type { Concept, UserRefAndSetter } from "@/arches_lingo/types.ts";
 
 export const ANONYMOUS = "anonymous";
 export const ERROR = "error";
+export const SUCCESS = "success";
 export const DANGER = "danger";
 export const SECONDARY = "secondary";
 export const CONTRAST = "contrast";
@@ -19,6 +20,7 @@ export const MINIMIZED = "minimized";
 export const CLOSE = "close";
 export const CLOSED = "closed";
 export const NEW_CONCEPT = "newConcept";
+export const CONCEPT_TYPE_NODE_ALIAS = "type";
 
 export const DEFAULT_TOAST_LIFE = 5000;
 export const DEFAULT_ERROR_TOAST_LIFE = 8000;
