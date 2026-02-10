@@ -203,7 +203,7 @@ def remove_standard_with_editing_resource_instance_lifecycle_from_graphs(
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("arches_lingo", "0003_add_concept_identifier_counters"),
+        ("arches_lingo", "0004_add_concept_identifier_counters"),
     ]
 
     operations = [
