@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { watchEffect, ref } from "vue";
 
 import Message from "primevue/message";
 import Skeleton from "primevue/skeleton";
@@ -40,19 +40,18 @@ const topConceptOfTileId = ref<string>();
 
 const shouldCreateNewTile = Boolean(props.mode === EDIT && !props.tileId);
 
-onMounted(async () => {
+watchEffect(async () => {
+    const currentPosition = await getHierarchicalData([
+        props.resourceInstanceId!,
+    ]);
+    schemeId.value = currentPosition.data[0]?.parents?.[0]?.[0]?.id;
+
     if (
         props.resourceInstanceId &&
         (props.mode === VIEW || !shouldCreateNewTile)
     ) {
         const sectionValue = await getSectionValue();
         tileData.value = sectionValue?.aliased_data[props.nodegroupAlias];
-
-        const currentPosition = await getHierarchicalData([
-            props.resourceInstanceId!,
-        ]);
-
-        schemeId.value = currentPosition.data[0]?.parents?.[0]?.[0]?.id;
 
         hierarchicalData.value = currentPosition.data[0]?.parents?.map(
             (parent: SearchResultItem) => ({ searchResults: parent }),
@@ -153,7 +152,7 @@ async function getSectionValue() {
             :nodegroup-alias="props.nodegroupAlias"
             :resource-instance-id="props.resourceInstanceId"
             :section-title="props.sectionTitle"
-            :scheme-id="schemeId"
+            :scheme="schemeId"
         />
         <HierarchicalPositionEditor
             v-else-if="mode === EDIT"
@@ -162,7 +161,7 @@ async function getSectionValue() {
             :nodegroup-alias="props.nodegroupAlias"
             :resource-instance-id="props.resourceInstanceId"
             :section-title="props.sectionTitle"
-            :scheme-id="schemeId"
+            :scheme="schemeId"
             :tile-data="
                 tileData!.find((tileDatum) => {
                     if (shouldCreateNewTile) {

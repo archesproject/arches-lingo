@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { watchEffect, ref } from "vue";
 
 import Message from "primevue/message";
 import Skeleton from "primevue/skeleton";
@@ -34,14 +34,15 @@ const fetchError = ref();
 
 const shouldCreateNewTile = Boolean(props.mode === EDIT && !props.tileId);
 
-onMounted(async () => {
+watchEffect(async () => {
+    isLoading.value = true;
+    const sectionValue = await getSectionValue();
+    schemeId.value = sectionValue?.scheme_id;
     if (
         props.resourceInstanceId &&
         (props.mode === VIEW || !shouldCreateNewTile)
     ) {
-        const sectionValue = await getSectionValue();
         tileData.value = sectionValue?.data;
-        schemeId.value = sectionValue?.scheme_id[0].resourceId;
     } else if (shouldCreateNewTile) {
         const blankTileData = await fetchTileData(
             props.graphSlug,
@@ -86,6 +87,7 @@ async function getSectionValue() {
             :resource-instance-id="props.resourceInstanceId"
             :section-title="props.sectionTitle"
             :tile-data="tileData"
+            :scheme="schemeId"
         />
         <ConceptMatchEditor
             v-else-if="mode === EDIT"
@@ -94,7 +96,7 @@ async function getSectionValue() {
             :graph-slug="props.graphSlug"
             :nodegroup-alias="props.nodegroupAlias"
             :resource-instance-id="props.resourceInstanceId"
-            :scheme-id="schemeId"
+            :scheme="schemeId"
             :section-title="props.sectionTitle"
             :tile-data="
                 tileData.find((tileDatum) => {

@@ -7,7 +7,7 @@ import { Form } from "@primevue/forms";
 
 import Skeleton from "primevue/skeleton";
 
-import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
+import ConceptResourceSelectWidget from "@/arches_lingo/components/widgets/ConceptResourceSelectWidget/ConceptResourceSelectWidget.vue";
 
 import { createLingoResource, upsertLingoTile } from "@/arches_lingo/api.ts";
 import { EDIT } from "@/arches_lingo/constants.ts";
@@ -20,7 +20,7 @@ const { $gettext } = useGettext();
 
 const props = defineProps<{
     tileData: ConceptClassificationStatus | undefined;
-    schemeId?: string;
+    scheme?: string;
     exclude?: boolean;
     componentName: string;
     sectionTitle: string;
@@ -92,7 +92,7 @@ async function save(e: FormSubmitEvent) {
             let values;
             if (
                 formData.classification_status_ascribed_classification
-                    .node_value.resourceId == props.schemeId
+                    .node_value.resourceId == props.scheme
             ) {
                 nodegroupAlias = "top_concept_of";
                 values = {
@@ -147,7 +147,7 @@ async function save(e: FormSubmitEvent) {
                 ref="form"
                 @submit="save"
             >
-                <GenericWidget
+                <ConceptResourceSelectWidget
                     :graph-slug="props.graphSlug"
                     node-alias="classification_status_ascribed_classification"
                     :aliased-node-data="
@@ -155,6 +155,8 @@ async function save(e: FormSubmitEvent) {
                             .classification_status_ascribed_classification
                     "
                     :mode="EDIT"
+                    :scheme="props.scheme"
+                    :scheme-selectable="true"
                     class="widget-container column"
                 />
             </Form>

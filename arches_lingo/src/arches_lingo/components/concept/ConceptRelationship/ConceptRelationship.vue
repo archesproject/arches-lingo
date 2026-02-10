@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { watchEffect, ref } from "vue";
 
 import Message from "primevue/message";
 import Skeleton from "primevue/skeleton";
@@ -30,15 +30,18 @@ const props = defineProps<{
 const isLoading = ref(true);
 const tileData = ref<ConceptRelationStatus[]>([]);
 const fetchError = ref();
+const schemeId = ref<string>();
 
 const shouldCreateNewTile = Boolean(props.mode === EDIT && !props.tileId);
 
-onMounted(async () => {
+watchEffect(async () => {
+    isLoading.value = true;
+    const sectionValue = await getSectionValue();
+    schemeId.value = sectionValue?.scheme_id;
     if (
         props.resourceInstanceId &&
         (props.mode === VIEW || !shouldCreateNewTile)
     ) {
-        const sectionValue = await getSectionValue();
         tileData.value = sectionValue?.data;
     } else if (shouldCreateNewTile) {
         const blankTileData = await fetchTileData(
@@ -84,6 +87,7 @@ async function getSectionValue() {
             :resource-instance-id="props.resourceInstanceId"
             :section-title="props.sectionTitle"
             :tile-data="tileData"
+            :scheme="schemeId"
         />
         <ConceptRelationshipEditor
             v-else-if="mode === EDIT"
@@ -102,6 +106,8 @@ async function getSectionValue() {
                 })
             "
             :tile-id="props.tileId"
+            :scheme="schemeId"
+            :exclude="false"
         />
     </template>
 </template>
