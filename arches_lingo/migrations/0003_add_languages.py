@@ -21,19 +21,28 @@ class Migration(migrations.Migration):
 
     def forward(apps, schema_editor):
         Language = apps.get_model("models", "Language")
-        existing_languages = Language.objects.values_list("code", flat=True)
+        existing_language_codes = set(Language.objects.values_list("code", flat=True))
         new_languages = []
-        for lang in Migration.LANGUAGES:
-            if lang["code"] not in existing_languages:
+        for language_definition in Migration.LANGUAGES:
+            if language_definition["code"] not in existing_language_codes:
                 new_languages.append(
                     Language(
-                        code=lang["code"],
-                        name=lang["name"],
-                        default_direction=lang.get("default_direction", "ltr"),
+                        code=language_definition["code"],
+                        name=language_definition["name"],
+                        default_direction=language_definition.get(
+                            "default_direction", "ltr"
+                        ),
                     )
                 )
         Language.objects.bulk_create(new_languages)
 
+    def reverse(apps, schema_editor):
+        Language = apps.get_model("models", "Language")
+        language_codes = [
+            language_definition["code"] for language_definition in Migration.LANGUAGES
+        ]
+        Language.objects.filter(code__in=language_codes).delete()
+
     operations = [
-        migrations.RunPython(forward),
+        migrations.RunPython(forward, reverse),
     ]
