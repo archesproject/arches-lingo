@@ -97,6 +97,7 @@ onMounted(async () => {
 <style scoped>
 .scheme-cards-container {
     padding: 0rem 1rem;
+    height: 100%;
     overflow: auto;
 }
 .scheme-cards {
