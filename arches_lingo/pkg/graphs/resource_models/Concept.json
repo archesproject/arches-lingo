@@ -64,7 +64,7 @@
                     "config": null,
                     "constraints": [],
                     "cssclass": null,
-                    "description": "{\"en\": \"\"}",
+                    "description": "",
                     "graph_id": "bf73e576-4888-11ee-8a8d-11afefc4bff7",
                     "helpenabled": false,
                     "helptext": {
@@ -520,14 +520,16 @@
                 {
                     "card_id": "bf73e5d9-4888-11ee-8a8d-11afefc4bff7",
                     "config": {
-                        "defaultValue": "",
+                        "defaultValue": null,
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Statement Language",
                         "placeholder": {
-                            "en": "Select an option"
-                        }
+                            "en": "Select a language"
+                        },
+                        "width": "100%",
+                        "uneditable": false
                     },
                     "id": "089b4a78-e5e3-481e-8016-ad842ac6ce5d",
                     "label": {
@@ -537,7 +539,7 @@
                     "sortorder": 1,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
+                    "widget_id": "b1f4d6e2-3c4a-4f5b-8f6d-7e8f9a0b1c2d"
                 },
                 {
                     "card_id": "dd3dca36-7d80-4827-92eb-d42cff9c1e2e",
@@ -744,14 +746,16 @@
                 {
                     "card_id": "32bc9136-f3f3-4424-b1cf-d0af4367980c",
                     "config": {
-                        "defaultValue": "",
+                        "defaultValue": null,
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Label Language",
                         "placeholder": {
-                            "en": "Select an option"
-                        }
+                            "en": "Select a language"
+                        },
+                        "width": "100%",
+                        "uneditable": false
                     },
                     "id": "26a178b9-1fe4-4343-b59d-c916593be4bc",
                     "label": {
@@ -761,7 +765,7 @@
                     "sortorder": 1,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
+                    "widget_id": "b1f4d6e2-3c4a-4f5b-8f6d-7e8f9a0b1c2d"
                 },
                 {
                     "card_id": "dabcc16e-2119-4e99-87bf-a2d4448bff04",
@@ -1063,14 +1067,17 @@
                 {
                     "card_id": "4cfaac3a-0ed7-11ef-9493-0a58a9feac02",
                     "config": {
-                        "defaultResourceInstance": [],
+                        "defaultValue": "",
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Matched Concept",
+                        "maxLength": null,
                         "placeholder": {
-                            "en": ""
-                        }
+                            "en": "Enter Matched Concept URI..."
+                        },
+                        "uneditable": false,
+                        "width": "100%"
                     },
                     "id": "4cfab3ec-0ed7-11ef-9493-0a58a9feac02",
                     "label": {
@@ -1080,7 +1087,7 @@
                     "sortorder": 0,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "ff3c400a-76ec-11e7-a793-784f435179ea"
+                    "widget_id": "46ef064b-2611-4708-9f52-60136bd8a65b"
                 },
                 {
                     "card_id": "4cfaac3a-0ed7-11ef-9493-0a58a9feac02",
@@ -1109,7 +1116,7 @@
                     "config": {
                         "dateFormat": "YYYY-MM-DD",
                         "defaultValue": "",
-                        "label": "Matched Concept Relation Validity Period End",
+                        "label": "Relation End Date",
                         "maxDate": false,
                         "minDate": false,
                         "placeholder": "Enter date",
@@ -1117,7 +1124,7 @@
                     },
                     "id": "4cfab496-0ed7-11ef-9493-0a58a9feac02",
                     "label": {
-                        "en": "Matched Concept Relation Validity Period End"
+                        "en": "Relation End Date"
                     },
                     "node_id": "4cfab270-0ed7-11ef-9493-0a58a9feac02",
                     "sortorder": 5,
@@ -1130,7 +1137,7 @@
                     "config": {
                         "dateFormat": "YYYY-MM-DD",
                         "defaultValue": "",
-                        "label": "Matched Concept Relation Validity Period Begin",
+                        "label": "Relation Begin Date",
                         "maxDate": false,
                         "minDate": false,
                         "placeholder": "Enter date",
@@ -1138,7 +1145,7 @@
                     },
                     "id": "4cfab4f0-0ed7-11ef-9493-0a58a9feac02",
                     "label": {
-                        "en": "Matched Concept Relation Validity Period Begin"
+                        "en": "Relation Begin Date"
                     },
                     "node_id": "4cfab13a-0ed7-11ef-9493-0a58a9feac02",
                     "sortorder": 4,
@@ -1287,13 +1294,27 @@
                 {
                     "card_id": "861024d2-798c-4f6e-9860-5141ac5f7b99",
                     "config": {
-                        "defaultValue": "",
+                        "defaultValue": [
+                            {
+                                "labels": [
+                                    {
+                                        "id": "ff0fe4ac-6828-4d9b-92fc-59a208cd1e80",
+                                        "language_id": "en",
+                                        "list_item_id": "d1012561-bd8f-4498-b7b1-fea78cb73afa",
+                                        "value": "concept",
+                                        "valuetype_id": "prefLabel"
+                                    }
+                                ],
+                                "list_id": "4f9b2c82-59c6-4173-99ea-2a6bfbab6aa2",
+                                "uri": "http://vocab.getty.edu/page/aat/300387329"
+                            }
+                        ],
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Type",
                         "placeholder": {
-                            "en": "Select an option"
+                            "en": "Select concept type"
                         }
                     },
                     "id": "62ccd207-f3ce-46a5-8a72-8cbbeb497313",
@@ -1503,14 +1524,16 @@
                 {
                     "card_id": "bf73e58b-4888-11ee-8a8d-11afefc4bff7",
                     "config": {
-                        "defaultValue": "",
+                        "defaultValue": null,
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Statement Language",
                         "placeholder": {
-                            "en": "Select an option"
-                        }
+                            "en": "Select a language"
+                        },
+                        "width": "100%",
+                        "uneditable": false
                     },
                     "id": "89b20635-f0bd-4e66-acc4-e168cef414b2",
                     "label": {
@@ -1520,7 +1543,7 @@
                     "sortorder": 3,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
+                    "widget_id": "b1f4d6e2-3c4a-4f5b-8f6d-7e8f9a0b1c2d"
                 },
                 {
                     "card_id": "32bc9136-f3f3-4424-b1cf-d0af4367980c",
@@ -2586,14 +2609,16 @@
                 {
                     "card_id": "bf73e59d-4888-11ee-8a8d-11afefc4bff7",
                     "config": {
-                        "defaultValue": "",
+                        "defaultValue": null,
                         "i18n_properties": [
                             "placeholder"
                         ],
                         "label": "Statement Language",
                         "placeholder": {
-                            "en": "Select an option"
-                        }
+                            "en": "Select a language"
+                        },
+                        "width": "100%",
+                        "uneditable": false
                     },
                     "id": "ecfbc672-1aed-459d-ba85-bc0a9052ac6c",
                     "label": {
@@ -2603,7 +2628,7 @@
                     "sortorder": 4,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "19e56148-82b8-47eb-b66e-f6243639a1a8"
+                    "widget_id": "b1f4d6e2-3c4a-4f5b-8f6d-7e8f9a0b1c2d"
                 },
                 {
                     "card_id": "dabcc16e-2119-4e99-87bf-a2d4448bff04",
@@ -4141,11 +4166,8 @@
                 },
                 {
                     "alias": "data_assignment_language",
-                    "config": {
-                        "controlledList": "55ce793b-a51a-4b25-811d-d08ea797f8c3",
-                        "multiValue": false
-                    },
-                    "datatype": "reference",
+                    "config": null,
+                    "datatype": "language",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -4271,20 +4293,9 @@
                 {
                     "alias": "match_status_ascribed_comparate",
                     "config": {
-                        "graphs": [
-                            {
-                                "graphid": "bf73e576-4888-11ee-8a8d-11afefc4bff7",
-                                "inverseRelationshipConcept": "ac41d9be-79db-4256-b368-2f4559cfbe55",
-                                "name": "Concept",
-                                "relationshipCollection": "00000000-0000-0000-0000-000000000005",
-                                "relationshipConcept": "ac41d9be-79db-4256-b368-2f4559cfbe55",
-                                "useOntologyRelationship": false
-                            }
-                        ],
-                        "searchDsl": "",
-                        "searchString": ""
+                        "en": ""
                     },
-                    "datatype": "resource-instance-list",
+                    "datatype": "non-localized-string",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -5102,11 +5113,8 @@
                 },
                 {
                     "alias": "statement_data_assignment_statement_language",
-                    "config": {
-                        "controlledList": "55ce793b-a51a-4b25-811d-d08ea797f8c3",
-                        "multiValue": false
-                    },
-                    "datatype": "reference",
+                    "config": null,
+                    "datatype": "language",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -5160,11 +5168,8 @@
                 },
                 {
                     "alias": "appellative_status_ascribed_name_language",
-                    "config": {
-                        "controlledList": "55ce793b-a51a-4b25-811d-d08ea797f8c3",
-                        "multiValue": false
-                    },
-                    "datatype": "reference",
+                    "config": null,
+                    "datatype": "language",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -6472,11 +6477,8 @@
                 },
                 {
                     "alias": "statement_language",
-                    "config": {
-                        "controlledList": "55ce793b-a51a-4b25-811d-d08ea797f8c3",
-                        "multiValue": false
-                    },
-                    "datatype": "reference",
+                    "config": null,
+                    "datatype": "language",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
@@ -6871,15 +6873,21 @@
             "resource_2_resource_constraints": [],
             "resource_instance_lifecycle": {
                 "id": "7e3cce56-fbfb-4a4b-8e83-59b9f9e7cb75",
-                "name": "Standard",
+                "name": {
+                    "en": "Standard"
+                },
                 "resource_instance_lifecycle_states": [
                     {
-                        "action_label": "Revert to Draft",
+                        "action_label": {
+                            "en": "Revert to Draft"
+                        },
                         "can_delete_resource_instances": true,
                         "can_edit_resource_instances": true,
                         "id": "9375c9a7-dad2-4f14-a5c1-d7e329fdde4f",
                         "is_initial_state": true,
-                        "name": "Draft",
+                        "name": {
+                            "en": "Draft"
+                        },
                         "next_resource_instance_lifecycle_states": [
                             "f75bb034-36e3-4ab4-8167-f520cf0b4c58"
                         ],
@@ -6887,12 +6895,16 @@
                         "resource_instance_lifecycle_id": "7e3cce56-fbfb-4a4b-8e83-59b9f9e7cb75"
                     },
                     {
-                        "action_label": "Make Active",
+                        "action_label": {
+                            "en": "Make Active"
+                        },
                         "can_delete_resource_instances": false,
                         "can_edit_resource_instances": true,
                         "id": "f75bb034-36e3-4ab4-8167-f520cf0b4c58",
                         "is_initial_state": false,
-                        "name": "Active",
+                        "name": {
+                            "en": "Active"
+                        },
                         "next_resource_instance_lifecycle_states": [
                             "d95d9c0e-0e2c-4450-93a3-d788b91abcc8"
                         ],
@@ -6902,12 +6914,16 @@
                         "resource_instance_lifecycle_id": "7e3cce56-fbfb-4a4b-8e83-59b9f9e7cb75"
                     },
                     {
-                        "action_label": "Retire",
+                        "action_label": {
+                            "en": "Retire"
+                        },
                         "can_delete_resource_instances": false,
                         "can_edit_resource_instances": false,
                         "id": "d95d9c0e-0e2c-4450-93a3-d788b91abcc8",
                         "is_initial_state": false,
-                        "name": "Retired",
+                        "name": {
+                            "en": "Retired"
+                        },
                         "next_resource_instance_lifecycle_states": [],
                         "previous_resource_instance_lifecycle_states": [
                             "f75bb034-36e3-4ab4-8167-f520cf0b4c58"
@@ -6940,6 +6956,7 @@
             },
             "slug": "concept",
             "source_identifier_id": null,
+            "spatial_views": [],
             "subtitle": {
                 "en": ""
             },

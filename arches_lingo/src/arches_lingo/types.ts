@@ -9,7 +9,7 @@ import type { Label } from "@/arches_controlled_lists/types.ts";
 import type { StringValue } from "@/arches_component_lab/datatypes/string/types.ts";
 import type { ResourceInstanceListValue } from "@/arches_component_lab/datatypes/resource-instance-list/types.ts";
 import type { FileListValue } from "@/arches_component_lab/datatypes/file-list/types.ts";
-import type { URLValue } from "@/arches_component_lab/datatypes/url/types.ts";
+import type { URL } from "@/arches_component_lab/datatypes/url/types";
 
 export interface User {
     first_name: string;
@@ -93,7 +93,7 @@ export type DataComponentMode = typeof EDIT | typeof VIEW;
 export interface MetaStringText {
     name: string;
     type: string;
-    language: string;
+    language?: string;
     deleteConfirm: string;
     noRecords: string;
 }
@@ -194,7 +194,7 @@ export interface ConceptRelationAliases extends AliasedData {
 export type ConceptRelationStatus = TileData<ConceptRelationAliases>;
 
 export interface ConceptMatchAliases extends AliasedData {
-    match_status_ascribed_comparate: ResourceInstanceListValue;
+    match_status_ascribed_comparate: StringValue;
     match_status_ascribed_relation: ReferenceSelectTreeNode[];
     match_status_status: ReferenceSelectTreeNode[];
     match_status_status_metatype: ReferenceSelectTreeNode[];
@@ -203,7 +203,6 @@ export interface ConceptMatchAliases extends AliasedData {
     match_status_data_assignment_actor: ResourceInstanceListValue;
     match_status_data_assignment_object_used: ResourceInstanceListValue;
     match_status_data_assignment_type: ReferenceSelectTreeNode[];
-    uri: URLValue;
 }
 
 export type ConceptMatchStatus = TileData<ConceptMatchAliases>;
@@ -222,6 +221,15 @@ export interface ConceptClassificationStatusAliases extends AliasedData {
 
 export type ConceptClassificationStatus =
     TileData<ConceptClassificationStatusAliases>;
+
+export interface IdentifierAliases extends AliasedData {
+    identifier_content: StringValue;
+    identifier_label?: StringValue;
+    identifier_type?: QuerysetsReferenceSelectFetchedOption;
+    identifier_type_metatype?: QuerysetsReferenceSelectFetchedOption;
+}
+
+export type Identifier = TileData<IdentifierAliases>;
 
 export interface SchemeStatementAliases extends AliasedData {
     statement_content: StringValue;
@@ -292,7 +300,7 @@ export interface ConceptClassificationStatusAliases extends AliasedData {
 }
 
 export interface ConceptHeaderData {
-    uri?: string;
+    uri?: URL;
     name?: string;
     descriptor?: ResourceDescriptor;
     principalUser?: number | string;
@@ -301,14 +309,16 @@ export interface ConceptHeaderData {
     parentConcepts?: ResourceInstanceListValue[];
     type?: ReferenceSelectTreeNode[];
     status?: ReferenceSelectTreeNode[];
+    identifier?: string;
 }
 
 export interface SchemeHeader {
-    uri?: string;
+    uri?: URL;
     name?: string;
     descriptor?: ResourceDescriptor;
     principalUser?: number | string;
     lifeCycleState: string;
+    identifier?: string;
 }
 
 export interface SchemeInstance {

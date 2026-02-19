@@ -404,6 +404,7 @@ function onLifecycleStateChange(
                             :href="schemeUri"
                             target="_blank"
                             rel="noopener"
+                            :disabled="!data?.uri"
                         ></Button>
                         <span
                             v-else

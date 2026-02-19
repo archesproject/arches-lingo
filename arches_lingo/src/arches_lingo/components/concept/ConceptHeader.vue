@@ -8,7 +8,8 @@ import { useToast } from "primevue/usetoast";
 
 import ConfirmDialog from "primevue/confirmdialog";
 import Button from "primevue/button";
-import Select from "primevue/select";
+import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
+import { upsertLingoTile } from "@/arches_lingo/api.ts";
 import Skeleton from "primevue/skeleton";
 
 import ExportThesauri from "@/arches_lingo/components/scheme/SchemeHeader/components/ExportThesauri.vue";
@@ -16,10 +17,14 @@ import ExportThesauri from "@/arches_lingo/components/scheme/SchemeHeader/compon
 import {
     DANGER,
     DEFAULT_ERROR_TOAST_LIFE,
+    DEFAULT_TOAST_LIFE,
+    EDIT,
     ERROR,
     SECONDARY,
+    SUCCESS,
     systemLanguageKey,
     selectedLanguageKey,
+    CONCEPT_TYPE_NODE_ALIAS,
 } from "@/arches_lingo/constants.ts";
 import { PREF_LABEL } from "@/arches_controlled_lists/constants.ts";
 
@@ -35,11 +40,13 @@ import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 import type {
     ConceptHeaderData,
     ConceptClassificationStatusAliases,
+    Identifier,
     ResourceInstanceResult,
     ResourceInstanceLifecycleState,
     DataComponentMode,
 } from "@/arches_lingo/types.ts";
 import type { Label } from "@/arches_controlled_lists/types";
+import type { ReferenceSelectValue } from "@/arches_controlled_lists/datatypes/reference-select/types.ts";
 
 import type { Language } from "@/arches_component_lab/types.ts";
 import { routeNames } from "@/arches_lingo/routes.ts";
@@ -69,15 +76,36 @@ const data = ref<ConceptHeaderData>();
 const isLoading = ref(true);
 const showExportDialog = ref(false);
 const exportDialogKey = ref(0);
-
 const conceptIdentifierValue = ref<string>();
+const conceptTypeTile = ref();
 
-// Placeholder for concept Type
-const conceptType = ref();
-const ctype = ref([
-    { name: "Concept", code: "c" },
-    { name: "Guide Term", code: "gt" },
-]);
+async function onConceptTypeChange(newValue: ReferenceSelectValue) {
+    try {
+        conceptTypeTile.value = await upsertLingoTile(
+            props.graphSlug,
+            CONCEPT_TYPE_NODE_ALIAS,
+            {
+                resourceinstance: props.resourceInstanceId,
+                aliased_data: {
+                    [CONCEPT_TYPE_NODE_ALIAS]: newValue,
+                },
+                tileid: conceptTypeTile.value?.tileid,
+            },
+        );
+        toast.add({
+            severity: SUCCESS,
+            summary: $gettext("Concept type updated"),
+            life: DEFAULT_TOAST_LIFE,
+        });
+    } catch (error) {
+        toast.add({
+            severity: ERROR,
+            summary: $gettext("Failed to update concept type"),
+            detail: error instanceof Error ? error.message : undefined,
+            life: DEFAULT_ERROR_TOAST_LIFE,
+        });
+    }
+}
 
 const resourceInstanceLifecycleState = inject<
     Ref<ResourceInstanceLifecycleState | undefined>
@@ -132,6 +160,9 @@ onMounted(async () => {
             ]);
 
         concept.value = fetchedConcept;
+
+        conceptTypeTile.value =
+            concept.value?.aliased_data?.[CONCEPT_TYPE_NODE_ALIAS];
 
         label.value = getItemLabel(
             conceptResource,
@@ -223,6 +254,12 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
             tile?.aliased_data?.classification_status_ascribed_classification ||
             [],
     );
+    const identifier = (aliased_data?.identifier || [])
+        .map(
+            (tile: Identifier) =>
+                tile?.aliased_data?.identifier_content?.node_value,
+        )
+        .join(", ");
 
     data.value = {
         name: name,
@@ -232,6 +269,7 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
         lifeCycleState: lifecycleStateLabel.value,
         partOfScheme: partOfScheme,
         parentConcepts: parentConcepts,
+        identifier: identifier,
     };
 }
 </script>
@@ -271,13 +309,19 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                     </div>
                 </h2>
                 <div class="card flex justify-center">
-                    <Select
-                        v-model="conceptType"
-                        :options="ctype"
-                        option-label="name"
-                        placeholder="Concept"
-                        checkmark
-                        :highlight-on-select="false"
+                    <GenericWidget
+                        v-if="concept && concept.resourceinstanceid"
+                        :node-alias="CONCEPT_TYPE_NODE_ALIAS"
+                        :graph-slug="props.graphSlug"
+                        :mode="EDIT"
+                        :aliased-node-data="
+                            conceptTypeTile?.aliased_data?.[
+                                CONCEPT_TYPE_NODE_ALIAS
+                            ]
+                        "
+                        :should-show-label="false"
+                        class="concept-type-widget"
+                        @update:value="onConceptTypeChange"
                     />
                 </div>
             </div>
@@ -326,11 +370,11 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                         }}</span>
                         <Button
                             v-if="data?.uri"
-                            :label="data?.uri"
+                            :label="data?.uri?.url_label || data?.uri?.url"
                             class="concept-uri"
                             variant="link"
                             as="a"
-                            :href="data?.uri"
+                            :href="data?.uri?.url"
                             target="_blank"
                             rel="noopener"
                             :disabled="!data?.uri"
@@ -615,5 +659,9 @@ h2 {
 
 .parent-concept:hover a {
     color: var(--p-primary-700);
+}
+
+:deep(.concept-type-widget .p-icon.p-treeselect-clear-icon) {
+    display: none;
 }
 </style>

@@ -409,17 +409,6 @@
     },
     {
         "model": "arches_controlled_lists.listitem",
-        "pk": "710a5dbf-c445-40bf-b431-cc7f6802be32",
-        "fields": {
-            "uri": "http://vocab.getty.edu/page/aat/300387516",
-            "list": "4f9b2c82-59c6-4173-99ea-2a6bfbab6aa2",
-            "sortorder": 2,
-            "parent": null,
-            "guide": false
-        }
-    },
-    {
-        "model": "arches_controlled_lists.listitem",
         "pk": "713f38ea-b13c-4ea2-b7bb-35ec255bdf12",
         "fields": {
             "uri": "http://www.w3.org/2004/02/skos/core#changeNote",
@@ -580,17 +569,6 @@
             "list": "769fa072-6247-4e23-b638-4e801f8c50dc",
             "sortorder": 2,
             "parent": "d6c5ca2f-04e3-4a61-9065-40193bce8d83",
-            "guide": false
-        }
-    },
-    {
-        "model": "arches_controlled_lists.listitem",
-        "pk": "b655c9b3-53f5-4d8a-a7e5-6751b4fc1d2c",
-        "fields": {
-            "uri": "http://vocab.getty.edu/page/aat/300386699",
-            "list": "4f9b2c82-59c6-4173-99ea-2a6bfbab6aa2",
-            "sortorder": 0,
-            "parent": null,
             "guide": false
         }
     },
@@ -1429,16 +1407,6 @@
     },
     {
         "model": "arches_controlled_lists.listitemvalue",
-        "pk": "8b1e6273-c06b-453e-bc04-3eab6585192d",
-        "fields": {
-            "list_item": "b655c9b3-53f5-4d8a-a7e5-6751b4fc1d2c",
-            "valuetype": "prefLabel",
-            "language": "en",
-            "value": "facets (controlled vocabulary)"
-        }
-    },
-    {
-        "model": "arches_controlled_lists.listitemvalue",
         "pk": "8f5a9d25-9666-4a73-8168-bbabf7127be4",
         "fields": {
             "list_item": "6abd4767-6959-41f9-9f36-95e8af6d5752",
@@ -1489,16 +1457,6 @@
     },
     {
         "model": "arches_controlled_lists.listitemvalue",
-        "pk": "a675bd06-42af-4954-b4b6-81e70ef43ddb",
-        "fields": {
-            "list_item": "710a5dbf-c445-40bf-b431-cc7f6802be32",
-            "valuetype": "definition",
-            "language": "en",
-            "value": "The highest levels of hierarchies, from which all branches descend."
-        }
-    },
-    {
-        "model": "arches_controlled_lists.listitemvalue",
         "pk": "a8db0760-1038-4430-86ac-5e8ac8aab05d",
         "fields": {
             "list_item": "58695100-659c-48df-8c87-fa565dfef39e",
@@ -1535,16 +1493,6 @@
             "valuetype": "prefLabel",
             "language": "en",
             "value": "editorial note"
-        }
-    },
-    {
-        "model": "arches_controlled_lists.listitemvalue",
-        "pk": "b48df84c-a342-4f62-9f67-ef6b8fe32fac",
-        "fields": {
-            "list_item": "710a5dbf-c445-40bf-b431-cc7f6802be32",
-            "valuetype": "prefLabel",
-            "language": "en",
-            "value": "hierarchy roots"
         }
     },
     {
@@ -1644,7 +1592,7 @@
             "list_item": "45fab276-7818-4c83-8dd8-43e4e862904c",
             "valuetype": "prefLabel",
             "language": "en",
-            "value": "guide terms"
+            "value": "guide term"
         }
     },
     {
@@ -1869,16 +1817,6 @@
     },
     {
         "model": "arches_controlled_lists.listitemvalue",
-        "pk": "f244a3a8-8a65-4868-8da9-c3136fcf355f",
-        "fields": {
-            "list_item": "b655c9b3-53f5-4d8a-a7e5-6751b4fc1d2c",
-            "valuetype": "scopeNote",
-            "language": "en",
-            "value": "A facet is a fundamental, homogeneous, and mutually exclusive category of information in a thesaurus (for example, the AAT has seven facets: Associated Concepts, Physical Attributes, Styles and Periods, Agents, Materials, Activities, Objects)."
-        }
-    },
-    {
-        "model": "arches_controlled_lists.listitemvalue",
         "pk": "f5f016d9-26e1-4b0c-89ff-7d22c072ce1c",
         "fields": {
             "list_item": "d98bfcab-fa26-4c8b-992d-a56eb7bbbaa2",
@@ -1934,7 +1872,7 @@
             "list_item": "d1012561-bd8f-4498-b7b1-fea78cb73afa",
             "valuetype": "prefLabel",
             "language": "en",
-            "value": "terms (controlled vocabulary)"
+            "value": "concept"
         }
     }
 ]

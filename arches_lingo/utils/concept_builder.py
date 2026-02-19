@@ -49,7 +49,7 @@ class ConceptBuilder:
         self.schemes_by_top_concept: dict[str, set[str]] = defaultdict(set)
 
         self.polyhierarchical_concepts = set()
-        self.language_lookup = {lang.name: lang.code for lang in Language.objects.all()}
+        self.language_lookup = {lang.code: lang.name for lang in Language.objects.all()}
 
         self.resource_instance_lifecycle_state_ids_by_resource_instance_id: dict[
             str, str | None
@@ -84,9 +84,6 @@ class ConceptBuilder:
         if value == HIDDEN_LABEL_VALUE:
             return "hidden"
         return "unknown"
-
-    def find_language_id_from_value(self, value):
-        return self.language_lookup.get(value, value)
 
     @staticmethod
     def resources_from_tiles(lookup_expression: str):
@@ -286,13 +283,7 @@ class ConceptBuilder:
         valuetype_id = self.find_valuetype_id_from_value(
             ListItem.find_best_label_from_set(scheme_name_type_labels)
         )
-        language_labels = [
-            ReferenceLabel(**label)
-            for label in label_tile[SCHEME_NAME_LANGUAGE_NODE][0]["labels"]
-        ]
-        language_id = self.find_language_id_from_value(
-            ListItem.find_best_label_from_set(language_labels)
-        )
+        language_id = label_tile[SCHEME_NAME_LANGUAGE_NODE]
         value = label_tile[SCHEME_NAME_CONTENT_NODE] or _("Unknown")
         return {
             "valuetype_id": valuetype_id,
@@ -368,16 +359,11 @@ class ConceptBuilder:
         valuetype_id = self.find_valuetype_id_from_value(
             ListItem.find_best_label_from_set(scheme_name_type_labels)
         )
-        language_labels = [
-            ReferenceLabel(**label)
-            for label in label_tile[CONCEPT_NAME_LANGUAGE_NODE][0]["labels"]
-        ]
-        language_id = self.find_language_id_from_value(
-            ListItem.find_best_label_from_set(language_labels)
-        )
+        language_id = label_tile[CONCEPT_NAME_LANGUAGE_NODE]
         value = label_tile[CONCEPT_NAME_CONTENT_NODE] or _("Unknown")
         return {
             "valuetype_id": valuetype_id,
             "language_id": language_id,
+            "language": self.language_lookup.get(language_id, _("Unknown")),
             "value": value,
         }
