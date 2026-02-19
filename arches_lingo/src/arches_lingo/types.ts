@@ -9,6 +9,7 @@ import type { Label } from "@/arches_controlled_lists/types.ts";
 import type { StringValue } from "@/arches_component_lab/datatypes/string/types.ts";
 import type { ResourceInstanceListValue } from "@/arches_component_lab/datatypes/resource-instance-list/types.ts";
 import type { FileListValue } from "@/arches_component_lab/datatypes/file-list/types.ts";
+import type { URL } from "@/arches_component_lab/datatypes/url/types";
 
 export interface User {
     first_name: string;
@@ -221,6 +222,15 @@ export interface ConceptClassificationStatusAliases extends AliasedData {
 export type ConceptClassificationStatus =
     TileData<ConceptClassificationStatusAliases>;
 
+export interface ConceptIdentiferAliases extends AliasedData {
+    identifier_content: StringValue;
+    identifier_label?: StringValue;
+    identifier_type?: QuerysetsReferenceSelectFetchedOption;
+    identifier_type_metatype?: QuerysetsReferenceSelectFetchedOption;
+}
+
+export type ConceptIdentifier = TileData<ConceptIdentiferAliases>;
+
 export interface SchemeStatementAliases extends AliasedData {
     statement_content: StringValue;
     statement_language?: QuerysetsReferenceSelectFetchedOption;
@@ -290,7 +300,7 @@ export interface ConceptClassificationStatusAliases extends AliasedData {
 }
 
 export interface ConceptHeaderData {
-    uri?: string;
+    uri?: URL;
     name?: string;
     descriptor?: ResourceDescriptor;
     principalUser?: number | string;
@@ -299,6 +309,7 @@ export interface ConceptHeaderData {
     parentConcepts?: ResourceInstanceListValue[];
     type?: ReferenceSelectTreeNode[];
     status?: ReferenceSelectTreeNode[];
+    identifier?: string;
 }
 
 export interface SchemeHeader {

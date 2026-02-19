@@ -39,6 +39,7 @@ import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 import type {
     ConceptHeaderData,
     ConceptClassificationStatusAliases,
+    ConceptIdentifier,
     ResourceInstanceResult,
     DataComponentMode,
 } from "@/arches_lingo/types.ts";
@@ -207,7 +208,7 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
     const principalUser = "Anonymous"; //concept?.principalUser; // returns userid int
     // TODO: get human-readable life cycle state from resource endpoint
     const lifeCycleState = $gettext("Draft");
-    const uri = aliased_data?.uri?.aliased_data?.uri_content?.url;
+    const uri = aliased_data?.uri?.aliased_data?.uri_content?.node_value;
     const partOfScheme =
         aliased_data?.part_of_scheme?.aliased_data?.part_of_scheme;
     const parentConcepts = (aliased_data?.classification_status || []).flatMap(
@@ -215,6 +216,12 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
             tile?.aliased_data?.classification_status_ascribed_classification ||
             [],
     );
+    const identifier = (aliased_data?.identifier || [])
+        .map(
+            (tile: ConceptIdentifier) =>
+                tile?.aliased_data?.identifier_content?.node_value,
+        )
+        .join(", ");
 
     data.value = {
         name: name,
@@ -224,6 +231,7 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
         lifeCycleState: lifeCycleState,
         partOfScheme: partOfScheme,
         parentConcepts: parentConcepts,
+        identifier: identifier,
     };
 }
 </script>
@@ -314,7 +322,9 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                         <span class="header-item-label">
                             {{ $gettext("Identifier:") }}
                         </span>
-                        <span class="header-item-value"> 0032775 </span>
+                        <span class="header-item-value">{{
+                            data?.identifier || "--"
+                        }}</span>
                     </div>
                     <div>
                         <span class="header-item-label">{{
@@ -322,11 +332,11 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                         }}</span>
                         <Button
                             v-if="data?.uri"
-                            :label="data?.uri"
+                            :label="data?.uri?.url_label || data?.uri?.url"
                             class="concept-uri"
                             variant="link"
                             as="a"
-                            :href="data?.uri"
+                            :href="data?.uri?.url"
                             target="_blank"
                             rel="noopener"
                             :disabled="!data?.uri"
