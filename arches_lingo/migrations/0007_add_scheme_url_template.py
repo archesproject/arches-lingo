@@ -9,7 +9,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("arches_lingo", "0005_add_scheme_lifecycle_handler_concept_identifier"),
+        ("arches_lingo", "0006_add_scheme_lifecycle_handler_concept_identifier"),
     ]
 
     operations = [
