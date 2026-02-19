@@ -28,6 +28,11 @@ const props = defineProps<{
 }>();
 
 const isLoading = ref(true);
+const isEditorLoading = defineModel("isEditorLoading", {
+    type: Boolean,
+    default: true,
+});
+
 const tileData = ref<AppellativeStatus[]>([]);
 const fetchError = ref();
 
@@ -48,6 +53,7 @@ onMounted(async () => {
         tileData.value = [blankTileData as unknown as AppellativeStatus];
     }
     isLoading.value = false;
+    isEditorLoading.value = false;
 });
 
 async function getSectionValue() {

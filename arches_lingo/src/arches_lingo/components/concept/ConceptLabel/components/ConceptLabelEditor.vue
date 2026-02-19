@@ -33,6 +33,11 @@ const props = defineProps<{
     tileId?: string;
 }>();
 
+const isEditorLoading = defineModel("isEditorLoading", {
+    type: Boolean,
+    default: true,
+});
+
 const route = useRoute();
 const router = useRouter();
 const toast = useToast();
@@ -141,6 +146,7 @@ async function save(e: FormSubmitEvent) {
                     "
                     :mode="EDIT"
                     class="widget-container column"
+                    @update:is-loading="isEditorLoading = $event"
                 />
                 <GenericWidget
                     :graph-slug="props.graphSlug"

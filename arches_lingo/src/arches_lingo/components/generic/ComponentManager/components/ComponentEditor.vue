@@ -1,12 +1,5 @@
 <script setup lang="ts">
-import {
-    computed,
-    nextTick,
-    onMounted,
-    provide,
-    ref,
-    useTemplateRef,
-} from "vue";
+import { computed, nextTick, provide, ref, useTemplateRef, watch } from "vue";
 
 import { useGettext } from "vue3-gettext";
 
@@ -16,6 +9,7 @@ import { MAXIMIZE, MINIMIZE, CLOSE } from "@/arches_lingo/constants.ts";
 
 const props = defineProps<{
     isEditorMaximized: boolean;
+    isEditorLoading: boolean;
 }>();
 
 const { $gettext } = useGettext();
@@ -39,12 +33,37 @@ const isFormDirty = computed(() => {
     return false;
 });
 
-onMounted(() => {
-    nextTick(() => {
-        // @ts-expect-error This is an error in PrimeVue types
-        toggleSizeButton.value!.$el.focus();
-    });
-});
+// onMounted(() => {
+//     nextTick(() => {
+//         // @ts-expect-error This is an error in PrimeVue types
+//         toggleSizeButton.value!.$el.focus();
+//     });
+// });
+
+watch(
+    () => props.isEditorLoading,
+    (isLoaded) => {
+        if (isLoaded === false) {
+            nextTick(() => {
+                console.log("loading finished, shift focus");
+                const editorContent = document.querySelector(
+                    ".editor-content",
+                ) as HTMLElement;
+                const firstTabbableElement = editorContent.querySelector(
+                    'button, input, select, textarea, [tabindex]:not([tabindex="-1"])',
+                ) as HTMLElement;
+                if (firstTabbableElement) {
+                    firstTabbableElement.focus();
+                    console.log("shifted focus to editor content");
+                } else {
+                    // @ts-expect-error This is an error in PrimeVue types
+                    toggleSizeButton.value!.$el.focus();
+                    console.log("shifted focus to toggle size button");
+                }
+            });
+        }
+    },
+);
 
 function toggleSize() {
     if (props.isEditorMaximized) {
