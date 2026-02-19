@@ -32,6 +32,7 @@ import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 
 import type {
     DataComponentMode,
+    Identifier,
     ResourceInstanceResult,
     SchemeHeader,
 } from "@/arches_lingo/types.ts";
@@ -76,12 +77,19 @@ function extractSchemeHeaderData(scheme: ResourceInstanceResult) {
     const principalUser = "Anonymous"; //scheme?.principalUser; // returns userid int
     // TODO: get human-readable life cycle state from resource endpoint
     const lifeCycleState = $gettext("Draft");
+    const identifier = (scheme?.aliased_data?.identifier || [])
+        .map(
+            (tile: Identifier) =>
+                tile?.aliased_data?.identifier_content?.node_value,
+        )
+        .join(", ");
 
     data.value = {
         name: name,
         descriptor: descriptor,
         principalUser: principalUser,
         lifeCycleState: lifeCycleState,
+        identifier: identifier,
     };
 }
 
@@ -244,27 +252,9 @@ function confirmDelete() {
                         <span class="header-item-label">
                             {{ $gettext("Identifier:") }}
                         </span>
-                        <span class="header-item-value"> 0032775 </span>
-                    </div>
-                    <div>
-                        <span class="header-item-label">{{
-                            $gettext("URI (provisonal): ")
+                        <span class="header-item-value">{{
+                            data?.identifier || "--"
                         }}</span>
-                        <Button
-                            v-if="data?.uri"
-                            :label="data?.uri"
-                            class="concept-uri"
-                            variant="link"
-                            as="a"
-                            :href="data?.uri"
-                            target="_blank"
-                            rel="noopener"
-                        ></Button>
-                        <span
-                            v-else
-                            class="header-item-value"
-                            >{{ $gettext("No URI assigned") }}</span
-                        >
                     </div>
                 </div>
 

@@ -39,7 +39,7 @@ import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 import type {
     ConceptHeaderData,
     ConceptClassificationStatusAliases,
-    ConceptIdentifier,
+    Identifier,
     ResourceInstanceResult,
     DataComponentMode,
 } from "@/arches_lingo/types.ts";
@@ -218,7 +218,7 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
     );
     const identifier = (aliased_data?.identifier || [])
         .map(
-            (tile: ConceptIdentifier) =>
+            (tile: Identifier) =>
                 tile?.aliased_data?.identifier_content?.node_value,
         )
         .join(", ");
