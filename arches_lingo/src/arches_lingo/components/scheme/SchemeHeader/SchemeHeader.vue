@@ -77,6 +77,8 @@ function extractSchemeHeaderData(scheme: ResourceInstanceResult) {
     const principalUser = "Anonymous"; //scheme?.principalUser; // returns userid int
     // TODO: get human-readable life cycle state from resource endpoint
     const lifeCycleState = $gettext("Draft");
+    const uri =
+        scheme?.aliased_data?.uri?.aliased_data?.uri_content?.node_value;
     const identifier = (scheme?.aliased_data?.identifier || [])
         .map(
             (tile: Identifier) =>
@@ -90,6 +92,7 @@ function extractSchemeHeaderData(scheme: ResourceInstanceResult) {
         principalUser: principalUser,
         lifeCycleState: lifeCycleState,
         identifier: identifier,
+        uri: uri,
     };
 }
 
@@ -255,6 +258,27 @@ function confirmDelete() {
                         <span class="header-item-value">{{
                             data?.identifier || "--"
                         }}</span>
+                    </div>
+                    <div>
+                        <span class="header-item-label">{{
+                            $gettext("URI (provisonal): ")
+                        }}</span>
+                        <Button
+                            v-if="data?.uri"
+                            :label="data?.uri?.url_label || data?.uri?.url"
+                            class="concept-uri"
+                            variant="link"
+                            as="a"
+                            :href="data?.uri?.url"
+                            target="_blank"
+                            rel="noopener"
+                            :disabled="!data?.uri"
+                        ></Button>
+                        <span
+                            v-else
+                            class="header-item-value"
+                            >{{ $gettext("No URI assigned") }}</span
+                        >
                     </div>
                 </div>
 

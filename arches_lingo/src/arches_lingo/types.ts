@@ -313,6 +313,7 @@ export interface ConceptHeaderData {
 }
 
 export interface SchemeHeader {
+    uri?: URL;
     name?: string;
     descriptor?: ResourceDescriptor;
     principalUser?: number | string;
