@@ -40,6 +40,7 @@ import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 import type {
     ConceptHeaderData,
     ConceptClassificationStatusAliases,
+    Identifier,
     ResourceInstanceResult,
     DataComponentMode,
 } from "@/arches_lingo/types.ts";
@@ -232,6 +233,12 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
             tile?.aliased_data?.classification_status_ascribed_classification ||
             [],
     );
+    const identifier = (aliased_data?.identifier || [])
+        .map(
+            (tile: Identifier) =>
+                tile?.aliased_data?.identifier_content?.node_value,
+        )
+        .join(", ");
 
     data.value = {
         name: name,
@@ -241,6 +248,7 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
         lifeCycleState: lifecycleStateLabel.value,
         partOfScheme: partOfScheme,
         parentConcepts: parentConcepts,
+        identifier: identifier,
     };
 }
 </script>
@@ -340,11 +348,11 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                         }}</span>
                         <Button
                             v-if="data?.uri"
-                            :label="data?.uri"
+                            :label="data?.uri?.url_label || data?.uri?.url"
                             class="concept-uri"
                             variant="link"
                             as="a"
-                            :href="data?.uri"
+                            :href="data?.uri?.url"
                             target="_blank"
                             rel="noopener"
                             :disabled="!data?.uri"

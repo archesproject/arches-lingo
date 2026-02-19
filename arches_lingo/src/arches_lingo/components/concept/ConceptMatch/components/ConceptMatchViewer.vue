@@ -125,18 +125,21 @@ function matchedConceptURIIsLink(rowData: ConceptMatchStatus): boolean {
                 />
             </template>
             <template #type="{ rowData }">
-                <RouterLink
+                <Button
                     v-if="matchedConceptURIIsLink(rowData)"
-                    :to="
+                    :label="
                         rowData.aliased_data.match_status_ascribed_comparate
                             .display_value
                     "
-                    class="text-link"
-                    >{{
+                    variant="link"
+                    as="a"
+                    :href="
                         rowData.aliased_data.match_status_ascribed_comparate
                             .display_value
-                    }}
-                </RouterLink>
+                    "
+                    target="_blank"
+                    rel="noopener"
+                ></Button>
                 <span v-else>
                     {{
                         rowData.aliased_data.match_status_ascribed_comparate
@@ -174,5 +177,10 @@ function matchedConceptURIIsLink(rowData: ConceptMatchStatus): boolean {
 
 :deep(a) {
     color: var(--p-primary-500);
+    padding-left: 0;
+
+    span {
+        font-size: var(--p-lingo-font-size-smallnormal);
+    }
 }
 </style>

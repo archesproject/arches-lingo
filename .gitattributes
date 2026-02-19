@@ -1,6 +1,5 @@
 # Set the default behavior, in case people don't have core.autocrlf set.
 * text=auto
-
 # Known binary formats
 *.png binary
 *.jpg binary
@@ -9,3 +8,5 @@
 *.ttf binary
 *.woff binary
 *.woff2 binary
+tests/fixtures/data/FISH_Thesauri_example_data_resources.json filter=lfs diff=lfs merge=lfs -text
+tests/fixtures/data/FISH_Thesauri_example_data_tiles.json filter=lfs diff=lfs merge=lfs -text

@@ -465,13 +465,14 @@ function onLifecycleStateChange(
                         }}</span>
                         <Button
                             v-if="data?.uri"
-                            :label="data?.uri"
+                            :label="data?.uri?.url_label || data?.uri?.url"
                             class="concept-uri"
                             variant="link"
                             as="a"
-                            :href="data?.uri"
+                            :href="data?.uri?.url"
                             target="_blank"
                             rel="noopener"
+                            :disabled="!data?.uri"
                         ></Button>
                         <span
                             v-else
