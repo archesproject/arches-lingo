@@ -272,6 +272,7 @@ export async function createOrUpdateConcept(
             part_of_scheme: {
                 aliased_data: { part_of_scheme: scheme },
             },
+            type: { aliased_data: {} },
         };
 
         if (isTop) {
