@@ -166,6 +166,10 @@ For developer install instructions, see the [Developer Setup](#developer-setup-f
     ```
 
 12. Load the test data:
+
+    You will need to have [Git Large File Storage](https://git-lfs.com/) (lfs) installed to be able to download these files.
+    All you need to do is install git lfs.
+
     ```
     python manage.py loaddata tests/fixtures/data/FISH_Thesauri_example_data_resources.json tests/fixtures/data/FISH_Thesauri_example_data_tiles.json
     ```
