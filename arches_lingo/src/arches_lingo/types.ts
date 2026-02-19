@@ -222,14 +222,14 @@ export interface ConceptClassificationStatusAliases extends AliasedData {
 export type ConceptClassificationStatus =
     TileData<ConceptClassificationStatusAliases>;
 
-export interface ConceptIdentiferAliases extends AliasedData {
+export interface IdentifierAliases extends AliasedData {
     identifier_content: StringValue;
     identifier_label?: StringValue;
     identifier_type?: QuerysetsReferenceSelectFetchedOption;
     identifier_type_metatype?: QuerysetsReferenceSelectFetchedOption;
 }
 
-export type ConceptIdentifier = TileData<ConceptIdentiferAliases>;
+export type Identifier = TileData<IdentifierAliases>;
 
 export interface SchemeStatementAliases extends AliasedData {
     statement_content: StringValue;
@@ -313,11 +313,11 @@ export interface ConceptHeaderData {
 }
 
 export interface SchemeHeader {
-    uri?: string;
     name?: string;
     descriptor?: ResourceDescriptor;
     principalUser?: number | string;
     lifeCycleState: string;
+    identifier?: string;
 }
 
 export interface SchemeInstance {
