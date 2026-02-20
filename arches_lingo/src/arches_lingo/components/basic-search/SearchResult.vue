@@ -1,10 +1,17 @@
 <script setup lang="ts">
+import { inject } from "vue";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 import { getParentLabels } from "@/arches_lingo/utils.ts";
-import { ENGLISH } from "@/arches_lingo/constants.ts";
+import {
+    selectedLanguageKey,
+    systemLanguageKey,
+} from "@/arches_lingo/constants.ts";
 
 import type { PropType } from "vue";
 import type { SearchResultItem } from "@/arches_lingo/types.ts";
+
+const selectedLanguage = inject(selectedLanguageKey);
+const systemLanguage = inject(systemLanguageKey);
 
 defineProps({
     searchResult: {
@@ -28,8 +35,8 @@ defineProps({
                 {{
                     getItemLabel(
                         searchResult.option,
-                        ENGLISH.code,
-                        ENGLISH.code,
+                        selectedLanguage?.code ?? "en",
+                        systemLanguage?.code ?? "en",
                     ).value
                 }}
             </span>
@@ -38,7 +45,11 @@ defineProps({
         <div class="search-result-hierarchy">
             [
             {{
-                getParentLabels(searchResult.option, ENGLISH.code, ENGLISH.code)
+                getParentLabels(
+                    searchResult.option,
+                    selectedLanguage?.code ?? "en",
+                    systemLanguage?.code ?? "en",
+                )
             }}
             ]
         </div>
