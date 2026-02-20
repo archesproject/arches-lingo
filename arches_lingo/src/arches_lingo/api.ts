@@ -339,6 +339,37 @@ export const fetchConceptRelationships = async (
     return parsed;
 };
 
+export const fetchLanguages = async () => {
+    const url = arches.urls.languages;
+    const response = await fetch(url);
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed.languages as Array<{
+        code: string;
+        default_direction: "ltr" | "rtl";
+        id: number;
+        isdefault: boolean;
+        name: string;
+        scope: string;
+    }>;
+};
+
+export const fetchI18nData = async (languageCode?: string) => {
+    const url = arches.urls.api_get_frontend_i18n_data;
+    const headers: Record<string, string> = {};
+    if (languageCode) {
+        headers["Accept-Language"] = languageCode;
+    }
+    const response = await fetch(url, { headers });
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed as {
+        enabled_languages: Record<string, string>;
+        translations: Record<string, Record<string, string | string[]>>;
+        language: string;
+    };
+};
+
 export const fetchConcepts = async () => {
     const response = await fetch(arches.urls.api_concepts);
     const parsed = await response.json();

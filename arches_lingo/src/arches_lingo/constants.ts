@@ -32,12 +32,4 @@ export const USER_KEY = Symbol() as InjectionKey<UserRefAndSetter>;
 export const displayedRowKey = Symbol() as InjectionKey<Ref<Concept | null>>;
 export const selectedLanguageKey = Symbol() as InjectionKey<Ref<Language>>;
 export const systemLanguageKey = Symbol() as InjectionKey<Language>; // not reactive
-
-export const ENGLISH = {
-    code: "en",
-    default_direction: "ltr" as const,
-    id: 1,
-    isdefault: true,
-    name: "English",
-    scope: "system",
-};
+export const availableLanguagesKey = Symbol() as InjectionKey<Ref<Language[]>>;
