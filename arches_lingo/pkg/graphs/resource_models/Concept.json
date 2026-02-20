@@ -528,8 +528,8 @@
                         "placeholder": {
                             "en": "Select a language"
                         },
-                        "width": "100%",
-                        "uneditable": false
+                        "uneditable": false,
+                        "width": "100%"
                     },
                     "id": "089b4a78-e5e3-481e-8016-ad842ac6ce5d",
                     "label": {
@@ -754,8 +754,8 @@
                         "placeholder": {
                             "en": "Select a language"
                         },
-                        "width": "100%",
-                        "uneditable": false
+                        "uneditable": false,
+                        "width": "100%"
                     },
                     "id": "26a178b9-1fe4-4343-b59d-c916593be4bc",
                     "label": {
@@ -1532,8 +1532,8 @@
                         "placeholder": {
                             "en": "Select a language"
                         },
-                        "width": "100%",
-                        "uneditable": false
+                        "uneditable": false,
+                        "width": "100%"
                     },
                     "id": "89b20635-f0bd-4e66-acc4-e168cef414b2",
                     "label": {
@@ -2617,8 +2617,8 @@
                         "placeholder": {
                             "en": "Select a language"
                         },
-                        "width": "100%",
-                        "uneditable": false
+                        "uneditable": false,
+                        "width": "100%"
                     },
                     "id": "ecfbc672-1aed-459d-ba85-bc0a9052ac6c",
                     "label": {
@@ -2675,9 +2675,11 @@
                 }
             ],
             "color": "rgb(250,181,101)",
-            "config": {},
+            "config": {
+                "foo": "foo"
+            },
             "deploymentdate": null,
-            "deploymentfile": null,
+            "deploymentfile": "",
             "description": {
                 "en": ""
             },
@@ -6872,9 +6874,9 @@
             "relatable_resource_model_ids": [],
             "resource_2_resource_constraints": [],
             "resource_instance_lifecycle": {
-                "id": "7e3cce56-fbfb-4a4b-8e83-59b9f9e7cb75",
+                "id": "1c9b0c18-3a3a-4e6c-ae3b-5f3c5b9f6a21",
                 "name": {
-                    "en": "Standard"
+                    "en": "Standard (with Editing)"
                 },
                 "resource_instance_lifecycle_states": [
                     {
@@ -6883,35 +6885,55 @@
                         },
                         "can_delete_resource_instances": true,
                         "can_edit_resource_instances": true,
-                        "id": "9375c9a7-dad2-4f14-a5c1-d7e329fdde4f",
+                        "id": "0e7f8c6d-1f7b-4c2a-9a0c-2b9e0d6c8f11",
                         "is_initial_state": true,
                         "name": {
                             "en": "Draft"
                         },
                         "next_resource_instance_lifecycle_states": [
-                            "f75bb034-36e3-4ab4-8167-f520cf0b4c58"
+                            "6b0f1a7b-5b3d-4b2a-8a5b-7c3a1b0f2d9e"
                         ],
                         "previous_resource_instance_lifecycle_states": [],
-                        "resource_instance_lifecycle_id": "7e3cce56-fbfb-4a4b-8e83-59b9f9e7cb75"
+                        "resource_instance_lifecycle_id": "1c9b0c18-3a3a-4e6c-ae3b-5f3c5b9f6a21"
                     },
                     {
                         "action_label": {
-                            "en": "Make Active"
+                            "en": "Publish"
+                        },
+                        "can_delete_resource_instances": false,
+                        "can_edit_resource_instances": false,
+                        "id": "6b0f1a7b-5b3d-4b2a-8a5b-7c3a1b0f2d9e",
+                        "is_initial_state": false,
+                        "name": {
+                            "en": "Published"
+                        },
+                        "next_resource_instance_lifecycle_states": [
+                            "9d2e1c0b-7a6b-4b3d-8c1a-0f2d9e6b0a7c",
+                            "b3a6a0d2-2b5c-4c2f-9d6c-0c2a5b7d1e8f"
+                        ],
+                        "previous_resource_instance_lifecycle_states": [
+                            "b3a6a0d2-2b5c-4c2f-9d6c-0c2a5b7d1e8f"
+                        ],
+                        "resource_instance_lifecycle_id": "1c9b0c18-3a3a-4e6c-ae3b-5f3c5b9f6a21"
+                    },
+                    {
+                        "action_label": {
+                            "en": "Edit"
                         },
                         "can_delete_resource_instances": false,
                         "can_edit_resource_instances": true,
-                        "id": "f75bb034-36e3-4ab4-8167-f520cf0b4c58",
+                        "id": "b3a6a0d2-2b5c-4c2f-9d6c-0c2a5b7d1e8f",
                         "is_initial_state": false,
                         "name": {
-                            "en": "Active"
+                            "en": "Editing"
                         },
                         "next_resource_instance_lifecycle_states": [
-                            "d95d9c0e-0e2c-4450-93a3-d788b91abcc8"
+                            "6b0f1a7b-5b3d-4b2a-8a5b-7c3a1b0f2d9e"
                         ],
                         "previous_resource_instance_lifecycle_states": [
-                            "9375c9a7-dad2-4f14-a5c1-d7e329fdde4f"
+                            "6b0f1a7b-5b3d-4b2a-8a5b-7c3a1b0f2d9e"
                         ],
-                        "resource_instance_lifecycle_id": "7e3cce56-fbfb-4a4b-8e83-59b9f9e7cb75"
+                        "resource_instance_lifecycle_id": "1c9b0c18-3a3a-4e6c-ae3b-5f3c5b9f6a21"
                     },
                     {
                         "action_label": {
@@ -6919,16 +6941,16 @@
                         },
                         "can_delete_resource_instances": false,
                         "can_edit_resource_instances": false,
-                        "id": "d95d9c0e-0e2c-4450-93a3-d788b91abcc8",
+                        "id": "9d2e1c0b-7a6b-4b3d-8c1a-0f2d9e6b0a7c",
                         "is_initial_state": false,
                         "name": {
                             "en": "Retired"
                         },
                         "next_resource_instance_lifecycle_states": [],
                         "previous_resource_instance_lifecycle_states": [
-                            "f75bb034-36e3-4ab4-8167-f520cf0b4c58"
+                            "6b0f1a7b-5b3d-4b2a-8a5b-7c3a1b0f2d9e"
                         ],
-                        "resource_instance_lifecycle_id": "7e3cce56-fbfb-4a4b-8e83-59b9f9e7cb75"
+                        "resource_instance_lifecycle_id": "1c9b0c18-3a3a-4e6c-ae3b-5f3c5b9f6a21"
                     }
                 ]
             },
@@ -6966,9 +6988,9 @@
         }
     ],
     "metadata": {
-        "db": "PostgreSQL 17.4 (Postgres.app) on aarch64-apple-darwin23.6.0, compiled by Apple clang version 15.0.0 (clang-1500.3.9.4), 64-bit",
-        "git hash": "0d2e19dc9b 2025-05-22 09:37:22 -0400",
+        "db": "PostgreSQL 16.4 (Postgres.app) on aarch64-apple-darwin21.6.0, compiled by Apple clang version 14.0.0 (clang-1400.0.29.102), 64-bit",
+        "git hash": "a36c8d34c0 2026-02-13 11:58:42 -0800",
         "os": "Darwin",
-        "os version": "24.4.0"
+        "os version": "23.6.0"
     }
 }
