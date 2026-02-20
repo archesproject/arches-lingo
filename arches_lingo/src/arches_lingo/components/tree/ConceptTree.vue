@@ -1,5 +1,13 @@
 <script setup lang="ts">
-import { computed, inject, nextTick, onMounted, ref, watch } from "vue";
+import {
+    computed,
+    inject,
+    nextTick,
+    onMounted,
+    provide,
+    ref,
+    watch,
+} from "vue";
 
 import { useRoute, useRouter } from "vue-router";
 import { useGettext } from "vue3-gettext";
@@ -38,7 +46,12 @@ import type {
 } from "primevue/tree";
 import type { TreeNode } from "primevue/treenode";
 import type { Language } from "@/arches_component_lab/types";
-import type { IconLabels, Scheme, Concept } from "@/arches_lingo/types";
+import type {
+    IconLabels,
+    Scheme,
+    Concept,
+    ResourceInstanceLifecycleState,
+} from "@/arches_lingo/types";
 
 const props = withDefaults(
     defineProps<{
@@ -84,6 +97,27 @@ const filterValue = ref("");
 
 const selectedLanguage = inject(selectedLanguageKey) as Ref<Language>;
 const systemLanguage = inject(systemLanguageKey) as Language;
+
+const resourceInstanceLifecycleStates = inject<
+    Ref<ResourceInstanceLifecycleState[] | undefined>
+>("resourceInstanceLifecycleStates");
+
+const resourceInstanceLifecycleStateCanEditById = computed(() =>
+    Object.fromEntries(
+        (resourceInstanceLifecycleStates?.value ?? []).map(
+            (resourceInstanceLifecycleState) => [
+                resourceInstanceLifecycleState.id,
+                resourceInstanceLifecycleState.can_edit_resource_instances ===
+                    true,
+            ],
+        ),
+    ),
+);
+
+provide(
+    "resourceInstanceLifecycleStateCanEditById",
+    resourceInstanceLifecycleStateCanEditById,
+);
 
 const FILTER_RENDER_CAP = 2500;
 const FILTER_DEBOUNCE_MS = 500;

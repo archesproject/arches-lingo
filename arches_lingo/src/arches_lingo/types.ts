@@ -402,3 +402,13 @@ export interface PaginatorDetails {
     total_notifications: number;
     unread_notifications: number;
 }
+
+export interface ResourceInstanceLifecycleState {
+    id: string;
+    name: string;
+    action_label: string;
+    can_edit_resource_instances?: boolean;
+    can_delete_resource_instances?: boolean;
+    next_resource_instance_lifecycle_states?: ResourceInstanceLifecycleState[];
+    previous_resource_instance_lifecycle_states?: ResourceInstanceLifecycleState[];
+}

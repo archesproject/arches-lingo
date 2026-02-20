@@ -51,10 +51,18 @@ class ConceptBuilder:
         self.polyhierarchical_concepts = set()
         self.language_lookup = {lang.code: lang.name for lang in Language.objects.all()}
 
+        self.resource_instance_lifecycle_state_ids_by_resource_instance_id: dict[
+            str, str | None
+        ] = {}
+
         if concept_ids is None:
             self.top_concepts_map()
             self.narrower_concepts_map()
             self.populate_schemes()
+            self.populate_resource_instance_lifecycle_state_ids(
+                scheme_ids=list(self.schemes_by_id.keys()),
+                concept_ids=list(self.labels.keys()),
+            )
             return
 
         if include_parents:
@@ -62,6 +70,10 @@ class ConceptBuilder:
             return
 
         self.populate_concept_labels(concept_ids)
+        self.populate_resource_instance_lifecycle_state_ids(
+            scheme_ids=list(self.schemes_by_id.keys()),
+            concept_ids=concept_ids,
+        )
 
     @staticmethod
     def find_valuetype_id_from_value(value):
@@ -116,6 +128,28 @@ class ConceptBuilder:
         )
         self.schemes = schemes_list
         self.schemes_by_id = {str(scheme.pk): scheme for scheme in schemes_list}
+
+    def populate_resource_instance_lifecycle_state_ids(
+        self, *, scheme_ids: list[str], concept_ids: list[str]
+    ):
+        resource_instance_ids = [*scheme_ids, *concept_ids]
+        self.resource_instance_lifecycle_state_ids_by_resource_instance_id = {}
+
+        if not resource_instance_ids:
+            return
+
+        self.resource_instance_lifecycle_state_ids_by_resource_instance_id = {
+            str(resource_instance_id): (
+                str(lifecycle_state_id) if lifecycle_state_id else None
+            )
+            for resource_instance_id, lifecycle_state_id in (
+                ResourceInstance.objects.filter(
+                    pk__in=resource_instance_ids
+                ).values_list(
+                    "resourceinstanceid", "resource_instance_lifecycle_state_id"
+                )
+            )
+        }
 
     def lookup_scheme(self, scheme_id: str):
         return self.schemes_by_id.get(scheme_id)
@@ -220,11 +254,18 @@ class ConceptBuilder:
 
         self.populate_schemes(list(scheme_ids))
         self.populate_concept_labels(list(closure_concept_ids))
+        self.populate_resource_instance_lifecycle_state_ids(
+            scheme_ids=list(self.schemes_by_id.keys()),
+            concept_ids=list(closure_concept_ids),
+        )
 
     def serialize_scheme(self, scheme: ResourceInstance, *, children=True):
         scheme_id: str = str(scheme.pk)
         data = {
             "id": scheme_id,
+            "resource_instance_lifecycle_state_id": self.resource_instance_lifecycle_state_ids_by_resource_instance_id.get(
+                scheme_id
+            ),
             "labels": [self.serialize_scheme_label(label) for label in scheme.labels],
         }
         if children:
@@ -253,6 +294,9 @@ class ConceptBuilder:
     def serialize_concept(self, conceptid: str, *, parents=False, children=True):
         data = {
             "id": conceptid,
+            "resource_instance_lifecycle_state_id": self.resource_instance_lifecycle_state_ids_by_resource_instance_id.get(
+                conceptid
+            ),
             "labels": [
                 self.serialize_concept_label(label) for label in self.labels[conceptid]
             ],
