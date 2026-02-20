@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject, onMounted, ref, type Ref } from "vue";
+import { computed, inject, onMounted, ref, type Ref } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import { useConfirm } from "primevue/useconfirm";
@@ -9,8 +9,10 @@ import { useToast } from "primevue/usetoast";
 import Skeleton from "primevue/skeleton";
 import ConfirmDialog from "primevue/confirmdialog";
 import Button from "primevue/button";
+import InputText from "primevue/inputtext";
 
 import ExportThesauri from "@/arches_lingo/components/scheme/SchemeHeader/components/ExportThesauri.vue";
+import LifecycleButtons from "@/arches_lingo/components/scheme/SchemeHeader/components/LifecycleButtons.vue";
 
 import {
     DANGER,
@@ -26,19 +28,35 @@ import {
     deleteLingoResource,
     fetchLingoResource,
     fetchSchemeResource,
+    fetchResourceIdentifiers,
+    upsertResourceIdentifier,
+    fetchConceptIdentifierCounter,
+    createConceptIdentifierCounter,
 } from "@/arches_lingo/api.ts";
 import { extractDescriptors } from "@/arches_lingo/utils.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 
 import type {
     DataComponentMode,
-    Identifier,
     ResourceInstanceResult,
     SchemeHeader,
 } from "@/arches_lingo/types.ts";
 import type { Language } from "@/arches_component_lab/types.ts";
 import type { Label } from "@/arches_controlled_lists/types";
 import { routeNames } from "@/arches_lingo/routes.ts";
+
+type ConceptIdentifierCounter = {
+    scheme_resource_instance_id: string;
+    start_number: number;
+    next_number: number;
+};
+
+type ResourceInstanceLifecycleState = {
+    id: string;
+    name: string;
+    action_label: string;
+    next_resource_instance_lifecycle_states?: ResourceInstanceLifecycleState[];
+};
 
 const props = defineProps<{
     mode: DataComponentMode;
@@ -50,6 +68,16 @@ const props = defineProps<{
 }>();
 
 const refreshSchemeHierarchy = inject<() => void>("refreshSchemeHierarchy");
+
+const resourceInstanceLifecycleState = inject<{
+    value:
+        | {
+              name: string;
+              can_edit_resource_instances: boolean;
+              can_delete_resource_instances: boolean;
+          }
+        | undefined;
+}>("resourceInstanceLifecycleState");
 
 const confirm = useConfirm();
 const router = useRouter();
@@ -64,37 +92,43 @@ const data = ref<SchemeHeader>();
 const isLoading = ref(true);
 const showExportDialog = ref(false);
 const exportDialogKey = ref(0);
+const identifierValue = ref<string>();
 
-function openExportDialog() {
-    exportDialogKey.value++;
-    showExportDialog.value = true;
-}
+const resourceIdentifierId = ref<number | undefined>();
+const isEditingIdentifier = ref(false);
+const identifierDraft = ref("");
+const isSavingIdentifier = ref(false);
 
-function extractSchemeHeaderData(scheme: ResourceInstanceResult) {
-    const name = scheme?.name;
-    const descriptor = extractDescriptors(scheme, systemLanguage);
-    // TODO: get human-readable user name from resource endpoint
-    const principalUser = "Anonymous"; //scheme?.principalUser; // returns userid int
-    // TODO: get human-readable life cycle state from resource endpoint
-    const lifeCycleState = $gettext("Draft");
-    const uri =
-        scheme?.aliased_data?.uri?.aliased_data?.uri_content?.node_value;
-    const identifier = (scheme?.aliased_data?.identifier || [])
-        .map(
-            (tile: Identifier) =>
-                tile?.aliased_data?.identifier_content?.node_value,
-        )
-        .join(", ");
+const conceptIdentifierCounter = ref<ConceptIdentifierCounter | undefined>();
+const isEditingConceptIdentifierCounter = ref(false);
+const conceptIdentifierCounterStartNumberDraft = ref("1");
+const isSavingConceptIdentifierCounter = ref(false);
 
-    data.value = {
-        name: name,
-        descriptor: descriptor,
-        principalUser: principalUser,
-        lifeCycleState: lifeCycleState,
-        identifier: identifier,
-        uri: uri,
-    };
-}
+const canEditResourceInstances = computed(() => {
+    return Boolean(
+        props.resourceInstanceId &&
+            resourceInstanceLifecycleState?.value?.can_edit_resource_instances,
+    );
+});
+
+const shouldShowIdentifierEditButton = computed(() => {
+    return canEditResourceInstances.value;
+});
+
+const shouldShowConceptIdentifierCounterEditButton = computed(() => {
+    if (!canEditResourceInstances.value) {
+        return false;
+    }
+
+    if (!conceptIdentifierCounter.value) {
+        return true;
+    }
+
+    return (
+        conceptIdentifierCounter.value.start_number ===
+        conceptIdentifierCounter.value.next_number
+    );
+});
 
 onMounted(async () => {
     try {
@@ -122,6 +156,20 @@ onMounted(async () => {
             systemLanguage.code,
         );
 
+        const resourceIdentifiers = await fetchResourceIdentifiers(
+            props.resourceInstanceId,
+        );
+        identifierValue.value = resourceIdentifiers?.[0]?.identifier;
+        resourceIdentifierId.value = resourceIdentifiers?.[0]?.id;
+
+        try {
+            conceptIdentifierCounter.value =
+                await fetchConceptIdentifierCounter(props.resourceInstanceId);
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        } catch (_error) {
+            conceptIdentifierCounter.value = undefined;
+        }
+
         extractSchemeHeaderData(scheme.value!);
     } catch (error) {
         toast.add({
@@ -134,6 +182,111 @@ onMounted(async () => {
         isLoading.value = false;
     }
 });
+
+function openExportDialog() {
+    exportDialogKey.value++;
+    showExportDialog.value = true;
+}
+
+function extractSchemeHeaderData(scheme: ResourceInstanceResult) {
+    const name = scheme?.name;
+    const descriptor = extractDescriptors(scheme, systemLanguage);
+    const principalUser = "Anonymous";
+    const lifeCycleState =
+        resourceInstanceLifecycleState?.value?.name || $gettext("Draft");
+
+    data.value = {
+        name: name,
+        descriptor: descriptor,
+        principalUser: principalUser,
+        lifeCycleState: lifeCycleState,
+    };
+}
+
+function editIdentifier() {
+    identifierDraft.value = identifierValue.value || "";
+    isEditingIdentifier.value = true;
+}
+
+function cancelEditingIdentifier() {
+    identifierDraft.value = "";
+    isEditingIdentifier.value = false;
+}
+
+async function saveIdentifier() {
+    if (!props.resourceInstanceId) {
+        return;
+    }
+
+    isSavingIdentifier.value = true;
+
+    try {
+        const identifierData = await upsertResourceIdentifier(
+            props.resourceInstanceId,
+            {
+                id: resourceIdentifierId.value,
+                identifier: identifierDraft.value,
+                source: "arches-lingo",
+            },
+        );
+
+        identifierValue.value = identifierData.identifier;
+        resourceIdentifierId.value = identifierData.id;
+        cancelEditingIdentifier();
+    } catch (error) {
+        toast.add({
+            severity: ERROR,
+            life: DEFAULT_ERROR_TOAST_LIFE,
+            summary: $gettext("Unable to save identifier"),
+            detail: error instanceof Error ? error.message : undefined,
+        });
+    } finally {
+        isSavingIdentifier.value = false;
+    }
+}
+
+function editConceptIdentifierCounter() {
+    if (!conceptIdentifierCounter.value) {
+        conceptIdentifierCounterStartNumberDraft.value = "1";
+    } else {
+        conceptIdentifierCounterStartNumberDraft.value = String(
+            conceptIdentifierCounter.value.start_number,
+        );
+    }
+
+    isEditingConceptIdentifierCounter.value = true;
+}
+
+function cancelEditingConceptIdentifierCounter() {
+    conceptIdentifierCounterStartNumberDraft.value = "1";
+    isEditingConceptIdentifierCounter.value = false;
+}
+
+async function saveConceptIdentifierCounter() {
+    if (!props.resourceInstanceId) {
+        return;
+    }
+
+    isSavingConceptIdentifierCounter.value = true;
+
+    try {
+        conceptIdentifierCounter.value = await createConceptIdentifierCounter(
+            props.resourceInstanceId,
+            Number(conceptIdentifierCounterStartNumberDraft.value),
+        );
+
+        cancelEditingConceptIdentifierCounter();
+    } catch (error) {
+        toast.add({
+            severity: ERROR,
+            life: DEFAULT_ERROR_TOAST_LIFE,
+            summary: $gettext("Unable to save concept identifier counter"),
+            detail: error instanceof Error ? error.message : undefined,
+        });
+    } finally {
+        isSavingConceptIdentifierCounter.value = false;
+    }
+}
 
 function confirmDelete() {
     confirm.require({
@@ -175,6 +328,16 @@ function confirmDelete() {
             severity: DANGER,
         },
     });
+}
+
+function onLifecycleStateChange(
+    currentResourceInstanceLifecycleState: ResourceInstanceLifecycleState,
+) {
+    if (data.value) {
+        data.value.lifeCycleState = currentResourceInstanceLifecycleState.name;
+    }
+
+    router.go(0);
 }
 </script>
 
@@ -237,12 +400,10 @@ function confirmDelete() {
                             @click="confirmDelete"
                         />
 
-                        <!-- TODO: button should allow user to publish scheme if draft, retire scheme if published -->
-                        <Button
-                            icon="pi pi-book"
-                            :label="$gettext('Publish')"
-                            class="add-button"
-                        ></Button>
+                        <LifecycleButtons
+                            :resource-instance-id="props.resourceInstanceId"
+                            @change="onLifecycleStateChange"
+                        />
                     </div>
                 </div>
             </div>
@@ -250,14 +411,53 @@ function confirmDelete() {
             <div class="header-content">
                 <!-- TODO: show Scheme URI here -->
                 <div class="header-row">
-                    <!-- TODO: Life Cycle mgmt functionality goes here -->
-                    <div class="header-item">
+                    <div class="header-item identifier-item">
                         <span class="header-item-label">
                             {{ $gettext("Identifier:") }}
                         </span>
-                        <span class="header-item-value">{{
-                            data?.identifier || "--"
-                        }}</span>
+
+                        <template v-if="isEditingIdentifier">
+                            <InputText
+                                v-model="identifierDraft"
+                                size="small"
+                            />
+                            <Button
+                                icon="pi pi-check"
+                                variant="text"
+                                severity="success"
+                                size="small"
+                                :rounded="true"
+                                :aria-label="$gettext('Save Identifier')"
+                                :loading="isSavingIdentifier"
+                                @click="saveIdentifier"
+                            />
+                            <Button
+                                icon="pi pi-times"
+                                variant="text"
+                                severity="danger"
+                                size="small"
+                                :rounded="true"
+                                :aria-label="$gettext('Cancel')"
+                                :disabled="isSavingIdentifier"
+                                @click="cancelEditingIdentifier"
+                            />
+                        </template>
+
+                        <template v-else>
+                            <span class="header-item-value identifier-value">
+                                {{ identifierValue || $gettext("None") }}
+                            </span>
+                            <Button
+                                v-if="shouldShowIdentifierEditButton"
+                                icon="pi pi-pencil"
+                                variant="text"
+                                size="small"
+                                class="identifier-edit-button"
+                                :rounded="true"
+                                :aria-label="$gettext('Edit Identifier')"
+                                @click="editIdentifier"
+                            />
+                        </template>
                     </div>
                     <div>
                         <span class="header-item-label">{{
@@ -279,6 +479,70 @@ function confirmDelete() {
                             class="header-item-value"
                             >{{ $gettext("No URI assigned") }}</span
                         >
+                    </div>
+                </div>
+
+                <div
+                    class="header-row"
+                    style="padding-bottom: 1rem"
+                >
+                    <div class="header-item">
+                        <span class="header-item-label">
+                            {{ $gettext("Concept counter:") }}
+                        </span>
+
+                        <template v-if="isEditingConceptIdentifierCounter">
+                            <InputText
+                                v-model="
+                                    conceptIdentifierCounterStartNumberDraft
+                                "
+                                size="small"
+                            />
+                            <Button
+                                icon="pi pi-check"
+                                variant="text"
+                                severity="success"
+                                size="small"
+                                :rounded="true"
+                                :aria-label="
+                                    $gettext('Save concept identifier counter')
+                                "
+                                :loading="isSavingConceptIdentifierCounter"
+                                @click="saveConceptIdentifierCounter"
+                            />
+                            <Button
+                                icon="pi pi-times"
+                                variant="text"
+                                severity="danger"
+                                size="small"
+                                :rounded="true"
+                                :aria-label="$gettext('Cancel')"
+                                :disabled="isSavingConceptIdentifierCounter"
+                                @click="cancelEditingConceptIdentifierCounter"
+                            />
+                        </template>
+
+                        <template v-else>
+                            <span class="header-item-value">
+                                {{
+                                    conceptIdentifierCounter?.start_number ??
+                                    $gettext("None")
+                                }}
+                            </span>
+                            <Button
+                                v-if="
+                                    shouldShowConceptIdentifierCounterEditButton
+                                "
+                                icon="pi pi-pencil"
+                                variant="text"
+                                size="small"
+                                :rounded="true"
+                                :aria-label="
+                                    $gettext('Edit concept identifier counter')
+                                "
+                                @click="editConceptIdentifierCounter"
+                            />
+                        </template>
                     </div>
                 </div>
 
@@ -451,7 +715,7 @@ h2 > span {
 
 .header-item {
     display: inline-flex;
-    align-items: baseline;
+    align-items: center;
     min-width: 0;
 }
 

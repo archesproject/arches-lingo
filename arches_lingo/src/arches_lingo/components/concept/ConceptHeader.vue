@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject, onMounted, ref, type Ref } from "vue";
+import { inject, onMounted, ref, type Ref, computed } from "vue";
 
 import { useConfirm } from "primevue/useconfirm";
 import { useGettext } from "vue3-gettext";
@@ -32,6 +32,7 @@ import {
     fetchLingoResource,
     deleteLingoResource,
     fetchConceptResource,
+    fetchResourceIdentifiers,
 } from "@/arches_lingo/api.ts";
 import { extractDescriptors } from "@/arches_lingo/utils.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
@@ -74,7 +75,7 @@ const data = ref<ConceptHeaderData>();
 const isLoading = ref(true);
 const showExportDialog = ref(false);
 const exportDialogKey = ref(0);
-
+const conceptIdentifierValue = ref<string>();
 const conceptTypeTile = ref();
 
 async function onConceptTypeChange(newValue: ReferenceSelectValue) {
@@ -105,6 +106,19 @@ async function onConceptTypeChange(newValue: ReferenceSelectValue) {
     }
 }
 
+const resourceInstanceLifecycleState = inject<{
+    value: { name: string } | undefined;
+}>("resourceInstanceLifecycleState");
+
+const lifecycleStateLabel = computed(() => {
+    const state = resourceInstanceLifecycleState?.value;
+    if (!state) {
+        return "--";
+    }
+
+    return state?.name || "--";
+});
+
 onMounted(async () => {
     try {
         if (!props.resourceInstanceId) {
@@ -133,6 +147,11 @@ onMounted(async () => {
             selectedLanguage.value.code,
             systemLanguage.code,
         );
+
+        const resourceIdentifiers = await fetchResourceIdentifiers(
+            props.resourceInstanceId,
+        );
+        conceptIdentifierValue.value = resourceIdentifiers?.[0]?.identifier;
 
         extractConceptHeaderData(concept.value!);
     } catch (error) {
@@ -206,9 +225,7 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
     const descriptor = extractDescriptors(concept, systemLanguage);
     // TODO: get human-readable user name from resource endpoint
     const principalUser = "Anonymous"; //concept?.principalUser; // returns userid int
-    // TODO: get human-readable life cycle state from resource endpoint
-    const lifeCycleState = $gettext("Draft");
-    const uri = aliased_data?.uri?.aliased_data?.uri_content?.node_value;
+    const uri = aliased_data?.uri?.aliased_data?.uri_content?.url;
     const partOfScheme =
         aliased_data?.part_of_scheme?.aliased_data?.part_of_scheme;
     const parentConcepts = (aliased_data?.classification_status || []).flatMap(
@@ -228,7 +245,7 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
         descriptor: descriptor,
         uri: uri,
         principalUser: principalUser,
-        lifeCycleState: lifeCycleState,
+        lifeCycleState: lifecycleStateLabel.value,
         partOfScheme: partOfScheme,
         parentConcepts: parentConcepts,
         identifier: identifier,
@@ -317,14 +334,13 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
         <div class="header-content">
             <div class="concept-header-section">
                 <div class="header-row">
-                    <!-- TODO: Life Cycle mgmt functionality goes here -->
                     <div class="header-item">
                         <span class="header-item-label">
                             {{ $gettext("Identifier:") }}
                         </span>
-                        <span class="header-item-value">{{
-                            data?.identifier || "--"
-                        }}</span>
+                        <span class="header-item-value">
+                            {{ conceptIdentifierValue || $gettext("None") }}
+                        </span>
                     </div>
                     <div>
                         <span class="header-item-label">{{
@@ -366,17 +382,12 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                         </span>
                     </div>
 
-                    <!-- TODO: Life Cycle mgmt functionality goes here -->
                     <div class="header-item">
                         <span class="header-item-label">
                             {{ $gettext("Life cycle state:") }}
                         </span>
                         <span class="header-item-value">
-                            {{
-                                data?.lifeCycleState
-                                    ? data?.lifeCycleState
-                                    : "--"
-                            }}
+                            {{ lifecycleStateLabel }}
                         </span>
                     </div>
                 </div>
