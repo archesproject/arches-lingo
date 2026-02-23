@@ -39,7 +39,7 @@ import type {
     SchemeHeader,
 } from "@/arches_lingo/types.ts";
 import type { Language } from "@/arches_component_lab/types.ts";
-import type { Label } from "@/arches_controlled_lists/types";
+import type { Label, Labellable } from "@/arches_controlled_lists/types";
 import { routeNames } from "@/arches_lingo/routes.ts";
 
 const props = defineProps<{
@@ -61,6 +61,7 @@ const systemLanguage = inject(systemLanguageKey) as Language;
 const selectedLanguage = inject(selectedLanguageKey) as Ref<Language>;
 
 const scheme = ref<ResourceInstanceResult>();
+const schemeResource = ref<Labellable>();
 const label = ref<Label>();
 const data = ref<SchemeHeader>();
 const labelCounts = ref<LanguageLabelCount[]>([]);
@@ -126,7 +127,7 @@ function openExportDialog() {
 
 function extractSchemeHeaderData(scheme: ResourceInstanceResult) {
     const name = scheme?.name;
-    const descriptor = extractDescriptors(scheme, systemLanguage);
+    const descriptor = extractDescriptors(scheme, selectedLanguage.value);
     // TODO: get human-readable user name from resource endpoint
     const principalUser = "Anonymous"; //scheme?.principalUser; // returns userid int
     // TODO: get human-readable life cycle state from resource endpoint
@@ -151,17 +152,60 @@ function extractSchemeHeaderData(scheme: ResourceInstanceResult) {
 }
 
 onMounted(async () => {
-    if (!props.resourceInstanceId) {
-        label.value = {
-            value: $gettext("New Scheme"),
-            language_id: selectedLanguage.value.code,
-            valuetype_id: PREF_LABEL,
-        };
+    try {
+        if (!props.resourceInstanceId) {
+            label.value = {
+                value: $gettext("New Scheme"),
+                language_id: selectedLanguage.value.code,
+                valuetype_id: PREF_LABEL,
+            };
+            return;
+        }
+
+        scheme.value = await fetchLingoResource(
+            props.graphSlug,
+            props.resourceInstanceId,
+        );
+
+        schemeResource.value = await fetchSchemeResource(
+            props.resourceInstanceId,
+        );
+
+        label.value = getItemLabel(
+            schemeResource.value!,
+            selectedLanguage.value.code,
+            systemLanguage.code,
+        );
+
+        extractSchemeHeaderData(scheme.value!);
+    } catch (error) {
+        toast.add({
+            severity: ERROR,
+            life: DEFAULT_ERROR_TOAST_LIFE,
+            summary: $gettext("Unable to fetch scheme"),
+            detail: error instanceof Error ? error.message : undefined,
+        });
+    } finally {
         isLoading.value = false;
-        return;
     }
     // Resource data is loaded via the store watch above
 });
+
+watch(
+    () => selectedLanguage.value.code,
+    (newCode) => {
+        if (schemeResource.value) {
+            label.value = getItemLabel(
+                schemeResource.value,
+                newCode,
+                systemLanguage.code,
+            );
+        }
+        if (scheme.value) {
+            extractSchemeHeaderData(scheme.value);
+        }
+    },
+);
 
 function confirmDelete() {
     confirm.require({

@@ -43,7 +43,7 @@ import type {
     ResourceInstanceResult,
     DataComponentMode,
 } from "@/arches_lingo/types.ts";
-import type { Label } from "@/arches_controlled_lists/types";
+import type { Label, Labellable } from "@/arches_controlled_lists/types";
 import type { ReferenceSelectValue } from "@/arches_controlled_lists/datatypes/reference-select/types.ts";
 
 import type { Language } from "@/arches_component_lab/types.ts";
@@ -69,6 +69,7 @@ const systemLanguage = inject(systemLanguageKey) as Language;
 const selectedLanguage = inject(selectedLanguageKey) as Ref<Language>;
 
 const concept = ref<ResourceInstanceResult>();
+const conceptResource = ref<Labellable>();
 const label = ref<Label>();
 const data = ref<ConceptHeaderData>();
 const isLoading = ref(true);
@@ -155,17 +156,63 @@ async function onConceptTypeChange(newValue: ReferenceSelectValue) {
 }
 
 onMounted(async () => {
-    if (!props.resourceInstanceId) {
-        label.value = {
-            value: $gettext("New Concept"),
-            language_id: selectedLanguage.value.code,
-            valuetype_id: PREF_LABEL,
-        };
+    try {
+        if (!props.resourceInstanceId) {
+            label.value = {
+                value: $gettext("New Concept"),
+                language_id: selectedLanguage.value.code,
+                valuetype_id: PREF_LABEL,
+            };
+            return;
+        }
+
+        concept.value = await fetchLingoResource(
+            props.graphSlug,
+            props.resourceInstanceId,
+        );
+
+        conceptTypeTile.value =
+            concept.value?.aliased_data?.[CONCEPT_TYPE_NODE_ALIAS];
+
+        conceptResource.value = await fetchConceptResource(
+            props.resourceInstanceId,
+        );
+
+        label.value = getItemLabel(
+            conceptResource.value!,
+            selectedLanguage.value.code,
+            systemLanguage.code,
+        );
+
+        extractConceptHeaderData(concept.value!);
+    } catch (error) {
+        toast.add({
+            severity: ERROR,
+            life: DEFAULT_ERROR_TOAST_LIFE,
+            summary: $gettext("Unable to fetch concept"),
+            detail: error instanceof Error ? error.message : undefined,
+        });
+    } finally {
         isLoading.value = false;
-        return;
     }
     // Resource data is loaded via the store watch above
 });
+
+watch(
+    () => selectedLanguage.value.code,
+    (newCode) => {
+        if (conceptResource.value) {
+            label.value = getItemLabel(
+                conceptResource.value,
+                newCode,
+                systemLanguage.code,
+            );
+        }
+        if (concept.value) {
+            extractConceptHeaderData(concept.value);
+        }
+    },
+);
 
 function confirmDelete() {
     confirm.require({
@@ -223,7 +270,7 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
     const aliased_data = concept?.aliased_data;
 
     const name = concept?.name;
-    const descriptor = extractDescriptors(concept, systemLanguage);
+    const descriptor = extractDescriptors(concept, selectedLanguage.value);
     // TODO: get human-readable user name from resource endpoint
     const principalUser = "Anonymous"; //concept?.principalUser; // returns userid int
     // TODO: get human-readable life cycle state from resource endpoint
