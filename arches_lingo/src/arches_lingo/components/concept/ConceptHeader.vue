@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject, onMounted, ref, type Ref } from "vue";
+import { inject, onMounted, ref, watch, type Ref } from "vue";
 
 import { useConfirm } from "primevue/useconfirm";
 import { useGettext } from "vue3-gettext";
@@ -43,7 +43,7 @@ import type {
     ResourceInstanceResult,
     DataComponentMode,
 } from "@/arches_lingo/types.ts";
-import type { Label } from "@/arches_controlled_lists/types";
+import type { Label, Labellable } from "@/arches_controlled_lists/types";
 import type { ReferenceSelectValue } from "@/arches_controlled_lists/datatypes/reference-select/types.ts";
 
 import type { Language } from "@/arches_component_lab/types.ts";
@@ -69,6 +69,7 @@ const systemLanguage = inject(systemLanguageKey) as Language;
 const selectedLanguage = inject(selectedLanguageKey) as Ref<Language>;
 
 const concept = ref<ResourceInstanceResult>();
+const conceptResource = ref<Labellable>();
 const label = ref<Label>();
 const data = ref<ConceptHeaderData>();
 const isLoading = ref(true);
@@ -124,12 +125,12 @@ onMounted(async () => {
         conceptTypeTile.value =
             concept.value?.aliased_data?.[CONCEPT_TYPE_NODE_ALIAS];
 
-        const conceptResource = await fetchConceptResource(
+        conceptResource.value = await fetchConceptResource(
             props.resourceInstanceId,
         );
 
         label.value = getItemLabel(
-            conceptResource,
+            conceptResource.value!,
             selectedLanguage.value.code,
             systemLanguage.code,
         );
@@ -146,6 +147,22 @@ onMounted(async () => {
         isLoading.value = false;
     }
 });
+
+watch(
+    () => selectedLanguage.value.code,
+    (newCode) => {
+        if (conceptResource.value) {
+            label.value = getItemLabel(
+                conceptResource.value,
+                newCode,
+                systemLanguage.code,
+            );
+        }
+        if (concept.value) {
+            extractConceptHeaderData(concept.value);
+        }
+    },
+);
 
 function confirmDelete() {
     confirm.require({
@@ -203,7 +220,7 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
     const aliased_data = concept?.aliased_data;
 
     const name = concept?.name;
-    const descriptor = extractDescriptors(concept, systemLanguage);
+    const descriptor = extractDescriptors(concept, selectedLanguage.value);
     // TODO: get human-readable user name from resource endpoint
     const principalUser = "Anonymous"; //concept?.principalUser; // returns userid int
     // TODO: get human-readable life cycle state from resource endpoint
