@@ -156,6 +156,10 @@ function openEditor(componentName: string, tileId?: string) {
     }
 }
 
+function updateEditorLoadingState(isLoading: boolean) {
+    isEditorLoading.value = isLoading;
+}
+
 function maximizeEditor() {
     editorState.value = MAXIMIZED;
 }
@@ -298,8 +302,10 @@ provide(openPanelComponentKey, openPanelComponent);
                         :tile-id="editorTileId"
                         :section-title="selectedComponentDatum.sectionTitle"
                         :component-name="selectedComponentDatum.componentName"
-                        :is-editor-loading="isEditorLoading"
                         :mode="EDIT"
+                        @update:is-editor-loading="
+                            updateEditorLoadingState($event)
+                        "
                     />
                 </ComponentEditor>
             </SplitterPanel>
@@ -353,10 +359,10 @@ provide(openPanelComponentKey, openPanelComponent);
             >
                 <ComponentEditor
                     :key="editorKey"
-                    v-model:is-editor-loading="isEditorLoading"
                     class="splitter-panel-content"
                     :is-editor-maximized="editorState === MAXIMIZED"
                     :is-form-editor="isFormEditor"
+                    :is-editor-loading="isEditorLoading"
                     :header-title="selectedComponentDatum.sectionTitle"
                     @maximize="maximizeEditor"
                     @minimize="minimizeEditor"
@@ -364,7 +370,6 @@ provide(openPanelComponentKey, openPanelComponent);
                 >
                     <component
                         :is="selectedComponentDatum.component"
-                        v-model:is-editor-loading="isEditorLoading"
                         :graph-slug="selectedComponentDatum.graphSlug"
                         :nodegroup-alias="selectedComponentDatum.nodegroupAlias"
                         :resource-instance-id="resourceInstanceId"
@@ -372,6 +377,9 @@ provide(openPanelComponentKey, openPanelComponent);
                         :section-title="selectedComponentDatum.sectionTitle"
                         :component-name="selectedComponentDatum.componentName"
                         :mode="EDIT"
+                        @update:is-editor-loading="
+                            updateEditorLoadingState($event)
+                        "
                     />
                 </ComponentEditor>
             </SplitterPanel>
