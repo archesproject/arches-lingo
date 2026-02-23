@@ -11,22 +11,38 @@ import {
 } from "@/arches_controlled_lists/constants.ts";
 
 import SchemeCard from "@/arches_lingo/components/scheme/SchemeCard.vue";
-import { fetchLingoResources } from "@/arches_lingo/api.ts";
+import { fetchConcepts, fetchLingoResources } from "@/arches_lingo/api.ts";
 import { NEW } from "@/arches_lingo/constants.ts";
 
-import type { ResourceInstanceResult } from "@/arches_lingo/types";
+import type { Scheme, SchemeStatement } from "@/arches_lingo/types";
 
 const toast = useToast();
 const { $gettext } = useGettext();
 
 const isLoading = ref(true);
-const schemes = ref<ResourceInstanceResult[]>([]);
+const schemes = ref<Scheme[]>([]);
+const statementsBySchemeId = ref<Map<string, SchemeStatement[]>>(new Map());
 
 async function fetchSchemes() {
     schemes.value = [];
+    statementsBySchemeId.value = new Map();
     isLoading.value = true;
     try {
-        schemes.value = await fetchLingoResources("scheme");
+        const [concepts, resources] = await Promise.all([
+            fetchConcepts(),
+            fetchLingoResources("scheme"),
+        ]);
+        schemes.value = concepts.schemes as Scheme[];
+
+        // Build a map of scheme id → statements for description lookup.
+        const stmtMap = new Map<string, SchemeStatement[]>();
+        for (const resource of resources) {
+            const statements = resource.aliased_data?.statement;
+            if (statements) {
+                stmtMap.set(resource.resourceinstanceid, statements);
+            }
+        }
+        statementsBySchemeId.value = stmtMap;
     } catch (error) {
         toast.add({
             severity: ERROR,
@@ -37,8 +53,9 @@ async function fetchSchemes() {
     }
 
     schemes.value.unshift({
-        resourceinstanceid: NEW,
-        descriptors: {},
+        id: NEW,
+        labels: [],
+        top_concepts: [],
     });
 
     isLoading.value = false;
@@ -83,10 +100,11 @@ onMounted(async () => {
         <ul class="scheme-cards">
             <li
                 v-for="scheme in schemes"
-                :key="scheme.resourceinstanceid"
+                :key="scheme.id"
             >
                 <SchemeCard
                     :scheme="scheme"
+                    :statements="statementsBySchemeId.get(scheme.id)"
                     @imported="fetchSchemes"
                 />
             </li>

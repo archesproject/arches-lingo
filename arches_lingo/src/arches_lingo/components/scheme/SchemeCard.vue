@@ -1,6 +1,10 @@
 <script setup lang="ts">
-import { inject, ref } from "vue";
-import { systemLanguageKey, NEW } from "@/arches_lingo/constants.ts";
+import { computed, inject, ref, type Ref } from "vue";
+import {
+    selectedLanguageKey,
+    systemLanguageKey,
+    NEW,
+} from "@/arches_lingo/constants.ts";
 import { routeNames } from "@/arches_lingo/routes.ts";
 
 import Card from "primevue/card";
@@ -8,24 +12,55 @@ import Button from "primevue/button";
 
 import ImportThesauri from "@/arches_lingo/components/scheme/ImportThesauri.vue";
 
-import { extractDescriptors } from "@/arches_lingo/utils.ts";
+import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 
 import type { Language } from "@/arches_component_lab/types";
-import type { ResourceInstanceResult } from "@/arches_lingo/types";
+import type { Scheme, SchemeStatement } from "@/arches_lingo/types";
 
+const selectedLanguage = inject(selectedLanguageKey) as Ref<Language>;
 const systemLanguage = inject(systemLanguageKey) as Language;
 
-const { scheme } = defineProps<{ scheme: ResourceInstanceResult }>();
+const { scheme, statements } = defineProps<{
+    scheme: Scheme;
+    statements?: SchemeStatement[];
+}>();
 const emit = defineEmits<{
     (e: "imported"): void;
 }>();
 
 const schemeURL = {
     name: routeNames.scheme,
-    params: { id: scheme.resourceinstanceid },
+    params: { id: scheme.id },
 };
 
-const schemeDescriptor = extractDescriptors(scheme, systemLanguage);
+const schemeName = computed(() =>
+    getItemLabel(scheme, selectedLanguage.value.code, systemLanguage.code),
+);
+
+/**
+ * Pick the best "description" statement for the current language.
+ * Filters statements whose statement_type display_value is "description",
+ * then ranks by language match (selected language first, system language
+ * second, any other last).
+ */
+const schemeDescription = computed(() => {
+    if (!statements?.length) return "";
+
+    const preferredCode = selectedLanguage.value.code;
+    const systemCode = systemLanguage.code;
+
+    // Rank: 2 = preferred language, 1 = system language, 0 = other
+    function rank(stmt: SchemeStatement): number {
+        const langDisplay =
+            stmt.aliased_data?.statement_language?.display_value?.toLowerCase();
+        if (langDisplay === preferredCode) return 2;
+        if (langDisplay === systemCode) return 1;
+        return 0;
+    }
+
+    const best = statements.reduce((a, b) => (rank(b) > rank(a) ? b : a));
+    return best.aliased_data?.statement_content?.display_value ?? "";
+});
 
 const showImportDialog = ref(false);
 const importDialogKey = ref(0);
@@ -43,20 +78,20 @@ function onImport() {
 
 <template>
     <RouterLink :to="schemeURL">
-        <Card :class="scheme.resourceinstanceid === NEW ? 'new-scheme' : ''">
+        <Card :class="scheme.id === NEW ? 'new-scheme' : ''">
             <template #title>
-                <div v-if="scheme.resourceinstanceid === NEW">
+                <div v-if="scheme.id === NEW">
                     {{ $gettext("New Scheme") }}
                 </div>
                 <div
                     v-else
                     class="scheme-card"
                 >
-                    {{ schemeDescriptor.name }}
+                    {{ schemeName.value }}
                 </div>
             </template>
             <template #content>
-                <div v-if="scheme.resourceinstanceid === NEW">
+                <div v-if="scheme.id === NEW">
                     <div class="scheme-circle">
                         <i class="pi pi-share-alt new-scheme-icon"></i>
                     </div>
@@ -68,10 +103,10 @@ function onImport() {
                         }}</span>
                     </div>
                 </div>
-                <span>{{ schemeDescriptor.description }}</span>
+                <span v-else>{{ schemeDescription }}</span>
             </template>
             <template
-                v-if="scheme.resourceinstanceid === NEW"
+                v-if="scheme.id === NEW"
                 #footer
             >
                 <Button
