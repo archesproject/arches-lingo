@@ -217,6 +217,11 @@ watch(
     },
 );
 
+// Keep the document direction in sync with the selected language.
+watchEffect(() => {
+    document.body.dir = selectedLanguage.value.default_direction;
+});
+
 const router = useRouter();
 const route = useRoute();
 const toast = useToast();
