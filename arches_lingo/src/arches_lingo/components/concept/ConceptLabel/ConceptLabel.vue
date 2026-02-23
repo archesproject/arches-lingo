@@ -27,11 +27,11 @@ const props = defineProps<{
     tileId?: string;
 }>();
 
-const isLoading = ref(true);
-const isEditorLoading = defineModel("isEditorLoading", {
-    type: Boolean,
-    default: true,
-});
+const emit = defineEmits<{
+    (event: "update:isEditorLoading", value: boolean): void;
+}>();
+
+const isDataLoading = ref(true);
 
 const tileData = ref<AppellativeStatus[]>([]);
 const fetchError = ref();
@@ -52,8 +52,7 @@ onMounted(async () => {
         );
         tileData.value = [blankTileData as unknown as AppellativeStatus];
     }
-    isLoading.value = false;
-    isEditorLoading.value = false;
+    isDataLoading.value = false;
 });
 
 async function getSectionValue() {
@@ -71,7 +70,7 @@ async function getSectionValue() {
 
 <template>
     <Skeleton
-        v-if="isLoading"
+        v-if="isDataLoading"
         style="width: 100%"
     />
     <Message
@@ -108,6 +107,7 @@ async function getSectionValue() {
                 })
             "
             :tile-id="props.tileId"
+            @update:is-loading="emit('update:isEditorLoading', $event)"
         />
     </template>
 </template>
