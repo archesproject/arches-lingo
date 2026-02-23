@@ -56,7 +56,7 @@ class LingoTileSerializer(ArchesTileSerializer):
                 initial_tile_data.get("tileid") != str(label.tileid)
                 and new_label_type.uri == PREF_LABEL.uri
                 and label_type.uri == PREF_LABEL.uri
-                and label_language.uri == new_label_language.uri
+                and label_language == new_label_language
             ):
                 msg = _("Only one preferred label per language is permitted.")
                 raise ValidationError({"appellative_status": msg})
