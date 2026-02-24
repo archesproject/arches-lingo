@@ -10,7 +10,7 @@ import ConceptMatchViewer from "@/arches_lingo/components/concept/ConceptMatch/c
 import { EDIT, VIEW } from "@/arches_lingo/constants.ts";
 
 import { fetchTileData } from "@/arches_component_lab/generics/GenericCard/api.ts";
-import { fetchConceptRelationships } from "@/arches_lingo/api.ts";
+import { fetchLingoResourcePartial } from "@/arches_lingo/api.ts";
 
 import type {
     ConceptMatchStatus,
@@ -29,20 +29,18 @@ const props = defineProps<{
 
 const isLoading = ref(true);
 const tileData = ref<ConceptMatchStatus[]>([]);
-const schemeId = ref<string>();
 const fetchError = ref();
 
 const shouldCreateNewTile = Boolean(props.mode === EDIT && !props.tileId);
 
 watchEffect(async () => {
     isLoading.value = true;
-    const sectionValue = await getSectionValue();
-    schemeId.value = sectionValue?.scheme_id;
     if (
         props.resourceInstanceId &&
         (props.mode === VIEW || !shouldCreateNewTile)
     ) {
-        tileData.value = sectionValue?.data;
+        const sectionValue = await getSectionValue();
+        tileData.value = sectionValue.aliased_data[props.nodegroupAlias];
     } else if (shouldCreateNewTile) {
         const blankTileData = await fetchTileData(
             props.graphSlug,
@@ -55,11 +53,11 @@ watchEffect(async () => {
 
 async function getSectionValue() {
     try {
-        const sectionValue = await fetchConceptRelationships(
+        return await fetchLingoResourcePartial(
+            props.graphSlug,
             props.resourceInstanceId as string,
-            "matched",
+            props.nodegroupAlias,
         );
-        return sectionValue;
     } catch (error) {
         fetchError.value = error;
     }
@@ -87,7 +85,6 @@ async function getSectionValue() {
             :resource-instance-id="props.resourceInstanceId"
             :section-title="props.sectionTitle"
             :tile-data="tileData"
-            :scheme="schemeId"
         />
         <ConceptMatchEditor
             v-else-if="mode === EDIT"
@@ -95,7 +92,6 @@ async function getSectionValue() {
             :graph-slug="props.graphSlug"
             :nodegroup-alias="props.nodegroupAlias"
             :resource-instance-id="props.resourceInstanceId"
-            :scheme="schemeId"
             :section-title="props.sectionTitle"
             :tile-data="
                 tileData.find((tileDatum) => {

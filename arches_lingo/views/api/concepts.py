@@ -141,10 +141,7 @@ class ConceptResourceView(ConceptTreeView):
 
         if not concept_ids:
             if scheme:
-                if exclude == "true":
-                    concept_query = Concept.exclude(part_of_scheme__id=scheme)
-                else:
-                    concept_query = Concept.filter(part_of_scheme__id=scheme)
+                concept_query = Concept.filter(part_of_scheme__id=scheme)
             else:
                 concept_query = Concept.all()
 
@@ -185,13 +182,9 @@ class ConceptResourceView(ConceptTreeView):
 class ConceptRelationshipView(ConceptTreeView):
     def get(self, request):
         concept_id = request.GET.get("concept")
-        relationship_type = request.GET.get("type")
         Concept = ResourceTileTree.get_tiles("concept", as_representation=True)
-
         concept = Concept.get(pk=concept_id)
-
-        if relationship_type == "associated":
-            relationships = concept.aliased_data.relation_status
+        relationships = concept.aliased_data.relation_status
 
         return_data = {
             "scheme_id": concept.aliased_data.part_of_scheme.aliased_data.part_of_scheme[
@@ -201,33 +194,7 @@ class ConceptRelationshipView(ConceptTreeView):
             ][
                 "resourceId"
             ],
-            "data": [],
+            "data": relationships,
         }
-        for relationship in relationships:
-            data = JSONDeserializer().deserialize(
-                JSONSerializer().serialize(relationship)
-            )
-            aliased_data = JSONDeserializer().deserialize(
-                JSONSerializer().serialize(relationship.aliased_data)
-            )
-
-            if relationship_type == "associated":
-                related_concept_resourceid = (
-                    relationship.aliased_data.relation_status_ascribed_comparate[
-                        "node_value"
-                    ][0]["resourceId"]
-                )
-
-            related_concept = Concept.get(pk=related_concept_resourceid)
-
-            if related_concept.aliased_data.uri:
-                uri = related_concept.aliased_data.uri.aliased_data.uri_content
-            else:
-                uri = None
-
-            aliased_data["uri"] = uri
-            data["aliased_data"] = aliased_data
-
-            return_data["data"].append(data)
 
         return JSONResponse(return_data)
