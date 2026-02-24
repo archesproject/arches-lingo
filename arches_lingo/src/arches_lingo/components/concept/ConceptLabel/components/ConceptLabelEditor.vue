@@ -12,7 +12,7 @@ import Skeleton from "primevue/skeleton";
 import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
 
 import { createOrUpdateConcept } from "@/arches_lingo/utils.ts";
-import { loadingHandler } from "@/arches_component_lab/generics/GenericWidget/utils.ts";
+import { incrementLoadedWidgets } from "@/arches_component_lab/generics/GenericWidget/utils.ts";
 
 import {
     DEFAULT_ERROR_TOAST_LIFE,
@@ -34,7 +34,9 @@ const props = defineProps<{
     tileId?: string;
 }>();
 
-const emit = defineEmits(["update:isLoading"]);
+const emit = defineEmits<{
+    (event: "update:isLoading", value: boolean): void;
+}>();
 
 const route = useRoute();
 const router = useRouter();
@@ -60,7 +62,7 @@ const isSaving = ref(false);
 
 const TOTAL_WIDGETS = 8;
 const widgetsLoadedCount = ref(0) as Ref<number>;
-const handleWidgetLoading = loadingHandler(widgetsLoadedCount);
+const handleWidgetLoading = incrementLoadedWidgets(widgetsLoadedCount);
 
 watch(widgetsLoadedCount, (count) => {
     emit("update:isLoading", count !== TOTAL_WIDGETS);

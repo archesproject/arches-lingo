@@ -11,6 +11,7 @@ import ConceptResourceSelectWidget from "@/arches_lingo/components/widgets/Conce
 
 import { createLingoResource, upsertLingoTile } from "@/arches_lingo/api.ts";
 import { EDIT } from "@/arches_lingo/constants.ts";
+import { incrementLoadedWidgets } from "@/arches_component_lab/generics/GenericWidget/utils.ts";
 
 import type { Component, Ref } from "vue";
 import type { FormSubmitEvent } from "@primevue/forms";
@@ -27,6 +28,10 @@ const props = defineProps<{
     nodegroupAlias: string;
     resourceInstanceId: string | undefined;
     tileId?: string;
+}>();
+
+const emit = defineEmits<{
+    (event: "update:isLoading", value: boolean): void;
 }>();
 
 const router = useRouter();
@@ -46,6 +51,14 @@ const onSaveSettled = inject<() => void>("onSaveSettled");
 
 const formRef = useTemplateRef("form");
 const isSaving = ref(false);
+
+const TOTAL_WIDGETS = 1;
+const widgetsLoadedCount = ref(0) as Ref<number>;
+const handleWidgetLoading = incrementLoadedWidgets(widgetsLoadedCount);
+
+watch(widgetsLoadedCount, (count) => {
+    emit("update:isLoading", count !== TOTAL_WIDGETS);
+});
 
 watch(
     () => formRef.value,
@@ -158,6 +171,7 @@ async function save(e: FormSubmitEvent) {
                     :mode="EDIT"
                     :scheme="props.scheme"
                     :scheme-selectable="true"
+                    @update:is-loading="handleWidgetLoading($event)"
                 />
             </Form>
         </div>
