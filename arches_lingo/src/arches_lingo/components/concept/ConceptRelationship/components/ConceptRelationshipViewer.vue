@@ -36,6 +36,12 @@ const metaStringLabel: MetaStringText = {
     type: $gettext("Relationship"),
     language: $gettext("Related Concept"),
     noRecords: $gettext("No associated concepts were found."),
+    sortFields: {
+        name: "aliased_data.relation_status_ascribed_comparate.display_value",
+        type: "aliased_data.relation_status_ascribed_relation.display_value",
+        language:
+            "aliased_data.relation_status_ascribed_comparate.display_value",
+    },
 };
 </script>
 

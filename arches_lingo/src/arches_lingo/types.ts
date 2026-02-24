@@ -96,6 +96,11 @@ export interface MetaStringText {
     language?: string;
     deleteConfirm: string;
     noRecords: string;
+    sortFields?: {
+        name?: string;
+        type?: string;
+        language?: string;
+    };
 }
 
 // eslint-disable-next-line

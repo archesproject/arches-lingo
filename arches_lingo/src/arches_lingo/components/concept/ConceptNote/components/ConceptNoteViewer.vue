@@ -30,6 +30,11 @@ const metaStringLabel: MetaStringText = {
     name: $gettext("Note"),
     type: $gettext("Type"),
     noRecords: $gettext("No concept notes were found."),
+    sortFields: {
+        name: "aliased_data.statement_content.display_value",
+        type: "aliased_data.statement_type.display_value",
+        language: "aliased_data.statement_language.display_value",
+    },
 };
 </script>
 
