@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject, ref, useTemplateRef, watch } from "vue";
+import { inject, onBeforeMount, ref, useTemplateRef, watch } from "vue";
 
 import { useRouter } from "vue-router";
 import { useGettext } from "vue3-gettext";
@@ -12,6 +12,8 @@ import Skeleton from "primevue/skeleton";
 import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
 
 import { createLingoResource, upsertLingoTile } from "@/arches_lingo/api.ts";
+import { incrementLoadedWidgets } from "@/arches_component_lab/generics/GenericWidget/utils.ts";
+
 import {
     DEFAULT_ERROR_TOAST_LIFE,
     EDIT,
@@ -32,6 +34,10 @@ const props = defineProps<{
     tileId?: string;
 }>();
 
+const emit = defineEmits<{
+    (event: "update:isLoading", value: boolean): void;
+}>();
+
 const router = useRouter();
 const toast = useToast();
 const { $gettext } = useGettext();
@@ -50,10 +56,22 @@ const onSaveSettled = inject<() => void>("onSaveSettled");
 const formRef = useTemplateRef("form");
 const isSaving = ref(false);
 
+const TOTAL_WIDGETS = 1;
+const widgetsLoadedCount = ref(0) as Ref<number>;
+const handleWidgetLoading = incrementLoadedWidgets(widgetsLoadedCount);
+
+watch(widgetsLoadedCount, (count) => {
+    emit("update:isLoading", count !== TOTAL_WIDGETS);
+});
+
 watch(
     () => formRef.value,
     (formComponent) => (componentEditorFormRef!.value = formComponent),
 );
+
+onBeforeMount(() => {
+    emit("update:isLoading", true);
+});
 
 async function save(e: FormSubmitEvent) {
     isSaving.value = true;
@@ -156,6 +174,7 @@ async function save(e: FormSubmitEvent) {
                             props.tileData?.aliased_data.creation_sources
                         "
                         :mode="EDIT"
+                        @update:is-loading="handleWidgetLoading($event)"
                     />
                 </div>
             </Form>
