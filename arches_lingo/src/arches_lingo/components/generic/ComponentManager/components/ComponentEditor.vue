@@ -3,22 +3,34 @@ import {
     computed,
     nextTick,
     onMounted,
+    onUnmounted,
     provide,
     ref,
     useTemplateRef,
+    watch,
 } from "vue";
 
 import { useGettext } from "vue3-gettext";
 
 import Button from "primevue/button";
+import { useConfirm } from "primevue/useconfirm";
 
-import { MAXIMIZE, MINIMIZE, CLOSE } from "@/arches_lingo/constants.ts";
+import {
+    CLOSE,
+    DANGER,
+    MAXIMIZE,
+    MINIMIZE,
+    SECONDARY,
+} from "@/arches_lingo/constants.ts";
+import { useEditorDirtyState } from "@/arches_lingo/composables/useEditorDirtyState.ts";
 
 const props = defineProps<{
     isEditorMaximized: boolean;
 }>();
 
 const { $gettext } = useGettext();
+const confirm = useConfirm();
+const { isEditorDirty } = useEditorDirtyState();
 
 const emit = defineEmits([MAXIMIZE, MINIMIZE, CLOSE]);
 
@@ -39,6 +51,14 @@ const isFormDirty = computed(() => {
     return false;
 });
 
+watch(isFormDirty, (dirty) => {
+    isEditorDirty.value = dirty;
+});
+
+onUnmounted(() => {
+    isEditorDirty.value = false;
+});
+
 onMounted(() => {
     nextTick(() => {
         // @ts-expect-error This is an error in PrimeVue types
@@ -51,6 +71,30 @@ function toggleSize() {
         emit(MINIMIZE);
     } else {
         emit(MAXIMIZE);
+    }
+}
+
+function onCloseClicked() {
+    if (isFormDirty.value) {
+        confirm.require({
+            group: "unsaved-changes",
+            header: $gettext("Unsaved Changes"),
+            message: $gettext(
+                "You have unsaved changes that will be discarded. Do you want to continue?",
+            ),
+            acceptProps: {
+                label: $gettext("Discard Changes"),
+                severity: DANGER,
+            },
+            rejectProps: {
+                label: $gettext("Keep Editing"),
+                severity: SECONDARY,
+                outlined: true,
+            },
+            accept: () => emit(CLOSE),
+        });
+    } else {
+        emit(CLOSE);
     }
 }
 
@@ -87,7 +131,7 @@ function onCancel() {
                 <Button
                     :aria-label="$gettext('close editor')"
                     class="panel-control-button"
-                    @click="$emit(CLOSE)"
+                    @click="onCloseClicked"
                 >
                     <i
                         class="pi pi-times"

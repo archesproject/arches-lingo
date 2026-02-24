@@ -2,6 +2,8 @@
 import { computed, markRaw, provide, ref } from "vue";
 
 import { useRoute } from "vue-router";
+import { useGettext } from "vue3-gettext";
+import { useConfirm } from "primevue/useconfirm";
 
 import Splitter from "primevue/splitter";
 import SplitterPanel from "primevue/splitterpanel";
@@ -10,12 +12,15 @@ import ComponentEditor from "@/arches_lingo/components/generic/ComponentManager/
 
 import {
     CLOSED,
+    DANGER,
     EDIT,
     MAXIMIZED,
     MINIMIZED,
     NEW,
+    SECONDARY,
     VIEW,
 } from "@/arches_lingo/constants.ts";
+import { useEditorDirtyState } from "@/arches_lingo/composables/useEditorDirtyState.ts";
 
 import type { Component } from "vue";
 
@@ -30,6 +35,9 @@ const props = defineProps<{
 }>();
 
 const route = useRoute();
+const { $gettext } = useGettext();
+const confirm = useConfirm();
+const { isEditorDirty } = useEditorDirtyState();
 
 const processedComponentData = ref(
     props.componentData.map(function (item) {
@@ -64,10 +72,34 @@ const remainingComponentData = computed(() => {
 window.addEventListener("keyup", (event) => {
     if (event.key === "Escape") {
         if (editorState.value !== CLOSED) {
-            closeEditor();
+            if (isEditorDirty.value) {
+                confirmDiscardThen(closeEditor);
+            } else {
+                closeEditor();
+            }
         }
     }
 });
+
+function confirmDiscardThen(callback: () => void) {
+    confirm.require({
+        group: "unsaved-changes",
+        header: $gettext("Unsaved Changes"),
+        message: $gettext(
+            "You have unsaved changes that will be discarded. Do you want to continue?",
+        ),
+        acceptProps: {
+            label: $gettext("Discard Changes"),
+            severity: DANGER,
+        },
+        rejectProps: {
+            label: $gettext("Keep Editing"),
+            severity: SECONDARY,
+            outlined: true,
+        },
+        accept: callback,
+    });
+}
 
 function closeEditor() {
     selectedComponentDatum.value = null;
@@ -75,7 +107,7 @@ function closeEditor() {
     editorTileId.value = null;
 }
 
-function openEditor(componentName: string, tileId?: string) {
+function doOpenEditor(componentName: string, tileId?: string) {
     const componentDatum = processedComponentData.value.find(
         (componentDatum) => {
             return componentDatum.componentName === componentName;
@@ -91,6 +123,14 @@ function openEditor(componentName: string, tileId?: string) {
     editorState.value = MINIMIZED;
 }
 
+function openEditor(componentName: string, tileId?: string) {
+    if (editorState.value !== CLOSED && isEditorDirty.value) {
+        confirmDiscardThen(() => doOpenEditor(componentName, tileId));
+    } else {
+        doOpenEditor(componentName, tileId);
+    }
+}
+
 function maximizeEditor() {
     editorState.value = MAXIMIZED;
 }
@@ -102,7 +142,7 @@ function minimizeEditor() {
 function updateAfterComponentDeletion(componentName: string, tileId: string) {
     if (tileId === editorTileId.value) {
         closeEditor();
-        openEditor(componentName);
+        doOpenEditor(componentName);
     }
 }
 

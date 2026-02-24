@@ -4,6 +4,7 @@ import { computed, inject, nextTick, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
+import { useConfirm } from "primevue/useconfirm";
 import Skeleton from "primevue/skeleton";
 import InputText from "primevue/inputtext";
 import Message from "primevue/message";
@@ -17,9 +18,12 @@ import {
     ERROR,
 } from "@/arches_controlled_lists/constants.ts";
 import {
+    DANGER,
+    SECONDARY,
     selectedLanguageKey,
     systemLanguageKey,
 } from "@/arches_lingo/constants.ts";
+import { useEditorDirtyState } from "@/arches_lingo/composables/useEditorDirtyState.ts";
 
 import { fetchConcepts } from "@/arches_lingo/api.ts";
 
@@ -55,8 +59,10 @@ const props = withDefaults(
 
 const toast = useToast();
 const { $gettext } = useGettext();
+const confirm = useConfirm();
 const route = useRoute();
 const router = useRouter();
+const { isEditorDirty } = useEditorDirtyState();
 
 const NEW = "new";
 const FOCUS = $gettext("Focus");
@@ -667,10 +673,33 @@ function onNodeSelect(node: TreeNode) {
         return;
     }
 
-    scrollToItemInTree(node.data.id, false, node.key);
+    function doNavigate() {
+        scrollToItemInTree(node.data.id, false, node.key);
+        suppressScrollOnNextRouteSelect.value = true;
+        navigateToSchemeOrConcept!(router, node.data);
+    }
 
-    suppressScrollOnNextRouteSelect.value = true;
-    navigateToSchemeOrConcept!(router, node.data);
+    if (isEditorDirty.value) {
+        confirm.require({
+            group: "unsaved-changes",
+            header: $gettext("Unsaved Changes"),
+            message: $gettext(
+                "You have unsaved changes that will be discarded. Do you want to continue?",
+            ),
+            acceptProps: {
+                label: $gettext("Discard Changes"),
+                severity: DANGER,
+            },
+            rejectProps: {
+                label: $gettext("Keep Editing"),
+                severity: SECONDARY,
+                outlined: true,
+            },
+            accept: doNavigate,
+        });
+    } else {
+        doNavigate();
+    }
 }
 </script>
 

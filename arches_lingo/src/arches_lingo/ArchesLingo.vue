@@ -6,6 +6,7 @@ import { useToast } from "primevue/usetoast";
 
 import Splitter from "primevue/splitter";
 import SplitterPanel from "primevue/splitterpanel";
+import ConfirmDialog from "primevue/confirmdialog";
 import Toast from "primevue/toast";
 
 import SchemeHierarchy from "@/arches_lingo/components/header/PageHeader/components/SchemeHierarchy/SchemeHierarchy.vue";
@@ -144,6 +145,7 @@ async function checkUserAuthentication(
             },
         }"
     />
+    <ConfirmDialog group="unsaved-changes" />
 </template>
 
 <style scoped>
