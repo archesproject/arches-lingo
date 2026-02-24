@@ -12,6 +12,8 @@ import Skeleton from "primevue/skeleton";
 import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
 
 import { createLingoResource, upsertLingoTile } from "@/arches_lingo/api.ts";
+import { incrementLoadedWidgets } from "@/arches_component_lab/generics/GenericWidget/utils.ts";
+
 import {
     DEFAULT_ERROR_TOAST_LIFE,
     EDIT,
@@ -30,6 +32,10 @@ const props = defineProps<{
     nodegroupAlias: string;
     resourceInstanceId: string | undefined;
     tileId?: string;
+}>();
+
+const emit = defineEmits<{
+    (event: "update:isLoading", value: boolean): void;
 }>();
 
 const router = useRouter();
@@ -51,6 +57,14 @@ const onSaveSettled = inject<() => void>("onSaveSettled");
 
 const formRef = useTemplateRef("form");
 const isSaving = ref(false);
+
+const TOTAL_WIDGETS = 5;
+const widgetsLoadedCount = ref(0) as Ref<number>;
+const handleWidgetLoading = incrementLoadedWidgets(widgetsLoadedCount);
+
+watch(widgetsLoadedCount, (count) => {
+    emit("update:isLoading", count !== TOTAL_WIDGETS);
+});
 
 watch(
     () => formRef.value,
@@ -160,6 +174,7 @@ async function save(e: FormSubmitEvent) {
                                 .appellative_status_ascribed_name_content
                         "
                         :mode="EDIT"
+                        @update:is-loading="handleWidgetLoading($event)"
                     />
                 </div>
                 <div class="widget-container column">
@@ -171,6 +186,7 @@ async function save(e: FormSubmitEvent) {
                                 .appellative_status_ascribed_relation
                         "
                         :mode="EDIT"
+                        @update:is-loading="handleWidgetLoading($event)"
                     />
                 </div>
                 <div class="widget-container column">
@@ -182,6 +198,7 @@ async function save(e: FormSubmitEvent) {
                                 .appellative_status_ascribed_name_language
                         "
                         :mode="EDIT"
+                        @update:is-loading="handleWidgetLoading($event)"
                     />
                 </div>
                 <div class="widget-container column">
@@ -193,6 +210,7 @@ async function save(e: FormSubmitEvent) {
                                 ?.appellative_status_data_assignment_actor
                         "
                         :mode="EDIT"
+                        @update:is-loading="handleWidgetLoading($event)"
                     />
                 </div>
                 <div class="widget-container column">
@@ -204,6 +222,7 @@ async function save(e: FormSubmitEvent) {
                                 ?.appellative_status_data_assignment_object_used
                         "
                         :mode="EDIT"
+                        @update:is-loading="handleWidgetLoading($event)"
                     />
                 </div>
             </Form>
