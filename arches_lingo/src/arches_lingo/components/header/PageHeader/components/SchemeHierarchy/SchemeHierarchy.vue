@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { ref, watchEffect } from "vue";
+import { ref } from "vue";
 
 import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
 
 import Button from "primevue/button";
+import ProgressBar from "primevue/progressbar";
 
 import ConceptTree from "@/arches_lingo/components/tree/ConceptTree.vue";
 
@@ -23,14 +24,18 @@ const props = withDefaults(
 const { $gettext } = useGettext();
 const toast = useToast();
 
-const conceptTreeKey = ref(0);
 const concepts = ref();
+const isRefreshing = ref(false);
+let isInitialLoad = true;
 
 const emit = defineEmits<{
     (e: "shouldShowHierarchy", value: boolean): void;
 }>();
 
-watchEffect(async () => {
+async function fetchAndSetConcepts() {
+    if (!isInitialLoad) {
+        isRefreshing.value = true;
+    }
     try {
         concepts.value = await fetchConcepts();
     } catch (error) {
@@ -40,8 +45,15 @@ watchEffect(async () => {
             summary: $gettext("Unable to fetch concepts"),
             detail: (error as Error).message,
         });
+    } finally {
+        isRefreshing.value = false;
+        isInitialLoad = false;
     }
-});
+}
+
+fetchAndSetConcepts();
+
+defineExpose({ refresh: fetchAndSetConcepts });
 </script>
 
 <template>
@@ -61,8 +73,12 @@ watchEffect(async () => {
             />
         </div>
     </div>
+    <ProgressBar
+        v-if="isRefreshing"
+        mode="indeterminate"
+        class="refresh-progress"
+    />
     <ConceptTree
-        :key="conceptTreeKey"
         :concepts="concepts"
         :is-open="props.isOpen"
     />
@@ -88,5 +104,10 @@ watchEffect(async () => {
     padding-bottom: 0.75rem;
     font-size: var(--p-lingo-font-size-large);
     font-weight: var(--p-lingo-font-weight-normal);
+}
+
+.refresh-progress {
+    height: 0.1875rem;
+    border-radius: 0;
 }
 </style>

@@ -203,6 +203,27 @@ watch(route, async (newRoute) => {
 });
 
 watch(
+    () => props.concepts,
+    async (newConcepts) => {
+        if (!hasCompletedInitialLoad.value || !newConcepts) return;
+
+        const priorSortedSchemeIds = schemes.value.map((scheme) => scheme.id);
+
+        schemes.value = (newConcepts.schemes as Scheme[]).sort(
+            (schemeA, schemeB) => {
+                return (
+                    priorSortedSchemeIds.indexOf(schemeA.id) -
+                    priorSortedSchemeIds.indexOf(schemeB.id)
+                );
+            },
+        );
+
+        await nextTick();
+        await selectNodeFromRoute(route, false);
+    },
+);
+
+watch(
     () => props.isOpen,
     async (nextIsOpen) => {
         if (!nextIsOpen) {

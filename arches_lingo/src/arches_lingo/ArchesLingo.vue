@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { provide, ref, watchEffect } from "vue";
+import { provide, ref, useTemplateRef, watchEffect } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
@@ -49,10 +49,10 @@ const { $gettext } = useGettext();
 const isNavExpanded = ref(false);
 const shouldShowHierarchy = ref(false);
 
-const schemeHierarchyKey = ref(0);
+const schemeHierarchyRef = useTemplateRef("schemeHierarchy");
 
 const refreshSchemeHierarchy = function () {
-    schemeHierarchyKey.value++;
+    schemeHierarchyRef.value?.refresh();
 };
 provide("refreshSchemeHierarchy", refreshSchemeHierarchy);
 
@@ -120,7 +120,7 @@ async function checkUserAuthentication(
                 >
                     <div class="hierarchy-panel">
                         <SchemeHierarchy
-                            :key="schemeHierarchyKey"
+                            ref="schemeHierarchy"
                             :is-open="shouldShowHierarchy"
                             @should-show-hierarchy="
                                 shouldShowHierarchy = $event
