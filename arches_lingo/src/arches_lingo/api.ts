@@ -312,15 +312,13 @@ export const fetchConceptResource = async (conceptId: string) => {
 };
 
 export const fetchSchemeResource = async (schemeId: string) => {
-    const parsed = await fetchConceptResources(
-        "",
-        1,
-        1,
-        schemeId,
-        undefined,
-        [],
-    );
-    return parsed.data[0].parents[0][0];
+    const url = generateArchesURL("arches_lingo:api-lingo-scheme", {
+        pk: schemeId,
+    });
+    const response = await fetch(url);
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
 };
 
 export const fetchConceptRelationships = async (
