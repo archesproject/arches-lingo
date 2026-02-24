@@ -37,12 +37,6 @@ const schemeName = computed(() =>
     getItemLabel(scheme, selectedLanguage.value.code, systemLanguage.code),
 );
 
-/**
- * Pick the best "description" statement for the current language.
- * Filters statements whose statement_type display_value is "description",
- * then ranks by language match (selected language first, system language
- * second, any other last).
- */
 const schemeDescription = computed(() => {
     if (!statements?.length) return "";
 
