@@ -27,6 +27,10 @@ const props = defineProps<{
     tileId?: string;
 }>();
 
+const emit = defineEmits<{
+    (event: "update:isEditorLoading", value: boolean): void;
+}>();
+
 const isLoading = ref(true);
 const tileData = ref<ConceptMatchStatus[]>([]);
 const fetchError = ref();
@@ -106,6 +110,7 @@ watchEffect(async () => {
                 })
             "
             :tile-id="props.tileId"
+            @update:is-loading="emit('update:isEditorLoading', $event)"
         />
     </template>
 </template>

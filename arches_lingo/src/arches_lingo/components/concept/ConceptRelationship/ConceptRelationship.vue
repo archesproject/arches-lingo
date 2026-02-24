@@ -27,6 +27,10 @@ const props = defineProps<{
     tileId?: string;
 }>();
 
+const emit = defineEmits<{
+    (event: "update:isEditorLoading", value: boolean): void;
+}>();
+
 const isLoading = ref(true);
 const tileData = ref<ConceptRelationStatus[]>([]);
 const fetchError = ref();
@@ -108,6 +112,8 @@ async function getSectionValue() {
             "
             :tile-id="props.tileId"
             :scheme="schemeId"
+            :exclude="false"
+            @update:is-loading="emit('update:isEditorLoading', $event)"
         />
     </template>
 </template>

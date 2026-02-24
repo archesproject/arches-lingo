@@ -46,6 +46,7 @@ const emit = defineEmits([
     "update:isDirty",
     "update:isFocused",
     "update:value",
+    "update:isLoading",
 ]);
 
 const isLoading = ref(true);
@@ -140,6 +141,7 @@ async function getConceptHierarchy(conceptIds: string[]) {
                 :scheme="scheme"
                 :scheme-selectable="schemeSelectable"
                 @update:value="onUpdateValue($event)"
+                @update:is-editor-mounted="emit('update:isLoading', $event)"
             />
         </GenericFormField>
         <ConceptResourceSelectWidgetViewer
