@@ -30,6 +30,7 @@ import {
     addDigitalObjectToConceptImageCollection,
     createDigitalObject,
 } from "@/arches_lingo/components/concept/ConceptImages/components/utils.ts";
+import { incrementLoadedWidgets } from "@/arches_component_lab/generics/GenericWidget/utils.ts";
 
 import {
     fetchLingoResource,
@@ -65,6 +66,10 @@ const props = defineProps<{
     tileId?: string;
 }>();
 
+const emit = defineEmits<{
+    (event: "update:isLoading", value: boolean): void;
+}>();
+
 const { $gettext } = useGettext();
 const toast = useToast();
 
@@ -83,6 +88,18 @@ const onSaveSettled = inject<() => void>("onSaveSettled");
 
 const formRef = useTemplateRef("form");
 const isLoading = ref(true);
+
+const TOTAL_WIDGETS = 3;
+const widgetsLoadedCount = ref(0) as Ref<number>;
+const handleWidgetLoading = incrementLoadedWidgets(widgetsLoadedCount);
+
+watch(widgetsLoadedCount, (count) => {
+    emit("update:isLoading", count !== TOTAL_WIDGETS);
+});
+
+// onBeforeMount(() => {
+//     emit("update:isLoading", true);
+// });
 
 onMounted(() => {
     document.addEventListener(
@@ -340,6 +357,7 @@ function resetForm() {
                             .name_content
                     "
                     class="widget-container column"
+                    @update:is-loading="handleWidgetLoading($event)"
                 />
                 <GenericWidget
                     node-alias="statement_content"
@@ -350,6 +368,7 @@ function resetForm() {
                             ?.aliased_data.statement_content
                     "
                     class="widget-container column"
+                    @update:is-loading="handleWidgetLoading($event)"
                 />
                 <GenericWidget
                     node-alias="content"
@@ -361,6 +380,7 @@ function resetForm() {
                     :mode="EDIT"
                     :should-show-label="false"
                     class="widget-container column"
+                    @update:is-loading="handleWidgetLoading($event)"
                 />
             </Form>
         </div>
