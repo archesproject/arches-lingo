@@ -10,6 +10,7 @@ from arches_lingo.views.api.concepts import (
     ConceptResourceView,
     ConceptRelationshipView,
 )
+from arches_lingo.views.api.schemes import SchemeResourceView
 from arches_lingo.views.api.generic import (
     LingoResourceDetailView,
     LingoResourceListCreateView,
@@ -43,6 +44,11 @@ urlpatterns = [
         "api/lingo/concept-relationships",
         ConceptRelationshipView.as_view(),
         name="api-lingo-concept-relationships",
+    ),
+    path(
+        "api/lingo/scheme/<uuid:pk>",
+        SchemeResourceView.as_view(),
+        name="api-lingo-scheme",
     ),
     path(
         "api/lingo/<slug:graph>",
