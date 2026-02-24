@@ -11,8 +11,9 @@ class Migration(migrations.Migration):
     ]
 
     def forward(apps, schema_editor):
-        WidgetSynchronizer().synchronize_widgets(
-            "language-widget", "LanguageSelectWidget"
+        WidgetSynchronizer().add_mapping(
+            "language-widget",
+            "arches_component_lab/widgets/LanguageSelectWidget/LanguageSelectWidget.vue",
         )
 
     def reverse(apps, schema_editor):
