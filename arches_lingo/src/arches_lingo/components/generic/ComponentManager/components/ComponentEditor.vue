@@ -55,7 +55,17 @@ watch(
     () => props.isEditorLoading,
     (isLoaded) => {
         if (isLoaded === false && componentEditorFormRef.value) {
-            componentEditorFormRef.value.$refs.formRef[0]?.focus();
+            const formRef = componentEditorFormRef.value.$refs.formRef;
+            try {
+                formRef[0].focus();
+            } catch {
+                const fields = componentEditorFormRef.value.fields;
+                const nodeAlias = Object.keys(fields)[0];
+                const firstField = formRef.querySelector(
+                    `#${nodeAlias}`,
+                ) as HTMLElement;
+                firstField.focus();
+            }
         }
     },
 );
