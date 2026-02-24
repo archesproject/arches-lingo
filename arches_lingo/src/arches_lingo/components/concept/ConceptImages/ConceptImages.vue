@@ -24,6 +24,10 @@ const props = defineProps<{
     tileId?: string;
 }>();
 
+const emit = defineEmits<{
+    (event: "update:isEditorLoading", value: boolean): void;
+}>();
+
 const isLoading = ref(true);
 const tileData = ref<ConceptImages>();
 const configurationError = ref();
@@ -93,6 +97,7 @@ onMounted(async () => {
             :section-title="props.sectionTitle"
             :tile-data="tileData"
             :tile-id="props.tileId"
+            @update:is-loading="emit('update:isEditorLoading', $event)"
         />
     </template>
 </template>
