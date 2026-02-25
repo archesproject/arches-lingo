@@ -81,4 +81,9 @@ urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 # Only handle i18n routing in active project. This will still handle the routes provided by Arches core and Arches applications,
 # but handling i18n routes in multiple places causes application errors.
 if settings.ROOT_URLCONF == __name__:
+    # Language switching is handled via the django_language cookie rather than
+    # URL-based language prefixes. i18n_patterns (which would wrap all URLs with
+    # a language code, e.g. /en/scheme/...) is intentionally not used, as it
+    # conflicts with cookie-based switching and would break existing URL structures.
+    # The i18n/ endpoint is still included to support Django's set_language view.
     urlpatterns.append(path("i18n/", include("django.conf.urls.i18n")))
