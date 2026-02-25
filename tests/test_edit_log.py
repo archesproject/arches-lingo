@@ -5,36 +5,58 @@ from unittest.mock import MagicMock, patch
 
 from arches.app.models.tile import Tile as RealTile
 
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
 
 from arches.app.models.models import (
     EditLog,
     NodeGroup,
-    ResourceInstance,
-    TileModel,
 )
 
 from arches_lingo.const import (
-    CONCEPTS_GRAPH_ID,
-    SCHEMES_GRAPH_ID,
     CONCEPT_NAME_NODEGROUP,
     CONCEPT_NAME_CONTENT_NODE,
     CONCEPT_NAME_LANGUAGE_NODE,
-    CONCEPT_NAME_TYPE_NODE,
     SCHEME_NAME_NODEGROUP,
-    SCHEME_NAME_CONTENT_NODE,
-    SCHEME_NAME_LANGUAGE_NODE,
-    SCHEME_NAME_TYPE_NODE,
-    LABEL_LIST_ID,
 )
 from arches_lingo.views.api.edit_log import _make_aware
 
 from tests.tests import ViewTests
 
 
-class EditLogGetTests(ViewTests):
+class EditLogTestMixin:
+    """Shared helpers for edit log tests."""
+
+    def _create_edit(
+        self,
+        resource,
+        edittype,
+        timestamp,
+        tileid=None,
+        nodegroupid=None,
+        newvalue=None,
+        oldvalue=None,
+        note=None,
+    ):
+        return EditLog.objects.create(
+            resourceinstanceid=str(resource.pk),
+            edittype=edittype,
+            timestamp=timestamp,
+            userid=str(self.admin.pk),
+            user_firstname="admin",
+            user_lastname="admin",
+            user_username="admin",
+            user_email="admin@test.com",
+            tileinstanceid=str(tileid) if tileid else None,
+            nodegroupid=str(nodegroupid) if nodegroupid else None,
+            newvalue=newvalue,
+            oldvalue=oldvalue,
+            note=note,
+        )
+
+
+class EditLogGetTests(EditLogTestMixin, ViewTests):
     """Tests for the GET endpoint of the edit log API."""
 
     @classmethod
@@ -42,28 +64,47 @@ class EditLogGetTests(ViewTests):
         super().setUpTestData()
         cls.base_time = datetime(2025, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
 
-        cls.edit1 = EditLog.objects.create(
-            resourceinstanceid=str(cls.scheme.pk),
-            edittype="create",
-            timestamp=cls.base_time,
-            userid=str(cls.admin.pk),
-            user_firstname="admin",
-            user_lastname="admin",
-            user_username="admin",
-            user_email="admin@test.com",
+        cls.edit1 = cls._create_edit_cls(
+            cls.scheme,
+            "create",
+            cls.base_time,
             note="Created resource",
         )
-        cls.edit2 = EditLog.objects.create(
-            resourceinstanceid=str(cls.scheme.pk),
-            edittype="tile create",
-            timestamp=cls.base_time + timedelta(minutes=5),
+        cls.edit2 = cls._create_edit_cls(
+            cls.scheme,
+            "tile create",
+            cls.base_time + timedelta(minutes=5),
+            nodegroupid=SCHEME_NAME_NODEGROUP,
+            tileid=uuid.uuid4(),
+        )
+
+    @classmethod
+    def _create_edit_cls(
+        cls,
+        resource,
+        edittype,
+        timestamp,
+        tileid=None,
+        nodegroupid=None,
+        newvalue=None,
+        oldvalue=None,
+        note=None,
+    ):
+        """classmethod variant of _create_edit for use in setUpTestData."""
+        return EditLog.objects.create(
+            resourceinstanceid=str(resource.pk),
+            edittype=edittype,
+            timestamp=timestamp,
             userid=str(cls.admin.pk),
             user_firstname="admin",
             user_lastname="admin",
             user_username="admin",
             user_email="admin@test.com",
-            nodegroupid=SCHEME_NAME_NODEGROUP,
-            tileinstanceid=str(uuid.uuid4()),
+            tileinstanceid=str(tileid) if tileid else None,
+            nodegroupid=str(nodegroupid) if nodegroupid else None,
+            newvalue=newvalue,
+            oldvalue=oldvalue,
+            note=note,
         )
 
     def test_get_edit_log(self):
@@ -148,45 +189,57 @@ class EditLogGetTests(ViewTests):
         self.assertIn(response.status_code, [403, 302])
 
 
-class EditLogPostTests(ViewTests):
+class EditLogPostTests(EditLogTestMixin, ViewTests):
     """Tests for the POST (revert) endpoint of the edit log API."""
+
+    TILE_PATCH_TARGET = "arches_lingo.views.api.edit_log.Tile"
 
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
         cls.base_time = datetime(2025, 6, 1, 12, 0, 0)
 
-    def _create_edit(
-        self,
-        resource,
-        edittype,
-        timestamp,
-        tileid=None,
-        nodegroupid=None,
-        newvalue=None,
-        oldvalue=None,
-    ):
-        return EditLog.objects.create(
-            resourceinstanceid=str(resource.pk),
-            edittype=edittype,
-            timestamp=timestamp,
-            userid=str(self.admin.pk),
-            user_firstname="admin",
-            user_lastname="admin",
-            user_username="admin",
-            user_email="admin@test.com",
-            tileinstanceid=str(tileid) if tileid else None,
-            nodegroupid=str(nodegroupid) if nodegroupid else None,
-            newvalue=newvalue,
-            oldvalue=oldvalue,
+    def _post_revert(self, resource, timestamp=None):
+        """POST a revert request and return the response."""
+        ts = (timestamp or self.base_time).isoformat()
+        url = reverse("api-lingo-edit-log", args=[resource.pk])
+        return self.client.post(
+            url,
+            data=json.dumps({"timestamp": ts}),
+            content_type="application/json",
         )
+
+    def _patch_tile(self, *, return_value=None, side_effect=None):
+        """Return a context manager that patches the Tile class.
+
+        Usage::
+
+            with self._patch_tile(return_value=mock_tile) as MockTile:
+                ...
+        """
+        p = patch(self.TILE_PATCH_TARGET)
+
+        class _PatchContext:
+            def __enter__(self_ctx):
+                MockTile = p.__enter__()
+                MockTile.DoesNotExist = RealTile.DoesNotExist
+                if side_effect is not None:
+                    MockTile.objects.get.side_effect = side_effect
+                elif return_value is not None:
+                    MockTile.objects.get.return_value = return_value
+                self_ctx.MockTile = MockTile
+                return MockTile
+
+            def __exit__(self_ctx, *args):
+                return p.__exit__(*args)
+
+        return _PatchContext()
 
     def test_revert_deletes_tile_created_after_target(self):
         """Tiles created after target timestamp should be deleted on revert."""
         concept = self.concepts[0]
         tileid = uuid.uuid4()
 
-        # Edit log: tile was created AFTER base_time
         self._create_edit(
             concept,
             "tile create",
@@ -197,15 +250,8 @@ class EditLogPostTests(ViewTests):
         )
 
         mock_tile = MagicMock()
-        with patch("arches_lingo.views.api.edit_log.Tile") as MockTile:
-            MockTile.DoesNotExist = RealTile.DoesNotExist
-            MockTile.objects.get.return_value = mock_tile
-            url = reverse("api-lingo-edit-log", args=[concept.pk])
-            response = self.client.post(
-                url,
-                data=json.dumps({"timestamp": self.base_time.isoformat()}),
-                content_type="application/json",
-            )
+        with self._patch_tile(return_value=mock_tile):
+            response = self._post_revert(concept)
 
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content)
@@ -246,20 +292,12 @@ class EditLogPostTests(ViewTests):
 
         mock_tile = MagicMock()
         mock_tile.data = modified_data.copy()
-        with patch("arches_lingo.views.api.edit_log.Tile") as MockTile:
-            MockTile.DoesNotExist = RealTile.DoesNotExist
-            MockTile.objects.get.return_value = mock_tile
-            url = reverse("api-lingo-edit-log", args=[concept.pk])
-            response = self.client.post(
-                url,
-                data=json.dumps({"timestamp": self.base_time.isoformat()}),
-                content_type="application/json",
-            )
+        with self._patch_tile(return_value=mock_tile):
+            response = self._post_revert(concept)
 
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content)
         self.assertEqual(data["status"], "ok")
-        # Verify tile data was set to the original data
         self.assertEqual(mock_tile.data, original_data)
         mock_tile.save.assert_called_once()
 
@@ -296,20 +334,12 @@ class EditLogPostTests(ViewTests):
         )
 
         mock_tile = MagicMock()
-        with patch("arches_lingo.views.api.edit_log.Tile") as MockTile:
-            MockTile.DoesNotExist = RealTile.DoesNotExist
-            MockTile.objects.get.return_value = mock_tile
-            url = reverse("api-lingo-edit-log", args=[concept.pk])
-            response = self.client.post(
-                url,
-                data=json.dumps({"timestamp": self.base_time.isoformat()}),
-                content_type="application/json",
-            )
+        with self._patch_tile(return_value=mock_tile):
+            response = self._post_revert(concept)
 
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content)
         self.assertEqual(data["status"], "ok")
-        # The last edit before target is "tile delete", so the tile should be deleted
         mock_tile.delete.assert_called_once()
 
     def test_revert_no_changes_needed(self):
@@ -326,12 +356,7 @@ class EditLogPostTests(ViewTests):
             newvalue={CONCEPT_NAME_CONTENT_NODE: "Old"},
         )
 
-        url = reverse("api-lingo-edit-log", args=[concept.pk])
-        response = self.client.post(
-            url,
-            data=json.dumps({"timestamp": self.base_time.isoformat()}),
-            content_type="application/json",
-        )
+        response = self._post_revert(concept)
 
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content)
@@ -371,37 +396,22 @@ class EditLogPostTests(ViewTests):
         self.assertEqual(response.status_code, 400)
 
     def test_revert_resource_not_found(self):
-        fake_id = uuid.uuid4()
-        url = reverse("api-lingo-edit-log", args=[fake_id])
+        fake_resource = MagicMock(pk=uuid.uuid4())
         with self.assertLogs("django.request", level="WARNING"):
-            response = self.client.post(
-                url,
-                data=json.dumps({"timestamp": self.base_time.isoformat()}),
-                content_type="application/json",
-            )
+            response = self._post_revert(fake_resource)
 
         self.assertEqual(response.status_code, 404)
 
     def test_revert_unauthenticated(self):
         self.client.logout()
-        url = reverse("api-lingo-edit-log", args=[self.scheme.pk])
-        response = self.client.post(
-            url,
-            data=json.dumps({"timestamp": self.base_time.isoformat()}),
-            content_type="application/json",
-        )
+        response = self._post_revert(self.scheme)
 
         self.assertIn(response.status_code, [403, 302])
 
     def test_revert_non_admin_user(self):
         non_admin = User.objects.create_user(username="viewer2", password="test123")
         self.client.force_login(non_admin)
-        url = reverse("api-lingo-edit-log", args=[self.scheme.pk])
-        response = self.client.post(
-            url,
-            data=json.dumps({"timestamp": self.base_time.isoformat()}),
-            content_type="application/json",
-        )
+        response = self._post_revert(self.scheme)
 
         self.assertIn(response.status_code, [403, 302])
 
@@ -422,11 +432,8 @@ class EditLogPostTests(ViewTests):
         )
 
         mock_tile = MagicMock()
-        # Send a naive timestamp (no 'Z' or offset)
         naive_ts = self.base_time.strftime("%Y-%m-%dT%H:%M:%S")
-        with patch("arches_lingo.views.api.edit_log.Tile") as MockTile:
-            MockTile.DoesNotExist = RealTile.DoesNotExist
-            MockTile.objects.get.return_value = mock_tile
+        with self._patch_tile(return_value=mock_tile):
             url = reverse("api-lingo-edit-log", args=[concept.pk])
             response = self.client.post(
                 url,
@@ -472,15 +479,8 @@ class EditLogPostTests(ViewTests):
         # The tile doesn't exist now (it was deleted after target).
         # When reverting, the code tries Tile.objects.get → DoesNotExist,
         # then finds that the nodegroup is nested → reports error.
-        with patch("arches_lingo.views.api.edit_log.Tile") as MockTile:
-            MockTile.DoesNotExist = RealTile.DoesNotExist
-            MockTile.objects.get.side_effect = RealTile.DoesNotExist
-            url = reverse("api-lingo-edit-log", args=[concept.pk])
-            response = self.client.post(
-                url,
-                data=json.dumps({"timestamp": self.base_time.isoformat()}),
-                content_type="application/json",
-            )
+        with self._patch_tile(side_effect=RealTile.DoesNotExist):
+            response = self._post_revert(concept)
 
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content)
@@ -500,12 +500,7 @@ class EditLogPostTests(ViewTests):
             self.base_time + timedelta(hours=1),
         )
 
-        url = reverse("api-lingo-edit-log", args=[concept.pk])
-        response = self.client.post(
-            url,
-            data=json.dumps({"timestamp": self.base_time.isoformat()}),
-            content_type="application/json",
-        )
+        response = self._post_revert(concept)
 
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content)
@@ -527,15 +522,8 @@ class EditLogPostTests(ViewTests):
             newvalue={CONCEPT_NAME_CONTENT_NODE: "Ghost"},
         )
 
-        with patch("arches_lingo.views.api.edit_log.Tile") as MockTile:
-            MockTile.DoesNotExist = RealTile.DoesNotExist
-            MockTile.objects.get.side_effect = RealTile.DoesNotExist
-            url = reverse("api-lingo-edit-log", args=[concept.pk])
-            response = self.client.post(
-                url,
-                data=json.dumps({"timestamp": self.base_time.isoformat()}),
-                content_type="application/json",
-            )
+        with self._patch_tile(side_effect=RealTile.DoesNotExist):
+            response = self._post_revert(concept)
 
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content)
@@ -558,15 +546,8 @@ class EditLogPostTests(ViewTests):
 
         mock_tile = MagicMock()
         mock_tile.delete.side_effect = Exception("delete failed")
-        with patch("arches_lingo.views.api.edit_log.Tile") as MockTile:
-            MockTile.DoesNotExist = RealTile.DoesNotExist
-            MockTile.objects.get.return_value = mock_tile
-            url = reverse("api-lingo-edit-log", args=[concept.pk])
-            response = self.client.post(
-                url,
-                data=json.dumps({"timestamp": self.base_time.isoformat()}),
-                content_type="application/json",
-            )
+        with self._patch_tile(return_value=mock_tile):
+            response = self._post_revert(concept)
 
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content)
@@ -604,15 +585,8 @@ class EditLogPostTests(ViewTests):
             newvalue={CONCEPT_NAME_CONTENT_NODE: "Re-created"},
         )
 
-        with patch("arches_lingo.views.api.edit_log.Tile") as MockTile:
-            MockTile.DoesNotExist = RealTile.DoesNotExist
-            MockTile.objects.get.side_effect = RealTile.DoesNotExist
-            url = reverse("api-lingo-edit-log", args=[concept.pk])
-            response = self.client.post(
-                url,
-                data=json.dumps({"timestamp": self.base_time.isoformat()}),
-                content_type="application/json",
-            )
+        with self._patch_tile(side_effect=RealTile.DoesNotExist):
+            response = self._post_revert(concept)
 
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content)
@@ -650,15 +624,8 @@ class EditLogPostTests(ViewTests):
 
         mock_tile = MagicMock()
         mock_tile.delete.side_effect = Exception("cannot delete")
-        with patch("arches_lingo.views.api.edit_log.Tile") as MockTile:
-            MockTile.DoesNotExist = RealTile.DoesNotExist
-            MockTile.objects.get.return_value = mock_tile
-            url = reverse("api-lingo-edit-log", args=[concept.pk])
-            response = self.client.post(
-                url,
-                data=json.dumps({"timestamp": self.base_time.isoformat()}),
-                content_type="application/json",
-            )
+        with self._patch_tile(return_value=mock_tile):
+            response = self._post_revert(concept)
 
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content)
@@ -690,12 +657,7 @@ class EditLogPostTests(ViewTests):
             newvalue={CONCEPT_NAME_CONTENT_NODE: "Updated"},
         )
 
-        url = reverse("api-lingo-edit-log", args=[concept.pk])
-        response = self.client.post(
-            url,
-            data=json.dumps({"timestamp": self.base_time.isoformat()}),
-            content_type="application/json",
-        )
+        response = self._post_revert(concept)
 
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content)
@@ -726,17 +688,9 @@ class EditLogPostTests(ViewTests):
         )
 
         mock_new_tile = MagicMock()
-        with patch("arches_lingo.views.api.edit_log.Tile") as MockTile:
-            MockTile.DoesNotExist = RealTile.DoesNotExist
-            MockTile.objects.get.side_effect = RealTile.DoesNotExist
+        with self._patch_tile(side_effect=RealTile.DoesNotExist) as MockTile:
             MockTile.return_value = mock_new_tile
-
-            url = reverse("api-lingo-edit-log", args=[concept.pk])
-            response = self.client.post(
-                url,
-                data=json.dumps({"timestamp": self.base_time.isoformat()}),
-                content_type="application/json",
-            )
+            response = self._post_revert(concept)
 
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content)
@@ -767,15 +721,8 @@ class EditLogPostTests(ViewTests):
 
         mock_tile = MagicMock()
         mock_tile.save.side_effect = Exception("save failed")
-        with patch("arches_lingo.views.api.edit_log.Tile") as MockTile:
-            MockTile.DoesNotExist = RealTile.DoesNotExist
-            MockTile.objects.get.return_value = mock_tile
-            url = reverse("api-lingo-edit-log", args=[concept.pk])
-            response = self.client.post(
-                url,
-                data=json.dumps({"timestamp": self.base_time.isoformat()}),
-                content_type="application/json",
-            )
+        with self._patch_tile(return_value=mock_tile):
+            response = self._post_revert(concept)
 
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content)
@@ -807,17 +754,9 @@ class EditLogPostTests(ViewTests):
 
         mock_new_tile = MagicMock()
         mock_new_tile.save.side_effect = Exception("restore failed")
-        with patch("arches_lingo.views.api.edit_log.Tile") as MockTile:
-            MockTile.DoesNotExist = RealTile.DoesNotExist
-            MockTile.objects.get.side_effect = RealTile.DoesNotExist
+        with self._patch_tile(side_effect=RealTile.DoesNotExist) as MockTile:
             MockTile.return_value = mock_new_tile
-
-            url = reverse("api-lingo-edit-log", args=[concept.pk])
-            response = self.client.post(
-                url,
-                data=json.dumps({"timestamp": self.base_time.isoformat()}),
-                content_type="application/json",
-            )
+            response = self._post_revert(concept)
 
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content)
