@@ -1,4 +1,5 @@
 import uuid
+from collections import Counter
 
 from django.core.paginator import Paginator
 from django.utils.decorators import method_decorator
@@ -9,6 +10,7 @@ from arches.app.models import models
 from arches.app.utils.decorators import group_required
 from arches.app.utils.response import JSONErrorResponse, JSONResponse
 
+from arches_controlled_lists.models import ListItem, ListItemValue
 from arches_querysets.models import ResourceTileTree
 
 from arches_lingo.const import (
@@ -16,12 +18,69 @@ from arches_lingo.const import (
     CONCEPT_NAME_NODEGROUP,
     CONCEPT_NAME_LANGUAGE_NODE,
     CONCEPT_NAME_TYPE_NODE,
+    CONCEPT_TYPE_NODE,
+    CONCEPT_TYPE_NODEGROUP,
     SCHEMES_GRAPH_ID,
 )
 from arches_lingo.utils.concept_builder import ConceptBuilder
 from arches_lingo.views.api.edit_log import EDIT_TYPE_LABELS
 
 PREF_LABEL_URI = "http://www.w3.org/2004/02/skos/core#prefLabel"
+
+
+def _get_concept_type_breakdown(concept_resource_ids):
+    """Return a list of {label, uri, count} dicts for each concept type list item.
+
+    Concepts that have no type tile are counted under an "Untyped" bucket.
+    The controlled list is discovered dynamically from the type node's config.
+    """
+    type_node = models.Node.objects.get(nodeid=CONCEPT_TYPE_NODE)
+    controlled_list_id = type_node.config.get("controlledList")
+    if not controlled_list_id:
+        return []
+
+    # Build a map of URI → label from the controlled list
+    items = ListItem.objects.filter(list_id=controlled_list_id)
+    uri_label_map = {}
+    for item in items:
+        pref = (
+            ListItemValue.objects.filter(list_item=item, valuetype_id="prefLabel")
+            .order_by("language_id")
+            .first()
+        )
+        label = pref.value if pref else str(item.id)
+        uri_label_map[item.uri] = label
+
+    # Count concepts by the URI stored in their type tile
+    uri_counter = Counter()
+    typed_resource_ids = set()
+
+    type_tiles = models.TileModel.objects.filter(
+        nodegroup_id=CONCEPT_TYPE_NODEGROUP,
+        resourceinstance_id__in=concept_resource_ids,
+    ).values_list("resourceinstance_id", "data")
+
+    for resource_id, data in type_tiles:
+        ref_values = data.get(CONCEPT_TYPE_NODE) if data else None
+        if ref_values and isinstance(ref_values, list):
+            for ref in ref_values:
+                uri = ref.get("uri")
+                if uri:
+                    uri_counter[uri] += 1
+            typed_resource_ids.add(resource_id)
+
+    untyped_count = len(concept_resource_ids) - len(typed_resource_ids)
+
+    breakdown = []
+    for uri, label in uri_label_map.items():
+        breakdown.append({"label": label, "uri": uri, "count": uri_counter.get(uri, 0)})
+    # Sort by label for consistent ordering
+    breakdown.sort(key=lambda x: x["label"])
+
+    if untyped_count > 0:
+        breakdown.append({"label": _("Untyped"), "uri": None, "count": untyped_count})
+
+    return breakdown
 
 
 @method_decorator(
@@ -40,6 +99,17 @@ class DashboardStatsView(View):
                     message=_("scheme must be a valid UUID"),
                     status=400,
                 )
+
+        # --- User greeting ---
+        user = request.user
+        user_display_name = (
+            user.first_name or user.username if user.is_authenticated else ""
+        )
+
+        # --- Scheme count ---
+        scheme_count = models.ResourceInstance.objects.filter(
+            graph_id=SCHEMES_GRAPH_ID
+        ).count()
 
         # --- Concept count ---
         Concept = ResourceTileTree.get_tiles("concept")
@@ -123,9 +193,17 @@ class DashboardStatsView(View):
             if len(activity) >= 20:
                 break
 
+        # --- Concepts by type ---
+        concepts_by_type = _get_concept_type_breakdown(
+            [uuid.UUID(rid) for rid in concept_ids]
+        )
+
         return JSONResponse(
             {
+                "user_display_name": user_display_name,
+                "scheme_count": scheme_count,
                 "concept_count": concept_count,
+                "concepts_by_type": concepts_by_type,
                 "recent_activity": activity,
             }
         )
