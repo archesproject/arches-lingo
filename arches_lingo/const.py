@@ -38,6 +38,10 @@ CONCEPT_NAME_TYPE_NODE = "1ddffab4-0eb8-11ef-93db-0a58a9feac02"
 
 CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID = "bf73e60a-4888-11ee-8a8d-11afefc4bff7"
 
+# type (top-level nodegroup on the Concept graph; reference datatype)
+CONCEPT_TYPE_NODE = "74d4d2cc-0f5d-11ef-9493-0a58a9feac02"
+CONCEPT_TYPE_NODEGROUP = CONCEPT_TYPE_NODE
+
 # Associated Concepts Nodegroup and Nodes
 RELATION_STATUS_NODEGROUP = "807ef412-0ebe-11ef-9493-0a58a9feac02"
 RELATION_STATUS_ASCRIBED_COMPARATE_NODEID = "9a33fc0e-0ebe-11ef-9493-0a58a9feac02"
