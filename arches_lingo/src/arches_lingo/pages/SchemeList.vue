@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import Skeleton from "primevue/skeleton";
@@ -61,6 +61,13 @@ async function fetchSchemes() {
     isLoading.value = false;
 }
 
+const schemesWithStatements = computed(() =>
+    schemes.value.map((scheme) => ({
+        scheme,
+        statements: statementsBySchemeId.value.get(scheme.id),
+    })),
+);
+
 onMounted(async () => {
     await fetchSchemes();
 });
@@ -99,12 +106,12 @@ onMounted(async () => {
     <div class="scheme-cards-container">
         <ul class="scheme-cards">
             <li
-                v-for="scheme in schemes"
+                v-for="{ scheme, statements } in schemesWithStatements"
                 :key="scheme.id"
             >
                 <SchemeCard
                     :scheme="scheme"
-                    :statements="statementsBySchemeId.get(scheme.id)"
+                    :statements="statements"
                     @imported="fetchSchemes"
                 />
             </li>

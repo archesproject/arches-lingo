@@ -13,6 +13,7 @@ import Button from "primevue/button";
 import ImportThesauri from "@/arches_lingo/components/scheme/ImportThesauri.vue";
 
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
+import { getLanguageRank } from "@/arches_lingo/utils.ts";
 
 import type { Language } from "@/arches_component_lab/types";
 import type { Scheme, SchemeStatement } from "@/arches_lingo/types";
@@ -43,16 +44,17 @@ const schemeDescription = computed(() => {
     const preferredCode = selectedLanguage.value.code;
     const systemCode = systemLanguage.code;
 
-    // Rank: 2 = preferred language, 1 = system language, 0 = other
     function rank(stmt: SchemeStatement): number {
-        const langDisplay =
-            stmt.aliased_data?.statement_language?.display_value?.toLowerCase();
-        if (langDisplay === preferredCode) return 2;
-        if (langDisplay === systemCode) return 1;
-        return 0;
+        return getLanguageRank(
+            stmt.aliased_data?.statement_language?.display_value?.toLowerCase(),
+            preferredCode,
+            systemCode,
+        );
     }
 
-    const best = statements.reduce((a, b) => (rank(b) > rank(a) ? b : a));
+    const best = statements.reduce((bestMatch, current) =>
+        rank(current) > rank(bestMatch) ? current : bestMatch,
+    );
     return best.aliased_data?.statement_content?.display_value ?? "";
 });
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, inject, useTemplateRef } from "vue";
+import { computed, inject, useTemplateRef, watchEffect } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import Button from "primevue/button";
@@ -24,7 +24,9 @@ const selectedCode = computed({
     get: () => selectedLanguage?.value?.code ?? "",
     set: (code: string) => {
         if (!selectedLanguage || !availableLanguages) return;
-        const lang = availableLanguages.value.find((l) => l.code === code);
+        const lang = availableLanguages.value.find(
+            (language) => language.code === code,
+        );
         if (lang) {
             selectedLanguage.value = lang;
         }
@@ -34,6 +36,10 @@ const selectedCode = computed({
 const showSelector = computed(
     () => availableLanguages && availableLanguages.value.length > 1,
 );
+
+watchEffect(() => {
+    document.body.dir = selectedLanguage?.value?.default_direction ?? "ltr";
+});
 
 function openLanguageSelector(event: MouseEvent) {
     popover.value!.toggle(event);
