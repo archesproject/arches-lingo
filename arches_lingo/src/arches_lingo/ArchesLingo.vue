@@ -120,17 +120,20 @@ onMounted(async () => {
         // Determine initial language priority:
         // 1. django_language cookie (user's previous explicit choice)
         // 2. Browser locale best-match
-        // 3. System language (LANGUAGE_CODE)
+        // 3. System language (LANGUAGE_CODE), if it is an enabled language
         // 4. First available language
         const cookieCode = Cookies.get("django_language");
         const cookieMatch = cookieCode
             ? availableLanguages.value.find((lang) => lang.code === cookieCode)
             : undefined;
         const browserMatch = matchBrowserLocale(availableLanguages.value);
+        const systemMatch = availableLanguages.value.find(
+            (lang) => lang.code === systemLanguageCode,
+        );
         const initial =
             cookieMatch ??
             browserMatch ??
-            dbSystem ??
+            systemMatch ??
             availableLanguages.value[0];
 
         if (initial) {
