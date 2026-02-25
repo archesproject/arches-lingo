@@ -35,7 +35,7 @@ module.exports = {
     path: "./arches_lingo/locale", // output path of all created files
     potPath: "./messages.pot", // relative to output.path, so by default "./src/language/messages.pot"
     jsonPath: "./", // relative to output.path, so by default "./src/language/translations.json"
-    locales: ["en"],
+    locales: ["en", "de"],
     flat: false, // don't create subdirectories for locales
     linguas: false, // create a LINGUAS file
     splitJson: true, // create separate json files for each locale. If used, jsonPath must end with a directory, not a file
