@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
@@ -137,6 +137,18 @@ function navigateToConcept(conceptId: string) {
     router.push({ name: routeNames.concept, params: { id: conceptId } });
 }
 
+function navigateToScheme(schemeId: string) {
+    router.push({ name: routeNames.scheme, params: { id: schemeId } });
+}
+
+const greeting = computed(() => {
+    const name = stats.value?.user_display_name;
+    if (name) {
+        return $gettext("Welcome, %{name}", { name });
+    }
+    return $gettext("Welcome");
+});
+
 function onPageChange(event: { first: number; rows: number }) {
     missingPage.value = event.first / event.rows;
     loadMissingTranslations();
@@ -162,47 +174,80 @@ onMounted(async () => {
 
 <template>
     <div class="dashboard">
-        <!-- Scheme filter -->
-        <div class="dashboard-filters">
-            <label
-                for="scheme-filter"
-                class="filter-label"
-            >
-                {{ $gettext("Scheme") }}:
-            </label>
-            <Select
-                id="scheme-filter"
-                v-model="selectedSchemeId"
-                :options="schemes"
-                option-label="name"
-                option-value="resourceinstanceid"
-                :placeholder="$gettext('All schemes')"
-                show-clear
-                class="scheme-select"
-            >
-                <template #option="slotProps">
-                    {{
-                        slotProps.option.descriptors?.en?.name ||
-                        slotProps.option.name ||
-                        $gettext("Unnamed scheme")
-                    }}
-                </template>
-                <template #value="slotProps">
-                    <span v-if="slotProps.value">
+        <!-- Welcome + Scheme filter -->
+        <div class="dashboard-header">
+            <h1 class="welcome-heading">
+                <Skeleton
+                    v-if="isStatsLoading"
+                    height="2rem"
+                    width="16rem"
+                />
+                <template v-else>{{ greeting }}</template>
+            </h1>
+            <div class="dashboard-filters">
+                <label
+                    for="scheme-filter"
+                    class="filter-label"
+                >
+                    {{ $gettext("Scheme") }}:
+                </label>
+                <Select
+                    id="scheme-filter"
+                    v-model="selectedSchemeId"
+                    :options="schemes"
+                    option-label="name"
+                    option-value="resourceinstanceid"
+                    :placeholder="$gettext('All schemes')"
+                    show-clear
+                    class="scheme-select"
+                >
+                    <template #option="slotProps">
                         {{
-                            schemes.find(
-                                (s) => s.resourceinstanceid === slotProps.value,
-                            )?.descriptors?.en?.name ||
-                            $gettext("Selected scheme")
+                            slotProps.option.descriptors?.en?.name ||
+                            slotProps.option.name ||
+                            $gettext("Unnamed scheme")
                         }}
-                    </span>
-                    <span v-else>{{ $gettext("All schemes") }}</span>
-                </template>
-            </Select>
+                    </template>
+                    <template #value="slotProps">
+                        <span v-if="slotProps.value">
+                            {{
+                                schemes.find(
+                                    (s) =>
+                                        s.resourceinstanceid ===
+                                        slotProps.value,
+                                )?.descriptors?.en?.name ||
+                                $gettext("Selected scheme")
+                            }}
+                        </span>
+                        <span v-else>{{ $gettext("All schemes") }}</span>
+                    </template>
+                </Select>
+            </div>
         </div>
 
-        <!-- Concept count card -->
+        <!-- Stat cards -->
         <div class="stats-row">
+            <Card class="stat-card">
+                <template #title>
+                    <span class="stat-title">
+                        <i class="pi pi-folder stat-icon" />
+                        {{ $gettext("Schemes") }}
+                    </span>
+                </template>
+                <template #content>
+                    <Skeleton
+                        v-if="isStatsLoading"
+                        height="3rem"
+                        width="6rem"
+                    />
+                    <div
+                        v-else
+                        class="stat-count"
+                    >
+                        {{ stats?.scheme_count?.toLocaleString() ?? "—" }}
+                    </div>
+                </template>
+            </Card>
             <Card class="stat-card">
                 <template #title>
                     <span class="stat-title">
@@ -225,6 +270,32 @@ onMounted(async () => {
                 </template>
             </Card>
         </div>
+
+        <!-- Concepts by Type -->
+        <section
+            v-if="
+                !isStatsLoading &&
+                stats?.concepts_by_type &&
+                stats.concepts_by_type.length > 0
+            "
+            class="dashboard-section"
+        >
+            <h2 class="section-title">
+                {{ $gettext("Concepts by Type") }}
+            </h2>
+            <div class="type-breakdown">
+                <div
+                    v-for="item in stats.concepts_by_type"
+                    :key="item.uri ?? 'untyped'"
+                    class="type-chip"
+                >
+                    <span class="type-label">{{ item.label }}</span>
+                    <span class="type-count">{{
+                        item.count.toLocaleString()
+                    }}</span>
+                </div>
+            </div>
+        </section>
 
         <!-- Recent Activity -->
         <section class="dashboard-section">
@@ -265,11 +336,16 @@ onMounted(async () => {
                 <Column :header="$gettext('Resource')">
                     <template #body="slotProps">
                         <a
-                            v-if="slotProps.data.resource_type === 'concept'"
                             class="resource-link"
                             href="#"
                             @click.prevent="
-                                navigateToConcept(slotProps.data.resource_id)
+                                slotProps.data.resource_type === 'scheme'
+                                    ? navigateToScheme(
+                                          slotProps.data.resource_id,
+                                      )
+                                    : navigateToConcept(
+                                          slotProps.data.resource_id,
+                                      )
                             "
                         >
                             {{
@@ -277,12 +353,6 @@ onMounted(async () => {
                                 slotProps.data.resource_id
                             }}
                         </a>
-                        <span v-else>
-                            {{
-                                slotProps.data.resource_name ||
-                                slotProps.data.resource_id
-                            }}
-                        </span>
                     </template>
                 </Column>
                 <Column
@@ -428,6 +498,19 @@ onMounted(async () => {
     gap: 1.5rem;
 }
 
+.dashboard-header {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.welcome-heading {
+    font-size: 1.5rem;
+    font-weight: 400;
+    margin: 0;
+    color: var(--p-text-color);
+}
+
 .dashboard-filters {
     display: flex;
     align-items: center;
@@ -477,6 +560,32 @@ onMounted(async () => {
     color: var(--p-text-color);
     line-height: 1;
     padding-top: 0.25rem;
+}
+
+.type-breakdown {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.type-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.375rem 0.75rem;
+    border-radius: 1rem;
+    background: var(--p-surface-100);
+    border: 0.0625rem solid var(--p-surface-border);
+    font-size: var(--p-lingo-font-size-smallnormal);
+}
+
+.type-label {
+    color: var(--p-text-color);
+}
+
+.type-count {
+    font-weight: 600;
+    color: var(--p-primary-500);
 }
 
 .dashboard-section {

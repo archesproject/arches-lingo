@@ -448,8 +448,17 @@ export interface DashboardActivityItem {
     resource_type: "concept" | "scheme";
 }
 
+export interface ConceptTypeCount {
+    label: string;
+    uri: string | null;
+    count: number;
+}
+
 export interface DashboardStats {
+    user_display_name: string;
+    scheme_count: number;
     concept_count: number;
+    concepts_by_type: ConceptTypeCount[];
     recent_activity: DashboardActivityItem[];
 }
 
