@@ -26,16 +26,13 @@ const toast = useToast();
 
 const concepts = ref();
 const isRefreshing = ref(false);
-let isInitialLoad = true;
 
 const emit = defineEmits<{
     (e: "shouldShowHierarchy", value: boolean): void;
 }>();
 
 async function fetchAndSetConcepts() {
-    if (!isInitialLoad) {
-        isRefreshing.value = true;
-    }
+    isRefreshing.value = true;
     try {
         concepts.value = await fetchConcepts();
     } catch (error) {
@@ -47,7 +44,6 @@ async function fetchAndSetConcepts() {
         });
     } finally {
         isRefreshing.value = false;
-        isInitialLoad = false;
     }
 }
 
