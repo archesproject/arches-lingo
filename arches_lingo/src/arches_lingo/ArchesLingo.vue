@@ -51,8 +51,6 @@ const { $gettext } = gettext;
 
 // Language state — populated from the backend in onMounted.
 // System language is initialised from get_language() (Django's LANGUAGE_CODE).
-// enabledCodes comes from settings.LANGUAGES via the i18n endpoint.
-const enabledCodes = new Set(Object.keys(gettext.available));
 const systemLanguageCode: string = gettext.current ?? DEFAULT_LANGUAGE.code;
 const availableLanguages: Ref<Language[]> = ref([]);
 const selectedLanguage: Ref<Language> = ref({
@@ -98,14 +96,32 @@ watch(
 
 onMounted(async () => {
     try {
-        const dbLanguages = await fetchLanguages();
+        const [dbLanguages, i18nData] = await Promise.all([
+            fetchLanguages(),
+            fetchI18nData(),
+        ]);
 
-        availableLanguages.value = dbLanguages
-            .filter((lang) => enabledCodes.has(lang.code))
-            .map((lang) => ({
-                ...lang,
-                name: getAutonym(lang.code, lang.name),
-            }));
+        // Merge initial translations so strings are available before any
+        // language switch occurs.
+        Object.assign(gettext.translations, i18nData.translations);
+
+        // enabled_languages comes from settings.LANGUAGES — the authoritative
+        // list of languages the site supports. Build availableLanguages from
+        // that list, enriching each entry with DB data (direction, scope, etc.)
+        // where a matching record exists, falling back to defaults otherwise.
+        const dbByCode = new Map(dbLanguages.map((lang) => [lang.code, lang]));
+        availableLanguages.value = Object.entries(
+            i18nData.enabled_languages,
+        ).map(([code, settingsName]) => {
+            const dbLang = dbByCode.get(code);
+            return dbLang
+                ? { ...dbLang, name: getAutonym(code, dbLang.name) }
+                : {
+                      ...DEFAULT_LANGUAGE,
+                      code,
+                      name: getAutonym(code, settingsName),
+                  };
+        });
 
         const dbSystem =
             dbLanguages.find((lang) => lang.code === systemLanguageCode) ??
