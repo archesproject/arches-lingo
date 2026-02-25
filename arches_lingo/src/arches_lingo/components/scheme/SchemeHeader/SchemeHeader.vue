@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { inject, onMounted, ref, type Ref } from "vue";
+import { inject, markRaw, onMounted, ref, type Ref } from "vue";
 import { useGettext } from "vue3-gettext";
+
+import EditLog from "@/arches_lingo/components/generic/EditLog/EditLog.vue";
 
 import { useConfirm } from "primevue/useconfirm";
 import { useRouter } from "vue-router";
@@ -19,6 +21,7 @@ import {
     SECONDARY,
     systemLanguageKey,
     selectedLanguageKey,
+    openPanelComponentKey,
 } from "@/arches_lingo/constants.ts";
 import { PREF_LABEL } from "@/arches_controlled_lists/constants.ts";
 
@@ -50,6 +53,16 @@ const props = defineProps<{
 }>();
 
 const refreshSchemeHierarchy = inject<() => void>("refreshSchemeHierarchy");
+const openPanelComponent = inject(openPanelComponentKey);
+
+function openEditLog() {
+    openPanelComponent?.(
+        markRaw(EditLog),
+        "EditLog",
+        $gettext("Edit History"),
+        props.graphSlug,
+    );
+}
 
 const confirm = useConfirm();
 const router = useRouter();
@@ -213,6 +226,14 @@ function confirmDelete() {
                     </div>
 
                     <div class="header-buttons">
+                        <Button
+                            :aria-label="$gettext('Edit History')"
+                            class="add-button"
+                            @click="openEditLog"
+                        >
+                            <span><i class="pi pi-history"></i></span>
+                            <span>{{ $gettext("History") }}</span>
+                        </Button>
                         <Button
                             :aria-label="$gettext('Export')"
                             class="add-button"

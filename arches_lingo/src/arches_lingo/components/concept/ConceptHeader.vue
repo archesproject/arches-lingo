@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { inject, onMounted, ref, type Ref } from "vue";
+import { inject, markRaw, onMounted, ref, type Ref } from "vue";
+
+import EditLog from "@/arches_lingo/components/generic/EditLog/EditLog.vue";
 
 import { useConfirm } from "primevue/useconfirm";
 import { useGettext } from "vue3-gettext";
@@ -25,6 +27,7 @@ import {
     systemLanguageKey,
     selectedLanguageKey,
     CONCEPT_TYPE_NODE_ALIAS,
+    openPanelComponentKey,
 } from "@/arches_lingo/constants.ts";
 import { PREF_LABEL } from "@/arches_controlled_lists/constants.ts";
 
@@ -59,6 +62,16 @@ const props = defineProps<{
 }>();
 
 const refreshSchemeHierarchy = inject<() => void>("refreshSchemeHierarchy");
+const openPanelComponent = inject(openPanelComponentKey);
+
+function openEditLog() {
+    openPanelComponent?.(
+        markRaw(EditLog),
+        "EditLog",
+        $gettext("Edit History"),
+        props.graphSlug,
+    );
+}
 
 const toast = useToast();
 const { $gettext } = useGettext();
@@ -288,6 +301,14 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                 </div>
             </div>
             <div class="header-buttons">
+                <Button
+                    :aria-label="$gettext('Edit History')"
+                    class="add-button"
+                    @click="openEditLog"
+                >
+                    <span><i class="pi pi-history"></i></span>
+                    <span>{{ $gettext("History") }}</span>
+                </Button>
                 <Button
                     :aria-label="$gettext('Export')"
                     class="add-button"
