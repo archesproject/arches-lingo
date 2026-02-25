@@ -99,7 +99,8 @@ async function deleteSectionValue(tileId: string) {
             />
             <Column
                 :header="props.metaStringText.name"
-                sortable
+                :field="props.metaStringText.sortFields?.name"
+                :sortable="Boolean(props.metaStringText.sortFields?.name)"
             >
                 <template #body="slotProps">
                     <slot
@@ -110,7 +111,8 @@ async function deleteSectionValue(tileId: string) {
             </Column>
             <Column
                 :header="props.metaStringText.type"
-                sortable
+                :field="props.metaStringText.sortFields?.type"
+                :sortable="Boolean(props.metaStringText.sortFields?.type)"
             >
                 <template #body="slotProps">
                     <slot
@@ -122,7 +124,8 @@ async function deleteSectionValue(tileId: string) {
             <Column
                 v-if="props.metaStringText?.language"
                 :header="props.metaStringText.language"
-                sortable
+                :field="props.metaStringText.sortFields?.language"
+                :sortable="Boolean(props.metaStringText.sortFields?.language)"
             >
                 <template #body="slotProps">
                     <slot

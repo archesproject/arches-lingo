@@ -34,6 +34,12 @@ const metaStringLabel: MetaStringText = {
     name: $gettext("Label Name"),
     type: $gettext("Label Type"),
     noRecords: $gettext("No scheme labels were found."),
+    sortFields: {
+        name: "aliased_data.appellative_status_ascribed_name_content.display_value",
+        type: "aliased_data.appellative_status_ascribed_relation.display_value",
+        language:
+            "aliased_data.appellative_status_ascribed_name_language.display_value",
+    },
 };
 </script>
 

@@ -35,6 +35,10 @@ const metaStringLabel: MetaStringText = {
     name: $gettext("Match Type"),
     type: $gettext("Related URI"),
     noRecords: $gettext("No matched concepts were found."),
+    sortFields: {
+        name: "aliased_data.match_status_ascribed_relation.display_value",
+        type: "aliased_data.match_status_ascribed_comparate.display_value",
+    },
 };
 
 function matchedConceptURIIsLink(rowData: ConceptMatchStatus): boolean {
