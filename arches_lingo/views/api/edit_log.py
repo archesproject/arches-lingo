@@ -24,20 +24,93 @@ EDIT_TYPE_LABELS = {
 }
 
 
+def _get_resource_or_404(resourceid):
+    """Look up a resource instance, returning it or None + error response."""
+    try:
+        return models.ResourceInstance.objects.get(pk=resourceid), None
+    except models.ResourceInstance.DoesNotExist:
+        return None, JSONErrorResponse(
+            title="Not found",
+            message=f"Resource {resourceid} not found",
+            status=404,
+        )
+
+
+def _delete_tile(tileid, request):
+    """Delete a tile by id, silently ignoring DoesNotExist.
+
+    Returns an error string on unexpected failure, or None on success.
+    """
+    try:
+        tile = Tile.objects.get(pk=tileid)
+        tile.delete(request=request)
+    except Tile.DoesNotExist:
+        pass
+    except Exception as e:
+        return str(e)
+    return None
+
+
+def _revert_tile(tileid, last_edit, resourceid, request):
+    """Revert a single tile to the state described by *last_edit*.
+
+    Returns an error string on failure, or None on success.
+    """
+    target_data = last_edit.newvalue
+    if not target_data:
+        return None
+
+    try:
+        tile = Tile.objects.get(pk=tileid)
+        tile.data = target_data
+        tile.save(request=request)
+    except Tile.DoesNotExist:
+        return _recreate_tile(tileid, last_edit, resourceid, request)
+    except Exception as e:
+        return _("Failed to update tile %(tileid)s: %(error)s") % {
+            "tileid": tileid,
+            "error": str(e),
+        }
+    return None
+
+
+def _recreate_tile(tileid, last_edit, resourceid, request):
+    """Recreate a tile that was deleted after the target timestamp.
+
+    Returns an error string on failure, or None on success.
+    """
+    try:
+        nodegroup = models.NodeGroup.objects.get(pk=last_edit.nodegroupid)
+        if nodegroup.parentnodegroup_id is not None:
+            return _(
+                "Cannot restore nested tile %(tileid)s: "
+                "parent tile information is not available "
+                "in the edit log."
+            ) % {"tileid": tileid}
+
+        tile = Tile()
+        tile.tileid = uuid.UUID(tileid)
+        tile.resourceinstance_id = str(resourceid)
+        tile.nodegroup_id = last_edit.nodegroupid
+        tile.data = last_edit.newvalue
+        tile.save(request=request)
+    except Exception as e:
+        return _("Failed to restore tile %(tileid)s: %(error)s") % {
+            "tileid": tileid,
+            "error": str(e),
+        }
+    return None
+
+
 @method_decorator(
     group_required("RDM Administrator", raise_exception=True), name="dispatch"
 )
 class ResourceEditLogAPIView(View):
     def get(self, request, resourceid):
         """Return the edit log for a resource as JSON."""
-        try:
-            resource_instance = models.ResourceInstance.objects.get(pk=resourceid)
-        except models.ResourceInstance.DoesNotExist:
-            return JSONErrorResponse(
-                title="Not found",
-                message=f"Resource {resourceid} not found",
-                status=404,
-            )
+        resource_instance, error_response = _get_resource_or_404(resourceid)
+        if error_response:
+            return error_response
 
         edits = models.EditLog.objects.filter(
             resourceinstanceid=str(resourceid)
@@ -102,7 +175,6 @@ class ResourceEditLogAPIView(View):
             body = json.loads(request.body)
             target_timestamp_str = body["timestamp"]
             target_timestamp = datetime.fromisoformat(target_timestamp_str)
-            # Ensure timezone-aware for comparison
             if target_timestamp.tzinfo is None:
                 target_timestamp = target_timestamp.replace(tzinfo=timezone.utc)
         except (KeyError, ValueError, json.JSONDecodeError) as e:
@@ -112,14 +184,9 @@ class ResourceEditLogAPIView(View):
                 status=400,
             )
 
-        try:
-            models.ResourceInstance.objects.get(pk=resourceid)
-        except models.ResourceInstance.DoesNotExist:
-            return JSONErrorResponse(
-                title="Not found",
-                message=f"Resource {resourceid} not found",
-                status=404,
-            )
+        _, error_response = _get_resource_or_404(resourceid)
+        if error_response:
+            return error_response
 
         # Get all tile-level edits for this resource ordered by timestamp
         all_tile_edits = list(
@@ -141,7 +208,6 @@ class ResourceEditLogAPIView(View):
 
         errors = []
         for tileid in affected_tileids:
-            # Find the state of this tile at target_timestamp
             tile_edits_at_or_before = [
                 e
                 for e in all_tile_edits
@@ -151,69 +217,19 @@ class ResourceEditLogAPIView(View):
             ]
 
             if not tile_edits_at_or_before:
-                # Tile was created after target timestamp — delete it
-                try:
-                    tile = Tile.objects.get(pk=tileid)
-                    tile.delete(request=request)
-                except Tile.DoesNotExist:
-                    pass
-                except Exception as e:
-                    errors.append(str(e))
+                # Tile was created after target — delete it
+                error = _delete_tile(tileid, request)
+            elif tile_edits_at_or_before[-1].edittype == "tile delete":
+                # Tile was deleted at or before target — should not exist
+                error = _delete_tile(tileid, request)
             else:
-                last_edit = tile_edits_at_or_before[-1]
+                # Tile should exist with the data from the last edit
+                error = _revert_tile(
+                    tileid, tile_edits_at_or_before[-1], resourceid, request
+                )
 
-                if last_edit.edittype == "tile delete":
-                    # Tile was deleted at or before target — it should not exist now
-                    try:
-                        tile = Tile.objects.get(pk=tileid)
-                        tile.delete(request=request)
-                    except Tile.DoesNotExist:
-                        pass
-                    except Exception as e:
-                        errors.append(str(e))
-                else:
-                    # Tile should exist with the data from last_edit.newvalue
-                    target_data = last_edit.newvalue
-                    if not target_data:
-                        continue
-
-                    try:
-                        tile = Tile.objects.get(pk=tileid)
-                        tile.data = target_data
-                        tile.save(request=request)
-                    except Tile.DoesNotExist:
-                        # Tile was deleted after the target — recreate it
-                        try:
-                            nodegroup = models.NodeGroup.objects.get(
-                                pk=last_edit.nodegroupid
-                            )
-                            if nodegroup.parentnodegroup_id is not None:
-                                errors.append(
-                                    _(
-                                        "Cannot restore nested tile %(tileid)s: "
-                                        "parent tile information is not available "
-                                        "in the edit log."
-                                    )
-                                    % {"tileid": tileid}
-                                )
-                                continue
-
-                            tile = Tile()
-                            tile.tileid = uuid.UUID(tileid)
-                            tile.resourceinstance_id = str(resourceid)
-                            tile.nodegroup_id = last_edit.nodegroupid
-                            tile.data = target_data
-                            tile.save(request=request)
-                        except Exception as e:
-                            errors.append(
-                                _("Failed to restore tile %(tileid)s: %(error)s")
-                                % {"tileid": tileid, "error": str(e)}
-                            )
-                    except Exception as e:
-                        errors.append(
-                            _("Failed to update tile %(tileid)s: %(error)s")
-                            % {"tileid": tileid, "error": str(e)}
-                        )
+            if error:
+                errors.append(error)
 
         if errors:
             return JSONResponse(
