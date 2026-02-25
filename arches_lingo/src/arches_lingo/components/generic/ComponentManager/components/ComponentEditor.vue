@@ -53,8 +53,8 @@ const isFormDirty = computed(() => {
 
 watch(
     () => props.isEditorLoading,
-    (isLoaded) => {
-        if (isLoaded === false && componentEditorFormRef.value) {
+    (isLoading) => {
+        if (isLoading === false && componentEditorFormRef.value) {
             const formRef = componentEditorFormRef.value.$refs.formRef;
             try {
                 formRef[0].focus();
@@ -64,7 +64,12 @@ watch(
                 const firstField = formRef.querySelector(
                     `#${nodeAlias}`,
                 ) as HTMLElement;
-                firstField.focus();
+                if (firstField) {
+                    firstField.focus();
+                } else {
+                    // @ts-expect-error This is an error in PrimeVue types
+                    toggleSizeButton.value!.$el.focus();
+                }
             }
         }
     },

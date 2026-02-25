@@ -97,10 +97,6 @@ watch(widgetsLoadedCount, (count) => {
     emit("update:isLoading", count !== TOTAL_WIDGETS);
 });
 
-// onBeforeMount(() => {
-//     emit("update:isLoading", true);
-// });
-
 onMounted(() => {
     document.addEventListener(
         "openConceptImagesEditor",
