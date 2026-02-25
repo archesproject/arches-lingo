@@ -10,6 +10,7 @@ from arches_lingo.views.api.concepts import (
     ConceptResourceView,
     ConceptRelationshipView,
 )
+from arches_lingo.views.api.edit_log import ResourceEditLogAPIView
 from arches_lingo.views.api.schemes import SchemeResourceView
 from arches_lingo.views.api.generic import (
     LingoResourceDetailView,
@@ -49,6 +50,11 @@ urlpatterns = [
         "api/lingo/scheme/<uuid:pk>",
         SchemeResourceView.as_view(),
         name="api-lingo-scheme",
+    ),
+    path(
+        "api/lingo/resource/<uuid:resourceid>/edit-log",
+        ResourceEditLogAPIView.as_view(),
+        name="api-lingo-edit-log",
     ),
     path(
         "api/lingo/<slug:graph>",

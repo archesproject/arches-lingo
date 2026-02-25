@@ -15,6 +15,7 @@ import {
     MINIMIZED,
     NEW,
     VIEW,
+    openPanelComponentKey,
 } from "@/arches_lingo/constants.ts";
 
 import type { Component } from "vue";
@@ -107,6 +108,12 @@ function updateAfterComponentDeletion(componentName: string, tileId: string) {
 }
 
 function refreshReportSection(componentName: string) {
+    if (componentName === "all") {
+        processedComponentData.value.forEach((datum) => {
+            datum.key += 1;
+        });
+        return;
+    }
     const componentDatum = processedComponentData.value.find(
         (componentDatum) => {
             return componentDatum.componentName === componentName;
@@ -118,10 +125,31 @@ function refreshReportSection(componentName: string) {
     }
 }
 
+function openPanelComponent(
+    component: Component,
+    componentName: string,
+    sectionTitle: string,
+    graphSlug: string = "",
+    nodegroupAlias: string = "",
+) {
+    selectedComponentDatum.value = {
+        component: markRaw(component),
+        componentName,
+        sectionTitle,
+        graphSlug,
+        nodegroupAlias,
+        key: 0,
+    };
+    editorKey.value += 1;
+    editorTileId.value = null;
+    editorState.value = MINIMIZED;
+}
+
 provide("openEditor", openEditor);
 provide("closeEditor", closeEditor);
 provide("updateAfterComponentDeletion", updateAfterComponentDeletion);
 provide("refreshReportSection", refreshReportSection);
+provide(openPanelComponentKey, openPanelComponent);
 </script>
 
 <template>
