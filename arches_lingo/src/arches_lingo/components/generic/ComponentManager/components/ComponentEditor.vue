@@ -51,19 +51,19 @@ const isFormDirty = computed(() => {
     return false;
 });
 
-watch(isFormDirty, (dirty) => {
-    isEditorDirty.value = dirty;
+onMounted(() => {
+    nextTick(() => {
+        // @ts-expect-error This is an error in PrimeVue types
+        toggleSizeButton.value!.$el.focus();
+    });
 });
 
 onUnmounted(() => {
     isEditorDirty.value = false;
 });
 
-onMounted(() => {
-    nextTick(() => {
-        // @ts-expect-error This is an error in PrimeVue types
-        toggleSizeButton.value!.$el.focus();
-    });
+watch(isFormDirty, (dirty) => {
+    isEditorDirty.value = dirty;
 });
 
 function toggleSize() {

@@ -73,7 +73,7 @@ window.addEventListener("keyup", (event) => {
     if (event.key === "Escape") {
         if (editorState.value !== CLOSED) {
             if (isEditorDirty.value) {
-                confirmDiscardThen(closeEditor);
+                confirmDiscard(closeEditor);
             } else {
                 closeEditor();
             }
@@ -81,7 +81,7 @@ window.addEventListener("keyup", (event) => {
     }
 });
 
-function confirmDiscardThen(callback: () => void) {
+function confirmDiscard(callback: () => void) {
     confirm.require({
         group: "unsaved-changes",
         header: $gettext("Unsaved Changes"),
@@ -125,7 +125,7 @@ function doOpenEditor(componentName: string, tileId?: string) {
 
 function openEditor(componentName: string, tileId?: string) {
     if (editorState.value !== CLOSED && isEditorDirty.value) {
-        confirmDiscardThen(() => doOpenEditor(componentName, tileId));
+        confirmDiscard(() => doOpenEditor(componentName, tileId));
     } else {
         doOpenEditor(componentName, tileId);
     }
