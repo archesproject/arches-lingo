@@ -27,7 +27,7 @@ import SideNav from "@/arches_lingo/components/sidenav/SideNav.vue";
 
 import type { Ref } from "vue";
 import type { Language } from "@/arches_component_lab/types";
-import type { User } from "@/arches_lingo/types";
+import type { User, Label, Scheme } from "@/arches_lingo/types";
 import type { RouteLocationNormalizedLoadedGeneric } from "vue-router";
 
 const user = ref<User | null>(null);
@@ -55,6 +55,46 @@ const refreshSchemeHierarchy = function () {
     schemeHierarchyRef.value?.refresh();
 };
 provide("refreshSchemeHierarchy", refreshSchemeHierarchy);
+
+provide(
+    "commitTreeConcept",
+    function (
+        conceptId: string,
+        labels: Label[],
+        schemeId: string,
+        parentId: string,
+    ) {
+        schemeHierarchyRef.value?.commitNewConcept(
+            conceptId,
+            labels,
+            schemeId,
+            parentId,
+        );
+    },
+);
+
+provide("removeTreeConcept", function (conceptId: string) {
+    schemeHierarchyRef.value?.removeConceptFromTree(conceptId);
+});
+
+provide(
+    "updateTreeConceptLabels",
+    function (conceptId: string, labels: Label[]) {
+        schemeHierarchyRef.value?.updateConceptLabels(conceptId, labels);
+    },
+);
+
+provide("removeTreeScheme", function (schemeId: string) {
+    schemeHierarchyRef.value?.removeSchemeFromTree(schemeId);
+});
+
+provide("updateTreeSchemeLabels", function (schemeId: string, labels: Label[]) {
+    schemeHierarchyRef.value?.updateSchemeLabels(schemeId, labels);
+});
+
+provide("insertTreeScheme", function (scheme: Scheme) {
+    schemeHierarchyRef.value?.insertScheme(scheme);
+});
 
 watchEffect(() => {
     router.beforeEach(async (to, _from, next) => {

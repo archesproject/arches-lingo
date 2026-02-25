@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { onMounted, ref, useTemplateRef } from "vue";
 
 import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
@@ -11,6 +11,8 @@ import ConceptTree from "@/arches_lingo/components/tree/ConceptTree.vue";
 
 import { fetchConcepts } from "@/arches_lingo/api.ts";
 import { ERROR, DEFAULT_ERROR_TOAST_LIFE } from "@/arches_lingo/constants.ts";
+
+import type { Label, Scheme } from "@/arches_lingo/types.ts";
 
 const props = withDefaults(
     defineProps<{
@@ -26,6 +28,7 @@ const toast = useToast();
 
 const concepts = ref();
 const isRefreshing = ref(false);
+const conceptTreeRef = useTemplateRef("conceptTree");
 
 const emit = defineEmits<{
     (e: "shouldShowHierarchy", value: boolean): void;
@@ -51,7 +54,37 @@ onMounted(() => {
     fetchAndSetConcepts();
 });
 
-defineExpose({ refresh: fetchAndSetConcepts });
+defineExpose({
+    refresh: fetchAndSetConcepts,
+    commitNewConcept: (
+        conceptId: string,
+        labels: Label[],
+        schemeId: string,
+        parentId: string,
+    ) => {
+        conceptTreeRef.value?.commitNewConcept(
+            conceptId,
+            labels,
+            schemeId,
+            parentId,
+        );
+    },
+    removeConceptFromTree: (conceptId: string) => {
+        conceptTreeRef.value?.removeConceptFromTree(conceptId);
+    },
+    updateConceptLabels: (conceptId: string, labels: Label[]) => {
+        conceptTreeRef.value?.updateConceptLabels(conceptId, labels);
+    },
+    removeSchemeFromTree: (schemeId: string) => {
+        conceptTreeRef.value?.removeSchemeFromTree(schemeId);
+    },
+    updateSchemeLabels: (schemeId: string, labels: Label[]) => {
+        conceptTreeRef.value?.updateSchemeLabels(schemeId, labels);
+    },
+    insertScheme: (scheme: Scheme) => {
+        conceptTreeRef.value?.insertScheme(scheme);
+    },
+});
 </script>
 
 <template>
@@ -77,6 +110,7 @@ defineExpose({ refresh: fetchAndSetConcepts });
         class="refresh-progress"
     />
     <ConceptTree
+        ref="conceptTree"
         :concepts="concepts"
         :is-open="props.isOpen"
     />

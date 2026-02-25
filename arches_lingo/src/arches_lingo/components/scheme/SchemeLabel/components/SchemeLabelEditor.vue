@@ -20,7 +20,12 @@ import {
 
 import type { Component, Ref } from "vue";
 import type { FormSubmitEvent } from "@primevue/forms";
-import type { AppellativeStatus } from "@/arches_lingo/types.ts";
+import type {
+    AppellativeStatus,
+    AppellativeStatusAliases,
+    Label,
+    Scheme,
+} from "@/arches_lingo/types.ts";
 
 const props = defineProps<{
     tileData: AppellativeStatus | undefined;
@@ -47,6 +52,7 @@ const refreshReportSection = inject<(componentName: string) => void>(
 );
 
 const refreshSchemeHierarchy = inject<() => void>("refreshSchemeHierarchy");
+const insertTreeScheme = inject<(scheme: Scheme) => void>("insertTreeScheme");
 
 const formRef = useTemplateRef("form");
 const isSaving = ref(false);
@@ -64,7 +70,7 @@ async function save(e: FormSubmitEvent) {
 
         const aliasedTileData = props.tileData?.aliased_data || {};
 
-        const updatedTileData = {
+        const updatedTileData: Partial<AppellativeStatusAliases> = {
             ...aliasedTileData,
             ...Object.fromEntries(
                 Object.entries(formData).filter(
@@ -74,6 +80,7 @@ async function save(e: FormSubmitEvent) {
         };
 
         let updatedTileId;
+        let newSchemeId: string | undefined;
 
         if (!props.resourceInstanceId) {
             const updatedScheme = await createLingoResource(
@@ -87,9 +94,11 @@ async function save(e: FormSubmitEvent) {
                 props.graphSlug,
             );
 
+            newSchemeId = updatedScheme.resourceinstanceid;
+
             await router.push({
                 name: props.graphSlug,
-                params: { id: updatedScheme.resourceinstanceid },
+                params: { id: newSchemeId },
             });
 
             updatedTileId =
@@ -113,7 +122,36 @@ async function save(e: FormSubmitEvent) {
         }
 
         refreshReportSection!(props.componentName);
-        refreshSchemeHierarchy!();
+
+        if (newSchemeId) {
+            const labelValue =
+                updatedTileData.appellative_status_ascribed_name_content
+                    ?.display_value ??
+                updatedTileData.appellative_status_ascribed_name_content
+                    ?.node_value ??
+                "";
+            const languageId =
+                updatedTileData.appellative_status_ascribed_name_language
+                    ?.display_value ?? "";
+            const valuetypeId =
+                updatedTileData.appellative_status_ascribed_relation
+                    ?.display_value ?? "preferred label";
+            const label: Label = {
+                value:
+                    typeof labelValue === "string"
+                        ? labelValue
+                        : String(labelValue),
+                language_id: languageId,
+                valuetype_id: valuetypeId,
+            };
+            insertTreeScheme!({
+                id: newSchemeId,
+                labels: [label],
+                top_concepts: [],
+            });
+        } else {
+            refreshSchemeHierarchy!();
+        }
     } catch (error) {
         toast.add({
             severity: ERROR,

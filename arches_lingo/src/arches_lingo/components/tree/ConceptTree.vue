@@ -38,7 +38,7 @@ import type {
 } from "primevue/tree";
 import type { TreeNode } from "primevue/treenode";
 import type { Language } from "@/arches_component_lab/types";
-import type { IconLabels, Scheme, Concept } from "@/arches_lingo/types";
+import type { IconLabels, Label, Scheme, Concept } from "@/arches_lingo/types";
 
 const props = withDefaults(
     defineProps<{
@@ -693,6 +693,128 @@ function onNodeSelect(node: TreeNode) {
     suppressScrollOnNextRouteSelect.value = true;
     navigateToSchemeOrConcept!(router, node.data);
 }
+
+// --- Local tree mutation methods (avoid full refetch) ---
+
+function triggerSchemesReactivity() {
+    schemes.value = [...schemes.value];
+}
+
+function commitNewConcept(
+    conceptId: string,
+    labels: Label[],
+    schemeId: string,
+    parentId: string,
+) {
+    // Fast path: replace the NEW placeholder if it still exists.
+    for (const scheme of schemes.value) {
+        const topConcepts = scheme.top_concepts ?? [];
+        const newIdx = topConcepts.findIndex((c) => c.id === NEW);
+        if (newIdx >= 0) {
+            topConcepts[newIdx] = {
+                id: conceptId,
+                labels,
+                narrower: [],
+            };
+            triggerSchemesReactivity();
+            return;
+        }
+
+        const queue = [...topConcepts];
+        for (const concept of queue) {
+            const narrower = concept.narrower ?? [];
+            const idx = narrower.findIndex((c) => c.id === NEW);
+            if (idx >= 0) {
+                narrower[idx] = {
+                    id: conceptId,
+                    labels,
+                    narrower: [],
+                };
+                triggerSchemesReactivity();
+                return;
+            }
+            queue.push(...narrower);
+        }
+    }
+
+    // Fallback: NEW placeholder was already removed by route watcher.
+    // Insert the concept at the correct parent.
+    const targetScheme = schemes.value.find((s) => s.id === schemeId);
+    if (!targetScheme) return;
+
+    const newConcept: Concept = { id: conceptId, labels, narrower: [] };
+
+    if (schemeId === parentId) {
+        targetScheme.top_concepts = targetScheme.top_concepts ?? [];
+        targetScheme.top_concepts.unshift(newConcept);
+    } else {
+        const queue = [...(targetScheme.top_concepts ?? [])];
+        for (const concept of queue) {
+            if (concept.id === parentId) {
+                concept.narrower = concept.narrower ?? [];
+                concept.narrower.unshift(newConcept);
+                break;
+            }
+            queue.push(...(concept.narrower ?? []));
+        }
+    }
+    triggerSchemesReactivity();
+}
+
+function removeConceptFromTree(conceptId: string) {
+    for (const scheme of schemes.value) {
+        scheme.top_concepts = (scheme.top_concepts ?? []).filter(
+            (c) => c.id !== conceptId,
+        );
+
+        const queue = [...(scheme.top_concepts ?? [])];
+        for (const concept of queue) {
+            concept.narrower = (concept.narrower ?? []).filter(
+                (c) => c.id !== conceptId,
+            );
+            queue.push(...(concept.narrower ?? []));
+        }
+    }
+    triggerSchemesReactivity();
+}
+
+function updateConceptLabels(conceptId: string, labels: Label[]) {
+    for (const scheme of schemes.value) {
+        const queue = [...(scheme.top_concepts ?? [])];
+        for (const concept of queue) {
+            if (concept.id === conceptId) {
+                concept.labels = labels;
+            }
+            queue.push(...(concept.narrower ?? []));
+        }
+    }
+    triggerSchemesReactivity();
+}
+
+function removeSchemeFromTree(schemeId: string) {
+    schemes.value = schemes.value.filter((s) => s.id !== schemeId);
+}
+
+function updateSchemeLabels(schemeId: string, labels: Label[]) {
+    const scheme = schemes.value.find((s) => s.id === schemeId);
+    if (scheme) {
+        scheme.labels = labels;
+        triggerSchemesReactivity();
+    }
+}
+
+function insertScheme(scheme: Scheme) {
+    schemes.value = [scheme, ...schemes.value];
+}
+
+defineExpose({
+    commitNewConcept,
+    removeConceptFromTree,
+    updateConceptLabels,
+    removeSchemeFromTree,
+    updateSchemeLabels,
+    insertScheme,
+});
 </script>
 
 <template>

@@ -5,6 +5,7 @@ import type { EDIT, VIEW } from "@/arches_lingo/constants.ts";
 
 import type { ReferenceSelectTreeNode } from "@/arches_controlled_lists/datatypes/reference-select/types.ts";
 import type { Label } from "@/arches_controlled_lists/types.ts";
+export type { Label } from "@/arches_controlled_lists/types.ts";
 
 import type { StringValue } from "@/arches_component_lab/datatypes/string/types.ts";
 import type { ResourceInstanceListValue } from "@/arches_component_lab/datatypes/resource-instance-list/types.ts";

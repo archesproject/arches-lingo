@@ -49,7 +49,7 @@ const props = defineProps<{
     nodegroupAlias: string;
 }>();
 
-const refreshSchemeHierarchy = inject<() => void>("refreshSchemeHierarchy");
+const removeTreeScheme = inject<(schemeId: string) => void>("removeTreeScheme");
 
 const confirm = useConfirm();
 const router = useRouter();
@@ -150,11 +150,11 @@ function confirmDelete() {
                     props.graphSlug,
                     scheme.value.resourceinstanceid,
                 ).then(() => {
+                    removeTreeScheme!(scheme.value!.resourceinstanceid);
+
                     router.push({
                         name: routeNames.schemes,
                     });
-
-                    refreshSchemeHierarchy!();
                 });
             } catch (error) {
                 toast.add({

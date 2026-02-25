@@ -21,7 +21,11 @@ import {
 
 import type { Component, Ref } from "vue";
 import type { FormSubmitEvent } from "@primevue/forms";
-import type { AppellativeStatus } from "@/arches_lingo/types.ts";
+import type {
+    AppellativeStatus,
+    AppellativeStatusAliases,
+    Label,
+} from "@/arches_lingo/types.ts";
 
 const props = defineProps<{
     tileData: AppellativeStatus | undefined;
@@ -50,6 +54,15 @@ const refreshReportSection = inject<(componentName: string) => void>(
 );
 
 const refreshSchemeHierarchy = inject<() => void>("refreshSchemeHierarchy");
+const commitTreeConcept =
+    inject<
+        (
+            conceptId: string,
+            labels: Label[],
+            schemeId: string,
+            parentId: string,
+        ) => void
+    >("commitTreeConcept");
 
 const formRef = useTemplateRef("form");
 const isSaving = ref(false);
@@ -67,7 +80,7 @@ async function save(e: FormSubmitEvent) {
 
         const aliasedTileData = props.tileData?.aliased_data || {};
 
-        const updatedTileData = {
+        const updatedTileData: Partial<AppellativeStatusAliases> = {
             ...aliasedTileData,
             ...Object.fromEntries(
                 Object.entries(formData).filter(
@@ -95,7 +108,41 @@ async function save(e: FormSubmitEvent) {
         }
 
         refreshReportSection!(props.componentName);
-        refreshSchemeHierarchy!();
+
+        if (!props.resourceInstanceId) {
+            // New concept — insert into tree locally instead of full refetch.
+            const newConceptId = route.params.id as string;
+            const labelValue =
+                updatedTileData.appellative_status_ascribed_name_content
+                    ?.display_value ??
+                updatedTileData.appellative_status_ascribed_name_content
+                    ?.node_value ??
+                "";
+            const languageId =
+                updatedTileData.appellative_status_ascribed_name_language
+                    ?.display_value ?? "";
+            const valuetypeId =
+                updatedTileData.appellative_status_ascribed_relation
+                    ?.display_value ?? "preferred label";
+            commitTreeConcept!(
+                newConceptId,
+                [
+                    {
+                        value:
+                            typeof labelValue === "string"
+                                ? labelValue
+                                : String(labelValue),
+                        language_id: languageId,
+                        valuetype_id: valuetypeId,
+                    },
+                ],
+                scheme,
+                parent,
+            );
+        } else {
+            // Existing concept — update tree labels locally.
+            refreshSchemeHierarchy!();
+        }
     } catch (error) {
         toast.add({
             severity: ERROR,

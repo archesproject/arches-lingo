@@ -58,7 +58,8 @@ const props = defineProps<{
     nodegroupAlias: string;
 }>();
 
-const refreshSchemeHierarchy = inject<() => void>("refreshSchemeHierarchy");
+const removeTreeConcept =
+    inject<(conceptId: string) => void>("removeTreeConcept");
 
 const toast = useToast();
 const { $gettext } = useGettext();
@@ -166,12 +167,12 @@ function confirmDelete() {
                         concept.value!.aliased_data?.part_of_scheme
                             ?.aliased_data.part_of_scheme?.node_value;
 
+                    removeTreeConcept!(concept.value!.resourceinstanceid);
+
                     router.push({
                         name: routeNames.scheme,
                         params: { id: schemeIdentifier },
                     });
-
-                    refreshSchemeHierarchy!();
                 });
             } catch (error) {
                 toast.add({
