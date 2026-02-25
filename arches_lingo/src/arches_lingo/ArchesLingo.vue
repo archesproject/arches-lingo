@@ -16,6 +16,7 @@ import SchemeHierarchy from "@/arches_lingo/components/header/PageHeader/compone
 import {
     ANONYMOUS,
     DEFAULT_ERROR_TOAST_LIFE,
+    DEFAULT_LANGUAGE,
     ERROR,
     USER_KEY,
     availableLanguagesKey,
@@ -32,6 +33,7 @@ import {
 import { useUnsavedChangesGuard } from "@/arches_lingo/composables/useUnsavedChangesGuard.ts";
 import PageHeader from "@/arches_lingo/components/header/PageHeader/PageHeader.vue";
 import SideNav from "@/arches_lingo/components/sidenav/SideNav.vue";
+import { getAutonym, matchBrowserLocale } from "@/arches_lingo/utils.ts";
 
 import type { Ref } from "vue";
 import type { Language } from "@/arches_component_lab/types";
@@ -47,152 +49,27 @@ provide(USER_KEY, { user, setUser });
 const gettext = useGettext();
 const { $gettext } = gettext;
 
-// Return the native/autonym name for a language code using the
-// browser's Intl API (e.g. "de" → "Deutsch", "en" → "English").
-function getAutonym(code: string, fallback: string): string {
-    try {
-        const name = new Intl.DisplayNames([code], { type: "language" }).of(
-            code,
-        );
-        if (name) {
-            return name.charAt(0).toUpperCase() + name.slice(1);
-        }
-    } catch {
-        // Intl.DisplayNames may not support every code.
-    }
-    return fallback;
-}
-
-// Build initial available languages from gettext.available (populated from
-// settings.LANGUAGES via the i18n endpoint in create-vue-application).
-// These use placeholder values for DB-specific fields until the real
-// Language records are fetched from the database.
+// Language state — populated from the backend in onMounted.
+// System language is initialised from get_language() (Django's LANGUAGE_CODE).
+// enabledCodes comes from settings.LANGUAGES via the i18n endpoint.
 const enabledCodes = new Set(Object.keys(gettext.available));
-const enabledLanguages: Language[] = Object.entries(gettext.available).map(
-    ([code, name], index) => ({
-        code,
-        name: getAutonym(code, name),
-        default_direction: "ltr" as const,
-        id: index,
-        isdefault: false,
-        scope: "system",
-    }),
-);
-
-// System language: gettext.current is initialised from get_language(),
-// which defaults to LANGUAGE_CODE when no cookie is set.
-const systemLanguageCode: string = gettext.current ?? "en";
-const systemLang =
-    enabledLanguages.find((l: Language) => l.code === systemLanguageCode) ??
-    enabledLanguages[0];
-const systemLanguage: Language = reactive(
-    systemLang
-        ? { ...systemLang, isdefault: true }
-        : {
-              code: systemLanguageCode,
-              default_direction: "ltr" as const,
-              id: 0,
-              isdefault: true,
-              name: systemLanguageCode,
-              scope: "system",
-          },
-);
-
-// Match browser locale to the best available language.
-function matchBrowserLocale(languages: Language[]): Language | undefined {
-    if (!languages.length) return undefined;
-    const browserLangs = navigator.languages ?? [navigator.language];
-    for (const browserTag of browserLangs) {
-        const normalized = browserTag.toLowerCase();
-        // Exact match (e.g. "en-gb" === "en-gb")
-        const exact = languages.find((l) => l.code === normalized);
-        if (exact) return exact;
-        // Primary subtag match (e.g. "en-US" → "en")
-        const primary = normalized.split("-")[0];
-        const partial = languages.find((l) => l.code === primary);
-        if (partial) return partial;
-        // Match language whose code starts with the primary subtag
-        const prefix = languages.find((l) => l.code.startsWith(primary));
-        if (prefix) return prefix;
-    }
-    return undefined;
-}
-
-// Determine initial language priority:
-// 1. django_language cookie (user's previous explicit choice)
-// 2. Browser locale best-match
-// 3. System language (LANGUAGE_CODE)
-// 4. First enabled language
-const cookieLanguageCode = Cookies.get("django_language");
-const cookieMatch = cookieLanguageCode
-    ? enabledLanguages.find((l) => l.code === cookieLanguageCode)
-    : undefined;
-const browserMatch = matchBrowserLocale(enabledLanguages);
-const initialLanguage =
-    cookieMatch ?? browserMatch ?? systemLang ?? enabledLanguages[0];
-
-const availableLanguages: Ref<Language[]> = ref(enabledLanguages);
-const selectedLanguage: Ref<Language> = ref(
-    initialLanguage ?? { ...systemLanguage },
-);
+const systemLanguageCode: string = gettext.current ?? DEFAULT_LANGUAGE.code;
+const availableLanguages: Ref<Language[]> = ref([]);
+const selectedLanguage: Ref<Language> = ref({
+    ...DEFAULT_LANGUAGE,
+    code: systemLanguageCode,
+    name: systemLanguageCode,
+});
+const systemLanguage: Language = reactive({
+    ...DEFAULT_LANGUAGE,
+    code: systemLanguageCode,
+    name: systemLanguageCode,
+    isdefault: true,
+});
 
 provide(availableLanguagesKey, availableLanguages);
 provide(selectedLanguageKey, selectedLanguage);
 provide(systemLanguageKey, systemLanguage);
-
-// Sync gettext current language with initial selection.
-if (initialLanguage && gettext.current !== initialLanguage.code) {
-    gettext.current = initialLanguage.code;
-}
-
-// Fetch full Language records from the database and replace the
-// placeholder objects with real DB values (default_direction, id, etc.).
-onMounted(async () => {
-    try {
-        const dbLanguages = await fetchLanguages();
-        const dbByCode = new Map(dbLanguages.map((l) => [l.code, l]));
-        // Keep only languages that are both in the DB and in
-        // settings.LANGUAGES (enabledCodes from gettext.available).
-        const merged: Language[] = [];
-        for (const code of enabledCodes) {
-            const dbLang = dbByCode.get(code);
-            if (dbLang) {
-                // Use the autonym so the selector always shows the
-                // language name in its own locale.
-                merged.push({
-                    ...dbLang,
-                    name: getAutonym(dbLang.code, dbLang.name),
-                });
-            } else {
-                // Language is in settings.LANGUAGES but not in DB —
-                // keep the placeholder (already has autonym).
-                const placeholder = enabledLanguages.find(
-                    (l) => l.code === code,
-                );
-                if (placeholder) merged.push(placeholder);
-            }
-        }
-        availableLanguages.value = merged;
-
-        // Update selectedLanguage and systemLanguage with DB values.
-        const dbSelected = dbByCode.get(selectedLanguage.value.code);
-        if (dbSelected) {
-            selectedLanguage.value = {
-                ...dbSelected,
-                name: getAutonym(dbSelected.code, dbSelected.name),
-            };
-        }
-        const dbSystem = dbByCode.get(systemLanguage.code);
-        if (dbSystem) {
-            Object.assign(systemLanguage, {
-                ...dbSystem,
-                name: getAutonym(dbSystem.code, dbSystem.name),
-            });
-        }
-    } catch {
-        // If the fetch fails, keep the placeholder Language objects.
-    }
-});
 
 // When the selected language changes, update gettext and reload translations.
 watch(
@@ -219,9 +96,52 @@ watch(
     },
 );
 
-// Keep the document direction in sync with the selected language.
-watchEffect(() => {
-    document.body.dir = selectedLanguage.value.default_direction;
+onMounted(async () => {
+    try {
+        const dbLanguages = await fetchLanguages();
+
+        availableLanguages.value = dbLanguages
+            .filter((lang) => enabledCodes.has(lang.code))
+            .map((lang) => ({
+                ...lang,
+                name: getAutonym(lang.code, lang.name),
+            }));
+
+        const dbSystem =
+            dbLanguages.find((lang) => lang.code === systemLanguageCode) ??
+            dbLanguages.find((lang) => lang.isdefault);
+        if (dbSystem) {
+            Object.assign(systemLanguage, {
+                ...dbSystem,
+                name: getAutonym(dbSystem.code, dbSystem.name),
+            });
+        }
+
+        // Determine initial language priority:
+        // 1. django_language cookie (user's previous explicit choice)
+        // 2. Browser locale best-match
+        // 3. System language (LANGUAGE_CODE)
+        // 4. First available language
+        const cookieCode = Cookies.get("django_language");
+        const cookieMatch = cookieCode
+            ? availableLanguages.value.find((lang) => lang.code === cookieCode)
+            : undefined;
+        const browserMatch = matchBrowserLocale(availableLanguages.value);
+        const initial =
+            cookieMatch ??
+            browserMatch ??
+            dbSystem ??
+            availableLanguages.value[0];
+
+        if (initial) {
+            selectedLanguage.value = initial;
+            if (gettext.current !== initial.code) {
+                gettext.current = initial.code;
+            }
+        }
+    } catch {
+        // If the fetch fails, keep the placeholder Language objects.
+    }
 });
 
 const router = useRouter();

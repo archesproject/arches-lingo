@@ -2,6 +2,7 @@ import arches from "arches";
 import Cookies from "js-cookie";
 import { generateArchesURL } from "@/arches/utils/generate-arches-url.ts";
 
+import type { Language } from "@/arches_component_lab/types";
 import type {
     ConceptInstance,
     DigitalObjectInstance,
@@ -401,22 +402,15 @@ export const fetchConceptRelationships = async (conceptId: string) => {
 };
 
 export const fetchLanguages = async () => {
-    const url = arches.urls.languages;
+    const url = generateArchesURL("arches:language");
     const response = await fetch(url);
     const parsed = await response.json();
     if (!response.ok) throw new Error(parsed.message || response.statusText);
-    return parsed.languages as Array<{
-        code: string;
-        default_direction: "ltr" | "rtl";
-        id: number;
-        isdefault: boolean;
-        name: string;
-        scope: string;
-    }>;
+    return parsed.languages as Language[];
 };
 
 export const fetchI18nData = async (languageCode?: string) => {
-    const url = arches.urls.api_get_frontend_i18n_data;
+    const url = generateArchesURL("arches:get_frontend_i18n_data");
     const headers: Record<string, string> = {};
     if (languageCode) {
         headers["Accept-Language"] = languageCode;

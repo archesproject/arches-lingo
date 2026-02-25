@@ -27,6 +27,15 @@ export const DEFAULT_ERROR_TOAST_LIFE = 8000;
 export const SEARCH_RESULTS_PER_PAGE = 25;
 export const SEARCH_RESULT_ITEM_SIZE = 50;
 
+export const DEFAULT_LANGUAGE: Language = {
+    code: "en",
+    default_direction: "ltr",
+    id: 0,
+    isdefault: false,
+    name: "English",
+    scope: "system",
+};
+
 // Injection keys
 export const USER_KEY = Symbol() as InjectionKey<UserRefAndSetter>;
 export const displayedRowKey = Symbol() as InjectionKey<Ref<Concept | null>>;

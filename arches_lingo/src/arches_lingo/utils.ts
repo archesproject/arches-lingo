@@ -254,6 +254,60 @@ export function extractDescriptors(
     return schemeDescriptor;
 }
 
+// Return the native/autonym name for a language code using the
+// browser's Intl API (e.g. "de" → "Deutsch", "en" → "English").
+export function getAutonym(code: string, fallback: string): string {
+    try {
+        const name = new Intl.DisplayNames([code], { type: "language" }).of(
+            code,
+        );
+        if (name) {
+            return name.charAt(0).toUpperCase() + name.slice(1);
+        }
+    } catch {
+        // Intl.DisplayNames may not support every code.
+    }
+    return fallback;
+}
+
+// Match browser locale to the best available language.
+export function matchBrowserLocale(
+    languages: Language[],
+): Language | undefined {
+    if (!languages.length) return undefined;
+    const browserLangs = navigator.languages ?? [navigator.language];
+    for (const browserTag of browserLangs) {
+        const normalized = browserTag.toLowerCase();
+        // Exact match (e.g. "en-gb" === "en-gb")
+        const exact = languages.find(
+            (language) => language.code === normalized,
+        );
+        if (exact) return exact;
+        // Primary subtag match (e.g. "en-US" → "en")
+        const primary = normalized.split("-")[0];
+        const partial = languages.find((language) => language.code === primary);
+        if (partial) return partial;
+        // Match language whose code starts with the primary subtag
+        const prefix = languages.find((language) =>
+            language.code.startsWith(primary),
+        );
+        if (prefix) return prefix;
+    }
+    return undefined;
+}
+
+// Rank a language code against preferred and system codes.
+// Returns 2 for preferred, 1 for system, 0 for other.
+export function getLanguageRank(
+    code: string | undefined,
+    preferredCode: string,
+    systemCode: string,
+): number {
+    if (code === preferredCode) return 2;
+    if (code === systemCode) return 1;
+    return 0;
+}
+
 export async function createOrUpdateConcept(
     formData: Record<string, unknown>,
     graphSlug: string,
