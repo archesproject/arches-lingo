@@ -18,8 +18,14 @@ const children = <SideNavMenuItem[]>[
         key: "dashboard",
         label: $gettext("Dashboard"),
         icon: "pi pi-home",
-        route: { name: routeNames.root },
-        disabled: true,
+        route: { name: routeNames.dashboard },
+        showIconIfCollapsed: true,
+    },
+    {
+        key: "schemes",
+        label: $gettext("Schemes"),
+        icon: "pi pi-lightbulb",
+        route: { name: routeNames.schemes },
         showIconIfCollapsed: true,
     },
     {
