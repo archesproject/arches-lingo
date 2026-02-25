@@ -435,3 +435,28 @@ export interface RevertResponse {
     message: string;
     errors?: string[];
 }
+
+export interface DashboardActivityItem {
+    editlogid: string;
+    edittype_label: string;
+    timestamp: string | null;
+    user_username: string;
+    user_firstname: string;
+    user_lastname: string;
+    resource_id: string;
+    resource_name: string;
+    resource_type: "concept" | "scheme";
+}
+
+export interface DashboardStats {
+    concept_count: number;
+    recent_activity: DashboardActivityItem[];
+}
+
+export interface MissingTranslationsResponse {
+    current_page: number;
+    total_pages: number;
+    results_per_page: number;
+    total_results: number;
+    data: SearchResultItem[];
+}

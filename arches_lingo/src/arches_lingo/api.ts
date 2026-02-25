@@ -500,3 +500,32 @@ export const getSearchExportFile = async (exportId: string) => {
     if (!response.ok) throw new Error(parsed.message || response.statusText);
     return parsed;
 };
+
+export const fetchDashboardStats = async (scheme?: string) => {
+    const params = new URLSearchParams();
+    if (scheme) params.append("scheme", scheme);
+    const url = `${generateArchesURL("arches_lingo:api-lingo-dashboard")}?${params.toString()}`;
+    const response = await fetch(url);
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
+export const fetchMissingTranslations = async (
+    language: string,
+    scheme?: string,
+    page = 1,
+    items = 25,
+) => {
+    const params = new URLSearchParams({
+        language,
+        page: page.toString(),
+        items: items.toString(),
+    });
+    if (scheme) params.append("scheme", scheme);
+    const url = `${generateArchesURL("arches_lingo:api-lingo-missing-translations")}?${params.toString()}`;
+    const response = await fetch(url);
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
