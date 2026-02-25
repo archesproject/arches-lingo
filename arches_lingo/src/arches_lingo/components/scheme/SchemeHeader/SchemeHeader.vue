@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject, onMounted, ref, type Ref } from "vue";
+import { inject, onMounted, ref, watch, type Ref } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import { useConfirm } from "primevue/useconfirm";
@@ -24,9 +24,9 @@ import { PREF_LABEL } from "@/arches_controlled_lists/constants.ts";
 
 import {
     deleteLingoResource,
-    fetchLingoResource,
     fetchSchemeResource,
 } from "@/arches_lingo/api.ts";
+import { useResourceStore } from "@/arches_lingo/composables/useResourceStore.ts";
 import { extractDescriptors } from "@/arches_lingo/utils.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 
@@ -65,6 +65,53 @@ const isLoading = ref(true);
 const showExportDialog = ref(false);
 const exportDialogKey = ref(0);
 
+const store = useResourceStore();
+let headerInitialized = false;
+
+watch(
+    [() => store.resource.value, () => store.error.value],
+    async ([resource, storeError]) => {
+        if (storeError) {
+            toast.add({
+                severity: ERROR,
+                life: DEFAULT_ERROR_TOAST_LIFE,
+                summary: $gettext("Unable to fetch scheme"),
+                detail: storeError.message,
+            });
+            isLoading.value = false;
+            return;
+        }
+        if (!resource || !props.resourceInstanceId || headerInitialized) return;
+        headerInitialized = true;
+
+        try {
+            scheme.value = resource;
+
+            const schemeResource = await fetchSchemeResource(
+                props.resourceInstanceId,
+            );
+
+            label.value = getItemLabel(
+                schemeResource,
+                selectedLanguage.value.code,
+                systemLanguage.code,
+            );
+
+            extractSchemeHeaderData(resource);
+        } catch (error) {
+            toast.add({
+                severity: ERROR,
+                life: DEFAULT_ERROR_TOAST_LIFE,
+                summary: $gettext("Unable to fetch scheme"),
+                detail: error instanceof Error ? error.message : undefined,
+            });
+        } finally {
+            isLoading.value = false;
+        }
+    },
+    { immediate: true },
+);
+
 function openExportDialog() {
     exportDialogKey.value++;
     showExportDialog.value = true;
@@ -97,42 +144,16 @@ function extractSchemeHeaderData(scheme: ResourceInstanceResult) {
 }
 
 onMounted(async () => {
-    try {
-        if (!props.resourceInstanceId) {
-            label.value = {
-                value: $gettext("New Scheme"),
-                language_id: selectedLanguage.value.code,
-                valuetype_id: PREF_LABEL,
-            };
-            return;
-        }
-
-        scheme.value = await fetchLingoResource(
-            props.graphSlug,
-            props.resourceInstanceId,
-        );
-
-        const schemeResource = await fetchSchemeResource(
-            props.resourceInstanceId,
-        );
-
-        label.value = getItemLabel(
-            schemeResource,
-            selectedLanguage.value.code,
-            systemLanguage.code,
-        );
-
-        extractSchemeHeaderData(scheme.value!);
-    } catch (error) {
-        toast.add({
-            severity: ERROR,
-            life: DEFAULT_ERROR_TOAST_LIFE,
-            summary: $gettext("Unable to fetch scheme"),
-            detail: error instanceof Error ? error.message : undefined,
-        });
-    } finally {
+    if (!props.resourceInstanceId) {
+        label.value = {
+            value: $gettext("New Scheme"),
+            language_id: selectedLanguage.value.code,
+            valuetype_id: PREF_LABEL,
+        };
         isLoading.value = false;
+        return;
     }
+    // Resource data is loaded via the store watch above
 });
 
 function confirmDelete() {

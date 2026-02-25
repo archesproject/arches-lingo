@@ -11,6 +11,11 @@ import SplitterPanel from "primevue/splitterpanel";
 import ComponentEditor from "@/arches_lingo/components/generic/ComponentManager/components/ComponentEditor.vue";
 
 import {
+    createResourceStore,
+    provideResourceStore,
+} from "@/arches_lingo/composables/useResourceStore.ts";
+
+import {
     CLOSED,
     EDIT,
     MAXIMIZED,
@@ -62,6 +67,10 @@ const resourceInstanceId = computed<string | undefined>(() => {
 
     return undefined;
 });
+
+const graphSlug = props.componentData[0]?.graphSlug;
+const resourceStore = createResourceStore(graphSlug, resourceInstanceId.value);
+provideResourceStore(resourceStore);
 
 const firstComponentDatum = computed(() => {
     return processedComponentData.value[0];
@@ -154,7 +163,7 @@ function updateAfterComponentDeletion(componentName: string, tileId: string) {
     }
 }
 
-function refreshReportSection(componentName: string) {
+async function refreshReportSection(componentName: string) {
     const componentDatum = processedComponentData.value.find(
         (componentDatum) => {
             return componentDatum.componentName === componentName;
@@ -162,6 +171,11 @@ function refreshReportSection(componentName: string) {
     );
 
     if (componentDatum) {
+        if (componentDatum.nodegroupAlias) {
+            await resourceStore.refreshNodegroup(componentDatum.nodegroupAlias);
+        } else {
+            await resourceStore.refreshResource();
+        }
         componentDatum.key += 1;
     }
 }
