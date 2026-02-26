@@ -42,6 +42,20 @@ const selectedSchemeIds = ref<string[]>([]);
 const isStatsLoading = ref(true);
 const stats = ref<DashboardStats | null>(null);
 
+// --- Activity period filter ---
+interface ActivityPeriod {
+    label: string;
+    days: number;
+}
+const ACTIVITY_PERIODS: ActivityPeriod[] = [
+    { label: $gettext("Last 24 hours"), days: 1 },
+    { label: $gettext("Last 7 days"), days: 7 },
+    { label: $gettext("Last 30 days"), days: 30 },
+    { label: $gettext("Last 90 days"), days: 90 },
+    { label: $gettext("All time"), days: 0 },
+];
+const selectedActivityPeriod = ref<ActivityPeriod>(ACTIVITY_PERIODS[1]);
+
 // --- Missing translations ---
 const languages = ref<Language[]>([]);
 const selectedLanguage = ref<Language | null>(null);
@@ -84,6 +98,7 @@ async function loadStats() {
             selectedSchemeIds.value.length
                 ? selectedSchemeIds.value
                 : undefined,
+            selectedActivityPeriod.value.days,
         );
     } catch (error) {
         toast.add({
@@ -161,7 +176,7 @@ function onPageChange(event: { first: number; rows: number }) {
     loadMissingTranslations();
 }
 
-watch(selectedSchemeIds, () => {
+watch([selectedSchemeIds, selectedActivityPeriod], () => {
     missingPage.value = 0;
     loadStats();
     if (selectedLanguage.value) {
@@ -373,7 +388,24 @@ onMounted(async () => {
 
         <!-- Recent Activity -->
         <section class="dashboard-section">
-            <h2 class="section-title">{{ $gettext("Recent Activity") }}</h2>
+            <div class="section-header">
+                <h2 class="section-title">{{ $gettext("Recent Activity") }}</h2>
+                <div class="filter-group">
+                    <label
+                        for="activity-period-filter"
+                        class="filter-label"
+                    >
+                        {{ $gettext("Time frame") }}:
+                    </label>
+                    <Select
+                        id="activity-period-filter"
+                        v-model="selectedActivityPeriod"
+                        :options="ACTIVITY_PERIODS"
+                        option-label="label"
+                        class="activity-period-select"
+                    />
+                </div>
+            </div>
             <div v-if="isStatsLoading">
                 <Skeleton
                     v-for="n in 5"
