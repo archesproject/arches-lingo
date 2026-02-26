@@ -166,7 +166,7 @@
                         "i18n_properties": [
                             "placeholder"
                         ],
-                        "label": "Name Content",
+                        "label": "Image Title",
                         "maxLength": null,
                         "placeholder": {
                             "en": "Enter text"
@@ -176,7 +176,7 @@
                     },
                     "id": "4dbebec9-e9c8-425e-ba9c-46fbe73b7915",
                     "label": {
-                        "en": "Name Content"
+                        "en": "Image Title"
                     },
                     "node_id": "95522790-08fc-11f0-9797-b33468cba848",
                     "sortorder": null,
@@ -191,7 +191,7 @@
                         "i18n_properties": [
                             "placeholder"
                         ],
-                        "label": "Statement Content",
+                        "label": "Image Description",
                         "maxLength": null,
                         "placeholder": {
                             "en": "Enter text"
@@ -201,7 +201,7 @@
                     },
                     "id": "5ac25ac7-15f5-45bb-88fc-5305b8552c1c",
                     "label": {
-                        "en": "Statement Content"
+                        "en": "Image Description"
                     },
                     "node_id": "4e995163-08fc-11f0-b111-b33468cba848",
                     "sortorder": null,
