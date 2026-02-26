@@ -501,12 +501,18 @@ export const getSearchExportFile = async (exportId: string) => {
     return parsed;
 };
 
-export const fetchDashboardStats = async (schemes?: string[]) => {
+export const fetchDashboardStats = async (
+    schemes?: string[],
+    activityDays?: number,
+) => {
     const params = new URLSearchParams();
     if (schemes) {
         for (const scheme of schemes) {
             params.append("scheme", scheme);
         }
+    }
+    if (activityDays !== undefined) {
+        params.append("days", String(activityDays));
     }
     const url = `${generateArchesURL("arches_lingo:api-lingo-dashboard")}?${params.toString()}`;
     const response = await fetch(url);

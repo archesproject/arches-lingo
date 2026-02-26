@@ -1,7 +1,9 @@
 import uuid
 from collections import Counter
+from datetime import timedelta
 
 from django.core.paginator import Paginator
+from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.utils.translation import gettext as _
 from django.views.generic import View
@@ -223,9 +225,26 @@ class DashboardStatsView(View):
             )
 
         # --- Recent activity: 20 most recent edits, deduplicated by transaction ---
-        edits = models.EditLog.objects.filter(
+        days_param = request.GET.get("days")
+        since = None
+        if days_param is not None:
+            try:
+                days_int = int(days_param)
+            except ValueError:
+                return JSONErrorResponse(
+                    title=_("Invalid parameter"),
+                    message=_("days must be an integer"),
+                    status=400,
+                )
+            if days_int > 0:
+                since = timezone.now() - timedelta(days=days_int)
+
+        edit_qs = models.EditLog.objects.filter(
             resourceinstanceid__in=all_resource_ids
-        ).order_by("-timestamp")[:100]
+        ).order_by("-timestamp")
+        if since:
+            edit_qs = edit_qs.filter(timestamp__gte=since)
+        edits = edit_qs[:100]
 
         # Build nodegroup ID → display name map for action labels
         nodegroup_ids = {edit.nodegroupid for edit in edits if edit.nodegroupid}
