@@ -120,6 +120,7 @@ async function checkUserAuthentication(
                 >
                     <div class="hierarchy-panel">
                         <SchemeHierarchy
+                            v-if="route.meta.shouldShowNavigation"
                             :key="schemeHierarchyKey"
                             :is-open="shouldShowHierarchy"
                             @should-show-hierarchy="
