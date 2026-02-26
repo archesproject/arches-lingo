@@ -228,6 +228,13 @@ export interface ConceptClassificationStatusAliases extends AliasedData {
 export type ConceptClassificationStatus =
     TileData<ConceptClassificationStatusAliases>;
 
+export interface ConceptTypeAliases extends AliasedData {
+    type: ReferenceSelectTreeNode[];
+    metatype?: ReferenceSelectTreeNode[];
+}
+
+export type ConceptType = TileData<ConceptTypeAliases>;
+
 export interface IdentifierAliases extends AliasedData {
     identifier_content: StringValue;
     identifier_label?: StringValue;
