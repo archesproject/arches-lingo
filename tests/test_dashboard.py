@@ -15,9 +15,9 @@ from arches_lingo.const import (
     CONCEPT_NAME_NODEGROUP,
     CONCEPT_NAME_TYPE_NODE,
     LABEL_LIST_ID,
+    PREF_LABEL_URI,
     SCHEMES_GRAPH_ID,
 )
-from arches_lingo.views.api.dashboard import PREF_LABEL_URI
 
 from tests.tests import ViewTests
 
@@ -292,6 +292,110 @@ class DashboardStatsViewTests(DashboardTestMixin, ViewTests):
 
         uris = [entry["uri"] for entry in data["labels_by_type"]]
         self.assertIn(PREF_LABEL_URI, uris)
+
+    def test_labels_per_concept(self):
+        # 5 concepts × 1 label each → 1.0
+        response = self.client.get(reverse("api-lingo-dashboard"))
+        data = json.loads(response.content)
+
+        self.assertIn("labels_per_concept", data)
+        self.assertEqual(data["labels_per_concept"], 1.0)
+
+    def test_days_filter_restricts_activity(self):
+        old_ts = datetime(2020, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+        recent_ts = datetime.now(tz=timezone.utc) - timedelta(hours=1)
+        self._create_edit(self.concepts[0], "tile create", old_ts)
+        self._create_edit(self.concepts[1], "tile create", recent_ts)
+
+        # With days=1, only the recent edit should appear
+        response = self.client.get(reverse("api-lingo-dashboard"), {"days": "1"})
+        data = json.loads(response.content)
+        resource_ids = {item["resource_id"] for item in data["recent_activity"]}
+        self.assertIn(str(self.concepts[1].pk), resource_ids)
+        self.assertNotIn(str(self.concepts[0].pk), resource_ids)
+
+    def test_days_zero_shows_all_activity(self):
+        old_ts = datetime(2020, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+        self._create_edit(self.concepts[0], "tile create", old_ts)
+
+        response = self.client.get(reverse("api-lingo-dashboard"), {"days": "0"})
+        data = json.loads(response.content)
+        resource_ids = {item["resource_id"] for item in data["recent_activity"]}
+        self.assertIn(str(self.concepts[0].pk), resource_ids)
+
+    def test_invalid_days_returns_400(self):
+        with self.assertLogs("django.request", level="WARNING"):
+            response = self.client.get(reverse("api-lingo-dashboard"), {"days": "abc"})
+        self.assertEqual(response.status_code, 400)
+
+    def test_multi_scheme_filter(self):
+        from arches.app.models.models import ResourceInstance, ResourceXResource
+        from arches_lingo.const import (
+            CONCEPTS_GRAPH_ID,
+            CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID,
+        )
+        import datetime as dt
+
+        # Create a second scheme with its own concept
+        second_scheme = ResourceInstance.objects.create(
+            graph_id=SCHEMES_GRAPH_ID, name="Second Scheme"
+        )
+        extra_concept = ResourceInstance.objects.create(
+            graph_id=CONCEPTS_GRAPH_ID, name="Extra Concept"
+        )
+        rxr = ResourceXResource(
+            from_resource=extra_concept,
+            from_resource_graph_id=CONCEPTS_GRAPH_ID,
+            to_resource=second_scheme,
+            to_resource_graph_id=SCHEMES_GRAPH_ID,
+            created=dt.datetime.now(),
+            modified=dt.datetime.now(),
+        )
+        rxr.save()
+        TileModel.objects.create(
+            resourceinstance=extra_concept,
+            nodegroup_id=CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID,
+            data={
+                CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID: [
+                    {
+                        "resourceId": str(second_scheme.pk),
+                        "resourceXresourceId": str(rxr.pk),
+                    }
+                ]
+            },
+        )
+
+        # Filter by both schemes — should include concepts from both
+        response = self.client.get(
+            reverse("api-lingo-dashboard"),
+            {"scheme": [str(self.scheme.pk), str(second_scheme.pk)]},
+        )
+        data = json.loads(response.content)
+        # 5 from the first scheme + 1 from the second
+        self.assertEqual(data["concept_count"], 6)
+        self.assertEqual(data["scheme_count"], 2)
+
+    def test_nodegroup_name_in_activity_label(self):
+        ts = datetime.now(tz=timezone.utc) - timedelta(minutes=5)
+        self._create_edit(
+            self.concepts[0],
+            "tile create",
+            ts,
+            nodegroupid=CONCEPT_NAME_NODEGROUP,
+        )
+
+        response = self.client.get(reverse("api-lingo-dashboard"))
+        data = json.loads(response.content)
+
+        matching = [
+            item
+            for item in data["recent_activity"]
+            if item["resource_id"] == str(self.concepts[0].pk)
+        ]
+        self.assertTrue(len(matching) > 0)
+        label = matching[0]["edittype_label"]
+        # Should use the nodegroup name instead of "Tile"
+        self.assertNotIn("Tile", label)
 
     def test_invalid_scheme_uuid_returns_400(self):
         with self.assertLogs("django.request", level="WARNING"):
