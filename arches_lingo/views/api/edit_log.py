@@ -184,7 +184,7 @@ class ResourceEditLogAPIView(View):
                 status=400,
             )
 
-        _, error_response = _get_resource_or_404(resourceid)
+        resource_instance, error_response = _get_resource_or_404(resourceid)
         if error_response:
             return error_response
 
