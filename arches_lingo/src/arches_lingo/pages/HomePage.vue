@@ -11,6 +11,7 @@ import MultiSelect from "primevue/multiselect";
 import Paginator from "primevue/paginator";
 import Select from "primevue/select";
 import Skeleton from "primevue/skeleton";
+import Tag from "primevue/tag";
 
 import { fetchLanguages } from "@/arches_component_lab/widgets/api.ts";
 import {
@@ -150,9 +151,34 @@ function getConceptScheme(concept: SearchResultItem): string {
     return "";
 }
 
-function formatTimestamp(timestamp: string | null): string {
+function formatRelativeTime(timestamp: string | null): string {
+    if (!timestamp) return "";
+    const diffMs = Date.now() - new Date(timestamp).getTime();
+    const diffMins = Math.floor(diffMs / 60_000);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+    if (diffMins < 1) return $gettext("Just now");
+    if (diffMins < 60) return $gettext("%{n} min ago", { n: String(diffMins) });
+    if (diffHours < 24)
+        return $gettext("%{n} hr ago", { n: String(diffHours) });
+    if (diffDays < 7) return $gettext("%{n}d ago", { n: String(diffDays) });
+    return new Date(timestamp).toLocaleDateString();
+}
+
+function formatFullTimestamp(timestamp: string | null): string {
     if (!timestamp) return "";
     return new Date(timestamp).toLocaleString();
+}
+
+function getInitials(
+    firstname: string,
+    lastname: string,
+    username: string,
+): string {
+    if (firstname || lastname) {
+        return `${firstname?.[0] ?? ""}${lastname?.[0] ?? ""}`.toUpperCase();
+    }
+    return username?.[0]?.toUpperCase() ?? "?";
 }
 
 function navigateToConcept(conceptId: string) {
@@ -302,7 +328,7 @@ onMounted(async () => {
                         v-else
                         class="stat-count"
                     >
-                        {{ stats?.label_count?.toLocaleString() ?? "\u2014" }}
+                        {{ stats?.label_count?.toLocaleString() ?? "—" }}
                     </div>
                 </template>
             </Card>
@@ -317,9 +343,11 @@ onMounted(async () => {
             "
             class="dashboard-section"
         >
-            <h2 class="section-title">
-                {{ $gettext("Concepts by Type") }}
-            </h2>
+            <div class="section-header">
+                <h2 class="section-title">
+                    {{ $gettext("Concepts by Type") }}
+                </h2>
+            </div>
             <div class="type-breakdown">
                 <div
                     v-for="item in stats.concepts_by_type"
@@ -343,9 +371,11 @@ onMounted(async () => {
             "
             class="dashboard-section"
         >
-            <h2 class="section-title">
-                {{ $gettext("Labels by Type") }}
-            </h2>
+            <div class="section-header">
+                <h2 class="section-title">
+                    {{ $gettext("Labels by Type") }}
+                </h2>
+            </div>
             <div class="type-breakdown">
                 <div
                     v-for="item in stats.labels_by_type"
@@ -369,9 +399,11 @@ onMounted(async () => {
             "
             class="dashboard-section"
         >
-            <h2 class="section-title">
-                {{ $gettext("Labels by Language") }}
-            </h2>
+            <div class="section-header">
+                <h2 class="section-title">
+                    {{ $gettext("Labels by Language") }}
+                </h2>
+            </div>
             <div class="type-breakdown">
                 <div
                     v-for="item in stats.labels_by_language"
@@ -411,7 +443,7 @@ onMounted(async () => {
                     v-for="n in 5"
                     :key="n"
                     style="margin-bottom: 0.5rem"
-                    height="2rem"
+                    height="2.25rem"
                 />
             </div>
             <DataTable
@@ -422,22 +454,30 @@ onMounted(async () => {
                 class="activity-table"
             >
                 <template #empty>
-                    <span class="no-data">{{
-                        $gettext("No recent activity")
-                    }}</span>
+                    <div class="empty-state">
+                        <i class="pi pi-inbox empty-icon" />
+                        <span>{{ $gettext("No recent activity") }}</span>
+                    </div>
                 </template>
                 <Column
-                    :header="$gettext('Date / Time')"
-                    style="width: 12rem"
+                    :header="$gettext('When')"
+                    style="width: 8rem"
                 >
                     <template #body="slotProps">
-                        {{ formatTimestamp(slotProps.data.timestamp) }}
+                        <span
+                            class="relative-time"
+                            :title="
+                                formatFullTimestamp(slotProps.data.timestamp)
+                            "
+                        >
+                            {{ formatRelativeTime(slotProps.data.timestamp) }}
+                        </span>
                     </template>
                 </Column>
                 <Column
                     field="edittype_label"
                     :header="$gettext('Action')"
-                    style="width: 16rem"
+                    style="width: 14rem"
                 />
                 <Column :header="$gettext('Resource')">
                     <template #body="slotProps">
@@ -463,27 +503,47 @@ onMounted(async () => {
                 </Column>
                 <Column
                     :header="$gettext('Type')"
-                    style="width: 7rem"
+                    style="width: 6.5rem"
                 >
                     <template #body="slotProps">
-                        {{
-                            slotProps.data.resource_type === "scheme"
-                                ? $gettext("Scheme")
-                                : $gettext("Concept")
-                        }}
+                        <Tag
+                            :value="
+                                slotProps.data.resource_type === 'scheme'
+                                    ? $gettext('Scheme')
+                                    : $gettext('Concept')
+                            "
+                            :severity="
+                                slotProps.data.resource_type === 'scheme'
+                                    ? 'success'
+                                    : 'info'
+                            "
+                        />
                     </template>
                 </Column>
                 <Column
                     :header="$gettext('User')"
-                    style="width: 10rem"
+                    style="width: 11rem"
                 >
                     <template #body="slotProps">
-                        {{
-                            slotProps.data.user_firstname ||
-                            slotProps.data.user_lastname
-                                ? `${slotProps.data.user_firstname} ${slotProps.data.user_lastname}`.trim()
-                                : slotProps.data.user_username
-                        }}
+                        <div class="user-cell">
+                            <span class="user-avatar">
+                                {{
+                                    getInitials(
+                                        slotProps.data.user_firstname,
+                                        slotProps.data.user_lastname,
+                                        slotProps.data.user_username,
+                                    )
+                                }}
+                            </span>
+                            <span>
+                                {{
+                                    slotProps.data.user_firstname ||
+                                    slotProps.data.user_lastname
+                                        ? `${slotProps.data.user_firstname} ${slotProps.data.user_lastname}`.trim()
+                                        : slotProps.data.user_username
+                                }}
+                            </span>
+                        </div>
                     </template>
                 </Column>
             </DataTable>
@@ -491,24 +551,37 @@ onMounted(async () => {
 
         <!-- Missing Translations -->
         <section class="dashboard-section">
-            <h2 class="section-title">
-                {{ $gettext("Missing Translations") }}
-            </h2>
-            <div class="missing-filters">
-                <label
-                    for="language-filter"
-                    class="filter-label"
-                >
-                    {{ $gettext("Language") }}:
-                </label>
-                <Select
-                    id="language-filter"
-                    v-model="selectedLanguage"
-                    :options="languages"
-                    option-label="name"
-                    :placeholder="$gettext('Select a language')"
-                    class="language-select"
-                />
+            <div class="section-header">
+                <div class="section-header-left">
+                    <h2 class="section-title">
+                        {{ $gettext("Missing Translations") }}
+                    </h2>
+                    <span
+                        v-if="
+                            missingTranslations &&
+                            missingTranslations.total_results > 0
+                        "
+                        class="count-badge"
+                    >
+                        {{ missingTranslations.total_results.toLocaleString() }}
+                    </span>
+                </div>
+                <div class="filter-group">
+                    <label
+                        for="language-filter"
+                        class="filter-label"
+                    >
+                        {{ $gettext("Language") }}:
+                    </label>
+                    <Select
+                        id="language-filter"
+                        v-model="selectedLanguage"
+                        :options="languages"
+                        option-label="name"
+                        :placeholder="$gettext('Select a language')"
+                        class="language-select"
+                    />
+                </div>
             </div>
 
             <div v-if="!selectedLanguage">
@@ -525,7 +598,7 @@ onMounted(async () => {
                     v-for="n in 5"
                     :key="n"
                     style="margin-bottom: 0.5rem"
-                    height="2rem"
+                    height="2.25rem"
                 />
             </div>
             <template v-else>
@@ -536,13 +609,16 @@ onMounted(async () => {
                     class="missing-table"
                 >
                     <template #empty>
-                        <span class="no-data">
-                            {{
+                        <div class="empty-state">
+                            <i
+                                class="pi pi-check-circle empty-icon empty-icon--success"
+                            />
+                            <span>{{
                                 $gettext(
                                     "All concepts have a preferred label in this language.",
                                 )
-                            }}
-                        </span>
+                            }}</span>
+                        </div>
                     </template>
                     <Column :header="$gettext('Concept')">
                         <template #body="slotProps">
@@ -573,22 +649,6 @@ onMounted(async () => {
                     "
                     @page="onPageChange"
                 />
-                <p
-                    v-if="missingTranslations"
-                    class="results-count"
-                >
-                    {{
-                        $gettext(
-                            "%{count} concept(s) missing a preferred label in %{lang}",
-                            {
-                                count: String(
-                                    missingTranslations.total_results,
-                                ),
-                                lang: selectedLanguage?.name ?? "",
-                            },
-                        )
-                    }}
-                </p>
             </template>
         </section>
     </div>
@@ -604,9 +664,12 @@ onMounted(async () => {
     gap: 1.5rem;
 }
 
+/* ── Header ── */
 .dashboard-header {
     display: flex;
-    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
     gap: 0.75rem;
 }
 
@@ -629,11 +692,22 @@ onMounted(async () => {
     white-space: nowrap;
 }
 
+.filter-group {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
 .scheme-select,
 .language-select {
     min-width: 14rem;
 }
 
+.activity-period-select {
+    min-width: 9rem;
+}
+
+/* ── Stat cards ── */
 .stats-row {
     display: flex;
     gap: 1rem;
@@ -641,6 +715,7 @@ onMounted(async () => {
 }
 
 .stat-card {
+    flex: 1;
     min-width: 10rem;
 }
 
@@ -668,6 +743,51 @@ onMounted(async () => {
     padding-top: 0.25rem;
 }
 
+/* ── Sections ── */
+.dashboard-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    background: var(--p-surface-0);
+    border: 0.0625rem solid var(--p-surface-border);
+    border-radius: 0.5rem;
+    padding: 1.25rem;
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 0.0625rem solid var(--p-surface-border);
+    padding-bottom: 0.5rem;
+}
+
+.section-header-left {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.section-title {
+    font-size: var(--p-lingo-font-size-large);
+    font-weight: var(--p-lingo-font-weight-normal);
+    margin: 0;
+}
+
+.count-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--p-primary-100);
+    color: var(--p-primary-700);
+    font-size: var(--p-lingo-font-size-xsmall);
+    font-weight: 600;
+    padding: 0.125rem 0.5rem;
+    border-radius: 1rem;
+    min-width: 1.5rem;
+}
+
+/* ── Type breakdown chips ── */
 .type-breakdown {
     display: flex;
     flex-wrap: wrap;
@@ -694,26 +814,55 @@ onMounted(async () => {
     color: var(--p-primary-500);
 }
 
-.dashboard-section {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
+/* ── Activity table ── */
+.relative-time {
+    cursor: default;
+    color: var(--p-neutral-400);
+    font-size: var(--p-lingo-font-size-small);
 }
 
-.section-title {
-    font-size: var(--p-lingo-font-size-large);
-    font-weight: var(--p-lingo-font-weight-normal);
-    margin: 0;
-    border-bottom: 0.0625rem solid var(--p-surface-border);
-    padding-bottom: 0.5rem;
-}
-
-.missing-filters {
+.user-cell {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.5rem;
 }
 
+.user-avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 50%;
+    background: var(--p-primary-100);
+    color: var(--p-primary-700);
+    font-size: 0.625rem;
+    font-weight: 700;
+    flex-shrink: 0;
+    text-transform: uppercase;
+}
+
+/* ── Empty states ── */
+.empty-state {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--p-inputtext-placeholder-color);
+    font-size: var(--p-lingo-font-size-smallnormal);
+    font-weight: var(--p-lingo-font-weight-light);
+    padding: 0.25rem 0;
+}
+
+.empty-icon {
+    font-size: 1rem;
+    color: var(--p-neutral-300);
+}
+
+.empty-icon--success {
+    color: var(--p-green-500);
+}
+
+/* ── Misc ── */
 .hint-text {
     font-size: var(--p-lingo-font-size-small);
     color: var(--p-inputtext-placeholder-color);
@@ -727,18 +876,6 @@ onMounted(async () => {
 
 .resource-link:hover {
     text-decoration: underline;
-}
-
-.no-data {
-    font-size: var(--p-lingo-font-size-smallnormal);
-    font-weight: var(--p-lingo-font-weight-light);
-    color: var(--p-inputtext-placeholder-color);
-}
-
-.results-count {
-    font-size: var(--p-lingo-font-size-xsmall);
-    color: var(--p-neutral-400);
-    margin: 0.25rem 0 0 0;
 }
 
 :deep(.p-datatable-tbody > tr > td) {
