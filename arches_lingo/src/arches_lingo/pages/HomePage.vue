@@ -4,7 +4,6 @@ import { useRouter } from "vue-router";
 import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
 
-import Card from "primevue/card";
 import Column from "primevue/column";
 import DataTable from "primevue/datatable";
 import MultiSelect from "primevue/multiselect";
@@ -269,180 +268,157 @@ onMounted(async () => {
 
         <!-- Stat cards -->
         <div class="stats-row">
-            <Card class="stat-card">
-                <template #title>
-                    <span class="stat-title">
-                        <i class="pi pi-folder stat-icon" />
-                        {{ $gettext("Schemes") }}
-                    </span>
-                </template>
-                <template #content>
-                    <Skeleton
-                        v-if="isStatsLoading"
-                        height="3rem"
-                        width="6rem"
-                    />
-                    <div
-                        v-else
-                        class="stat-count"
-                    >
-                        {{ stats?.scheme_count?.toLocaleString() ?? "—" }}
-                    </div>
-                </template>
-            </Card>
-            <Card class="stat-card">
-                <template #title>
-                    <span class="stat-title">
-                        <i class="pi pi-lightbulb stat-icon" />
-                        {{ $gettext("Concepts") }}
-                    </span>
-                </template>
-                <template #content>
-                    <Skeleton
-                        v-if="isStatsLoading"
-                        height="3rem"
-                        width="6rem"
-                    />
-                    <div
-                        v-else
-                        class="stat-count"
-                    >
-                        {{ stats?.concept_count?.toLocaleString() ?? "—" }}
-                    </div>
-                </template>
-            </Card>
-            <Card class="stat-card">
-                <template #title>
-                    <span class="stat-title">
-                        <i class="pi pi-tag stat-icon" />
-                        {{ $gettext("Labels") }}
-                    </span>
-                </template>
-                <template #content>
-                    <Skeleton
-                        v-if="isStatsLoading"
-                        height="3rem"
-                        width="6rem"
-                    />
-                    <div
-                        v-else
-                        class="stat-count"
-                    >
-                        {{ stats?.label_count?.toLocaleString() ?? "—" }}
-                    </div>
-                </template>
-            </Card>
-            <Card class="stat-card">
-                <template #title>
-                    <span class="stat-title">
-                        <i class="pi pi-chart-bar stat-icon" />
-                        {{ $gettext("Labels / Concept") }}
-                    </span>
-                </template>
-                <template #content>
-                    <Skeleton
-                        v-if="isStatsLoading"
-                        height="3rem"
-                        width="6rem"
-                    />
-                    <div
-                        v-else
-                        class="stat-count"
-                    >
-                        {{ stats?.labels_per_concept ?? "—" }}
-                    </div>
-                </template>
-            </Card>
+            <div class="stat-card">
+                <div class="stat-card-title">
+                    <i class="pi pi-folder stat-icon" />
+                    {{ $gettext("Schemes") }}
+                </div>
+                <Skeleton
+                    v-if="isStatsLoading"
+                    height="2.5rem"
+                    width="5rem"
+                />
+                <div
+                    v-else
+                    class="stat-count"
+                >
+                    {{ stats?.scheme_count?.toLocaleString() ?? "—" }}
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-title">
+                    <i class="pi pi-lightbulb stat-icon" />
+                    {{ $gettext("Concepts") }}
+                </div>
+                <Skeleton
+                    v-if="isStatsLoading"
+                    height="2.5rem"
+                    width="5rem"
+                />
+                <div
+                    v-else
+                    class="stat-count"
+                >
+                    {{ stats?.concept_count?.toLocaleString() ?? "—" }}
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-title">
+                    <i class="pi pi-tag stat-icon" />
+                    {{ $gettext("Labels") }}
+                </div>
+                <Skeleton
+                    v-if="isStatsLoading"
+                    height="2.5rem"
+                    width="5rem"
+                />
+                <div
+                    v-else
+                    class="stat-count"
+                >
+                    {{ stats?.label_count?.toLocaleString() ?? "—" }}
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-title">
+                    <i class="pi pi-chart-bar stat-icon" />
+                    {{ $gettext("Labels / Concept") }}
+                </div>
+                <Skeleton
+                    v-if="isStatsLoading"
+                    height="2.5rem"
+                    width="5rem"
+                />
+                <div
+                    v-else
+                    class="stat-count"
+                >
+                    {{ stats?.labels_per_concept ?? "—" }}
+                </div>
+            </div>
         </div>
 
-        <!-- Concepts by Type -->
-        <section
-            v-if="
-                !isStatsLoading &&
-                stats?.concepts_by_type &&
-                stats.concepts_by_type.length > 0
-            "
-            class="dashboard-section"
+        <!-- Breakdowns: two-column grid -->
+        <div
+            v-if="!isStatsLoading"
+            class="breakdowns-grid"
         >
-            <div class="section-header">
-                <h2 class="section-title">
-                    {{ $gettext("Concepts by Type") }}
-                </h2>
-            </div>
-            <div class="type-breakdown">
-                <div
-                    v-for="item in stats.concepts_by_type"
-                    :key="item.uri ?? 'untyped'"
-                    class="type-chip"
-                >
-                    <span class="type-label">{{ item.label }}</span>
-                    <span class="type-count">{{
-                        item.count.toLocaleString()
-                    }}</span>
+            <!-- Concepts by Type -->
+            <section
+                v-if="
+                    stats?.concepts_by_type && stats.concepts_by_type.length > 0
+                "
+                class="dashboard-section"
+            >
+                <div class="section-header">
+                    <h2>{{ $gettext("Concepts by Type") }}</h2>
                 </div>
-            </div>
-        </section>
+                <div class="type-breakdown">
+                    <div
+                        v-for="item in stats.concepts_by_type"
+                        :key="item.uri ?? 'untyped'"
+                        class="type-chip"
+                    >
+                        <span class="type-label">{{ item.label }}</span>
+                        <span class="type-count">{{
+                            item.count.toLocaleString()
+                        }}</span>
+                    </div>
+                </div>
+            </section>
 
-        <!-- Labels by Type -->
-        <section
-            v-if="
-                !isStatsLoading &&
-                stats?.labels_by_type &&
-                stats.labels_by_type.length > 0
-            "
-            class="dashboard-section"
-        >
-            <div class="section-header">
-                <h2 class="section-title">
-                    {{ $gettext("Labels by Type") }}
-                </h2>
-            </div>
-            <div class="type-breakdown">
-                <div
-                    v-for="item in stats.labels_by_type"
-                    :key="item.uri"
-                    class="type-chip"
-                >
-                    <span class="type-label">{{ item.label }}</span>
-                    <span class="type-count">{{
-                        item.count.toLocaleString()
-                    }}</span>
+            <!-- Labels by Type -->
+            <section
+                v-if="stats?.labels_by_type && stats.labels_by_type.length > 0"
+                class="dashboard-section"
+            >
+                <div class="section-header">
+                    <h2>{{ $gettext("Labels by Type") }}</h2>
                 </div>
-            </div>
-        </section>
+                <div class="type-breakdown">
+                    <div
+                        v-for="item in stats.labels_by_type"
+                        :key="item.uri"
+                        class="type-chip"
+                    >
+                        <span class="type-label">{{ item.label }}</span>
+                        <span class="type-count">{{
+                            item.count.toLocaleString()
+                        }}</span>
+                    </div>
+                </div>
+            </section>
 
-        <!-- Labels by Language -->
-        <section
-            v-if="
-                !isStatsLoading &&
-                stats?.labels_by_language &&
-                stats.labels_by_language.length > 0
-            "
-            class="dashboard-section"
-        >
-            <div class="section-header">
-                <h2 class="section-title">
-                    {{ $gettext("Labels by Language") }}
-                </h2>
-            </div>
-            <div class="type-breakdown">
-                <div
-                    v-for="item in stats.labels_by_language"
-                    :key="item.code"
-                    class="type-chip"
-                >
-                    <span class="type-label">{{ item.language }}</span>
-                    <span class="type-count">{{
-                        item.count.toLocaleString()
-                    }}</span>
+            <!-- Labels by Language -->
+            <section
+                v-if="
+                    stats?.labels_by_language &&
+                    stats.labels_by_language.length > 0
+                "
+                class="dashboard-section"
+            >
+                <div class="section-header">
+                    <h2>{{ $gettext("Labels by Language") }}</h2>
                 </div>
-            </div>
-        </section>
+                <div class="type-breakdown">
+                    <div
+                        v-for="item in stats.labels_by_language"
+                        :key="item.code"
+                        class="type-chip"
+                    >
+                        <span class="type-label">{{ item.language }}</span>
+                        <span class="type-count">{{
+                            item.count.toLocaleString()
+                        }}</span>
+                    </div>
+                </div>
+            </section>
+        </div>
 
         <!-- Recent Activity -->
         <section class="dashboard-section">
             <div class="section-header">
-                <h2 class="section-title">{{ $gettext("Recent Activity") }}</h2>
+                <h2>{{ $gettext("Recent Activity") }}</h2>
                 <div class="filter-group">
                     <label
                         for="activity-period-filter"
@@ -574,7 +550,7 @@ onMounted(async () => {
         <section class="dashboard-section">
             <div class="section-header">
                 <div class="section-header-left">
-                    <h2 class="section-title">
+                    <h2>
                         {{ $gettext("Missing Translations") }}
                     </h2>
                     <span
@@ -682,7 +658,7 @@ onMounted(async () => {
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 1.25rem;
 }
 
 /* ── Header ── */
@@ -695,8 +671,8 @@ onMounted(async () => {
 }
 
 .welcome-heading {
-    font-size: 1.5rem;
-    font-weight: 400;
+    font-size: var(--p-lingo-font-size-large);
+    font-weight: var(--p-lingo-font-weight-normal);
     margin: 0;
     color: var(--p-text-color);
 }
@@ -704,11 +680,12 @@ onMounted(async () => {
 .dashboard-filters {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.5rem;
 }
 
 .filter-label {
     font-size: var(--p-lingo-font-size-small);
+    font-weight: var(--p-lingo-font-weight-normal);
     color: var(--p-neutral-400);
     white-space: nowrap;
 }
@@ -716,52 +693,65 @@ onMounted(async () => {
 .filter-group {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.5rem;
 }
 
 .scheme-select,
 .language-select {
     min-width: 14rem;
+    border-radius: 0.125rem;
 }
 
 .activity-period-select {
     min-width: 9rem;
+    border-radius: 0.125rem;
 }
 
 /* ── Stat cards ── */
 .stats-row {
-    display: flex;
-    gap: 1rem;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.75rem;
 }
 
 .stat-card {
-    flex: 1;
-    min-width: 10rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 1rem;
+    border: 0.0625rem solid var(--p-header-toolbar-border);
+    border-radius: 0.125rem;
+    background: var(--p-content-background);
 }
 
-.stat-title {
+.stat-card-title {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    font-size: var(--p-lingo-font-size-small);
+    gap: 0.375rem;
+    font-size: var(--p-lingo-font-size-xsmall);
     font-weight: var(--p-lingo-font-weight-normal);
     color: var(--p-neutral-400);
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.04em;
 }
 
 .stat-icon {
-    font-size: 1rem;
+    font-size: 0.75rem;
     color: var(--p-primary-500);
 }
 
 .stat-count {
-    font-size: 2.5rem;
-    font-weight: 600;
+    font-size: 2rem;
+    font-weight: var(--p-lingo-font-weight-normal);
     color: var(--p-text-color);
     line-height: 1;
-    padding-top: 0.25rem;
+}
+
+/* ── Breakdowns grid ── */
+.breakdowns-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
 }
 
 /* ── Sections ── */
@@ -769,30 +759,31 @@ onMounted(async () => {
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
-    background: var(--p-surface-0);
-    border: 0.0625rem solid var(--p-surface-border);
-    border-radius: 0.5rem;
-    padding: 1.25rem;
+    background: var(--p-content-background);
+    border: 0.0625rem solid var(--p-header-toolbar-border);
+    border-radius: 0.125rem;
+    padding: 1rem;
 }
 
 .section-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    border-bottom: 0.0625rem solid var(--p-surface-border);
+    border-bottom: 0.0625rem solid var(--p-highlight-focus-background);
     padding-bottom: 0.5rem;
+}
+
+.section-header h2 {
+    margin: 0;
+    font-size: var(--p-lingo-font-size-medium);
+    font-weight: var(--p-lingo-font-weight-normal);
+    color: var(--p-neutral-500);
 }
 
 .section-header-left {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-}
-
-.section-title {
-    font-size: var(--p-lingo-font-size-large);
-    font-weight: var(--p-lingo-font-weight-normal);
-    margin: 0;
 }
 
 .count-badge {
@@ -802,9 +793,9 @@ onMounted(async () => {
     background: var(--p-primary-100);
     color: var(--p-primary-700);
     font-size: var(--p-lingo-font-size-xsmall);
-    font-weight: 600;
+    font-weight: var(--p-lingo-font-weight-normal);
     padding: 0.125rem 0.5rem;
-    border-radius: 1rem;
+    border-radius: 0.125rem;
     min-width: 1.5rem;
 }
 
@@ -812,33 +803,33 @@ onMounted(async () => {
 .type-breakdown {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.5rem;
+    gap: 0.375rem;
 }
 
 .type-chip {
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.375rem 0.75rem;
-    border-radius: 1rem;
-    background: var(--p-surface-100);
-    border: 0.0625rem solid var(--p-surface-border);
+    gap: 0.375rem;
+    padding: 0.25rem 0.625rem;
+    border-radius: 0.125rem;
+    background: var(--p-highlight-background);
+    border: 0.0625rem solid var(--p-highlight-focus-background);
     font-size: var(--p-lingo-font-size-smallnormal);
 }
 
 .type-label {
-    color: var(--p-text-color);
+    color: var(--p-content-color);
 }
 
 .type-count {
-    font-weight: 600;
+    font-weight: var(--p-lingo-font-weight-normal);
     color: var(--p-primary-500);
 }
 
 /* ── Activity table ── */
 .relative-time {
     cursor: default;
-    color: var(--p-neutral-400);
+    color: var(--p-inputtext-placeholder-color);
     font-size: var(--p-lingo-font-size-small);
 }
 
@@ -852,13 +843,14 @@ onMounted(async () => {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 1.75rem;
-    height: 1.75rem;
+    width: 1.5rem;
+    height: 1.5rem;
     border-radius: 50%;
     background: var(--p-primary-100);
-    color: var(--p-primary-700);
-    font-size: 0.625rem;
-    font-weight: 700;
+    color: var(--p-primary-600);
+    border: 0.0625rem solid var(--p-primary-300);
+    font-size: 0.5625rem;
+    font-weight: var(--p-lingo-font-weight-normal);
     flex-shrink: 0;
     text-transform: uppercase;
 }
@@ -893,6 +885,7 @@ onMounted(async () => {
 .resource-link {
     color: var(--p-primary-500);
     text-decoration: none;
+    font-size: var(--p-lingo-font-size-smallnormal);
 }
 
 .resource-link:hover {
@@ -906,14 +899,34 @@ onMounted(async () => {
 
 :deep(.p-datatable-column-title) {
     font-weight: var(--p-lingo-font-weight-normal);
-    color: var(--p-neutral-400);
-}
-
-:deep(.p-card-title) {
+    color: var(--p-neutral-500);
     font-size: var(--p-lingo-font-size-small);
 }
 
-:deep(.p-card-body) {
-    padding: 1rem;
+:deep(.p-tag) {
+    border-radius: 0.125rem;
+    font-size: var(--p-lingo-font-size-xsmall);
+}
+
+/* ── Responsive ── */
+@media (max-width: 960px) {
+    .stats-row {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .breakdowns-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
 }
 </style>
