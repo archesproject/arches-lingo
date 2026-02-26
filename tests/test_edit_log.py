@@ -217,11 +217,11 @@ class EditLogPostTests(EditLogTestMixin, ViewTests):
             with self._patch_tile(return_value=mock_tile) as MockTile:
                 ...
         """
-        p = patch(self.TILE_PATCH_TARGET)
+        tile_patcher = patch(self.TILE_PATCH_TARGET)
 
         class _PatchContext:
             def __enter__(self_ctx):
-                MockTile = p.__enter__()
+                MockTile = tile_patcher.__enter__()
                 MockTile.DoesNotExist = RealTile.DoesNotExist
                 if side_effect is not None:
                     MockTile.objects.get.side_effect = side_effect
@@ -231,7 +231,7 @@ class EditLogPostTests(EditLogTestMixin, ViewTests):
                 return MockTile
 
             def __exit__(self_ctx, *args):
-                return p.__exit__(*args)
+                return tile_patcher.__exit__(*args)
 
         return _PatchContext()
 
