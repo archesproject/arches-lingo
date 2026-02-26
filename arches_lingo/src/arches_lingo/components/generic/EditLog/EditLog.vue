@@ -104,13 +104,6 @@ function getEditTypeSeverity(edittype: string) {
     return "info";
 }
 
-function formatEditTypeLabel(edit: EditLogEntry): string {
-    if (edit.card_name && edit.edittype.startsWith("tile ")) {
-        return edit.edittype_label.replace("Tile", edit.card_name);
-    }
-    return edit.edittype_label;
-}
-
 function canRevert(edit: EditLogEntry) {
     return (
         edit.edittype !== "create" &&
@@ -237,7 +230,7 @@ async function performRevert(timestamp: string) {
                 <div class="edit-entry-body">
                     <div class="edit-entry-top">
                         <span class="edit-type-label">
-                            {{ formatEditTypeLabel(edit) }}
+                            {{ edit.edittype_label }}
                         </span>
                         <Button
                             v-if="canRevert(edit)"

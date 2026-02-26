@@ -13,9 +13,7 @@ from arches.app.utils.decorators import group_required
 from arches.app.utils.response import JSONErrorResponse, JSONResponse
 
 
-from arches_lingo.const import (
-    EDIT_TYPE_LABELS,
-)  # noqa: F401 (re-exported for back-compat)
+from arches_lingo.const import EDIT_TYPE_LABELS, TILE_EDIT_TYPE_LABEL_TEMPLATES
 
 
 def _get_resource_or_404(resourceid):
@@ -129,6 +127,13 @@ class ResourceEditLogAPIView(View):
                 if ng and not request.user.has_perm("read_nodegroup", ng):
                     continue
 
+            card_name = card_lookup.get(edit.nodegroupid) if edit.nodegroupid else None
+            template = TILE_EDIT_TYPE_LABEL_TEMPLATES.get(edit.edittype)
+            if card_name and template:
+                edittype_label = str(template % {"name": card_name})
+            else:
+                edittype_label = str(EDIT_TYPE_LABELS.get(edit.edittype, edit.edittype))
+
             permitted_edits.append(
                 {
                     "editlogid": str(edit.editlogid),
@@ -136,9 +141,7 @@ class ResourceEditLogAPIView(View):
                         str(edit.transactionid) if edit.transactionid else None
                     ),
                     "edittype": edit.edittype,
-                    "edittype_label": _(
-                        EDIT_TYPE_LABELS.get(edit.edittype, edit.edittype)
-                    ),
+                    "edittype_label": edittype_label,
                     "timestamp": (
                         edit.timestamp.isoformat() if edit.timestamp else None
                     ),
@@ -149,9 +152,7 @@ class ResourceEditLogAPIView(View):
                     "user_email": edit.user_email,
                     "nodegroupid": edit.nodegroupid,
                     "tileinstanceid": edit.tileinstanceid,
-                    "card_name": (
-                        card_lookup.get(edit.nodegroupid) if edit.nodegroupid else None
-                    ),
+                    "card_name": card_name,
                     "note": edit.note,
                 }
             )

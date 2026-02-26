@@ -1,3 +1,5 @@
+from django.utils.translation import gettext_lazy as _
+
 ### Concepts Model Nodes & Nodegroups ###
 CONCEPTS_GRAPH_ID = "bf73e576-4888-11ee-8a8d-11afefc4bff7"
 
@@ -81,11 +83,19 @@ HIDDEN_LABEL_VALUE = "hidden label"
 PREF_LABEL_URI = "http://www.w3.org/2004/02/skos/core#prefLabel"
 
 EDIT_TYPE_LABELS = {
-    "create": "Resource Created",
-    "delete": "Resource Deleted",
-    "tile delete": "Tile Deleted",
-    "tile create": "Tile Created",
-    "tile edit": "Tile Updated",
-    "bulk_create": "Resource Created",
-    "update_resource_instance_lifecycle_state": "Resource Lifecycle State Updated",
+    "create": _("Resource Created"),
+    "delete": _("Resource Deleted"),
+    "tile delete": _("Tile Deleted"),
+    "tile create": _("Tile Created"),
+    "tile edit": _("Tile Updated"),
+    "bulk_create": _("Resource Created"),
+    "update_resource_instance_lifecycle_state": _("Resource Lifecycle State Updated"),
+}
+
+# Used when a card name is available; %(name)s is replaced with the card name.
+# Translators: %(name)s is the name of the card (e.g. "Label").
+TILE_EDIT_TYPE_LABEL_TEMPLATES = {
+    "tile delete": _("%(name)s Deleted"),
+    "tile create": _("%(name)s Created"),
+    "tile edit": _("%(name)s Updated"),
 }

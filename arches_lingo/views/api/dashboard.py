@@ -9,6 +9,7 @@ from django.utils.translation import gettext as _
 from django.views.generic import View
 
 from arches.app.models import models
+from arches.app.models.card import Card
 from arches.app.utils.decorators import group_required
 from arches.app.utils.response import JSONErrorResponse, JSONResponse
 
@@ -26,6 +27,7 @@ from arches_lingo.const import (
     LABEL_LIST_ID,
     PREF_LABEL_URI,
     SCHEMES_GRAPH_ID,
+    TILE_EDIT_TYPE_LABEL_TEMPLATES,
 )
 from arches_lingo.utils.concept_builder import ConceptBuilder
 
@@ -254,14 +256,12 @@ class DashboardStatsView(View):
             edit_qs = edit_qs.filter(timestamp__gte=since)
         edits = edit_qs[:100]
 
-        # Build nodegroup ID → display name map for action labels
+        # Build nodegroup ID → card name map for action labels
         nodegroup_ids = {edit.nodegroupid for edit in edits if edit.nodegroupid}
-        nodegroup_name_map: dict = {}
+        card_lookup: dict = {}
         if nodegroup_ids:
-            for node in models.Node.objects.filter(nodeid__in=nodegroup_ids):
-                nodegroup_name_map[str(node.nodeid)] = node.name.replace(
-                    "_", " "
-                ).title()
+            for card in Card.objects.filter(nodegroup_id__in=nodegroup_ids):
+                card_lookup[str(card.nodegroup_id)] = card.name
 
         seen_transactions: set = set()
         activity = []
@@ -269,15 +269,20 @@ class DashboardStatsView(View):
             key = str(edit.transactionid) if edit.transactionid else str(edit.editlogid)
             if key not in seen_transactions:
                 seen_transactions.add(key)
-                raw_label = EDIT_TYPE_LABELS.get(edit.edittype, edit.edittype)
-                if edit.nodegroupid and edit.nodegroupid in nodegroup_name_map:
-                    ng_name = nodegroup_name_map[edit.nodegroupid]
-                    edittype_label = _(raw_label.replace("Tile", ng_name))
+                card_name = (
+                    card_lookup.get(edit.nodegroupid) if edit.nodegroupid else None
+                )
+                template = TILE_EDIT_TYPE_LABEL_TEMPLATES.get(edit.edittype)
+                if card_name and template:
+                    edittype_label = str(template % {"name": card_name})
                 else:
-                    edittype_label = _(raw_label)
+                    edittype_label = str(
+                        EDIT_TYPE_LABELS.get(edit.edittype, edit.edittype)
+                    )
                 activity.append(
                     {
                         "editlogid": str(edit.editlogid),
+                        "edittype": edit.edittype,
                         "edittype_label": edittype_label,
                         "timestamp": (
                             edit.timestamp.isoformat() if edit.timestamp else None
