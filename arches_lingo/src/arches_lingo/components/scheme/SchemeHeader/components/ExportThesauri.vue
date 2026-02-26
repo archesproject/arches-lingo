@@ -29,10 +29,10 @@ const visible = ref(true);
 
 const exportFormat = ref("xml");
 const exportformatOptions = ref([
-    { label: "csv", value: "csv", disabled: true },
-    { label: "SKOS", value: "xml", disabled: false },
-    { label: "rdf", value: "rdf", disabled: true },
-    { label: "JSON-LD", value: "jsonld", disabled: true },
+    { label: "SKOS/XML", value: "xml", disabled: false },
+    { label: "RDF/XML", value: "rdf", disabled: false },
+    { label: "CSV", value: "csv", disabled: false },
+    { label: "JSON-LD", value: "jsonld", disabled: false },
 ]);
 const fileName = ref();
 
