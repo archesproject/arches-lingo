@@ -163,7 +163,7 @@ class EditLogGetTests(EditLogTestMixin, ViewTests):
         tile_create_edit = next(
             e for e in data["edits"] if e["edittype"] == "tile create"
         )
-        self.assertEqual(tile_create_edit["edittype_label"], "Tile Created")
+        self.assertEqual(tile_create_edit["edittype_label"], "Label Created")
 
     def test_get_edit_log_resource_not_found(self):
         fake_id = uuid.uuid4()
