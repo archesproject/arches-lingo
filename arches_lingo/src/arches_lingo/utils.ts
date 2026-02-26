@@ -1,13 +1,18 @@
 import { routeNames } from "@/arches_lingo/routes.ts";
 
 import { createLingoResource, upsertLingoTile } from "@/arches_lingo/api.ts";
-import { NEW_CONCEPT } from "@/arches_lingo/constants.ts";
+import {
+    CONCEPT_TYPE_NODE_ALIAS,
+    NEW_CONCEPT,
+} from "@/arches_lingo/constants.ts";
+import { fetchTileData } from "@/arches_component_lab/generics/GenericCard/api.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 
 import type { TreeNode } from "primevue/treenode";
 import type { Language } from "@/arches_component_lab/types.ts";
 import type {
     Concept,
+    ConceptType,
     IconLabels,
     NodeAndParentInstruction,
     ResourceInstanceResult,
@@ -265,6 +270,11 @@ export async function createOrUpdateConcept(
     tileId?: string,
 ): Promise<string> {
     if (!resourceInstanceId) {
+        const blankConceptTypeTile = (await fetchTileData(
+            graphSlug,
+            CONCEPT_TYPE_NODE_ALIAS,
+        )) as unknown as ConceptType;
+
         const isTop = scheme === parent;
 
         const aliased_data = {
@@ -272,7 +282,7 @@ export async function createOrUpdateConcept(
             part_of_scheme: {
                 aliased_data: { part_of_scheme: scheme },
             },
-            type: { aliased_data: {} },
+            type: { aliased_data: blankConceptTypeTile.aliased_data },
         };
 
         if (isTop) {
