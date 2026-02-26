@@ -545,7 +545,9 @@ export interface ConceptSetDetail extends ConceptSetItem {
 
 export interface DashboardActivityItem {
     editlogid: string;
+    edittype: string;
     edittype_label: string;
+    card_name: string | null;
     timestamp: string | null;
     user_username: string;
     user_firstname: string;

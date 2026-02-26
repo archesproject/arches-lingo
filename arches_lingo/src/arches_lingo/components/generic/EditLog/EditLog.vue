@@ -279,7 +279,7 @@ async function acceptRevert() {
                 <div class="edit-entry-body">
                     <div class="edit-entry-top">
                         <span class="edit-type-label">
-                            {{ formatEditTypeLabel(edit) }}
+                            {{ edit.edittype_label }}
                         </span>
                         <Button
                             v-if="canRevert(edit)"
