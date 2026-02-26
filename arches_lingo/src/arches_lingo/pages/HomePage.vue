@@ -7,6 +7,7 @@ import { useToast } from "primevue/usetoast";
 import Card from "primevue/card";
 import Column from "primevue/column";
 import DataTable from "primevue/datatable";
+import MultiSelect from "primevue/multiselect";
 import Paginator from "primevue/paginator";
 import Select from "primevue/select";
 import Skeleton from "primevue/skeleton";
@@ -35,7 +36,7 @@ const { $gettext } = useGettext();
 
 // --- Scheme filter ---
 const schemes = ref<ResourceInstanceResult[]>([]);
-const selectedSchemeId = ref<string | undefined>(undefined);
+const selectedSchemeIds = ref<string[]>([]);
 
 // --- Dashboard stats ---
 const isStatsLoading = ref(true);
@@ -79,7 +80,11 @@ async function loadLanguages() {
 async function loadStats() {
     isStatsLoading.value = true;
     try {
-        stats.value = await fetchDashboardStats(selectedSchemeId.value);
+        stats.value = await fetchDashboardStats(
+            selectedSchemeIds.value.length
+                ? selectedSchemeIds.value
+                : undefined,
+        );
     } catch (error) {
         toast.add({
             severity: ERROR,
@@ -97,7 +102,9 @@ async function loadMissingTranslations() {
     try {
         missingTranslations.value = await fetchMissingTranslations(
             selectedLanguage.value.code,
-            selectedSchemeId.value,
+            selectedSchemeIds.value.length
+                ? selectedSchemeIds.value
+                : undefined,
             missingPage.value + 1, // API is 1-based
         );
     } catch (error) {
@@ -154,7 +161,7 @@ function onPageChange(event: { first: number; rows: number }) {
     loadMissingTranslations();
 }
 
-watch(selectedSchemeId, () => {
+watch(selectedSchemeIds, () => {
     missingPage.value = 0;
     loadStats();
     if (selectedLanguage.value) {
@@ -189,16 +196,23 @@ onMounted(async () => {
                     for="scheme-filter"
                     class="filter-label"
                 >
-                    {{ $gettext("Scheme") }}:
+                    {{ $gettext("Schemes") }}:
                 </label>
-                <Select
+                <MultiSelect
                     id="scheme-filter"
-                    v-model="selectedSchemeId"
+                    v-model="selectedSchemeIds"
                     :options="schemes"
                     option-label="name"
                     option-value="resourceinstanceid"
                     :placeholder="$gettext('All schemes')"
-                    show-clear
+                    :max-selected-labels="2"
+                    :selected-items-label="
+                        $gettext('%{count} schemes selected', {
+                            count: String(selectedSchemeIds.length),
+                        })
+                    "
+                    display="chip"
+                    filter
                     class="scheme-select"
                 >
                     <template #option="slotProps">
@@ -208,20 +222,7 @@ onMounted(async () => {
                             $gettext("Unnamed scheme")
                         }}
                     </template>
-                    <template #value="slotProps">
-                        <span v-if="slotProps.value">
-                            {{
-                                schemes.find(
-                                    (s) =>
-                                        s.resourceinstanceid ===
-                                        slotProps.value,
-                                )?.descriptors?.en?.name ||
-                                $gettext("Selected scheme")
-                            }}
-                        </span>
-                        <span v-else>{{ $gettext("All schemes") }}</span>
-                    </template>
-                </Select>
+                </MultiSelect>
             </div>
         </div>
 
@@ -269,6 +270,27 @@ onMounted(async () => {
                     </div>
                 </template>
             </Card>
+            <Card class="stat-card">
+                <template #title>
+                    <span class="stat-title">
+                        <i class="pi pi-tag stat-icon" />
+                        {{ $gettext("Labels") }}
+                    </span>
+                </template>
+                <template #content>
+                    <Skeleton
+                        v-if="isStatsLoading"
+                        height="3rem"
+                        width="6rem"
+                    />
+                    <div
+                        v-else
+                        class="stat-count"
+                    >
+                        {{ stats?.label_count?.toLocaleString() ?? "\u2014" }}
+                    </div>
+                </template>
+            </Card>
         </div>
 
         <!-- Concepts by Type -->
@@ -290,6 +312,58 @@ onMounted(async () => {
                     class="type-chip"
                 >
                     <span class="type-label">{{ item.label }}</span>
+                    <span class="type-count">{{
+                        item.count.toLocaleString()
+                    }}</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Labels by Type -->
+        <section
+            v-if="
+                !isStatsLoading &&
+                stats?.labels_by_type &&
+                stats.labels_by_type.length > 0
+            "
+            class="dashboard-section"
+        >
+            <h2 class="section-title">
+                {{ $gettext("Labels by Type") }}
+            </h2>
+            <div class="type-breakdown">
+                <div
+                    v-for="item in stats.labels_by_type"
+                    :key="item.uri"
+                    class="type-chip"
+                >
+                    <span class="type-label">{{ item.label }}</span>
+                    <span class="type-count">{{
+                        item.count.toLocaleString()
+                    }}</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Labels by Language -->
+        <section
+            v-if="
+                !isStatsLoading &&
+                stats?.labels_by_language &&
+                stats.labels_by_language.length > 0
+            "
+            class="dashboard-section"
+        >
+            <h2 class="section-title">
+                {{ $gettext("Labels by Language") }}
+            </h2>
+            <div class="type-breakdown">
+                <div
+                    v-for="item in stats.labels_by_language"
+                    :key="item.code"
+                    class="type-chip"
+                >
+                    <span class="type-label">{{ item.language }}</span>
                     <span class="type-count">{{
                         item.count.toLocaleString()
                     }}</span>
@@ -331,7 +405,7 @@ onMounted(async () => {
                 <Column
                     field="edittype_label"
                     :header="$gettext('Action')"
-                    style="width: 10rem"
+                    style="width: 16rem"
                 />
                 <Column :header="$gettext('Resource')">
                     <template #body="slotProps">
