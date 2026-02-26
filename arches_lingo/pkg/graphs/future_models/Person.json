@@ -10562,7 +10562,7 @@
                         "i18n_properties": [
                             "placeholder"
                         ],
-                        "label": "Name Content",
+                        "label": "Name",
                         "maxLength": null,
                         "placeholder": {
                             "en": "Enter text"
@@ -10572,7 +10572,7 @@
                     },
                     "id": "b150744c-894b-11ee-8c66-2364610b9df3",
                     "label": {
-                        "en": "Name Content"
+                        "en": "Name"
                     },
                     "node_id": "b150740f-894b-11ee-8c66-2364610b9df3",
                     "sortorder": 0,

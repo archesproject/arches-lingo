@@ -524,7 +524,7 @@
                         "i18n_properties": [
                             "placeholder"
                         ],
-                        "label": "Statement Language",
+                        "label": "Note Language",
                         "placeholder": {
                             "en": "Select a language"
                         },
@@ -533,7 +533,7 @@
                     },
                     "id": "089b4a78-e5e3-481e-8016-ad842ac6ce5d",
                     "label": {
-                        "en": "Statement Language"
+                        "en": "Note Language"
                     },
                     "node_id": "da0c9d52-0f5b-11ef-9493-0a58a9feac02",
                     "sortorder": 1,
@@ -598,14 +598,14 @@
                         "i18n_properties": [
                             "placeholder"
                         ],
-                        "label": "Statement Metatype",
+                        "label": "Note Metatype",
                         "placeholder": {
                             "en": "Select an option"
                         }
                     },
                     "id": "0a6f53eb-b14d-484a-b5bf-4551661e3617",
                     "label": {
-                        "en": "Statement Metatype"
+                        "en": "Note Metatype"
                     },
                     "node_id": "1333f508-0f5c-11ef-9493-0a58a9feac02",
                     "sortorder": 3,
@@ -671,14 +671,14 @@
                         "i18n_properties": [
                             "placeholder"
                         ],
-                        "label": "Statement Type",
+                        "label": "Note Type",
                         "placeholder": {
                             "en": "Select an option"
                         }
                     },
                     "id": "1dec9b15-654c-465d-b19f-a82ad3c33097",
                     "label": {
-                        "en": "Statement Type"
+                        "en": "Note Type"
                     },
                     "node_id": "f299c9fa-0f5e-11ef-9493-0a58a9feac02",
                     "sortorder": 1,
@@ -881,7 +881,7 @@
                     "config": {
                         "dateFormat": "YYYY-MM-DD",
                         "defaultValue": "",
-                        "label": "Associated Concept Relation Validity Period End",
+                        "label": "Relationship End Date",
                         "maxDate": false,
                         "minDate": false,
                         "placeholder": "Enter date",
@@ -889,7 +889,7 @@
                     },
                     "id": "37872e69-55ef-446e-aaeb-15c53a6ec564",
                     "label": {
-                        "en": "Associated Concept Relation Validity Period End"
+                        "en": "Relationship End Date"
                     },
                     "node_id": "522380c2-0ed4-11ef-9493-0a58a9feac02",
                     "sortorder": 5,
@@ -1005,14 +1005,14 @@
                         "i18n_properties": [
                             "placeholder"
                         ],
-                        "label": "Statement Type Metatype",
+                        "label": "Note Type Metatype",
                         "placeholder": {
                             "en": "Select an option"
                         }
                     },
                     "id": "470d7671-8de9-46cb-b56f-224849987b95",
                     "label": {
-                        "en": "Statement Type Metatype"
+                        "en": "Note Type Metatype"
                     },
                     "node_id": "08e5e202-0f5f-11ef-9493-0a58a9feac02",
                     "sortorder": 2,
@@ -1368,7 +1368,7 @@
                     "config": {
                         "dateFormat": "YYYY-MM-DD",
                         "defaultValue": "",
-                        "label": "Associated Concept Relation Validity Period Begin",
+                        "label": "Relationship Begin Date",
                         "maxDate": false,
                         "minDate": false,
                         "placeholder": "Enter date",
@@ -1376,7 +1376,7 @@
                     },
                     "id": "703534b6-a8cd-43dd-a610-f8fd04dd9a11",
                     "label": {
-                        "en": "Associated Concept Relation Validity Period Begin"
+                        "en": "Relationship Begin Date"
                     },
                     "node_id": "5223819e-0ed4-11ef-9493-0a58a9feac02",
                     "sortorder": 4,
@@ -1528,7 +1528,7 @@
                         "i18n_properties": [
                             "placeholder"
                         ],
-                        "label": "Statement Language",
+                        "label": "Note Language",
                         "placeholder": {
                             "en": "Select a language"
                         },
@@ -1537,7 +1537,7 @@
                     },
                     "id": "89b20635-f0bd-4e66-acc4-e168cef414b2",
                     "label": {
-                        "en": "Statement Language"
+                        "en": "Note Language"
                     },
                     "node_id": "20e0bb66-0f5f-11ef-9493-0a58a9feac02",
                     "sortorder": 3,
@@ -1740,14 +1740,14 @@
                         "i18n_properties": [
                             "placeholder"
                         ],
-                        "label": "Statement Type",
+                        "label": "Note Type",
                         "placeholder": {
                             "en": "Select an option"
                         }
                     },
                     "id": "b1b8f02f-a709-4eac-8504-339c51a9a0c7",
                     "label": {
-                        "en": "Statement Type"
+                        "en": "Note Type"
                     },
                     "node_id": "702aa17e-0f63-11ef-9493-0a58a9feac02",
                     "sortorder": 2,
@@ -1916,7 +1916,7 @@
                         "i18n_properties": [
                             "placeholder"
                         ],
-                        "label": "Statement",
+                        "label": "Notes",
                         "maxLength": null,
                         "placeholder": {
                             "en": "Enter text"
@@ -1926,7 +1926,7 @@
                     },
                     "id": "bf73e744-4888-11ee-8a8d-11afefc4bff7",
                     "label": {
-                        "en": "Statement"
+                        "en": "Notes"
                     },
                     "node_id": "bf73e66a-4888-11ee-8a8d-11afefc4bff7",
                     "sortorder": 0,
@@ -1946,7 +1946,7 @@
                         "i18n_properties": [
                             "placeholder"
                         ],
-                        "label": "Statement Label",
+                        "label": "Note Label",
                         "maxLength": null,
                         "placeholder": {
                             "en": "Enter text"
@@ -1956,7 +1956,7 @@
                     },
                     "id": "bf73e745-4888-11ee-8a8d-11afefc4bff7",
                     "label": {
-                        "en": "Statement Label"
+                        "en": "Note Label"
                     },
                     "node_id": "bf73e669-4888-11ee-8a8d-11afefc4bff7",
                     "sortorder": 1,
@@ -2001,7 +2001,7 @@
                         "i18n_properties": [
                             "placeholder"
                         ],
-                        "label": "Statement Label",
+                        "label": "Note Label",
                         "maxLength": null,
                         "placeholder": {
                             "en": "Enter text"
@@ -2011,7 +2011,7 @@
                     },
                     "id": "bf73e7d3-4888-11ee-8a8d-11afefc4bff7",
                     "label": {
-                        "en": "Statement Label"
+                        "en": "Note Label"
                     },
                     "node_id": "bf73e6be-4888-11ee-8a8d-11afefc4bff7",
                     "sortorder": 4,
@@ -2056,7 +2056,7 @@
                         "i18n_properties": [
                             "placeholder"
                         ],
-                        "label": "Statement Label",
+                        "label": "Note Label",
                         "maxLength": null,
                         "placeholder": {
                             "en": "Enter text"
@@ -2066,7 +2066,7 @@
                     },
                     "id": "bf73e7da-4888-11ee-8a8d-11afefc4bff7",
                     "label": {
-                        "en": "Statement Label"
+                        "en": "Note Label"
                     },
                     "node_id": "bf73e718-4888-11ee-8a8d-11afefc4bff7",
                     "sortorder": 4,
@@ -2399,14 +2399,14 @@
                         "i18n_properties": [
                             "placeholder"
                         ],
-                        "label": "Statement Type Metatype",
+                        "label": "Note Type Metatype",
                         "placeholder": {
                             "en": "Select an option"
                         }
                     },
                     "id": "ddad8b65-477f-4d14-965c-73526e99d84c",
                     "label": {
-                        "en": "Statement Type Metatype"
+                        "en": "Note Type Metatype"
                     },
                     "node_id": "819ad4d8-0f63-11ef-9493-0a58a9feac02",
                     "sortorder": 3,
@@ -2511,14 +2511,14 @@
                         "i18n_properties": [
                             "placeholder"
                         ],
-                        "label": "Statement Type",
+                        "label": "Note Type",
                         "placeholder": {
                             "en": "Select an option"
                         }
                     },
                     "id": "e4600925-d419-49b4-8617-5794187cf9a7",
                     "label": {
-                        "en": "Statement Type"
+                        "en": "Note Type"
                     },
                     "node_id": "fbfc89d6-0f5b-11ef-9493-0a58a9feac02",
                     "sortorder": 2,
@@ -2613,7 +2613,7 @@
                         "i18n_properties": [
                             "placeholder"
                         ],
-                        "label": "Statement Language",
+                        "label": "Note Language",
                         "placeholder": {
                             "en": "Select a language"
                         },
@@ -2622,7 +2622,7 @@
                     },
                     "id": "ecfbc672-1aed-459d-ba85-bc0a9052ac6c",
                     "label": {
-                        "en": "Statement Language"
+                        "en": "Note Language"
                     },
                     "node_id": "98814862-0f63-11ef-9493-0a58a9feac02",
                     "sortorder": 4,
