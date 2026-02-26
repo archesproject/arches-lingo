@@ -332,6 +332,27 @@ onMounted(async () => {
                     </div>
                 </template>
             </Card>
+            <Card class="stat-card">
+                <template #title>
+                    <span class="stat-title">
+                        <i class="pi pi-chart-bar stat-icon" />
+                        {{ $gettext("Labels / Concept") }}
+                    </span>
+                </template>
+                <template #content>
+                    <Skeleton
+                        v-if="isStatsLoading"
+                        height="3rem"
+                        width="6rem"
+                    />
+                    <div
+                        v-else
+                        class="stat-count"
+                    >
+                        {{ stats?.labels_per_concept ?? "—" }}
+                    </div>
+                </template>
+            </Card>
         </div>
 
         <!-- Concepts by Type -->

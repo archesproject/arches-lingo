@@ -579,6 +579,7 @@ export interface DashboardStats {
     concept_count: number;
     concepts_by_type: ConceptTypeCount[];
     label_count: number;
+    labels_per_concept: number;
     labels_by_type: LabelTypeCount[];
     labels_by_language: LabelLanguageCount[];
     recent_activity: DashboardActivityItem[];

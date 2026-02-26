@@ -28,7 +28,6 @@ from arches_lingo.const import (
     SCHEMES_GRAPH_ID,
 )
 from arches_lingo.utils.concept_builder import ConceptBuilder
-from arches_lingo.views.api.edit_log import EDIT_TYPE_LABELS  # noqa: F811
 
 
 def _build_uri_label_map(list_id: str) -> dict:
@@ -303,6 +302,10 @@ class DashboardStatsView(View):
             concept_uuids
         )
 
+        labels_per_concept = (
+            round(label_count / concept_count, 1) if concept_count else 0
+        )
+
         return JSONResponse(
             {
                 "user_display_name": user_display_name,
@@ -310,6 +313,7 @@ class DashboardStatsView(View):
                 "concept_count": concept_count,
                 "concepts_by_type": concepts_by_type,
                 "label_count": label_count,
+                "labels_per_concept": labels_per_concept,
                 "labels_by_type": labels_by_type,
                 "labels_by_language": labels_by_language,
                 "recent_activity": activity,
