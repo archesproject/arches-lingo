@@ -2,6 +2,7 @@ import json
 import os
 from io import BytesIO, StringIO
 from pathlib import Path
+from unittest.mock import patch
 
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -231,7 +232,7 @@ class ExportTests(TestCase):
         )
 
     def tearDown(self):
-        if os.path.exists(self.file_path):
+        if hasattr(self, "file_path") and os.path.exists(self.file_path):
             os.remove(self.file_path)
         return super().tearDown()
 
@@ -277,3 +278,89 @@ class ExportTests(TestCase):
         self.assertIn("fileid", file_details)
         self.file_path = os.path.join(self.tempfile_dir, file_details["name"])
         self.assertTrue(os.path.exists(self.file_path))
+
+    def _run_export(self, resourceid, format, export_option=None):
+        """Helper that builds a request, runs the export, and returns the response."""
+        self.client.login(username="admin", password="admin")
+        request = HttpRequest()
+        request.method = "POST"
+        request.user = User.objects.get(username="admin")
+        request.POST["module"] = str(self.moduleid)
+        request.POST["action"] = "start"
+        request.POST["resourceid"] = str(resourceid)
+        request.POST["format"] = format
+        if export_option:
+            request.POST["export_option"] = export_option
+
+        exporter = LingoResourceExporter(request=request)
+        return exporter.start(request=request)
+
+    def _assert_successful_export(self, response):
+        """Assert that an export response is successful and a file was produced."""
+        self.assertTrue(response["success"])
+        load_details = json.loads(json.loads(response["data"]["load_details"]))
+        self.assertIn("scheme_name", load_details)
+        file_details = load_details["file"]
+        self.assertIn("name", file_details)
+        self.assertIn("fileid", file_details)
+        self.file_path = os.path.join(self.tempfile_dir, file_details["name"])
+        self.assertTrue(os.path.exists(self.file_path))
+        return file_details
+
+    # --- RDF/XML ---
+
+    def test_export_full_hierarchy_to_rdf(self):
+        response = self._run_export(self.test_scheme.pk, "rdf")
+        file_details = self._assert_successful_export(response)
+        self.assertTrue(file_details["name"].endswith(".zip"))
+
+    def test_export_partial_hierarchy_to_rdf(self):
+        response = self._run_export(
+            self.test_concept.pk, "rdf", export_option="partial"
+        )
+        file_details = self._assert_successful_export(response)
+        self.assertTrue(file_details["name"].endswith(".zip"))
+
+    # --- CSV ---
+
+    def test_export_full_hierarchy_to_csv(self):
+        response = self._run_export(self.test_scheme.pk, "csv")
+        file_details = self._assert_successful_export(response)
+        self.assertTrue(file_details["name"].endswith(".zip"))
+
+    def test_export_partial_hierarchy_to_csv(self):
+        response = self._run_export(
+            self.test_concept.pk, "csv", export_option="partial"
+        )
+        file_details = self._assert_successful_export(response)
+        self.assertTrue(file_details["name"].endswith(".zip"))
+
+    # --- JSON-LD ---
+
+    @patch(
+        "arches_lingo.etl_modules.lingo_resource_exporter.JsonLdWriter.build_json",
+        return_value={"@context": "mock", "@graph": []},
+    )
+    def test_export_full_hierarchy_to_jsonld(self, mock_build):
+        response = self._run_export(self.test_scheme.pk, "jsonld")
+        file_details = self._assert_successful_export(response)
+        self.assertTrue(file_details["name"].endswith(".zip"))
+        self.assertTrue(mock_build.called)
+
+    @patch(
+        "arches_lingo.etl_modules.lingo_resource_exporter.JsonLdWriter.build_json",
+        return_value={"@context": "mock", "@graph": []},
+    )
+    def test_export_partial_hierarchy_to_jsonld(self, mock_build):
+        response = self._run_export(
+            self.test_concept.pk, "jsonld", export_option="partial"
+        )
+        file_details = self._assert_successful_export(response)
+        self.assertTrue(file_details["name"].endswith(".zip"))
+        self.assertTrue(mock_build.called)
+
+    # --- Error handling ---
+
+    def test_export_unsupported_format(self):
+        response = self._run_export(self.test_scheme.pk, "unsupported_format")
+        self.assertFalse(response["success"])
