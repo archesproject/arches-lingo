@@ -13,15 +13,9 @@ from arches.app.utils.decorators import group_required
 from arches.app.utils.response import JSONErrorResponse, JSONResponse
 
 
-EDIT_TYPE_LABELS = {
-    "create": "Resource Created",
-    "delete": "Resource Deleted",
-    "tile delete": "Tile Deleted",
-    "tile create": "Tile Created",
-    "tile edit": "Tile Updated",
-    "bulk_create": "Resource Created",
-    "update_resource_instance_lifecycle_state": "Resource Lifecycle State Updated",
-}
+from arches_lingo.const import (
+    EDIT_TYPE_LABELS,
+)  # noqa: F401 (re-exported for back-compat)
 
 
 def _get_resource_or_404(resourceid):

@@ -4,8 +4,10 @@ import { generateArchesURL } from "@/arches/utils/generate-arches-url.ts";
 
 import type {
     ConceptInstance,
+    DashboardStats,
     DigitalObjectInstance,
     EditLogResponse,
+    MissingTranslationsResponse,
     RevertResponse,
     SchemeInstance,
     TileData,
@@ -504,7 +506,7 @@ export const getSearchExportFile = async (exportId: string) => {
 export const fetchDashboardStats = async (
     schemes?: string[],
     activityDays?: number,
-) => {
+): Promise<DashboardStats> => {
     const params = new URLSearchParams();
     if (schemes) {
         for (const scheme of schemes) {
@@ -526,7 +528,7 @@ export const fetchMissingTranslations = async (
     schemes?: string[],
     page = 1,
     items = 25,
-) => {
+): Promise<MissingTranslationsResponse> => {
     const params = new URLSearchParams({
         language,
         page: page.toString(),

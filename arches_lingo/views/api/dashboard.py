@@ -22,28 +22,65 @@ from arches_lingo.const import (
     CONCEPT_NAME_TYPE_NODE,
     CONCEPT_TYPE_NODE,
     CONCEPT_TYPE_NODEGROUP,
+    EDIT_TYPE_LABELS,
     LABEL_LIST_ID,
+    PREF_LABEL_URI,
     SCHEMES_GRAPH_ID,
 )
 from arches_lingo.utils.concept_builder import ConceptBuilder
-from arches_lingo.views.api.edit_log import EDIT_TYPE_LABELS
-
-PREF_LABEL_URI = "http://www.w3.org/2004/02/skos/core#prefLabel"
+from arches_lingo.views.api.edit_log import EDIT_TYPE_LABELS  # noqa: F811
 
 
-def _get_label_stats(concept_resource_ids):
-    """Return label_count, labels_by_type, and labels_by_language.
+def _build_uri_label_map(list_id: str) -> dict:
+    """Return a URI → display-label dict for all items in a controlled list.
 
-    labels_by_type uses the controlled list at LABEL_LIST_ID for human labels.
-    labels_by_language uses Language.code → Language.name for display.
+    Uses two queries (fetch items, fetch pref labels in bulk) rather than
+    one query per item, avoiding an N+1 pattern.
+    """
+    items = list(ListItem.objects.filter(list_id=list_id))
+    pref_values = (
+        ListItemValue.objects.filter(list_item__in=items, valuetype_id="prefLabel")
+        .order_by("language_id")
+        .values("list_item_id", "value")
+    )
+    # Build item_id → first pref label value
+    pref_map: dict = {}
+    for pv in pref_values:
+        if pv["list_item_id"] not in pref_map:
+            pref_map[pv["list_item_id"]] = pv["value"]
+    return {item.uri: pref_map.get(item.id, str(item.id)) for item in items}
+
+
+def _parse_scheme_ids(request) -> tuple:
+    """Parse and validate ``scheme`` query params as UUID strings.
+
+    Returns ``(scheme_ids, None)`` on success or ``([], error_response)``
+    when any value is not a valid UUID.
+    """
+    scheme_ids = []
+    for param in request.GET.getlist("scheme"):
+        try:
+            scheme_ids.append(str(uuid.UUID(param)))
+        except ValueError:
+            return [], JSONErrorResponse(
+                title=_("Invalid scheme"),
+                message=_("scheme must be a valid UUID"),
+                status=400,
+            )
+    return scheme_ids, None
+
+
+def _get_label_stats(concept_resource_ids: list) -> tuple:
+    """Return ``(label_count, labels_by_type, labels_by_language)`` for a
+    set of concept resource IDs.
     """
     tiles = models.TileModel.objects.filter(
         nodegroup_id=CONCEPT_NAME_NODEGROUP,
         resourceinstance_id__in=concept_resource_ids,
     ).values_list("data", flat=True)
 
-    type_counter = Counter()
-    lang_counter = Counter()
+    type_counter: Counter = Counter()
+    lang_counter: Counter = Counter()
     total = 0
 
     for data in tiles:
@@ -58,16 +95,7 @@ def _get_label_stats(concept_resource_ids):
                 if uri:
                     type_counter[uri] += 1
 
-    # Build URI → label map from the label controlled list
-    label_items = ListItem.objects.filter(list_id=LABEL_LIST_ID)
-    uri_label_map = {}
-    for item in label_items:
-        pref = (
-            ListItemValue.objects.filter(list_item=item, valuetype_id="prefLabel")
-            .order_by("language_id")
-            .first()
-        )
-        uri_label_map[item.uri] = pref.value if pref else str(item.id)
+    uri_label_map = _build_uri_label_map(LABEL_LIST_ID)
 
     labels_by_type = [
         {"label": uri_label_map.get(uri, uri), "uri": uri, "count": count}
@@ -75,9 +103,8 @@ def _get_label_stats(concept_resource_ids):
     ]
     labels_by_type.sort(key=lambda x: x["label"])
 
-    # Build language code → display name map
     lang_codes = list(lang_counter.keys())
-    lang_name_map = {}
+    lang_name_map: dict = {}
     if lang_codes:
         for lang_obj in models.Language.objects.filter(code__in=lang_codes):
             lang_name_map[lang_obj.code] = lang_obj.name or lang_obj.code
@@ -91,32 +118,20 @@ def _get_label_stats(concept_resource_ids):
     return total, labels_by_type, labels_by_language
 
 
-def _get_concept_type_breakdown(concept_resource_ids):
-    """Return a list of {label, uri, count} dicts for each concept type list item.
+def _get_concept_type_breakdown(concept_resource_ids: list) -> list:
+    """Return a list of ``{label, uri, count}`` dicts for each concept type.
 
-    Concepts that have no type tile are counted under an "Untyped" bucket.
-    The controlled list is discovered dynamically from the type node's config.
+    Concepts with no type tile are counted under an "Untyped" bucket.
     """
     type_node = models.Node.objects.get(nodeid=CONCEPT_TYPE_NODE)
     controlled_list_id = type_node.config.get("controlledList")
     if not controlled_list_id:
         return []
 
-    # Build a map of URI → label from the controlled list
-    items = ListItem.objects.filter(list_id=controlled_list_id)
-    uri_label_map = {}
-    for item in items:
-        pref = (
-            ListItemValue.objects.filter(list_item=item, valuetype_id="prefLabel")
-            .order_by("language_id")
-            .first()
-        )
-        label = pref.value if pref else str(item.id)
-        uri_label_map[item.uri] = label
+    uri_label_map = _build_uri_label_map(controlled_list_id)
 
-    # Count concepts by the URI stored in their type tile
-    uri_counter = Counter()
-    typed_resource_ids = set()
+    uri_counter: Counter = Counter()
+    typed_resource_ids: set = set()
 
     type_tiles = models.TileModel.objects.filter(
         nodegroup_id=CONCEPT_TYPE_NODEGROUP,
@@ -134,10 +149,10 @@ def _get_concept_type_breakdown(concept_resource_ids):
 
     untyped_count = len(concept_resource_ids) - len(typed_resource_ids)
 
-    breakdown = []
-    for uri, label in uri_label_map.items():
-        breakdown.append({"label": label, "uri": uri, "count": uri_counter.get(uri, 0)})
-    # Sort by label for consistent ordering
+    breakdown = [
+        {"label": label, "uri": uri, "count": uri_counter.get(uri, 0)}
+        for uri, label in uri_label_map.items()
+    ]
     breakdown.sort(key=lambda x: x["label"])
 
     if untyped_count > 0:
@@ -151,17 +166,9 @@ def _get_concept_type_breakdown(concept_resource_ids):
 )
 class DashboardStatsView(View):
     def get(self, request):
-        scheme_params = request.GET.getlist("scheme")
-        scheme_ids = []
-        for param in scheme_params:
-            try:
-                scheme_ids.append(str(uuid.UUID(param)))
-            except ValueError:
-                return JSONErrorResponse(
-                    title=_("Invalid scheme"),
-                    message=_("scheme must be a valid UUID"),
-                    status=400,
-                )
+        scheme_ids, error = _parse_scheme_ids(request)
+        if error:
+            return error
 
         # --- User greeting ---
         user = request.user
@@ -175,31 +182,33 @@ class DashboardStatsView(View):
         ).count()
         scheme_count = len(scheme_ids) if scheme_ids else total_scheme_count
 
-        # --- Concept count ---
+        # --- Concept count and IDs ---
         Concept = ResourceTileTree.get_tiles("concept")
         if scheme_ids:
-            concept_count = Concept.filter(part_of_scheme__id__in=scheme_ids).count()
+            concept_qs = Concept.filter(part_of_scheme__id__in=scheme_ids)
+        else:
+            concept_qs = None
+
+        if concept_qs is not None:
+            concept_count = concept_qs.count()
+            concept_ids_list = [
+                str(pk) for pk in concept_qs.values_list("pk", flat=True)
+            ]
         else:
             concept_count = models.ResourceInstance.objects.filter(
                 graph_id=CONCEPTS_GRAPH_ID
             ).count()
-
-        # --- Resource IDs for activity query ---
-        if scheme_ids:
-            concept_ids_list = [
-                str(pk)
-                for pk in Concept.filter(part_of_scheme__id__in=scheme_ids).values_list(
-                    "pk", flat=True
-                )
-            ]
-            all_resource_ids = concept_ids_list + scheme_ids
-        else:
             concept_ids_list = [
                 str(pk)
                 for pk in models.ResourceInstance.objects.filter(
                     graph_id=CONCEPTS_GRAPH_ID
                 ).values_list("pk", flat=True)
             ]
+
+        # --- All resource IDs covered by this request ---
+        if scheme_ids:
+            all_resource_ids = concept_ids_list + scheme_ids
+        else:
             all_scheme_ids = [
                 str(pk)
                 for pk in models.ResourceInstance.objects.filter(
@@ -212,8 +221,8 @@ class DashboardStatsView(View):
         resource_instances = models.ResourceInstance.objects.filter(
             resourceinstanceid__in=all_resource_ids
         )
-        name_map = {}
-        type_map = {}
+        name_map: dict = {}
+        type_map: dict = {}
         for ri in resource_instances:
             descriptors = ri.descriptors or {}
             name_map[str(ri.resourceinstanceid)] = next(
@@ -248,21 +257,19 @@ class DashboardStatsView(View):
 
         # Build nodegroup ID → display name map for action labels
         nodegroup_ids = {edit.nodegroupid for edit in edits if edit.nodegroupid}
-        nodegroup_name_map = {}
+        nodegroup_name_map: dict = {}
         if nodegroup_ids:
             for node in models.Node.objects.filter(nodeid__in=nodegroup_ids):
-                # Convert snake_case alias to Title Case
                 nodegroup_name_map[str(node.nodeid)] = node.name.replace(
                     "_", " "
                 ).title()
 
-        seen_transactions = set()
+        seen_transactions: set = set()
         activity = []
         for edit in edits:
             key = str(edit.transactionid) if edit.transactionid else str(edit.editlogid)
             if key not in seen_transactions:
                 seen_transactions.add(key)
-                # Build action label: replace "Tile" with nodegroup name
                 raw_label = EDIT_TYPE_LABELS.get(edit.edittype, edit.edittype)
                 if edit.nodegroupid and edit.nodegroupid in nodegroup_name_map:
                     ng_name = nodegroup_name_map[edit.nodegroupid]
@@ -289,14 +296,11 @@ class DashboardStatsView(View):
             if len(activity) >= 20:
                 break
 
-        # --- Concepts by type ---
-        concepts_by_type = _get_concept_type_breakdown(
-            [uuid.UUID(rid) for rid in concept_ids_list]
-        )
-
-        # --- Label stats ---
+        # --- Concepts by type and label stats ---
+        concept_uuids = [uuid.UUID(rid) for rid in concept_ids_list]
+        concepts_by_type = _get_concept_type_breakdown(concept_uuids)
         label_count, labels_by_type, labels_by_language = _get_label_stats(
-            [uuid.UUID(rid) for rid in concept_ids_list]
+            concept_uuids
         )
 
         return JSONResponse(
@@ -326,17 +330,9 @@ class MissingTranslationsView(View):
                 status=400,
             )
 
-        scheme_params = request.GET.getlist("scheme")
-        scheme_ids = []
-        for param in scheme_params:
-            try:
-                scheme_ids.append(str(uuid.UUID(param)))
-            except ValueError:
-                return JSONErrorResponse(
-                    title=_("Invalid scheme"),
-                    message=_("scheme must be a valid UUID"),
-                    status=400,
-                )
+        scheme_ids, error = _parse_scheme_ids(request)
+        if error:
+            return error
 
         page_number = int(request.GET.get("page", 1))
         items_per_page = int(request.GET.get("items", 25))
