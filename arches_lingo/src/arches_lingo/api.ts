@@ -765,9 +765,13 @@ export const removeFromConceptSet = async (
     return parsed;
 };
 
-export const fetchDashboardStats = async (scheme?: string) => {
+export const fetchDashboardStats = async (schemes?: string[]) => {
     const params = new URLSearchParams();
-    if (scheme) params.append("scheme", scheme);
+    if (schemes) {
+        for (const scheme of schemes) {
+            params.append("scheme", scheme);
+        }
+    }
     const url = `${generateArchesURL("arches_lingo:api-lingo-dashboard")}?${params.toString()}`;
     const response = await fetch(url);
     const parsed = await response.json();
@@ -777,7 +781,7 @@ export const fetchDashboardStats = async (scheme?: string) => {
 
 export const fetchMissingTranslations = async (
     language: string,
-    scheme?: string,
+    schemes?: string[],
     page = 1,
     items = 25,
 ) => {
@@ -786,7 +790,11 @@ export const fetchMissingTranslations = async (
         page: page.toString(),
         items: items.toString(),
     });
-    if (scheme) params.append("scheme", scheme);
+    if (schemes) {
+        for (const scheme of schemes) {
+            params.append("scheme", scheme);
+        }
+    }
     const url = `${generateArchesURL("arches_lingo:api-lingo-missing-translations")}?${params.toString()}`;
     const response = await fetch(url);
     const parsed = await response.json();

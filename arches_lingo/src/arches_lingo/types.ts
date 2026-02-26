@@ -561,11 +561,26 @@ export interface ConceptTypeCount {
     count: number;
 }
 
+export interface LabelTypeCount {
+    label: string;
+    uri: string;
+    count: number;
+}
+
+export interface LabelLanguageCount {
+    language: string;
+    code: string;
+    count: number;
+}
+
 export interface DashboardStats {
     user_display_name: string;
     scheme_count: number;
     concept_count: number;
     concepts_by_type: ConceptTypeCount[];
+    label_count: number;
+    labels_by_type: LabelTypeCount[];
+    labels_by_language: LabelLanguageCount[];
     recent_activity: DashboardActivityItem[];
 }
 

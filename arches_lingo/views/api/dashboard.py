@@ -20,12 +20,73 @@ from arches_lingo.const import (
     CONCEPT_NAME_TYPE_NODE,
     CONCEPT_TYPE_NODE,
     CONCEPT_TYPE_NODEGROUP,
+    LABEL_LIST_ID,
     SCHEMES_GRAPH_ID,
 )
 from arches_lingo.utils.concept_builder import ConceptBuilder
 from arches_lingo.views.api.edit_log import EDIT_TYPE_LABELS
 
 PREF_LABEL_URI = "http://www.w3.org/2004/02/skos/core#prefLabel"
+
+
+def _get_label_stats(concept_resource_ids):
+    """Return label_count, labels_by_type, and labels_by_language.
+
+    labels_by_type uses the controlled list at LABEL_LIST_ID for human labels.
+    labels_by_language uses Language.code → Language.name for display.
+    """
+    tiles = models.TileModel.objects.filter(
+        nodegroup_id=CONCEPT_NAME_NODEGROUP,
+        resourceinstance_id__in=concept_resource_ids,
+    ).values_list("data", flat=True)
+
+    type_counter = Counter()
+    lang_counter = Counter()
+    total = 0
+
+    for data in tiles:
+        total += 1
+        lang = data.get(CONCEPT_NAME_LANGUAGE_NODE)
+        if lang:
+            lang_counter[lang] += 1
+        ref_values = data.get(CONCEPT_NAME_TYPE_NODE)
+        if ref_values and isinstance(ref_values, list):
+            for ref in ref_values:
+                uri = ref.get("uri")
+                if uri:
+                    type_counter[uri] += 1
+
+    # Build URI → label map from the label controlled list
+    label_items = ListItem.objects.filter(list_id=LABEL_LIST_ID)
+    uri_label_map = {}
+    for item in label_items:
+        pref = (
+            ListItemValue.objects.filter(list_item=item, valuetype_id="prefLabel")
+            .order_by("language_id")
+            .first()
+        )
+        uri_label_map[item.uri] = pref.value if pref else str(item.id)
+
+    labels_by_type = [
+        {"label": uri_label_map.get(uri, uri), "uri": uri, "count": count}
+        for uri, count in type_counter.items()
+    ]
+    labels_by_type.sort(key=lambda x: x["label"])
+
+    # Build language code → display name map
+    lang_codes = list(lang_counter.keys())
+    lang_name_map = {}
+    if lang_codes:
+        for lang_obj in models.Language.objects.filter(code__in=lang_codes):
+            lang_name_map[lang_obj.code] = lang_obj.name or lang_obj.code
+
+    labels_by_language = [
+        {"language": lang_name_map.get(code, code), "code": code, "count": count}
+        for code, count in lang_counter.items()
+    ]
+    labels_by_language.sort(key=lambda x: -x["count"])
+
+    return total, labels_by_type, labels_by_language
 
 
 def _get_concept_type_breakdown(concept_resource_ids):
@@ -88,11 +149,11 @@ def _get_concept_type_breakdown(concept_resource_ids):
 )
 class DashboardStatsView(View):
     def get(self, request):
-        scheme_param = request.GET.get("scheme")
-        scheme_id = None
-        if scheme_param:
+        scheme_params = request.GET.getlist("scheme")
+        scheme_ids = []
+        for param in scheme_params:
             try:
-                scheme_id = str(uuid.UUID(scheme_param))
+                scheme_ids.append(str(uuid.UUID(param)))
             except ValueError:
                 return JSONErrorResponse(
                     title=_("Invalid scheme"),
@@ -107,42 +168,43 @@ class DashboardStatsView(View):
         )
 
         # --- Scheme count ---
-        scheme_count = models.ResourceInstance.objects.filter(
+        total_scheme_count = models.ResourceInstance.objects.filter(
             graph_id=SCHEMES_GRAPH_ID
         ).count()
+        scheme_count = len(scheme_ids) if scheme_ids else total_scheme_count
 
         # --- Concept count ---
         Concept = ResourceTileTree.get_tiles("concept")
-        if scheme_id:
-            concept_count = Concept.filter(part_of_scheme__id=scheme_id).count()
+        if scheme_ids:
+            concept_count = Concept.filter(part_of_scheme__id__in=scheme_ids).count()
         else:
             concept_count = models.ResourceInstance.objects.filter(
                 graph_id=CONCEPTS_GRAPH_ID
             ).count()
 
         # --- Resource IDs for activity query ---
-        if scheme_id:
-            concept_ids = [
+        if scheme_ids:
+            concept_ids_list = [
                 str(pk)
-                for pk in Concept.filter(part_of_scheme__id=scheme_id).values_list(
+                for pk in Concept.filter(part_of_scheme__id__in=scheme_ids).values_list(
                     "pk", flat=True
                 )
             ]
-            all_resource_ids = concept_ids + [scheme_id]
+            all_resource_ids = concept_ids_list + scheme_ids
         else:
-            concept_ids = [
+            concept_ids_list = [
                 str(pk)
                 for pk in models.ResourceInstance.objects.filter(
                     graph_id=CONCEPTS_GRAPH_ID
                 ).values_list("pk", flat=True)
             ]
-            scheme_ids = [
+            all_scheme_ids = [
                 str(pk)
                 for pk in models.ResourceInstance.objects.filter(
                     graph_id=SCHEMES_GRAPH_ID
                 ).values_list("pk", flat=True)
             ]
-            all_resource_ids = concept_ids + scheme_ids
+            all_resource_ids = concept_ids_list + all_scheme_ids
 
         # --- Build resource name and type lookup ---
         resource_instances = models.ResourceInstance.objects.filter(
@@ -165,18 +227,33 @@ class DashboardStatsView(View):
             resourceinstanceid__in=all_resource_ids
         ).order_by("-timestamp")[:100]
 
+        # Build nodegroup ID → display name map for action labels
+        nodegroup_ids = {edit.nodegroupid for edit in edits if edit.nodegroupid}
+        nodegroup_name_map = {}
+        if nodegroup_ids:
+            for node in models.Node.objects.filter(nodeid__in=nodegroup_ids):
+                # Convert snake_case alias to Title Case
+                nodegroup_name_map[str(node.nodeid)] = node.name.replace(
+                    "_", " "
+                ).title()
+
         seen_transactions = set()
         activity = []
         for edit in edits:
             key = str(edit.transactionid) if edit.transactionid else str(edit.editlogid)
             if key not in seen_transactions:
                 seen_transactions.add(key)
+                # Build action label: replace "Tile" with nodegroup name
+                raw_label = EDIT_TYPE_LABELS.get(edit.edittype, edit.edittype)
+                if edit.nodegroupid and edit.nodegroupid in nodegroup_name_map:
+                    ng_name = nodegroup_name_map[edit.nodegroupid]
+                    edittype_label = _(raw_label.replace("Tile", ng_name))
+                else:
+                    edittype_label = _(raw_label)
                 activity.append(
                     {
                         "editlogid": str(edit.editlogid),
-                        "edittype_label": _(
-                            EDIT_TYPE_LABELS.get(edit.edittype, edit.edittype)
-                        ),
+                        "edittype_label": edittype_label,
                         "timestamp": (
                             edit.timestamp.isoformat() if edit.timestamp else None
                         ),
@@ -195,7 +272,12 @@ class DashboardStatsView(View):
 
         # --- Concepts by type ---
         concepts_by_type = _get_concept_type_breakdown(
-            [uuid.UUID(rid) for rid in concept_ids]
+            [uuid.UUID(rid) for rid in concept_ids_list]
+        )
+
+        # --- Label stats ---
+        label_count, labels_by_type, labels_by_language = _get_label_stats(
+            [uuid.UUID(rid) for rid in concept_ids_list]
         )
 
         return JSONResponse(
@@ -204,6 +286,9 @@ class DashboardStatsView(View):
                 "scheme_count": scheme_count,
                 "concept_count": concept_count,
                 "concepts_by_type": concepts_by_type,
+                "label_count": label_count,
+                "labels_by_type": labels_by_type,
+                "labels_by_language": labels_by_language,
                 "recent_activity": activity,
             }
         )
@@ -222,11 +307,11 @@ class MissingTranslationsView(View):
                 status=400,
             )
 
-        scheme_param = request.GET.get("scheme")
-        scheme_id = None
-        if scheme_param:
+        scheme_params = request.GET.getlist("scheme")
+        scheme_ids = []
+        for param in scheme_params:
             try:
-                scheme_id = str(uuid.UUID(scheme_param))
+                scheme_ids.append(str(uuid.UUID(param)))
             except ValueError:
                 return JSONErrorResponse(
                     title=_("Invalid scheme"),
@@ -248,11 +333,11 @@ class MissingTranslationsView(View):
             ).values_list("resourceinstance_id", flat=True)
         )
 
-        # All concept IDs, optionally filtered by scheme
+        # All concept IDs, optionally filtered by scheme(s)
         Concept = ResourceTileTree.get_tiles("concept")
-        if scheme_id:
+        if scheme_ids:
             all_concept_ids = list(
-                Concept.filter(part_of_scheme__id=scheme_id).values_list(
+                Concept.filter(part_of_scheme__id__in=scheme_ids).values_list(
                     "pk", flat=True
                 )
             )
