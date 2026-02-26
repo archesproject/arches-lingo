@@ -108,3 +108,15 @@ STATUS_NODEGROUP = "152321b6-0f5e-11ef-9493-0a58a9feac02"
 PREF_LABEL_VALUE = "preferred label"
 ALT_LABEL_VALUE = "alternative label"
 HIDDEN_LABEL_VALUE = "hidden label"
+
+PREF_LABEL_URI = "http://www.w3.org/2004/02/skos/core#prefLabel"
+
+EDIT_TYPE_LABELS = {
+    "create": "Resource Created",
+    "delete": "Resource Deleted",
+    "tile delete": "Tile Deleted",
+    "tile create": "Tile Created",
+    "tile edit": "Tile Updated",
+    "bulk_create": "Resource Created",
+    "update_resource_instance_lifecycle_state": "Resource Lifecycle State Updated",
+}

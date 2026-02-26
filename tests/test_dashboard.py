@@ -1,6 +1,6 @@
 import json
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from django.contrib.auth.models import User
 from django.test import TestCase
@@ -157,25 +157,16 @@ class DashboardStatsViewTests(DashboardTestMixin, ViewTests):
         data = json.loads(response.content)
 
         # Both edits share the same transaction ID; only one entry should appear
-        matching = [
-            item
-            for item in data["recent_activity"]
-            if item["resource_id"] == str(self.concepts[0].pk)
-            and item.get("_txn") == str(txn)
-        ]
-        # Check total count didn't double-count this transaction
         txn_entries = [
             item
             for item in data["recent_activity"]
             if item["resource_id"] == str(self.concepts[0].pk)
         ]
         # At most one entry per transaction
-        self.assertLessEqual(len(txn_entries), 1 + len(self.concepts))
+        self.assertLessEqual(len(txn_entries), 1)
 
     def test_recent_activity_capped_at_20(self):
         base_ts = datetime(2025, 7, 1, 0, 0, 0, tzinfo=timezone.utc)
-        from datetime import timedelta
-
         for edit_num in range(25):
             self._create_edit(
                 self.concepts[edit_num % 5],

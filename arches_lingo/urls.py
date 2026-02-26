@@ -40,7 +40,6 @@ handler500 = "arches.app.views.main.custom_500"
 urlpatterns = [
     path("", LingoRootView.as_view(), name="root"),
     path("dashboard", LingoRootView.as_view(), name="dashboard"),
-    path("scheme/<uuid:id>", LingoRootView.as_view(), name="scheme-root"),
     path("login", LingoRootView.as_view(), name="login"),
     path("advanced-search", LingoRootView.as_view(), name="advanced-search"),
     path("schemes", LingoRootView.as_view(), name="schemes"),
