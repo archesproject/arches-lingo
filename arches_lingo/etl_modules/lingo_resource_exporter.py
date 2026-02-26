@@ -492,7 +492,7 @@ class LingoResourceExporter:
         mapping = TILE_TREE_TO_TRIPLE_MAPPING.get(nodegroup_alias)
         if mapping is None:
             logger.error(f"No mapping found for nodegroup alias: {nodegroup_alias}")
-            return None
+            return []
         if type(tile_trees) is not list:
             tile_trees = [tile_trees]
         for tile_tree in tile_trees:
