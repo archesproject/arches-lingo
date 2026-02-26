@@ -176,11 +176,11 @@ class DashboardStatsViewTests(DashboardTestMixin, ViewTests):
         base_ts = datetime(2025, 7, 1, 0, 0, 0, tzinfo=timezone.utc)
         from datetime import timedelta
 
-        for i in range(25):
+        for edit_num in range(25):
             self._create_edit(
-                self.concepts[i % 5],
+                self.concepts[edit_num % 5],
                 "tile edit",
-                base_ts + timedelta(minutes=i),
+                base_ts + timedelta(minutes=edit_num),
             )
 
         response = self.client.get(reverse("api-lingo-dashboard"))
