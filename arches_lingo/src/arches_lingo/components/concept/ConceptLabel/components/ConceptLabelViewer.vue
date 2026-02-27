@@ -33,6 +33,12 @@ const metaStringLabel: MetaStringText = {
     name: $gettext("Label"),
     type: $gettext("Type"),
     noRecords: $gettext("No concept labels were found."),
+    sortFields: {
+        name: "aliased_data.appellative_status_ascribed_name_content.display_value",
+        type: "aliased_data.appellative_status_ascribed_relation.display_value",
+        language:
+            "aliased_data.appellative_status_ascribed_name_language.display_value",
+    },
 };
 </script>
 

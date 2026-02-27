@@ -26,10 +26,15 @@ const openEditor = inject<(componentName: string) => void>("openEditor");
 
 const metaStringLabel: MetaStringText = {
     deleteConfirm: $gettext("Are you sure you want to delete this note?"),
-    language: $gettext("Note Language"),
-    name: $gettext("Note Name"),
-    type: $gettext("Note Type"),
+    language: $gettext("Language"),
+    name: $gettext("Note"),
+    type: $gettext("Type"),
     noRecords: $gettext("No scheme notes were found."),
+    sortFields: {
+        name: "aliased_data.statement_content.display_value",
+        type: "aliased_data.statement_type.display_value",
+        language: "aliased_data.statement_language.display_value",
+    },
 };
 </script>
 
