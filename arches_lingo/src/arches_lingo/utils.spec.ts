@@ -1,3 +1,4 @@
+import { vi } from "vitest";
 import { ENGLISH } from "@/arches_lingo/constants.ts";
 import {
     dataIsScheme,
@@ -7,6 +8,8 @@ import {
 import schemesFixture from "./fixtures/test_scheme.json";
 
 import type { IconLabels, Scheme } from "@/arches_lingo/types";
+
+vi.mock("js-cookie", () => ({ default: { get: vi.fn() } }));
 
 const iconLabels: IconLabels = {
     concept: "Concept",
