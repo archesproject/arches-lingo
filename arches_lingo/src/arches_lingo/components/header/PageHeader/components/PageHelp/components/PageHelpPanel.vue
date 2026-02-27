@@ -410,6 +410,90 @@ const shouldShowPageHelpPanel = defineModel("shouldShowPageHelpPanel", {
                 </ul>
             </section>
 
+            <!-- Advanced Search -->
+            <section class="help-section">
+                <h3 class="help-section-title">
+                    <i class="pi pi-search" />
+                    {{ $gettext("Advanced Search") }}
+                </h3>
+                <p class="help-text">
+                    {{
+                        $gettext(
+                            "Build complex queries to find concepts across all schemes using multiple criteria at once.",
+                        )
+                    }}
+                </p>
+                <ul class="help-list">
+                    <li>
+                        <i class="pi pi-filter help-list-icon" />
+                        <div>
+                            <span class="help-term">{{
+                                $gettext("Query builder")
+                            }}</span>
+                            {{
+                                $gettext(
+                                    " — combine facets such as label, scheme, language, note content, URI, identifier, and lifecycle state. Group conditions with AND / OR logic.",
+                                )
+                            }}
+                        </div>
+                    </li>
+                    <li>
+                        <i class="pi pi-save help-list-icon" />
+                        <div>
+                            <span class="help-term">{{
+                                $gettext("Saved searches")
+                            }}</span>
+                            {{
+                                $gettext(
+                                    " — save your current query for quick re-use later. Saved searches appear in the Collections panel on the right.",
+                                )
+                            }}
+                        </div>
+                    </li>
+                    <li>
+                        <i class="pi pi-folder help-list-icon" />
+                        <div>
+                            <span class="help-term">{{
+                                $gettext("Concept sets")
+                            }}</span>
+                            {{
+                                $gettext(
+                                    " — group selected concepts into named sets. Add concepts from search results, view a set's members, or remove concepts from a set.",
+                                )
+                            }}
+                        </div>
+                    </li>
+                    <li>
+                        <i class="pi pi-check-square help-list-icon" />
+                        <div>
+                            {{
+                                $gettext(
+                                    "Use the checkboxes in search results to select concepts, then use the Concept Sets actions to add or remove them.",
+                                )
+                            }}
+                        </div>
+                    </li>
+                    <li>
+                        <i class="pi pi-objects-column help-list-icon" />
+                        <div>
+                            {{
+                                $gettext(
+                                    "Click the Collections button in the toolbar to show or hide the Saved Searches and Concept Sets panel.",
+                                )
+                            }}
+                        </div>
+                    </li>
+                </ul>
+                <div class="help-tip">
+                    <i class="pi pi-info-circle help-tip-icon" />
+                    {{
+                        $gettext(
+                            "Expand a search result row to see additional details such as identifier, lifecycle state, and notes.",
+                        )
+                    }}
+                </div>
+            </section>
+
             <!-- Support -->
             <section class="help-section help-section--last">
                 <h3 class="help-section-title">
