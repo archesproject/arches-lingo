@@ -53,6 +53,15 @@ export const routes = [
             requiresAuthentication: true,
         },
     },
+    {
+        path: "/profile",
+        name: "profile",
+        component: () => import("@/arches_lingo/pages/UserProfilePage.vue"),
+        meta: {
+            shouldShowNavigation: true,
+            requiresAuthentication: true,
+        },
+    },
 ];
 
 export const routeNames = {
@@ -63,4 +72,5 @@ export const routeNames = {
     schemes: "schemes",
     concept: "concept",
     scheme: "scheme",
+    profile: "profile",
 };

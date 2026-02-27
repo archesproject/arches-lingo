@@ -18,6 +18,14 @@ export interface User {
     email: string;
 }
 
+export interface UserProfile {
+    username: string;
+    first_name: string;
+    last_name: string;
+    email: string;
+    phone: string;
+}
+
 // Prop injection types
 export interface UserRefAndSetter {
     user: Ref<User | null>;
