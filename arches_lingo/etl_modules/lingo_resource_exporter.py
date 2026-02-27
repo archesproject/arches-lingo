@@ -371,7 +371,7 @@ class LingoResourceExporter:
             }
             self.load_event.complete = True
             self.load_event.successful = True
-            self.load_end_time=datetime.now()
+            self.load_end_time = datetime.now()
             self.load_event.status = (
                 "indexed"  # in BDM UI, 'indexed' maps to 'completed'
             )
