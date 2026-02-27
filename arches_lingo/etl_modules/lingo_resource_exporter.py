@@ -148,30 +148,19 @@ class LingoResourceExporter:
     def run_export_task(self, resourceid, filename=None, format="xml"):
         if format == "xml":
             output_files = self._export_as_skos_xml(resourceid)
-        elif format == "rdf":
+        elif format in ["rdf", "csv", "jsonld"]:
             scheme_ids, concept_ids = self._get_resource_ids_for_export(resourceid)
             if not scheme_ids and not concept_ids:
                 return {
                     "success": False,
                     "data": {"message": self.load_event.error_message},
                 }
-            output_files = self._export_as_arches_rdf(scheme_ids, concept_ids)
-        elif format == "csv":
-            scheme_ids, concept_ids = self._get_resource_ids_for_export(resourceid)
-            if not scheme_ids and not concept_ids:
-                return {
-                    "success": False,
-                    "data": {"message": self.load_event.error_message},
-                }
-            output_files = self._export_as_tilecsv(scheme_ids, concept_ids)
-        elif format == "jsonld":
-            scheme_ids, concept_ids = self._get_resource_ids_for_export(resourceid)
-            if not scheme_ids and not concept_ids:
-                return {
-                    "success": False,
-                    "data": {"message": self.load_event.error_message},
-                }
-            output_files = self._export_as_jsonld(scheme_ids, concept_ids)
+            if format == "rdf":
+                output_files = self._export_as_arches_rdf(scheme_ids, concept_ids)
+            elif format == "csv":
+                output_files = self._export_as_tilecsv(scheme_ids, concept_ids)
+            elif format == "jsonld":
+                output_files = self._export_as_jsonld(scheme_ids, concept_ids)
         else:
             error = _("The requested export format is not supported.")
             return self.handle_error(error)
@@ -381,6 +370,8 @@ class LingoResourceExporter:
                 "scheme_name": self.scheme_name,
             }
             self.load_event.complete = True
+            self.load_event.successful = True
+            self.load_end_time=datetime.now()
             self.load_event.status = (
                 "indexed"  # in BDM UI, 'indexed' maps to 'completed'
             )
