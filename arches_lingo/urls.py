@@ -38,6 +38,16 @@ urlpatterns = [
     path("concept/<uuid:id>", LingoRootView.as_view(), name="concept"),
     path("concept/new", LingoRootView.as_view(), name="new-concept"),
     path("profile", LingoRootView.as_view(), name="profile"),
+    path(
+        "api/lingo/user-profile",
+        UserProfileAPIView.as_view(),
+        name="api-lingo-user-profile",
+    ),
+    path(
+        "api/lingo/change-password",
+        ChangePasswordAPIView.as_view(),
+        name="api-lingo-change-password",
+    ),
     path("api/concept-tree", ConceptTreeView.as_view(), name="api-concepts"),
     path("api/search", ValueSearchView.as_view(), name="api-search"),
     path(
