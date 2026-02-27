@@ -197,10 +197,6 @@ async function performRevert(timestamp: string) {
     </Dialog>
 
     <div class="edit-log">
-        <div class="edit-log-header">
-            <h3>{{ $gettext("Edit History") }}</h3>
-        </div>
-
         <Skeleton
             v-if="isLoading"
             style="width: 100%; height: 16rem"
