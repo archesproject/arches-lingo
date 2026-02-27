@@ -11,7 +11,4 @@ beforeAll(() => {
         })
     }));
 
-    vi.mock('js-cookie', () => ({
-        default: { get: vi.fn() },
-    }));
 });
