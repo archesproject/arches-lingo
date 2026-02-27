@@ -46,6 +46,7 @@ const editorKey = ref(0);
 const editorTileId = ref();
 const editorState = ref(CLOSED);
 const selectedComponentDatum = ref();
+const isFormEditor = ref(true);
 
 const resourceInstanceId = computed<string | undefined>(() => {
     if (route.params.id !== NEW) {
@@ -90,6 +91,7 @@ function openEditor(componentName: string, tileId?: string) {
     editorKey.value += 1;
     editorTileId.value = tileId;
     editorState.value = MINIMIZED;
+    isFormEditor.value = true;
 }
 
 function maximizeEditor() {
@@ -143,6 +145,7 @@ function openPanelComponent(
     editorKey.value += 1;
     editorTileId.value = null;
     editorState.value = MINIMIZED;
+    isFormEditor.value = false;
 }
 
 provide("openEditor", openEditor);
@@ -201,6 +204,8 @@ provide(openPanelComponentKey, openPanelComponent);
                     :key="editorKey"
                     class="splitter-panel-content"
                     :is-editor-maximized="editorState === MAXIMIZED"
+                    :is-form-editor="isFormEditor"
+                    :header-title="selectedComponentDatum.sectionTitle"
                     @maximize="maximizeEditor"
                     @minimize="minimizeEditor"
                     @close="closeEditor"
@@ -269,6 +274,8 @@ provide(openPanelComponentKey, openPanelComponent);
                     :key="editorKey"
                     class="splitter-panel-content"
                     :is-editor-maximized="editorState === MAXIMIZED"
+                    :is-form-editor="isFormEditor"
+                    :header-title="selectedComponentDatum.sectionTitle"
                     @maximize="maximizeEditor"
                     @minimize="minimizeEditor"
                     @close="closeEditor"
