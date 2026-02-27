@@ -56,11 +56,6 @@ urlpatterns = [
         name="api-lingo-scheme",
     ),
     path(
-        "api/lingo/resource/<uuid:resourceid>/edit-log",
-        ResourceEditLogAPIView.as_view(),
-        name="api-lingo-edit-log",
-    ),
-    path(
         "api/lingo/<slug:graph>",
         LingoResourceListCreateView.as_view(),
         name="api-lingo-resources",
