@@ -325,7 +325,10 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                     />
                 </div>
             </div>
-            <div class="header-buttons">
+            <div
+                v-if="resourceInstanceId"
+                class="header-buttons"
+            >
                 <Button
                     :aria-label="$gettext('Export')"
                     class="add-button"
