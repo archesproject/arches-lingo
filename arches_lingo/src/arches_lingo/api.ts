@@ -4,9 +4,15 @@ import { generateArchesURL } from "@/arches/utils/generate-arches-url.ts";
 
 import type { Language } from "@/arches_component_lab/types";
 import type {
+    AdvancedSearchQuery,
+    AdvancedSearchResponse,
+    AdvancedSearchOptions,
     ConceptInstance,
+    ConceptSetDetail,
+    ConceptSetItem,
     DigitalObjectInstance,
     EditLogEntry,
+    SavedSearchItem,
     SchemeInstance,
     TileData,
     User,
@@ -587,6 +593,177 @@ export const getSearchExportFile = async (exportId: string) => {
     });
     const url = `${arches.urls.get_export_file}?${params.toString()}`;
     const response = await fetch(url);
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
+export const executeAdvancedSearch = async (
+    query: AdvancedSearchQuery,
+    page: number = 1,
+    items: number = 25,
+): Promise<AdvancedSearchResponse> => {
+    const url = generateArchesURL("arches_lingo:api-advanced-search");
+    const response = await fetch(url, {
+        method: "POST",
+        headers: {
+            "X-CSRFTOKEN": getToken(),
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ query, page, items }),
+    });
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
+export const fetchAdvancedSearchOptions =
+    async (): Promise<AdvancedSearchOptions> => {
+        const url = generateArchesURL(
+            "arches_lingo:api-advanced-search-options",
+        );
+        const response = await fetch(url);
+        const parsed = await response.json();
+        if (!response.ok)
+            throw new Error(parsed.message || response.statusText);
+        return parsed;
+    };
+
+// ── Saved Searches API ─────────────────────────────────────────
+
+export const fetchSavedSearches = async (): Promise<{
+    data: SavedSearchItem[];
+}> => {
+    const url = generateArchesURL("arches_lingo:api-saved-searches");
+    const response = await fetch(url);
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
+export const createSavedSearch = async (
+    name: string,
+    query: AdvancedSearchQuery,
+): Promise<SavedSearchItem> => {
+    const url = generateArchesURL("arches_lingo:api-saved-searches");
+    const response = await fetch(url, {
+        method: "POST",
+        headers: {
+            "X-CSRFTOKEN": getToken(),
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ name, query }),
+    });
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
+export const deleteSavedSearch = async (pk: number): Promise<void> => {
+    const url = generateArchesURL("arches_lingo:api-saved-search-detail", {
+        pk,
+    });
+    const response = await fetch(url, {
+        method: "DELETE",
+        headers: { "X-CSRFTOKEN": getToken() },
+    });
+    if (!response.ok) {
+        const parsed = await response.json();
+        throw new Error(parsed.message || response.statusText);
+    }
+};
+
+// ── Concept Sets API ───────────────────────────────────────────
+
+export const fetchConceptSets = async (): Promise<{
+    data: ConceptSetItem[];
+}> => {
+    const url = generateArchesURL("arches_lingo:api-concept-sets");
+    const response = await fetch(url);
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
+export const createConceptSet = async (
+    name: string,
+    description: string = "",
+): Promise<ConceptSetItem> => {
+    const url = generateArchesURL("arches_lingo:api-concept-sets");
+    const response = await fetch(url, {
+        method: "POST",
+        headers: {
+            "X-CSRFTOKEN": getToken(),
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ name, description }),
+    });
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
+export const fetchConceptSetDetail = async (
+    pk: number,
+): Promise<ConceptSetDetail> => {
+    const url = generateArchesURL("arches_lingo:api-concept-set-detail", {
+        pk,
+    });
+    const response = await fetch(url);
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
+export const deleteConceptSet = async (pk: number): Promise<void> => {
+    const url = generateArchesURL("arches_lingo:api-concept-set-detail", {
+        pk,
+    });
+    const response = await fetch(url, {
+        method: "DELETE",
+        headers: { "X-CSRFTOKEN": getToken() },
+    });
+    if (!response.ok) {
+        const parsed = await response.json();
+        throw new Error(parsed.message || response.statusText);
+    }
+};
+
+export const addToConceptSet = async (
+    pk: number,
+    conceptIds: string[],
+): Promise<{ added: number; member_count: number }> => {
+    const url = generateArchesURL("arches_lingo:api-concept-set-members", {
+        pk,
+    });
+    const response = await fetch(url, {
+        method: "POST",
+        headers: {
+            "X-CSRFTOKEN": getToken(),
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ concept_ids: conceptIds }),
+    });
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
+export const removeFromConceptSet = async (
+    pk: number,
+    conceptIds: string[],
+): Promise<{ member_count: number }> => {
+    const url = generateArchesURL("arches_lingo:api-concept-set-members", {
+        pk,
+    });
+    const response = await fetch(url, {
+        method: "DELETE",
+        headers: {
+            "X-CSRFTOKEN": getToken(),
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ concept_ids: conceptIds }),
+    });
     const parsed = await response.json();
     if (!response.ok) throw new Error(parsed.message || response.statusText);
     return parsed;
