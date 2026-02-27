@@ -10,4 +10,8 @@ beforeAll(() => {
             $gettext: (text: string) => (text)
         })
     }));
+
+    vi.mock('js-cookie', () => ({
+        default: { get: vi.fn() },
+    }));
 });
