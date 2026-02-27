@@ -30,9 +30,9 @@ const openEditor = inject<(componentName: string) => void>("openEditor");
 
 const metaStringLabel: MetaStringText = {
     deleteConfirm: $gettext("Are you sure you want to delete this label?"),
-    language: $gettext("Label Language"),
-    name: $gettext("Label Name"),
-    type: $gettext("Label Type"),
+    language: $gettext("Language"),
+    name: $gettext("Name"),
+    type: $gettext("Type"),
     noRecords: $gettext("No scheme labels were found."),
     sortFields: {
         name: "aliased_data.appellative_status_ascribed_name_content.display_value",
