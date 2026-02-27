@@ -882,7 +882,7 @@
                         "i18n_properties": [
                             "placeholder"
                         ],
-                        "label": "Notes",
+                        "label": "Note",
                         "maxLength": null,
                         "placeholder": {
                             "en": "Enter text"
@@ -892,7 +892,7 @@
                     },
                     "id": "7131cd3e-11e0-11ef-9493-0a58a9feac02",
                     "label": {
-                        "en": "Notes"
+                        "en": "Note"
                     },
                     "node_id": "7131c67c-11e0-11ef-9493-0a58a9feac02",
                     "sortorder": 0,

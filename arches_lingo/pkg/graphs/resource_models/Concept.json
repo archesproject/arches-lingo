@@ -691,7 +691,7 @@
                     "config": {
                         "dateFormat": "YYYY-MM-DD",
                         "defaultValue": "",
-                        "label": "Warrant Assertion Timespan Begin",
+                        "label": "Warrant Assertion Begin Date",
                         "maxDate": false,
                         "minDate": false,
                         "placeholder": "Enter date",
@@ -699,7 +699,7 @@
                     },
                     "id": "24147af3-6602-4a05-9d8a-e22138352b32",
                     "label": {
-                        "en": "Warrant Assertion Timespan Begin"
+                        "en": "Warrant Assertion Begin Date"
                     },
                     "node_id": "edf5535c-0f5d-11ef-9493-0a58a9feac02",
                     "sortorder": 3,
@@ -1425,7 +1425,7 @@
                     "config": {
                         "dateFormat": "YYYY-MM-DD",
                         "defaultValue": "",
-                        "label": "Warrant Assertion Timespan End",
+                        "label": "Warrant Assertion End Date",
                         "maxDate": false,
                         "minDate": false,
                         "placeholder": "Enter date",
@@ -1433,7 +1433,7 @@
                     },
                     "id": "7bfb9d1e-54d3-415a-b6af-7e8dd8ee5344",
                     "label": {
-                        "en": "Warrant Assertion Timespan End"
+                        "en": "Warrant Assertion End Date"
                     },
                     "node_id": "de191c2c-0f60-11ef-9493-0a58a9feac02",
                     "sortorder": 7,
@@ -1916,7 +1916,7 @@
                         "i18n_properties": [
                             "placeholder"
                         ],
-                        "label": "Notes",
+                        "label": "Note",
                         "maxLength": null,
                         "placeholder": {
                             "en": "Enter text"
@@ -1926,7 +1926,7 @@
                     },
                     "id": "bf73e744-4888-11ee-8a8d-11afefc4bff7",
                     "label": {
-                        "en": "Notes"
+                        "en": "Note"
                     },
                     "node_id": "bf73e66a-4888-11ee-8a8d-11afefc4bff7",
                     "sortorder": 0,
@@ -1971,7 +1971,7 @@
                         "i18n_properties": [
                             "placeholder"
                         ],
-                        "label": "Statement",
+                        "label": "Note",
                         "maxLength": null,
                         "placeholder": {
                             "en": "Enter text"
@@ -1981,7 +1981,7 @@
                     },
                     "id": "bf73e7d1-4888-11ee-8a8d-11afefc4bff7",
                     "label": {
-                        "en": "Statement"
+                        "en": "Note"
                     },
                     "node_id": "bf73e6ab-4888-11ee-8a8d-11afefc4bff7",
                     "sortorder": 0,
@@ -2340,7 +2340,7 @@
                     "config": {
                         "dateFormat": "YYYY-MM-DD",
                         "defaultValue": "",
-                        "label": "Warrant Assertion Timespan Begin",
+                        "label": "Warrant Assertion Begin Date",
                         "maxDate": false,
                         "minDate": false,
                         "placeholder": "Enter date",
@@ -2348,7 +2348,7 @@
                     },
                     "id": "c8c6faa7-c42c-4d37-b8ce-fe1b0efd7ab9",
                     "label": {
-                        "en": "Warrant Assertion Timespan Begin"
+                        "en": "Warrant Assertion Begin Date"
                     },
                     "node_id": "de191d08-0f60-11ef-9493-0a58a9feac02",
                     "sortorder": 6,
@@ -2444,7 +2444,7 @@
                     "config": {
                         "dateFormat": "YYYY-MM-DD",
                         "defaultValue": "",
-                        "label": "Warrant Assertion Timespan End",
+                        "label": "Warrant Assertion End Date",
                         "maxDate": false,
                         "minDate": false,
                         "placeholder": "Enter date",
@@ -2452,7 +2452,7 @@
                     },
                     "id": "e1f16581-8795-4b7e-8c6f-e59513264824",
                     "label": {
-                        "en": "Warrant Assertion Timespan End"
+                        "en": "Warrant Assertion End Date"
                     },
                     "node_id": "edf55280-0f5d-11ef-9493-0a58a9feac02",
                     "sortorder": 4,
