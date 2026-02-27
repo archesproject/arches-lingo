@@ -441,3 +441,103 @@ export interface EditLogEntry {
     card_name: string | null;
     note: string | null;
 }
+
+export type SearchOperator = "and" | "or";
+
+export type FacetType =
+    | "label"
+    | "note"
+    | "language"
+    | "concept_type"
+    | "relationship_hierarchical"
+    | "relationship_associated"
+    | "match_uri"
+    | "scheme"
+    | "uri"
+    | "identifier"
+    | "lifecycle_state"
+    | "concept_set";
+
+export interface SearchCondition {
+    id: string;
+    facet: FacetType;
+    value: string;
+    label_type?: string;
+    note_type?: string;
+    language?: string;
+    direction?: "broader" | "narrower";
+}
+
+export interface SearchGroup {
+    id: string;
+    operator: SearchOperator;
+    conditions: (SearchCondition | SearchGroup)[];
+}
+
+export interface AdvancedSearchQuery {
+    operator: SearchOperator;
+    conditions: (SearchCondition | SearchGroup)[];
+}
+
+export interface AdvancedSearchResultNote {
+    content: string;
+    language: string;
+    type: string;
+}
+
+export interface AdvancedSearchResultItem extends SearchResultItem {
+    uri?: string | null;
+    identifier?: string | null;
+    notes: AdvancedSearchResultNote[];
+    lifecycle_state?: string | null;
+}
+
+export interface AdvancedSearchResponse {
+    current_page: number;
+    total_pages: number;
+    results_per_page: number;
+    total_results: number;
+    data: AdvancedSearchResultItem[];
+}
+
+export interface SearchFilterOption {
+    id: string;
+    label: string;
+}
+
+export interface LanguageOption {
+    code: string;
+    name: string;
+}
+
+export interface LifecycleStateOption {
+    id: string;
+    name: string;
+}
+
+export interface AdvancedSearchOptions {
+    languages: LanguageOption[];
+    schemes: SearchFilterOption[];
+    lifecycle_states: LifecycleStateOption[];
+}
+
+export interface SavedSearchItem {
+    id: number;
+    name: string;
+    query: AdvancedSearchQuery;
+    created: string;
+    updated: string;
+}
+
+export interface ConceptSetItem {
+    id: number;
+    name: string;
+    description: string;
+    member_count: number;
+    created: string;
+    updated: string;
+}
+
+export interface ConceptSetDetail extends ConceptSetItem {
+    members: SearchResultItem[];
+}

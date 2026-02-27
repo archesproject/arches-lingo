@@ -11,6 +11,15 @@ from arches_lingo.views.api.concepts import (
 )
 from arches_lingo.views.api.edit_log import ResourceEditLogAPIView
 from arches_lingo.views.api.schemes import SchemeResourceView, SchemeLabelCountView
+from arches_lingo.views.api.advanced_search import (
+    AdvancedSearchView,
+    AdvancedSearchOptionsView,
+    ConceptSetDetailView,
+    ConceptSetListView,
+    ConceptSetMembersView,
+    SavedSearchDetailView,
+    SavedSearchListView,
+)
 from arches_lingo.views.api.generic import (
     LingoResourceDetailView,
     LingoResourceListCreateView,
@@ -50,6 +59,41 @@ urlpatterns = [
     ),
     path("api/concept-tree", ConceptTreeView.as_view(), name="api-concepts"),
     path("api/search", ValueSearchView.as_view(), name="api-search"),
+    path(
+        "api/advanced-search",
+        AdvancedSearchView.as_view(),
+        name="api-advanced-search",
+    ),
+    path(
+        "api/advanced-search/options",
+        AdvancedSearchOptionsView.as_view(),
+        name="api-advanced-search-options",
+    ),
+    path(
+        "api/saved-searches",
+        SavedSearchListView.as_view(),
+        name="api-saved-searches",
+    ),
+    path(
+        "api/saved-searches/<int:pk>",
+        SavedSearchDetailView.as_view(),
+        name="api-saved-search-detail",
+    ),
+    path(
+        "api/concept-sets",
+        ConceptSetListView.as_view(),
+        name="api-concept-sets",
+    ),
+    path(
+        "api/concept-sets/<int:pk>",
+        ConceptSetDetailView.as_view(),
+        name="api-concept-set-detail",
+    ),
+    path(
+        "api/concept-sets/<int:pk>/members",
+        ConceptSetMembersView.as_view(),
+        name="api-concept-set-members",
+    ),
     path(
         "api/lingo/concept-resources",
         ConceptResourceView.as_view(),
