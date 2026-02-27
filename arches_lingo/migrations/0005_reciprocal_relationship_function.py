@@ -30,7 +30,7 @@ def reverse(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("arches_lingo", "0003_add_languages"),
+        ("arches_lingo", "0004_add_language_widget_mapping"),
     ]
 
     operations = [
