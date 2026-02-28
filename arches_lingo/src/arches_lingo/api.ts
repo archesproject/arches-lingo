@@ -47,7 +47,7 @@ export const fetchUser = async () => {
 };
 
 export const fetchUserProfile = async (): Promise<UserProfile> => {
-    const response = await fetch(arches.urls.api_lingo_user_profile);
+    const response = await fetch(generateArchesURL("arches_lingo:api_lingo_user_profile"));
     const parsed = await response.json();
     if (!response.ok) throw new Error(parsed.message || response.statusText);
     return parsed;
@@ -56,7 +56,7 @@ export const fetchUserProfile = async (): Promise<UserProfile> => {
 export const updateUserProfile = async (
     profile: Omit<UserProfile, "username">,
 ): Promise<UserProfile> => {
-    const response = await fetch(arches.urls.api_lingo_user_profile, {
+    const response = await fetch(generateArchesURL("arches_lingo:api_lingo_user_profile"), {
         method: "PUT",
         headers: {
             "X-CSRFTOKEN": getToken(),
@@ -74,7 +74,7 @@ export const changePassword = async (
     newPassword: string,
     newPassword2: string,
 ): Promise<{ success: string }> => {
-    const response = await fetch(arches.urls.api_lingo_change_password, {
+    const response = await fetch(generateArchesURL("arches_lingo:api_lingo_change_password"), {
         method: "POST",
         headers: {
             "X-CSRFTOKEN": getToken(),
