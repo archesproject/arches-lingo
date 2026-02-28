@@ -1,15 +1,20 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref, watch } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import Button from "primevue/button";
 import Dropdown from "primevue/dropdown";
 import InputText from "primevue/inputtext";
+import Select from "primevue/select";
+import ToggleButton from "primevue/togglebutton";
+
+import { fetchConceptResources } from "@/arches_lingo/api.ts";
 
 import type {
     AdvancedSearchOptions,
     ConceptSetItem,
     FacetType,
+    MatchMode,
     SearchCondition,
 } from "@/arches_lingo/types.ts";
 
@@ -47,10 +52,12 @@ const facetTypes: { label: string; value: FacetType }[] = [
     { label: $gettext("Concept Set"), value: "concept_set" },
 ];
 
-const labelTypes = [
-    { label: $gettext("Preferred Label"), value: "prefLabel" },
-    { label: $gettext("Alternative Label"), value: "altLabel" },
-    { label: $gettext("Hidden Label"), value: "hidden" },
+const matchModes: { label: string; value: MatchMode }[] = [
+    { label: $gettext("Contains"), value: "contains" },
+    { label: $gettext("Exact"), value: "exact" },
+    { label: $gettext("Starts with"), value: "starts_with" },
+    { label: $gettext("Ends with"), value: "ends_with" },
+    { label: $gettext("Exists (any value)"), value: "exists" },
 ];
 
 const hierarchyDirections = [
@@ -58,21 +65,86 @@ const hierarchyDirections = [
     { label: $gettext("Narrower (child of)"), value: "narrower" },
 ];
 
+// ── Concept picker state ───────────────────────────────────────
+
+const conceptSearchResults = ref<
+    { display_value: string; resource_id: string }[]
+>([]);
+const isLoadingConcepts = ref(false);
+let conceptSearchTimeout: ReturnType<typeof setTimeout> | null = null;
+
+function onConceptFilter(event: { value: string }) {
+    if (conceptSearchTimeout) {
+        clearTimeout(conceptSearchTimeout);
+    }
+    conceptSearchTimeout = setTimeout(async () => {
+        await loadConcepts(event.value);
+    }, 400);
+}
+
+function getConceptPrefLabel(concept: {
+    id: string;
+    labels?: { valuetype_id: string; value: string }[];
+}): string {
+    const pref = concept.labels?.find((l) => l.valuetype_id === "prefLabel");
+    return pref?.value || concept.labels?.[0]?.value || concept.id;
+}
+
+async function loadConcepts(term?: string) {
+    try {
+        isLoadingConcepts.value = true;
+        const result = await fetchConceptResources(term || "", 50, 1);
+        conceptSearchResults.value = (result.data || []).map(
+            (item: {
+                id: string;
+                labels?: { valuetype_id: string; value: string }[];
+            }) => ({
+                display_value: getConceptPrefLabel(item),
+                resource_id: item.id,
+            }),
+        );
+    } catch {
+        conceptSearchResults.value = [];
+    } finally {
+        isLoadingConcepts.value = false;
+    }
+}
+
+// Load initial concepts when a relationship facet is selected
+watch(
+    () => props.condition.facet,
+    (facet) => {
+        if (
+            facet === "relationship_hierarchical" ||
+            facet === "relationship_associated"
+        ) {
+            loadConcepts();
+        }
+    },
+    { immediate: true },
+);
+
+// ── Computed visibility flags ──────────────────────────────────
+
+const currentMatchMode = computed(
+    () => props.condition.match_mode || "contains",
+);
+
+const isExistsMode = computed(() => currentMatchMode.value === "exists");
+
 const showValueInput = computed(() => {
+    if (isExistsMode.value) return false;
     const facet = props.condition.facet;
-    return [
-        "label",
-        "note",
-        "match_uri",
-        "uri",
-        "identifier",
-        "relationship_hierarchical",
-        "relationship_associated",
-    ].includes(facet);
+    return ["label", "note", "match_uri", "uri", "identifier"].includes(facet);
 });
 
-const showLabelTypeDropdown = computed(() => props.condition.facet === "label");
+const showConceptPicker = computed(() =>
+    ["relationship_hierarchical", "relationship_associated"].includes(
+        props.condition.facet,
+    ),
+);
 
+const showLabelTypeDropdown = computed(() => props.condition.facet === "label");
 const showNoteTypeDropdown = computed(() => props.condition.facet === "note");
 
 const showLanguageDropdown = computed(() =>
@@ -80,7 +152,6 @@ const showLanguageDropdown = computed(() =>
 );
 
 const showLanguageSelect = computed(() => props.condition.facet === "language");
-
 const showSchemeSelect = computed(() => props.condition.facet === "scheme");
 
 const showLifecycleSelect = computed(
@@ -91,13 +162,21 @@ const showConceptSetSelect = computed(
     () => props.condition.facet === "concept_set",
 );
 
-const showConceptTypeInput = computed(
+const showConceptTypeDropdown = computed(
     () => props.condition.facet === "concept_type",
 );
 
 const showDirectionSelect = computed(
     () => props.condition.facet === "relationship_hierarchical",
 );
+
+const showMatchMode = computed(() => {
+    return ["label", "note", "match_uri", "uri", "identifier"].includes(
+        props.condition.facet,
+    );
+});
+
+// ── Update helpers ─────────────────────────────────────────────
 
 function updateField(field: keyof SearchCondition, value: string) {
     const updated = { ...props.condition, [field]: value };
@@ -112,10 +191,37 @@ function updateFacet(facet: FacetType) {
     };
     emit("update:condition", updated);
 }
+
+function updateMatchMode(mode: MatchMode) {
+    const updated = { ...props.condition, match_mode: mode };
+    if (mode === "exists") {
+        updated.value = "";
+    }
+    emit("update:condition", updated);
+}
+
+function toggleNegated() {
+    const updated = {
+        ...props.condition,
+        negated: !props.condition.negated,
+    };
+    emit("update:condition", updated);
+}
 </script>
 
 <template>
     <div class="facet-row">
+        <!-- Negation toggle -->
+        <ToggleButton
+            :model-value="!!condition.negated"
+            :on-label="$gettext('NOT')"
+            :off-label="$gettext('NOT')"
+            class="negation-toggle"
+            :class="{ 'negation-active': condition.negated }"
+            @update:model-value="toggleNegated"
+        />
+
+        <!-- Facet type selector -->
         <Dropdown
             :model-value="condition.facet"
             :options="facetTypes"
@@ -126,7 +232,18 @@ function updateFacet(facet: FacetType) {
             @update:model-value="updateFacet"
         />
 
-        <!-- Text input for label, note, URI, identifier, match_uri, relationships -->
+        <!-- Match mode (for text-based facets) -->
+        <Dropdown
+            v-if="showMatchMode"
+            :model-value="currentMatchMode"
+            :options="matchModes"
+            option-label="label"
+            option-value="value"
+            class="match-mode-dropdown"
+            @update:model-value="updateMatchMode"
+        />
+
+        <!-- Text input for label, note, URI, identifier, match_uri -->
         <InputText
             v-if="showValueInput"
             :model-value="condition.value"
@@ -137,11 +254,33 @@ function updateFacet(facet: FacetType) {
             "
         />
 
-        <!-- Label type filter -->
+        <!-- Concept picker for hierarchical and associated relationships -->
+        <Select
+            v-if="showConceptPicker"
+            :model-value="condition.value"
+            :options="conceptSearchResults"
+            option-label="display_value"
+            option-value="resource_id"
+            :filter="true"
+            :filter-fields="['display_value', 'resource_id']"
+            :empty-filter-message="$gettext('No concepts found')"
+            :filter-placeholder="$gettext('Search concepts...')"
+            :loading="isLoadingConcepts"
+            :placeholder="$gettext('Select concept...')"
+            :show-clear="true"
+            class="facet-value-input"
+            @filter="onConceptFilter"
+            @before-show="loadConcepts()"
+            @update:model-value="
+                (val: string | null) => updateField('value', val ?? '')
+            "
+        />
+
+        <!-- Label type filter (from controlled list) -->
         <Dropdown
             v-if="showLabelTypeDropdown"
             :model-value="condition.label_type"
-            :options="labelTypes"
+            :options="options.label_types"
             option-label="label"
             option-value="value"
             :placeholder="$gettext('Any type')"
@@ -153,11 +292,15 @@ function updateFacet(facet: FacetType) {
             "
         />
 
-        <!-- Note type filter (placeholder — populated from options) -->
-        <InputText
+        <!-- Note type filter (from controlled list) -->
+        <Dropdown
             v-if="showNoteTypeDropdown"
-            :model-value="condition.note_type || ''"
-            :placeholder="$gettext('Note type (optional)')"
+            :model-value="condition.note_type"
+            :options="options.note_types"
+            option-label="label"
+            option-value="value"
+            :placeholder="$gettext('Any type')"
+            show-clear
             class="facet-sub-dropdown"
             @update:model-value="
                 (val: string | undefined) => updateField('note_type', val ?? '')
@@ -227,11 +370,15 @@ function updateFacet(facet: FacetType) {
             "
         />
 
-        <!-- Concept type facet (text input for list_item_id) -->
-        <InputText
-            v-if="showConceptTypeInput"
+        <!-- Concept type facet (from controlled list) -->
+        <Dropdown
+            v-if="showConceptTypeDropdown"
             :model-value="condition.value"
-            :placeholder="$gettext('Concept type ID')"
+            :options="options.concept_types"
+            option-label="label"
+            option-value="value"
+            :placeholder="$gettext('Select concept type')"
+            show-clear
             class="facet-value-input"
             @update:model-value="
                 (val: string | undefined) => updateField('value', val ?? '')
@@ -270,8 +417,31 @@ function updateFacet(facet: FacetType) {
     font-family: var(--p-lingo-font-family);
 }
 
+.negation-toggle {
+    flex: 0 0 auto;
+    min-width: 3rem;
+}
+
+.negation-toggle :deep(.p-togglebutton) {
+    font-size: var(--p-lingo-font-size-xsmall);
+    font-weight: var(--p-lingo-font-weight-normal);
+    border-radius: 0.125rem;
+    padding: 0.25rem 0.5rem;
+}
+
+.negation-active :deep(.p-togglebutton) {
+    background: var(--p-red-100) !important;
+    color: var(--p-red-700) !important;
+    border-color: var(--p-red-300) !important;
+}
+
 .facet-type-dropdown {
     min-width: 12rem;
+    flex: 0 0 auto;
+}
+
+.match-mode-dropdown {
+    min-width: 9rem;
     flex: 0 0 auto;
 }
 

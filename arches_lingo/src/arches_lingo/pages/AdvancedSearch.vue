@@ -16,14 +16,22 @@ import ConceptSets from "@/arches_lingo/components/advanced-search/ConceptSets.v
 import {
     executeAdvancedSearch,
     fetchAdvancedSearchOptions,
+    fetchControlledListOptions,
 } from "@/arches_lingo/api.ts";
-import { DEFAULT_ERROR_TOAST_LIFE, ERROR } from "@/arches_lingo/constants.ts";
+import {
+    DEFAULT_ERROR_TOAST_LIFE,
+    ERROR,
+    LABEL_TYPE_LIST_ID,
+    NOTE_TYPE_LIST_ID,
+    CONCEPT_TYPE_LIST_ID,
+} from "@/arches_lingo/constants.ts";
 
 import type {
     AdvancedSearchOptions,
     AdvancedSearchQuery,
     AdvancedSearchResponse,
     ConceptSetItem,
+    ControlledListOption,
     SearchCondition,
     SearchGroup,
 } from "@/arches_lingo/types.ts";
@@ -45,6 +53,9 @@ const searchOptions = ref<AdvancedSearchOptions>({
     languages: [],
     schemes: [],
     lifecycle_states: [],
+    label_types: [],
+    note_types: [],
+    concept_types: [],
 });
 
 const conceptSets = ref<ConceptSetItem[]>([]);
@@ -70,9 +81,56 @@ const showSidePanel = ref(true);
 
 // ── Search Options ─────────────────────────────────────────────
 
+interface ControlledListItem {
+    id: string;
+    values: { valuetype_id: string; value: string }[];
+    children?: ControlledListItem[];
+}
+
+function getPreferredLabel(item: ControlledListItem): string {
+    const pref = item.values?.find((v) => v.valuetype_id === "prefLabel");
+    return pref?.value || item.values?.[0]?.value || item.id;
+}
+
+function flattenListItems(items: ControlledListItem[]): ControlledListOption[] {
+    const result: ControlledListOption[] = [];
+    for (const item of items) {
+        result.push({ label: getPreferredLabel(item), value: item.id });
+        if (item.children && Array.isArray(item.children)) {
+            result.push(...flattenListItems(item.children));
+        }
+    }
+    return result;
+}
+
 async function loadSearchOptions() {
     try {
-        searchOptions.value = await fetchAdvancedSearchOptions();
+        const [options, labelList, noteList, conceptTypeList] =
+            await Promise.all([
+                fetchAdvancedSearchOptions(),
+                fetchControlledListOptions(LABEL_TYPE_LIST_ID),
+                fetchControlledListOptions(NOTE_TYPE_LIST_ID),
+                fetchControlledListOptions(CONCEPT_TYPE_LIST_ID),
+            ]);
+
+        searchOptions.value = {
+            ...options,
+            label_types: [],
+            note_types: [],
+            concept_types: [],
+        };
+
+        if (labelList?.items) {
+            searchOptions.value.label_types = flattenListItems(labelList.items);
+        }
+        if (noteList?.items) {
+            searchOptions.value.note_types = flattenListItems(noteList.items);
+        }
+        if (conceptTypeList?.items) {
+            searchOptions.value.concept_types = flattenListItems(
+                conceptTypeList.items,
+            );
+        }
     } catch (error) {
         toast.add({
             severity: ERROR,
@@ -387,7 +445,7 @@ onMounted(loadSearchOptions);
     gap: 1rem;
     padding: 1rem;
     height: 100%;
-    overflow: auto;
+    overflow: hidden;
 }
 
 /* ── Query builder panel ── */
@@ -395,6 +453,7 @@ onMounted(loadSearchOptions);
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
+    flex-shrink: 0;
 }
 
 /* ── Search / Clear buttons ── */
@@ -414,17 +473,33 @@ onMounted(loadSearchOptions);
 /* ── Results panel ── */
 .results-panel {
     flex: 1 1 auto;
-    overflow: auto;
-}
-
-.results-panel :deep(.p-panel) {
-    border-radius: 0.125rem;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
 }
 
 .results-panel :deep(.p-panel-header) {
     font-size: var(--p-lingo-font-size-medium);
     font-weight: var(--p-lingo-font-weight-normal);
     border-radius: 0.125rem 0.125rem 0 0;
+    flex-shrink: 0;
+}
+
+.results-panel :deep(.p-panel-content-container) {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.results-panel :deep(.p-panel-content) {
+    flex: 1 1 auto;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
 }
 
 /* ── Side panel ── */

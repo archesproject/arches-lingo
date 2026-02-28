@@ -116,7 +116,14 @@ class AdvancedSearchEvaluator:
         if handler is None:
             return []
 
-        return handler(condition)
+        result_ids = handler(condition)
+
+        # Apply negation: return all concepts *except* the matched ones.
+        if condition.get("negated"):
+            all_ids = set(self._all_concept_ids())
+            return list(all_ids - set(result_ids))
+
+        return result_ids
 
     def _concept_ids_from_tiles(self, nodegroup_id, extra_filters=None):
         """Get distinct concept resource IDs from tiles in a nodegroup."""
@@ -125,6 +132,25 @@ class AdvancedSearchEvaluator:
             qs = qs.filter(extra_filters)
         return list(qs.values_list("resourceinstance_id", flat=True).distinct())
 
+    # ── Match mode helpers ──────────────────────────────────────────
+
+    MATCH_MODE_LOOKUPS = {
+        "contains": "icontains",
+        "exact": "iexact",
+        "starts_with": "istartswith",
+        "ends_with": "iendswith",
+    }
+
+    def _text_filter(self, field, value, match_mode="contains"):
+        """Build a Q filter for a text field using the given match mode.
+
+        ``match_mode`` of ``"exists"`` checks for non-empty/non-null values.
+        """
+        if match_mode == "exists":
+            return ~Q(**{field: ""}) & ~Q(**{field: None})
+        lookup = self.MATCH_MODE_LOOKUPS.get(match_mode, "icontains")
+        return Q(**{f"{field}__{lookup}": value})
+
     # ── Facet handlers ──────────────────────────────────────────────
 
     def _facet_label(self, condition):
@@ -132,8 +158,11 @@ class AdvancedSearchEvaluator:
         filters = Q(nodegroup_id=CONCEPT_NAME_NODEGROUP)
 
         value = condition.get("value", "").strip()
-        if value:
-            filters &= Q(**{f"data__{CONCEPT_NAME_CONTENT_NODE}__icontains": value})
+        match_mode = condition.get("match_mode", "contains")
+        if match_mode == "exists" or value:
+            filters &= self._text_filter(
+                f"data__{CONCEPT_NAME_CONTENT_NODE}", value, match_mode
+            )
 
         label_type = condition.get("label_type")
         if label_type:
@@ -162,8 +191,11 @@ class AdvancedSearchEvaluator:
         filters = Q(nodegroup_id=STATEMENT_NODEGROUP)
 
         value = condition.get("value", "").strip()
-        if value:
-            filters &= Q(**{f"data__{STATEMENT_CONTENT_NODE}__icontains": value})
+        match_mode = condition.get("match_mode", "contains")
+        if match_mode == "exists" or value:
+            filters &= self._text_filter(
+                f"data__{STATEMENT_CONTENT_NODE}", value, match_mode
+            )
 
         note_type = condition.get("note_type")
         if note_type:
@@ -310,14 +342,17 @@ class AdvancedSearchEvaluator:
     def _facet_match_uri(self, condition):
         """Find concepts with a matching URI in match_status."""
         value = condition.get("value", "").strip()
-        if not value:
+        match_mode = condition.get("match_mode", "contains")
+        if not value and match_mode != "exists":
             return list(self._all_concept_ids())
 
+        filters = Q(nodegroup_id=MATCH_STATUS_NODEGROUP)
+        filters &= self._text_filter(
+            f"data__{MATCH_STATUS_COMPARATE_NODE}", value, match_mode
+        )
+
         return list(
-            TileModel.objects.filter(
-                nodegroup_id=MATCH_STATUS_NODEGROUP,
-                **{f"data__{MATCH_STATUS_COMPARATE_NODE}__icontains": value},
-            )
+            TileModel.objects.filter(filters)
             .values_list("resourceinstance_id", flat=True)
             .distinct()
         )
@@ -361,15 +396,20 @@ class AdvancedSearchEvaluator:
     def _facet_uri(self, condition):
         """Search by concept URI."""
         value = condition.get("value", "").strip()
-        if not value:
+        match_mode = condition.get("match_mode", "contains")
+        if not value and match_mode != "exists":
             return list(self._all_concept_ids())
 
         # URL datatype stores as {"url": "...", "url_label": "..."}
+        filters = Q(nodegroup_id=URI_NODEGROUP)
+        if match_mode == "exists":
+            filters &= ~Q(**{f"data__{URI_CONTENT_NODE}": None})
+        else:
+            lookup = self.MATCH_MODE_LOOKUPS.get(match_mode, "icontains")
+            filters &= Q(**{f"data__{URI_CONTENT_NODE}__url__{lookup}": value})
+
         return list(
-            TileModel.objects.filter(
-                nodegroup_id=URI_NODEGROUP,
-                **{f"data__{URI_CONTENT_NODE}__url__icontains": value},
-            )
+            TileModel.objects.filter(filters)
             .values_list("resourceinstance_id", flat=True)
             .distinct()
         )
@@ -377,14 +417,17 @@ class AdvancedSearchEvaluator:
     def _facet_identifier(self, condition):
         """Search by concept identifier."""
         value = condition.get("value", "").strip()
-        if not value:
+        match_mode = condition.get("match_mode", "contains")
+        if not value and match_mode != "exists":
             return list(self._all_concept_ids())
 
+        filters = Q(nodegroup_id=IDENTIFIER_NODEGROUP)
+        filters &= self._text_filter(
+            f"data__{IDENTIFIER_CONTENT_NODE}", value, match_mode
+        )
+
         return list(
-            TileModel.objects.filter(
-                nodegroup_id=IDENTIFIER_NODEGROUP,
-                **{f"data__{IDENTIFIER_CONTENT_NODE}__icontains": value},
-            )
+            TileModel.objects.filter(filters)
             .values_list("resourceinstance_id", flat=True)
             .distinct()
         )
