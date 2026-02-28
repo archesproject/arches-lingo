@@ -47,7 +47,9 @@ export const fetchUser = async () => {
 };
 
 export const fetchUserProfile = async (): Promise<User> => {
-    const response = await fetch(generateArchesURL("arches_lingo:api_lingo_user_profile"));
+    const response = await fetch(
+        generateArchesURL("arches_lingo:api_lingo_user_profile"),
+    );
     const parsed = await response.json();
     if (!response.ok) throw new Error(parsed.message || response.statusText);
     return parsed;
@@ -56,14 +58,17 @@ export const fetchUserProfile = async (): Promise<User> => {
 export const updateUserProfile = async (
     profile: Omit<User, "username">,
 ): Promise<User> => {
-    const response = await fetch(generateArchesURL("arches_lingo:api_lingo_user_profile"), {
-        method: "PUT",
-        headers: {
-            "X-CSRFTOKEN": getToken(),
-            "Content-Type": "application/json",
+    const response = await fetch(
+        generateArchesURL("arches_lingo:api_lingo_user_profile"),
+        {
+            method: "PUT",
+            headers: {
+                "X-CSRFTOKEN": getToken(),
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(profile),
         },
-        body: JSON.stringify(profile),
-    });
+    );
     const parsed = await response.json();
     if (!response.ok) throw new Error(parsed.message || response.statusText);
     return parsed;
@@ -74,18 +79,21 @@ export const changePassword = async (
     newPassword: string,
     newPassword2: string,
 ): Promise<{ success: string }> => {
-    const response = await fetch(generateArchesURL("arches_lingo:api_lingo_change_password"), {
-        method: "POST",
-        headers: {
-            "X-CSRFTOKEN": getToken(),
-            "Content-Type": "application/json",
+    const response = await fetch(
+        generateArchesURL("arches_lingo:api_lingo_change_password"),
+        {
+            method: "POST",
+            headers: {
+                "X-CSRFTOKEN": getToken(),
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                old_password: oldPassword,
+                new_password: newPassword,
+                new_password2: newPassword2,
+            }),
         },
-        body: JSON.stringify({
-            old_password: oldPassword,
-            new_password: newPassword,
-            new_password2: newPassword2,
-        }),
-    });
+    );
     const parsed = await response.json();
     if (!response.ok) throw new Error(parsed.message || response.statusText);
     return parsed;
