@@ -139,25 +139,6 @@ class LingoResourceExporter:
         self.load_event = load_event
 
         try:
-            if format == "jsonld":
-                from arches_lingo.tasks import export_lingo_resources_task
-
-                export_lingo_resources_task.delay(
-                    str(self.loadid),
-                    self.user.id,
-                    str(self.resourceid),
-                    filename,
-                    format,
-                )
-                return {
-                    "success": True,
-                    "data": {
-                        "message": _(
-                            "Export task has been started. "
-                            "You will be notified when complete."
-                        ),
-                    },
-                }
             response = self.run_export_task(self.resourceid, filename, format)
             return response
         except:
