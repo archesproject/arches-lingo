@@ -3,6 +3,7 @@ import json
 import logging
 import uuid
 import zipfile
+from concurrent.futures import ThreadPoolExecutor
 from io import BytesIO
 from collections import defaultdict
 from datetime import datetime
@@ -138,6 +139,25 @@ class LingoResourceExporter:
         self.load_event = load_event
 
         try:
+            if format == "jsonld":
+                from arches_lingo.tasks import export_lingo_resources_task
+
+                export_lingo_resources_task.delay(
+                    str(self.loadid),
+                    self.user.id,
+                    str(self.resourceid),
+                    filename,
+                    format,
+                )
+                return {
+                    "success": True,
+                    "data": {
+                        "message": _(
+                            "Export task has been started. "
+                            "You will be notified when complete."
+                        ),
+                    },
+                }
             response = self.run_export_task(self.resourceid, filename, format)
             return response
         except:
@@ -169,8 +189,14 @@ class LingoResourceExporter:
             error = _("The thesaurus could not be exported in the requested format.")
             return self.handle_error(error)
 
-        file = self._save_files_as_zip(output_files)
+        file = self._save_files_as_zip(output_files, filename)
         return self._finalize_export(file)
+
+    def _make_filename(self, extension):
+        """Generate a standardized filename from the scheme name and extension."""
+        return (
+            f"{slugify(self.scheme_name, separator='_', lowercase=False)}.{extension}"
+        )
 
     def _export_as_skos_xml(self, resourceid):
         """Export a thesaurus hierarchy as SKOS/RDF XML using the Lingo SKOS writer."""
@@ -207,7 +233,7 @@ class LingoResourceExporter:
         rdf_graph = writer.write_skos_from_triples(scheme_triples, concept_triples)
         serialized = rdf_graph.serialize(format="pretty-xml")
 
-        file_name = f"{slugify(self.scheme_name, separator='_', lowercase=False)}.xml"
+        file_name = self._make_filename("xml")
         if isinstance(serialized, str):
             serialized = serialized.encode("utf-8")
         return [{"name": file_name, "content": serialized}]
@@ -281,7 +307,7 @@ class LingoResourceExporter:
         if isinstance(serialized, str):
             serialized = serialized.encode("utf-8")
 
-        file_name = f"{slugify(self.scheme_name, separator='_', lowercase=False)}.rdf"
+        file_name = self._make_filename("rdf")
         return [{"name": file_name, "content": serialized}]
 
     def _export_as_tilecsv(self, scheme_ids, concept_ids):
@@ -314,16 +340,18 @@ class LingoResourceExporter:
         """
         Export scheme and concept resources as JSON-LD using the core
         JsonLdWriter. Each resource is serialised individually (the core
-        writer requires one resource at a time) and collected into a list
-        that is written as a single JSON file.
+        writer requires one resource at a time) and built in parallel
+        via a thread pool to reduce overall wall-clock time.
         """
         all_resource_ids = list(scheme_ids) + list(concept_ids)
-        documents = []
 
-        for rid in all_resource_ids:
+        def _build_single(rid):
             writer = JsonLdWriter()
-            js = writer.build_json(resourceinstanceids=[rid])
-            documents.append(js)
+            return writer.build_json(resourceinstanceids=[rid])
+
+        max_workers = min(4, len(all_resource_ids)) or 1
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            documents = list(executor.map(_build_single, all_resource_ids))
 
         if len(documents) == 1:
             output = json.dumps(documents[0], indent=2, sort_keys=True)
@@ -333,17 +361,17 @@ class LingoResourceExporter:
         if isinstance(output, str):
             output = output.encode("utf-8")
 
-        file_name = (
-            f"{slugify(self.scheme_name, separator='_', lowercase=False)}.jsonld"
-        )
+        file_name = self._make_filename("jsonld")
         return [{"name": file_name, "content": output}]
 
-    def _save_files_as_zip(self, output_files):
+    def _save_files_as_zip(self, output_files, filename=None):
         """Bundle a list of {name, content} dicts into a ZIP TempFile."""
-        zip_name = (
-            f"{slugify(self.scheme_name, separator='_', lowercase=False)}"
-            f"_{slugify(str(datetime.now()))}.zip"
-        )
+        if filename:
+            zip_name = filename if filename.endswith(".zip") else f"{filename}.zip"
+        else:
+            base = slugify(self.scheme_name, separator="_", lowercase=False)
+            timestamp = slugify(str(datetime.now()))
+            zip_name = f"{base}_{timestamp}.zip"
         zip_stream = BytesIO()
         with zipfile.ZipFile(zip_stream, "w") as zf:
             for f in output_files:
