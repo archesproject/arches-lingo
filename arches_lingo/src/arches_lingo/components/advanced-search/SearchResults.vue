@@ -243,6 +243,9 @@ function onPageChange(event: { page: number }) {
     flex-direction: column;
     gap: 0.5rem;
     font-family: var(--p-lingo-font-family);
+    flex: 1 1 auto;
+    overflow: hidden;
+    min-height: 0;
 }
 
 .results-header {
@@ -251,6 +254,7 @@ function onPageChange(event: { page: number }) {
     justify-content: space-between;
     padding: 0.5rem 0;
     border-bottom: 0.0625rem solid var(--p-highlight-focus-background);
+    flex-shrink: 0;
 }
 
 .results-count {
@@ -289,6 +293,15 @@ function onPageChange(event: { page: number }) {
 .results-list {
     display: flex;
     flex-direction: column;
+    flex: 1 1 auto;
+    overflow-y: auto;
+    min-height: 0;
+    border: 0.0625rem solid var(--p-highlight-focus-background);
+    border-radius: 0.125rem;
+}
+
+:deep(.p-paginator) {
+    flex-shrink: 0;
 }
 
 .result-item {

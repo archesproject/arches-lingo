@@ -740,6 +740,230 @@ class AdvancedSearchEvaluatorTests(TestCase):
         all_concepts = {self.concept_a.pk, self.concept_b.pk, self.concept_c.pk}
         self.assertTrue(all_concepts.issubset(set(result)))
 
+    # ── Match mode tests ────────────────────────────────────────
+
+    def test_match_mode_contains(self):
+        """Default 'contains' match finds partial text."""
+        result = self.evaluator.evaluate(
+            {"facet": "label", "value": "Alph", "match_mode": "contains"}
+        )
+        ids = set(result)
+        self.assertIn(self.concept_a.pk, ids)
+        self.assertNotIn(self.concept_b.pk, ids)
+
+    def test_match_mode_exact(self):
+        """Exact match only returns concepts with that exact label."""
+        result = self.evaluator.evaluate(
+            {"facet": "label", "value": "Alpha Concept", "match_mode": "exact"}
+        )
+        ids = set(result)
+        self.assertIn(self.concept_a.pk, ids)
+        self.assertNotIn(self.concept_b.pk, ids)
+
+    def test_match_mode_exact_no_partial(self):
+        """Exact match does not find partial text."""
+        result = self.evaluator.evaluate(
+            {"facet": "label", "value": "Alpha", "match_mode": "exact"}
+        )
+        self.assertEqual(len(result), 0)
+
+    def test_match_mode_starts_with(self):
+        """starts_with finds labels starting with the given text."""
+        result = self.evaluator.evaluate(
+            {"facet": "label", "value": "Beta", "match_mode": "starts_with"}
+        )
+        ids = set(result)
+        self.assertIn(self.concept_b.pk, ids)
+        self.assertNotIn(self.concept_a.pk, ids)
+
+    def test_match_mode_ends_with(self):
+        """ends_with finds labels ending with the given text."""
+        result = self.evaluator.evaluate(
+            {"facet": "label", "value": "Concept", "match_mode": "ends_with"}
+        )
+        ids = set(result)
+        # All three concepts have labels ending in "Concept"
+        self.assertIn(self.concept_a.pk, ids)
+        self.assertIn(self.concept_b.pk, ids)
+        self.assertIn(self.concept_c.pk, ids)
+
+    def test_match_mode_exists_label(self):
+        """'exists' match returns concepts that have any label."""
+        result = self.evaluator.evaluate(
+            {"facet": "label", "value": "", "match_mode": "exists"}
+        )
+        ids = set(result)
+        self.assertIn(self.concept_a.pk, ids)
+        self.assertIn(self.concept_b.pk, ids)
+        self.assertIn(self.concept_c.pk, ids)
+
+    def test_match_mode_exists_note(self):
+        """'exists' note match returns only concepts with notes."""
+        result = self.evaluator.evaluate(
+            {"facet": "note", "value": "", "match_mode": "exists"}
+        )
+        ids = set(result)
+        # Only A and C have notes
+        self.assertIn(self.concept_a.pk, ids)
+        self.assertIn(self.concept_c.pk, ids)
+        self.assertNotIn(self.concept_b.pk, ids)
+
+    def test_match_mode_exists_identifier(self):
+        """'exists' identifier match returns only concepts with identifiers."""
+        result = self.evaluator.evaluate(
+            {"facet": "identifier", "value": "", "match_mode": "exists"}
+        )
+        ids = set(result)
+        # Only B has an identifier
+        self.assertIn(self.concept_b.pk, ids)
+        self.assertNotIn(self.concept_a.pk, ids)
+
+    def test_match_mode_note_starts_with(self):
+        """starts_with works on notes too."""
+        result = self.evaluator.evaluate(
+            {"facet": "note", "value": "Alpha", "match_mode": "starts_with"}
+        )
+        ids = set(result)
+        self.assertIn(self.concept_a.pk, ids)
+        self.assertNotIn(self.concept_c.pk, ids)
+
+    def test_match_mode_identifier_exact(self):
+        """Exact match on identifier."""
+        result = self.evaluator.evaluate(
+            {"facet": "identifier", "value": "ID-BETA-001", "match_mode": "exact"}
+        )
+        ids = set(result)
+        self.assertIn(self.concept_b.pk, ids)
+
+    def test_match_mode_identifier_partial_no_exact(self):
+        """Exact match does not find partial identifier."""
+        result = self.evaluator.evaluate(
+            {"facet": "identifier", "value": "BETA", "match_mode": "exact"}
+        )
+        self.assertEqual(len(result), 0)
+
+    def test_match_mode_uri_starts_with(self):
+        """starts_with on URI content."""
+        result = self.evaluator.evaluate(
+            {"facet": "uri", "value": "http://example", "match_mode": "starts_with"}
+        )
+        ids = set(result)
+        self.assertIn(self.concept_a.pk, ids)
+
+    def test_match_mode_uri_exists(self):
+        """'exists' on URI returns only concepts with a URI."""
+        result = self.evaluator.evaluate(
+            {"facet": "uri", "value": "", "match_mode": "exists"}
+        )
+        ids = set(result)
+        self.assertIn(self.concept_a.pk, ids)
+
+    def test_match_mode_match_uri_exact(self):
+        """Exact match on match_uri (Getty URI)."""
+        result = self.evaluator.evaluate(
+            {
+                "facet": "match_uri",
+                "value": "http://vocab.getty.edu/aat/12345",
+                "match_mode": "exact",
+            }
+        )
+        ids = set(result)
+        self.assertIn(self.concept_a.pk, ids)
+
+    def test_match_mode_match_uri_exists(self):
+        """'exists' on match_uri returns concepts with any match URI."""
+        result = self.evaluator.evaluate(
+            {"facet": "match_uri", "value": "", "match_mode": "exists"}
+        )
+        ids = set(result)
+        self.assertIn(self.concept_a.pk, ids)
+
+    # ── Negation tests ──────────────────────────────────────────
+
+    def test_negation_excludes_matched(self):
+        """Negated label=Alpha returns everything except Alpha."""
+        result = self.evaluator.evaluate(
+            {"facet": "label", "value": "Alpha", "negated": True}
+        )
+        ids = set(result)
+        self.assertNotIn(self.concept_a.pk, ids)
+        self.assertIn(self.concept_b.pk, ids)
+        self.assertIn(self.concept_c.pk, ids)
+
+    def test_negation_note(self):
+        """Negated note=definition excludes A (which has it)."""
+        result = self.evaluator.evaluate(
+            {"facet": "note", "value": "definition", "negated": True}
+        )
+        ids = set(result)
+        self.assertNotIn(self.concept_a.pk, ids)
+        self.assertIn(self.concept_b.pk, ids)
+        self.assertIn(self.concept_c.pk, ids)
+
+    def test_negation_with_match_mode(self):
+        """Negation combined with match mode: NOT starts_with Beta → no B."""
+        result = self.evaluator.evaluate(
+            {
+                "facet": "label",
+                "value": "Beta",
+                "match_mode": "starts_with",
+                "negated": True,
+            }
+        )
+        ids = set(result)
+        self.assertNotIn(self.concept_b.pk, ids)
+        self.assertIn(self.concept_a.pk, ids)
+        self.assertIn(self.concept_c.pk, ids)
+
+    def test_negation_exists_note(self):
+        """NOT exists on notes → concepts WITHOUT any notes."""
+        result = self.evaluator.evaluate(
+            {"facet": "note", "value": "", "match_mode": "exists", "negated": True}
+        )
+        ids = set(result)
+        # B has no notes
+        self.assertIn(self.concept_b.pk, ids)
+        # A and C have notes
+        self.assertNotIn(self.concept_a.pk, ids)
+        self.assertNotIn(self.concept_c.pk, ids)
+
+    def test_negation_identifier(self):
+        """Negated identifier filter excludes B."""
+        result = self.evaluator.evaluate(
+            {"facet": "identifier", "value": "BETA", "negated": True}
+        )
+        ids = set(result)
+        self.assertNotIn(self.concept_b.pk, ids)
+        self.assertIn(self.concept_a.pk, ids)
+        self.assertIn(self.concept_c.pk, ids)
+
+    def test_negation_scheme(self):
+        """Negated scheme filter excludes all members of the scheme."""
+        result = self.evaluator.evaluate(
+            {"facet": "scheme", "value": str(self.scheme.pk), "negated": True}
+        )
+        ids = set(result)
+        # All three concepts are in this scheme, so none should appear
+        self.assertNotIn(self.concept_a.pk, ids)
+        self.assertNotIn(self.concept_b.pk, ids)
+        self.assertNotIn(self.concept_c.pk, ids)
+
+    def test_negation_in_group(self):
+        """Negated condition within an AND group works correctly."""
+        query = {
+            "operator": "and",
+            "conditions": [
+                {"facet": "label", "value": "Concept"},
+                {"facet": "note", "value": "definition", "negated": True},
+            ],
+        }
+        result = self.evaluator.evaluate(query)
+        ids = set(result)
+        # All have labels with "Concept", but A has "definition" note → excluded
+        self.assertNotIn(self.concept_a.pk, ids)
+        self.assertIn(self.concept_b.pk, ids)
+        self.assertIn(self.concept_c.pk, ids)
+
 
 # ────────────────────────────────────────────────────────────────
 # API view tests  (require graph fixtures + tile data)

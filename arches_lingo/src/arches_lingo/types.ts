@@ -444,6 +444,13 @@ export interface EditLogEntry {
 
 export type SearchOperator = "and" | "or";
 
+export type MatchMode =
+    | "contains"
+    | "exact"
+    | "starts_with"
+    | "ends_with"
+    | "exists";
+
 export type FacetType =
     | "label"
     | "note"
@@ -466,6 +473,8 @@ export interface SearchCondition {
     note_type?: string;
     language?: string;
     direction?: "broader" | "narrower";
+    match_mode?: MatchMode;
+    negated?: boolean;
 }
 
 export interface SearchGroup {
@@ -515,10 +524,18 @@ export interface LifecycleStateOption {
     name: string;
 }
 
+export interface ControlledListOption {
+    label: string;
+    value: string;
+}
+
 export interface AdvancedSearchOptions {
     languages: LanguageOption[];
     schemes: SearchFilterOption[];
     lifecycle_states: LifecycleStateOption[];
+    label_types: ControlledListOption[];
+    note_types: ControlledListOption[];
+    concept_types: ControlledListOption[];
 }
 
 export interface SavedSearchItem {

@@ -22,6 +22,11 @@ export const CLOSED = "closed";
 export const NEW_CONCEPT = "newConcept";
 export const CONCEPT_TYPE_NODE_ALIAS = "type";
 
+// Controlled list IDs for advanced search dropdowns
+export const LABEL_TYPE_LIST_ID = "deb847fc-f4c3-4e82-be19-04641579f129";
+export const NOTE_TYPE_LIST_ID = "aba2a0b4-75a4-45ba-8b57-021f3ca92a6a";
+export const CONCEPT_TYPE_LIST_ID = "4f9b2c82-59c6-4173-99ea-2a6bfbab6aa2";
+
 export const DEFAULT_TOAST_LIFE = 5000;
 export const DEFAULT_ERROR_TOAST_LIFE = 8000;
 export const SEARCH_RESULTS_PER_PAGE = 25;
