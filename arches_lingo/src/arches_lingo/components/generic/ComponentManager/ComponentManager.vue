@@ -12,15 +12,16 @@ import ComponentEditor from "@/arches_lingo/components/generic/ComponentManager/
 
 import {
     CLOSED,
-    DANGER,
     EDIT,
     MAXIMIZED,
     MINIMIZED,
     NEW,
-    SECONDARY,
     VIEW,
 } from "@/arches_lingo/constants.ts";
-import { useEditorDirtyState } from "@/arches_lingo/composables/useEditorDirtyState.ts";
+import {
+    useEditorDirtyState,
+    unsavedChangesConfirmOptions,
+} from "@/arches_lingo/composables/useEditorDirtyState.ts";
 
 import type { Component } from "vue";
 
@@ -82,23 +83,7 @@ window.addEventListener("keyup", (event) => {
 });
 
 function confirmDiscard(callback: () => void) {
-    confirm.require({
-        group: "unsaved-changes",
-        header: $gettext("Unsaved Changes"),
-        message: $gettext(
-            "You have unsaved changes that will be discarded. Do you want to continue?",
-        ),
-        acceptProps: {
-            label: $gettext("Discard Changes"),
-            severity: DANGER,
-        },
-        rejectProps: {
-            label: $gettext("Keep Editing"),
-            severity: SECONDARY,
-            outlined: true,
-        },
-        accept: callback,
-    });
+    confirm.require(unsavedChangesConfirmOptions($gettext, callback));
 }
 
 function closeEditor() {

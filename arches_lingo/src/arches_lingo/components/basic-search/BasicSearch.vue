@@ -6,21 +6,14 @@ import { useRouter } from "vue-router";
 import AutoComplete from "primevue/autocomplete";
 import Button from "primevue/button";
 import ProgressBar from "primevue/progressbar";
-import { useConfirm } from "primevue/useconfirm";
 import { useToast } from "primevue/usetoast";
 
 import SortAndFilterControls from "@/arches_lingo/components/basic-search/SortAndFilterControls.vue";
 import SearchResult from "@/arches_lingo/components/basic-search/SearchResult.vue";
 
 import { fetchSearchResults } from "@/arches_lingo/api.ts";
-import {
-    DANGER,
-    DEFAULT_ERROR_TOAST_LIFE,
-    ERROR,
-    SECONDARY,
-} from "@/arches_lingo/constants.ts";
+import { DEFAULT_ERROR_TOAST_LIFE, ERROR } from "@/arches_lingo/constants.ts";
 import { routeNames } from "@/arches_lingo/routes.ts";
-import { useEditorDirtyState } from "@/arches_lingo/composables/useEditorDirtyState.ts";
 
 import type { AutoCompleteOptionSelectEvent } from "primevue/autocomplete";
 import type { VirtualScrollerLazyEvent } from "primevue/virtualscroller";
@@ -29,8 +22,6 @@ import type { SearchResultItem } from "@/arches_lingo/types.ts";
 const { $gettext } = useGettext();
 const router = useRouter();
 const toast = useToast();
-const confirm = useConfirm();
-const { isEditorDirty } = useEditorDirtyState();
 
 interface Props {
     searchResultsPerPage: number;
@@ -149,34 +140,12 @@ const loadAdditionalSearchResults = (event: VirtualScrollerLazyEvent) => {
 };
 
 const navigateToReport = async (event: AutoCompleteOptionSelectEvent) => {
-    function doNavigate() {
+    const failure = await router.push({
+        name: routeNames.concept,
+        params: { id: event.value.id },
+    });
+    if (!failure) {
         props.toggleModal();
-        router.push({
-            name: routeNames.concept,
-            params: { id: event.value.id },
-        });
-    }
-
-    if (isEditorDirty.value) {
-        confirm.require({
-            group: "unsaved-changes",
-            header: $gettext("Unsaved Changes"),
-            message: $gettext(
-                "You have unsaved changes that will be discarded. Do you want to continue?",
-            ),
-            acceptProps: {
-                label: $gettext("Discard Changes"),
-                severity: DANGER,
-            },
-            rejectProps: {
-                label: $gettext("Keep Editing"),
-                severity: SECONDARY,
-                outlined: true,
-            },
-            accept: doNavigate,
-        });
-    } else {
-        doNavigate();
     }
 };
 

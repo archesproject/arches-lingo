@@ -15,14 +15,11 @@ import { useGettext } from "vue3-gettext";
 import Button from "primevue/button";
 import { useConfirm } from "primevue/useconfirm";
 
+import { CLOSE, MAXIMIZE, MINIMIZE } from "@/arches_lingo/constants.ts";
 import {
-    CLOSE,
-    DANGER,
-    MAXIMIZE,
-    MINIMIZE,
-    SECONDARY,
-} from "@/arches_lingo/constants.ts";
-import { useEditorDirtyState } from "@/arches_lingo/composables/useEditorDirtyState.ts";
+    useEditorDirtyState,
+    unsavedChangesConfirmOptions,
+} from "@/arches_lingo/composables/useEditorDirtyState.ts";
 
 const props = defineProps<{
     isEditorMaximized: boolean;
@@ -39,6 +36,15 @@ const toggleSizeButton = useTemplateRef("toggleSizeButton");
 const formKey = ref(0);
 const componentEditorFormRef = ref();
 provide("componentEditorFormRef", componentEditorFormRef);
+
+/**
+ * Called by child editors at the end of their save() (in their finally block)
+ * to re-sync the global dirty flag with the form's actual dirty state.
+ */
+function onSaveSettled() {
+    isEditorDirty.value = isFormDirty.value;
+}
+provide("onSaveSettled", onSaveSettled);
 
 const isFormDirty = computed(() => {
     if (componentEditorFormRef.value) {
@@ -76,26 +82,26 @@ function toggleSize() {
 
 function onCloseClicked() {
     if (isFormDirty.value) {
-        confirm.require({
-            group: "unsaved-changes",
-            header: $gettext("Unsaved Changes"),
-            message: $gettext(
-                "You have unsaved changes that will be discarded. Do you want to continue?",
-            ),
-            acceptProps: {
-                label: $gettext("Discard Changes"),
-                severity: DANGER,
-            },
-            rejectProps: {
-                label: $gettext("Keep Editing"),
-                severity: SECONDARY,
-                outlined: true,
-            },
-            accept: () => emit(CLOSE),
-        });
+        confirm.require(
+            unsavedChangesConfirmOptions($gettext, () => emit(CLOSE)),
+        );
     } else {
         emit(CLOSE);
     }
+}
+
+function onSave() {
+    // Clear the global dirty flag *before* the form's submit handler runs,
+    // which may trigger a router.push (e.g. after creating a new concept) or
+    // call openEditor() to reload the tile.  Without this, those actions
+    // would trip the unsaved-changes guard right after a successful save.
+    //
+    // The watcher `watch(isFormDirty, ...)` only fires on value *changes* so
+    // it will not immediately re-set isEditorDirty: isFormDirty was already
+    // true and stays true through the submit cycle.  If the editor is
+    // destroyed and recreated (new concept), onUnmounted resets the flag.
+    isEditorDirty.value = false;
+    componentEditorFormRef.value.submit();
 }
 
 function onCancel() {
@@ -150,7 +156,7 @@ function onCancel() {
                 :label="$gettext('Save Changes')"
                 severity="success"
                 :disabled="!isFormDirty"
-                @click="componentEditorFormRef.submit()"
+                @click="onSave"
             />
             <Button
                 :label="$gettext('Cancel')"

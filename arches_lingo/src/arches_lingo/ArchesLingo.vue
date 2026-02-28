@@ -23,6 +23,7 @@ import {
 
 import { routeNames } from "@/arches_lingo/routes.ts";
 import { fetchUser } from "@/arches_lingo/api.ts";
+import { useUnsavedChangesGuard } from "@/arches_lingo/composables/useUnsavedChangesGuard.ts";
 import PageHeader from "@/arches_lingo/components/header/PageHeader/PageHeader.vue";
 import SideNav from "@/arches_lingo/components/sidenav/SideNav.vue";
 
@@ -46,6 +47,8 @@ const router = useRouter();
 const route = useRoute();
 const toast = useToast();
 const { $gettext } = useGettext();
+
+useUnsavedChangesGuard(router);
 
 const isNavExpanded = ref(false);
 const shouldShowHierarchy = ref(false);
