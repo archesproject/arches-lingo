@@ -154,6 +154,7 @@ async function save(e: FormSubmitEvent) {
                             props.tileData?.aliased_data.creation_sources
                         "
                         :mode="EDIT"
+                        :can-create-new-resources="true"
                     />
                 </div>
             </Form>

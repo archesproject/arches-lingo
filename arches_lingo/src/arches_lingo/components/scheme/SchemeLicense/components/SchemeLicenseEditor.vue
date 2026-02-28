@@ -205,6 +205,7 @@ async function save(e: FormSubmitEvent) {
                             props.tileData?.aliased_data.right_holder
                         "
                         :mode="EDIT"
+                        :can-create-new-resources="true"
                     />
                 </div>
                 <div class="widget-container column">

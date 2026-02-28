@@ -199,6 +199,7 @@ async function save(e: FormSubmitEvent) {
                             ?.appellative_status_data_assignment_actor
                     "
                     :mode="EDIT"
+                    :can-create-new-resources="true"
                     class="widget-container column"
                 />
                 <GenericWidget
@@ -209,6 +210,7 @@ async function save(e: FormSubmitEvent) {
                             ?.appellative_status_data_assignment_object_used
                     "
                     :mode="EDIT"
+                    :can-create-new-resources="true"
                     class="widget-container column"
                 />
             </Form>

@@ -186,6 +186,7 @@ async function save(e: FormSubmitEvent) {
                                 ?.statement_data_assignment_actor
                         "
                         :mode="EDIT"
+                        :can-create-new-resources="true"
                     />
                 </div>
                 <div class="widget-container column">
@@ -197,6 +198,7 @@ async function save(e: FormSubmitEvent) {
                                 ?.statement_data_assignment_object_used
                         "
                         :mode="EDIT"
+                        :can-create-new-resources="true"
                     />
                 </div>
             </Form>
