@@ -16,14 +16,7 @@ export interface User {
     last_name: string;
     username: string;
     email: string;
-}
-
-export interface UserProfile {
-    username: string;
-    first_name: string;
-    last_name: string;
-    email: string;
-    phone: string;
+    phone?: string;
 }
 
 // Prop injection types

@@ -7,7 +7,7 @@ import type {
     DigitalObjectInstance,
     SchemeInstance,
     TileData,
-    UserProfile,
+    User,
 } from "@/arches_lingo/types";
 
 function getToken() {
@@ -46,7 +46,7 @@ export const fetchUser = async () => {
     return parsed;
 };
 
-export const fetchUserProfile = async (): Promise<UserProfile> => {
+export const fetchUserProfile = async (): Promise<User> => {
     const response = await fetch(generateArchesURL("arches_lingo:api_lingo_user_profile"));
     const parsed = await response.json();
     if (!response.ok) throw new Error(parsed.message || response.statusText);
@@ -54,8 +54,8 @@ export const fetchUserProfile = async (): Promise<UserProfile> => {
 };
 
 export const updateUserProfile = async (
-    profile: Omit<UserProfile, "username">,
-): Promise<UserProfile> => {
+    profile: Omit<User, "username">,
+): Promise<User> => {
     const response = await fetch(generateArchesURL("arches_lingo:api_lingo_user_profile"), {
         method: "PUT",
         headers: {

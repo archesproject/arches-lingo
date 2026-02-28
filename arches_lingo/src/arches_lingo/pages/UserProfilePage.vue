@@ -24,7 +24,7 @@ import {
     USER_KEY,
 } from "@/arches_lingo/constants.ts";
 
-import type { UserProfile } from "@/arches_lingo/types.ts";
+import type { User } from "@/arches_lingo/types.ts";
 
 const { $gettext } = useGettext();
 const toast = useToast();
@@ -34,7 +34,7 @@ const userContext = inject(USER_KEY);
 // Profile form state
 const isLoading = ref(true);
 const isSavingProfile = ref(false);
-const profile = ref<UserProfile>({
+const profile = ref<User>({
     username: "",
     first_name: "",
     last_name: "",
