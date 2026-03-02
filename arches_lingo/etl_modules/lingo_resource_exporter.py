@@ -318,21 +318,20 @@ class LingoResourceExporter:
         return output_files
 
     def _export_as_jsonld(self, scheme_ids, concept_ids):
-        """
-        Export scheme and concept resources as JSON-LD using the core
+        """Export scheme and concept resources as JSON-LD using the core
         JsonLdWriter. Each resource is serialised individually (the core
+        writer requires one resource at a time) and collected into a list
+        that is written as a single JSON file.
         writer requires one resource at a time) and built in parallel
         via a thread pool to reduce overall wall-clock time.
         """
         all_resource_ids = list(scheme_ids) + list(concept_ids)
+        documents = []
 
-        def _build_single(rid):
+        for rid in all_resource_ids:
             writer = JsonLdWriter()
-            return writer.build_json(resourceinstanceids=[rid])
-
-        max_workers = min(4, len(all_resource_ids)) or 1
-        with ThreadPoolExecutor(max_workers=max_workers) as executor:
-            documents = list(executor.map(_build_single, all_resource_ids))
+            js = writer.build_json(resourceinstanceids=[rid])
+            documents.append(js)
 
         if len(documents) == 1:
             output = json.dumps(documents[0], indent=2, sort_keys=True)
