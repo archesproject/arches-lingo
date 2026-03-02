@@ -667,13 +667,22 @@ function onNodeSelect(node: TreeNode) {
         return;
     }
 
+    const selectedKeysBeforeNavigation = { ...selectedKeys.value };
+
     suppressScrollOnNextRouteSelect.value = true;
     navigateToSchemeOrConcept(router, node.data)?.then((failure) => {
         if (failure) {
             // Navigation was cancelled (e.g. by the unsaved-changes guard).
-            // PrimeVue Tree already updated selectedKeys; re-sync from route.
+            // PrimeVue Tree already updated selectedKeys; restore the previous selection.
             suppressScrollOnNextRouteSelect.value = false;
-            selectNodeFromRoute(route, false);
+            selectedKeys.value = selectedKeysBeforeNavigation;
+
+            const primaryOriginalKey = Object.keys(
+                selectedKeysBeforeNavigation,
+            )[0];
+            if (primaryOriginalKey) {
+                scrollOccurrenceIntoView(primaryOriginalKey);
+            }
         }
     });
 }

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { provide, ref, watchEffect } from "vue";
+import { onMounted, provide, ref, watchEffect } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
@@ -48,8 +48,6 @@ const route = useRoute();
 const toast = useToast();
 const { $gettext } = useGettext();
 
-useUnsavedChangesGuard(router);
-
 const isNavExpanded = ref(false);
 const shouldShowHierarchy = ref(false);
 
@@ -59,6 +57,10 @@ const refreshSchemeHierarchy = function () {
     schemeHierarchyKey.value++;
 };
 provide("refreshSchemeHierarchy", refreshSchemeHierarchy);
+
+onMounted(function () {
+    useUnsavedChangesGuard(router);
+});
 
 watchEffect(() => {
     router.beforeEach(async (to, _from, next) => {

@@ -70,20 +70,43 @@ const remainingComponentData = computed(() => {
     return processedComponentData.value.slice(1);
 });
 
-window.addEventListener("keyup", (event) => {
-    if (event.key === "Escape") {
-        if (editorState.value !== CLOSED) {
+const isConfirmDialogOpen = ref(false);
+
+window.addEventListener(
+    "keydown",
+    (event) => {
+        if (event.key === "Escape" && editorState.value !== CLOSED) {
+            if (isConfirmDialogOpen.value) {
+                return;
+            }
             if (isEditorDirty.value) {
+                // Stop propagation so PrimeVue's document-level keydown handler
+                // doesn't immediately close the dialog we're about to open.
+                event.stopPropagation();
                 confirmDiscard(closeEditor);
             } else {
                 closeEditor();
             }
         }
-    }
-});
+    },
+    true,
+);
 
 function confirmDiscard(callback: () => void) {
-    confirm.require(unsavedChangesConfirmOptions($gettext, callback));
+    isConfirmDialogOpen.value = true;
+
+    confirm.require({
+        ...unsavedChangesConfirmOptions($gettext, () => {
+            isConfirmDialogOpen.value = false;
+            callback();
+        }),
+        reject: () => {
+            isConfirmDialogOpen.value = false;
+        },
+        onHide: () => {
+            isConfirmDialogOpen.value = false;
+        },
+    });
 }
 
 function closeEditor() {
