@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, inject, onMounted, ref, watch, type Ref } from "vue";
 import { useRouter } from "vue-router";
 import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
@@ -18,7 +18,12 @@ import {
     fetchLingoResources,
     fetchMissingTranslations,
 } from "@/arches_lingo/api.ts";
-import { DEFAULT_ERROR_TOAST_LIFE, ERROR } from "@/arches_lingo/constants.ts";
+import {
+    DEFAULT_ERROR_TOAST_LIFE,
+    ERROR,
+    selectedLanguageKey,
+    systemLanguageKey,
+} from "@/arches_lingo/constants.ts";
 import { routeNames } from "@/arches_lingo/routes.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 
@@ -33,6 +38,10 @@ import type {
 const toast = useToast();
 const router = useRouter();
 const { $gettext } = useGettext();
+
+// --- Injected language preferences ---
+const preferredLanguage = inject(selectedLanguageKey) as Ref<Language>;
+const systemLanguage = inject(systemLanguageKey) as Language;
 
 // --- Scheme filter ---
 const schemes = ref<ResourceInstanceResult[]>([]);
@@ -492,8 +501,11 @@ onMounted(async () => {
                             "
                         >
                             {{
-                                slotProps.data.resource_name ||
-                                slotProps.data.resource_id
+                                getItemLabel(
+                                    slotProps.data,
+                                    preferredLanguage.code,
+                                    systemLanguage.code,
+                                ).value || slotProps.data.resource_id
                             }}
                         </a>
                     </template>

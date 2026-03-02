@@ -218,18 +218,12 @@ class DashboardStatsView(View):
             ]
             all_resource_ids = concept_ids_list + all_scheme_ids
 
-        # --- Build resource name and type lookup ---
+        # --- Build resource type lookup ---
         resource_instances = models.ResourceInstance.objects.filter(
             resourceinstanceid__in=all_resource_ids
         )
-        name_map: dict = {}
         type_map: dict = {}
         for ri in resource_instances:
-            descriptors = ri.descriptors or {}
-            name_map[str(ri.resourceinstanceid)] = next(
-                (v.get("name", "") for v in descriptors.values() if v.get("name")),
-                "",
-            )
             type_map[str(ri.resourceinstanceid)] = (
                 "scheme" if str(ri.graph_id) == str(SCHEMES_GRAPH_ID) else "concept"
             )
@@ -291,7 +285,6 @@ class DashboardStatsView(View):
                         "user_firstname": edit.user_firstname,
                         "user_lastname": edit.user_lastname,
                         "resource_id": edit.resourceinstanceid,
-                        "resource_name": name_map.get(edit.resourceinstanceid, ""),
                         "resource_type": type_map.get(
                             edit.resourceinstanceid, "concept"
                         ),
@@ -299,6 +292,43 @@ class DashboardStatsView(View):
                 )
             if len(activity) >= 20:
                 break
+
+        # --- Fetch labels for activity resources ---
+        activity_concept_ids = list(
+            {
+                item["resource_id"]
+                for item in activity
+                if item["resource_type"] == "concept"
+            }
+        )
+        activity_scheme_ids = list(
+            {
+                item["resource_id"]
+                for item in activity
+                if item["resource_type"] == "scheme"
+            }
+        )
+
+        labels_map: dict = {}
+        if activity_concept_ids or activity_scheme_ids:
+            builder = ConceptBuilder(activity_concept_ids or [])
+            if activity_scheme_ids:
+                builder.populate_schemes(activity_scheme_ids)
+
+            for cid in activity_concept_ids:
+                labels_map[cid] = [
+                    builder.serialize_concept_label(label_data)
+                    for label_data in builder.labels.get(cid, [])
+                ]
+            for scheme in builder.schemes:
+                sid = str(scheme.pk)
+                labels_map[sid] = [
+                    builder.serialize_scheme_label(label_tile)
+                    for label_tile in scheme.labels
+                ]
+
+        for item in activity:
+            item["labels"] = labels_map.get(item["resource_id"], [])
 
         # --- Concepts by type and label stats ---
         concept_uuids = [uuid.UUID(rid) for rid in concept_ids_list]

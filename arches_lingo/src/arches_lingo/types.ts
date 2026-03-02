@@ -553,7 +553,7 @@ export interface DashboardActivityItem {
     user_firstname: string;
     user_lastname: string;
     resource_id: string;
-    resource_name: string;
+    labels: Label[];
     resource_type: "concept" | "scheme";
 }
 
