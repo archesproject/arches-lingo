@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { watchEffect, ref } from "vue";
 
 import Message from "primevue/message";
 import Skeleton from "primevue/skeleton";
@@ -29,12 +29,12 @@ const props = defineProps<{
 
 const isLoading = ref(true);
 const tileData = ref<ConceptMatchStatus[]>([]);
-const schemeId = ref<string>();
 const fetchError = ref();
 
 const shouldCreateNewTile = Boolean(props.mode === EDIT && !props.tileId);
 
-onMounted(async () => {
+watchEffect(async () => {
+    isLoading.value = true;
     if (
         props.resourceInstanceId &&
         (props.mode === VIEW || !shouldCreateNewTile)
@@ -92,7 +92,6 @@ async function getSectionValue() {
             :graph-slug="props.graphSlug"
             :nodegroup-alias="props.nodegroupAlias"
             :resource-instance-id="props.resourceInstanceId"
-            :scheme-id="schemeId"
             :section-title="props.sectionTitle"
             :tile-data="
                 tileData.find((tileDatum) => {

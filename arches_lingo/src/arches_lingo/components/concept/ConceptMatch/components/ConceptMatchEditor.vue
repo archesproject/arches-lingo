@@ -25,7 +25,6 @@ import type { ConceptMatchStatus } from "@/arches_lingo/types.ts";
 
 const props = defineProps<{
     tileData: ConceptMatchStatus | undefined;
-    schemeId?: string;
     componentName: string;
     sectionTitle: string;
     graphSlug: string;

@@ -321,13 +321,9 @@ export const fetchSchemeResource = async (schemeId: string) => {
     return parsed;
 };
 
-export const fetchConceptRelationships = async (
-    conceptId: string,
-    type: string,
-) => {
+export const fetchConceptRelationships = async (conceptId: string) => {
     const params = new URLSearchParams({
         concept: conceptId,
-        type: type,
     });
 
     const url = `${generateArchesURL("arches_lingo:api-lingo-concept-relationships")}?${params.toString()}`;
