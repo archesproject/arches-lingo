@@ -166,11 +166,11 @@ class AdvancedSearchEvaluator:
 
         label_type = condition.get("label_type")
         if label_type:
-            # Reference data: filter on list_item_id within the JSON array
+            # Reference data: list_item_id is nested inside the labels array
             filters &= Q(
                 **{
                     f"data__{CONCEPT_NAME_TYPE_NODE}__contains": [
-                        {"list_item_id": label_type}
+                        {"labels": [{"list_item_id": label_type}]}
                     ]
                 }
             )
@@ -199,10 +199,11 @@ class AdvancedSearchEvaluator:
 
         note_type = condition.get("note_type")
         if note_type:
+            # Reference data: list_item_id is nested inside the labels array
             filters &= Q(
                 **{
                     f"data__{STATEMENT_TYPE_NODE}__contains": [
-                        {"list_item_id": note_type}
+                        {"labels": [{"list_item_id": note_type}]}
                     ]
                 }
             )
@@ -252,7 +253,11 @@ class AdvancedSearchEvaluator:
         return list(
             TileModel.objects.filter(
                 nodegroup_id=CONCEPT_TYPE_NODE,
-                **{f"data__{CONCEPT_TYPE_NODE}__contains": [{"list_item_id": type_id}]},
+                **{
+                    f"data__{CONCEPT_TYPE_NODE}__contains": [
+                        {"labels": [{"list_item_id": type_id}]}
+                    ]
+                },
             )
             .values_list("resourceinstance_id", flat=True)
             .distinct()
