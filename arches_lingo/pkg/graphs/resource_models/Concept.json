@@ -3812,7 +3812,7 @@
             "is_active": true,
             "is_copy_immutable": false,
             "isresource": true,
-            "jsonldcontext": "{\"@context\": {\"crm\": \"http://www.cidoc-crm.org/cidoc-crm/\", \"crmaaa\": \"https://takin.solutions/ontologies/CRMaaa/\", \"rdm\": \"https://takin.solutions/ontologies/rdm/\", \"xsd\": \"http://www.w3.org/2001/XMLSchema#\", \"rdf\": \"http://www.w3.org/1999/02/22-rdf-syntax-ns#\", \"rdfs\": \"http://www.w3.org/2000/01/rdf-schema#\"}}",
+            "jsonldcontext": null,
             "name": {
                 "en": "Concept"
             },
