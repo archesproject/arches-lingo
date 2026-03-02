@@ -155,6 +155,14 @@ function getOption(value: string): SearchResultItem | undefined {
     return option;
 }
 
+function getChipLabel(resourceId: string): string | undefined {
+    return (
+        getOption(resourceId)?.label ??
+        props.value?.find((preloadedItem) => preloadedItem.id == resourceId)
+            ?.label
+    );
+}
+
 function onUpdateModelValue(updatedValue: string[]) {
     const options = updatedValue.map((resourceId: string) => {
         return getOption(resourceId);
@@ -234,7 +242,7 @@ function onUpdateModelValue(updatedValue: string[]) {
         <template #chip="slotProps">
             <div style="width: 100%">
                 <div class="chip-text">
-                    {{ getOption(slotProps.value)?.label }}
+                    {{ getChipLabel(slotProps.value) }}
                 </div>
             </div>
             <div class="button-container">
@@ -297,7 +305,7 @@ function onUpdateModelValue(updatedValue: string[]) {
     width: inherit;
     flex-direction: column;
     white-space: break-spaces;
-    align-items: flex-start;
+    align-items: flex-start !important;
 }
 
 :deep(.p-multiselect-chip-item) {

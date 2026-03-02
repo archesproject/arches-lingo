@@ -157,7 +157,6 @@ async function save(e: FormSubmitEvent) {
                     :mode="EDIT"
                     :scheme="props.scheme"
                     :scheme-selectable="true"
-                    class="widget-container column"
                 />
             </Form>
         </div>

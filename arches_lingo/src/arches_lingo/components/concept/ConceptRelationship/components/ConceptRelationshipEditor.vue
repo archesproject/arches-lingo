@@ -145,7 +145,6 @@ async function save(e: FormSubmitEvent) {
                     :scheme="props.scheme"
                     :exclude="props.exclude"
                     :mode="EDIT"
-                    class="widget-container column"
                 />
                 <GenericWidget
                     :graph-slug="props.graphSlug"
