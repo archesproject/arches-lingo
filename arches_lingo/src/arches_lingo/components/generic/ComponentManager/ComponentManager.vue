@@ -2,6 +2,8 @@
 import { computed, markRaw, provide, ref } from "vue";
 
 import { useRoute } from "vue-router";
+import { useGettext } from "vue3-gettext";
+import { useConfirm } from "primevue/useconfirm";
 
 import Splitter from "primevue/splitter";
 import SplitterPanel from "primevue/splitterpanel";
@@ -16,6 +18,10 @@ import {
     NEW,
     VIEW,
 } from "@/arches_lingo/constants.ts";
+import {
+    useEditorDirtyState,
+    unsavedChangesConfirmOptions,
+} from "@/arches_lingo/composables/useEditorDirtyState.ts";
 
 import type { Component } from "vue";
 
@@ -30,6 +36,9 @@ const props = defineProps<{
 }>();
 
 const route = useRoute();
+const { $gettext } = useGettext();
+const confirm = useConfirm();
+const { isEditorDirty } = useEditorDirtyState();
 
 const processedComponentData = ref(
     props.componentData.map(function (item) {
@@ -61,13 +70,44 @@ const remainingComponentData = computed(() => {
     return processedComponentData.value.slice(1);
 });
 
-window.addEventListener("keyup", (event) => {
-    if (event.key === "Escape") {
-        if (editorState.value !== CLOSED) {
-            closeEditor();
+const isConfirmDialogOpen = ref(false);
+
+window.addEventListener(
+    "keydown",
+    (event) => {
+        if (event.key === "Escape" && editorState.value !== CLOSED) {
+            if (isConfirmDialogOpen.value) {
+                return;
+            }
+            if (isEditorDirty.value) {
+                // Stop propagation so PrimeVue's document-level keydown handler
+                // doesn't immediately close the dialog we're about to open.
+                event.stopPropagation();
+                confirmDiscard(closeEditor);
+            } else {
+                closeEditor();
+            }
         }
-    }
-});
+    },
+    true,
+);
+
+function confirmDiscard(callback: () => void) {
+    isConfirmDialogOpen.value = true;
+
+    confirm.require({
+        ...unsavedChangesConfirmOptions($gettext, () => {
+            isConfirmDialogOpen.value = false;
+            callback();
+        }),
+        reject: () => {
+            isConfirmDialogOpen.value = false;
+        },
+        onHide: () => {
+            isConfirmDialogOpen.value = false;
+        },
+    });
+}
 
 function closeEditor() {
     selectedComponentDatum.value = null;
@@ -75,7 +115,7 @@ function closeEditor() {
     editorTileId.value = null;
 }
 
-function openEditor(componentName: string, tileId?: string) {
+function doOpenEditor(componentName: string, tileId?: string) {
     const componentDatum = processedComponentData.value.find(
         (componentDatum) => {
             return componentDatum.componentName === componentName;
@@ -91,6 +131,14 @@ function openEditor(componentName: string, tileId?: string) {
     editorState.value = MINIMIZED;
 }
 
+function openEditor(componentName: string, tileId?: string) {
+    if (editorState.value !== CLOSED && isEditorDirty.value) {
+        confirmDiscard(() => doOpenEditor(componentName, tileId));
+    } else {
+        doOpenEditor(componentName, tileId);
+    }
+}
+
 function maximizeEditor() {
     editorState.value = MAXIMIZED;
 }
@@ -102,7 +150,7 @@ function minimizeEditor() {
 function updateAfterComponentDeletion(componentName: string, tileId: string) {
     if (tileId === editorTileId.value) {
         closeEditor();
-        openEditor(componentName);
+        doOpenEditor(componentName);
     }
 }
 

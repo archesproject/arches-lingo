@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { provide, ref, watchEffect } from "vue";
+import { onMounted, provide, ref, watchEffect } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
 
 import Splitter from "primevue/splitter";
 import SplitterPanel from "primevue/splitterpanel";
+import ConfirmDialog from "primevue/confirmdialog";
 import Toast from "primevue/toast";
 
 import SchemeHierarchy from "@/arches_lingo/components/header/PageHeader/components/SchemeHierarchy/SchemeHierarchy.vue";
@@ -22,6 +23,7 @@ import {
 
 import { routeNames } from "@/arches_lingo/routes.ts";
 import { fetchUser } from "@/arches_lingo/api.ts";
+import { useUnsavedChangesGuard } from "@/arches_lingo/composables/useUnsavedChangesGuard.ts";
 import PageHeader from "@/arches_lingo/components/header/PageHeader/PageHeader.vue";
 import SideNav from "@/arches_lingo/components/sidenav/SideNav.vue";
 
@@ -55,6 +57,10 @@ const refreshSchemeHierarchy = function () {
     schemeHierarchyKey.value++;
 };
 provide("refreshSchemeHierarchy", refreshSchemeHierarchy);
+
+onMounted(function () {
+    useUnsavedChangesGuard(router);
+});
 
 watchEffect(() => {
     router.beforeEach(async (to, _from, next) => {
@@ -144,6 +150,7 @@ async function checkUserAuthentication(
             },
         }"
     />
+    <ConfirmDialog group="unsaved-changes" />
 </template>
 
 <style scoped>

@@ -33,19 +33,19 @@ export function navigateToSchemeOrConcept(
 ) {
     // TODO: Consider adding some sort of short-circuiting of fetchUser
     if (value === NEW_CONCEPT) {
-        router.push({
+        return router.push({
             name: routeNames.concept,
             params: { id: "new" },
             query: queryParams,
         });
     } else if (dataIsScheme(value)) {
-        router.push({
+        return router.push({
             name: routeNames.scheme,
             params: { id: value.id },
             query: queryParams,
         });
     } else if (dataIsConcept(value)) {
-        router.push({
+        return router.push({
             name: routeNames.concept,
             params: { id: value.id },
             query: queryParams,

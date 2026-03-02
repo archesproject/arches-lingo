@@ -48,6 +48,7 @@ const openEditor =
 const refreshReportSection = inject<(componentName: string) => void>(
     "refreshReportSection",
 );
+const onSaveSettled = inject<() => void>("onSaveSettled");
 
 const formRef = useTemplateRef("form");
 const isSaving = ref(false);
@@ -104,6 +105,7 @@ async function save(e: FormSubmitEvent) {
         });
     } finally {
         isSaving.value = false;
+        onSaveSettled?.();
     }
 }
 </script>

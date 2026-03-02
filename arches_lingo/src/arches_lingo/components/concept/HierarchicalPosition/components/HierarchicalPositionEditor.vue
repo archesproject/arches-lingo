@@ -43,6 +43,7 @@ const refreshReportSection = inject<(componentName: string) => void>(
     "refreshReportSection",
 );
 const refreshSchemeHierarchy = inject<() => void>("refreshSchemeHierarchy");
+const onSaveSettled = inject<() => void>("onSaveSettled");
 
 const formRef = useTemplateRef("form");
 const isSaving = ref(false);
@@ -124,6 +125,7 @@ async function save(e: FormSubmitEvent) {
         console.error(error);
     } finally {
         refreshReportSection!(props.componentName);
+        onSaveSettled?.();
     }
 }
 </script>
