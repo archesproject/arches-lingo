@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watch} from "vue";
+import { onMounted, ref, watch } from "vue";
 
 import Message from "primevue/message";
 import Skeleton from "primevue/skeleton";
