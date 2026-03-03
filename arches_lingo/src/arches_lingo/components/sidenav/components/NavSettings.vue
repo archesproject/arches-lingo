@@ -17,9 +17,8 @@ const children = <SideNavMenuItem[]>[
     {
         key: "profile",
         label: $gettext("Profile"),
-        icon: "pi pi-shield",
-        route: { name: routeNames.root },
-        disabled: true,
+        icon: "pi pi-user",
+        route: { name: routeNames.profile },
         showIconIfCollapsed: true,
     },
     {

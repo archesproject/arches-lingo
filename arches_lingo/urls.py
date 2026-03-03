@@ -17,6 +17,10 @@ from arches_lingo.views.api.generic import (
     LingoTileDetailView,
     LingoTileListCreateView,
 )
+from arches_lingo.views.api.user_profile import (
+    ChangePasswordAPIView,
+    UserProfileAPIView,
+)
 
 handler400 = "arches.app.views.main.custom_400"
 handler403 = "arches.app.views.main.custom_403"
@@ -33,6 +37,17 @@ urlpatterns = [
     path("scheme/new", LingoRootView.as_view(), name="new-scheme"),
     path("concept/<uuid:id>", LingoRootView.as_view(), name="concept"),
     path("concept/new", LingoRootView.as_view(), name="new-concept"),
+    path("profile", LingoRootView.as_view(), name="profile"),
+    path(
+        "api/lingo/user-profile",
+        UserProfileAPIView.as_view(),
+        name="api-lingo-user-profile",
+    ),
+    path(
+        "api/lingo/change-password",
+        ChangePasswordAPIView.as_view(),
+        name="api-lingo-change-password",
+    ),
     path("api/concept-tree", ConceptTreeView.as_view(), name="api-concepts"),
     path("api/search", ValueSearchView.as_view(), name="api-search"),
     path(
