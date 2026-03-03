@@ -326,6 +326,12 @@ export interface SchemeHeader {
     identifier?: string;
 }
 
+export interface LanguageLabelCount {
+    language: string;
+    code: string;
+    count: number;
+}
+
 export interface SchemeInstance {
     aliased_data: {
         namespace?: SchemeNamespace;
