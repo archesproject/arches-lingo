@@ -156,44 +156,14 @@ async function onConceptTypeChange(newValue: ReferenceSelectValue) {
 }
 
 onMounted(async () => {
-    try {
-        if (!props.resourceInstanceId) {
-            label.value = {
-                value: $gettext("New Concept"),
-                language_id: selectedLanguage.value.code,
-                valuetype_id: PREF_LABEL,
-            };
-            return;
-        }
-
-        concept.value = await fetchLingoResource(
-            props.graphSlug,
-            props.resourceInstanceId,
-        );
-
-        conceptTypeTile.value =
-            concept.value?.aliased_data?.[CONCEPT_TYPE_NODE_ALIAS];
-
-        conceptResource.value = await fetchConceptResource(
-            props.resourceInstanceId,
-        );
-
-        label.value = getItemLabel(
-            conceptResource.value!,
-            selectedLanguage.value.code,
-            systemLanguage.code,
-        );
-
-        extractConceptHeaderData(concept.value!);
-    } catch (error) {
-        toast.add({
-            severity: ERROR,
-            life: DEFAULT_ERROR_TOAST_LIFE,
-            summary: $gettext("Unable to fetch concept"),
-            detail: error instanceof Error ? error.message : undefined,
-        });
-    } finally {
+    if (!props.resourceInstanceId) {
+        label.value = {
+            value: $gettext("New Concept"),
+            language_id: selectedLanguage.value.code,
+            valuetype_id: PREF_LABEL,
+        };
         isLoading.value = false;
+        return;
     }
     // Resource data is loaded via the store watch above
 });

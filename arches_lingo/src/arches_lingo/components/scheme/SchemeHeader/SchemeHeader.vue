@@ -152,41 +152,14 @@ function extractSchemeHeaderData(scheme: ResourceInstanceResult) {
 }
 
 onMounted(async () => {
-    try {
-        if (!props.resourceInstanceId) {
-            label.value = {
-                value: $gettext("New Scheme"),
-                language_id: selectedLanguage.value.code,
-                valuetype_id: PREF_LABEL,
-            };
-            return;
-        }
-
-        scheme.value = await fetchLingoResource(
-            props.graphSlug,
-            props.resourceInstanceId,
-        );
-
-        schemeResource.value = await fetchSchemeResource(
-            props.resourceInstanceId,
-        );
-
-        label.value = getItemLabel(
-            schemeResource.value!,
-            selectedLanguage.value.code,
-            systemLanguage.code,
-        );
-
-        extractSchemeHeaderData(scheme.value!);
-    } catch (error) {
-        toast.add({
-            severity: ERROR,
-            life: DEFAULT_ERROR_TOAST_LIFE,
-            summary: $gettext("Unable to fetch scheme"),
-            detail: error instanceof Error ? error.message : undefined,
-        });
-    } finally {
+    if (!props.resourceInstanceId) {
+        label.value = {
+            value: $gettext("New Scheme"),
+            language_id: selectedLanguage.value.code,
+            valuetype_id: PREF_LABEL,
+        };
         isLoading.value = false;
+        return;
     }
     // Resource data is loaded via the store watch above
 });
