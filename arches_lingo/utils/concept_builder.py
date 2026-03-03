@@ -18,6 +18,9 @@ from arches_lingo.const import (
     CONCEPT_NAME_CONTENT_NODE,
     CONCEPT_NAME_LANGUAGE_NODE,
     CONCEPT_NAME_TYPE_NODE,
+    CONCEPT_TYPE_NODEGROUP,
+    CONCEPT_TYPE_NODE,
+    GUIDE_TERM_URI,
     ALT_LABEL_VALUE,
     HIDDEN_LABEL_VALUE,
     PREF_LABEL_VALUE,
@@ -49,12 +52,14 @@ class ConceptBuilder:
         self.schemes_by_top_concept: dict[str, set[str]] = defaultdict(set)
 
         self.polyhierarchical_concepts = set()
+        self.guide_term_concept_ids: set[str] = set()
         self.language_lookup = {lang.code: lang.name for lang in Language.objects.all()}
 
         if concept_ids is None:
             self.top_concepts_map()
             self.narrower_concepts_map()
             self.populate_schemes()
+            self.populate_guide_terms()
             return
 
         if include_parents:
@@ -119,6 +124,25 @@ class ConceptBuilder:
 
     def lookup_scheme(self, scheme_id: str):
         return self.schemes_by_id.get(scheme_id)
+
+    def populate_guide_terms(self, concept_ids: list[str] | None = None):
+        """Populate the set of concept IDs that have the guide term type."""
+        type_tiles_qs = TileModel.objects.filter(
+            nodegroup_id=CONCEPT_TYPE_NODEGROUP,
+        )
+        if concept_ids is not None:
+            type_tiles_qs = type_tiles_qs.filter(
+                resourceinstance_id__in=concept_ids,
+            )
+        type_tiles = type_tiles_qs.values_list("resourceinstance_id", "data")
+
+        for resource_id, data in type_tiles:
+            ref_values = data.get(CONCEPT_TYPE_NODE) if data else None
+            if ref_values and isinstance(ref_values, list):
+                for ref in ref_values:
+                    if ref.get("uri") == GUIDE_TERM_URI:
+                        self.guide_term_concept_ids.add(str(resource_id))
+                        break
 
     def populate_concept_labels(self, concept_ids: list[str]):
         label_tiles = (
@@ -220,6 +244,7 @@ class ConceptBuilder:
 
         self.populate_schemes(list(scheme_ids))
         self.populate_concept_labels(list(closure_concept_ids))
+        self.populate_guide_terms(list(closure_concept_ids))
 
     def serialize_scheme(self, scheme: ResourceInstance, *, children=True):
         scheme_id: str = str(scheme.pk)
@@ -256,6 +281,7 @@ class ConceptBuilder:
             "labels": [
                 self.serialize_concept_label(label) for label in self.labels[conceptid]
             ],
+            "is_guide_term": conceptid in self.guide_term_concept_ids,
         }
         if children:
             data["narrower"] = [

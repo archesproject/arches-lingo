@@ -63,10 +63,19 @@ SCHEME_NAME_LANGUAGE_NODE = "ef87b43e-11de-11ef-9493-0a58a9feac02"
 SCHEME_NAME_TYPE_NODE = "ef87b588-11de-11ef-9493-0a58a9feac02"
 
 
+### Concept Type ###
+CONCEPT_TYPE_NODEGROUP = "74d4d2cc-0f5d-11ef-9493-0a58a9feac02"
+CONCEPT_TYPE_NODE = "74d4d2cc-0f5d-11ef-9493-0a58a9feac02"
+
+
 ### Lists and List Items ###
 LABEL_LIST_ID = "deb847fc-f4c3-4e82-be19-04641579f129"
 EVENT_TYPES_LIST_ID = "6eaa2c6f-af83-464c-9200-051c4cfe7e8e"
 METATYPES_LIST_ID = "ef69e772-de53-45fe-98d4-bf3e7b10eb57"
+
+
+### URIs ###
+GUIDE_TERM_URI = "http://vocab.getty.edu/page/aat/300386700"
 
 
 ### Values ###

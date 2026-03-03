@@ -11,6 +11,7 @@ import type { IconLabels, Scheme } from "@/arches_lingo/types";
 const iconLabels: IconLabels = {
     concept: "Concept",
     scheme: "Scheme",
+    guideTerm: "Guide Term",
 };
 
 describe("Duck-typing helpers", () => {

@@ -37,6 +37,7 @@ export interface Concept {
     id: string;
     labels: Label[];
     narrower: Concept[];
+    is_guide_term?: boolean;
 }
 
 export interface Scheme {
@@ -349,6 +350,7 @@ export interface NodeAndParentInstruction {
 
 export interface IconLabels {
     concept: string;
+    guideTerm: string;
     scheme: string;
 }
 
@@ -364,14 +366,28 @@ export interface SearchResultItem {
     parents: {
         id: string;
         labels: Label[];
+        is_guide_term?: boolean;
     }[][];
     polyhierarchical: boolean;
+    is_guide_term?: boolean;
+    uri?: string;
+    identifier?: string;
+    lifecycle_state?: string;
+    notes?: { type?: string; language?: string; content: string }[];
 }
 
 export interface SearchResultHierarchy {
     tileid?: string;
     searchResults: SearchResultItem[];
     isTopConcept?: boolean;
+}
+
+export interface AdvancedSearchResponse {
+    total_results: number;
+    data: SearchResultItem[];
+    total_pages: number;
+    results_per_page: number;
+    current_page: number;
 }
 
 export interface archesPreset {

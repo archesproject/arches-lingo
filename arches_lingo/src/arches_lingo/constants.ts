@@ -22,6 +22,10 @@ export const CLOSED = "closed";
 export const NEW_CONCEPT = "newConcept";
 export const CONCEPT_TYPE_NODE_ALIAS = "type";
 
+export const GUIDE_TERM_URI = "http://vocab.getty.edu/page/aat/300386700";
+export const GUIDE_TERM_ICON = "pi pi-clipboard";
+export const CONCEPT_ICON = "pi pi-tag";
+
 export const DEFAULT_TOAST_LIFE = 5000;
 export const DEFAULT_ERROR_TOAST_LIFE = 8000;
 export const SEARCH_RESULTS_PER_PAGE = 25;

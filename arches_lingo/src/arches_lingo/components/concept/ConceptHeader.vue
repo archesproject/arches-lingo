@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject, onMounted, ref, watch, type Ref } from "vue";
+import { inject, computed, onMounted, ref, watch, type Ref } from "vue";
 
 import { useConfirm } from "primevue/useconfirm";
 import { useGettext } from "vue3-gettext";
@@ -25,6 +25,9 @@ import {
     systemLanguageKey,
     selectedLanguageKey,
     CONCEPT_TYPE_NODE_ALIAS,
+    CONCEPT_ICON,
+    GUIDE_TERM_ICON,
+    GUIDE_TERM_URI,
 } from "@/arches_lingo/constants.ts";
 import { PREF_LABEL } from "@/arches_controlled_lists/constants.ts";
 
@@ -76,6 +79,18 @@ const showExportDialog = ref(false);
 const exportDialogKey = ref(0);
 
 const conceptTypeTile = ref();
+
+const conceptIcon = computed(() => {
+    const typeData =
+        conceptTypeTile.value?.aliased_data?.[CONCEPT_TYPE_NODE_ALIAS];
+    if (typeData?.node_value && Array.isArray(typeData.node_value)) {
+        const isGuide = typeData.node_value.some(
+            (ref: { uri?: string }) => ref.uri === GUIDE_TERM_URI,
+        );
+        if (isGuide) return GUIDE_TERM_ICON;
+    }
+    return CONCEPT_ICON;
+});
 
 const store = useResourceStore();
 let headerInitialized = false;
@@ -144,6 +159,7 @@ async function onConceptTypeChange(newValue: ReferenceSelectValue) {
             summary: $gettext("Concept type updated"),
             life: DEFAULT_TOAST_LIFE,
         });
+        refreshSchemeHierarchy?.();
     } catch (error) {
         toast.add({
             severity: ERROR,
@@ -276,8 +292,7 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
             <div class="concept-details">
                 <h2>
                     <div class="concept-name">
-                        <!-- To do: change icon based on concept type -->
-                        <i class="pi pi-tag"></i>
+                        <i :class="conceptIcon"></i>
                         <span>
                             {{ label?.value }}
 
