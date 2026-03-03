@@ -352,3 +352,63 @@ class ViewTests(TestCase):
             "Edit distance could not be converted to an integer.",
             status_code=HTTPStatus.BAD_REQUEST,
         )
+
+    def test_scheme_label_counts(self):
+        """The existing test data has 5 concepts each with one English label."""
+        response = self.client.get(
+            reverse("api-lingo-scheme-label-counts", kwargs={"pk": self.scheme.pk})
+        )
+        self.assertEqual(response.status_code, 200)
+        result = json.loads(response.content)
+
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0]["code"], "en")
+        self.assertEqual(result[0]["count"], 5)
+        self.assertEqual(result[0]["language"], "English")
+
+    def test_scheme_label_counts_multiple_languages(self):
+        """Add German labels to some concepts and verify counts."""
+        # Add German labels to the first two concepts
+        for concept in self.concepts[:2]:
+            TileModel.objects.create(
+                resourceinstance=concept,
+                nodegroup_id=CONCEPT_NAME_NODEGROUP,
+                data={
+                    CONCEPT_NAME_CONTENT_NODE: f"{concept.name} (de)",
+                    CONCEPT_NAME_TYPE_NODE: None,
+                    CONCEPT_NAME_LANGUAGE_NODE: "de",
+                },
+            )
+
+        response = self.client.get(
+            reverse("api-lingo-scheme-label-counts", kwargs={"pk": self.scheme.pk})
+        )
+        self.assertEqual(response.status_code, 200)
+        result = json.loads(response.content)
+
+        counts_by_code = {entry["code"]: entry["count"] for entry in result}
+        self.assertEqual(counts_by_code["en"], 5)
+        self.assertEqual(counts_by_code["de"], 2)
+        # Results sorted by count descending
+        self.assertEqual(result[0]["code"], "en")
+        self.assertEqual(result[1]["code"], "de")
+
+    def test_scheme_label_counts_empty_scheme(self):
+        """A scheme with no concepts should return an empty list."""
+        empty_scheme = ResourceInstance.objects.create(
+            graph_id=SCHEMES_GRAPH_ID, name="Empty Scheme"
+        )
+        response = self.client.get(
+            reverse("api-lingo-scheme-label-counts", kwargs={"pk": empty_scheme.pk})
+        )
+        self.assertEqual(response.status_code, 200)
+        result = json.loads(response.content)
+        self.assertEqual(result, [])
+
+    def test_scheme_label_counts_unauthenticated(self):
+        """Unauthenticated requests should be rejected."""
+        self.client.logout()
+        response = self.client.get(
+            reverse("api-lingo-scheme-label-counts", kwargs={"pk": self.scheme.pk})
+        )
+        self.assertIn(response.status_code, (302, 403))
