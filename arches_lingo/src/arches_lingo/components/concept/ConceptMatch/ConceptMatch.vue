@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { ref, watch, watchEffect } from "vue";
 
 import Message from "primevue/message";
 import Skeleton from "primevue/skeleton";
@@ -10,7 +10,7 @@ import ConceptMatchViewer from "@/arches_lingo/components/concept/ConceptMatch/c
 import { EDIT, VIEW } from "@/arches_lingo/constants.ts";
 
 import { fetchTileData } from "@/arches_component_lab/generics/GenericCard/api.ts";
-import { fetchLingoResourcePartial } from "@/arches_lingo/api.ts";
+import { useResourceStore } from "@/arches_lingo/composables/useResourceStore.ts";
 
 import type {
     ConceptMatchStatus,
@@ -29,39 +29,42 @@ const props = defineProps<{
 
 const isLoading = ref(true);
 const tileData = ref<ConceptMatchStatus[]>([]);
-const schemeId = ref<string>();
 const fetchError = ref();
 
 const shouldCreateNewTile = Boolean(props.mode === EDIT && !props.tileId);
 
-onMounted(async () => {
-    if (
-        props.resourceInstanceId &&
-        (props.mode === VIEW || !shouldCreateNewTile)
-    ) {
-        const sectionValue = await getSectionValue();
-        tileData.value = sectionValue.aliased_data[props.nodegroupAlias];
-    } else if (shouldCreateNewTile) {
+const store = useResourceStore();
+
+watch(
+    [() => store.resource.value, () => store.error.value],
+    ([resource, storeError]) => {
+        if (storeError) {
+            fetchError.value = storeError;
+            isLoading.value = false;
+            return;
+        }
+        if (resource && props.resourceInstanceId && !shouldCreateNewTile) {
+            tileData.value =
+                resource.aliased_data?.[props.nodegroupAlias] ?? [];
+            isLoading.value = false;
+        }
+    },
+    { immediate: true },
+);
+
+watchEffect(async () => {
+    isLoading.value = true;
+    if (shouldCreateNewTile) {
         const blankTileData = await fetchTileData(
             props.graphSlug,
             props.nodegroupAlias,
         );
         tileData.value = [blankTileData as unknown as ConceptMatchStatus];
+        isLoading.value = false;
+    } else if (!props.resourceInstanceId) {
+        isLoading.value = false;
     }
-    isLoading.value = false;
 });
-
-async function getSectionValue() {
-    try {
-        return await fetchLingoResourcePartial(
-            props.graphSlug,
-            props.resourceInstanceId as string,
-            props.nodegroupAlias,
-        );
-    } catch (error) {
-        fetchError.value = error;
-    }
-}
 </script>
 
 <template>
@@ -92,7 +95,6 @@ async function getSectionValue() {
             :graph-slug="props.graphSlug"
             :nodegroup-alias="props.nodegroupAlias"
             :resource-instance-id="props.resourceInstanceId"
-            :scheme-id="schemeId"
             :section-title="props.sectionTitle"
             :tile-data="
                 tileData.find((tileDatum) => {

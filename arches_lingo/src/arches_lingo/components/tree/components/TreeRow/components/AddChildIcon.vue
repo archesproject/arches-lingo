@@ -3,9 +3,8 @@ import { useRouter } from "vue-router";
 
 import Button from "primevue/button";
 
-import { NEW_CONCEPT } from "@/arches_lingo/constants.ts";
+import { NEW, NEW_CONCEPT } from "@/arches_lingo/constants.ts";
 import { navigateToSchemeOrConcept } from "@/arches_lingo/utils.ts";
-import { NEW } from "@/arches_lingo/constants.ts";
 
 import type { TreeNode } from "primevue/treenode";
 

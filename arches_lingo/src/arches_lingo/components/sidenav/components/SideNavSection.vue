@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { inject } from "vue";
+
 import type { SideNavMenuItem } from "@/arches_lingo/types.ts";
 
 const props = defineProps<{
@@ -49,7 +50,7 @@ const isNavExpanded = inject("isNavExpanded", false);
                 }"
                 class="nav-button p-button"
                 :class="child.disabled ? 'disabled' : ''"
-                @click="navigate"
+                @click.prevent="navigate()"
             >
                 <i
                     v-if="child.icon"

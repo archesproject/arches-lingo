@@ -140,12 +140,13 @@ const loadAdditionalSearchResults = (event: VirtualScrollerLazyEvent) => {
 };
 
 const navigateToReport = async (event: AutoCompleteOptionSelectEvent) => {
-    props.toggleModal();
-
-    router.push({
+    const failure = await router.push({
         name: routeNames.concept,
         params: { id: event.value.id },
     });
+    if (!failure) {
+        props.toggleModal();
+    }
 };
 
 onMounted(focusInput);

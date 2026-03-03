@@ -14,7 +14,7 @@
         "gettext:extract": "vue-gettext-extract",
         "gettext:compile": "vue-gettext-compile",
         "prettier:check": "prettier arches_lingo/src --check",
-        "prettier:fix": "prettier --write",
+        "prettier:fix": "prettier arches_lingo/src --write",
         "prettier:fix:all": "npm run prettier:fix arches_lingo/src",
         "ts:check": "vue-tsc --noEmit",
         "ts:watch": "vue-tsc --watch --noEmit",
