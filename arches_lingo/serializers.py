@@ -10,10 +10,8 @@ from arches_querysets.rest_framework.serializers import ArchesTileSerializer
 class LingoTileSerializer(ArchesTileSerializer):
     def validate_appellative_status(self, data, initial_tile_data):
         if data:
-            new_label_lang = None
+            new_label_lang = data.appellative_status_ascribed_name_language
             new_label_type = None
-            if new_label_languages := data.appellative_status_ascribed_name_language:
-                new_label_lang = new_label_languages[0]
             if new_label_types := data.appellative_status_ascribed_relation:
                 new_label_type = new_label_types[0]
 
@@ -42,11 +40,10 @@ class LingoTileSerializer(ArchesTileSerializer):
             raise ValidationError(msg)
 
         for label in resource.aliased_data.appellative_status:
-            if (
-                label_languages := label.aliased_data.appellative_status_ascribed_name_language
-            ):
-                label_language = label_languages[0]
-            else:
+            label_language = (
+                label.aliased_data.appellative_status_ascribed_name_language
+            )
+            if not label_language:
                 continue
             if label_types := label.aliased_data.appellative_status_ascribed_relation:
                 label_type = label_types[0]
@@ -56,7 +53,7 @@ class LingoTileSerializer(ArchesTileSerializer):
                 initial_tile_data.get("tileid") != str(label.tileid)
                 and new_label_type.uri == PREF_LABEL.uri
                 and label_type.uri == PREF_LABEL.uri
-                and label_language.uri == new_label_language.uri
+                and label_language == new_label_language
             ):
                 msg = _("Only one preferred label per language is permitted.")
                 raise ValidationError({"appellative_status": msg})
