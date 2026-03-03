@@ -375,6 +375,19 @@ export const fetchSchemeResource = async (schemeId: string) => {
     return parsed;
 };
 
+export const fetchSchemeLabelCounts = async (schemeId: string) => {
+    const url = generateArchesURL(
+        "arches_lingo:api-lingo-scheme-label-counts",
+        {
+            pk: schemeId,
+        },
+    );
+    const response = await fetch(url);
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
 export const fetchConceptRelationships = async (conceptId: string) => {
     const params = new URLSearchParams({
         concept: conceptId,

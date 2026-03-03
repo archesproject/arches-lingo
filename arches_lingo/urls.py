@@ -10,7 +10,7 @@ from arches_lingo.views.api.concepts import (
     ConceptResourceView,
     ConceptRelationshipView,
 )
-from arches_lingo.views.api.schemes import SchemeResourceView
+from arches_lingo.views.api.schemes import SchemeResourceView, SchemeLabelCountView
 from arches_lingo.views.api.generic import (
     LingoResourceDetailView,
     LingoResourceListCreateView,
@@ -64,6 +64,11 @@ urlpatterns = [
         "api/lingo/scheme/<uuid:pk>",
         SchemeResourceView.as_view(),
         name="api-lingo-scheme",
+    ),
+    path(
+        "api/lingo/scheme/<uuid:pk>/label-counts",
+        SchemeLabelCountView.as_view(),
+        name="api-lingo-scheme-label-counts",
     ),
     path(
         "api/lingo/<slug:graph>",
