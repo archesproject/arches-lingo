@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { watchEffect, ref } from "vue";
+import { onMounted, ref, watch } from "vue";
 
 import Message from "primevue/message";
 import Skeleton from "primevue/skeleton";
@@ -10,10 +10,8 @@ import HierarchicalPositionEditor from "@/arches_lingo/components/concept/Hierar
 import { EDIT, VIEW } from "@/arches_lingo/constants.ts";
 
 import { fetchTileData } from "@/arches_component_lab/generics/GenericCard/api.ts";
-import {
-    fetchConceptResources,
-    fetchLingoResourcePartial,
-} from "@/arches_lingo/api.ts";
+import { fetchConceptResources } from "@/arches_lingo/api.ts";
+import { useResourceStore } from "@/arches_lingo/composables/useResourceStore.ts";
 import type {
     ConceptClassificationStatus,
     DataComponentMode,
@@ -40,23 +38,79 @@ const topConceptOfTileId = ref<string>();
 
 const shouldCreateNewTile = Boolean(props.mode === EDIT && !props.tileId);
 
-watchEffect(async () => {
-    const currentPosition = await getHierarchicalData([
-        props.resourceInstanceId!,
-    ]);
-    schemeId.value = currentPosition.data[0]?.parents?.[0]?.[0]?.id;
+const store = useResourceStore();
+let positionInitialized = false;
 
-    if (
-        props.resourceInstanceId &&
-        (props.mode === VIEW || !shouldCreateNewTile)
-    ) {
-        const sectionValue = await getSectionValue();
-        tileData.value = sectionValue?.aliased_data[props.nodegroupAlias];
+watch(
+    [() => store.resource.value, () => store.error.value],
+    async ([resource, storeError]) => {
+        if (storeError) {
+            fetchError.value = storeError;
+            isLoading.value = false;
+            return;
+        }
+        if (
+            !resource ||
+            !props.resourceInstanceId ||
+            shouldCreateNewTile ||
+            positionInitialized
+        )
+            return;
+        positionInitialized = true;
 
-        hierarchicalData.value = currentPosition.data[0]?.parents?.map(
-            (parent: SearchResultItem) => ({ searchResults: parent }),
-        );
-    } else if (shouldCreateNewTile) {
+        try {
+            // Read classification_status and top_concept_of from the store
+            tileData.value = resource.aliased_data?.[props.nodegroupAlias];
+            topConceptOfTileId.value =
+                resource.aliased_data?.top_concept_of?.[0]?.tileid;
+
+            // Still need the search endpoint for hierarchy path data
+            const currentPosition = await getHierarchicalData([
+                props.resourceInstanceId!,
+            ]);
+
+            schemeId.value = currentPosition?.data[0]?.parents?.[0]?.[0]?.id;
+
+            hierarchicalData.value =
+                currentPosition?.data[0]?.parents?.map(
+                    (parent: SearchResultItem) => ({
+                        searchResults: parent,
+                    }),
+                ) ?? [];
+
+            if (hierarchicalData.value && tileData.value) {
+                for (const datum of hierarchicalData.value) {
+                    const parentConceptResourceId =
+                        datum.searchResults[datum.searchResults.length - 2].id;
+                    const parentConceptTile = tileData.value.find((tile) => {
+                        const ascribedValues =
+                            tile.aliased_data
+                                .classification_status_ascribed_classification
+                                .node_value;
+                        return ascribedValues?.some(
+                            (value) =>
+                                value.resourceId === parentConceptResourceId,
+                        );
+                    });
+                    if (parentConceptTile) {
+                        datum.tileid = parentConceptTile.tileid;
+                    } else if (topConceptOfTileId.value) {
+                        datum.tileid = topConceptOfTileId.value;
+                        datum.isTopConcept = true;
+                    }
+                }
+            }
+        } catch (error) {
+            fetchError.value = error;
+        } finally {
+            isLoading.value = false;
+        }
+    },
+    { immediate: true },
+);
+
+onMounted(async () => {
+    if (shouldCreateNewTile) {
         const blankTileData = await fetchTileData(
             props.graphSlug,
             props.nodegroupAlias,
@@ -64,70 +118,24 @@ watchEffect(async () => {
         tileData.value = [
             blankTileData as unknown as ConceptClassificationStatus,
         ];
+        isLoading.value = false;
+    } else if (!props.resourceInstanceId) {
+        isLoading.value = false;
     }
-
-    if (hierarchicalData.value && tileData.value) {
-        for (const datum of hierarchicalData.value) {
-            const parentConceptResourceId =
-                datum.searchResults[datum.searchResults.length - 2].id;
-            const parentConceptTile = tileData.value.find((tile) => {
-                const ascribedValues =
-                    tile.aliased_data
-                        .classification_status_ascribed_classification
-                        .node_value;
-                return ascribedValues?.some(
-                    (value) => value.resourceId === parentConceptResourceId,
-                );
-            });
-            if (parentConceptTile) {
-                datum.tileid = parentConceptTile.tileid;
-            } else if (topConceptOfTileId.value) {
-                datum.tileid = topConceptOfTileId.value;
-                datum.isTopConcept = true;
-            }
-        }
-    }
-    isLoading.value = false;
 });
 
 async function getHierarchicalData(conceptIds: string[]) {
-    try {
-        if (conceptIds.length === 0) {
-            return;
-        }
-        return await fetchConceptResources(
-            "",
-            conceptIds.length,
-            1,
-            undefined,
-            undefined,
-            conceptIds,
-        );
-    } catch (error) {
-        fetchError.value = error;
+    if (conceptIds.length === 0) {
+        return;
     }
-}
-
-async function getSectionValue() {
-    try {
-        const sectionValue = await fetchLingoResourcePartial(
-            props.graphSlug,
-            props.resourceInstanceId as string,
-            props.nodegroupAlias,
-        );
-
-        const topConceptOfValue = await fetchLingoResourcePartial(
-            props.graphSlug,
-            props.resourceInstanceId as string,
-            "top_concept_of",
-        );
-        topConceptOfTileId.value =
-            topConceptOfValue.aliased_data.top_concept_of[0]?.tileid;
-
-        return sectionValue;
-    } catch (error) {
-        fetchError.value = error;
-    }
+    return await fetchConceptResources(
+        "",
+        conceptIds.length,
+        1,
+        undefined,
+        undefined,
+        conceptIds,
+    );
 }
 </script>
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject, onMounted, ref, type Ref } from "vue";
+import { inject, onMounted, ref, watch, type Ref } from "vue";
 
 import { useConfirm } from "primevue/useconfirm";
 import { useGettext } from "vue3-gettext";
@@ -29,10 +29,10 @@ import {
 import { PREF_LABEL } from "@/arches_controlled_lists/constants.ts";
 
 import {
-    fetchLingoResource,
     deleteLingoResource,
     fetchConceptResource,
 } from "@/arches_lingo/api.ts";
+import { useResourceStore } from "@/arches_lingo/composables/useResourceStore.ts";
 import { extractDescriptors } from "@/arches_lingo/utils.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 
@@ -77,6 +77,55 @@ const exportDialogKey = ref(0);
 
 const conceptTypeTile = ref();
 
+const store = useResourceStore();
+let headerInitialized = false;
+
+watch(
+    [() => store.resource.value, () => store.error.value],
+    async ([resource, storeError]) => {
+        if (storeError) {
+            toast.add({
+                severity: ERROR,
+                life: DEFAULT_ERROR_TOAST_LIFE,
+                summary: $gettext("Unable to fetch concept"),
+                detail: storeError.message,
+            });
+            isLoading.value = false;
+            return;
+        }
+        if (!resource || !props.resourceInstanceId || headerInitialized) return;
+        headerInitialized = true;
+
+        try {
+            concept.value = resource;
+            conceptTypeTile.value =
+                resource.aliased_data?.[CONCEPT_TYPE_NODE_ALIAS];
+
+            const conceptResource = await fetchConceptResource(
+                props.resourceInstanceId,
+            );
+
+            label.value = getItemLabel(
+                conceptResource,
+                selectedLanguage.value.code,
+                systemLanguage.code,
+            );
+
+            extractConceptHeaderData(resource);
+        } catch (error) {
+            toast.add({
+                severity: ERROR,
+                life: DEFAULT_ERROR_TOAST_LIFE,
+                summary: $gettext("Unable to fetch concept"),
+                detail: error instanceof Error ? error.message : undefined,
+            });
+        } finally {
+            isLoading.value = false;
+        }
+    },
+    { immediate: true },
+);
+
 async function onConceptTypeChange(newValue: ReferenceSelectValue) {
     try {
         conceptTypeTile.value = await upsertLingoTile(
@@ -106,45 +155,16 @@ async function onConceptTypeChange(newValue: ReferenceSelectValue) {
 }
 
 onMounted(async () => {
-    try {
-        if (!props.resourceInstanceId) {
-            label.value = {
-                value: $gettext("New Concept"),
-                language_id: selectedLanguage.value.code,
-                valuetype_id: PREF_LABEL,
-            };
-            return;
-        }
-
-        concept.value = await fetchLingoResource(
-            props.graphSlug,
-            props.resourceInstanceId,
-        );
-
-        conceptTypeTile.value =
-            concept.value?.aliased_data?.[CONCEPT_TYPE_NODE_ALIAS];
-
-        const conceptResource = await fetchConceptResource(
-            props.resourceInstanceId,
-        );
-
-        label.value = getItemLabel(
-            conceptResource,
-            selectedLanguage.value.code,
-            systemLanguage.code,
-        );
-
-        extractConceptHeaderData(concept.value!);
-    } catch (error) {
-        toast.add({
-            severity: ERROR,
-            life: DEFAULT_ERROR_TOAST_LIFE,
-            summary: $gettext("Unable to fetch concept"),
-            detail: error instanceof Error ? error.message : undefined,
-        });
-    } finally {
+    if (!props.resourceInstanceId) {
+        label.value = {
+            value: $gettext("New Concept"),
+            language_id: selectedLanguage.value.code,
+            valuetype_id: PREF_LABEL,
+        };
         isLoading.value = false;
+        return;
     }
+    // Resource data is loaded via the store watch above
 });
 
 function confirmDelete() {
