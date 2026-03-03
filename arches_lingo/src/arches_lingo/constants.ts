@@ -27,6 +27,14 @@ export const DEFAULT_ERROR_TOAST_LIFE = 8000;
 export const SEARCH_RESULTS_PER_PAGE = 25;
 export const SEARCH_RESULT_ITEM_SIZE = 50;
 
+// Icons
+export const CONCEPT_ICON = "pi pi-tag";
+export const GUIDE_TERM_ICON = "pi pi-angle-double-right";
+export const SCHEME_ICON = "pi pi-folder";
+
+// URIs
+export const GUIDE_TERM_URI = "http://vocab.getty.edu/page/aat/300386700";
+
 // Injection keys
 export const USER_KEY = Symbol() as InjectionKey<UserRefAndSetter>;
 export const displayedRowKey = Symbol() as InjectionKey<Ref<Concept | null>>;

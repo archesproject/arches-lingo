@@ -23,11 +23,14 @@ from arches_lingo.const import (
     TOP_CONCEPT_OF_NODE_AND_NODEGROUP,
     CLASSIFICATION_STATUS_NODEGROUP,
     CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID,
+    CONCEPT_TYPE_NODEGROUP,
+    CONCEPT_TYPE_NODEID,
     CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID,
     CONCEPT_NAME_NODEGROUP,
     CONCEPT_NAME_CONTENT_NODE,
     CONCEPT_NAME_LANGUAGE_NODE,
     CONCEPT_NAME_TYPE_NODE,
+    GUIDE_TERM_URI,
     SCHEME_NAME_NODEGROUP,
     SCHEME_NAME_CONTENT_NODE,
     SCHEME_NAME_LANGUAGE_NODE,
@@ -233,13 +236,14 @@ class ViewTests(TestCase):
         self.client.force_login(self.admin)
 
     def test_get_concept_trees(self):
-        with self.assertNumQueries(6):
+        with self.assertNumQueries(7):
             # 1: session
             # 2: auth
             # 3: select broader tiles, subquery for labels
             # 4: select top concept tiles, subquery for labels
-            # 5: select schemes, subquery for labels
-            # 6: languages
+            # 5: select guide term concept type tiles
+            # 6: select schemes, subquery for labels
+            # 7: languages
             response = self.client.get(reverse("api-concepts"))
 
         self.assertEqual(response.status_code, 200)
@@ -352,3 +356,123 @@ class ViewTests(TestCase):
             "Edit distance could not be converted to an integer.",
             status_code=HTTPStatus.BAD_REQUEST,
         )
+
+    def test_guide_term_flag_in_concept_tree(self):
+        """Concepts with guide term concept type should be flagged."""
+        guide_concept = self.concepts[1]  # Concept 2
+
+        # Add a type tile with guide term type
+        TileModel.objects.create(
+            resourceinstance=guide_concept,
+            nodegroup_id=CONCEPT_TYPE_NODEGROUP,
+            data={
+                CONCEPT_TYPE_NODEID: [
+                    {
+                        "uri": GUIDE_TERM_URI,
+                        "labels": [{"value": "guide term", "language_id": "en"}],
+                    }
+                ],
+            },
+        )
+
+        response = self.client.get(reverse("api-concepts"))
+        self.assertEqual(response.status_code, 200)
+        result = json.loads(response.content)
+        scheme = result["schemes"][0]
+        top = scheme["top_concepts"][0]
+
+        # The top concept (Concept 1) should NOT be a guide term
+        self.assertFalse(top["guide_term"])
+
+        # Find Concept 2 in narrower list -- it should be flagged as guide term
+        concept_2 = next(
+            c for c in top["narrower"] if c["labels"][0]["value"] == "Concept 2"
+        )
+        self.assertTrue(concept_2["guide_term"])
+
+        # Other narrower concepts should not be guide terms
+        for c in top["narrower"]:
+            if c["labels"][0]["value"] != "Concept 2":
+                self.assertFalse(c["guide_term"])
+
+    def test_guide_term_flag_in_search(self):
+        """Guide term flag should appear in search results."""
+        guide_concept = self.concepts[2]  # Concept 3
+
+        TileModel.objects.create(
+            resourceinstance=guide_concept,
+            nodegroup_id=CONCEPT_TYPE_NODEGROUP,
+            data={
+                CONCEPT_TYPE_NODEID: [
+                    {
+                        "uri": GUIDE_TERM_URI,
+                        "labels": [{"value": "guide term", "language_id": "en"}],
+                    }
+                ],
+            },
+        )
+
+        response = self.client.get(
+            reverse("api-search"),
+            QUERY_STRING="term=Concept 3&maxEditDistance=0",
+        )
+        result = json.loads(response.content)
+        self.assertEqual(len(result["data"]), 1)
+        self.assertTrue(result["data"][0]["guide_term"])
+
+        # Non-guide-term concept should be False
+        response = self.client.get(
+            reverse("api-search"),
+            QUERY_STRING="term=Concept 1&maxEditDistance=0",
+        )
+        result = json.loads(response.content)
+        self.assertEqual(len(result["data"]), 1)
+        self.assertFalse(result["data"][0]["guide_term"])
+
+    def test_guide_term_flag_default_false(self):
+        """Concepts without guide term type should have guide_term=False."""
+        response = self.client.get(reverse("api-concepts"))
+        result = json.loads(response.content)
+        scheme = result["schemes"][0]
+        top = scheme["top_concepts"][0]
+
+        self.assertFalse(top["guide_term"])
+        for c in top["narrower"]:
+            self.assertFalse(c["guide_term"])
+
+
+class IsGuideTermTileTests(TestCase):
+    """Unit tests for ConceptBuilder.is_guide_term_tile static method."""
+
+    def test_guide_term_tile_detected(self):
+        from arches_lingo.utils.concept_builder import ConceptBuilder
+
+        tile_data = {
+            CONCEPT_TYPE_NODEID: [
+                {
+                    "uri": GUIDE_TERM_URI,
+                    "labels": [{"value": "guide term", "language_id": "en"}],
+                }
+            ]
+        }
+        self.assertTrue(ConceptBuilder.is_guide_term_tile(tile_data))
+
+    def test_non_guide_term_tile(self):
+        from arches_lingo.utils.concept_builder import ConceptBuilder
+
+        tile_data = {
+            CONCEPT_TYPE_NODEID: [
+                {
+                    "uri": "http://example.com/some-other-type",
+                    "labels": [{"value": "other", "language_id": "en"}],
+                }
+            ]
+        }
+        self.assertFalse(ConceptBuilder.is_guide_term_tile(tile_data))
+
+    def test_empty_type_data(self):
+        from arches_lingo.utils.concept_builder import ConceptBuilder
+
+        self.assertFalse(ConceptBuilder.is_guide_term_tile({}))
+        self.assertFalse(ConceptBuilder.is_guide_term_tile({CONCEPT_TYPE_NODEID: None}))
+        self.assertFalse(ConceptBuilder.is_guide_term_tile({CONCEPT_TYPE_NODEID: []}))

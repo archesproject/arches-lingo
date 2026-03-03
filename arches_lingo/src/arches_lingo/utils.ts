@@ -1,7 +1,12 @@
 import { routeNames } from "@/arches_lingo/routes.ts";
 
 import { createLingoResource, upsertLingoTile } from "@/arches_lingo/api.ts";
-import { NEW_CONCEPT } from "@/arches_lingo/constants.ts";
+import {
+    NEW_CONCEPT,
+    CONCEPT_ICON,
+    GUIDE_TERM_ICON,
+    SCHEME_ICON,
+} from "@/arches_lingo/constants.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 
 import type { TreeNode } from "primevue/treenode";
@@ -24,6 +29,20 @@ export function dataIsScheme(data: Concept | Scheme) {
 }
 export function dataIsConcept(data: Concept | Scheme) {
     return !dataIsScheme(data);
+}
+
+// Icon helpers
+export function getConceptIcon(
+    item: Concept | SearchResultItem | { guide_term?: boolean },
+): string {
+    return item.guide_term ? GUIDE_TERM_ICON : CONCEPT_ICON;
+}
+
+export function getItemIcon(item: Concept | Scheme): string {
+    if (dataIsScheme(item)) {
+        return SCHEME_ICON;
+    }
+    return getConceptIcon(item as Concept);
 }
 
 export function navigateToSchemeOrConcept(
@@ -88,10 +107,12 @@ export function treeFromSchemes(
                 ...item,
                 schemeId,
             },
-            icon: dataIsScheme(item) ? "pi pi-folder" : "pi pi-tag",
+            icon: getItemIcon(item),
             iconLabel: dataIsScheme(item)
                 ? iconLabels.scheme
-                : iconLabels.concept,
+                : (item as Concept).guide_term
+                  ? iconLabels.guideTerm
+                  : iconLabels.concept,
         };
     }
 
