@@ -78,6 +78,11 @@ class ImportTests(TransactionTestCase):
             "warrant assertion event", str(statement_tile_trees[0].aliased_data)
         )
 
+        # Type
+        type_tile_tree = junk_sculpture.aliased_data.type
+        self.assertIn("concept", str(type_tile_tree.aliased_data.type))
+        self.assertIn("classification", str(type_tile_tree.aliased_data.type_metatype))
+
         # Part of scheme
         scheme = junk_sculpture.aliased_data.part_of_scheme.aliased_data.part_of_scheme
         self.assertEqual(scheme.name["en"], "Test Thesaurus")

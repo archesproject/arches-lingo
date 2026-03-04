@@ -233,6 +233,11 @@ class SKOSReader(SKOSReader):
                         elif mock_tile:
                             new_concept["tile_data"].append(mock_tile)
 
+                    type_tile = {
+                        "type": {"type": "concept", "type_metatype": "classification"}
+                    }
+                    new_concept["tile_data"].append(type_tile)
+
                     self.concepts.append(new_concept)
 
             # Map relationships to their respective concept resources
