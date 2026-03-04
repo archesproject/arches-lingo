@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject, onMounted, ref } from "vue";
+import { computed, inject, onMounted, ref } from "vue";
 
 import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
@@ -40,29 +40,72 @@ const { $gettext } = useGettext();
 
 const isLoading = ref(true);
 const isReverting = ref(false);
-const edits = ref<EditLogEntry[]>([]);
-const pendingRevertTimestamp = ref<string | null>(null);
-const revertConfirmMessage = ref("");
 
-onMounted(async () => {
-    await loadEditLog();
+const edits = ref([] as EditLogEntry[]);
+const pendingRevertTimestamp = ref<string | null>(null);
+
+const isRevertDialogVisible = computed(
+    () => pendingRevertTimestamp.value !== null,
+);
+
+const dateTimeFormatter = new Intl.DateTimeFormat(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short",
 });
 
+const tileEditTypes = new Set(["tile create", "tile edit", "tile delete"]);
+const nonRevertableEditTypes = new Set(["create", "bulk_create", "delete"]);
+
+const editTypeIconByType = {
+    create: "pi-plus-circle",
+    bulk_create: "pi-plus-circle",
+    delete: "pi-trash",
+    "tile create": "pi-plus",
+    "tile edit": "pi-pencil",
+    "tile delete": "pi-minus-circle",
+    update_resource_instance_lifecycle_state: "pi-sync",
+} as const;
+
+const editTypeSeverityByType = {
+    delete: "danger",
+    "tile delete": "danger",
+    create: "success",
+    bulk_create: "success",
+    "tile create": "success",
+} as const;
+
+const revertConfirmMessage = computed(() => {
+    const timestamp = pendingRevertTimestamp.value;
+    if (!timestamp) return "";
+    return $gettext(
+        "Are you sure you want to revert to the state at %{timestamp}? All changes made after this point will be undone.",
+    ).replace("%{timestamp}", formatTimestamp(timestamp));
+});
+
+onMounted(loadEditLog);
+
 async function loadEditLog() {
-    if (!props.resourceInstanceId) {
+    const resourceInstanceId = props.resourceInstanceId;
+    if (!resourceInstanceId) {
+        edits.value = [];
         isLoading.value = false;
         return;
     }
+
     isLoading.value = true;
+
     try {
-        const data = await fetchResourceEditLog(props.resourceInstanceId);
-        edits.value = data.edits;
-    } catch (error) {
+        const responseData = await fetchResourceEditLog(resourceInstanceId);
+        edits.value = responseData.edits;
+    } catch (caughtError) {
         toast.add({
             severity: ERROR,
             life: DEFAULT_ERROR_TOAST_LIFE,
             summary: $gettext("Unable to fetch edit history"),
-            detail: error instanceof Error ? error.message : undefined,
+            detail:
+                caughtError instanceof Error
+                    ? caughtError.message
+                    : String(caughtError),
         });
     } finally {
         isLoading.value = false;
@@ -70,100 +113,99 @@ async function loadEditLog() {
 }
 
 function formatTimestamp(timestamp: string) {
-    return new Date(timestamp).toLocaleString();
+    return dateTimeFormatter.format(new Date(timestamp));
 }
 
-function formatUser(edit: EditLogEntry) {
-    const name = [edit.user_firstname, edit.user_lastname]
+function formatUser(editEntry: EditLogEntry) {
+    const fullName = [editEntry.user_firstname, editEntry.user_lastname]
         .filter(Boolean)
         .join(" ");
-    return name || edit.user_username || edit.user_email || $gettext("Unknown");
-}
-
-function getEditTypeIcon(edittype: string) {
-    const icons: Record<string, string> = {
-        create: "pi-plus-circle",
-        bulk_create: "pi-plus-circle",
-        delete: "pi-trash",
-        "tile create": "pi-plus",
-        "tile edit": "pi-pencil",
-        "tile delete": "pi-minus-circle",
-        update_resource_instance_lifecycle_state: "pi-sync",
-    };
-    return icons[edittype] ?? "pi-circle";
-}
-
-function getEditTypeSeverity(edittype: string) {
-    if (edittype === "delete" || edittype === "tile delete") return "danger";
-    if (
-        edittype === "create" ||
-        edittype === "bulk_create" ||
-        edittype === "tile create"
-    )
-        return "success";
-    return "info";
-}
-
-function formatEditTypeLabel(edit: EditLogEntry): string {
-    if (edit.card_name && edit.edittype.startsWith("tile ")) {
-        return edit.edittype_label.replace("Tile", edit.card_name);
-    }
-    return edit.edittype_label;
-}
-
-function canRevert(edit: EditLogEntry) {
     return (
-        edit.edittype !== "create" &&
-        edit.edittype !== "bulk_create" &&
-        edit.edittype !== "delete"
+        fullName ||
+        editEntry.user_username ||
+        editEntry.user_email ||
+        $gettext("Unknown")
     );
 }
 
-function confirmRevert(edit: EditLogEntry) {
-    revertConfirmMessage.value = $gettext(
-        "Are you sure you want to revert to the state at %{timestamp}? All changes made after this point will be undone.",
-    ).replace("%{timestamp}", formatTimestamp(edit.timestamp));
-    pendingRevertTimestamp.value = edit.timestamp;
+function getEditTypeIcon(editType: string) {
+    return (
+        editTypeIconByType[editType as keyof typeof editTypeIconByType] ??
+        "pi-circle"
+    );
+}
+
+function getEditTypeSeverity(editType: string) {
+    return (
+        editTypeSeverityByType[
+            editType as keyof typeof editTypeSeverityByType
+        ] ?? "info"
+    );
+}
+
+function isTileEditType(editType: string) {
+    return tileEditTypes.has(editType);
+}
+
+function formatEditTypeLabel(editEntry: EditLogEntry) {
+    if (editEntry.card_name && isTileEditType(editEntry.edittype)) {
+        return editEntry.edittype_label.replace("Tile", editEntry.card_name);
+    }
+    return editEntry.edittype_label;
+}
+
+function shouldShowCardNameRow(editEntry: EditLogEntry) {
+    return Boolean(editEntry.card_name) && !isTileEditType(editEntry.edittype);
+}
+
+function canRevert(editEntry: EditLogEntry) {
+    return !nonRevertableEditTypes.has(editEntry.edittype);
+}
+
+function confirmRevert(editEntry: EditLogEntry) {
+    pendingRevertTimestamp.value = editEntry.timestamp;
 }
 
 function cancelRevert() {
     pendingRevertTimestamp.value = null;
-    revertConfirmMessage.value = "";
 }
 
 async function acceptRevert() {
-    if (!pendingRevertTimestamp.value) return;
+    const resourceInstanceId = props.resourceInstanceId;
     const timestamp = pendingRevertTimestamp.value;
-    pendingRevertTimestamp.value = null;
-    await performRevert(timestamp);
-}
 
-async function performRevert(timestamp: string) {
-    if (!props.resourceInstanceId) return;
+    if (!resourceInstanceId || !timestamp) return;
+
+    pendingRevertTimestamp.value = null;
     isReverting.value = true;
+
     try {
-        const result = await revertResourceToTimestamp(
-            props.resourceInstanceId,
+        const responseData = await revertResourceToTimestamp(
+            resourceInstanceId,
             timestamp,
         );
-        const isSuccess = result.status === "ok";
+        const isSuccess = responseData.status === "ok";
+
         toast.add({
             severity: isSuccess ? SUCCESS : "warn",
             life: DEFAULT_TOAST_LIFE,
             summary: isSuccess
                 ? $gettext("Resource reverted successfully")
                 : $gettext("Resource partially reverted"),
-            detail: result.errors?.join("; "),
+            detail: responseData.errors?.join("; "),
         });
-        // Refresh the edit log and all report sections
+
         await loadEditLog();
         refreshReportSection?.("all");
-    } catch (error) {
+    } catch (caughtError) {
         toast.add({
             severity: ERROR,
             life: DEFAULT_ERROR_TOAST_LIFE,
             summary: $gettext("Revert failed"),
-            detail: error instanceof Error ? error.message : undefined,
+            detail:
+                caughtError instanceof Error
+                    ? caughtError.message
+                    : String(caughtError),
         });
     } finally {
         isReverting.value = false;
@@ -173,7 +215,7 @@ async function performRevert(timestamp: string) {
 
 <template>
     <Dialog
-        :visible="pendingRevertTimestamp !== null"
+        :visible="isRevertDialogVisible"
         :modal="true"
         :header="$gettext('Confirm Revert')"
         :closable="false"
@@ -252,9 +294,7 @@ async function performRevert(timestamp: string) {
                     </div>
 
                     <div
-                        v-if="
-                            edit.card_name && !edit.edittype.startsWith('tile ')
-                        "
+                        v-if="shouldShowCardNameRow(edit)"
                         class="edit-card-name"
                     >
                         <i class="pi pi-table" />

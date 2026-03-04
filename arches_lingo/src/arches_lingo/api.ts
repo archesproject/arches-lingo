@@ -5,8 +5,7 @@ import { generateArchesURL } from "@/arches/utils/generate-arches-url.ts";
 import type {
     ConceptInstance,
     DigitalObjectInstance,
-    EditLogResponse,
-    RevertResponse,
+    EditLogEntry,
     SchemeInstance,
     TileData,
     User,
@@ -523,7 +522,7 @@ export const dismissNotifications = async (notificationIds: string[]) => {
 
 export const fetchResourceEditLog = async (
     resourceId: string,
-): Promise<EditLogResponse> => {
+): Promise<{ resourceid: string; edits: EditLogEntry[] }> => {
     const url = generateArchesURL("arches_lingo:api-lingo-edit-log", {
         resourceid: resourceId,
     });
@@ -536,7 +535,11 @@ export const fetchResourceEditLog = async (
 export const revertResourceToTimestamp = async (
     resourceId: string,
     timestamp: string,
-): Promise<RevertResponse> => {
+): Promise<{
+    status: "ok" | "partial_success";
+    message: string;
+    errors?: string[];
+}> => {
     const url = generateArchesURL("arches_lingo:api-lingo-edit-log", {
         resourceid: resourceId,
     });

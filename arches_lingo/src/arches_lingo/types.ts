@@ -438,14 +438,3 @@ export interface EditLogEntry {
     card_name: string | null;
     note: string | null;
 }
-
-export interface EditLogResponse {
-    resourceid: string;
-    edits: EditLogEntry[];
-}
-
-export interface RevertResponse {
-    status: "ok" | "partial_success";
-    message: string;
-    errors?: string[];
-}
