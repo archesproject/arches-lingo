@@ -151,7 +151,8 @@ class LingoResourceImporter(BaseImportModule):
             Prefetch("value_set", queryset=models.Value.objects.order_by("value"))
         )
         for concept in concepts_qs:
-            concept_to_load = {"type": "Concept", "tile_data": []}
+            type_tile = {"type": {"type": "concept", "type_metatype": "classification"}}
+            concept_to_load = {"type": "Concept", "tile_data": [type_tile]}
             for value in concept.value_set.all():
                 concept_to_load["resourceinstanceid"] = (
                     concept.pk
