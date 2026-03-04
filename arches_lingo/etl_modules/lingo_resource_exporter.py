@@ -9,8 +9,10 @@ from collections import defaultdict
 from datetime import datetime
 from slugify import slugify
 
+from django.db import connection
 from django.utils.translation import gettext as _
 
+import arches.app.utils.task_management as task_management
 from arches.app.models.system_settings import settings
 from arches.app.models.models import (
     ETLModule,
@@ -137,6 +139,19 @@ class LingoResourceExporter:
             complete=False,
         )
         self.load_event = load_event
+
+        if task_management.check_if_celery_available():
+            from arches_lingo import tasks as lingo_tasks
+
+            task = lingo_tasks.export_lingo_resources_task.apply_async(
+                args=[self.loadid, self.user.id, self.resourceid, filename, format]
+            )
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    "UPDATE load_event SET taskid = %s WHERE loadid = %s",
+                    (task.task_id, self.loadid),
+                )
+            return {"success": True, "data": "delegated_to_celery"}
 
         try:
             response = self.run_export_task(self.resourceid, filename, format)
@@ -319,19 +334,18 @@ class LingoResourceExporter:
 
     def _export_as_jsonld(self, scheme_ids, concept_ids):
         """Export scheme and concept resources as JSON-LD using the core
-        JsonLdWriter. Each resource is serialised individually (the core
-        writer requires one resource at a time) and collected into a list
-        that is written as a single JSON file.
-        writer requires one resource at a time) and built in parallel
-        via a thread pool to reduce overall wall-clock time.
+        JsonLdWriter. The core writer requires one resource at a time, so
+        resources are serialised in parallel via a thread pool. DB I/O
+        releases the GIL, allowing genuine concurrency across threads.
         """
         all_resource_ids = list(scheme_ids) + list(concept_ids)
-        documents = []
 
-        for rid in all_resource_ids:
+        def process_resource(rid):
             writer = JsonLdWriter()
-            js = writer.build_json(resourceinstanceids=[rid])
-            documents.append(js)
+            return writer.build_json(resourceinstanceids=[rid])
+
+        with ThreadPoolExecutor(max_workers=min(len(all_resource_ids), 8)) as executor:
+            documents = list(executor.map(process_resource, all_resource_ids))
 
         if len(documents) == 1:
             output = json.dumps(documents[0], indent=2, sort_keys=True)
