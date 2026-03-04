@@ -9,13 +9,13 @@ from arches.app.models.tile import Tile
 
 
 EDIT_TYPE_LABELS = {
-    "create": "Resource Created",
-    "delete": "Resource Deleted",
-    "tile delete": "Tile Deleted",
-    "tile create": "Tile Created",
-    "tile edit": "Tile Updated",
-    "bulk_create": "Resource Created",
-    "update_resource_instance_lifecycle_state": "Resource Lifecycle State Updated",
+    "create": _("Resource Created"),
+    "delete": _("Resource Deleted"),
+    "tile delete": _("Tile Deleted"),
+    "tile create": _("Tile Created"),
+    "tile edit": _("Tile Updated"),
+    "bulk_create": _("Resource Created"),
+    "update_resource_instance_lifecycle_state": _("Resource Lifecycle State Updated"),
 }
 
 
