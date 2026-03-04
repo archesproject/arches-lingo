@@ -31,25 +31,17 @@ from .test_settings import PROJECT_TEST_ROOT
 class ImportTests(TransactionTestCase):
 
     @classmethod
-    def register_etl_module_and_functions(cls):
+    def register_etl_module(cls):
         from arches.management.commands.etl_module import Command as ETLModuleCommand
-        from arches.management.commands.fn import Command as FunctionCommand
 
         etl_cmd = ETLModuleCommand()
         etl_cmd.register(
             source=str(Path(settings.APP_ROOT) / "etl_modules" / "migrate_to_lingo.py")
         )
 
-        fn_cmd = FunctionCommand()
-        fn_cmd.register(
-            source=str(
-                Path(settings.APP_ROOT) / "functions" / "reciprocal_relationship.py"
-            )
-        )
-
     def setUp(cls):
         """setUpClass doesn't work because the rollback fixture is applied after that."""
-        cls.register_etl_module_and_functions()
+        cls.register_etl_module()
         ViewTests.load_ontology()
         ViewTests.load_graphs()
         cls.moduleid = ETLModule.objects.get(slug="migrate-to-lingo").pk
