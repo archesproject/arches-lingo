@@ -212,7 +212,6 @@ class LingoResourceImporter(BaseImportModule):
                 "language": value.language.name,
             }
         # Values coming from SKOS import are dicts
-        # TODO: https://github.com/archesproject/arches-lingo/issues/472
         elif isinstance(value, dict):
             try:
                 value["language"] = lang_lookup[value["language_id"]]
