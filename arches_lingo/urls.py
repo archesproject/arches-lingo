@@ -61,12 +61,12 @@ urlpatterns = [
         name="api-lingo-concept-relationships",
     ),
     path(
-        "api/lingo/scheme/<uuid:pk>",
+        "api/lingo/schemes/<uuid:pk>",
         SchemeResourceView.as_view(),
         name="api-lingo-scheme",
     ),
     path(
-        "api/lingo/scheme/<uuid:pk>/label-counts",
+        "api/lingo/schemes/<uuid:pk>/label-counts",
         SchemeLabelCountView.as_view(),
         name="api-lingo-scheme-label-counts",
     ),
