@@ -63,9 +63,7 @@ class ViewTests(TestCase):
     def load_controlled_lists(cls):
         cmd = ControlledListsPackageCommand()
         package_dir = Path(settings.APP_ROOT) / "pkg"
-        cmd.load_controlled_lists(
-            package_dir=package_dir, overwrite_options="overwrite"
-        )
+        cmd.load_concepts(package_dir, "overwrite", "keep", True)
 
     @classmethod
     def setUpTestData(cls):
