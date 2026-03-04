@@ -76,7 +76,6 @@ const showExportDialog = ref(false);
 const exportDialogKey = ref(0);
 
 const store = useResourceStore();
-let headerInitialized = false;
 
 watch(
     [() => store.resource.value, () => store.error.value],
@@ -91,8 +90,7 @@ watch(
             isLoading.value = false;
             return;
         }
-        if (!resource || !props.resourceInstanceId || headerInitialized) return;
-        headerInitialized = true;
+        if (!resource || !props.resourceInstanceId) return;
 
         try {
             scheme.value = resource;

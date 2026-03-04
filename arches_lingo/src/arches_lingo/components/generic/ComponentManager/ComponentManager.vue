@@ -167,6 +167,11 @@ function updateAfterComponentDeletion(componentName: string, tileId: string) {
 }
 
 async function refreshReportSection(componentName: string) {
+    if (componentName === "all") {
+        await resourceStore.refreshResource();
+        return;
+    }
+
     const componentDatum = processedComponentData.value.find(
         (componentDatum) => {
             return componentDatum.componentName === componentName;
