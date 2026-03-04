@@ -9,6 +9,7 @@ import type {
     RevertResponse,
     SchemeInstance,
     TileData,
+    User,
 } from "@/arches_lingo/types";
 
 function getToken() {
@@ -42,6 +43,59 @@ export const logout = async () => {
 
 export const fetchUser = async () => {
     const response = await fetch(arches.urls.api_user);
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
+export const fetchUserProfile = async (): Promise<User> => {
+    const response = await fetch(
+        generateArchesURL("arches_lingo:api_lingo_user_profile"),
+    );
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
+export const updateUserProfile = async (
+    profile: Omit<User, "username">,
+): Promise<User> => {
+    const response = await fetch(
+        generateArchesURL("arches_lingo:api_lingo_user_profile"),
+        {
+            method: "PUT",
+            headers: {
+                "X-CSRFTOKEN": getToken(),
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(profile),
+        },
+    );
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
+export const changePassword = async (
+    oldPassword: string,
+    newPassword: string,
+    newPassword2: string,
+): Promise<{ success: string }> => {
+    const response = await fetch(
+        generateArchesURL("arches_lingo:api_lingo_change_password"),
+        {
+            method: "POST",
+            headers: {
+                "X-CSRFTOKEN": getToken(),
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                old_password: oldPassword,
+                new_password: newPassword,
+                new_password2: newPassword2,
+            }),
+        },
+    );
     const parsed = await response.json();
     if (!response.ok) throw new Error(parsed.message || response.statusText);
     return parsed;
@@ -323,13 +377,22 @@ export const fetchSchemeResource = async (schemeId: string) => {
     return parsed;
 };
 
-export const fetchConceptRelationships = async (
-    conceptId: string,
-    type: string,
-) => {
+export const fetchSchemeLabelCounts = async (schemeId: string) => {
+    const url = generateArchesURL(
+        "arches_lingo:api-lingo-scheme-label-counts",
+        {
+            pk: schemeId,
+        },
+    );
+    const response = await fetch(url);
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
+export const fetchConceptRelationships = async (conceptId: string) => {
     const params = new URLSearchParams({
         concept: conceptId,
-        type: type,
     });
 
     const url = `${generateArchesURL("arches_lingo:api-lingo-concept-relationships")}?${params.toString()}`;

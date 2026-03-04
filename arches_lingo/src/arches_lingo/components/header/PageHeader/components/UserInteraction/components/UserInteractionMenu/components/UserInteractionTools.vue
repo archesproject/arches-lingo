@@ -7,8 +7,6 @@ import { useConfirm } from "primevue/useconfirm";
 import Button from "primevue/button";
 import ConfirmDialog from "primevue/confirmdialog";
 
-import { generateArchesURL } from "@/arches/utils/generate-arches-url.ts";
-
 import { logout } from "@/arches_lingo/api.ts";
 import { DEFAULT_ERROR_TOAST_LIFE, ERROR } from "@/arches_lingo/constants.ts";
 import { routeNames } from "@/arches_lingo/routes.ts";
@@ -71,9 +69,9 @@ async function issueLogout() {
             <Button
                 as="a"
                 class="action-button"
-                style="text-decoration: none"
-                :href="generateArchesURL('arches:user_profile_manager')"
+                style="text-decoration: none; cursor: pointer"
                 :aria-label="$gettext('My Profile')"
+                @click="router.push({ name: routeNames.profile })"
             >
                 <i
                     class="pi pi-user"

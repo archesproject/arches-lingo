@@ -6,9 +6,9 @@ import Button from "primevue/button";
 
 import MetaStringViewer from "@/arches_lingo/components/generic/MetaStringViewer.vue";
 import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
+import ConceptResourceSelectWidget from "@/arches_lingo/components/widgets/ConceptResourceSelectWidget/ConceptResourceSelectWidget.vue";
 
 import { VIEW } from "@/arches_lingo/constants.ts";
-import { routeNames } from "@/arches_lingo/routes.ts";
 
 import type {
     ConceptRelationStatus,
@@ -32,9 +32,8 @@ const metaStringLabel: MetaStringText = {
     deleteConfirm: $gettext(
         "Are you sure you want to delete this relationship?",
     ),
-    name: $gettext("RelationshipID"),
-    type: $gettext("Relationship"),
-    language: $gettext("Related Concept"),
+    name: $gettext("Relationship"),
+    type: $gettext("Related Concept"),
     noRecords: $gettext("No associated concepts were found."),
     sortFields: {
         name: "aliased_data.relation_status_ascribed_comparate.display_value",
@@ -80,16 +79,6 @@ const metaStringLabel: MetaStringText = {
             :nodegroup-alias="props.nodegroupAlias"
         >
             <template #name="{ rowData }">
-                <div
-                    v-for="item in rowData.aliased_data
-                        .relation_status_ascribed_comparate?.details"
-                    :key="item.resource_id"
-                    style="white-space: nowrap"
-                >
-                    {{ item.resource_id }}
-                </div>
-            </template>
-            <template #type="{ rowData }">
                 <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="relation_status_ascribed_relation"
@@ -100,24 +89,16 @@ const metaStringLabel: MetaStringText = {
                     :should-show-label="false"
                 />
             </template>
-            <template #language="{ rowData }">
-                <div
-                    v-for="item in rowData.aliased_data
-                        .relation_status_ascribed_comparate.details"
-                    :key="item.resource_id"
-                >
-                    <RouterLink
-                        :to="{
-                            name: routeNames.concept,
-                            params: {
-                                id: item.resource_id,
-                            },
-                        }"
-                        class="text-link"
-                    >
-                        {{ item.display_value }}
-                    </RouterLink>
-                </div>
+            <template #type="{ rowData }">
+                <ConceptResourceSelectWidget
+                    :graph-slug="props.graphSlug"
+                    node-alias="relation_status_ascribed_comparate"
+                    :aliased-node-data="
+                        rowData.aliased_data.relation_status_ascribed_comparate
+                    "
+                    :mode="VIEW"
+                    :should-show-label="false"
+                />
             </template>
             <template #drawer="{ rowData }">
                 <GenericWidget

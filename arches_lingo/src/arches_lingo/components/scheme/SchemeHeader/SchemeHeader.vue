@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject, onMounted, ref, type Ref } from "vue";
+import { inject, onMounted, ref, watch, type Ref } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import { useEditLog } from "@/arches_lingo/composables/useEditLog.ts";
@@ -18,6 +18,7 @@ import {
     DANGER,
     DEFAULT_ERROR_TOAST_LIFE,
     ERROR,
+    NEW_CONCEPT,
     SECONDARY,
     systemLanguageKey,
     selectedLanguageKey,
@@ -26,15 +27,20 @@ import { PREF_LABEL } from "@/arches_controlled_lists/constants.ts";
 
 import {
     deleteLingoResource,
-    fetchLingoResource,
     fetchSchemeResource,
+    fetchSchemeLabelCounts,
 } from "@/arches_lingo/api.ts";
-import { extractDescriptors } from "@/arches_lingo/utils.ts";
+import { useResourceStore } from "@/arches_lingo/composables/useResourceStore.ts";
+import {
+    extractDescriptors,
+    navigateToSchemeOrConcept,
+} from "@/arches_lingo/utils.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 
 import type {
     DataComponentMode,
     Identifier,
+    LanguageLabelCount,
     ResourceInstanceResult,
     SchemeHeader,
 } from "@/arches_lingo/types.ts";
@@ -64,13 +70,76 @@ const selectedLanguage = inject(selectedLanguageKey) as Ref<Language>;
 const scheme = ref<ResourceInstanceResult>();
 const label = ref<Label>();
 const data = ref<SchemeHeader>();
+const labelCounts = ref<LanguageLabelCount[]>([]);
 const isLoading = ref(true);
 const showExportDialog = ref(false);
 const exportDialogKey = ref(0);
 
+const store = useResourceStore();
+let headerInitialized = false;
+
+watch(
+    [() => store.resource.value, () => store.error.value],
+    async ([resource, storeError]) => {
+        if (storeError) {
+            toast.add({
+                severity: ERROR,
+                life: DEFAULT_ERROR_TOAST_LIFE,
+                summary: $gettext("Unable to fetch scheme"),
+                detail: storeError.message,
+            });
+            isLoading.value = false;
+            return;
+        }
+        if (!resource || !props.resourceInstanceId || headerInitialized) return;
+        headerInitialized = true;
+
+        try {
+            scheme.value = resource;
+
+            const schemeResource = await fetchSchemeResource(
+                props.resourceInstanceId,
+            );
+
+            label.value = getItemLabel(
+                schemeResource,
+                selectedLanguage.value.code,
+                systemLanguage.code,
+            );
+
+            extractSchemeHeaderData(resource);
+
+            fetchSchemeLabelCounts(props.resourceInstanceId).then((counts) => {
+                labelCounts.value = counts;
+            });
+        } catch (error) {
+            toast.add({
+                severity: ERROR,
+                life: DEFAULT_ERROR_TOAST_LIFE,
+                summary: $gettext("Unable to fetch scheme"),
+                detail: error instanceof Error ? error.message : undefined,
+            });
+        } finally {
+            isLoading.value = false;
+        }
+    },
+    { immediate: true },
+);
+
 function openExportDialog() {
     exportDialogKey.value++;
     showExportDialog.value = true;
+}
+
+function addTopConcept() {
+    const schemeId = props.resourceInstanceId;
+    if (!schemeId) {
+        return;
+    }
+    navigateToSchemeOrConcept(router, NEW_CONCEPT, {
+        scheme: schemeId,
+        parent: schemeId,
+    });
 }
 
 function extractSchemeHeaderData(scheme: ResourceInstanceResult) {
@@ -100,42 +169,16 @@ function extractSchemeHeaderData(scheme: ResourceInstanceResult) {
 }
 
 onMounted(async () => {
-    try {
-        if (!props.resourceInstanceId) {
-            label.value = {
-                value: $gettext("New Scheme"),
-                language_id: selectedLanguage.value.code,
-                valuetype_id: PREF_LABEL,
-            };
-            return;
-        }
-
-        scheme.value = await fetchLingoResource(
-            props.graphSlug,
-            props.resourceInstanceId,
-        );
-
-        const schemeResource = await fetchSchemeResource(
-            props.resourceInstanceId,
-        );
-
-        label.value = getItemLabel(
-            schemeResource,
-            selectedLanguage.value.code,
-            systemLanguage.code,
-        );
-
-        extractSchemeHeaderData(scheme.value!);
-    } catch (error) {
-        toast.add({
-            severity: ERROR,
-            life: DEFAULT_ERROR_TOAST_LIFE,
-            summary: $gettext("Unable to fetch scheme"),
-            detail: error instanceof Error ? error.message : undefined,
-        });
-    } finally {
+    if (!props.resourceInstanceId) {
+        label.value = {
+            value: $gettext("New Scheme"),
+            language_id: selectedLanguage.value.code,
+            valuetype_id: PREF_LABEL,
+        };
         isLoading.value = false;
+        return;
     }
+    // Resource data is loaded via the store watch above
 });
 
 function confirmDelete() {
@@ -236,7 +279,8 @@ function confirmDelete() {
                             icon="pi pi-plus-circle"
                             :label="$gettext('Add Top Concept')"
                             class="add-button"
-                        ></Button>
+                            @click="addTopConcept"
+                        />
 
                         <!-- TODO: button should reflect published state of concept: delete if draft, deprecate if URI is present -->
                         <Button
@@ -294,19 +338,14 @@ function confirmDelete() {
                 </div>
 
                 <div class="header-row metadata-container">
-                    <!-- TODO: Load Scheme languages here -->
                     <div class="language-chip-container">
-                        <span class="scheme-language">
-                            {{ $gettext("English (en)") }}
-                        </span>
-                        <span class="scheme-language">
-                            {{ $gettext("German (de)") }}
-                        </span>
-                        <span class="scheme-language">
-                            {{ $gettext("French (fr)") }}
-                        </span>
-                        <span class="add-language">
-                            {{ $gettext("Add Language") }}
+                        <span
+                            v-for="entry in labelCounts"
+                            :key="entry.code"
+                            class="scheme-language"
+                        >
+                            {{ entry.language }} ({{ entry.code }}):
+                            {{ entry.count }}
                         </span>
                     </div>
 

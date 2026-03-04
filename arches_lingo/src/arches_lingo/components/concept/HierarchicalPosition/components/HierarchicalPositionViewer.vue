@@ -31,7 +31,7 @@ const props = defineProps<{
     nodegroupAlias: string;
     resourceInstanceId: string | undefined;
     sectionTitle: string;
-    schemeId?: string;
+    scheme?: string;
 }>();
 const { $gettext } = useGettext();
 const confirm = useConfirm();
@@ -55,7 +55,7 @@ const refreshSchemeHierarchy = inject<() => void>("refreshSchemeHierarchy");
 
 function getIcon(item: SearchResultItem) {
     //TODO need a better way to determine if item is a scheme or not
-    return item.id === props.schemeId ? "pi pi-folder" : "pi pi-tag";
+    return item.id === props.scheme ? "pi pi-folder" : "pi pi-tag";
 }
 
 function confirmDelete(hierarchy: SearchResultHierarchy) {

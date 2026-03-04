@@ -16,6 +16,7 @@ export interface User {
     last_name: string;
     username: string;
     email: string;
+    phone?: string;
 }
 
 // Prop injection types
@@ -227,6 +228,13 @@ export interface ConceptClassificationStatusAliases extends AliasedData {
 export type ConceptClassificationStatus =
     TileData<ConceptClassificationStatusAliases>;
 
+export interface ConceptTypeAliases extends AliasedData {
+    type: ReferenceSelectTreeNode[];
+    metatype?: ReferenceSelectTreeNode[];
+}
+
+export type ConceptType = TileData<ConceptTypeAliases>;
+
 export interface IdentifierAliases extends AliasedData {
     identifier_content: StringValue;
     identifier_label?: StringValue;
@@ -324,6 +332,12 @@ export interface SchemeHeader {
     principalUser?: number | string;
     lifeCycleState: string;
     identifier?: string;
+}
+
+export interface LanguageLabelCount {
+    language: string;
+    code: string;
+    count: number;
 }
 
 export interface SchemeInstance {

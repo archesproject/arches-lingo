@@ -11,12 +11,16 @@ from arches_lingo.views.api.concepts import (
     ConceptRelationshipView,
 )
 from arches_lingo.views.api.edit_log import ResourceEditLogAPIView
-from arches_lingo.views.api.schemes import SchemeResourceView
+from arches_lingo.views.api.schemes import SchemeResourceView, SchemeLabelCountView
 from arches_lingo.views.api.generic import (
     LingoResourceDetailView,
     LingoResourceListCreateView,
     LingoTileDetailView,
     LingoTileListCreateView,
+)
+from arches_lingo.views.api.user_profile import (
+    ChangePasswordAPIView,
+    UserProfileAPIView,
 )
 
 handler400 = "arches.app.views.main.custom_400"
@@ -34,6 +38,17 @@ urlpatterns = [
     path("scheme/new", LingoRootView.as_view(), name="new-scheme"),
     path("concept/<uuid:id>", LingoRootView.as_view(), name="concept"),
     path("concept/new", LingoRootView.as_view(), name="new-concept"),
+    path("profile", LingoRootView.as_view(), name="profile"),
+    path(
+        "api/lingo/user-profile",
+        UserProfileAPIView.as_view(),
+        name="api-lingo-user-profile",
+    ),
+    path(
+        "api/lingo/change-password",
+        ChangePasswordAPIView.as_view(),
+        name="api-lingo-change-password",
+    ),
     path("api/concept-tree", ConceptTreeView.as_view(), name="api-concepts"),
     path("api/search", ValueSearchView.as_view(), name="api-search"),
     path(
@@ -47,7 +62,7 @@ urlpatterns = [
         name="api-lingo-concept-relationships",
     ),
     path(
-        "api/lingo/scheme/<uuid:pk>",
+        "api/lingo/schemes/<uuid:pk>",
         SchemeResourceView.as_view(),
         name="api-lingo-scheme",
     ),
@@ -55,6 +70,11 @@ urlpatterns = [
         "api/lingo/resource/<uuid:resourceid>/edit-log",
         ResourceEditLogAPIView.as_view(),
         name="api-lingo-edit-log",
+    ),
+    path(
+        "api/lingo/schemes/<uuid:pk>/label-counts",
+        SchemeLabelCountView.as_view(),
+        name="api-lingo-scheme-label-counts",
     ),
     path(
         "api/lingo/<slug:graph>",
