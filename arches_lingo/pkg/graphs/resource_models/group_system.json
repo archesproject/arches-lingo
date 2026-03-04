@@ -980,7 +980,7 @@
                 {
                     "alias": "type",
                     "config": {
-                        "controlledList": "8936df69-415c-4f4d-8443-ae8f66309457",
+                        "controlledList": "b4d1b62e-13d3-4035-9cff-465f73114772",
                         "multiValue": true
                     },
                     "datatype": "reference",
