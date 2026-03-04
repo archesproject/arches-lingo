@@ -1210,7 +1210,7 @@
                 {
                     "alias": "type",
                     "config": {
-                        "controlledList": "8936df69-415c-4f4d-8443-ae8f66309457",
+                        "controlledList": "e3abbba4-1ba9-4904-9093-b4d31af54e6e",
                         "multiValue": true
                     },
                     "datatype": "reference",
