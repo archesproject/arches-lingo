@@ -17,6 +17,10 @@ from arches.app.utils.data_management.resource_graphs.importer import (
     import_graph as ResourceGraphImporter,
 )
 
+from arches_controlled_lists.management.commands.packages import (
+    Command as ControlledListsPackageCommand,
+)
+
 from arches_lingo.const import (
     CONCEPTS_GRAPH_ID,
     SCHEMES_GRAPH_ID,
@@ -56,7 +60,16 @@ class ViewTests(TestCase):
                 ResourceGraphImporter(archesfile["graph"], overwrite_graphs=True)
 
     @classmethod
+    def load_controlled_lists(cls):
+        cmd = ControlledListsPackageCommand()
+        package_dir = Path(settings.APP_ROOT) / "pkg"
+        cmd.load_controlled_lists(
+            package_dir=package_dir, overwrite_options="overwrite"
+        )
+
+    @classmethod
     def setUpTestData(cls):
+        cls.load_controlled_lists()
         cls.load_ontology()
         cls.load_graphs()
         cls.admin = User.objects.get(username="admin")
