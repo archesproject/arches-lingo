@@ -1811,7 +1811,7 @@
                     "sortorder": 0,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "ff3c400a-76ec-11e7-a793-784f435179ea"
+                    "widget_id": "31f3728c-7613-11e7-a139-784f435179ea"
                 },
                 {
                     "card_id": "bf73e579-4888-11ee-8a8d-11afefc4bff7",
@@ -3795,6 +3795,14 @@
                     "function_id": "60000000-0000-0000-0000-000000000001",
                     "graph_id": "bf73e576-4888-11ee-8a8d-11afefc4bff7",
                     "id": "132e115a-ac19-4961-88a3-d7fb4f622e88"
+                },
+                {
+                    "config": {
+                        "triggering_nodegroups": ["807ef412-0ebe-11ef-9493-0a58a9feac02"]
+                    },
+                    "function_id": "dc0a3a78-f8a3-4472-b77d-7301d6718a36",
+                    "graph_id": "bf73e576-4888-11ee-8a8d-11afefc4bff7",
+                    "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
                 }
             ],
             "graphid": "bf73e576-4888-11ee-8a8d-11afefc4bff7",
@@ -5146,7 +5154,7 @@
                         "searchDsl": "",
                         "searchString": ""
                     },
-                    "datatype": "resource-instance-list",
+                    "datatype": "resource-instance",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,

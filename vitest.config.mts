@@ -29,6 +29,7 @@ function generateConfig(): Promise<UserConfig> {
         const alias: { [key: string]: string } = {
             '@/arches': path.join(parsedData['ROOT_DIR'], 'app', 'src', 'arches'),
             'arches': path.join(parsedData['ROOT_DIR'], 'app', 'media', 'js', 'arches.js'),
+            'js-cookie': path.join(filePath, 'node_modules', 'js-cookie', 'dist', 'js.cookie.mjs'),
         };
 
         for (

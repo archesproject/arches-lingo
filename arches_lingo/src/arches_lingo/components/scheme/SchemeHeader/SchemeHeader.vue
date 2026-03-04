@@ -16,6 +16,7 @@ import {
     DANGER,
     DEFAULT_ERROR_TOAST_LIFE,
     ERROR,
+    NEW_CONCEPT,
     SECONDARY,
     systemLanguageKey,
     selectedLanguageKey,
@@ -25,14 +26,19 @@ import { PREF_LABEL } from "@/arches_controlled_lists/constants.ts";
 import {
     deleteLingoResource,
     fetchSchemeResource,
+    fetchSchemeLabelCounts,
 } from "@/arches_lingo/api.ts";
 import { useResourceStore } from "@/arches_lingo/composables/useResourceStore.ts";
-import { extractDescriptors } from "@/arches_lingo/utils.ts";
+import {
+    extractDescriptors,
+    navigateToSchemeOrConcept,
+} from "@/arches_lingo/utils.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 
 import type {
     DataComponentMode,
     Identifier,
+    LanguageLabelCount,
     ResourceInstanceResult,
     SchemeHeader,
 } from "@/arches_lingo/types.ts";
@@ -61,6 +67,7 @@ const selectedLanguage = inject(selectedLanguageKey) as Ref<Language>;
 const scheme = ref<ResourceInstanceResult>();
 const label = ref<Label>();
 const data = ref<SchemeHeader>();
+const labelCounts = ref<LanguageLabelCount[]>([]);
 const isLoading = ref(true);
 const showExportDialog = ref(false);
 const exportDialogKey = ref(0);
@@ -98,6 +105,10 @@ watch(
             );
 
             extractSchemeHeaderData(resource);
+
+            fetchSchemeLabelCounts(props.resourceInstanceId).then((counts) => {
+                labelCounts.value = counts;
+            });
         } catch (error) {
             toast.add({
                 severity: ERROR,
@@ -115,6 +126,17 @@ watch(
 function openExportDialog() {
     exportDialogKey.value++;
     showExportDialog.value = true;
+}
+
+function addTopConcept() {
+    const schemeId = props.resourceInstanceId;
+    if (!schemeId) {
+        return;
+    }
+    navigateToSchemeOrConcept(router, NEW_CONCEPT, {
+        scheme: schemeId,
+        parent: schemeId,
+    });
 }
 
 function extractSchemeHeaderData(scheme: ResourceInstanceResult) {
@@ -246,7 +268,8 @@ function confirmDelete() {
                             icon="pi pi-plus-circle"
                             :label="$gettext('Add Top Concept')"
                             class="add-button"
-                        ></Button>
+                            @click="addTopConcept"
+                        />
 
                         <!-- TODO: button should reflect published state of concept: delete if draft, deprecate if URI is present -->
                         <Button
@@ -304,19 +327,14 @@ function confirmDelete() {
                 </div>
 
                 <div class="header-row metadata-container">
-                    <!-- TODO: Load Scheme languages here -->
                     <div class="language-chip-container">
-                        <span class="scheme-language">
-                            {{ $gettext("English (en)") }}
-                        </span>
-                        <span class="scheme-language">
-                            {{ $gettext("German (de)") }}
-                        </span>
-                        <span class="scheme-language">
-                            {{ $gettext("French (fr)") }}
-                        </span>
-                        <span class="add-language">
-                            {{ $gettext("Add Language") }}
+                        <span
+                            v-for="entry in labelCounts"
+                            :key="entry.code"
+                            class="scheme-language"
+                        >
+                            {{ entry.language }} ({{ entry.code }}):
+                            {{ entry.count }}
                         </span>
                     </div>
 

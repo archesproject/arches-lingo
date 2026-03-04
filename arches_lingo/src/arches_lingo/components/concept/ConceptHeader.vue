@@ -20,6 +20,7 @@ import {
     DEFAULT_TOAST_LIFE,
     EDIT,
     ERROR,
+    NEW_CONCEPT,
     SECONDARY,
     SUCCESS,
     systemLanguageKey,
@@ -36,7 +37,10 @@ import {
     fetchConceptResource,
 } from "@/arches_lingo/api.ts";
 import { useResourceStore } from "@/arches_lingo/composables/useResourceStore.ts";
-import { extractDescriptors } from "@/arches_lingo/utils.ts";
+import {
+    extractDescriptors,
+    navigateToSchemeOrConcept,
+} from "@/arches_lingo/utils.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 
 import type {
@@ -242,6 +246,20 @@ function openExportDialog() {
     showExportDialog.value = true;
 }
 
+function addChild() {
+    const schemeId = data.value?.partOfScheme?.node_value?.[0]?.resourceId;
+    const parentId = props.resourceInstanceId;
+
+    if (!schemeId || !parentId) {
+        return;
+    }
+
+    navigateToSchemeOrConcept(router, NEW_CONCEPT, {
+        scheme: schemeId,
+        parent: parentId,
+    });
+}
+
 function extractConceptHeaderData(concept: ResourceInstanceResult) {
     const aliased_data = concept?.aliased_data;
 
@@ -329,7 +347,10 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                     />
                 </div>
             </div>
-            <div class="header-buttons">
+            <div
+                v-if="resourceInstanceId"
+                class="header-buttons"
+            >
                 <Button
                     :aria-label="$gettext('Export')"
                     class="add-button"
@@ -342,7 +363,8 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                     icon="pi pi-plus-circle"
                     :label="$gettext('Add Child')"
                     class="add-button"
-                ></Button>
+                    @click="addChild"
+                />
 
                 <!-- TODO: button should reflect published state of concept: delete if draft, deprecate if URI is present -->
                 <Button
