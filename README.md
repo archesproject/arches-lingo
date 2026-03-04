@@ -175,7 +175,7 @@ For developer install instructions, see the [Developer Setup](#developer-setup-f
     ```
     then you can import the test data:
     ```
-    python manage.py loaddata tests/fixtures/data/FISH_Thesauri_example_data_resources.json tests/fixtures/data/FISH_Thesauri_example_data_tiles.json
+    python manage.py loaddata tests/fixtures/data/FISH_Thesaurus_Monument_Types.json tests/fixtures/data/FISH_Archaeological_Objects_and_Components_Thesauri.json tests/fixtures/data/remaining_FISH_Thesauri.json
     ```
 
 13. In the terminal window that is running the Django server, halt the server and restart it.
