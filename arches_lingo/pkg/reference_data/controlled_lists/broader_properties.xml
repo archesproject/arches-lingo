@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rdf:RDF
+  xmlns:skos="http://www.w3.org/2004/02/skos/core#"
+  xmlns:arches="http://localhost:8000/"
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  xmlns:dcterms="http://purl.org/dc/terms/"
+>
+  <skos:Concept rdf:about="http://localhost:8000/4810df79-8bdd-4102-a067-fdb11dcff8b7">
+    <skos:broader>
+      <skos:Concept rdf:about="http://localhost:8000/ad3bbf30-5fa6-43a3-b6cd-f5e874befd7e">
+        <dcterms:identifier>http://www.w3.org/2004/02/skos/core#broaderTransitive</dcterms:identifier>
+        <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</arches:sortorder>
+        <skos:prefLabel xml:lang="en">broaderTransitive</skos:prefLabel>
+        <skos:inScheme rdf:resource="http://localhost:8000/42e91d71-7d25-4e43-97df-8b43f46711cf"/>
+        <skos:narrower rdf:resource="http://localhost:8000/4810df79-8bdd-4102-a067-fdb11dcff8b7"/>
+      </skos:Concept>
+    </skos:broader>
+    <skos:narrower>
+      <skos:Concept rdf:about="http://localhost:8000/0e53033b-49f0-4252-b9cc-e50f120c76f9">
+        <skos:altLabel xml:lang="en">BTG</skos:altLabel>
+        <skos:prefLabel xml:lang="en">broaderGeneric</skos:prefLabel>
+        <skos:altLabel xml:lang="en">broader term (generic)</skos:altLabel>
+        <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</arches:sortorder>
+        <skos:inScheme rdf:resource="http://localhost:8000/42e91d71-7d25-4e43-97df-8b43f46711cf"/>
+        <dcterms:identifier>http://purl.org/iso25964/skos-thes#broaderGeneric</dcterms:identifier>
+        <skos:broader rdf:resource="http://localhost:8000/4810df79-8bdd-4102-a067-fdb11dcff8b7"/>
+        <skos:definition xml:lang="en">ISO 25964-1: BTG
+The immediate (direct or one-step) class - generalized class relationship</skos:definition>
+      </skos:Concept>
+    </skos:narrower>
+    <skos:inScheme>
+      <skos:ConceptScheme rdf:about="http://localhost:8000/42e91d71-7d25-4e43-97df-8b43f46711cf">
+        <dcterms:title>broader properties</dcterms:title>
+      </skos:ConceptScheme>
+    </skos:inScheme>
+    <skos:narrower>
+      <skos:Concept rdf:about="http://localhost:8000/d8a07e1a-3c4a-4b09-a2d9-82754d6f95cf">
+        <skos:definition xml:lang="en">ISO 25964-1: BTP
+When the ISO 25964 standard is followed, the BTP/NTP relationship should qualify for a transitive closure.</skos:definition>
+        <skos:prefLabel xml:lang="en">broaderPartitive</skos:prefLabel>
+        <skos:altLabel xml:lang="en">BTP</skos:altLabel>
+        <dcterms:identifier>http://purl.org/iso25964/skos-thes#broaderPartitive</dcterms:identifier>
+        <skos:example xml:lang="en">A "bicycle wheel" for instance belongs uniquely to a "bicycle" while a "wheel" does not.
+A BTP/NTP relationship should not be established between "bicycles" and "wheels" because a wheel could be part of a motor car, a wheelbarrow or one of many other artefacts.</skos:example>
+        <skos:inScheme rdf:resource="http://localhost:8000/42e91d71-7d25-4e43-97df-8b43f46711cf"/>
+        <skos:broader rdf:resource="http://localhost:8000/4810df79-8bdd-4102-a067-fdb11dcff8b7"/>
+        <skos:altLabel xml:lang="en">broader term (partitive)</skos:altLabel>
+        <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">6</arches:sortorder>
+      </skos:Concept>
+    </skos:narrower>
+    <dcterms:identifier>http://www.w3.org/2004/02/skos/core#broader</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">broader</skos:prefLabel>
+    <skos:narrower>
+      <skos:Concept rdf:about="http://localhost:8000/4a08c8ab-d909-4dd1-aa7f-e240c8712def">
+        <skos:prefLabel xml:lang="en">broaderInstantial</skos:prefLabel>
+        <skos:broader rdf:resource="http://localhost:8000/4810df79-8bdd-4102-a067-fdb11dcff8b7"/>
+        <skos:definition xml:lang="en">ISO 25964-1: BTI
+The immediate (direct or one-step) instance - class relationship.</skos:definition>
+        <skos:altLabel xml:lang="en">broader term (instantial)</skos:altLabel>
+        <skos:inScheme rdf:resource="http://localhost:8000/42e91d71-7d25-4e43-97df-8b43f46711cf"/>
+        <dcterms:identifier>http://purl.org/iso25964/skos-thes#broaderInstantial</dcterms:identifier>
+        <skos:altLabel xml:lang="en">BTI</skos:altLabel>
+        <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">5</arches:sortorder>
+      </skos:Concept>
+    </skos:narrower>
+    <skos:narrower>
+      <skos:Concept rdf:about="http://localhost:8000/d7723ec7-a527-4a39-9ef5-cea3f99a7455">
+        <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">3</arches:sortorder>
+        <skos:broader rdf:resource="http://localhost:8000/4810df79-8bdd-4102-a067-fdb11dcff8b7"/>
+        <skos:prefLabel xml:lang="en">broadMatch</skos:prefLabel>
+        <dcterms:identifier>http://www.w3.org/2004/02/skos/core#broadMatch</dcterms:identifier>
+        <skos:inScheme rdf:resource="http://localhost:8000/42e91d71-7d25-4e43-97df-8b43f46711cf"/>
+      </skos:Concept>
+    </skos:narrower>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</arches:sortorder>
+  </skos:Concept>
+</rdf:RDF>

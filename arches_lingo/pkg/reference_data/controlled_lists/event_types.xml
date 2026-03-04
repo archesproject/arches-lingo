@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rdf:RDF
+  xmlns:skos="http://www.w3.org/2004/02/skos/core#"
+  xmlns:dcterms="http://purl.org/dc/terms/"
+  xmlns:arches="http://localhost:8000/"
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+>
+  <skos:Concept rdf:about="http://localhost:8000/14751cb1-f7af-45d9-b32a-59d150bdac0f">
+    <skos:prefLabel xml:lang="en">warrant assertion event</skos:prefLabel>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</arches:sortorder>
+    <skos:inScheme>
+      <skos:ConceptScheme rdf:about="http://localhost:8000/6eaa2c6f-af83-464c-9200-051c4cfe7e8e">
+        <dcterms:title>Event Types</dcterms:title>
+      </skos:ConceptScheme>
+    </skos:inScheme>
+    <dcterms:identifier>https://vocab.getty.edu/aat/300456597</dcterms:identifier>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/4062bbcd-bd0f-46c5-85ba-6479c1eac864">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</arches:sortorder>
+    <skos:prefLabel xml:lang="en">test event</skos:prefLabel>
+    <dcterms:identifier>http://www.w3.org/2004/02/skos/core#broadMatch</dcterms:identifier>
+    <skos:inScheme rdf:resource="http://localhost:8000/6eaa2c6f-af83-464c-9200-051c4cfe7e8e"/>
+  </skos:Concept>
+</rdf:RDF>

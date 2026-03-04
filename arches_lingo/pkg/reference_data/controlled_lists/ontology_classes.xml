@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rdf:RDF
+  xmlns:skos="http://www.w3.org/2004/02/skos/core#"
+  xmlns:arches="http://localhost:8000/"
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  xmlns:dcterms="http://purl.org/dc/terms/"
+>
+  <skos:Concept rdf:about="http://localhost:8000/b80b3df5-39ce-4dd3-a979-a73aed2b362c">
+    <skos:narrower>
+      <skos:Concept rdf:about="http://localhost:8000/6abe2747-f53f-40d9-857a-3c027ccf2f79">
+        <skos:inScheme rdf:resource="http://localhost:8000/5f28f263-9d16-4c01-a146-80a97d7119a9"/>
+        <dcterms:identifier>http://www.cidoc-crm.org/cidoc-crm/E99_Product_Type</dcterms:identifier>
+        <skos:prefLabel xml:lang="en">E99 Product Type</skos:prefLabel>
+        <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</arches:sortorder>
+        <skos:broader rdf:resource="http://localhost:8000/b80b3df5-39ce-4dd3-a979-a73aed2b362c"/>
+      </skos:Concept>
+    </skos:narrower>
+    <skos:prefLabel xml:lang="en">E55 Type</skos:prefLabel>
+    <dcterms:identifier>http://www.cidoc-crm.org/cidoc-crm/E55_Type</dcterms:identifier>
+    <skos:narrower>
+      <skos:Concept rdf:about="http://localhost:8000/fd263a79-e808-49a0-a0da-b663978e4e68">
+        <dcterms:identifier>http://www.cidoc-crm.org/cidoc-crm/E58_Measurement_Unit</dcterms:identifier>
+        <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">5</arches:sortorder>
+        <skos:broader rdf:resource="http://localhost:8000/b80b3df5-39ce-4dd3-a979-a73aed2b362c"/>
+        <skos:prefLabel xml:lang="en">E58 Measurement Unit</skos:prefLabel>
+        <skos:scopeNote xml:lang="en">This class is a specialization of E55 Type and comprises the types of measurement units: feet, inches, centimetres, litres, lumens, etc.
+
+This type is used categorically in the model without reference to instances of it, i.e. the model does not foresee the description of instances of instances of E58 Measurement Unit, e.g. “instances of cm”.
+
+Système International (SI) units or internationally recognized non-SI terms should be used whenever possible, such as those defined by ISO80000:2009. Archaic Measurement Units used in historical records should be preserved.</skos:scopeNote>
+        <skos:inScheme rdf:resource="http://localhost:8000/5f28f263-9d16-4c01-a146-80a97d7119a9"/>
+      </skos:Concept>
+    </skos:narrower>
+    <skos:narrower>
+      <skos:Concept rdf:about="http://localhost:8000/bffe467f-5d22-4b3c-a6c7-9766165271b3">
+        <skos:prefLabel xml:lang="en">E56 Language</skos:prefLabel>
+        <skos:broader rdf:resource="http://localhost:8000/b80b3df5-39ce-4dd3-a979-a73aed2b362c"/>
+        <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">3</arches:sortorder>
+        <skos:inScheme rdf:resource="http://localhost:8000/5f28f263-9d16-4c01-a146-80a97d7119a9"/>
+        <skos:scopeNote xml:lang="en">This class is a specialization of E55 Type and comprises the natural languages in the sense of concepts.
+
+This type is used categorically in the model without reference to instances of it, i.e. the Model does not foresee the description of instances of instances of E56 Language, e.g. “instances of Mandarin Chinese”.
+
+It is recommended that internationally or nationally agreed codes and terminology should be used to denote instances of E56 Language, such as those defined in ISO 639-3:2007 and later versions.</skos:scopeNote>
+        <dcterms:identifier>http://www.cidoc-crm.org/cidoc-crm/E56_Language</dcterms:identifier>
+      </skos:Concept>
+    </skos:narrower>
+    <skos:inScheme>
+      <skos:ConceptScheme rdf:about="http://localhost:8000/5f28f263-9d16-4c01-a146-80a97d7119a9">
+        <dcterms:title>Ontology Classes</dcterms:title>
+      </skos:ConceptScheme>
+    </skos:inScheme>
+    <skos:narrower>
+      <skos:Concept rdf:about="http://localhost:8000/36f1b686-c4ba-4c0e-b4f3-b8b190f3a88d">
+        <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</arches:sortorder>
+        <skos:broader rdf:resource="http://localhost:8000/b80b3df5-39ce-4dd3-a979-a73aed2b362c"/>
+        <skos:inScheme rdf:resource="http://localhost:8000/5f28f263-9d16-4c01-a146-80a97d7119a9"/>
+        <skos:prefLabel xml:lang="en">E57 Material</skos:prefLabel>
+        <dcterms:identifier>http://www.cidoc-crm.org/cidoc-crm/E57_Material</dcterms:identifier>
+      </skos:Concept>
+    </skos:narrower>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</arches:sortorder>
+    <skos:scopeNote xml:lang="en">This class comprises concepts denoted by terms from thesauri and controlled vocabularies used to characterize and classify instances of CIDOC CRM classes. Instances of E55 Type represent concepts, in contrast to instances of E41 Appellation which are used to name instances of CIDOC CRM classes.
+
+E55 Type provides an interface to domain specific ontologies and thesauri. These can be represented in the CIDOC CRM as subclasses of E55 Type, forming hierarchies of terms, i.e. instances of E55 Type linked via P127 has broader term (has narrower term): E55 Type. Such hierarchies may be extended with additional properties.</skos:scopeNote>
+  </skos:Concept>
+</rdf:RDF>

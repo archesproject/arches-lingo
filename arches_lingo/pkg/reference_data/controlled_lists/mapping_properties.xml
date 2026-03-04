@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rdf:RDF
+  xmlns:skos="http://www.w3.org/2004/02/skos/core#"
+  xmlns:dcterms="http://purl.org/dc/terms/"
+  xmlns:arches="http://localhost:8000/"
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+>
+  <skos:Concept rdf:about="http://localhost:8000/d6c5ca2f-04e3-4a61-9065-40193bce8d83">
+    <skos:narrower>
+      <skos:Concept rdf:about="http://localhost:8000/5ca7196a-2e9a-449c-b6fe-8ed42f604cba">
+        <skos:inScheme rdf:resource="http://localhost:8000/769fa072-6247-4e23-b638-4e801f8c50dc"/>
+        <skos:prefLabel xml:lang="en">relatedMatch</skos:prefLabel>
+        <dcterms:identifier>http://www.w3.org/2004/02/skos/core#relatedMatch</dcterms:identifier>
+        <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">5</arches:sortorder>
+        <skos:broader rdf:resource="http://localhost:8000/d6c5ca2f-04e3-4a61-9065-40193bce8d83"/>
+      </skos:Concept>
+    </skos:narrower>
+    <skos:prefLabel xml:lang="en">mappingRelation</skos:prefLabel>
+    <skos:narrower>
+      <skos:Concept rdf:about="http://localhost:8000/b3ffe5b4-21ba-4568-aec0-e6e0bd669c38">
+        <skos:narrower rdf:resource="http://localhost:8000/ed044298-b4a1-4455-b11a-81561fbf2fd8"/>
+        <dcterms:identifier>http://www.w3.org/2004/02/skos/core#broadMatch</dcterms:identifier>
+        <skos:broader rdf:resource="http://localhost:8000/d6c5ca2f-04e3-4a61-9065-40193bce8d83"/>
+        <skos:inScheme rdf:resource="http://localhost:8000/769fa072-6247-4e23-b638-4e801f8c50dc"/>
+        <skos:prefLabel xml:lang="en">broadMatch</skos:prefLabel>
+        <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</arches:sortorder>
+      </skos:Concept>
+    </skos:narrower>
+    <dcterms:identifier>http://www.w3.org/2004/02/skos/core#mappingRelation</dcterms:identifier>
+    <skos:inScheme>
+      <skos:ConceptScheme rdf:about="http://localhost:8000/769fa072-6247-4e23-b638-4e801f8c50dc">
+        <dcterms:title>Mapping properties</dcterms:title>
+      </skos:ConceptScheme>
+    </skos:inScheme>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</arches:sortorder>
+    <skos:narrower>
+      <skos:Concept rdf:about="http://localhost:8000/bb125622-0256-4f28-902f-7c273d353bc9">
+        <dcterms:identifier>http://www.w3.org/2004/02/skos/core#narrowMatch</dcterms:identifier>
+        <skos:prefLabel xml:lang="en">narrowMatch</skos:prefLabel>
+        <skos:broader rdf:resource="http://localhost:8000/d6c5ca2f-04e3-4a61-9065-40193bce8d83"/>
+        <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">6</arches:sortorder>
+        <skos:inScheme rdf:resource="http://localhost:8000/769fa072-6247-4e23-b638-4e801f8c50dc"/>
+      </skos:Concept>
+    </skos:narrower>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/cce4ce1c-0e47-453e-8a12-3e23c3dbb472">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</arches:sortorder>
+    <dcterms:identifier>http://www.w3.org/2004/02/skos/core#exactMatch</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">exactMatch</skos:prefLabel>
+    <skos:inScheme rdf:resource="http://localhost:8000/769fa072-6247-4e23-b638-4e801f8c50dc"/>
+    <skos:broader>
+      <skos:Concept rdf:about="http://localhost:8000/ed044298-b4a1-4455-b11a-81561fbf2fd8">
+        <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">3</arches:sortorder>
+        <skos:prefLabel xml:lang="en">closeMatch</skos:prefLabel>
+        <dcterms:identifier>http://www.w3.org/2004/02/skos/core#closeMatch</dcterms:identifier>
+        <skos:narrower rdf:resource="http://localhost:8000/cce4ce1c-0e47-453e-8a12-3e23c3dbb472"/>
+        <skos:broader rdf:resource="http://localhost:8000/b3ffe5b4-21ba-4568-aec0-e6e0bd669c38"/>
+        <skos:inScheme rdf:resource="http://localhost:8000/769fa072-6247-4e23-b638-4e801f8c50dc"/>
+      </skos:Concept>
+    </skos:broader>
+  </skos:Concept>
+</rdf:RDF>

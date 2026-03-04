@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rdf:RDF
+  xmlns:skos="http://www.w3.org/2004/02/skos/core#"
+  xmlns:dcterms="http://purl.org/dc/terms/"
+  xmlns:arches="http://localhost:8000/"
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+>
+  <skos:Concept rdf:about="http://localhost:8000/9baf3cd5-33d4-4fbc-b1d1-a2d218732f1e">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</arches:sortorder>
+    <skos:inScheme>
+      <skos:ConceptScheme rdf:about="http://localhost:8000/38fc54d4-67ef-4183-8934-66669f1f504c">
+        <dcterms:title>Scheme Identifier Types</dcterms:title>
+      </skos:ConceptScheme>
+    </skos:inScheme>
+    <skos:scopeNote xml:lang="en">Numbers or alphanumeric codes that are not repeated within a given environment and used to unambiguously and uniquely identify an object, record, or data element.</skos:scopeNote>
+    <skos:prefLabel xml:lang="en">identifier</skos:prefLabel>
+    <dcterms:identifier>https://vocab.getty.edu/aat/300404012</dcterms:identifier>
+  </skos:Concept>
+</rdf:RDF>
