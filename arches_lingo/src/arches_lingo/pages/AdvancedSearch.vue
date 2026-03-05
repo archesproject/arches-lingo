@@ -8,7 +8,7 @@ import Panel from "primevue/panel";
 import Splitter from "primevue/splitter";
 import SplitterPanel from "primevue/splitterpanel";
 
-import FacetGroup from "@/arches_lingo/components/advanced-search/FacetGroup.vue";
+import SearchQueryBuilder from "@/arches_lingo/components/advanced-search/SearchQueryBuilder.vue";
 import SearchResults from "@/arches_lingo/components/advanced-search/SearchResults.vue";
 import SavedSearches from "@/arches_lingo/components/advanced-search/SavedSearches.vue";
 import ConceptSets from "@/arches_lingo/components/advanced-search/ConceptSets.vue";
@@ -301,32 +301,15 @@ onMounted(loadSearchOptions);
         >
             <SplitterPanel :size="75">
                 <div class="search-content">
-                    <!-- Query Builder Section -->
-                    <div class="query-panel">
-                        <FacetGroup
-                            :group="queryGroup"
-                            :options="searchOptions"
-                            :concept-sets="conceptSets"
-                            :depth="0"
-                            @update:group="queryGroup = $event"
-                        />
-
-                        <div class="search-actions">
-                            <Button
-                                :label="$gettext('Search')"
-                                icon="pi pi-search"
-                                :loading="isSearching"
-                                @click="executeSearch(1)"
-                            />
-                            <Button
-                                :label="$gettext('Clear')"
-                                icon="pi pi-eraser"
-                                severity="secondary"
-                                outlined
-                                @click="clearSearch"
-                            />
-                        </div>
-                    </div>
+                    <SearchQueryBuilder
+                        :query-group="queryGroup"
+                        :options="searchOptions"
+                        :concept-sets="conceptSets"
+                        :is-searching="isSearching"
+                        @update:query-group="queryGroup = $event"
+                        @search="executeSearch(1)"
+                        @clear="clearSearch"
+                    />
 
                     <!-- Search Results Section -->
                     <Panel
@@ -452,28 +435,6 @@ onMounted(loadSearchOptions);
     padding: 1rem;
     height: 100%;
     overflow: hidden;
-}
-
-/* ── Query builder panel ── */
-.query-panel {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    flex-shrink: 0;
-}
-
-/* ── Search / Clear buttons ── */
-.search-actions {
-    display: flex;
-    gap: 0.375rem;
-    padding-top: 0.75rem;
-    border-top: 0.0625rem solid var(--p-highlight-focus-background);
-}
-
-.search-actions :deep(.p-button) {
-    font-size: var(--p-lingo-font-size-small);
-    font-weight: var(--p-lingo-font-weight-normal);
-    border-radius: 0.125rem;
 }
 
 /* ── Results panel ── */

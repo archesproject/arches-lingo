@@ -10,40 +10,30 @@ from arches.app.models.models import ResourceInstance, TileModel
 
 from arches_lingo.const import (
     CONCEPTS_GRAPH_ID,
-    # Appellative status (labels)
     CONCEPT_NAME_NODEGROUP,
     CONCEPT_NAME_CONTENT_NODE,
     CONCEPT_NAME_LANGUAGE_NODE,
     CONCEPT_NAME_TYPE_NODE,
-    # Classification status (broader/narrower hierarchy)
     CLASSIFICATION_STATUS_NODEGROUP,
     CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID,
-    # Relation status (associated concepts)
     RELATION_STATUS_NODEGROUP,
     RELATION_STATUS_ASCRIBED_COMPARATE_NODEID,
-    # Part of scheme (scheme membership)
     CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID,
-    # Top concept of
     TOP_CONCEPT_OF_NODE_AND_NODEGROUP,
-    # Statement (notes)
     STATEMENT_NODEGROUP,
     STATEMENT_CONTENT_NODE,
     STATEMENT_LANGUAGE_NODE,
     STATEMENT_TYPE_NODE,
-    # URI
     URI_NODEGROUP,
     URI_CONTENT_NODE,
-    # Identifier
     IDENTIFIER_NODEGROUP,
     IDENTIFIER_CONTENT_NODE,
-    # Match status
     MATCH_STATUS_NODEGROUP,
     MATCH_STATUS_COMPARATE_NODE,
-    # Concept type
     CONCEPT_TYPE_NODE,
-    # Status (lifecycle)
     STATUS_NODEGROUP,
 )
+from arches_lingo.models import ConceptSet
 
 
 VALID_FACETS = {
@@ -452,8 +442,6 @@ class AdvancedSearchEvaluator:
 
     def _facet_concept_set(self, condition):
         """Return concepts from a saved concept set."""
-        from arches_lingo.models import ConceptSet
-
         set_id = condition.get("value")
         if not set_id:
             return []

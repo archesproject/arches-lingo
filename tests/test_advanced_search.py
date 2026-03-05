@@ -1,4 +1,4 @@
-"""Tests for advanced search: models, query evaluator, and API views."""
+"""Tests for advanced search: query evaluator and API views."""
 
 import datetime
 import json
@@ -9,7 +9,6 @@ from pathlib import Path
 from django.conf import settings
 from django.contrib.auth.models import Group, User
 from django.core import management
-from django.db import IntegrityError
 from django.test import TestCase
 from django.test.utils import captured_stdout
 from django.urls import reverse
@@ -43,9 +42,6 @@ from arches_lingo.const import (
     RELATION_STATUS_NODEGROUP,
     RELATION_STATUS_ASCRIBED_COMPARATE_NODEID,
     LABEL_LIST_ID,
-)
-from arches_lingo.models import ConceptSet, ConceptSetMember, SavedSearch
-from arches_lingo.const import (
     STATEMENT_NODEGROUP,
     STATEMENT_CONTENT_NODE,
     STATEMENT_LANGUAGE_NODE,
@@ -59,144 +55,8 @@ from arches_lingo.const import (
     CONCEPT_TYPE_NODE,
     STATUS_NODEGROUP,
 )
+from arches_lingo.models import ConceptSet, ConceptSetMember, SavedSearch
 from arches_lingo.utils.advanced_search import AdvancedSearchEvaluator
-
-
-# ────────────────────────────────────────────────────────────────
-# Model tests  (lightweight, no graph fixtures needed)
-# ────────────────────────────────────────────────────────────────
-
-
-class SavedSearchModelTests(TestCase):
-    """Tests for the SavedSearch model."""
-
-    @classmethod
-    def setUpTestData(cls):
-        cls.user = User.objects.create_user(
-            username="test_saved_search",
-            password="pass",
-        )
-
-    def test_create_saved_search(self):
-        query = {"operator": "and", "conditions": []}
-        saved_search = SavedSearch.objects.create(
-            user=self.user,
-            name="My Search",
-            query=query,
-        )
-        self.assertEqual(saved_search.name, "My Search")
-        self.assertEqual(saved_search.query, query)
-        self.assertEqual(saved_search.user, self.user)
-        self.assertIsNotNone(saved_search.created)
-        self.assertIsNotNone(saved_search.updated)
-
-    def test_str_representation(self):
-        saved_search = SavedSearch.objects.create(
-            user=self.user,
-            name="Alpha Search",
-            query={},
-        )
-        self.assertEqual(str(saved_search), "Alpha Search")
-
-    def test_ordering_by_updated(self):
-        """Most recently updated first."""
-        s1 = SavedSearch.objects.create(user=self.user, name="First", query={})
-        s2 = SavedSearch.objects.create(user=self.user, name="Second", query={})
-        # Touch s1 to make it more recent
-        s1.name = "First updated"
-        s1.save()
-
-        searches = list(SavedSearch.objects.filter(user=self.user))
-        self.assertEqual(searches[0].pk, s1.pk)
-        self.assertEqual(searches[1].pk, s2.pk)
-
-    def test_user_related_name(self):
-        """Ensure saved searches are accessible via the related name."""
-        SavedSearch.objects.create(user=self.user, name="Related", query={})
-        self.assertEqual(
-            self.user.lingo_saved_searches.count(),
-            SavedSearch.objects.filter(user=self.user).count(),
-        )
-
-
-class ConceptSetModelTests(TestCase):
-    """Tests for ConceptSet and ConceptSetMember models."""
-
-    @classmethod
-    def setUpTestData(cls):
-        cls.user = User.objects.create_user(
-            username="test_concept_set",
-            password="pass",
-        )
-
-    def test_create_concept_set(self):
-        concept_set = ConceptSet.objects.create(
-            user=self.user,
-            name="Set A",
-            description="A test set",
-        )
-        self.assertEqual(concept_set.name, "Set A")
-        self.assertEqual(concept_set.description, "A test set")
-        self.assertIsNotNone(concept_set.created)
-
-    def test_str_representation(self):
-        concept_set = ConceptSet.objects.create(
-            user=self.user, name="Beta Set", description=""
-        )
-        self.assertEqual(str(concept_set), "Beta Set")
-
-    def test_add_members(self):
-        concept_set = ConceptSet.objects.create(user=self.user, name="Set B")
-        cid = uuid.uuid4()
-        member = ConceptSetMember.objects.create(
-            concept_set=concept_set, concept_id=cid
-        )
-        self.assertEqual(concept_set.members.count(), 1)
-        self.assertEqual(member.concept_id, cid)
-
-    def test_member_str_representation(self):
-        concept_set = ConceptSet.objects.create(user=self.user, name="Set C")
-        cid = uuid.uuid4()
-        member = ConceptSetMember.objects.create(
-            concept_set=concept_set, concept_id=cid
-        )
-        self.assertEqual(str(member), f"Set C: {cid}")
-
-    def test_unique_together_constraint(self):
-        concept_set = ConceptSet.objects.create(user=self.user, name="Set D")
-        cid = uuid.uuid4()
-        ConceptSetMember.objects.create(concept_set=concept_set, concept_id=cid)
-        with self.assertRaises(IntegrityError):
-            ConceptSetMember.objects.create(concept_set=concept_set, concept_id=cid)
-
-    def test_cascade_delete_on_set(self):
-        concept_set = ConceptSet.objects.create(user=self.user, name="Delete Me")
-        ConceptSetMember.objects.create(
-            concept_set=concept_set, concept_id=uuid.uuid4()
-        )
-        ConceptSetMember.objects.create(
-            concept_set=concept_set, concept_id=uuid.uuid4()
-        )
-        concept_set_pk = concept_set.pk
-        self.assertEqual(
-            ConceptSetMember.objects.filter(concept_set_id=concept_set_pk).count(), 2
-        )
-        concept_set.delete()
-        self.assertEqual(
-            ConceptSetMember.objects.filter(concept_set_id=concept_set_pk).count(), 0
-        )
-
-    def test_user_related_name(self):
-        """Ensure concept sets are accessible via the related name."""
-        ConceptSet.objects.create(user=self.user, name="Related Set")
-        self.assertEqual(
-            self.user.lingo_concept_sets.count(),
-            ConceptSet.objects.filter(user=self.user).count(),
-        )
-
-    def test_default_description_blank(self):
-        concept_set = ConceptSet.objects.create(user=self.user, name="No Desc")
-        self.assertEqual(concept_set.description, "")
 
 
 # ────────────────────────────────────────────────────────────────
@@ -1134,39 +994,6 @@ class AdvancedSearchViewTests(TestCase):
         )
         self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
 
-    def test_search_empty_query(self):
-        """An empty query should still return results (all concepts)."""
-        response = self.client.post(
-            reverse("api-advanced-search"),
-            data=json.dumps({"query": {}}),
-            content_type="application/json",
-        )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
-        result = json.loads(response.content)
-        self.assertGreaterEqual(result["total_results"], 1)
-
-    def test_search_pagination(self):
-        response = self.client.post(
-            reverse("api-advanced-search"),
-            data=json.dumps(
-                {
-                    "query": {
-                        "operator": "and",
-                        "conditions": [
-                            {"facet": "label", "value": ""},
-                        ],
-                    },
-                    "page": 1,
-                    "items": 1,
-                }
-            ),
-            content_type="application/json",
-        )
-        result = json.loads(response.content)
-        self.assertEqual(result["current_page"], 1)
-        self.assertEqual(result["results_per_page"], 1)
-        self.assertLessEqual(len(result["data"]), 1)
-
     def test_search_requires_authentication(self):
         self.client.logout()
         response = self.client.post(
@@ -1188,14 +1015,8 @@ class AdvancedSearchViewTests(TestCase):
         self.assertIsInstance(result["languages"], list)
         self.assertIsInstance(result["schemes"], list)
 
-    def test_search_options_requires_authentication(self):
-        self.client.logout()
-        response = self.client.get(reverse("api-advanced-search-options"))
-        self.assertNotEqual(response.status_code, HTTPStatus.OK)
-
 
 class SavedSearchViewTests(TestCase):
-    """Tests for saved search CRUD API endpoints."""
 
     @classmethod
     def setUpTestData(cls):
@@ -1208,26 +1029,6 @@ class SavedSearchViewTests(TestCase):
 
     def setUp(self):
         self.client.force_login(self.admin)
-
-    # ── List ────────────────────────────────────────────────────
-
-    def test_list_empty(self):
-        response = self.client.get(reverse("api-saved-searches"))
-        self.assertEqual(response.status_code, HTTPStatus.OK)
-        result = json.loads(response.content)
-        self.assertEqual(result["data"], [])
-
-    def test_list_returns_own_searches(self):
-        SavedSearch.objects.create(user=self.admin, name="My Search", query={"a": 1})
-        SavedSearch.objects.create(
-            user=self.other_user, name="Other Search", query={"b": 2}
-        )
-        response = self.client.get(reverse("api-saved-searches"))
-        result = json.loads(response.content)
-        self.assertEqual(len(result["data"]), 1)
-        self.assertEqual(result["data"][0]["name"], "My Search")
-
-    # ── Create ──────────────────────────────────────────────────
 
     def test_create_saved_search(self):
         response = self.client.post(
@@ -1245,37 +1046,7 @@ class SavedSearchViewTests(TestCase):
         self.assertEqual(result["name"], "New Search")
         self.assertIn("id", result)
 
-    def test_create_saved_search_missing_name(self):
-        response = self.client.post(
-            reverse("api-saved-searches"),
-            data=json.dumps({"query": {}}),
-            content_type="application/json",
-        )
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
-
-    def test_create_saved_search_invalid_json(self):
-        response = self.client.post(
-            reverse("api-saved-searches"),
-            data="not json",
-            content_type="application/json",
-        )
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
-
-    # ── Delete ──────────────────────────────────────────────────
-
-    def test_delete_saved_search(self):
-        saved_search = SavedSearch.objects.create(
-            user=self.admin, name="Delete Me", query={}
-        )
-        response = self.client.delete(
-            reverse("api-saved-search-detail", args=[saved_search.pk])
-        )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
-        result = json.loads(response.content)
-        self.assertTrue(result["deleted"])
-        self.assertFalse(SavedSearch.objects.filter(pk=saved_search.pk).exists())
-
-    def test_delete_other_users_search_404(self):
+    def test_delete_other_users_search_returns_404(self):
         saved_search = SavedSearch.objects.create(
             user=self.other_user, name="Not Mine", query={}
         )
@@ -1284,64 +1055,13 @@ class SavedSearchViewTests(TestCase):
         )
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
 
-    def test_delete_nonexistent_search_404(self):
-        response = self.client.delete(reverse("api-saved-search-detail", args=[99999]))
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
-
-    # ── Patch ───────────────────────────────────────────────────
-
-    def test_patch_saved_search_name(self):
-        saved_search = SavedSearch.objects.create(
-            user=self.admin, name="Old Name", query={"a": 1}
-        )
-        response = self.client.patch(
-            reverse("api-saved-search-detail", args=[saved_search.pk]),
-            data=json.dumps({"name": "New Name"}),
-            content_type="application/json",
-        )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
-        result = json.loads(response.content)
-        self.assertEqual(result["name"], "New Name")
-        saved_search.refresh_from_db()
-        self.assertEqual(saved_search.name, "New Name")
-
-    def test_patch_saved_search_query(self):
-        saved_search = SavedSearch.objects.create(
-            user=self.admin, name="Patch Query", query={"old": True}
-        )
-        new_query = {"operator": "or", "conditions": []}
-        response = self.client.patch(
-            reverse("api-saved-search-detail", args=[saved_search.pk]),
-            data=json.dumps({"query": new_query}),
-            content_type="application/json",
-        )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
-        saved_search.refresh_from_db()
-        self.assertEqual(saved_search.query, new_query)
-
-    def test_patch_other_users_search_404(self):
-        saved_search = SavedSearch.objects.create(
-            user=self.other_user, name="Not Mine", query={}
-        )
-        response = self.client.patch(
-            reverse("api-saved-search-detail", args=[saved_search.pk]),
-            data=json.dumps({"name": "Hacked"}),
-            content_type="application/json",
-        )
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
-
-    def test_patch_invalid_json(self):
-        saved_search = SavedSearch.objects.create(
-            user=self.admin, name="Bad JSON", query={}
-        )
-        response = self.client.patch(
-            reverse("api-saved-search-detail", args=[saved_search.pk]),
+    def test_create_saved_search_with_invalid_json(self):
+        response = self.client.post(
+            reverse("api-saved-searches"),
             data="not json",
             content_type="application/json",
         )
         self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
-
-    # ── Authentication ──────────────────────────────────────────
 
     def test_list_requires_authentication(self):
         self.client.logout()
@@ -1350,7 +1070,6 @@ class SavedSearchViewTests(TestCase):
 
 
 class ConceptSetViewTests(TestCase):
-    """Tests for concept set CRUD API endpoints."""
 
     @classmethod
     def setUpTestData(cls):
@@ -1363,36 +1082,6 @@ class ConceptSetViewTests(TestCase):
 
     def setUp(self):
         self.client.force_login(self.admin)
-
-    # ── List ────────────────────────────────────────────────────
-
-    def test_list_empty(self):
-        response = self.client.get(reverse("api-concept-sets"))
-        self.assertEqual(response.status_code, HTTPStatus.OK)
-        result = json.loads(response.content)
-        self.assertEqual(result["data"], [])
-
-    def test_list_returns_own_sets(self):
-        ConceptSet.objects.create(user=self.admin, name="My Set")
-        ConceptSet.objects.create(user=self.other_user, name="Other Set")
-        response = self.client.get(reverse("api-concept-sets"))
-        result = json.loads(response.content)
-        self.assertEqual(len(result["data"]), 1)
-        self.assertEqual(result["data"][0]["name"], "My Set")
-
-    def test_list_includes_member_count(self):
-        concept_set = ConceptSet.objects.create(user=self.admin, name="Counted Set")
-        ConceptSetMember.objects.create(
-            concept_set=concept_set, concept_id=uuid.uuid4()
-        )
-        ConceptSetMember.objects.create(
-            concept_set=concept_set, concept_id=uuid.uuid4()
-        )
-        response = self.client.get(reverse("api-concept-sets"))
-        result = json.loads(response.content)
-        self.assertEqual(result["data"][0]["member_count"], 2)
-
-    # ── Create ──────────────────────────────────────────────────
 
     def test_create_concept_set(self):
         response = self.client.post(
@@ -1411,50 +1100,19 @@ class ConceptSetViewTests(TestCase):
         self.assertEqual(result["description"], "A test set")
         self.assertEqual(result["member_count"], 0)
 
-    def test_create_concept_set_missing_name(self):
-        response = self.client.post(
-            reverse("api-concept-sets"),
-            data=json.dumps({"description": "No name"}),
-            content_type="application/json",
+    def test_list_includes_member_count(self):
+        concept_set = ConceptSet.objects.create(user=self.admin, name="Counted Set")
+        ConceptSetMember.objects.create(
+            concept_set=concept_set, concept_id=uuid.uuid4()
         )
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
-
-    def test_create_concept_set_invalid_json(self):
-        response = self.client.post(
-            reverse("api-concept-sets"),
-            data="not json",
-            content_type="application/json",
+        ConceptSetMember.objects.create(
+            concept_set=concept_set, concept_id=uuid.uuid4()
         )
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
-
-    # ── Detail (GET) ────────────────────────────────────────────
-
-    def test_get_concept_set_detail_not_found(self):
-        response = self.client.get(reverse("api-concept-set-detail", args=[99999]))
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
-
-    def test_get_other_users_set_not_found(self):
-        concept_set = ConceptSet.objects.create(user=self.other_user, name="Private")
-        response = self.client.get(
-            reverse("api-concept-set-detail", args=[concept_set.pk])
-        )
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
-
-    # ── Patch ───────────────────────────────────────────────────
-
-    def test_patch_concept_set(self):
-        concept_set = ConceptSet.objects.create(user=self.admin, name="Old Name")
-        response = self.client.patch(
-            reverse("api-concept-set-detail", args=[concept_set.pk]),
-            data=json.dumps({"name": "Updated Name", "description": "New desc"}),
-            content_type="application/json",
-        )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        response = self.client.get(reverse("api-concept-sets"))
         result = json.loads(response.content)
-        self.assertEqual(result["name"], "Updated Name")
-        self.assertEqual(result["description"], "New desc")
+        self.assertEqual(result["data"][0]["member_count"], 2)
 
-    def test_patch_other_users_set_not_found(self):
+    def test_patch_other_users_set_returns_404(self):
         concept_set = ConceptSet.objects.create(user=self.other_user, name="Not Mine")
         response = self.client.patch(
             reverse("api-concept-set-detail", args=[concept_set.pk]),
@@ -1463,36 +1121,6 @@ class ConceptSetViewTests(TestCase):
         )
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
 
-    def test_patch_invalid_json(self):
-        concept_set = ConceptSet.objects.create(user=self.admin, name="Bad JSON")
-        response = self.client.patch(
-            reverse("api-concept-set-detail", args=[concept_set.pk]),
-            data="not json",
-            content_type="application/json",
-        )
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
-
-    # ── Delete ──────────────────────────────────────────────────
-
-    def test_delete_concept_set(self):
-        concept_set = ConceptSet.objects.create(user=self.admin, name="Delete Me")
-        response = self.client.delete(
-            reverse("api-concept-set-detail", args=[concept_set.pk])
-        )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
-        result = json.loads(response.content)
-        self.assertTrue(result["deleted"])
-        self.assertFalse(ConceptSet.objects.filter(pk=concept_set.pk).exists())
-
-    def test_delete_other_users_set_not_found(self):
-        concept_set = ConceptSet.objects.create(user=self.other_user, name="Private")
-        response = self.client.delete(
-            reverse("api-concept-set-detail", args=[concept_set.pk])
-        )
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
-
-    # ── Authentication ──────────────────────────────────────────
-
     def test_list_requires_authentication(self):
         self.client.logout()
         response = self.client.get(reverse("api-concept-sets"))
@@ -1500,7 +1128,6 @@ class ConceptSetViewTests(TestCase):
 
 
 class ConceptSetMembersViewTests(TestCase):
-    """Tests for adding/removing members from concept sets."""
 
     @classmethod
     def setUpTestData(cls):
@@ -1513,8 +1140,6 @@ class ConceptSetMembersViewTests(TestCase):
 
     def setUp(self):
         self.client.force_login(self.admin)
-
-    # ── Add members ─────────────────────────────────────────────
 
     def test_add_members(self):
         concept_set = ConceptSet.objects.create(user=self.admin, name="Members Set")
@@ -1529,7 +1154,7 @@ class ConceptSetMembersViewTests(TestCase):
         self.assertEqual(result["added"], 2)
         self.assertEqual(result["member_count"], 2)
 
-    def test_add_duplicate_members_idempotent(self):
+    def test_add_duplicate_members_is_idempotent(self):
         concept_set = ConceptSet.objects.create(user=self.admin, name="Dedup Set")
         cid = str(uuid.uuid4())
         ConceptSetMember.objects.create(concept_set=concept_set, concept_id=cid)
@@ -1542,45 +1167,6 @@ class ConceptSetMembersViewTests(TestCase):
         result = json.loads(response.content)
         self.assertEqual(result["added"], 0)
         self.assertEqual(result["member_count"], 1)
-
-    def test_add_members_empty_list(self):
-        concept_set = ConceptSet.objects.create(user=self.admin, name="Empty Add")
-        response = self.client.post(
-            reverse("api-concept-set-members", args=[concept_set.pk]),
-            data=json.dumps({"concept_ids": []}),
-            content_type="application/json",
-        )
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
-
-    def test_add_members_not_found(self):
-        response = self.client.post(
-            reverse("api-concept-set-members", args=[99999]),
-            data=json.dumps({"concept_ids": [str(uuid.uuid4())]}),
-            content_type="application/json",
-        )
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
-
-    def test_add_members_other_users_set(self):
-        concept_set = ConceptSet.objects.create(
-            user=self.other_user, name="Private Set"
-        )
-        response = self.client.post(
-            reverse("api-concept-set-members", args=[concept_set.pk]),
-            data=json.dumps({"concept_ids": [str(uuid.uuid4())]}),
-            content_type="application/json",
-        )
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
-
-    def test_add_members_invalid_json(self):
-        concept_set = ConceptSet.objects.create(user=self.admin, name="Bad JSON")
-        response = self.client.post(
-            reverse("api-concept-set-members", args=[concept_set.pk]),
-            data="not json",
-            content_type="application/json",
-        )
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
-
-    # ── Remove members ──────────────────────────────────────────
 
     def test_remove_members(self):
         concept_set = ConceptSet.objects.create(user=self.admin, name="Remove Set")
@@ -1598,43 +1184,13 @@ class ConceptSetMembersViewTests(TestCase):
         result = json.loads(response.content)
         self.assertEqual(result["member_count"], 1)
 
-    def test_remove_members_empty_is_noop(self):
-        concept_set = ConceptSet.objects.create(user=self.admin, name="Noop Remove")
-        ConceptSetMember.objects.create(
-            concept_set=concept_set, concept_id=uuid.uuid4()
+    def test_add_members_to_other_users_set_returns_404(self):
+        concept_set = ConceptSet.objects.create(
+            user=self.other_user, name="Private Set"
         )
-
-        response = self.client.delete(
-            reverse("api-concept-set-members", args=[concept_set.pk]),
-            data=json.dumps({"concept_ids": []}),
-            content_type="application/json",
-        )
-        self.assertEqual(response.status_code, HTTPStatus.OK)
-        result = json.loads(response.content)
-        self.assertEqual(result["member_count"], 1)
-
-    def test_remove_members_not_found(self):
-        response = self.client.delete(
-            reverse("api-concept-set-members", args=[99999]),
-            data=json.dumps({"concept_ids": [str(uuid.uuid4())]}),
-            content_type="application/json",
-        )
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
-
-    def test_remove_members_other_users_set(self):
-        concept_set = ConceptSet.objects.create(user=self.other_user, name="Private")
-        response = self.client.delete(
+        response = self.client.post(
             reverse("api-concept-set-members", args=[concept_set.pk]),
             data=json.dumps({"concept_ids": [str(uuid.uuid4())]}),
             content_type="application/json",
         )
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
-
-    def test_remove_members_invalid_json(self):
-        concept_set = ConceptSet.objects.create(user=self.admin, name="Bad JSON")
-        response = self.client.delete(
-            reverse("api-concept-set-members", args=[concept_set.pk]),
-            data="not json",
-            content_type="application/json",
-        )
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)

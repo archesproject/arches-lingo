@@ -488,16 +488,10 @@ export interface AdvancedSearchQuery {
     conditions: (SearchCondition | SearchGroup)[];
 }
 
-export interface AdvancedSearchResultNote {
-    content: string;
-    language: string;
-    type: string;
-}
-
-export interface AdvancedSearchResultItem extends SearchResultItem {
+interface AdvancedSearchResultItem extends SearchResultItem {
     uri?: string | null;
     identifier?: string | null;
-    notes: AdvancedSearchResultNote[];
+    notes: { content: string; language: string; type: string }[];
     lifecycle_state?: string | null;
 }
 
@@ -514,25 +508,15 @@ export interface SchemeOption {
     labels: Label[];
 }
 
-export interface LanguageOption {
-    code: string;
-    name: string;
-}
-
-export interface LifecycleStateOption {
-    id: string;
-    name: string;
-}
-
 export interface ControlledListOption {
     label: string;
     value: string;
 }
 
 export interface AdvancedSearchOptions {
-    languages: LanguageOption[];
+    languages: { code: string; name: string }[];
     schemes: SchemeOption[];
-    lifecycle_states: LifecycleStateOption[];
+    lifecycle_states: { id: string; name: string }[];
     label_types: ControlledListOption[];
     note_types: ControlledListOption[];
     concept_types: ControlledListOption[];
