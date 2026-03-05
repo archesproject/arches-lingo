@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject, markRaw, onMounted, ref, watch } from "vue";
+import { inject, onMounted, ref, watch } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import { useEditLog } from "@/arches_lingo/composables/useEditLog.ts";
@@ -21,7 +21,6 @@ import {
     ERROR,
     NEW_CONCEPT,
     SECONDARY,
-    openPanelComponentKey,
 } from "@/arches_lingo/constants.ts";
 import { PREF_LABEL } from "@/arches_controlled_lists/constants.ts";
 

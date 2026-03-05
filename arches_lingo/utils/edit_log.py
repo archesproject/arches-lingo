@@ -7,16 +7,7 @@ from arches.app.models import models
 from arches.app.models.card import Card
 from arches.app.models.tile import Tile
 
-
-EDIT_TYPE_LABELS = {
-    "create": _("Resource Created"),
-    "delete": _("Resource Deleted"),
-    "tile delete": _("Tile Deleted"),
-    "tile create": _("Tile Created"),
-    "tile edit": _("Tile Updated"),
-    "bulk_create": _("Resource Created"),
-    "update_resource_instance_lifecycle_state": _("Resource Lifecycle State Updated"),
-}
+from arches_lingo.const import EDIT_TYPE_LABELS
 
 
 def build_permitted_edit_log(resource_instance, user):
