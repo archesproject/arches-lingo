@@ -52,8 +52,6 @@ const toast = useToast();
 const conceptSetsRef =
     useTemplateRef<InstanceType<typeof ConceptSets>>("conceptSetsRef");
 
-// ── State ──────────────────────────────────────────────────────
-
 const searchOptions = ref<AdvancedSearchOptions>({
     languages: [],
     schemes: [],
@@ -83,8 +81,6 @@ const currentPage = ref(1);
 const selectedConceptIds = ref<Set<string>>(new Set());
 const activeConceptSetId = ref<number | null>(null);
 const showSidePanel = ref(true);
-
-// ── Search Options ─────────────────────────────────────────────
 
 function flattenListItems(items: Labellable[]): ControlledListOption[] {
     const result: ControlledListOption[] = [];
@@ -147,8 +143,6 @@ async function loadSearchOptions() {
     }
 }
 
-// ── Search Execution ───────────────────────────────────────────
-
 function buildQuery(): AdvancedSearchQuery {
     return {
         operator: queryGroup.value.operator,
@@ -194,8 +188,6 @@ function clearSearch() {
     activeConceptSetId.value = null;
 }
 
-// ── Selection ──────────────────────────────────────────────────
-
 function toggleSelectConcept(id: string) {
     const newSet = new Set(selectedConceptIds.value);
     if (newSet.has(id)) {
@@ -219,8 +211,6 @@ function deselectAll() {
     selectedConceptIds.value = new Set();
 }
 
-// ── Saved Searches ─────────────────────────────────────────────
-
 function loadSavedSearch(query: AdvancedSearchQuery) {
     queryGroup.value = {
         id: generateConditionId(),
@@ -230,8 +220,6 @@ function loadSavedSearch(query: AdvancedSearchQuery) {
     searchResults.value = null;
     selectedConceptIds.value = new Set();
 }
-
-// ── Concept Sets ───────────────────────────────────────────────
 
 function onSetsUpdated(sets: ConceptSetItem[]) {
     conceptSets.value = sets;
@@ -256,8 +244,6 @@ function loadConceptSet(conceptSetId: number) {
 function onConceptsRemoved() {
     executeSearch(currentPage.value);
 }
-
-// ── Lifecycle ──────────────────────────────────────────────────
 
 onMounted(loadSearchOptions);
 </script>
@@ -375,7 +361,6 @@ onMounted(loadSearchOptions);
     font-family: var(--p-lingo-font-family);
 }
 
-/* ── Header (matches concept-header-toolbar) ── */
 .search-header {
     display: flex;
     align-items: center;
@@ -419,7 +404,6 @@ onMounted(loadSearchOptions);
     background: var(--p-highlight-background) !important;
 }
 
-/* ── Splitter ── */
 .search-splitter {
     flex: 1 1 auto;
     border: none;
@@ -427,7 +411,6 @@ onMounted(loadSearchOptions);
     border-radius: 0;
 }
 
-/* ── Main content area ── */
 .search-content {
     display: flex;
     flex-direction: column;
@@ -437,7 +420,6 @@ onMounted(loadSearchOptions);
     overflow: hidden;
 }
 
-/* ── Results panel ── */
 .results-panel {
     flex: 1 1 auto;
     overflow: hidden;
@@ -469,7 +451,6 @@ onMounted(loadSearchOptions);
     min-height: 0;
 }
 
-/* ── Side panel ── */
 .side-panel {
     display: flex;
     flex-direction: column;
@@ -491,13 +472,11 @@ onMounted(loadSearchOptions);
     font-weight: var(--p-lingo-font-weight-normal);
 }
 
-/* ── Global overrides for all buttons inside advanced search ── */
 .advanced-search :deep(.p-button) {
     border-radius: 0.125rem;
     font-family: var(--p-lingo-font-family);
 }
 
-/* ── Global overrides for inputs / dropdowns inside advanced search ── */
 .advanced-search :deep(.p-select),
 .advanced-search :deep(.p-inputtext),
 .advanced-search :deep(.p-textarea),
@@ -505,7 +484,6 @@ onMounted(loadSearchOptions);
     border-radius: 0.125rem;
 }
 
-/* ── Panel border-radius ── */
 .advanced-search :deep(.p-panel) {
     border-radius: 0.125rem;
 }
@@ -518,7 +496,6 @@ onMounted(loadSearchOptions);
     border-radius: 0 0 0.125rem 0.125rem;
 }
 
-/* ── Dialog border-radius ── */
 .advanced-search :deep(.p-dialog) {
     border-radius: 0.125rem;
 }

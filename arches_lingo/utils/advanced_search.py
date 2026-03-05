@@ -122,8 +122,6 @@ class AdvancedSearchEvaluator:
             qs = qs.filter(extra_filters)
         return list(qs.values_list("resourceinstance_id", flat=True).distinct())
 
-    # ── Match mode helpers ──────────────────────────────────────────
-
     MATCH_MODE_LOOKUPS = {
         "contains": "icontains",
         "exact": "iexact",
@@ -140,8 +138,6 @@ class AdvancedSearchEvaluator:
             return ~Q(**{field: ""}) & ~Q(**{field: None})
         lookup = self.MATCH_MODE_LOOKUPS.get(match_mode, "icontains")
         return Q(**{f"{field}__{lookup}": value})
-
-    # ── Facet handlers ──────────────────────────────────────────────
 
     def _facet_label(self, condition):
         """Search by label text, optionally filtered by type and language."""
