@@ -21,6 +21,7 @@ import type {
     ResourceInstanceResult,
     ResourceDescriptor,
     Scheme,
+    SchemeStatement,
     SearchResultItem,
 } from "@/arches_lingo/types";
 import type { Router } from "vue-router/dist/vue-router";
@@ -274,58 +275,44 @@ export function extractDescriptors(
     return schemeDescriptor;
 }
 
-// Return the native/autonym name for a language code using the
-// browser's Intl API (e.g. "de" → "Deutsch", "en" → "English").
 export function getAutonym(code: string, fallback: string): string {
     try {
         const name = new Intl.DisplayNames([code], { type: "language" }).of(
             code,
         );
         if (name) {
-            return name.charAt(0).toUpperCase() + name.slice(1);
+            return name;
         }
     } catch {
-        // Intl.DisplayNames may not support every code.
+        // Intl.DisplayNames may not support every code — fall through.
     }
     return fallback;
 }
 
-// Match browser locale to the best available language.
-export function matchBrowserLocale(
-    languages: Language[],
-): Language | undefined {
-    if (!languages.length) return undefined;
-    const browserLangs = navigator.languages ?? [navigator.language];
-    for (const browserTag of browserLangs) {
-        const normalized = browserTag.toLowerCase();
-        // Exact match (e.g. "en-gb" === "en-gb")
-        const exact = languages.find(
-            (language) => language.code === normalized,
-        );
-        if (exact) return exact;
-        // Primary subtag match (e.g. "en-US" → "en")
-        const primary = normalized.split("-")[0];
-        const partial = languages.find((language) => language.code === primary);
-        if (partial) return partial;
-        // Match language whose code starts with the primary subtag
-        const prefix = languages.find((language) =>
-            language.code.startsWith(primary),
-        );
-        if (prefix) return prefix;
-    }
-    return undefined;
-}
+export function getStatementText(
+    statements: SchemeStatement[],
+    preferredLanguageCode: string,
+    systemLanguageCode: string,
+): string {
+    if (!statements.length) return "";
 
-// Rank a language code against preferred and system codes.
-// Returns 2 for preferred, 1 for system, 0 for other.
-export function getLanguageRank(
-    code: string | undefined,
-    preferredCode: string,
-    systemCode: string,
-): number {
-    if (code === preferredCode) return 2;
-    if (code === systemCode) return 1;
-    return 0;
+    function rankLanguage(lang?: string): number {
+        if (lang === preferredLanguageCode) return 2;
+        if (lang === systemLanguageCode) return 1;
+        return 0;
+    }
+
+    const best = statements.reduce((bestMatch, current) => {
+        const currentLang =
+            current.aliased_data?.statement_language?.display_value?.toLowerCase();
+        const bestLang =
+            bestMatch.aliased_data?.statement_language?.display_value?.toLowerCase();
+        return rankLanguage(currentLang) > rankLanguage(bestLang)
+            ? current
+            : bestMatch;
+    });
+
+    return best.aliased_data?.statement_content?.display_value ?? "";
 }
 
 export async function createOrUpdateConcept(

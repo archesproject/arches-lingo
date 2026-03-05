@@ -3,7 +3,7 @@ import { inject, ref } from "vue";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 import { getParentLabels, getConceptIcon } from "@/arches_lingo/utils.ts";
 import {
-    DEFAULT_LANGUAGE,
+    FALLBACK_LANGUAGE,
     selectedLanguageKey,
     systemLanguageKey,
 } from "@/arches_lingo/constants.ts";
@@ -11,8 +11,8 @@ import {
 import type { PropType } from "vue";
 import type { SearchResultItem } from "@/arches_lingo/types.ts";
 
-const selectedLanguage = inject(selectedLanguageKey, ref(DEFAULT_LANGUAGE));
-const systemLanguage = inject(systemLanguageKey, DEFAULT_LANGUAGE);
+const selectedLanguage = inject(selectedLanguageKey, ref(FALLBACK_LANGUAGE));
+const systemLanguage = inject(systemLanguageKey, FALLBACK_LANGUAGE);
 
 defineProps({
     searchResult: {

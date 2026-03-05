@@ -27,11 +27,14 @@ export const DEFAULT_ERROR_TOAST_LIFE = 8000;
 export const SEARCH_RESULTS_PER_PAGE = 25;
 export const SEARCH_RESULT_ITEM_SIZE = 50;
 
-export const DEFAULT_LANGUAGE: Language = {
+// Placeholder used before backend language data is loaded.
+// The code "en" is a last-resort fallback; the real default
+// comes from Django's LANGUAGE_CODE at runtime.
+export const FALLBACK_LANGUAGE: Language = {
     code: "en",
     default_direction: "ltr",
     id: 0,
-    isdefault: false,
+    isdefault: true,
     name: "English",
     scope: "system",
 };

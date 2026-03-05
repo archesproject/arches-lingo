@@ -1,7 +1,5 @@
 <script setup lang="ts">
-import Cookies from "js-cookie";
-
-import { onMounted, provide, reactive, ref, watch, watchEffect } from "vue";
+import { onMounted, provide, ref, watchEffect } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
@@ -16,7 +14,6 @@ import SchemeHierarchy from "@/arches_lingo/components/header/PageHeader/compone
 import {
     ANONYMOUS,
     DEFAULT_ERROR_TOAST_LIFE,
-    DEFAULT_LANGUAGE,
     ERROR,
     USER_KEY,
     availableLanguagesKey,
@@ -25,18 +22,12 @@ import {
 } from "@/arches_lingo/constants.ts";
 
 import { routeNames } from "@/arches_lingo/routes.ts";
-import {
-    fetchI18nData,
-    fetchLanguages,
-    fetchUser,
-} from "@/arches_lingo/api.ts";
+import { fetchUser } from "@/arches_lingo/api.ts";
 import { useUnsavedChangesGuard } from "@/arches_lingo/composables/useUnsavedChangesGuard.ts";
+import { useLanguage } from "@/arches_lingo/composables/useLanguage.ts";
 import PageHeader from "@/arches_lingo/components/header/PageHeader/PageHeader.vue";
 import SideNav from "@/arches_lingo/components/sidenav/SideNav.vue";
-import { getAutonym, matchBrowserLocale } from "@/arches_lingo/utils.ts";
 
-import type { Ref } from "vue";
-import type { Language } from "@/arches_component_lab/types";
 import type { User } from "@/arches_lingo/types";
 import type { RouteLocationNormalizedLoadedGeneric } from "vue-router";
 
@@ -46,122 +37,12 @@ const setUser = (userToSet: User | null) => {
 };
 provide(USER_KEY, { user, setUser });
 
-const gettext = useGettext();
-const { $gettext } = gettext;
-
-// Language state — populated from the backend in onMounted.
-// System language is initialised from get_language() (Django's LANGUAGE_CODE).
-const systemLanguageCode: string = gettext.current ?? DEFAULT_LANGUAGE.code;
-const availableLanguages: Ref<Language[]> = ref([]);
-const selectedLanguage: Ref<Language> = ref({
-    ...DEFAULT_LANGUAGE,
-    code: systemLanguageCode,
-    name: systemLanguageCode,
-});
-const systemLanguage: Language = reactive({
-    ...DEFAULT_LANGUAGE,
-    code: systemLanguageCode,
-    name: systemLanguageCode,
-    isdefault: true,
-});
+const { $gettext } = useGettext();
+const { selectedLanguage, systemLanguage, availableLanguages } = useLanguage();
 
 provide(availableLanguagesKey, availableLanguages);
 provide(selectedLanguageKey, selectedLanguage);
 provide(systemLanguageKey, systemLanguage);
-
-// When the selected language changes, update gettext and reload translations.
-watch(
-    () => selectedLanguage.value,
-    async (newLang, oldLang) => {
-        if (newLang.code === oldLang?.code) return;
-
-        // Set the django_language cookie so subsequent requests use the new language.
-        Cookies.set("django_language", newLang.code, {
-            path: "/",
-            sameSite: "Strict",
-        });
-
-        // Fetch translations for the new language.
-        try {
-            const i18nData = await fetchI18nData(newLang.code);
-            // Merge new translations into the gettext translations object.
-            Object.assign(gettext.translations, i18nData.translations);
-            gettext.current = newLang.code;
-        } catch {
-            // Fall back to just switching the language code.
-            gettext.current = newLang.code;
-        }
-    },
-);
-
-onMounted(async () => {
-    try {
-        const [dbLanguages, i18nData] = await Promise.all([
-            fetchLanguages(),
-            fetchI18nData(),
-        ]);
-
-        // Merge initial translations so strings are available before any
-        // language switch occurs.
-        Object.assign(gettext.translations, i18nData.translations);
-
-        // enabled_languages comes from settings.LANGUAGES — the authoritative
-        // list of languages the site supports. Build availableLanguages from
-        // that list, enriching each entry with DB data (direction, scope, etc.)
-        // where a matching record exists, falling back to defaults otherwise.
-        const dbByCode = new Map(dbLanguages.map((lang) => [lang.code, lang]));
-        availableLanguages.value = Object.entries(
-            i18nData.enabled_languages,
-        ).map(([code, settingsName]) => {
-            const dbLang = dbByCode.get(code);
-            return dbLang
-                ? { ...dbLang, name: getAutonym(code, dbLang.name) }
-                : {
-                      ...DEFAULT_LANGUAGE,
-                      code,
-                      name: getAutonym(code, settingsName),
-                  };
-        });
-
-        const dbSystem =
-            dbLanguages.find((lang) => lang.code === systemLanguageCode) ??
-            dbLanguages.find((lang) => lang.isdefault);
-        if (dbSystem) {
-            Object.assign(systemLanguage, {
-                ...dbSystem,
-                name: getAutonym(dbSystem.code, dbSystem.name),
-            });
-        }
-
-        // Determine initial language priority:
-        // 1. django_language cookie (user's previous explicit choice)
-        // 2. Browser locale best-match
-        // 3. System language (LANGUAGE_CODE), if it is an enabled language
-        // 4. First available language
-        const cookieCode = Cookies.get("django_language");
-        const cookieMatch = cookieCode
-            ? availableLanguages.value.find((lang) => lang.code === cookieCode)
-            : undefined;
-        const browserMatch = matchBrowserLocale(availableLanguages.value);
-        const systemMatch = availableLanguages.value.find(
-            (lang) => lang.code === systemLanguageCode,
-        );
-        const initial =
-            cookieMatch ??
-            browserMatch ??
-            systemMatch ??
-            availableLanguages.value[0];
-
-        if (initial) {
-            selectedLanguage.value = initial;
-            if (gettext.current !== initial.code) {
-                gettext.current = initial.code;
-            }
-        }
-    } catch {
-        // If the fetch fails, keep the placeholder Language objects.
-    }
-});
 
 const router = useRouter();
 const route = useRoute();

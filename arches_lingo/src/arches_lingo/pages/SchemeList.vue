@@ -21,11 +21,11 @@ const { $gettext } = useGettext();
 
 const isLoading = ref(true);
 const schemes = ref<Scheme[]>([]);
-const statementsBySchemeId = ref<Map<string, SchemeStatement[]>>(new Map());
+const statementsMap = ref<Map<string, SchemeStatement[]>>(new Map());
 
 async function fetchSchemes() {
     schemes.value = [];
-    statementsBySchemeId.value = new Map();
+    statementsMap.value = new Map();
     isLoading.value = true;
     try {
         const [concepts, resources] = await Promise.all([
@@ -34,15 +34,14 @@ async function fetchSchemes() {
         ]);
         schemes.value = concepts.schemes as Scheme[];
 
-        // Build a map of scheme id → statements for description lookup.
-        const stmtMap = new Map<string, SchemeStatement[]>();
+        const map = new Map<string, SchemeStatement[]>();
         for (const resource of resources) {
             const statements = resource.aliased_data?.statement;
             if (statements) {
-                stmtMap.set(resource.resourceinstanceid, statements);
+                map.set(resource.resourceinstanceid, statements);
             }
         }
-        statementsBySchemeId.value = stmtMap;
+        statementsMap.value = map;
     } catch (error) {
         toast.add({
             severity: ERROR,
@@ -61,10 +60,10 @@ async function fetchSchemes() {
     isLoading.value = false;
 }
 
-const schemesWithStatements = computed(() =>
+const schemeEntries = computed(() =>
     schemes.value.map((scheme) => ({
         scheme,
-        statements: statementsBySchemeId.value.get(scheme.id),
+        statements: statementsMap.value.get(scheme.id),
     })),
 );
 
@@ -106,7 +105,7 @@ onMounted(async () => {
     <div class="scheme-cards-container">
         <ul class="scheme-cards">
             <li
-                v-for="{ scheme, statements } in schemesWithStatements"
+                v-for="{ scheme, statements } in schemeEntries"
                 :key="scheme.id"
             >
                 <SchemeCard

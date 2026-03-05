@@ -13,7 +13,7 @@ import Button from "primevue/button";
 import ImportThesauri from "@/arches_lingo/components/scheme/ImportThesauri.vue";
 
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
-import { getLanguageRank } from "@/arches_lingo/utils.ts";
+import { getStatementText } from "@/arches_lingo/utils.ts";
 
 import type { Language } from "@/arches_component_lab/types";
 import type { Scheme, SchemeStatement } from "@/arches_lingo/types";
@@ -40,22 +40,11 @@ const schemeName = computed(() =>
 
 const schemeDescription = computed(() => {
     if (!statements?.length) return "";
-
-    const preferredCode = selectedLanguage.value.code;
-    const systemCode = systemLanguage.code;
-
-    function rank(stmt: SchemeStatement): number {
-        return getLanguageRank(
-            stmt.aliased_data?.statement_language?.display_value?.toLowerCase(),
-            preferredCode,
-            systemCode,
-        );
-    }
-
-    const best = statements.reduce((bestMatch, current) =>
-        rank(current) > rank(bestMatch) ? current : bestMatch,
+    return getStatementText(
+        statements,
+        selectedLanguage.value.code,
+        systemLanguage.code,
     );
-    return best.aliased_data?.statement_content?.display_value ?? "";
 });
 
 const showImportDialog = ref(false);

@@ -85,17 +85,38 @@ For developer install instructions, see the [Developer Setup](#developer-setup-f
     ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     ```
 
-6. Install the arches application package (models and other data)
+6. Configure language support
+
+    Arches Lingo uses cookie-based language switching (via Django's `django_language` cookie) rather than URL-based language prefixes. If you are running Lingo as a standalone project, ensure the following are set in your project settings:
+
+    ```python
+    MIDDLEWARE = [
+        ...
+        "django.middleware.locale.LocaleMiddleware",
+        ...
+    ]
+
+    LANGUAGES = [
+        ("en", "English"),
+        # Add other languages your deployment supports, e.g.:
+        # ("es", "Spanish"),
+        # ("de", "German"),
+    ]
+    ```
+
+    The `LANGUAGES` setting determines which languages appear in the Lingo language selector. The `django_language` cookie persists the user's language choice across sessions.
+
+7. Install the arches application package (models and other data)
     ```
     python manage.py packages -o load_package -a arches_lingo -dev -y
     ```
 
-7. Start your project
+8. Start your project
     ```
     python manage.py runserver
     ```
 
-8. Next cd into your project's app directory (the one with package.json) install and build front-end dependencies:
+9. Next cd into your project's app directory (the one with package.json) install and build front-end dependencies:
     ```
     npm install
     npm run build_development
