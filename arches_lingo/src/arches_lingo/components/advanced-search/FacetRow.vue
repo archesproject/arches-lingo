@@ -1,24 +1,35 @@
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { computed, inject, ref, watch, type Ref } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import Button from "primevue/button";
-import Dropdown from "primevue/dropdown";
 import InputText from "primevue/inputtext";
 import Select from "primevue/select";
 import ToggleButton from "primevue/togglebutton";
 
 import { fetchConceptResources } from "@/arches_lingo/api.ts";
+import {
+    selectedLanguageKey,
+    systemLanguageKey,
+} from "@/arches_lingo/constants.ts";
+import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
+
+import type { Label } from "@/arches_controlled_lists/types.ts";
+import type { Language } from "@/arches_component_lab/types.ts";
 
 import type {
     AdvancedSearchOptions,
     ConceptSetItem,
     FacetType,
     MatchMode,
+    SchemeOption,
     SearchCondition,
 } from "@/arches_lingo/types.ts";
 
 const { $gettext } = useGettext();
+
+const systemLanguage = inject(systemLanguageKey) as Language;
+const selectedLanguage = inject(selectedLanguageKey) as Ref<Language>;
 
 const props = defineProps<{
     condition: SearchCondition;
@@ -82,24 +93,18 @@ function onConceptFilter(event: { value: string }) {
     }, 400);
 }
 
-function getConceptPrefLabel(concept: {
-    id: string;
-    labels?: { valuetype_id: string; value: string }[];
-}): string {
-    const pref = concept.labels?.find((l) => l.valuetype_id === "prefLabel");
-    return pref?.value || concept.labels?.[0]?.value || concept.id;
-}
-
 async function loadConcepts(term?: string) {
     try {
         isLoadingConcepts.value = true;
         const result = await fetchConceptResources(term || "", 50, 1);
         conceptSearchResults.value = (result.data || []).map(
-            (item: {
-                id: string;
-                labels?: { valuetype_id: string; value: string }[];
-            }) => ({
-                display_value: getConceptPrefLabel(item),
+            (item: { id: string; labels: Label[] }) => ({
+                display_value:
+                    getItemLabel(
+                        item,
+                        selectedLanguage.value.code,
+                        systemLanguage.code,
+                    ).value || item.id,
                 resource_id: item.id,
             }),
         );
@@ -153,6 +158,17 @@ const showLanguageDropdown = computed(() =>
 
 const showLanguageSelect = computed(() => props.condition.facet === "language");
 const showSchemeSelect = computed(() => props.condition.facet === "scheme");
+
+const schemeDisplayOptions = computed(() =>
+    props.options.schemes.map((scheme: SchemeOption) => ({
+        id: scheme.id,
+        label: getItemLabel(
+            scheme,
+            selectedLanguage.value.code,
+            systemLanguage.code,
+        ).value,
+    })),
+);
 
 const showLifecycleSelect = computed(
     () => props.condition.facet === "lifecycle_state",
@@ -222,7 +238,7 @@ function toggleNegated() {
         />
 
         <!-- Facet type selector -->
-        <Dropdown
+        <Select
             :model-value="condition.facet"
             :options="facetTypes"
             option-label="label"
@@ -233,7 +249,7 @@ function toggleNegated() {
         />
 
         <!-- Match mode (for text-based facets) -->
-        <Dropdown
+        <Select
             v-if="showMatchMode"
             :model-value="currentMatchMode"
             :options="matchModes"
@@ -277,7 +293,7 @@ function toggleNegated() {
         />
 
         <!-- Label type filter (from controlled list) -->
-        <Dropdown
+        <Select
             v-if="showLabelTypeDropdown"
             :model-value="condition.label_type"
             :options="options.label_types"
@@ -293,7 +309,7 @@ function toggleNegated() {
         />
 
         <!-- Note type filter (from controlled list) -->
-        <Dropdown
+        <Select
             v-if="showNoteTypeDropdown"
             :model-value="condition.note_type"
             :options="options.note_types"
@@ -308,7 +324,7 @@ function toggleNegated() {
         />
 
         <!-- Language filter for label/note facets -->
-        <Dropdown
+        <Select
             v-if="showLanguageDropdown"
             :model-value="condition.language"
             :options="options.languages"
@@ -321,7 +337,7 @@ function toggleNegated() {
         />
 
         <!-- Language facet (standalone) -->
-        <Dropdown
+        <Select
             v-if="showLanguageSelect"
             :model-value="condition.value"
             :options="options.languages"
@@ -333,10 +349,10 @@ function toggleNegated() {
         />
 
         <!-- Scheme facet -->
-        <Dropdown
+        <Select
             v-if="showSchemeSelect"
             :model-value="condition.value"
-            :options="options.schemes"
+            :options="schemeDisplayOptions"
             option-label="label"
             option-value="id"
             :placeholder="$gettext('Select scheme')"
@@ -345,7 +361,7 @@ function toggleNegated() {
         />
 
         <!-- Lifecycle state facet -->
-        <Dropdown
+        <Select
             v-if="showLifecycleSelect"
             :model-value="condition.value"
             :options="options.lifecycle_states"
@@ -357,7 +373,7 @@ function toggleNegated() {
         />
 
         <!-- Concept set facet -->
-        <Dropdown
+        <Select
             v-if="showConceptSetSelect"
             :model-value="condition.value"
             :options="conceptSets"
@@ -371,7 +387,7 @@ function toggleNegated() {
         />
 
         <!-- Concept type facet (from controlled list) -->
-        <Dropdown
+        <Select
             v-if="showConceptTypeDropdown"
             :model-value="condition.value"
             :options="options.concept_types"
@@ -386,7 +402,7 @@ function toggleNegated() {
         />
 
         <!-- Direction for hierarchical relationships -->
-        <Dropdown
+        <Select
             v-if="showDirectionSelect"
             :model-value="condition.direction || 'broader'"
             :options="hierarchyDirections"
@@ -457,7 +473,6 @@ function toggleNegated() {
 
 .facet-row :deep(.p-select),
 .facet-row :deep(.p-inputtext),
-.facet-row :deep(.p-dropdown),
 .facet-row :deep(.p-multiselect) {
     border-radius: 0.125rem;
     font-size: var(--p-lingo-font-size-smallnormal);

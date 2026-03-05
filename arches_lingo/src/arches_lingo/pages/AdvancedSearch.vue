@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, useTemplateRef } from "vue";
+import { inject, onMounted, ref, useTemplateRef, type Ref } from "vue";
 import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
 
@@ -24,7 +24,13 @@ import {
     LABEL_TYPE_LIST_ID,
     NOTE_TYPE_LIST_ID,
     CONCEPT_TYPE_LIST_ID,
+    selectedLanguageKey,
+    systemLanguageKey,
 } from "@/arches_lingo/constants.ts";
+
+import type { Language } from "@/arches_component_lab/types.ts";
+import { generateConditionId } from "@/arches_lingo/utils.ts";
+import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 
 import type {
     AdvancedSearchOptions,
@@ -36,16 +42,15 @@ import type {
     SearchGroup,
 } from "@/arches_lingo/types.ts";
 
+const systemLanguage = inject(systemLanguageKey) as Language;
+const selectedLanguage = inject(selectedLanguageKey) as Ref<Language>;
+import type { Labellable } from "@/arches_controlled_lists/types.ts";
+
 const { $gettext } = useGettext();
 const toast = useToast();
 
 const conceptSetsRef =
     useTemplateRef<InstanceType<typeof ConceptSets>>("conceptSetsRef");
-
-let nextId = Date.now();
-function generateId(): string {
-    return `cond-${nextId++}`;
-}
 
 // ── State ──────────────────────────────────────────────────────
 
@@ -61,11 +66,11 @@ const searchOptions = ref<AdvancedSearchOptions>({
 const conceptSets = ref<ConceptSetItem[]>([]);
 
 const queryGroup = ref<SearchGroup>({
-    id: generateId(),
+    id: generateConditionId(),
     operator: "and",
     conditions: [
         {
-            id: generateId(),
+            id: generateConditionId(),
             facet: "label",
             value: "",
         } as SearchCondition,
@@ -81,23 +86,24 @@ const showSidePanel = ref(true);
 
 // ── Search Options ─────────────────────────────────────────────
 
-interface ControlledListItem {
-    id: string;
-    values: { valuetype_id: string; value: string }[];
-    children?: ControlledListItem[];
-}
-
-function getPreferredLabel(item: ControlledListItem): string {
-    const pref = item.values?.find((v) => v.valuetype_id === "prefLabel");
-    return pref?.value || item.values?.[0]?.value || item.id;
-}
-
-function flattenListItems(items: ControlledListItem[]): ControlledListOption[] {
+function flattenListItems(items: Labellable[]): ControlledListOption[] {
     const result: ControlledListOption[] = [];
     for (const item of items) {
-        result.push({ label: getPreferredLabel(item), value: item.id });
-        if (item.children && Array.isArray(item.children)) {
-            result.push(...flattenListItems(item.children));
+        const typedItem = item as Labellable & {
+            id: string;
+            children?: Labellable[];
+        };
+        result.push({
+            label:
+                getItemLabel(
+                    item,
+                    selectedLanguage.value.code,
+                    systemLanguage.code,
+                ).value || typedItem.id,
+            value: typedItem.id,
+        });
+        if (typedItem.children && Array.isArray(typedItem.children)) {
+            result.push(...flattenListItems(typedItem.children));
         }
     }
     return result;
@@ -172,11 +178,11 @@ async function executeSearch(page: number = 1) {
 
 function clearSearch() {
     queryGroup.value = {
-        id: generateId(),
+        id: generateConditionId(),
         operator: "and",
         conditions: [
             {
-                id: generateId(),
+                id: generateConditionId(),
                 facet: "label",
                 value: "",
             } as SearchCondition,
@@ -217,7 +223,7 @@ function deselectAll() {
 
 function loadSavedSearch(query: AdvancedSearchQuery) {
     queryGroup.value = {
-        id: generateId(),
+        id: generateConditionId(),
         operator: query.operator,
         conditions: query.conditions,
     };
@@ -234,11 +240,11 @@ function onSetsUpdated(sets: ConceptSetItem[]) {
 function loadConceptSet(conceptSetId: number) {
     activeConceptSetId.value = conceptSetId;
     queryGroup.value = {
-        id: generateId(),
+        id: generateConditionId(),
         operator: "and",
         conditions: [
             {
-                id: generateId(),
+                id: generateConditionId(),
                 facet: "concept_set",
                 value: String(conceptSetId),
             } as SearchCondition,
@@ -534,7 +540,6 @@ onMounted(loadSearchOptions);
 .advanced-search :deep(.p-select),
 .advanced-search :deep(.p-inputtext),
 .advanced-search :deep(.p-textarea),
-.advanced-search :deep(.p-dropdown),
 .advanced-search :deep(.p-multiselect) {
     border-radius: 0.125rem;
 }

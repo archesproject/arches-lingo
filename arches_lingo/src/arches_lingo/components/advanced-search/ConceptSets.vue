@@ -5,8 +5,8 @@ import { useToast } from "primevue/usetoast";
 
 import Button from "primevue/button";
 import Dialog from "primevue/dialog";
-import Dropdown from "primevue/dropdown";
 import InputText from "primevue/inputtext";
+import Select from "primevue/select";
 import Textarea from "primevue/textarea";
 
 import {
@@ -320,7 +320,7 @@ onMounted(loadConceptSets);
         >
             <div class="dialog-content">
                 <label for="target-set">{{ $gettext("Select Set") }}</label>
-                <Dropdown
+                <Select
                     v-model="targetSetId"
                     :options="conceptSets"
                     option-label="name"

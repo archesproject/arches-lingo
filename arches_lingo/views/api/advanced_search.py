@@ -6,13 +6,17 @@ from django.utils.decorators import method_decorator
 from django.utils.translation import gettext as _
 from django.views.generic import View
 
-from arches.app.models.models import Language, ResourceInstance, TileModel
+from arches.app.models.models import (
+    Language,
+    ResourceInstance,
+    ResourceInstanceLifecycleState,
+    TileModel,
+)
 from arches.app.utils.decorators import group_required
 from arches.app.utils.response import JSONErrorResponse, JSONResponse
 
-from arches_lingo.const import CONCEPTS_GRAPH_ID
-from arches_lingo.models import ConceptSet, ConceptSetMember, SavedSearch
 from arches_lingo.const import (
+    CONCEPTS_GRAPH_ID,
     IDENTIFIER_CONTENT_NODE,
     IDENTIFIER_NODEGROUP,
     STATEMENT_CONTENT_NODE,
@@ -22,6 +26,7 @@ from arches_lingo.const import (
     URI_CONTENT_NODE,
     URI_NODEGROUP,
 )
+from arches_lingo.models import ConceptSet, ConceptSetMember, SavedSearch
 from arches_lingo.utils.advanced_search import AdvancedSearchEvaluator
 from arches_lingo.utils.concept_builder import ConceptBuilder
 
@@ -238,17 +243,14 @@ class AdvancedSearchOptionsView(View):
         scheme_options = []
         for scheme in scheme_builder.schemes:
             serialized = scheme_builder.serialize_scheme(scheme, children=False)
-            label = self._extract_pref_label(serialized)
             scheme_options.append(
                 {
                     "id": serialized["id"],
-                    "label": label,
+                    "labels": serialized.get("labels", []),
                 }
             )
 
         # Lifecycle states
-        from arches.app.models.models import ResourceInstanceLifecycleState
-
         lifecycle_states = list(
             ResourceInstanceLifecycleState.objects.filter(
                 resource_instance_lifecycle__graphs__graphid=CONCEPTS_GRAPH_ID
@@ -265,17 +267,6 @@ class AdvancedSearchOptionsView(View):
                 "lifecycle_states": lifecycle_states,
             }
         )
-
-    @staticmethod
-    def _extract_pref_label(serialized_scheme):
-        """Extract the preferred label from a serialized scheme."""
-        for label in serialized_scheme.get("labels", []):
-            if label.get("valuetype_id") == "prefLabel":
-                return label.get("value", "")
-        labels = serialized_scheme.get("labels", [])
-        if labels:
-            return labels[0].get("value", "")
-        return ""
 
 
 @method_decorator(
