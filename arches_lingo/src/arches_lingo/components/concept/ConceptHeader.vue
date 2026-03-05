@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject, onMounted, ref, watch, type Ref } from "vue";
+import { inject, onMounted, ref, watch, computed, type Ref } from "vue";
 
 import { useConfirm } from "primevue/useconfirm";
 import { useGettext } from "vue3-gettext";
@@ -26,6 +26,9 @@ import {
     systemLanguageKey,
     selectedLanguageKey,
     CONCEPT_TYPE_NODE_ALIAS,
+    CONCEPT_ICON,
+    GUIDE_TERM_ICON,
+    GUIDE_TERM_URI,
 } from "@/arches_lingo/constants.ts";
 import { useEditLog } from "@/arches_lingo/composables/useEditLog.ts";
 import { PREF_LABEL } from "@/arches_controlled_lists/constants.ts";
@@ -64,12 +67,16 @@ const props = defineProps<{
 }>();
 
 const refreshSchemeHierarchy = inject<() => void>("refreshSchemeHierarchy");
+const refreshReportSection = inject<(componentName: string) => void>(
+    "refreshReportSection",
+);
 const { openEditLog } = useEditLog(() => props.graphSlug);
 
 const toast = useToast();
 const { $gettext } = useGettext();
 const confirm = useConfirm();
 const router = useRouter();
+const store = useResourceStore();
 
 const systemLanguage = inject(systemLanguageKey) as Language;
 const selectedLanguage = inject(selectedLanguageKey) as Ref<Language>;
@@ -83,7 +90,21 @@ const exportDialogKey = ref(0);
 
 const conceptTypeTile = ref();
 
-const store = useResourceStore();
+function isGuideTermType(typeNodeValue: unknown): boolean {
+    if (!Array.isArray(typeNodeValue) || typeNodeValue.length === 0) {
+        return false;
+    }
+    return typeNodeValue.some(
+        (ref: { uri?: string }) => ref.uri === GUIDE_TERM_URI,
+    );
+}
+
+const conceptIcon = computed(() => {
+    const typeNodeValue =
+        conceptTypeTile.value?.aliased_data?.[CONCEPT_TYPE_NODE_ALIAS]
+            ?.node_value;
+    return isGuideTermType(typeNodeValue) ? GUIDE_TERM_ICON : CONCEPT_ICON;
+});
 
 watch(
     [() => store.resource.value, () => store.error.value],
@@ -132,22 +153,21 @@ watch(
 
 async function onConceptTypeChange(newValue: ReferenceSelectValue) {
     try {
-        conceptTypeTile.value = await upsertLingoTile(
-            props.graphSlug,
-            CONCEPT_TYPE_NODE_ALIAS,
-            {
-                resourceinstance: props.resourceInstanceId,
-                aliased_data: {
-                    [CONCEPT_TYPE_NODE_ALIAS]: newValue,
-                },
-                tileid: conceptTypeTile.value?.tileid,
+        await upsertLingoTile(props.graphSlug, CONCEPT_TYPE_NODE_ALIAS, {
+            resourceinstance: props.resourceInstanceId,
+            aliased_data: {
+                [CONCEPT_TYPE_NODE_ALIAS]: newValue,
             },
-        );
+            tileid: conceptTypeTile.value?.tileid,
+        });
+        await store.refreshResource();
         toast.add({
             severity: SUCCESS,
             summary: $gettext("Concept type updated"),
             life: DEFAULT_TOAST_LIFE,
         });
+        refreshSchemeHierarchy!();
+        refreshReportSection!("HierarchicalPosition");
     } catch (error) {
         toast.add({
             severity: ERROR,
@@ -294,8 +314,7 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
             <div class="concept-details">
                 <h2>
                     <div class="concept-name">
-                        <!-- To do: change icon based on concept type -->
-                        <i class="pi pi-tag"></i>
+                        <i :class="conceptIcon"></i>
                         <span>
                             {{ label?.value }}
 

@@ -38,6 +38,7 @@ export interface Concept {
     id: string;
     labels: Label[];
     narrower: Concept[];
+    guide_term?: boolean;
 }
 
 export interface Scheme {
@@ -363,6 +364,7 @@ export interface NodeAndParentInstruction {
 
 export interface IconLabels {
     concept: string;
+    guideTerm: string;
     scheme: string;
 }
 
@@ -380,6 +382,7 @@ export interface SearchResultItem {
         labels: Label[];
     }[][];
     polyhierarchical: boolean;
+    guide_term?: boolean;
 }
 
 export interface SearchResultHierarchy {

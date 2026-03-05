@@ -2,8 +2,11 @@ import { routeNames } from "@/arches_lingo/routes.ts";
 
 import { createLingoResource, upsertLingoTile } from "@/arches_lingo/api.ts";
 import {
-    CONCEPT_TYPE_NODE_ALIAS,
     NEW_CONCEPT,
+    CONCEPT_ICON,
+    GUIDE_TERM_ICON,
+    SCHEME_ICON,
+    CONCEPT_TYPE_NODE_ALIAS,
 } from "@/arches_lingo/constants.ts";
 import { fetchTileData } from "@/arches_component_lab/generics/GenericCard/api.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
@@ -29,6 +32,20 @@ export function dataIsScheme(data: Concept | Scheme) {
 }
 export function dataIsConcept(data: Concept | Scheme) {
     return !dataIsScheme(data);
+}
+
+// Icon helpers
+export function getConceptIcon(
+    item: Concept | SearchResultItem | { guide_term?: boolean },
+): string {
+    return item.guide_term ? GUIDE_TERM_ICON : CONCEPT_ICON;
+}
+
+export function getItemIcon(item: Concept | Scheme): string {
+    if (dataIsScheme(item)) {
+        return SCHEME_ICON;
+    }
+    return getConceptIcon(item as Concept);
 }
 
 export function navigateToSchemeOrConcept(
@@ -93,10 +110,8 @@ export function treeFromSchemes(
                 ...item,
                 schemeId,
             },
-            icon: dataIsScheme(item) ? "pi pi-folder" : "pi pi-tag",
-            iconLabel: dataIsScheme(item)
-                ? iconLabels.scheme
-                : iconLabels.concept,
+            icon: getItemIcon(item),
+            iconLabel: getIconLabel(item, iconLabels),
         };
     }
 
@@ -321,4 +336,19 @@ export async function createOrUpdateConcept(
 
         return tile.tileid;
     }
+}
+
+export function getIconLabel(
+    item: Concept | Scheme,
+    iconLabels: IconLabels,
+): string {
+    if (dataIsScheme(item)) {
+        return iconLabels.scheme;
+    }
+
+    if ((item as Concept).guide_term) {
+        return iconLabels.guideTerm;
+    }
+
+    return iconLabels.concept;
 }

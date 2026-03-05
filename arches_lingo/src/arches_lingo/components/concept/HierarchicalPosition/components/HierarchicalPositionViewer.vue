@@ -8,6 +8,7 @@ import Button from "primevue/button";
 import ConfirmDialog from "primevue/confirmdialog";
 
 import { deleteLingoTile } from "@/arches_lingo/api.ts";
+import { getConceptIcon } from "@/arches_lingo/utils.ts";
 import type { Ref } from "vue";
 import type {
     SearchResultItem,
@@ -17,6 +18,7 @@ import {
     DANGER,
     DEFAULT_ERROR_TOAST_LIFE,
     ERROR,
+    SCHEME_ICON,
     SECONDARY,
     selectedLanguageKey,
     systemLanguageKey,
@@ -55,7 +57,7 @@ const refreshSchemeHierarchy = inject<() => void>("refreshSchemeHierarchy");
 
 function getIcon(item: SearchResultItem) {
     //TODO need a better way to determine if item is a scheme or not
-    return item.id === props.scheme ? "pi pi-folder" : "pi pi-tag";
+    return item.id === props.scheme ? SCHEME_ICON : getConceptIcon(item);
 }
 
 function confirmDelete(hierarchy: SearchResultHierarchy) {

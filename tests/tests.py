@@ -23,17 +23,21 @@ from arches_lingo.const import (
     TOP_CONCEPT_OF_NODE_AND_NODEGROUP,
     CLASSIFICATION_STATUS_NODEGROUP,
     CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID,
+    CONCEPT_TYPE_NODEGROUP,
+    CONCEPT_TYPE_NODEID,
     CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID,
     CONCEPT_NAME_NODEGROUP,
     CONCEPT_NAME_CONTENT_NODE,
     CONCEPT_NAME_LANGUAGE_NODE,
     CONCEPT_NAME_TYPE_NODE,
+    GUIDE_TERM_URI,
     SCHEME_NAME_NODEGROUP,
     SCHEME_NAME_CONTENT_NODE,
     SCHEME_NAME_LANGUAGE_NODE,
     SCHEME_NAME_TYPE_NODE,
     LABEL_LIST_ID,
 )
+from arches_lingo.utils.concept_builder import ConceptBuilder
 
 # these tests can be run from the command line via
 # python manage.py test tests.tests --settings="tests.test_settings"
@@ -51,8 +55,8 @@ class ViewTests(TestCase):
     def load_graphs(cls):
         path = Path(settings.APP_ROOT) / "pkg" / "graphs" / "resource_models"
         for file_path in cls.graph_fixtures:
-            with captured_stdout(), open(path / file_path, "r") as f:
-                archesfile = JSONDeserializer().deserialize(f)
+            with captured_stdout(), open(path / file_path, "r") as graph_file:
+                archesfile = JSONDeserializer().deserialize(graph_file)
                 ResourceGraphImporter(archesfile["graph"], overwrite_graphs=True)
 
     @classmethod
@@ -94,14 +98,14 @@ class ViewTests(TestCase):
 
         concept_tiles = []
         resource_x_resource_records = []
-        for i, concept in enumerate(cls.concepts):
+        for index, concept in enumerate(cls.concepts):
             # Create label tile
             concept_tiles.append(
                 TileModel(
                     resourceinstance=concept,
                     nodegroup_id=CONCEPT_NAME_NODEGROUP,
                     data={
-                        CONCEPT_NAME_CONTENT_NODE: f"Concept {i + 1}",
+                        CONCEPT_NAME_CONTENT_NODE: f"Concept {index + 1}",
                         CONCEPT_NAME_TYPE_NODE: prefLabel_reference_dt,
                         CONCEPT_NAME_LANGUAGE_NODE: "en",
                     },
@@ -132,7 +136,7 @@ class ViewTests(TestCase):
                 )
             )
             # Create top concept/narrower tile
-            if i == 0:
+            if index == 0:
                 top_concept_rxr = ResourceXResource(
                     from_resource=concept,
                     from_resource_graph_id=CONCEPTS_GRAPH_ID,
@@ -156,11 +160,11 @@ class ViewTests(TestCase):
                         },
                     )
                 )
-            elif i < MAX_DEPTH:
+            elif index < MAX_DEPTH:
                 narrower_hierarchy_rxr = ResourceXResource(
                     from_resource=concept,
                     from_resource_graph_id=CONCEPTS_GRAPH_ID,
-                    to_resource=cls.concepts[i - 1],
+                    to_resource=cls.concepts[index - 1],
                     to_resource_graph_id=CONCEPTS_GRAPH_ID,
                     created=datetime.datetime.now(),
                     modified=datetime.datetime.now(),
@@ -183,7 +187,7 @@ class ViewTests(TestCase):
                             CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID: [
                                 # Previous concept
                                 {
-                                    "resourceId": str(cls.concepts[i - 1].pk),
+                                    "resourceId": str(cls.concepts[index - 1].pk),
                                     "resourceXresourceId": str(
                                         narrower_hierarchy_rxr.pk
                                     ),
@@ -233,13 +237,14 @@ class ViewTests(TestCase):
         self.client.force_login(self.admin)
 
     def test_get_concept_trees(self):
-        with self.assertNumQueries(6):
+        with self.assertNumQueries(7):
             # 1: session
             # 2: auth
             # 3: select broader tiles, subquery for labels
             # 4: select top concept tiles, subquery for labels
-            # 5: select schemes, subquery for labels
-            # 6: languages
+            # 5: select guide term concept type tiles
+            # 6: select schemes, subquery for labels
+            # 7: languages
             response = self.client.get(reverse("api-concepts"))
 
         self.assertEqual(response.status_code, 200)
@@ -257,7 +262,9 @@ class ViewTests(TestCase):
             {"Concept 2", "Concept 3", "Concept 4", "Concept 5"},
         )
         concept_2 = [
-            c for c in top["narrower"] if c["labels"][0]["value"] == "Concept 2"
+            concept
+            for concept in top["narrower"]
+            if concept["labels"][0]["value"] == "Concept 2"
         ][0]
         self.assertEqual(
             {n["labels"][0]["value"] for n in concept_2["narrower"]},
@@ -412,3 +419,119 @@ class ViewTests(TestCase):
             reverse("api-lingo-scheme-label-counts", kwargs={"pk": self.scheme.pk})
         )
         self.assertIn(response.status_code, (302, 403))
+
+    def test_guide_term_flag_in_concept_tree(self):
+        """Concepts with guide term concept type should be flagged."""
+        guide_concept = self.concepts[1]  # Concept 2
+
+        # Add a type tile with guide term type
+        TileModel.objects.create(
+            resourceinstance=guide_concept,
+            nodegroup_id=CONCEPT_TYPE_NODEGROUP,
+            data={
+                CONCEPT_TYPE_NODEID: [
+                    {
+                        "uri": GUIDE_TERM_URI,
+                        "labels": [{"value": "guide term", "language_id": "en"}],
+                    }
+                ],
+            },
+        )
+
+        response = self.client.get(reverse("api-concepts"))
+        self.assertEqual(response.status_code, 200)
+        result = json.loads(response.content)
+        scheme = result["schemes"][0]
+        top = scheme["top_concepts"][0]
+
+        # The top concept (Concept 1) should NOT be a guide term
+        self.assertFalse(top["guide_term"])
+
+        # Find Concept 2 in narrower list -- it should be flagged as guide term
+        concept_2 = next(
+            narrower_concept
+            for narrower_concept in top["narrower"]
+            if narrower_concept["labels"][0]["value"] == "Concept 2"
+        )
+        self.assertTrue(concept_2["guide_term"])
+
+        # Other narrower concepts should not be guide terms
+        for narrower_concept in top["narrower"]:
+            if narrower_concept["labels"][0]["value"] != "Concept 2":
+                self.assertFalse(narrower_concept["guide_term"])
+
+    def test_guide_term_flag_in_search(self):
+        """Guide term flag should appear in search results."""
+        guide_concept = self.concepts[2]  # Concept 3
+
+        TileModel.objects.create(
+            resourceinstance=guide_concept,
+            nodegroup_id=CONCEPT_TYPE_NODEGROUP,
+            data={
+                CONCEPT_TYPE_NODEID: [
+                    {
+                        "uri": GUIDE_TERM_URI,
+                        "labels": [{"value": "guide term", "language_id": "en"}],
+                    }
+                ],
+            },
+        )
+
+        response = self.client.get(
+            reverse("api-search"),
+            QUERY_STRING="term=Concept 3&maxEditDistance=0",
+        )
+        result = json.loads(response.content)
+        self.assertEqual(len(result["data"]), 1)
+        self.assertTrue(result["data"][0]["guide_term"])
+
+        # Non-guide-term concept should be False
+        response = self.client.get(
+            reverse("api-search"),
+            QUERY_STRING="term=Concept 1&maxEditDistance=0",
+        )
+        result = json.loads(response.content)
+        self.assertEqual(len(result["data"]), 1)
+        self.assertFalse(result["data"][0]["guide_term"])
+
+    def test_guide_term_flag_default_false(self):
+        """Concepts without guide term type should have guide_term=False."""
+        response = self.client.get(reverse("api-concepts"))
+        result = json.loads(response.content)
+        scheme = result["schemes"][0]
+        top = scheme["top_concepts"][0]
+
+        self.assertFalse(top["guide_term"])
+        for narrower_concept in top["narrower"]:
+            self.assertFalse(narrower_concept["guide_term"])
+
+
+class IsGuideTermTileTests(TestCase):
+    """Unit tests for ConceptBuilder.is_guide_term_tile static method."""
+
+    def test_guide_term_tile_detected(self):
+        tile_data = {
+            CONCEPT_TYPE_NODEID: [
+                {
+                    "uri": GUIDE_TERM_URI,
+                    "labels": [{"value": "guide term", "language_id": "en"}],
+                }
+            ]
+        }
+        self.assertTrue(ConceptBuilder.is_guide_term_tile(tile_data))
+
+    def test_non_guide_term_tile(self):
+        tile_data = {
+            CONCEPT_TYPE_NODEID: [
+                {
+                    "uri": "http://example.com/some-other-type",
+                    "labels": [{"value": "other", "language_id": "en"}],
+                }
+            ]
+        }
+        self.assertFalse(ConceptBuilder.is_guide_term_tile(tile_data))
+
+    def test_empty_type_data(self):
+        self.assertFalse(ConceptBuilder.is_guide_term_tile({}))
+        self.assertFalse(ConceptBuilder.is_guide_term_tile({CONCEPT_TYPE_NODEID: None}))
+        self.assertFalse(ConceptBuilder.is_guide_term_tile({CONCEPT_TYPE_NODEID: []}))

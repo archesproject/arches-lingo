@@ -14,11 +14,14 @@ from arches_lingo.const import (
     TOP_CONCEPT_OF_NODE_AND_NODEGROUP,
     CLASSIFICATION_STATUS_NODEGROUP,
     CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID,
+    CONCEPT_TYPE_NODEGROUP,
+    CONCEPT_TYPE_NODEID,
     CONCEPT_NAME_NODEGROUP,
     CONCEPT_NAME_CONTENT_NODE,
     CONCEPT_NAME_LANGUAGE_NODE,
     CONCEPT_NAME_TYPE_NODE,
     ALT_LABEL_VALUE,
+    GUIDE_TERM_URI,
     HIDDEN_LABEL_VALUE,
     PREF_LABEL_VALUE,
     SCHEME_NAME_NODEGROUP,
@@ -32,6 +35,7 @@ from arches_lingo.query_expressions import JsonbArrayElements
 
 TOP_CONCEPT_OF_LOOKUP = f"data__{TOP_CONCEPT_OF_NODE_AND_NODEGROUP}"
 BROADER_LOOKUP = f"data__{CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID}"
+CONCEPT_TYPE_LOOKUP = f"data__{CONCEPT_TYPE_NODEID}"
 
 
 class ConceptBuilder:
@@ -49,11 +53,13 @@ class ConceptBuilder:
         self.schemes_by_top_concept: dict[str, set[str]] = defaultdict(set)
 
         self.polyhierarchical_concepts = set()
+        self.guide_term_concepts: set[str] = set()
         self.language_lookup = {lang.code: lang.name for lang in Language.objects.all()}
 
         if concept_ids is None:
             self.top_concepts_map()
             self.narrower_concepts_map()
+            self.populate_guide_term_concepts()
             self.populate_schemes()
             return
 
@@ -62,6 +68,7 @@ class ConceptBuilder:
             return
 
         self.populate_concept_labels(concept_ids)
+        self.populate_guide_term_concepts(concept_ids)
 
     @staticmethod
     def find_valuetype_id_from_value(value):
@@ -220,6 +227,7 @@ class ConceptBuilder:
 
         self.populate_schemes(list(scheme_ids))
         self.populate_concept_labels(list(closure_concept_ids))
+        self.populate_guide_term_concepts(list(closure_concept_ids))
 
     def serialize_scheme(self, scheme: ResourceInstance, *, children=True):
         scheme_id: str = str(scheme.pk)
@@ -250,12 +258,39 @@ class ConceptBuilder:
             "value": value,
         }
 
+    @staticmethod
+    def is_guide_term_tile(tile_data: dict) -> bool:
+        """Check if a concept type tile has guide term type."""
+        type_values = tile_data.get(CONCEPT_TYPE_NODEID)
+        if not type_values:
+            return False
+        for ref in type_values:
+            if ref.get("uri") == GUIDE_TERM_URI:
+                return True
+        return False
+
+    def populate_guide_term_concepts(
+        self, concept_ids: list[str] | None = None
+    ) -> None:
+        """Populate guide_term_concepts set from concept type tiles."""
+        tiles = TileModel.objects.filter(
+            nodegroup_id=CONCEPT_TYPE_NODEGROUP,
+        ).exclude(**{CONCEPT_TYPE_LOOKUP: None})
+
+        if concept_ids is not None:
+            tiles = tiles.filter(resourceinstance_id__in=concept_ids)
+
+        for tile in tiles.values("resourceinstance_id", "data").iterator():
+            if self.is_guide_term_tile(tile["data"]):
+                self.guide_term_concepts.add(str(tile["resourceinstance_id"]))
+
     def serialize_concept(self, conceptid: str, *, parents=False, children=True):
         data = {
             "id": conceptid,
             "labels": [
                 self.serialize_concept_label(label) for label in self.labels[conceptid]
             ],
+            "guide_term": conceptid in self.guide_term_concepts,
         }
         if children:
             data["narrower"] = [
