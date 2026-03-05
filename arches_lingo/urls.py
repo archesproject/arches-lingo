@@ -9,6 +9,7 @@ from arches_lingo.views.api.concepts import (
     ConceptResourceView,
     ConceptRelationshipView,
 )
+from arches_lingo.views.api.edit_log import ResourceEditLogAPIView
 from arches_lingo.views.api.schemes import SchemeResourceView, SchemeLabelCountView
 from arches_lingo.views.api.generic import (
     LingoResourceDetailView,
@@ -60,12 +61,17 @@ urlpatterns = [
         name="api-lingo-concept-relationships",
     ),
     path(
-        "api/lingo/scheme/<uuid:pk>",
+        "api/lingo/schemes/<uuid:pk>",
         SchemeResourceView.as_view(),
         name="api-lingo-scheme",
     ),
     path(
-        "api/lingo/scheme/<uuid:pk>/label-counts",
+        "api/lingo/resource/<uuid:resourceid>/edit-log",
+        ResourceEditLogAPIView.as_view(),
+        name="api-lingo-edit-log",
+    ),
+    path(
+        "api/lingo/schemes/<uuid:pk>/label-counts",
         SchemeLabelCountView.as_view(),
         name="api-lingo-scheme-label-counts",
     ),

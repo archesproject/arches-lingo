@@ -2,6 +2,8 @@
 import { inject, onMounted, ref, watch, type Ref } from "vue";
 import { useGettext } from "vue3-gettext";
 
+import { useEditLog } from "@/arches_lingo/composables/useEditLog.ts";
+
 import { useConfirm } from "primevue/useconfirm";
 import { useRouter } from "vue-router";
 import { useToast } from "primevue/usetoast";
@@ -16,6 +18,7 @@ import {
     DANGER,
     DEFAULT_ERROR_TOAST_LIFE,
     ERROR,
+    NEW_CONCEPT,
     SECONDARY,
     systemLanguageKey,
     selectedLanguageKey,
@@ -28,7 +31,10 @@ import {
     fetchSchemeLabelCounts,
 } from "@/arches_lingo/api.ts";
 import { useResourceStore } from "@/arches_lingo/composables/useResourceStore.ts";
-import { extractDescriptors } from "@/arches_lingo/utils.ts";
+import {
+    extractDescriptors,
+    navigateToSchemeOrConcept,
+} from "@/arches_lingo/utils.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 
 import type {
@@ -52,6 +58,7 @@ const props = defineProps<{
 }>();
 
 const refreshSchemeHierarchy = inject<() => void>("refreshSchemeHierarchy");
+const { openEditLog } = useEditLog(() => props.graphSlug);
 
 const confirm = useConfirm();
 const router = useRouter();
@@ -70,7 +77,6 @@ const showExportDialog = ref(false);
 const exportDialogKey = ref(0);
 
 const store = useResourceStore();
-let headerInitialized = false;
 
 watch(
     [() => store.resource.value, () => store.error.value],
@@ -85,8 +91,7 @@ watch(
             isLoading.value = false;
             return;
         }
-        if (!resource || !props.resourceInstanceId || headerInitialized) return;
-        headerInitialized = true;
+        if (!resource || !props.resourceInstanceId) return;
 
         try {
             scheme.value = resource;
@@ -123,6 +128,17 @@ watch(
 function openExportDialog() {
     exportDialogKey.value++;
     showExportDialog.value = true;
+}
+
+function addTopConcept() {
+    const schemeId = props.resourceInstanceId;
+    if (!schemeId) {
+        return;
+    }
+    navigateToSchemeOrConcept(router, NEW_CONCEPT, {
+        scheme: schemeId,
+        parent: schemeId,
+    });
 }
 
 function extractSchemeHeaderData(scheme: ResourceInstanceResult) {
@@ -259,6 +275,14 @@ function confirmDelete() {
 
                     <div class="header-buttons">
                         <Button
+                            :aria-label="$gettext('Edit History')"
+                            class="add-button"
+                            @click="openEditLog"
+                        >
+                            <span><i class="pi pi-history"></i></span>
+                            <span>{{ $gettext("History") }}</span>
+                        </Button>
+                        <Button
                             :aria-label="$gettext('Export')"
                             class="add-button"
                             @click="openExportDialog"
@@ -270,7 +294,8 @@ function confirmDelete() {
                             icon="pi pi-plus-circle"
                             :label="$gettext('Add Top Concept')"
                             class="add-button"
-                        ></Button>
+                            @click="addTopConcept"
+                        />
 
                         <!-- TODO: button should reflect published state of concept: delete if draft, deprecate if URI is present -->
                         <Button

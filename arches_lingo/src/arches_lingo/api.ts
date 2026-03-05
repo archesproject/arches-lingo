@@ -6,6 +6,7 @@ import type { Language } from "@/arches_component_lab/types";
 import type {
     ConceptInstance,
     DigitalObjectInstance,
+    EditLogEntry,
     SchemeInstance,
     TileData,
     User,
@@ -538,6 +539,42 @@ export const dismissNotifications = async (notificationIds: string[]) => {
         method: "POST",
         headers: { "X-CSRFTOKEN": getToken() },
         body: formData,
+    });
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
+export const fetchResourceEditLog = async (
+    resourceId: string,
+): Promise<{ resourceid: string; edits: EditLogEntry[] }> => {
+    const url = generateArchesURL("arches_lingo:api-lingo-edit-log", {
+        resourceid: resourceId,
+    });
+    const response = await fetch(url);
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
+export const revertResourceToTimestamp = async (
+    resourceId: string,
+    timestamp: string,
+): Promise<{
+    status: "ok" | "partial_success";
+    message: string;
+    errors?: string[];
+}> => {
+    const url = generateArchesURL("arches_lingo:api-lingo-edit-log", {
+        resourceid: resourceId,
+    });
+    const response = await fetch(url, {
+        method: "POST",
+        headers: {
+            "X-CSRFTOKEN": getToken(),
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ timestamp }),
     });
     const parsed = await response.json();
     if (!response.ok) throw new Error(parsed.message || response.statusText);

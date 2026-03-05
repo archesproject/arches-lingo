@@ -38,6 +38,7 @@ export interface Concept {
     id: string;
     labels: Label[];
     narrower: Concept[];
+    guide_term?: boolean;
 }
 
 export interface Scheme {
@@ -228,6 +229,13 @@ export interface ConceptClassificationStatusAliases extends AliasedData {
 export type ConceptClassificationStatus =
     TileData<ConceptClassificationStatusAliases>;
 
+export interface ConceptTypeAliases extends AliasedData {
+    type: ReferenceSelectTreeNode[];
+    metatype?: ReferenceSelectTreeNode[];
+}
+
+export type ConceptType = TileData<ConceptTypeAliases>;
+
 export interface IdentifierAliases extends AliasedData {
     identifier_content: StringValue;
     identifier_label?: StringValue;
@@ -356,6 +364,7 @@ export interface NodeAndParentInstruction {
 
 export interface IconLabels {
     concept: string;
+    guideTerm: string;
     scheme: string;
 }
 
@@ -373,6 +382,7 @@ export interface SearchResultItem {
         labels: Label[];
     }[][];
     polyhierarchical: boolean;
+    guide_term?: boolean;
 }
 
 export interface SearchResultHierarchy {
@@ -413,4 +423,21 @@ export interface PaginatorDetails {
     has_next: boolean;
     total_notifications: number;
     unread_notifications: number;
+}
+
+export interface EditLogEntry {
+    editlogid: string;
+    transactionid: string | null;
+    edittype: string;
+    edittype_label: string;
+    timestamp: string;
+    userid: string;
+    user_firstname: string;
+    user_lastname: string;
+    user_username: string;
+    user_email: string;
+    nodegroupid: string | null;
+    tileinstanceid: string | null;
+    card_name: string | null;
+    note: string | null;
 }

@@ -70,6 +70,7 @@ const FILTER_CAPPED_MESSAGE = $gettext("Please refine your query.");
 
 const iconLabels: IconLabels = Object.freeze({
     concept: $gettext("Concept"),
+    guideTerm: $gettext("Guide Term"),
     scheme: $gettext("Scheme"),
 });
 

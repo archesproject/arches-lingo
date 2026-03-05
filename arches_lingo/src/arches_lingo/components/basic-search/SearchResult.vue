@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { inject, ref } from "vue";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
-import { getParentLabels } from "@/arches_lingo/utils.ts";
+import { getParentLabels, getConceptIcon } from "@/arches_lingo/utils.ts";
 import {
     DEFAULT_LANGUAGE,
     selectedLanguageKey,
@@ -30,7 +30,10 @@ defineProps({
         <div style="margin: 0 0.5rem">
             <span>
                 <i
-                    class="pi pi-paperclip concept-icon"
+                    :class="[
+                        getConceptIcon(searchResult.option),
+                        'concept-icon',
+                    ]"
                     aria-hidden="true"
                 />
                 {{

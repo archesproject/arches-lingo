@@ -23,6 +23,8 @@ import {
 
 const props = defineProps<{
     isEditorMaximized: boolean;
+    isFormEditor: boolean;
+    headerTitle: string;
 }>();
 
 const { $gettext } = useGettext();
@@ -116,7 +118,13 @@ function onCancel() {
 <template>
     <div class="container">
         <div class="header">
-            <h2>{{ $gettext("Editor Tools") }}</h2>
+            <h2>
+                {{
+                    props.isFormEditor
+                        ? $gettext("Editor Tools")
+                        : props.headerTitle
+                }}
+            </h2>
 
             <div class="controls">
                 <Button
@@ -151,7 +159,10 @@ function onCancel() {
             <slot :key="formKey" />
         </div>
 
-        <div class="footer">
+        <div
+            v-if="props.isFormEditor"
+            class="footer"
+        >
             <Button
                 :label="$gettext('Save Changes')"
                 severity="success"

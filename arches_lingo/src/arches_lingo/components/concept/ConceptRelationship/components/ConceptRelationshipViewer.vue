@@ -32,9 +32,8 @@ const metaStringLabel: MetaStringText = {
     deleteConfirm: $gettext(
         "Are you sure you want to delete this relationship?",
     ),
-    name: $gettext("RelationshipID"),
-    type: $gettext("Relationship"),
-    language: $gettext("Related Concept"),
+    name: $gettext("Relationship"),
+    type: $gettext("Related Concept"),
     noRecords: $gettext("No associated concepts were found."),
     sortFields: {
         name: "aliased_data.relation_status_ascribed_comparate.display_value",
@@ -80,16 +79,6 @@ const metaStringLabel: MetaStringText = {
             :nodegroup-alias="props.nodegroupAlias"
         >
             <template #name="{ rowData }">
-                <div
-                    v-for="item in rowData.aliased_data
-                        .relation_status_ascribed_comparate?.details"
-                    :key="item.resource_id"
-                    style="white-space: nowrap"
-                >
-                    {{ item.resource_id }}
-                </div>
-            </template>
-            <template #type="{ rowData }">
                 <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="relation_status_ascribed_relation"
@@ -100,7 +89,7 @@ const metaStringLabel: MetaStringText = {
                     :should-show-label="false"
                 />
             </template>
-            <template #language="{ rowData }">
+            <template #type="{ rowData }">
                 <ConceptResourceSelectWidget
                     :graph-slug="props.graphSlug"
                     node-alias="relation_status_ascribed_comparate"

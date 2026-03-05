@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject, onMounted, ref, watch, type Ref } from "vue";
+import { inject, onMounted, ref, watch, computed, type Ref } from "vue";
 
 import { useConfirm } from "primevue/useconfirm";
 import { useGettext } from "vue3-gettext";
@@ -20,12 +20,17 @@ import {
     DEFAULT_TOAST_LIFE,
     EDIT,
     ERROR,
+    NEW_CONCEPT,
     SECONDARY,
     SUCCESS,
     systemLanguageKey,
     selectedLanguageKey,
     CONCEPT_TYPE_NODE_ALIAS,
+    CONCEPT_ICON,
+    GUIDE_TERM_ICON,
+    GUIDE_TERM_URI,
 } from "@/arches_lingo/constants.ts";
+import { useEditLog } from "@/arches_lingo/composables/useEditLog.ts";
 import { PREF_LABEL } from "@/arches_controlled_lists/constants.ts";
 
 import {
@@ -33,7 +38,10 @@ import {
     fetchConceptResource,
 } from "@/arches_lingo/api.ts";
 import { useResourceStore } from "@/arches_lingo/composables/useResourceStore.ts";
-import { extractDescriptors } from "@/arches_lingo/utils.ts";
+import {
+    extractDescriptors,
+    navigateToSchemeOrConcept,
+} from "@/arches_lingo/utils.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 
 import type {
@@ -59,11 +67,16 @@ const props = defineProps<{
 }>();
 
 const refreshSchemeHierarchy = inject<() => void>("refreshSchemeHierarchy");
+const refreshReportSection = inject<(componentName: string) => void>(
+    "refreshReportSection",
+);
+const { openEditLog } = useEditLog(() => props.graphSlug);
 
 const toast = useToast();
 const { $gettext } = useGettext();
 const confirm = useConfirm();
 const router = useRouter();
+const store = useResourceStore();
 
 const systemLanguage = inject(systemLanguageKey) as Language;
 const selectedLanguage = inject(selectedLanguageKey) as Ref<Language>;
@@ -78,8 +91,21 @@ const exportDialogKey = ref(0);
 
 const conceptTypeTile = ref();
 
-const store = useResourceStore();
-let headerInitialized = false;
+function isGuideTermType(typeNodeValue: unknown): boolean {
+    if (!Array.isArray(typeNodeValue) || typeNodeValue.length === 0) {
+        return false;
+    }
+    return typeNodeValue.some(
+        (ref: { uri?: string }) => ref.uri === GUIDE_TERM_URI,
+    );
+}
+
+const conceptIcon = computed(() => {
+    const typeNodeValue =
+        conceptTypeTile.value?.aliased_data?.[CONCEPT_TYPE_NODE_ALIAS]
+            ?.node_value;
+    return isGuideTermType(typeNodeValue) ? GUIDE_TERM_ICON : CONCEPT_ICON;
+});
 
 watch(
     [() => store.resource.value, () => store.error.value],
@@ -94,8 +120,7 @@ watch(
             isLoading.value = false;
             return;
         }
-        if (!resource || !props.resourceInstanceId || headerInitialized) return;
-        headerInitialized = true;
+        if (!resource || !props.resourceInstanceId) return;
 
         try {
             concept.value = resource;
@@ -129,22 +154,21 @@ watch(
 
 async function onConceptTypeChange(newValue: ReferenceSelectValue) {
     try {
-        conceptTypeTile.value = await upsertLingoTile(
-            props.graphSlug,
-            CONCEPT_TYPE_NODE_ALIAS,
-            {
-                resourceinstance: props.resourceInstanceId,
-                aliased_data: {
-                    [CONCEPT_TYPE_NODE_ALIAS]: newValue,
-                },
-                tileid: conceptTypeTile.value?.tileid,
+        await upsertLingoTile(props.graphSlug, CONCEPT_TYPE_NODE_ALIAS, {
+            resourceinstance: props.resourceInstanceId,
+            aliased_data: {
+                [CONCEPT_TYPE_NODE_ALIAS]: newValue,
             },
-        );
+            tileid: conceptTypeTile.value?.tileid,
+        });
+        await store.refreshResource();
         toast.add({
             severity: SUCCESS,
             summary: $gettext("Concept type updated"),
             life: DEFAULT_TOAST_LIFE,
         });
+        refreshSchemeHierarchy!();
+        refreshReportSection!("HierarchicalPosition");
     } catch (error) {
         toast.add({
             severity: ERROR,
@@ -236,6 +260,20 @@ function openExportDialog() {
     showExportDialog.value = true;
 }
 
+function addChild() {
+    const schemeId = data.value?.partOfScheme?.node_value?.[0]?.resourceId;
+    const parentId = props.resourceInstanceId;
+
+    if (!schemeId || !parentId) {
+        return;
+    }
+
+    navigateToSchemeOrConcept(router, NEW_CONCEPT, {
+        scheme: schemeId,
+        parent: parentId,
+    });
+}
+
 function extractConceptHeaderData(concept: ResourceInstanceResult) {
     const aliased_data = concept?.aliased_data;
 
@@ -293,8 +331,7 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
             <div class="concept-details">
                 <h2>
                     <div class="concept-name">
-                        <!-- To do: change icon based on concept type -->
-                        <i class="pi pi-tag"></i>
+                        <i :class="conceptIcon"></i>
                         <span>
                             {{ label?.value }}
 
@@ -324,7 +361,18 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                     />
                 </div>
             </div>
-            <div class="header-buttons">
+            <div
+                v-if="resourceInstanceId"
+                class="header-buttons"
+            >
+                <Button
+                    :aria-label="$gettext('Edit History')"
+                    class="add-button"
+                    @click="openEditLog"
+                >
+                    <span><i class="pi pi-history"></i></span>
+                    <span>{{ $gettext("History") }}</span>
+                </Button>
                 <Button
                     :aria-label="$gettext('Export')"
                     class="add-button"
@@ -337,7 +385,8 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                     icon="pi pi-plus-circle"
                     :label="$gettext('Add Child')"
                     class="add-button"
-                ></Button>
+                    @click="addChild"
+                />
 
                 <!-- TODO: button should reflect published state of concept: delete if draft, deprecate if URI is present -->
                 <Button
