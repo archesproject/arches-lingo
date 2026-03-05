@@ -46,9 +46,8 @@ def _build_uri_label_map(list_id: str) -> dict:
     )
     # Build item_id → first pref label value
     pref_map: dict = {}
-    for pv in pref_values:
-        if pv["list_item_id"] not in pref_map:
-            pref_map[pv["list_item_id"]] = pv["value"]
+    for pref_value in pref_values:
+        pref_map.setdefault(pref_value["list_item_id"], pref_value["value"])
     return {item.uri: pref_map.get(item.id, str(item.id)) for item in items}
 
 
@@ -102,7 +101,7 @@ def _get_label_stats(concept_resource_ids: list) -> tuple:
         {"label": uri_label_map.get(uri, uri), "uri": uri, "count": count}
         for uri, count in type_counter.items()
     ]
-    labels_by_type.sort(key=lambda x: x["label"])
+    labels_by_type.sort(key=lambda entry: entry["label"])
 
     lang_codes = list(lang_counter.keys())
     lang_name_map: dict = {}
@@ -114,7 +113,7 @@ def _get_label_stats(concept_resource_ids: list) -> tuple:
         {"language": lang_name_map.get(code, code), "code": code, "count": count}
         for code, count in lang_counter.items()
     ]
-    labels_by_language.sort(key=lambda x: -x["count"])
+    labels_by_language.sort(key=lambda entry: -entry["count"])
 
     return total, labels_by_type, labels_by_language
 
@@ -154,12 +153,172 @@ def _get_concept_type_breakdown(concept_resource_ids: list) -> list:
         {"label": label, "uri": uri, "count": uri_counter.get(uri, 0)}
         for uri, label in uri_label_map.items()
     ]
-    breakdown.sort(key=lambda x: x["label"])
+    breakdown.sort(key=lambda entry: entry["label"])
 
     if untyped_count > 0:
         breakdown.append({"label": _("Untyped"), "uri": None, "count": untyped_count})
 
     return breakdown
+
+
+def _get_concept_ids(scheme_ids: list) -> tuple:
+    """Return ``(concept_count, concept_ids_as_strings)`` for the given
+    scheme filter.  When *scheme_ids* is empty, all concepts are returned.
+    """
+    if scheme_ids:
+        concept_qs = ResourceTileTree.get_tiles("concept").filter(
+            part_of_scheme__id__in=scheme_ids,
+        )
+        concept_count = concept_qs.count()
+        concept_ids_list = [str(pk) for pk in concept_qs.values_list("pk", flat=True)]
+    else:
+        concept_count = models.ResourceInstance.objects.filter(
+            graph_id=CONCEPTS_GRAPH_ID
+        ).count()
+        concept_ids_list = [
+            str(pk)
+            for pk in models.ResourceInstance.objects.filter(
+                graph_id=CONCEPTS_GRAPH_ID
+            ).values_list("pk", flat=True)
+        ]
+    return concept_count, concept_ids_list
+
+
+def _get_all_scheme_ids() -> list:
+    """Return all scheme resource IDs as strings."""
+    return [
+        str(pk)
+        for pk in models.ResourceInstance.objects.filter(
+            graph_id=SCHEMES_GRAPH_ID
+        ).values_list("pk", flat=True)
+    ]
+
+
+def _build_resource_type_map(resource_ids: list) -> dict:
+    """Return a ``{resource_id_str: "scheme"|"concept"}`` mapping."""
+    type_map: dict = {}
+    for resource in models.ResourceInstance.objects.filter(
+        resourceinstanceid__in=resource_ids
+    ):
+        type_map[str(resource.resourceinstanceid)] = (
+            "scheme" if str(resource.graph_id) == str(SCHEMES_GRAPH_ID) else "concept"
+        )
+    return type_map
+
+
+def _build_recent_activity(
+    all_resource_ids: list,
+    type_map: dict,
+    since,
+    *,
+    max_items: int = 20,
+    fetch_limit: int = 100,
+) -> list:
+    """Return the *max_items* most recent edits, deduplicated by transaction.
+
+    Each entry is a dict ready for JSON serialisation.
+    """
+    edit_qs = models.EditLog.objects.filter(
+        resourceinstanceid__in=all_resource_ids,
+    ).order_by("-timestamp")
+    if since:
+        edit_qs = edit_qs.filter(timestamp__gte=since)
+    edits = edit_qs[:fetch_limit]
+
+    # Build nodegroup ID → card name map for action labels
+    nodegroup_ids = {edit.nodegroupid for edit in edits if edit.nodegroupid}
+    card_lookup: dict = {}
+    if nodegroup_ids:
+        for card in Card.objects.filter(nodegroup_id__in=nodegroup_ids):
+            card_lookup[str(card.nodegroup_id)] = card.name
+
+    seen_transactions: set = set()
+    activity: list = []
+    for edit in edits:
+        dedup_key = (
+            str(edit.transactionid) if edit.transactionid else str(edit.editlogid)
+        )
+        if dedup_key in seen_transactions:
+            continue
+        seen_transactions.add(dedup_key)
+
+        card_name = card_lookup.get(edit.nodegroupid) if edit.nodegroupid else None
+        template = TILE_EDIT_TYPE_LABEL_TEMPLATES.get(edit.edittype)
+        if card_name and template:
+            edittype_label = str(template % {"name": card_name})
+        else:
+            edittype_label = str(EDIT_TYPE_LABELS.get(edit.edittype, edit.edittype))
+
+        activity.append(
+            {
+                "editlogid": str(edit.editlogid),
+                "edittype": edit.edittype,
+                "edittype_label": edittype_label,
+                "timestamp": (edit.timestamp.isoformat() if edit.timestamp else None),
+                "user_username": edit.user_username,
+                "user_firstname": edit.user_firstname,
+                "user_lastname": edit.user_lastname,
+                "resource_id": edit.resourceinstanceid,
+                "resource_type": type_map.get(edit.resourceinstanceid, "concept"),
+            }
+        )
+        if len(activity) >= max_items:
+            break
+
+    return activity
+
+
+def _attach_activity_labels(activity: list) -> None:
+    """Mutate *activity* items in-place, adding a ``labels`` list to each."""
+    concept_ids = list(
+        {item["resource_id"] for item in activity if item["resource_type"] == "concept"}
+    )
+    scheme_ids = list(
+        {item["resource_id"] for item in activity if item["resource_type"] == "scheme"}
+    )
+
+    labels_map: dict = {}
+    if concept_ids or scheme_ids:
+        builder = ConceptBuilder(concept_ids or [])
+        if scheme_ids:
+            builder.populate_schemes(scheme_ids)
+
+        for concept_id in concept_ids:
+            labels_map[concept_id] = [
+                builder.serialize_concept_label(label_data)
+                for label_data in builder.labels.get(concept_id, [])
+            ]
+        for scheme in builder.schemes:
+            scheme_id = str(scheme.pk)
+            labels_map[scheme_id] = [
+                builder.serialize_scheme_label(label_tile)
+                for label_tile in scheme.labels
+            ]
+
+    for item in activity:
+        item["labels"] = labels_map.get(item["resource_id"], [])
+
+
+def _parse_days_param(request):
+    """Parse the optional ``days`` query param.
+
+    Returns ``(since_datetime_or_None, None)`` on success or
+    ``(None, error_response)`` on invalid input.
+    """
+    days_param = request.GET.get("days")
+    if days_param is None:
+        return None, None
+    try:
+        days_int = int(days_param)
+    except ValueError:
+        return None, JSONErrorResponse(
+            title=_("Invalid parameter"),
+            message=_("days must be an integer"),
+            status=400,
+        )
+    if days_int > 0:
+        return timezone.now() - timedelta(days=days_int), None
+    return None, None
 
 
 @method_decorator(
@@ -171,166 +330,30 @@ class DashboardStatsView(View):
         if error:
             return error
 
-        # --- User greeting ---
         user = request.user
         user_display_name = (
             user.first_name or user.username if user.is_authenticated else ""
         )
 
-        # --- Scheme count ---
         total_scheme_count = models.ResourceInstance.objects.filter(
             graph_id=SCHEMES_GRAPH_ID
         ).count()
         scheme_count = len(scheme_ids) if scheme_ids else total_scheme_count
 
-        # --- Concept count and IDs ---
-        Concept = ResourceTileTree.get_tiles("concept")
-        if scheme_ids:
-            concept_qs = Concept.filter(part_of_scheme__id__in=scheme_ids)
-        else:
-            concept_qs = None
+        concept_count, concept_ids_list = _get_concept_ids(scheme_ids)
 
-        if concept_qs is not None:
-            concept_count = concept_qs.count()
-            concept_ids_list = [
-                str(pk) for pk in concept_qs.values_list("pk", flat=True)
-            ]
-        else:
-            concept_count = models.ResourceInstance.objects.filter(
-                graph_id=CONCEPTS_GRAPH_ID
-            ).count()
-            concept_ids_list = [
-                str(pk)
-                for pk in models.ResourceInstance.objects.filter(
-                    graph_id=CONCEPTS_GRAPH_ID
-                ).values_list("pk", flat=True)
-            ]
+        resolved_scheme_ids = scheme_ids or _get_all_scheme_ids()
+        all_resource_ids = concept_ids_list + resolved_scheme_ids
 
-        # --- All resource IDs covered by this request ---
-        if scheme_ids:
-            all_resource_ids = concept_ids_list + scheme_ids
-        else:
-            all_scheme_ids = [
-                str(pk)
-                for pk in models.ResourceInstance.objects.filter(
-                    graph_id=SCHEMES_GRAPH_ID
-                ).values_list("pk", flat=True)
-            ]
-            all_resource_ids = concept_ids_list + all_scheme_ids
+        type_map = _build_resource_type_map(all_resource_ids)
 
-        # --- Build resource type lookup ---
-        resource_instances = models.ResourceInstance.objects.filter(
-            resourceinstanceid__in=all_resource_ids
-        )
-        type_map: dict = {}
-        for ri in resource_instances:
-            type_map[str(ri.resourceinstanceid)] = (
-                "scheme" if str(ri.graph_id) == str(SCHEMES_GRAPH_ID) else "concept"
-            )
+        since, error = _parse_days_param(request)
+        if error:
+            return error
 
-        # --- Recent activity: 20 most recent edits, deduplicated by transaction ---
-        days_param = request.GET.get("days")
-        since = None
-        if days_param is not None:
-            try:
-                days_int = int(days_param)
-            except ValueError:
-                return JSONErrorResponse(
-                    title=_("Invalid parameter"),
-                    message=_("days must be an integer"),
-                    status=400,
-                )
-            if days_int > 0:
-                since = timezone.now() - timedelta(days=days_int)
+        activity = _build_recent_activity(all_resource_ids, type_map, since)
+        _attach_activity_labels(activity)
 
-        edit_qs = models.EditLog.objects.filter(
-            resourceinstanceid__in=all_resource_ids
-        ).order_by("-timestamp")
-        if since:
-            edit_qs = edit_qs.filter(timestamp__gte=since)
-        edits = edit_qs[:100]
-
-        # Build nodegroup ID → card name map for action labels
-        nodegroup_ids = {edit.nodegroupid for edit in edits if edit.nodegroupid}
-        card_lookup: dict = {}
-        if nodegroup_ids:
-            for card in Card.objects.filter(nodegroup_id__in=nodegroup_ids):
-                card_lookup[str(card.nodegroup_id)] = card.name
-
-        seen_transactions: set = set()
-        activity = []
-        for edit in edits:
-            key = str(edit.transactionid) if edit.transactionid else str(edit.editlogid)
-            if key not in seen_transactions:
-                seen_transactions.add(key)
-                card_name = (
-                    card_lookup.get(edit.nodegroupid) if edit.nodegroupid else None
-                )
-                template = TILE_EDIT_TYPE_LABEL_TEMPLATES.get(edit.edittype)
-                if card_name and template:
-                    edittype_label = str(template % {"name": card_name})
-                else:
-                    edittype_label = str(
-                        EDIT_TYPE_LABELS.get(edit.edittype, edit.edittype)
-                    )
-                activity.append(
-                    {
-                        "editlogid": str(edit.editlogid),
-                        "edittype": edit.edittype,
-                        "edittype_label": edittype_label,
-                        "timestamp": (
-                            edit.timestamp.isoformat() if edit.timestamp else None
-                        ),
-                        "user_username": edit.user_username,
-                        "user_firstname": edit.user_firstname,
-                        "user_lastname": edit.user_lastname,
-                        "resource_id": edit.resourceinstanceid,
-                        "resource_type": type_map.get(
-                            edit.resourceinstanceid, "concept"
-                        ),
-                    }
-                )
-            if len(activity) >= 20:
-                break
-
-        # --- Fetch labels for activity resources ---
-        activity_concept_ids = list(
-            {
-                item["resource_id"]
-                for item in activity
-                if item["resource_type"] == "concept"
-            }
-        )
-        activity_scheme_ids = list(
-            {
-                item["resource_id"]
-                for item in activity
-                if item["resource_type"] == "scheme"
-            }
-        )
-
-        labels_map: dict = {}
-        if activity_concept_ids or activity_scheme_ids:
-            builder = ConceptBuilder(activity_concept_ids or [])
-            if activity_scheme_ids:
-                builder.populate_schemes(activity_scheme_ids)
-
-            for cid in activity_concept_ids:
-                labels_map[cid] = [
-                    builder.serialize_concept_label(label_data)
-                    for label_data in builder.labels.get(cid, [])
-                ]
-            for scheme in builder.schemes:
-                sid = str(scheme.pk)
-                labels_map[sid] = [
-                    builder.serialize_scheme_label(label_tile)
-                    for label_tile in scheme.labels
-                ]
-
-        for item in activity:
-            item["labels"] = labels_map.get(item["resource_id"], [])
-
-        # --- Concepts by type and label stats ---
         concept_uuids = [uuid.UUID(rid) for rid in concept_ids_list]
         concepts_by_type = _get_concept_type_breakdown(concept_uuids)
         label_count, labels_by_type, labels_by_language = _get_label_stats(
@@ -376,7 +399,6 @@ class MissingTranslationsView(View):
         page_number = int(request.GET.get("page", 1))
         items_per_page = int(request.GET.get("items", 25))
 
-        # Find concept IDs that have a preferred label in the given language
         concepts_with_pref_ids = set(
             models.TileModel.objects.filter(
                 nodegroup_id=CONCEPT_NAME_NODEGROUP,
@@ -387,22 +409,9 @@ class MissingTranslationsView(View):
             ).values_list("resourceinstance_id", flat=True)
         )
 
-        # All concept IDs, optionally filtered by scheme(s)
-        Concept = ResourceTileTree.get_tiles("concept")
-        if scheme_ids:
-            all_concept_ids = list(
-                Concept.filter(part_of_scheme__id__in=scheme_ids).values_list(
-                    "pk", flat=True
-                )
-            )
-        else:
-            all_concept_ids = list(
-                models.ResourceInstance.objects.filter(
-                    graph_id=CONCEPTS_GRAPH_ID
-                ).values_list("resourceinstanceid", flat=True)
-            )
+        _concept_count, all_concept_id_strings = _get_concept_ids(scheme_ids)
+        all_concept_ids = [uuid.UUID(pk) for pk in all_concept_id_strings]
 
-        # Concepts missing preferred label in given language
         missing_ids = [
             str(pk) for pk in all_concept_ids if pk not in concepts_with_pref_ids
         ]

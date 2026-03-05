@@ -446,8 +446,8 @@ onMounted(async () => {
             </div>
             <div v-if="isStatsLoading">
                 <Skeleton
-                    v-for="n in 5"
-                    :key="n"
+                    v-for="index in 5"
+                    :key="index"
                     style="margin-bottom: 0.5rem"
                     height="2.25rem"
                 />
@@ -604,8 +604,8 @@ onMounted(async () => {
             </div>
             <div v-else-if="isMissingLoading">
                 <Skeleton
-                    v-for="n in 5"
-                    :key="n"
+                    v-for="index in 5"
+                    :key="index"
                     style="margin-bottom: 0.5rem"
                     height="2.25rem"
                 />

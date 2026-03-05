@@ -179,7 +179,7 @@ class DashboardStatsViewTests(DashboardTestMixin, ViewTests):
 
         self.assertLessEqual(len(data["recent_activity"]), 20)
 
-    def test_recent_activity_resource_name_populated(self):
+    def test_recent_activity_labels_populated(self):
         ts = datetime(2025, 6, 1, 13, 0, 0, tzinfo=timezone.utc)
         self._create_edit(self.concepts[0], "tile create", ts)
 
@@ -192,9 +192,9 @@ class DashboardStatsViewTests(DashboardTestMixin, ViewTests):
             if item["resource_id"] == str(self.concepts[0].pk)
         ]
         self.assertTrue(len(matching) > 0)
-        # resource_name may be blank if descriptors not populated in test,
+        # labels may be empty if descriptors not populated in test,
         # but the key must exist
-        self.assertIn("resource_name", matching[0])
+        self.assertIn("labels", matching[0])
         self.assertIn("resource_type", matching[0])
         self.assertEqual(matching[0]["resource_type"], "concept")
 
@@ -253,7 +253,7 @@ class DashboardStatsViewTests(DashboardTestMixin, ViewTests):
         self.assertIn("user_firstname", entry)
         self.assertIn("user_lastname", entry)
         self.assertIn("resource_id", entry)
-        self.assertIn("resource_name", entry)
+        self.assertIn("labels", entry)
         self.assertIn("resource_type", entry)
 
     def test_user_display_name_for_admin(self):
@@ -281,7 +281,9 @@ class DashboardStatsViewTests(DashboardTestMixin, ViewTests):
         response = self.client.get(reverse("api-lingo-dashboard"))
         data = json.loads(response.content)
 
-        en_entries = [e for e in data["labels_by_language"] if e["code"] == "en"]
+        en_entries = [
+            entry for entry in data["labels_by_language"] if entry["code"] == "en"
+        ]
         self.assertEqual(len(en_entries), 1)
         # 5 concepts × 1 EN label each
         self.assertEqual(en_entries[0]["count"], 5)
