@@ -10,7 +10,7 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ("arches_lingo", "0004_add_language_widget_mapping"),
+        ("arches_lingo", "0005_reciprocal_relationship_function"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
