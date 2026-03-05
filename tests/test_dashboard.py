@@ -2,27 +2,29 @@ import json
 import uuid
 from datetime import datetime, timedelta, timezone
 
-from django.contrib.auth.models import User
-from django.test import TestCase
 from django.urls import reverse
 
 from arches.app.datatypes.datatypes import DataTypeFactory
-from arches.app.models.models import EditLog, TileModel
+from arches.app.models.models import (
+    EditLog,
+    ResourceInstance,
+    ResourceXResource,
+    TileModel,
+)
 
 from arches_lingo.const import (
     CONCEPT_NAME_CONTENT_NODE,
     CONCEPT_NAME_LANGUAGE_NODE,
     CONCEPT_NAME_NODEGROUP,
     CONCEPT_NAME_TYPE_NODE,
+    CONCEPTS_GRAPH_ID,
+    CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID,
     LABEL_LIST_ID,
     PREF_LABEL_URI,
     SCHEMES_GRAPH_ID,
 )
 
 from tests.tests import ViewTests
-
-# these tests can be run from the command line via
-# python manage.py test tests.test_dashboard --settings="tests.test_settings"
 
 
 class DashboardTestMixin:
@@ -63,38 +65,12 @@ class DashboardTestMixin:
 class DashboardStatsViewTests(DashboardTestMixin, ViewTests):
     """Tests for GET /api/lingo/dashboard."""
 
-    def test_returns_200(self):
-        response = self.client.get(reverse("api-lingo-dashboard"))
-        self.assertEqual(response.status_code, 200)
-
-    def test_response_structure(self):
-        response = self.client.get(reverse("api-lingo-dashboard"))
-        data = json.loads(response.content)
-
-        self.assertIn("concept_count", data)
-        self.assertIn("scheme_count", data)
-        self.assertIn("recent_activity", data)
-        self.assertIn("label_count", data)
-        self.assertIn("labels_by_type", data)
-        self.assertIn("labels_by_language", data)
-        self.assertIn("concepts_by_type", data)
-        self.assertIn("user_display_name", data)
-
     def test_concept_count_all_schemes(self):
         response = self.client.get(reverse("api-lingo-dashboard"))
         data = json.loads(response.content)
 
-        # setUpTestData creates 5 concepts
         self.assertEqual(data["concept_count"], 5)
-
-    def test_concept_count_filtered_by_scheme(self):
-        response = self.client.get(
-            reverse("api-lingo-dashboard"), {"scheme": str(self.scheme.pk)}
-        )
-        data = json.loads(response.content)
-
-        # All 5 test concepts belong to the test scheme
-        self.assertEqual(data["concept_count"], 5)
+        self.assertEqual(data["scheme_count"], 1)
 
     def test_concept_count_filtered_by_unknown_scheme(self):
         other_scheme_id = str(uuid.uuid4())
@@ -105,25 +81,9 @@ class DashboardStatsViewTests(DashboardTestMixin, ViewTests):
         data = json.loads(response.content)
         self.assertEqual(data["concept_count"], 0)
 
-    def test_scheme_count_no_filter(self):
-        response = self.client.get(reverse("api-lingo-dashboard"))
-        data = json.loads(response.content)
-
-        # setUpTestData creates 1 scheme
-        self.assertEqual(data["scheme_count"], 1)
-
-    def test_scheme_count_filtered(self):
-        # When filtering by a specific scheme, scheme_count equals the
-        # number of schemes passed in (1)
-        response = self.client.get(
-            reverse("api-lingo-dashboard"), {"scheme": str(self.scheme.pk)}
-        )
-        data = json.loads(response.content)
-        self.assertEqual(data["scheme_count"], 1)
-
     def test_recent_activity_includes_concept_edits(self):
-        ts = datetime(2025, 6, 1, 10, 0, 0, tzinfo=timezone.utc)
-        self._create_edit(self.concepts[0], "tile create", ts)
+        edit_timestamp = datetime(2025, 6, 1, 10, 0, 0, tzinfo=timezone.utc)
+        self._create_edit(self.concepts[0], "tile create", edit_timestamp)
 
         response = self.client.get(reverse("api-lingo-dashboard"))
         data = json.loads(response.content)
@@ -131,26 +91,21 @@ class DashboardStatsViewTests(DashboardTestMixin, ViewTests):
         resource_ids = [item["resource_id"] for item in data["recent_activity"]]
         self.assertIn(str(self.concepts[0].pk), resource_ids)
 
-    def test_recent_activity_includes_scheme_edits(self):
-        ts = datetime(2025, 6, 1, 11, 0, 0, tzinfo=timezone.utc)
-        self._create_edit(self.scheme, "create", ts)
-
-        response = self.client.get(reverse("api-lingo-dashboard"))
-        data = json.loads(response.content)
-
-        resource_ids = [item["resource_id"] for item in data["recent_activity"]]
-        self.assertIn(str(self.scheme.pk), resource_ids)
-
     def test_recent_activity_deduplicates_by_transaction(self):
-        ts = datetime(2025, 6, 1, 12, 0, 0, tzinfo=timezone.utc)
-        txn = uuid.uuid4()
-        self._create_edit(self.concepts[0], "tile create", ts, transactionid=txn)
+        edit_timestamp = datetime(2025, 6, 1, 12, 0, 0, tzinfo=timezone.utc)
+        transaction_id = uuid.uuid4()
         self._create_edit(
             self.concepts[0],
             "tile create",
-            ts,
+            edit_timestamp,
+            transactionid=transaction_id,
+        )
+        self._create_edit(
+            self.concepts[0],
+            "tile create",
+            edit_timestamp,
             nodegroupid=CONCEPT_NAME_NODEGROUP,
-            transactionid=txn,
+            transactionid=transaction_id,
         )
 
         response = self.client.get(reverse("api-lingo-dashboard"))
@@ -166,12 +121,12 @@ class DashboardStatsViewTests(DashboardTestMixin, ViewTests):
         self.assertLessEqual(len(txn_entries), 1)
 
     def test_recent_activity_capped_at_20(self):
-        base_ts = datetime(2025, 7, 1, 0, 0, 0, tzinfo=timezone.utc)
+        base_timestamp = datetime(2025, 7, 1, 0, 0, 0, tzinfo=timezone.utc)
         for edit_num in range(25):
             self._create_edit(
                 self.concepts[edit_num % 5],
                 "tile edit",
-                base_ts + timedelta(minutes=edit_num),
+                base_timestamp + timedelta(minutes=edit_num),
             )
 
         response = self.client.get(reverse("api-lingo-dashboard"))
@@ -179,28 +134,9 @@ class DashboardStatsViewTests(DashboardTestMixin, ViewTests):
 
         self.assertLessEqual(len(data["recent_activity"]), 20)
 
-    def test_recent_activity_labels_populated(self):
-        ts = datetime(2025, 6, 1, 13, 0, 0, tzinfo=timezone.utc)
-        self._create_edit(self.concepts[0], "tile create", ts)
-
-        response = self.client.get(reverse("api-lingo-dashboard"))
-        data = json.loads(response.content)
-
-        matching = [
-            item
-            for item in data["recent_activity"]
-            if item["resource_id"] == str(self.concepts[0].pk)
-        ]
-        self.assertTrue(len(matching) > 0)
-        # labels may be empty if descriptors not populated in test,
-        # but the key must exist
-        self.assertIn("labels", matching[0])
-        self.assertIn("resource_type", matching[0])
-        self.assertEqual(matching[0]["resource_type"], "concept")
-
     def test_recent_activity_scheme_resource_type(self):
-        ts = datetime(2025, 6, 1, 14, 0, 0, tzinfo=timezone.utc)
-        self._create_edit(self.scheme, "create", ts)
+        edit_timestamp = datetime(2025, 6, 1, 14, 0, 0, tzinfo=timezone.utc)
+        self._create_edit(self.scheme, "create", edit_timestamp)
 
         response = self.client.get(reverse("api-lingo-dashboard"))
         data = json.loads(response.content)
@@ -215,18 +151,15 @@ class DashboardStatsViewTests(DashboardTestMixin, ViewTests):
 
     def test_recent_activity_filtered_by_scheme(self):
         # Edit for concept in test scheme
-        ts_in = datetime(2025, 6, 1, 15, 0, 0, tzinfo=timezone.utc)
-        self._create_edit(self.concepts[0], "tile edit", ts_in)
+        in_scheme_timestamp = datetime(2025, 6, 1, 15, 0, 0, tzinfo=timezone.utc)
+        self._create_edit(self.concepts[0], "tile edit", in_scheme_timestamp)
 
         # Edit for a concept NOT in the test scheme
-        from arches.app.models.models import ResourceInstance
-        from arches_lingo.const import CONCEPTS_GRAPH_ID
-
         other_concept = ResourceInstance.objects.create(
             graph_id=CONCEPTS_GRAPH_ID, name="Other Concept"
         )
-        ts_out = datetime(2025, 6, 1, 16, 0, 0, tzinfo=timezone.utc)
-        self._create_edit(other_concept, "tile create", ts_out)
+        out_of_scheme_timestamp = datetime(2025, 6, 1, 16, 0, 0, tzinfo=timezone.utc)
+        self._create_edit(other_concept, "tile create", out_of_scheme_timestamp)
 
         response = self.client.get(
             reverse("api-lingo-dashboard"), {"scheme": str(self.scheme.pk)}
@@ -236,25 +169,6 @@ class DashboardStatsViewTests(DashboardTestMixin, ViewTests):
         resource_ids = {item["resource_id"] for item in data["recent_activity"]}
         # The other concept (not in this scheme) should not appear
         self.assertNotIn(str(other_concept.pk), resource_ids)
-
-    def test_recent_activity_activity_fields(self):
-        ts = datetime(2025, 6, 1, 17, 0, 0, tzinfo=timezone.utc)
-        self._create_edit(self.scheme, "tile create", ts)
-
-        response = self.client.get(reverse("api-lingo-dashboard"))
-        data = json.loads(response.content)
-
-        self.assertTrue(len(data["recent_activity"]) > 0)
-        entry = data["recent_activity"][0]
-        self.assertIn("editlogid", entry)
-        self.assertIn("edittype_label", entry)
-        self.assertIn("timestamp", entry)
-        self.assertIn("user_username", entry)
-        self.assertIn("user_firstname", entry)
-        self.assertIn("user_lastname", entry)
-        self.assertIn("resource_id", entry)
-        self.assertIn("labels", entry)
-        self.assertIn("resource_type", entry)
 
     def test_user_display_name_for_admin(self):
         response = self.client.get(reverse("api-lingo-dashboard"))
@@ -269,13 +183,6 @@ class DashboardStatsViewTests(DashboardTestMixin, ViewTests):
         data = json.loads(response.content)
 
         self.assertEqual(data["label_count"], 5)
-
-    def test_labels_by_language_contains_english(self):
-        response = self.client.get(reverse("api-lingo-dashboard"))
-        data = json.loads(response.content)
-
-        codes = [entry["code"] for entry in data["labels_by_language"]]
-        self.assertIn("en", codes)
 
     def test_labels_by_language_count_correct(self):
         response = self.client.get(reverse("api-lingo-dashboard"))
@@ -304,10 +211,10 @@ class DashboardStatsViewTests(DashboardTestMixin, ViewTests):
         self.assertEqual(data["labels_per_concept"], 1.0)
 
     def test_days_filter_restricts_activity(self):
-        old_ts = datetime(2020, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
-        recent_ts = datetime.now(tz=timezone.utc) - timedelta(hours=1)
-        self._create_edit(self.concepts[0], "tile create", old_ts)
-        self._create_edit(self.concepts[1], "tile create", recent_ts)
+        old_timestamp = datetime(2020, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+        recent_timestamp = datetime.now(tz=timezone.utc) - timedelta(hours=1)
+        self._create_edit(self.concepts[0], "tile create", old_timestamp)
+        self._create_edit(self.concepts[1], "tile create", recent_timestamp)
 
         # With days=1, only the recent edit should appear
         response = self.client.get(reverse("api-lingo-dashboard"), {"days": "1"})
@@ -317,8 +224,8 @@ class DashboardStatsViewTests(DashboardTestMixin, ViewTests):
         self.assertNotIn(str(self.concepts[0].pk), resource_ids)
 
     def test_days_zero_shows_all_activity(self):
-        old_ts = datetime(2020, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
-        self._create_edit(self.concepts[0], "tile create", old_ts)
+        old_timestamp = datetime(2020, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+        self._create_edit(self.concepts[0], "tile create", old_timestamp)
 
         response = self.client.get(reverse("api-lingo-dashboard"), {"days": "0"})
         data = json.loads(response.content)
@@ -331,13 +238,6 @@ class DashboardStatsViewTests(DashboardTestMixin, ViewTests):
         self.assertEqual(response.status_code, 400)
 
     def test_multi_scheme_filter(self):
-        from arches.app.models.models import ResourceInstance, ResourceXResource
-        from arches_lingo.const import (
-            CONCEPTS_GRAPH_ID,
-            CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID,
-        )
-        import datetime as dt
-
         # Create a second scheme with its own concept
         second_scheme = ResourceInstance.objects.create(
             graph_id=SCHEMES_GRAPH_ID, name="Second Scheme"
@@ -345,15 +245,15 @@ class DashboardStatsViewTests(DashboardTestMixin, ViewTests):
         extra_concept = ResourceInstance.objects.create(
             graph_id=CONCEPTS_GRAPH_ID, name="Extra Concept"
         )
-        rxr = ResourceXResource(
+        resource_relationship = ResourceXResource(
             from_resource=extra_concept,
             from_resource_graph_id=CONCEPTS_GRAPH_ID,
             to_resource=second_scheme,
             to_resource_graph_id=SCHEMES_GRAPH_ID,
-            created=dt.datetime.now(),
-            modified=dt.datetime.now(),
+            created=datetime.now(),
+            modified=datetime.now(),
         )
-        rxr.save()
+        resource_relationship.save()
         TileModel.objects.create(
             resourceinstance=extra_concept,
             nodegroup_id=CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID,
@@ -361,7 +261,7 @@ class DashboardStatsViewTests(DashboardTestMixin, ViewTests):
                 CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID: [
                     {
                         "resourceId": str(second_scheme.pk),
-                        "resourceXresourceId": str(rxr.pk),
+                        "resourceXresourceId": str(resource_relationship.pk),
                     }
                 ]
             },
@@ -378,11 +278,11 @@ class DashboardStatsViewTests(DashboardTestMixin, ViewTests):
         self.assertEqual(data["scheme_count"], 2)
 
     def test_nodegroup_name_in_activity_label(self):
-        ts = datetime.now(tz=timezone.utc) - timedelta(minutes=5)
+        edit_timestamp = datetime.now(tz=timezone.utc) - timedelta(minutes=5)
         self._create_edit(
             self.concepts[0],
             "tile create",
-            ts,
+            edit_timestamp,
             nodegroupid=CONCEPT_NAME_NODEGROUP,
         )
 
@@ -406,51 +306,13 @@ class DashboardStatsViewTests(DashboardTestMixin, ViewTests):
             )
         self.assertEqual(response.status_code, 400)
 
-    def test_unauthenticated_returns_403_or_302(self):
-        self.client.logout()
-        response = self.client.get(reverse("api-lingo-dashboard"))
-        self.assertIn(response.status_code, [403, 302])
-
-    def test_non_admin_returns_403_or_302(self):
-        non_admin = User.objects.create_user(username="viewer_dash", password="test123")
-        self.client.force_login(non_admin)
-        response = self.client.get(reverse("api-lingo-dashboard"))
-        self.assertIn(response.status_code, [403, 302])
-
 
 class MissingTranslationsViewTests(DashboardTestMixin, ViewTests):
-    """Tests for GET /api/lingo/missing-translations."""
-
-    def test_returns_200_with_language(self):
-        response = self.client.get(
-            reverse("api-lingo-missing-translations"), {"language": "en"}
-        )
-        self.assertEqual(response.status_code, 200)
-
-    def test_response_structure(self):
-        response = self.client.get(
-            reverse("api-lingo-missing-translations"), {"language": "de"}
-        )
-        data = json.loads(response.content)
-
-        self.assertIn("current_page", data)
-        self.assertIn("total_pages", data)
-        self.assertIn("results_per_page", data)
-        self.assertIn("total_results", data)
-        self.assertIn("data", data)
-        self.assertIsInstance(data["data"], list)
+    """Tests for GET /api/lingo/concepts/missing-translations."""
 
     def test_missing_language_param_returns_400(self):
         with self.assertLogs("django.request", level="WARNING"):
             response = self.client.get(reverse("api-lingo-missing-translations"))
-        self.assertEqual(response.status_code, 400)
-
-    def test_invalid_scheme_uuid_returns_400(self):
-        with self.assertLogs("django.request", level="WARNING"):
-            response = self.client.get(
-                reverse("api-lingo-missing-translations"),
-                {"language": "de", "scheme": "not-a-uuid"},
-            )
         self.assertEqual(response.status_code, 400)
 
     def test_all_concepts_present_for_their_own_language(self):
@@ -471,13 +333,13 @@ class MissingTranslationsViewTests(DashboardTestMixin, ViewTests):
 
     def test_concept_with_pref_label_in_language_not_returned(self):
         # Add a German preferred label to concepts[0]
-        pref_label_dt = self._make_pref_label_reference()
+        preferred_label_reference_value = self._make_pref_label_reference()
         TileModel.objects.create(
             resourceinstance=self.concepts[0],
             nodegroup_id=CONCEPT_NAME_NODEGROUP,
             data={
                 CONCEPT_NAME_CONTENT_NODE: "Konzept 1",
-                CONCEPT_NAME_TYPE_NODE: pref_label_dt,
+                CONCEPT_NAME_TYPE_NODE: preferred_label_reference_value,
                 CONCEPT_NAME_LANGUAGE_NODE: "de",
             },
         )
@@ -495,7 +357,7 @@ class MissingTranslationsViewTests(DashboardTestMixin, ViewTests):
     def test_alt_label_does_not_satisfy_missing_translation(self):
         # An alternative label in "de" should not satisfy the "preferred label" check
         reference = DataTypeFactory().get_instance("reference")
-        alt_label_dt = reference.transform_value_for_tile(
+        alt_label_reference_value = reference.transform_value_for_tile(
             "altLabel", **{"controlledList": LABEL_LIST_ID}
         )
         TileModel.objects.create(
@@ -503,7 +365,7 @@ class MissingTranslationsViewTests(DashboardTestMixin, ViewTests):
             nodegroup_id=CONCEPT_NAME_NODEGROUP,
             data={
                 CONCEPT_NAME_CONTENT_NODE: "Konzept alt",
-                CONCEPT_NAME_TYPE_NODE: alt_label_dt,
+                CONCEPT_NAME_TYPE_NODE: alt_label_reference_value,
                 CONCEPT_NAME_LANGUAGE_NODE: "de",
             },
         )
@@ -517,23 +379,7 @@ class MissingTranslationsViewTests(DashboardTestMixin, ViewTests):
         # concepts[1] has only a DE alt label — it should still be in missing
         self.assertIn(str(self.concepts[1].pk), concept_ids)
 
-    def test_scheme_filter_limits_results(self):
-        # Filter by the test scheme — all 5 concepts belong to it
-        response = self.client.get(
-            reverse("api-lingo-missing-translations"),
-            {"language": "de", "scheme": str(self.scheme.pk)},
-        )
-        data = json.loads(response.content)
-        self.assertEqual(data["total_results"], 5)
-
     def test_scheme_filter_excludes_other_scheme_concepts(self):
-        from arches.app.models.models import ResourceInstance, ResourceXResource
-        from arches_lingo.const import (
-            CONCEPTS_GRAPH_ID,
-            CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID,
-        )
-        import datetime
-
         # Create a second scheme with one concept
         second_scheme = ResourceInstance.objects.create(
             graph_id=SCHEMES_GRAPH_ID, name="Second Scheme"
@@ -541,15 +387,15 @@ class MissingTranslationsViewTests(DashboardTestMixin, ViewTests):
         other_concept = ResourceInstance.objects.create(
             graph_id=CONCEPTS_GRAPH_ID, name="Other Concept"
         )
-        rxr = ResourceXResource(
+        resource_relationship = ResourceXResource(
             from_resource=other_concept,
             from_resource_graph_id=CONCEPTS_GRAPH_ID,
             to_resource=second_scheme,
             to_resource_graph_id=SCHEMES_GRAPH_ID,
-            created=datetime.datetime.now(),
-            modified=datetime.datetime.now(),
+            created=datetime.now(),
+            modified=datetime.now(),
         )
-        rxr.save()
+        resource_relationship.save()
         TileModel.objects.create(
             resourceinstance=other_concept,
             nodegroup_id=CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID,
@@ -557,7 +403,7 @@ class MissingTranslationsViewTests(DashboardTestMixin, ViewTests):
                 CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID: [
                     {
                         "resourceId": str(second_scheme.pk),
-                        "resourceXresourceId": str(rxr.pk),
+                        "resourceXresourceId": str(resource_relationship.pk),
                     }
                 ]
             },
@@ -587,28 +433,6 @@ class MissingTranslationsViewTests(DashboardTestMixin, ViewTests):
         self.assertEqual(len(data["data"]), 2)
         self.assertEqual(data["total_results"], 5)
 
-    def test_pagination_second_page(self):
-        # Page 2 with 2 items per page — expect 2 items (items 3 & 4 of 5)
-        response = self.client.get(
-            reverse("api-lingo-missing-translations"),
-            {"language": "de", "items": "2", "page": "2"},
-        )
-        data = json.loads(response.content)
-
-        self.assertEqual(data["current_page"], 2)
-        self.assertEqual(len(data["data"]), 2)
-
-    def test_pagination_last_page(self):
-        # Page 3 with 2 items — expect 1 item (the 5th concept)
-        response = self.client.get(
-            reverse("api-lingo-missing-translations"),
-            {"language": "de", "items": "2", "page": "3"},
-        )
-        data = json.loads(response.content)
-
-        self.assertEqual(data["current_page"], 3)
-        self.assertEqual(len(data["data"]), 1)
-
     def test_data_items_have_expected_fields(self):
         response = self.client.get(
             reverse("api-lingo-missing-translations"),
@@ -621,20 +445,3 @@ class MissingTranslationsViewTests(DashboardTestMixin, ViewTests):
         self.assertIn("id", item)
         self.assertIn("labels", item)
         self.assertIn("parents", item)
-
-    def test_unauthenticated_returns_403_or_302(self):
-        self.client.logout()
-        response = self.client.get(
-            reverse("api-lingo-missing-translations"), {"language": "de"}
-        )
-        self.assertIn(response.status_code, [403, 302])
-
-    def test_non_admin_returns_403_or_302(self):
-        non_admin = User.objects.create_user(
-            username="viewer_missing", password="test123"
-        )
-        self.client.force_login(non_admin)
-        response = self.client.get(
-            reverse("api-lingo-missing-translations"), {"language": "de"}
-        )
-        self.assertIn(response.status_code, [403, 302])

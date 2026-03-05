@@ -10,15 +10,17 @@ import type {
     ConceptInstance,
     ConceptSetDetail,
     ConceptSetItem,
-    DashboardStats,
     DigitalObjectInstance,
     EditLogEntry,
     SavedSearchItem,
-    MissingTranslationsResponse,
     SchemeInstance,
     TileData,
     User,
 } from "@/arches_lingo/types";
+import type {
+    MissingTranslationsResponse,
+    DashboardStats,
+} from "@/arches_lingo/types/dashboard.ts";
 
 function getToken() {
     const token = Cookies.get("csrftoken");
