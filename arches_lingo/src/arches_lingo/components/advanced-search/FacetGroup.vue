@@ -6,6 +6,8 @@ import SelectButton from "primevue/selectbutton";
 
 import FacetRow from "@/arches_lingo/components/advanced-search/FacetRow.vue";
 
+import { generateConditionId } from "@/arches_lingo/utils.ts";
+
 import type {
     AdvancedSearchOptions,
     ConceptSetItem,
@@ -33,18 +35,13 @@ const operatorOptions = [
     { label: $gettext("OR"), value: "or" as SearchOperator },
 ];
 
-let nextId = Date.now();
-function generateId(): string {
-    return `cond-${nextId++}`;
-}
-
 function updateOperator(value: SearchOperator) {
     emit("update:group", { ...props.group, operator: value });
 }
 
 function addCondition() {
     const newCondition: SearchCondition = {
-        id: generateId(),
+        id: generateConditionId(),
         facet: "label",
         value: "",
     };
@@ -56,11 +53,11 @@ function addCondition() {
 
 function addGroup() {
     const newGroup: SearchGroup = {
-        id: generateId(),
+        id: generateConditionId(),
         operator: "and",
         conditions: [
             {
-                id: generateId(),
+                id: generateConditionId(),
                 facet: "label",
                 value: "",
             } as SearchCondition,

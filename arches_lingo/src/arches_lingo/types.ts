@@ -509,9 +509,9 @@ export interface AdvancedSearchResponse {
     data: AdvancedSearchResultItem[];
 }
 
-export interface SearchFilterOption {
+export interface SchemeOption {
     id: string;
-    label: string;
+    labels: Label[];
 }
 
 export interface LanguageOption {
@@ -531,7 +531,7 @@ export interface ControlledListOption {
 
 export interface AdvancedSearchOptions {
     languages: LanguageOption[];
-    schemes: SearchFilterOption[];
+    schemes: SchemeOption[];
     lifecycle_states: LifecycleStateOption[];
     label_types: ControlledListOption[];
     note_types: ControlledListOption[];

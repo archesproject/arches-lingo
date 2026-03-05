@@ -388,3 +388,15 @@ export function getIconLabel(
 
     return iconLabels.concept;
 }
+
+// Advanced Search helpers
+
+let nextConditionId = Date.now();
+
+/**
+ * Generate a unique ID for search conditions and groups.
+ * Shared between AdvancedSearch page and FacetGroup component.
+ */
+export function generateConditionId(): string {
+    return `cond-${nextConditionId++}`;
+}

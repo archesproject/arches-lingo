@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { inject, ref, type Ref } from "vue";
 import { useGettext } from "vue3-gettext";
 import { useRouter } from "vue-router";
 
@@ -9,13 +9,21 @@ import Paginator from "primevue/paginator";
 
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 import { getParentLabels } from "@/arches_lingo/utils.ts";
-import { ENGLISH } from "@/arches_lingo/constants.ts";
+import {
+    selectedLanguageKey,
+    systemLanguageKey,
+} from "@/arches_lingo/constants.ts";
 import { routeNames } from "@/arches_lingo/routes.ts";
+
+import type { Language } from "@/arches_component_lab/types.ts";
 
 import type { AdvancedSearchResponse } from "@/arches_lingo/types.ts";
 
 const { $gettext } = useGettext();
 const router = useRouter();
+
+const systemLanguage = inject(systemLanguageKey) as Language;
+const selectedLanguage = inject(selectedLanguageKey) as Ref<Language>;
 
 defineProps<{
     results: AdvancedSearchResponse | null;
@@ -133,16 +141,19 @@ function onPageChange(event: { page: number }) {
                                 aria-hidden="true"
                             />
                             {{
-                                getItemLabel(item, ENGLISH.code, ENGLISH.code)
-                                    .value
+                                getItemLabel(
+                                    item,
+                                    selectedLanguage.code,
+                                    systemLanguage.code,
+                                ).value
                             }}
                         </div>
                         <div class="result-hierarchy">
                             [{{
                                 getParentLabels(
                                     item,
-                                    ENGLISH.code,
-                                    ENGLISH.code,
+                                    selectedLanguage.code,
+                                    systemLanguage.code,
                                 )
                             }}]
                         </div>
@@ -165,8 +176,8 @@ function onPageChange(event: { page: number }) {
                             $gettext('View concept %{label}', {
                                 label: getItemLabel(
                                     item,
-                                    ENGLISH.code,
-                                    ENGLISH.code,
+                                    selectedLanguage.code,
+                                    systemLanguage.code,
                                 ).value,
                             })
                         "
