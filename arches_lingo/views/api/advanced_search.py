@@ -44,9 +44,6 @@ def _get_user_concept_set(user, pk):
         )
 
 
-# ── Views ───────────────────────────────────────────────────────
-
-
 @method_decorator(
     group_required("RDM Administrator", raise_exception=True), name="dispatch"
 )

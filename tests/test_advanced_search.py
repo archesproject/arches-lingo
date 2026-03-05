@@ -120,7 +120,6 @@ class AdvancedSearchEvaluatorTests(TestCase):
 
         now = datetime.datetime.now()
 
-        # ── Labels ──
         TileModel.objects.create(
             resourceinstance=cls.concept_a,
             nodegroup_id=CONCEPT_NAME_NODEGROUP,
@@ -158,7 +157,6 @@ class AdvancedSearchEvaluatorTests(TestCase):
             },
         )
 
-        # ── Notes (statement) ──
         TileModel.objects.create(
             resourceinstance=cls.concept_a,
             nodegroup_id=STATEMENT_NODEGROUP,
@@ -178,7 +176,6 @@ class AdvancedSearchEvaluatorTests(TestCase):
             },
         )
 
-        # ── URI ──
         TileModel.objects.create(
             resourceinstance=cls.concept_a,
             nodegroup_id=URI_NODEGROUP,
@@ -190,7 +187,6 @@ class AdvancedSearchEvaluatorTests(TestCase):
             },
         )
 
-        # ── Identifier ──
         TileModel.objects.create(
             resourceinstance=cls.concept_b,
             nodegroup_id=IDENTIFIER_NODEGROUP,
@@ -199,7 +195,6 @@ class AdvancedSearchEvaluatorTests(TestCase):
             },
         )
 
-        # ── Match status ──
         TileModel.objects.create(
             resourceinstance=cls.concept_a,
             nodegroup_id=MATCH_STATUS_NODEGROUP,
@@ -208,7 +203,6 @@ class AdvancedSearchEvaluatorTests(TestCase):
             },
         )
 
-        # ── Part of scheme ──
         for concept in [cls.concept_a, cls.concept_b, cls.concept_c]:
             rxr = ResourceXResource.objects.create(
                 from_resource=concept,
@@ -231,7 +225,6 @@ class AdvancedSearchEvaluatorTests(TestCase):
                 },
             )
 
-        # ── Top concept of ──
         top_rxr = ResourceXResource.objects.create(
             from_resource=cls.concept_a,
             from_resource_graph_id=CONCEPTS_GRAPH_ID,
@@ -253,7 +246,6 @@ class AdvancedSearchEvaluatorTests(TestCase):
             },
         )
 
-        # ── Hierarchy: B broader A, C broader A ──
         for child in [cls.concept_b, cls.concept_c]:
             hier_rxr = ResourceXResource.objects.create(
                 from_resource=child,
@@ -276,7 +268,6 @@ class AdvancedSearchEvaluatorTests(TestCase):
                 },
             )
 
-        # ── Association: A ↔ C ──
         assoc_rxr = ResourceXResource.objects.create(
             from_resource=cls.concept_a,
             from_resource_graph_id=CONCEPTS_GRAPH_ID,
@@ -301,8 +292,6 @@ class AdvancedSearchEvaluatorTests(TestCase):
     def setUp(self):
         self.evaluator = AdvancedSearchEvaluator(user=self.admin)
 
-    # ── evaluate() core behaviour ───────────────────────────────
-
     def test_empty_query_returns_all(self):
         """An empty dict should return all concept IDs."""
         result = self.evaluator.evaluate({})
@@ -317,8 +306,6 @@ class AdvancedSearchEvaluatorTests(TestCase):
         result = self.evaluator.evaluate({"operator": "and", "conditions": []})
         all_concepts = {self.concept_a.pk, self.concept_b.pk, self.concept_c.pk}
         self.assertTrue(all_concepts.issubset(set(result)))
-
-    # ── Label facet ─────────────────────────────────────────────
 
     def test_facet_label_text_match(self):
         result = self.evaluator.evaluate({"facet": "label", "value": "Alpha"})
@@ -346,8 +333,6 @@ class AdvancedSearchEvaluatorTests(TestCase):
         self.assertIn(self.concept_b.pk, ids)
         self.assertIn(self.concept_c.pk, ids)
 
-    # ── Note facet ──────────────────────────────────────────────
-
     def test_facet_note_text_match(self):
         result = self.evaluator.evaluate({"facet": "note", "value": "sculpture"})
         ids = set(result)
@@ -362,8 +347,6 @@ class AdvancedSearchEvaluatorTests(TestCase):
     def test_facet_note_no_match(self):
         result = self.evaluator.evaluate({"facet": "note", "value": "zzz_nonexistent"})
         self.assertEqual(len(result), 0)
-
-    # ── Language facet ──────────────────────────────────────────
 
     def test_facet_language_english(self):
         result = self.evaluator.evaluate({"facet": "language", "value": "en"})
@@ -385,8 +368,6 @@ class AdvancedSearchEvaluatorTests(TestCase):
         all_concepts = {self.concept_a.pk, self.concept_b.pk, self.concept_c.pk}
         self.assertTrue(all_concepts.issubset(set(result)))
 
-    # ── URI facet ───────────────────────────────────────────────
-
     def test_facet_uri_match(self):
         result = self.evaluator.evaluate({"facet": "uri", "value": "alpha"})
         ids = set(result)
@@ -397,8 +378,6 @@ class AdvancedSearchEvaluatorTests(TestCase):
         result = self.evaluator.evaluate({"facet": "uri", "value": ""})
         all_concepts = {self.concept_a.pk, self.concept_b.pk, self.concept_c.pk}
         self.assertTrue(all_concepts.issubset(set(result)))
-
-    # ── Identifier facet ────────────────────────────────────────
 
     def test_facet_identifier_match(self):
         result = self.evaluator.evaluate({"facet": "identifier", "value": "BETA"})
@@ -411,8 +390,6 @@ class AdvancedSearchEvaluatorTests(TestCase):
         all_concepts = {self.concept_a.pk, self.concept_b.pk, self.concept_c.pk}
         self.assertTrue(all_concepts.issubset(set(result)))
 
-    # ── Match URI facet ─────────────────────────────────────────
-
     def test_facet_match_uri(self):
         result = self.evaluator.evaluate({"facet": "match_uri", "value": "getty"})
         ids = set(result)
@@ -423,8 +400,6 @@ class AdvancedSearchEvaluatorTests(TestCase):
         result = self.evaluator.evaluate({"facet": "match_uri", "value": ""})
         all_concepts = {self.concept_a.pk, self.concept_b.pk, self.concept_c.pk}
         self.assertTrue(all_concepts.issubset(set(result)))
-
-    # ── Scheme facet ────────────────────────────────────────────
 
     def test_facet_scheme_finds_members(self):
         result = self.evaluator.evaluate(
@@ -439,8 +414,6 @@ class AdvancedSearchEvaluatorTests(TestCase):
         result = self.evaluator.evaluate({"facet": "scheme", "value": ""})
         all_concepts = {self.concept_a.pk, self.concept_b.pk, self.concept_c.pk}
         self.assertTrue(all_concepts.issubset(set(result)))
-
-    # ── Hierarchical relationship facet ─────────────────────────
 
     def test_facet_relationship_hierarchical_broader(self):
         """B and C both have A as broader."""
@@ -479,8 +452,6 @@ class AdvancedSearchEvaluatorTests(TestCase):
         all_concepts = {self.concept_a.pk, self.concept_b.pk, self.concept_c.pk}
         self.assertTrue(all_concepts.issubset(set(result)))
 
-    # ── Associated relationship facet ───────────────────────────
-
     def test_facet_relationship_associated_forward(self):
         """A has C as an associated concept."""
         result = self.evaluator.evaluate(
@@ -517,8 +488,6 @@ class AdvancedSearchEvaluatorTests(TestCase):
         all_concepts = {self.concept_a.pk, self.concept_b.pk, self.concept_c.pk}
         self.assertTrue(all_concepts.issubset(set(result)))
 
-    # ── Concept set facet ───────────────────────────────────────
-
     def test_facet_concept_set(self):
         concept_set = ConceptSet.objects.create(user=self.admin, name="Eval Set")
         ConceptSetMember.objects.create(
@@ -545,8 +514,6 @@ class AdvancedSearchEvaluatorTests(TestCase):
     def test_facet_concept_set_nonexistent_returns_empty(self):
         result = self.evaluator.evaluate({"facet": "concept_set", "value": "99999"})
         self.assertEqual(result, [])
-
-    # ── Boolean group logic ─────────────────────────────────────
 
     def test_and_group_intersection(self):
         """AND of label=Alpha + note=definition → only concept A."""
@@ -607,14 +574,10 @@ class AdvancedSearchEvaluatorTests(TestCase):
         ids = set(result)
         self.assertEqual(ids, {self.concept_a.pk})
 
-    # ── Lifecycle state facet (no data, tests the empty path) ──
-
     def test_facet_lifecycle_state_empty_returns_all(self):
         result = self.evaluator.evaluate({"facet": "lifecycle_state", "value": ""})
         all_concepts = {self.concept_a.pk, self.concept_b.pk, self.concept_c.pk}
         self.assertTrue(all_concepts.issubset(set(result)))
-
-    # ── Match mode tests ────────────────────────────────────────
 
     def test_match_mode_contains(self):
         """Default 'contains' match finds partial text."""
@@ -751,8 +714,6 @@ class AdvancedSearchEvaluatorTests(TestCase):
         )
         ids = set(result)
         self.assertIn(self.concept_a.pk, ids)
-
-    # ── Negation tests ──────────────────────────────────────────
 
     def test_negation_excludes_matched(self):
         """Negated label=Alpha returns everything except Alpha."""
@@ -933,8 +894,6 @@ class AdvancedSearchViewTests(TestCase):
     def setUp(self):
         self.client.force_login(self.admin)
 
-    # ── AdvancedSearchView ──────────────────────────────────────
-
     def test_search_basic(self):
         response = self.client.post(
             reverse("api-advanced-search"),
@@ -1002,8 +961,6 @@ class AdvancedSearchViewTests(TestCase):
             content_type="application/json",
         )
         self.assertNotEqual(response.status_code, HTTPStatus.OK)
-
-    # ── AdvancedSearchOptionsView ───────────────────────────────
 
     def test_get_search_options(self):
         response = self.client.get(reverse("api-advanced-search-options"))

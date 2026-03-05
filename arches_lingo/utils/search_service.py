@@ -29,9 +29,6 @@ from arches_lingo.utils.advanced_search import AdvancedSearchEvaluator
 from arches_lingo.utils.concept_builder import ConceptBuilder
 
 
-# ── Search execution ────────────────────────────────────────────
-
-
 def execute_search(query, user, page_number=1, items_per_page=25):
     """Execute an advanced search and return paginated, enriched results."""
     evaluator = AdvancedSearchEvaluator(user=user)
@@ -53,9 +50,6 @@ def execute_search(query, user, page_number=1, items_per_page=25):
         "total_results": paginator.count,
         "data": data,
     }
-
-
-# ── Result enrichment ──────────────────────────────────────────
 
 
 def enrich_search_result(builder, concept_id):
@@ -143,9 +137,6 @@ def get_lifecycle_state_for_concept(concept_id):
         return None
 
 
-# ── Search options ──────────────────────────────────────────────
-
-
 def fetch_search_options():
     """Return filter option data for the advanced search UI."""
     languages = list(
@@ -182,9 +173,6 @@ def fetch_search_options():
         "schemes": scheme_options,
         "lifecycle_states": lifecycle_states,
     }
-
-
-# ── Serialization ──────────────────────────────────────────────
 
 
 def serialize_saved_search(saved_search):
@@ -231,9 +219,6 @@ def serialize_concept_set_with_members(concept_set):
         "created": concept_set.created.isoformat(),
         "updated": concept_set.updated.isoformat(),
     }
-
-
-# ── Concept set member operations ──────────────────────────────
 
 
 def add_members_to_concept_set(concept_set, concept_ids):

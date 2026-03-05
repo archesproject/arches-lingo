@@ -629,8 +629,6 @@ export const fetchAdvancedSearchOptions =
         return parsed;
     };
 
-// ── Saved Searches API ─────────────────────────────────────────
-
 export const fetchSavedSearches = async (): Promise<{
     data: SavedSearchItem[];
 }> => {
@@ -672,8 +670,6 @@ export const deleteSavedSearch = async (pk: number): Promise<void> => {
         throw new Error(parsed.message || response.statusText);
     }
 };
-
-// ── Concept Sets API ───────────────────────────────────────────
 
 export const fetchConceptSets = async (): Promise<{
     data: ConceptSetItem[];
