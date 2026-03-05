@@ -421,3 +421,20 @@ export interface PaginatorDetails {
     total_notifications: number;
     unread_notifications: number;
 }
+
+export interface EditLogEntry {
+    editlogid: string;
+    transactionid: string | null;
+    edittype: string;
+    edittype_label: string;
+    timestamp: string;
+    userid: string;
+    user_firstname: string;
+    user_lastname: string;
+    user_username: string;
+    user_email: string;
+    nodegroupid: string | null;
+    tileinstanceid: string | null;
+    card_name: string | null;
+    note: string | null;
+}

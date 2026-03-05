@@ -2,6 +2,8 @@
 import { inject, onMounted, ref, watch, type Ref } from "vue";
 import { useGettext } from "vue3-gettext";
 
+import { useEditLog } from "@/arches_lingo/composables/useEditLog.ts";
+
 import { useConfirm } from "primevue/useconfirm";
 import { useRouter } from "vue-router";
 import { useToast } from "primevue/usetoast";
@@ -56,6 +58,7 @@ const props = defineProps<{
 }>();
 
 const refreshSchemeHierarchy = inject<() => void>("refreshSchemeHierarchy");
+const { openEditLog } = useEditLog(() => props.graphSlug);
 
 const confirm = useConfirm();
 const router = useRouter();
@@ -73,7 +76,6 @@ const showExportDialog = ref(false);
 const exportDialogKey = ref(0);
 
 const store = useResourceStore();
-let headerInitialized = false;
 
 watch(
     [() => store.resource.value, () => store.error.value],
@@ -88,8 +90,7 @@ watch(
             isLoading.value = false;
             return;
         }
-        if (!resource || !props.resourceInstanceId || headerInitialized) return;
-        headerInitialized = true;
+        if (!resource || !props.resourceInstanceId) return;
 
         try {
             scheme.value = resource;
@@ -256,6 +257,14 @@ function confirmDelete() {
                     </div>
 
                     <div class="header-buttons">
+                        <Button
+                            :aria-label="$gettext('Edit History')"
+                            class="add-button"
+                            @click="openEditLog"
+                        >
+                            <span><i class="pi pi-history"></i></span>
+                            <span>{{ $gettext("History") }}</span>
+                        </Button>
                         <Button
                             :aria-label="$gettext('Export')"
                             class="add-button"

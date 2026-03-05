@@ -22,6 +22,7 @@ import {
     MINIMIZED,
     NEW,
     VIEW,
+    openPanelComponentKey,
 } from "@/arches_lingo/constants.ts";
 import {
     useEditorDirtyState,
@@ -59,6 +60,7 @@ const editorKey = ref(0);
 const editorTileId = ref();
 const editorState = ref(CLOSED);
 const selectedComponentDatum = ref();
+const isFormEditor = ref(true);
 
 const resourceInstanceId = computed<string | undefined>(() => {
     if (route.params.id !== NEW) {
@@ -138,6 +140,7 @@ function doOpenEditor(componentName: string, tileId?: string) {
     editorKey.value += 1;
     editorTileId.value = tileId;
     editorState.value = MINIMIZED;
+    isFormEditor.value = true;
 }
 
 function openEditor(componentName: string, tileId?: string) {
@@ -164,6 +167,11 @@ function updateAfterComponentDeletion(componentName: string, tileId: string) {
 }
 
 async function refreshReportSection(componentName: string) {
+    if (componentName === "all") {
+        await resourceStore.refreshResource();
+        return;
+    }
+
     const componentDatum = processedComponentData.value.find(
         (componentDatum) => {
             return componentDatum.componentName === componentName;
@@ -180,10 +188,32 @@ async function refreshReportSection(componentName: string) {
     }
 }
 
+function openPanelComponent(
+    component: Component,
+    componentName: string,
+    sectionTitle: string,
+    graphSlug: string = "",
+    nodegroupAlias: string = "",
+) {
+    selectedComponentDatum.value = {
+        component: markRaw(component),
+        componentName,
+        sectionTitle,
+        graphSlug,
+        nodegroupAlias,
+        key: 0,
+    };
+    editorKey.value += 1;
+    editorTileId.value = null;
+    editorState.value = MINIMIZED;
+    isFormEditor.value = false;
+}
+
 provide("openEditor", openEditor);
 provide("closeEditor", closeEditor);
 provide("updateAfterComponentDeletion", updateAfterComponentDeletion);
 provide("refreshReportSection", refreshReportSection);
+provide(openPanelComponentKey, openPanelComponent);
 </script>
 
 <template>
@@ -235,6 +265,8 @@ provide("refreshReportSection", refreshReportSection);
                     :key="editorKey"
                     class="splitter-panel-content"
                     :is-editor-maximized="editorState === MAXIMIZED"
+                    :is-form-editor="isFormEditor"
+                    :header-title="selectedComponentDatum.sectionTitle"
                     @maximize="maximizeEditor"
                     @minimize="minimizeEditor"
                     @close="closeEditor"
@@ -303,6 +335,8 @@ provide("refreshReportSection", refreshReportSection);
                     :key="editorKey"
                     class="splitter-panel-content"
                     :is-editor-maximized="editorState === MAXIMIZED"
+                    :is-form-editor="isFormEditor"
+                    :header-title="selectedComponentDatum.sectionTitle"
                     @maximize="maximizeEditor"
                     @minimize="minimizeEditor"
                     @close="closeEditor"

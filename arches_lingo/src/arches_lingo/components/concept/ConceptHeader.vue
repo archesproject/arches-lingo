@@ -27,6 +27,7 @@ import {
     selectedLanguageKey,
     CONCEPT_TYPE_NODE_ALIAS,
 } from "@/arches_lingo/constants.ts";
+import { useEditLog } from "@/arches_lingo/composables/useEditLog.ts";
 import { PREF_LABEL } from "@/arches_controlled_lists/constants.ts";
 
 import {
@@ -63,6 +64,7 @@ const props = defineProps<{
 }>();
 
 const refreshSchemeHierarchy = inject<() => void>("refreshSchemeHierarchy");
+const { openEditLog } = useEditLog(() => props.graphSlug);
 
 const toast = useToast();
 const { $gettext } = useGettext();
@@ -82,7 +84,6 @@ const exportDialogKey = ref(0);
 const conceptTypeTile = ref();
 
 const store = useResourceStore();
-let headerInitialized = false;
 
 watch(
     [() => store.resource.value, () => store.error.value],
@@ -97,8 +98,7 @@ watch(
             isLoading.value = false;
             return;
         }
-        if (!resource || !props.resourceInstanceId || headerInitialized) return;
-        headerInitialized = true;
+        if (!resource || !props.resourceInstanceId) return;
 
         try {
             concept.value = resource;
@@ -329,6 +329,14 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                 v-if="resourceInstanceId"
                 class="header-buttons"
             >
+                <Button
+                    :aria-label="$gettext('Edit History')"
+                    class="add-button"
+                    @click="openEditLog"
+                >
+                    <span><i class="pi pi-history"></i></span>
+                    <span>{{ $gettext("History") }}</span>
+                </Button>
                 <Button
                     :aria-label="$gettext('Export')"
                     class="add-button"
