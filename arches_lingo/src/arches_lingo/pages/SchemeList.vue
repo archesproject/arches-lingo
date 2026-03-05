@@ -34,14 +34,14 @@ async function fetchSchemes() {
         ]);
         schemes.value = concepts.schemes as Scheme[];
 
-        const map = new Map<string, SchemeStatement[]>();
+        const schemeStatementMap = new Map<string, SchemeStatement[]>();
         for (const resource of resources) {
             const statements = resource.aliased_data?.statement;
             if (statements) {
-                map.set(resource.resourceinstanceid, statements);
+                schemeStatementMap.set(resource.resourceinstanceid, statements);
             }
         }
-        statementsMap.value = map;
+        statementsMap.value = schemeStatementMap;
     } catch (error) {
         toast.add({
             severity: ERROR,

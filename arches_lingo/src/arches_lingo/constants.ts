@@ -27,9 +27,6 @@ export const DEFAULT_ERROR_TOAST_LIFE = 8000;
 export const SEARCH_RESULTS_PER_PAGE = 25;
 export const SEARCH_RESULT_ITEM_SIZE = 50;
 
-// Placeholder used before backend language data is loaded.
-// The code "en" is a last-resort fallback; the real default
-// comes from Django's LANGUAGE_CODE at runtime.
 export const FALLBACK_LANGUAGE: Language = {
     code: "en",
     default_direction: "ltr",
@@ -60,5 +57,5 @@ export const openPanelComponentKey = Symbol() as InjectionKey<
 >;
 export const displayedRowKey = Symbol() as InjectionKey<Ref<Concept | null>>;
 export const selectedLanguageKey = Symbol() as InjectionKey<Ref<Language>>;
-export const systemLanguageKey = Symbol() as InjectionKey<Language>; // not reactive
+export const systemLanguageKey = Symbol() as InjectionKey<Language>;
 export const availableLanguagesKey = Symbol() as InjectionKey<Ref<Language[]>>;

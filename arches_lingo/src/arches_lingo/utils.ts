@@ -27,7 +27,6 @@ import type {
 import type { Router } from "vue-router/dist/vue-router";
 import type { ConceptInstance } from "@/arches_lingo/types.ts";
 
-// Duck-typing helpers
 export function dataIsScheme(data: Concept | Scheme) {
     return (data as Scheme).top_concepts !== undefined;
 }
@@ -35,7 +34,6 @@ export function dataIsConcept(data: Concept | Scheme) {
     return !dataIsScheme(data);
 }
 
-// Icon helpers
 export function getConceptIcon(
     item: Concept | SearchResultItem | { guide_term?: boolean },
 ): string {
@@ -76,7 +74,6 @@ export function navigateToSchemeOrConcept(
     }
 }
 
-// Tree builder
 export function treeFromSchemes(
     schemes: Scheme[],
     selectedLanguage: Language,
@@ -161,7 +158,6 @@ export function treeFromSchemes(
         return { node, shouldHideSiblings };
     }
 
-    // If this scheme is focused, immediately process and return it.
     const focalScheme = schemes.find(
         (schemeItem) => schemeItem.id === focusedOccurrenceKey,
     );
@@ -176,7 +172,6 @@ export function treeFromSchemes(
         ];
     }
 
-    // Otherwise, process schemes until a focused node is found.
     const reshapedSchemes = [];
     for (const scheme of schemes) {
         const { node, shouldHideSiblings } = processItem(
