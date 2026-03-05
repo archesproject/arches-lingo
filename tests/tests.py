@@ -37,6 +37,7 @@ from arches_lingo.const import (
     SCHEME_NAME_TYPE_NODE,
     LABEL_LIST_ID,
 )
+from arches_lingo.utils.concept_builder import ConceptBuilder
 
 # these tests can be run from the command line via
 # python manage.py test tests.tests --settings="tests.test_settings"
@@ -54,8 +55,8 @@ class ViewTests(TestCase):
     def load_graphs(cls):
         path = Path(settings.APP_ROOT) / "pkg" / "graphs" / "resource_models"
         for file_path in cls.graph_fixtures:
-            with captured_stdout(), open(path / file_path, "r") as f:
-                archesfile = JSONDeserializer().deserialize(f)
+            with captured_stdout(), open(path / file_path, "r") as graph_file:
+                archesfile = JSONDeserializer().deserialize(graph_file)
                 ResourceGraphImporter(archesfile["graph"], overwrite_graphs=True)
 
     @classmethod
@@ -97,14 +98,14 @@ class ViewTests(TestCase):
 
         concept_tiles = []
         resource_x_resource_records = []
-        for i, concept in enumerate(cls.concepts):
+        for index, concept in enumerate(cls.concepts):
             # Create label tile
             concept_tiles.append(
                 TileModel(
                     resourceinstance=concept,
                     nodegroup_id=CONCEPT_NAME_NODEGROUP,
                     data={
-                        CONCEPT_NAME_CONTENT_NODE: f"Concept {i + 1}",
+                        CONCEPT_NAME_CONTENT_NODE: f"Concept {index + 1}",
                         CONCEPT_NAME_TYPE_NODE: prefLabel_reference_dt,
                         CONCEPT_NAME_LANGUAGE_NODE: "en",
                     },
@@ -135,7 +136,7 @@ class ViewTests(TestCase):
                 )
             )
             # Create top concept/narrower tile
-            if i == 0:
+            if index == 0:
                 top_concept_rxr = ResourceXResource(
                     from_resource=concept,
                     from_resource_graph_id=CONCEPTS_GRAPH_ID,
@@ -159,11 +160,11 @@ class ViewTests(TestCase):
                         },
                     )
                 )
-            elif i < MAX_DEPTH:
+            elif index < MAX_DEPTH:
                 narrower_hierarchy_rxr = ResourceXResource(
                     from_resource=concept,
                     from_resource_graph_id=CONCEPTS_GRAPH_ID,
-                    to_resource=cls.concepts[i - 1],
+                    to_resource=cls.concepts[index - 1],
                     to_resource_graph_id=CONCEPTS_GRAPH_ID,
                     created=datetime.datetime.now(),
                     modified=datetime.datetime.now(),
@@ -186,7 +187,7 @@ class ViewTests(TestCase):
                             CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID: [
                                 # Previous concept
                                 {
-                                    "resourceId": str(cls.concepts[i - 1].pk),
+                                    "resourceId": str(cls.concepts[index - 1].pk),
                                     "resourceXresourceId": str(
                                         narrower_hierarchy_rxr.pk
                                     ),
@@ -261,7 +262,9 @@ class ViewTests(TestCase):
             {"Concept 2", "Concept 3", "Concept 4", "Concept 5"},
         )
         concept_2 = [
-            c for c in top["narrower"] if c["labels"][0]["value"] == "Concept 2"
+            concept
+            for concept in top["narrower"]
+            if concept["labels"][0]["value"] == "Concept 2"
         ][0]
         self.assertEqual(
             {n["labels"][0]["value"] for n in concept_2["narrower"]},
@@ -451,9 +454,9 @@ class ViewTests(TestCase):
         self.assertTrue(concept_2["guide_term"])
 
         # Other narrower concepts should not be guide terms
-        for c in top["narrower"]:
-            if c["labels"][0]["value"] != "Concept 2":
-                self.assertFalse(c["guide_term"])
+        for narrower_concept in top["narrower"]:
+            if narrower_concept["labels"][0]["value"] != "Concept 2":
+                self.assertFalse(narrower_concept["guide_term"])
 
     def test_guide_term_flag_in_search(self):
         """Guide term flag should appear in search results."""
@@ -497,16 +500,14 @@ class ViewTests(TestCase):
         top = scheme["top_concepts"][0]
 
         self.assertFalse(top["guide_term"])
-        for c in top["narrower"]:
-            self.assertFalse(c["guide_term"])
+        for narrower_concept in top["narrower"]:
+            self.assertFalse(narrower_concept["guide_term"])
 
 
 class IsGuideTermTileTests(TestCase):
     """Unit tests for ConceptBuilder.is_guide_term_tile static method."""
 
     def test_guide_term_tile_detected(self):
-        from arches_lingo.utils.concept_builder import ConceptBuilder
-
         tile_data = {
             CONCEPT_TYPE_NODEID: [
                 {
@@ -518,8 +519,6 @@ class IsGuideTermTileTests(TestCase):
         self.assertTrue(ConceptBuilder.is_guide_term_tile(tile_data))
 
     def test_non_guide_term_tile(self):
-        from arches_lingo.utils.concept_builder import ConceptBuilder
-
         tile_data = {
             CONCEPT_TYPE_NODEID: [
                 {
@@ -531,8 +530,6 @@ class IsGuideTermTileTests(TestCase):
         self.assertFalse(ConceptBuilder.is_guide_term_tile(tile_data))
 
     def test_empty_type_data(self):
-        from arches_lingo.utils.concept_builder import ConceptBuilder
-
         self.assertFalse(ConceptBuilder.is_guide_term_tile({}))
         self.assertFalse(ConceptBuilder.is_guide_term_tile({CONCEPT_TYPE_NODEID: None}))
         self.assertFalse(ConceptBuilder.is_guide_term_tile({CONCEPT_TYPE_NODEID: []}))
