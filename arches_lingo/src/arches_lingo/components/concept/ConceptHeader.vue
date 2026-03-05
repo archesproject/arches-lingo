@@ -76,6 +76,7 @@ const toast = useToast();
 const { $gettext } = useGettext();
 const confirm = useConfirm();
 const router = useRouter();
+const store = useResourceStore();
 
 const systemLanguage = inject(systemLanguageKey) as Language;
 const selectedLanguage = inject(selectedLanguageKey) as Ref<Language>;
@@ -89,22 +90,21 @@ const exportDialogKey = ref(0);
 
 const conceptTypeTile = ref();
 
-const conceptIcon = computed(() => {
-    const typeData =
-        conceptTypeTile.value?.aliased_data?.[CONCEPT_TYPE_NODE_ALIAS];
-    if (typeData?.node_value) {
-        const refs = typeData.node_value;
-        if (
-            Array.isArray(refs) &&
-            refs.some((r: { uri?: string }) => r.uri === GUIDE_TERM_URI)
-        ) {
-            return GUIDE_TERM_ICON;
-        }
+function isGuideTermType(typeNodeValue: unknown): boolean {
+    if (!Array.isArray(typeNodeValue) || typeNodeValue.length === 0) {
+        return false;
     }
-    return CONCEPT_ICON;
-});
+    return typeNodeValue.some(
+        (ref: { uri?: string }) => ref.uri === GUIDE_TERM_URI,
+    );
+}
 
-const store = useResourceStore();
+const conceptIcon = computed(() => {
+    const typeNodeValue =
+        conceptTypeTile.value?.aliased_data?.[CONCEPT_TYPE_NODE_ALIAS]
+            ?.node_value;
+    return isGuideTermType(typeNodeValue) ? GUIDE_TERM_ICON : CONCEPT_ICON;
+});
 
 watch(
     [() => store.resource.value, () => store.error.value],
@@ -153,17 +153,14 @@ watch(
 
 async function onConceptTypeChange(newValue: ReferenceSelectValue) {
     try {
-        conceptTypeTile.value = await upsertLingoTile(
-            props.graphSlug,
-            CONCEPT_TYPE_NODE_ALIAS,
-            {
-                resourceinstance: props.resourceInstanceId,
-                aliased_data: {
-                    [CONCEPT_TYPE_NODE_ALIAS]: newValue,
-                },
-                tileid: conceptTypeTile.value?.tileid,
+        await upsertLingoTile(props.graphSlug, CONCEPT_TYPE_NODE_ALIAS, {
+            resourceinstance: props.resourceInstanceId,
+            aliased_data: {
+                [CONCEPT_TYPE_NODE_ALIAS]: newValue,
             },
-        );
+            tileid: conceptTypeTile.value?.tileid,
+        });
+        await store.refreshResource();
         toast.add({
             severity: SUCCESS,
             summary: $gettext("Concept type updated"),

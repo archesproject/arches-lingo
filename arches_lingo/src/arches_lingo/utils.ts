@@ -111,11 +111,7 @@ export function treeFromSchemes(
                 schemeId,
             },
             icon: getItemIcon(item),
-            iconLabel: dataIsScheme(item)
-                ? iconLabels.scheme
-                : (item as Concept).guide_term
-                  ? iconLabels.guideTerm
-                  : iconLabels.concept,
+            iconLabel: getIconLabel(item, iconLabels),
         };
     }
 
@@ -340,4 +336,19 @@ export async function createOrUpdateConcept(
 
         return tile.tileid;
     }
+}
+
+export function getIconLabel(
+    item: Concept | Scheme,
+    iconLabels: IconLabels,
+): string {
+    if (dataIsScheme(item)) {
+        return iconLabels.scheme;
+    }
+
+    if ((item as Concept).guide_term) {
+        return iconLabels.guideTerm;
+    }
+
+    return iconLabels.concept;
 }

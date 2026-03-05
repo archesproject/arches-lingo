@@ -449,7 +449,9 @@ class ViewTests(TestCase):
 
         # Find Concept 2 in narrower list -- it should be flagged as guide term
         concept_2 = next(
-            c for c in top["narrower"] if c["labels"][0]["value"] == "Concept 2"
+            narrower_concept
+            for narrower_concept in top["narrower"]
+            if narrower_concept["labels"][0]["value"] == "Concept 2"
         )
         self.assertTrue(concept_2["guide_term"])
 
