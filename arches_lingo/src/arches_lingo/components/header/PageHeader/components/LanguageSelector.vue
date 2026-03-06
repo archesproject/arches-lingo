@@ -1,45 +1,40 @@
 <script setup lang="ts">
-import { computed, inject, useTemplateRef, watchEffect } from "vue";
+import { computed, useTemplateRef, watchEffect } from "vue";
 import { useGettext } from "vue3-gettext";
+import { storeToRefs } from "pinia";
 
 import Button from "primevue/button";
 import Popover from "primevue/popover";
 import RadioButton from "primevue/radiobutton";
 
-import {
-    availableLanguagesKey,
-    selectedLanguageKey,
-} from "@/arches_lingo/constants.ts";
+import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 
 import type { PopoverMethods } from "primevue/popover";
 
 const { $gettext } = useGettext();
 
-const selectedLanguage = inject(selectedLanguageKey);
-const availableLanguages = inject(availableLanguagesKey);
+const languageStore = useLanguageStore();
+const { selectedLanguage, availableLanguages } = storeToRefs(languageStore);
 
 const popover = useTemplateRef<PopoverMethods>("popover");
 
 const selectedCode = computed({
-    get: () => selectedLanguage?.value?.code ?? "",
+    get: () => selectedLanguage.value.code,
     set: (code: string) => {
-        if (!selectedLanguage || !availableLanguages) return;
         const lang = availableLanguages.value.find(
             (language) => language.code === code,
         );
         if (lang) {
-            selectedLanguage.value = lang;
+            languageStore.setSelectedLanguage(lang);
         }
     },
 });
 
-const showSelector = computed(
-    () => availableLanguages && availableLanguages.value.length > 1,
-);
+const showSelector = computed(() => availableLanguages.value.length > 1);
 
 watchEffect(() => {
     document.documentElement.dir =
-        selectedLanguage?.value?.default_direction ?? "ltr";
+        selectedLanguage.value.default_direction ?? "ltr";
 });
 
 function openLanguageSelector(event: MouseEvent) {
@@ -57,9 +52,9 @@ function openLanguageSelector(event: MouseEvent) {
             @click="openLanguageSelector"
         >
             <div class="language-abbreviation-circle">
-                {{ selectedLanguage?.code }}
+                {{ selectedLanguage.code }}
             </div>
-            <span>{{ selectedLanguage?.name }}</span>
+            <span>{{ selectedLanguage.name }}</span>
         </Button>
 
         <Popover ref="popover">

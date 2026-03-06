@@ -1,23 +1,17 @@
 <script setup lang="ts">
-import { inject } from "vue";
+import { storeToRefs } from "pinia";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 import { getParentLabels } from "@/arches_lingo/utils.ts";
-import {
-    selectedLanguageKey,
-    systemLanguageKey,
-} from "@/arches_lingo/constants.ts";
+import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 import { routeNames } from "@/arches_lingo/routes.ts";
 
 import type { SearchResultItem } from "@/arches_lingo/types.ts";
-import type { Ref } from "vue";
-import type { Language } from "@/arches_component_lab/types";
 
 const props = defineProps<{
     value?: SearchResultItem[];
 }>();
 
-const selectedLanguage = inject(selectedLanguageKey) as Ref<Language>;
-const systemLanguage = inject(systemLanguageKey) as Language;
+const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
 </script>
 <template>
     <div

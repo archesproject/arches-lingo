@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed, inject, ref } from "vue";
+import { computed, ref } from "vue";
 
 import { useGettext } from "vue3-gettext";
+import { storeToRefs } from "pinia";
 
 import Button from "primevue/button";
 import MultiSelect from "primevue/multiselect";
@@ -10,12 +11,8 @@ import { fetchConceptResources } from "@/arches_lingo/api.ts";
 import { generateArchesURL } from "@/arches/utils/generate-arches-url.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 import { getParentLabels } from "@/arches_lingo/utils.ts";
-import {
-    selectedLanguageKey,
-    systemLanguageKey,
-} from "@/arches_lingo/constants.ts";
+import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 
-import type { Ref } from "vue";
 import type { MultiSelectFilterEvent } from "primevue/multiselect";
 import type { VirtualScrollerLazyEvent } from "primevue/virtualscroller";
 import type {
@@ -23,7 +20,6 @@ import type {
     ResourceInstanceReference,
 } from "@/arches_component_lab/datatypes/resource-instance-list/types";
 import type { SearchResultItem } from "@/arches_lingo/types.ts";
-import type { Language } from "@/arches_component_lab/types";
 
 const props = defineProps<{
     value: SearchResultItem[] | null | undefined;
@@ -42,8 +38,7 @@ const { $gettext } = useGettext();
 
 const itemSize = 36; // in future iteration this should be declared in the CardXNodeXWidget config
 
-const selectedLanguage = inject(selectedLanguageKey) as Ref<Language>;
-const systemLanguage = inject(systemLanguageKey) as Language;
+const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
 const options = ref<SearchResultItem[]>(props.value || []);
 const isLoading = ref(false);
 const searchResultsPage = ref(0);
@@ -57,7 +52,7 @@ props.value?.forEach((option) => {
     option.label = getItemLabel(
         option,
         selectedLanguage.value.code,
-        systemLanguage.code,
+        systemLanguage.value.code,
     ).value;
 });
 
@@ -96,7 +91,7 @@ async function getOptions(page: number, filterTerm?: string) {
             option.label = getItemLabel(
                 option,
                 selectedLanguage.value.code,
-                systemLanguage.code,
+                systemLanguage.value.code,
             ).value;
         });
         if (page === 1) {

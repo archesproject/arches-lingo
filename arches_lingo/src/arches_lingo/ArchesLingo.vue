@@ -16,15 +16,12 @@ import {
     DEFAULT_ERROR_TOAST_LIFE,
     ERROR,
     USER_KEY,
-    availableLanguagesKey,
-    selectedLanguageKey,
-    systemLanguageKey,
 } from "@/arches_lingo/constants.ts";
 
 import { routeNames } from "@/arches_lingo/routes.ts";
 import { fetchUser } from "@/arches_lingo/api.ts";
 import { useUnsavedChangesGuard } from "@/arches_lingo/composables/useUnsavedChangesGuard.ts";
-import { useLanguage } from "@/arches_lingo/composables/useLanguage.ts";
+import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 import PageHeader from "@/arches_lingo/components/header/PageHeader/PageHeader.vue";
 import SideNav from "@/arches_lingo/components/sidenav/SideNav.vue";
 
@@ -38,11 +35,7 @@ const setUser = (userToSet: User | null) => {
 provide(USER_KEY, { user, setUser });
 
 const { $gettext } = useGettext();
-const { selectedLanguage, systemLanguage, availableLanguages } = useLanguage();
-
-provide(availableLanguagesKey, availableLanguages);
-provide(selectedLanguageKey, selectedLanguage);
-provide(systemLanguageKey, systemLanguage);
+const languageStore = useLanguageStore();
 
 const router = useRouter();
 const route = useRoute();
@@ -60,6 +53,7 @@ provide("refreshSchemeHierarchy", refreshSchemeHierarchy);
 
 onMounted(function () {
     useUnsavedChangesGuard(router);
+    languageStore.initialize();
 });
 
 watchEffect(() => {
