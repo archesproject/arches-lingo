@@ -18,6 +18,10 @@ from arches_lingo.utils.concept_builder import ConceptBuilder
 class SchemeResourceView(AnonymousAccessMixin, View):
     def get(self, request, pk):
         scheme_id = str(pk)
+        include_top_concepts = (
+            request.GET.get("include_top_concepts", "").lower() == "true"
+        )
+
         builder = ConceptBuilder(concept_ids=[])
         builder.populate_schemes([scheme_id])
 
@@ -29,7 +33,12 @@ class SchemeResourceView(AnonymousAccessMixin, View):
                 status=404,
             )
 
-        data = builder.serialize_scheme(scheme, children=False)
+        if include_top_concepts:
+            builder.top_concepts_map()
+            top_concept_ids = list(builder.top_concepts.get(scheme_id, set()))
+            builder.populate_guide_term_concepts(top_concept_ids)
+
+        data = builder.serialize_scheme(scheme, children=include_top_concepts)
         return JSONResponse(data)
 
 
