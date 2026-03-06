@@ -36,7 +36,9 @@ const shouldCreateNewTile = Boolean(props.mode === EDIT && !props.tileId);
 
 watchEffect(async () => {
     isLoading.value = true;
-    const sectionValue = await getSectionValue();
+    const sectionValue = props.resourceInstanceId
+        ? await getSectionValue()
+        : undefined;
     schemeId.value = sectionValue?.scheme_id;
     if (
         props.resourceInstanceId &&
