@@ -1,18 +1,13 @@
 <script setup lang="ts">
-import { inject, ref } from "vue";
+import { storeToRefs } from "pinia";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 import { getParentLabels, getConceptIcon } from "@/arches_lingo/utils.ts";
-import {
-    FALLBACK_LANGUAGE,
-    selectedLanguageKey,
-    systemLanguageKey,
-} from "@/arches_lingo/constants.ts";
+import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 
 import type { PropType } from "vue";
 import type { SearchResultItem } from "@/arches_lingo/types.ts";
 
-const selectedLanguage = inject(selectedLanguageKey, ref(FALLBACK_LANGUAGE));
-const systemLanguage = inject(systemLanguageKey, FALLBACK_LANGUAGE);
+const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
 
 defineProps({
     searchResult: {

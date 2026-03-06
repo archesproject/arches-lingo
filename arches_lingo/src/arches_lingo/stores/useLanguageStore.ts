@@ -1,52 +1,51 @@
 import Cookies from "js-cookie";
-import { onMounted, reactive, ref, watch } from "vue";
+import { ref } from "vue";
+import { defineStore } from "pinia";
 import { useGettext } from "vue3-gettext";
 
 import { fetchI18nData, fetchLanguages } from "@/arches_lingo/api.ts";
 import { FALLBACK_LANGUAGE } from "@/arches_lingo/constants.ts";
 import { getAutonym } from "@/arches_lingo/utils.ts";
 
-import type { Ref } from "vue";
 import type { Language } from "@/arches_component_lab/types";
 
-export function useLanguage() {
+export const useLanguageStore = defineStore("language", () => {
     const gettext = useGettext();
 
     const systemLanguageCode = gettext.current ?? FALLBACK_LANGUAGE.code;
-    const availableLanguages: Ref<Language[]> = ref([]);
-    const selectedLanguage: Ref<Language> = ref({
+
+    const selectedLanguage = ref<Language>({
         ...FALLBACK_LANGUAGE,
         code: systemLanguageCode,
         name: systemLanguageCode,
     });
-    const systemLanguage: Language = reactive({
+    const systemLanguage = ref<Language>({
         ...FALLBACK_LANGUAGE,
         code: systemLanguageCode,
         name: systemLanguageCode,
         isdefault: true,
     });
+    const availableLanguages = ref<Language[]>([]);
 
-    watch(
-        () => selectedLanguage.value,
-        async (newLang, oldLang) => {
-            if (newLang.code === oldLang?.code) return;
+    async function setSelectedLanguage(lang: Language) {
+        if (lang.code === selectedLanguage.value.code) return;
+        selectedLanguage.value = lang;
 
-            Cookies.set("django_language", newLang.code, {
-                path: "/",
-                sameSite: "Strict",
-            });
+        Cookies.set("django_language", lang.code, {
+            path: "/",
+            sameSite: "Strict",
+        });
 
-            try {
-                const i18nData = await fetchI18nData(newLang.code);
-                Object.assign(gettext.translations, i18nData.translations);
-                gettext.current = newLang.code;
-            } catch {
-                gettext.current = newLang.code;
-            }
-        },
-    );
+        try {
+            const i18nData = await fetchI18nData(lang.code);
+            Object.assign(gettext.translations, i18nData.translations);
+            gettext.current = lang.code;
+        } catch {
+            gettext.current = lang.code;
+        }
+    }
 
-    onMounted(async () => {
+    async function initialize() {
         try {
             const [dbLanguages, i18nData] = await Promise.all([
                 fetchLanguages(),
@@ -75,10 +74,10 @@ export function useLanguage() {
                 dbLanguages.find((lang) => lang.code === systemLanguageCode) ??
                 dbLanguages.find((lang) => lang.isdefault);
             if (dbSystem) {
-                Object.assign(systemLanguage, {
+                systemLanguage.value = {
                     ...dbSystem,
                     name: getAutonym(dbSystem.code, dbSystem.name),
-                });
+                };
             }
 
             // Initial language priority:
@@ -106,7 +105,13 @@ export function useLanguage() {
         } catch {
             // Keep placeholder Language objects if fetch fails.
         }
-    });
+    }
 
-    return { selectedLanguage, systemLanguage, availableLanguages };
-}
+    return {
+        selectedLanguage,
+        systemLanguage,
+        availableLanguages,
+        setSelectedLanguage,
+        initialize,
+    };
+});

@@ -56,6 +56,3 @@ export const openPanelComponentKey = Symbol() as InjectionKey<
     ) => void
 >;
 export const displayedRowKey = Symbol() as InjectionKey<Ref<Concept | null>>;
-export const selectedLanguageKey = Symbol() as InjectionKey<Ref<Language>>;
-export const systemLanguageKey = Symbol() as InjectionKey<Language>;
-export const availableLanguagesKey = Symbol() as InjectionKey<Ref<Language[]>>;

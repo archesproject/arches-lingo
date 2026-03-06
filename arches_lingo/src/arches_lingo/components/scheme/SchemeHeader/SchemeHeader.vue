@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject, onMounted, ref, watch, type Ref } from "vue";
+import { inject, onMounted, ref, watch } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import { useEditLog } from "@/arches_lingo/composables/useEditLog.ts";
@@ -7,6 +7,7 @@ import { useEditLog } from "@/arches_lingo/composables/useEditLog.ts";
 import { useConfirm } from "primevue/useconfirm";
 import { useRouter } from "vue-router";
 import { useToast } from "primevue/usetoast";
+import { storeToRefs } from "pinia";
 
 import Skeleton from "primevue/skeleton";
 import ConfirmDialog from "primevue/confirmdialog";
@@ -20,8 +21,6 @@ import {
     ERROR,
     NEW_CONCEPT,
     SECONDARY,
-    systemLanguageKey,
-    selectedLanguageKey,
 } from "@/arches_lingo/constants.ts";
 import { PREF_LABEL } from "@/arches_controlled_lists/constants.ts";
 
@@ -36,6 +35,7 @@ import {
     navigateToSchemeOrConcept,
 } from "@/arches_lingo/utils.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
+import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 
 import type {
     DataComponentMode,
@@ -44,7 +44,6 @@ import type {
     ResourceInstanceResult,
     SchemeHeader,
 } from "@/arches_lingo/types.ts";
-import type { Language } from "@/arches_component_lab/types.ts";
 import type { Label, Labellable } from "@/arches_controlled_lists/types";
 import { routeNames } from "@/arches_lingo/routes.ts";
 
@@ -64,8 +63,7 @@ const confirm = useConfirm();
 const router = useRouter();
 const toast = useToast();
 const { $gettext } = useGettext();
-const systemLanguage = inject(systemLanguageKey) as Language;
-const selectedLanguage = inject(selectedLanguageKey) as Ref<Language>;
+const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
 
 const scheme = ref<ResourceInstanceResult>();
 const schemeResource = ref<Labellable>();
@@ -103,7 +101,7 @@ watch(
             label.value = getItemLabel(
                 schemeResource,
                 selectedLanguage.value.code,
-                systemLanguage.code,
+                systemLanguage.value.code,
             );
 
             extractSchemeHeaderData(resource);
@@ -187,7 +185,7 @@ watch(
             label.value = getItemLabel(
                 schemeResource.value,
                 newCode,
-                systemLanguage.code,
+                systemLanguage.value.code,
             );
         }
         if (scheme.value) {

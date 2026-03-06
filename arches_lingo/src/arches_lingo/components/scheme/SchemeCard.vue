@@ -1,10 +1,7 @@
 <script setup lang="ts">
-import { computed, inject, ref, type Ref } from "vue";
-import {
-    selectedLanguageKey,
-    systemLanguageKey,
-    NEW,
-} from "@/arches_lingo/constants.ts";
+import { computed, ref } from "vue";
+import { storeToRefs } from "pinia";
+import { NEW } from "@/arches_lingo/constants.ts";
 import { routeNames } from "@/arches_lingo/routes.ts";
 
 import Card from "primevue/card";
@@ -14,12 +11,11 @@ import ImportThesauri from "@/arches_lingo/components/scheme/ImportThesauri.vue"
 
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 import { getStatementText } from "@/arches_lingo/utils.ts";
+import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 
-import type { Language } from "@/arches_component_lab/types";
 import type { Scheme, SchemeStatement } from "@/arches_lingo/types";
 
-const selectedLanguage = inject(selectedLanguageKey) as Ref<Language>;
-const systemLanguage = inject(systemLanguageKey) as Language;
+const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
 
 const { scheme, statements } = defineProps<{
     scheme: Scheme;
@@ -35,7 +31,11 @@ const schemeURL = {
 };
 
 const schemeName = computed(() =>
-    getItemLabel(scheme, selectedLanguage.value.code, systemLanguage.code),
+    getItemLabel(
+        scheme,
+        selectedLanguage.value.code,
+        systemLanguage.value.code,
+    ),
 );
 
 const schemeDescription = computed(() => {
@@ -43,7 +43,7 @@ const schemeDescription = computed(() => {
     return getStatementText(
         statements,
         selectedLanguage.value.code,
-        systemLanguage.code,
+        systemLanguage.value.code,
     );
 });
 

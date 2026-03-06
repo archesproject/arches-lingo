@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { inject, onMounted, ref, watch, computed, type Ref } from "vue";
+import { inject, onMounted, ref, watch, computed } from "vue";
 
 import { useConfirm } from "primevue/useconfirm";
 import { useGettext } from "vue3-gettext";
 import { useRouter } from "vue-router";
 import { useToast } from "primevue/usetoast";
+import { storeToRefs } from "pinia";
 
 import ConfirmDialog from "primevue/confirmdialog";
 import Button from "primevue/button";
@@ -23,8 +24,6 @@ import {
     NEW_CONCEPT,
     SECONDARY,
     SUCCESS,
-    systemLanguageKey,
-    selectedLanguageKey,
     CONCEPT_TYPE_NODE_ALIAS,
     CONCEPT_ICON,
     GUIDE_TERM_ICON,
@@ -43,6 +42,7 @@ import {
     navigateToSchemeOrConcept,
 } from "@/arches_lingo/utils.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
+import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 
 import type {
     ConceptHeaderData,
@@ -54,7 +54,6 @@ import type {
 import type { Label, Labellable } from "@/arches_controlled_lists/types";
 import type { ReferenceSelectValue } from "@/arches_controlled_lists/datatypes/reference-select/types.ts";
 
-import type { Language } from "@/arches_component_lab/types.ts";
 import { routeNames } from "@/arches_lingo/routes.ts";
 
 const props = defineProps<{
@@ -78,8 +77,7 @@ const confirm = useConfirm();
 const router = useRouter();
 const store = useResourceStore();
 
-const systemLanguage = inject(systemLanguageKey) as Language;
-const selectedLanguage = inject(selectedLanguageKey) as Ref<Language>;
+const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
 
 const concept = ref<ResourceInstanceResult>();
 const conceptResource = ref<Labellable>();
@@ -134,7 +132,7 @@ watch(
             label.value = getItemLabel(
                 conceptResource,
                 selectedLanguage.value.code,
-                systemLanguage.code,
+                systemLanguage.value.code,
             );
 
             extractConceptHeaderData(resource);
@@ -199,7 +197,7 @@ watch(
             label.value = getItemLabel(
                 conceptResource.value,
                 newCode,
-                systemLanguage.code,
+                systemLanguage.value.code,
             );
         }
         if (concept.value) {
