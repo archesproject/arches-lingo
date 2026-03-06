@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, markRaw, provide, ref } from "vue";
+import { computed, markRaw, nextTick, provide, ref } from "vue";
 
 import { useRoute } from "vue-router";
 import { useGettext } from "vue3-gettext";
@@ -141,6 +141,9 @@ function doOpenEditor(componentName: string, tileId?: string) {
     editorTileId.value = tileId;
     editorState.value = MINIMIZED;
     isFormEditor.value = true;
+    nextTick(() => {
+        isEditorDirty.value = false;
+    });
 }
 
 function openEditor(componentName: string, tileId?: string) {
