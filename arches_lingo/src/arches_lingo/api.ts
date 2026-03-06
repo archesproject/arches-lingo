@@ -14,6 +14,7 @@ import type {
     DigitalObjectInstance,
     EditLogEntry,
     SavedSearchItem,
+    Scheme,
     SchemeInstance,
     TileData,
     User,
@@ -395,6 +396,19 @@ export const fetchSchemeResource = async (schemeId: string) => {
     const url = generateArchesURL("arches_lingo:api-lingo-scheme", {
         pk: schemeId,
     });
+    const response = await fetch(url);
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
+export const fetchSchemeTopConcepts = async (
+    schemeId: string,
+): Promise<Scheme> => {
+    const baseUrl = generateArchesURL("arches_lingo:api-lingo-scheme", {
+        pk: schemeId,
+    });
+    const url = `${baseUrl}?include_top_concepts=true`;
     const response = await fetch(url);
     const parsed = await response.json();
     if (!response.ok) throw new Error(parsed.message || response.statusText);

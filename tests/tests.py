@@ -1,4 +1,5 @@
 import json
+import uuid
 import datetime
 from http import HTTPStatus
 from pathlib import Path
@@ -374,6 +375,37 @@ class ViewTests(TestCase):
             "Edit distance could not be converted to an integer.",
             status_code=HTTPStatus.BAD_REQUEST,
         )
+
+    def test_get_scheme_without_top_concepts(self):
+        response = self.client.get(
+            reverse("api-lingo-scheme", kwargs={"pk": self.scheme.pk})
+        )
+        self.assertEqual(response.status_code, 200)
+        result = json.loads(response.content)
+        self.assertEqual(result["labels"][0]["value"], "Test Scheme")
+        self.assertNotIn("top_concepts", result)
+
+    def test_get_scheme_with_top_concepts(self):
+        response = self.client.get(
+            reverse("api-lingo-scheme", kwargs={"pk": self.scheme.pk}),
+            {"include_top_concepts": "true"},
+        )
+        self.assertEqual(response.status_code, 200)
+        result = json.loads(response.content)
+        self.assertEqual(result["labels"][0]["value"], "Test Scheme")
+        self.assertIn("top_concepts", result)
+        self.assertEqual(len(result["top_concepts"]), 1)
+        top = result["top_concepts"][0]
+        self.assertEqual(top["labels"][0]["value"], "Concept 1")
+        self.assertEqual(top["narrower"], [])
+
+    def test_get_scheme_not_found(self):
+        nonexistent_id = uuid.uuid4()
+        with self.assertLogs("django.request", level="WARNING"):
+            response = self.client.get(
+                reverse("api-lingo-scheme", kwargs={"pk": nonexistent_id})
+            )
+        self.assertEqual(response.status_code, 404)
 
     def test_scheme_label_counts(self):
         """The existing test data has 5 concepts each with one English label."""
