@@ -95,8 +95,6 @@ IDENTIFIER_CONTENT_NODE = "bf73e6ba-4888-11ee-8a8d-11afefc4bff7"
 MATCH_STATUS_NODEGROUP = "4cfaaa64-0ed7-11ef-9493-0a58a9feac02"
 MATCH_STATUS_COMPARATE_NODE = "4cfaae24-0ed7-11ef-9493-0a58a9feac02"
 
-# concept_type (collector = nodegroup = node)
-CONCEPT_TYPE_NODE = "74d4d2cc-0f5d-11ef-9493-0a58a9feac02"
 
 # status (lifecycle/status)
 STATUS_NODEGROUP = "152321b6-0f5e-11ef-9493-0a58a9feac02"

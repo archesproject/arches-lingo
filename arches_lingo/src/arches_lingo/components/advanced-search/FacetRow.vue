@@ -76,8 +76,6 @@ const hierarchyDirections = [
     { label: $gettext("Narrower (child of)"), value: "narrower" },
 ];
 
-// ── Concept picker state ───────────────────────────────────────
-
 const conceptSearchResults = ref<
     { display_value: string; resource_id: string }[]
 >([]);
@@ -128,8 +126,6 @@ watch(
     },
     { immediate: true },
 );
-
-// ── Computed visibility flags ──────────────────────────────────
 
 const currentMatchMode = computed(
     () => props.condition.match_mode || "contains",
@@ -191,8 +187,6 @@ const showMatchMode = computed(() => {
         props.condition.facet,
     );
 });
-
-// ── Update helpers ─────────────────────────────────────────────
 
 function updateField(field: keyof SearchCondition, value: string) {
     const updated = { ...props.condition, [field]: value };

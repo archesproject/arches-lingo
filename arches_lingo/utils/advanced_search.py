@@ -30,8 +30,8 @@ from arches_lingo.const import (
     IDENTIFIER_CONTENT_NODE,
     MATCH_STATUS_NODEGROUP,
     MATCH_STATUS_COMPARATE_NODE,
-    CONCEPT_TYPE_NODE,
-    STATUS_NODEGROUP,
+    CONCEPT_TYPE_NODEGROUP,
+    CONCEPT_TYPE_NODEID,
 )
 from arches_lingo.models import ConceptSet
 
@@ -238,9 +238,9 @@ class AdvancedSearchEvaluator:
 
         return list(
             TileModel.objects.filter(
-                nodegroup_id=CONCEPT_TYPE_NODE,
+                nodegroup_id=CONCEPT_TYPE_NODEGROUP,
                 **{
-                    f"data__{CONCEPT_TYPE_NODE}__contains": [
+                    f"data__{CONCEPT_TYPE_NODEID}__contains": [
                         {"labels": [{"list_item_id": type_id}]}
                     ]
                 },

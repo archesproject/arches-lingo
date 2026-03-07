@@ -61,10 +61,10 @@ class AdvancedSearchView(View):
                 page_number=body.get("page", 1),
                 items_per_page=body.get("items", 25),
             )
-        except Exception as err:
+        except Exception as error:
             return JSONErrorResponse(
                 title=_("Search error."),
-                message=str(err),
+                message=str(error),
                 status=HTTPStatus.BAD_REQUEST,
             )
 
@@ -163,7 +163,11 @@ class ConceptSetListView(View):
     def get(self, request):
         concept_sets = ConceptSet.objects.filter(user=request.user)
         return JSONResponse(
-            {"data": [serialize_concept_set(cs) for cs in concept_sets]}
+            {
+                "data": [
+                    serialize_concept_set(concept_set) for concept_set in concept_sets
+                ]
+            }
         )
 
     def post(self, request):
