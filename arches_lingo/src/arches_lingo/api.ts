@@ -49,7 +49,7 @@ export const fetchUser = async () => {
 
 export const fetchUserProfile = async (): Promise<User> => {
     const response = await fetch(
-        generateArchesURL("arches_lingo:api_lingo_user_profile"),
+        generateArchesURL("arches_lingo:api-lingo-user-profile"),
     );
     const parsed = await response.json();
     if (!response.ok) throw new Error(parsed.message || response.statusText);
@@ -60,7 +60,7 @@ export const updateUserProfile = async (
     profile: Omit<User, "username">,
 ): Promise<User> => {
     const response = await fetch(
-        generateArchesURL("arches_lingo:api_lingo_user_profile"),
+        generateArchesURL("arches_lingo:api-lingo-user-profile"),
         {
             method: "PUT",
             headers: {
@@ -81,7 +81,7 @@ export const changePassword = async (
     newPassword2: string,
 ): Promise<{ success: string }> => {
     const response = await fetch(
-        generateArchesURL("arches_lingo:api_lingo_change_password"),
+        generateArchesURL("arches_lingo:api-lingo-change-password"),
         {
             method: "POST",
             headers: {

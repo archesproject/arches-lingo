@@ -40,6 +40,7 @@ class UserProfileAPIView(View):
                 "last_name": user.last_name,
                 "email": user.email,
                 "phone": phone,
+                "is_staff": user.is_staff,
             }
         )
 

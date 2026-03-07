@@ -21,38 +21,6 @@ const children = <SideNavMenuItem[]>[
         route: { name: routeNames.schemes },
         showIconIfCollapsed: true,
     },
-    {
-        key: "places",
-        label: $gettext("Places"),
-        icon: "pi pi-globe",
-        route: { name: routeNames.root },
-        disabled: true,
-        showIconIfCollapsed: true,
-    },
-    {
-        key: "people",
-        label: $gettext("People"),
-        icon: "pi pi-user",
-        route: { name: routeNames.root },
-        disabled: true,
-        showIconIfCollapsed: true,
-    },
-    {
-        key: "groups",
-        label: $gettext("Groups"),
-        icon: "pi pi-users",
-        route: { name: routeNames.root },
-        disabled: true,
-        showIconIfCollapsed: true,
-    },
-    {
-        key: "periods",
-        label: $gettext("Periods"),
-        icon: "pi pi-hourglass",
-        route: { name: routeNames.root },
-        disabled: true,
-        showIconIfCollapsed: true,
-    },
 ];
 
 const navSection = ref<SideNavMenuItem>(props.item);

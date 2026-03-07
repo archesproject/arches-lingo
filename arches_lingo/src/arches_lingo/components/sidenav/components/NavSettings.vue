@@ -21,14 +21,6 @@ const children = <SideNavMenuItem[]>[
         route: { name: routeNames.profile },
         showIconIfCollapsed: true,
     },
-    {
-        key: "system_settings",
-        label: $gettext("System Settings"),
-        icon: "pi pi-cog",
-        route: { name: routeNames.root },
-        disabled: true,
-        showIconIfCollapsed: true,
-    },
 ];
 
 const navSection = ref<SideNavMenuItem>(props.item);
