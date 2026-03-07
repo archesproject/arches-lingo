@@ -181,7 +181,7 @@ export default {
     border: 0.0625rem solid var(--p-highlight-focus-background);
     border-radius: 0.125rem;
     padding: 0.75rem;
-    background-color: var(--p-surface-0);
+    background-color: var(--p-surface-card);
     font-family: var(--p-lingo-font-family);
 }
 
