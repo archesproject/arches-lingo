@@ -36,7 +36,13 @@ function confirmLogout() {
 async function issueLogout() {
     try {
         await logout();
-        router.push({ name: routeNames.login });
+        const currentRouteRequiresAuthentication =
+            router.currentRoute.value.meta.requiresAuthentication;
+        if (currentRouteRequiresAuthentication) {
+            router.push({ name: routeNames.schemes });
+        } else {
+            window.location.reload();
+        }
     } catch (error) {
         toast.add({
             severity: ERROR,
