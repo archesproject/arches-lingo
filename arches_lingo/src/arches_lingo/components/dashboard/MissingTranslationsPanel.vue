@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { inject, type Ref } from "vue";
 import { useRouter } from "vue-router";
 import { useGettext } from "vue3-gettext";
 
@@ -8,6 +9,10 @@ import Paginator from "primevue/paginator";
 import Select from "primevue/select";
 import Skeleton from "primevue/skeleton";
 
+import {
+    selectedLanguageKey,
+    systemLanguageKey,
+} from "@/arches_lingo/constants.ts";
 import { routeNames } from "@/arches_lingo/routes.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 
@@ -31,13 +36,17 @@ const emit = defineEmits<{
 const router = useRouter();
 const { $gettext } = useGettext();
 
+const preferredLanguage = inject(selectedLanguageKey) as Ref<Language>;
+const systemLanguage = inject(systemLanguageKey) as Language;
+
 function navigateToConcept(conceptId: string) {
     router.push({ name: routeNames.concept, params: { id: conceptId } });
 }
 
 function getConceptLabel(concept: SearchResultItem): string {
     return (
-        getItemLabel(concept, "en", "en").value ||
+        getItemLabel(concept, preferredLanguage.value.code, systemLanguage.code)
+            .value ||
         concept.labels[0]?.value ||
         ""
     );

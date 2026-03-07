@@ -91,6 +91,13 @@ function navigateToResource(item: DashboardActivityItem) {
         navigateToConcept(item.resource_id);
     }
 }
+
+function getDisplayName(item: DashboardActivityItem): string {
+    if (item.user_firstname || item.user_lastname) {
+        return `${item.user_firstname} ${item.user_lastname}`.trim();
+    }
+    return item.user_username;
+}
 </script>
 
 <template>
@@ -207,12 +214,7 @@ function navigateToResource(item: DashboardActivityItem) {
                             }}
                         </span>
                         <span>
-                            {{
-                                slotProps.data.user_firstname ||
-                                slotProps.data.user_lastname
-                                    ? `${slotProps.data.user_firstname} ${slotProps.data.user_lastname}`.trim()
-                                    : slotProps.data.user_username
-                            }}
+                            {{ getDisplayName(slotProps.data) }}
                         </span>
                     </div>
                 </template>

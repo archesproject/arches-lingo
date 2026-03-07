@@ -8,9 +8,9 @@ from arches_lingo.views.api.concepts import (
     ValueSearchView,
     ConceptResourceView,
     ConceptRelationshipView,
+    ConceptMissingTranslationsView,
 )
 from arches_lingo.views.api.dashboard import DashboardStatsView
-from arches_lingo.views.api.translations import MissingTranslationsView
 from arches_lingo.views.api.edit_log import ResourceEditLogAPIView
 from arches_lingo.views.api.schemes import SchemeResourceView, SchemeLabelCountView
 from arches_lingo.views.api.advanced_search import (
@@ -66,7 +66,7 @@ urlpatterns = [
     ),
     path(
         "api/lingo/concepts/missing-translations",
-        MissingTranslationsView.as_view(),
+        ConceptMissingTranslationsView.as_view(),
         name="api-lingo-missing-translations",
     ),
     path("api/concept-tree", ConceptTreeView.as_view(), name="api-concepts"),

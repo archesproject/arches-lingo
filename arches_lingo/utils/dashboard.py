@@ -10,7 +10,6 @@ from django.utils.translation import gettext as _
 
 from arches.app.models import models
 from arches.app.models.card import Card
-from arches.app.utils.response import JSONErrorResponse
 
 from arches_controlled_lists.models import ListItem, ListItemValue
 from arches_querysets.models import ResourceTileTree
@@ -47,37 +46,29 @@ def build_uri_label_map(list_id: str) -> dict:
     return {item.uri: preferred_label_map.get(item.id, str(item.id)) for item in items}
 
 
-def parse_scheme_ids(request) -> tuple:
+def parse_scheme_ids(request) -> list:
     """Parse and validate ``scheme`` query params as UUID strings."""
     scheme_ids = []
     for param in request.GET.getlist("scheme"):
         try:
             scheme_ids.append(str(uuid.UUID(param)))
         except ValueError:
-            return [], JSONErrorResponse(
-                title=_("Invalid scheme"),
-                message=_("scheme must be a valid UUID"),
-                status=400,
-            )
-    return scheme_ids, None
+            raise ValueError(_("scheme must be a valid UUID"))
+    return scheme_ids
 
 
 def parse_days_param(request):
     """Parse the optional ``days`` query param into a cutoff datetime."""
     days_param = request.GET.get("days")
     if days_param is None:
-        return None, None
+        return None
     try:
         days_int = int(days_param)
     except ValueError:
-        return None, JSONErrorResponse(
-            title=_("Invalid parameter"),
-            message=_("days must be an integer"),
-            status=400,
-        )
+        raise ValueError(_("days must be an integer"))
     if days_int > 0:
-        return timezone.now() - timedelta(days=days_int), None
-    return None, None
+        return timezone.now() - timedelta(days=days_int)
+    return None
 
 
 def get_concept_ids(scheme_ids: list) -> tuple:
