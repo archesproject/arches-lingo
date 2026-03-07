@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject, ref, type Ref } from "vue";
+import { ref } from "vue";
 import { useGettext } from "vue3-gettext";
 import { useRouter } from "vue-router";
 
@@ -7,23 +7,19 @@ import Button from "primevue/button";
 import Checkbox from "primevue/checkbox";
 import Paginator from "primevue/paginator";
 
+import { storeToRefs } from "pinia";
+
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 import { getParentLabels } from "@/arches_lingo/utils.ts";
-import {
-    selectedLanguageKey,
-    systemLanguageKey,
-} from "@/arches_lingo/constants.ts";
+import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 import { routeNames } from "@/arches_lingo/routes.ts";
-
-import type { Language } from "@/arches_component_lab/types.ts";
 
 import type { AdvancedSearchResponse } from "@/arches_lingo/types.ts";
 
 const { $gettext } = useGettext();
 const router = useRouter();
 
-const systemLanguage = inject(systemLanguageKey) as Language;
-const selectedLanguage = inject(selectedLanguageKey) as Ref<Language>;
+const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
 
 defineProps<{
     results: AdvancedSearchResponse | null;
