@@ -22,7 +22,7 @@ import {
 } from "@/arches_lingo/constants.ts";
 
 import { routeNames } from "@/arches_lingo/routes.ts";
-import { fetchUser } from "@/arches_lingo/api.ts";
+import { fetchUser, fetchUserProfile } from "@/arches_lingo/api.ts";
 import { useUnsavedChangesGuard } from "@/arches_lingo/composables/useUnsavedChangesGuard.ts";
 import PageHeader from "@/arches_lingo/components/header/PageHeader/PageHeader.vue";
 import SideNav from "@/arches_lingo/components/sidenav/SideNav.vue";
@@ -85,7 +85,6 @@ async function checkUserAuthentication(
     to: RouteLocationNormalizedLoadedGeneric,
 ) {
     const userData = await fetchUser();
-    setUser(userData);
 
     const requiresAuthentication = to.matched.some(
         (record) => record.meta.requiresAuthentication,
@@ -94,6 +93,13 @@ async function checkUserAuthentication(
     if (requiresAuthentication && userData.username === ANONYMOUS) {
         throw new Error($gettext("Authentication required."));
     }
+
+    if (userData.username !== ANONYMOUS) {
+        const profileData = await fetchUserProfile();
+        Object.assign(userData, profileData);
+    }
+
+    setUser(userData);
 }
 </script>
 

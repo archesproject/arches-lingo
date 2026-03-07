@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { markRaw, provide, ref } from "vue";
+import { computed, inject, markRaw, provide, ref } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import Button from "primevue/button";
@@ -7,10 +7,12 @@ import PanelMenu from "primevue/panelmenu";
 
 import NavNavigation from "@/arches_lingo/components/sidenav/components/NavNavigation.vue";
 import NavAuthorityEditors from "@/arches_lingo/components/sidenav/components/NavAuthorityEditors.vue";
-import NavReferenceData from "@/arches_lingo/components/sidenav/components/NavReferenceData.vue";
+import NavSystemAdministration from "@/arches_lingo/components/sidenav/components/NavSystemAdministration.vue";
 import NavSettings from "@/arches_lingo/components/sidenav/components/NavSettings.vue";
 
 import ArchesLingoBadge from "@/arches_lingo/components/header/PageHeader/components/ArchesLingoBadge.vue";
+
+import { USER_KEY } from "@/arches_lingo/constants.ts";
 
 import type { SideNavMenuItem } from "@/arches_lingo/types.ts";
 
@@ -19,32 +21,42 @@ const { $gettext } = useGettext();
 const isNavExpanded = ref(false);
 provide("isNavExpanded", isNavExpanded);
 
-const items = ref<SideNavMenuItem[]>([
-    {
-        component: markRaw(NavNavigation),
-        key: "navigation",
-        label: $gettext("Navigation"),
-        items: [],
-    },
-    {
-        component: markRaw(NavAuthorityEditors),
-        key: "editors",
-        label: $gettext("Authority Editors"),
-        items: [],
-    },
-    {
-        component: markRaw(NavReferenceData),
-        key: "reference-data",
-        label: $gettext("Reference Data"),
-        items: [],
-    },
-    {
+const { user } = inject(USER_KEY)!;
+
+const items = computed<SideNavMenuItem[]>(() => {
+    const baseItems: SideNavMenuItem[] = [
+        {
+            component: markRaw(NavNavigation),
+            key: "navigation",
+            label: $gettext("Navigation"),
+            items: [],
+        },
+        {
+            component: markRaw(NavAuthorityEditors),
+            key: "editors",
+            label: $gettext("Authority Editors"),
+            items: [],
+        },
+    ];
+
+    if (user.value?.is_staff) {
+        baseItems.push({
+            component: markRaw(NavSystemAdministration),
+            key: "system-administration",
+            label: $gettext("System Administration"),
+            items: [],
+        });
+    }
+
+    baseItems.push({
         component: markRaw(NavSettings),
         key: "settings",
         label: $gettext("Settings"),
         items: [],
-    },
-]);
+    });
+
+    return baseItems;
+});
 
 const buttonKey = ref(0);
 

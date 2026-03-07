@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { useGettext } from "vue3-gettext";
+import { generateArchesURL } from "@/arches/utils/generate-arches-url.ts";
 
-import { routeNames } from "@/arches_lingo/routes.ts";
 import SideNavSection from "@/arches_lingo/components/sidenav/components/SideNavSection.vue";
 
 import type { SideNavMenuItem } from "@/arches_lingo/types.ts";
@@ -15,27 +15,26 @@ const props = defineProps<{
 
 const children = <SideNavMenuItem[]>[
     {
-        key: "contributors",
-        label: $gettext("Contributors"),
-        icon: "pi pi-user-edit",
-        route: { name: routeNames.root },
-        disabled: true,
-        showIconIfCollapsed: true,
-    },
-    {
-        key: "sources",
-        label: $gettext("Sources"),
-        icon: "pi pi-bookmark-fill",
-        route: { name: routeNames.root },
-        disabled: true,
-        showIconIfCollapsed: true,
-    },
-    {
         key: "controlled_lists",
         label: $gettext("Controlled List Manager"),
         icon: "pi pi-list",
-        route: { name: routeNames.root },
-        disabled: true,
+        url: generateArchesURL("arches:plugins", {
+            pluginid: "controlled-list-manager",
+        }),
+        showIconIfCollapsed: true,
+    },
+    {
+        key: "system_settings",
+        label: $gettext("System Settings"),
+        icon: "pi pi-cog",
+        url: generateArchesURL("arches:config"),
+        showIconIfCollapsed: true,
+    },
+    {
+        key: "django_admin",
+        label: $gettext("Administration"),
+        icon: "pi pi-shield",
+        url: generateArchesURL("admin", { url: "" }),
         showIconIfCollapsed: true,
     },
 ];

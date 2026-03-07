@@ -17,6 +17,7 @@ export interface User {
     username: string;
     email: string;
     phone?: string;
+    is_staff?: boolean;
 }
 
 // Prop injection types
