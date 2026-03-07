@@ -13,11 +13,13 @@ import {
 import SchemeCard from "@/arches_lingo/components/scheme/SchemeCard.vue";
 import { fetchConcepts, fetchLingoResources } from "@/arches_lingo/api.ts";
 import { NEW } from "@/arches_lingo/constants.ts";
+import { useLingoUser } from "@/arches_lingo/composables/useLingoUser.ts";
 
 import type { Scheme, SchemeStatement } from "@/arches_lingo/types";
 
 const toast = useToast();
 const { $gettext } = useGettext();
+const { isEditor } = useLingoUser();
 
 const isLoading = ref(true);
 const schemes = ref<Scheme[]>([]);
@@ -51,11 +53,13 @@ async function fetchSchemes() {
         });
     }
 
-    schemes.value.unshift({
-        id: NEW,
-        labels: [],
-        top_concepts: [],
-    });
+    if (isEditor.value) {
+        schemes.value.unshift({
+            id: NEW,
+            labels: [],
+            top_concepts: [],
+        });
+    }
 
     isLoading.value = false;
 }

@@ -7,6 +7,7 @@ import Button from "primevue/button";
 import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
 
 import { VIEW } from "@/arches_lingo/constants.ts";
+import { useLingoUser } from "@/arches_lingo/composables/useLingoUser.ts";
 
 import type { SchemeCreation } from "@/arches_lingo/types.ts";
 
@@ -25,6 +26,8 @@ const openEditor =
         "openEditor",
     );
 
+const { isEditor } = useLingoUser();
+
 const buttonLabel = computed(() => {
     if (props.tileData) {
         return $gettext("Edit Scheme Standard");
@@ -40,6 +43,7 @@ const buttonLabel = computed(() => {
             <h2>{{ props.sectionTitle }}</h2>
 
             <Button
+                v-if="isEditor"
                 v-tooltip.top="{
                     disabled: Boolean(props.resourceInstanceId),
                     value: $gettext(

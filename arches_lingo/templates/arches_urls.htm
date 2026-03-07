@@ -12,6 +12,7 @@
     api_lingo_concept_resources="{% url 'api-lingo-concept-resources' %}"
     api_lingo_concept_relationships="{% url 'api-lingo-concept-relationships' %}"
     api_lingo_user_profile="{% url 'api-lingo-user-profile' %}"
+    api_lingo_user="{% url 'api-lingo-user' %}"
     api_lingo_change_password="{% url 'api-lingo-change-password' %}"
     api_lingo_resources='(graphslug) => {return "{% url "api-lingo-resources" "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa" %}".replace("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", graphslug)}'
     api_lingo_resource='(graphslug, resourceinstanceid) => { return "{% url "api-lingo-resource" "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa" "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb" %}".replace("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", graphslug).replace("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", resourceinstanceid)}'

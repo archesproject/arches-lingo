@@ -17,6 +17,7 @@ import {
     ERROR,
     SECONDARY,
 } from "@/arches_lingo/constants.ts";
+import { useLingoUser } from "@/arches_lingo/composables/useLingoUser.ts";
 
 import type { MetaStringText } from "@/arches_lingo/types.ts";
 
@@ -41,6 +42,7 @@ const refreshReportSection = inject<(componentName: string) => void>(
     "refreshReportSection",
 );
 const refreshSchemeHierarchy = inject<() => void>("refreshSchemeHierarchy");
+const { isEditor } = useLingoUser();
 
 const expandedRows = ref([]);
 
@@ -134,7 +136,7 @@ async function deleteSectionValue(tileId: string) {
                     ></slot>
                 </template>
             </Column>
-            <Column>
+            <Column v-if="isEditor">
                 <template #body="slotProps">
                     <div class="controls">
                         <Button

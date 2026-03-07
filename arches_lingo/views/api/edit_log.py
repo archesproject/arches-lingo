@@ -1,23 +1,20 @@
 import json
 from datetime import datetime, timezone
 
-from django.utils.decorators import method_decorator
+from django.http import JsonResponse
 from django.utils.translation import gettext as _
 from django.views.generic import View
 
 from arches.app.models import models
-from arches.app.utils.decorators import group_required
 from arches.app.utils.response import JSONErrorResponse, JSONResponse
 
+from arches_lingo.permissions import is_lingo_editor
 from arches_lingo.utils.edit_log import (
     build_permitted_edit_log,
     revert_resource_to_timestamp,
 )
 
 
-@method_decorator(
-    group_required("RDM Administrator", raise_exception=True), name="dispatch"
-)
 class ResourceEditLogAPIView(View):
     def get(self, request, resourceid):
         try:
@@ -33,6 +30,12 @@ class ResourceEditLogAPIView(View):
         return JSONResponse({"resourceid": str(resourceid), "edits": permitted_edits})
 
     def post(self, request, resourceid):
+        if not is_lingo_editor(request.user):
+            return JsonResponse(
+                {"message": _("Permission denied.")},
+                status=403,
+            )
+
         try:
             body = json.loads(request.body)
             target_timestamp = datetime.fromisoformat(body["timestamp"])

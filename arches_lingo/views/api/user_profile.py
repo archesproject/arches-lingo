@@ -14,6 +14,26 @@ from django.views.generic import View
 from arches.app.models import models
 from arches.app.utils.response import JSONErrorResponse, JSONResponse
 
+from arches_lingo.permissions import LINGO_EDITOR_GROUP_NAME, is_lingo_editor
+
+
+class LingoUserView(View):
+    """Returns the current user's basic info and editor status."""
+
+    def get(self, request):
+        user = request.user
+        is_anonymous = not user.is_authenticated or user.username == "anonymous"
+
+        return JSONResponse(
+            {
+                "username": user.username,
+                "first_name": getattr(user, "first_name", ""),
+                "last_name": getattr(user, "last_name", ""),
+                "is_editor": is_lingo_editor(user),
+                "is_anonymous": is_anonymous,
+            }
+        )
+
 
 class UserProfileAPIView(View):
     """JSON API for reading and updating the authenticated user's profile."""

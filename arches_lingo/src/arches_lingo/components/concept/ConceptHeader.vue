@@ -24,12 +24,14 @@ import {
     NEW_CONCEPT,
     SECONDARY,
     SUCCESS,
+    VIEW,
     CONCEPT_TYPE_NODE_ALIAS,
     CONCEPT_ICON,
     GUIDE_TERM_ICON,
     GUIDE_TERM_URI,
 } from "@/arches_lingo/constants.ts";
 import { useEditLog } from "@/arches_lingo/composables/useEditLog.ts";
+import { useLingoUser } from "@/arches_lingo/composables/useLingoUser.ts";
 import { PREF_LABEL } from "@/arches_controlled_lists/constants.ts";
 
 import {
@@ -76,6 +78,7 @@ const { $gettext } = useGettext();
 const confirm = useConfirm();
 const router = useRouter();
 const store = useResourceStore();
+const { isEditor } = useLingoUser();
 
 const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
 
@@ -347,7 +350,7 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                         v-if="concept && concept.resourceinstanceid"
                         :node-alias="CONCEPT_TYPE_NODE_ALIAS"
                         :graph-slug="props.graphSlug"
-                        :mode="EDIT"
+                        :mode="isEditor ? EDIT : VIEW"
                         :aliased-node-data="
                             conceptTypeTile?.aliased_data?.[
                                 CONCEPT_TYPE_NODE_ALIAS
@@ -380,6 +383,7 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                     <span>{{ $gettext("Export") }}</span>
                 </Button>
                 <Button
+                    v-if="isEditor"
                     icon="pi pi-plus-circle"
                     :label="$gettext('Add Child')"
                     class="add-button"
@@ -388,6 +392,7 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
 
                 <!-- TODO: button should reflect published state of concept: delete if draft, deprecate if URI is present -->
                 <Button
+                    v-if="isEditor"
                     icon="pi pi-trash"
                     severity="danger"
                     class="delete-button"

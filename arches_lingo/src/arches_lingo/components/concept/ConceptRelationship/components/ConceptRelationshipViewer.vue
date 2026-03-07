@@ -9,6 +9,7 @@ import GenericWidget from "@/arches_component_lab/generics/GenericWidget/Generic
 import ConceptResourceSelectWidget from "@/arches_lingo/components/widgets/ConceptResourceSelectWidget/ConceptResourceSelectWidget.vue";
 
 import { VIEW } from "@/arches_lingo/constants.ts";
+import { useLingoUser } from "@/arches_lingo/composables/useLingoUser.ts";
 
 import type {
     ConceptRelationStatus,
@@ -27,6 +28,8 @@ const props = defineProps<{
 const { $gettext } = useGettext();
 
 const openEditor = inject<(componentName: string) => void>("openEditor");
+
+const { isEditor } = useLingoUser();
 
 const metaStringLabel: MetaStringText = {
     deleteConfirm: $gettext(
@@ -50,6 +53,7 @@ const metaStringLabel: MetaStringText = {
             <h2>{{ props.sectionTitle }}</h2>
 
             <Button
+                v-if="isEditor"
                 v-tooltip.top="{
                     disabled: Boolean(props.resourceInstanceId),
                     value: $gettext(

@@ -19,10 +19,22 @@ export interface User {
     phone?: string;
 }
 
+export interface LingoUser {
+    first_name: string;
+    last_name: string;
+    username: string;
+    is_editor: boolean;
+    is_anonymous: boolean;
+}
+
 // Prop injection types
 export interface UserRefAndSetter {
     user: Ref<User | null>;
     setUser: (userToSet: User | null) => void;
+}
+export interface LingoUserRefAndSetter {
+    lingoUser: Ref<LingoUser | null>;
+    setLingoUser: (userToSet: LingoUser | null) => void;
 }
 export interface DisplayedRowRefAndSetter {
     displayedRow: Ref<Concept | Scheme | null>;

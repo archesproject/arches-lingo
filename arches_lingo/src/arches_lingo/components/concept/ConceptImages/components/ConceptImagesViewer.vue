@@ -11,6 +11,7 @@ import { useConfirm } from "primevue/useconfirm";
 import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
 
 import { DANGER, SECONDARY, VIEW } from "@/arches_lingo/constants.ts";
+import { useLingoUser } from "@/arches_lingo/composables/useLingoUser.ts";
 
 import type {
     ConceptImages,
@@ -34,6 +35,8 @@ const props = defineProps<{
 
 const openEditor =
     inject<(componentName: string, tileId?: string) => void>("openEditor");
+
+const { isEditor } = useLingoUser();
 
 const configurationError = ref();
 const isLoading = ref(true);
@@ -160,6 +163,7 @@ function modifyResource(resourceInstanceId?: string) {
         <div class="section-header">
             <h2>{{ props.sectionTitle }}</h2>
             <Button
+                v-if="isEditor"
                 v-tooltip.top="{
                     disabled: Boolean(props.resourceInstanceId),
                     value: $gettext(
@@ -227,7 +231,10 @@ function modifyResource(resourceInstanceId?: string) {
                                 "
                             />
                         </label>
-                        <div class="buttons">
+                        <div
+                            v-if="isEditor"
+                            class="buttons"
+                        >
                             <Button
                                 icon="pi pi-file-edit"
                                 style="

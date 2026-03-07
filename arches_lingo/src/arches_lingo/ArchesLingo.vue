@@ -12,20 +12,20 @@ import Toast from "primevue/toast";
 import SchemeHierarchy from "@/arches_lingo/components/header/PageHeader/components/SchemeHierarchy/SchemeHierarchy.vue";
 
 import {
-    ANONYMOUS,
     DEFAULT_ERROR_TOAST_LIFE,
     ERROR,
+    LINGO_USER_KEY,
     USER_KEY,
 } from "@/arches_lingo/constants.ts";
 
 import { routeNames } from "@/arches_lingo/routes.ts";
-import { fetchUser } from "@/arches_lingo/api.ts";
+import { fetchLingoUser, fetchUser } from "@/arches_lingo/api.ts";
 import { useUnsavedChangesGuard } from "@/arches_lingo/composables/useUnsavedChangesGuard.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 import PageHeader from "@/arches_lingo/components/header/PageHeader/PageHeader.vue";
 import SideNav from "@/arches_lingo/components/sidenav/SideNav.vue";
 
-import type { User } from "@/arches_lingo/types";
+import type { LingoUser, User } from "@/arches_lingo/types";
 import type { RouteLocationNormalizedLoadedGeneric } from "vue-router";
 
 const user = ref<User | null>(null);
@@ -33,6 +33,12 @@ const setUser = (userToSet: User | null) => {
     user.value = userToSet;
 };
 provide(USER_KEY, { user, setUser });
+
+const lingoUser = ref<LingoUser | null>(null);
+const setLingoUser = (userToSet: LingoUser | null) => {
+    lingoUser.value = userToSet;
+};
+provide(LINGO_USER_KEY, { lingoUser, setLingoUser });
 
 const { $gettext } = useGettext();
 const languageStore = useLanguageStore();
@@ -78,14 +84,18 @@ watchEffect(() => {
 async function checkUserAuthentication(
     to: RouteLocationNormalizedLoadedGeneric,
 ) {
-    const userData = await fetchUser();
+    const [userData, lingoUserData] = await Promise.all([
+        fetchUser(),
+        fetchLingoUser(),
+    ]);
     setUser(userData);
+    setLingoUser(lingoUserData);
 
     const requiresAuthentication = to.matched.some(
         (record) => record.meta.requiresAuthentication,
     );
 
-    if (requiresAuthentication && userData.username === ANONYMOUS) {
+    if (requiresAuthentication && lingoUserData.is_anonymous) {
         throw new Error($gettext("Authentication required."));
     }
 }

@@ -30,6 +30,7 @@ import {
     fetchSchemeLabelCounts,
 } from "@/arches_lingo/api.ts";
 import { useResourceStore } from "@/arches_lingo/composables/useResourceStore.ts";
+import { useLingoUser } from "@/arches_lingo/composables/useLingoUser.ts";
 import {
     extractDescriptors,
     navigateToSchemeOrConcept,
@@ -75,6 +76,7 @@ const showExportDialog = ref(false);
 const exportDialogKey = ref(0);
 
 const store = useResourceStore();
+const { isEditor } = useLingoUser();
 
 watch(
     [() => store.resource.value, () => store.error.value],
@@ -289,6 +291,7 @@ function confirmDelete() {
                             <span>{{ $gettext("Export") }}</span>
                         </Button>
                         <Button
+                            v-if="isEditor"
                             icon="pi pi-plus-circle"
                             :label="$gettext('Add Top Concept')"
                             class="add-button"
@@ -297,6 +300,7 @@ function confirmDelete() {
 
                         <!-- TODO: button should reflect published state of concept: delete if draft, deprecate if URI is present -->
                         <Button
+                            v-if="isEditor"
                             icon="pi pi-trash"
                             severity="danger"
                             class="delete-button"
@@ -307,6 +311,7 @@ function confirmDelete() {
 
                         <!-- TODO: button should allow user to publish scheme if draft, retire scheme if published -->
                         <Button
+                            v-if="isEditor"
                             icon="pi pi-book"
                             :label="$gettext('Publish')"
                             class="add-button"
