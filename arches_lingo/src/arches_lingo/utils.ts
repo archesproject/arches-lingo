@@ -21,12 +21,12 @@ import type {
     ResourceInstanceResult,
     ResourceDescriptor,
     Scheme,
+    SchemeStatement,
     SearchResultItem,
 } from "@/arches_lingo/types";
 import type { Router } from "vue-router/dist/vue-router";
 import type { ConceptInstance } from "@/arches_lingo/types.ts";
 
-// Duck-typing helpers
 export function dataIsScheme(data: Concept | Scheme) {
     return (data as Scheme).top_concepts !== undefined;
 }
@@ -34,7 +34,6 @@ export function dataIsConcept(data: Concept | Scheme) {
     return !dataIsScheme(data);
 }
 
-// Icon helpers
 export function getConceptIcon(
     item: Concept | SearchResultItem | { guide_term?: boolean },
 ): string {
@@ -75,7 +74,6 @@ export function navigateToSchemeOrConcept(
     }
 }
 
-// Tree builder
 export function treeFromSchemes(
     schemes: Scheme[],
     selectedLanguage: Language,
@@ -160,7 +158,6 @@ export function treeFromSchemes(
         return { node, shouldHideSiblings };
     }
 
-    // If this scheme is focused, immediately process and return it.
     const focalScheme = schemes.find(
         (schemeItem) => schemeItem.id === focusedOccurrenceKey,
     );
@@ -175,7 +172,6 @@ export function treeFromSchemes(
         ];
     }
 
-    // Otherwise, process schemes until a focused node is found.
     const reshapedSchemes = [];
     for (const scheme of schemes) {
         const { node, shouldHideSiblings } = processItem(
@@ -272,6 +268,46 @@ export function extractDescriptors(
         }
     }
     return schemeDescriptor;
+}
+
+export function getAutonym(code: string, fallback: string): string {
+    try {
+        const name = new Intl.DisplayNames([code], { type: "language" }).of(
+            code,
+        );
+        if (name) {
+            return name;
+        }
+    } catch {
+        // Intl.DisplayNames may not support every code — fall through.
+    }
+    return fallback;
+}
+
+export function getStatementText(
+    statements: SchemeStatement[],
+    preferredLanguageCode: string,
+    systemLanguageCode: string,
+): string {
+    if (!statements.length) return "";
+
+    function rankLanguage(lang?: string): number {
+        if (lang === preferredLanguageCode) return 2;
+        if (lang === systemLanguageCode) return 1;
+        return 0;
+    }
+
+    const best = statements.reduce((bestMatch, current) => {
+        const currentLang =
+            current.aliased_data?.statement_language?.display_value?.toLowerCase();
+        const bestLang =
+            bestMatch.aliased_data?.statement_language?.display_value?.toLowerCase();
+        return rankLanguage(currentLang) > rankLanguage(bestLang)
+            ? current
+            : bestMatch;
+    });
+
+    return best.aliased_data?.statement_content?.display_value ?? "";
 }
 
 export async function createOrUpdateConcept(

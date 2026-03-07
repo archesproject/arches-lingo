@@ -14,21 +14,17 @@ import SchemeHierarchy from "@/arches_lingo/components/header/PageHeader/compone
 import {
     ANONYMOUS,
     DEFAULT_ERROR_TOAST_LIFE,
-    ENGLISH,
     ERROR,
     USER_KEY,
-    selectedLanguageKey,
-    systemLanguageKey,
 } from "@/arches_lingo/constants.ts";
 
 import { routeNames } from "@/arches_lingo/routes.ts";
 import { fetchUser } from "@/arches_lingo/api.ts";
 import { useUnsavedChangesGuard } from "@/arches_lingo/composables/useUnsavedChangesGuard.ts";
+import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 import PageHeader from "@/arches_lingo/components/header/PageHeader/PageHeader.vue";
 import SideNav from "@/arches_lingo/components/sidenav/SideNav.vue";
 
-import type { Ref } from "vue";
-import type { Language } from "@/arches_component_lab/types";
 import type { User } from "@/arches_lingo/types";
 import type { RouteLocationNormalizedLoadedGeneric } from "vue-router";
 
@@ -38,15 +34,12 @@ const setUser = (userToSet: User | null) => {
 };
 provide(USER_KEY, { user, setUser });
 
-const selectedLanguage: Ref<Language> = ref(ENGLISH);
-provide(selectedLanguageKey, selectedLanguage);
-const systemLanguage = ENGLISH;
-provide(systemLanguageKey, systemLanguage);
+const { $gettext } = useGettext();
+const languageStore = useLanguageStore();
 
 const router = useRouter();
 const route = useRoute();
 const toast = useToast();
-const { $gettext } = useGettext();
 
 const isNavExpanded = ref(false);
 const shouldShowHierarchy = ref(false);
@@ -60,6 +53,7 @@ provide("refreshSchemeHierarchy", refreshSchemeHierarchy);
 
 onMounted(function () {
     useUnsavedChangesGuard(router);
+    languageStore.initialize();
 });
 
 watchEffect(() => {

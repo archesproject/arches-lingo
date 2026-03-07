@@ -1,30 +1,41 @@
 <script setup lang="ts">
-import { inject, ref, useTemplateRef } from "vue";
+import { computed, useTemplateRef, watchEffect } from "vue";
 import { useGettext } from "vue3-gettext";
+import { storeToRefs } from "pinia";
 
 import Button from "primevue/button";
 import Popover from "primevue/popover";
 import RadioButton from "primevue/radiobutton";
 
-import { selectedLanguageKey } from "@/arches_lingo/constants.ts";
+import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 
 import type { PopoverMethods } from "primevue/popover";
 
 const { $gettext } = useGettext();
 
-const selectedLanguage = inject(selectedLanguageKey);
+const languageStore = useLanguageStore();
+const { selectedLanguage, availableLanguages } = storeToRefs(languageStore);
 
 const popover = useTemplateRef<PopoverMethods>("popover");
 
-// TODO: rm in favor of injected selectedLanguage to update across app
-const lang = ref(selectedLanguage?.value);
-// TODO: Fetch this list from the backend
-const languages = ref([
-    { code: "en", label: "English" },
-    { code: "zh", label: "Chinese" },
-    { code: "de", label: "German" },
-    { code: "es", label: "Spanish" },
-]);
+const selectedCode = computed({
+    get: () => selectedLanguage.value.code,
+    set: (code: string) => {
+        const lang = availableLanguages.value.find(
+            (language) => language.code === code,
+        );
+        if (lang) {
+            languageStore.setSelectedLanguage(lang);
+        }
+    },
+});
+
+const showSelector = computed(() => availableLanguages.value.length > 1);
+
+watchEffect(() => {
+    document.documentElement.dir =
+        selectedLanguage.value.default_direction ?? "ltr";
+});
 
 function openLanguageSelector(event: MouseEvent) {
     popover.value!.toggle(event);
@@ -32,15 +43,18 @@ function openLanguageSelector(event: MouseEvent) {
 </script>
 
 <template>
-    <div class="language-selector">
+    <div
+        v-if="showSelector"
+        class="language-selector"
+    >
         <Button
             :aria-label="$gettext('Open language selector')"
             @click="openLanguageSelector"
         >
             <div class="language-abbreviation-circle">
-                {{ selectedLanguage?.code }}
+                {{ selectedLanguage.code }}
             </div>
-            <span>{{ selectedLanguage?.name }}</span>
+            <span>{{ selectedLanguage.name }}</span>
         </Button>
 
         <Popover ref="popover">
@@ -50,19 +64,18 @@ function openLanguageSelector(event: MouseEvent) {
                 </h4>
                 <div class="formats-container">
                     <span
-                        v-for="language in languages"
+                        v-for="language in availableLanguages"
                         :key="language.code"
                         class="selection"
                     >
                         <RadioButton
                             :key="language.code"
-                            v-model="lang"
+                            v-model="selectedCode"
                             :input-id="`language-${language.code}`"
                             :value="language.code"
-                            :label="language.label"
                         />
                         <label :for="`language-${language.code}`">
-                            {{ language.label }} ({{ language.code }})
+                            {{ language.name }} ({{ language.code }})
                         </label>
                     </span>
                 </div>

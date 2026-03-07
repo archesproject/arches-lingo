@@ -27,6 +27,15 @@ export const DEFAULT_ERROR_TOAST_LIFE = 8000;
 export const SEARCH_RESULTS_PER_PAGE = 25;
 export const SEARCH_RESULT_ITEM_SIZE = 50;
 
+export const FALLBACK_LANGUAGE: Language = {
+    code: "en",
+    default_direction: "ltr",
+    id: 0,
+    isdefault: true,
+    name: "English",
+    scope: "system",
+};
+
 // Icons
 export const CONCEPT_ICON = "pi pi-tag";
 export const GUIDE_TERM_ICON = "pi pi-angle-double-right";
@@ -47,14 +56,3 @@ export const openPanelComponentKey = Symbol() as InjectionKey<
     ) => void
 >;
 export const displayedRowKey = Symbol() as InjectionKey<Ref<Concept | null>>;
-export const selectedLanguageKey = Symbol() as InjectionKey<Ref<Language>>;
-export const systemLanguageKey = Symbol() as InjectionKey<Language>; // not reactive
-
-export const ENGLISH = {
-    code: "en",
-    default_direction: "ltr" as const,
-    id: 1,
-    isdefault: true,
-    name: "English",
-    scope: "system",
-};

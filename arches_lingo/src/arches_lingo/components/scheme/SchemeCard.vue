@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { inject, ref } from "vue";
-import { systemLanguageKey, NEW } from "@/arches_lingo/constants.ts";
+import { computed, ref } from "vue";
+import { storeToRefs } from "pinia";
+import { NEW } from "@/arches_lingo/constants.ts";
 import { routeNames } from "@/arches_lingo/routes.ts";
 
 import Card from "primevue/card";
@@ -8,24 +9,43 @@ import Button from "primevue/button";
 
 import ImportThesauri from "@/arches_lingo/components/scheme/ImportThesauri.vue";
 
-import { extractDescriptors } from "@/arches_lingo/utils.ts";
+import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
+import { getStatementText } from "@/arches_lingo/utils.ts";
+import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 
-import type { Language } from "@/arches_component_lab/types";
-import type { ResourceInstanceResult } from "@/arches_lingo/types";
+import type { Scheme, SchemeStatement } from "@/arches_lingo/types";
 
-const systemLanguage = inject(systemLanguageKey) as Language;
+const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
 
-const { scheme } = defineProps<{ scheme: ResourceInstanceResult }>();
+const { scheme, statements } = defineProps<{
+    scheme: Scheme;
+    statements?: SchemeStatement[];
+}>();
 const emit = defineEmits<{
     (e: "imported"): void;
 }>();
 
 const schemeURL = {
     name: routeNames.scheme,
-    params: { id: scheme.resourceinstanceid },
+    params: { id: scheme.id },
 };
 
-const schemeDescriptor = extractDescriptors(scheme, systemLanguage);
+const schemeName = computed(() =>
+    getItemLabel(
+        scheme,
+        selectedLanguage.value.code,
+        systemLanguage.value.code,
+    ),
+);
+
+const schemeDescription = computed(() => {
+    if (!statements?.length) return "";
+    return getStatementText(
+        statements,
+        selectedLanguage.value.code,
+        systemLanguage.value.code,
+    );
+});
 
 const showImportDialog = ref(false);
 const importDialogKey = ref(0);
@@ -43,20 +63,20 @@ function onImport() {
 
 <template>
     <RouterLink :to="schemeURL">
-        <Card :class="scheme.resourceinstanceid === NEW ? 'new-scheme' : ''">
+        <Card :class="scheme.id === NEW ? 'new-scheme' : ''">
             <template #title>
-                <div v-if="scheme.resourceinstanceid === NEW">
+                <div v-if="scheme.id === NEW">
                     {{ $gettext("New Scheme") }}
                 </div>
                 <div
                     v-else
                     class="scheme-card"
                 >
-                    {{ schemeDescriptor.name }}
+                    {{ schemeName.value }}
                 </div>
             </template>
             <template #content>
-                <div v-if="scheme.resourceinstanceid === NEW">
+                <div v-if="scheme.id === NEW">
                     <div class="scheme-circle">
                         <i class="pi pi-share-alt new-scheme-icon"></i>
                     </div>
@@ -68,10 +88,10 @@ function onImport() {
                         }}</span>
                     </div>
                 </div>
-                <span>{{ schemeDescriptor.description }}</span>
+                <span v-else>{{ schemeDescription }}</span>
             </template>
             <template
-                v-if="scheme.resourceinstanceid === NEW"
+                v-if="scheme.id === NEW"
                 #footer
             >
                 <Button

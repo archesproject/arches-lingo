@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject, onMounted, ref, watch, type Ref } from "vue";
+import { inject, onMounted, ref, watch } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import { useEditLog } from "@/arches_lingo/composables/useEditLog.ts";
@@ -7,6 +7,7 @@ import { useEditLog } from "@/arches_lingo/composables/useEditLog.ts";
 import { useConfirm } from "primevue/useconfirm";
 import { useRouter } from "vue-router";
 import { useToast } from "primevue/usetoast";
+import { storeToRefs } from "pinia";
 
 import Skeleton from "primevue/skeleton";
 import ConfirmDialog from "primevue/confirmdialog";
@@ -20,8 +21,6 @@ import {
     ERROR,
     NEW_CONCEPT,
     SECONDARY,
-    systemLanguageKey,
-    selectedLanguageKey,
 } from "@/arches_lingo/constants.ts";
 import { PREF_LABEL } from "@/arches_controlled_lists/constants.ts";
 
@@ -36,6 +35,7 @@ import {
     navigateToSchemeOrConcept,
 } from "@/arches_lingo/utils.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
+import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 
 import type {
     DataComponentMode,
@@ -44,8 +44,7 @@ import type {
     ResourceInstanceResult,
     SchemeHeader,
 } from "@/arches_lingo/types.ts";
-import type { Language } from "@/arches_component_lab/types.ts";
-import type { Label } from "@/arches_controlled_lists/types";
+import type { Label, Labellable } from "@/arches_controlled_lists/types";
 import { routeNames } from "@/arches_lingo/routes.ts";
 
 const props = defineProps<{
@@ -64,10 +63,10 @@ const confirm = useConfirm();
 const router = useRouter();
 const toast = useToast();
 const { $gettext } = useGettext();
-const systemLanguage = inject(systemLanguageKey) as Language;
-const selectedLanguage = inject(selectedLanguageKey) as Ref<Language>;
+const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
 
 const scheme = ref<ResourceInstanceResult>();
+const schemeResource = ref<Labellable>();
 const label = ref<Label>();
 const data = ref<SchemeHeader>();
 const labelCounts = ref<LanguageLabelCount[]>([]);
@@ -102,7 +101,7 @@ watch(
             label.value = getItemLabel(
                 schemeResource,
                 selectedLanguage.value.code,
-                systemLanguage.code,
+                systemLanguage.value.code,
             );
 
             extractSchemeHeaderData(resource);
@@ -142,7 +141,7 @@ function addTopConcept() {
 
 function extractSchemeHeaderData(scheme: ResourceInstanceResult) {
     const name = scheme?.name;
-    const descriptor = extractDescriptors(scheme, systemLanguage);
+    const descriptor = extractDescriptors(scheme, selectedLanguage.value);
     // TODO: get human-readable user name from resource endpoint
     const principalUser = "Anonymous"; //scheme?.principalUser; // returns userid int
     // TODO: get human-readable life cycle state from resource endpoint
@@ -178,6 +177,22 @@ onMounted(async () => {
     }
     // Resource data is loaded via the store watch above
 });
+
+watch(
+    () => selectedLanguage.value.code,
+    (newCode) => {
+        if (schemeResource.value) {
+            label.value = getItemLabel(
+                schemeResource.value,
+                newCode,
+                systemLanguage.value.code,
+            );
+        }
+        if (scheme.value) {
+            extractSchemeHeaderData(scheme.value);
+        }
+    },
+);
 
 function confirmDelete() {
     confirm.require({

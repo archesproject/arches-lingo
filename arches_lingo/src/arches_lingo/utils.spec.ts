@@ -1,5 +1,4 @@
 import {
-    ENGLISH,
     CONCEPT_ICON,
     GUIDE_TERM_ICON,
     SCHEME_ICON,
@@ -11,7 +10,17 @@ import {
 } from "@/arches_lingo/utils.ts";
 import schemesFixture from "./fixtures/test_scheme.json";
 
+import type { Language } from "@/arches_component_lab/types.ts";
 import type { IconLabels, Scheme } from "@/arches_lingo/types";
+
+const ENGLISH: Language = {
+    code: "en",
+    default_direction: "ltr",
+    id: 1,
+    isdefault: true,
+    name: "English",
+    scope: "system",
+};
 
 const iconLabels: IconLabels = {
     concept: "Concept",

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import Skeleton from "primevue/skeleton";
@@ -11,22 +11,37 @@ import {
 } from "@/arches_controlled_lists/constants.ts";
 
 import SchemeCard from "@/arches_lingo/components/scheme/SchemeCard.vue";
-import { fetchLingoResources } from "@/arches_lingo/api.ts";
+import { fetchConcepts, fetchLingoResources } from "@/arches_lingo/api.ts";
 import { NEW } from "@/arches_lingo/constants.ts";
 
-import type { ResourceInstanceResult } from "@/arches_lingo/types";
+import type { Scheme, SchemeStatement } from "@/arches_lingo/types";
 
 const toast = useToast();
 const { $gettext } = useGettext();
 
 const isLoading = ref(true);
-const schemes = ref<ResourceInstanceResult[]>([]);
+const schemes = ref<Scheme[]>([]);
+const statementsMap = ref<Map<string, SchemeStatement[]>>(new Map());
 
 async function fetchSchemes() {
     schemes.value = [];
+    statementsMap.value = new Map();
     isLoading.value = true;
     try {
-        schemes.value = await fetchLingoResources("scheme");
+        const [concepts, resources] = await Promise.all([
+            fetchConcepts(),
+            fetchLingoResources("scheme"),
+        ]);
+        schemes.value = concepts.schemes as Scheme[];
+
+        const schemeStatementMap = new Map<string, SchemeStatement[]>();
+        for (const resource of resources) {
+            const statements = resource.aliased_data?.statement;
+            if (statements) {
+                schemeStatementMap.set(resource.resourceinstanceid, statements);
+            }
+        }
+        statementsMap.value = schemeStatementMap;
     } catch (error) {
         toast.add({
             severity: ERROR,
@@ -37,12 +52,20 @@ async function fetchSchemes() {
     }
 
     schemes.value.unshift({
-        resourceinstanceid: NEW,
-        descriptors: {},
+        id: NEW,
+        labels: [],
+        top_concepts: [],
     });
 
     isLoading.value = false;
 }
+
+const schemeEntries = computed(() =>
+    schemes.value.map((scheme) => ({
+        scheme,
+        statements: statementsMap.value.get(scheme.id),
+    })),
+);
 
 onMounted(async () => {
     await fetchSchemes();
@@ -82,11 +105,12 @@ onMounted(async () => {
     <div class="scheme-cards-container">
         <ul class="scheme-cards">
             <li
-                v-for="scheme in schemes"
-                :key="scheme.resourceinstanceid"
+                v-for="{ scheme, statements } in schemeEntries"
+                :key="scheme.id"
             >
                 <SchemeCard
                     :scheme="scheme"
+                    :statements="statements"
                     @imported="fetchSchemes"
                 />
             </li>
