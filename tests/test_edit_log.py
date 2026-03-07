@@ -134,13 +134,13 @@ class EditLogGetViewTests(EditLogTestMixin, ViewTests):
 
         self.assertIn(response.status_code, [403, 302])
 
-    def test_non_admin_user_is_denied(self):
+    def test_non_editor_authenticated_user_can_read_edit_log(self):
         self.client.force_login(
             User.objects.create_user(username="viewer", password="test123")
         )
         response = self.client.get(reverse("api-lingo-edit-log", args=[self.scheme.pk]))
 
-        self.assertIn(response.status_code, [403, 302])
+        self.assertEqual(response.status_code, 200)
 
 
 class EditLogPostViewTests(EditLogTestMixin, ViewTests):
