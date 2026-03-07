@@ -8,7 +8,11 @@ from django.views.generic import View
 from arches.app.models import models
 from arches.app.utils.response import JSONErrorResponse, JSONResponse
 
-from arches_lingo.permissions import is_lingo_editor
+from arches_lingo.permissions import (
+    anonymous_access_allowed,
+    is_authenticated_user,
+    is_lingo_editor,
+)
 from arches_lingo.utils.edit_log import (
     build_permitted_edit_log,
     revert_resource_to_timestamp,
@@ -17,6 +21,12 @@ from arches_lingo.utils.edit_log import (
 
 class ResourceEditLogAPIView(View):
     def get(self, request, resourceid):
+        if not anonymous_access_allowed() and not is_authenticated_user(request.user):
+            return JsonResponse(
+                {"message": _("Authentication required.")},
+                status=403,
+            )
+
         try:
             resource_instance = models.ResourceInstance.objects.get(pk=resourceid)
         except models.ResourceInstance.DoesNotExist:

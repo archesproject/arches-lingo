@@ -64,6 +64,10 @@ onMounted(function () {
 
 watchEffect(() => {
     router.beforeEach(async (to, _from, next) => {
+        if (to.name === routeNames.login) {
+            next();
+            return;
+        }
         try {
             await checkUserAuthentication(to);
             next();
@@ -95,7 +99,12 @@ async function checkUserAuthentication(
         (record) => record.meta.requiresAuthentication,
     );
 
-    if (requiresAuthentication && lingoUserData.is_anonymous) {
+    const anonymousAccessAllowed = lingoUserData.allow_anonymous_access;
+
+    if (
+        lingoUserData.is_anonymous &&
+        (!anonymousAccessAllowed || requiresAuthentication)
+    ) {
         throw new Error($gettext("Authentication required."));
     }
 }

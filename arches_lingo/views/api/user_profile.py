@@ -14,7 +14,11 @@ from django.views.generic import View
 from arches.app.models import models
 from arches.app.utils.response import JSONErrorResponse, JSONResponse
 
-from arches_lingo.permissions import LINGO_EDITOR_GROUP_NAME, is_lingo_editor
+from arches_lingo.permissions import (
+    LINGO_EDITOR_GROUP_NAME,
+    is_lingo_editor,
+    anonymous_access_allowed,
+)
 
 
 class LingoUserView(View):
@@ -31,6 +35,7 @@ class LingoUserView(View):
                 "last_name": getattr(user, "last_name", ""),
                 "is_editor": is_lingo_editor(user),
                 "is_anonymous": is_anonymous,
+                "allow_anonymous_access": anonymous_access_allowed(),
             }
         )
 

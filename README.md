@@ -70,7 +70,13 @@ For developer install instructions, see the [Developer Setup](#developer-setup-f
     ]
     ```
 
-4. Next ensure arches and arches_lingo are included as dependencies in package.json
+4. Optionally, enable anonymous (read-only) access by adding the following setting to your project's `settings.py` or `settings_local.py`:
+    ```
+    LINGO_ALLOW_ANONYMOUS_ACCESS = True
+    ```
+    When enabled, unauthenticated users can browse schemes, concepts, and search results in a read-only mode. When disabled (the default), all users must log in to access any Lingo content. Authenticated users who are not members of the "Lingo Editor" group will still see a read-only experience regardless of this setting.
+
+5. Next ensure arches and arches_lingo are included as dependencies in package.json
     ```
     "dependencies": {
         "arches": "archesproject/arches#dev/8.0.x",
@@ -78,14 +84,14 @@ For developer install instructions, see the [Developer Setup](#developer-setup-f
     }
     ```
 
-5. Update urls.py to include the arches_lingo urls
+6. Update urls.py to include the arches_lingo urls
     ```
     urlpatterns = [
         path("", include("arches_lingo.urls")),
     ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     ```
 
-6. Configure language support
+7. Configure language support
 
     Arches Lingo uses cookie-based language switching (via Django's `django_language` cookie) rather than URL-based language prefixes. If you are running Lingo as a standalone project, ensure the following are set in your project settings:
 
@@ -106,17 +112,17 @@ For developer install instructions, see the [Developer Setup](#developer-setup-f
 
     The `LANGUAGES` setting determines which languages appear in the Lingo language selector. The `django_language` cookie persists the user's language choice across sessions.
 
-7. Install the arches application package (models and other data)
+8. Install the arches application package (models and other data)
     ```
     python manage.py packages -o load_package -a arches_lingo -dev -y
     ```
 
-8. Start your project
+9. Start your project
     ```
     python manage.py runserver
     ```
 
-9. Next cd into your project's app directory (the one with package.json) install and build front-end dependencies:
+10. Next cd into your project's app directory (the one with package.json) install and build front-end dependencies:
     ```
     npm install
     npm run build_development

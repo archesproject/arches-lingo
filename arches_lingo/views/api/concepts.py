@@ -2,6 +2,7 @@ from http import HTTPStatus
 
 from django.conf import settings
 from django.core.paginator import Paginator
+from django.http import JsonResponse
 from django.utils.translation import get_language, gettext as _
 from django.views.generic import View
 
@@ -9,6 +10,7 @@ from arches.app.utils.betterJSONSerializer import JSONDeserializer, JSONSerializ
 from arches.app.utils.response import JSONErrorResponse, JSONResponse
 
 from arches_querysets.models import ResourceTileTree, TileTree
+from arches_lingo.permissions import anonymous_access_allowed, is_authenticated_user
 from arches_lingo.utils.concept_builder import ConceptBuilder
 from arches_lingo.utils.concepts import (
     resolve_max_edit_distance,
@@ -23,7 +25,19 @@ from arches_lingo.utils.dashboard import (
 )
 
 
-class ConceptTreeView(View):
+class AnonymousAccessMixin:
+    """Deny GET requests from anonymous users when anonymous access is disabled."""
+
+    def dispatch(self, request, *args, **kwargs):
+        if not anonymous_access_allowed() and not is_authenticated_user(request.user):
+            return JsonResponse(
+                {"message": _("Authentication required.")},
+                status=403,
+            )
+        return super().dispatch(request, *args, **kwargs)
+
+
+class ConceptTreeView(AnonymousAccessMixin, View):
     def get(self, request):
         builder = ConceptBuilder()
         data = {

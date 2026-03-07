@@ -9,6 +9,15 @@ export function useLingoUser() {
     const isEditor = computed(() => lingoUser.value?.is_editor ?? false);
     const isAnonymous = computed(() => lingoUser.value?.is_anonymous ?? true);
     const isAuthenticated = computed(() => !isAnonymous.value);
+    const allowAnonymousAccess = computed(
+        () => lingoUser.value?.allow_anonymous_access ?? false,
+    );
 
-    return { lingoUser, isEditor, isAnonymous, isAuthenticated };
+    return {
+        lingoUser,
+        isEditor,
+        isAnonymous,
+        isAuthenticated,
+        allowAnonymousAccess,
+    };
 }

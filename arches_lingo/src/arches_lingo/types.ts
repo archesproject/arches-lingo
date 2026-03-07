@@ -25,6 +25,7 @@ export interface LingoUser {
     username: string;
     is_editor: boolean;
     is_anonymous: boolean;
+    allow_anonymous_access: boolean;
 }
 
 // Prop injection types

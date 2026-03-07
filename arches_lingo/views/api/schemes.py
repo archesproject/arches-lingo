@@ -1,5 +1,7 @@
 from collections import Counter
 
+from django.http import JsonResponse
+from django.utils.translation import gettext as _
 from django.views.generic import View
 
 from arches.app.models.models import Language, TileModel
@@ -8,10 +10,23 @@ from arches.app.utils.response import JSONErrorResponse, JSONResponse
 from arches_querysets.models import ResourceTileTree
 
 from arches_lingo.const import CONCEPT_NAME_NODEGROUP, CONCEPT_NAME_LANGUAGE_NODE
+from arches_lingo.permissions import anonymous_access_allowed, is_authenticated_user
 from arches_lingo.utils.concept_builder import ConceptBuilder
 
 
-class SchemeResourceView(View):
+class AnonymousAccessMixin:
+    """Deny GET requests from anonymous users when anonymous access is disabled."""
+
+    def dispatch(self, request, *args, **kwargs):
+        if not anonymous_access_allowed() and not is_authenticated_user(request.user):
+            return JsonResponse(
+                {"message": _("Authentication required.")},
+                status=403,
+            )
+        return super().dispatch(request, *args, **kwargs)
+
+
+class SchemeResourceView(AnonymousAccessMixin, View):
     def get(self, request, pk):
         scheme_id = str(pk)
         builder = ConceptBuilder(concept_ids=[])
@@ -29,7 +44,7 @@ class SchemeResourceView(View):
         return JSONResponse(data)
 
 
-class SchemeLabelCountView(View):
+class SchemeLabelCountView(AnonymousAccessMixin, View):
     def get(self, request, pk):
         scheme_id = str(pk)
 
