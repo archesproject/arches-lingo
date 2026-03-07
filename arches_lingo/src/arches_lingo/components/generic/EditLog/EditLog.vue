@@ -19,6 +19,7 @@ import {
     ERROR,
     SUCCESS,
 } from "@/arches_lingo/constants.ts";
+import { useLingoUser } from "@/arches_lingo/composables/useLingoUser.ts";
 
 import type { DataComponentMode, EditLogEntry } from "@/arches_lingo/types.ts";
 
@@ -37,6 +38,7 @@ const refreshReportSection = inject<(componentName: string) => void>(
 
 const toast = useToast();
 const { $gettext } = useGettext();
+const { isEditor } = useLingoUser();
 
 const isLoading = ref(true);
 const isReverting = ref(false);
@@ -282,7 +284,7 @@ async function acceptRevert() {
                             {{ formatEditTypeLabel(edit) }}
                         </span>
                         <Button
-                            v-if="canRevert(edit)"
+                            v-if="isEditor && canRevert(edit)"
                             class="revert-button"
                             severity="secondary"
                             size="small"
