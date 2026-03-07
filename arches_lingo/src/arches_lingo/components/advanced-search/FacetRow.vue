@@ -445,6 +445,12 @@ function toggleNegated() {
     border-color: var(--p-red-300) !important;
 }
 
+:global(.arches-dark) .negation-active :deep(.p-togglebutton) {
+    background: var(--p-red-900) !important;
+    color: var(--p-red-200) !important;
+    border-color: var(--p-red-700) !important;
+}
+
 .facet-type-dropdown {
     min-width: 12rem;
     flex: 0 0 auto;
