@@ -14,7 +14,7 @@ def remove_lingo_editor_group(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("arches_lingo", "0005_reciprocal_relationship_function"),
+        ("arches_lingo", "0006_advanced_search_models"),
     ]
 
     operations = [
