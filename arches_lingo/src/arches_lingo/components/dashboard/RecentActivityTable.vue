@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { inject, type Ref } from "vue";
 import { useRouter } from "vue-router";
 import { useGettext } from "vue3-gettext";
 
@@ -9,14 +8,12 @@ import Select from "primevue/select";
 import Skeleton from "primevue/skeleton";
 import Tag from "primevue/tag";
 
-import {
-    selectedLanguageKey,
-    systemLanguageKey,
-} from "@/arches_lingo/constants.ts";
+import { storeToRefs } from "pinia";
+
 import { routeNames } from "@/arches_lingo/routes.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
+import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 
-import type { Language } from "@/arches_component_lab/types.ts";
 import type {
     DashboardActivityItem,
     DashboardStats,
@@ -41,8 +38,7 @@ const emit = defineEmits<{
 const router = useRouter();
 const { $gettext } = useGettext();
 
-const preferredLanguage = inject(selectedLanguageKey) as Ref<Language>;
-const systemLanguage = inject(systemLanguageKey) as Language;
+const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
 
 function formatRelativeTime(timestamp: string | null): string {
     if (!timestamp) return "";
@@ -172,7 +168,7 @@ function getDisplayName(item: DashboardActivityItem): string {
                         {{
                             getItemLabel(
                                 slotProps.data,
-                                preferredLanguage.code,
+                                selectedLanguage.code,
                                 systemLanguage.code,
                             ).value || slotProps.data.resource_id
                         }}

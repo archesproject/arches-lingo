@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { inject, type Ref } from "vue";
 import { useRouter } from "vue-router";
 import { useGettext } from "vue3-gettext";
 
@@ -8,13 +7,11 @@ import DataTable from "primevue/datatable";
 import Paginator from "primevue/paginator";
 import Select from "primevue/select";
 import Skeleton from "primevue/skeleton";
+import { storeToRefs } from "pinia";
 
-import {
-    selectedLanguageKey,
-    systemLanguageKey,
-} from "@/arches_lingo/constants.ts";
 import { routeNames } from "@/arches_lingo/routes.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
+import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 
 import type { Language } from "@/arches_component_lab/types.ts";
 import type { MissingTranslationsResponse } from "@/arches_lingo/types/dashboard.ts";
@@ -22,22 +19,21 @@ import type { SearchResultItem } from "@/arches_lingo/types.ts";
 
 const props = defineProps<{
     languages: Language[];
-    selectedLanguage: Language | null;
+    translationLanguage: Language | null;
     isLoading: boolean;
     missingTranslations: MissingTranslationsResponse | null;
     missingPage: number;
 }>();
 
 const emit = defineEmits<{
-    "update:selectedLanguage": [value: Language | null];
+    "update:translationLanguage": [value: Language | null];
     pageChange: [event: { first: number; rows: number }];
 }>();
 
 const router = useRouter();
 const { $gettext } = useGettext();
 
-const preferredLanguage = inject(selectedLanguageKey) as Ref<Language>;
-const systemLanguage = inject(systemLanguageKey) as Language;
+const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
 
 function navigateToConcept(conceptId: string) {
     router.push({ name: routeNames.concept, params: { id: conceptId } });
@@ -45,8 +41,11 @@ function navigateToConcept(conceptId: string) {
 
 function getConceptLabel(concept: SearchResultItem): string {
     return (
-        getItemLabel(concept, preferredLanguage.value.code, systemLanguage.code)
-            .value ||
+        getItemLabel(
+            concept,
+            selectedLanguage.value.code,
+            systemLanguage.value.code,
+        ).value ||
         concept.labels[0]?.value ||
         ""
     );
@@ -88,19 +87,19 @@ function getConceptScheme(concept: SearchResultItem): string {
                 </label>
                 <Select
                     id="language-filter"
-                    :model-value="props.selectedLanguage"
+                    :model-value="props.translationLanguage"
                     :options="props.languages"
                     option-label="name"
                     :placeholder="$gettext('Select a language')"
                     class="language-select"
                     @update:model-value="
-                        emit('update:selectedLanguage', $event)
+                        emit('update:translationLanguage', $event)
                     "
                 />
             </div>
         </div>
 
-        <div v-if="!selectedLanguage">
+        <div v-if="!props.translationLanguage">
             <p class="hint-text">
                 {{
                     $gettext(

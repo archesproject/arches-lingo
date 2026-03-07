@@ -46,7 +46,7 @@ const ACTIVITY_PERIODS: ActivityPeriod[] = [
 const selectedActivityPeriod = ref<ActivityPeriod>(ACTIVITY_PERIODS[1]);
 
 const languages = ref<Language[]>([]);
-const selectedLanguage = ref<Language | null>(null);
+const translationLanguage = ref<Language | null>(null);
 const isMissingLoading = ref(false);
 const missingTranslations = ref<MissingTranslationsResponse | null>(null);
 const missingPage = ref(0);
@@ -100,11 +100,11 @@ async function loadStats() {
 }
 
 async function loadMissingTranslations() {
-    if (!selectedLanguage.value) return;
+    if (!translationLanguage.value) return;
     isMissingLoading.value = true;
     try {
         missingTranslations.value = await fetchMissingTranslations(
-            selectedLanguage.value.code,
+            translationLanguage.value.code,
             selectedSchemeIds.value.length
                 ? selectedSchemeIds.value
                 : undefined,
@@ -137,12 +137,12 @@ function onPageChange(event: { first: number; rows: number }) {
 watch([selectedSchemeIds, selectedActivityPeriod], () => {
     missingPage.value = 0;
     loadStats();
-    if (selectedLanguage.value) {
+    if (translationLanguage.value) {
         loadMissingTranslations();
     }
 });
 
-watch(selectedLanguage, () => {
+watch(translationLanguage, () => {
     missingPage.value = 0;
     loadMissingTranslations();
 });
@@ -216,7 +216,7 @@ onMounted(async () => {
         />
 
         <MissingTranslationsPanel
-            v-model:selected-language="selectedLanguage"
+            v-model:translation-language="translationLanguage"
             :languages="languages"
             :is-loading="isMissingLoading"
             :missing-translations="missingTranslations"
