@@ -14,8 +14,8 @@ from django.views.generic import View
 from arches.app.models import models
 from arches.app.utils.response import JSONErrorResponse, JSONResponse
 
+from arches_lingo.const import LINGO_EDITOR_GROUP_NAME
 from arches_lingo.permissions import (
-    LINGO_EDITOR_GROUP_NAME,
     is_lingo_editor,
     anonymous_access_allowed,
 )

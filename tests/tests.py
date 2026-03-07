@@ -22,10 +22,10 @@ from arches_controlled_lists.management.commands.packages import (
 )
 
 from arches_lingo.permissions import (
-    LINGO_EDITOR_GROUP_NAME,
     is_lingo_editor,
 )
 from arches_lingo.const import (
+    LINGO_EDITOR_GROUP_NAME,
     CONCEPTS_GRAPH_ID,
     SCHEMES_GRAPH_ID,
     TOP_CONCEPT_OF_NODE_AND_NODEGROUP,

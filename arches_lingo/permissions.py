@@ -1,7 +1,7 @@
 from django.conf import settings
 from rest_framework import permissions
 
-LINGO_EDITOR_GROUP_NAME = "Lingo Editor"
+from arches_lingo.const import LINGO_EDITOR_GROUP_NAME
 
 
 def anonymous_access_allowed():
