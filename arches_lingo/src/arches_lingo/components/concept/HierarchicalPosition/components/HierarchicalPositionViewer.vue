@@ -23,7 +23,7 @@ import {
 } from "@/arches_lingo/constants.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
-import { useLingoUser } from "@/arches_lingo/composables/useLingoUser.ts";
+import { useLingoUserStore } from "@/arches_lingo/stores/useLingoUserStore.ts";
 
 const props = defineProps<{
     componentName: string;
@@ -53,7 +53,7 @@ const refreshReportSection = inject<(componentName: string) => void>(
 
 const refreshSchemeHierarchy = inject<() => void>("refreshSchemeHierarchy");
 
-const { isEditor } = useLingoUser();
+const { isEditor } = useLingoUserStore();
 
 function getIcon(item: SearchResultItem) {
     //TODO need a better way to determine if item is a scheme or not

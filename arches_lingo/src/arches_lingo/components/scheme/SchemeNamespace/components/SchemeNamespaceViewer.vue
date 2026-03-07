@@ -7,7 +7,7 @@ import Button from "primevue/button";
 import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
 
 import { VIEW } from "@/arches_lingo/constants.ts";
-import { useLingoUser } from "@/arches_lingo/composables/useLingoUser.ts";
+import { useLingoUserStore } from "@/arches_lingo/stores/useLingoUserStore.ts";
 
 import type { SchemeNamespace } from "@/arches_lingo/types.ts";
 
@@ -26,7 +26,7 @@ const openEditor =
         "openEditor",
     );
 
-const { isEditor } = useLingoUser();
+const { isEditor } = useLingoUserStore();
 
 const buttonLabel = computed(() => {
     if (props.tileData) {

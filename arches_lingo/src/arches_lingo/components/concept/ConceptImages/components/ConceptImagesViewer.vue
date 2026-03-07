@@ -11,7 +11,7 @@ import { useConfirm } from "primevue/useconfirm";
 import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
 
 import { DANGER, SECONDARY, VIEW } from "@/arches_lingo/constants.ts";
-import { useLingoUser } from "@/arches_lingo/composables/useLingoUser.ts";
+import { useLingoUserStore } from "@/arches_lingo/stores/useLingoUserStore.ts";
 
 import type {
     ConceptImages,
@@ -36,7 +36,7 @@ const props = defineProps<{
 const openEditor =
     inject<(componentName: string, tileId?: string) => void>("openEditor");
 
-const { isEditor } = useLingoUser();
+const { isEditor } = useLingoUserStore();
 
 const configurationError = ref();
 const isLoading = ref(true);

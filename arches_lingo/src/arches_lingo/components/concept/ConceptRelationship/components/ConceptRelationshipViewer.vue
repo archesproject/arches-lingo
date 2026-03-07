@@ -9,7 +9,7 @@ import GenericWidget from "@/arches_component_lab/generics/GenericWidget/Generic
 import ConceptResourceSelectWidget from "@/arches_lingo/components/widgets/ConceptResourceSelectWidget/ConceptResourceSelectWidget.vue";
 
 import { VIEW } from "@/arches_lingo/constants.ts";
-import { useLingoUser } from "@/arches_lingo/composables/useLingoUser.ts";
+import { useLingoUserStore } from "@/arches_lingo/stores/useLingoUserStore.ts";
 
 import type {
     ConceptRelationStatus,
@@ -29,7 +29,7 @@ const { $gettext } = useGettext();
 
 const openEditor = inject<(componentName: string) => void>("openEditor");
 
-const { isEditor } = useLingoUser();
+const { isEditor } = useLingoUserStore();
 
 const metaStringLabel: MetaStringText = {
     deleteConfirm: $gettext(

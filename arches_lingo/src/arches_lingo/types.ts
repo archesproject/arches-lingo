@@ -33,10 +33,6 @@ export interface UserRefAndSetter {
     user: Ref<User | null>;
     setUser: (userToSet: User | null) => void;
 }
-export interface LingoUserRefAndSetter {
-    lingoUser: Ref<LingoUser | null>;
-    setLingoUser: (userToSet: LingoUser | null) => void;
-}
 export interface DisplayedRowRefAndSetter {
     displayedRow: Ref<Concept | Scheme | null>;
     setDisplayedRow: (val: Concept | Scheme | null) => void;

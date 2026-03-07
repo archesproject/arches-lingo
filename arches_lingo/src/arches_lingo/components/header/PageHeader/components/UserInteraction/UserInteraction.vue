@@ -9,7 +9,7 @@ import Popover from "primevue/popover";
 import UserInteractionMenu from "@/arches_lingo/components/header/PageHeader/components/UserInteraction/components/UserInteractionMenu/UserInteractionMenu.vue";
 
 import { USER_KEY } from "@/arches_lingo/constants.ts";
-import { useLingoUser } from "@/arches_lingo/composables/useLingoUser.ts";
+import { useLingoUserStore } from "@/arches_lingo/stores/useLingoUserStore.ts";
 import { routeNames } from "@/arches_lingo/routes.ts";
 
 import type { PopoverMethods } from "primevue/popover";
@@ -18,7 +18,7 @@ import type { UserRefAndSetter } from "@/arches_lingo/types.ts";
 const { $gettext } = useGettext();
 const router = useRouter();
 const { user } = inject(USER_KEY) as UserRefAndSetter;
-const { isAnonymous } = useLingoUser();
+const { isAnonymous } = useLingoUserStore();
 
 const popover = useTemplateRef<PopoverMethods>("popover");
 

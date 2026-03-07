@@ -14,18 +14,18 @@ import SchemeHierarchy from "@/arches_lingo/components/header/PageHeader/compone
 import {
     DEFAULT_ERROR_TOAST_LIFE,
     ERROR,
-    LINGO_USER_KEY,
     USER_KEY,
 } from "@/arches_lingo/constants.ts";
 
 import { routeNames } from "@/arches_lingo/routes.ts";
-import { fetchLingoUser, fetchUser } from "@/arches_lingo/api.ts";
+import { fetchUser } from "@/arches_lingo/api.ts";
 import { useUnsavedChangesGuard } from "@/arches_lingo/composables/useUnsavedChangesGuard.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
+import { useLingoUserStore } from "@/arches_lingo/stores/useLingoUserStore.ts";
 import PageHeader from "@/arches_lingo/components/header/PageHeader/PageHeader.vue";
 import SideNav from "@/arches_lingo/components/sidenav/SideNav.vue";
 
-import type { LingoUser, User } from "@/arches_lingo/types";
+import type { User } from "@/arches_lingo/types";
 import type { RouteLocationNormalizedLoadedGeneric } from "vue-router";
 
 const user = ref<User | null>(null);
@@ -34,14 +34,9 @@ const setUser = (userToSet: User | null) => {
 };
 provide(USER_KEY, { user, setUser });
 
-const lingoUser = ref<LingoUser | null>(null);
-const setLingoUser = (userToSet: LingoUser | null) => {
-    lingoUser.value = userToSet;
-};
-provide(LINGO_USER_KEY, { lingoUser, setLingoUser });
-
 const { $gettext } = useGettext();
 const languageStore = useLanguageStore();
+const lingoUserStore = useLingoUserStore();
 
 const router = useRouter();
 const route = useRoute();
@@ -88,22 +83,19 @@ watchEffect(() => {
 async function checkUserAuthentication(
     to: RouteLocationNormalizedLoadedGeneric,
 ) {
-    const [userData, lingoUserData] = await Promise.all([
+    const [userData] = await Promise.all([
         fetchUser(),
-        fetchLingoUser(),
+        lingoUserStore.initialize(),
     ]);
     setUser(userData);
-    setLingoUser(lingoUserData);
 
     const requiresAuthentication = to.matched.some(
         (record) => record.meta.requiresAuthentication,
     );
 
-    const anonymousAccessAllowed = lingoUserData.allow_anonymous_access;
-
     if (
-        lingoUserData.is_anonymous &&
-        (!anonymousAccessAllowed || requiresAuthentication)
+        lingoUserStore.isAnonymous &&
+        (!lingoUserStore.allowAnonymousAccess || requiresAuthentication)
     ) {
         throw new Error($gettext("Authentication required."));
     }

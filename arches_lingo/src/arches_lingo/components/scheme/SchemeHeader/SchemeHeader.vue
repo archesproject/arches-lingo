@@ -30,7 +30,7 @@ import {
     fetchSchemeLabelCounts,
 } from "@/arches_lingo/api.ts";
 import { useResourceStore } from "@/arches_lingo/composables/useResourceStore.ts";
-import { useLingoUser } from "@/arches_lingo/composables/useLingoUser.ts";
+import { useLingoUserStore } from "@/arches_lingo/stores/useLingoUserStore.ts";
 import {
     extractDescriptors,
     navigateToSchemeOrConcept,
@@ -76,7 +76,7 @@ const showExportDialog = ref(false);
 const exportDialogKey = ref(0);
 
 const store = useResourceStore();
-const { isEditor } = useLingoUser();
+const { isEditor } = useLingoUserStore();
 
 watch(
     [() => store.resource.value, () => store.error.value],
