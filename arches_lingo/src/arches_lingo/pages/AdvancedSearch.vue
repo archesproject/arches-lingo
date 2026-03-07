@@ -32,6 +32,7 @@ import type { Language } from "@/arches_component_lab/types.ts";
 import { generateConditionId } from "@/arches_lingo/utils.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 
+import type { Labellable } from "@/arches_controlled_lists/types.ts";
 import type {
     AdvancedSearchOptions,
     AdvancedSearchQuery,
@@ -44,7 +45,6 @@ import type {
 
 const systemLanguage = inject(systemLanguageKey) as Language;
 const selectedLanguage = inject(selectedLanguageKey) as Ref<Language>;
-import type { Labellable } from "@/arches_controlled_lists/types.ts";
 
 const { $gettext } = useGettext();
 const toast = useToast();

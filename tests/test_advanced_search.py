@@ -52,8 +52,6 @@ from arches_lingo.const import (
     IDENTIFIER_CONTENT_NODE,
     MATCH_STATUS_NODEGROUP,
     MATCH_STATUS_COMPARATE_NODE,
-    CONCEPT_TYPE_NODE,
-    STATUS_NODEGROUP,
 )
 from arches_lingo.models import ConceptSet, ConceptSetMember, SavedSearch
 from arches_lingo.utils.advanced_search import AdvancedSearchEvaluator
