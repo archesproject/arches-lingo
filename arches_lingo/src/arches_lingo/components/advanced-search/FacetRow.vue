@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, inject, ref, watch, type Ref } from "vue";
+import { computed, ref, watch } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import Button from "primevue/button";
@@ -7,15 +7,13 @@ import InputText from "primevue/inputtext";
 import Select from "primevue/select";
 import ToggleButton from "primevue/togglebutton";
 
+import { storeToRefs } from "pinia";
+
 import { fetchConceptResources } from "@/arches_lingo/api.ts";
-import {
-    selectedLanguageKey,
-    systemLanguageKey,
-} from "@/arches_lingo/constants.ts";
+import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 
 import type { Label } from "@/arches_controlled_lists/types.ts";
-import type { Language } from "@/arches_component_lab/types.ts";
 
 import type {
     AdvancedSearchOptions,
@@ -28,8 +26,7 @@ import type {
 
 const { $gettext } = useGettext();
 
-const systemLanguage = inject(systemLanguageKey) as Language;
-const selectedLanguage = inject(selectedLanguageKey) as Ref<Language>;
+const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
 
 const props = defineProps<{
     condition: SearchCondition;
@@ -101,7 +98,7 @@ async function loadConcepts(term?: string) {
                     getItemLabel(
                         item,
                         selectedLanguage.value.code,
-                        systemLanguage.code,
+                        systemLanguage.value.code,
                     ).value || item.id,
                 resource_id: item.id,
             }),
@@ -161,7 +158,7 @@ const schemeDisplayOptions = computed(() =>
         label: getItemLabel(
             scheme,
             selectedLanguage.value.code,
-            systemLanguage.code,
+            systemLanguage.value.code,
         ).value,
     })),
 );

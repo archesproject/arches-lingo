@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject, onMounted, ref, useTemplateRef, type Ref } from "vue";
+import { onMounted, ref, useTemplateRef } from "vue";
 import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
 
@@ -24,11 +24,11 @@ import {
     LABEL_TYPE_LIST_ID,
     NOTE_TYPE_LIST_ID,
     CONCEPT_TYPE_LIST_ID,
-    selectedLanguageKey,
-    systemLanguageKey,
 } from "@/arches_lingo/constants.ts";
+import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 
-import type { Language } from "@/arches_component_lab/types.ts";
+import { storeToRefs } from "pinia";
+
 import { generateConditionId } from "@/arches_lingo/utils.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 
@@ -43,8 +43,7 @@ import type {
     SearchGroup,
 } from "@/arches_lingo/types.ts";
 
-const systemLanguage = inject(systemLanguageKey) as Language;
-const selectedLanguage = inject(selectedLanguageKey) as Ref<Language>;
+const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
 
 const { $gettext } = useGettext();
 const toast = useToast();
@@ -94,7 +93,7 @@ function flattenListItems(items: Labellable[]): ControlledListOption[] {
                 getItemLabel(
                     item,
                     selectedLanguage.value.code,
-                    systemLanguage.code,
+                    systemLanguage.value.code,
                 ).value || typedItem.id,
             value: typedItem.id,
         });
