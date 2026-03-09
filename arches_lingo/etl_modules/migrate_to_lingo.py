@@ -11,6 +11,7 @@ from collections import defaultdict
 from django.core.files.storage import default_storage
 from django.db import connection
 from django.db.models import FilteredRelation, OuterRef, Prefetch, Q, Subquery
+from django.db.models.expressions import RawSQL
 from django.db.models.functions import Coalesce
 from django.utils.translation import gettext as _
 
@@ -748,7 +749,7 @@ class LingoResourceImporter(BaseImportModule):
         LoadStaging.objects.bulk_create(part_of_scheme_tiles)
 
     def start(self, request):
-        load_details = {"operation": "Bulk Lingo Resource Import"}
+        load_details = {"operation": "Lingo Thesaurus Import"}
         if not self.loadid:
             self.loadid = request.POST.get("load_id")
         load_event = models.LoadEvent.objects.create(
@@ -769,7 +770,7 @@ class LingoResourceImporter(BaseImportModule):
         return {"success": True, "data": data}
 
     def write(self, request):
-
+        self.load_event = models.LoadEvent.objects.get(loadid=self.loadid)
         # scheme_conceptid is indicator of the entrypoint -
         # if it's present, we're migrating a thesaurus from the RDM
         # if absent, we're loading data from an external SKOS file
@@ -778,6 +779,20 @@ class LingoResourceImporter(BaseImportModule):
             self.file = request.FILES["file"] if "file" in request.FILES else None
 
         if self.scheme_conceptid:
+            scheme_pref_label = (
+                models.Value.objects.filter(
+                    concept_id=self.scheme_conceptid, valuetype="prefLabel"
+                )
+                .first()
+                .value
+            )
+            # use RawSQL to mimic behavior in _save_to_tiles method
+            self.load_event.load_details = RawSQL(
+                "load_details || %s::jsonb",
+                [json.dumps({"thesaurus_name": scheme_pref_label})],
+            )
+            self.load_event.save()
+
             num_concepts_to_import = len(
                 Concept()
                 .get(
@@ -801,14 +816,21 @@ class LingoResourceImporter(BaseImportModule):
                 return self.return_with_error(error)
 
         elif self.file is not None:
+            # sanitize file name
+            file_name = os.path.basename(self.file.name)
+            file_name, extension = os.path.splitext(file_name)
             # Do minimal file validation to mock file checking in FileValidator
-            extension = self.file.name.split(".")[-1]
             guessed_file_type = filetype.guess(self.file)
 
             # guessed_file_type will be None if the file is xml
-            if extension != "xml" or guessed_file_type is not None:
+            if extension != ".xml" or guessed_file_type is not None:
                 message = f"File extension {extension}/{guessed_file_type.extension} not allowed"
                 return self.return_with_error(message)
+
+            self.load_event.load_details = RawSQL(
+                "load_details || %s::jsonb", [json.dumps({"thesaurus_name": file_name})]
+            )
+            self.load_event.save()
 
             use_celery_file_size_threshold = self.config.get(
                 "celeryByteSizeLimit", 100000

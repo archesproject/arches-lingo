@@ -46,7 +46,13 @@
 {% block loading_status %}
 <!-- ko ifnot: loading() -->
 <div class="bulk-load-status">
-    <h4 class="summary-title">{% trans "RDM to Arches-Lingo Migrator Summary" %}</h4>
+    <div class="h4 summary-title">{% trans "Arches-Lingo Thesaurus Importer Summary" %}</div>
+    <!-- ko if: loadDetails().thesaurus_name -->
+    <div class="h4 summary-header">
+        <span class="etl-loading-metadata-key" data-bind="text: $root.translations.thesaurusLoaded + ':'"></span>
+        <span class="etl-loading-metadata-value" data-bind="text: loadDetails().thesaurus_name"></span>
+    </div>
+    <!-- /ko -->
     <div>
         <span class="etl-loading-metadata-key" data-bind="text: $root.translations.loadingStatus + ':'"></span>
         <!-- ko if: selectedLoadEvent().status -->
@@ -86,17 +92,15 @@
 
     <!-- ko if: loadDetails().number_of_import -->
     <div class="bulk-load-status" style="padding: 5px 0">
-        <h4 class="summary-header">
+        <div class="h4 summary-header">
             <span data-bind="text: $root.translations.importedData"></span>
             <span>
                 <a class="etl-status-link" target="_blank"
                     data-bind="text: '('+$root.translations.viewInEditLog+')', attr: { href: editHistoryUrl }">
                 </a>
             </span>
-        </h4>
+        </div>
         <div>
-            <span class="etl-loading-metadata-key" data-bind="text: $root.translations.schemesMigrated"></span>
-            <span class="etl-loading-metadata-value" data-bind="text: selectedSchemeName()"></span>
             <!-- ko foreach: loadDetails().number_of_import -->
             <span class="etl-loading-metadata-key" data-bind="text: $data.name + ' ' + $root.translations.instances + ':'"></span>
             <span class="etl-loading-metadata-value" data-bind="text: $data.total"></span>
