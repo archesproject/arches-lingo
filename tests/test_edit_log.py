@@ -8,6 +8,7 @@ from arches.app.models.models import EditLog, NodeGroup
 from arches.app.models.tile import Tile as RealTile
 
 from django.contrib.auth.models import User
+from django.test import override_settings
 from django.urls import reverse
 
 from arches_lingo.const import (
@@ -134,6 +135,20 @@ class EditLogGetViewTests(EditLogTestMixin, ViewTests):
 
         self.assertIn(response.status_code, [403, 302])
 
+    @override_settings(LINGO_ALLOW_ANONYMOUS_ACCESS=True)
+    def test_anonymous_can_read_edit_log_when_anonymous_access_is_allowed(self):
+        self.client.logout()
+        response = self.client.get(reverse("api-lingo-edit-log", args=[self.scheme.pk]))
+
+        self.assertEqual(response.status_code, 200)
+
+    @override_settings(LINGO_ALLOW_ANONYMOUS_ACCESS=False)
+    def test_anonymous_is_denied_edit_log_when_anonymous_access_is_disabled(self):
+        self.client.logout()
+        response = self.client.get(reverse("api-lingo-edit-log", args=[self.scheme.pk]))
+
+        self.assertIn(response.status_code, [403, 302])
+
     def test_non_editor_authenticated_user_can_read_edit_log(self):
         self.client.force_login(
             User.objects.create_user(username="viewer", password="test123")
@@ -198,6 +213,13 @@ class EditLogPostViewTests(EditLogTestMixin, ViewTests):
     def test_unauthenticated_user_is_denied(self):
         self.client.logout()
         self.assertIn(self._post_revert(self.scheme).status_code, [403, 302])
+
+    @override_settings(LINGO_ALLOW_ANONYMOUS_ACCESS=True)
+    def test_anonymous_cannot_post_edit_log_even_when_anonymous_access_is_allowed(self):
+        self.client.logout()
+        response = self._post_revert(self.scheme)
+
+        self.assertIn(response.status_code, [403, 302])
 
     def test_non_admin_user_is_denied(self):
         self.client.force_login(
