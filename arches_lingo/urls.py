@@ -28,6 +28,7 @@ from arches_lingo.views.api.generic import (
     LingoTileDetailView,
     LingoTileListCreateView,
 )
+from arches_lingo.views.api.settings import AppSettingsView
 from arches_lingo.views.api.user_profile import (
     ChangePasswordAPIView,
     LingoUserView,
@@ -59,6 +60,11 @@ urlpatterns = [
         "api/lingo/user",
         LingoUserView.as_view(),
         name="api-lingo-user",
+    ),
+    path(
+        "api/lingo/settings",
+        AppSettingsView.as_view(),
+        name="api-lingo-settings",
     ),
     path(
         "api/lingo/change-password",

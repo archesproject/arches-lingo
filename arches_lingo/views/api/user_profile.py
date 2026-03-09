@@ -15,10 +15,7 @@ from arches.app.models import models
 from arches.app.utils.response import JSONErrorResponse, JSONResponse
 
 from arches_lingo.const import LINGO_EDITOR_GROUP_NAME
-from arches_lingo.permissions import (
-    is_lingo_editor,
-    anonymous_access_allowed,
-)
+from arches_lingo.permissions import is_lingo_editor
 
 
 class LingoUserView(View):
@@ -44,7 +41,6 @@ class LingoUserView(View):
                 "phone": phone,
                 "is_lingo_editor": is_lingo_editor(user),
                 "is_anonymous": is_anonymous,
-                "allow_anonymous_access": anonymous_access_allowed(),
             }
         )
 
@@ -67,7 +63,6 @@ class UserProfileAPIView(View):
             "phone": phone,
             "is_lingo_editor": is_lingo_editor(user),
             "is_anonymous": False,
-            "allow_anonymous_access": anonymous_access_allowed(),
         }
 
     def get(self, request):

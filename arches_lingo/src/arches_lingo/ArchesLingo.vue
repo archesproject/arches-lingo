@@ -15,6 +15,7 @@ import { DEFAULT_ERROR_TOAST_LIFE, ERROR } from "@/arches_lingo/constants.ts";
 
 import { routeNames } from "@/arches_lingo/routes.ts";
 import { useUnsavedChangesGuard } from "@/arches_lingo/composables/useUnsavedChangesGuard.ts";
+import { useAppSettingsStore } from "@/arches_lingo/stores/useAppSettingsStore.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 import PageHeader from "@/arches_lingo/components/header/PageHeader/PageHeader.vue";
@@ -23,6 +24,7 @@ import SideNav from "@/arches_lingo/components/sidenav/SideNav.vue";
 import type { RouteLocationNormalizedLoadedGeneric } from "vue-router";
 
 const { $gettext } = useGettext();
+const appSettingsStore = useAppSettingsStore();
 const languageStore = useLanguageStore();
 const userStore = useUserStore();
 
@@ -71,7 +73,7 @@ watchEffect(() => {
 async function checkUserAuthentication(
     to: RouteLocationNormalizedLoadedGeneric,
 ) {
-    await userStore.initialize();
+    await Promise.all([userStore.initialize(), appSettingsStore.initialize()]);
 
     const requiresAuthentication = to.matched.some(
         (record) => record.meta.requiresAuthentication,
@@ -79,7 +81,7 @@ async function checkUserAuthentication(
 
     if (
         userStore.isAnonymous &&
-        (!userStore.allowAnonymousAccess || requiresAuthentication)
+        (!appSettingsStore.allowAnonymousAccess || requiresAuthentication)
     ) {
         throw new Error($gettext("Authentication required."));
     }

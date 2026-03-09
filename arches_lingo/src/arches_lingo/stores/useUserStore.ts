@@ -11,9 +11,6 @@ export const useUserStore = defineStore("user", () => {
     const isEditor = computed(() => user.value?.is_lingo_editor ?? false);
     const isAnonymous = computed(() => user.value?.is_anonymous ?? true);
     const isAuthenticated = computed(() => !isAnonymous.value);
-    const allowAnonymousAccess = computed(
-        () => user.value?.allow_anonymous_access ?? false,
-    );
 
     async function initialize() {
         user.value = await fetchUser();
@@ -28,7 +25,6 @@ export const useUserStore = defineStore("user", () => {
         isEditor,
         isAnonymous,
         isAuthenticated,
-        allowAnonymousAccess,
         initialize,
         setUser,
     };

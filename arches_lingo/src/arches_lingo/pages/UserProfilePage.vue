@@ -42,7 +42,6 @@ const profile = ref<User>({
     phone: "",
     is_lingo_editor: false,
     is_anonymous: true,
-    allow_anonymous_access: false,
 });
 
 // Password form state

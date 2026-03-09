@@ -7,6 +7,7 @@ import type {
     AdvancedSearchQuery,
     AdvancedSearchResponse,
     AdvancedSearchOptions,
+    AppSettings,
     ConceptInstance,
     ConceptSetDetail,
     ConceptSetItem,
@@ -49,6 +50,15 @@ export const logout = async () => {
     if (response.ok) return true;
     const parsedError = await response.json();
     throw new Error(parsedError.message || response.statusText);
+};
+
+export const fetchAppSettings = async (): Promise<AppSettings> => {
+    const response = await fetch(
+        generateArchesURL("arches_lingo:api-lingo-settings"),
+    );
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
 };
 
 export const fetchUser = async (): Promise<User> => {
