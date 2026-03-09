@@ -24,6 +24,7 @@ from arches.app.models.models import LoadStaging, NodeGroup, LoadEvent
 from arches.app.models.concept import Concept
 from arches.app.models.system_settings import settings
 from arches.app.tasks import notify_completion
+import arches.app.utils.task_management as task_management
 
 import arches_lingo.tasks as tasks
 import arches_lingo.const as const
@@ -810,6 +811,10 @@ class LingoResourceImporter(BaseImportModule):
                 if num_concepts_to_import <= 1000:
                     self.run_load_task()
                 elif num_concepts_to_import > 1000:
+                    if not task_management.check_if_celery_available():
+                        return self.return_with_error(
+                            task_management.CeleryNotAvailableError()
+                        )
                     self.run_load_task_async(request, self.loadid)
                 message = "Schemes and Concept Migration to Lingo Models Complete"
                 return {"success": True, "data": message}
@@ -850,7 +855,10 @@ class LingoResourceImporter(BaseImportModule):
                     self.run_load_task()
 
                 elif self.file.size > use_celery_file_size_threshold:
-                    # Save file to temp storage so it can be accessed by celery worker
+                    if not task_management.check_if_celery_available():
+                        return self.return_with_error(
+                            task_management.CeleryNotAvailableError()
+                        )
                     temp_dir = os.path.join(
                         settings.UPLOADED_FILES_DIR, "tmp", self.loadid
                     )
@@ -946,18 +954,18 @@ class LingoResourceImporter(BaseImportModule):
             thesaurus_name = self.load_event.load_details[1].get("thesaurus_name")
         user = models.User.objects.get(id=self.userid)
         if self.load_event.status == "indexed":
-            msg = (
+            message = (
                 _("{} import completed").format(thesaurus_name)
                 if thesaurus_name
                 else _("Import completed")
             )
         else:
-            msg = (
+            message = (
                 _("{} import failed").format(thesaurus_name)
                 if thesaurus_name
                 else _("Import failed")
             )
-        notify_completion(msg, user)
+        notify_completion(message, user)
 
     @load_data_async
     def run_load_task_async(self, request):
@@ -979,18 +987,25 @@ class LingoResourceImporter(BaseImportModule):
             )
 
     def return_with_error(self, error):
+        logger.error(error)
         if not self.load_event:
             self.load_event = models.LoadEvent.objects.get(loadid=self.loadid)
         self.load_event.status = "failed"
         self.load_event.error_message = str(error)
         self.load_event.save()
-        logger.error(error)
+        thesaurus_name = getattr(self, "thesaurus_name", None)
         if thesaurus_name is None and type(self.load_event.load_details) is list:
             thesaurus_name = self.load_event.load_details[1].get("thesaurus_name")
-        msg = (
-            _("{} import failed").format(thesaurus_name)
-            if thesaurus_name
-            else _("Import failed")
-        )
-        notify_completion(msg, models.User.objects.get(id=self.userid))
-        return {"success": False, "data": {"message": error}}
+        if isinstance(error, task_management.CeleryNotAvailableError):
+            message = _(
+                "The thesaurus exceeds threshold for synchronous processing, but Celery is not available. Please contact your system administrator."
+            )
+            error = message
+        else:
+            message = (
+                _("{} import failed").format(thesaurus_name)
+                if thesaurus_name
+                else _("Import failed")
+            )
+        notify_completion(message, models.User.objects.get(id=self.userid))
+        return {"success": False, "message": error}
