@@ -158,7 +158,7 @@ class LingoResourceExporter:
             return response
         except:
             error = _("An unexpected error occurred during export.")
-            self.handle_error(error)
+            self._handle_error(error)
             raise
 
     def run_export_task(self, resourceid, filename=None, format="xml"):
@@ -179,11 +179,11 @@ class LingoResourceExporter:
                 output_files = self._export_as_jsonld(scheme_ids, concept_ids)
         else:
             error = _("The requested export format is not supported.")
-            return self.handle_error(error)
+            return self._handle_error(error)
 
         if not output_files:
             error = _("The thesaurus could not be exported in the requested format.")
-            return self.handle_error(error)
+            return self._handle_error(error)
 
         file = self._save_files_as_zip(output_files, filename)
         return self._finalize_export(file)
@@ -222,7 +222,7 @@ class LingoResourceExporter:
 
         if len(scheme_triples) == 0 and len(concept_triples) == 0:
             error = _("The thesaurus could not be mapped to triples for export.")
-            self.handle_error(error)
+            self._handle_error(error)
             return []
 
         writer = SKOSWriter()
@@ -261,7 +261,7 @@ class LingoResourceExporter:
                 error = _(
                     "The selected concept is not part of a Scheme and cannot be exported."
                 )
-                self.handle_error(error)
+                self._handle_error(error)
                 return [], []
             scheme_id = part_of_scheme.aliased_data.part_of_scheme.pk
             self.scheme_name = root_concept.name[settings.LANGUAGE_CODE]
@@ -414,7 +414,7 @@ class LingoResourceExporter:
             }
         else:
             error = _("File could not be saved.")
-            return self.handle_error(error)
+            return self._handle_error(error)
 
     def gather_hierarchy_for_export(self, resourceid):
         """
@@ -442,7 +442,7 @@ class LingoResourceExporter:
                 error = _(
                     "The selected concept is not part of a Scheme and cannot be exported."
                 )
-                return self.handle_error(error)
+                return self._handle_error(error)
             else:
                 scheme_id = part_of_scheme.aliased_data.part_of_scheme.pk
 
@@ -533,7 +533,7 @@ class LingoResourceExporter:
             triples.append(triple)
         return triples
 
-    def handle_error(self, error):
+    def _handle_error(self, error):
         self.load_event.status = "failed"
         self.load_event.error_message = str(error)
         self.load_event.save()
@@ -546,4 +546,4 @@ class LingoResourceExporter:
                 else _("Export failed")
             )
             notify_completion(message, self.user)
-        return {"success": False, "data": {"message": error}}
+        return {"success": False, "message": error}
