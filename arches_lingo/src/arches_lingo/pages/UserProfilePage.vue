@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject, onMounted, ref } from "vue";
+import { onMounted, ref } from "vue";
 import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
 
@@ -21,15 +21,15 @@ import {
     DEFAULT_TOAST_LIFE,
     ERROR,
     SUCCESS,
-    USER_KEY,
 } from "@/arches_lingo/constants.ts";
+import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 
 import type { User } from "@/arches_lingo/types.ts";
 
 const { $gettext } = useGettext();
 const toast = useToast();
 
-const userContext = inject(USER_KEY);
+const userStore = useUserStore();
 
 // Profile form state
 const isLoading = ref(true);
@@ -40,6 +40,9 @@ const profile = ref<User>({
     last_name: "",
     email: "",
     phone: "",
+    is_lingo_editor: false,
+    is_anonymous: true,
+    allow_anonymous_access: false,
 });
 
 // Password form state
@@ -75,16 +78,7 @@ async function saveProfile() {
             phone: profile.value.phone,
         });
         profile.value = updated;
-
-        // Update the global user context so the header reflects changes
-        if (userContext) {
-            userContext.setUser({
-                username: updated.username,
-                first_name: updated.first_name,
-                last_name: updated.last_name,
-                email: updated.email,
-            });
-        }
+        userStore.setUser(updated);
 
         toast.add({
             severity: SUCCESS,

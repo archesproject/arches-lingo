@@ -28,12 +28,21 @@ class LingoUserView(View):
         user = request.user
         is_anonymous = not user.is_authenticated or user.username == "anonymous"
 
+        phone = ""
+        if not is_anonymous:
+            try:
+                phone = user.userprofile.phone or ""
+            except models.UserProfile.DoesNotExist:
+                pass
+
         return JSONResponse(
             {
                 "username": user.username,
                 "first_name": getattr(user, "first_name", ""),
                 "last_name": getattr(user, "last_name", ""),
-                "is_editor": is_lingo_editor(user),
+                "email": getattr(user, "email", ""),
+                "phone": phone,
+                "is_lingo_editor": is_lingo_editor(user),
                 "is_anonymous": is_anonymous,
                 "allow_anonymous_access": anonymous_access_allowed(),
             }
@@ -42,6 +51,24 @@ class LingoUserView(View):
 
 class UserProfileAPIView(View):
     """JSON API for reading and updating the authenticated user's profile."""
+
+    def _user_response_data(self, user):
+        phone = ""
+        try:
+            phone = user.userprofile.phone or ""
+        except models.UserProfile.DoesNotExist:
+            pass
+
+        return {
+            "username": user.username,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "email": user.email,
+            "phone": phone,
+            "is_lingo_editor": is_lingo_editor(user),
+            "is_anonymous": False,
+            "allow_anonymous_access": anonymous_access_allowed(),
+        }
 
     def get(self, request):
         user = request.user
@@ -52,21 +79,7 @@ class UserProfileAPIView(View):
                 status=401,
             )
 
-        phone = ""
-        try:
-            phone = user.userprofile.phone or ""
-        except models.UserProfile.DoesNotExist:
-            pass
-
-        return JSONResponse(
-            {
-                "username": user.username,
-                "first_name": user.first_name,
-                "last_name": user.last_name,
-                "email": user.email,
-                "phone": phone,
-            }
-        )
+        return JSONResponse(self._user_response_data(user))
 
     @method_decorator((sensitive_variables(), sensitive_post_parameters()))
     def put(self, request):
@@ -118,15 +131,7 @@ class UserProfileAPIView(View):
         user.userprofile.phone = phone
         user.userprofile.save()
 
-        return JSONResponse(
-            {
-                "username": user.username,
-                "first_name": user.first_name,
-                "last_name": user.last_name,
-                "email": user.email,
-                "phone": phone,
-            }
-        )
+        return JSONResponse(self._user_response_data(user))
 
 
 class ChangePasswordAPIView(View):

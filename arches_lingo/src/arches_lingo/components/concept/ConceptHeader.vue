@@ -31,7 +31,7 @@ import {
     GUIDE_TERM_URI,
 } from "@/arches_lingo/constants.ts";
 import { useEditLog } from "@/arches_lingo/composables/useEditLog.ts";
-import { useLingoUserStore } from "@/arches_lingo/stores/useLingoUserStore.ts";
+import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 import { PREF_LABEL } from "@/arches_controlled_lists/constants.ts";
 
 import {
@@ -78,7 +78,7 @@ const { $gettext } = useGettext();
 const confirm = useConfirm();
 const router = useRouter();
 const store = useResourceStore();
-const { isEditor } = useLingoUserStore();
+const { isEditor } = useUserStore();
 
 const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
 

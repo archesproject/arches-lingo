@@ -17,7 +17,7 @@ import {
     ERROR,
     SECONDARY,
 } from "@/arches_lingo/constants.ts";
-import { useLingoUserStore } from "@/arches_lingo/stores/useLingoUserStore.ts";
+import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 
 import type { MetaStringText } from "@/arches_lingo/types.ts";
 
@@ -42,7 +42,7 @@ const refreshReportSection = inject<(componentName: string) => void>(
     "refreshReportSection",
 );
 const refreshSchemeHierarchy = inject<() => void>("refreshSchemeHierarchy");
-const { isEditor } = useLingoUserStore();
+const { isEditor } = useUserStore();
 
 const expandedRows = ref([]);
 

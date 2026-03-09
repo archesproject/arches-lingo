@@ -10,6 +10,7 @@ from arches.app.utils.betterJSONSerializer import JSONDeserializer, JSONSerializ
 from arches.app.utils.response import JSONErrorResponse, JSONResponse
 
 from arches_querysets.models import ResourceTileTree, TileTree
+from arches_lingo.mixins.anonymous_access import AnonymousAccessMixin
 from arches_lingo.permissions import anonymous_access_allowed, is_authenticated_user
 from arches_lingo.utils.concept_builder import ConceptBuilder
 from arches_lingo.utils.concepts import (
@@ -23,18 +24,6 @@ from arches_lingo.utils.dashboard import (
     paginate_missing_translations,
     parse_scheme_ids,
 )
-
-
-class AnonymousAccessMixin:
-    """Deny GET requests from anonymous users when anonymous access is disabled."""
-
-    def dispatch(self, request, *args, **kwargs):
-        if not anonymous_access_allowed() and not is_authenticated_user(request.user):
-            return JsonResponse(
-                {"message": _("Authentication required.")},
-                status=403,
-            )
-        return super().dispatch(request, *args, **kwargs)
 
 
 class ConceptTreeView(AnonymousAccessMixin, View):

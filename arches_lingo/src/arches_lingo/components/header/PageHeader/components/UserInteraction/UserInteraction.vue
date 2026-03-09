@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, inject, useTemplateRef } from "vue";
+import { computed, useTemplateRef } from "vue";
+import { storeToRefs } from "pinia";
 import { useGettext } from "vue3-gettext";
 import { useRouter } from "vue-router";
 
@@ -8,17 +9,16 @@ import Popover from "primevue/popover";
 
 import UserInteractionMenu from "@/arches_lingo/components/header/PageHeader/components/UserInteraction/components/UserInteractionMenu/UserInteractionMenu.vue";
 
-import { USER_KEY } from "@/arches_lingo/constants.ts";
-import { useLingoUserStore } from "@/arches_lingo/stores/useLingoUserStore.ts";
+import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 import { routeNames } from "@/arches_lingo/routes.ts";
 
 import type { PopoverMethods } from "primevue/popover";
-import type { UserRefAndSetter } from "@/arches_lingo/types.ts";
 
 const { $gettext } = useGettext();
 const router = useRouter();
-const { user } = inject(USER_KEY) as UserRefAndSetter;
-const { isAnonymous } = useLingoUserStore();
+const userStore = useUserStore();
+const { user } = storeToRefs(userStore);
+const { isAnonymous } = userStore;
 
 const popover = useTemplateRef<PopoverMethods>("popover");
 
@@ -89,7 +89,7 @@ function navigateToLogin() {
             >
                 <UserInteractionMenu
                     :display-name="displayName"
-                    :email="user!.email"
+                    :email="user?.email ?? ''"
                 />
             </Popover>
         </template>

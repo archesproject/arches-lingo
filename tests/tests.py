@@ -669,7 +669,7 @@ class PermissionTests(TestCase):
         response = self.client.get(reverse("api-lingo-user"))
         result = json.loads(response.content)
         self.assertTrue(result["is_anonymous"])
-        self.assertFalse(result["is_editor"])
+        self.assertFalse(result["is_lingo_editor"])
         self.assertTrue(result["allow_anonymous_access"])
 
     @override_settings(LINGO_ALLOW_ANONYMOUS_ACCESS=False)
@@ -684,7 +684,7 @@ class PermissionTests(TestCase):
         response = self.client.get(reverse("api-lingo-user"))
         result = json.loads(response.content)
         self.assertFalse(result["is_anonymous"])
-        self.assertFalse(result["is_editor"])
+        self.assertFalse(result["is_lingo_editor"])
         self.assertEqual(result["username"], "regular")
 
     def test_lingo_user_view_editor(self):
@@ -692,5 +692,5 @@ class PermissionTests(TestCase):
         response = self.client.get(reverse("api-lingo-user"))
         result = json.loads(response.content)
         self.assertFalse(result["is_anonymous"])
-        self.assertTrue(result["is_editor"])
+        self.assertTrue(result["is_lingo_editor"])
         self.assertEqual(result["username"], "editor")

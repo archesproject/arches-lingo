@@ -17,22 +17,11 @@ export interface User {
     username: string;
     email: string;
     phone?: string;
-}
-
-export interface LingoUser {
-    first_name: string;
-    last_name: string;
-    username: string;
-    is_editor: boolean;
+    is_lingo_editor: boolean;
     is_anonymous: boolean;
     allow_anonymous_access: boolean;
 }
 
-// Prop injection types
-export interface UserRefAndSetter {
-    user: Ref<User | null>;
-    setUser: (userToSet: User | null) => void;
-}
 export interface DisplayedRowRefAndSetter {
     displayedRow: Ref<Concept | Scheme | null>;
     setDisplayedRow: (val: Concept | Scheme | null) => void;

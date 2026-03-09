@@ -12,7 +12,6 @@ import type {
     ConceptSetItem,
     DigitalObjectInstance,
     EditLogEntry,
-    LingoUser,
     SavedSearchItem,
     SchemeInstance,
     TileData,
@@ -52,14 +51,7 @@ export const logout = async () => {
     throw new Error(parsedError.message || response.statusText);
 };
 
-export const fetchUser = async () => {
-    const response = await fetch(arches.urls.api_user);
-    const parsed = await response.json();
-    if (!response.ok) throw new Error(parsed.message || response.statusText);
-    return parsed;
-};
-
-export const fetchLingoUser = async (): Promise<LingoUser> => {
+export const fetchUser = async (): Promise<User> => {
     const response = await fetch(
         generateArchesURL("arches_lingo:api-lingo-user"),
     );
@@ -78,7 +70,9 @@ export const fetchUserProfile = async (): Promise<User> => {
 };
 
 export const updateUserProfile = async (
-    profile: Omit<User, "username">,
+    profile: Pick<User, "first_name" | "last_name" | "email"> & {
+        phone?: string;
+    },
 ): Promise<User> => {
     const response = await fetch(
         generateArchesURL("arches_lingo:api-lingo-user-profile"),

@@ -8,7 +8,7 @@ import MetaStringViewer from "@/arches_lingo/components/generic/MetaStringViewer
 import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
 
 import { VIEW } from "@/arches_lingo/constants.ts";
-import { useLingoUserStore } from "@/arches_lingo/stores/useLingoUserStore.ts";
+import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 
 import type {
     ConceptMatchStatus,
@@ -29,7 +29,7 @@ const { $gettext } = useGettext();
 const openEditor =
     inject<(componentName: string, tileId?: string) => void>("openEditor");
 
-const { isEditor } = useLingoUserStore();
+const { isEditor } = useUserStore();
 
 const metaStringLabel: MetaStringText = {
     deleteConfirm: $gettext(

@@ -11,32 +11,20 @@ import Toast from "primevue/toast";
 
 import SchemeHierarchy from "@/arches_lingo/components/header/PageHeader/components/SchemeHierarchy/SchemeHierarchy.vue";
 
-import {
-    DEFAULT_ERROR_TOAST_LIFE,
-    ERROR,
-    USER_KEY,
-} from "@/arches_lingo/constants.ts";
+import { DEFAULT_ERROR_TOAST_LIFE, ERROR } from "@/arches_lingo/constants.ts";
 
 import { routeNames } from "@/arches_lingo/routes.ts";
-import { fetchUser } from "@/arches_lingo/api.ts";
 import { useUnsavedChangesGuard } from "@/arches_lingo/composables/useUnsavedChangesGuard.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
-import { useLingoUserStore } from "@/arches_lingo/stores/useLingoUserStore.ts";
+import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 import PageHeader from "@/arches_lingo/components/header/PageHeader/PageHeader.vue";
 import SideNav from "@/arches_lingo/components/sidenav/SideNav.vue";
 
-import type { User } from "@/arches_lingo/types";
 import type { RouteLocationNormalizedLoadedGeneric } from "vue-router";
-
-const user = ref<User | null>(null);
-const setUser = (userToSet: User | null) => {
-    user.value = userToSet;
-};
-provide(USER_KEY, { user, setUser });
 
 const { $gettext } = useGettext();
 const languageStore = useLanguageStore();
-const lingoUserStore = useLingoUserStore();
+const userStore = useUserStore();
 
 const router = useRouter();
 const route = useRoute();
@@ -83,19 +71,15 @@ watchEffect(() => {
 async function checkUserAuthentication(
     to: RouteLocationNormalizedLoadedGeneric,
 ) {
-    const [userData] = await Promise.all([
-        fetchUser(),
-        lingoUserStore.initialize(),
-    ]);
-    setUser(userData);
+    await userStore.initialize();
 
     const requiresAuthentication = to.matched.some(
         (record) => record.meta.requiresAuthentication,
     );
 
     if (
-        lingoUserStore.isAnonymous &&
-        (!lingoUserStore.allowAnonymousAccess || requiresAuthentication)
+        userStore.isAnonymous &&
+        (!userStore.allowAnonymousAccess || requiresAuthentication)
     ) {
         throw new Error($gettext("Authentication required."));
     }

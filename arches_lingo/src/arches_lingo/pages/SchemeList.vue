@@ -13,13 +13,13 @@ import {
 import SchemeCard from "@/arches_lingo/components/scheme/SchemeCard.vue";
 import { fetchConcepts, fetchLingoResources } from "@/arches_lingo/api.ts";
 import { NEW } from "@/arches_lingo/constants.ts";
-import { useLingoUserStore } from "@/arches_lingo/stores/useLingoUserStore.ts";
+import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 
 import type { Scheme, SchemeStatement } from "@/arches_lingo/types";
 
 const toast = useToast();
 const { $gettext } = useGettext();
-const { isEditor } = useLingoUserStore();
+const { isEditor } = useUserStore();
 
 const isLoading = ref(true);
 const schemes = ref<Scheme[]>([]);

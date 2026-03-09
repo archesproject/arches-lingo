@@ -19,7 +19,7 @@ import {
     ERROR,
     SUCCESS,
 } from "@/arches_lingo/constants.ts";
-import { useLingoUserStore } from "@/arches_lingo/stores/useLingoUserStore.ts";
+import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 
 import type { DataComponentMode, EditLogEntry } from "@/arches_lingo/types.ts";
 
@@ -38,7 +38,7 @@ const refreshReportSection = inject<(componentName: string) => void>(
 
 const toast = useToast();
 const { $gettext } = useGettext();
-const { isEditor } = useLingoUserStore();
+const { isEditor } = useUserStore();
 
 const isLoading = ref(true);
 const isReverting = ref(false);

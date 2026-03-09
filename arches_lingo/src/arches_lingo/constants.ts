@@ -1,6 +1,6 @@
 import type { Component, InjectionKey, Ref } from "vue";
 import type { Language } from "@/arches_component_lab/types.ts";
-import type { Concept, UserRefAndSetter } from "@/arches_lingo/types.ts";
+import type { Concept } from "@/arches_lingo/types.ts";
 
 export const ERROR = "error";
 export const SUCCESS = "success";
@@ -49,7 +49,6 @@ export const SCHEME_ICON = "pi pi-folder";
 export const GUIDE_TERM_URI = "http://vocab.getty.edu/page/aat/300386700";
 
 // Injection keys
-export const USER_KEY = Symbol() as InjectionKey<UserRefAndSetter>;
 export const openPanelComponentKey = Symbol() as InjectionKey<
     (
         component: Component,
