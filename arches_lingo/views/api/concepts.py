@@ -194,10 +194,7 @@ class ConceptRelationshipView(ConceptTreeView):
         return JSONResponse(return_data)
 
 
-@method_decorator(
-    group_required("RDM Administrator", raise_exception=True), name="dispatch"
-)
-class ConceptMissingTranslationsView(View):
+class ConceptMissingTranslationsView(AnonymousAccessMixin, View):
     def get(self, request):
         language_code = request.GET.get("language")
         if not language_code:

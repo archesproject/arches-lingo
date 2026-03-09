@@ -1,14 +1,13 @@
 import uuid
 
-from django.utils.decorators import method_decorator
 from django.utils.translation import gettext as _
 from django.views.generic import View
 
 from arches.app.models import models
-from arches.app.utils.decorators import group_required
 from arches.app.utils.response import JSONErrorResponse, JSONResponse
 
 from arches_lingo.const import SCHEMES_GRAPH_ID
+from arches_lingo.mixins.anonymous_access import AnonymousAccessMixin
 from arches_lingo.utils.dashboard import (
     attach_activity_labels,
     build_recent_activity,
@@ -22,10 +21,7 @@ from arches_lingo.utils.dashboard import (
 )
 
 
-@method_decorator(
-    group_required("RDM Administrator", raise_exception=True), name="dispatch"
-)
-class DashboardStatsView(View):
+class DashboardStatsView(AnonymousAccessMixin, View):
     def get(self, request):
         try:
             scheme_ids = parse_scheme_ids(request)

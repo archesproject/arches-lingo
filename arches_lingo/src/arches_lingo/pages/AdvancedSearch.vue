@@ -26,6 +26,7 @@ import {
     CONCEPT_TYPE_LIST_ID,
 } from "@/arches_lingo/constants.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
+import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 
 import { storeToRefs } from "pinia";
 
@@ -44,6 +45,8 @@ import type {
 } from "@/arches_lingo/types.ts";
 
 const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
+const userStore = useUserStore();
+const { isAnonymous } = userStore;
 
 const { $gettext } = useGettext();
 const toast = useToast();
@@ -258,6 +261,7 @@ onMounted(loadSearchOptions);
                 {{ $gettext("Advanced Search") }}
             </h2>
             <Button
+                v-if="!isAnonymous"
                 :label="
                     showSidePanel
                         ? $gettext('Hide Saved Searches & Sets')
@@ -279,7 +283,8 @@ onMounted(loadSearchOptions);
             :pt="{
                 gutter: {
                     style: {
-                        display: showSidePanel ? 'flex' : 'none',
+                        display:
+                            showSidePanel && !isAnonymous ? 'flex' : 'none',
                     },
                 },
             }"
@@ -316,7 +321,7 @@ onMounted(loadSearchOptions);
             </SplitterPanel>
 
             <SplitterPanel
-                v-show="showSidePanel"
+                v-show="showSidePanel && !isAnonymous"
                 :size="25"
             >
                 <div class="side-panel">
