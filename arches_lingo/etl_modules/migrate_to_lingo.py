@@ -859,6 +859,7 @@ class LingoResourceImporter(BaseImportModule):
                         return self.return_with_error(
                             task_management.CeleryNotAvailableError()
                         )
+                    # Save file to temp storage so it can be accessed by celery worker
                     temp_dir = os.path.join(
                         settings.UPLOADED_FILES_DIR, "tmp", self.loadid
                     )
