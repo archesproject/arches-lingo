@@ -161,11 +161,12 @@ export const fetchLingoResourcesBatch = async (
     return parsed;
 };
 
-export const fetchSources = async (
+async function fetchPaginatedResources(
+    url: string,
     search: string = "",
     limit: number = 25,
     offset: number = 0,
-): Promise<PaginatedResourceListResponse> => {
+): Promise<PaginatedResourceListResponse> {
     const params = new URLSearchParams({
         limit: String(limit),
         offset: String(offset),
@@ -173,31 +174,35 @@ export const fetchSources = async (
     if (search) {
         params.set("search", search);
     }
-    const response = await fetch(`${arches.urls.api_lingo_sources}?${params}`);
+    const response = await fetch(`${url}?${params}`);
     const parsed = await response.json();
     if (!response.ok) throw new Error(parsed.message || response.statusText);
     return parsed;
-};
+}
 
-export const fetchContributors = async (
+export const fetchSources = (
     search: string = "",
     limit: number = 25,
     offset: number = 0,
-): Promise<PaginatedResourceListResponse> => {
-    const params = new URLSearchParams({
-        limit: String(limit),
-        offset: String(offset),
-    });
-    if (search) {
-        params.set("search", search);
-    }
-    const response = await fetch(
-        `${arches.urls.api_lingo_contributors}?${params}`,
+): Promise<PaginatedResourceListResponse> =>
+    fetchPaginatedResources(
+        arches.urls.api_lingo_sources,
+        search,
+        limit,
+        offset,
     );
-    const parsed = await response.json();
-    if (!response.ok) throw new Error(parsed.message || response.statusText);
-    return parsed;
-};
+
+export const fetchContributors = (
+    search: string = "",
+    limit: number = 25,
+    offset: number = 0,
+): Promise<PaginatedResourceListResponse> =>
+    fetchPaginatedResources(
+        arches.urls.api_lingo_contributors,
+        search,
+        limit,
+        offset,
+    );
 
 export const fetchLingoResourcePartial = async (
     graphSlug: string,

@@ -10,14 +10,10 @@ import GenericCard from "@/arches_component_lab/generics/GenericCard/GenericCard
 import { EDIT } from "@/arches_component_lab/widgets/constants.ts";
 
 import ResourceListEditor from "@/arches_lingo/components/generic/ResourceListEditor/ResourceListEditor.vue";
-import {
-    fetchContributors,
-    fetchLingoResourcePartial,
-} from "@/arches_lingo/api.ts";
+import { useResourceNameEditor } from "@/arches_lingo/composables/useResourceNameEditor.ts";
+import { fetchContributors } from "@/arches_lingo/api.ts";
 
 import type { ResourceSummary } from "@/arches_lingo/types";
-
-const NODEGROUP_ALIAS = "name";
 
 interface GraphTypeOption {
     label: string;
@@ -32,42 +28,26 @@ const graphTypeOptions: GraphTypeOption[] = [
 ];
 
 const listEditorRef = ref<InstanceType<typeof ResourceListEditor>>();
-const selectedResourceInstanceId = ref<string | null>(null);
-const selectedTileId = ref<string | null>(null);
 const selectedGraphSlug = ref<string>("person_system");
 const newGraphSlug = ref<GraphTypeOption>(graphTypeOptions[0]);
-const isLoadingTile = ref(false);
-const editorKey = ref(0);
+const {
+    selectedResourceInstanceId,
+    selectedTileId,
+    isLoadingTile,
+    editorKey,
+    selectResource,
+    clearSelection,
+    NAME_NODEGROUP_ALIAS,
+} = useResourceNameEditor();
 
 async function onSelectResource(resource: ResourceSummary) {
-    selectedResourceInstanceId.value = resource.resourceinstanceid;
     selectedGraphSlug.value = resource.graph_slug;
-    isLoadingTile.value = true;
-
-    try {
-        const partialData = await fetchLingoResourcePartial(
-            resource.graph_slug,
-            resource.resourceinstanceid,
-            NODEGROUP_ALIAS,
-        );
-        const nameTiles = partialData?.aliased_data?.name;
-        selectedTileId.value =
-            Array.isArray(nameTiles) && nameTiles.length > 0
-                ? nameTiles[0].tileid
-                : null;
-    } catch {
-        selectedTileId.value = null;
-    }
-
-    editorKey.value++;
-    isLoadingTile.value = false;
+    await selectResource(resource);
 }
 
 function onCreateNew() {
-    selectedResourceInstanceId.value = null;
-    selectedTileId.value = null;
     selectedGraphSlug.value = newGraphSlug.value.value;
-    editorKey.value++;
+    clearSelection();
     listEditorRef.value?.openBlankEditor();
 }
 
@@ -125,7 +105,7 @@ function onSave() {
                 :key="editorKey"
                 :mode="EDIT"
                 :graph-slug="selectedGraphSlug"
-                :nodegroup-alias="NODEGROUP_ALIAS"
+                :nodegroup-alias="NAME_NODEGROUP_ALIAS"
                 :resource-instance-id="
                     isCreatingNew ? undefined : selectedResourceInstanceId
                 "

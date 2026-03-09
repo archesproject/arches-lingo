@@ -8,7 +8,7 @@ from django.test import TestCase
 from django.test.utils import captured_stdout
 from django.urls import reverse
 
-from arches.app.models.models import ResourceInstance
+from arches.app.models.models import GraphModel, ResourceInstance
 from arches.app.utils.betterJSONSerializer import JSONDeserializer
 from arches.app.utils.data_management.resource_graphs.importer import (
     import_graph as ResourceGraphImporter,
@@ -46,8 +46,6 @@ class ResourceListTests(TestCase):
         cls.load_ontology()
         cls.load_graphs()
         cls.admin = User.objects.get(username="admin")
-
-        from arches.app.models.models import GraphModel
 
         cls.person_graph = GraphModel.objects.get(slug="person_system")
         cls.group_graph = GraphModel.objects.get(slug="group")

@@ -9,48 +9,26 @@ import GenericCard from "@/arches_component_lab/generics/GenericCard/GenericCard
 import { EDIT } from "@/arches_component_lab/widgets/constants.ts";
 
 import ResourceListEditor from "@/arches_lingo/components/generic/ResourceListEditor/ResourceListEditor.vue";
-import { fetchLingoResourcePartial, fetchSources } from "@/arches_lingo/api.ts";
-
-import type { ResourceSummary } from "@/arches_lingo/types";
+import { useResourceNameEditor } from "@/arches_lingo/composables/useResourceNameEditor.ts";
+import { fetchSources } from "@/arches_lingo/api.ts";
 
 const GRAPH_SLUG = "textual_work";
-const NODEGROUP_ALIAS = "name";
 
 const { $gettext } = useGettext();
 
 const listEditorRef = ref<InstanceType<typeof ResourceListEditor>>();
-const selectedResourceInstanceId = ref<string | null>(null);
-const selectedTileId = ref<string | null>(null);
-const isLoadingTile = ref(false);
-const editorKey = ref(0);
-
-async function onSelectResource(resource: ResourceSummary) {
-    selectedResourceInstanceId.value = resource.resourceinstanceid;
-    isLoadingTile.value = true;
-
-    try {
-        const partialData = await fetchLingoResourcePartial(
-            resource.graph_slug,
-            resource.resourceinstanceid,
-            NODEGROUP_ALIAS,
-        );
-        const nameTiles = partialData?.aliased_data?.name;
-        selectedTileId.value =
-            Array.isArray(nameTiles) && nameTiles.length > 0
-                ? nameTiles[0].tileid
-                : null;
-    } catch {
-        selectedTileId.value = null;
-    }
-
-    editorKey.value++;
-    isLoadingTile.value = false;
-}
+const {
+    selectedResourceInstanceId,
+    selectedTileId,
+    isLoadingTile,
+    editorKey,
+    selectResource,
+    clearSelection,
+    NAME_NODEGROUP_ALIAS,
+} = useResourceNameEditor();
 
 function onCreateNew() {
-    selectedResourceInstanceId.value = null;
-    selectedTileId.value = null;
-    editorKey.value++;
+    clearSelection();
     listEditorRef.value?.openBlankEditor();
 }
 
@@ -64,7 +42,7 @@ function onSave() {
         ref="listEditorRef"
         :page-title="$gettext('Sources')"
         :fetch-resources="fetchSources"
-        @select-resource="onSelectResource"
+        @select-resource="selectResource"
     >
         <template #list-actions>
             <Button
@@ -85,7 +63,7 @@ function onSave() {
                 :key="editorKey"
                 :mode="EDIT"
                 :graph-slug="GRAPH_SLUG"
-                :nodegroup-alias="NODEGROUP_ALIAS"
+                :nodegroup-alias="NAME_NODEGROUP_ALIAS"
                 :resource-instance-id="
                     isCreatingNew ? undefined : selectedResourceInstanceId
                 "

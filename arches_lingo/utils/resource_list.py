@@ -5,12 +5,6 @@ CONTRIBUTORS_GRAPH_SLUGS = ["person_system", "group"]
 
 
 def get_paginated_resources(graph_slugs, search_term="", limit=25, offset=0):
-    """Return a paginated, optionally name-filtered list of resources
-    belonging to the given graph slugs.
-
-    Returns a dict with ``count`` (total matching) and ``results``
-    (the current page of resource summaries).
-    """
     queryset = ResourceInstance.objects.filter(
         graph__slug__in=graph_slugs,
     ).select_related("graph")
