@@ -186,7 +186,7 @@ export const fetchSources = (
     offset: number = 0,
 ): Promise<PaginatedResourceListResponse> =>
     fetchPaginatedResources(
-        arches.urls.api_lingo_sources,
+        generateArchesURL("arches_lingo:api-lingo-sources"),
         search,
         limit,
         offset,
@@ -198,7 +198,7 @@ export const fetchContributors = (
     offset: number = 0,
 ): Promise<PaginatedResourceListResponse> =>
     fetchPaginatedResources(
-        arches.urls.api_lingo_contributors,
+        generateArchesURL("arches_lingo:api-lingo-contributors"),
         search,
         limit,
         offset,
