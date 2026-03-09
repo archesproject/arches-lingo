@@ -161,7 +161,7 @@ function shouldShowCardNameRow(editEntry: EditLogEntry) {
 }
 
 function canRevert(editEntry: EditLogEntry) {
-    return !nonRevertableEditTypes.has(editEntry.edittype);
+    return !nonRevertableEditTypes.has(editEntry.edittype) && isEditor;
 }
 
 function confirmRevert(editEntry: EditLogEntry) {
@@ -284,7 +284,7 @@ async function acceptRevert() {
                             {{ formatEditTypeLabel(edit) }}
                         </span>
                         <Button
-                            v-if="isEditor && canRevert(edit)"
+                            v-if="canRevert(edit)"
                             class="revert-button"
                             severity="secondary"
                             size="small"
