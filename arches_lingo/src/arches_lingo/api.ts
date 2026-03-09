@@ -17,6 +17,10 @@ import type {
     TileData,
     User,
 } from "@/arches_lingo/types";
+import type {
+    MissingTranslationsResponse,
+    DashboardStats,
+} from "@/arches_lingo/types/dashboard.ts";
 
 function getToken() {
     const token = Cookies.get("csrftoken");
@@ -760,6 +764,49 @@ export const removeFromConceptSet = async (
         },
         body: JSON.stringify({ concept_ids: conceptIds }),
     });
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
+export const fetchDashboardStats = async (
+    schemes?: string[],
+    activityDays?: number,
+): Promise<DashboardStats> => {
+    const params = new URLSearchParams();
+    if (schemes) {
+        for (const scheme of schemes) {
+            params.append("scheme", scheme);
+        }
+    }
+    if (activityDays !== undefined) {
+        params.append("days", String(activityDays));
+    }
+    const url = `${generateArchesURL("arches_lingo:api-lingo-dashboard")}?${params.toString()}`;
+    const response = await fetch(url);
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
+export const fetchMissingTranslations = async (
+    language: string,
+    schemes?: string[],
+    page = 1,
+    items = 25,
+): Promise<MissingTranslationsResponse> => {
+    const params = new URLSearchParams({
+        language,
+        page: page.toString(),
+        items: items.toString(),
+    });
+    if (schemes) {
+        for (const scheme of schemes) {
+            params.append("scheme", scheme);
+        }
+    }
+    const url = `${generateArchesURL("arches_lingo:api-lingo-missing-translations")}?${params.toString()}`;
+    const response = await fetch(url);
     const parsed = await response.json();
     if (!response.ok) throw new Error(parsed.message || response.statusText);
     return parsed;

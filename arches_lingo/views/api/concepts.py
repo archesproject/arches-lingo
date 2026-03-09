@@ -18,6 +18,11 @@ from arches_lingo.utils.concepts import (
     build_concept_ids_for_non_fuzzy,
     rank_concepts_for_unsorted_term,
 )
+from arches_lingo.utils.dashboard import (
+    get_missing_translation_ids,
+    paginate_missing_translations,
+    parse_scheme_ids,
+)
 
 
 @method_decorator(
@@ -198,3 +203,35 @@ class ConceptRelationshipView(ConceptTreeView):
         }
 
         return JSONResponse(return_data)
+
+
+@method_decorator(
+    group_required("RDM Administrator", raise_exception=True), name="dispatch"
+)
+class ConceptMissingTranslationsView(View):
+    def get(self, request):
+        language_code = request.GET.get("language")
+        if not language_code:
+            return JSONErrorResponse(
+                title=_("Missing parameter"),
+                message=_("language parameter is required"),
+                status=400,
+            )
+
+        try:
+            scheme_ids = parse_scheme_ids(request)
+        except ValueError as error:
+            return JSONErrorResponse(
+                title=_("Invalid scheme"),
+                message=str(error),
+                status=400,
+            )
+
+        page_number = int(request.GET.get("page", 1))
+        items_per_page = int(request.GET.get("items", 25))
+
+        missing_ids = get_missing_translation_ids(language_code, scheme_ids)
+
+        return JSONResponse(
+            paginate_missing_translations(missing_ids, page_number, items_per_page)
+        )

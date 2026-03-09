@@ -1,3 +1,5 @@
+from django.utils.translation import gettext_lazy as _
+
 ### Concepts Model Nodes & Nodegroups ###
 CONCEPTS_GRAPH_ID = "bf73e576-4888-11ee-8a8d-11afefc4bff7"
 
@@ -104,3 +106,21 @@ STATUS_NODEGROUP = "152321b6-0f5e-11ef-9493-0a58a9feac02"
 PREF_LABEL_VALUE = "preferred label"
 ALT_LABEL_VALUE = "alternative label"
 HIDDEN_LABEL_VALUE = "hidden label"
+
+PREF_LABEL_URI = "http://www.w3.org/2004/02/skos/core#prefLabel"
+
+EDIT_TYPE_LABELS = {
+    "create": _("Resource Created"),
+    "delete": _("Resource Deleted"),
+    "tile delete": _("Tile Deleted"),
+    "tile create": _("Tile Created"),
+    "tile edit": _("Tile Updated"),
+    "bulk_create": _("Resource Created"),
+    "update_resource_instance_lifecycle_state": _("Resource Lifecycle State Updated"),
+}
+
+TILE_EDIT_TYPE_LABEL_TEMPLATES = {
+    "tile delete": _("%(name)s Deleted"),
+    "tile create": _("%(name)s Created"),
+    "tile edit": _("%(name)s Updated"),
+}

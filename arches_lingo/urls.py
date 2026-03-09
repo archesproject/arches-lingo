@@ -8,7 +8,9 @@ from arches_lingo.views.api.concepts import (
     ValueSearchView,
     ConceptResourceView,
     ConceptRelationshipView,
+    ConceptMissingTranslationsView,
 )
+from arches_lingo.views.api.dashboard import DashboardStatsView
 from arches_lingo.views.api.edit_log import ResourceEditLogAPIView
 from arches_lingo.views.api.schemes import SchemeResourceView, SchemeLabelCountView
 from arches_lingo.views.api.advanced_search import (
@@ -38,7 +40,7 @@ handler500 = "arches.app.views.main.custom_500"
 
 urlpatterns = [
     path("", LingoRootView.as_view(), name="root"),
-    path("scheme/<uuid:id>", LingoRootView.as_view(), name="scheme-root"),
+    path("dashboard", LingoRootView.as_view(), name="dashboard"),
     path("login", LingoRootView.as_view(), name="login"),
     path("advanced-search", LingoRootView.as_view(), name="advanced-search"),
     path("schemes", LingoRootView.as_view(), name="schemes"),
@@ -56,6 +58,16 @@ urlpatterns = [
         "api/lingo/change-password",
         ChangePasswordAPIView.as_view(),
         name="api-lingo-change-password",
+    ),
+    path(
+        "api/lingo/dashboard",
+        DashboardStatsView.as_view(),
+        name="api-lingo-dashboard",
+    ),
+    path(
+        "api/lingo/concepts/missing-translations",
+        ConceptMissingTranslationsView.as_view(),
+        name="api-lingo-missing-translations",
     ),
     path("api/concept-tree", ConceptTreeView.as_view(), name="api-concepts"),
     path("api/search", ValueSearchView.as_view(), name="api-search"),
