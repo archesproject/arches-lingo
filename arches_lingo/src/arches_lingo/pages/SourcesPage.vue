@@ -69,8 +69,8 @@ function onSave() {
         <template #list-actions>
             <Button
                 :label="$gettext('Add Source')"
-                icon="pi pi-plus"
-                size="small"
+                icon="pi pi-plus-circle"
+                class="add-button"
                 @click="onCreateNew"
             />
         </template>
@@ -96,3 +96,18 @@ function onSave() {
         </template>
     </ResourceListEditor>
 </template>
+
+<style scoped>
+.add-button {
+    font-size: var(--p-lingo-font-size-xsmall);
+    font-weight: var(--p-lingo-font-weight-normal);
+    background: var(--p-header-button-background);
+    color: var(--p-header-button-color);
+    border-color: var(--p-header-button-border);
+    border-radius: 0.125rem;
+}
+
+.add-button:hover {
+    background: var(--p-highlight-background);
+}
+</style>

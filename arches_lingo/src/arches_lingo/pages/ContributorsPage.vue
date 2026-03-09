@@ -92,8 +92,8 @@ function onSave() {
         <template #list-actions>
             <Button
                 :label="$gettext('Add Contributor')"
-                icon="pi pi-plus"
-                size="small"
+                icon="pi pi-plus-circle"
+                class="add-button"
                 @click="onCreateNew"
             />
         </template>
@@ -138,6 +138,19 @@ function onSave() {
 </template>
 
 <style scoped>
+.add-button {
+    font-size: var(--p-lingo-font-size-xsmall);
+    font-weight: var(--p-lingo-font-weight-normal);
+    background: var(--p-header-button-background);
+    color: var(--p-header-button-color);
+    border-color: var(--p-header-button-border);
+    border-radius: 0.125rem;
+}
+
+.add-button:hover {
+    background: var(--p-highlight-background);
+}
+
 .new-contributor-type-selector {
     display: flex;
     flex-direction: column;
@@ -146,12 +159,13 @@ function onSave() {
 }
 
 .type-selector-label {
-    font-size: var(--p-lingo-font-size-small, 0.875rem);
-    font-weight: var(--p-lingo-font-weight-normal, 600);
-    color: var(--p-neutral-500);
+    font-size: var(--p-lingo-font-size-smallnormal);
+    font-weight: var(--p-lingo-font-weight-normal);
+    color: var(--p-header-item-label);
 }
 
 .type-selector {
     width: 100%;
+    border-radius: 0.125rem;
 }
 </style>

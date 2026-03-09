@@ -137,19 +137,23 @@ defineExpose({ refreshList: loadResources, openBlankEditor });
             >
                 <div class="list-panel-content">
                     <div class="list-header">
-                        <div class="list-header-top">
+                        <div class="list-header-toolbar">
                             <h1 class="page-title">{{ pageTitle }}</h1>
-                            <slot name="list-actions" />
+                            <div class="header-buttons">
+                                <slot name="list-actions" />
+                            </div>
                         </div>
-                        <IconField class="search-field">
-                            <InputIcon class="pi pi-search" />
-                            <InputText
-                                v-model="searchQuery"
-                                :placeholder="$gettext('Search by name...')"
-                                class="search-input"
-                                @input="onSearchInput"
-                            />
-                        </IconField>
+                        <div class="list-header-content">
+                            <IconField class="search-field">
+                                <InputIcon class="pi pi-search" />
+                                <InputText
+                                    v-model="searchQuery"
+                                    :placeholder="$gettext('Search by name...')"
+                                    class="search-input"
+                                    @input="onSearchInput"
+                                />
+                            </IconField>
+                        </div>
                     </div>
 
                     <DataTable
@@ -284,27 +288,38 @@ defineExpose({ refreshList: loadResources, openBlankEditor });
     flex-direction: column;
     height: 100%;
     min-height: 0;
-    padding: 1rem;
 }
 
 .list-header {
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
-    margin-bottom: 1rem;
 }
 
-.list-header-top {
+.list-header-toolbar {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    min-height: 3rem;
+    background: var(--p-header-toolbar-background);
+    border-bottom: 0.0625rem solid var(--p-header-toolbar-border);
+    padding: 0.375rem 1rem;
+}
+
+.header-buttons {
+    display: flex;
+    gap: 0.25rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.list-header-content {
+    padding: 0.75rem 1rem;
 }
 
 .page-title {
     margin: 0;
-    font-size: var(--p-lingo-font-size-large, 1.25rem);
-    font-weight: var(--p-lingo-font-weight-normal, 600);
-    color: var(--p-neutral-700);
+    font-size: var(--p-lingo-font-size-large);
+    font-weight: var(--p-lingo-font-weight-normal);
 }
 
 .search-field {
@@ -314,11 +329,13 @@ defineExpose({ refreshList: loadResources, openBlankEditor });
 
 .search-input {
     width: 100%;
+    border-radius: 0.125rem;
 }
 
 .resource-table {
     flex: 1;
     min-height: 0;
+    padding: 0 1rem;
 }
 
 .unnamed-resource {
@@ -347,15 +364,16 @@ defineExpose({ refreshList: loadResources, openBlankEditor });
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1rem;
-    border-bottom: 0.0625rem solid var(--p-highlight-focus-background);
+    background: var(--p-header-toolbar-background);
+    border-bottom: 0.0625rem solid var(--p-header-toolbar-border);
+    padding: 0 1rem;
+    padding-bottom: 0.1rem;
 }
 
 .editor-title {
-    margin: 0;
-    font-size: var(--p-lingo-font-size-medium, 1rem);
-    font-weight: var(--p-lingo-font-weight-normal, 600);
-    color: var(--p-neutral-700);
+    margin: 0.75rem 0;
+    font-size: var(--p-lingo-font-size-large);
+    font-weight: var(--p-lingo-font-weight-normal);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -377,10 +395,27 @@ defineExpose({ refreshList: loadResources, openBlankEditor });
 .editor-body {
     flex: 1;
     overflow-y: auto;
-    padding: 1rem;
+    padding: 0.5rem 1rem;
+    background: var(--p-editor-form-background);
 }
 
 :deep(.name-column) {
     min-width: 12rem;
+}
+
+:deep(.p-inputtext),
+:deep(.p-multiselect),
+:deep(.p-textarea),
+:deep(.p-treeselect),
+:deep(.p-select) {
+    border-radius: 0.125rem;
+}
+
+:deep(.p-inputtext) {
+    font-size: 0.875rem !important;
+}
+
+:deep(.p-treeselect-label) {
+    font-size: 0.875rem !important;
 }
 </style>
