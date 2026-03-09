@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rdf:RDF
+  xmlns:skos="http://www.w3.org/2004/02/skos/core#"
+  xmlns:arches="http://localhost:8000/"
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  xmlns:dcterms="http://purl.org/dc/terms/"
+>
+  <skos:Concept rdf:about="http://localhost:8000/de263fe8-5ebd-4d6c-a7c7-8068598ba962">
+    <skos:prefLabel xml:lang="en">namespaces</skos:prefLabel>
+    <dcterms:identifier>https://vocab.getty.edu/aat/300456599</dcterms:identifier>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</arches:sortorder>
+    <skos:scopeNote xml:lang="en">Text elements that act as containers or environments created to hold a logical grouping of unique identifiers, as for a scheme or concept.</skos:scopeNote>
+    <skos:inScheme>
+      <skos:ConceptScheme rdf:about="http://localhost:8000/a8da34eb-575b-498c-ada7-161ee745fd16">
+        <dcterms:title>Identifier Types</dcterms:title>
+      </skos:ConceptScheme>
+    </skos:inScheme>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/926aa6de-a7e6-4959-9fc4-5ea87c46d677">
+    <dcterms:identifier>https://vocab.getty.edu/aat/300456598</dcterms:identifier>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">3</arches:sortorder>
+    <skos:prefLabel xml:lang="en">version numbers</skos:prefLabel>
+    <skos:scopeNote xml:lang="en">Numeric identifiers which indicate unique iterative states of an object.</skos:scopeNote>
+    <skos:inScheme rdf:resource="http://localhost:8000/a8da34eb-575b-498c-ada7-161ee745fd16"/>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/d98bfcab-fa26-4c8b-992d-a56eb7bbbaa2">
+    <skos:scopeNote xml:lang="en">Strings of characters or numbers used to identify individual electronic resources online.</skos:scopeNote>
+    <skos:prefLabel xml:lang="en">uniform resource identifiers</skos:prefLabel>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/a8da34eb-575b-498c-ada7-161ee745fd16"/>
+    <dcterms:identifier>https://vocab.getty.edu/aat/300404629</dcterms:identifier>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/d8ba08f9-b265-4288-9412-857c77fe2581">
+    <skos:prefLabel xml:lang="en">identifier</skos:prefLabel>
+    <dcterms:identifier>https://vocab.getty.edu/aat/300404012</dcterms:identifier>
+    <skos:scopeNote xml:lang="en">Numbers or alphanumeric codes that are not repeated within a given environment and used to unambiguously and uniquely identify an object, record, or data element.</skos:scopeNote>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/a8da34eb-575b-498c-ada7-161ee745fd16"/>
+  </skos:Concept>
+</rdf:RDF>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rdf:RDF
+  xmlns:skos="http://www.w3.org/2004/02/skos/core#"
+  xmlns:dcterms="http://purl.org/dc/terms/"
+  xmlns:arches="http://localhost:8000/"
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+>
+  <skos:Concept rdf:about="http://localhost:8000/2e3a2045-b44e-47fc-a27b-3078b17e08e4">
+    <skos:altLabel xml:lang="en">prefLabel</skos:altLabel>
+    <skos:inScheme>
+      <skos:ConceptScheme rdf:about="http://localhost:8000/deb847fc-f4c3-4e82-be19-04641579f129">
+        <dcterms:title>label</dcterms:title>
+      </skos:ConceptScheme>
+    </skos:inScheme>
+    <dcterms:identifier>http://www.w3.org/2004/02/skos/core#prefLabel</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">preferred label</skos:prefLabel>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</arches:sortorder>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/df24d257-b547-4733-ae89-dfffa3597683">
+    <skos:prefLabel xml:lang="en">hidden label</skos:prefLabel>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</arches:sortorder>
+    <skos:altLabel xml:lang="en">hiddenLabel</skos:altLabel>
+    <dcterms:identifier>http://www.w3.org/2004/02/skos/core#hiddenLabel</dcterms:identifier>
+    <skos:inScheme rdf:resource="http://localhost:8000/deb847fc-f4c3-4e82-be19-04641579f129"/>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/19376b93-4bdc-4d48-a22a-71121506b70b">
+    <skos:altLabel xml:lang="en">altLabel</skos:altLabel>
+    <dcterms:identifier>http://www.w3.org/2004/02/skos/core#altLabel</dcterms:identifier>
+    <skos:inScheme rdf:resource="http://localhost:8000/deb847fc-f4c3-4e82-be19-04641579f129"/>
+    <skos:prefLabel xml:lang="en">alternative label</skos:prefLabel>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</arches:sortorder>
+  </skos:Concept>
+</rdf:RDF>

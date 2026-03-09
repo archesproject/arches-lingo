@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rdf:RDF
+  xmlns:skos="http://www.w3.org/2004/02/skos/core#"
+  xmlns:arches="http://localhost:8000/"
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  xmlns:dcterms="http://purl.org/dc/terms/"
+>
+  <skos:Concept rdf:about="http://localhost:8000/774994db-54d3-4793-baa1-2810410be8d0">
+    <skos:scopeNote xml:lang="en">Structures or parts of structures that are the result of conscious construction, are of practical use, are relatively stable and permanent, and are of a size and scale appropriate for--but not limited to--habitable buildings. Works of architecture are manifestations of the built environment that is typically classified as fine art, meaning it is generally considered to have aesthetic value, was designed by an architect (whether or not his or her name is known), and constructed with skilled labor. For the art or science of designing and building structures, use "architecture (discipline)."</skos:scopeNote>
+    <dcterms:identifier>https://vocab.getty.edu/aat/300263552</dcterms:identifier>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</arches:sortorder>
+    <skos:inScheme>
+      <skos:ConceptScheme rdf:about="http://localhost:8000/8fe1efd6-c90e-4f64-a125-14b2cc4d78e3">
+        <dcterms:title>Subject Types</dcterms:title>
+      </skos:ConceptScheme>
+    </skos:inScheme>
+    <skos:prefLabel xml:lang="en">architecture</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/d1544a63-b04e-4ec6-b6b1-256cd70c4954">
+    <skos:prefLabel xml:lang="en">art</skos:prefLabel>
+    <skos:scopeNote xml:lang="en">General term for the broad genre of objects, environments, or experiences (as in performance art) that are visual in nature, were created by the use of skill and imagination, and possess an aesthetic that is valued and of a quality and type that would be collected by art museums. It may refer to the study or practice of the fine arts or the fine and decorative arts together. For the discipline of art including reference to expertise of art, use "art (discipline)."</skos:scopeNote>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</arches:sortorder>
+    <dcterms:identifier>https://vocab.getty.edu/aat/300417586</dcterms:identifier>
+    <skos:inScheme rdf:resource="http://localhost:8000/8fe1efd6-c90e-4f64-a125-14b2cc4d78e3"/>
+  </skos:Concept>
+</rdf:RDF>

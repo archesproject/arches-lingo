@@ -28,5 +28,5 @@ class Migration(migrations.Migration):
         )
 
     operations = [
-        migrations.RunPython(load_lists, migrations.RunPython.noop),
+        migrations.RunPython(migrations.RunPython.noop, migrations.RunPython.noop),
     ]

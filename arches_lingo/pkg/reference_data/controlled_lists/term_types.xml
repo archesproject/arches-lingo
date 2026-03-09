@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rdf:RDF
+  xmlns:skos="http://www.w3.org/2004/02/skos/core#"
+  xmlns:arches="http://localhost:8000/"
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  xmlns:dcterms="http://purl.org/dc/terms/"
+>
+  <skos:Concept rdf:about="http://localhost:8000/45fab276-7818-4c83-8dd8-43e4e862904c">
+    <dcterms:identifier>http://vocab.getty.edu/page/aat/300386700</dcterms:identifier>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</arches:sortorder>
+    <skos:inScheme>
+      <skos:ConceptScheme rdf:about="http://localhost:8000/4f9b2c82-59c6-4173-99ea-2a6bfbab6aa2">
+        <dcterms:title>Term Types</dcterms:title>
+      </skos:ConceptScheme>
+    </skos:inScheme>
+    <skos:prefLabel xml:lang="en">guide term</skos:prefLabel>
+    <skos:definition xml:lang="en"><![CDATA[A guide term is a record represented by a term or phrase that is created as a hierarchical level to provide order and structure to thesauri by grouping narrower terms according to a given logic. Guide terms are not used for indexing and are often enclosed in angled brackets or otherwise distinguished from other terms in displays (for example, <photographs by form>).]]></skos:definition>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/d1012561-bd8f-4498-b7b1-fea78cb73afa">
+    <skos:inScheme rdf:resource="http://localhost:8000/4f9b2c82-59c6-4173-99ea-2a6bfbab6aa2"/>
+    <skos:definition xml:lang="en">A term is a word or group of words representing a single concept; a vocabulary record comprises terms and other information, including relationships, scope note, sources, etc. Additionally, in the jargon of thesaurus construction, the word term is often used as shorthand to actually refer to the concept that is represented by that term (for example, BT and NT actually refer to the relationships between concepts). The distinction between a term in the strict sense and term meaning a record must often be inferred from the context of the discussion.</skos:definition>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">3</arches:sortorder>
+    <skos:prefLabel xml:lang="en">concept</skos:prefLabel>
+    <dcterms:identifier>http://vocab.getty.edu/page/aat/300387329</dcterms:identifier>
+  </skos:Concept>
+</rdf:RDF>

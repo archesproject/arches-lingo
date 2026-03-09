@@ -43,6 +43,7 @@ class ImportTests(TransactionTestCase):
     def setUp(cls):
         """setUpClass doesn't work because the rollback fixture is applied after that."""
         cls.register_etl_module()
+        ViewTests.load_controlled_lists()
         ViewTests.load_ontology()
         ViewTests.load_graphs()
         cls.moduleid = ETLModule.objects.get(slug="migrate-to-lingo").pk
