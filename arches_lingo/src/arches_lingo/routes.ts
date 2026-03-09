@@ -54,6 +54,42 @@ export const routes = [
         },
     },
     {
+        path: "/sources",
+        name: "sources",
+        component: () => import("@/arches_lingo/pages/SourcesPage.vue"),
+        meta: {
+            shouldShowNavigation: true,
+            requiresAuthentication: true,
+        },
+    },
+    {
+        path: "/source/:id",
+        name: "source",
+        component: () => import("@/arches_lingo/pages/SourcesPage.vue"),
+        meta: {
+            shouldShowNavigation: true,
+            requiresAuthentication: true,
+        },
+    },
+    {
+        path: "/contributors",
+        name: "contributors",
+        component: () => import("@/arches_lingo/pages/ContributorsPage.vue"),
+        meta: {
+            shouldShowNavigation: true,
+            requiresAuthentication: true,
+        },
+    },
+    {
+        path: "/contributor/:id",
+        name: "contributor",
+        component: () => import("@/arches_lingo/pages/ContributorsPage.vue"),
+        meta: {
+            shouldShowNavigation: true,
+            requiresAuthentication: true,
+        },
+    },
+    {
         path: "/profile",
         name: "profile",
         component: () => import("@/arches_lingo/pages/UserProfilePage.vue"),
@@ -73,5 +109,9 @@ export const routeNames = {
     schemes: "schemes",
     concept: "concept",
     scheme: "scheme",
+    sources: "sources",
+    source: "source",
+    contributors: "contributors",
+    contributor: "contributor",
     profile: "profile",
 };

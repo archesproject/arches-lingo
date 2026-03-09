@@ -91,6 +91,18 @@ export interface ResourceInstanceResult {
     resource_instance_lifecycle_state?: string;
 }
 
+export interface ResourceSummary {
+    resourceinstanceid: string;
+    display_name: string;
+    graph_slug: string;
+    graph_name: string;
+}
+
+export interface PaginatedResourceListResponse {
+    count: number;
+    results: ResourceSummary[];
+}
+
 export type DataComponentMode = typeof EDIT | typeof VIEW;
 
 export interface MetaStringText {

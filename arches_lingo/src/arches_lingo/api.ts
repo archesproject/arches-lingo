@@ -13,6 +13,7 @@ import type {
     ConceptSetItem,
     DigitalObjectInstance,
     EditLogEntry,
+    PaginatedResourceListResponse,
     SavedSearchItem,
     SchemeInstance,
     TileData,
@@ -154,6 +155,44 @@ export const fetchLingoResourcesBatch = async (
 
     const response = await fetch(
         `${arches.urls.api_lingo_resources(graphSlug)}?${new URLSearchParams(params)}`,
+    );
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
+export const fetchSources = async (
+    search: string = "",
+    limit: number = 25,
+    offset: number = 0,
+): Promise<PaginatedResourceListResponse> => {
+    const params = new URLSearchParams({
+        limit: String(limit),
+        offset: String(offset),
+    });
+    if (search) {
+        params.set("search", search);
+    }
+    const response = await fetch(`${arches.urls.api_lingo_sources}?${params}`);
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
+export const fetchContributors = async (
+    search: string = "",
+    limit: number = 25,
+    offset: number = 0,
+): Promise<PaginatedResourceListResponse> => {
+    const params = new URLSearchParams({
+        limit: String(limit),
+        offset: String(offset),
+    });
+    if (search) {
+        params.set("search", search);
+    }
+    const response = await fetch(
+        `${arches.urls.api_lingo_contributors}?${params}`,
     );
     const parsed = await response.json();
     if (!response.ok) throw new Error(parsed.message || response.statusText);
