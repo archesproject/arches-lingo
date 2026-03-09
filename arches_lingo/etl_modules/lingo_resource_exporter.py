@@ -538,4 +538,12 @@ class LingoResourceExporter:
         self.load_event.error_message = str(error)
         self.load_event.save()
         logger.error(error)
+        if hasattr(self, "user"):
+            scheme_name = getattr(self, "scheme_name", "")
+            message = (
+                _("{name} export failed").format(name=scheme_name)
+                if scheme_name
+                else _("Export failed")
+            )
+            notify_completion(message, self.user)
         return {"success": False, "data": {"message": error}}
