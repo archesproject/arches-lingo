@@ -18,7 +18,7 @@ from arches_lingo.utils.concept_builder import ConceptBuilder
 class SchemeResourceView(AnonymousAccessMixin, View):
     def get(self, request, pk):
         scheme_id = str(pk)
-        include_top_concepts = (
+        include_top_concepts = bool(request.GET.get("include_top_concepts"))
             request.GET.get("include_top_concepts", "").lower() == "true"
         )
 
