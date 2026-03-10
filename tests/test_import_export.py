@@ -17,6 +17,7 @@ from arches.app.models.models import (
     LoadEvent,
     Relation,
     ResourceInstance,
+    UserXNotification,
     Value,
 )
 from arches.app.utils.skos import SKOSReader
@@ -109,6 +110,7 @@ class ImportTests(TransactionTestCase):
         1. Management command path, importing from a SKOS RDF file.
         2. HTTP Request path, importing from a SKOS RDF file upload.
         3. Migrate Concepts & Schemes from RDM
+        4. Ensure that an import failure sends a notification to the user
         """
 
         # 1. Test Import from SKOS via management command path
@@ -206,8 +208,34 @@ class ImportTests(TransactionTestCase):
         self.assertTrue(write_request1["success"])
         self._assert_resources_loaded()
         print("Test migrate from RDM completed.\n")
+        importer.reverse_load(loadid=start_event1.loadid)
 
-        # No need to reverse load because tearDown will reset the DB
+        # 4. test_import_failure_sends_notification(self):
+        admin_user = User.objects.get(username="admin")
+
+        load_event = LoadEvent.objects.create(
+            user_id=1, etl_module_id=self.moduleid, status="running"
+        )
+        request = HttpRequest()
+        request.method = "POST"
+        request.user = admin_user
+        request.POST["load_id"] = str(load_event.loadid)
+        request.POST["module"] = str(self.moduleid)
+        request.POST["overwrite_option"] = "overwrite"
+        request.POST["action"] = "write"
+        # No file or scheme provided — triggers the return_with_error path
+
+        importer = LingoResourceImporter(request=request)
+        response = importer.write(request=request)
+
+        self.assertFalse(response["success"])
+        latest_notification = (
+            UserXNotification.objects.filter(recipient=admin_user)
+            .order_by("-notif__created")
+            .first()
+            .notif
+        )
+        self.assertIn("Import failed", latest_notification.message)
 
 
 class ExportTests(TestCase):
@@ -365,3 +393,17 @@ class ExportTests(TestCase):
     def test_export_unsupported_format(self):
         response = self._run_export(self.test_scheme.pk, "unsupported_format")
         self.assertFalse(response["success"])
+
+    def test_export_failure_sends_notification(self):
+        admin_user = User.objects.get(username="admin")
+        notifications_before = UserXNotification.objects.filter(
+            recipient=admin_user
+        ).count()
+
+        response = self._run_export(self.test_scheme.pk, "unsupported_format")
+
+        self.assertFalse(response["success"])
+        notifications_after = UserXNotification.objects.filter(
+            recipient=admin_user
+        ).count()
+        self.assertGreater(notifications_after, notifications_before)
