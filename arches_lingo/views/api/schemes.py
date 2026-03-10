@@ -1,6 +1,5 @@
 from collections import Counter
 
-from django.http import JsonResponse
 from django.utils.translation import gettext as _
 from django.views.generic import View
 
@@ -11,7 +10,6 @@ from arches_querysets.models import ResourceTileTree
 
 from arches_lingo.const import CONCEPT_NAME_NODEGROUP, CONCEPT_NAME_LANGUAGE_NODE
 from arches_lingo.mixins.anonymous_access import AnonymousAccessMixin
-from arches_lingo.permissions import anonymous_access_allowed, is_authenticated_user
 from arches_lingo.utils.concept_builder import ConceptBuilder
 
 
@@ -19,8 +17,6 @@ class SchemeResourceView(AnonymousAccessMixin, View):
     def get(self, request, pk):
         scheme_id = str(pk)
         include_top_concepts = bool(request.GET.get("include_top_concepts"))
-            request.GET.get("include_top_concepts", "").lower() == "true"
-        )
 
         builder = ConceptBuilder(concept_ids=[])
         builder.populate_schemes([scheme_id])
