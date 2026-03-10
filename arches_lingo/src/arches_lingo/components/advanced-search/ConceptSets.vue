@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, watch } from "vue";
 import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
 
@@ -22,11 +22,14 @@ import {
     ERROR,
     SUCCESS,
 } from "@/arches_lingo/constants.ts";
+import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 
 import type { ConceptSetItem } from "@/arches_lingo/types.ts";
 
 const { $gettext } = useGettext();
 const toast = useToast();
+const userStore = useUserStore();
+const { isAnonymous } = userStore;
 
 defineProps<{
     selectedConceptIds: Set<string>;
@@ -178,7 +181,15 @@ defineExpose({
     loadConceptSets,
 });
 
-onMounted(loadConceptSets);
+watch(
+    () => isAnonymous,
+    (isAnonymous) => {
+        if (!isAnonymous) {
+            loadConceptSets();
+        }
+    },
+    { immediate: true },
+);
 </script>
 
 <template>

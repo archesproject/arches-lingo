@@ -7,7 +7,7 @@ from http import HTTPStatus
 from pathlib import Path
 
 from django.conf import settings
-from django.contrib.auth.models import Group, User
+from django.contrib.auth.models import User
 from django.core import management
 from django.test import TestCase
 from django.test.utils import captured_stdout
@@ -844,14 +844,6 @@ class AdvancedSearchViewTests(TestCase):
         cls.load_ontology()
         cls.load_graphs()
         cls.admin = User.objects.get(username="admin")
-        # Ensure admin is in RDM Administrator group
-        rdm_group, _ = Group.objects.get_or_create(name="RDM Administrator")
-        cls.admin.groups.add(rdm_group)
-
-        cls.non_admin = User.objects.create_user(
-            username="non_admin_advsearch",
-            password="pass",
-        )
 
         reference = DataTypeFactory().get_instance("reference")
         label_config = {"controlledList": LABEL_LIST_ID}
@@ -994,11 +986,8 @@ class SavedSearchViewTests(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.admin = User.objects.create_user(username="ss_admin", password="pass")
-        rdm_group, _ = Group.objects.get_or_create(name="RDM Administrator")
-        cls.admin.groups.add(rdm_group)
 
         cls.other_user = User.objects.create_user(username="ss_other", password="pass")
-        rdm_group.user_set.add(cls.other_user)
 
     def setUp(self):
         self.client.force_login(self.admin)
@@ -1047,11 +1036,8 @@ class ConceptSetViewTests(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.admin = User.objects.create_user(username="cs_admin", password="pass")
-        rdm_group, _ = Group.objects.get_or_create(name="RDM Administrator")
-        cls.admin.groups.add(rdm_group)
 
         cls.other_user = User.objects.create_user(username="cs_other", password="pass")
-        rdm_group.user_set.add(cls.other_user)
 
     def setUp(self):
         self.client.force_login(self.admin)
@@ -1105,11 +1091,8 @@ class ConceptSetMembersViewTests(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.admin = User.objects.create_user(username="csm_admin", password="pass")
-        rdm_group, _ = Group.objects.get_or_create(name="RDM Administrator")
-        cls.admin.groups.add(rdm_group)
 
         cls.other_user = User.objects.create_user(username="csm_other", password="pass")
-        rdm_group.user_set.add(cls.other_user)
 
     def setUp(self):
         self.client.force_login(self.admin)

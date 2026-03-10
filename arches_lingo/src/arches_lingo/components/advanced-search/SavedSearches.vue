@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, watch } from "vue";
 import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
 
@@ -18,6 +18,7 @@ import {
     SUCCESS,
     DEFAULT_TOAST_LIFE,
 } from "@/arches_lingo/constants.ts";
+import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 
 import type {
     AdvancedSearchQuery,
@@ -26,6 +27,8 @@ import type {
 
 const { $gettext } = useGettext();
 const toast = useToast();
+const userStore = useUserStore();
+const { isAnonymous } = userStore;
 
 const props = defineProps<{
     currentQuery: AdvancedSearchQuery;
@@ -106,7 +109,15 @@ function loadSearch(search: SavedSearchItem) {
     emit("load-search", search.query);
 }
 
-onMounted(loadSavedSearches);
+watch(
+    () => isAnonymous,
+    (isAnonymous) => {
+        if (!isAnonymous) {
+            loadSavedSearches();
+        }
+    },
+    { immediate: true },
+);
 </script>
 
 <template>

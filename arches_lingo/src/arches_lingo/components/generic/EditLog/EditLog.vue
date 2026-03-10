@@ -19,6 +19,7 @@ import {
     ERROR,
     SUCCESS,
 } from "@/arches_lingo/constants.ts";
+import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 
 import type { DataComponentMode, EditLogEntry } from "@/arches_lingo/types.ts";
 
@@ -37,6 +38,7 @@ const refreshReportSection = inject<(componentName: string) => void>(
 
 const toast = useToast();
 const { $gettext } = useGettext();
+const { isEditor } = useUserStore();
 
 const isLoading = ref(true);
 const isReverting = ref(false);
@@ -159,7 +161,7 @@ function shouldShowCardNameRow(editEntry: EditLogEntry) {
 }
 
 function canRevert(editEntry: EditLogEntry) {
-    return !nonRevertableEditTypes.has(editEntry.edittype);
+    return !nonRevertableEditTypes.has(editEntry.edittype) && isEditor;
 }
 
 function confirmRevert(editEntry: EditLogEntry) {

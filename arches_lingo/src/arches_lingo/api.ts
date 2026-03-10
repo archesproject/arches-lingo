@@ -7,6 +7,7 @@ import type {
     AdvancedSearchQuery,
     AdvancedSearchResponse,
     AdvancedSearchOptions,
+    AppSettings,
     ConceptInstance,
     ConceptSetDetail,
     ConceptSetItem,
@@ -51,8 +52,19 @@ export const logout = async () => {
     throw new Error(parsedError.message || response.statusText);
 };
 
-export const fetchUser = async () => {
-    const response = await fetch(arches.urls.api_user);
+export const fetchAppSettings = async (): Promise<AppSettings> => {
+    const response = await fetch(
+        generateArchesURL("arches_lingo:api-lingo-settings"),
+    );
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
+export const fetchUser = async (): Promise<User> => {
+    const response = await fetch(
+        generateArchesURL("arches_lingo:api-lingo-user"),
+    );
     const parsed = await response.json();
     if (!response.ok) throw new Error(parsed.message || response.statusText);
     return parsed;
@@ -60,7 +72,7 @@ export const fetchUser = async () => {
 
 export const fetchUserProfile = async (): Promise<User> => {
     const response = await fetch(
-        generateArchesURL("arches_lingo:api_lingo_user_profile"),
+        generateArchesURL("arches_lingo:api-lingo-user-profile"),
     );
     const parsed = await response.json();
     if (!response.ok) throw new Error(parsed.message || response.statusText);
@@ -68,10 +80,12 @@ export const fetchUserProfile = async (): Promise<User> => {
 };
 
 export const updateUserProfile = async (
-    profile: Omit<User, "username">,
+    profile: Pick<User, "first_name" | "last_name" | "email"> & {
+        phone?: string;
+    },
 ): Promise<User> => {
     const response = await fetch(
-        generateArchesURL("arches_lingo:api_lingo_user_profile"),
+        generateArchesURL("arches_lingo:api-lingo-user-profile"),
         {
             method: "PUT",
             headers: {
@@ -92,7 +106,7 @@ export const changePassword = async (
     newPassword2: string,
 ): Promise<{ success: string }> => {
     const response = await fetch(
-        generateArchesURL("arches_lingo:api_lingo_change_password"),
+        generateArchesURL("arches_lingo:api-lingo-change-password"),
         {
             method: "POST",
             headers: {

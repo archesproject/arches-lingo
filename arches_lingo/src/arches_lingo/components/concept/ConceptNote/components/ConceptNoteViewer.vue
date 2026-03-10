@@ -8,6 +8,7 @@ import MetaStringViewer from "@/arches_lingo/components/generic/MetaStringViewer
 import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
 
 import { VIEW } from "@/arches_lingo/constants.ts";
+import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 
 import type { MetaStringText, ConceptStatement } from "@/arches_lingo/types.ts";
 
@@ -23,6 +24,7 @@ const props = defineProps<{
 const { $gettext } = useGettext();
 
 const openEditor = inject<(componentName: string) => void>("openEditor");
+const { isEditor } = useUserStore();
 
 const metaStringLabel: MetaStringText = {
     deleteConfirm: $gettext("Are you sure you want to delete this note?"),
@@ -44,6 +46,7 @@ const metaStringLabel: MetaStringText = {
             <h2>{{ props.sectionTitle }}</h2>
 
             <Button
+                v-if="isEditor"
                 v-tooltip.top="{
                     disabled: Boolean(props.resourceInstanceId),
                     value: $gettext(

@@ -23,6 +23,7 @@ import {
 } from "@/arches_lingo/constants.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
+import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 
 const props = defineProps<{
     componentName: string;
@@ -51,6 +52,8 @@ const refreshReportSection = inject<(componentName: string) => void>(
 );
 
 const refreshSchemeHierarchy = inject<() => void>("refreshSchemeHierarchy");
+
+const { isEditor } = useUserStore();
 
 function getIcon(item: SearchResultItem) {
     //TODO need a better way to determine if item is a scheme or not
@@ -133,6 +136,7 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
             <h2>{{ props.sectionTitle }}</h2>
 
             <Button
+                v-if="isEditor"
                 v-tooltip.top="{
                     disabled: Boolean(props.resourceInstanceId),
                     value: $gettext(
@@ -197,6 +201,7 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
                         </span>
                         <div
                             v-if="
+                                isEditor &&
                                 subindex === hierarchy.searchResults.length - 1
                             "
                             style="margin-inline-start: 0.5rem; display: flex"

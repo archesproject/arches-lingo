@@ -1,22 +1,21 @@
 from collections import Counter
 
-from django.utils.decorators import method_decorator
+from django.http import JsonResponse
+from django.utils.translation import gettext as _
 from django.views.generic import View
 
 from arches.app.models.models import Language, TileModel
-from arches.app.utils.decorators import group_required
 from arches.app.utils.response import JSONErrorResponse, JSONResponse
 
 from arches_querysets.models import ResourceTileTree
 
 from arches_lingo.const import CONCEPT_NAME_NODEGROUP, CONCEPT_NAME_LANGUAGE_NODE
+from arches_lingo.mixins.anonymous_access import AnonymousAccessMixin
+from arches_lingo.permissions import anonymous_access_allowed, is_authenticated_user
 from arches_lingo.utils.concept_builder import ConceptBuilder
 
 
-@method_decorator(
-    group_required("RDM Administrator", raise_exception=True), name="dispatch"
-)
-class SchemeResourceView(View):
+class SchemeResourceView(AnonymousAccessMixin, View):
     def get(self, request, pk):
         scheme_id = str(pk)
         builder = ConceptBuilder(concept_ids=[])
@@ -34,10 +33,7 @@ class SchemeResourceView(View):
         return JSONResponse(data)
 
 
-@method_decorator(
-    group_required("RDM Administrator", raise_exception=True), name="dispatch"
-)
-class SchemeLabelCountView(View):
+class SchemeLabelCountView(AnonymousAccessMixin, View):
     def get(self, request, pk):
         scheme_id = str(pk)
 

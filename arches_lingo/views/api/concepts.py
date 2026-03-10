@@ -2,15 +2,16 @@ from http import HTTPStatus
 
 from django.conf import settings
 from django.core.paginator import Paginator
-from django.utils.decorators import method_decorator
+from django.http import JsonResponse
 from django.utils.translation import get_language, gettext as _
 from django.views.generic import View
 
 from arches.app.utils.betterJSONSerializer import JSONDeserializer, JSONSerializer
-from arches.app.utils.decorators import group_required
 from arches.app.utils.response import JSONErrorResponse, JSONResponse
 
 from arches_querysets.models import ResourceTileTree, TileTree
+from arches_lingo.mixins.anonymous_access import AnonymousAccessMixin
+from arches_lingo.permissions import anonymous_access_allowed, is_authenticated_user
 from arches_lingo.utils.concept_builder import ConceptBuilder
 from arches_lingo.utils.concepts import (
     resolve_max_edit_distance,
@@ -25,10 +26,7 @@ from arches_lingo.utils.dashboard import (
 )
 
 
-@method_decorator(
-    group_required("RDM Administrator", raise_exception=True), name="dispatch"
-)
-class ConceptTreeView(View):
+class ConceptTreeView(AnonymousAccessMixin, View):
     def get(self, request):
         builder = ConceptBuilder()
         data = {
@@ -37,9 +35,6 @@ class ConceptTreeView(View):
         return JSONResponse(data)
 
 
-@method_decorator(
-    group_required("RDM Administrator", raise_exception=True), name="dispatch"
-)
 class ValueSearchView(ConceptTreeView):
     def get(self, request):
         term = request.GET.get("term")
@@ -130,9 +125,6 @@ class ValueSearchView(ConceptTreeView):
         )
 
 
-@method_decorator(
-    group_required("RDM Administrator", raise_exception=True), name="dispatch"
-)
 class ConceptResourceView(ConceptTreeView):
     def get(self, request):
         scheme = request.GET.get("scheme", None)
@@ -181,9 +173,6 @@ class ConceptResourceView(ConceptTreeView):
         )
 
 
-@method_decorator(
-    group_required("RDM Administrator", raise_exception=True), name="dispatch"
-)
 class ConceptRelationshipView(ConceptTreeView):
     def get(self, request):
         concept_id = request.GET.get("concept")
@@ -205,10 +194,7 @@ class ConceptRelationshipView(ConceptTreeView):
         return JSONResponse(return_data)
 
 
-@method_decorator(
-    group_required("RDM Administrator", raise_exception=True), name="dispatch"
-)
-class ConceptMissingTranslationsView(View):
+class ConceptMissingTranslationsView(AnonymousAccessMixin, View):
     def get(self, request):
         language_code = request.GET.get("language")
         if not language_code:

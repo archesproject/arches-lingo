@@ -1,13 +1,15 @@
 import json
 from http import HTTPStatus
 
-from django.utils.decorators import method_decorator
 from django.utils.translation import gettext as _
 from django.views.generic import View
 
-from arches.app.utils.decorators import group_required
 from arches.app.utils.response import JSONErrorResponse, JSONResponse
 
+from arches_lingo.mixins.anonymous_access import (
+    AnonymousAccessMixin,
+    AuthenticatedUserMixin,
+)
 from arches_lingo.models import ConceptSet, SavedSearch
 from arches_lingo.utils.search_service import (
     add_members_to_concept_set,
@@ -44,10 +46,7 @@ def _get_user_concept_set(user, pk):
         )
 
 
-@method_decorator(
-    group_required("RDM Administrator", raise_exception=True), name="dispatch"
-)
-class AdvancedSearchView(View):
+class AdvancedSearchView(AnonymousAccessMixin, View):
 
     def post(self, request):
         body, error_response = _parse_json_body(request)
@@ -71,19 +70,13 @@ class AdvancedSearchView(View):
         return JSONResponse(result)
 
 
-@method_decorator(
-    group_required("RDM Administrator", raise_exception=True), name="dispatch"
-)
-class AdvancedSearchOptionsView(View):
+class AdvancedSearchOptionsView(AnonymousAccessMixin, View):
 
     def get(self, request):
         return JSONResponse(fetch_search_options())
 
 
-@method_decorator(
-    group_required("RDM Administrator", raise_exception=True), name="dispatch"
-)
-class SavedSearchListView(View):
+class SavedSearchListView(AuthenticatedUserMixin, View):
 
     def get(self, request):
         searches = SavedSearch.objects.filter(user=request.user)
@@ -115,10 +108,7 @@ class SavedSearchListView(View):
         )
 
 
-@method_decorator(
-    group_required("RDM Administrator", raise_exception=True), name="dispatch"
-)
-class SavedSearchDetailView(View):
+class SavedSearchDetailView(AuthenticatedUserMixin, View):
 
     def delete(self, request, pk):
         try:
@@ -155,10 +145,7 @@ class SavedSearchDetailView(View):
         return JSONResponse(serialize_saved_search(search))
 
 
-@method_decorator(
-    group_required("RDM Administrator", raise_exception=True), name="dispatch"
-)
-class ConceptSetListView(View):
+class ConceptSetListView(AuthenticatedUserMixin, View):
 
     def get(self, request):
         concept_sets = ConceptSet.objects.filter(user=request.user)
@@ -194,10 +181,7 @@ class ConceptSetListView(View):
         )
 
 
-@method_decorator(
-    group_required("RDM Administrator", raise_exception=True), name="dispatch"
-)
-class ConceptSetDetailView(View):
+class ConceptSetDetailView(AuthenticatedUserMixin, View):
 
     def get(self, request, pk):
         concept_set, error_response = _get_user_concept_set(request.user, pk)
@@ -230,10 +214,7 @@ class ConceptSetDetailView(View):
         return JSONResponse({"deleted": True})
 
 
-@method_decorator(
-    group_required("RDM Administrator", raise_exception=True), name="dispatch"
-)
-class ConceptSetMembersView(View):
+class ConceptSetMembersView(AuthenticatedUserMixin, View):
 
     def post(self, request, pk):
         concept_set, error_response = _get_user_concept_set(request.user, pk)

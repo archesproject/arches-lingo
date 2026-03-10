@@ -4,9 +4,9 @@ from http import HTTPStatus
 from pathlib import Path
 
 from django.conf import settings
-from django.contrib.auth.models import User
+from django.contrib.auth.models import AnonymousUser, Group, User
 from django.core import management
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.test.utils import captured_stdout
 from django.urls import reverse
 
@@ -21,7 +21,11 @@ from arches_controlled_lists.management.commands.packages import (
     Command as ControlledListsPackageCommand,
 )
 
+from arches_lingo.permissions import (
+    is_lingo_editor,
+)
 from arches_lingo.const import (
+    LINGO_EDITOR_GROUP_NAME,
     CONCEPTS_GRAPH_ID,
     SCHEMES_GRAPH_ID,
     TOP_CONCEPT_OF_NODE_AND_NODEGROUP,
@@ -424,12 +428,28 @@ class ViewTests(TestCase):
         self.assertEqual(result, [])
 
     def test_scheme_label_counts_unauthenticated(self):
-        """Unauthenticated requests should be rejected."""
+        """Anonymous users should be able to read scheme label counts when allowed."""
         self.client.logout()
-        response = self.client.get(
-            reverse("api-lingo-scheme-label-counts", kwargs={"pk": self.scheme.pk})
-        )
-        self.assertIn(response.status_code, (302, 403))
+        with self.settings(LINGO_ALLOW_ANONYMOUS_ACCESS=True):
+            response = self.client.get(
+                reverse(
+                    "api-lingo-scheme-label-counts",
+                    kwargs={"pk": self.scheme.pk},
+                )
+            )
+        self.assertEqual(response.status_code, 200)
+
+    def test_scheme_label_counts_unauthenticated_denied(self):
+        """Anonymous users should be denied when anonymous access is disabled."""
+        self.client.logout()
+        with self.settings(LINGO_ALLOW_ANONYMOUS_ACCESS=False):
+            response = self.client.get(
+                reverse(
+                    "api-lingo-scheme-label-counts",
+                    kwargs={"pk": self.scheme.pk},
+                )
+            )
+        self.assertEqual(response.status_code, 403)
 
     def test_guide_term_flag_in_concept_tree(self):
         """Concepts with guide term concept type should be flagged."""
@@ -516,6 +536,74 @@ class ViewTests(TestCase):
         for narrower_concept in top["narrower"]:
             self.assertFalse(narrower_concept["guide_term"])
 
+    @override_settings(LINGO_ALLOW_ANONYMOUS_ACCESS=True)
+    def test_anonymous_can_read_concept_trees(self):
+        """Anonymous users should be able to read the concept tree when allowed."""
+        self.client.logout()
+        response = self.client.get(reverse("api-concepts"))
+        self.assertEqual(response.status_code, 200)
+
+    @override_settings(LINGO_ALLOW_ANONYMOUS_ACCESS=True)
+    def test_anonymous_can_search(self):
+        """Anonymous users should be able to search when allowed."""
+        self.client.logout()
+        response = self.client.get(reverse("api-search"), QUERY_STRING="term=Concept")
+        self.assertEqual(response.status_code, 200)
+
+    @override_settings(LINGO_ALLOW_ANONYMOUS_ACCESS=True)
+    def test_anonymous_can_read_edit_log(self):
+        """Anonymous users should be able to GET the edit log when allowed."""
+        self.client.logout()
+        response = self.client.get(
+            reverse(
+                "api-lingo-edit-log",
+                kwargs={"resourceid": self.concepts[0].pk},
+            )
+        )
+        self.assertEqual(response.status_code, 200)
+
+    @override_settings(LINGO_ALLOW_ANONYMOUS_ACCESS=True)
+    def test_anonymous_cannot_post_edit_log(self):
+        """Anonymous users should not be able to revert resources."""
+        self.client.logout()
+        response = self.client.post(
+            reverse(
+                "api-lingo-edit-log",
+                kwargs={"resourceid": self.concepts[0].pk},
+            ),
+            content_type="application/json",
+            data=json.dumps({"timestamp": "2024-01-01T00:00:00Z"}),
+        )
+        self.assertEqual(response.status_code, 403)
+
+    def test_non_editor_cannot_post_edit_log(self):
+        """Authenticated non-editors should not be able to revert resources."""
+        non_editor = User.objects.create_user(username="noeditor", password="test")
+        self.client.force_login(non_editor)
+        response = self.client.post(
+            reverse(
+                "api-lingo-edit-log",
+                kwargs={"resourceid": self.concepts[0].pk},
+            ),
+            content_type="application/json",
+            data=json.dumps({"timestamp": "2024-01-01T00:00:00Z"}),
+        )
+        self.assertEqual(response.status_code, 403)
+
+    @override_settings(LINGO_ALLOW_ANONYMOUS_ACCESS=False)
+    def test_anonymous_denied_when_setting_disabled(self):
+        """Anonymous users should be denied read access when anonymous access is disabled."""
+        self.client.logout()
+        response = self.client.get(reverse("api-concepts"))
+        self.assertEqual(response.status_code, 403)
+
+    @override_settings(LINGO_ALLOW_ANONYMOUS_ACCESS=False)
+    def test_anonymous_search_denied_when_setting_disabled(self):
+        """Anonymous users should be denied search access when anonymous access is disabled."""
+        self.client.logout()
+        response = self.client.get(reverse("api-search"), QUERY_STRING="term=Concept")
+        self.assertEqual(response.status_code, 403)
+
 
 class IsGuideTermTileTests(TestCase):
     """Unit tests for ConceptBuilder.is_guide_term_tile static method."""
@@ -546,3 +634,67 @@ class IsGuideTermTileTests(TestCase):
         self.assertFalse(ConceptBuilder.is_guide_term_tile({}))
         self.assertFalse(ConceptBuilder.is_guide_term_tile({CONCEPT_TYPE_NODEID: None}))
         self.assertFalse(ConceptBuilder.is_guide_term_tile({CONCEPT_TYPE_NODEID: []}))
+
+
+class PermissionTests(TestCase):
+    """Tests for the Lingo Editor permission utilities and LingoUserView."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.admin = User.objects.get(username="admin")
+        cls.regular_user = User.objects.create_user(
+            username="regular", password="testpass"
+        )
+        cls.editor_user = User.objects.create_user(
+            username="editor", password="testpass"
+        )
+        editor_group = Group.objects.get(name=LINGO_EDITOR_GROUP_NAME)
+        cls.editor_user.groups.add(editor_group)
+
+    def test_is_lingo_editor_anonymous_user(self):
+        anonymous = AnonymousUser()
+        self.assertFalse(is_lingo_editor(anonymous))
+
+    def test_is_lingo_editor_regular_user(self):
+        self.assertFalse(is_lingo_editor(self.regular_user))
+
+    def test_is_lingo_editor_editor_user(self):
+        self.assertTrue(is_lingo_editor(self.editor_user))
+
+    def test_is_lingo_editor_superuser(self):
+        self.assertTrue(is_lingo_editor(self.admin))
+
+    def test_lingo_user_view_anonymous(self):
+        response = self.client.get(reverse("api-lingo-user"))
+        result = json.loads(response.content)
+        self.assertTrue(result["is_anonymous"])
+        self.assertFalse(result["is_lingo_editor"])
+        self.assertNotIn("allow_anonymous_access", result)
+
+    def test_lingo_user_view_regular_user(self):
+        self.client.force_login(self.regular_user)
+        response = self.client.get(reverse("api-lingo-user"))
+        result = json.loads(response.content)
+        self.assertFalse(result["is_anonymous"])
+        self.assertFalse(result["is_lingo_editor"])
+        self.assertEqual(result["username"], "regular")
+
+    def test_lingo_user_view_editor(self):
+        self.client.force_login(self.editor_user)
+        response = self.client.get(reverse("api-lingo-user"))
+        result = json.loads(response.content)
+        self.assertFalse(result["is_anonymous"])
+        self.assertTrue(result["is_lingo_editor"])
+        self.assertEqual(result["username"], "editor")
+
+    @override_settings(LINGO_ALLOW_ANONYMOUS_ACCESS=True)
+    def test_app_settings_view_anonymous_access_enabled(self):
+        response = self.client.get(reverse("api-lingo-settings"))
+        result = json.loads(response.content)
+        self.assertTrue(result["allow_anonymous_access"])
+
+    @override_settings(LINGO_ALLOW_ANONYMOUS_ACCESS=False)
+    def test_app_settings_view_anonymous_access_disabled(self):
+        response = self.client.get(reverse("api-lingo-settings"))
+        result = json.loads(response.content)
+        self.assertFalse(result["allow_anonymous_access"])

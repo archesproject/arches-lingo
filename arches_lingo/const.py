@@ -1,5 +1,8 @@
 from django.utils.translation import gettext_lazy as _
 
+### Groups ###
+LINGO_EDITOR_GROUP_NAME = "Lingo Editor"
+
 ### Concepts Model Nodes & Nodegroups ###
 CONCEPTS_GRAPH_ID = "bf73e576-4888-11ee-8a8d-11afefc4bff7"
 
