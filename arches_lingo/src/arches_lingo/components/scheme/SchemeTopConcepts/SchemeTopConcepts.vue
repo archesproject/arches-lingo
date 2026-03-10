@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { inject, onMounted, ref, type Ref } from "vue";
+import { onMounted, ref } from "vue";
 import { useGettext } from "vue3-gettext";
-import { useRouter } from "vue-router";
+import { RouterLink } from "vue-router";
 import { useToast } from "primevue/usetoast";
+import { storeToRefs } from "pinia";
 
 import Skeleton from "primevue/skeleton";
 import Message from "primevue/message";
@@ -10,17 +11,12 @@ import Message from "primevue/message";
 import { fetchSchemeTopConcepts } from "@/arches_lingo/api.ts";
 import { getConceptIcon } from "@/arches_lingo/utils.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
-import { navigateToSchemeOrConcept } from "@/arches_lingo/utils.ts";
+import { routeNames } from "@/arches_lingo/routes.ts";
+import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 
-import {
-    DEFAULT_ERROR_TOAST_LIFE,
-    ERROR,
-    selectedLanguageKey,
-    systemLanguageKey,
-} from "@/arches_lingo/constants.ts";
+import { DEFAULT_ERROR_TOAST_LIFE, ERROR } from "@/arches_lingo/constants.ts";
 
 import type { Concept, DataComponentMode } from "@/arches_lingo/types.ts";
-import type { Language } from "@/arches_component_lab/types.ts";
 
 const props = defineProps<{
     mode: DataComponentMode;
@@ -32,11 +28,8 @@ const props = defineProps<{
 }>();
 
 const { $gettext } = useGettext();
-const router = useRouter();
 const toast = useToast();
-
-const selectedLanguage = inject(selectedLanguageKey) as Ref<Language>;
-const systemLanguage = inject(systemLanguageKey) as Language;
+const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
 
 const topConcepts = ref<Concept[]>([]);
 const isLoading = ref(true);
@@ -66,10 +59,6 @@ onMounted(async () => {
         isLoading.value = false;
     }
 });
-
-function navigateToConcept(concept: Concept) {
-    navigateToSchemeOrConcept(router, concept);
-}
 </script>
 
 <template>
@@ -95,11 +84,14 @@ function navigateToConcept(concept: Concept) {
             v-if="topConcepts.length"
             class="top-concepts-list"
         >
-            <div
+            <RouterLink
                 v-for="concept in topConcepts"
                 :key="concept.id"
+                :to="{
+                    name: routeNames.concept,
+                    params: { id: concept.id },
+                }"
                 class="top-concept-item"
-                @click="navigateToConcept(concept)"
             >
                 <span :class="getConceptIcon(concept)"></span>
                 <span class="top-concept-label">
@@ -111,7 +103,7 @@ function navigateToConcept(concept: Concept) {
                         ).value
                     }}
                 </span>
-            </div>
+            </RouterLink>
         </div>
         <div
             v-else
@@ -138,6 +130,8 @@ function navigateToConcept(concept: Concept) {
     border-radius: 0.25rem;
     cursor: pointer;
     font-size: var(--p-lingo-font-size-smallnormal);
+    text-decoration: none;
+    color: inherit;
 }
 
 .top-concept-item:hover {
