@@ -50,6 +50,7 @@ onMounted(function () {
 watchEffect(() => {
     router.beforeEach(async (to, _from, next) => {
         if (to.name === routeNames.login) {
+            shouldShowHierarchy.value = false;
             next();
             return;
         }
