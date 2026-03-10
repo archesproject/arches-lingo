@@ -267,6 +267,12 @@ function closeEditor() {
                             :is-creating-new="isCreatingNew"
                         />
                     </div>
+                    <div
+                        v-if="$slots['editor-footer']"
+                        class="editor-footer"
+                    >
+                        <slot name="editor-footer" />
+                    </div>
                 </div>
             </SplitterPanel>
         </Splitter>
@@ -387,10 +393,6 @@ function closeEditor() {
     flex-shrink: 0;
 }
 
-.editor-body :deep(.form-action-buttons .p-button) {
-    border-radius: 0.125rem;
-}
-
 .panel-control-button {
     border-radius: 50%;
     background: var(--p-primary-contrast-color);
@@ -403,6 +405,20 @@ function closeEditor() {
     overflow-y: auto;
     padding: 0.5rem 1rem;
     background: var(--p-editor-form-background);
+}
+
+.editor-footer {
+    flex-shrink: 0;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: var(--p-header-background);
+    border-top: 0.125rem solid var(--p-menubar-border-color);
+}
+
+.editor-footer :deep(button) {
+    border-radius: 0.125rem;
 }
 
 :deep(.type-column) {
