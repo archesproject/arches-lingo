@@ -59,7 +59,7 @@ export const routes = [
         component: () => import("@/arches_lingo/pages/SourcesPage.vue"),
         meta: {
             shouldShowNavigation: true,
-            requiresAuthentication: true,
+            requiresAuthentication: false,
         },
     },
     {
@@ -68,7 +68,7 @@ export const routes = [
         component: () => import("@/arches_lingo/pages/SourcesPage.vue"),
         meta: {
             shouldShowNavigation: true,
-            requiresAuthentication: true,
+            requiresAuthentication: false,
         },
     },
     {
@@ -77,7 +77,7 @@ export const routes = [
         component: () => import("@/arches_lingo/pages/ContributorsPage.vue"),
         meta: {
             shouldShowNavigation: true,
-            requiresAuthentication: true,
+            requiresAuthentication: false,
         },
     },
     {
@@ -86,7 +86,7 @@ export const routes = [
         component: () => import("@/arches_lingo/pages/ContributorsPage.vue"),
         meta: {
             shouldShowNavigation: true,
-            requiresAuthentication: true,
+            requiresAuthentication: false,
         },
     },
     {

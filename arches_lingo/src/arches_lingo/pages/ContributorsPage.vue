@@ -7,11 +7,12 @@ import Select from "primevue/select";
 import Skeleton from "primevue/skeleton";
 
 import GenericCard from "@/arches_component_lab/generics/GenericCard/GenericCard.vue";
-import { EDIT } from "@/arches_component_lab/widgets/constants.ts";
+import { EDIT, VIEW } from "@/arches_component_lab/widgets/constants.ts";
 
 import ResourceListEditor from "@/arches_lingo/components/generic/ResourceListEditor/ResourceListEditor.vue";
 import { useResourceNameEditor } from "@/arches_lingo/composables/useResourceNameEditor.ts";
 import { fetchContributors } from "@/arches_lingo/api.ts";
+import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 
 import type { ResourceSummary } from "@/arches_lingo/types";
 
@@ -21,6 +22,7 @@ interface GraphTypeOption {
 }
 
 const { $gettext } = useGettext();
+const { isEditor } = useUserStore();
 
 const graphTypeOptions: GraphTypeOption[] = [
     { label: $gettext("Person"), value: "person_system" },
@@ -67,10 +69,12 @@ function onSave() {
         :fetch-resources="fetchContributors"
         :refresh-trigger="refreshTrigger"
         :show-graph-type="true"
+        :editor-enabled="isEditor"
         @select-resource="onSelectResource"
     >
         <template #list-actions="{ openBlankEditor }">
             <Button
+                v-if="isEditor"
                 :label="$gettext('Add Contributor')"
                 icon="pi pi-plus-circle"
                 class="add-button"
@@ -103,14 +107,14 @@ function onSave() {
             <GenericCard
                 v-else
                 :key="editorKey"
-                :mode="EDIT"
+                :mode="isEditor ? EDIT : VIEW"
                 :graph-slug="selectedGraphSlug"
                 :nodegroup-alias="NAME_NODEGROUP_ALIAS"
                 :resource-instance-id="
                     isCreatingNew ? undefined : selectedResourceInstanceId
                 "
                 :tile-id="isCreatingNew ? undefined : selectedTileId"
-                :should-show-form-buttons="true"
+                :should-show-form-buttons="isEditor"
                 @save="onSave"
             />
         </template>

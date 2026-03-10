@@ -35,6 +35,7 @@ const props = defineProps<{
     ) => Promise<PaginatedResourceListResponse>;
     showGraphType?: boolean;
     refreshTrigger?: number;
+    editorEnabled?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -116,7 +117,9 @@ function onSearchInput() {
 function onRowSelect(event: { data: ResourceSummary }) {
     isCreatingNew.value = false;
     selectedResource.value = event.data;
-    isEditorOpen.value = true;
+    if (props.editorEnabled !== false) {
+        isEditorOpen.value = true;
+    }
     emit("select-resource", event.data);
 }
 
@@ -382,6 +385,10 @@ function closeEditor() {
 
 .editor-controls {
     flex-shrink: 0;
+}
+
+.editor-body :deep(.form-action-buttons .p-button) {
+    border-radius: 0.125rem;
 }
 
 .panel-control-button {

@@ -6,15 +6,17 @@ import Button from "primevue/button";
 import Skeleton from "primevue/skeleton";
 
 import GenericCard from "@/arches_component_lab/generics/GenericCard/GenericCard.vue";
-import { EDIT } from "@/arches_component_lab/widgets/constants.ts";
+import { EDIT, VIEW } from "@/arches_component_lab/widgets/constants.ts";
 
 import ResourceListEditor from "@/arches_lingo/components/generic/ResourceListEditor/ResourceListEditor.vue";
 import { useResourceNameEditor } from "@/arches_lingo/composables/useResourceNameEditor.ts";
 import { fetchSources } from "@/arches_lingo/api.ts";
+import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 
 const GRAPH_SLUG = "textual_work";
 
 const { $gettext } = useGettext();
+const { isEditor } = useUserStore();
 
 const refreshTrigger = ref(0);
 const {
@@ -41,10 +43,12 @@ function onSave() {
         :page-title="$gettext('Sources')"
         :fetch-resources="fetchSources"
         :refresh-trigger="refreshTrigger"
+        :editor-enabled="isEditor"
         @select-resource="selectResource"
     >
         <template #list-actions="{ openBlankEditor }">
             <Button
+                v-if="isEditor"
                 :label="$gettext('Add Source')"
                 icon="pi pi-plus-circle"
                 class="add-button"
@@ -65,14 +69,14 @@ function onSave() {
             <GenericCard
                 v-else
                 :key="editorKey"
-                :mode="EDIT"
+                :mode="isEditor ? EDIT : VIEW"
                 :graph-slug="GRAPH_SLUG"
                 :nodegroup-alias="NAME_NODEGROUP_ALIAS"
                 :resource-instance-id="
                     isCreatingNew ? undefined : selectedResourceInstanceId
                 "
                 :tile-id="isCreatingNew ? undefined : selectedTileId"
-                :should-show-form-buttons="true"
+                :should-show-form-buttons="isEditor"
                 @save="onSave"
             />
         </template>
