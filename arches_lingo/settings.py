@@ -599,7 +599,7 @@ ES_MAPPING_MODIFIER_CLASSES = [
     "arches_controlled_lists.search.references_es_mapping_modifier.ReferencesEsMappingModifier"
 ]
 
-LINGO_ALLOW_ANONYMOUS_ACCESS = True
+LINGO_ALLOW_ANONYMOUS_ACCESS = False
 
 RESOURCE_LIST_PAGE_SIZE = 25
 
