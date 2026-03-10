@@ -14,10 +14,10 @@ from arches.app.utils.data_management.resource_graphs.importer import (
     import_graph as ResourceGraphImporter,
 )
 
-from arches_lingo.utils.resource_list import (
+from arches_lingo.utils.resource_list import get_paginated_resource_summaries
+from arches_lingo.views.api.resource_list import (
     CONTRIBUTORS_GRAPH_SLUGS,
     SOURCES_GRAPH_SLUGS,
-    get_paginated_resources,
 )
 
 
@@ -71,49 +71,63 @@ class ResourceListTests(TestCase):
         )
 
 
-class TestGetPaginatedResources(ResourceListTests):
+class TestGetPaginatedResourceSummaries(ResourceListTests):
     def test_sources_returns_textual_work_resources(self):
-        result = get_paginated_resources(SOURCES_GRAPH_SLUGS)
+        result = get_paginated_resource_summaries(SOURCES_GRAPH_SLUGS)
         self.assertEqual(result["count"], 3)
-        display_names = [r["display_name"] for r in result["results"]]
+        display_names = [
+            resource_summary["display_name"] for resource_summary in result["results"]
+        ]
         self.assertIn("A Great Book", display_names)
         self.assertIn("Important Article", display_names)
         self.assertIn("Research Paper", display_names)
 
     def test_contributors_returns_person_and_group_resources(self):
-        result = get_paginated_resources(CONTRIBUTORS_GRAPH_SLUGS)
+        result = get_paginated_resource_summaries(CONTRIBUTORS_GRAPH_SLUGS)
         self.assertEqual(result["count"], 3)
-        graph_slugs = {r["graph_slug"] for r in result["results"]}
+        graph_slugs = {
+            resource_summary["graph_slug"] for resource_summary in result["results"]
+        }
         self.assertIn("person_system", graph_slugs)
         self.assertIn("group", graph_slugs)
 
     def test_search_filters_by_name(self):
-        result = get_paginated_resources(SOURCES_GRAPH_SLUGS, search_term="Great")
+        result = get_paginated_resource_summaries(
+            SOURCES_GRAPH_SLUGS, search_term="Great"
+        )
         self.assertEqual(result["count"], 1)
         self.assertEqual(result["results"][0]["display_name"], "A Great Book")
 
     def test_search_is_case_insensitive(self):
-        result = get_paginated_resources(CONTRIBUTORS_GRAPH_SLUGS, search_term="alice")
+        result = get_paginated_resource_summaries(
+            CONTRIBUTORS_GRAPH_SLUGS, search_term="alice"
+        )
         self.assertEqual(result["count"], 1)
         self.assertEqual(result["results"][0]["display_name"], "Alice Smith")
 
     def test_pagination_with_limit_and_offset(self):
-        result = get_paginated_resources(SOURCES_GRAPH_SLUGS, limit=2, offset=0)
+        result = get_paginated_resource_summaries(
+            SOURCES_GRAPH_SLUGS, limit=2, offset=0
+        )
         self.assertEqual(result["count"], 3)
         self.assertEqual(len(result["results"]), 2)
 
     def test_pagination_offset_past_end(self):
-        result = get_paginated_resources(SOURCES_GRAPH_SLUGS, limit=25, offset=100)
+        result = get_paginated_resource_summaries(
+            SOURCES_GRAPH_SLUGS, limit=25, offset=100
+        )
         self.assertEqual(result["count"], 3)
         self.assertEqual(len(result["results"]), 0)
 
     def test_results_ordered_by_name(self):
-        result = get_paginated_resources(SOURCES_GRAPH_SLUGS)
-        display_names = [r["display_name"] for r in result["results"]]
+        result = get_paginated_resource_summaries(SOURCES_GRAPH_SLUGS)
+        display_names = [
+            resource_summary["display_name"] for resource_summary in result["results"]
+        ]
         self.assertEqual(display_names, sorted(display_names))
 
     def test_result_includes_graph_metadata(self):
-        result = get_paginated_resources(SOURCES_GRAPH_SLUGS)
+        result = get_paginated_resource_summaries(SOURCES_GRAPH_SLUGS)
         for resource_summary in result["results"]:
             self.assertIn("resourceinstanceid", resource_summary)
             self.assertIn("display_name", resource_summary)
@@ -122,11 +136,13 @@ class TestGetPaginatedResources(ResourceListTests):
             self.assertEqual(resource_summary["graph_slug"], "textual_work")
 
     def test_empty_search_returns_all(self):
-        result = get_paginated_resources(SOURCES_GRAPH_SLUGS, search_term="")
+        result = get_paginated_resource_summaries(SOURCES_GRAPH_SLUGS, search_term="")
         self.assertEqual(result["count"], 3)
 
     def test_no_match_returns_empty(self):
-        result = get_paginated_resources(SOURCES_GRAPH_SLUGS, search_term="xyz_nomatch")
+        result = get_paginated_resource_summaries(
+            SOURCES_GRAPH_SLUGS, search_term="xyz_nomatch"
+        )
         self.assertEqual(result["count"], 0)
         self.assertEqual(result["results"], [])
 
@@ -181,7 +197,9 @@ class TestContributorsListView(ResourceListTests):
         self.client.force_login(self.admin)
         response = self.client.get(reverse("api-lingo-contributors"))
         data = response.json()
-        graph_slugs = {r["graph_slug"] for r in data["results"]}
+        graph_slugs = {
+            resource_summary["graph_slug"] for resource_summary in data["results"]
+        }
         self.assertIn("person_system", graph_slugs)
         self.assertIn("group", graph_slugs)
 

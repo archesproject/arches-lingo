@@ -27,7 +27,7 @@ const graphTypeOptions: GraphTypeOption[] = [
     { label: $gettext("Group"), value: "group" },
 ];
 
-const listEditorRef = ref<InstanceType<typeof ResourceListEditor>>();
+const refreshTrigger = ref(0);
 const selectedGraphSlug = ref<string>("person_system");
 const newGraphSlug = ref<GraphTypeOption>(graphTypeOptions[0]);
 const {
@@ -45,10 +45,10 @@ async function onSelectResource(resource: ResourceSummary) {
     await selectResource(resource);
 }
 
-function onCreateNew() {
+function onCreateNew(openBlankEditor: () => void) {
     selectedGraphSlug.value = newGraphSlug.value.value;
     clearSelection();
-    listEditorRef.value?.openBlankEditor();
+    openBlankEditor();
 }
 
 function onNewGraphTypeChange() {
@@ -57,24 +57,24 @@ function onNewGraphTypeChange() {
 }
 
 function onSave() {
-    listEditorRef.value?.refreshList();
+    refreshTrigger.value++;
 }
 </script>
 
 <template>
     <ResourceListEditor
-        ref="listEditorRef"
         :page-title="$gettext('Contributors')"
         :fetch-resources="fetchContributors"
+        :refresh-trigger="refreshTrigger"
         :show-graph-type="true"
         @select-resource="onSelectResource"
     >
-        <template #list-actions>
+        <template #list-actions="{ openBlankEditor }">
             <Button
                 :label="$gettext('Add Contributor')"
                 icon="pi pi-plus-circle"
                 class="add-button"
-                @click="onCreateNew"
+                @click="() => onCreateNew(openBlankEditor)"
             />
         </template>
 
@@ -129,6 +129,7 @@ function onSave() {
 
 .add-button:hover {
     background: var(--p-highlight-background);
+    color: var(--p-highlight-color);
 }
 
 .new-contributor-type-selector {

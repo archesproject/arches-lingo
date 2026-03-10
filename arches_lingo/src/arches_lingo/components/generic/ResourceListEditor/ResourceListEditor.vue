@@ -34,6 +34,7 @@ const props = defineProps<{
         offset: number,
     ) => Promise<PaginatedResourceListResponse>;
     showGraphType?: boolean;
+    refreshTrigger?: number;
 }>();
 
 const emit = defineEmits<{
@@ -53,6 +54,28 @@ const isEditorOpen = ref(false);
 const isCreatingNew = ref(false);
 
 let searchDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+
+const editorTitle = computed(() => {
+    if (isCreatingNew.value) return $gettext("New Resource");
+    if (!selectedResource.value) return "";
+    return selectedResource.value.display_name || $gettext("Untitled");
+});
+
+watch(
+    () => props.fetchResources,
+    () => {
+        currentPage.value = 0;
+        loadResources();
+    },
+    { immediate: true },
+);
+
+watch(
+    () => props.refreshTrigger,
+    () => {
+        loadResources();
+    },
+);
 
 async function loadResources() {
     isLoading.value = true;
@@ -108,23 +131,6 @@ function closeEditor() {
     selectedResource.value = null;
     isCreatingNew.value = false;
 }
-
-const editorTitle = computed(() => {
-    if (isCreatingNew.value) return $gettext("New Resource");
-    if (!selectedResource.value) return "";
-    return selectedResource.value.display_name || $gettext("Untitled");
-});
-
-watch(
-    () => props.fetchResources,
-    () => {
-        currentPage.value = 0;
-        loadResources();
-    },
-    { immediate: true },
-);
-
-defineExpose({ refreshList: loadResources, openBlankEditor });
 </script>
 
 <template>
@@ -140,7 +146,10 @@ defineExpose({ refreshList: loadResources, openBlankEditor });
                         <div class="list-header-toolbar">
                             <h1 class="page-title">{{ pageTitle }}</h1>
                             <div class="header-buttons">
-                                <slot name="list-actions" />
+                                <slot
+                                    name="list-actions"
+                                    :open-blank-editor="openBlankEditor"
+                                />
                             </div>
                         </div>
                         <div class="list-header-content">
@@ -188,10 +197,7 @@ defineExpose({ refreshList: loadResources, openBlankEditor });
                                 >
                             </template>
                             <template #loading>
-                                <Skeleton
-                                    width="12rem"
-                                    height="1.25rem"
-                                />
+                                <Skeleton />
                             </template>
                         </Column>
 
@@ -199,7 +205,7 @@ defineExpose({ refreshList: loadResources, openBlankEditor });
                             v-if="showGraphType"
                             field="graph_name"
                             :header="$gettext('Type')"
-                            style="width: 10rem"
+                            class="type-column"
                         >
                             <template #body="{ data }">
                                 <Tag
@@ -208,10 +214,7 @@ defineExpose({ refreshList: loadResources, openBlankEditor });
                                 />
                             </template>
                             <template #loading>
-                                <Skeleton
-                                    width="6rem"
-                                    height="1.25rem"
-                                />
+                                <Skeleton />
                             </template>
                         </Column>
 
@@ -299,7 +302,6 @@ defineExpose({ refreshList: loadResources, openBlankEditor });
     display: flex;
     justify-content: space-between;
     align-items: center;
-    min-height: 3rem;
     background: var(--p-header-toolbar-background);
     border-bottom: 0.0625rem solid var(--p-header-toolbar-border);
     padding: 0.375rem 1rem;
@@ -324,7 +326,6 @@ defineExpose({ refreshList: loadResources, openBlankEditor });
 
 .search-field {
     width: 100%;
-    max-width: 24rem;
 }
 
 .search-input {
@@ -385,8 +386,6 @@ defineExpose({ refreshList: loadResources, openBlankEditor });
 
 .panel-control-button {
     border-radius: 50%;
-    height: 2.25rem;
-    width: 2.25rem;
     background: var(--p-primary-contrast-color);
     border: 0.0625rem solid var(--p-header-button-border);
     color: var(--p-editor-form-color);
@@ -399,8 +398,8 @@ defineExpose({ refreshList: loadResources, openBlankEditor });
     background: var(--p-editor-form-background);
 }
 
-:deep(.name-column) {
-    min-width: 12rem;
+:deep(.type-column) {
+    width: 8rem;
 }
 
 :deep(.p-inputtext),

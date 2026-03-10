@@ -1,10 +1,7 @@
 from arches.app.models.models import ResourceInstance
 
-SOURCES_GRAPH_SLUGS = ["textual_work"]
-CONTRIBUTORS_GRAPH_SLUGS = ["person_system", "group"]
 
-
-def get_paginated_resources(graph_slugs, search_term="", limit=25, offset=0):
+def get_paginated_resource_summaries(graph_slugs, search_term="", limit=25, offset=0):
     queryset = ResourceInstance.objects.filter(
         graph__slug__in=graph_slugs,
     ).select_related("graph")

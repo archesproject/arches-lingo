@@ -161,12 +161,11 @@ export const fetchLingoResourcesBatch = async (
     return parsed;
 };
 
-async function fetchPaginatedResources(
-    url: string,
+export const fetchSources = async (
     search: string = "",
     limit: number = 25,
     offset: number = 0,
-): Promise<PaginatedResourceListResponse> {
+): Promise<PaginatedResourceListResponse> => {
     const params = new URLSearchParams({
         limit: String(limit),
         offset: String(offset),
@@ -174,35 +173,33 @@ async function fetchPaginatedResources(
     if (search) {
         params.set("search", search);
     }
-    const response = await fetch(`${url}?${params}`);
+    const response = await fetch(
+        `${generateArchesURL("arches_lingo:api-lingo-sources")}?${params}`,
+    );
     const parsed = await response.json();
     if (!response.ok) throw new Error(parsed.message || response.statusText);
     return parsed;
-}
+};
 
-export const fetchSources = (
+export const fetchContributors = async (
     search: string = "",
     limit: number = 25,
     offset: number = 0,
-): Promise<PaginatedResourceListResponse> =>
-    fetchPaginatedResources(
-        generateArchesURL("arches_lingo:api-lingo-sources"),
-        search,
-        limit,
-        offset,
+): Promise<PaginatedResourceListResponse> => {
+    const params = new URLSearchParams({
+        limit: String(limit),
+        offset: String(offset),
+    });
+    if (search) {
+        params.set("search", search);
+    }
+    const response = await fetch(
+        `${generateArchesURL("arches_lingo:api-lingo-contributors")}?${params}`,
     );
-
-export const fetchContributors = (
-    search: string = "",
-    limit: number = 25,
-    offset: number = 0,
-): Promise<PaginatedResourceListResponse> =>
-    fetchPaginatedResources(
-        generateArchesURL("arches_lingo:api-lingo-contributors"),
-        search,
-        limit,
-        offset,
-    );
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
 
 export const fetchLingoResourcePartial = async (
     graphSlug: string,

@@ -16,7 +16,7 @@ const GRAPH_SLUG = "textual_work";
 
 const { $gettext } = useGettext();
 
-const listEditorRef = ref<InstanceType<typeof ResourceListEditor>>();
+const refreshTrigger = ref(0);
 const {
     selectedResourceInstanceId,
     selectedTileId,
@@ -29,27 +29,31 @@ const {
 
 function onCreateNew() {
     clearSelection();
-    listEditorRef.value?.openBlankEditor();
 }
 
 function onSave() {
-    listEditorRef.value?.refreshList();
+    refreshTrigger.value++;
 }
 </script>
 
 <template>
     <ResourceListEditor
-        ref="listEditorRef"
         :page-title="$gettext('Sources')"
         :fetch-resources="fetchSources"
+        :refresh-trigger="refreshTrigger"
         @select-resource="selectResource"
     >
-        <template #list-actions>
+        <template #list-actions="{ openBlankEditor }">
             <Button
                 :label="$gettext('Add Source')"
                 icon="pi pi-plus-circle"
                 class="add-button"
-                @click="onCreateNew"
+                @click="
+                    () => {
+                        onCreateNew();
+                        openBlankEditor();
+                    }
+                "
             />
         </template>
 
@@ -87,5 +91,6 @@ function onSave() {
 
 .add-button:hover {
     background: var(--p-highlight-background);
+    color: var(--p-highlight-color);
 }
 </style>
