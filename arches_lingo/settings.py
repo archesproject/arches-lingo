@@ -601,6 +601,8 @@ ES_MAPPING_MODIFIER_CLASSES = [
 
 LINGO_ALLOW_ANONYMOUS_ACCESS = False
 
+RESOURCE_LIST_PAGE_SIZE = 25
+
 try:
     from .package_settings import *
 except ImportError:
