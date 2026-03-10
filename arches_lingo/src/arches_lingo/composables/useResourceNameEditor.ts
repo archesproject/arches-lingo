@@ -23,10 +23,10 @@ export function useResourceNameEditor() {
                 NAME_NODEGROUP_ALIAS,
             );
             const nameTiles = partialData?.aliased_data?.name;
-            selectedTileId.value =
-                Array.isArray(nameTiles) && nameTiles.length > 0
-                    ? nameTiles[0].tileid
-                    : null;
+            const nameTile = Array.isArray(nameTiles)
+                ? nameTiles[0]
+                : nameTiles;
+            selectedTileId.value = nameTile?.tileid ?? null;
         } catch {
             selectedTileId.value = null;
         }
