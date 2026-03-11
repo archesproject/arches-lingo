@@ -40,12 +40,14 @@ export interface Concept {
     labels: Label[];
     narrower: Concept[];
     guide_term?: boolean;
+    lifecycle_state_id?: string;
 }
 
 export interface Scheme {
     id: string;
     labels: Label[];
     top_concepts: Concept[];
+    lifecycle_state_id?: string;
 }
 
 export interface ControlledListResult {

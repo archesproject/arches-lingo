@@ -471,6 +471,17 @@ export const fetchConcepts = async () => {
     return parsed;
 };
 
+export const fetchLifecycleStates = async (): Promise<
+    { id: string; name: string }[]
+> => {
+    const response = await fetch(
+        generateArchesURL("arches_lingo:api-lingo-lifecycle-states"),
+    );
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
 export const fetchControlledListOptions = async (controlledListId: string) => {
     const response = await fetch(arches.urls.controlled_list(controlledListId));
     const parsed = await response.json();

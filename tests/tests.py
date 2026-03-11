@@ -253,7 +253,7 @@ class ViewTests(TestCase):
         self.client.force_login(self.admin)
 
     def test_get_concept_trees(self):
-        with self.assertNumQueries(7):
+        with self.assertNumQueries(8):
             # 1: session
             # 2: auth
             # 3: select broader tiles, subquery for labels
@@ -261,6 +261,7 @@ class ViewTests(TestCase):
             # 5: select guide term concept type tiles
             # 6: select schemes, subquery for labels
             # 7: languages
+            # 8: lifecycle state IDs for all concepts and schemes
             response = self.client.get(reverse("api-concepts"))
 
         self.assertEqual(response.status_code, 200)
@@ -269,9 +270,13 @@ class ViewTests(TestCase):
 
         self.assertEqual(scheme["labels"][0]["value"], "Test Scheme")
         self.assertEqual(scheme["labels"][0]["valuetype_id"], "prefLabel")
+        self.assertIn("lifecycle_state_id", scheme)
+        self.assertIsNotNone(scheme["lifecycle_state_id"])
         self.assertEqual(len(scheme["top_concepts"]), 1)
         top = scheme["top_concepts"][0]
         self.assertEqual(top["labels"][0]["value"], "Concept 1")
+        self.assertIn("lifecycle_state_id", top)
+        self.assertIsNotNone(top["lifecycle_state_id"])
         self.assertEqual(len(top["narrower"]), 4)
         self.assertEqual(
             {n["labels"][0]["value"] for n in top["narrower"]},
@@ -290,6 +295,19 @@ class ViewTests(TestCase):
             {n["labels"][0]["valuetype_id"] for n in concept_2["narrower"]},
             {"prefLabel"},
         )
+
+    def test_lifecycle_states_endpoint(self):
+        response = self.client.get(reverse("api-lingo-lifecycle-states"))
+
+        self.assertEqual(response.status_code, 200)
+        result = json.loads(response.content)
+        self.assertIsInstance(result, list)
+        self.assertGreater(len(result), 0)
+        for lifecycle_state in result:
+            self.assertIn("id", lifecycle_state)
+            self.assertIn("name", lifecycle_state)
+            self.assertIsInstance(lifecycle_state["id"], str)
+            self.assertIsInstance(lifecycle_state["name"], str)
 
     def test_search(self):
         cases = (

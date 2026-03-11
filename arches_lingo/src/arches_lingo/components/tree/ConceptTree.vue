@@ -18,15 +18,17 @@ import {
     ERROR,
 } from "@/arches_controlled_lists/constants.ts";
 
-import { fetchConcepts } from "@/arches_lingo/api.ts";
+import { fetchConcepts, fetchLifecycleStates } from "@/arches_lingo/api.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 
 import {
     treeFromSchemes,
     navigateToSchemeOrConcept,
+    filterTreeByLifecycleStates,
 } from "@/arches_lingo/utils.ts";
 
 import { useCappedTreeFilter } from "@/arches_lingo/components/tree/utils/capped-filter.ts";
+import LifecycleStateFilter from "@/arches_lingo/components/tree/components/LifecycleStateFilter.vue";
 
 import type {
     TreePassThroughMethodOptions,
@@ -78,6 +80,8 @@ const selectedKeys = ref<TreeSelectionKeys>({});
 const lastNonEmptySelectedKeys = ref<TreeSelectionKeys>({});
 const expandedKeys = ref<TreeExpandedKeys>({});
 const filterValue = ref("");
+const lifecycleStates = ref<{ id: string; name: string }[]>([]);
+const selectedLifecycleStateIds = ref<string[]>([]);
 
 const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
 
@@ -103,6 +107,19 @@ onMounted(async () => {
             });
         }
     }
+
+    fetchLifecycleStates()
+        .then((states) => {
+            lifecycleStates.value = states;
+        })
+        .catch((error) => {
+            toast.add({
+                severity: ERROR,
+                life: DEFAULT_ERROR_TOAST_LIFE,
+                summary: $gettext("Unable to fetch lifecycle states"),
+                detail: (error as Error).message,
+            });
+        });
 
     const priorSortedSchemeIds = tree.value.map((treeNode) => treeNode.key);
 
@@ -133,9 +150,17 @@ const tree = computed(() => {
     );
 });
 
+const lifecycleStateSelectedSet = computed(
+    () => new Set(selectedLifecycleStateIds.value),
+);
+
+const lifecycleStateFilteredTree = computed(() =>
+    filterTreeByLifecycleStates(tree.value, lifecycleStateSelectedSet.value),
+);
+
 const { debouncedFilterValue, filteredTree, isFilterCapped } =
     useCappedTreeFilter(
-        tree,
+        lifecycleStateFilteredTree,
         expandedKeys,
         filterValue,
         FILTER_DEBOUNCE_MS,
@@ -687,13 +712,19 @@ function onNodeSelect(node: TreeNode) {
 <template>
     <div class="concept-tree-layout">
         <div class="filter-container">
-            <InputText
-                v-model="filterValue"
-                class="tree-filter-input"
-                type="text"
-                :placeholder="FILTER_CONCEPTS"
-                :aria-label="FILTER_CONCEPTS"
-            />
+            <div class="filter-input-row">
+                <InputText
+                    v-model="filterValue"
+                    class="tree-filter-input"
+                    type="text"
+                    :placeholder="FILTER_CONCEPTS"
+                    :aria-label="FILTER_CONCEPTS"
+                />
+                <LifecycleStateFilter
+                    v-model:selected-state-ids="selectedLifecycleStateIds"
+                    :lifecycle-states="lifecycleStates"
+                />
+            </div>
             <Message
                 v-if="isFilterCapped"
                 severity="warn"
@@ -777,6 +808,12 @@ function onNodeSelect(node: TreeNode) {
     background: var(--p-header-toolbar-background);
     border-bottom: 0.0625rem solid var(--p-menubar-border-color);
     margin-bottom: 0.5rem;
+}
+
+.filter-input-row {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
 }
 
 .tree-filter-input {
