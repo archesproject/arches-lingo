@@ -9,8 +9,7 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ("arches_lingo", "0003_add_languages"),
-        ("models", "0001_initial"),
+        ("arches_lingo", "0007_add_lingo_editor_group"),
     ]
 
     operations = [

@@ -51,7 +51,7 @@ def unregister_update_concept_lifecycle_states_for_scheme_function(apps, schema_
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("arches_lingo", "0008_update_scheme_concept_lifecycles"),
+        ("arches_lingo", "0009_update_scheme_concept_lifecycles"),
     ]
 
     operations = [
