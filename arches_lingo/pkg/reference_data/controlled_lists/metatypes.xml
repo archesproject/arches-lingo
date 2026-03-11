@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rdf:RDF
+  xmlns:skos="http://www.w3.org/2004/02/skos/core#"
+  xmlns:dcterms="http://purl.org/dc/terms/"
+  xmlns:arches="http://localhost:8000/"
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+>
+  <skos:Concept rdf:about="http://localhost:8000/02a0fc69-9f92-4bef-b657-af1ed37c1d3e">
+    <dcterms:identifier>https://vocab.getty.edu/aat/300418049</dcterms:identifier>
+    <skos:scopeNote xml:lang="en">Documents comprising texts that are relatively short in length, sometimes but not always abbreviated versions of longer texts.</skos:scopeNote>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</arches:sortorder>
+    <skos:inScheme>
+      <skos:ConceptScheme rdf:about="http://localhost:8000/ef69e772-de53-45fe-98d4-bf3e7b10eb57">
+        <dcterms:title>Metatypes</dcterms:title>
+      </skos:ConceptScheme>
+    </skos:inScheme>
+    <skos:prefLabel xml:lang="en">brief texts</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/7b873aed-1dbd-45e4-98e7-85143ee453c6">
+    <dcterms:identifier>https://vocab.getty.edu/aat/300456594</dcterms:identifier>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</arches:sortorder>
+    <skos:prefLabel xml:lang="en">informational status</skos:prefLabel>
+    <skos:inScheme rdf:resource="http://localhost:8000/ef69e772-de53-45fe-98d4-bf3e7b10eb57"/>
+    <skos:scopeNote xml:lang="en">The current state of an information object qua information at a particular time; the validity of a piece of data regarding its appropriateness, or rightness to use at the present historical moment. An implicit author is applied to all such judgments.</skos:scopeNote>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/9c93be63-b900-4f63-b0cf-7351e5129508">
+    <skos:prefLabel xml:lang="en">classification</skos:prefLabel>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ef69e772-de53-45fe-98d4-bf3e7b10eb57"/>
+    <skos:scopeNote xml:lang="en">Indication of the placement of a work of art or architecture within a classification scheme that groups other, similar works together on the basis of similar characteristics</skos:scopeNote>
+    <dcterms:identifier>https://vocab.getty.edu/aat/300435444</dcterms:identifier>
+  </skos:Concept>
+</rdf:RDF>

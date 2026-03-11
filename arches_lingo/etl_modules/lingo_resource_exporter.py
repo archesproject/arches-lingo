@@ -3,13 +3,16 @@ import json
 import logging
 import uuid
 import zipfile
+from concurrent.futures import ThreadPoolExecutor
 from io import BytesIO
 from collections import defaultdict
 from datetime import datetime
 from slugify import slugify
 
+from django.db import connection
 from django.utils.translation import gettext as _
 
+import arches.app.utils.task_management as task_management
 from arches.app.models.system_settings import settings
 from arches.app.models.models import (
     ETLModule,
@@ -18,6 +21,9 @@ from arches.app.models.models import (
     TempFile,
     User,
 )
+from arches.app.utils.data_management.resources.formats.rdffile import RdfWriter
+from arches.app.utils.data_management.resources.formats.rdffile import JsonLdWriter
+from arches.app.utils.data_management.resources.formats.csvfile import TileCsvWriter
 from arches_querysets.models import ResourceTileTree
 from arches.app.tasks import notify_completion
 
@@ -107,9 +113,9 @@ class LingoResourceExporter:
             self.moduleid = ETLModule.objects.get(slug="export-lingo-resources").pk
 
         self.loadid = request.POST.get("load_id")
-        if self.loadid is None and self.loadid is None:
+        if self.loadid is None:
             # Mints a loadid if one was not minted by frontend
-            loadid = str(uuid.uuid4())
+            self.loadid = str(uuid.uuid4())
 
         self.resourceid = (
             request.POST.get("resourceid")
@@ -134,61 +140,248 @@ class LingoResourceExporter:
         )
         self.load_event = load_event
 
+        if task_management.check_if_celery_available():
+            from arches_lingo import tasks as lingo_tasks
+
+            task = lingo_tasks.export_lingo_resources_task.apply_async(
+                args=[self.loadid, self.user.id, self.resourceid, filename, format]
+            )
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    "UPDATE load_event SET taskid = %s WHERE loadid = %s",
+                    (task.task_id, self.loadid),
+                )
+            return {"success": True, "data": "delegated_to_celery"}
+
         try:
             response = self.run_export_task(self.resourceid, filename, format)
             return response
         except:
             error = _("An unexpected error occurred during export.")
-            self.handle_error(error)
+            self._handle_error(error)
             raise
 
     def run_export_task(self, resourceid, filename=None, format="xml"):
+        if format == "xml":
+            output_files = self._export_as_skos_xml(resourceid)
+        elif format in ["rdf", "csv", "jsonld"]:
+            scheme_ids, concept_ids = self._get_resource_ids_for_export(resourceid)
+            if not scheme_ids and not concept_ids:
+                return {
+                    "success": False,
+                    "data": {"message": self.load_event.error_message},
+                }
+            if format == "rdf":
+                output_files = self._export_as_arches_rdf(scheme_ids, concept_ids)
+            elif format == "csv":
+                output_files = self._export_as_tilecsv(scheme_ids, concept_ids)
+            elif format == "jsonld":
+                output_files = self._export_as_jsonld(scheme_ids, concept_ids)
+        else:
+            error = _("The requested export format is not supported.")
+            return self._handle_error(error)
+
+        if not output_files:
+            error = _("The thesaurus could not be exported in the requested format.")
+            return self._handle_error(error)
+
+        file = self._save_files_as_zip(output_files, filename)
+        return self._finalize_export(file)
+
+    def _make_filename(self, extension):
+        """Generate a standardized filename from the scheme name and extension."""
+        return (
+            f"{slugify(self.scheme_name, separator='_', lowercase=False)}.{extension}"
+        )
+
+    def _export_as_skos_xml(self, resourceid):
+        """Export a thesaurus hierarchy as SKOS/RDF XML using the Lingo SKOS writer."""
         schemes, concepts = self.gather_hierarchy_for_export(resourceid)
         self.schemes = schemes
         self.concepts = concepts
 
-        self.scheme_triples = defaultdict(list)
+        scheme_triples = defaultdict(list)
         for scheme in self.schemes:
             for nodegroup_alias, tile_trees in scheme.aliased_data._items():
                 if tile_trees:
-                    self.scheme_triples[scheme.resourceinstanceid].extend(
+                    scheme_triples[scheme.resourceinstanceid].extend(
                         self.extract_triples_from_aliased_tiles(
                             nodegroup_alias, tile_trees
                         )
                     )
 
-        self.concept_triples = defaultdict(list)
+        concept_triples = defaultdict(list)
         for concept in self.concepts:
             for nodegroup_alias, tile_trees in concept.aliased_data._items():
                 if tile_trees:
-                    self.concept_triples[concept.resourceinstanceid].extend(
+                    concept_triples[concept.resourceinstanceid].extend(
                         self.extract_triples_from_aliased_tiles(
                             nodegroup_alias, tile_trees
                         )
                     )
 
-        if len(self.scheme_triples) == 0 and len(self.concept_triples) == 0:
+        if len(scheme_triples) == 0 and len(concept_triples) == 0:
             error = _("The thesaurus could not be mapped to triples for export.")
-            return self.handle_error(error)
+            self._handle_error(error)
+            return []
 
-        if format == "xml":
-            writer = SKOSWriter()
-            rdf_graph = writer.write_skos_from_triples(
-                self.scheme_triples, self.concept_triples
+        writer = SKOSWriter()
+        rdf_graph = writer.write_skos_from_triples(scheme_triples, concept_triples)
+        serialized = rdf_graph.serialize(format="pretty-xml")
+
+        file_name = self._make_filename("xml")
+        if isinstance(serialized, str):
+            serialized = serialized.encode("utf-8")
+        return [{"name": file_name, "content": serialized}]
+
+    def _get_resource_ids_for_export(self, resourceid):
+        """
+        Return (scheme_ids, concept_ids) for use with core Arches export formats.
+        For a full hierarchy, scheme_ids contains the scheme and concept_ids has all
+        its concepts. For a partial hierarchy rooted at a concept, scheme_ids is empty
+        and concept_ids contains the root plus all descendants.
+        """
+        schemes = ResourceTileTree.get_tiles(
+            graph_slug="scheme", resource_ids=[resourceid]
+        )
+        if len(schemes) > 0:
+            self.scheme_name = schemes.first().name[settings.LANGUAGE_CODE]
+            concepts = ResourceTileTree.get_tiles(graph_slug="concept").filter(
+                part_of_scheme__id=resourceid
             )
-            serialized_rdf = rdf_graph.serialize(format="pretty-xml")
-        # TODO: support other linked data formats
+            scheme_ids = [str(resourceid)]
+            concept_ids = [str(c.resourceinstanceid) for c in concepts]
+            return scheme_ids, concept_ids
         else:
-            error = _("The requested export format is not supported.")
-            return self.handle_error(error)
+            root_concept = ResourceTileTree.get_tiles(
+                graph_slug="concept", resource_ids=[resourceid]
+            ).first()
+            part_of_scheme = root_concept.aliased_data.part_of_scheme
+            if not part_of_scheme:
+                error = _(
+                    "The selected concept is not part of a Scheme and cannot be exported."
+                )
+                self._handle_error(error)
+                return [], []
+            scheme_id = part_of_scheme.aliased_data.part_of_scheme.pk
+            self.scheme_name = root_concept.name[settings.LANGUAGE_CODE]
 
-        file = self.save_file(serialized_rdf, filename, format)
+            concept_builder = ConceptBuilder()
+            all_ids = {str(resourceid)}
+            potential_descendants = ResourceTileTree.get_tiles(
+                graph_slug="concept"
+            ).filter(part_of_scheme__id=str(scheme_id))
+            for concept in potential_descendants:
+                paths = concept_builder.find_paths_to_root([], str(concept.pk))
+                for path in paths:
+                    if resourceid in path:
+                        all_ids.add(str(concept.pk))
+                        break
+            return [], list(all_ids)
+
+    def _export_as_arches_rdf(self, scheme_ids, concept_ids):
+        """
+        Export scheme and concept resources as Arches RDF/XML using the core
+        RdfWriter, which serialises tile data using each node's ontology class
+        and the CIDOC-CRM property mappings stored in the graph model.
+        """
+        from rdflib import ConjunctiveGraph
+
+        merged = ConjunctiveGraph()
+
+        if scheme_ids:
+            writer = RdfWriter(format="pretty-xml")
+            writer.get_tiles(resourceinstanceids=scheme_ids)
+            merged += writer.get_rdf_graph()
+
+        if concept_ids:
+            writer = RdfWriter(format="pretty-xml")
+            writer.get_tiles(resourceinstanceids=concept_ids)
+            merged += writer.get_rdf_graph()
+
+        serialized = merged.serialize(format="pretty-xml")
+        if isinstance(serialized, str):
+            serialized = serialized.encode("utf-8")
+
+        file_name = self._make_filename("rdf")
+        return [{"name": file_name, "content": serialized}]
+
+    def _export_as_tilecsv(self, scheme_ids, concept_ids):
+        """
+        Export scheme and concept resources as Arches TileCSV format using the
+        core TileCsvWriter. Each nodegroup card becomes a separate CSV file,
+        all bundled together in the output ZIP.
+        """
+        output_files = []
+
+        if scheme_ids:
+            writer = TileCsvWriter()
+            for f in writer.write_resources(resourceinstanceids=scheme_ids):
+                content = f["outputfile"].getvalue()
+                if isinstance(content, str):
+                    content = content.encode("utf-8")
+                output_files.append({"name": f["name"], "content": content})
+
+        if concept_ids:
+            writer = TileCsvWriter()
+            for f in writer.write_resources(resourceinstanceids=concept_ids):
+                content = f["outputfile"].getvalue()
+                if isinstance(content, str):
+                    content = content.encode("utf-8")
+                output_files.append({"name": f["name"], "content": content})
+
+        return output_files
+
+    def _export_as_jsonld(self, scheme_ids, concept_ids):
+        """Export scheme and concept resources as JSON-LD using the core
+        JsonLdWriter. The core writer requires one resource at a time, so
+        resources are serialised in parallel via a thread pool. DB I/O
+        releases the GIL, allowing genuine concurrency across threads.
+        """
+        all_resource_ids = list(scheme_ids) + list(concept_ids)
+
+        def process_resource(rid):
+            writer = JsonLdWriter()
+            return writer.build_json(resourceinstanceids=[rid])
+
+        with ThreadPoolExecutor(max_workers=min(len(all_resource_ids), 8)) as executor:
+            documents = list(executor.map(process_resource, all_resource_ids))
+
+        if len(documents) == 1:
+            output = json.dumps(documents[0], indent=2, sort_keys=True)
+        else:
+            output = json.dumps(documents, indent=2, sort_keys=True)
+
+        if isinstance(output, str):
+            output = output.encode("utf-8")
+
+        file_name = self._make_filename("jsonld")
+        return [{"name": file_name, "content": output}]
+
+    def _save_files_as_zip(self, output_files, filename=None):
+        """Bundle a list of {name, content} dicts into a ZIP TempFile."""
+        if filename:
+            zip_name = filename if filename.endswith(".zip") else f"{filename}.zip"
+        else:
+            base = slugify(self.scheme_name, separator="_", lowercase=False)
+            timestamp = slugify(str(datetime.now()))
+            zip_name = f"{base}_{timestamp}.zip"
+        zip_stream = BytesIO()
+        with zipfile.ZipFile(zip_stream, "w") as zf:
+            for f in output_files:
+                zf.writestr(f["name"], f["content"])
+        zip_file = TempFile(source="lingo_resource_exporter")
+        zip_file.path.save(zip_name, zip_stream)
+        return zip_file
+
+    def _finalize_export(self, file):
+        """Update the load event, notify the user, and return the success response."""
         if file:
-            filename = os.path.basename(file.path.name)
-            file_url = os.path.join(settings.MEDIA_URL, filename)
+            zip_filename = os.path.basename(file.path.name)
+            file_url = os.path.join(settings.MEDIA_URL, zip_filename)
             existing_details = json.loads(self.load_event.load_details)
             file_details = {
-                "name": filename,
+                "name": zip_filename,
                 "url": file_url,
                 "fileid": str(file.fileid),
             }
@@ -199,6 +392,8 @@ class LingoResourceExporter:
                 "scheme_name": self.scheme_name,
             }
             self.load_event.complete = True
+            self.load_event.successful = True
+            self.load_end_time = datetime.now()
             self.load_event.status = (
                 "indexed"  # in BDM UI, 'indexed' maps to 'completed'
             )
@@ -219,7 +414,7 @@ class LingoResourceExporter:
             }
         else:
             error = _("File could not be saved.")
-            return self.handle_error(error)
+            return self._handle_error(error)
 
     def gather_hierarchy_for_export(self, resourceid):
         """
@@ -247,7 +442,7 @@ class LingoResourceExporter:
                 error = _(
                     "The selected concept is not part of a Scheme and cannot be exported."
                 )
-                return self.handle_error(error)
+                return self._handle_error(error)
             else:
                 scheme_id = part_of_scheme.aliased_data.part_of_scheme.pk
 
@@ -310,7 +505,7 @@ class LingoResourceExporter:
         mapping = TILE_TREE_TO_TRIPLE_MAPPING.get(nodegroup_alias)
         if mapping is None:
             logger.error(f"No mapping found for nodegroup alias: {nodegroup_alias}")
-            return None
+            return []
         if type(tile_trees) is not list:
             tile_trees = [tile_trees]
         for tile_tree in tile_trees:
@@ -338,33 +533,17 @@ class LingoResourceExporter:
             triples.append(triple)
         return triples
 
-    def save_file(self, serialized_rdf, filename, format):
-        # TODO: support multiple schemes export to individual files
-        if filename:
-            filename = filename.replace(" ", "_")
-            if not filename.endswith(f".{format}"):
-                filename = f"{filename}.{format}"
-        else:
-            filename = (
-                f"{slugify(self.scheme_name, separator='_', lowercase=False)}.{format}"
-            )
-        zip_name = filename.replace(
-            f".{format}", f"_{slugify(str(datetime.now()))}.zip"
-        )
-
-        # TODO: support saving associated files (e.g. images) in zip archive
-        data_stream = BytesIO(serialized_rdf)
-        zip_stream = BytesIO()
-        with zipfile.ZipFile(zip_stream, "w") as zip:
-            zip.writestr(filename, data_stream.read())
-        zip_file = TempFile(source="lingo_resource_exporter")
-        zip_file.path.save(zip_name, zip_stream)
-
-        return zip_file
-
-    def handle_error(self, error):
+    def _handle_error(self, error):
         self.load_event.status = "failed"
         self.load_event.error_message = str(error)
         self.load_event.save()
         logger.error(error)
-        return {"success": False, "data": {"message": error}}
+        if hasattr(self, "user"):
+            scheme_name = getattr(self, "scheme_name", "")
+            message = (
+                _("{name} export failed").format(name=scheme_name)
+                if scheme_name
+                else _("Export failed")
+            )
+            notify_completion(message, self.user)
+        return {"success": False, "message": error}

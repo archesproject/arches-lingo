@@ -3,22 +3,33 @@ import {
     computed,
     nextTick,
     onMounted,
+    onUnmounted,
     provide,
     ref,
     useTemplateRef,
+    watch,
 } from "vue";
 
 import { useGettext } from "vue3-gettext";
 
 import Button from "primevue/button";
+import { useConfirm } from "primevue/useconfirm";
 
-import { MAXIMIZE, MINIMIZE, CLOSE } from "@/arches_lingo/constants.ts";
+import { CLOSE, MAXIMIZE, MINIMIZE } from "@/arches_lingo/constants.ts";
+import {
+    useEditorDirtyState,
+    unsavedChangesConfirmOptions,
+} from "@/arches_lingo/composables/useEditorDirtyState.ts";
 
 const props = defineProps<{
     isEditorMaximized: boolean;
+    isFormEditor: boolean;
+    headerTitle: string;
 }>();
 
 const { $gettext } = useGettext();
+const confirm = useConfirm();
+const { isEditorDirty } = useEditorDirtyState();
 
 const emit = defineEmits([MAXIMIZE, MINIMIZE, CLOSE]);
 
@@ -27,6 +38,15 @@ const toggleSizeButton = useTemplateRef("toggleSizeButton");
 const formKey = ref(0);
 const componentEditorFormRef = ref();
 provide("componentEditorFormRef", componentEditorFormRef);
+
+/**
+ * Called by child editors at the end of their save() (in their finally block)
+ * to re-sync the global dirty flag with the form's actual dirty state.
+ */
+function onSaveSettled() {
+    isEditorDirty.value = isFormDirty.value;
+}
+provide("onSaveSettled", onSaveSettled);
 
 const isFormDirty = computed(() => {
     if (componentEditorFormRef.value) {
@@ -46,12 +66,44 @@ onMounted(() => {
     });
 });
 
+onUnmounted(() => {
+    isEditorDirty.value = false;
+});
+
+watch(isFormDirty, (dirty) => {
+    isEditorDirty.value = dirty;
+});
+
 function toggleSize() {
     if (props.isEditorMaximized) {
         emit(MINIMIZE);
     } else {
         emit(MAXIMIZE);
     }
+}
+
+function onCloseClicked() {
+    if (isFormDirty.value) {
+        confirm.require(
+            unsavedChangesConfirmOptions($gettext, () => emit(CLOSE)),
+        );
+    } else {
+        emit(CLOSE);
+    }
+}
+
+function onSave() {
+    // Clear the global dirty flag *before* the form's submit handler runs,
+    // which may trigger a router.push (e.g. after creating a new concept) or
+    // call openEditor() to reload the tile.  Without this, those actions
+    // would trip the unsaved-changes guard right after a successful save.
+    //
+    // The watcher `watch(isFormDirty, ...)` only fires on value *changes* so
+    // it will not immediately re-set isEditorDirty: isFormDirty was already
+    // true and stays true through the submit cycle.  If the editor is
+    // destroyed and recreated (new concept), onUnmounted resets the flag.
+    isEditorDirty.value = false;
+    componentEditorFormRef.value.submit();
 }
 
 function onCancel() {
@@ -66,7 +118,13 @@ function onCancel() {
 <template>
     <div class="container">
         <div class="header">
-            <h2>{{ $gettext("Editor Tools") }}</h2>
+            <h2>
+                {{
+                    props.isFormEditor
+                        ? $gettext("Editor Tools")
+                        : props.headerTitle
+                }}
+            </h2>
 
             <div class="controls">
                 <Button
@@ -87,7 +145,7 @@ function onCancel() {
                 <Button
                     :aria-label="$gettext('close editor')"
                     class="panel-control-button"
-                    @click="$emit(CLOSE)"
+                    @click="onCloseClicked"
                 >
                     <i
                         class="pi pi-times"
@@ -101,12 +159,15 @@ function onCancel() {
             <slot :key="formKey" />
         </div>
 
-        <div class="footer">
+        <div
+            v-if="props.isFormEditor"
+            class="footer"
+        >
             <Button
                 :label="$gettext('Save Changes')"
                 severity="success"
                 :disabled="!isFormDirty"
-                @click="componentEditorFormRef.submit()"
+                @click="onSave"
             />
             <Button
                 :label="$gettext('Cancel')"

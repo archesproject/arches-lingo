@@ -1,10 +1,8 @@
 <script setup lang="ts">
-import { computed, inject } from "vue";
+import { computed } from "vue";
+import { storeToRefs } from "pinia";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
-import {
-    selectedLanguageKey,
-    systemLanguageKey,
-} from "@/arches_lingo/constants.ts";
+import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 import type { TreeNode } from "primevue/treenode";
 
 const { node, filterValue } = defineProps<{
@@ -12,8 +10,7 @@ const { node, filterValue } = defineProps<{
     filterValue: string;
 }>();
 
-const selectedLanguage = inject(selectedLanguageKey);
-const systemLanguage = inject(systemLanguageKey);
+const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
 
 function tokenizeLabel(
     label: string,
@@ -44,8 +41,8 @@ const tokenizedLabel = computed(() => {
 
     const unstyledLabel = getItemLabel(
         node.data,
-        selectedLanguage!.value.code,
-        systemLanguage!.code,
+        selectedLanguage.value.code,
+        systemLanguage.value.code,
     ).value;
 
     return tokenizeLabel(unstyledLabel, filterValue);

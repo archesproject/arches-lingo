@@ -1,10 +1,13 @@
 <script setup lang="ts">
-import { computed, inject, onMounted, ref, type Ref } from "vue";
+import { computed, inject, onMounted, ref, watch } from "vue";
 import { useGettext } from "vue3-gettext";
+
+import { useEditLog } from "@/arches_lingo/composables/useEditLog.ts";
 
 import { useConfirm } from "primevue/useconfirm";
 import { useRouter } from "vue-router";
 import { useToast } from "primevue/usetoast";
+import { storeToRefs } from "pinia";
 
 import Skeleton from "primevue/skeleton";
 import ConfirmDialog from "primevue/confirmdialog";
@@ -18,31 +21,37 @@ import {
     DANGER,
     DEFAULT_ERROR_TOAST_LIFE,
     ERROR,
+    NEW_CONCEPT,
     SECONDARY,
-    systemLanguageKey,
-    selectedLanguageKey,
 } from "@/arches_lingo/constants.ts";
 import { PREF_LABEL } from "@/arches_controlled_lists/constants.ts";
 
 import {
     deleteLingoResource,
-    fetchLingoResource,
     fetchSchemeResource,
     fetchResourceIdentifiers,
     upsertResourceIdentifier,
     fetchConceptIdentifierCounter,
     createConceptIdentifierCounter,
+    fetchSchemeLabelCounts,
 } from "@/arches_lingo/api.ts";
-import { extractDescriptors } from "@/arches_lingo/utils.ts";
+import { useResourceStore } from "@/arches_lingo/composables/useResourceStore.ts";
+import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
+import {
+    extractDescriptors,
+    navigateToSchemeOrConcept,
+} from "@/arches_lingo/utils.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
+import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 
 import type {
     DataComponentMode,
+    Identifier,
+    LanguageLabelCount,
     ResourceInstanceResult,
     SchemeHeader,
 } from "@/arches_lingo/types.ts";
-import type { Language } from "@/arches_component_lab/types.ts";
-import type { Label } from "@/arches_controlled_lists/types";
+import type { Label, Labellable } from "@/arches_controlled_lists/types";
 import { routeNames } from "@/arches_lingo/routes.ts";
 
 type ConceptIdentifierCounter = {
@@ -68,6 +77,7 @@ const props = defineProps<{
 }>();
 
 const refreshSchemeHierarchy = inject<() => void>("refreshSchemeHierarchy");
+const { openEditLog } = useEditLog(() => props.graphSlug);
 
 const resourceInstanceLifecycleState = inject<{
     value:
@@ -83,12 +93,13 @@ const confirm = useConfirm();
 const router = useRouter();
 const toast = useToast();
 const { $gettext } = useGettext();
-const systemLanguage = inject(systemLanguageKey) as Language;
-const selectedLanguage = inject(selectedLanguageKey) as Ref<Language>;
+const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
 
 const scheme = ref<ResourceInstanceResult>();
+const schemeResource = ref<Labellable>();
 const label = ref<Label>();
 const data = ref<SchemeHeader>();
+const labelCounts = ref<LanguageLabelCount[]>([]);
 const isLoading = ref(true);
 const showExportDialog = ref(false);
 const exportDialogKey = ref(0);
@@ -103,6 +114,56 @@ const conceptIdentifierCounter = ref<ConceptIdentifierCounter | undefined>();
 const isEditingConceptIdentifierCounter = ref(false);
 const conceptIdentifierCounterStartNumberDraft = ref("1");
 const isSavingConceptIdentifierCounter = ref(false);
+
+const store = useResourceStore();
+const { isEditor } = useUserStore();
+
+watch(
+    [() => store.resource.value, () => store.error.value],
+    async ([resource, storeError]) => {
+        if (storeError) {
+            toast.add({
+                severity: ERROR,
+                life: DEFAULT_ERROR_TOAST_LIFE,
+                summary: $gettext("Unable to fetch scheme"),
+                detail: storeError.message,
+            });
+            isLoading.value = false;
+            return;
+        }
+        if (!resource || !props.resourceInstanceId) return;
+
+        try {
+            scheme.value = resource;
+
+            const schemeResource = await fetchSchemeResource(
+                props.resourceInstanceId,
+            );
+
+            label.value = getItemLabel(
+                schemeResource,
+                selectedLanguage.value.code,
+                systemLanguage.value.code,
+            );
+
+            extractSchemeHeaderData(resource);
+
+            fetchSchemeLabelCounts(props.resourceInstanceId).then((counts) => {
+                labelCounts.value = counts;
+            });
+        } catch (error) {
+            toast.add({
+                severity: ERROR,
+                life: DEFAULT_ERROR_TOAST_LIFE,
+                summary: $gettext("Unable to fetch scheme"),
+                detail: error instanceof Error ? error.message : undefined,
+            });
+        } finally {
+            isLoading.value = false;
+        }
+    },
+    { immediate: true },
+);
 
 const canEditResourceInstances = computed(() => {
     return Boolean(
@@ -131,31 +192,17 @@ const shouldShowConceptIdentifierCounterEditButton = computed(() => {
 });
 
 onMounted(async () => {
+    if (!props.resourceInstanceId) {
+        label.value = {
+            value: $gettext("New Scheme"),
+            language_id: selectedLanguage.value.code,
+            valuetype_id: PREF_LABEL,
+        };
+        isLoading.value = false;
+        return;
+    }
+
     try {
-        if (!props.resourceInstanceId) {
-            label.value = {
-                value: $gettext("New Scheme"),
-                language_id: selectedLanguage.value.code,
-                valuetype_id: PREF_LABEL,
-            };
-            return;
-        }
-
-        scheme.value = await fetchLingoResource(
-            props.graphSlug,
-            props.resourceInstanceId,
-        );
-
-        const schemeResource = await fetchSchemeResource(
-            props.resourceInstanceId,
-        );
-
-        label.value = getItemLabel(
-            schemeResource,
-            selectedLanguage.value.code,
-            systemLanguage.code,
-        );
-
         const resourceIdentifiers = await fetchResourceIdentifiers(
             props.resourceInstanceId,
         );
@@ -169,8 +216,6 @@ onMounted(async () => {
         } catch (_error) {
             conceptIdentifierCounter.value = undefined;
         }
-
-        extractSchemeHeaderData(scheme.value!);
     } catch (error) {
         toast.add({
             severity: ERROR,
@@ -178,9 +223,8 @@ onMounted(async () => {
             summary: $gettext("Unable to fetch scheme"),
             detail: error instanceof Error ? error.message : undefined,
         });
-    } finally {
-        isLoading.value = false;
     }
+    // Resource data is loaded via the store watch above
 });
 
 function openExportDialog() {
@@ -188,20 +232,57 @@ function openExportDialog() {
     showExportDialog.value = true;
 }
 
+function addTopConcept() {
+    const schemeId = props.resourceInstanceId;
+    if (!schemeId) {
+        return;
+    }
+    navigateToSchemeOrConcept(router, NEW_CONCEPT, {
+        scheme: schemeId,
+        parent: schemeId,
+    });
+}
+
 function extractSchemeHeaderData(scheme: ResourceInstanceResult) {
     const name = scheme?.name;
-    const descriptor = extractDescriptors(scheme, systemLanguage);
+    const descriptor = extractDescriptors(scheme, selectedLanguage.value);
     const principalUser = "Anonymous";
     const lifeCycleState =
         resourceInstanceLifecycleState?.value?.name || $gettext("Draft");
+    const uri =
+        scheme?.aliased_data?.uri?.aliased_data?.uri_content?.node_value;
+    const identifier = (scheme?.aliased_data?.identifier || [])
+        .map(
+            (tile: Identifier) =>
+                tile?.aliased_data?.identifier_content?.node_value,
+        )
+        .join(", ");
 
     data.value = {
-        name: name,
-        descriptor: descriptor,
-        principalUser: principalUser,
-        lifeCycleState: lifeCycleState,
+        name,
+        descriptor,
+        principalUser,
+        lifeCycleState,
+        uri,
+        identifier,
     };
 }
+
+watch(
+    () => selectedLanguage.value.code,
+    (newCode) => {
+        if (schemeResource.value) {
+            label.value = getItemLabel(
+                schemeResource.value,
+                newCode,
+                systemLanguage.value.code,
+            );
+        }
+        if (scheme.value) {
+            extractSchemeHeaderData(scheme.value);
+        }
+    },
+);
 
 function editIdentifier() {
     identifierDraft.value = identifierValue.value || "";
@@ -377,6 +458,14 @@ function onLifecycleStateChange(
 
                     <div class="header-buttons">
                         <Button
+                            :aria-label="$gettext('Edit History')"
+                            class="add-button"
+                            @click="openEditLog"
+                        >
+                            <span><i class="pi pi-history"></i></span>
+                            <span>{{ $gettext("History") }}</span>
+                        </Button>
+                        <Button
                             :aria-label="$gettext('Export')"
                             class="add-button"
                             @click="openExportDialog"
@@ -385,13 +474,16 @@ function onLifecycleStateChange(
                             <span>{{ $gettext("Export") }}</span>
                         </Button>
                         <Button
+                            v-if="isEditor"
                             icon="pi pi-plus-circle"
                             :label="$gettext('Add Top Concept')"
                             class="add-button"
-                        ></Button>
+                            @click="addTopConcept"
+                        />
 
                         <!-- TODO: button should reflect published state of concept: delete if draft, deprecate if URI is present -->
                         <Button
+                            v-if="isEditor"
                             icon="pi pi-trash"
                             severity="danger"
                             class="delete-button"
@@ -547,19 +639,14 @@ function onLifecycleStateChange(
                 </div>
 
                 <div class="header-row metadata-container">
-                    <!-- TODO: Load Scheme languages here -->
                     <div class="language-chip-container">
-                        <span class="scheme-language">
-                            {{ $gettext("English (en)") }}
-                        </span>
-                        <span class="scheme-language">
-                            {{ $gettext("German (de)") }}
-                        </span>
-                        <span class="scheme-language">
-                            {{ $gettext("French (fr)") }}
-                        </span>
-                        <span class="add-language">
-                            {{ $gettext("Add Language") }}
+                        <span
+                            v-for="entry in labelCounts"
+                            :key="entry.code"
+                            class="scheme-language"
+                        >
+                            {{ entry.language }} ({{ entry.code }}):
+                            {{ entry.count }}
                         </span>
                     </div>
 

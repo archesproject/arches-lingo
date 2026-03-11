@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rdf:RDF
+  xmlns:skos="http://www.w3.org/2004/02/skos/core#"
+  xmlns:dcterms="http://purl.org/dc/terms/"
+  xmlns:arches="http://localhost:8000/"
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+>
+  <skos:Concept rdf:about="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</arches:sortorder>
+    <skos:prefLabel xml:lang="en">related</skos:prefLabel>
+    <skos:narrower>
+      <skos:Concept rdf:about="http://localhost:8000/68792506-7b45-4008-9a12-15d63ea18f29">
+        <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</arches:sortorder>
+        <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+        <dcterms:identifier>http://www.w3.org/2004/02/skos/core#relatedMatch</dcterms:identifier>
+        <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+        <skos:prefLabel xml:lang="en">relatedMatch</skos:prefLabel>
+      </skos:Concept>
+    </skos:narrower>
+    <dcterms:identifier>http://www.w3.org/2004/02/skos/core#related</dcterms:identifier>
+    <skos:inScheme>
+      <skos:ConceptScheme rdf:about="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97">
+        <dcterms:title>related properties</dcterms:title>
+      </skos:ConceptScheme>
+    </skos:inScheme>
+  </skos:Concept>
+</rdf:RDF>

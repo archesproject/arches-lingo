@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rdf:RDF
+  xmlns:skos="http://www.w3.org/2004/02/skos/core#"
+  xmlns:arches="http://localhost:8000/"
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  xmlns:dcterms="http://purl.org/dc/terms/"
+>
+  <skos:Concept rdf:about="http://localhost:8000/929bfdbf-a592-4f70-bd8b-9c11deb6bff9">
+    <skos:narrower>
+      <skos:Concept rdf:about="http://localhost:8000/f3464aca-b9d8-4667-a551-71fe5058f7fd">
+        <skos:prefLabel xml:lang="en">authority files</skos:prefLabel>
+        <skos:inScheme rdf:resource="http://localhost:8000/fb5dd406-33ef-4e83-a6a9-9ea02c1ada17"/>
+        <skos:narrower rdf:resource="http://localhost:8000/8a036544-6392-4ec2-8128-107b7e7cf151"/>
+        <skos:broader rdf:resource="http://localhost:8000/929bfdbf-a592-4f70-bd8b-9c11deb6bff9"/>
+        <dcterms:identifier>http://vocab.getty.edu/aat/300026957</dcterms:identifier>
+        <skos:narrower rdf:resource="http://localhost:8000/6abd4767-6959-41f9-9f36-95e8af6d5752"/>
+        <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</arches:sortorder>
+      </skos:Concept>
+    </skos:narrower>
+    <skos:prefLabel xml:lang="en">controlled vocabularies</skos:prefLabel>
+    <skos:narrower>
+      <skos:Concept rdf:about="http://localhost:8000/a9982494-aed2-428c-9792-b6ec7a88e550">
+        <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</arches:sortorder>
+        <skos:definition xml:lang="en">A controlled list is a simple list of terms used to control terminology. In a well-constructed controlled list, the following should be true: each term must be unique; terms should all be members of same class; terms should not be overlapping in meaning; terms should be equal in granularity/specificity; and terms should be arranged alphabetically or in another logical order.</skos:definition>
+        <skos:inScheme rdf:resource="http://localhost:8000/fb5dd406-33ef-4e83-a6a9-9ea02c1ada17"/>
+        <skos:broader rdf:resource="http://localhost:8000/929bfdbf-a592-4f70-bd8b-9c11deb6bff9"/>
+        <dcterms:identifier>http://vocab.getty.edu/aat/300265267</dcterms:identifier>
+        <skos:prefLabel xml:lang="en">controlled lists</skos:prefLabel>
+      </skos:Concept>
+    </skos:narrower>
+    <dcterms:identifier>http://vocab.getty.edu/aat/300265266</dcterms:identifier>
+    <skos:narrower>
+      <skos:Concept rdf:about="http://localhost:8000/ea4de366-3459-4e97-a597-426cb7b9ab3d">
+        <skos:inScheme rdf:resource="http://localhost:8000/fb5dd406-33ef-4e83-a6a9-9ea02c1ada17"/>
+        <skos:broader rdf:resource="http://localhost:8000/929bfdbf-a592-4f70-bd8b-9c11deb6bff9"/>
+        <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">5</arches:sortorder>
+        <dcterms:identifier>http://vocab.getty.edu/aat/300444161</dcterms:identifier>
+        <skos:prefLabel xml:lang="en">indexing languages</skos:prefLabel>
+      </skos:Concept>
+    </skos:narrower>
+    <skos:narrower>
+      <skos:Concept rdf:about="http://localhost:8000/221b97ab-5344-4157-b661-6e8786198dff">
+        <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">6</arches:sortorder>
+        <skos:definition xml:lang="en">Access points to a bibliographical record based upon subject terminology, usually from a standardized or controlled vocabulary. Subject headings are words or phrases; pre-coordination of terminology is a characteristic of subject headings, meaning that they combine several unique concepts together in a string (e.g., "Medieval bronze vessels" combines a period, material, and work type in one heading).</skos:definition>
+        <skos:prefLabel xml:lang="en">subject headings</skos:prefLabel>
+        <dcterms:identifier>http://vocab.getty.edu/aat/300265269</dcterms:identifier>
+        <skos:inScheme rdf:resource="http://localhost:8000/fb5dd406-33ef-4e83-a6a9-9ea02c1ada17"/>
+        <skos:broader rdf:resource="http://localhost:8000/929bfdbf-a592-4f70-bd8b-9c11deb6bff9"/>
+      </skos:Concept>
+    </skos:narrower>
+    <skos:definition xml:lang="en">A controlled vocabulary is an organized arrangement of words and phrases that are used to index content and/or to retrieve content through browsing or searching. It typically includes preferred and variant terms and has a limited scope or describes a specific domain. Controlled vocabulary is a broader concept than authority file, encompassing authority files as well as other controlled lists of terminology.</skos:definition>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</arches:sortorder>
+    <skos:inScheme>
+      <skos:ConceptScheme rdf:about="http://localhost:8000/fb5dd406-33ef-4e83-a6a9-9ea02c1ada17">
+        <dcterms:title>Scheme Types</dcterms:title>
+      </skos:ConceptScheme>
+    </skos:inScheme>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/8a036544-6392-4ec2-8128-107b7e7cf151">
+    <skos:broader rdf:resource="http://localhost:8000/f3464aca-b9d8-4667-a551-71fe5058f7fd"/>
+    <dcterms:identifier>http://vocab.getty.edu/aat/300026966</dcterms:identifier>
+    <skos:inScheme rdf:resource="http://localhost:8000/fb5dd406-33ef-4e83-a6a9-9ea02c1ada17"/>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">3</arches:sortorder>
+    <skos:definition xml:lang="en">Electronic or physical files or other groupings of authorized cataloging entries for terminology appropriate for subject indexing.</skos:definition>
+    <skos:prefLabel xml:lang="en">subject authority files</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/6abd4767-6959-41f9-9f36-95e8af6d5752">
+    <skos:broader rdf:resource="http://localhost:8000/f3464aca-b9d8-4667-a551-71fe5058f7fd"/>
+    <dcterms:identifier>http://vocab.getty.edu/aat/300026963</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">name authority files</skos:prefLabel>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/fb5dd406-33ef-4e83-a6a9-9ea02c1ada17"/>
+    <skos:definition xml:lang="en">Electronic or physical files or other groupings of authorized cataloging entries for names, particularly personal and corporate names, but the term could also be used for authorities containing other names, such as geographic names, titles of works of art, etc.</skos:definition>
+  </skos:Concept>
+</rdf:RDF>

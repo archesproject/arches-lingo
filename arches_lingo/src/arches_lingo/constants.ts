@@ -1,8 +1,7 @@
-import type { InjectionKey, Ref } from "vue";
+import type { Component, InjectionKey, Ref } from "vue";
 import type { Language } from "@/arches_component_lab/types.ts";
-import type { Concept, UserRefAndSetter } from "@/arches_lingo/types.ts";
+import type { Concept } from "@/arches_lingo/types.ts";
 
-export const ANONYMOUS = "anonymous";
 export const ERROR = "error";
 export const SUCCESS = "success";
 export const DANGER = "danger";
@@ -22,22 +21,41 @@ export const CLOSED = "closed";
 export const NEW_CONCEPT = "newConcept";
 export const CONCEPT_TYPE_NODE_ALIAS = "type";
 
+// Controlled list IDs for advanced search dropdowns
+export const LABEL_TYPE_LIST_ID = "deb847fc-f4c3-4e82-be19-04641579f129";
+export const NOTE_TYPE_LIST_ID = "aba2a0b4-75a4-45ba-8b57-021f3ca92a6a";
+export const CONCEPT_TYPE_LIST_ID = "4f9b2c82-59c6-4173-99ea-2a6bfbab6aa2";
+
 export const DEFAULT_TOAST_LIFE = 5000;
 export const DEFAULT_ERROR_TOAST_LIFE = 8000;
 export const SEARCH_RESULTS_PER_PAGE = 25;
 export const SEARCH_RESULT_ITEM_SIZE = 50;
 
-// Injection keys
-export const USER_KEY = Symbol() as InjectionKey<UserRefAndSetter>;
-export const displayedRowKey = Symbol() as InjectionKey<Ref<Concept | null>>;
-export const selectedLanguageKey = Symbol() as InjectionKey<Ref<Language>>;
-export const systemLanguageKey = Symbol() as InjectionKey<Language>; // not reactive
-
-export const ENGLISH = {
+export const FALLBACK_LANGUAGE: Language = {
     code: "en",
-    default_direction: "ltr" as const,
-    id: 1,
+    default_direction: "ltr",
+    id: 0,
     isdefault: true,
     name: "English",
     scope: "system",
 };
+
+// Icons
+export const CONCEPT_ICON = "pi pi-tag";
+export const GUIDE_TERM_ICON = "pi pi-angle-double-right";
+export const SCHEME_ICON = "pi pi-folder";
+
+// URIs
+export const GUIDE_TERM_URI = "http://vocab.getty.edu/page/aat/300386700";
+
+// Injection keys
+export const openPanelComponentKey = Symbol() as InjectionKey<
+    (
+        component: Component,
+        componentName: string,
+        sectionTitle: string,
+        graphSlug?: string,
+        nodegroupAlias?: string,
+    ) => void
+>;
+export const displayedRowKey = Symbol() as InjectionKey<Ref<Concept | null>>;

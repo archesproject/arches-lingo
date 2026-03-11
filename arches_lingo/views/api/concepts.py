@@ -2,15 +2,16 @@ from http import HTTPStatus
 
 from django.conf import settings
 from django.core.paginator import Paginator
-from django.utils.decorators import method_decorator
+from django.http import JsonResponse
 from django.utils.translation import get_language, gettext as _
 from django.views.generic import View
 
 from arches.app.utils.betterJSONSerializer import JSONDeserializer, JSONSerializer
-from arches.app.utils.decorators import group_required
 from arches.app.utils.response import JSONErrorResponse, JSONResponse
 
 from arches_querysets.models import ResourceTileTree, TileTree
+from arches_lingo.mixins.anonymous_access import AnonymousAccessMixin
+from arches_lingo.permissions import anonymous_access_allowed, is_authenticated_user
 from arches_lingo.utils.concept_builder import ConceptBuilder
 from arches_lingo.utils.concepts import (
     resolve_max_edit_distance,
@@ -18,12 +19,14 @@ from arches_lingo.utils.concepts import (
     build_concept_ids_for_non_fuzzy,
     rank_concepts_for_unsorted_term,
 )
-
-
-@method_decorator(
-    group_required("RDM Administrator", raise_exception=True), name="dispatch"
+from arches_lingo.utils.dashboard import (
+    get_missing_translation_ids,
+    paginate_missing_translations,
+    parse_scheme_ids,
 )
-class ConceptTreeView(View):
+
+
+class ConceptTreeView(AnonymousAccessMixin, View):
     def get(self, request):
         builder = ConceptBuilder()
         data = {
@@ -32,9 +35,6 @@ class ConceptTreeView(View):
         return JSONResponse(data)
 
 
-@method_decorator(
-    group_required("RDM Administrator", raise_exception=True), name="dispatch"
-)
 class ValueSearchView(ConceptTreeView):
     def get(self, request):
         term = request.GET.get("term")
@@ -125,9 +125,6 @@ class ValueSearchView(ConceptTreeView):
         )
 
 
-@method_decorator(
-    group_required("RDM Administrator", raise_exception=True), name="dispatch"
-)
 class ConceptResourceView(ConceptTreeView):
     def get(self, request):
         scheme = request.GET.get("scheme", None)
@@ -141,10 +138,7 @@ class ConceptResourceView(ConceptTreeView):
 
         if not concept_ids:
             if scheme:
-                if exclude == "true":
-                    concept_query = Concept.exclude(part_of_scheme__id=scheme)
-                else:
-                    concept_query = Concept.filter(part_of_scheme__id=scheme)
+                concept_query = Concept.filter(part_of_scheme__id=scheme)
             else:
                 concept_query = Concept.all()
 
@@ -179,51 +173,51 @@ class ConceptResourceView(ConceptTreeView):
         )
 
 
-@method_decorator(
-    group_required("RDM Administrator", raise_exception=True), name="dispatch"
-)
 class ConceptRelationshipView(ConceptTreeView):
     def get(self, request):
         concept_id = request.GET.get("concept")
-        relationship_type = request.GET.get("type")
         Concept = ResourceTileTree.get_tiles("concept", as_representation=True)
-
         concept = Concept.get(pk=concept_id)
-
-        if relationship_type == "associated":
-            relationships = concept.aliased_data.relation_status
+        relationships = concept.aliased_data.relation_status
 
         return_data = {
             "scheme_id": concept.aliased_data.part_of_scheme.aliased_data.part_of_scheme[
                 "node_value"
+            ][
+                0
+            ][
+                "resourceId"
             ],
-            "data": [],
+            "data": relationships,
         }
-        for relationship in relationships:
-            data = JSONDeserializer().deserialize(
-                JSONSerializer().serialize(relationship)
-            )
-            aliased_data = JSONDeserializer().deserialize(
-                JSONSerializer().serialize(relationship.aliased_data)
-            )
-
-            if relationship_type == "associated":
-                related_concept_resourceid = (
-                    relationship.aliased_data.relation_status_ascribed_comparate[
-                        "node_value"
-                    ][0]["resourceId"]
-                )
-
-            related_concept = Concept.get(pk=related_concept_resourceid)
-
-            if related_concept.aliased_data.uri:
-                uri = related_concept.aliased_data.uri.aliased_data.uri_content
-            else:
-                uri = None
-
-            aliased_data["uri"] = uri
-            data["aliased_data"] = aliased_data
-
-            return_data["data"].append(data)
 
         return JSONResponse(return_data)
+
+
+class ConceptMissingTranslationsView(AnonymousAccessMixin, View):
+    def get(self, request):
+        language_code = request.GET.get("language")
+        if not language_code:
+            return JSONErrorResponse(
+                title=_("Missing parameter"),
+                message=_("language parameter is required"),
+                status=400,
+            )
+
+        try:
+            scheme_ids = parse_scheme_ids(request)
+        except ValueError as error:
+            return JSONErrorResponse(
+                title=_("Invalid scheme"),
+                message=str(error),
+                status=400,
+            )
+
+        page_number = int(request.GET.get("page", 1))
+        items_per_page = int(request.GET.get("items", 25))
+
+        missing_ids = get_missing_translation_ids(language_code, scheme_ids)
+
+        return JSONResponse(
+            paginate_missing_translations(missing_ids, page_number, items_per_page)
+        )

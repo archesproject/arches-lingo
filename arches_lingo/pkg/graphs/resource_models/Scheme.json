@@ -705,14 +705,14 @@
                         "i18n_properties": [
                             "placeholder"
                         ],
-                        "label": "Statement Metatype",
+                        "label": "Note Metatype",
                         "placeholder": {
                             "en": "Select an option"
                         }
                     },
                     "id": "7131cae6-11e0-11ef-9493-0a58a9feac02",
                     "label": {
-                        "en": "Statement Metatype"
+                        "en": "Note Metatype"
                     },
                     "node_id": "7131c4c4-11e0-11ef-9493-0a58a9feac02",
                     "sortorder": 3,
@@ -741,14 +741,14 @@
                         "i18n_properties": [
                             "placeholder"
                         ],
-                        "label": "Statement Type",
+                        "label": "Note Type",
                         "placeholder": {
                             "en": "Select an option"
                         }
                     },
                     "id": "7131cb36-11e0-11ef-9493-0a58a9feac02",
                     "label": {
-                        "en": "Statement Type"
+                        "en": "Note Type"
                     },
                     "node_id": "7131c550-11e0-11ef-9493-0a58a9feac02",
                     "sortorder": 2,
@@ -763,7 +763,7 @@
                         "i18n_properties": [
                             "placeholder"
                         ],
-                        "label": "Statement Language",
+                        "label": "Note Language",
                         "placeholder": {
                             "en": "Select a language"
                         },
@@ -772,7 +772,7 @@
                     },
                     "id": "7131cb90-11e0-11ef-9493-0a58a9feac02",
                     "label": {
-                        "en": "Statement Language"
+                        "en": "Note Language"
                     },
                     "node_id": "7131c37a-11e0-11ef-9493-0a58a9feac02",
                     "sortorder": 1,
@@ -882,7 +882,7 @@
                         "i18n_properties": [
                             "placeholder"
                         ],
-                        "label": "Statement",
+                        "label": "Note",
                         "maxLength": null,
                         "placeholder": {
                             "en": "Enter text"
@@ -892,7 +892,7 @@
                     },
                     "id": "7131cd3e-11e0-11ef-9493-0a58a9feac02",
                     "label": {
-                        "en": "Statement"
+                        "en": "Note"
                     },
                     "node_id": "7131c67c-11e0-11ef-9493-0a58a9feac02",
                     "sortorder": 0,
@@ -912,7 +912,7 @@
                         "i18n_properties": [
                             "placeholder"
                         ],
-                        "label": "Statement Label",
+                        "label": "Note Label",
                         "maxLength": null,
                         "placeholder": {
                             "en": "Enter text"
@@ -922,7 +922,7 @@
                     },
                     "id": "7131cd8e-11e0-11ef-9493-0a58a9feac02",
                     "label": {
-                        "en": "Statement Label"
+                        "en": "Note Label"
                     },
                     "node_id": "7131c5e6-11e0-11ef-9493-0a58a9feac02",
                     "sortorder": 4,
@@ -1120,7 +1120,7 @@
                         "i18n_properties": [
                             "placeholder"
                         ],
-                        "label": "Statement Label",
+                        "label": "Note Label",
                         "maxLength": null,
                         "placeholder": {
                             "en": "Enter text"
@@ -1130,7 +1130,7 @@
                     },
                     "id": "87fac841-423c-11ee-8a8d-11afefc4bff7",
                     "label": {
-                        "en": "Statement Label"
+                        "en": "Note Label"
                     },
                     "node_id": "87fac83c-423c-11ee-8a8d-11afefc4bff7",
                     "sortorder": 4,
@@ -3449,7 +3449,7 @@
                 {
                     "alias": "right_type",
                     "config": {
-                        "controlledList": "1c950e16-3fcf-4f33-9e5e-ce5c6c992cca",
+                        "controlledList": "e7e56dd5-b03c-4c70-a943-2af45f50135d",
                         "multiValue": false
                     },
                     "datatype": "reference",

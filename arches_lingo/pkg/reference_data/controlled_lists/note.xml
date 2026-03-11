@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rdf:RDF
+  xmlns:skos="http://www.w3.org/2004/02/skos/core#"
+  xmlns:arches="http://localhost:8000/"
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  xmlns:dcterms="http://purl.org/dc/terms/"
+>
+  <skos:Concept rdf:about="http://localhost:8000/67fff0cd-eae0-40bb-b58e-798150dae54a">
+    <skos:broader>
+      <skos:Concept rdf:about="http://localhost:8000/44bb50fc-42d5-41a0-bc21-4ad8d2f8bf5e">
+        <skos:prefLabel xml:lang="en">note</skos:prefLabel>
+        <skos:narrower rdf:resource="http://localhost:8000/67fff0cd-eae0-40bb-b58e-798150dae54a"/>
+        <dcterms:identifier>http://www.w3.org/2004/02/skos/core#note</dcterms:identifier>
+        <skos:narrower rdf:resource="http://localhost:8000/dd9186a8-a591-4f40-914c-1f476e60f552"/>
+        <skos:narrower rdf:resource="http://localhost:8000/713f38ea-b13c-4ea2-b7bb-35ec255bdf12"/>
+        <skos:narrower rdf:resource="http://localhost:8000/52eb8678-485d-418c-9ad2-aa97d077ac56"/>
+        <skos:narrower rdf:resource="http://localhost:8000/854e54ba-8a9e-4b7d-87ed-ce80e54506a4"/>
+        <skos:narrower rdf:resource="http://localhost:8000/970f7714-2df3-4c56-b248-9f1d022ab28c"/>
+        <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</arches:sortorder>
+        <skos:inScheme rdf:resource="http://localhost:8000/aba2a0b4-75a4-45ba-8b57-021f3ca92a6a"/>
+        <skos:narrower rdf:resource="http://localhost:8000/db222348-5dbc-4647-b649-52e0ae6df99a"/>
+      </skos:Concept>
+    </skos:broader>
+    <dcterms:identifier>https://rdm.dev.fargeo.com/plugins/controlled-list-manager/item/67fff0cd-eae0-40bb-b58e-798150dae54a</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">description</skos:prefLabel>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">3</arches:sortorder>
+    <skos:inScheme>
+      <skos:ConceptScheme rdf:about="http://localhost:8000/aba2a0b4-75a4-45ba-8b57-021f3ca92a6a">
+        <dcterms:title>note</dcterms:title>
+      </skos:ConceptScheme>
+    </skos:inScheme>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/db222348-5dbc-4647-b649-52e0ae6df99a">
+    <dcterms:identifier>http://www.w3.org/2004/02/skos/core#editorialNote</dcterms:identifier>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/aba2a0b4-75a4-45ba-8b57-021f3ca92a6a"/>
+    <skos:broader rdf:resource="http://localhost:8000/44bb50fc-42d5-41a0-bc21-4ad8d2f8bf5e"/>
+    <skos:altLabel xml:lang="en">editorialNote</skos:altLabel>
+    <skos:prefLabel xml:lang="en">editorial note</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/713f38ea-b13c-4ea2-b7bb-35ec255bdf12">
+    <skos:broader rdf:resource="http://localhost:8000/44bb50fc-42d5-41a0-bc21-4ad8d2f8bf5e"/>
+    <skos:prefLabel xml:lang="en">change note</skos:prefLabel>
+    <skos:inScheme rdf:resource="http://localhost:8000/aba2a0b4-75a4-45ba-8b57-021f3ca92a6a"/>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</arches:sortorder>
+    <dcterms:identifier>http://www.w3.org/2004/02/skos/core#changeNote</dcterms:identifier>
+    <skos:altLabel xml:lang="en">changeNote</skos:altLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/52eb8678-485d-418c-9ad2-aa97d077ac56">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">7</arches:sortorder>
+    <skos:altLabel xml:lang="en">scopeNote</skos:altLabel>
+    <skos:inScheme rdf:resource="http://localhost:8000/aba2a0b4-75a4-45ba-8b57-021f3ca92a6a"/>
+    <skos:prefLabel xml:lang="en">scope note</skos:prefLabel>
+    <skos:broader rdf:resource="http://localhost:8000/44bb50fc-42d5-41a0-bc21-4ad8d2f8bf5e"/>
+    <dcterms:identifier>http://www.w3.org/2004/02/skos/core#scopeNote</dcterms:identifier>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/854e54ba-8a9e-4b7d-87ed-ce80e54506a4">
+    <skos:inScheme rdf:resource="http://localhost:8000/aba2a0b4-75a4-45ba-8b57-021f3ca92a6a"/>
+    <skos:prefLabel xml:lang="en">definition</skos:prefLabel>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</arches:sortorder>
+    <skos:broader rdf:resource="http://localhost:8000/44bb50fc-42d5-41a0-bc21-4ad8d2f8bf5e"/>
+    <dcterms:identifier>http://www.w3.org/2004/02/skos/core#definition</dcterms:identifier>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/970f7714-2df3-4c56-b248-9f1d022ab28c">
+    <skos:inScheme rdf:resource="http://localhost:8000/aba2a0b4-75a4-45ba-8b57-021f3ca92a6a"/>
+    <skos:prefLabel xml:lang="en">history note</skos:prefLabel>
+    <skos:altLabel xml:lang="en">historyNote</skos:altLabel>
+    <skos:broader rdf:resource="http://localhost:8000/44bb50fc-42d5-41a0-bc21-4ad8d2f8bf5e"/>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">6</arches:sortorder>
+    <dcterms:identifier>http://www.w3.org/2004/02/skos/core#historyNote</dcterms:identifier>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/dd9186a8-a591-4f40-914c-1f476e60f552">
+    <dcterms:identifier>http://www.w3.org/2004/02/skos/core#example</dcterms:identifier>
+    <skos:inScheme rdf:resource="http://localhost:8000/aba2a0b4-75a4-45ba-8b57-021f3ca92a6a"/>
+    <skos:prefLabel xml:lang="en">example</skos:prefLabel>
+    <skos:broader rdf:resource="http://localhost:8000/44bb50fc-42d5-41a0-bc21-4ad8d2f8bf5e"/>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">5</arches:sortorder>
+  </skos:Concept>
+</rdf:RDF>

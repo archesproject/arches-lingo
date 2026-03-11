@@ -1,3 +1,8 @@
+from django.utils.translation import gettext_lazy as _
+
+### Groups ###
+LINGO_EDITOR_GROUP_NAME = "Lingo Editor"
+
 ### Concepts Model Nodes & Nodegroups ###
 CONCEPTS_GRAPH_ID = "bf73e576-4888-11ee-8a8d-11afefc4bff7"
 
@@ -22,6 +27,10 @@ CLASSIFICATION_STATUS_TIMESPAN_END_OF_END_NODEID = (
 CLASSIFICATION_STATUS_TIMESPAN_BEGIN_OF_BEGIN_NODEID = (
     "f92a16de-0eba-11ef-93db-0a58a9feac02"
 )
+
+# type (concept type – e.g. guide term)
+CONCEPT_TYPE_NODEGROUP = "74d4d2cc-0f5d-11ef-9493-0a58a9feac02"
+CONCEPT_TYPE_NODEID = "74d4d2cc-0f5d-11ef-9493-0a58a9feac02"
 
 # appellative_status
 CONCEPT_NAME_NODEGROUP = "ab9fee9c-0eb6-11ef-93db-0a58a9feac02"
@@ -69,7 +78,52 @@ EVENT_TYPES_LIST_ID = "6eaa2c6f-af83-464c-9200-051c4cfe7e8e"
 METATYPES_LIST_ID = "ef69e772-de53-45fe-98d4-bf3e7b10eb57"
 
 
+### URIs ###
+GUIDE_TERM_URI = "http://vocab.getty.edu/page/aat/300386700"
+
+
+# statement (notes)
+STATEMENT_NODEGROUP = "bf73e5d7-4888-11ee-8a8d-11afefc4bff7"
+STATEMENT_CONTENT_NODE = "bf73e6ab-4888-11ee-8a8d-11afefc4bff7"
+STATEMENT_LANGUAGE_NODE = "da0c9d52-0f5b-11ef-9493-0a58a9feac02"
+STATEMENT_TYPE_NODE = "fbfc89d6-0f5b-11ef-9493-0a58a9feac02"
+
+# uri
+URI_NODEGROUP = "bf73e598-4888-11ee-8a8d-11afefc4bff7"
+URI_CONTENT_NODE = "bf73e64a-4888-11ee-8a8d-11afefc4bff7"
+
+# identifier
+IDENTIFIER_NODEGROUP = "bf73e5d1-4888-11ee-8a8d-11afefc4bff7"
+IDENTIFIER_CONTENT_NODE = "bf73e6ba-4888-11ee-8a8d-11afefc4bff7"
+
+# match_status
+MATCH_STATUS_NODEGROUP = "4cfaaa64-0ed7-11ef-9493-0a58a9feac02"
+MATCH_STATUS_COMPARATE_NODE = "4cfaae24-0ed7-11ef-9493-0a58a9feac02"
+
+
+# status (lifecycle/status)
+STATUS_NODEGROUP = "152321b6-0f5e-11ef-9493-0a58a9feac02"
+
+
 ### Values ###
 PREF_LABEL_VALUE = "preferred label"
 ALT_LABEL_VALUE = "alternative label"
 HIDDEN_LABEL_VALUE = "hidden label"
+
+PREF_LABEL_URI = "http://www.w3.org/2004/02/skos/core#prefLabel"
+
+EDIT_TYPE_LABELS = {
+    "create": _("Resource Created"),
+    "delete": _("Resource Deleted"),
+    "tile delete": _("Tile Deleted"),
+    "tile create": _("Tile Created"),
+    "tile edit": _("Tile Updated"),
+    "bulk_create": _("Resource Created"),
+    "update_resource_instance_lifecycle_state": _("Resource Lifecycle State Updated"),
+}
+
+TILE_EDIT_TYPE_LABEL_TEMPLATES = {
+    "tile delete": _("%(name)s Deleted"),
+    "tile create": _("%(name)s Created"),
+    "tile edit": _("%(name)s Updated"),
+}

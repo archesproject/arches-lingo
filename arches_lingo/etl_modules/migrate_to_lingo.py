@@ -11,6 +11,7 @@ from collections import defaultdict
 from django.core.files.storage import default_storage
 from django.db import connection
 from django.db.models import FilteredRelation, OuterRef, Prefetch, Q, Subquery
+from django.db.models.expressions import RawSQL
 from django.db.models.functions import Coalesce
 from django.utils.translation import gettext as _
 
@@ -22,6 +23,8 @@ from arches.app.models import models
 from arches.app.models.models import LoadStaging, NodeGroup, LoadEvent
 from arches.app.models.concept import Concept
 from arches.app.models.system_settings import settings
+from arches.app.tasks import notify_completion
+import arches.app.utils.task_management as task_management
 
 import arches_lingo.tasks as tasks
 import arches_lingo.const as const
@@ -151,7 +154,8 @@ class LingoResourceImporter(BaseImportModule):
             Prefetch("value_set", queryset=models.Value.objects.order_by("value"))
         )
         for concept in concepts_qs:
-            concept_to_load = {"type": "Concept", "tile_data": []}
+            type_tile = {"type": {"type": "concept", "type_metatype": "classification"}}
+            concept_to_load = {"type": "Concept", "tile_data": [type_tile]}
             for value in concept.value_set.all():
                 concept_to_load["resourceinstanceid"] = (
                     concept.pk
@@ -212,7 +216,6 @@ class LingoResourceImporter(BaseImportModule):
                 "language": value.language.name,
             }
         # Values coming from SKOS import are dicts
-        # TODO: https://github.com/archesproject/arches-lingo/issues/472
         elif isinstance(value, dict):
             try:
                 value["language"] = lang_lookup[value["language_id"]]
@@ -748,7 +751,7 @@ class LingoResourceImporter(BaseImportModule):
         LoadStaging.objects.bulk_create(part_of_scheme_tiles)
 
     def start(self, request):
-        load_details = {"operation": "Bulk Lingo Resource Import"}
+        load_details = {"operation": "Lingo Thesaurus Import"}
         if not self.loadid:
             self.loadid = request.POST.get("load_id")
         load_event = models.LoadEvent.objects.create(
@@ -769,7 +772,7 @@ class LingoResourceImporter(BaseImportModule):
         return {"success": True, "data": data}
 
     def write(self, request):
-
+        self.load_event = models.LoadEvent.objects.get(loadid=self.loadid)
         # scheme_conceptid is indicator of the entrypoint -
         # if it's present, we're migrating a thesaurus from the RDM
         # if absent, we're loading data from an external SKOS file
@@ -778,6 +781,20 @@ class LingoResourceImporter(BaseImportModule):
             self.file = request.FILES["file"] if "file" in request.FILES else None
 
         if self.scheme_conceptid:
+            self.thesaurus_name = (
+                models.Value.objects.filter(
+                    concept_id=self.scheme_conceptid, valuetype="prefLabel"
+                )
+                .first()
+                .value
+            )
+            # use RawSQL to mimic behavior in _save_to_tiles method
+            self.load_event.load_details = RawSQL(
+                "load_details || %s::jsonb",
+                [json.dumps({"thesaurus_name": self.thesaurus_name})],
+            )
+            self.load_event.save()
+
             num_concepts_to_import = len(
                 Concept()
                 .get(
@@ -792,23 +809,35 @@ class LingoResourceImporter(BaseImportModule):
             )
             try:
                 if num_concepts_to_import <= 1000:
-                    response = self.run_load_task()
+                    self.run_load_task()
                 elif num_concepts_to_import > 1000:
-                    response = self.run_load_task_async(request, self.loadid)
+                    if not task_management.check_if_celery_available():
+                        return self.return_with_error(
+                            task_management.CeleryNotAvailableError()
+                        )
+                    self.run_load_task_async(request, self.loadid)
                 message = "Schemes and Concept Migration to Lingo Models Complete"
                 return {"success": True, "data": message}
             except Exception as error:
                 return self.return_with_error(error)
 
         elif self.file is not None:
+            # sanitize file name
+            file_name = os.path.basename(self.file.name)
+            file_name, extension = os.path.splitext(file_name)
             # Do minimal file validation to mock file checking in FileValidator
-            extension = self.file.name.split(".")[-1]
+            self.thesaurus_name = file_name
             guessed_file_type = filetype.guess(self.file)
 
             # guessed_file_type will be None if the file is xml
-            if extension != "xml" or guessed_file_type is not None:
+            if extension != ".xml" or guessed_file_type is not None:
                 message = f"File extension {extension}/{guessed_file_type.extension} not allowed"
                 return self.return_with_error(message)
+
+            self.load_event.load_details = RawSQL(
+                "load_details || %s::jsonb", [json.dumps({"thesaurus_name": file_name})]
+            )
+            self.load_event.save()
 
             use_celery_file_size_threshold = self.config.get(
                 "celeryByteSizeLimit", 100000
@@ -823,9 +852,13 @@ class LingoResourceImporter(BaseImportModule):
                     self.schemes, self.concepts = (
                         skos_reader.extract_concepts_from_skos_for_lingo_import(rdf)
                     )
-                    response = self.run_load_task()
+                    self.run_load_task()
 
                 elif self.file.size > use_celery_file_size_threshold:
+                    if not task_management.check_if_celery_available():
+                        return self.return_with_error(
+                            task_management.CeleryNotAvailableError()
+                        )
                     # Save file to temp storage so it can be accessed by celery worker
                     temp_dir = os.path.join(
                         settings.UPLOADED_FILES_DIR, "tmp", self.loadid
@@ -834,7 +867,7 @@ class LingoResourceImporter(BaseImportModule):
                     self.temp_file_path = os.path.join(temp_dir, self.file.name)
                     default_storage.save(self.temp_file_path, self.file)
                     self.file.close()
-                    response = self.run_load_task_async(request, self.loadid)
+                    self.run_load_task_async(request, self.loadid)
 
                 message = "Schemes and Concept Migration to Lingo Models Complete"
                 return {"success": True, "data": message}
@@ -900,7 +933,7 @@ class LingoResourceImporter(BaseImportModule):
                     """UPDATE load_event SET status = %s WHERE loadid = %s""",
                     ("validated", self.loadid),
                 )
-                response = save_to_tiles(self.userid, self.loadid)
+                save_to_tiles(self.userid, self.loadid)
                 cursor.execute(
                     """CALL __arches_update_resource_x_resource_with_graphids();"""
                 )
@@ -908,13 +941,32 @@ class LingoResourceImporter(BaseImportModule):
                 refresh_successful = cursor.fetchone()[0]
                 if not refresh_successful:
                     raise Exception("Unable to refresh spatial views")
-                return response
             else:
                 cursor.execute(
                     """UPDATE load_event SET status = %s, load_end_time = %s WHERE loadid = %s""",
                     ("failed", datetime.now(), self.loadid),
                 )
-                return {"success": False, "data": "failed"}
+        self._finalize_import()
+
+    def _finalize_import(self):
+        self.load_event = models.LoadEvent.objects.get(loadid=self.loadid)
+        thesaurus_name = getattr(self, "thesaurus_name", None)
+        if thesaurus_name is None and type(self.load_event.load_details) is list:
+            thesaurus_name = self.load_event.load_details[1].get("thesaurus_name")
+        user = models.User.objects.get(id=self.userid)
+        if self.load_event.status == "indexed":
+            message = (
+                _("{} import completed").format(thesaurus_name)
+                if thesaurus_name
+                else _("Import completed")
+            )
+        else:
+            message = (
+                _("{} import failed").format(thesaurus_name)
+                if thesaurus_name
+                else _("Import failed")
+            )
+        notify_completion(message, user)
 
     @load_data_async
     def run_load_task_async(self, request):
@@ -936,10 +988,25 @@ class LingoResourceImporter(BaseImportModule):
             )
 
     def return_with_error(self, error):
+        logger.error(error)
         if not self.load_event:
             self.load_event = models.LoadEvent.objects.get(loadid=self.loadid)
         self.load_event.status = "failed"
         self.load_event.error_message = str(error)
         self.load_event.save()
-        logger.error(error)
-        return {"success": False, "data": {"message": error}}
+        thesaurus_name = getattr(self, "thesaurus_name", None)
+        if thesaurus_name is None and type(self.load_event.load_details) is list:
+            thesaurus_name = self.load_event.load_details[1].get("thesaurus_name")
+        if isinstance(error, task_management.CeleryNotAvailableError):
+            message = _(
+                "The thesaurus exceeds threshold for synchronous processing, but Celery is not available. Please contact your system administrator."
+            )
+            error = message
+        else:
+            message = (
+                _("{} import failed").format(thesaurus_name)
+                if thesaurus_name
+                else _("Import failed")
+            )
+        notify_completion(message, models.User.objects.get(id=self.userid))
+        return {"success": False, "message": error}

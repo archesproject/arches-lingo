@@ -54,6 +54,12 @@ TEST_RUNNER = "arches.test.runner.ArchesTestRunner"
 SILENCED_SYSTEM_CHECKS.append(
     "arches.W001",  # Cache backend does not support rate-limiting
 )
+SILENCED_SYSTEM_CHECKS.append(
+    "arches.E001",  # Cache backend does not support rate-limiting (error level)
+)
+SILENCED_SYSTEM_CHECKS.append(
+    "arches.E003",  # Incompatible arches requirement
+)
 
 ELASTICSEARCH_HOSTS = [
     {"scheme": "http", "host": "localhost", "port": ELASTICSEARCH_HTTP_PORT}

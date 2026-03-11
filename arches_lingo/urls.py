@@ -1,6 +1,5 @@
 from django.conf import settings
 from django.conf.urls.static import static
-from django.conf.urls.i18n import i18n_patterns
 from django.urls import include, path
 
 from arches_lingo.views.root import LingoRootView
@@ -9,6 +8,19 @@ from arches_lingo.views.api.concepts import (
     ValueSearchView,
     ConceptResourceView,
     ConceptRelationshipView,
+    ConceptMissingTranslationsView,
+)
+from arches_lingo.views.api.dashboard import DashboardStatsView
+from arches_lingo.views.api.edit_log import ResourceEditLogAPIView
+from arches_lingo.views.api.schemes import SchemeResourceView, SchemeLabelCountView
+from arches_lingo.views.api.advanced_search import (
+    AdvancedSearchView,
+    AdvancedSearchOptionsView,
+    ConceptSetDetailView,
+    ConceptSetListView,
+    ConceptSetMembersView,
+    SavedSearchDetailView,
+    SavedSearchListView,
 )
 from arches_lingo.views.api.schemes import SchemeResourceView
 from arches_lingo.views.api.generic import (
@@ -20,6 +32,12 @@ from arches_lingo.views.api.generic import (
 from arches_lingo.views.api.concept_identifier_counter import (
     ConceptIdentifierCounterView,
 )
+from arches_lingo.views.api.settings import AppSettingsView
+from arches_lingo.views.api.user_profile import (
+    ChangePasswordAPIView,
+    LingoUserView,
+    UserProfileAPIView,
+)
 
 handler400 = "arches.app.views.main.custom_400"
 handler403 = "arches.app.views.main.custom_403"
@@ -28,7 +46,7 @@ handler500 = "arches.app.views.main.custom_500"
 
 urlpatterns = [
     path("", LingoRootView.as_view(), name="root"),
-    path("scheme/<uuid:id>", LingoRootView.as_view(), name="scheme-root"),
+    path("dashboard", LingoRootView.as_view(), name="dashboard"),
     path("login", LingoRootView.as_view(), name="login"),
     path("advanced-search", LingoRootView.as_view(), name="advanced-search"),
     path("schemes", LingoRootView.as_view(), name="schemes"),
@@ -36,6 +54,37 @@ urlpatterns = [
     path("scheme/new", LingoRootView.as_view(), name="new-scheme"),
     path("concept/<uuid:id>", LingoRootView.as_view(), name="concept"),
     path("concept/new", LingoRootView.as_view(), name="new-concept"),
+    path("profile", LingoRootView.as_view(), name="profile"),
+    path(
+        "api/lingo/user-profile",
+        UserProfileAPIView.as_view(),
+        name="api-lingo-user-profile",
+    ),
+    path(
+        "api/lingo/user",
+        LingoUserView.as_view(),
+        name="api-lingo-user",
+    ),
+    path(
+        "api/lingo/settings",
+        AppSettingsView.as_view(),
+        name="api-lingo-settings",
+    ),
+    path(
+        "api/lingo/change-password",
+        ChangePasswordAPIView.as_view(),
+        name="api-lingo-change-password",
+    ),
+    path(
+        "api/lingo/dashboard",
+        DashboardStatsView.as_view(),
+        name="api-lingo-dashboard",
+    ),
+    path(
+        "api/lingo/concepts/missing-translations",
+        ConceptMissingTranslationsView.as_view(),
+        name="api-lingo-missing-translations",
+    ),
     path("api/concept-tree", ConceptTreeView.as_view(), name="api-concepts"),
     path("api/search", ValueSearchView.as_view(), name="api-search"),
     path(
@@ -44,9 +93,39 @@ urlpatterns = [
         name="api-concept-identifier-counter",
     ),
     path(
-        "api/lingo/scheme-resource",
-        SchemeResourceView.as_view(),
-        name="api-lingo-scheme-resource",
+        "api/advanced-search",
+        AdvancedSearchView.as_view(),
+        name="api-advanced-search",
+    ),
+    path(
+        "api/advanced-search/options",
+        AdvancedSearchOptionsView.as_view(),
+        name="api-advanced-search-options",
+    ),
+    path(
+        "api/saved-searches",
+        SavedSearchListView.as_view(),
+        name="api-saved-searches",
+    ),
+    path(
+        "api/saved-searches/<int:pk>",
+        SavedSearchDetailView.as_view(),
+        name="api-saved-search-detail",
+    ),
+    path(
+        "api/concept-sets",
+        ConceptSetListView.as_view(),
+        name="api-concept-sets",
+    ),
+    path(
+        "api/concept-sets/<int:pk>",
+        ConceptSetDetailView.as_view(),
+        name="api-concept-set-detail",
+    ),
+    path(
+        "api/concept-sets/<int:pk>/members",
+        ConceptSetMembersView.as_view(),
+        name="api-concept-set-members",
     ),
     path(
         "api/lingo/concept-resources",
@@ -57,6 +136,21 @@ urlpatterns = [
         "api/lingo/concept-relationships",
         ConceptRelationshipView.as_view(),
         name="api-lingo-concept-relationships",
+    ),
+    path(
+        "api/lingo/schemes/<uuid:pk>",
+        SchemeResourceView.as_view(),
+        name="api-lingo-scheme",
+    ),
+    path(
+        "api/lingo/resource/<uuid:resourceid>/edit-log",
+        ResourceEditLogAPIView.as_view(),
+        name="api-lingo-edit-log",
+    ),
+    path(
+        "api/lingo/schemes/<uuid:pk>/label-counts",
+        SchemeLabelCountView.as_view(),
+        name="api-lingo-scheme-label-counts",
     ),
     path(
         "api/lingo/<slug:graph>",
@@ -96,7 +190,9 @@ urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 # Only handle i18n routing in active project. This will still handle the routes provided by Arches core and Arches applications,
 # but handling i18n routes in multiple places causes application errors.
 if settings.ROOT_URLCONF == __name__:
-    if settings.SHOW_LANGUAGE_SWITCH is True:
-        urlpatterns = i18n_patterns(*urlpatterns)
-
+    # Language switching is handled via the django_language cookie rather than
+    # URL-based language prefixes. i18n_patterns (which would wrap all URLs with
+    # a language code, e.g. /en/scheme/...) is intentionally not used, as it
+    # conflicts with cookie-based switching and would break existing URL structures.
+    # The i18n/ endpoint is still included to support Django's set_language view.
     urlpatterns.append(path("i18n/", include("django.conf.urls.i18n")))

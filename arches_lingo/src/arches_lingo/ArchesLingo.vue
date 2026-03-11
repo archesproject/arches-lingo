@@ -1,50 +1,36 @@
 <script setup lang="ts">
-import { provide, ref, watchEffect } from "vue";
+import { onMounted, provide, ref, watchEffect } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
 
 import Splitter from "primevue/splitter";
 import SplitterPanel from "primevue/splitterpanel";
+import ConfirmDialog from "primevue/confirmdialog";
 import Toast from "primevue/toast";
 
 import SchemeHierarchy from "@/arches_lingo/components/header/PageHeader/components/SchemeHierarchy/SchemeHierarchy.vue";
 
-import {
-    ANONYMOUS,
-    DEFAULT_ERROR_TOAST_LIFE,
-    ENGLISH,
-    ERROR,
-    USER_KEY,
-    selectedLanguageKey,
-    systemLanguageKey,
-} from "@/arches_lingo/constants.ts";
+import { DEFAULT_ERROR_TOAST_LIFE, ERROR } from "@/arches_lingo/constants.ts";
 
 import { routeNames } from "@/arches_lingo/routes.ts";
-import { fetchUser } from "@/arches_lingo/api.ts";
+import { useUnsavedChangesGuard } from "@/arches_lingo/composables/useUnsavedChangesGuard.ts";
+import { useAppSettingsStore } from "@/arches_lingo/stores/useAppSettingsStore.ts";
+import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
+import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 import PageHeader from "@/arches_lingo/components/header/PageHeader/PageHeader.vue";
 import SideNav from "@/arches_lingo/components/sidenav/SideNav.vue";
 
-import type { Ref } from "vue";
-import type { Language } from "@/arches_component_lab/types";
-import type { User } from "@/arches_lingo/types";
 import type { RouteLocationNormalizedLoadedGeneric } from "vue-router";
 
-const user = ref<User | null>(null);
-const setUser = (userToSet: User | null) => {
-    user.value = userToSet;
-};
-provide(USER_KEY, { user, setUser });
-
-const selectedLanguage: Ref<Language> = ref(ENGLISH);
-provide(selectedLanguageKey, selectedLanguage);
-const systemLanguage = ENGLISH;
-provide(systemLanguageKey, systemLanguage);
+const { $gettext } = useGettext();
+const appSettingsStore = useAppSettingsStore();
+const languageStore = useLanguageStore();
+const userStore = useUserStore();
 
 const router = useRouter();
 const route = useRoute();
 const toast = useToast();
-const { $gettext } = useGettext();
 
 const isNavExpanded = ref(false);
 const shouldShowHierarchy = ref(false);
@@ -56,8 +42,18 @@ const refreshSchemeHierarchy = function () {
 };
 provide("refreshSchemeHierarchy", refreshSchemeHierarchy);
 
+onMounted(function () {
+    useUnsavedChangesGuard(router);
+    languageStore.initialize();
+});
+
 watchEffect(() => {
     router.beforeEach(async (to, _from, next) => {
+        if (to.name === routeNames.login) {
+            shouldShowHierarchy.value = false;
+            next();
+            return;
+        }
         try {
             await checkUserAuthentication(to);
             next();
@@ -78,14 +74,16 @@ watchEffect(() => {
 async function checkUserAuthentication(
     to: RouteLocationNormalizedLoadedGeneric,
 ) {
-    const userData = await fetchUser();
-    setUser(userData);
+    await Promise.all([userStore.initialize(), appSettingsStore.initialize()]);
 
     const requiresAuthentication = to.matched.some(
         (record) => record.meta.requiresAuthentication,
     );
 
-    if (requiresAuthentication && userData.username === ANONYMOUS) {
+    if (
+        userStore.isAnonymous &&
+        (!appSettingsStore.allowAnonymousAccess || requiresAuthentication)
+    ) {
         throw new Error($gettext("Authentication required."));
     }
 }
@@ -120,6 +118,7 @@ async function checkUserAuthentication(
                 >
                     <div class="hierarchy-panel">
                         <SchemeHierarchy
+                            v-if="route.meta.shouldShowNavigation"
                             :key="schemeHierarchyKey"
                             :is-open="shouldShowHierarchy"
                             @should-show-hierarchy="
@@ -143,6 +142,7 @@ async function checkUserAuthentication(
             },
         }"
     />
+    <ConfirmDialog group="unsaved-changes" />
 </template>
 
 <style scoped>

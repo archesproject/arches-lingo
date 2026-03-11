@@ -11,6 +11,7 @@ import { useConfirm } from "primevue/useconfirm";
 import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
 
 import { DANGER, SECONDARY, VIEW } from "@/arches_lingo/constants.ts";
+import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 
 import type {
     ConceptImages,
@@ -75,6 +76,7 @@ const createTooltipText = computed(() => {
         "This concept is not editable in its current lifecycle state",
     );
 });
+const { isEditor } = useUserStore();
 
 const configurationError = ref();
 const isLoading = ref(true);
@@ -201,6 +203,7 @@ function modifyResource(resourceInstanceId?: string) {
         <div class="section-header">
             <h2>{{ props.sectionTitle }}</h2>
             <Button
+                v-if="isEditor"
                 v-tooltip.top="{
                     disabled: Boolean(!isCreateDisabled),
                     value: createTooltipText,
@@ -267,10 +270,7 @@ function modifyResource(resourceInstanceId?: string) {
                             />
                         </label>
                         <div
-                            v-if="
-                                canEditResourceInstances ||
-                                canDeleteResourceInstances
-                            "
+                            v-if="isEditor"
                             class="buttons"
                         >
                             <Button
