@@ -2,7 +2,6 @@
 import { computed, ref, watch } from "vue";
 import { useGettext } from "vue3-gettext";
 
-import Button from "primevue/button";
 import Column from "primevue/column";
 import DataTable from "primevue/datatable";
 import IconField from "primevue/iconfield";
@@ -14,6 +13,7 @@ import SplitterPanel from "primevue/splitterpanel";
 import Tag from "primevue/tag";
 import { useToast } from "primevue/usetoast";
 
+import ComponentEditor from "@/arches_lingo/components/generic/ComponentManager/components/ComponentEditor.vue";
 import {
     DEFAULT_ERROR_TOAST_LIFE,
     ERROR,
@@ -52,14 +52,19 @@ const currentPage = ref(0);
 const searchQuery = ref("");
 const selectedResource = ref<ResourceSummary | null>(null);
 const isEditorOpen = ref(false);
+const isEditorMaximized = ref(false);
 const isCreatingNew = ref(false);
+const editorInstanceKey = ref(0);
+const pendingSavedResourceInstanceId = ref<string | null>(null);
 
 let searchDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 
 const editorTitle = computed(() => {
     if (isCreatingNew.value) return $gettext("New Resource");
     if (!selectedResource.value) return "";
-    return selectedResource.value.display_name || $gettext("Untitled");
+    const displayName =
+        selectedResource.value.display_name || $gettext("Untitled");
+    return $gettext(`Now Editing: ${displayName}`);
 });
 
 watch(
@@ -96,6 +101,20 @@ async function loadResources() {
             detail: error instanceof Error ? error.message : undefined,
         });
     }
+
+    const resourceIdToSync =
+        pendingSavedResourceInstanceId.value ??
+        selectedResource.value?.resourceinstanceid;
+    if (resourceIdToSync) {
+        const refreshed = resources.value.find(
+            (resource) => resource.resourceinstanceid === resourceIdToSync,
+        );
+        if (refreshed) {
+            selectedResource.value = refreshed;
+        }
+    }
+    pendingSavedResourceInstanceId.value = null;
+
     isLoading.value = false;
 }
 
@@ -119,6 +138,7 @@ function onRowSelect(event: { data: ResourceSummary }) {
     selectedResource.value = event.data;
     if (props.editorEnabled !== false) {
         isEditorOpen.value = true;
+        editorInstanceKey.value++;
     }
     emit("select-resource", event.data);
 }
@@ -127,19 +147,32 @@ function openBlankEditor() {
     selectedResource.value = null;
     isCreatingNew.value = true;
     isEditorOpen.value = true;
+    editorInstanceKey.value++;
 }
 
 function closeEditor() {
     isEditorOpen.value = false;
+    isEditorMaximized.value = false;
     selectedResource.value = null;
     isCreatingNew.value = false;
 }
+
+defineExpose({
+    afterSave(savedResourceInstanceId: string) {
+        isCreatingNew.value = false;
+        pendingSavedResourceInstanceId.value = savedResourceInstanceId;
+    },
+});
 </script>
 
 <template>
     <div class="resource-list-editor">
-        <Splitter class="resource-splitter">
+        <Splitter
+            :key="isEditorOpen ? 'open' : 'closed'"
+            class="resource-splitter"
+        >
             <SplitterPanel
+                v-show="!isEditorMaximized"
                 :size="isEditorOpen ? 50 : 100"
                 :min-size="30"
                 class="list-panel"
@@ -169,7 +202,6 @@ function closeEditor() {
                     </div>
 
                     <DataTable
-                        v-model:selection="selectedResource"
                         :value="resources"
                         :loading="isLoading"
                         :lazy="true"
@@ -177,12 +209,14 @@ function closeEditor() {
                         :rows="PAGE_SIZE"
                         :total-records="totalRecords"
                         :first="currentPage * PAGE_SIZE"
+                        :selection="selectedResource"
                         selection-mode="single"
                         data-key="resourceinstanceid"
                         striped-rows
                         class="resource-table"
                         @page="onPage"
                         @row-select="onRowSelect"
+                        @row-unselect.stop
                     >
                         <Column
                             field="display_name"
@@ -244,36 +278,33 @@ function closeEditor() {
                 :min-size="30"
                 class="editor-panel"
             >
-                <div class="editor-panel-content">
-                    <div class="editor-header">
-                        <h2 class="editor-title">{{ editorTitle }}</h2>
-                        <div class="editor-controls">
-                            <Button
-                                :aria-label="$gettext('Close editor')"
-                                class="panel-control-button"
-                                @click="closeEditor"
-                            >
-                                <i
-                                    class="pi pi-times"
-                                    aria-hidden="true"
-                                />
-                            </Button>
+                <ComponentEditor
+                    :key="editorInstanceKey"
+                    :is-editor-maximized="isEditorMaximized"
+                    :is-form-editor="true"
+                    :header-title="editorTitle"
+                    @maximize="isEditorMaximized = true"
+                    @minimize="isEditorMaximized = false"
+                    @close="closeEditor"
+                >
+                    <div class="form-header">
+                        <h3>{{ editorTitle }}</h3>
+                        <div class="form-description">
+                            {{
+                                $gettext(
+                                    "Add or edit resource name information.",
+                                )
+                            }}
                         </div>
                     </div>
-                    <div class="editor-body">
+                    <div class="form-container">
                         <slot
                             name="editor"
                             :resource="selectedResource"
                             :is-creating-new="isCreatingNew"
                         />
                     </div>
-                    <div
-                        v-if="$slots['editor-footer']"
-                        class="editor-footer"
-                    >
-                        <slot name="editor-footer" />
-                    </div>
-                </div>
+                </ComponentEditor>
             </SplitterPanel>
         </Splitter>
     </div>
@@ -360,65 +391,7 @@ function closeEditor() {
 }
 
 .editor-panel {
-    overflow: auto;
-}
-
-.editor-panel-content {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    min-height: 0;
-}
-
-.editor-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: var(--p-header-toolbar-background);
-    border-bottom: 0.0625rem solid var(--p-header-toolbar-border);
-    padding: 0 1rem;
-    padding-bottom: 0.1rem;
-}
-
-.editor-title {
-    margin: 0.75rem 0;
-    font-size: var(--p-lingo-font-size-large);
-    font-weight: var(--p-lingo-font-weight-normal);
     overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.editor-controls {
-    flex-shrink: 0;
-}
-
-.panel-control-button {
-    border-radius: 50%;
-    background: var(--p-primary-contrast-color);
-    border: 0.0625rem solid var(--p-header-button-border);
-    color: var(--p-editor-form-color);
-}
-
-.editor-body {
-    flex: 1;
-    overflow-y: auto;
-    padding: 0.5rem 1rem;
-    background: var(--p-editor-form-background);
-}
-
-.editor-footer {
-    flex-shrink: 0;
-    display: flex;
-    justify-content: flex-end;
-    gap: 0.5rem;
-    padding: 0.75rem 1rem;
-    background: var(--p-header-background);
-    border-top: 0.125rem solid var(--p-menubar-border-color);
-}
-
-.editor-footer :deep(button) {
-    border-radius: 0.125rem;
 }
 
 :deep(.type-column) {

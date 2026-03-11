@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, useTemplateRef, watchEffect } from "vue";
+import { inject, reactive, ref, useTemplateRef, watch, watchEffect } from "vue";
 
 import Message from "primevue/message";
 import Skeleton from "primevue/skeleton";
@@ -12,6 +12,7 @@ import {
 
 import { EDIT } from "@/arches_component_lab/widgets/constants.ts";
 
+import type { Ref } from "vue";
 import type {
     AliasedTileData,
     CardXNodeXWidgetData,
@@ -24,20 +25,43 @@ const { graphSlug, nodegroupAlias, resourceInstanceId, tileId } = defineProps<{
     tileId?: string | null;
 }>();
 
-const emit = defineEmits([
-    "update:tileData",
-    "update:widgetDirtyStates",
-    "update:widgetFocusStates",
-    "save",
-    "reset",
-]);
+const emit = defineEmits(["save"]);
+
+const componentEditorFormRef = inject<Ref<unknown>>("componentEditorFormRef");
 
 const isLoading = ref(true);
 const configurationError = ref<Error>();
 const cardXNodeXWidgetData = ref<CardXNodeXWidgetData[]>([]);
 const aliasedTileData = ref<AliasedTileData>();
+const widgetDirtyStates = ref<Record<string, boolean>>({});
 
 const cardEditorRef = useTemplateRef("cardEditorRef");
+
+const formFacade = reactive({
+    states: {} as Record<string, { dirty: boolean }>,
+    submit() {
+        cardEditorRef.value?.save();
+    },
+});
+
+watch(
+    widgetDirtyStates,
+    (newStates) => {
+        formFacade.states = Object.fromEntries(
+            Object.entries(newStates).map(([key, dirty]) => [key, { dirty }]),
+        );
+    },
+    { deep: true },
+);
+
+watch(
+    () => isLoading.value,
+    (loading) => {
+        if (!loading && componentEditorFormRef) {
+            componentEditorFormRef.value = formFacade;
+        }
+    },
+);
 
 watchEffect(async () => {
     isLoading.value = true;
@@ -92,9 +116,6 @@ defineExpose({
         :resource-instance-id="resourceInstanceId"
         :should-show-form-buttons="false"
         @save="emit('save', $event)"
-        @reset="emit('reset', $event)"
-        @update:tile-data="emit('update:tileData', $event)"
-        @update:widget-dirty-states="emit('update:widgetDirtyStates', $event)"
-        @update:widget-focus-states="emit('update:widgetFocusStates', $event)"
+        @update:widget-dirty-states="widgetDirtyStates = $event"
     />
 </template>

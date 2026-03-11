@@ -18,8 +18,7 @@ const GRAPH_SLUG = "textual_work";
 const { $gettext } = useGettext();
 const { isEditor } = useUserStore();
 
-const genericCardRef = useTemplateRef("genericCardRef");
-const hasUnsavedChanges = ref(false);
+const resourceListEditorRef = useTemplateRef("resourceListEditorRef");
 const refreshTrigger = ref(0);
 const {
     selectedResourceInstanceId,
@@ -32,32 +31,27 @@ const {
 } = useResourceNameEditor();
 
 async function onSelectResource(resource: ResourceSummary) {
-    hasUnsavedChanges.value = false;
     await selectResource(resource);
 }
 
 function onCreateNew() {
-    hasUnsavedChanges.value = false;
     clearSelection();
 }
 
-function onWidgetDirtyStatesChange(states: Record<string, boolean>) {
-    hasUnsavedChanges.value = Object.values(states).some(Boolean);
-}
-
-function onCancel() {
-    hasUnsavedChanges.value = false;
-    editorKey.value++;
-}
-
-function onSave() {
-    hasUnsavedChanges.value = false;
+function onSave(savedTileData: {
+    resourceinstance: string;
+    tileid: string | null;
+}) {
+    selectedResourceInstanceId.value = savedTileData.resourceinstance;
+    selectedTileId.value = savedTileData.tileid;
+    resourceListEditorRef.value?.afterSave(savedTileData.resourceinstance);
     refreshTrigger.value++;
 }
 </script>
 
 <template>
     <ResourceListEditor
+        ref="resourceListEditorRef"
         :page-title="$gettext('Sources')"
         :fetch-resources="fetchSources"
         :refresh-trigger="refreshTrigger"
@@ -86,7 +80,6 @@ function onSave() {
             />
             <ResourceNameCard
                 v-else
-                ref="genericCardRef"
                 :key="editorKey"
                 :graph-slug="GRAPH_SLUG"
                 :nodegroup-alias="NAME_NODEGROUP_ALIAS"
@@ -94,27 +87,7 @@ function onSave() {
                     isCreatingNew ? undefined : selectedResourceInstanceId
                 "
                 :tile-id="isCreatingNew ? undefined : selectedTileId"
-                @update:widget-dirty-states="onWidgetDirtyStatesChange"
                 @save="onSave"
-            />
-        </template>
-
-        <template #editor-footer>
-            <Button
-                :label="$gettext('Save')"
-                severity="success"
-                size="small"
-                icon="pi pi-check"
-                :disabled="!hasUnsavedChanges"
-                @click="genericCardRef?.save()"
-            />
-            <Button
-                :label="$gettext('Cancel')"
-                severity="warn"
-                size="small"
-                icon="pi pi-undo"
-                :disabled="!hasUnsavedChanges"
-                @click="onCancel"
             />
         </template>
     </ResourceListEditor>

@@ -27,8 +27,7 @@ const graphTypeOptions: GraphTypeOption[] = [
     { label: $gettext("Group"), value: "group" },
 ];
 
-const genericCardRef = useTemplateRef("genericCardRef");
-const hasUnsavedChanges = ref(false);
+const resourceListEditorRef = useTemplateRef("resourceListEditorRef");
 const refreshTrigger = ref(0);
 const selectedGraphSlug = ref<string>("person_system");
 const newGraphSlug = ref<GraphTypeOption>(graphTypeOptions[0]);
@@ -43,25 +42,14 @@ const {
 } = useResourceNameEditor();
 
 async function onSelectResource(resource: ResourceSummary) {
-    hasUnsavedChanges.value = false;
     selectedGraphSlug.value = resource.graph_slug;
     await selectResource(resource);
 }
 
 function onCreateNew(openBlankEditor: () => void) {
-    hasUnsavedChanges.value = false;
     selectedGraphSlug.value = newGraphSlug.value.value;
     clearSelection();
     openBlankEditor();
-}
-
-function onWidgetDirtyStatesChange(states: Record<string, boolean>) {
-    hasUnsavedChanges.value = Object.values(states).some(Boolean);
-}
-
-function onCancel() {
-    hasUnsavedChanges.value = false;
-    editorKey.value++;
 }
 
 function onNewGraphTypeChange() {
@@ -69,14 +57,20 @@ function onNewGraphTypeChange() {
     editorKey.value++;
 }
 
-function onSave() {
-    hasUnsavedChanges.value = false;
+function onSave(savedTileData: {
+    resourceinstance: string;
+    tileid: string | null;
+}) {
+    selectedResourceInstanceId.value = savedTileData.resourceinstance;
+    selectedTileId.value = savedTileData.tileid;
+    resourceListEditorRef.value?.afterSave(savedTileData.resourceinstance);
     refreshTrigger.value++;
 }
 </script>
 
 <template>
     <ResourceListEditor
+        ref="resourceListEditorRef"
         :page-title="$gettext('Contributors')"
         :fetch-resources="fetchContributors"
         :refresh-trigger="refreshTrigger"
@@ -118,7 +112,6 @@ function onSave() {
             />
             <ResourceNameCard
                 v-else
-                ref="genericCardRef"
                 :key="editorKey"
                 :graph-slug="selectedGraphSlug"
                 :nodegroup-alias="NAME_NODEGROUP_ALIAS"
@@ -126,27 +119,7 @@ function onSave() {
                     isCreatingNew ? undefined : selectedResourceInstanceId
                 "
                 :tile-id="isCreatingNew ? undefined : selectedTileId"
-                @update:widget-dirty-states="onWidgetDirtyStatesChange"
                 @save="onSave"
-            />
-        </template>
-
-        <template #editor-footer>
-            <Button
-                :label="$gettext('Save')"
-                severity="success"
-                size="small"
-                icon="pi pi-check"
-                :disabled="!hasUnsavedChanges"
-                @click="genericCardRef?.save()"
-            />
-            <Button
-                :label="$gettext('Cancel')"
-                severity="warn"
-                size="small"
-                icon="pi pi-undo"
-                :disabled="!hasUnsavedChanges"
-                @click="onCancel"
             />
         </template>
     </ResourceListEditor>
