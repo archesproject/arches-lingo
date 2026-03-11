@@ -6,9 +6,6 @@ from arches.app.utils.response import JSONResponse
 from arches_lingo.mixins.anonymous_access import AnonymousAccessMixin
 from arches_lingo.utils.resource_list import get_paginated_resource_summaries
 
-SOURCES_GRAPH_SLUGS = ["textual_work"]
-CONTRIBUTORS_GRAPH_SLUGS = ["person_system", "group"]
-
 
 class SourcesListView(AnonymousAccessMixin, View):
     def get(self, request):
@@ -17,7 +14,7 @@ class SourcesListView(AnonymousAccessMixin, View):
         offset = int(request.GET.get("offset", 0))
 
         data = get_paginated_resource_summaries(
-            SOURCES_GRAPH_SLUGS,
+            ["textual_work"],
             search_term=search_term,
             limit=limit,
             offset=offset,
@@ -32,7 +29,7 @@ class ContributorsListView(AnonymousAccessMixin, View):
         offset = int(request.GET.get("offset", 0))
 
         data = get_paginated_resource_summaries(
-            CONTRIBUTORS_GRAPH_SLUGS,
+            ["person_system", "group"],
             search_term=search_term,
             limit=limit,
             offset=offset,
