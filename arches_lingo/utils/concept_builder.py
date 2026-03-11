@@ -54,6 +54,7 @@ class ConceptBuilder:
 
         self.polyhierarchical_concepts = set()
         self.guide_term_concepts: set[str] = set()
+        self.lifecycle_state_ids: dict[str, str] = {}
         self.language_lookup = {lang.code: lang.name for lang in Language.objects.all()}
 
         if concept_ids is None:
@@ -61,6 +62,7 @@ class ConceptBuilder:
             self.narrower_concepts_map()
             self.populate_guide_term_concepts()
             self.populate_schemes()
+            self.populate_lifecycle_states()
             return
 
         if include_parents:
@@ -228,12 +230,29 @@ class ConceptBuilder:
         self.populate_schemes(list(scheme_ids))
         self.populate_concept_labels(list(closure_concept_ids))
         self.populate_guide_term_concepts(list(closure_concept_ids))
+        self.populate_lifecycle_states()
+
+    def populate_lifecycle_states(self):
+        all_concept_ids = set(self.labels.keys())
+        all_ids = all_concept_ids | set(self.schemes_by_id.keys())
+
+        if not all_ids:
+            return
+
+        self.lifecycle_state_ids = {
+            str(resource_id): str(lifecycle_state_id)
+            for resource_id, lifecycle_state_id in ResourceInstance.objects.filter(
+                pk__in=all_ids
+            ).values_list("pk", "resource_instance_lifecycle_state_id")
+            if lifecycle_state_id is not None
+        }
 
     def serialize_scheme(self, scheme: ResourceInstance, *, children=True):
         scheme_id: str = str(scheme.pk)
         data = {
             "id": scheme_id,
             "labels": [self.serialize_scheme_label(label) for label in scheme.labels],
+            "lifecycle_state_id": self.lifecycle_state_ids.get(scheme_id),
         }
         if children:
             data["top_concepts"] = [
@@ -291,6 +310,7 @@ class ConceptBuilder:
                 self.serialize_concept_label(label) for label in self.labels[conceptid]
             ],
             "guide_term": conceptid in self.guide_term_concepts,
+            "lifecycle_state_id": self.lifecycle_state_ids.get(conceptid),
         }
         if children:
             data["narrower"] = [

@@ -400,3 +400,30 @@ let nextConditionId = Date.now();
 export function generateConditionId(): string {
     return `cond-${nextConditionId++}`;
 }
+
+export function filterTreeByLifecycleStates(
+    treeNodes: TreeNode[],
+    selectedStateIds: Set<string>,
+): TreeNode[] {
+    if (selectedStateIds.size === 0) {
+        return treeNodes;
+    }
+
+    return treeNodes.reduce((visibleNodes: TreeNode[], node: TreeNode) => {
+        const filteredChildren = filterTreeByLifecycleStates(
+            (node.children ?? []) as TreeNode[],
+            selectedStateIds,
+        );
+
+        const nodeData = node.data as Concept | Scheme;
+        const nodeMatchesFilter =
+            nodeData.lifecycle_state_id !== undefined &&
+            selectedStateIds.has(nodeData.lifecycle_state_id);
+
+        if (nodeMatchesFilter || filteredChildren.length > 0) {
+            visibleNodes.push({ ...node, children: filteredChildren });
+        }
+
+        return visibleNodes;
+    }, []);
+}
