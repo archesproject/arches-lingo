@@ -8,7 +8,6 @@ import Button from "primevue/button";
 import MultiSelect from "primevue/multiselect";
 
 import { fetchConceptResources } from "@/arches_lingo/api.ts";
-import { generateArchesURL } from "@/arches/utils/generate-arches-url.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 import { getParentLabels } from "@/arches_lingo/utils.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
