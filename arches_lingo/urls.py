@@ -6,6 +6,7 @@ from arches_lingo.views.root import LingoRootView
 from arches_lingo.views.api.concepts import (
     ConceptDeleteView,
     ConceptTreeView,
+    LifecycleStatesView,
     ValueSearchView,
     ConceptResourceView,
     ConceptRelationshipView,
