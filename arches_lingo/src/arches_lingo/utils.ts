@@ -2,6 +2,7 @@ import { routeNames } from "@/arches_lingo/routes.ts";
 
 import { createLingoResource, upsertLingoTile } from "@/arches_lingo/api.ts";
 import {
+    NEW,
     NEW_CONCEPT,
     CONCEPT_ICON,
     GUIDE_TERM_ICON,
@@ -80,6 +81,7 @@ export function treeFromSchemes(
     systemLanguage: Language,
     iconLabels: IconLabels,
     focusedOccurrenceKey: string | null,
+    sortAscending: boolean = true,
 ): TreeNode[] {
     function buildOccurrenceKey(schemeId: string, pathIds: string[]) {
         return `${schemeId}::${pathIds.join(">")}`;
@@ -121,7 +123,25 @@ export function treeFromSchemes(
         schemeId: string,
         pathIds: string[],
     ): NodeAndParentInstruction {
-        const nodesAndInstructions = children.map((child) =>
+        const sortedChildren = [...children].sort((conceptA, conceptB) => {
+            if (conceptA.id === NEW) return -1;
+            if (conceptB.id === NEW) return 1;
+            const labelA = getItemLabel(
+                conceptA,
+                selectedLanguage.code,
+                systemLanguage.code,
+            ).value.toLowerCase();
+            const labelB = getItemLabel(
+                conceptB,
+                selectedLanguage.code,
+                systemLanguage.code,
+            ).value.toLowerCase();
+            return sortAscending
+                ? labelA.localeCompare(labelB)
+                : labelB.localeCompare(labelA);
+        });
+
+        const nodesAndInstructions = sortedChildren.map((child) =>
             processItem(child, child.narrower, schemeId, [
                 ...pathIds,
                 child.id,

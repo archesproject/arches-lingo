@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useGettext } from "vue3-gettext";
 import { RouterLink } from "vue-router";
 import { useToast } from "primevue/usetoast";
@@ -34,6 +34,22 @@ const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
 const topConcepts = ref<Concept[]>([]);
 const isLoading = ref(true);
 const fetchError = ref<Error>();
+
+const sortedTopConcepts = computed(() => {
+    return [...topConcepts.value].sort((conceptA, conceptB) => {
+        const labelA = getItemLabel(
+            conceptA,
+            selectedLanguage.value.code,
+            systemLanguage.value.code,
+        ).value.toLowerCase();
+        const labelB = getItemLabel(
+            conceptB,
+            selectedLanguage.value.code,
+            systemLanguage.value.code,
+        ).value.toLowerCase();
+        return labelA.localeCompare(labelB);
+    });
+});
 
 onMounted(async () => {
     if (!props.resourceInstanceId) {
@@ -85,7 +101,7 @@ onMounted(async () => {
             class="top-concepts-list"
         >
             <RouterLink
-                v-for="concept in topConcepts"
+                v-for="concept in sortedTopConcepts"
                 :key="concept.id"
                 :to="{
                     name: routeNames.concept,
