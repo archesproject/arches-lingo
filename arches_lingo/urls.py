@@ -6,6 +6,7 @@ from arches_lingo.views.root import LingoRootView
 from arches_lingo.views.api.concepts import (
     ConceptDeleteView,
     ConceptTreeView,
+    LifecycleStatesView,
     ValueSearchView,
     ConceptResourceView,
     ConceptRelationshipView,
@@ -112,6 +113,11 @@ urlpatterns = [
         name="api-lingo-missing-translations",
     ),
     path("api/concept-tree", ConceptTreeView.as_view(), name="api-concepts"),
+    path(
+        "api/lingo/lifecycle-states",
+        LifecycleStatesView.as_view(),
+        name="api-lingo-lifecycle-states",
+    ),
     path("api/search", ValueSearchView.as_view(), name="api-search"),
     path(
         "api/scheme/<uuid:scheme_resource_instance_id>/concept-identifier-counter",

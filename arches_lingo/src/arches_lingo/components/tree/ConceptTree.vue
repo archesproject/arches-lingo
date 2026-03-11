@@ -35,14 +35,17 @@ import {
 import { RETIRED_LIFECYCLE_STATE_ID } from "@/arches_lingo/constants.ts";
 
 import { useConceptStore } from "@/arches_lingo/stores/useConceptStore.ts";
+import { fetchLifecycleStates } from "@/arches_lingo/api.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 
 import {
     treeFromSchemes,
     navigateToSchemeOrConcept,
+    filterTreeByLifecycleStates,
 } from "@/arches_lingo/utils.ts";
 
 import { useCappedTreeFilter } from "@/arches_lingo/components/tree/utils/capped-filter.ts";
+import LifecycleStateFilter from "@/arches_lingo/components/tree/components/LifecycleStateFilter.vue";
 
 import type {
     TreePassThroughMethodOptions,
@@ -103,6 +106,8 @@ const selectedKeys = ref<TreeSelectionKeys>({});
 const lastNonEmptySelectedKeys = ref<TreeSelectionKeys>({});
 const expandedKeys = ref<TreeExpandedKeys>({});
 const filterValue = ref((route.query.filter as string) ?? "");
+const lifecycleStates = ref<{ id: string; name: string }[]>([]);
+const selectedLifecycleStateIds = ref<string[]>([]);
 
 const FILTER_RENDER_CAP = 2500;
 const FILTER_DEBOUNCE_MS = 500;
@@ -125,6 +130,19 @@ onMounted(async () => {
             detail: (error as Error).message,
         });
     }
+
+    fetchLifecycleStates()
+        .then((states) => {
+            lifecycleStates.value = states;
+        })
+        .catch((error) => {
+            toast.add({
+                severity: ERROR,
+                life: DEFAULT_ERROR_TOAST_LIFE,
+                summary: $gettext("Unable to fetch lifecycle states"),
+                detail: (error as Error).message,
+            });
+        });
 
     const priorSortedSchemeIds = tree.value.map((treeNode) => treeNode.key);
 
@@ -196,9 +214,17 @@ const tree = computed(() => {
     );
 });
 
+const lifecycleStateSelectedSet = computed(
+    () => new Set(selectedLifecycleStateIds.value),
+);
+
+const lifecycleStateFilteredTree = computed(() =>
+    filterTreeByLifecycleStates(tree.value, lifecycleStateSelectedSet.value),
+);
+
 const { debouncedFilterValue, filteredTree, isFilterCapped } =
     useCappedTreeFilter(
-        tree,
+        lifecycleStateFilteredTree,
         expandedKeys,
         filterValue,
         FILTER_DEBOUNCE_MS,
@@ -811,6 +837,10 @@ async function onNodeSelect(node: TreeNode) {
                     variant="text"
                     size="small"
                     @click="shouldSortByAscending = !shouldSortByAscending"
+                />
+                <LifecycleStateFilter
+                    v-model:selected-state-ids="selectedLifecycleStateIds"
+                    :lifecycle-states="lifecycleStates"
                 />
             </div>
             <Message
