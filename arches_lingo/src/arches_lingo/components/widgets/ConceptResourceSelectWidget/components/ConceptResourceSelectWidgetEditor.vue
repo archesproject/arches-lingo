@@ -242,34 +242,6 @@ function onUpdateModelValue(updatedValue: string[]) {
             </div>
             <div class="button-container">
                 <Button
-                    as="a"
-                    icon="pi pi-info-circle"
-                    target="_blank"
-                    variant="text"
-                    size="small"
-                    style="text-decoration: none"
-                    :href="
-                        generateArchesURL('arches:resource_report', {
-                            resourceid: slotProps.value,
-                        })
-                    "
-                    @click.stop
-                />
-                <Button
-                    as="a"
-                    icon="pi pi-pencil"
-                    target="_blank"
-                    variant="text"
-                    size="small"
-                    style="text-decoration: none"
-                    :href="
-                        generateArchesURL('arches:resource_editor', {
-                            resourceid: slotProps.value,
-                        })
-                    "
-                    @click.stop
-                />
-                <Button
                     icon="pi pi-times"
                     variant="text"
                     size="small"
