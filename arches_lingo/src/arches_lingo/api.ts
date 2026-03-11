@@ -284,6 +284,19 @@ export const deleteLingoResource = async (
     }
 };
 
+export const fetchResourceReferenceCount = async (
+    resourceId: string,
+): Promise<number> => {
+    const url = generateArchesURL(
+        "arches_lingo:api-lingo-resource-reference-count",
+        { resourceid: resourceId },
+    );
+    const response = await fetch(url);
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed.count;
+};
+
 export const upsertLingoTile = async (
     graphSlug: string,
     nodegroupAlias: string,

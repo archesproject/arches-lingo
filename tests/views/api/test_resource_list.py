@@ -7,18 +7,21 @@ from django.core import management
 from django.test import TestCase
 from django.test.utils import captured_stdout
 from django.urls import reverse
+from django.utils import timezone
 
-from arches.app.models.models import GraphModel, ResourceInstance
+from arches.app.models.models import GraphModel, ResourceInstance, ResourceXResource
 from arches.app.utils.betterJSONSerializer import JSONDeserializer
 from arches.app.utils.data_management.resource_graphs.importer import (
     import_graph as ResourceGraphImporter,
 )
 
-from arches_lingo.utils.resource_list import get_paginated_resource_summaries
-from arches_lingo.views.api.resource_list import (
-    CONTRIBUTORS_GRAPH_SLUGS,
-    SOURCES_GRAPH_SLUGS,
+from arches_lingo.utils.resource_list import (
+    get_paginated_resource_summaries,
+    get_resource_reference_count,
 )
+
+SOURCES_GRAPH_SLUGS = ["textual_work"]
+CONTRIBUTORS_GRAPH_SLUGS = ["person_system", "group"]
 
 
 class ResourceListTests(TestCase):
@@ -212,3 +215,84 @@ class TestContributorsListView(ResourceListTests):
         data = response.json()
         self.assertEqual(data["count"], 1)
         self.assertEqual(data["results"][0]["graph_slug"], "group")
+
+
+class TestGetResourceReferenceCount(ResourceListTests):
+    def test_returns_zero_for_unreferenced_resource(self):
+        count = get_resource_reference_count(self.person_alice.resourceinstanceid)
+        self.assertEqual(count, 0)
+
+    def test_counts_from_references(self):
+        now = timezone.now()
+        ResourceXResource.objects.create(
+            from_resource=self.source_book,
+            from_resource_graph=self.textual_work_graph,
+            to_resource=self.person_alice,
+            to_resource_graph=self.person_graph,
+            created=now,
+            modified=now,
+        )
+        count = get_resource_reference_count(self.person_alice.resourceinstanceid)
+        self.assertEqual(count, 1)
+
+    def test_counts_both_directions(self):
+        now = timezone.now()
+        ResourceXResource.objects.create(
+            from_resource=self.person_alice,
+            from_resource_graph=self.person_graph,
+            to_resource=self.source_book,
+            to_resource_graph=self.textual_work_graph,
+            created=now,
+            modified=now,
+        )
+        ResourceXResource.objects.create(
+            from_resource=self.source_article,
+            from_resource_graph=self.textual_work_graph,
+            to_resource=self.person_alice,
+            to_resource_graph=self.person_graph,
+            created=now,
+            modified=now,
+        )
+        count = get_resource_reference_count(self.person_alice.resourceinstanceid)
+        self.assertEqual(count, 2)
+
+
+class TestResourceReferenceCountView(ResourceListTests):
+    def test_requires_authentication(self):
+        url = reverse(
+            "api-lingo-resource-reference-count",
+            kwargs={"resourceid": self.person_alice.resourceinstanceid},
+        )
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+
+    def test_returns_count_for_authenticated_user(self):
+        self.client.force_login(self.admin)
+        url = reverse(
+            "api-lingo-resource-reference-count",
+            kwargs={"resourceid": self.person_alice.resourceinstanceid},
+        )
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        data = response.json()
+        self.assertEqual(data["count"], 0)
+
+    def test_returns_correct_count_with_references(self):
+        now = timezone.now()
+        ResourceXResource.objects.create(
+            from_resource=self.source_book,
+            from_resource_graph=self.textual_work_graph,
+            to_resource=self.person_alice,
+            to_resource_graph=self.person_graph,
+            created=now,
+            modified=now,
+        )
+        self.client.force_login(self.admin)
+        url = reverse(
+            "api-lingo-resource-reference-count",
+            kwargs={"resourceid": self.person_alice.resourceinstanceid},
+        )
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        data = response.json()
+        self.assertEqual(data["count"], 1)

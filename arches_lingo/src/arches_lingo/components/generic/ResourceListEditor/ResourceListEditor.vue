@@ -2,7 +2,9 @@
 import { computed, ref, watch } from "vue";
 import { useGettext } from "vue3-gettext";
 
+import Button from "primevue/button";
 import Column from "primevue/column";
+import ConfirmDialog from "primevue/confirmdialog";
 import DataTable from "primevue/datatable";
 import IconField from "primevue/iconfield";
 import InputIcon from "primevue/inputicon";
@@ -11,13 +13,22 @@ import Skeleton from "primevue/skeleton";
 import Splitter from "primevue/splitter";
 import SplitterPanel from "primevue/splitterpanel";
 import Tag from "primevue/tag";
+import { useConfirm } from "primevue/useconfirm";
 import { useToast } from "primevue/usetoast";
 
 import ComponentEditor from "@/arches_lingo/components/generic/ComponentManager/components/ComponentEditor.vue";
 import {
+    deleteLingoResource,
+    fetchResourceReferenceCount,
+} from "@/arches_lingo/api.ts";
+import {
+    DANGER,
     DEFAULT_ERROR_TOAST_LIFE,
+    DEFAULT_TOAST_LIFE,
     ERROR,
-} from "@/arches_controlled_lists/constants.ts";
+    SECONDARY,
+    SUCCESS,
+} from "@/arches_lingo/constants.ts";
 
 import type {
     PaginatedResourceListResponse,
@@ -43,7 +54,8 @@ const emit = defineEmits<{
 }>();
 
 const toast = useToast();
-const { $gettext } = useGettext();
+const confirm = useConfirm();
+const { $gettext, interpolate, $ngettext } = useGettext();
 
 const isLoading = ref(true);
 const resources = ref<ResourceSummary[]>([]);
@@ -157,6 +169,82 @@ function closeEditor() {
     isCreatingNew.value = false;
 }
 
+async function confirmDeleteResource(resource: ResourceSummary) {
+    let referenceCount = 0;
+    try {
+        referenceCount = await fetchResourceReferenceCount(
+            resource.resourceinstanceid,
+        );
+    } catch {
+        // If the count fetch fails, proceed with 0 to not block the delete
+    }
+
+    const resourceName = resource.display_name || $gettext("Untitled");
+    const baseMessage = interpolate(
+        $gettext('Are you sure you want to delete "%{name}"?'),
+        { name: resourceName },
+    );
+    const referenceWarning = referenceCount
+        ? interpolate(
+              $ngettext(
+                  "This resource is referenced by %{count} other resource. That reference will be lost.",
+                  "This resource is referenced by %{count} other resources. Those references will be lost.",
+                  referenceCount,
+              ),
+              { count: referenceCount },
+          )
+        : "";
+
+    const message = referenceWarning
+        ? `${baseMessage}\n\n${referenceWarning}`
+        : baseMessage;
+
+    confirm.require({
+        header: $gettext("Delete Resource"),
+        message,
+        group: "delete-resource",
+        acceptProps: {
+            label: $gettext("Delete"),
+            severity: DANGER,
+        },
+        rejectProps: {
+            label: $gettext("Cancel"),
+            severity: SECONDARY,
+            outlined: true,
+        },
+        accept: async () => {
+            try {
+                await deleteLingoResource(
+                    resource.graph_slug,
+                    resource.resourceinstanceid,
+                );
+
+                if (
+                    selectedResource.value?.resourceinstanceid ===
+                    resource.resourceinstanceid
+                ) {
+                    closeEditor();
+                }
+
+                toast.add({
+                    severity: SUCCESS,
+                    life: DEFAULT_TOAST_LIFE,
+                    summary: $gettext("Resource deleted"),
+                });
+
+                loadResources();
+            } catch (error) {
+                toast.add({
+                    severity: ERROR,
+                    life: DEFAULT_ERROR_TOAST_LIFE,
+                    summary: $gettext("Failed to delete resource"),
+                    detail: error instanceof Error ? error.message : undefined,
+                });
+            }
+        },
+    });
+}
+
 defineExpose({
     afterSave(savedResourceInstanceId: string) {
         isCreatingNew.value = false;
@@ -255,6 +343,24 @@ defineExpose({
                             </template>
                         </Column>
 
+                        <Column
+                            v-if="editorEnabled"
+                            class="actions-column"
+                        >
+                            <template #body="{ data }">
+                                <Button
+                                    :aria-label="$gettext('Delete resource')"
+                                    icon="pi pi-trash"
+                                    severity="danger"
+                                    text
+                                    rounded
+                                    size="small"
+                                    class="delete-button"
+                                    @click.stop="confirmDeleteResource(data)"
+                                />
+                            </template>
+                        </Column>
+
                         <template #empty>
                             <div class="empty-message">
                                 {{
@@ -308,6 +414,20 @@ defineExpose({
             </SplitterPanel>
         </Splitter>
     </div>
+
+    <ConfirmDialog
+        group="delete-resource"
+        class="delete-confirm-dialog"
+    >
+        <template #message="{ message }">
+            <p
+                class="delete-confirm-message"
+                style="white-space: pre-line"
+            >
+                {{ message.message }}
+            </p>
+        </template>
+    </ConfirmDialog>
 </template>
 
 <style scoped>
@@ -396,6 +516,22 @@ defineExpose({
 
 :deep(.type-column) {
     width: 8rem;
+}
+
+:deep(.actions-column) {
+    width: 3rem;
+    padding: 0;
+    text-align: center;
+}
+
+.delete-button {
+    width: 2rem;
+    height: 2rem;
+}
+
+.delete-confirm-message {
+    margin: 0;
+    line-height: 1.5;
 }
 
 :deep(.p-inputtext),

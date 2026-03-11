@@ -31,6 +31,7 @@ from arches_lingo.views.api.generic import (
 from arches_lingo.views.api.settings import AppSettingsView
 from arches_lingo.views.api.resource_list import (
     ContributorsListView,
+    ResourceReferenceCountView,
     SourcesListView,
 )
 from arches_lingo.views.api.user_profile import (
@@ -160,6 +161,11 @@ urlpatterns = [
         "api/lingo/contributors",
         ContributorsListView.as_view(),
         name="api-lingo-contributors",
+    ),
+    path(
+        "api/lingo/resource/<uuid:resourceid>/reference-count",
+        ResourceReferenceCountView.as_view(),
+        name="api-lingo-resource-reference-count",
     ),
     path(
         "api/lingo/<slug:graph>",

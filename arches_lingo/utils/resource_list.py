@@ -1,4 +1,12 @@
-from arches.app.models.models import ResourceInstance
+from django.db.models import Q
+
+from arches.app.models.models import ResourceInstance, ResourceXResource
+
+
+def get_resource_reference_count(resource_id):
+    return ResourceXResource.objects.filter(
+        Q(from_resource_id=resource_id) | Q(to_resource_id=resource_id)
+    ).count()
 
 
 def get_paginated_resource_summaries(graph_slugs, search_term="", limit=25, offset=0):
