@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref, watch } from "vue";
+import Button from "primevue/button";
 
 import { useRoute, useRouter } from "vue-router";
 import { useGettext } from "vue3-gettext";
@@ -63,6 +64,8 @@ const EXPORT = $gettext("Export");
 
 const FILTER_CONCEPTS = $gettext("Filter concepts");
 const FILTER_CAPPED_MESSAGE = $gettext("Please refine your query.");
+const SORT_ASCENDING = $gettext("Sort ascending");
+const SORT_DESCENDING = $gettext("Sort descending");
 
 const iconLabels: IconLabels = Object.freeze({
     concept: $gettext("Concept"),
@@ -71,6 +74,7 @@ const iconLabels: IconLabels = Object.freeze({
 });
 
 const schemes = ref<Scheme[]>([]);
+const sortAscending = ref(true);
 const focusedNode = ref<TreeNode | null>(null);
 const focusedOccurrenceKey = ref<string | null>(null);
 
@@ -130,6 +134,7 @@ const tree = computed(() => {
         systemLanguage.value,
         iconLabels,
         focusedOccurrenceKey.value,
+        sortAscending.value,
     );
 });
 
@@ -687,13 +692,28 @@ function onNodeSelect(node: TreeNode) {
 <template>
     <div class="concept-tree-layout">
         <div class="filter-container">
-            <InputText
-                v-model="filterValue"
-                class="tree-filter-input"
-                type="text"
-                :placeholder="FILTER_CONCEPTS"
-                :aria-label="FILTER_CONCEPTS"
-            />
+            <div class="filter-toolbar">
+                <InputText
+                    v-model="filterValue"
+                    class="tree-filter-input"
+                    type="text"
+                    :placeholder="FILTER_CONCEPTS"
+                    :aria-label="FILTER_CONCEPTS"
+                />
+                <Button
+                    :icon="
+                        sortAscending
+                            ? 'pi pi-sort-alpha-down'
+                            : 'pi pi-sort-alpha-up'
+                    "
+                    :aria-label="
+                        sortAscending ? SORT_ASCENDING : SORT_DESCENDING
+                    "
+                    variant="text"
+                    size="small"
+                    @click="sortAscending = !sortAscending"
+                />
+            </div>
             <Message
                 v-if="isFilterCapped"
                 severity="warn"
@@ -779,9 +799,15 @@ function onNodeSelect(node: TreeNode) {
     margin-bottom: 0.5rem;
 }
 
+.filter-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
 .tree-filter-input {
     border-radius: 0.125rem;
-    width: 100%;
+    flex: 1;
     font-size: 0.875rem;
 }
 
