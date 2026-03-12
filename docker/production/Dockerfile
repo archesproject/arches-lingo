@@ -16,7 +16,6 @@ COPY ./webpack ${WEB_ROOT}/arches-lingo/webpack
 COPY ./eslint.config.mjs ${WEB_ROOT}/arches-lingo/eslint.config.js
 COPY ./gettext.config.js ${WEB_ROOT}/arches-lingo/gettext.config.js
 COPY ./package-lock.json ${WEB_ROOT}/arches-lingo/package-lock.json
-COPY ./frontend_configuration ${WEB_ROOT}/arches-lingo/frontend_configuration
 COPY ./.babelrc ${WEB_ROOT}/arches-lingo/.babelrc
 
 RUN source ${WEB_ROOT}/ENV/bin/activate && cd ${APP_ROOT} && pip install .
