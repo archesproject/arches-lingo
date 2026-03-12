@@ -23,6 +23,7 @@ import type {
     MissingTranslationsResponse,
     DashboardStats,
 } from "@/arches_lingo/types/dashboard.ts";
+import type { UserTasksResponse } from "@/arches_lingo/types/tasks.ts";
 
 function getToken() {
     const token = Cookies.get("csrftoken");
@@ -835,6 +836,44 @@ export const fetchMissingTranslations = async (
     }
     const url = `${generateArchesURL("arches_lingo:api-lingo-missing-translations")}?${params.toString()}`;
     const response = await fetch(url);
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
+export const fetchUserTasks = async (page = 1): Promise<UserTasksResponse> => {
+    const url = `${generateArchesURL("arches_lingo:api-lingo-tasks")}?page=${page}`;
+    const response = await fetch(url);
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
+export const cancelTask = async (
+    loadid: string,
+): Promise<{ success: boolean; event?: unknown }> => {
+    const url = generateArchesURL("arches_lingo:api-lingo-task-detail", {
+        loadid,
+    });
+    const response = await fetch(url, {
+        method: "POST",
+        headers: { "X-CSRFTOKEN": getToken() },
+    });
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
+export const deleteTask = async (
+    loadid: string,
+): Promise<{ success: boolean }> => {
+    const url = generateArchesURL("arches_lingo:api-lingo-task-detail", {
+        loadid,
+    });
+    const response = await fetch(url, {
+        method: "DELETE",
+        headers: { "X-CSRFTOKEN": getToken() },
+    });
     const parsed = await response.json();
     if (!response.ok) throw new Error(parsed.message || response.statusText);
     return parsed;

@@ -142,6 +142,7 @@ async function checkUserAuthentication(
             },
         }"
     />
+    <ConfirmDialog group="task-confirm" />
     <ConfirmDialog group="unsaved-changes" />
 </template>
 

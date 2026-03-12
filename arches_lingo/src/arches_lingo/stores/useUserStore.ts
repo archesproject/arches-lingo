@@ -9,6 +9,9 @@ export const useUserStore = defineStore("user", () => {
     const user = ref<User | null>(null);
 
     const isEditor = computed(() => user.value?.is_lingo_editor ?? false);
+    const isResourceEditor = computed(
+        () => user.value?.is_resource_editor ?? false,
+    );
     const isAnonymous = computed(() => user.value?.is_anonymous ?? true);
 
     async function initialize() {
@@ -22,6 +25,7 @@ export const useUserStore = defineStore("user", () => {
     return {
         user,
         isEditor,
+        isResourceEditor,
         isAnonymous,
         initialize,
         setUser,
