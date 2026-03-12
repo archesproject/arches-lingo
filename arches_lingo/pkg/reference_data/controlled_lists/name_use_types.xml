@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rdf:RDF
+  xmlns:skos="http://www.w3.org/2004/02/skos/core#"
+  xmlns:ns1="https://"
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  xmlns:dcterms="http://purl.org/dc/terms/"
+>
+  <skos:Concept rdf:about="http://localhost:8000/12969a7e-20e5-43a5-a48a-285afd2599bd">
+    <skos:scopeNote xml:lang="en">A nickname</skos:scopeNote>
+    <skos:prefLabel xml:lang="en">Sobriquet</skos:prefLabel>
+    <ns1:lingo.dev.fargeo.comsortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">10</ns1:lingo.dev.fargeo.comsortorder>
+    <skos:altLabel xml:lang="en">SB</skos:altLabel>
+    <skos:inScheme>
+      <skos:ConceptScheme rdf:about="http://localhost:8000/afcfa02b-3529-46de-9ddf-2fc2d05b47a5">
+        <dcterms:title>Name Use Type</dcterms:title>
+      </skos:ConceptScheme>
+    </skos:inScheme>
+    <skos:altLabel xml:lang="en">Nickname</skos:altLabel>
+    <dcterms:identifier>http://localhost:8000/12969a7e-20e5-43a5-a48a-285afd2599bd</dcterms:identifier>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/77d2e4e4-3c5d-433f-ac84-4132b2e67aa8">
+    <ns1:lingo.dev.fargeo.comsortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</ns1:lingo.dev.fargeo.comsortorder>
+    <skos:altLabel xml:lang="en">L</skos:altLabel>
+    <skos:prefLabel xml:lang="en">Latest</skos:prefLabel>
+    <dcterms:identifier>http://localhost:8000/77d2e4e4-3c5d-433f-ac84-4132b2e67aa8</dcterms:identifier>
+    <skos:inScheme rdf:resource="http://localhost:8000/afcfa02b-3529-46de-9ddf-2fc2d05b47a5"/>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/2773d78c-1adc-494d-9df4-73a58966be85">
+    <dcterms:identifier>http://localhost:8000/2773d78c-1adc-494d-9df4-73a58966be85</dcterms:identifier>
+    <ns1:lingo.dev.fargeo.comsortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">9</ns1:lingo.dev.fargeo.comsortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/afcfa02b-3529-46de-9ddf-2fc2d05b47a5"/>
+    <skos:prefLabel xml:lang="en">Registered</skos:prefLabel>
+    <skos:altLabel xml:lang="en">REG</skos:altLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/d4e3d550-6e2d-4734-88d4-3e781118048d">
+    <skos:inScheme rdf:resource="http://localhost:8000/afcfa02b-3529-46de-9ddf-2fc2d05b47a5"/>
+    <skos:prefLabel xml:lang="en">Primary</skos:prefLabel>
+    <skos:altLabel xml:lang="en">P</skos:altLabel>
+    <ns1:lingo.dev.fargeo.comsortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">7</ns1:lingo.dev.fargeo.comsortorder>
+    <dcterms:identifier>http://localhost:8000/d4e3d550-6e2d-4734-88d4-3e781118048d</dcterms:identifier>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/6f8b9b3a-edb7-435b-b8cb-d6690bb1c9b6">
+    <skos:inScheme rdf:resource="http://localhost:8000/afcfa02b-3529-46de-9ddf-2fc2d05b47a5"/>
+    <skos:prefLabel xml:lang="en">Original</skos:prefLabel>
+    <ns1:lingo.dev.fargeo.comsortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">6</ns1:lingo.dev.fargeo.comsortorder>
+    <skos:altLabel xml:lang="en">O</skos:altLabel>
+    <dcterms:identifier>http://localhost:8000/6f8b9b3a-edb7-435b-b8cb-d6690bb1c9b6</dcterms:identifier>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/f2a2710a-5a81-435a-9f2f-4eeddcdcd4af">
+    <skos:inScheme rdf:resource="http://localhost:8000/afcfa02b-3529-46de-9ddf-2fc2d05b47a5"/>
+    <skos:altLabel xml:lang="en">ALT</skos:altLabel>
+    <dcterms:identifier>http://localhost:8000/f2a2710a-5a81-435a-9f2f-4eeddcdcd4af</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">Alternative</skos:prefLabel>
+    <ns1:lingo.dev.fargeo.comsortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</ns1:lingo.dev.fargeo.comsortorder>
+    <skos:altLabel xml:lang="en">A</skos:altLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/d45d8db7-43d3-4731-a140-4890e8cc8fe5">
+    <ns1:lingo.dev.fargeo.comsortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</ns1:lingo.dev.fargeo.comsortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/afcfa02b-3529-46de-9ddf-2fc2d05b47a5"/>
+    <dcterms:identifier>http://localhost:8000/d45d8db7-43d3-4731-a140-4890e8cc8fe5</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">For Correspondence</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/6c4828de-2dc7-4dbd-922b-2dc8e79f7efc">
+    <ns1:lingo.dev.fargeo.comsortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">5</ns1:lingo.dev.fargeo.comsortorder>
+    <skos:altLabel xml:lang="en">M</skos:altLabel>
+    <dcterms:identifier>http://localhost:8000/6c4828de-2dc7-4dbd-922b-2dc8e79f7efc</dcterms:identifier>
+    <skos:inScheme rdf:resource="http://localhost:8000/afcfa02b-3529-46de-9ddf-2fc2d05b47a5"/>
+    <skos:prefLabel xml:lang="en">Maiden</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/5c8f4b76-64bd-4718-a730-a8e4a1923df8">
+    <skos:inScheme rdf:resource="http://localhost:8000/afcfa02b-3529-46de-9ddf-2fc2d05b47a5"/>
+    <ns1:lingo.dev.fargeo.comsortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">11</ns1:lingo.dev.fargeo.comsortorder>
+    <skos:altLabel xml:lang="en">S</skos:altLabel>
+    <dcterms:identifier>http://localhost:8000/5c8f4b76-64bd-4718-a730-a8e4a1923df8</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">Statutory</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/be258618-a5f4-4420-b580-008d0e7f1d20">
+    <skos:inScheme rdf:resource="http://localhost:8000/afcfa02b-3529-46de-9ddf-2fc2d05b47a5"/>
+    <skos:prefLabel xml:lang="en">Former</skos:prefLabel>
+    <dcterms:identifier>http://localhost:8000/be258618-a5f4-4420-b580-008d0e7f1d20</dcterms:identifier>
+    <skos:altLabel xml:lang="en">F</skos:altLabel>
+    <ns1:lingo.dev.fargeo.comsortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</ns1:lingo.dev.fargeo.comsortorder>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/647b7a46-d312-40be-9b26-172355e5339e">
+    <dcterms:identifier>http://localhost:8000/647b7a46-d312-40be-9b26-172355e5339e</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">Formerly identified as</skos:prefLabel>
+    <skos:altLabel xml:lang="en">FIA</skos:altLabel>
+    <skos:scopeNote xml:lang="en">Use for recording the names of vessels or sites that have since been identified correctly.</skos:scopeNote>
+    <ns1:lingo.dev.fargeo.comsortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">3</ns1:lingo.dev.fargeo.comsortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/afcfa02b-3529-46de-9ddf-2fc2d05b47a5"/>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/edbf1916-af77-408d-94f4-09a58dd98825">
+    <skos:scopeNote xml:lang="en">A fictitious name, especially one used by an author. A pen-name.</skos:scopeNote>
+    <skos:inScheme rdf:resource="http://localhost:8000/afcfa02b-3529-46de-9ddf-2fc2d05b47a5"/>
+    <skos:prefLabel xml:lang="en">Pseudonym</skos:prefLabel>
+    <skos:altLabel xml:lang="en">PSE</skos:altLabel>
+    <dcterms:identifier>http://localhost:8000/edbf1916-af77-408d-94f4-09a58dd98825</dcterms:identifier>
+    <ns1:lingo.dev.fargeo.comsortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">8</ns1:lingo.dev.fargeo.comsortorder>
+    <skos:altLabel xml:lang="en">Pen name</skos:altLabel>
+  </skos:Concept>
+</rdf:RDF>

@@ -9,7 +9,7 @@
     <ns1:lingo.dev.fargeo.comsortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</ns1:lingo.dev.fargeo.comsortorder>
     <skos:inScheme>
       <skos:ConceptScheme rdf:about="https://lingo.dev.fargeo.com0e2eeb72-66bf-4376-b75b-c058cd4ec571">
-        <dcterms:title>Source Type</dcterms:title>
+        <dcterms:title>Source Types</dcterms:title>
       </skos:ConceptScheme>
     </skos:inScheme>
     <dcterms:identifier>https://lingo.dev.fargeo.com/plugins/controlled-list-manager/item/0fc08649-2c56-4555-84b7-a8682395c674</dcterms:identifier>

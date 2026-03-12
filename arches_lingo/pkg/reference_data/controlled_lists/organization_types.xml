@@ -8,7 +8,7 @@
   <skos:Concept rdf:about="https://lingo.dev.fargeo.comd26334d8-7dbe-4791-8b9d-6cfbb08c511a">
     <skos:inScheme>
       <skos:ConceptScheme rdf:about="https://lingo.dev.fargeo.com5a6af1b6-9d9a-4477-b77a-0a0920ae5fea">
-        <dcterms:title>Organization Type</dcterms:title>
+        <dcterms:title>Organization Types</dcterms:title>
       </skos:ConceptScheme>
     </skos:inScheme>
     <ns1:lingo.dev.fargeo.comsortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</ns1:lingo.dev.fargeo.comsortorder>

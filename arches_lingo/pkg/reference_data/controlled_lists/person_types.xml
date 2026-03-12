@@ -11,7 +11,7 @@
     <ns1:lingo.dev.fargeo.comsortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</ns1:lingo.dev.fargeo.comsortorder>
     <skos:inScheme>
       <skos:ConceptScheme rdf:about="https://lingo.dev.fargeo.com712fe6c1-777d-4407-9d39-58884f2f1d18">
-        <dcterms:title>Person Type</dcterms:title>
+        <dcterms:title>Person Types</dcterms:title>
       </skos:ConceptScheme>
     </skos:inScheme>
   </skos:Concept>
