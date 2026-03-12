@@ -28,7 +28,6 @@ const {
     shouldShowLabel = true,
     isDirty = false,
     scheme = "",
-    exclude = false,
     schemeSelectable = false,
 } = defineProps<{
     graphSlug: string;
@@ -38,7 +37,6 @@ const {
     aliasedNodeData: ResourceInstanceListValue | null | undefined;
     shouldShowLabel?: boolean;
     scheme?: string;
-    exclude?: boolean | false;
     schemeSelectable?: boolean | false;
 }>();
 
@@ -137,7 +135,6 @@ async function getConceptHierarchy(conceptIds: string[]) {
                 :node-alias="nodeAlias"
                 :graph-slug="graphSlug"
                 :scheme="scheme"
-                :exclude="exclude"
                 :scheme-selectable="schemeSelectable"
                 @update:value="onUpdateValue($event)"
             />

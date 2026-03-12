@@ -33,7 +33,6 @@ const props = defineProps<{
     resourceInstanceId: string | undefined;
     tileId?: string;
     scheme?: string;
-    exclude?: boolean;
 }>();
 
 const route = useRoute();
@@ -145,7 +144,6 @@ async function save(e: FormSubmitEvent) {
                             .relation_status_ascribed_comparate
                     "
                     :scheme="props.scheme"
-                    :exclude="props.exclude"
                     :mode="EDIT"
                 />
                 <GenericWidget

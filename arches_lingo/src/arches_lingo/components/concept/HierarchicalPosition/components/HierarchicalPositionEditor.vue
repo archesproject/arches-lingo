@@ -21,7 +21,6 @@ const { $gettext } = useGettext();
 const props = defineProps<{
     tileData: ConceptClassificationStatus | undefined;
     scheme?: string;
-    exclude?: boolean;
     componentName: string;
     sectionTitle: string;
     graphSlug: string;
