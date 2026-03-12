@@ -5764,7 +5764,7 @@
                 {
                     "alias": "uri_content",
                     "config": {},
-                    "datatype": "url",
+                    "datatype": "string",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,
