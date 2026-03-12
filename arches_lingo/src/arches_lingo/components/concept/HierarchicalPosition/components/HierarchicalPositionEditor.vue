@@ -11,7 +11,7 @@ import ConceptResourceSelectWidget from "@/arches_lingo/components/widgets/Conce
 
 import { createLingoResource, upsertLingoTile } from "@/arches_lingo/api.ts";
 import { EDIT } from "@/arches_lingo/constants.ts";
-import { incrementLoadedWidgets } from "@/arches_component_lab/generics/GenericWidget/utils.ts";
+import { provideWidgetReadyTracker } from "@/arches_lingo/composables/useWidgetReadyTracker.ts";
 
 import type { Component, Ref } from "vue";
 import type { FormSubmitEvent } from "@primevue/forms";
@@ -52,12 +52,10 @@ const onSaveSettled = inject<() => void>("onSaveSettled");
 const formRef = useTemplateRef("form");
 const isSaving = ref(false);
 
-const TOTAL_WIDGETS = 1;
-const widgetsLoadedCount = ref(0) as Ref<number>;
-const handleWidgetLoading = incrementLoadedWidgets(widgetsLoadedCount);
+const { allWidgetsReady } = provideWidgetReadyTracker();
 
-watch(widgetsLoadedCount, (count) => {
-    emit("update:isLoading", count !== TOTAL_WIDGETS);
+watch(allWidgetsReady, (ready) => {
+    emit("update:isLoading", !ready);
 });
 
 watch(
@@ -171,7 +169,6 @@ async function save(e: FormSubmitEvent) {
                     :mode="EDIT"
                     :scheme="props.scheme"
                     :scheme-selectable="true"
-                    @update:is-loading="handleWidgetLoading($event)"
                 />
             </Form>
         </div>

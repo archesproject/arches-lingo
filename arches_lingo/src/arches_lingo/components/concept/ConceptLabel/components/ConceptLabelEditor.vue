@@ -12,7 +12,7 @@ import Skeleton from "primevue/skeleton";
 import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
 
 import { createOrUpdateConcept } from "@/arches_lingo/utils.ts";
-import { incrementLoadedWidgets } from "@/arches_component_lab/generics/GenericWidget/utils.ts";
+import { provideWidgetReadyTracker } from "@/arches_lingo/composables/useWidgetReadyTracker.ts";
 
 import {
     DEFAULT_ERROR_TOAST_LIFE,
@@ -60,12 +60,10 @@ const onSaveSettled = inject<() => void>("onSaveSettled");
 const formRef = useTemplateRef("form");
 const isSaving = ref(false);
 
-const TOTAL_WIDGETS = 8;
-const widgetsLoadedCount = ref(0) as Ref<number>;
-const handleWidgetLoading = incrementLoadedWidgets(widgetsLoadedCount);
+const { allWidgetsReady } = provideWidgetReadyTracker();
 
-watch(widgetsLoadedCount, (count) => {
-    emit("update:isLoading", count !== TOTAL_WIDGETS);
+watch(allWidgetsReady, (ready) => {
+    emit("update:isLoading", !ready);
 });
 
 watch(
@@ -156,7 +154,6 @@ async function save(e: FormSubmitEvent) {
                     "
                     :mode="EDIT"
                     class="widget-container column"
-                    @update:is-loading="handleWidgetLoading($event)"
                 />
                 <GenericWidget
                     :graph-slug="props.graphSlug"
@@ -167,7 +164,6 @@ async function save(e: FormSubmitEvent) {
                     "
                     :mode="EDIT"
                     class="widget-container column"
-                    @update:is-loading="handleWidgetLoading($event)"
                 />
                 <GenericWidget
                     :graph-slug="props.graphSlug"
@@ -178,7 +174,6 @@ async function save(e: FormSubmitEvent) {
                     "
                     :mode="EDIT"
                     class="widget-container column"
-                    @update:is-loading="handleWidgetLoading($event)"
                 />
                 <div class="widget-container">
                     <GenericWidget
@@ -189,7 +184,6 @@ async function save(e: FormSubmitEvent) {
                                 ?.appellative_status_timespan_begin_of_the_begin
                         "
                         :mode="EDIT"
-                        @update:is-loading="handleWidgetLoading($event)"
                     />
                     <GenericWidget
                         :graph-slug="props.graphSlug"
@@ -199,7 +193,6 @@ async function save(e: FormSubmitEvent) {
                                 ?.appellative_status_timespan_end_of_the_end
                         "
                         :mode="EDIT"
-                        @update:is-loading="handleWidgetLoading($event)"
                     />
                 </div>
                 <GenericWidget
@@ -210,7 +203,6 @@ async function save(e: FormSubmitEvent) {
                     "
                     :mode="EDIT"
                     class="widget-container column"
-                    @update:is-loading="handleWidgetLoading($event)"
                 />
                 <GenericWidget
                     :graph-slug="props.graphSlug"
@@ -221,7 +213,6 @@ async function save(e: FormSubmitEvent) {
                     "
                     :mode="EDIT"
                     class="widget-container column"
-                    @update:is-loading="handleWidgetLoading($event)"
                 />
                 <GenericWidget
                     :graph-slug="props.graphSlug"
@@ -232,7 +223,6 @@ async function save(e: FormSubmitEvent) {
                     "
                     :mode="EDIT"
                     class="widget-container column"
-                    @update:is-loading="handleWidgetLoading($event)"
                 />
             </Form>
         </div>

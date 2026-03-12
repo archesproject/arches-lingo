@@ -19,7 +19,7 @@ import Skeleton from "primevue/skeleton";
 import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
 
 import { createLingoResource, upsertLingoTile } from "@/arches_lingo/api.ts";
-import { incrementLoadedWidgets } from "@/arches_component_lab/generics/GenericWidget/utils.ts";
+import { provideWidgetReadyTracker } from "@/arches_lingo/composables/useWidgetReadyTracker.ts";
 
 import {
     DEFAULT_ERROR_TOAST_LIFE,
@@ -62,12 +62,10 @@ const onSaveSettled = inject<() => void>("onSaveSettled");
 const formRef = useTemplateRef("form");
 const isSaving = ref(false);
 
-const TOTAL_WIDGETS = 5;
-const widgetsLoadedCount = ref(0) as Ref<number>;
-const handleWidgetLoading = incrementLoadedWidgets(widgetsLoadedCount);
+const { allWidgetsReady } = provideWidgetReadyTracker();
 
-watch(widgetsLoadedCount, (count) => {
-    emit("update:isLoading", count !== TOTAL_WIDGETS);
+watch(allWidgetsReady, (ready) => {
+    emit("update:isLoading", !ready);
 });
 
 watch(
@@ -188,7 +186,6 @@ async function save(e: FormSubmitEvent) {
                                 ?.aliased_data.right_statement_content
                         "
                         :mode="EDIT"
-                        @update:is-loading="handleWidgetLoading($event)"
                     />
                 </div>
                 <div class="widget-container column">
@@ -200,7 +197,6 @@ async function save(e: FormSubmitEvent) {
                                 ?.aliased_data.right_statement_type
                         "
                         :mode="EDIT"
-                        @update:is-loading="handleWidgetLoading($event)"
                     />
                 </div>
                 <div class="widget-container column">
@@ -212,7 +208,6 @@ async function save(e: FormSubmitEvent) {
                                 ?.aliased_data.right_statement_language
                         "
                         :mode="EDIT"
-                        @update:is-loading="handleWidgetLoading($event)"
                     />
                 </div>
                 <div class="widget-container column">
@@ -223,7 +218,6 @@ async function save(e: FormSubmitEvent) {
                             props.tileData?.aliased_data.right_holder
                         "
                         :mode="EDIT"
-                        @update:is-loading="handleWidgetLoading($event)"
                     />
                 </div>
                 <div class="widget-container column">
@@ -234,7 +228,6 @@ async function save(e: FormSubmitEvent) {
                             props.tileData?.aliased_data.right_type
                         "
                         :mode="EDIT"
-                        @update:is-loading="handleWidgetLoading($event)"
                     />
                 </div>
             </Form>
