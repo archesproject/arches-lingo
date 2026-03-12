@@ -29,6 +29,11 @@ from arches_lingo.views.api.generic import (
     LingoTileListCreateView,
 )
 from arches_lingo.views.api.settings import AppSettingsView
+from arches_lingo.views.api.resource_list import (
+    ContributorsListView,
+    ResourceReferenceCountView,
+    SourcesListView,
+)
 from arches_lingo.views.api.user_profile import (
     ChangePasswordAPIView,
     LingoUserView,
@@ -50,6 +55,10 @@ urlpatterns = [
     path("scheme/new", LingoRootView.as_view(), name="new-scheme"),
     path("concept/<uuid:id>", LingoRootView.as_view(), name="concept"),
     path("concept/new", LingoRootView.as_view(), name="new-concept"),
+    path("sources", LingoRootView.as_view(), name="sources"),
+    path("source/<uuid:id>", LingoRootView.as_view(), name="source"),
+    path("contributors", LingoRootView.as_view(), name="contributors"),
+    path("contributor/<uuid:id>", LingoRootView.as_view(), name="contributor"),
     path("profile", LingoRootView.as_view(), name="profile"),
     path(
         "api/lingo/user-profile",
@@ -142,6 +151,21 @@ urlpatterns = [
         "api/lingo/schemes/<uuid:pk>/label-counts",
         SchemeLabelCountView.as_view(),
         name="api-lingo-scheme-label-counts",
+    ),
+    path(
+        "api/lingo/sources",
+        SourcesListView.as_view(),
+        name="api-lingo-sources",
+    ),
+    path(
+        "api/lingo/contributors",
+        ContributorsListView.as_view(),
+        name="api-lingo-contributors",
+    ),
+    path(
+        "api/lingo/resource/<uuid:resourceid>/reference-count",
+        ResourceReferenceCountView.as_view(),
+        name="api-lingo-resource-reference-count",
     ),
     path(
         "api/lingo/<slug:graph>",
