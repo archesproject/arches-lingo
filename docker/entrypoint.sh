@@ -165,7 +165,7 @@ reset_database() {
 	echo "CREATE EXTENSION postgis" | ../ENV/bin/python manage.py dbshell --database postgres))
 	service memcached start&
 	../ENV/bin/python manage.py packages -o load_package -a arches_lingo -db -dev -y
-	../ENV/bin/python manage.py loaddata tests/fixtures/data/FISH_Thesauri_example_data_resources.json tests/fixtures/data/FISH_Thesauri_example_data_tiles.json
+	../ENV/bin/python manage.py loaddata tests/fixtures/data/FISH_Example_Thesauri.json.xz
 	../ENV/bin/python manage.py es reindex_database -mp
 }
 
