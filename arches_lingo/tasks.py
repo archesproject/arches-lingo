@@ -8,24 +8,70 @@ from arches.app.tasks import notify_completion
 
 
 @shared_task
+def export_lingo_resources_task(
+    loadid, userid, resourceid, filename=None, format="xml"
+):
+    logger = logging.getLogger(__name__)
+
+    try:
+        from arches_lingo.etl_modules.lingo_resource_exporter import (
+            LingoResourceExporter,
+        )
+
+        exporter = LingoResourceExporter()
+        exporter.user = User.objects.get(id=userid)
+        exporter.loadid = loadid
+        exporter.load_event = models.LoadEvent.objects.get(loadid=loadid)
+        exporter.run_export_task(resourceid, filename, format)
+        # _finalize_export (success) and handle_error (internal failure)
+        # both call notify_completion directly
+    except Exception as exception:
+        logger.error(exception, exc_info=True)
+        user = User.objects.get(id=userid)
+        scheme_name = ""
+        try:
+            load_event = models.LoadEvent.objects.get(loadid=loadid)
+            load_event.status = "failed"
+            load_event.error_message = str(exception)
+            load_event.save()
+            if isinstance(load_event.load_details, dict):
+                scheme_name = load_event.load_details.get("scheme_name", "")
+        except Exception:
+            pass
+        message = (
+            _("{} export failed").format(scheme_name)
+            if scheme_name
+            else _("Export failed")
+        )
+        notify_completion(message, user)
+
+
+@shared_task
 def load_lingo_resources_task(loadid, userid, kwargs={}):
     logger = logging.getLogger(__name__)
-    status = _("Started")
 
     try:
         importer = migrate_to_lingo.LingoResourceImporter(
             loadid=loadid, userid=userid, **kwargs
         )
         importer.run_load_task()
-        load_event = models.LoadEvent.objects.get(loadid=loadid)
-        status = _("Completed") if load_event.status == "indexed" else _("Failed")
-    except Exception as e:
-        logger.error(e)
-        load_event = models.LoadEvent.objects.get(loadid=loadid)
-        load_event.status = "failed"
-        load_event.save()
-        status = _("Failed")
-    finally:
-        msg = _("Lingo Resource Importer: [{}]").format(status)
+        # _finalize_import (called within run_load_task) handles notify_completion
+    except Exception as exception:
+        logger.error(exception, exc_info=True)
         user = User.objects.get(id=userid)
-        notify_completion(msg, user)
+        thesaurus_name = ""
+        try:
+            load_event = models.LoadEvent.objects.get(loadid=loadid)
+            load_event.status = "failed"
+            load_event.error_message = str(exception)
+            load_event.save()
+            if isinstance(load_event.load_details, dict):
+                thesaurus_name = load_event.load_details.get("thesaurus_name", "")
+        except Exception:
+            pass
+        message = (
+            _("{} import failed").format(thesaurus_name)
+            if thesaurus_name
+            else _("Import failed")
+        )
+        notify_completion(message, user)

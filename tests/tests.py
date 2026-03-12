@@ -1,12 +1,13 @@
 import json
+import uuid
 import datetime
 from http import HTTPStatus
 from pathlib import Path
 
 from django.conf import settings
-from django.contrib.auth.models import User
+from django.contrib.auth.models import AnonymousUser, Group, User
 from django.core import management
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.test.utils import captured_stdout
 from django.urls import reverse
 
@@ -17,23 +18,35 @@ from arches.app.utils.data_management.resource_graphs.importer import (
     import_graph as ResourceGraphImporter,
 )
 
+from arches_controlled_lists.management.commands.packages import (
+    Command as ControlledListsPackageCommand,
+)
+
+from arches_lingo.permissions import (
+    is_lingo_editor,
+)
 from arches_lingo.const import (
+    LINGO_EDITOR_GROUP_NAME,
     CONCEPTS_GRAPH_ID,
     SCHEMES_GRAPH_ID,
     TOP_CONCEPT_OF_NODE_AND_NODEGROUP,
     CLASSIFICATION_STATUS_NODEGROUP,
     CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID,
+    CONCEPT_TYPE_NODEGROUP,
+    CONCEPT_TYPE_NODEID,
     CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID,
     CONCEPT_NAME_NODEGROUP,
     CONCEPT_NAME_CONTENT_NODE,
     CONCEPT_NAME_LANGUAGE_NODE,
     CONCEPT_NAME_TYPE_NODE,
+    GUIDE_TERM_URI,
     SCHEME_NAME_NODEGROUP,
     SCHEME_NAME_CONTENT_NODE,
     SCHEME_NAME_LANGUAGE_NODE,
     SCHEME_NAME_TYPE_NODE,
     LABEL_LIST_ID,
 )
+from arches_lingo.utils.concept_builder import ConceptBuilder
 
 # these tests can be run from the command line via
 # python manage.py test tests.tests --settings="tests.test_settings"
@@ -51,12 +64,19 @@ class ViewTests(TestCase):
     def load_graphs(cls):
         path = Path(settings.APP_ROOT) / "pkg" / "graphs" / "resource_models"
         for file_path in cls.graph_fixtures:
-            with captured_stdout(), open(path / file_path, "r") as f:
-                archesfile = JSONDeserializer().deserialize(f)
+            with captured_stdout(), open(path / file_path, "r") as graph_file:
+                archesfile = JSONDeserializer().deserialize(graph_file)
                 ResourceGraphImporter(archesfile["graph"], overwrite_graphs=True)
 
     @classmethod
+    def load_controlled_lists(cls):
+        cmd = ControlledListsPackageCommand()
+        package_dir = Path(settings.APP_ROOT) / "pkg"
+        cmd.load_concepts(package_dir, "overwrite", "keep", True)
+
+    @classmethod
     def setUpTestData(cls):
+        cls.load_controlled_lists()
         cls.load_ontology()
         cls.load_graphs()
         cls.admin = User.objects.get(username="admin")
@@ -94,14 +114,14 @@ class ViewTests(TestCase):
 
         concept_tiles = []
         resource_x_resource_records = []
-        for i, concept in enumerate(cls.concepts):
+        for index, concept in enumerate(cls.concepts):
             # Create label tile
             concept_tiles.append(
                 TileModel(
                     resourceinstance=concept,
                     nodegroup_id=CONCEPT_NAME_NODEGROUP,
                     data={
-                        CONCEPT_NAME_CONTENT_NODE: f"Concept {i + 1}",
+                        CONCEPT_NAME_CONTENT_NODE: f"Concept {index + 1}",
                         CONCEPT_NAME_TYPE_NODE: prefLabel_reference_dt,
                         CONCEPT_NAME_LANGUAGE_NODE: "en",
                     },
@@ -132,7 +152,7 @@ class ViewTests(TestCase):
                 )
             )
             # Create top concept/narrower tile
-            if i == 0:
+            if index == 0:
                 top_concept_rxr = ResourceXResource(
                     from_resource=concept,
                     from_resource_graph_id=CONCEPTS_GRAPH_ID,
@@ -156,11 +176,11 @@ class ViewTests(TestCase):
                         },
                     )
                 )
-            elif i < MAX_DEPTH:
+            elif index < MAX_DEPTH:
                 narrower_hierarchy_rxr = ResourceXResource(
                     from_resource=concept,
                     from_resource_graph_id=CONCEPTS_GRAPH_ID,
-                    to_resource=cls.concepts[i - 1],
+                    to_resource=cls.concepts[index - 1],
                     to_resource_graph_id=CONCEPTS_GRAPH_ID,
                     created=datetime.datetime.now(),
                     modified=datetime.datetime.now(),
@@ -183,7 +203,7 @@ class ViewTests(TestCase):
                             CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID: [
                                 # Previous concept
                                 {
-                                    "resourceId": str(cls.concepts[i - 1].pk),
+                                    "resourceId": str(cls.concepts[index - 1].pk),
                                     "resourceXresourceId": str(
                                         narrower_hierarchy_rxr.pk
                                     ),
@@ -233,14 +253,15 @@ class ViewTests(TestCase):
         self.client.force_login(self.admin)
 
     def test_get_concept_trees(self):
-        with self.assertNumQueries(7):
+        with self.assertNumQueries(8):
             # 1: session
             # 2: auth
             # 3: select broader tiles, subquery for labels
             # 4: select top concept tiles, subquery for labels
-            # 5: select schemes, subquery for labels
-            # 6: languages
-            # 7: resource_instance_lifecycle_state
+            # 5: select guide term concept type tiles
+            # 6: select schemes, subquery for labels
+            # 7: languages
+            # 8: resource_instance_lifecycle_state
             response = self.client.get(reverse("api-concepts"))
 
         self.assertEqual(response.status_code, 200)
@@ -258,7 +279,9 @@ class ViewTests(TestCase):
             {"Concept 2", "Concept 3", "Concept 4", "Concept 5"},
         )
         concept_2 = [
-            c for c in top["narrower"] if c["labels"][0]["value"] == "Concept 2"
+            concept
+            for concept in top["narrower"]
+            if concept["labels"][0]["value"] == "Concept 2"
         ][0]
         self.assertEqual(
             {n["labels"][0]["value"] for n in concept_2["narrower"]},
@@ -353,3 +376,358 @@ class ViewTests(TestCase):
             "Edit distance could not be converted to an integer.",
             status_code=HTTPStatus.BAD_REQUEST,
         )
+
+    def test_get_scheme_without_top_concepts(self):
+        response = self.client.get(
+            reverse("api-lingo-scheme", kwargs={"pk": self.scheme.pk})
+        )
+        self.assertEqual(response.status_code, 200)
+        result = json.loads(response.content)
+        self.assertEqual(result["labels"][0]["value"], "Test Scheme")
+        self.assertNotIn("top_concepts", result)
+
+    def test_get_scheme_with_top_concepts(self):
+        response = self.client.get(
+            reverse("api-lingo-scheme", kwargs={"pk": self.scheme.pk}),
+            {"include_top_concepts": "true"},
+        )
+        self.assertEqual(response.status_code, 200)
+        result = json.loads(response.content)
+        self.assertEqual(result["labels"][0]["value"], "Test Scheme")
+        self.assertIn("top_concepts", result)
+        self.assertEqual(len(result["top_concepts"]), 1)
+        top = result["top_concepts"][0]
+        self.assertEqual(top["labels"][0]["value"], "Concept 1")
+        self.assertEqual(top["narrower"], [])
+
+    def test_get_scheme_not_found(self):
+        nonexistent_id = uuid.uuid4()
+        with self.assertLogs("django.request", level="WARNING"):
+            response = self.client.get(
+                reverse("api-lingo-scheme", kwargs={"pk": nonexistent_id})
+            )
+        self.assertEqual(response.status_code, 404)
+
+    def test_scheme_label_counts(self):
+        """The existing test data has 5 concepts each with one English label."""
+        response = self.client.get(
+            reverse("api-lingo-scheme-label-counts", kwargs={"pk": self.scheme.pk})
+        )
+        self.assertEqual(response.status_code, 200)
+        result = json.loads(response.content)
+
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0]["code"], "en")
+        self.assertEqual(result[0]["count"], 5)
+        self.assertEqual(result[0]["language"], "English")
+
+    def test_scheme_label_counts_multiple_languages(self):
+        """Add German labels to some concepts and verify counts."""
+        # Add German labels to the first two concepts
+        for concept in self.concepts[:2]:
+            TileModel.objects.create(
+                resourceinstance=concept,
+                nodegroup_id=CONCEPT_NAME_NODEGROUP,
+                data={
+                    CONCEPT_NAME_CONTENT_NODE: f"{concept.name} (de)",
+                    CONCEPT_NAME_TYPE_NODE: None,
+                    CONCEPT_NAME_LANGUAGE_NODE: "de",
+                },
+            )
+
+        response = self.client.get(
+            reverse("api-lingo-scheme-label-counts", kwargs={"pk": self.scheme.pk})
+        )
+        self.assertEqual(response.status_code, 200)
+        result = json.loads(response.content)
+
+        counts_by_code = {entry["code"]: entry["count"] for entry in result}
+        self.assertEqual(counts_by_code["en"], 5)
+        self.assertEqual(counts_by_code["de"], 2)
+        # Results sorted by count descending
+        self.assertEqual(result[0]["code"], "en")
+        self.assertEqual(result[1]["code"], "de")
+
+    def test_scheme_label_counts_empty_scheme(self):
+        """A scheme with no concepts should return an empty list."""
+        empty_scheme = ResourceInstance.objects.create(
+            graph_id=SCHEMES_GRAPH_ID, name="Empty Scheme"
+        )
+        response = self.client.get(
+            reverse("api-lingo-scheme-label-counts", kwargs={"pk": empty_scheme.pk})
+        )
+        self.assertEqual(response.status_code, 200)
+        result = json.loads(response.content)
+        self.assertEqual(result, [])
+
+    def test_scheme_label_counts_unauthenticated(self):
+        """Anonymous users should be able to read scheme label counts when allowed."""
+        self.client.logout()
+        with self.settings(LINGO_ALLOW_ANONYMOUS_ACCESS=True):
+            response = self.client.get(
+                reverse(
+                    "api-lingo-scheme-label-counts",
+                    kwargs={"pk": self.scheme.pk},
+                )
+            )
+        self.assertEqual(response.status_code, 200)
+
+    def test_scheme_label_counts_unauthenticated_denied(self):
+        """Anonymous users should be denied when anonymous access is disabled."""
+        self.client.logout()
+        with self.settings(LINGO_ALLOW_ANONYMOUS_ACCESS=False):
+            response = self.client.get(
+                reverse(
+                    "api-lingo-scheme-label-counts",
+                    kwargs={"pk": self.scheme.pk},
+                )
+            )
+        self.assertEqual(response.status_code, 403)
+
+    def test_guide_term_flag_in_concept_tree(self):
+        """Concepts with guide term concept type should be flagged."""
+        guide_concept = self.concepts[1]  # Concept 2
+
+        # Add a type tile with guide term type
+        TileModel.objects.create(
+            resourceinstance=guide_concept,
+            nodegroup_id=CONCEPT_TYPE_NODEGROUP,
+            data={
+                CONCEPT_TYPE_NODEID: [
+                    {
+                        "uri": GUIDE_TERM_URI,
+                        "labels": [{"value": "guide term", "language_id": "en"}],
+                    }
+                ],
+            },
+        )
+
+        response = self.client.get(reverse("api-concepts"))
+        self.assertEqual(response.status_code, 200)
+        result = json.loads(response.content)
+        scheme = result["schemes"][0]
+        top = scheme["top_concepts"][0]
+
+        # The top concept (Concept 1) should NOT be a guide term
+        self.assertFalse(top["guide_term"])
+
+        # Find Concept 2 in narrower list -- it should be flagged as guide term
+        concept_2 = next(
+            narrower_concept
+            for narrower_concept in top["narrower"]
+            if narrower_concept["labels"][0]["value"] == "Concept 2"
+        )
+        self.assertTrue(concept_2["guide_term"])
+
+        # Other narrower concepts should not be guide terms
+        for narrower_concept in top["narrower"]:
+            if narrower_concept["labels"][0]["value"] != "Concept 2":
+                self.assertFalse(narrower_concept["guide_term"])
+
+    def test_guide_term_flag_in_search(self):
+        """Guide term flag should appear in search results."""
+        guide_concept = self.concepts[2]  # Concept 3
+
+        TileModel.objects.create(
+            resourceinstance=guide_concept,
+            nodegroup_id=CONCEPT_TYPE_NODEGROUP,
+            data={
+                CONCEPT_TYPE_NODEID: [
+                    {
+                        "uri": GUIDE_TERM_URI,
+                        "labels": [{"value": "guide term", "language_id": "en"}],
+                    }
+                ],
+            },
+        )
+
+        response = self.client.get(
+            reverse("api-search"),
+            QUERY_STRING="term=Concept 3&maxEditDistance=0",
+        )
+        result = json.loads(response.content)
+        self.assertEqual(len(result["data"]), 1)
+        self.assertTrue(result["data"][0]["guide_term"])
+
+        # Non-guide-term concept should be False
+        response = self.client.get(
+            reverse("api-search"),
+            QUERY_STRING="term=Concept 1&maxEditDistance=0",
+        )
+        result = json.loads(response.content)
+        self.assertEqual(len(result["data"]), 1)
+        self.assertFalse(result["data"][0]["guide_term"])
+
+    def test_guide_term_flag_default_false(self):
+        """Concepts without guide term type should have guide_term=False."""
+        response = self.client.get(reverse("api-concepts"))
+        result = json.loads(response.content)
+        scheme = result["schemes"][0]
+        top = scheme["top_concepts"][0]
+
+        self.assertFalse(top["guide_term"])
+        for narrower_concept in top["narrower"]:
+            self.assertFalse(narrower_concept["guide_term"])
+
+    @override_settings(LINGO_ALLOW_ANONYMOUS_ACCESS=True)
+    def test_anonymous_can_read_concept_trees(self):
+        """Anonymous users should be able to read the concept tree when allowed."""
+        self.client.logout()
+        response = self.client.get(reverse("api-concepts"))
+        self.assertEqual(response.status_code, 200)
+
+    @override_settings(LINGO_ALLOW_ANONYMOUS_ACCESS=True)
+    def test_anonymous_can_search(self):
+        """Anonymous users should be able to search when allowed."""
+        self.client.logout()
+        response = self.client.get(reverse("api-search"), QUERY_STRING="term=Concept")
+        self.assertEqual(response.status_code, 200)
+
+    @override_settings(LINGO_ALLOW_ANONYMOUS_ACCESS=True)
+    def test_anonymous_can_read_edit_log(self):
+        """Anonymous users should be able to GET the edit log when allowed."""
+        self.client.logout()
+        response = self.client.get(
+            reverse(
+                "api-lingo-edit-log",
+                kwargs={"resourceid": self.concepts[0].pk},
+            )
+        )
+        self.assertEqual(response.status_code, 200)
+
+    @override_settings(LINGO_ALLOW_ANONYMOUS_ACCESS=True)
+    def test_anonymous_cannot_post_edit_log(self):
+        """Anonymous users should not be able to revert resources."""
+        self.client.logout()
+        response = self.client.post(
+            reverse(
+                "api-lingo-edit-log",
+                kwargs={"resourceid": self.concepts[0].pk},
+            ),
+            content_type="application/json",
+            data=json.dumps({"timestamp": "2024-01-01T00:00:00Z"}),
+        )
+        self.assertEqual(response.status_code, 403)
+
+    def test_non_editor_cannot_post_edit_log(self):
+        """Authenticated non-editors should not be able to revert resources."""
+        non_editor = User.objects.create_user(username="noeditor", password="test")
+        self.client.force_login(non_editor)
+        response = self.client.post(
+            reverse(
+                "api-lingo-edit-log",
+                kwargs={"resourceid": self.concepts[0].pk},
+            ),
+            content_type="application/json",
+            data=json.dumps({"timestamp": "2024-01-01T00:00:00Z"}),
+        )
+        self.assertEqual(response.status_code, 403)
+
+    @override_settings(LINGO_ALLOW_ANONYMOUS_ACCESS=False)
+    def test_anonymous_denied_when_setting_disabled(self):
+        """Anonymous users should be denied read access when anonymous access is disabled."""
+        self.client.logout()
+        response = self.client.get(reverse("api-concepts"))
+        self.assertEqual(response.status_code, 403)
+
+    @override_settings(LINGO_ALLOW_ANONYMOUS_ACCESS=False)
+    def test_anonymous_search_denied_when_setting_disabled(self):
+        """Anonymous users should be denied search access when anonymous access is disabled."""
+        self.client.logout()
+        response = self.client.get(reverse("api-search"), QUERY_STRING="term=Concept")
+        self.assertEqual(response.status_code, 403)
+
+
+class IsGuideTermTileTests(TestCase):
+    """Unit tests for ConceptBuilder.is_guide_term_tile static method."""
+
+    def test_guide_term_tile_detected(self):
+        tile_data = {
+            CONCEPT_TYPE_NODEID: [
+                {
+                    "uri": GUIDE_TERM_URI,
+                    "labels": [{"value": "guide term", "language_id": "en"}],
+                }
+            ]
+        }
+        self.assertTrue(ConceptBuilder.is_guide_term_tile(tile_data))
+
+    def test_non_guide_term_tile(self):
+        tile_data = {
+            CONCEPT_TYPE_NODEID: [
+                {
+                    "uri": "http://example.com/some-other-type",
+                    "labels": [{"value": "other", "language_id": "en"}],
+                }
+            ]
+        }
+        self.assertFalse(ConceptBuilder.is_guide_term_tile(tile_data))
+
+    def test_empty_type_data(self):
+        self.assertFalse(ConceptBuilder.is_guide_term_tile({}))
+        self.assertFalse(ConceptBuilder.is_guide_term_tile({CONCEPT_TYPE_NODEID: None}))
+        self.assertFalse(ConceptBuilder.is_guide_term_tile({CONCEPT_TYPE_NODEID: []}))
+
+
+class PermissionTests(TestCase):
+    """Tests for the Lingo Editor permission utilities and LingoUserView."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.admin = User.objects.get(username="admin")
+        cls.regular_user = User.objects.create_user(
+            username="regular", password="testpass"
+        )
+        cls.editor_user = User.objects.create_user(
+            username="editor", password="testpass"
+        )
+        editor_group = Group.objects.get(name=LINGO_EDITOR_GROUP_NAME)
+        cls.editor_user.groups.add(editor_group)
+
+    def test_is_lingo_editor_anonymous_user(self):
+        anonymous = AnonymousUser()
+        self.assertFalse(is_lingo_editor(anonymous))
+
+    def test_is_lingo_editor_regular_user(self):
+        self.assertFalse(is_lingo_editor(self.regular_user))
+
+    def test_is_lingo_editor_editor_user(self):
+        self.assertTrue(is_lingo_editor(self.editor_user))
+
+    def test_is_lingo_editor_superuser(self):
+        self.assertTrue(is_lingo_editor(self.admin))
+
+    def test_lingo_user_view_anonymous(self):
+        response = self.client.get(reverse("api-lingo-user"))
+        result = json.loads(response.content)
+        self.assertTrue(result["is_anonymous"])
+        self.assertFalse(result["is_lingo_editor"])
+        self.assertNotIn("allow_anonymous_access", result)
+
+    def test_lingo_user_view_regular_user(self):
+        self.client.force_login(self.regular_user)
+        response = self.client.get(reverse("api-lingo-user"))
+        result = json.loads(response.content)
+        self.assertFalse(result["is_anonymous"])
+        self.assertFalse(result["is_lingo_editor"])
+        self.assertEqual(result["username"], "regular")
+
+    def test_lingo_user_view_editor(self):
+        self.client.force_login(self.editor_user)
+        response = self.client.get(reverse("api-lingo-user"))
+        result = json.loads(response.content)
+        self.assertFalse(result["is_anonymous"])
+        self.assertTrue(result["is_lingo_editor"])
+        self.assertEqual(result["username"], "editor")
+
+    @override_settings(LINGO_ALLOW_ANONYMOUS_ACCESS=True)
+    def test_app_settings_view_anonymous_access_enabled(self):
+        response = self.client.get(reverse("api-lingo-settings"))
+        result = json.loads(response.content)
+        self.assertTrue(result["allow_anonymous_access"])
+
+    @override_settings(LINGO_ALLOW_ANONYMOUS_ACCESS=False)
+    def test_app_settings_view_anonymous_access_disabled(self):
+        response = self.client.get(reverse("api-lingo-settings"))
+        result = json.loads(response.content)
+        self.assertFalse(result["allow_anonymous_access"])

@@ -8,10 +8,12 @@ import {
     ref,
     watch,
 } from "vue";
+import type { Ref } from "vue";
 
 import { useRoute, useRouter } from "vue-router";
 import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
+import { storeToRefs } from "pinia";
 import Skeleton from "primevue/skeleton";
 import InputText from "primevue/inputtext";
 import Message from "primevue/message";
@@ -24,12 +26,9 @@ import {
     DEFAULT_ERROR_TOAST_LIFE,
     ERROR,
 } from "@/arches_controlled_lists/constants.ts";
-import {
-    selectedLanguageKey,
-    systemLanguageKey,
-} from "@/arches_lingo/constants.ts";
 
 import { fetchConcepts } from "@/arches_lingo/api.ts";
+import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 
 import {
     treeFromSchemes,
@@ -38,14 +37,12 @@ import {
 
 import { useCappedTreeFilter } from "@/arches_lingo/components/tree/utils/capped-filter.ts";
 
-import type { Ref } from "vue";
 import type {
     TreePassThroughMethodOptions,
     TreeExpandedKeys,
     TreeSelectionKeys,
 } from "primevue/tree";
 import type { TreeNode } from "primevue/treenode";
-import type { Language } from "@/arches_component_lab/types";
 import type {
     IconLabels,
     Scheme,
@@ -83,6 +80,7 @@ const FILTER_CAPPED_MESSAGE = $gettext("Please refine your query.");
 
 const iconLabels: IconLabels = Object.freeze({
     concept: $gettext("Concept"),
+    guideTerm: $gettext("Guide Term"),
     scheme: $gettext("Scheme"),
 });
 
@@ -95,8 +93,7 @@ const lastNonEmptySelectedKeys = ref<TreeSelectionKeys>({});
 const expandedKeys = ref<TreeExpandedKeys>({});
 const filterValue = ref("");
 
-const selectedLanguage = inject(selectedLanguageKey) as Ref<Language>;
-const systemLanguage = inject(systemLanguageKey) as Language;
+const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
 
 const resourceInstanceLifecycleStates = inject<
     Ref<ResourceInstanceLifecycleState[] | undefined>
@@ -105,7 +102,9 @@ const resourceInstanceLifecycleStates = inject<
 const resourceInstanceLifecycleStateCanEditById = computed(() =>
     Object.fromEntries(
         (resourceInstanceLifecycleStates?.value ?? []).map(
-            (resourceInstanceLifecycleState) => [
+            (
+                resourceInstanceLifecycleState: ResourceInstanceLifecycleState,
+            ) => [
                 resourceInstanceLifecycleState.id,
                 resourceInstanceLifecycleState.can_edit_resource_instances ===
                     true,
@@ -165,7 +164,7 @@ const tree = computed(() => {
     return treeFromSchemes(
         schemes.value,
         selectedLanguage.value,
-        systemLanguage,
+        systemLanguage.value,
         iconLabels,
         focusedOccurrenceKey.value,
     );
@@ -701,10 +700,24 @@ function onNodeSelect(node: TreeNode) {
         return;
     }
 
-    scrollToItemInTree(node.data.id, false, node.key);
+    const selectedKeysBeforeNavigation = { ...selectedKeys.value };
 
     suppressScrollOnNextRouteSelect.value = true;
-    navigateToSchemeOrConcept!(router, node.data);
+    navigateToSchemeOrConcept(router, node.data)?.then((failure) => {
+        if (failure) {
+            // Navigation was cancelled (e.g. by the unsaved-changes guard).
+            // PrimeVue Tree already updated selectedKeys; restore the previous selection.
+            suppressScrollOnNextRouteSelect.value = false;
+            selectedKeys.value = selectedKeysBeforeNavigation;
+
+            const primaryOriginalKey = Object.keys(
+                selectedKeysBeforeNavigation,
+            )[0];
+            if (primaryOriginalKey) {
+                scrollOccurrenceIntoView(primaryOriginalKey);
+            }
+        }
+    });
 }
 </script>
 

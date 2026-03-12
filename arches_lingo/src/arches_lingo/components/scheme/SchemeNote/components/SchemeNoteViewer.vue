@@ -8,6 +8,7 @@ import MetaStringViewer from "@/arches_lingo/components/generic/MetaStringViewer
 import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
 
 import { VIEW } from "@/arches_lingo/constants.ts";
+import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 
 import type { MetaStringText, SchemeStatement } from "@/arches_lingo/types.ts";
 
@@ -23,6 +24,7 @@ const props = defineProps<{
 const { $gettext } = useGettext();
 
 const openEditor = inject<(componentName: string) => void>("openEditor");
+const { isEditor } = useUserStore();
 
 const resourceInstanceLifecycleState = inject<{
     value:
@@ -61,10 +63,15 @@ const createTooltipText = computed(() => {
 
 const metaStringLabel: MetaStringText = {
     deleteConfirm: $gettext("Are you sure you want to delete this note?"),
-    language: $gettext("Note Language"),
-    name: $gettext("Note Name"),
-    type: $gettext("Note Type"),
+    language: $gettext("Language"),
+    name: $gettext("Note"),
+    type: $gettext("Type"),
     noRecords: $gettext("No scheme notes were found."),
+    sortFields: {
+        name: "aliased_data.statement_content.display_value",
+        type: "aliased_data.statement_type.display_value",
+        language: "aliased_data.statement_language.display_value",
+    },
 };
 </script>
 
@@ -74,6 +81,7 @@ const metaStringLabel: MetaStringText = {
             <h2>{{ props.sectionTitle }}</h2>
 
             <Button
+                v-if="isEditor"
                 v-tooltip.top="{
                     disabled: Boolean(!isCreateDisabled),
                     value: createTooltipText,

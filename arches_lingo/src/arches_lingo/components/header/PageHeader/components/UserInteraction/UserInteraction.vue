@@ -1,19 +1,24 @@
 <script setup lang="ts">
-import { computed, inject, useTemplateRef } from "vue";
+import { computed, useTemplateRef } from "vue";
+import { storeToRefs } from "pinia";
 import { useGettext } from "vue3-gettext";
+import { useRouter } from "vue-router";
 
 import Button from "primevue/button";
 import Popover from "primevue/popover";
 
 import UserInteractionMenu from "@/arches_lingo/components/header/PageHeader/components/UserInteraction/components/UserInteractionMenu/UserInteractionMenu.vue";
 
-import { USER_KEY } from "@/arches_lingo/constants.ts";
+import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
+import { routeNames } from "@/arches_lingo/routes.ts";
 
 import type { PopoverMethods } from "primevue/popover";
-import type { UserRefAndSetter } from "@/arches_lingo/types.ts";
 
 const { $gettext } = useGettext();
-const { user } = inject(USER_KEY) as UserRefAndSetter;
+const router = useRouter();
+const userStore = useUserStore();
+const { user } = storeToRefs(userStore);
+const { isAnonymous } = userStore;
 
 const popover = useTemplateRef<PopoverMethods>("popover");
 
@@ -48,32 +53,46 @@ const initials = computed(() => {
 function openUserMenu(event: MouseEvent) {
     popover.value!.toggle(event);
 }
+
+function navigateToLogin() {
+    router.push({ name: routeNames.login });
+}
 </script>
 
 <template>
     <div class="user-interaction">
-        <Button
-            :aria-label="$gettext('Open user menu')"
-            @click="openUserMenu"
-        >
-            <div
-                v-if="initials"
-                class="initials-circle"
-            >
-                {{ initials }}
-            </div>
-            <span>{{ displayName }}</span>
-        </Button>
-
-        <Popover
-            ref="popover"
-            class="user-interaction-popover"
-        >
-            <UserInteractionMenu
-                :display-name="displayName"
-                :email="user!.email"
+        <template v-if="isAnonymous">
+            <Button
+                :label="$gettext('Login')"
+                :aria-label="$gettext('Login')"
+                icon="pi pi-sign-in"
+                @click="navigateToLogin"
             />
-        </Popover>
+        </template>
+        <template v-else>
+            <Button
+                :aria-label="$gettext('Open user menu')"
+                @click="openUserMenu"
+            >
+                <div
+                    v-if="initials"
+                    class="initials-circle"
+                >
+                    {{ initials }}
+                </div>
+                <span>{{ displayName }}</span>
+            </Button>
+
+            <Popover
+                ref="popover"
+                class="user-interaction-popover"
+            >
+                <UserInteractionMenu
+                    :display-name="displayName"
+                    :email="user?.email ?? ''"
+                />
+            </Popover>
+        </template>
     </div>
 </template>
 

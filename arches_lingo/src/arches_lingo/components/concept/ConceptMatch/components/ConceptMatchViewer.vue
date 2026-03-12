@@ -8,6 +8,7 @@ import MetaStringViewer from "@/arches_lingo/components/generic/MetaStringViewer
 import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
 
 import { VIEW } from "@/arches_lingo/constants.ts";
+import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 
 import type {
     ConceptMatchStatus,
@@ -24,6 +25,7 @@ const props = defineProps<{
 }>();
 
 const { $gettext } = useGettext();
+const { isEditor } = useUserStore();
 
 const openEditor =
     inject<(componentName: string, tileId?: string) => void>("openEditor");
@@ -72,6 +74,10 @@ const metaStringLabel: MetaStringText = {
     name: $gettext("Match Type"),
     type: $gettext("Related URI"),
     noRecords: $gettext("No matched concepts were found."),
+    sortFields: {
+        name: "aliased_data.match_status_ascribed_relation.display_value",
+        type: "aliased_data.match_status_ascribed_comparate.display_value",
+    },
 };
 
 function matchedConceptURIIsLink(rowData: ConceptMatchStatus): boolean {
@@ -87,6 +93,7 @@ function matchedConceptURIIsLink(rowData: ConceptMatchStatus): boolean {
             <h2>{{ props.sectionTitle }}</h2>
 
             <Button
+                v-if="isEditor"
                 v-tooltip.top="{
                     disabled: Boolean(!isCreateDisabled),
                     value: createTooltipText,

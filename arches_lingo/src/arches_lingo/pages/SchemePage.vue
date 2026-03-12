@@ -9,6 +9,7 @@ import SchemeNamespace from "@/arches_lingo/components/scheme/SchemeNamespace/Sc
 import SchemeNote from "@/arches_lingo/components/scheme/SchemeNote/SchemeNote.vue";
 import SchemeStandard from "@/arches_lingo/components/scheme/SchemeStandard/SchemeStandard.vue";
 import SchemeLicense from "@/arches_lingo/components/scheme/SchemeLicense/SchemeLicense.vue";
+import SchemeTopConcepts from "@/arches_lingo/components/scheme/SchemeTopConcepts/SchemeTopConcepts.vue";
 
 const { $gettext } = useGettext();
 
@@ -54,6 +55,13 @@ const componentData = [
         sectionTitle: $gettext("Scheme Rights"),
         graphSlug: "scheme",
         nodegroupAlias: "rights",
+    },
+    {
+        component: SchemeTopConcepts,
+        componentName: "SchemeTopConcepts",
+        sectionTitle: $gettext("Top Concepts"),
+        graphSlug: "scheme",
+        nodegroupAlias: "",
     },
 ];
 </script>

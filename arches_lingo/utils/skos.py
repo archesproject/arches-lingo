@@ -233,6 +233,11 @@ class SKOSReader(SKOSReader):
                         elif mock_tile:
                             new_concept["tile_data"].append(mock_tile)
 
+                    type_tile = {
+                        "type": {"type": "concept", "type_metatype": "classification"}
+                    }
+                    new_concept["tile_data"].append(type_tile)
+
                     self.concepts.append(new_concept)
 
             # Map relationships to their respective concept resources
@@ -272,39 +277,6 @@ class SKOSReader(SKOSReader):
             mock_tile, isScheme=isScheme, lang_lookup=self.allowed_languages
         )
         return mock_tile
-
-    def language_exists(self, rdf_tag):
-        # TODO: When creating new Language datatype, remove this logic to add new list items
-        # re. https://github.com/archesproject/arches-lingo/issues/472
-        with transaction.atomic():
-            lang_exists = super().language_exists(rdf_tag, self.allowed_languages)
-            default_lang = self.allowed_languages[settings.LANGUAGE_CODE]
-            if not lang_exists:
-                lang_list_items = ListItem.objects.filter(
-                    list=self.languages_controlled_list
-                )
-                lang_code = rdf_tag.language
-                lang_name = translation.get_language_info(lang_code)
-                new_list_item = ListItem.objects.create(
-                    list=self.languages_controlled_list,
-                    parent=None,
-                    guide=False,
-                    sortorder=lang_list_items.aggregate(Max("sortorder"))[
-                        "sortorder__max"
-                    ]
-                    + 1,
-                )
-                new_list_item.clean()  # force generation of URI
-                ListItemValue.objects.create(
-                    list_item=new_list_item,
-                    valuetype=self.prefLabel_valuetype,
-                    language=default_lang,
-                    value=lang_name or lang_code,
-                )
-                # Re-sort of list items after addition
-                sorted = new_list_item.sort_siblings(root_siblings=lang_list_items)
-                ListItem.objects.bulk_update(sorted, ["sortorder"])
-            return lang_exists
 
 
 class SKOSWriter:

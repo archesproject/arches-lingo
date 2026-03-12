@@ -2,6 +2,7 @@ import json
 import os
 from io import BytesIO, StringIO
 from pathlib import Path
+from unittest.mock import patch
 
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -16,6 +17,7 @@ from arches.app.models.models import (
     LoadEvent,
     Relation,
     ResourceInstance,
+    UserXNotification,
     Value,
 )
 from arches.app.utils.skos import SKOSReader
@@ -31,25 +33,25 @@ from .test_settings import PROJECT_TEST_ROOT
 class ImportTests(TransactionTestCase):
 
     @classmethod
-    def register_lingo_resource_importer(cls):
-        # management.call_command("etl_module", "register", source=str(Path(settings.APP_ROOT) / "etl_modules" / "migrate_to_lingo.py"))
+    def register_etl_module(cls):
         from arches.management.commands.etl_module import Command as ETLModuleCommand
 
-        cmd = ETLModuleCommand()
-        cmd.register(
+        etl_cmd = ETLModuleCommand()
+        etl_cmd.register(
             source=str(Path(settings.APP_ROOT) / "etl_modules" / "migrate_to_lingo.py")
         )
 
     def setUp(cls):
         """setUpClass doesn't work because the rollback fixture is applied after that."""
+        cls.register_etl_module()
+        ViewTests.load_controlled_lists()
         ViewTests.load_ontology()
         ViewTests.load_graphs()
-        cls.register_lingo_resource_importer()
         cls.moduleid = ETLModule.objects.get(slug="migrate-to-lingo").pk
         cls.file_name = "skos_rdf_import_example.xml"
         cls.fixture_path = Path(PROJECT_TEST_ROOT) / "fixtures" / "data" / cls.file_name
 
-    def assert_resources_loaded(self):
+    def _assert_resources_loaded(self):
         schemes = ResourceTileTree.get_tiles(graph_slug="scheme")
         concepts = ResourceTileTree.get_tiles(graph_slug="concept")
         self.assertEqual(schemes.count(), 1)
@@ -78,6 +80,11 @@ class ImportTests(TransactionTestCase):
             "warrant assertion event", str(statement_tile_trees[0].aliased_data)
         )
 
+        # Type
+        type_tile_tree = junk_sculpture.aliased_data.type
+        self.assertIn("concept", str(type_tile_tree.aliased_data.type))
+        self.assertIn("classification", str(type_tile_tree.aliased_data.type_metatype))
+
         # Part of scheme
         scheme = junk_sculpture.aliased_data.part_of_scheme.aliased_data.part_of_scheme
         self.assertEqual(scheme.name["en"], "Test Thesaurus")
@@ -103,6 +110,7 @@ class ImportTests(TransactionTestCase):
         1. Management command path, importing from a SKOS RDF file.
         2. HTTP Request path, importing from a SKOS RDF file upload.
         3. Migrate Concepts & Schemes from RDM
+        4. Ensure that an import failure sends a notification to the user
         """
 
         # 1. Test Import from SKOS via management command path
@@ -117,7 +125,7 @@ class ImportTests(TransactionTestCase):
             overwrite=True,
             stdout=stdout,
         )
-        self.assert_resources_loaded()
+        self._assert_resources_loaded()
         print("Test import from CLI completed.\n")
 
         # Reverse load to clear out the loaded resources
@@ -157,7 +165,7 @@ class ImportTests(TransactionTestCase):
         importer = LingoResourceImporter(request=request0)
         write_request0 = importer.write(request=request0)
         self.assertTrue(write_request0["success"])
-        self.assert_resources_loaded()
+        self._assert_resources_loaded()
         print("Test import from Lingo UI completed.\n")
 
         # Reverse load to clear out the loaded resources
@@ -198,10 +206,36 @@ class ImportTests(TransactionTestCase):
         importer = LingoResourceImporter(request=request1)
         write_request1 = importer.write(request=request1)
         self.assertTrue(write_request1["success"])
-        self.assert_resources_loaded()
+        self._assert_resources_loaded()
         print("Test migrate from RDM completed.\n")
+        importer.reverse_load(loadid=start_event1.loadid)
 
-        # No need to reverse load because tearDown will reset the DB
+        # 4. test_import_failure_sends_notification(self):
+        admin_user = User.objects.get(username="admin")
+
+        load_event = LoadEvent.objects.create(
+            user_id=1, etl_module_id=self.moduleid, status="running"
+        )
+        request = HttpRequest()
+        request.method = "POST"
+        request.user = admin_user
+        request.POST["load_id"] = str(load_event.loadid)
+        request.POST["module"] = str(self.moduleid)
+        request.POST["overwrite_option"] = "overwrite"
+        request.POST["action"] = "write"
+        # No file or scheme provided — triggers the return_with_error path
+
+        importer = LingoResourceImporter(request=request)
+        response = importer.write(request=request)
+
+        self.assertFalse(response["success"])
+        latest_notification = (
+            UserXNotification.objects.filter(recipient=admin_user)
+            .order_by("-notif__created")
+            .first()
+            .notif
+        )
+        self.assertIn("Import failed", latest_notification.message)
 
 
 class ExportTests(TestCase):
@@ -227,7 +261,7 @@ class ExportTests(TestCase):
         )
 
     def tearDown(self):
-        if os.path.exists(self.file_path):
+        if hasattr(self, "file_path") and os.path.exists(self.file_path):
             os.remove(self.file_path)
         return super().tearDown()
 
@@ -273,3 +307,103 @@ class ExportTests(TestCase):
         self.assertIn("fileid", file_details)
         self.file_path = os.path.join(self.tempfile_dir, file_details["name"])
         self.assertTrue(os.path.exists(self.file_path))
+
+    def _run_export(self, resourceid, format, export_option=None):
+        """Helper that builds a request, runs the export, and returns the response."""
+        self.client.login(username="admin", password="admin")
+        request = HttpRequest()
+        request.method = "POST"
+        request.user = User.objects.get(username="admin")
+        request.POST["module"] = str(self.moduleid)
+        request.POST["action"] = "start"
+        request.POST["resourceid"] = str(resourceid)
+        request.POST["format"] = format
+        if export_option:
+            request.POST["export_option"] = export_option
+
+        exporter = LingoResourceExporter(request=request)
+        return exporter.start(request=request)
+
+    def _assert_successful_export(self, response):
+        """Assert that an export response is successful and a file was produced."""
+        self.assertTrue(response["success"])
+        load_details = json.loads(json.loads(response["data"]["load_details"]))
+        self.assertIn("scheme_name", load_details)
+        file_details = load_details["file"]
+        self.assertIn("name", file_details)
+        self.assertIn("fileid", file_details)
+        self.file_path = os.path.join(self.tempfile_dir, file_details["name"])
+        self.assertTrue(os.path.exists(self.file_path))
+        return file_details
+
+    # --- RDF/XML ---
+
+    def test_export_full_hierarchy_to_rdf(self):
+        response = self._run_export(self.test_scheme.pk, "rdf")
+        file_details = self._assert_successful_export(response)
+        self.assertTrue(file_details["name"].endswith(".zip"))
+
+    def test_export_partial_hierarchy_to_rdf(self):
+        response = self._run_export(
+            self.test_concept.pk, "rdf", export_option="partial"
+        )
+        file_details = self._assert_successful_export(response)
+        self.assertTrue(file_details["name"].endswith(".zip"))
+
+    # --- CSV ---
+
+    def test_export_full_hierarchy_to_csv(self):
+        response = self._run_export(self.test_scheme.pk, "csv")
+        file_details = self._assert_successful_export(response)
+        self.assertTrue(file_details["name"].endswith(".zip"))
+
+    def test_export_partial_hierarchy_to_csv(self):
+        response = self._run_export(
+            self.test_concept.pk, "csv", export_option="partial"
+        )
+        file_details = self._assert_successful_export(response)
+        self.assertTrue(file_details["name"].endswith(".zip"))
+
+    # --- JSON-LD ---
+
+    @patch(
+        "arches_lingo.etl_modules.lingo_resource_exporter.JsonLdWriter.build_json",
+        return_value={"@context": "mock", "@graph": []},
+    )
+    def test_export_full_hierarchy_to_jsonld(self, mock_build):
+        response = self._run_export(self.test_scheme.pk, "jsonld")
+        file_details = self._assert_successful_export(response)
+        self.assertTrue(file_details["name"].endswith(".zip"))
+        self.assertTrue(mock_build.called)
+
+    @patch(
+        "arches_lingo.etl_modules.lingo_resource_exporter.JsonLdWriter.build_json",
+        return_value={"@context": "mock", "@graph": []},
+    )
+    def test_export_partial_hierarchy_to_jsonld(self, mock_build):
+        response = self._run_export(
+            self.test_concept.pk, "jsonld", export_option="partial"
+        )
+        file_details = self._assert_successful_export(response)
+        self.assertTrue(file_details["name"].endswith(".zip"))
+        self.assertTrue(mock_build.called)
+
+    # --- Error handling ---
+
+    def test_export_unsupported_format(self):
+        response = self._run_export(self.test_scheme.pk, "unsupported_format")
+        self.assertFalse(response["success"])
+
+    def test_export_failure_sends_notification(self):
+        admin_user = User.objects.get(username="admin")
+        notifications_before = UserXNotification.objects.filter(
+            recipient=admin_user
+        ).count()
+
+        response = self._run_export(self.test_scheme.pk, "unsupported_format")
+
+        self.assertFalse(response["success"])
+        notifications_after = UserXNotification.objects.filter(
+            recipient=admin_user
+        ).count()
+        self.assertGreater(notifications_after, notifications_before)

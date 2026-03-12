@@ -3,12 +3,13 @@ import { inject, computed } from "vue";
 import { useGettext } from "vue3-gettext";
 import { useConfirm } from "primevue/useconfirm";
 import { useToast } from "primevue/usetoast";
+import { storeToRefs } from "pinia";
 
 import Button from "primevue/button";
 import ConfirmDialog from "primevue/confirmdialog";
 
 import { deleteLingoTile } from "@/arches_lingo/api.ts";
-import type { Ref } from "vue";
+import { getConceptIcon } from "@/arches_lingo/utils.ts";
 import type {
     SearchResultItem,
     SearchResultHierarchy,
@@ -17,12 +18,12 @@ import {
     DANGER,
     DEFAULT_ERROR_TOAST_LIFE,
     ERROR,
+    SCHEME_ICON,
     SECONDARY,
-    selectedLanguageKey,
-    systemLanguageKey,
 } from "@/arches_lingo/constants.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
-import type { Language } from "@/arches_component_lab/types";
+import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
+import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 
 const props = defineProps<{
     componentName: string;
@@ -31,14 +32,13 @@ const props = defineProps<{
     nodegroupAlias: string;
     resourceInstanceId: string | undefined;
     sectionTitle: string;
-    schemeId?: string;
+    scheme?: string;
 }>();
 const { $gettext } = useGettext();
 const confirm = useConfirm();
 const toast = useToast();
 
-const selectedLanguage = inject(selectedLanguageKey) as Ref<Language>;
-const systemLanguage = inject(systemLanguageKey) as Language;
+const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
 
 const openEditor =
     inject<(componentName: string, tileId?: string) => void>("openEditor");
@@ -89,10 +89,11 @@ const createTooltipText = computed(() => {
         "This concept is not editable in its current lifecycle state",
     );
 });
+const { isEditor } = useUserStore();
 
 function getIcon(item: SearchResultItem) {
     //TODO need a better way to determine if item is a scheme or not
-    return item.id === props.schemeId ? "pi pi-folder" : "pi pi-tag";
+    return item.id === props.scheme ? SCHEME_ICON : getConceptIcon(item);
 }
 
 function confirmDelete(hierarchy: SearchResultHierarchy) {
@@ -171,6 +172,7 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
             <h2>{{ props.sectionTitle }}</h2>
 
             <Button
+                v-if="isEditor"
                 v-tooltip.top="{
                     disabled: Boolean(!isCreateDisabled),
                     value: createTooltipText,
@@ -233,6 +235,7 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
                         </span>
                         <div
                             v-if="
+                                isEditor &&
                                 subindex === hierarchy.searchResults.length - 1
                             "
                             style="margin-inline-start: 0.5rem; display: flex"

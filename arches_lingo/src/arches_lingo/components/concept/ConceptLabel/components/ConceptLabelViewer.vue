@@ -8,6 +8,7 @@ import MetaStringViewer from "@/arches_lingo/components/generic/MetaStringViewer
 import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
 
 import { VIEW } from "@/arches_lingo/constants.ts";
+import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 
 import type {
     AppellativeStatus,
@@ -26,6 +27,7 @@ const props = defineProps<{
 const { $gettext } = useGettext();
 
 const openEditor = inject<(componentName: string) => void>("openEditor");
+const { isEditor } = useUserStore();
 
 const resourceInstanceLifecycleState = inject<{
     value:
@@ -52,6 +54,12 @@ const metaStringLabel: MetaStringText = {
     name: $gettext("Label"),
     type: $gettext("Type"),
     noRecords: $gettext("No concept labels were found."),
+    sortFields: {
+        name: "aliased_data.appellative_status_ascribed_name_content.display_value",
+        type: "aliased_data.appellative_status_ascribed_relation.display_value",
+        language:
+            "aliased_data.appellative_status_ascribed_name_language.display_value",
+    },
 };
 </script>
 
@@ -61,6 +69,7 @@ const metaStringLabel: MetaStringText = {
             <h2>{{ props.sectionTitle }}</h2>
 
             <Button
+                v-if="isEditor"
                 v-tooltip.top="{
                     disabled: Boolean(!isCreateDisabled),
                     value: $gettext(

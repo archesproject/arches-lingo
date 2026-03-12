@@ -7,6 +7,7 @@ import Button from "primevue/button";
 import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
 
 import { VIEW } from "@/arches_lingo/constants.ts";
+import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 
 import type { SchemeCreation } from "@/arches_lingo/types.ts";
 
@@ -59,6 +60,7 @@ const createTooltipText = computed(() => {
         "This scheme is not editable in its current lifecycle state",
     );
 });
+const { isEditor } = useUserStore();
 
 const buttonLabel = computed(() => {
     if (props.tileData) {
@@ -75,6 +77,7 @@ const buttonLabel = computed(() => {
             <h2>{{ props.sectionTitle }}</h2>
 
             <Button
+                v-if="isEditor"
                 v-tooltip.top="{
                     disabled: Boolean(!isCreateDisabled),
                     value: createTooltipText,

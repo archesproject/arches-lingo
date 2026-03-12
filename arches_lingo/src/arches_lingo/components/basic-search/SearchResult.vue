@@ -1,10 +1,13 @@
 <script setup lang="ts">
+import { storeToRefs } from "pinia";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
-import { getParentLabels } from "@/arches_lingo/utils.ts";
-import { ENGLISH } from "@/arches_lingo/constants.ts";
+import { getParentLabels, getConceptIcon } from "@/arches_lingo/utils.ts";
+import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 
 import type { PropType } from "vue";
 import type { SearchResultItem } from "@/arches_lingo/types.ts";
+
+const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
 
 defineProps({
     searchResult: {
@@ -22,14 +25,17 @@ defineProps({
         <div style="margin: 0 0.5rem">
             <span>
                 <i
-                    class="pi pi-paperclip concept-icon"
+                    :class="[
+                        getConceptIcon(searchResult.option),
+                        'concept-icon',
+                    ]"
                     aria-hidden="true"
                 />
                 {{
                     getItemLabel(
                         searchResult.option,
-                        ENGLISH.code,
-                        ENGLISH.code,
+                        selectedLanguage.code,
+                        systemLanguage.code,
                     ).value
                 }}
             </span>
@@ -38,7 +44,11 @@ defineProps({
         <div class="search-result-hierarchy">
             [
             {{
-                getParentLabels(searchResult.option, ENGLISH.code, ENGLISH.code)
+                getParentLabels(
+                    searchResult.option,
+                    selectedLanguage.code,
+                    systemLanguage.code,
+                )
             }}
             ]
         </div>

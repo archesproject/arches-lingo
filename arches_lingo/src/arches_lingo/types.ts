@@ -16,13 +16,16 @@ export interface User {
     last_name: string;
     username: string;
     email: string;
+    phone?: string;
+    is_lingo_editor: boolean;
+    is_anonymous: boolean;
 }
 
-// Prop injection types
-export interface UserRefAndSetter {
-    user: Ref<User | null>;
-    setUser: (userToSet: User | null) => void;
+export interface AppSettings {
+    allow_anonymous_access: boolean;
+    public_server_address: string | null;
 }
+
 export interface DisplayedRowRefAndSetter {
     displayedRow: Ref<Concept | Scheme | null>;
     setDisplayedRow: (val: Concept | Scheme | null) => void;
@@ -37,6 +40,7 @@ export interface Concept {
     id: string;
     labels: Label[];
     narrower: Concept[];
+    guide_term?: boolean;
 }
 
 export interface Scheme {
@@ -96,6 +100,11 @@ export interface MetaStringText {
     language?: string;
     deleteConfirm: string;
     noRecords: string;
+    sortFields?: {
+        name?: string;
+        type?: string;
+        language?: string;
+    };
 }
 
 // eslint-disable-next-line
@@ -222,6 +231,13 @@ export interface ConceptClassificationStatusAliases extends AliasedData {
 export type ConceptClassificationStatus =
     TileData<ConceptClassificationStatusAliases>;
 
+export interface ConceptTypeAliases extends AliasedData {
+    type: ReferenceSelectTreeNode[];
+    metatype?: ReferenceSelectTreeNode[];
+}
+
+export type ConceptType = TileData<ConceptTypeAliases>;
+
 export interface IdentifierAliases extends AliasedData {
     identifier_content: StringValue;
     identifier_label?: StringValue;
@@ -321,6 +337,12 @@ export interface SchemeHeader {
     identifier?: string;
 }
 
+export interface LanguageLabelCount {
+    language: string;
+    code: string;
+    count: number;
+}
+
 export interface SchemeInstance {
     aliased_data: {
         namespace?: SchemeNamespace;
@@ -344,6 +366,7 @@ export interface NodeAndParentInstruction {
 
 export interface IconLabels {
     concept: string;
+    guideTerm: string;
     scheme: string;
 }
 
@@ -361,6 +384,7 @@ export interface SearchResultItem {
         labels: Label[];
     }[][];
     polyhierarchical: boolean;
+    guide_term?: boolean;
 }
 
 export interface SearchResultHierarchy {
@@ -411,4 +435,122 @@ export interface ResourceInstanceLifecycleState {
     can_delete_resource_instances?: boolean;
     next_resource_instance_lifecycle_states?: ResourceInstanceLifecycleState[];
     previous_resource_instance_lifecycle_states?: ResourceInstanceLifecycleState[];
+}
+
+export interface EditLogEntry {
+    editlogid: string;
+    transactionid: string | null;
+    edittype: string;
+    edittype_label: string;
+    timestamp: string;
+    userid: string;
+    user_firstname: string;
+    user_lastname: string;
+    user_username: string;
+    user_email: string;
+    nodegroupid: string | null;
+    tileinstanceid: string | null;
+    card_name: string | null;
+    note: string | null;
+}
+
+export type SearchOperator = "and" | "or";
+
+export type MatchMode =
+    | "contains"
+    | "exact"
+    | "starts_with"
+    | "ends_with"
+    | "exists";
+
+export type FacetType =
+    | "label"
+    | "note"
+    | "language"
+    | "concept_type"
+    | "relationship_hierarchical"
+    | "relationship_associated"
+    | "match_uri"
+    | "scheme"
+    | "uri"
+    | "identifier"
+    | "lifecycle_state"
+    | "concept_set";
+
+export interface SearchCondition {
+    id: string;
+    facet: FacetType;
+    value: string;
+    label_type?: string;
+    note_type?: string;
+    language?: string;
+    direction?: "broader" | "narrower";
+    match_mode?: MatchMode;
+    negated?: boolean;
+}
+
+export interface SearchGroup {
+    id: string;
+    operator: SearchOperator;
+    conditions: (SearchCondition | SearchGroup)[];
+}
+
+export interface AdvancedSearchQuery {
+    operator: SearchOperator;
+    conditions: (SearchCondition | SearchGroup)[];
+}
+
+interface AdvancedSearchResultItem extends SearchResultItem {
+    uri?: string | null;
+    identifier?: string | null;
+    notes: { content: string; language: string; type: string }[];
+    lifecycle_state?: string | null;
+}
+
+export interface AdvancedSearchResponse {
+    current_page: number;
+    total_pages: number;
+    results_per_page: number;
+    total_results: number;
+    data: AdvancedSearchResultItem[];
+}
+
+export interface SchemeOption {
+    id: string;
+    labels: Label[];
+}
+
+export interface ControlledListOption {
+    label: string;
+    value: string;
+}
+
+export interface AdvancedSearchOptions {
+    languages: { code: string; name: string }[];
+    schemes: SchemeOption[];
+    lifecycle_states: { id: string; name: string }[];
+    label_types: ControlledListOption[];
+    note_types: ControlledListOption[];
+    concept_types: ControlledListOption[];
+}
+
+export interface SavedSearchItem {
+    id: number;
+    name: string;
+    query: AdvancedSearchQuery;
+    created: string;
+    updated: string;
+}
+
+export interface ConceptSetItem {
+    id: number;
+    name: string;
+    description: string;
+    member_count: number;
+    created: string;
+    updated: string;
+}
+
+export interface ConceptSetDetail extends ConceptSetItem {
+    members: SearchResultItem[];
 }

@@ -1,29 +1,50 @@
 import { routeNames } from "@/arches_lingo/routes.ts";
 
 import { createLingoResource, upsertLingoTile } from "@/arches_lingo/api.ts";
-import { NEW_CONCEPT } from "@/arches_lingo/constants.ts";
+import {
+    NEW_CONCEPT,
+    CONCEPT_ICON,
+    GUIDE_TERM_ICON,
+    SCHEME_ICON,
+    CONCEPT_TYPE_NODE_ALIAS,
+} from "@/arches_lingo/constants.ts";
+import { fetchTileData } from "@/arches_component_lab/generics/GenericCard/api.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 
 import type { TreeNode } from "primevue/treenode";
 import type { Language } from "@/arches_component_lab/types.ts";
 import type {
     Concept,
+    ConceptType,
     IconLabels,
     NodeAndParentInstruction,
     ResourceInstanceResult,
     ResourceDescriptor,
     Scheme,
+    SchemeStatement,
     SearchResultItem,
 } from "@/arches_lingo/types";
 import type { Router } from "vue-router/dist/vue-router";
 import type { ConceptInstance } from "@/arches_lingo/types.ts";
 
-// Duck-typing helpers
 export function dataIsScheme(data: Concept | Scheme) {
     return (data as Scheme).top_concepts !== undefined;
 }
 export function dataIsConcept(data: Concept | Scheme) {
     return !dataIsScheme(data);
+}
+
+export function getConceptIcon(
+    item: Concept | SearchResultItem | { guide_term?: boolean },
+): string {
+    return item.guide_term ? GUIDE_TERM_ICON : CONCEPT_ICON;
+}
+
+export function getItemIcon(item: Concept | Scheme): string {
+    if (dataIsScheme(item)) {
+        return SCHEME_ICON;
+    }
+    return getConceptIcon(item as Concept);
 }
 
 export function navigateToSchemeOrConcept(
@@ -33,19 +54,19 @@ export function navigateToSchemeOrConcept(
 ) {
     // TODO: Consider adding some sort of short-circuiting of fetchUser
     if (value === NEW_CONCEPT) {
-        router.push({
+        return router.push({
             name: routeNames.concept,
             params: { id: "new" },
             query: queryParams,
         });
     } else if (dataIsScheme(value)) {
-        router.push({
+        return router.push({
             name: routeNames.scheme,
             params: { id: value.id },
             query: queryParams,
         });
     } else if (dataIsConcept(value)) {
-        router.push({
+        return router.push({
             name: routeNames.concept,
             params: { id: value.id },
             query: queryParams,
@@ -53,7 +74,6 @@ export function navigateToSchemeOrConcept(
     }
 }
 
-// Tree builder
 export function treeFromSchemes(
     schemes: Scheme[],
     selectedLanguage: Language,
@@ -88,10 +108,8 @@ export function treeFromSchemes(
                 ...item,
                 schemeId,
             },
-            icon: dataIsScheme(item) ? "pi pi-folder" : "pi pi-tag",
-            iconLabel: dataIsScheme(item)
-                ? iconLabels.scheme
-                : iconLabels.concept,
+            icon: getItemIcon(item),
+            iconLabel: getIconLabel(item, iconLabels),
         };
     }
 
@@ -140,7 +158,6 @@ export function treeFromSchemes(
         return { node, shouldHideSiblings };
     }
 
-    // If this scheme is focused, immediately process and return it.
     const focalScheme = schemes.find(
         (schemeItem) => schemeItem.id === focusedOccurrenceKey,
     );
@@ -155,7 +172,6 @@ export function treeFromSchemes(
         ];
     }
 
-    // Otherwise, process schemes until a focused node is found.
     const reshapedSchemes = [];
     for (const scheme of schemes) {
         const { node, shouldHideSiblings } = processItem(
@@ -254,6 +270,46 @@ export function extractDescriptors(
     return schemeDescriptor;
 }
 
+export function getAutonym(code: string, fallback: string): string {
+    try {
+        const name = new Intl.DisplayNames([code], { type: "language" }).of(
+            code,
+        );
+        if (name) {
+            return name;
+        }
+    } catch {
+        // Intl.DisplayNames may not support every code — fall through.
+    }
+    return fallback;
+}
+
+export function getStatementText(
+    statements: SchemeStatement[],
+    preferredLanguageCode: string,
+    systemLanguageCode: string,
+): string {
+    if (!statements.length) return "";
+
+    function rankLanguage(lang?: string): number {
+        if (lang === preferredLanguageCode) return 2;
+        if (lang === systemLanguageCode) return 1;
+        return 0;
+    }
+
+    const best = statements.reduce((bestMatch, current) => {
+        const currentLang =
+            current.aliased_data?.statement_language?.display_value?.toLowerCase();
+        const bestLang =
+            bestMatch.aliased_data?.statement_language?.display_value?.toLowerCase();
+        return rankLanguage(currentLang) > rankLanguage(bestLang)
+            ? current
+            : bestMatch;
+    });
+
+    return best.aliased_data?.statement_content?.display_value ?? "";
+}
+
 export async function createOrUpdateConcept(
     formData: Record<string, unknown>,
     graphSlug: string,
@@ -265,6 +321,11 @@ export async function createOrUpdateConcept(
     tileId?: string,
 ): Promise<string> {
     if (!resourceInstanceId) {
+        const blankConceptTypeTile = (await fetchTileData(
+            graphSlug,
+            CONCEPT_TYPE_NODE_ALIAS,
+        )) as unknown as ConceptType;
+
         const isTop = scheme === parent;
 
         const aliased_data = {
@@ -272,6 +333,7 @@ export async function createOrUpdateConcept(
             part_of_scheme: {
                 aliased_data: { part_of_scheme: scheme },
             },
+            type: { aliased_data: blankConceptTypeTile.aliased_data },
         };
 
         if (isTop) {
@@ -310,4 +372,31 @@ export async function createOrUpdateConcept(
 
         return tile.tileid;
     }
+}
+
+export function getIconLabel(
+    item: Concept | Scheme,
+    iconLabels: IconLabels,
+): string {
+    if (dataIsScheme(item)) {
+        return iconLabels.scheme;
+    }
+
+    if ((item as Concept).guide_term) {
+        return iconLabels.guideTerm;
+    }
+
+    return iconLabels.concept;
+}
+
+// Advanced Search helpers
+
+let nextConditionId = Date.now();
+
+/**
+ * Generate a unique ID for search conditions and groups.
+ * Shared between AdvancedSearch page and FacetGroup component.
+ */
+export function generateConditionId(): string {
+    return `cond-${nextConditionId++}`;
 }

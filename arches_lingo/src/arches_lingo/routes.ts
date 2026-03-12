@@ -1,13 +1,4 @@
 export const routes = [
-    // {
-    //     path: "/",
-    //     name: "root",
-    //     component: () => import("@/arches_lingo/pages/HomePage.vue"),
-    //     meta: {
-    //         shouldShowNavigation: true,
-    //         requiresAuthentication: true,
-    //     },
-    // },
     {
         path: "/login/:next?",
         name: "login",
@@ -18,21 +9,30 @@ export const routes = [
         },
     },
     {
+        path: "/",
+        name: "dashboard",
+        component: () => import("@/arches_lingo/pages/HomePage.vue"),
+        meta: {
+            shouldShowNavigation: true,
+            requiresAuthentication: false,
+        },
+    },
+    {
+        path: "/schemes",
+        name: "schemes",
+        component: () => import("@/arches_lingo/pages/SchemeList.vue"),
+        meta: {
+            shouldShowNavigation: true,
+            requiresAuthentication: false,
+        },
+    },
+    {
         path: "/advanced-search",
         name: "advanced-search",
         component: () => import("@/arches_lingo/pages/AdvancedSearch.vue"),
         meta: {
             shouldShowNavigation: true,
-            requiresAuthentication: true,
-        },
-    },
-    {
-        path: "/",
-        name: "schemes",
-        component: () => import("@/arches_lingo/pages/SchemeList.vue"),
-        meta: {
-            shouldShowNavigation: true,
-            requiresAuthentication: true,
+            requiresAuthentication: false,
         },
     },
     {
@@ -41,7 +41,7 @@ export const routes = [
         component: () => import("@/arches_lingo/pages/ConceptPage.vue"),
         meta: {
             shouldShowNavigation: true,
-            requiresAuthentication: true,
+            requiresAuthentication: false,
         },
     },
     {
@@ -50,17 +50,28 @@ export const routes = [
         component: () => import("@/arches_lingo/pages/SchemePage.vue"),
         meta: {
             shouldShowNavigation: true,
+            requiresAuthentication: false,
+        },
+    },
+    {
+        path: "/profile",
+        name: "profile",
+        component: () => import("@/arches_lingo/pages/UserProfilePage.vue"),
+        meta: {
+            shouldShowNavigation: true,
             requiresAuthentication: true,
         },
     },
 ];
 
 export const routeNames = {
-    root: "schemes",
+    root: "dashboard",
     login: "login",
     search: "search",
     advancedSearch: "advanced-search",
+    dashboard: "dashboard",
     schemes: "schemes",
     concept: "concept",
     scheme: "scheme",
+    profile: "profile",
 };

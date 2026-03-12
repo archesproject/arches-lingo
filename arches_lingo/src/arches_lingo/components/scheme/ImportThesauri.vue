@@ -10,7 +10,11 @@ import RadioButton from "primevue/radiobutton";
 import ProgressSpinner from "primevue/progressspinner";
 
 import { importThesaurus } from "@/arches_lingo/api.ts";
-import { DEFAULT_ERROR_TOAST_LIFE, ERROR } from "@/arches_lingo/constants.ts";
+import {
+    DEFAULT_TOAST_LIFE,
+    DEFAULT_ERROR_TOAST_LIFE,
+    ERROR,
+} from "@/arches_lingo/constants.ts";
 
 const { $gettext } = useGettext();
 const toast = useToast();
@@ -60,6 +64,14 @@ async function submit() {
     loading.value = true;
     await importThesaurus(file.value, overwriteOption.value)
         .then(() => {
+            toast.add({
+                severity: "success",
+                life: DEFAULT_TOAST_LIFE,
+                summary: $gettext("Import initiated"),
+                detail: $gettext(
+                    "Your import is being processed. You will be notified when it is complete.",
+                ),
+            });
             emit("imported");
         })
         .catch((error: Error) => {

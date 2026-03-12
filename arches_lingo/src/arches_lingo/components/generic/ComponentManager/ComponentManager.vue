@@ -1,7 +1,16 @@
 <script setup lang="ts">
-import { computed, markRaw, onMounted, provide, ref, watch } from "vue";
-import { useRoute } from "vue-router";
+import {
+    computed,
+    markRaw,
+    nextTick,
+    onMounted,
+    provide,
+    ref,
+    watch,
+} from "vue";
 
+import { useRoute } from "vue-router";
+import { useConfirm } from "primevue/useconfirm";
 import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
 
@@ -11,13 +20,23 @@ import SplitterPanel from "primevue/splitterpanel";
 import ComponentEditor from "@/arches_lingo/components/generic/ComponentManager/components/ComponentEditor.vue";
 
 import {
+    createResourceStore,
+    provideResourceStore,
+} from "@/arches_lingo/composables/useResourceStore.ts";
+
+import {
     CLOSED,
     EDIT,
     MAXIMIZED,
     MINIMIZED,
     NEW,
     VIEW,
+    openPanelComponentKey,
 } from "@/arches_lingo/constants.ts";
+import {
+    useEditorDirtyState,
+    unsavedChangesConfirmOptions,
+} from "@/arches_lingo/composables/useEditorDirtyState.ts";
 
 import { fetchResourceInstanceLifecycleState } from "@/arches_lingo/api.ts";
 import { DEFAULT_ERROR_TOAST_LIFE, ERROR } from "@/arches_lingo/constants.ts";
@@ -34,9 +53,11 @@ const props = defineProps<{
     }[];
 }>();
 
-const { $gettext } = useGettext();
 const toast = useToast();
 const route = useRoute();
+const confirm = useConfirm();
+const { $gettext } = useGettext();
+const { isEditorDirty } = useEditorDirtyState();
 
 const processedComponentData = ref(
     props.componentData.map(function (item) {
@@ -52,6 +73,7 @@ const editorKey = ref(0);
 const editorTileId = ref();
 const editorState = ref(CLOSED);
 const selectedComponentDatum = ref();
+const isFormEditor = ref(true);
 
 const resourceInstanceLifecycleState = ref<object | undefined>(undefined);
 const isFetchingResourceInstanceLifecycleState = ref(false);
@@ -63,6 +85,10 @@ const resourceInstanceId = computed<string | undefined>(() => {
 
     return undefined;
 });
+
+const graphSlug = props.componentData[0]?.graphSlug;
+const resourceStore = createResourceStore(graphSlug, resourceInstanceId.value);
+provideResourceStore(resourceStore);
 
 const firstComponentDatum = computed(() => {
     return processedComponentData.value[0];
@@ -79,13 +105,44 @@ watch(resourceInstanceId, async () => {
     await loadResourceInstanceLifecycleState();
 });
 
-window.addEventListener("keyup", (event) => {
-    if (event.key === "Escape") {
-        if (editorState.value !== CLOSED) {
-            closeEditor();
+const isConfirmDialogOpen = ref(false);
+
+window.addEventListener(
+    "keydown",
+    (event) => {
+        if (event.key === "Escape" && editorState.value !== CLOSED) {
+            if (isConfirmDialogOpen.value) {
+                return;
+            }
+            if (isEditorDirty.value) {
+                // Stop propagation so PrimeVue's document-level keydown handler
+                // doesn't immediately close the dialog we're about to open.
+                event.stopPropagation();
+                confirmDiscard(closeEditor);
+            } else {
+                closeEditor();
+            }
         }
-    }
-});
+    },
+    true,
+);
+
+function confirmDiscard(callback: () => void) {
+    isConfirmDialogOpen.value = true;
+
+    confirm.require({
+        ...unsavedChangesConfirmOptions($gettext, () => {
+            isConfirmDialogOpen.value = false;
+            callback();
+        }),
+        reject: () => {
+            isConfirmDialogOpen.value = false;
+        },
+        onHide: () => {
+            isConfirmDialogOpen.value = false;
+        },
+    });
+}
 
 provide("openEditor", openEditor);
 provide("closeEditor", closeEditor);
@@ -99,7 +156,7 @@ function closeEditor() {
     editorTileId.value = null;
 }
 
-function openEditor(componentName: string, tileId?: string) {
+function doOpenEditor(componentName: string, tileId?: string) {
     const componentDatum = processedComponentData.value.find(
         (componentDatum) => {
             return componentDatum.componentName === componentName;
@@ -113,6 +170,19 @@ function openEditor(componentName: string, tileId?: string) {
     editorKey.value += 1;
     editorTileId.value = tileId;
     editorState.value = MINIMIZED;
+    isFormEditor.value = true;
+
+    nextTick(() => {
+        isEditorDirty.value = false;
+    });
+}
+
+function openEditor(componentName: string, tileId?: string) {
+    if (editorState.value !== CLOSED && isEditorDirty.value) {
+        confirmDiscard(() => doOpenEditor(componentName, tileId));
+    } else {
+        doOpenEditor(componentName, tileId);
+    }
 }
 
 function maximizeEditor() {
@@ -126,11 +196,16 @@ function minimizeEditor() {
 function updateAfterComponentDeletion(componentName: string, tileId: string) {
     if (tileId === editorTileId.value) {
         closeEditor();
-        openEditor(componentName);
+        doOpenEditor(componentName);
     }
 }
 
-function refreshReportSection(componentName: string) {
+async function refreshReportSection(componentName: string) {
+    if (componentName === "all") {
+        await resourceStore.refreshResource();
+        return;
+    }
+
     const componentDatum = processedComponentData.value.find(
         (componentDatum) => {
             return componentDatum.componentName === componentName;
@@ -138,6 +213,11 @@ function refreshReportSection(componentName: string) {
     );
 
     if (componentDatum) {
+        if (componentDatum.nodegroupAlias) {
+            await resourceStore.refreshNodegroup(componentDatum.nodegroupAlias);
+        } else {
+            await resourceStore.refreshResource();
+        }
         componentDatum.key += 1;
     }
 }
@@ -170,6 +250,29 @@ async function loadResourceInstanceLifecycleState() {
         isFetchingResourceInstanceLifecycleState.value = false;
     }
 }
+
+function openPanelComponent(
+    component: Component,
+    componentName: string,
+    sectionTitle: string,
+    graphSlug: string = "",
+    nodegroupAlias: string = "",
+) {
+    selectedComponentDatum.value = {
+        component: markRaw(component),
+        componentName,
+        sectionTitle,
+        graphSlug,
+        nodegroupAlias,
+        key: 0,
+    };
+    editorKey.value += 1;
+    editorTileId.value = null;
+    editorState.value = MINIMIZED;
+    isFormEditor.value = false;
+}
+
+provide(openPanelComponentKey, openPanelComponent);
 </script>
 
 <template>
@@ -221,6 +324,8 @@ async function loadResourceInstanceLifecycleState() {
                     :key="editorKey"
                     class="splitter-panel-content"
                     :is-editor-maximized="editorState === MAXIMIZED"
+                    :is-form-editor="isFormEditor"
+                    :header-title="selectedComponentDatum.sectionTitle"
                     @maximize="maximizeEditor"
                     @minimize="minimizeEditor"
                     @close="closeEditor"
@@ -289,6 +394,8 @@ async function loadResourceInstanceLifecycleState() {
                     :key="editorKey"
                     class="splitter-panel-content"
                     :is-editor-maximized="editorState === MAXIMIZED"
+                    :is-form-editor="isFormEditor"
+                    :header-title="selectedComponentDatum.sectionTitle"
                     @maximize="maximizeEditor"
                     @minimize="minimizeEditor"
                     @close="closeEditor"

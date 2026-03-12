@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { onMounted, ref, watch } from "vue";
 
 import Message from "primevue/message";
 import Skeleton from "primevue/skeleton";
@@ -10,7 +10,7 @@ import ConceptImagesViewer from "@/arches_lingo/components/concept/ConceptImages
 import { EDIT, VIEW } from "@/arches_lingo/constants.ts";
 
 import { fetchTileData } from "@/arches_component_lab/generics/GenericCard/api.ts";
-import { fetchLingoResourcePartial } from "@/arches_lingo/api.ts";
+import { useResourceStore } from "@/arches_lingo/composables/useResourceStore.ts";
 
 import type { ConceptImages, DataComponentMode } from "@/arches_lingo/types.ts";
 
@@ -30,34 +30,36 @@ const configurationError = ref();
 
 const shouldCreateNewTile = Boolean(props.mode === EDIT && !props.tileId);
 
+const store = useResourceStore();
+
+watch(
+    [() => store.resource.value, () => store.error.value],
+    ([resource, storeError]) => {
+        if (storeError) {
+            configurationError.value = storeError;
+            isLoading.value = false;
+            return;
+        }
+        if (resource && props.resourceInstanceId && !shouldCreateNewTile) {
+            tileData.value = resource.aliased_data?.[props.nodegroupAlias];
+            isLoading.value = false;
+        }
+    },
+    { immediate: true },
+);
+
 onMounted(async () => {
-    if (
-        props.resourceInstanceId &&
-        (props.mode === VIEW || !shouldCreateNewTile)
-    ) {
-        const sectionValue = await getSectionValue();
-        tileData.value = sectionValue.aliased_data[props.nodegroupAlias];
-    } else if (shouldCreateNewTile) {
+    if (shouldCreateNewTile) {
         const blankTileData = await fetchTileData(
             props.graphSlug,
             props.nodegroupAlias,
         );
         tileData.value = blankTileData as unknown as ConceptImages;
+        isLoading.value = false;
+    } else if (!props.resourceInstanceId) {
+        isLoading.value = false;
     }
-    isLoading.value = false;
 });
-
-async function getSectionValue() {
-    try {
-        return await fetchLingoResourcePartial(
-            props.graphSlug,
-            props.resourceInstanceId as string,
-            props.nodegroupAlias,
-        );
-    } catch (error) {
-        configurationError.value = error;
-    }
-}
 </script>
 
 <template>

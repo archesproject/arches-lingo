@@ -17,6 +17,7 @@ import {
     ERROR,
     SECONDARY,
 } from "@/arches_lingo/constants.ts";
+import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 
 import type { MetaStringText } from "@/arches_lingo/types.ts";
 
@@ -41,6 +42,7 @@ const refreshReportSection = inject<(componentName: string) => void>(
     "refreshReportSection",
 );
 const refreshSchemeHierarchy = inject<() => void>("refreshSchemeHierarchy");
+const { isEditor } = useUserStore();
 
 const resourceInstanceLifecycleState = inject<{
     value:
@@ -114,7 +116,8 @@ async function deleteSectionValue(tileId: string) {
             />
             <Column
                 :header="props.metaStringText.name"
-                sortable
+                :field="props.metaStringText.sortFields?.name"
+                :sortable="Boolean(props.metaStringText.sortFields?.name)"
             >
                 <template #body="slotProps">
                     <slot
@@ -125,7 +128,8 @@ async function deleteSectionValue(tileId: string) {
             </Column>
             <Column
                 :header="props.metaStringText.type"
-                sortable
+                :field="props.metaStringText.sortFields?.type"
+                :sortable="Boolean(props.metaStringText.sortFields?.type)"
             >
                 <template #body="slotProps">
                     <slot
@@ -137,7 +141,8 @@ async function deleteSectionValue(tileId: string) {
             <Column
                 v-if="props.metaStringText?.language"
                 :header="props.metaStringText.language"
-                sortable
+                :field="props.metaStringText.sortFields?.language"
+                :sortable="Boolean(props.metaStringText.sortFields?.language)"
             >
                 <template #body="slotProps">
                     <slot
@@ -146,8 +151,7 @@ async function deleteSectionValue(tileId: string) {
                     ></slot>
                 </template>
             </Column>
-
-            <Column>
+            <Column v-if="isEditor">
                 <template #body="slotProps">
                     <div class="controls">
                         <Button

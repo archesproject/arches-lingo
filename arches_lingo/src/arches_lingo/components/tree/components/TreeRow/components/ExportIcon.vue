@@ -57,7 +57,7 @@ function openExportDialog() {
     <ExportThesauri
         v-if="showExportDialog"
         :key="exportDialogKey"
-        :resource-id="node.key"
+        :resource-id="node.data.id"
         :resource-name="node.label"
     />
 </template>

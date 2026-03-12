@@ -1,16 +1,20 @@
 from django.conf import settings
-from django.utils.translation import gettext as _
+from django.views.generic import View
 
 from arches.app.utils.response import JSONResponse
-from arches.app.views.api import APIBase
+
+from arches_lingo.permissions import anonymous_access_allowed
 
 
-class PublicServerAddressView(APIBase):
+class AppSettingsView(View):
+    """Returns application-level settings."""
+
     def get(self, request):
-        public_server_address = getattr(settings, "PUBLIC_SERVER_ADDRESS", None)
-
         return JSONResponse(
             {
-                "PUBLIC_SERVER_ADDRESS": public_server_address,
+                "allow_anonymous_access": anonymous_access_allowed(),
+                "public_server_address": getattr(
+                    settings, "PUBLIC_SERVER_ADDRESS", None
+                ),
             }
         )
