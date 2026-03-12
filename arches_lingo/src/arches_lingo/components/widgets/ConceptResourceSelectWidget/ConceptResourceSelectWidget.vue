@@ -24,6 +24,7 @@ const {
     graphSlug,
     mode,
     nodeAlias,
+    resourceInstanceId,
     aliasedNodeData,
     shouldShowLabel = true,
     isDirty = false,
@@ -34,6 +35,7 @@ const {
     isDirty?: boolean;
     mode: WidgetMode;
     nodeAlias: string;
+    resourceInstanceId?: string;
     aliasedNodeData: ResourceInstanceListValue | null | undefined;
     shouldShowLabel?: boolean;
     scheme?: string;
@@ -133,6 +135,7 @@ async function getConceptHierarchy(conceptIds: string[]) {
             <ConceptResourceSelectWidgetEditor
                 :value="searchResult"
                 :node-alias="nodeAlias"
+                :resource-instance-id="resourceInstanceId"
                 :graph-slug="graphSlug"
                 :scheme="scheme"
                 :scheme-selectable="schemeSelectable"

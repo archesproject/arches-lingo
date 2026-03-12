@@ -366,13 +366,13 @@ export const fetchConceptResources = async (
     items: number,
     page: number,
     schemeResource: string = "",
-    exclude: boolean = false,
+    exclude: string[] = [],
     conceptIds: string[] = [],
 ) => {
     const params = new URLSearchParams({
         term: searchTerm,
         scheme: schemeResource,
-        exclude: exclude.toString(),
+        exclude: exclude?.join(","),
         items: items.toString(),
         page: page.toString(),
         concepts: conceptIds.join(","),
