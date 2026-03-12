@@ -74,7 +74,7 @@ WORKDIR ${APP_ROOT}
 COPY docker/nginx/default.conf /etc/nginx/sites-available/default
 
 #TODO: remove pymemcacheD from this image
-RUN source ${WEB_ROOT}/ENV/bin/activate && pip install . && ${WEB_ROOT}/ENV/bin/python3 manage.py check && pip install gunicorn pymemcache boto boto3 django-storages psutil
+RUN source ${WEB_ROOT}/ENV/bin/activate && pip install . && pip install gunicorn pymemcache boto boto3 django-storages psutil && export ARCHES_DJANGO_DEBUG=True && ${WEB_ROOT}/ENV/bin/python3 manage.py check 
 
 #TODO: remove rabbitmq from this image
 RUN <<EOF
