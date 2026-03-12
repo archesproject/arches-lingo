@@ -673,7 +673,7 @@
                                 "string_template": ""
                             },
                             "name": {
-                                "nodegroup_id": "5bc65fd2-bb18-11ea-85a6-3af9d3b32b71",
+                                "nodegroup_id": "de76dbdc-11e5-11ef-9493-0a58a9feac02",
                                 "string_template": "<name_content>"
                             }
                         },
@@ -682,7 +682,7 @@
                             "string_template": ""
                         },
                         "name": {
-                            "nodegroup_id": "5bc65fd2-bb18-11ea-85a6-3af9d3b32b71",
+                            "nodegroup_id": "de76dbdc-11e5-11ef-9493-0a58a9feac02",
                             "string_template": "<name_content>"
                         },
                         "triggering_nodegroups": []
