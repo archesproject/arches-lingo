@@ -11,6 +11,7 @@ import ConceptResourceSelectWidgetViewer from "@/arches_lingo/components/widgets
 
 import { fetchCardXNodeXWidgetData } from "@/arches_component_lab/generics/GenericWidget/api.ts";
 import { fetchConceptResources } from "@/arches_lingo/api.ts";
+import { useWidgetReadyTracker } from "@/arches_lingo/composables/useWidgetReadyTracker.ts";
 import { EDIT, VIEW } from "@/arches_component_lab/widgets/constants.ts";
 
 import type {
@@ -52,6 +53,12 @@ const emit = defineEmits([
 const isLoading = ref(true);
 const cardXNodeXWidgetData = ref<CardXNodeXWidgetData>();
 const configurationError = ref();
+
+const widgetReadyTracker = useWidgetReadyTracker();
+if (widgetReadyTracker) {
+    widgetReadyTracker.register();
+}
+
 const conceptIds = aliasedNodeData?.details.map(
     (resource: { display_value: string; resource_id: string }) =>
         resource.resource_id,
@@ -87,6 +94,7 @@ watchEffect(async () => {
         configurationError.value = error;
     } finally {
         isLoading.value = false;
+        widgetReadyTracker?.reportReady();
     }
 });
 

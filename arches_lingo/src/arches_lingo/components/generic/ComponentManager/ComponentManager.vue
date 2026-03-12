@@ -110,6 +110,12 @@ watch(resourceInstanceId, async () => {
 
 const isConfirmDialogOpen = ref(false);
 
+onMounted(() => {
+    if (route.params.id === NEW) {
+        initNewLabel();
+    }
+});
+
 window.addEventListener(
     "keydown",
     (event) => {
@@ -161,6 +167,7 @@ function closeEditor() {
 }
 
 function doOpenEditor(componentName: string, tileId?: string) {
+    isEditorLoading.value = true;
     const componentDatum = processedComponentData.value.find(
         (componentDatum) => {
             return componentDatum.componentName === componentName;
@@ -190,6 +197,7 @@ function openEditor(componentName: string, tileId?: string) {
 }
 
 function updateEditorLoadingState(isLoading: boolean) {
+    console.log("component manager received editor loading state:", isLoading);
     isEditorLoading.value = isLoading;
 }
 
@@ -286,12 +294,6 @@ function initNewLabel() {
     );
     openEditor(labelComponent[0].componentName);
 }
-
-onMounted(() => {
-    if (route.params.id === NEW) {
-        initNewLabel();
-    }
-});
 
 provide("openEditor", openEditor);
 provide("closeEditor", closeEditor);

@@ -30,7 +30,7 @@ import {
     addDigitalObjectToConceptImageCollection,
     createDigitalObject,
 } from "@/arches_lingo/components/concept/ConceptImages/components/utils.ts";
-import { incrementLoadedWidgets } from "@/arches_component_lab/generics/GenericWidget/utils.ts";
+import { provideWidgetReadyTracker } from "@/arches_lingo/composables/useWidgetReadyTracker.ts";
 
 import {
     fetchLingoResource,
@@ -89,12 +89,10 @@ const onSaveSettled = inject<() => void>("onSaveSettled");
 const formRef = useTemplateRef("form");
 const isLoading = ref(true);
 
-const TOTAL_WIDGETS = 3;
-const widgetsLoadedCount = ref(0) as Ref<number>;
-const handleWidgetLoading = incrementLoadedWidgets(widgetsLoadedCount);
+const { allWidgetsReady } = provideWidgetReadyTracker();
 
-watch(widgetsLoadedCount, (count) => {
-    emit("update:isLoading", count !== TOTAL_WIDGETS);
+watch(allWidgetsReady, (ready) => {
+    emit("update:isLoading", !ready);
 });
 
 onMounted(() => {
@@ -353,7 +351,6 @@ function resetForm() {
                             .name_content
                     "
                     class="widget-container column"
-                    @update:is-loading="handleWidgetLoading($event)"
                 />
                 <GenericWidget
                     node-alias="statement_content"
@@ -364,7 +361,6 @@ function resetForm() {
                             ?.aliased_data.statement_content
                     "
                     class="widget-container column"
-                    @update:is-loading="handleWidgetLoading($event)"
                 />
                 <GenericWidget
                     node-alias="content"
@@ -376,7 +372,6 @@ function resetForm() {
                     :mode="EDIT"
                     :should-show-label="false"
                     class="widget-container column"
-                    @update:is-loading="handleWidgetLoading($event)"
                 />
             </Form>
         </div>
