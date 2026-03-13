@@ -9,7 +9,7 @@ import Skeleton from "primevue/skeleton";
 import Message from "primevue/message";
 
 import { fetchSchemeTopConcepts } from "@/arches_lingo/api.ts";
-import { getConceptIcon } from "@/arches_lingo/utils.ts";
+import { getConceptIcon, sortItemsByLabel } from "@/arches_lingo/utils.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 import { routeNames } from "@/arches_lingo/routes.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
@@ -35,21 +35,13 @@ const topConcepts = ref<Concept[]>([]);
 const isLoading = ref(true);
 const fetchError = ref<Error>();
 
-const sortedTopConcepts = computed(() => {
-    return [...topConcepts.value].sort((conceptA, conceptB) => {
-        const labelA = getItemLabel(
-            conceptA,
-            selectedLanguage.value.code,
-            systemLanguage.value.code,
-        ).value.toLowerCase();
-        const labelB = getItemLabel(
-            conceptB,
-            selectedLanguage.value.code,
-            systemLanguage.value.code,
-        ).value.toLowerCase();
-        return labelA.localeCompare(labelB);
-    });
-});
+const sortedTopConcepts = computed(() =>
+    sortItemsByLabel(
+        topConcepts.value,
+        selectedLanguage.value.code,
+        systemLanguage.value.code,
+    ),
+);
 
 onMounted(async () => {
     if (!props.resourceInstanceId) {
