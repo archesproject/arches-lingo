@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useGettext } from "vue3-gettext";
 import { RouterLink } from "vue-router";
 import { useToast } from "primevue/usetoast";
@@ -9,7 +9,7 @@ import Skeleton from "primevue/skeleton";
 import Message from "primevue/message";
 
 import { fetchSchemeTopConcepts } from "@/arches_lingo/api.ts";
-import { getConceptIcon } from "@/arches_lingo/utils.ts";
+import { getConceptIcon, sortItemsByLabel } from "@/arches_lingo/utils.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 import { routeNames } from "@/arches_lingo/routes.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
@@ -34,6 +34,14 @@ const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
 const topConcepts = ref<Concept[]>([]);
 const isLoading = ref(true);
 const fetchError = ref<Error>();
+
+const sortedTopConcepts = computed(() =>
+    sortItemsByLabel(
+        topConcepts.value,
+        selectedLanguage.value.code,
+        systemLanguage.value.code,
+    ),
+);
 
 onMounted(async () => {
     if (!props.resourceInstanceId) {
@@ -85,7 +93,7 @@ onMounted(async () => {
             class="top-concepts-list"
         >
             <RouterLink
-                v-for="concept in topConcepts"
+                v-for="concept in sortedTopConcepts"
                 :key="concept.id"
                 :to="{
                     name: routeNames.concept,

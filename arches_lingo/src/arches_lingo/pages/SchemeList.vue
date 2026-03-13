@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
 import { useGettext } from "vue3-gettext";
+import { storeToRefs } from "pinia";
 
 import Skeleton from "primevue/skeleton";
 
@@ -13,6 +14,8 @@ import {
 import SchemeCard from "@/arches_lingo/components/scheme/SchemeCard.vue";
 import { fetchConcepts, fetchLingoResources } from "@/arches_lingo/api.ts";
 import { NEW } from "@/arches_lingo/constants.ts";
+import { sortItemsByLabel } from "@/arches_lingo/utils.ts";
+import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 
 import type { Scheme, SchemeStatement } from "@/arches_lingo/types";
@@ -20,6 +23,7 @@ import type { Scheme, SchemeStatement } from "@/arches_lingo/types";
 const toast = useToast();
 const { $gettext } = useGettext();
 const { isEditor } = useUserStore();
+const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
 
 const isLoading = ref(true);
 const schemes = ref<Scheme[]>([]);
@@ -65,7 +69,13 @@ async function fetchSchemes() {
 }
 
 const schemeEntries = computed(() =>
-    schemes.value.map((scheme) => ({
+    sortItemsByLabel(
+        schemes.value,
+        selectedLanguage.value.code,
+        systemLanguage.value.code,
+        true,
+        NEW,
+    ).map((scheme) => ({
         scheme,
         statements: statementsMap.value.get(scheme.id),
     })),
