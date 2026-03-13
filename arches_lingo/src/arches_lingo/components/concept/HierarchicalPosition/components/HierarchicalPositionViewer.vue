@@ -86,19 +86,11 @@ function confirmDelete(hierarchy: SearchResultHierarchy) {
 async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
     try {
         if (props.data.length !== 1) {
-            if (hierarchy.searchResults.length > 2) {
-                await deleteLingoTile(
-                    props.graphSlug,
-                    props.nodegroupAlias,
-                    hierarchy.tileid!,
-                );
-            } else if (hierarchy.searchResults.length === 2) {
-                await deleteLingoTile(
-                    props.graphSlug,
-                    "top_concept_of",
-                    hierarchy.tileid!,
-                );
-            }
+            await deleteLingoTile(
+                props.graphSlug,
+                props.nodegroupAlias,
+                hierarchy.tileid!,
+            );
 
             refreshSchemeHierarchy!();
         } else {
@@ -210,7 +202,6 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
                                 icon="pi pi-file-edit"
                                 variant="text"
                                 :aria-label="$gettext('edit')"
-                                :disabled="hierarchy.isTopConcept"
                                 size="small"
                                 @click="
                                     openEditor!(componentName, hierarchy.tileid)
