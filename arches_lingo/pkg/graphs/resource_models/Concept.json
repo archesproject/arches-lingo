@@ -3800,7 +3800,9 @@
                 },
                 {
                     "config": {
-                        "triggering_nodegroups": ["807ef412-0ebe-11ef-9493-0a58a9feac02"]
+                        "triggering_nodegroups": [
+                            "807ef412-0ebe-11ef-9493-0a58a9feac02"
+                        ]
                     },
                     "function_id": "dc0a3a78-f8a3-4472-b77d-7301d6718a36",
                     "graph_id": "bf73e576-4888-11ee-8a8d-11afefc4bff7",
@@ -5764,7 +5766,7 @@
                 {
                     "alias": "uri_content",
                     "config": {},
-                    "datatype": "string",
+                    "datatype": "non-localized-string",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,

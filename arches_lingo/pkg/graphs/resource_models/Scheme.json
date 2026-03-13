@@ -2546,7 +2546,7 @@
                 {
                     "alias": "uri_content",
                     "config": {},
-                    "datatype": "string",
+                    "datatype": "non-localized-string",
                     "description": null,
                     "exportable": false,
                     "fieldname": null,

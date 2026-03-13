@@ -197,10 +197,7 @@ class UpdateConceptLifecycleStatesForScheme(BaseFunction):
                 resourceinstance_id=scheme_resource_instance_id,
             )
 
-        tile.data[str(uri_content_node.nodeid)] = {
-            "url": scheme_uri_value,
-            "url_label": None,
-        }
+        tile.data[str(uri_content_node.nodeid)] = scheme_uri_value
         tile.save(request=request, index=False)
 
     def _handle_draft_concepts_promoted_to_active(
@@ -379,10 +376,7 @@ class UpdateConceptLifecycleStatesForScheme(BaseFunction):
 
             if existing_uri_tile is None:
                 new_tile_data = copy.deepcopy(default_uri_tile_data)
-                new_tile_data[uri_content_node_id_string] = {
-                    "url": desired_uri_value,
-                    "url_label": None,
-                }
+                new_tile_data[uri_content_node_id_string] = desired_uri_value
                 uri_tiles_to_create.append(
                     TileModel(
                         resourceinstance_id=concept_resource_instance_id,
@@ -395,17 +389,12 @@ class UpdateConceptLifecycleStatesForScheme(BaseFunction):
                 )
                 continue
 
-            existing_uri_value = (
-                existing_uri_tile.data.get(uri_content_node_id_string) or {}
-            ).get("url")
+            existing_uri_value = existing_uri_tile.data.get(uri_content_node_id_string)
 
             if existing_uri_value == desired_uri_value:
                 continue
 
-            existing_uri_tile.data[uri_content_node_id_string] = {
-                "url": desired_uri_value,
-                "url_label": None,
-            }
+            existing_uri_tile.data[uri_content_node_id_string] = desired_uri_value
             uri_tiles_to_update.append(existing_uri_tile)
 
         if uri_tiles_to_create:

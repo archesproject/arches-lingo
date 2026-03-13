@@ -391,13 +391,12 @@ class AdvancedSearchEvaluator:
         if not value and match_mode != "exists":
             return list(self._all_concept_ids())
 
-        # URL datatype stores as {"url": "...", "url_label": "..."}
         filters = Q(nodegroup_id=URI_NODEGROUP)
         if match_mode == "exists":
             filters &= ~Q(**{f"data__{URI_CONTENT_NODE}": None})
         else:
             lookup = self.MATCH_MODE_LOOKUPS.get(match_mode, "icontains")
-            filters &= Q(**{f"data__{URI_CONTENT_NODE}__url__{lookup}": value})
+            filters &= Q(**{f"data__{URI_CONTENT_NODE}__{lookup}": value})
 
         return list(
             TileModel.objects.filter(filters)
