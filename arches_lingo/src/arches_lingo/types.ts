@@ -9,7 +9,6 @@ import type { Label } from "@/arches_controlled_lists/types.ts";
 import type { StringValue } from "@/arches_component_lab/datatypes/string/types.ts";
 import type { ResourceInstanceListValue } from "@/arches_component_lab/datatypes/resource-instance-list/types.ts";
 import type { FileListValue } from "@/arches_component_lab/datatypes/file-list/types.ts";
-import type { URL } from "@/arches_component_lab/datatypes/url/types";
 
 export interface User {
     first_name: string;
@@ -328,7 +327,7 @@ export interface ConceptClassificationStatusAliases extends AliasedData {
 }
 
 export interface ConceptHeaderData {
-    uri?: URL;
+    uri?: string;
     name?: string;
     descriptor?: ResourceDescriptor;
     principalUser?: number | string;
@@ -341,7 +340,7 @@ export interface ConceptHeaderData {
 }
 
 export interface SchemeHeader {
-    uri?: URL;
+    uri?: string;
     name?: string;
     descriptor?: ResourceDescriptor;
     principalUser?: number | string;

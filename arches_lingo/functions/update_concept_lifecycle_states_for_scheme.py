@@ -15,11 +15,14 @@ from arches.app.models.models import (
 )
 from arches.app.models.tile import Tile
 
+from arches_controlled_lists.models import ListItem
 from arches_lingo.models import ConceptIdentifierCounter, SchemeURITemplate
 from arches_lingo.utils.concept_identifier_allocator import (
     allocate_concept_identifier_number,
 )
 
+
+IDENTIFIER_TYPE_LIST_ITEM_ID = uuid.UUID("d8ba08f9-b265-4288-9412-857c77fe2581")
 
 DRAFT_RESOURCE_INSTANCE_LIFECYCLE_STATE_ID = uuid.UUID(
     "0e7f8c6d-1f7b-4c2a-9a0c-2b9e0d6c8f11"
@@ -161,8 +164,8 @@ class UpdateConceptLifecycleStatesForScheme(BaseFunction):
         if "<scheme_identifier>" not in template:
             return
 
-        scheme_uri_value = template.replace(
-            "<scheme_identifier>", scheme_identifier_value
+        scheme_uri_value = (
+            template.split("<scheme_identifier>")[0] + scheme_identifier_value
         )
 
         scheme_graph_id = (
@@ -228,6 +231,15 @@ class UpdateConceptLifecycleStatesForScheme(BaseFunction):
             alias="identifier_content",
         )
 
+        identifier_type_node = Node.objects.only("nodeid").get(
+            graph_id=concept_graph_id,
+            alias="identifier_type",
+        )
+
+        identifier_type_list_item = ListItem.objects.get(
+            pk=IDENTIFIER_TYPE_LIST_ITEM_ID
+        )
+
         allocated_start_number = allocate_concept_identifier_number(
             scheme_resource_instance_id=scheme_resource_instance_id,
             count=len(draft_concept_resource_instance_ids),
@@ -245,7 +257,7 @@ class UpdateConceptLifecycleStatesForScheme(BaseFunction):
                     resourceid_id=concept_resource_instance_id,
                     identifier=concept_identifier_value,
                     source="arches-lingo",
-                    identifier_type="",
+                    identifier_type="identifier",
                 )
             )
 
@@ -267,6 +279,9 @@ class UpdateConceptLifecycleStatesForScheme(BaseFunction):
             concept_tile_data[str(identifier_content_node.nodeid)] = (
                 concept_identifier_value
             )
+            concept_tile_data[str(identifier_type_node.nodeid)] = [
+                identifier_type_list_item.build_tile_value()
+            ]
 
             concept_tiles_to_create.append(
                 TileModel(

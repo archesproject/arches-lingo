@@ -355,7 +355,7 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
     // TODO: get human-readable user name from resource endpoint
     const principalUser = "Anonymous";
 
-    const uri = aliased_data?.uri?.aliased_data?.uri_content?.node_value.url;
+    const uri = aliased_data?.uri?.aliased_data?.uri_content?.node_value;
     const partOfScheme =
         aliased_data?.part_of_scheme?.aliased_data?.part_of_scheme;
     const parentConcepts = (aliased_data?.classification_status || []).flatMap(
@@ -490,11 +490,11 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                         }}</span>
                         <Button
                             v-if="data?.uri"
-                            :label="data?.uri?.url_label || data?.uri?.url"
+                            :label="data?.uri"
                             class="concept-uri"
                             variant="link"
                             as="a"
-                            :href="data?.uri?.url"
+                            :href="data?.uri"
                             target="_blank"
                             rel="noopener"
                             :disabled="!data?.uri"

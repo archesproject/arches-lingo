@@ -191,7 +191,7 @@ const defaultSchemeURITemplate = computed(() => {
 
 const schemeUri = computed(() => {
     return scheme.value?.aliased_data?.uri?.aliased_data?.uri_content
-        ?.node_value.url;
+        ?.node_value;
 });
 
 onMounted(async () => {
