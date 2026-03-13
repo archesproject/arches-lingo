@@ -1134,7 +1134,7 @@
                 {
                     "alias": "type",
                     "config": {
-                        "controlledList": "e3abbba4-1ba9-4904-9093-b4d31af54e6e",
+                        "controlledList": "0e2eeb72-66bf-4376-b75b-c058cd4ec571",
                         "multiValue": true
                     },
                     "datatype": "reference",

@@ -129,6 +129,7 @@ class ConceptResourceView(ConceptTreeView):
     def get(self, request):
         scheme = request.GET.get("scheme", None)
         exclude = request.GET.get("exclude", None)
+        excluded_ids = exclude.split(",") if exclude else None
         term = request.GET.get("term", None)
         page_number = int(request.GET.get("page", 1))
         items_per_page = int(request.GET.get("items", 25))
@@ -146,6 +147,8 @@ class ConceptResourceView(ConceptTreeView):
                 concept_query = concept_query.filter(
                     appellative_status_ascribed_name_content__icontains=term
                 )
+            if exclude:
+                concept_query = concept_query.exclude(pk__in=excluded_ids)
 
             concept_ids = concept_query.order_by("pk").values_list("pk", flat=True)
 

@@ -2,9 +2,23 @@
 <rdf:RDF
   xmlns:skos="http://www.w3.org/2004/02/skos/core#"
   xmlns:dcterms="http://purl.org/dc/terms/"
+  xmlns:ns1="https://"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 >
-  <skos:ConceptScheme rdf:about="http://localhost:8000/e3abbba4-1ba9-4904-9093-b4d31af54e6e">
-    <dcterms:title>Source Types</dcterms:title>
-  </skos:ConceptScheme>
+  <skos:Concept rdf:about="https://lingo.dev.fargeo.com0fc08649-2c56-4555-84b7-a8682395c674">
+    <ns1:lingo.dev.fargeo.comsortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</ns1:lingo.dev.fargeo.comsortorder>
+    <skos:inScheme>
+      <skos:ConceptScheme rdf:about="https://lingo.dev.fargeo.com0e2eeb72-66bf-4376-b75b-c058cd4ec571">
+        <dcterms:title>Source Types</dcterms:title>
+      </skos:ConceptScheme>
+    </skos:inScheme>
+    <dcterms:identifier>https://lingo.dev.fargeo.com/plugins/controlled-list-manager/item/0fc08649-2c56-4555-84b7-a8682395c674</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">Book</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="https://lingo.dev.fargeo.com95a4be3d-106e-406e-96ce-de7aba6cefa8">
+    <skos:inScheme rdf:resource="https://lingo.dev.fargeo.com0e2eeb72-66bf-4376-b75b-c058cd4ec571"/>
+    <dcterms:identifier>https://lingo.dev.fargeo.com/plugins/controlled-list-manager/item/95a4be3d-106e-406e-96ce-de7aba6cefa8</dcterms:identifier>
+    <ns1:lingo.dev.fargeo.comsortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</ns1:lingo.dev.fargeo.comsortorder>
+    <skos:prefLabel xml:lang="en">Article</skos:prefLabel>
+  </skos:Concept>
 </rdf:RDF>

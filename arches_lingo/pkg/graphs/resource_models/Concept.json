@@ -714,7 +714,7 @@
                             {
                                 "labels": [
                                     {
-                                        "id": "24559510-c6c6-4558-b411-7cd127642657",
+                                        "id": "14751cb1-f7af-45d9-b32a-59d150bdac0f",
                                         "language_id": "en",
                                         "list_item_id": "14751cb1-f7af-45d9-b32a-59d150bdac0f",
                                         "value": "warrant assertion event",
@@ -925,7 +925,7 @@
                             {
                                 "labels": [
                                     {
-                                        "id": "24559510-c6c6-4558-b411-7cd127642657",
+                                        "id": "14751cb1-f7af-45d9-b32a-59d150bdac0f",
                                         "language_id": "en",
                                         "list_item_id": "14751cb1-f7af-45d9-b32a-59d150bdac0f",
                                         "value": "warrant assertion event",
@@ -1240,7 +1240,7 @@
                             {
                                 "labels": [
                                     {
-                                        "id": "24559510-c6c6-4558-b411-7cd127642657",
+                                        "id": "14751cb1-f7af-45d9-b32a-59d150bdac0f",
                                         "language_id": "en",
                                         "list_item_id": "14751cb1-f7af-45d9-b32a-59d150bdac0f",
                                         "value": "warrant assertion event",
@@ -1334,7 +1334,7 @@
                             {
                                 "labels": [
                                     {
-                                        "id": "24559510-c6c6-4558-b411-7cd127642657",
+                                        "id": "14751cb1-f7af-45d9-b32a-59d150bdac0f",
                                         "language_id": "en",
                                         "list_item_id": "14751cb1-f7af-45d9-b32a-59d150bdac0f",
                                         "value": "warrant assertion event",
@@ -1492,7 +1492,7 @@
                             {
                                 "labels": [
                                     {
-                                        "id": "24559510-c6c6-4558-b411-7cd127642657",
+                                        "id": "14751cb1-f7af-45d9-b32a-59d150bdac0f",
                                         "language_id": "en",
                                         "list_item_id": "14751cb1-f7af-45d9-b32a-59d150bdac0f",
                                         "value": "warrant assertion event",
@@ -1762,7 +1762,7 @@
                             {
                                 "labels": [
                                     {
-                                        "id": "24559510-c6c6-4558-b411-7cd127642657",
+                                        "id": "14751cb1-f7af-45d9-b32a-59d150bdac0f",
                                         "language_id": "en",
                                         "list_item_id": "14751cb1-f7af-45d9-b32a-59d150bdac0f",
                                         "value": "warrant assertion event",
@@ -2740,7 +2740,7 @@
                     "edgeid": "18c93a62-42c8-4d59-b7f1-13ead45f103e",
                     "graph_id": "bf73e576-4888-11ee-8a8d-11afefc4bff7",
                     "name": null,
-                    "ontologyproperty": "https://takin.solutions/ontologies/CRMaaa/ZP11i_is_classificatory_subject_of",
+                    "ontologyproperty": "https://ontology.swissartresearch.net/aaao/ZP11i_is_classificatory_subject_of",
                     "rangenode_id": "f3f7bbea-0eb9-11ef-93db-0a58a9feac02",
                     "source_identifier_id": null
                 },
@@ -2750,7 +2750,7 @@
                     "edgeid": "1a59b086-3bfd-4054-aa60-e6566dfca7d7",
                     "graph_id": "bf73e576-4888-11ee-8a8d-11afefc4bff7",
                     "name": null,
-                    "ontologyproperty": "https://takin.solutions/ontologies/CRMaaa/ZP13_ascribes_classification_relation",
+                    "ontologyproperty": "https://ontology.swissartresearch.net/aaao/ZP13_ascribes_classification_relation",
                     "rangenode_id": "70c66e14-0eba-11ef-93db-0a58a9feac02",
                     "source_identifier_id": null
                 },
@@ -2880,7 +2880,7 @@
                     "edgeid": "4cfae1f0-0ed7-11ef-9493-0a58a9feac02",
                     "graph_id": "bf73e576-4888-11ee-8a8d-11afefc4bff7",
                     "name": null,
-                    "ontologyproperty": "https://takin.solutions/ontologies/CRMaaa/ZP45_ascribes_similarity_relation",
+                    "ontologyproperty": "https://ontology.swissartresearch.net/aaao/ZP45_ascribes_similarity_relation",
                     "rangenode_id": "4cfaad48-0ed7-11ef-9493-0a58a9feac02",
                     "source_identifier_id": null
                 },
@@ -2890,7 +2890,7 @@
                     "edgeid": "4cfae290-0ed7-11ef-9493-0a58a9feac02",
                     "graph_id": "bf73e576-4888-11ee-8a8d-11afefc4bff7",
                     "name": null,
-                    "ontologyproperty": "https://takin.solutions/ontologies/CRMaaa/ZP44_ascribes_similarity_target",
+                    "ontologyproperty": "https://ontology.swissartresearch.net/aaao/ZP44_ascribes_similarity_target",
                     "rangenode_id": "4cfaae24-0ed7-11ef-9493-0a58a9feac02",
                     "source_identifier_id": null
                 },
@@ -2910,7 +2910,7 @@
                     "edgeid": "4cfae3da-0ed7-11ef-9493-0a58a9feac02",
                     "graph_id": "bf73e576-4888-11ee-8a8d-11afefc4bff7",
                     "name": null,
-                    "ontologyproperty": "https://takin.solutions/ontologies/CRMaaa/ZP45_ascribes_similarity_relation",
+                    "ontologyproperty": "https://ontology.swissartresearch.net/aaao/ZP45_ascribes_similarity_relation",
                     "rangenode_id": "4cfab1da-0ed7-11ef-9493-0a58a9feac02",
                     "source_identifier_id": null
                 },
@@ -3010,7 +3010,7 @@
                     "edgeid": "5e9fc574-ae0d-45ad-a53d-4fe7b8b04323",
                     "graph_id": "bf73e576-4888-11ee-8a8d-11afefc4bff7",
                     "name": null,
-                    "ontologyproperty": "https://takin.solutions/ontologies/CRMaaa/ZP44_ascribes_similarity_target",
+                    "ontologyproperty": "https://ontology.swissartresearch.net/aaao/ZP44_ascribes_similarity_target",
                     "rangenode_id": "9a33fc0e-0ebe-11ef-9493-0a58a9feac02",
                     "source_identifier_id": null
                 },
@@ -3090,7 +3090,7 @@
                     "edgeid": "84514029-6ae0-471d-9d7e-28b719d926ed",
                     "graph_id": "bf73e576-4888-11ee-8a8d-11afefc4bff7",
                     "name": null,
-                    "ontologyproperty": "https://takin.solutions/ontologies/CRMaaa/ZP45_ascribes_similarity_relation",
+                    "ontologyproperty": "https://ontology.swissartresearch.net/aaao/ZP45_ascribes_similarity_relation",
                     "rangenode_id": "556e34f6-0ed5-11ef-9493-0a58a9feac02",
                     "source_identifier_id": null
                 },
@@ -3140,7 +3140,7 @@
                     "edgeid": "9a10ba73-2740-46f2-8a38-73b32f2b0e64",
                     "graph_id": "bf73e576-4888-11ee-8a8d-11afefc4bff7",
                     "name": null,
-                    "ontologyproperty": "https://takin.solutions/ontologies/CRMaaa/ZP44i_is_similarity_target_ascribed_by",
+                    "ontologyproperty": "https://ontology.swissartresearch.net/aaao/ZP44i_is_similarity_target_ascribed_by",
                     "rangenode_id": "807ef412-0ebe-11ef-9493-0a58a9feac02",
                     "source_identifier_id": null
                 },
@@ -3160,7 +3160,7 @@
                     "edgeid": "a2356421-5486-43e4-8a3d-39f6816ba967",
                     "graph_id": "bf73e576-4888-11ee-8a8d-11afefc4bff7",
                     "name": null,
-                    "ontologyproperty": "https://takin.solutions/ontologies/CRMaaa/ZP5i_is_appellative_subject_of",
+                    "ontologyproperty": "https://ontology.swissartresearch.net/aaao/ZP5i_is_appellative_subject_of",
                     "rangenode_id": "ab9fee9c-0eb6-11ef-93db-0a58a9feac02",
                     "source_identifier_id": null
                 },
@@ -3200,7 +3200,7 @@
                     "edgeid": "a8a34432-2385-4cf3-80a7-a43acfa33d49",
                     "graph_id": "bf73e576-4888-11ee-8a8d-11afefc4bff7",
                     "name": null,
-                    "ontologyproperty": "https://takin.solutions/ontologies/CRMaaa/ZP43i_is_similarity_subject_of",
+                    "ontologyproperty": "https://ontology.swissartresearch.net/aaao/ZP43i_is_similarity_subject_of",
                     "rangenode_id": "4cfaaa64-0ed7-11ef-9493-0a58a9feac02",
                     "source_identifier_id": null
                 },
@@ -3640,7 +3640,7 @@
                     "edgeid": "c730f88b-716b-431c-be96-0cf75d326ed9",
                     "graph_id": "bf73e576-4888-11ee-8a8d-11afefc4bff7",
                     "name": null,
-                    "ontologyproperty": "https://takin.solutions/ontologies/CRMaaa/ZP12_ascribes_classification",
+                    "ontologyproperty": "https://ontology.swissartresearch.net/aaao/ZP12_ascribes_classification",
                     "rangenode_id": "0b531a82-0eba-11ef-93db-0a58a9feac02",
                     "source_identifier_id": null
                 },
@@ -3650,7 +3650,7 @@
                     "edgeid": "ce6e78c9-74b7-4642-8d07-8956d67c9bb4",
                     "graph_id": "bf73e576-4888-11ee-8a8d-11afefc4bff7",
                     "name": null,
-                    "ontologyproperty": "https://takin.solutions/ontologies/CRMaaa/ZP45_ascribes_similarity_relation",
+                    "ontologyproperty": "https://ontology.swissartresearch.net/aaao/ZP45_ascribes_similarity_relation",
                     "rangenode_id": "799ba8ce-0ed3-11ef-9493-0a58a9feac02",
                     "source_identifier_id": null
                 },
@@ -3730,7 +3730,7 @@
                     "edgeid": "e06ef0fd-0585-47e3-a095-3765d27a6b63",
                     "graph_id": "bf73e576-4888-11ee-8a8d-11afefc4bff7",
                     "name": null,
-                    "ontologyproperty": "https://takin.solutions/ontologies/CRMaaa/ZP7_ascribes_appellative_relation",
+                    "ontologyproperty": "https://ontology.swissartresearch.net/aaao/ZP7_ascribes_appellative_relation",
                     "rangenode_id": "1ddffab4-0eb8-11ef-93db-0a58a9feac02",
                     "source_identifier_id": null
                 },
@@ -3760,7 +3760,7 @@
                     "edgeid": "f2a01932-58f7-42e2-96ee-9b4630993701",
                     "graph_id": "bf73e576-4888-11ee-8a8d-11afefc4bff7",
                     "name": null,
-                    "ontologyproperty": "https://takin.solutions/ontologies/CRMaaa/ZP6_ascribes_appellation",
+                    "ontologyproperty": "https://ontology.swissartresearch.net/aaao/ZP6_ascribes_appellation",
                     "rangenode_id": "0ef45a00-0eb7-11ef-93db-0a58a9feac02",
                     "source_identifier_id": null
                 },
@@ -4066,7 +4066,7 @@
                     "nodegroup_id": "f3f7bbea-0eb9-11ef-93db-0a58a9feac02",
                     "nodeid": "0b531a82-0eba-11ef-93db-0a58a9feac02",
                     "ontologyclass": "http://www.cidoc-crm.org/cidoc-crm/E55_Type",
-                    "parentproperty": "https://takin.solutions/ontologies/CRMaaa/ZP12_ascribes_classification",
+                    "parentproperty": "https://ontology.swissartresearch.net/aaao/ZP12_ascribes_classification",
                     "sortorder": 0,
                     "source_identifier_id": null,
                     "sourcebranchpublication_id": null
@@ -4091,7 +4091,7 @@
                     "nodegroup_id": "ab9fee9c-0eb6-11ef-93db-0a58a9feac02",
                     "nodeid": "0ef45a00-0eb7-11ef-93db-0a58a9feac02",
                     "ontologyclass": "http://www.cidoc-crm.org/cidoc-crm/E33_E41_Linguistic_Appellation",
-                    "parentproperty": "https://takin.solutions/ontologies/CRMaaa/ZP6_ascribes_appellation",
+                    "parentproperty": "https://ontology.swissartresearch.net/aaao/ZP6_ascribes_appellation",
                     "sortorder": 0,
                     "source_identifier_id": null,
                     "sourcebranchpublication_id": null
@@ -4169,7 +4169,7 @@
                     "nodegroup_id": "ab9fee9c-0eb6-11ef-93db-0a58a9feac02",
                     "nodeid": "1ddffab4-0eb8-11ef-93db-0a58a9feac02",
                     "ontologyclass": "http://www.cidoc-crm.org/cidoc-crm/E55_Type",
-                    "parentproperty": "https://takin.solutions/ontologies/CRMaaa/ZP7_ascribes_appellative_relation",
+                    "parentproperty": "https://ontology.swissartresearch.net/aaao/ZP7_ascribes_appellative_relation",
                     "sortorder": 0,
                     "source_identifier_id": null,
                     "sourcebranchpublication_id": null
@@ -4268,8 +4268,8 @@
                     "name": "match_status",
                     "nodegroup_id": "4cfaaa64-0ed7-11ef-9493-0a58a9feac02",
                     "nodeid": "4cfaaa64-0ed7-11ef-9493-0a58a9feac02",
-                    "ontologyclass": "https://takin.solutions/ontologies/CRMaaa/ZE14_Similarity_Status",
-                    "parentproperty": "https://takin.solutions/ontologies/CRMaaa/ZP43i_is_similarity_subject_of",
+                    "ontologyclass": "https://ontology.swissartresearch.net/aaao/ZE14_Similarity_Status",
+                    "parentproperty": "https://ontology.swissartresearch.net/aaao/ZP43i_is_similarity_subject_of",
                     "sortorder": 0,
                     "source_identifier_id": null,
                     "sourcebranchpublication_id": null
@@ -4295,7 +4295,7 @@
                     "nodegroup_id": "4cfaaa64-0ed7-11ef-9493-0a58a9feac02",
                     "nodeid": "4cfaad48-0ed7-11ef-9493-0a58a9feac02",
                     "ontologyclass": "http://www.cidoc-crm.org/cidoc-crm/E55_Type",
-                    "parentproperty": "https://takin.solutions/ontologies/CRMaaa/ZP45_ascribes_similarity_relation",
+                    "parentproperty": "https://ontology.swissartresearch.net/aaao/ZP45_ascribes_similarity_relation",
                     "sortorder": 0,
                     "source_identifier_id": null,
                     "sourcebranchpublication_id": null
@@ -4320,7 +4320,7 @@
                     "nodegroup_id": "4cfaaa64-0ed7-11ef-9493-0a58a9feac02",
                     "nodeid": "4cfaae24-0ed7-11ef-9493-0a58a9feac02",
                     "ontologyclass": "http://www.cidoc-crm.org/cidoc-crm/E55_Type",
-                    "parentproperty": "https://takin.solutions/ontologies/CRMaaa/ZP44_ascribes_similarity_target",
+                    "parentproperty": "https://ontology.swissartresearch.net/aaao/ZP44_ascribes_similarity_target",
                     "sortorder": 0,
                     "source_identifier_id": null,
                     "sourcebranchpublication_id": null
@@ -4483,7 +4483,7 @@
                     "nodegroup_id": "4cfaaa64-0ed7-11ef-9493-0a58a9feac02",
                     "nodeid": "4cfab1da-0ed7-11ef-9493-0a58a9feac02",
                     "ontologyclass": "http://www.cidoc-crm.org/cidoc-crm/E55_Type",
-                    "parentproperty": "https://takin.solutions/ontologies/CRMaaa/ZP45_ascribes_similarity_relation",
+                    "parentproperty": "https://ontology.swissartresearch.net/aaao/ZP45_ascribes_similarity_relation",
                     "sortorder": 0,
                     "source_identifier_id": null,
                     "sourcebranchpublication_id": null
@@ -4653,7 +4653,7 @@
                     "nodegroup_id": "807ef412-0ebe-11ef-9493-0a58a9feac02",
                     "nodeid": "556e34f6-0ed5-11ef-9493-0a58a9feac02",
                     "ontologyclass": "http://www.cidoc-crm.org/cidoc-crm/E55_Type",
-                    "parentproperty": "https://takin.solutions/ontologies/CRMaaa/ZP45_ascribes_similarity_relation",
+                    "parentproperty": "https://ontology.swissartresearch.net/aaao/ZP45_ascribes_similarity_relation",
                     "sortorder": 0,
                     "source_identifier_id": null,
                     "sourcebranchpublication_id": null
@@ -4807,7 +4807,7 @@
                     "nodegroup_id": "f3f7bbea-0eb9-11ef-93db-0a58a9feac02",
                     "nodeid": "70c66e14-0eba-11ef-93db-0a58a9feac02",
                     "ontologyclass": "http://www.cidoc-crm.org/cidoc-crm/E55_Type",
-                    "parentproperty": "https://takin.solutions/ontologies/CRMaaa/ZP13_ascribes_classification_relation",
+                    "parentproperty": "https://ontology.swissartresearch.net/aaao/ZP13_ascribes_classification_relation",
                     "sortorder": 0,
                     "source_identifier_id": null,
                     "sourcebranchpublication_id": null
@@ -4910,7 +4910,7 @@
                     "nodegroup_id": "807ef412-0ebe-11ef-9493-0a58a9feac02",
                     "nodeid": "799ba8ce-0ed3-11ef-9493-0a58a9feac02",
                     "ontologyclass": "http://www.cidoc-crm.org/cidoc-crm/E55_Type",
-                    "parentproperty": "https://takin.solutions/ontologies/CRMaaa/ZP45_ascribes_similarity_relation",
+                    "parentproperty": "https://ontology.swissartresearch.net/aaao/ZP45_ascribes_similarity_relation",
                     "sortorder": 0,
                     "source_identifier_id": null,
                     "sourcebranchpublication_id": null
@@ -4960,8 +4960,8 @@
                     "name": "relation_status",
                     "nodegroup_id": "807ef412-0ebe-11ef-9493-0a58a9feac02",
                     "nodeid": "807ef412-0ebe-11ef-9493-0a58a9feac02",
-                    "ontologyclass": "https://takin.solutions/ontologies/CRMaaa/ZE14_Similarity_Status",
-                    "parentproperty": "https://takin.solutions/ontologies/CRMaaa/ZP44i_is_similarity_target_ascribed_by",
+                    "ontologyclass": "https://ontology.swissartresearch.net/aaao/ZE14_Similarity_Status",
+                    "parentproperty": "https://ontology.swissartresearch.net/aaao/ZP44i_is_similarity_target_ascribed_by",
                     "sortorder": 0,
                     "source_identifier_id": null,
                     "sourcebranchpublication_id": null
@@ -5171,7 +5171,7 @@
                     "nodegroup_id": "807ef412-0ebe-11ef-9493-0a58a9feac02",
                     "nodeid": "9a33fc0e-0ebe-11ef-9493-0a58a9feac02",
                     "ontologyclass": "http://www.cidoc-crm.org/cidoc-crm/E55_Type",
-                    "parentproperty": "https://takin.solutions/ontologies/CRMaaa/ZP44_ascribes_similarity_target",
+                    "parentproperty": "https://ontology.swissartresearch.net/aaao/ZP44_ascribes_similarity_target",
                     "sortorder": 0,
                     "source_identifier_id": null,
                     "sourcebranchpublication_id": null
@@ -5243,8 +5243,8 @@
                     "name": "appellative_status",
                     "nodegroup_id": "ab9fee9c-0eb6-11ef-93db-0a58a9feac02",
                     "nodeid": "ab9fee9c-0eb6-11ef-93db-0a58a9feac02",
-                    "ontologyclass": "https://takin.solutions/ontologies/CRMaaa/ZE2_Appellative_Status",
-                    "parentproperty": "https://takin.solutions/ontologies/CRMaaa/ZP5i_is_appellative_subject_of",
+                    "ontologyclass": "https://ontology.swissartresearch.net/aaao/ZE2_Appellative_Status",
+                    "parentproperty": "https://ontology.swissartresearch.net/aaao/ZP5i_is_appellative_subject_of",
                     "sortorder": 0,
                     "source_identifier_id": null,
                     "sourcebranchpublication_id": null
@@ -6787,8 +6787,8 @@
                     "name": "classification_status",
                     "nodegroup_id": "f3f7bbea-0eb9-11ef-93db-0a58a9feac02",
                     "nodeid": "f3f7bbea-0eb9-11ef-93db-0a58a9feac02",
-                    "ontologyclass": "https://takin.solutions/ontologies/CRMaaa/ZE4_Classificatory_Status",
-                    "parentproperty": "https://takin.solutions/ontologies/CRMaaa/ZP11i_is_classificatory_subject_of",
+                    "ontologyclass": "https://ontology.swissartresearch.net/aaao/ZE4_Classificatory_Status",
+                    "parentproperty": "https://ontology.swissartresearch.net/aaao/ZP11i_is_classificatory_subject_of",
                     "sortorder": 0,
                     "source_identifier_id": null,
                     "sourcebranchpublication_id": null

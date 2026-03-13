@@ -8,7 +8,6 @@ import Button from "primevue/button";
 import MultiSelect from "primevue/multiselect";
 
 import { fetchConceptResources } from "@/arches_lingo/api.ts";
-import { generateArchesURL } from "@/arches/utils/generate-arches-url.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 import { getParentLabels } from "@/arches_lingo/utils.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
@@ -25,8 +24,8 @@ const props = defineProps<{
     value: SearchResultItem[] | null | undefined;
     graphSlug: string;
     nodeAlias: string;
+    resourceInstanceId?: string;
     scheme?: string;
-    exclude?: boolean;
     schemeSelectable: boolean;
 }>();
 
@@ -84,7 +83,7 @@ async function getOptions(page: number, filterTerm?: string) {
             itemSize,
             page,
             props.scheme,
-            props.exclude,
+            props.resourceInstanceId ? [props.resourceInstanceId] : undefined,
         );
 
         parsedResponse.data.forEach((option: SearchResultItem) => {
@@ -241,34 +240,6 @@ function onUpdateModelValue(updatedValue: string[]) {
                 </div>
             </div>
             <div class="button-container">
-                <Button
-                    as="a"
-                    icon="pi pi-info-circle"
-                    target="_blank"
-                    variant="text"
-                    size="small"
-                    style="text-decoration: none"
-                    :href="
-                        generateArchesURL('arches:resource_report', {
-                            resourceid: slotProps.value,
-                        })
-                    "
-                    @click.stop
-                />
-                <Button
-                    as="a"
-                    icon="pi pi-pencil"
-                    target="_blank"
-                    variant="text"
-                    size="small"
-                    style="text-decoration: none"
-                    :href="
-                        generateArchesURL('arches:resource_editor', {
-                            resourceid: slotProps.value,
-                        })
-                    "
-                    @click.stop
-                />
                 <Button
                     icon="pi pi-times"
                     variant="text"

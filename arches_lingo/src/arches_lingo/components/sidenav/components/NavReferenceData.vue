@@ -18,16 +18,14 @@ const children = <SideNavMenuItem[]>[
         key: "contributors",
         label: $gettext("Contributors"),
         icon: "pi pi-user-edit",
-        route: { name: routeNames.root },
-        disabled: true,
+        route: { name: routeNames.contributors },
         showIconIfCollapsed: true,
     },
     {
         key: "sources",
         label: $gettext("Sources"),
         icon: "pi pi-bookmark-fill",
-        route: { name: routeNames.root },
-        disabled: true,
+        route: { name: routeNames.sources },
         showIconIfCollapsed: true,
     },
     {

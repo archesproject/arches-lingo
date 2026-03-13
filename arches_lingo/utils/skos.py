@@ -28,7 +28,6 @@ class SKOSReader(SKOSReader):
         self.schemes = []
         self.concepts = []
         self.relations = defaultdict(list)
-        self.languages_controlled_list = List.objects.get(name="Languages")
         self.prefLabel_valuetype = models.DValueType.objects.get(valuetype="prefLabel")
 
     def extract_concepts_from_skos_for_lingo_import(

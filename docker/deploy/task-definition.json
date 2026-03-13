@@ -71,6 +71,10 @@
                 {
                     "name": "ARCHES_MAIN_CACHE_LOCATION",
                     "value": "127.0.0.1:11211"
+                },
+                {
+                    "name": "CELERY_BROKER_URL",
+                    "value": "amqp://guest:guest@localhost"
                 }
             ],
             "healthCheck": {

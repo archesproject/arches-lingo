@@ -787,7 +787,7 @@
                             {
                                 "labels": [
                                     {
-                                        "id": "24559510-c6c6-4558-b411-7cd127642657",
+                                        "id": "14751cb1-f7af-45d9-b32a-59d150bdac0f",
                                         "language_id": "en",
                                         "list_item_id": "14751cb1-f7af-45d9-b32a-59d150bdac0f",
                                         "value": "warrant assertion event",
@@ -823,7 +823,7 @@
                             {
                                 "labels": [
                                     {
-                                        "id": "24559510-c6c6-4558-b411-7cd127642657",
+                                        "id": "14751cb1-f7af-45d9-b32a-59d150bdac0f",
                                         "language_id": "en",
                                         "list_item_id": "14751cb1-f7af-45d9-b32a-59d150bdac0f",
                                         "value": "warrant assertion event",
@@ -1073,7 +1073,7 @@
                     "edgeid": "03462c36-11e8-11ef-9493-0a58a9feac02",
                     "graph_id": "06903e8f-1a65-11ee-8f04-cd21e680a247",
                     "name": null,
-                    "ontologyproperty": "https://takin.solutions/ontologies/CRMaaa/ZP7_ascribes_appellative_relation",
+                    "ontologyproperty": "https://ontology.swissartresearch.net/aaao/ZP7_ascribes_appellative_relation",
                     "rangenode_id": "0345f216-11e8-11ef-9493-0a58a9feac02",
                     "source_identifier_id": null
                 },
@@ -1163,7 +1163,7 @@
                     "edgeid": "03463212-11e8-11ef-9493-0a58a9feac02",
                     "graph_id": "06903e8f-1a65-11ee-8f04-cd21e680a247",
                     "name": null,
-                    "ontologyproperty": "https://takin.solutions/ontologies/CRMaaa/ZP6_ascribes_appellation",
+                    "ontologyproperty": "https://ontology.swissartresearch.net/aaao/ZP6_ascribes_appellation",
                     "rangenode_id": "0345f2ac-11e8-11ef-9493-0a58a9feac02",
                     "source_identifier_id": null
                 },
@@ -1403,7 +1403,7 @@
                     "edgeid": "7392522a-8e3b-4333-b308-18f019a297d8",
                     "graph_id": "06903e8f-1a65-11ee-8f04-cd21e680a247",
                     "name": null,
-                    "ontologyproperty": "https://takin.solutions/ontologies/CRMaaa/ZP5i_is_appellative_subject_of",
+                    "ontologyproperty": "https://ontology.swissartresearch.net/aaao/ZP5i_is_appellative_subject_of",
                     "rangenode_id": "0345e87a-11e8-11ef-9493-0a58a9feac02",
                     "source_identifier_id": null
                 },
@@ -1572,8 +1572,8 @@
                     "name": "appellative_status",
                     "nodegroup_id": "0345e87a-11e8-11ef-9493-0a58a9feac02",
                     "nodeid": "0345e87a-11e8-11ef-9493-0a58a9feac02",
-                    "ontologyclass": "https://takin.solutions/ontologies/CRMaaa/ZE2_Appellative_Status",
-                    "parentproperty": "https://takin.solutions/ontologies/CRMaaa/ZP5i_is_appellative_subject_of",
+                    "ontologyclass": "https://ontology.swissartresearch.net/aaao/ZE2_Appellative_Status",
+                    "parentproperty": "https://ontology.swissartresearch.net/aaao/ZP5i_is_appellative_subject_of",
                     "sortorder": 0,
                     "source_identifier_id": null,
                     "sourcebranchpublication_id": null
@@ -1871,7 +1871,7 @@
                     "nodegroup_id": "0345e87a-11e8-11ef-9493-0a58a9feac02",
                     "nodeid": "0345f216-11e8-11ef-9493-0a58a9feac02",
                     "ontologyclass": "http://www.cidoc-crm.org/cidoc-crm/E55_Type",
-                    "parentproperty": "https://takin.solutions/ontologies/CRMaaa/ZP7_ascribes_appellative_relation",
+                    "parentproperty": "https://ontology.swissartresearch.net/aaao/ZP7_ascribes_appellative_relation",
                     "sortorder": 0,
                     "source_identifier_id": null,
                     "sourcebranchpublication_id": null
@@ -1896,7 +1896,7 @@
                     "nodegroup_id": "0345e87a-11e8-11ef-9493-0a58a9feac02",
                     "nodeid": "0345f2ac-11e8-11ef-9493-0a58a9feac02",
                     "ontologyclass": "http://www.cidoc-crm.org/cidoc-crm/E33_E41_Linguistic_Appellation",
-                    "parentproperty": "https://takin.solutions/ontologies/CRMaaa/ZP6_ascribes_appellation",
+                    "parentproperty": "https://ontology.swissartresearch.net/aaao/ZP6_ascribes_appellation",
                     "sortorder": 0,
                     "source_identifier_id": null,
                     "sourcebranchpublication_id": null

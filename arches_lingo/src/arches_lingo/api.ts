@@ -13,6 +13,7 @@ import type {
     ConceptSetItem,
     DigitalObjectInstance,
     EditLogEntry,
+    PaginatedResourceListResponse,
     SavedSearchItem,
     Scheme,
     SchemeInstance,
@@ -161,6 +162,46 @@ export const fetchLingoResourcesBatch = async (
     return parsed;
 };
 
+export const fetchSources = async (
+    search: string = "",
+    limit: number = 25,
+    offset: number = 0,
+): Promise<PaginatedResourceListResponse> => {
+    const params = new URLSearchParams({
+        limit: String(limit),
+        offset: String(offset),
+    });
+    if (search) {
+        params.set("search", search);
+    }
+    const response = await fetch(
+        `${generateArchesURL("arches_lingo:api-lingo-sources")}?${params}`,
+    );
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
+export const fetchContributors = async (
+    search: string = "",
+    limit: number = 25,
+    offset: number = 0,
+): Promise<PaginatedResourceListResponse> => {
+    const params = new URLSearchParams({
+        limit: String(limit),
+        offset: String(offset),
+    });
+    if (search) {
+        params.set("search", search);
+    }
+    const response = await fetch(
+        `${generateArchesURL("arches_lingo:api-lingo-contributors")}?${params}`,
+    );
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
 export const fetchLingoResourcePartial = async (
     graphSlug: string,
     resourceId: string,
@@ -242,6 +283,19 @@ export const deleteLingoResource = async (
     } else {
         return true;
     }
+};
+
+export const fetchResourceReferenceCount = async (
+    resourceId: string,
+): Promise<number> => {
+    const url = generateArchesURL(
+        "arches_lingo:api-lingo-resource-reference-count",
+        { resourceid: resourceId },
+    );
+    const response = await fetch(url);
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed.count;
 };
 
 export const upsertLingoTile = async (
@@ -366,13 +420,13 @@ export const fetchConceptResources = async (
     items: number,
     page: number,
     schemeResource: string = "",
-    exclude: boolean = false,
+    exclude: string[] = [],
     conceptIds: string[] = [],
 ) => {
     const params = new URLSearchParams({
         term: searchTerm,
         scheme: schemeResource,
-        exclude: exclude.toString(),
+        exclude: exclude?.join(","),
         items: items.toString(),
         page: page.toString(),
         concepts: conceptIds.join(","),
