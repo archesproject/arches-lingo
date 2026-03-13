@@ -24,8 +24,8 @@ const props = defineProps<{
     value: SearchResultItem[] | null | undefined;
     graphSlug: string;
     nodeAlias: string;
+    resourceInstanceId?: string;
     scheme?: string;
-    exclude?: boolean;
     schemeSelectable: boolean;
 }>();
 
@@ -83,7 +83,7 @@ async function getOptions(page: number, filterTerm?: string) {
             itemSize,
             page,
             props.scheme,
-            props.exclude,
+            props.resourceInstanceId ? [props.resourceInstanceId] : undefined,
         );
 
         parsedResponse.data.forEach((option: SearchResultItem) => {

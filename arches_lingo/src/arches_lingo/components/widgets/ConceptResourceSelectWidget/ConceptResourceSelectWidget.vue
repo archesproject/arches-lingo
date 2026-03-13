@@ -24,21 +24,21 @@ const {
     graphSlug,
     mode,
     nodeAlias,
+    resourceInstanceId,
     aliasedNodeData,
     shouldShowLabel = true,
     isDirty = false,
     scheme = "",
-    exclude = false,
     schemeSelectable = false,
 } = defineProps<{
     graphSlug: string;
     isDirty?: boolean;
     mode: WidgetMode;
     nodeAlias: string;
+    resourceInstanceId?: string;
     aliasedNodeData: ResourceInstanceListValue | null | undefined;
     shouldShowLabel?: boolean;
     scheme?: string;
-    exclude?: boolean | false;
     schemeSelectable?: boolean | false;
 }>();
 
@@ -135,9 +135,9 @@ async function getConceptHierarchy(conceptIds: string[]) {
             <ConceptResourceSelectWidgetEditor
                 :value="searchResult"
                 :node-alias="nodeAlias"
+                :resource-instance-id="resourceInstanceId"
                 :graph-slug="graphSlug"
                 :scheme="scheme"
-                :exclude="exclude"
                 :scheme-selectable="schemeSelectable"
                 @update:value="onUpdateValue($event)"
             />

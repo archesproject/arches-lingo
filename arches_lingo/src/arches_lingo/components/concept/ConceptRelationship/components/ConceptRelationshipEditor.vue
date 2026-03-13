@@ -33,7 +33,6 @@ const props = defineProps<{
     resourceInstanceId: string | undefined;
     tileId?: string;
     scheme?: string;
-    exclude?: boolean;
 }>();
 
 const route = useRoute();
@@ -140,12 +139,12 @@ async function save(e: FormSubmitEvent) {
                 <ConceptResourceSelectWidget
                     :graph-slug="props.graphSlug"
                     node-alias="relation_status_ascribed_comparate"
+                    :resource-instance-id="props.resourceInstanceId"
                     :aliased-node-data="
                         props.tileData?.aliased_data
                             .relation_status_ascribed_comparate
                     "
                     :scheme="props.scheme"
-                    :exclude="props.exclude"
                     :mode="EDIT"
                 />
                 <GenericWidget
