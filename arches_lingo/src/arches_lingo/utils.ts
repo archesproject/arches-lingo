@@ -48,6 +48,34 @@ export function getItemIcon(item: Concept | Scheme): string {
     return getConceptIcon(item as Concept);
 }
 
+export function sortItemsByLabel<T extends Concept | Scheme>(
+    items: T[],
+    selectedLanguageCode: string,
+    systemLanguageCode: string,
+    sortAscending: boolean = true,
+    pinnedFirstId?: string,
+): T[] {
+    return [...items].sort((itemA, itemB) => {
+        if (pinnedFirstId !== undefined) {
+            if (itemA.id === pinnedFirstId) return -1;
+            if (itemB.id === pinnedFirstId) return 1;
+        }
+        const labelA = getItemLabel(
+            itemA,
+            selectedLanguageCode,
+            systemLanguageCode,
+        ).value.toLowerCase();
+        const labelB = getItemLabel(
+            itemB,
+            selectedLanguageCode,
+            systemLanguageCode,
+        ).value.toLowerCase();
+        return sortAscending
+            ? labelA.localeCompare(labelB)
+            : labelB.localeCompare(labelA);
+    });
+}
+
 export function navigateToSchemeOrConcept(
     router: Router,
     value: Concept | Scheme | typeof NEW_CONCEPT,
@@ -123,23 +151,13 @@ export function treeFromSchemes(
         schemeId: string,
         pathIds: string[],
     ): NodeAndParentInstruction {
-        const sortedChildren = [...children].sort((conceptA, conceptB) => {
-            if (conceptA.id === NEW) return -1;
-            if (conceptB.id === NEW) return 1;
-            const labelA = getItemLabel(
-                conceptA,
-                selectedLanguage.code,
-                systemLanguage.code,
-            ).value.toLowerCase();
-            const labelB = getItemLabel(
-                conceptB,
-                selectedLanguage.code,
-                systemLanguage.code,
-            ).value.toLowerCase();
-            return sortAscending
-                ? labelA.localeCompare(labelB)
-                : labelB.localeCompare(labelA);
-        });
+        const sortedChildren = sortItemsByLabel(
+            children,
+            selectedLanguage.code,
+            systemLanguage.code,
+            sortAscending,
+            NEW,
+        );
 
         const nodesAndInstructions = sortedChildren.map((child) =>
             processItem(child, child.narrower, schemeId, [
@@ -192,8 +210,15 @@ export function treeFromSchemes(
         ];
     }
 
+    const sortedSchemes = sortItemsByLabel(
+        schemes,
+        selectedLanguage.code,
+        systemLanguage.code,
+        sortAscending,
+    );
+
     const reshapedSchemes = [];
-    for (const scheme of schemes) {
+    for (const scheme of sortedSchemes) {
         const { node, shouldHideSiblings } = processItem(
             scheme,
             scheme.top_concepts,
