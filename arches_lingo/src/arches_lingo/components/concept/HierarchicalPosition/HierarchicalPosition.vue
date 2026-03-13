@@ -37,7 +37,7 @@ const fetchError = ref();
 const hierarchicalData = ref<SearchResultHierarchy[]>([]);
 const schemeId = ref<string>();
 const tileData = ref<ConceptClassificationStatus[]>();
-const topConceptOfTileId = ref<string>();
+const isTopConcept = ref(false);
 
 const shouldCreateNewTile = Boolean(props.mode === EDIT && !props.tileId);
 
@@ -62,10 +62,17 @@ watch(
         positionInitialized = true;
 
         try {
-            // Read classification_status and top_concept_of from the store
+            const topConceptOfTiles =
+                resource.aliased_data?.top_concept_of ?? [];
+            isTopConcept.value = topConceptOfTiles.length > 0;
+
+            // Top concepts should not show this section
+            if (isTopConcept.value) {
+                isLoading.value = false;
+                return;
+            }
+
             tileData.value = resource.aliased_data?.[props.nodegroupAlias];
-            topConceptOfTileId.value =
-                resource.aliased_data?.top_concept_of?.[0]?.tileid;
 
             // Still need the search endpoint for hierarchy path data
             const currentPosition = await getHierarchicalData([
@@ -97,9 +104,6 @@ watch(
                     });
                     if (parentConceptTile) {
                         datum.tileid = parentConceptTile.tileid;
-                    } else if (topConceptOfTileId.value) {
-                        datum.tileid = topConceptOfTileId.value;
-                        datum.isTopConcept = true;
                     }
                 }
             }
@@ -166,7 +170,7 @@ async function getHierarchicalData(conceptIds: string[]) {
     >
         {{ fetchError.message }}
     </Message>
-    <template v-else>
+    <template v-else-if="!isTopConcept">
         <HierarchicalPositionViewer
             v-if="mode === VIEW"
             :component-name="props.componentName"
