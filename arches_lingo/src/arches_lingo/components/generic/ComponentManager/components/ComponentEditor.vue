@@ -2,7 +2,6 @@
 import {
     computed,
     nextTick,
-    onMounted,
     onUnmounted,
     provide,
     ref,
@@ -23,17 +22,19 @@ import {
 
 const props = defineProps<{
     isEditorMaximized: boolean;
+    isEditorLoading: boolean;
     isFormEditor: boolean;
     headerTitle: string;
 }>();
+
+const emit = defineEmits([MAXIMIZE, MINIMIZE, CLOSE]);
 
 const { $gettext } = useGettext();
 const confirm = useConfirm();
 const { isEditorDirty } = useEditorDirtyState();
 
-const emit = defineEmits([MAXIMIZE, MINIMIZE, CLOSE]);
-
 const toggleSizeButton = useTemplateRef("toggleSizeButton");
+const hasAutoFocused = ref(false);
 
 const formKey = ref(0);
 const componentEditorFormRef = ref();
@@ -59,11 +60,34 @@ const isFormDirty = computed(() => {
     return false;
 });
 
-onMounted(() => {
-    nextTick(() => {
-        // @ts-expect-error This is an error in PrimeVue types
-        toggleSizeButton.value!.$el.focus();
-    });
+const firstFieldKey = computed(() => {
+    if (!componentEditorFormRef.value?.fields) return null;
+    return Object.keys(componentEditorFormRef.value.fields)[0] ?? null;
+});
+
+watch([() => props.isEditorLoading, firstFieldKey], ([isLoading, fieldKey]) => {
+    console.log(firstFieldKey.value);
+    if (isLoading === false && fieldKey && !hasAutoFocused.value) {
+        hasAutoFocused.value = true;
+        nextTick(() => {
+            const formRef = componentEditorFormRef.value.$refs.formRef;
+            try {
+                formRef[0].focus();
+            } catch {
+                const fields = componentEditorFormRef.value.fields;
+                const nodeAlias = Object.keys(fields)[0];
+                const firstField = formRef.querySelector(
+                    `#${nodeAlias}`,
+                ) as HTMLElement;
+                if (firstField) {
+                    firstField.focus();
+                } else {
+                    // @ts-expect-error This is an error in PrimeVue types
+                    toggleSizeButton.value!.$el.focus();
+                }
+            }
+        });
+    }
 });
 
 onUnmounted(() => {

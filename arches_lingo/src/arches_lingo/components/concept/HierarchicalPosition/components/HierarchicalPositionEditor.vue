@@ -11,6 +11,7 @@ import ConceptResourceSelectWidget from "@/arches_lingo/components/widgets/Conce
 
 import { createLingoResource, upsertLingoTile } from "@/arches_lingo/api.ts";
 import { EDIT } from "@/arches_lingo/constants.ts";
+import { provideWidgetReadyTracker } from "@/arches_lingo/composables/useWidgetReadyTracker.ts";
 
 import type { Component, Ref } from "vue";
 import type { FormSubmitEvent } from "@primevue/forms";
@@ -27,6 +28,10 @@ const props = defineProps<{
     nodegroupAlias: string;
     resourceInstanceId: string | undefined;
     tileId?: string;
+}>();
+
+const emit = defineEmits<{
+    (event: "update:isLoading", value: boolean): void;
 }>();
 
 const router = useRouter();
@@ -46,6 +51,12 @@ const onSaveSettled = inject<() => void>("onSaveSettled");
 
 const formRef = useTemplateRef("form");
 const isSaving = ref(false);
+
+const { allWidgetsReady } = provideWidgetReadyTracker();
+
+watch(allWidgetsReady, (ready) => {
+    emit("update:isLoading", !ready);
+});
 
 watch(
     () => formRef.value,

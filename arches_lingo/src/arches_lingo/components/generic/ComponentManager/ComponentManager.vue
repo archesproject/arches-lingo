@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, markRaw, nextTick, provide, ref } from "vue";
+import { computed, markRaw, nextTick, onMounted, provide, ref } from "vue";
 
 import { useRoute } from "vue-router";
 import { useGettext } from "vue3-gettext";
@@ -61,6 +61,7 @@ const editorTileId = ref();
 const editorState = ref(CLOSED);
 const selectedComponentDatum = ref();
 const isFormEditor = ref(true);
+const isEditorLoading = ref(false);
 
 const resourceInstanceId = computed<string | undefined>(() => {
     if (route.params.id !== NEW) {
@@ -82,6 +83,12 @@ const remainingComponentData = computed(() => {
 });
 
 const isConfirmDialogOpen = ref(false);
+
+onMounted(() => {
+    if (route.params.id === NEW) {
+        initNewLabel();
+    }
+});
 
 window.addEventListener(
     "keydown",
@@ -124,9 +131,11 @@ function closeEditor() {
     selectedComponentDatum.value = null;
     editorState.value = CLOSED;
     editorTileId.value = null;
+    isEditorLoading.value = false;
 }
 
 function doOpenEditor(componentName: string, tileId?: string) {
+    isEditorLoading.value = true;
     const componentDatum = processedComponentData.value.find(
         (componentDatum) => {
             return componentDatum.componentName === componentName;
@@ -152,6 +161,11 @@ function openEditor(componentName: string, tileId?: string) {
     } else {
         doOpenEditor(componentName, tileId);
     }
+}
+
+function updateEditorLoadingState(isLoading: boolean) {
+    console.log("component manager received editor loading state:", isLoading);
+    isEditorLoading.value = isLoading;
 }
 
 function maximizeEditor() {
@@ -212,6 +226,13 @@ function openPanelComponent(
     isFormEditor.value = false;
 }
 
+function initNewLabel() {
+    const labelComponent = processedComponentData.value.filter(
+        (componentDatum) => componentDatum.componentName.includes("Label"),
+    );
+    openEditor(labelComponent[0].componentName);
+}
+
 provide("openEditor", openEditor);
 provide("closeEditor", closeEditor);
 provide("updateAfterComponentDeletion", updateAfterComponentDeletion);
@@ -269,6 +290,7 @@ provide(openPanelComponentKey, openPanelComponent);
                     class="splitter-panel-content"
                     :is-editor-maximized="editorState === MAXIMIZED"
                     :is-form-editor="isFormEditor"
+                    :is-editor-loading="isEditorLoading"
                     :header-title="selectedComponentDatum.sectionTitle"
                     @maximize="maximizeEditor"
                     @minimize="minimizeEditor"
@@ -283,6 +305,9 @@ provide(openPanelComponentKey, openPanelComponent);
                         :section-title="selectedComponentDatum.sectionTitle"
                         :component-name="selectedComponentDatum.componentName"
                         :mode="EDIT"
+                        @update:is-editor-loading="
+                            updateEditorLoadingState($event)
+                        "
                     />
                 </ComponentEditor>
             </SplitterPanel>
@@ -339,6 +364,7 @@ provide(openPanelComponentKey, openPanelComponent);
                     class="splitter-panel-content"
                     :is-editor-maximized="editorState === MAXIMIZED"
                     :is-form-editor="isFormEditor"
+                    :is-editor-loading="isEditorLoading"
                     :header-title="selectedComponentDatum.sectionTitle"
                     @maximize="maximizeEditor"
                     @minimize="minimizeEditor"
@@ -353,6 +379,9 @@ provide(openPanelComponentKey, openPanelComponent);
                         :section-title="selectedComponentDatum.sectionTitle"
                         :component-name="selectedComponentDatum.componentName"
                         :mode="EDIT"
+                        @update:is-editor-loading="
+                            updateEditorLoadingState($event)
+                        "
                     />
                 </ComponentEditor>
             </SplitterPanel>

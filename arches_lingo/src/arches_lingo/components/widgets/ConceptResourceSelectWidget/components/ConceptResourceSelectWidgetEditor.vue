@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, onMounted } from "vue";
 
 import { useGettext } from "vue3-gettext";
 import { storeToRefs } from "pinia";
@@ -31,6 +31,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
     (event: "update:value", updatedValue: ResourceInstanceListValue): void;
+    (event: "update:isEditorMounted", isMounted: boolean): void;
 }>();
 
 const { $gettext } = useGettext();
@@ -62,6 +63,10 @@ const initialValueFromTileData = computed(() => {
         });
     }
     return [];
+});
+
+onMounted(() => {
+    emit("update:isEditorMounted", true);
 });
 
 function clearOptions() {

@@ -30,6 +30,7 @@ import {
     addDigitalObjectToConceptImageCollection,
     createDigitalObject,
 } from "@/arches_lingo/components/concept/ConceptImages/components/utils.ts";
+import { provideWidgetReadyTracker } from "@/arches_lingo/composables/useWidgetReadyTracker.ts";
 
 import {
     fetchLingoResource,
@@ -65,6 +66,10 @@ const props = defineProps<{
     tileId?: string;
 }>();
 
+const emit = defineEmits<{
+    (event: "update:isLoading", value: boolean): void;
+}>();
+
 const { $gettext } = useGettext();
 const toast = useToast();
 
@@ -83,6 +88,12 @@ const onSaveSettled = inject<() => void>("onSaveSettled");
 
 const formRef = useTemplateRef("form");
 const isLoading = ref(true);
+
+const { allWidgetsReady } = provideWidgetReadyTracker();
+
+watch(allWidgetsReady, (ready) => {
+    emit("update:isLoading", !ready);
+});
 
 onMounted(() => {
     document.addEventListener(

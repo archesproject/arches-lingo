@@ -27,6 +27,10 @@ const props = defineProps<{
     tileId?: string;
 }>();
 
+const emit = defineEmits<{
+    (event: "update:isEditorLoading", value: boolean): void;
+}>();
+
 const shouldCreateNewTile = Boolean(props.mode === EDIT && !props.tileId);
 
 const store = useResourceStore();
@@ -95,6 +99,7 @@ onMounted(async () => {
             :section-title="props.sectionTitle"
             :tile-data="tileData"
             :tile-id="props.tileId"
+            @update:is-loading="emit('update:isEditorLoading', $event)"
         />
     </template>
 </template>

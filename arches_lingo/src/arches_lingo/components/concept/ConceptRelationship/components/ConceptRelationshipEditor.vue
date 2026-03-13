@@ -13,6 +13,7 @@ import GenericWidget from "@/arches_component_lab/generics/GenericWidget/Generic
 import ConceptResourceSelectWidget from "@/arches_lingo/components/widgets/ConceptResourceSelectWidget/ConceptResourceSelectWidget.vue";
 
 import { createOrUpdateConcept } from "@/arches_lingo/utils.ts";
+import { provideWidgetReadyTracker } from "@/arches_lingo/composables/useWidgetReadyTracker.ts";
 
 import {
     DEFAULT_ERROR_TOAST_LIFE,
@@ -35,6 +36,10 @@ const props = defineProps<{
     scheme?: string;
 }>();
 
+const emit = defineEmits<{
+    (event: "update:isLoading", value: boolean): void;
+}>();
+
 const route = useRoute();
 const router = useRouter();
 const toast = useToast();
@@ -53,6 +58,12 @@ const onSaveSettled = inject<() => void>("onSaveSettled");
 
 const formRef = useTemplateRef("form");
 const isSaving = ref(false);
+
+const { allWidgetsReady } = provideWidgetReadyTracker();
+
+watch(allWidgetsReady, (ready) => {
+    emit("update:isLoading", !ready);
+});
 
 watch(
     () => formRef.value,
