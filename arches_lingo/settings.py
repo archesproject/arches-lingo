@@ -79,7 +79,7 @@ if STORAGE_BACKEND == "storages.backends.s3.S3Storage":
         "signature_version": get_optional_env_variable(
             "ARCHES_S3SIGNATUREVERSION", "s3v4"
         ),
-        "region": get_optional_env_variable("ARCHES_S3REGION", "us-west-1"),
+        "region_name": get_optional_env_variable("ARCHES_S3REGION", "us-west-1"),
         "max_memory_size": get_optional_env_variable(
             "ARCHES_S3MAXMEMORY", str(psutil.virtual_memory().available * 0.5)
         ),
@@ -451,7 +451,7 @@ EMAIL_HOST_USER = "xxxx@xxx.com"
 
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
-CELERY_BROKER_URL = ""  # RabbitMQ --> "amqp://guest:guest@localhost",  Redis --> "redis://localhost:6379/0"
+CELERY_BROKER_URL = get_optional_env_variable("CELERY_BROKER_URL", "")  # RabbitMQ --> "amqp://guest:guest@localhost",  Redis --> "redis://localhost:6379/0"
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_RESULT_BACKEND = (
     "django-db"  # Use 'django-cache' if you want to use your cache as your backend
