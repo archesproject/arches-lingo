@@ -115,7 +115,7 @@ watch(
 onMounted(async () => {
     schemeId.value =
         store.resource.value?.aliased_data?.part_of_scheme.aliased_data.part_of_scheme?.details[0]?.resource_id;
-    if (!schemeId.value) {
+    if (!schemeId.value && props.resourceInstanceId) {
         const partOfSchemeTile = await fetchLingoResourcePartial(
             "concept",
             props.resourceInstanceId!,
