@@ -189,10 +189,7 @@ class AdvancedSearchEvaluatorTests(TestCase):
             resourceinstance=cls.concept_a,
             nodegroup_id=URI_NODEGROUP,
             data={
-                URI_CONTENT_NODE: {
-                    "url": "http://example.com/alpha",
-                    "url_label": "Alpha URI",
-                },
+                URI_CONTENT_NODE: "http://example.com/alpha",
             },
         )
 
