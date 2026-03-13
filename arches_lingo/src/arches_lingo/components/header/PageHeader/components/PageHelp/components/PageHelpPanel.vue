@@ -114,7 +114,41 @@ const shouldShowPageHelpPanel = defineModel("shouldShowPageHelpPanel", {
                             }}
                         </div>
                     </li>
+                    <li>
+                        <i class="pi pi-user-edit help-list-icon" />
+                        <div>
+                            <span class="help-term">{{
+                                $gettext("Reference Data")
+                            }}</span>
+                            {{
+                                $gettext(
+                                    " — find Contributors and Sources in this sidebar section to manage the people, organizations, and bibliographic references that support your vocabulary.",
+                                )
+                            }}
+                        </div>
+                    </li>
+                    <li>
+                        <i class="pi pi-user help-list-icon" />
+                        <div>
+                            <span class="help-term">{{
+                                $gettext("Settings")
+                            }}</span>
+                            {{
+                                $gettext(
+                                    " — access your Profile from the Settings section of the sidebar to update your name, email, and password.",
+                                )
+                            }}
+                        </div>
+                    </li>
                 </ul>
+                <div class="help-tip">
+                    <i class="pi pi-info-circle help-tip-icon" />
+                    {{
+                        $gettext(
+                            "Lingo will warn you before navigating away if you have unsaved edits on the current page.",
+                        )
+                    }}
+                </div>
             </section>
 
             <!-- Dashboard -->
@@ -492,6 +526,86 @@ const shouldShowPageHelpPanel = defineModel("shouldShowPageHelpPanel", {
                         )
                     }}
                 </div>
+            </section>
+
+            <!-- Reference Data -->
+            <section class="help-section">
+                <h3 class="help-section-title">
+                    <i class="pi pi-database" />
+                    {{ $gettext("Reference Data") }}
+                </h3>
+                <p class="help-text">
+                    {{
+                        $gettext(
+                            "The Reference Data section of the sidebar lets you manage supporting resources that can be linked to vocabulary content.",
+                        )
+                    }}
+                </p>
+                <ul class="help-list">
+                    <li>
+                        <i class="pi pi-user-edit help-list-icon" />
+                        <div>
+                            <span class="help-term">{{
+                                $gettext("Contributors")
+                            }}</span>
+                            {{
+                                $gettext(
+                                    " — manage the people and organizations that contribute to your vocabularies. Contributors can be recorded as individuals (Person) or as collective bodies (Group).",
+                                )
+                            }}
+                        </div>
+                    </li>
+                    <li>
+                        <i class="pi pi-bookmark-fill help-list-icon" />
+                        <div>
+                            <span class="help-term">{{
+                                $gettext("Sources")
+                            }}</span>
+                            {{
+                                $gettext(
+                                    " — record the bibliographic sources that inform or support your vocabulary content, such as reference publications or authority files.",
+                                )
+                            }}
+                        </div>
+                    </li>
+                </ul>
+            </section>
+
+            <!-- Profile -->
+            <section class="help-section">
+                <h3 class="help-section-title">
+                    <i class="pi pi-user" />
+                    {{ $gettext("Your Profile") }}
+                </h3>
+                <p class="help-text">
+                    {{
+                        $gettext(
+                            "Access your profile from Settings > Profile in the sidebar.",
+                        )
+                    }}
+                </p>
+                <ul class="help-list">
+                    <li>
+                        <i class="pi pi-id-card help-list-icon" />
+                        <div>
+                            {{
+                                $gettext(
+                                    "Update your display name, email address, and phone number.",
+                                )
+                            }}
+                        </div>
+                    </li>
+                    <li>
+                        <i class="pi pi-lock help-list-icon" />
+                        <div>
+                            {{
+                                $gettext(
+                                    "Change your password using the Password section — enter your current password and choose a new one.",
+                                )
+                            }}
+                        </div>
+                    </li>
+                </ul>
             </section>
 
             <!-- Support -->
