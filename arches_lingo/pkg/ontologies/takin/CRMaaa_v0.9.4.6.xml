@@ -18,7 +18,7 @@ Encoding Rules:
 -->
 <rdf:RDF xml:lang="en" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" 
 	 xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#" 
-	 xml:base="https://takin.solutions/ontologies/CRMaaa/"> xml:lang="en">
+	 xml:base="https://ontology.swissartresearch.net/aaao/"> xml:lang="en">
 
 <rdfs:Class rdf:about="http://www.cidoc-crm.org/cidoc-crm/E13_Attribute_Assignment">
     <rdfs:subClassOf rdf:resource="ZE13_Speech_Act"/>
