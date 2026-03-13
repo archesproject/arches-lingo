@@ -832,7 +832,6 @@ export const resolveSchemeIdentifier = async (
 
     const response = await fetch(url);
     const parsedResponseBody = await response.json();
-    if (response.status === 404) return null;
     if (!response.ok) {
         throw new Error(parsedResponseBody.message || response.statusText);
     }
@@ -850,7 +849,6 @@ export const resolveConceptIdentifier = async (
 
     const response = await fetch(url);
     const parsedResponseBody = await response.json();
-    if (response.status === 404) return null;
     if (!response.ok) {
         throw new Error(parsedResponseBody.message || response.statusText);
     }
