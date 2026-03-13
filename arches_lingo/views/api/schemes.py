@@ -1,4 +1,5 @@
 from collections import Counter
+from http import HTTPStatus
 
 from django.utils.translation import gettext as _
 from django.views.generic import View
@@ -16,7 +17,7 @@ from arches_lingo.utils.concept_builder import ConceptBuilder
 class SchemeResourceView(AnonymousAccessMixin, View):
     def get(self, request, pk):
         scheme_id = str(pk)
-        include_top_concepts = bool(request.GET.get("include_top_concepts"))
+        include_top_concepts = request.GET.get("include_top_concepts") == "true"
 
         builder = ConceptBuilder(concept_ids=[])
         builder.populate_schemes([scheme_id])
@@ -24,9 +25,10 @@ class SchemeResourceView(AnonymousAccessMixin, View):
         scheme = builder.lookup_scheme(scheme_id)
         if scheme is None:
             return JSONErrorResponse(
-                title="Scheme not found",
-                message=f"No scheme found with id {pk}",
-                status=404,
+                title=_("Scheme not found."),
+                message=_("No scheme found with id %(scheme_id)s.")
+                % {"scheme_id": scheme_id},
+                status=HTTPStatus.NOT_FOUND,
             )
 
         if include_top_concepts:
@@ -34,8 +36,12 @@ class SchemeResourceView(AnonymousAccessMixin, View):
             top_concept_ids = list(builder.top_concepts.get(scheme_id, set()))
             builder.populate_guide_term_concepts(top_concept_ids)
 
-        data = builder.serialize_scheme(scheme, children=include_top_concepts)
-        return JSONResponse(data)
+        return JSONResponse(
+            builder.serialize_scheme(
+                scheme,
+                children=include_top_concepts,
+            )
+        )
 
 
 class SchemeLabelCountView(AnonymousAccessMixin, View):

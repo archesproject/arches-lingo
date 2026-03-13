@@ -22,11 +22,15 @@ from arches_lingo.views.api.advanced_search import (
     SavedSearchDetailView,
     SavedSearchListView,
 )
+from arches_lingo.views.api.schemes import SchemeResourceView
 from arches_lingo.views.api.generic import (
     LingoResourceDetailView,
     LingoResourceListCreateView,
     LingoTileDetailView,
     LingoTileListCreateView,
+)
+from arches_lingo.views.api.concept_identifier_counter import (
+    ConceptIdentifierCounterView,
 )
 from arches_lingo.views.api.settings import AppSettingsView
 from arches_lingo.views.api.resource_list import (
@@ -92,6 +96,11 @@ urlpatterns = [
     ),
     path("api/concept-tree", ConceptTreeView.as_view(), name="api-concepts"),
     path("api/search", ValueSearchView.as_view(), name="api-search"),
+    path(
+        "api/scheme/<uuid:scheme_resource_instance_id>/concept-identifier-counter",
+        ConceptIdentifierCounterView.as_view(),
+        name="api-concept-identifier-counter",
+    ),
     path(
         "api/advanced-search",
         AdvancedSearchView.as_view(),

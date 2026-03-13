@@ -684,6 +684,132 @@ export const getSearchExportFile = async (exportId: string) => {
     return parsed;
 };
 
+export const fetchResourceIdentifiers = async (resourceId: string) => {
+    const url = generateArchesURL("arches:api-resource-identifiers", {
+        resourceid: resourceId,
+    });
+
+    const response = await fetch(url);
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
+export const upsertResourceIdentifier = async (
+    resourceId: string,
+    resourceIdentifier: {
+        id?: number;
+        identifier: string;
+        source: string;
+        identifier_type?: string;
+    },
+) => {
+    const url = generateArchesURL("arches:api-resource-identifiers", {
+        resourceid: resourceId,
+    });
+
+    const response = await fetch(url, {
+        method: "POST",
+        headers: {
+            "X-CSRFTOKEN": getToken(),
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(resourceIdentifier),
+    });
+
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
+export const fetchConceptIdentifierCounter = async (
+    schemeResourceInstanceId: string,
+) => {
+    const url = generateArchesURL(
+        "arches_lingo:api-concept-identifier-counter",
+        {
+            scheme_resource_instance_id: schemeResourceInstanceId,
+        },
+    );
+
+    const response = await fetch(url);
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
+export const createConceptIdentifierCounter = async (
+    schemeResourceInstanceId: string,
+    startNumber: number = 1,
+) => {
+    const url = generateArchesURL(
+        "arches_lingo:api-concept-identifier-counter",
+        {
+            scheme_resource_instance_id: schemeResourceInstanceId,
+        },
+    );
+
+    const response = await fetch(url, {
+        method: "POST",
+        headers: {
+            "X-CSRFTOKEN": getToken(),
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            start_number: startNumber,
+        }),
+    });
+
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
+export const fetchResourceInstanceLifecycleState = async (
+    resourceId: string,
+) => {
+    const resourceInstanceLifecycleStateUrl = generateArchesURL(
+        "arches:api_resource_instance_lifecycle_state",
+        {
+            resourceid: resourceId,
+        },
+    );
+
+    const response = await fetch(resourceInstanceLifecycleStateUrl);
+    const parsedResponseBody = await response.json();
+    if (!response.ok) {
+        throw new Error(parsedResponseBody.message || response.statusText);
+    }
+    return parsedResponseBody;
+};
+
+export const updateResourceInstanceLifecycleState = async (
+    resourceId: string,
+    resourceInstanceLifecycleStateId: string,
+) => {
+    const resourceInstanceLifecycleStateUrl = generateArchesURL(
+        "arches:api_resource_instance_lifecycle_state",
+        {
+            resourceid: resourceId,
+        },
+    );
+
+    const response = await fetch(resourceInstanceLifecycleStateUrl, {
+        method: "POST",
+        headers: {
+            "X-CSRFTOKEN": getToken(),
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(resourceInstanceLifecycleStateId),
+    });
+
+    const parsedResponseBody = await response.json();
+    if (!response.ok) {
+        throw new Error(parsedResponseBody.message || response.statusText);
+    }
+    return parsedResponseBody;
+};
+
 export const executeAdvancedSearch = async (
     query: AdvancedSearchQuery,
     page: number = 1,

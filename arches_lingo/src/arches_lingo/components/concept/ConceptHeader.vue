@@ -35,8 +35,10 @@ import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 import { PREF_LABEL } from "@/arches_controlled_lists/constants.ts";
 
 import {
+    fetchLingoResource,
     deleteLingoResource,
     fetchConceptResource,
+    fetchResourceIdentifiers,
 } from "@/arches_lingo/api.ts";
 import { useResourceStore } from "@/arches_lingo/composables/useResourceStore.ts";
 import {
@@ -89,7 +91,7 @@ const data = ref<ConceptHeaderData>();
 const isLoading = ref(true);
 const showExportDialog = ref(false);
 const exportDialogKey = ref(0);
-
+const conceptIdentifierValue = ref<string>();
 const conceptTypeTile = ref();
 
 function isGuideTermType(typeNodeValue: unknown): boolean {
@@ -180,15 +182,63 @@ async function onConceptTypeChange(newValue: ReferenceSelectValue) {
     }
 }
 
+const resourceInstanceLifecycleState = inject<{
+    value: { name: string } | undefined;
+}>("resourceInstanceLifecycleState");
+
+const lifecycleStateLabel = computed(() => {
+    const state = resourceInstanceLifecycleState?.value;
+    if (!state) {
+        return "--";
+    }
+
+    return state?.name || "--";
+});
+
 onMounted(async () => {
-    if (!props.resourceInstanceId) {
-        label.value = {
-            value: $gettext("New Concept"),
-            language_id: selectedLanguage.value.code,
-            valuetype_id: PREF_LABEL,
-        };
+    try {
+        if (!props.resourceInstanceId) {
+            label.value = {
+                value: $gettext("New Concept"),
+                language_id: selectedLanguage.value.code,
+                valuetype_id: PREF_LABEL,
+            };
+            return;
+        }
+
+        concept.value = await fetchLingoResource(
+            props.graphSlug,
+            props.resourceInstanceId,
+        );
+
+        conceptTypeTile.value =
+            concept.value?.aliased_data?.[CONCEPT_TYPE_NODE_ALIAS];
+
+        const conceptResource = await fetchConceptResource(
+            props.resourceInstanceId,
+        );
+
+        label.value = getItemLabel(
+            conceptResource,
+            selectedLanguage.value.code,
+            systemLanguage.value.code,
+        );
+
+        const resourceIdentifiers = await fetchResourceIdentifiers(
+            props.resourceInstanceId,
+        );
+        conceptIdentifierValue.value = resourceIdentifiers?.[0]?.identifier;
+
+        extractConceptHeaderData(concept.value!);
+    } catch (error) {
+        toast.add({
+            severity: ERROR,
+            life: DEFAULT_ERROR_TOAST_LIFE,
+            summary: $gettext("Unable to fetch concept"),
+            detail: error instanceof Error ? error.message : undefined,
+        });
+    } finally {
         isLoading.value = false;
-        return;
     }
     // Resource data is loaded via the store watch above
 });
@@ -282,9 +332,7 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
     const descriptor = extractDescriptors(concept, selectedLanguage.value);
     // TODO: get human-readable user name from resource endpoint
     const principalUser = "Anonymous"; //concept?.principalUser; // returns userid int
-    // TODO: get human-readable life cycle state from resource endpoint
-    const lifeCycleState = $gettext("Draft");
-    const uri = aliased_data?.uri?.aliased_data?.uri_content?.node_value;
+    const uri = aliased_data?.uri?.aliased_data?.uri_content?.url;
     const partOfScheme =
         aliased_data?.part_of_scheme?.aliased_data?.part_of_scheme;
     const parentConcepts = (aliased_data?.classification_status || []).flatMap(
@@ -304,7 +352,7 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
         descriptor: descriptor,
         uri: uri,
         principalUser: principalUser,
-        lifeCycleState: lifeCycleState,
+        lifeCycleState: lifecycleStateLabel.value,
         partOfScheme: partOfScheme,
         parentConcepts: parentConcepts,
         identifier: identifier,
@@ -406,14 +454,13 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
         <div class="header-content">
             <div class="concept-header-section">
                 <div class="header-row">
-                    <!-- TODO: Life Cycle mgmt functionality goes here -->
                     <div class="header-item">
                         <span class="header-item-label">
                             {{ $gettext("Identifier:") }}
                         </span>
-                        <span class="header-item-value">{{
-                            data?.identifier || "--"
-                        }}</span>
+                        <span class="header-item-value">
+                            {{ conceptIdentifierValue || $gettext("None") }}
+                        </span>
                     </div>
                     <div>
                         <span class="header-item-label">{{
@@ -455,17 +502,12 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                         </span>
                     </div>
 
-                    <!-- TODO: Life Cycle mgmt functionality goes here -->
                     <div class="header-item">
                         <span class="header-item-label">
                             {{ $gettext("Life cycle state:") }}
                         </span>
                         <span class="header-item-value">
-                            {{
-                                data?.lifeCycleState
-                                    ? data?.lifeCycleState
-                                    : "--"
-                            }}
+                            {{ lifecycleStateLabel }}
                         </span>
                     </div>
                 </div>

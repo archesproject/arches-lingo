@@ -1,9 +1,18 @@
 <script setup lang="ts">
-import { computed, markRaw, nextTick, provide, ref } from "vue";
+import {
+    computed,
+    markRaw,
+    nextTick,
+    onMounted,
+    provide,
+    ref,
+    watch,
+} from "vue";
 
 import { useRoute } from "vue-router";
-import { useGettext } from "vue3-gettext";
 import { useConfirm } from "primevue/useconfirm";
+import { useGettext } from "vue3-gettext";
+import { useToast } from "primevue/usetoast";
 
 import Splitter from "primevue/splitter";
 import SplitterPanel from "primevue/splitterpanel";
@@ -29,6 +38,9 @@ import {
     unsavedChangesConfirmOptions,
 } from "@/arches_lingo/composables/useEditorDirtyState.ts";
 
+import { fetchResourceInstanceLifecycleState } from "@/arches_lingo/api.ts";
+import { DEFAULT_ERROR_TOAST_LIFE, ERROR } from "@/arches_lingo/constants.ts";
+
 import type { Component } from "vue";
 
 const props = defineProps<{
@@ -41,9 +53,10 @@ const props = defineProps<{
     }[];
 }>();
 
+const toast = useToast();
 const route = useRoute();
-const { $gettext } = useGettext();
 const confirm = useConfirm();
+const { $gettext } = useGettext();
 const { isEditorDirty } = useEditorDirtyState();
 
 const processedComponentData = ref(
@@ -62,6 +75,9 @@ const editorState = ref(CLOSED);
 const selectedComponentDatum = ref();
 const isFormEditor = ref(true);
 
+const resourceInstanceLifecycleState = ref<object | undefined>(undefined);
+const isFetchingResourceInstanceLifecycleState = ref(false);
+
 const resourceInstanceId = computed<string | undefined>(() => {
     if (route.params.id !== NEW) {
         return route.params.id as string;
@@ -79,6 +95,14 @@ const firstComponentDatum = computed(() => {
 });
 const remainingComponentData = computed(() => {
     return processedComponentData.value.slice(1);
+});
+
+onMounted(async () => {
+    await loadResourceInstanceLifecycleState();
+});
+
+watch(resourceInstanceId, async () => {
+    await loadResourceInstanceLifecycleState();
 });
 
 const isConfirmDialogOpen = ref(false);
@@ -120,6 +144,12 @@ function confirmDiscard(callback: () => void) {
     });
 }
 
+provide("openEditor", openEditor);
+provide("closeEditor", closeEditor);
+provide("updateAfterComponentDeletion", updateAfterComponentDeletion);
+provide("refreshReportSection", refreshReportSection);
+provide("resourceInstanceLifecycleState", resourceInstanceLifecycleState);
+
 function closeEditor() {
     selectedComponentDatum.value = null;
     editorState.value = CLOSED;
@@ -141,6 +171,7 @@ function doOpenEditor(componentName: string, tileId?: string) {
     editorTileId.value = tileId;
     editorState.value = MINIMIZED;
     isFormEditor.value = true;
+
     nextTick(() => {
         isEditorDirty.value = false;
     });
@@ -191,6 +222,35 @@ async function refreshReportSection(componentName: string) {
     }
 }
 
+async function loadResourceInstanceLifecycleState() {
+    if (isFetchingResourceInstanceLifecycleState.value) {
+        return;
+    }
+
+    isFetchingResourceInstanceLifecycleState.value = true;
+
+    try {
+        if (!resourceInstanceId.value) {
+            resourceInstanceLifecycleState.value = undefined;
+            return;
+        }
+
+        resourceInstanceLifecycleState.value =
+            await fetchResourceInstanceLifecycleState(resourceInstanceId.value);
+    } catch (error) {
+        resourceInstanceLifecycleState.value = undefined;
+
+        toast.add({
+            severity: ERROR,
+            life: DEFAULT_ERROR_TOAST_LIFE,
+            summary: $gettext("Unable to fetch lifecycle state"),
+            detail: error instanceof Error ? error.message : undefined,
+        });
+    } finally {
+        isFetchingResourceInstanceLifecycleState.value = false;
+    }
+}
+
 function openPanelComponent(
     component: Component,
     componentName: string,
@@ -212,10 +272,6 @@ function openPanelComponent(
     isFormEditor.value = false;
 }
 
-provide("openEditor", openEditor);
-provide("closeEditor", closeEditor);
-provide("updateAfterComponentDeletion", updateAfterComponentDeletion);
-provide("refreshReportSection", refreshReportSection);
 provide(openPanelComponentKey, openPanelComponent);
 </script>
 
