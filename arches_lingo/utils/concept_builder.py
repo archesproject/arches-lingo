@@ -6,10 +6,9 @@ from django.db.models.expressions import CombinedExpression
 from django.utils.translation import gettext as _
 
 from arches.app.models.models import Language, ResourceInstance, TileModel
-from arches_controlled_lists.datatypes.datatypes import ReferenceLabel
-from arches_controlled_lists.models import ListItem
 
 from arches_lingo.const import (
+    ALT_LABEL_URI,
     SCHEMES_GRAPH_ID,
     TOP_CONCEPT_OF_NODE_AND_NODEGROUP,
     CLASSIFICATION_STATUS_NODEGROUP,
@@ -20,10 +19,9 @@ from arches_lingo.const import (
     CONCEPT_NAME_CONTENT_NODE,
     CONCEPT_NAME_LANGUAGE_NODE,
     CONCEPT_NAME_TYPE_NODE,
-    ALT_LABEL_VALUE,
     GUIDE_TERM_URI,
-    HIDDEN_LABEL_VALUE,
-    PREF_LABEL_VALUE,
+    HIDDEN_LABEL_URI,
+    PREF_LABEL_URI,
     SCHEME_NAME_NODEGROUP,
     SCHEME_NAME_CONTENT_NODE,
     SCHEME_NAME_LANGUAGE_NODE,
@@ -71,12 +69,12 @@ class ConceptBuilder:
         self.populate_guide_term_concepts(concept_ids)
 
     @staticmethod
-    def find_valuetype_id_from_value(value):
-        if value == PREF_LABEL_VALUE:
+    def find_valuetype_id_from_uri(uri):
+        if uri == PREF_LABEL_URI:
             return "prefLabel"
-        if value == ALT_LABEL_VALUE:
+        if uri == ALT_LABEL_URI:
             return "altLabel"
-        if value == HIDDEN_LABEL_VALUE:
+        if uri == HIDDEN_LABEL_URI:
             return "hidden"
         return "unknown"
 
@@ -243,12 +241,8 @@ class ConceptBuilder:
         return data
 
     def serialize_scheme_label(self, label_tile: dict):
-        scheme_name_type_labels = [
-            ReferenceLabel(**label)
-            for label in label_tile[SCHEME_NAME_TYPE_NODE][0]["labels"]
-        ]
-        valuetype_id = self.find_valuetype_id_from_value(
-            ListItem.find_best_label_from_set(scheme_name_type_labels)
+        valuetype_id = self.find_valuetype_id_from_uri(
+            label_tile[SCHEME_NAME_TYPE_NODE][0]["uri"]
         )
         language_id = label_tile[SCHEME_NAME_LANGUAGE_NODE]
         value = label_tile[SCHEME_NAME_CONTENT_NODE] or _("Unknown")
@@ -343,12 +337,8 @@ class ConceptBuilder:
         return [working_path]
 
     def serialize_concept_label(self, label_tile: dict):
-        scheme_name_type_labels = [
-            ReferenceLabel(**label)
-            for label in label_tile[CONCEPT_NAME_TYPE_NODE][0]["labels"]
-        ]
-        valuetype_id = self.find_valuetype_id_from_value(
-            ListItem.find_best_label_from_set(scheme_name_type_labels)
+        valuetype_id = self.find_valuetype_id_from_uri(
+            label_tile[CONCEPT_NAME_TYPE_NODE][0]["uri"]
         )
         language_id = label_tile[CONCEPT_NAME_LANGUAGE_NODE]
         value = label_tile[CONCEPT_NAME_CONTENT_NODE] or _("Unknown")
