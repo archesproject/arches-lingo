@@ -207,12 +207,7 @@
                 {
                     "card_id": "42fd9938-11e6-11ef-9493-0a58a9feac02",
                     "config": {
-                        "defaultValue": {
-                            "en": {
-                                "direction": "ltr",
-                                "value": ""
-                            }
-                        },
+                        "defaultValue": "",
                         "i18n_properties": [
                             "placeholder"
                         ],
@@ -232,7 +227,7 @@
                     "sortorder": 0,
                     "source_identifier_id": null,
                     "visible": true,
-                    "widget_id": "10000000-0000-0000-0000-000000000001"
+                    "widget_id": "46ef064b-2611-4708-9f52-60136bd8a65b"
                 },
                 {
                     "card_id": "42fd9938-11e6-11ef-9493-0a58a9feac02",
@@ -729,7 +724,7 @@
                                 "string_template": ""
                             },
                             "name": {
-                                "nodegroup_id": "ab2d016b-a6d5-11ed-9522-7d5311f38495",
+                                "nodegroup_id": "42fd96f4-11e6-11ef-9493-0a58a9feac02",
                                 "string_template": "<name_content>"
                             }
                         },
@@ -738,7 +733,7 @@
                             "string_template": ""
                         },
                         "name": {
-                            "nodegroup_id": "1c7e9042-bbd6-11ea-b6b2-3af9d3b32b71",
+                            "nodegroup_id": "42fd96f4-11e6-11ef-9493-0a58a9feac02",
                             "string_template": "<name_content>"
                         },
                         "triggering_nodegroups": []
@@ -946,7 +941,7 @@
                 {
                     "alias": "name_content",
                     "config": {},
-                    "datatype": "string",
+                    "datatype": "non-localized-string",
                     "description": "* Collection_id: LAP.1_Name\n* Field_id: LAF.6_name_content\n* Category_id: CAT.1_Names_and_Classifications",
                     "exportable": true,
                     "fieldname": null,
@@ -1210,7 +1205,7 @@
                 {
                     "alias": "type",
                     "config": {
-                        "controlledList": "e3abbba4-1ba9-4904-9093-b4d31af54e6e",
+                        "controlledList": "0e2eeb72-66bf-4376-b75b-c058cd4ec571",
                         "multiValue": true
                     },
                     "datatype": "reference",

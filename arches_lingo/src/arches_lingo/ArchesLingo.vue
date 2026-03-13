@@ -189,4 +189,14 @@ body {
 .p-component {
     font-family: var(--p-lingo-font-family);
 }
+
+.p-multiselect .button-container a {
+    display: none;
+}
+
+.resource-instance-link {
+    color: inherit;
+    text-decoration: none;
+    pointer-events: none;
+}
 </style>

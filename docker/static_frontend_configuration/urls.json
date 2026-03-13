@@ -3,17 +3,19 @@
     "admin": [
         {
             "url": "/admin/{url}",
-            "params": [
-                "url"
-            ]
+            "params": ["url"]
         }
     ],
     "arches:add_resource": [
         {
             "url": "/add-resource/{graphid}",
-            "params": [
-                "graphid"
-            ]
+            "params": ["graphid"]
+        }
+    ],
+    "arches:api-resource-identifiers": [
+        {
+            "url": "/api/resource-identifiers/{resourceid}",
+            "params": ["resourceid"]
         }
     ],
     "arches:api_bulk_disambiguated_resource_instance": [
@@ -31,9 +33,7 @@
     "arches:api_card": [
         {
             "url": "/cards/{resourceid}",
-            "params": [
-                "resourceid"
-            ]
+            "params": ["resourceid"]
         }
     ],
     "arches:api_export_results": [
@@ -75,33 +75,25 @@
     "arches:api_nodegroup": [
         {
             "url": "/api/nodegroup/{nodegroupid}",
-            "params": [
-                "nodegroupid"
-            ]
+            "params": ["nodegroupid"]
         }
     ],
     "arches:api_nodes": [
         {
             "url": "/api/nodes/{nodeid}",
-            "params": [
-                "nodeid"
-            ]
+            "params": ["nodeid"]
         }
     ],
     "arches:api_plugins": [
         {
             "url": "/api/plugins/{pluginid}",
-            "params": [
-                "pluginid"
-            ]
+            "params": ["pluginid"]
         }
     ],
     "arches:api_resource_instance_lifecycle_state": [
         {
             "url": "/api/resource_instance_lifecycle_state/{resourceid}",
-            "params": [
-                "resourceid"
-            ]
+            "params": ["resourceid"]
         }
     ],
     "arches:api_resource_instance_lifecycle_states": [
@@ -113,25 +105,19 @@
     "arches:api_resource_report": [
         {
             "url": "/api/resource_report/{resourceid}",
-            "params": [
-                "resourceid"
-            ]
+            "params": ["resourceid"]
         }
     ],
     "arches:api_search_component_data": [
         {
             "url": "/search_component_data/{componentname}",
-            "params": [
-                "componentname"
-            ]
+            "params": ["componentname"]
         }
     ],
     "arches:api_tiles": [
         {
             "url": "/api/tiles/{tileid}",
-            "params": [
-                "tileid"
-            ]
+            "params": ["tileid"]
         }
     ],
     "arches:api_user": [
@@ -149,9 +135,7 @@
     "arches:api_user_preference_detail_view": [
         {
             "url": "/api/user_preference/{identifier}",
-            "params": [
-                "identifier"
-            ]
+            "params": ["identifier"]
         }
     ],
     "arches:api_user_preference_list_view": [
@@ -163,25 +147,19 @@
     "arches:append_branch": [
         {
             "url": "/graph/{graphid}/append_branch",
-            "params": [
-                "graphid"
-            ]
+            "params": ["graphid"]
         }
     ],
     "arches:append_node": [
         {
             "url": "/graph/{graphid}/append_node",
-            "params": [
-                "graphid"
-            ]
+            "params": ["graphid"]
         }
     ],
     "arches:apply_functions": [
         {
             "url": "/graph/{graphid}/apply_functions",
-            "params": [
-                "graphid"
-            ]
+            "params": ["graphid"]
         }
     ],
     "arches:as_stream_collection": [
@@ -193,9 +171,7 @@
     "arches:as_stream_page": [
         {
             "url": "/history/{page}",
-            "params": [
-                "page"
-            ]
+            "params": ["page"]
         }
     ],
     "arches:auth": [
@@ -213,9 +189,7 @@
     "arches:card": [
         {
             "url": "/card/{cardid}",
-            "params": [
-                "cardid"
-            ]
+            "params": ["cardid"]
         }
     ],
     "arches:change_password": [
@@ -233,25 +207,19 @@
     "arches:clone_graph": [
         {
             "url": "/graph/{graphid}/clone",
-            "params": [
-                "graphid"
-            ]
+            "params": ["graphid"]
         }
     ],
     "arches:concept": [
         {
             "url": "/concepts/{conceptid}",
-            "params": [
-                "conceptid"
-            ]
+            "params": ["conceptid"]
         }
     ],
     "arches:concept_manage_parents": [
         {
             "url": "/concepts/{conceptid}/manage_parents",
-            "params": [
-                "conceptid"
-            ]
+            "params": ["conceptid"]
         }
     ],
     "arches:concept_search": [
@@ -263,9 +231,7 @@
     "arches:concept_tree": [
         {
             "url": "/concepts/tree/{mode}",
-            "params": [
-                "mode"
-            ]
+            "params": ["mode"]
         }
     ],
     "arches:concept_value": [
@@ -277,9 +243,7 @@
     "arches:concepts": [
         {
             "url": "/rdm/concepts/{conceptid}",
-            "params": [
-                "conceptid"
-            ]
+            "params": ["conceptid"]
         }
     ],
     "arches:config": [
@@ -291,9 +255,7 @@
     "arches:confirm_delete": [
         {
             "url": "/concepts/{conceptid}/confirm_delete",
-            "params": [
-                "conceptid"
-            ]
+            "params": ["conceptid"]
         }
     ],
     "arches:confirm_signup": [
@@ -305,33 +267,25 @@
     "arches:datatype_template": [
         {
             "url": "/components/datatypes/{template}",
-            "params": [
-                "template"
-            ]
+            "params": ["template"]
         }
     ],
     "arches:delete_graph": [
         {
             "url": "/graph/{graphid}/delete",
-            "params": [
-                "graphid"
-            ]
+            "params": ["graphid"]
         }
     ],
     "arches:delete_instances": [
         {
             "url": "/graph/{graphid}/delete_instances",
-            "params": [
-                "graphid"
-            ]
+            "params": ["graphid"]
         }
     ],
     "arches:delete_node": [
         {
             "url": "/graph/{graphid}/delete_node",
-            "params": [
-                "graphid"
-            ]
+            "params": ["graphid"]
         }
     ],
     "arches:delete_provisional_tile": [
@@ -343,9 +297,7 @@
     "arches:delete_published_graph": [
         {
             "url": "/graph/{graphid}/delete_published_graph",
-            "params": [
-                "graphid"
-            ]
+            "params": ["graphid"]
         }
     ],
     "arches:dismiss_notifications": [
@@ -363,9 +315,7 @@
     "arches:draft_graph_api": [
         {
             "url": "/draft_graph/{graph_id}",
-            "params": [
-                "graph_id"
-            ]
+            "params": ["graph_id"]
         }
     ],
     "arches:dropdown": [
@@ -389,17 +339,13 @@
     "arches:export_branch": [
         {
             "url": "/graph/{graphid}/export_branch",
-            "params": [
-                "graphid"
-            ]
+            "params": ["graphid"]
         }
     ],
     "arches:export_concept": [
         {
             "url": "/concepts/export/{conceptid}",
-            "params": [
-                "conceptid"
-            ]
+            "params": ["conceptid"]
         }
     ],
     "arches:export_concept_collections": [
@@ -411,17 +357,13 @@
     "arches:export_graph": [
         {
             "url": "/graph/{graphid}/export",
-            "params": [
-                "graphid"
-            ]
+            "params": ["graphid"]
         }
     ],
     "arches:export_mapping_file": [
         {
             "url": "/graph/{graphid}/export_mapping_file",
-            "params": [
-                "graphid"
-            ]
+            "params": ["graphid"]
         }
     ],
     "arches:export_results": [
@@ -451,33 +393,25 @@
     "arches:file_access": [
         {
             "url": "/files/{fileid}",
-            "params": [
-                "fileid"
-            ]
+            "params": ["fileid"]
         }
     ],
     "arches:from_sparql_endpoint": [
         {
             "url": "/concepts/{conceptid}/from_sparql_endpoint",
-            "params": [
-                "conceptid"
-            ]
+            "params": ["conceptid"]
         }
     ],
     "arches:function-templates": [
         {
             "url": "/function-templates/{template}",
-            "params": [
-                "template"
-            ]
+            "params": ["template"]
         }
     ],
     "arches:function_manager": [
         {
             "url": "/graph/{graphid}/function_manager",
-            "params": [
-                "graphid"
-            ]
+            "params": ["graphid"]
         }
     ],
     "arches:geojson": [
@@ -507,9 +441,7 @@
     "arches:get_domain_connections": [
         {
             "url": "/graph/{graphid}/get_domain_connections",
-            "params": [
-                "graphid"
-            ]
+            "params": ["graphid"]
         }
     ],
     "arches:get_dsl": [
@@ -557,10 +489,7 @@
     "arches:get_related_nodes": [
         {
             "url": "/graph/{graphid}/get_related_nodes/{nodeid}",
-            "params": [
-                "graphid",
-                "nodeid"
-            ]
+            "params": ["graphid", "nodeid"]
         }
     ],
     "arches:get_user_names": [
@@ -572,58 +501,43 @@
     "arches:get_valid_domain_nodes": [
         {
             "url": "/graph/{graphid}/get_valid_domain_nodes/{nodeid}",
-            "params": [
-                "graphid",
-                "nodeid"
-            ]
+            "params": ["graphid", "nodeid"]
         }
     ],
     "arches:graph": [
         {
             "url": "/graph/{graphid}",
-            "params": [
-                "graphid"
-            ]
+            "params": ["graphid"]
         }
     ],
     "arches:graph_designer": [
         {
             "url": "/graph_designer/{graphid}",
-            "params": [
-                "graphid"
-            ]
+            "params": ["graphid"]
         }
     ],
     "arches:graph_is_active_api": [
         {
             "url": "/graph_is_active/{graph_id}",
-            "params": [
-                "graph_id"
-            ]
+            "params": ["graph_id"]
         }
     ],
     "arches:graph_nodes": [
         {
             "url": "/graph/{graphid}/nodes",
-            "params": [
-                "graphid"
-            ]
+            "params": ["graphid"]
         }
     ],
     "arches:graph_settings": [
         {
             "url": "/graph_settings/{graphid}",
-            "params": [
-                "graphid"
-            ]
+            "params": ["graphid"]
         }
     ],
     "arches:graphs_api": [
         {
             "url": "/graphs/{graph_id}",
-            "params": [
-                "graph_id"
-            ]
+            "params": ["graph_id"]
         }
     ],
     "arches:help_templates": [
@@ -665,9 +579,7 @@
     "arches:iiifserver": [
         {
             "url": "/iiifserver/{path}",
-            "params": [
-                "path"
-            ]
+            "params": ["path"]
         }
     ],
     "arches:images": [
@@ -685,9 +597,7 @@
     "arches:kibana": [
         {
             "url": "/kibana/{path}",
-            "params": [
-                "path"
-            ]
+            "params": ["path"]
         }
     ],
     "arches:language": [
@@ -705,17 +615,13 @@
     "arches:make_collection": [
         {
             "url": "/concepts/{conceptid}/make_collection",
-            "params": [
-                "conceptid"
-            ]
+            "params": ["conceptid"]
         }
     ],
     "arches:manifest": [
         {
             "url": "/manifest/{id}",
-            "params": [
-                "id"
-            ]
+            "params": ["id"]
         }
     ],
     "arches:manifest_manager": [
@@ -733,36 +639,25 @@
     "arches:map_layer_update": [
         {
             "url": "/map_layer_manager/{maplayerid}",
-            "params": [
-                "maplayerid"
-            ]
+            "params": ["maplayerid"]
         }
     ],
     "arches:model_history": [
         {
             "url": "/graph/{graphid}/model_history",
-            "params": [
-                "graphid"
-            ]
+            "params": ["graphid"]
         }
     ],
     "arches:move_node": [
         {
             "url": "/graph/{graphid}/move_node",
-            "params": [
-                "graphid"
-            ]
+            "params": ["graphid"]
         }
     ],
     "arches:mvt": [
         {
             "url": "/mvt/{nodeid}/{zoom}/{x}/{y}.pbf",
-            "params": [
-                "nodeid",
-                "zoom",
-                "x",
-                "y"
-            ]
+            "params": ["nodeid", "zoom", "x", "y"]
         }
     ],
     "arches:new_graph": [
@@ -774,17 +669,13 @@
     "arches:node": [
         {
             "url": "/node/{graphid}",
-            "params": [
-                "graphid"
-            ]
+            "params": ["graphid"]
         }
     ],
     "arches:node_layer": [
         {
             "url": "/node_layer/{graphid}",
-            "params": [
-                "graphid"
-            ]
+            "params": ["graphid"]
         }
     ],
     "arches:nodegroup": [
@@ -814,10 +705,7 @@
     "arches:password_reset_confirm": [
         {
             "url": "/reset/{uidb64}/{token}",
-            "params": [
-                "uidb64",
-                "token"
-            ]
+            "params": ["uidb64", "token"]
         }
     ],
     "arches:permission_data": [
@@ -835,45 +723,31 @@
     "arches:plugins": [
         {
             "url": "/plugins/{pluginid}",
-            "params": [
-                "pluginid"
-            ]
+            "params": ["pluginid"]
         },
         {
             "url": "/plugins/{pluginid}/{path}",
-            "params": [
-                "pluginid",
-                "path"
-            ]
+            "params": ["pluginid", "path"]
         },
         {
             "url": "/plugins/{slug}",
-            "params": [
-                "slug"
-            ]
+            "params": ["slug"]
         },
         {
             "url": "/plugins/{slug}/{path}",
-            "params": [
-                "slug",
-                "path"
-            ]
+            "params": ["slug", "path"]
         }
     ],
     "arches:publish_graph": [
         {
             "url": "/graph/{graphid}/publish",
-            "params": [
-                "graphid"
-            ]
+            "params": ["graphid"]
         }
     ],
     "arches:rdm": [
         {
             "url": "/rdm/{conceptid}",
-            "params": [
-                "conceptid"
-            ]
+            "params": ["conceptid"]
         }
     ],
     "arches:reindex": [
@@ -897,17 +771,13 @@
     "arches:related_resources": [
         {
             "url": "/resource/related/{resourceid}",
-            "params": [
-                "resourceid"
-            ]
+            "params": ["resourceid"]
         }
     ],
     "arches:remove_functions": [
         {
             "url": "/graph/{graphid}/remove_functions",
-            "params": [
-                "graphid"
-            ]
+            "params": ["graphid"]
         }
     ],
     "arches:reorder_cards": [
@@ -931,9 +801,7 @@
     "arches:report-templates": [
         {
             "url": "/report-templates/{template}",
-            "params": [
-                "template"
-            ]
+            "params": ["template"]
         }
     ],
     "arches:resource": [
@@ -945,50 +813,37 @@
     "arches:resource_cards": [
         {
             "url": "/resource/{resourceid}/cards",
-            "params": [
-                "resourceid"
-            ]
+            "params": ["resourceid"]
         }
     ],
     "arches:resource_copy": [
         {
             "url": "/resource/{resourceid}/copy",
-            "params": [
-                "resourceid"
-            ]
+            "params": ["resourceid"]
         }
     ],
     "arches:resource_data": [
         {
             "url": "/resource/{resourceid}/data/{formid}",
-            "params": [
-                "resourceid",
-                "formid"
-            ]
+            "params": ["resourceid", "formid"]
         }
     ],
     "arches:resource_descriptors": [
         {
             "url": "/resource/descriptors/{resourceid}",
-            "params": [
-                "resourceid"
-            ]
+            "params": ["resourceid"]
         }
     ],
     "arches:resource_edit_log": [
         {
             "url": "/resource/{resourceid}/history",
-            "params": [
-                "resourceid"
-            ]
+            "params": ["resourceid"]
         }
     ],
     "arches:resource_editor": [
         {
             "url": "/resource/{resourceid}",
-            "params": [
-                "resourceid"
-            ]
+            "params": ["resourceid"]
         }
     ],
     "arches:resource_permission_data": [
@@ -1000,59 +855,43 @@
     "arches:resource_report": [
         {
             "url": "/report/{resourceid}",
-            "params": [
-                "resourceid"
-            ]
+            "params": ["resourceid"]
         }
     ],
     "arches:resource_tiles": [
         {
             "url": "/resource/{resourceid}/tiles",
-            "params": [
-                "resourceid"
-            ]
+            "params": ["resourceid"]
         }
     ],
     "arches:resources": [
         {
             "url": "/resources/{resourceid}",
-            "params": [
-                "resourceid"
-            ]
+            "params": ["resourceid"]
         }
     ],
     "arches:resources_graphid": [
         {
             "url": "/resources/{graphid}/{resourceid}",
-            "params": [
-                "graphid",
-                "resourceid"
-            ]
+            "params": ["graphid", "resourceid"]
         }
     ],
     "arches:resources_slug": [
         {
             "url": "/resources/{slug}/{resourceid}",
-            "params": [
-                "slug",
-                "resourceid"
-            ]
+            "params": ["slug", "resourceid"]
         }
     ],
     "arches:restore_state_from_serialized_graph": [
         {
             "url": "/graph/{graphid}/restore_state_from_serialized_graph",
-            "params": [
-                "graphid"
-            ]
+            "params": ["graphid"]
         }
     ],
     "arches:revert_graph": [
         {
             "url": "/graph/{graphid}/revert",
-            "params": [
-                "graphid"
-            ]
+            "params": ["graphid"]
         }
     ],
     "arches:root": [
@@ -1100,17 +939,13 @@
     "arches:spatialview_api": [
         {
             "url": "/api/spatialview/{identifier}",
-            "params": [
-                "identifier"
-            ]
+            "params": ["identifier"]
         }
     ],
     "arches:temp_file": [
         {
             "url": "/temp_file/{file_id}",
-            "params": [
-                "file_id"
-            ]
+            "params": ["file_id"]
         },
         {
             "url": "/temp_file",
@@ -1120,17 +955,13 @@
     "arches:templates": [
         {
             "url": "/templates/{template}",
-            "params": [
-                "template"
-            ]
+            "params": ["template"]
         }
     ],
     "arches:thumbnail": [
         {
             "url": "/thumbnail/{resource_id}",
-            "params": [
-                "resource_id"
-            ]
+            "params": ["resource_id"]
         }
     ],
     "arches:tile": [
@@ -1148,9 +979,7 @@
     "arches:tileserver": [
         {
             "url": "/tileserver/{path}",
-            "params": [
-                "path"
-            ]
+            "params": ["path"]
         }
     ],
     "arches:time_wheel_config": [
@@ -1162,9 +991,7 @@
     "arches:transaction_reverse": [
         {
             "url": "/transaction/{transactionid}/reverse",
-            "params": [
-                "transactionid"
-            ]
+            "params": ["transactionid"]
         }
     ],
     "arches:transform_edtf_for_tile": [
@@ -1194,9 +1021,7 @@
     "arches:update_node": [
         {
             "url": "/graph/{graphid}/update_node",
-            "params": [
-                "graphid"
-            ]
+            "params": ["graphid"]
         }
     ],
     "arches:update_notification_types": [
@@ -1208,17 +1033,13 @@
     "arches:update_published_graph": [
         {
             "url": "/graph/{graphid}/update_published_graph",
-            "params": [
-                "graphid"
-            ]
+            "params": ["graphid"]
         }
     ],
     "arches:update_published_graphs": [
         {
             "url": "/graph/{graphid}/update_published_graphs",
-            "params": [
-                "graphid"
-            ]
+            "params": ["graphid"]
         }
     ],
     "arches:user_profile": [
@@ -1236,61 +1057,43 @@
     "arches:validate": [
         {
             "url": "/validate/{itemtype}/{itemid}",
-            "params": [
-                "itemtype",
-                "itemid"
-            ]
+            "params": ["itemtype", "itemid"]
         }
     ],
     "arches:validatejson": [
         {
             "url": "/validate/{itemtype}",
-            "params": [
-                "itemtype"
-            ]
+            "params": ["itemtype"]
         }
     ],
     "arches:widgets": [
         {
             "url": "/widgets/{template}",
-            "params": [
-                "template"
-            ]
+            "params": ["template"]
         }
     ],
     "arches:workflow_history": [
         {
             "url": "/workflow_history/{workflowid}",
-            "params": [
-                "workflowid"
-            ]
+            "params": ["workflowid"]
         }
     ],
     "arches_component_lab:api-card-x-node-x-widget": [
         {
             "url": "/api/card-x-node-x-widget-data/{graph_slug}/{node_alias}",
-            "params": [
-                "graph_slug",
-                "node_alias"
-            ]
+            "params": ["graph_slug", "node_alias"]
         }
     ],
     "arches_component_lab:api-card-x-node-x-widget-list-from-nodegroup": [
         {
             "url": "/api/card-x-node-x-widget-list-from-nodegroup/{graph_slug}/{nodegroup_alias}",
-            "params": [
-                "graph_slug",
-                "nodegroup_alias"
-            ]
+            "params": ["graph_slug", "nodegroup_alias"]
         }
     ],
     "arches_component_lab:api-concepts-tree": [
         {
             "url": "/api/concepts/{graph_slug}/{node_alias}",
-            "params": [
-                "graph_slug",
-                "node_alias"
-            ]
+            "params": ["graph_slug", "node_alias"]
         }
     ],
     "arches_component_lab:api-languages-with-request-language": [
@@ -1302,18 +1105,13 @@
     "arches_component_lab:api-relatable-resources": [
         {
             "url": "/api/relatable-resources/{graph}/{node_alias}",
-            "params": [
-                "graph",
-                "node_alias"
-            ]
+            "params": ["graph", "node_alias"]
         }
     ],
     "arches_controlled_lists:controlled_list": [
         {
             "url": "/api/controlled_list/{list_id}",
-            "params": [
-                "list_id"
-            ]
+            "params": ["list_id"]
         }
     ],
     "arches_controlled_lists:controlled_list_add": [
@@ -1331,9 +1129,7 @@
     "arches_controlled_lists:controlled_list_item": [
         {
             "url": "/api/controlled_list_item/{item_id}",
-            "params": [
-                "item_id"
-            ]
+            "params": ["item_id"]
         }
     ],
     "arches_controlled_lists:controlled_list_item_add": [
@@ -1345,17 +1141,13 @@
     "arches_controlled_lists:controlled_list_item_copy": [
         {
             "url": "/api/controlled_list_item/{item_id}/copy",
-            "params": [
-                "item_id"
-            ]
+            "params": ["item_id"]
         }
     ],
     "arches_controlled_lists:controlled_list_item_image": [
         {
             "url": "/api/controlled_list_item_image/{image_id}",
-            "params": [
-                "image_id"
-            ]
+            "params": ["image_id"]
         }
     ],
     "arches_controlled_lists:controlled_list_item_image_add": [
@@ -1367,9 +1159,7 @@
     "arches_controlled_lists:controlled_list_item_image_metadata": [
         {
             "url": "/api/controlled_list_item_image_metadata/{metadata_id}",
-            "params": [
-                "metadata_id"
-            ]
+            "params": ["metadata_id"]
         }
     ],
     "arches_controlled_lists:controlled_list_item_image_metadata_add": [
@@ -1381,9 +1171,7 @@
     "arches_controlled_lists:controlled_list_item_value": [
         {
             "url": "/api/controlled_list_item_value/{value_id}",
-            "params": [
-                "value_id"
-            ]
+            "params": ["value_id"]
         }
     ],
     "arches_controlled_lists:controlled_list_item_value_add": [
@@ -1410,9 +1198,45 @@
             "params": []
         }
     ],
+    "arches_lingo:api-advanced-search": [
+        {
+            "url": "/api/advanced-search",
+            "params": []
+        }
+    ],
+    "arches_lingo:api-advanced-search-options": [
+        {
+            "url": "/api/advanced-search/options",
+            "params": []
+        }
+    ],
+    "arches_lingo:api-concept-set-detail": [
+        {
+            "url": "/api/concept-sets/{pk}",
+            "params": ["pk"]
+        }
+    ],
+    "arches_lingo:api-concept-set-members": [
+        {
+            "url": "/api/concept-sets/{pk}/members",
+            "params": ["pk"]
+        }
+    ],
+    "arches_lingo:api-concept-sets": [
+        {
+            "url": "/api/concept-sets",
+            "params": []
+        }
+    ],
     "arches_lingo:api-concepts": [
         {
             "url": "/api/concept-tree",
+            "params": []
+        }
+    ],
+    "arches_lingo:api-lingo-change-password": [
+        {
+            "url": "/api/lingo/change-password",
             "params": []
         }
     ],
@@ -1428,50 +1252,112 @@
             "params": []
         }
     ],
+    "arches_lingo:api-lingo-contributors": [
+        {
+            "url": "/api/lingo/contributors",
+            "params": []
+        }
+    ],
+    "arches_lingo:api-lingo-dashboard": [
+        {
+            "url": "/api/lingo/dashboard",
+            "params": []
+        }
+    ],
+    "arches_lingo:api-lingo-edit-log": [
+        {
+            "url": "/api/lingo/resource/{resourceid}/edit-log",
+            "params": ["resourceid"]
+        }
+    ],
+    "arches_lingo:api-lingo-missing-translations": [
+        {
+            "url": "/api/lingo/concepts/missing-translations",
+            "params": []
+        }
+    ],
     "arches_lingo:api-lingo-resource": [
         {
             "url": "/api/lingo/{graph}/{pk}",
-            "params": [
-                "graph",
-                "pk"
-            ]
+            "params": ["graph", "pk"]
         }
     ],
     "arches_lingo:api-lingo-resource-partial": [
         {
             "url": "/api/lingo/{graph}/{pk}/{nodegroup_alias}",
-            "params": [
-                "graph",
-                "pk",
-                "nodegroup_alias"
-            ]
+            "params": ["graph", "pk", "nodegroup_alias"]
+        }
+    ],
+    "arches_lingo:api-lingo-resource-reference-count": [
+        {
+            "url": "/api/lingo/resource/{resourceid}/reference-count",
+            "params": ["resourceid"]
         }
     ],
     "arches_lingo:api-lingo-resources": [
         {
             "url": "/api/lingo/{graph}",
-            "params": [
-                "graph"
-            ]
+            "params": ["graph"]
+        }
+    ],
+    "arches_lingo:api-lingo-scheme": [
+        {
+            "url": "/api/lingo/schemes/{pk}",
+            "params": ["pk"]
+        }
+    ],
+    "arches_lingo:api-lingo-scheme-label-counts": [
+        {
+            "url": "/api/lingo/schemes/{pk}/label-counts",
+            "params": ["pk"]
+        }
+    ],
+    "arches_lingo:api-lingo-settings": [
+        {
+            "url": "/api/lingo/settings",
+            "params": []
+        }
+    ],
+    "arches_lingo:api-lingo-sources": [
+        {
+            "url": "/api/lingo/sources",
+            "params": []
         }
     ],
     "arches_lingo:api-lingo-tile": [
         {
             "url": "/api/lingo/{graph}/{nodegroup_alias}/{pk}",
-            "params": [
-                "graph",
-                "nodegroup_alias",
-                "pk"
-            ]
+            "params": ["graph", "nodegroup_alias", "pk"]
         }
     ],
     "arches_lingo:api-lingo-tiles": [
         {
             "url": "/api/lingo/{graph}/{nodegroup_alias}",
-            "params": [
-                "graph",
-                "nodegroup_alias"
-            ]
+            "params": ["graph", "nodegroup_alias"]
+        }
+    ],
+    "arches_lingo:api-lingo-user": [
+        {
+            "url": "/api/lingo/user",
+            "params": []
+        }
+    ],
+    "arches_lingo:api-lingo-user-profile": [
+        {
+            "url": "/api/lingo/user-profile",
+            "params": []
+        }
+    ],
+    "arches_lingo:api-saved-search-detail": [
+        {
+            "url": "/api/saved-searches/{pk}",
+            "params": ["pk"]
+        }
+    ],
+    "arches_lingo:api-saved-searches": [
+        {
+            "url": "/api/saved-searches",
+            "params": []
         }
     ],
     "arches_lingo:api-search": [
@@ -1483,9 +1369,25 @@
     "arches_lingo:concept": [
         {
             "url": "/concept/{id}",
-            "params": [
-                "id"
-            ]
+            "params": ["id"]
+        }
+    ],
+    "arches_lingo:contributor": [
+        {
+            "url": "/contributor/{id}",
+            "params": ["id"]
+        }
+    ],
+    "arches_lingo:contributors": [
+        {
+            "url": "/contributors",
+            "params": []
+        }
+    ],
+    "arches_lingo:dashboard": [
+        {
+            "url": "/dashboard",
+            "params": []
         }
     ],
     "arches_lingo:login": [
@@ -1512,6 +1414,12 @@
             "params": []
         }
     ],
+    "arches_lingo:profile": [
+        {
+            "url": "/profile",
+            "params": []
+        }
+    ],
     "arches_lingo:root": [
         {
             "url": "/",
@@ -1521,22 +1429,24 @@
     "arches_lingo:scheme": [
         {
             "url": "/scheme/{id}",
-            "params": [
-                "id"
-            ]
-        }
-    ],
-    "arches_lingo:scheme-root": [
-        {
-            "url": "/scheme/{id}",
-            "params": [
-                "id"
-            ]
+            "params": ["id"]
         }
     ],
     "arches_lingo:schemes": [
         {
             "url": "/schemes",
+            "params": []
+        }
+    ],
+    "arches_lingo:source": [
+        {
+            "url": "/source/{id}",
+            "params": ["id"]
+        }
+    ],
+    "arches_lingo:sources": [
+        {
+            "url": "/sources",
             "params": []
         }
     ],
@@ -1549,38 +1459,31 @@
     "arches_querysets:api-tile": [
         {
             "url": "/api/tile/{graph}/{nodegroup_alias}/{pk}",
-            "params": [
-                "graph",
-                "nodegroup_alias",
-                "pk"
-            ]
+            "params": ["graph", "nodegroup_alias", "pk"]
         }
     ],
     "arches_querysets:api-tile-blank": [
         {
             "url": "/api/tile/{graph}/{nodegroup_alias}/blank",
-            "params": [
-                "graph",
-                "nodegroup_alias"
-            ]
+            "params": ["graph", "nodegroup_alias"]
         }
     ],
     "arches_querysets:api-tile-list-create": [
         {
             "url": "/api/tile-list-create/{graph}/{nodegroup_alias}/{pk}",
-            "params": [
-                "graph",
-                "nodegroup_alias",
-                "pk"
-            ]
+            "params": ["graph", "nodegroup_alias", "pk"]
+        }
+    ],
+    "arches_querysets:api-tile-new-resource": [
+        {
+            "url": "/api/tile-new-resource/{graph}/{nodegroup_alias}",
+            "params": ["graph", "nodegroup_alias"]
         }
     ],
     "django:app_list": [
         {
             "url": "/admin/{app_label}",
-            "params": [
-                "app_label"
-            ]
+            "params": ["app_label"]
         }
     ],
     "django:auth_group_add": [
@@ -1592,9 +1495,7 @@
     "django:auth_group_change": [
         {
             "url": "/admin/auth/group/{object_id}/change",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:auth_group_changelist": [
@@ -1606,17 +1507,13 @@
     "django:auth_group_delete": [
         {
             "url": "/admin/auth/group/{object_id}/delete",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:auth_group_history": [
         {
             "url": "/admin/auth/group/{object_id}/history",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:auth_user_add": [
@@ -1628,9 +1525,7 @@
     "django:auth_user_change": [
         {
             "url": "/admin/auth/user/{object_id}/change",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:auth_user_changelist": [
@@ -1642,25 +1537,19 @@
     "django:auth_user_delete": [
         {
             "url": "/admin/auth/user/{object_id}/delete",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:auth_user_history": [
         {
             "url": "/admin/auth/user/{object_id}/history",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:auth_user_password_change": [
         {
             "url": "/admin/auth/user/{id}/password",
-            "params": [
-                "id"
-            ]
+            "params": ["id"]
         }
     ],
     "django:autocomplete": [
@@ -1678,9 +1567,7 @@
     "django:django_celery_results_groupresult_change": [
         {
             "url": "/admin/django_celery_results/groupresult/{object_id}/change",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:django_celery_results_groupresult_changelist": [
@@ -1692,17 +1579,13 @@
     "django:django_celery_results_groupresult_delete": [
         {
             "url": "/admin/django_celery_results/groupresult/{object_id}/delete",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:django_celery_results_groupresult_history": [
         {
             "url": "/admin/django_celery_results/groupresult/{object_id}/history",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:django_celery_results_taskresult_add": [
@@ -1714,9 +1597,7 @@
     "django:django_celery_results_taskresult_change": [
         {
             "url": "/admin/django_celery_results/taskresult/{object_id}/change",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:django_celery_results_taskresult_changelist": [
@@ -1728,25 +1609,19 @@
     "django:django_celery_results_taskresult_delete": [
         {
             "url": "/admin/django_celery_results/taskresult/{object_id}/delete",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:django_celery_results_taskresult_history": [
         {
             "url": "/admin/django_celery_results/taskresult/{object_id}/history",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:files": [
         {
             "url": "/files/{path}",
-            "params": [
-                "path"
-            ]
+            "params": ["path"]
         }
     ],
     "django:index": [
@@ -1776,9 +1651,7 @@
     "django:models_ddatatype_change": [
         {
             "url": "/admin/models/ddatatype/{object_id}/change",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:models_ddatatype_changelist": [
@@ -1790,17 +1663,13 @@
     "django:models_ddatatype_delete": [
         {
             "url": "/admin/models/ddatatype/{object_id}/delete",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:models_ddatatype_history": [
         {
             "url": "/admin/models/ddatatype/{object_id}/history",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:models_etlmodule_add": [
@@ -1812,9 +1681,7 @@
     "django:models_etlmodule_change": [
         {
             "url": "/admin/models/etlmodule/{object_id}/change",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:models_etlmodule_changelist": [
@@ -1826,17 +1693,13 @@
     "django:models_etlmodule_delete": [
         {
             "url": "/admin/models/etlmodule/{object_id}/delete",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:models_etlmodule_history": [
         {
             "url": "/admin/models/etlmodule/{object_id}/history",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:models_geocoder_add": [
@@ -1848,9 +1711,7 @@
     "django:models_geocoder_change": [
         {
             "url": "/admin/models/geocoder/{object_id}/change",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:models_geocoder_changelist": [
@@ -1862,17 +1723,13 @@
     "django:models_geocoder_delete": [
         {
             "url": "/admin/models/geocoder/{object_id}/delete",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:models_geocoder_history": [
         {
             "url": "/admin/models/geocoder/{object_id}/history",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:models_graphmodel_add": [
@@ -1884,9 +1741,7 @@
     "django:models_graphmodel_change": [
         {
             "url": "/admin/models/graphmodel/{object_id}/change",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:models_graphmodel_changelist": [
@@ -1898,17 +1753,13 @@
     "django:models_graphmodel_delete": [
         {
             "url": "/admin/models/graphmodel/{object_id}/delete",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:models_graphmodel_history": [
         {
             "url": "/admin/models/graphmodel/{object_id}/history",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:models_groupmapsettings_add": [
@@ -1920,9 +1771,7 @@
     "django:models_groupmapsettings_change": [
         {
             "url": "/admin/models/groupmapsettings/{object_id}/change",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:models_groupmapsettings_changelist": [
@@ -1934,17 +1783,13 @@
     "django:models_groupmapsettings_delete": [
         {
             "url": "/admin/models/groupmapsettings/{object_id}/delete",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:models_groupmapsettings_history": [
         {
             "url": "/admin/models/groupmapsettings/{object_id}/history",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:models_iiifmanifest_add": [
@@ -1956,9 +1801,7 @@
     "django:models_iiifmanifest_change": [
         {
             "url": "/admin/models/iiifmanifest/{object_id}/change",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:models_iiifmanifest_changelist": [
@@ -1970,17 +1813,13 @@
     "django:models_iiifmanifest_delete": [
         {
             "url": "/admin/models/iiifmanifest/{object_id}/delete",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:models_iiifmanifest_history": [
         {
             "url": "/admin/models/iiifmanifest/{object_id}/history",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:models_language_add": [
@@ -1992,9 +1831,7 @@
     "django:models_language_change": [
         {
             "url": "/admin/models/language/{object_id}/change",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:models_language_changelist": [
@@ -2006,17 +1843,13 @@
     "django:models_language_delete": [
         {
             "url": "/admin/models/language/{object_id}/delete",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:models_language_history": [
         {
             "url": "/admin/models/language/{object_id}/history",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:models_maplayer_add": [
@@ -2028,9 +1861,7 @@
     "django:models_maplayer_change": [
         {
             "url": "/admin/models/maplayer/{object_id}/change",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:models_maplayer_changelist": [
@@ -2042,17 +1873,13 @@
     "django:models_maplayer_delete": [
         {
             "url": "/admin/models/maplayer/{object_id}/delete",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:models_maplayer_history": [
         {
             "url": "/admin/models/maplayer/{object_id}/history",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:models_mapmarker_add": [
@@ -2064,9 +1891,7 @@
     "django:models_mapmarker_change": [
         {
             "url": "/admin/models/mapmarker/{object_id}/change",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:models_mapmarker_changelist": [
@@ -2078,17 +1903,13 @@
     "django:models_mapmarker_delete": [
         {
             "url": "/admin/models/mapmarker/{object_id}/delete",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:models_mapmarker_history": [
         {
             "url": "/admin/models/mapmarker/{object_id}/history",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:models_mapsource_add": [
@@ -2100,9 +1921,7 @@
     "django:models_mapsource_change": [
         {
             "url": "/admin/models/mapsource/{object_id}/change",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:models_mapsource_changelist": [
@@ -2114,17 +1933,13 @@
     "django:models_mapsource_delete": [
         {
             "url": "/admin/models/mapsource/{object_id}/delete",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:models_mapsource_history": [
         {
             "url": "/admin/models/mapsource/{object_id}/history",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:models_nodegroup_add": [
@@ -2136,9 +1951,7 @@
     "django:models_nodegroup_change": [
         {
             "url": "/admin/models/nodegroup/{object_id}/change",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:models_nodegroup_changelist": [
@@ -2150,17 +1963,13 @@
     "django:models_nodegroup_delete": [
         {
             "url": "/admin/models/nodegroup/{object_id}/delete",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:models_nodegroup_history": [
         {
             "url": "/admin/models/nodegroup/{object_id}/history",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:models_plugin_add": [
@@ -2172,9 +1981,7 @@
     "django:models_plugin_change": [
         {
             "url": "/admin/models/plugin/{object_id}/change",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:models_plugin_changelist": [
@@ -2186,17 +1993,13 @@
     "django:models_plugin_delete": [
         {
             "url": "/admin/models/plugin/{object_id}/delete",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:models_plugin_history": [
         {
             "url": "/admin/models/plugin/{object_id}/history",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:models_resourceinstancelifecycle_add": [
@@ -2208,9 +2011,7 @@
     "django:models_resourceinstancelifecycle_change": [
         {
             "url": "/admin/models/resourceinstancelifecycle/{object_id}/change",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:models_resourceinstancelifecycle_changelist": [
@@ -2222,17 +2023,13 @@
     "django:models_resourceinstancelifecycle_delete": [
         {
             "url": "/admin/models/resourceinstancelifecycle/{object_id}/delete",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:models_resourceinstancelifecycle_history": [
         {
             "url": "/admin/models/resourceinstancelifecycle/{object_id}/history",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:models_resourceinstancelifecyclestate_add": [
@@ -2244,9 +2041,7 @@
     "django:models_resourceinstancelifecyclestate_change": [
         {
             "url": "/admin/models/resourceinstancelifecyclestate/{object_id}/change",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:models_resourceinstancelifecyclestate_changelist": [
@@ -2258,17 +2053,13 @@
     "django:models_resourceinstancelifecyclestate_delete": [
         {
             "url": "/admin/models/resourceinstancelifecyclestate/{object_id}/delete",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:models_resourceinstancelifecyclestate_history": [
         {
             "url": "/admin/models/resourceinstancelifecyclestate/{object_id}/history",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:models_searchcomponent_add": [
@@ -2280,9 +2071,7 @@
     "django:models_searchcomponent_change": [
         {
             "url": "/admin/models/searchcomponent/{object_id}/change",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:models_searchcomponent_changelist": [
@@ -2294,17 +2083,13 @@
     "django:models_searchcomponent_delete": [
         {
             "url": "/admin/models/searchcomponent/{object_id}/delete",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:models_searchcomponent_history": [
         {
             "url": "/admin/models/searchcomponent/{object_id}/history",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:models_spatialview_add": [
@@ -2316,9 +2101,7 @@
     "django:models_spatialview_change": [
         {
             "url": "/admin/models/spatialview/{object_id}/change",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:models_spatialview_changelist": [
@@ -2330,17 +2113,13 @@
     "django:models_spatialview_delete": [
         {
             "url": "/admin/models/spatialview/{object_id}/delete",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:models_spatialview_history": [
         {
             "url": "/admin/models/spatialview/{object_id}/history",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:models_userpreference_add": [
@@ -2352,9 +2131,7 @@
     "django:models_userpreference_change": [
         {
             "url": "/admin/models/userpreference/{object_id}/change",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:models_userpreference_changelist": [
@@ -2366,17 +2143,13 @@
     "django:models_userpreference_delete": [
         {
             "url": "/admin/models/userpreference/{object_id}/delete",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:models_userpreference_history": [
         {
             "url": "/admin/models/userpreference/{object_id}/history",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:models_userprofile_add": [
@@ -2388,9 +2161,7 @@
     "django:models_userprofile_change": [
         {
             "url": "/admin/models/userprofile/{object_id}/change",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:models_userprofile_changelist": [
@@ -2402,17 +2173,13 @@
     "django:models_userprofile_delete": [
         {
             "url": "/admin/models/userprofile/{object_id}/delete",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:models_userprofile_history": [
         {
             "url": "/admin/models/userprofile/{object_id}/history",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:models_widget_add": [
@@ -2424,9 +2191,7 @@
     "django:models_widget_change": [
         {
             "url": "/admin/models/widget/{object_id}/change",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:models_widget_changelist": [
@@ -2438,17 +2203,13 @@
     "django:models_widget_delete": [
         {
             "url": "/admin/models/widget/{object_id}/delete",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:models_widget_history": [
         {
             "url": "/admin/models/widget/{object_id}/history",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:oauth2_provider_accesstoken_add": [
@@ -2460,9 +2221,7 @@
     "django:oauth2_provider_accesstoken_change": [
         {
             "url": "/admin/oauth2_provider/accesstoken/{object_id}/change",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:oauth2_provider_accesstoken_changelist": [
@@ -2474,17 +2233,13 @@
     "django:oauth2_provider_accesstoken_delete": [
         {
             "url": "/admin/oauth2_provider/accesstoken/{object_id}/delete",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:oauth2_provider_accesstoken_history": [
         {
             "url": "/admin/oauth2_provider/accesstoken/{object_id}/history",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:oauth2_provider_application_add": [
@@ -2496,9 +2251,7 @@
     "django:oauth2_provider_application_change": [
         {
             "url": "/admin/oauth2_provider/application/{object_id}/change",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:oauth2_provider_application_changelist": [
@@ -2510,17 +2263,13 @@
     "django:oauth2_provider_application_delete": [
         {
             "url": "/admin/oauth2_provider/application/{object_id}/delete",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:oauth2_provider_application_history": [
         {
             "url": "/admin/oauth2_provider/application/{object_id}/history",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:oauth2_provider_grant_add": [
@@ -2532,9 +2281,7 @@
     "django:oauth2_provider_grant_change": [
         {
             "url": "/admin/oauth2_provider/grant/{object_id}/change",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:oauth2_provider_grant_changelist": [
@@ -2546,17 +2293,13 @@
     "django:oauth2_provider_grant_delete": [
         {
             "url": "/admin/oauth2_provider/grant/{object_id}/delete",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:oauth2_provider_grant_history": [
         {
             "url": "/admin/oauth2_provider/grant/{object_id}/history",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:oauth2_provider_idtoken_add": [
@@ -2568,9 +2311,7 @@
     "django:oauth2_provider_idtoken_change": [
         {
             "url": "/admin/oauth2_provider/idtoken/{object_id}/change",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:oauth2_provider_idtoken_changelist": [
@@ -2582,17 +2323,13 @@
     "django:oauth2_provider_idtoken_delete": [
         {
             "url": "/admin/oauth2_provider/idtoken/{object_id}/delete",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:oauth2_provider_idtoken_history": [
         {
             "url": "/admin/oauth2_provider/idtoken/{object_id}/history",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:oauth2_provider_refreshtoken_add": [
@@ -2604,9 +2341,7 @@
     "django:oauth2_provider_refreshtoken_change": [
         {
             "url": "/admin/oauth2_provider/refreshtoken/{object_id}/change",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:oauth2_provider_refreshtoken_changelist": [
@@ -2618,17 +2353,13 @@
     "django:oauth2_provider_refreshtoken_delete": [
         {
             "url": "/admin/oauth2_provider/refreshtoken/{object_id}/delete",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:oauth2_provider_refreshtoken_history": [
         {
             "url": "/admin/oauth2_provider/refreshtoken/{object_id}/history",
-            "params": [
-                "object_id"
-            ]
+            "params": ["object_id"]
         }
     ],
     "django:password_change": [
@@ -2664,88 +2395,61 @@
     "django:view_on_site": [
         {
             "url": "/admin/r/{content_type_id}/{object_id}",
-            "params": [
-                "content_type_id",
-                "object_id"
-            ]
+            "params": ["content_type_id", "object_id"]
         }
     ],
     "guardian:models_etlmodule_permissions": [
         {
             "url": "/admin/models/etlmodule/{object_pk}/permissions",
-            "params": [
-                "object_pk"
-            ]
+            "params": ["object_pk"]
         }
     ],
     "guardian:models_etlmodule_permissions_manage_group": [
         {
             "url": "/admin/models/etlmodule/{object_pk}/permissions/group-manage/{group_id}",
-            "params": [
-                "object_pk",
-                "group_id"
-            ]
+            "params": ["object_pk", "group_id"]
         }
     ],
     "guardian:models_etlmodule_permissions_manage_user": [
         {
             "url": "/admin/models/etlmodule/{object_pk}/permissions/user-manage/{user_id}",
-            "params": [
-                "object_pk",
-                "user_id"
-            ]
+            "params": ["object_pk", "user_id"]
         }
     ],
     "guardian:models_maplayer_permissions": [
         {
             "url": "/admin/models/maplayer/{object_pk}/permissions",
-            "params": [
-                "object_pk"
-            ]
+            "params": ["object_pk"]
         }
     ],
     "guardian:models_maplayer_permissions_manage_group": [
         {
             "url": "/admin/models/maplayer/{object_pk}/permissions/group-manage/{group_id}",
-            "params": [
-                "object_pk",
-                "group_id"
-            ]
+            "params": ["object_pk", "group_id"]
         }
     ],
     "guardian:models_maplayer_permissions_manage_user": [
         {
             "url": "/admin/models/maplayer/{object_pk}/permissions/user-manage/{user_id}",
-            "params": [
-                "object_pk",
-                "user_id"
-            ]
+            "params": ["object_pk", "user_id"]
         }
     ],
     "guardian:models_plugin_permissions": [
         {
             "url": "/admin/models/plugin/{object_pk}/permissions",
-            "params": [
-                "object_pk"
-            ]
+            "params": ["object_pk"]
         }
     ],
     "guardian:models_plugin_permissions_manage_group": [
         {
             "url": "/admin/models/plugin/{object_pk}/permissions/group-manage/{group_id}",
-            "params": [
-                "object_pk",
-                "group_id"
-            ]
+            "params": ["object_pk", "group_id"]
         }
     ],
     "guardian:models_plugin_permissions_manage_user": [
         {
             "url": "/admin/models/plugin/{object_pk}/permissions/user-manage/{user_id}",
-            "params": [
-                "object_pk",
-                "user_id"
-            ]
+            "params": ["object_pk", "user_id"]
         }
     ],
     "oauth2:authorize": [
@@ -2757,9 +2461,7 @@
     "oauth2:authorized-token-delete": [
         {
             "url": "/o/authorized_tokens/{pk}/delete",
-            "params": [
-                "pk"
-            ]
+            "params": ["pk"]
         }
     ],
     "oauth2:authorized-token-list": [
@@ -2771,17 +2473,13 @@
     "oauth2:delete": [
         {
             "url": "/o/applications/{pk}/delete",
-            "params": [
-                "pk"
-            ]
+            "params": ["pk"]
         }
     ],
     "oauth2:detail": [
         {
             "url": "/o/applications/{pk}",
-            "params": [
-                "pk"
-            ]
+            "params": ["pk"]
         }
     ],
     "oauth2:introspect": [
@@ -2835,9 +2533,7 @@
     "oauth2:update": [
         {
             "url": "/o/applications/{pk}/update",
-            "params": [
-                "pk"
-            ]
+            "params": ["pk"]
         }
     ],
     "oauth2:user-info": [

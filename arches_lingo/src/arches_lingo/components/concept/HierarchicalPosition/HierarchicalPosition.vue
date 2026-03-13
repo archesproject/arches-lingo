@@ -10,7 +10,10 @@ import HierarchicalPositionEditor from "@/arches_lingo/components/concept/Hierar
 import { EDIT, VIEW } from "@/arches_lingo/constants.ts";
 
 import { fetchTileData } from "@/arches_component_lab/generics/GenericCard/api.ts";
-import { fetchConceptResources } from "@/arches_lingo/api.ts";
+import {
+    fetchConceptResources,
+    fetchLingoResourcePartial,
+} from "@/arches_lingo/api.ts";
 import { useResourceStore } from "@/arches_lingo/composables/useResourceStore.ts";
 import type {
     ConceptClassificationStatus,
@@ -110,6 +113,18 @@ watch(
 );
 
 onMounted(async () => {
+    schemeId.value =
+        store.resource.value?.aliased_data?.part_of_scheme.aliased_data.part_of_scheme?.details[0]?.resource_id;
+    if (!schemeId.value && props.resourceInstanceId) {
+        const partOfSchemeTile = await fetchLingoResourcePartial(
+            "concept",
+            props.resourceInstanceId!,
+            "part_of_scheme",
+        );
+        schemeId.value =
+            partOfSchemeTile.aliased_data?.part_of_scheme.aliased_data.part_of_scheme?.details[0]?.resource_id;
+    }
+
     if (shouldCreateNewTile) {
         const blankTileData = await fetchTileData(
             props.graphSlug,
