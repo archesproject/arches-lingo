@@ -295,7 +295,11 @@ watch(
             }
 
             await nextTick();
-            scrollToItemInTree(route.params.id as string, true);
+            scrollToItemInTree(
+                (route.meta.resolvedResourceId as string) ||
+                    (route.params.id as string),
+                true,
+            );
             return;
         }
 
@@ -663,7 +667,9 @@ async function selectNodeFromRoute(
     newRoute: typeof route,
     shouldScroll: boolean,
 ) {
-    const routeNodeId = newRoute.params.id as string;
+    const routeNodeId =
+        (newRoute.meta.resolvedResourceId as string) ||
+        (newRoute.params.id as string);
 
     removeAllNewNodes();
 

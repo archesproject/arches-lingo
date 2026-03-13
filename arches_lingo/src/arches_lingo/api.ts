@@ -823,6 +823,40 @@ export const updateResourceInstanceLifecycleState = async (
     return parsedResponseBody;
 };
 
+export const resolveSchemeIdentifier = async (
+    schemeIdentifier: string,
+): Promise<{ resourceinstanceid: string } | null> => {
+    const url = generateArchesURL("arches_lingo:api-lingo-scheme-resolve", {
+        scheme_identifier: schemeIdentifier,
+    });
+
+    const response = await fetch(url);
+    const parsedResponseBody = await response.json();
+    if (response.status === 404) return null;
+    if (!response.ok) {
+        throw new Error(parsedResponseBody.message || response.statusText);
+    }
+    return parsedResponseBody;
+};
+
+export const resolveConceptIdentifier = async (
+    schemeIdentifier: string,
+    conceptIdentifier: string,
+): Promise<{ resourceinstanceid: string } | null> => {
+    const url = generateArchesURL("arches_lingo:api-lingo-concept-resolve", {
+        scheme_identifier: schemeIdentifier,
+        concept_identifier: conceptIdentifier,
+    });
+
+    const response = await fetch(url);
+    const parsedResponseBody = await response.json();
+    if (response.status === 404) return null;
+    if (!response.ok) {
+        throw new Error(parsedResponseBody.message || response.statusText);
+    }
+    return parsedResponseBody;
+};
+
 export const fetchSchemeURITemplate = async (
     schemeResourceInstanceId: string,
 ) => {
