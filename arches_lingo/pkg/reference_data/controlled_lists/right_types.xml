@@ -2,9 +2,41 @@
 <rdf:RDF
   xmlns:skos="http://www.w3.org/2004/02/skos/core#"
   xmlns:dcterms="http://purl.org/dc/terms/"
+  xmlns:ns1="https://"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 >
-  <skos:ConceptScheme rdf:about="http://localhost:8000/1c950e16-3fcf-4f33-9e5e-ce5c6c992cca">
-    <dcterms:title>Right Types</dcterms:title>
-  </skos:ConceptScheme>
+  <skos:Concept rdf:about="https://lingo.dev.fargeo.com9c7e055b-6ce8-45e2-a89f-3cef96503bc1">
+    <skos:inScheme>
+      <skos:ConceptScheme rdf:about="https://lingo.dev.fargeo.come7e56dd5-b03c-4c70-a943-2af45f50135d">
+        <dcterms:title>Right Types</dcterms:title>
+      </skos:ConceptScheme>
+    </skos:inScheme>
+    <ns1:lingo.dev.fargeo.comsortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</ns1:lingo.dev.fargeo.comsortorder>
+    <skos:prefLabel xml:lang="en">Crown Copyright</skos:prefLabel>
+    <dcterms:identifier>http://localhost:8000/9c7e055b-6ce8-45e2-a89f-3cef96503bc1</dcterms:identifier>
+  </skos:Concept>
+  <skos:Concept rdf:about="https://lingo.dev.fargeo.com4b20fbcd-a0d2-4a47-83e3-e8acd72b7182">
+    <skos:prefLabel xml:lang="en">Copyright - All Rights Reserved</skos:prefLabel>
+    <ns1:lingo.dev.fargeo.comsortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</ns1:lingo.dev.fargeo.comsortorder>
+    <dcterms:identifier>http://www.archesproject.org/4b20fbcd-a0d2-4a47-83e3-e8acd72b7182</dcterms:identifier>
+    <skos:inScheme rdf:resource="https://lingo.dev.fargeo.come7e56dd5-b03c-4c70-a943-2af45f50135d"/>
+  </skos:Concept>
+  <skos:Concept rdf:about="https://lingo.dev.fargeo.comb402a3df-fd66-4179-a99d-2ce396bbfac5">
+    <dcterms:identifier>http://www.archesproject.org/b402a3df-fd66-4179-a99d-2ce396bbfac5</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">Public Domain</skos:prefLabel>
+    <ns1:lingo.dev.fargeo.comsortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</ns1:lingo.dev.fargeo.comsortorder>
+    <skos:inScheme rdf:resource="https://lingo.dev.fargeo.come7e56dd5-b03c-4c70-a943-2af45f50135d"/>
+  </skos:Concept>
+  <skos:Concept rdf:about="https://lingo.dev.fargeo.comf0373651-e12b-4ea9-8e64-2eea9e6df73d">
+    <ns1:lingo.dev.fargeo.comsortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</ns1:lingo.dev.fargeo.comsortorder>
+    <dcterms:identifier>http://www.archesproject.org/f0373651-e12b-4ea9-8e64-2eea9e6df73d</dcterms:identifier>
+    <skos:inScheme rdf:resource="https://lingo.dev.fargeo.come7e56dd5-b03c-4c70-a943-2af45f50135d"/>
+    <skos:prefLabel xml:lang="en">Copyright Licence (e.g. Creative Commons)</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="https://lingo.dev.fargeo.coma942fca4-2947-4096-8d83-873193f7b395">
+    <ns1:lingo.dev.fargeo.comsortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">3</ns1:lingo.dev.fargeo.comsortorder>
+    <skos:prefLabel xml:lang="en">No Known Copyright Restriction</skos:prefLabel>
+    <skos:inScheme rdf:resource="https://lingo.dev.fargeo.come7e56dd5-b03c-4c70-a943-2af45f50135d"/>
+    <dcterms:identifier>http://www.archesproject.org/a942fca4-2947-4096-8d83-873193f7b395</dcterms:identifier>
+  </skos:Concept>
 </rdf:RDF>

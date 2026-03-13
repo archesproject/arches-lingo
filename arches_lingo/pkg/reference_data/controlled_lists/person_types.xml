@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rdf:RDF
+  xmlns:skos="http://www.w3.org/2004/02/skos/core#"
+  xmlns:dcterms="http://purl.org/dc/terms/"
+  xmlns:ns1="https://"
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+>
+  <skos:Concept rdf:about="https://lingo.dev.fargeo.com7d5bccbd-a4de-45cd-bbf4-d0442dd20ddf">
+    <dcterms:identifier>https://lingo.dev.fargeo.com/plugins/controlled-list-manager/item/7d5bccbd-a4de-45cd-bbf4-d0442dd20ddf</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">Contributor</skos:prefLabel>
+    <ns1:lingo.dev.fargeo.comsortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</ns1:lingo.dev.fargeo.comsortorder>
+    <skos:inScheme>
+      <skos:ConceptScheme rdf:about="https://lingo.dev.fargeo.com712fe6c1-777d-4407-9d39-58884f2f1d18">
+        <dcterms:title>Person Types</dcterms:title>
+      </skos:ConceptScheme>
+    </skos:inScheme>
+  </skos:Concept>
+  <skos:Concept rdf:about="https://lingo.dev.fargeo.com9b2fe23b-7507-4da3-b7bc-d495cc8444b0">
+    <dcterms:identifier>https://lingo.dev.fargeo.com/plugins/controlled-list-manager/item/9b2fe23b-7507-4da3-b7bc-d495cc8444b0</dcterms:identifier>
+    <skos:inScheme rdf:resource="https://lingo.dev.fargeo.com712fe6c1-777d-4407-9d39-58884f2f1d18"/>
+    <ns1:lingo.dev.fargeo.comsortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</ns1:lingo.dev.fargeo.comsortorder>
+    <skos:prefLabel xml:lang="en">Editor</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="https://lingo.dev.fargeo.com350b3c39-fad7-47ba-981c-bb34b6987e14">
+    <ns1:lingo.dev.fargeo.comsortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</ns1:lingo.dev.fargeo.comsortorder>
+    <skos:prefLabel xml:lang="en">Author</skos:prefLabel>
+    <dcterms:identifier>https://lingo.dev.fargeo.com/plugins/controlled-list-manager/item/350b3c39-fad7-47ba-981c-bb34b6987e14</dcterms:identifier>
+    <skos:inScheme rdf:resource="https://lingo.dev.fargeo.com712fe6c1-777d-4407-9d39-58884f2f1d18"/>
+  </skos:Concept>
+</rdf:RDF>
