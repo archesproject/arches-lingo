@@ -9,7 +9,6 @@ import type { Label } from "@/arches_controlled_lists/types.ts";
 import type { StringValue } from "@/arches_component_lab/datatypes/string/types.ts";
 import type { ResourceInstanceListValue } from "@/arches_component_lab/datatypes/resource-instance-list/types.ts";
 import type { FileListValue } from "@/arches_component_lab/datatypes/file-list/types.ts";
-import type { URL } from "@/arches_component_lab/datatypes/url/types";
 
 export interface User {
     first_name: string;
@@ -23,6 +22,7 @@ export interface User {
 
 export interface AppSettings {
     allow_anonymous_access: boolean;
+    public_server_address: string | null;
 }
 
 export interface DisplayedRowRefAndSetter {
@@ -327,7 +327,7 @@ export interface ConceptClassificationStatusAliases extends AliasedData {
 }
 
 export interface ConceptHeaderData {
-    uri?: URL;
+    uri?: string;
     name?: string;
     descriptor?: ResourceDescriptor;
     principalUser?: number | string;
@@ -340,7 +340,7 @@ export interface ConceptHeaderData {
 }
 
 export interface SchemeHeader {
-    uri?: URL;
+    uri?: string;
     name?: string;
     descriptor?: ResourceDescriptor;
     principalUser?: number | string;
@@ -436,6 +436,16 @@ export interface PaginatorDetails {
     has_next: boolean;
     total_notifications: number;
     unread_notifications: number;
+}
+
+export interface ResourceInstanceLifecycleState {
+    id: string;
+    name: string;
+    action_label: string;
+    can_edit_resource_instances?: boolean;
+    can_delete_resource_instances?: boolean;
+    next_resource_instance_lifecycle_states?: ResourceInstanceLifecycleState[];
+    previous_resource_instance_lifecycle_states?: ResourceInstanceLifecycleState[];
 }
 
 export interface EditLogEntry {

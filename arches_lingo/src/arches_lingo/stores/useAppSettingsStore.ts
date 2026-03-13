@@ -12,6 +12,10 @@ export const useAppSettingsStore = defineStore("appSettings", () => {
         () => settings.value?.allow_anonymous_access ?? false,
     );
 
+    const publicServerAddress = computed(
+        () => settings.value?.public_server_address ?? undefined,
+    );
+
     async function initialize() {
         settings.value = await fetchAppSettings();
     }
@@ -19,6 +23,7 @@ export const useAppSettingsStore = defineStore("appSettings", () => {
     return {
         settings,
         allowAnonymousAccess,
+        publicServerAddress,
         initialize,
     };
 });

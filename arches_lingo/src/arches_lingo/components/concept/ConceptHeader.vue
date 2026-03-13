@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { inject, onMounted, ref, watch, computed } from "vue";
+import type { Ref } from "vue";
 
 import { useConfirm } from "primevue/useconfirm";
 import { useGettext } from "vue3-gettext";
@@ -53,6 +54,7 @@ import type {
     ConceptClassificationStatusAliases,
     Identifier,
     ResourceInstanceResult,
+    ResourceInstanceLifecycleState,
     DataComponentMode,
 } from "@/arches_lingo/types.ts";
 import type { Label, Labellable } from "@/arches_controlled_lists/types";
@@ -182,9 +184,9 @@ async function onConceptTypeChange(newValue: ReferenceSelectValue) {
     }
 }
 
-const resourceInstanceLifecycleState = inject<{
-    value: { name: string } | undefined;
-}>("resourceInstanceLifecycleState");
+const resourceInstanceLifecycleState = inject<
+    Ref<ResourceInstanceLifecycleState | undefined>
+>("resourceInstanceLifecycleState");
 
 const lifecycleStateLabel = computed(() => {
     const state = resourceInstanceLifecycleState?.value;
@@ -195,9 +197,32 @@ const lifecycleStateLabel = computed(() => {
     return state?.name || "--";
 });
 
+const canEditResourceInstances = computed(() => {
+    return (
+        isEditor &&
+        props.resourceInstanceId &&
+        Boolean(
+            resourceInstanceLifecycleState?.value?.can_edit_resource_instances,
+        )
+    );
+});
+
+const canDeleteResourceInstances = computed(() => {
+    return (
+        isEditor &&
+        props.resourceInstanceId &&
+        Boolean(
+            resourceInstanceLifecycleState?.value
+                ?.can_delete_resource_instances,
+        )
+    );
+});
+
 onMounted(async () => {
     try {
-        if (!props.resourceInstanceId) {
+        const resourceInstanceId = props.resourceInstanceId;
+
+        if (!resourceInstanceId) {
             label.value = {
                 value: $gettext("New Concept"),
                 language_id: selectedLanguage.value.code,
@@ -206,17 +231,17 @@ onMounted(async () => {
             return;
         }
 
-        concept.value = await fetchLingoResource(
-            props.graphSlug,
-            props.resourceInstanceId,
-        );
+        const [fetchedConcept, conceptResource, resourceIdentifiers] =
+            await Promise.all([
+                fetchLingoResource(props.graphSlug, resourceInstanceId),
+                fetchConceptResource(resourceInstanceId),
+                fetchResourceIdentifiers(resourceInstanceId),
+            ]);
+
+        concept.value = fetchedConcept;
 
         conceptTypeTile.value =
             concept.value?.aliased_data?.[CONCEPT_TYPE_NODE_ALIAS];
-
-        const conceptResource = await fetchConceptResource(
-            props.resourceInstanceId,
-        );
 
         label.value = getItemLabel(
             conceptResource,
@@ -224,12 +249,9 @@ onMounted(async () => {
             systemLanguage.value.code,
         );
 
-        const resourceIdentifiers = await fetchResourceIdentifiers(
-            props.resourceInstanceId,
-        );
         conceptIdentifierValue.value = resourceIdentifiers?.[0]?.identifier;
 
-        extractConceptHeaderData(concept.value!);
+        extractConceptHeaderData(fetchedConcept);
     } catch (error) {
         toast.add({
             severity: ERROR,
@@ -331,8 +353,9 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
     const name = concept?.name;
     const descriptor = extractDescriptors(concept, selectedLanguage.value);
     // TODO: get human-readable user name from resource endpoint
-    const principalUser = "Anonymous"; //concept?.principalUser; // returns userid int
-    const uri = aliased_data?.uri?.aliased_data?.uri_content?.url;
+    const principalUser = "Anonymous";
+
+    const uri = aliased_data?.uri?.aliased_data?.uri_content?.node_value;
     const partOfScheme =
         aliased_data?.part_of_scheme?.aliased_data?.part_of_scheme;
     const parentConcepts = (aliased_data?.classification_status || []).flatMap(
@@ -431,16 +454,15 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                     <span>{{ $gettext("Export") }}</span>
                 </Button>
                 <Button
-                    v-if="isEditor"
+                    v-if="canEditResourceInstances"
                     icon="pi pi-plus-circle"
                     :label="$gettext('Add Child')"
                     class="add-button"
                     @click="addChild"
                 />
 
-                <!-- TODO: button should reflect published state of concept: delete if draft, deprecate if URI is present -->
                 <Button
-                    v-if="isEditor"
+                    v-if="canDeleteResourceInstances"
                     icon="pi pi-trash"
                     severity="danger"
                     class="delete-button"
@@ -468,11 +490,11 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                         }}</span>
                         <Button
                             v-if="data?.uri"
-                            :label="data?.uri?.url_label || data?.uri?.url"
+                            :label="data?.uri"
                             class="concept-uri"
                             variant="link"
                             as="a"
-                            :href="data?.uri?.url"
+                            :href="data?.uri"
                             target="_blank"
                             rel="noopener"
                             :disabled="!data?.uri"
@@ -486,7 +508,6 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                 </div>
 
                 <div class="header-row">
-                    <!-- TODO: Human-reable conceptid to be displayed here -->
                     <div class="header-item">
                         <span class="header-item-label">
                             {{ $gettext("Scheme:") }}

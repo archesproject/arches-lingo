@@ -1,5 +1,14 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref, watch } from "vue";
+import {
+    computed,
+    inject,
+    nextTick,
+    onMounted,
+    provide,
+    ref,
+    watch,
+} from "vue";
+import type { Ref } from "vue";
 
 import { useRoute, useRouter } from "vue-router";
 import { useGettext } from "vue3-gettext";
@@ -34,7 +43,12 @@ import type {
     TreeSelectionKeys,
 } from "primevue/tree";
 import type { TreeNode } from "primevue/treenode";
-import type { IconLabels, Scheme, Concept } from "@/arches_lingo/types";
+import type {
+    IconLabels,
+    Scheme,
+    Concept,
+    ResourceInstanceLifecycleState,
+} from "@/arches_lingo/types";
 
 const props = withDefaults(
     defineProps<{
@@ -80,6 +94,29 @@ const expandedKeys = ref<TreeExpandedKeys>({});
 const filterValue = ref("");
 
 const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
+
+const resourceInstanceLifecycleStates = inject<
+    Ref<ResourceInstanceLifecycleState[] | undefined>
+>("resourceInstanceLifecycleStates");
+
+const resourceInstanceLifecycleStateCanEditById = computed(() =>
+    Object.fromEntries(
+        (resourceInstanceLifecycleStates?.value ?? []).map(
+            (
+                resourceInstanceLifecycleState: ResourceInstanceLifecycleState,
+            ) => [
+                resourceInstanceLifecycleState.id,
+                resourceInstanceLifecycleState.can_edit_resource_instances ===
+                    true,
+            ],
+        ),
+    ),
+);
+
+provide(
+    "resourceInstanceLifecycleStateCanEditById",
+    resourceInstanceLifecycleStateCanEditById,
+);
 
 const FILTER_RENDER_CAP = 2500;
 const FILTER_DEBOUNCE_MS = 500;
@@ -258,7 +295,11 @@ watch(
             }
 
             await nextTick();
-            scrollToItemInTree(route.params.id as string, true);
+            scrollToItemInTree(
+                (route.meta.resolvedResourceId as string) ||
+                    (route.params.id as string),
+                true,
+            );
             return;
         }
 
@@ -626,7 +667,9 @@ async function selectNodeFromRoute(
     newRoute: typeof route,
     shouldScroll: boolean,
 ) {
-    const routeNodeId = newRoute.params.id as string;
+    const routeNodeId =
+        (newRoute.meta.resolvedResourceId as string) ||
+        (newRoute.params.id as string);
 
     removeAllNewNodes();
 

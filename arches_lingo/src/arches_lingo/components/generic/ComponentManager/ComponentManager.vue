@@ -79,10 +79,12 @@ const resourceInstanceLifecycleState = ref<object | undefined>(undefined);
 const isFetchingResourceInstanceLifecycleState = ref(false);
 
 const resourceInstanceId = computed<string | undefined>(() => {
-    if (route.params.id !== NEW) {
+    if (route.meta.resolvedResourceId) {
+        return route.meta.resolvedResourceId as string;
+    }
+    if (route.params.id && route.params.id !== NEW) {
         return route.params.id as string;
     }
-
     return undefined;
 });
 
