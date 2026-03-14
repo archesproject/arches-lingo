@@ -347,7 +347,7 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
     margin-top: 1rem;
     margin-bottom: 0.5rem;
     border: thin solid var(--p-neutral-200);
-    border-radius: 0.5rem;
+    border-radius: 0.125rem;
     padding: 0.75rem 1rem;
     overflow-x: auto;
 }
@@ -386,7 +386,7 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
     border-radius: 1rem;
 }
 
-.lineage-paths {
+.lineage-paths12 {
     margin-top: 0.5rem;
 }
 
