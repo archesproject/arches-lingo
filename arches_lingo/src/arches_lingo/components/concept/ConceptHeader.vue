@@ -29,6 +29,7 @@ import {
     CONCEPT_ICON,
     GUIDE_TERM_ICON,
     GUIDE_TERM_URI,
+    TOP_CONCEPT_ICON,
 } from "@/arches_lingo/constants.ts";
 import { useEditLog } from "@/arches_lingo/composables/useEditLog.ts";
 import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
@@ -37,6 +38,7 @@ import { PREF_LABEL } from "@/arches_controlled_lists/constants.ts";
 import {
     deleteLingoResource,
     fetchConceptResource,
+    fetchSchemeResource,
 } from "@/arches_lingo/api.ts";
 import { useResourceStore } from "@/arches_lingo/composables/useResourceStore.ts";
 import {
@@ -52,6 +54,7 @@ import type {
     Identifier,
     ResourceInstanceResult,
     DataComponentMode,
+    SearchResultItem,
 } from "@/arches_lingo/types.ts";
 import type { Label, Labellable } from "@/arches_controlled_lists/types";
 import type { ReferenceSelectValue } from "@/arches_controlled_lists/datatypes/reference-select/types.ts";
@@ -83,8 +86,12 @@ const { isEditor } = useUserStore();
 const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
 
 const concept = ref<ResourceInstanceResult>();
-const conceptResource = ref<Labellable>();
+const conceptResource = ref<SearchResultItem>();
+const isTopConcept = ref(false);
+const parentConceptLabelMap = ref<Map<string, Label[]>>(new Map());
 const label = ref<Label>();
+const schemeResource = ref<Labellable>();
+const schemeLabel = ref<Label>();
 const data = ref<ConceptHeaderData>();
 const isLoading = ref(true);
 const showExportDialog = ref(false);
@@ -105,7 +112,9 @@ const conceptIcon = computed(() => {
     const typeNodeValue =
         conceptTypeTile.value?.aliased_data?.[CONCEPT_TYPE_NODE_ALIAS]
             ?.node_value;
-    return isGuideTermType(typeNodeValue) ? GUIDE_TERM_ICON : CONCEPT_ICON;
+    if (isGuideTermType(typeNodeValue)) return GUIDE_TERM_ICON;
+    if (isTopConcept.value) return TOP_CONCEPT_ICON;
+    return CONCEPT_ICON;
 });
 
 watch(
@@ -128,17 +137,44 @@ watch(
             conceptTypeTile.value =
                 resource.aliased_data?.[CONCEPT_TYPE_NODE_ALIAS];
 
-            const conceptResource = await fetchConceptResource(
+            isTopConcept.value =
+                (resource.aliased_data?.top_concept_of ?? []).length > 0;
+
+            const fetchedConceptResource = await fetchConceptResource(
                 props.resourceInstanceId,
             );
+            conceptResource.value = fetchedConceptResource;
 
             label.value = getItemLabel(
-                conceptResource,
+                fetchedConceptResource,
                 selectedLanguage.value.code,
                 systemLanguage.value.code,
             );
 
+            const labelMap = new Map<string, Label[]>();
+            for (const path of fetchedConceptResource?.parents ?? []) {
+                for (const item of path) {
+                    if (!labelMap.has(item.id)) {
+                        labelMap.set(item.id, item.labels);
+                    }
+                }
+            }
+            parentConceptLabelMap.value = labelMap;
+
             extractConceptHeaderData(resource);
+
+            const schemeId =
+                data.value?.partOfScheme?.node_value?.[0]?.resourceId;
+            if (schemeId) {
+                const fetchedSchemeResource =
+                    await fetchSchemeResource(schemeId);
+                schemeResource.value = fetchedSchemeResource;
+                schemeLabel.value = getItemLabel(
+                    fetchedSchemeResource,
+                    selectedLanguage.value.code,
+                    systemLanguage.value.code,
+                );
+            }
         } catch (error) {
             toast.add({
                 severity: ERROR,
@@ -199,6 +235,13 @@ watch(
         if (conceptResource.value) {
             label.value = getItemLabel(
                 conceptResource.value,
+                newCode,
+                systemLanguage.value.code,
+            );
+        }
+        if (schemeResource.value) {
+            schemeLabel.value = getItemLabel(
+                schemeResource.value,
                 newCode,
                 systemLanguage.value.code,
             );
@@ -449,7 +492,10 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                                 v-if="data?.partOfScheme?.node_value"
                                 :to="`/scheme/${data?.partOfScheme?.node_value?.[0]?.resourceId}`"
                             >
-                                {{ data?.partOfScheme?.display_value }}
+                                {{
+                                    schemeLabel?.value ||
+                                    data?.partOfScheme?.display_value
+                                }}
                             </RouterLink>
                             <span v-else>--</span>
                         </span>
@@ -471,7 +517,10 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                 </div>
             </div>
             <div class="header-row">
-                <div class="header-item">
+                <div
+                    v-if="!isTopConcept"
+                    class="header-item"
+                >
                     <span class="header-item-label">
                         {{ $gettext("Parent Concept(s):") }}
                     </span>
@@ -482,8 +531,20 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                     >
                         <RouterLink
                             :to="`/concept/${parent.details[0].resource_id}`"
-                            >{{ parent.details[0].display_value }}</RouterLink
                         >
+                            {{
+                                getItemLabel(
+                                    {
+                                        labels:
+                                            parentConceptLabelMap.get(
+                                                parent.details[0].resource_id,
+                                            ) ?? [],
+                                    },
+                                    selectedLanguage.code,
+                                    systemLanguage.code,
+                                ).value || parent.details[0].display_value
+                            }}
+                        </RouterLink>
                     </span>
                 </div>
                 <div class="header-item">

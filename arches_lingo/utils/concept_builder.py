@@ -291,6 +291,7 @@ class ConceptBuilder:
                 self.serialize_concept_label(label) for label in self.labels[conceptid]
             ],
             "guide_term": conceptid in self.guide_term_concepts,
+            "top_concept": bool(self.schemes_by_top_concept.get(conceptid)),
         }
         if children:
             data["narrower"] = [
