@@ -1,14 +1,18 @@
 <script setup lang="ts">
 import { ref, watch } from "vue";
+import { storeToRefs } from "pinia";
 
 import Message from "primevue/message";
 import Skeleton from "primevue/skeleton";
 
 import { VIEW } from "@/arches_lingo/constants.ts";
-
+import { fetchSchemeResource } from "@/arches_lingo/api.ts";
+import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
+import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 import { useResourceStore } from "@/arches_lingo/composables/useResourceStore.ts";
 
 import type { DataComponentMode } from "@/arches_lingo/types.ts";
+import type { Label, Labellable } from "@/arches_controlled_lists/types";
 
 const props = defineProps<{
     mode: DataComponentMode;
@@ -23,14 +27,16 @@ const props = defineProps<{
 const isLoading = ref(true);
 const fetchError = ref();
 const isTopConcept = ref(false);
-const schemeName = ref<string>();
+const schemeResource = ref<Labellable>();
+const schemeLabel = ref<Label>();
 
+const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
 const store = useResourceStore();
 let initialized = false;
 
 watch(
     [() => store.resource.value, () => store.error.value],
-    ([resource, storeError]) => {
+    async ([resource, storeError]) => {
         if (storeError) {
             fetchError.value = storeError;
             isLoading.value = false;
@@ -45,10 +51,18 @@ watch(
             isTopConcept.value = topConceptOfTiles.length > 0;
 
             if (isTopConcept.value) {
-                const schemeDetails =
+                const schemeId =
                     topConceptOfTiles[0]?.aliased_data?.top_concept_of
-                        ?.details?.[0];
-                schemeName.value = schemeDetails?.display_value;
+                        ?.details?.[0]?.resource_id;
+                if (schemeId) {
+                    const fetchedScheme = await fetchSchemeResource(schemeId);
+                    schemeResource.value = fetchedScheme;
+                    schemeLabel.value = getItemLabel(
+                        fetchedScheme,
+                        selectedLanguage.value.code,
+                        systemLanguage.value.code,
+                    );
+                }
             }
         } catch (error) {
             fetchError.value = error;
@@ -57,6 +71,19 @@ watch(
         }
     },
     { immediate: true },
+);
+
+watch(
+    () => selectedLanguage.value.code,
+    (newCode) => {
+        if (schemeResource.value) {
+            schemeLabel.value = getItemLabel(
+                schemeResource.value,
+                newCode,
+                systemLanguage.value.code,
+            );
+        }
+    },
 );
 </script>
 
@@ -81,7 +108,7 @@ watch(
                 <h2>{{ props.sectionTitle }}</h2>
             </div>
             <div class="top-concept-info">
-                <span v-if="schemeName">{{ schemeName }}</span>
+                <span v-if="schemeLabel">{{ schemeLabel.value }}</span>
             </div>
         </div>
     </template>
