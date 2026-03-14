@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject } from "vue";
+import { computed, inject } from "vue";
 import { useGettext } from "vue3-gettext";
 import { useConfirm } from "primevue/useconfirm";
 import { useToast } from "primevue/usetoast";
@@ -24,6 +24,13 @@ import {
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
+
+interface RelationshipGroup {
+    tileid: string | undefined;
+    isTopConcept: boolean;
+    parentConcept: SearchResultItem | undefined;
+    lineages: SearchResultHierarchy[];
+}
 
 const props = defineProps<{
     componentName: string;
@@ -55,13 +62,52 @@ const refreshSchemeHierarchy = inject<() => void>("refreshSchemeHierarchy");
 
 const { isEditor } = useUserStore();
 
+const relationshipGroups = computed<RelationshipGroup[]>(() => {
+    const groupMap = new Map<string, RelationshipGroup>();
+
+    for (const hierarchy of props.data) {
+        const groupKey = hierarchy.tileid ?? "no-tile";
+
+        if (!groupMap.has(groupKey)) {
+            const parentIndex = hierarchy.searchResults.length - 2;
+            const parentConcept =
+                parentIndex >= 0
+                    ? hierarchy.searchResults[parentIndex]
+                    : undefined;
+
+            groupMap.set(groupKey, {
+                tileid: hierarchy.tileid,
+                isTopConcept: Boolean(hierarchy.isTopConcept),
+                parentConcept,
+                lineages: [],
+            });
+        }
+
+        groupMap.get(groupKey)!.lineages.push(hierarchy);
+    }
+
+    return Array.from(groupMap.values());
+});
+
 function getIcon(item: SearchResultItem) {
     //TODO need a better way to determine if item is a scheme or not
     return item.id === props.scheme ? SCHEME_ICON : getConceptIcon(item);
 }
 
-function confirmDelete(hierarchy: SearchResultHierarchy) {
-    if (!hierarchy.tileid) return;
+function getParentLabel(group: RelationshipGroup): string {
+    if (!group.parentConcept) {
+        return $gettext("Unknown Parent");
+    }
+    return getItemLabel(
+        group.parentConcept,
+        selectedLanguage.value.code,
+        systemLanguage.value.code,
+    ).value;
+}
+
+function confirmDelete(group: RelationshipGroup) {
+    if (!group.tileid) return;
+    const representativeLineage = group.lineages[0];
     confirm.require({
         header: $gettext("Confirmation"),
         message: $gettext(
@@ -69,7 +115,7 @@ function confirmDelete(hierarchy: SearchResultHierarchy) {
         ),
         group: "delete-parent",
         accept: () => {
-            deleteSectionValue(hierarchy);
+            deleteSectionValue(representativeLineage);
         },
         rejectProps: {
             label: $gettext("Cancel"),
@@ -85,7 +131,7 @@ function confirmDelete(hierarchy: SearchResultHierarchy) {
 
 async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
     try {
-        if (props.data.length !== 1) {
+        if (relationshipGroups.value.length !== 1) {
             if (hierarchy.searchResults.length > 2) {
                 await deleteLingoTile(
                     props.graphSlug,
@@ -162,71 +208,97 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
             v-if="props.data.length"
             style="overflow-x: auto"
         >
-            <div class="lineage-section">
-                <div
-                    v-for="(hierarchy, index) in props.data"
-                    :key="index"
-                    class="lineage-item"
-                >
-                    <div style="margin-bottom: 0.5rem">
+            <div
+                v-for="(group, groupIndex) in relationshipGroups"
+                :key="group.tileid ?? groupIndex"
+                class="relationship-group"
+            >
+                <div class="relationship-group-header">
+                    <span class="relationship-group-label">
                         <span
-                            style="
-                                color: var(--p-neutral-500);
-                                font-weight: var(--p-lingo-font-weight-normal);
-                                font-size: var(--p-lingo-font-size-medium);
-                            "
-                        >
-                            {{ $gettext("Lineage " + (index + 1)) }}
-                        </span>
-                    </div>
-                    <div
-                        v-for="(item, subindex) in hierarchy.searchResults"
-                        :key="item.id"
-                        class="section-item"
-                    >
-                        <span
-                            :class="getIcon(item)"
-                            :style="{
-                                'margin-inline-start': subindex * 2 + 'rem',
-                            }"
-                        ></span>
-                        <span style="margin-inline-start: 0.5rem">
+                            v-if="group.parentConcept"
+                            :class="getIcon(group.parentConcept)"
+                        />
+                        <span v-if="group.isTopConcept">
                             {{
-                                getItemLabel(
-                                    item,
-                                    selectedLanguage.code,
-                                    systemLanguage.code,
-                                ).value
+                                $gettext("Top Concept Of: %{parent}", {
+                                    parent: getParentLabel(group),
+                                })
                             }}
                         </span>
-                        <div
-                            v-if="
-                                isEditor &&
-                                subindex === hierarchy.searchResults.length - 1
-                            "
-                            style="margin-inline-start: 0.5rem; display: flex"
+                        <span v-else>
+                            {{
+                                $gettext("Broader Concept: %{parent}", {
+                                    parent: getParentLabel(group),
+                                })
+                            }}
+                        </span>
+                        <span
+                            v-if="group.lineages.length > 1"
+                            class="path-count-badge"
                         >
-                            <Button
-                                icon="pi pi-file-edit"
-                                variant="text"
-                                :aria-label="$gettext('edit')"
-                                :disabled="hierarchy.isTopConcept"
-                                size="small"
-                                @click="
-                                    openEditor!(componentName, hierarchy.tileid)
-                                "
-                            />
-                            <Button
-                                v-if="hierarchy.tileid"
-                                icon="pi pi-trash"
-                                variant="text"
-                                :aria-label="$gettext('delete')"
-                                severity="danger"
-                                size="small"
-                                @click="confirmDelete(hierarchy)"
-                            />
-                        </div>
+                            {{
+                                $gettext("%{count} paths", {
+                                    count: String(group.lineages.length),
+                                })
+                            }}
+                        </span>
+                    </span>
+                    <div
+                        v-if="isEditor"
+                        class="relationship-group-actions"
+                    >
+                        <Button
+                            icon="pi pi-file-edit"
+                            variant="text"
+                            :aria-label="$gettext('edit')"
+                            :disabled="group.isTopConcept"
+                            size="small"
+                            @click="openEditor!(componentName, group.tileid)"
+                        />
+                        <Button
+                            v-if="group.tileid"
+                            icon="pi pi-trash"
+                            variant="text"
+                            :aria-label="$gettext('delete')"
+                            severity="danger"
+                            size="small"
+                            @click="confirmDelete(group)"
+                        />
                     </div>
+                </div>
+                <div class="lineage-paths">
+                    <template
+                        v-for="(hierarchy, lineageIndex) in group.lineages"
+                        :key="lineageIndex"
+                    >
+                        <div
+                            v-if="group.lineages.length > 1 && lineageIndex > 0"
+                            class="lineage-divider"
+                        />
+                        <div class="lineage-path">
+                            <div
+                                v-for="(item, depth) in hierarchy.searchResults"
+                                :key="item.id"
+                                class="tree-node"
+                                :style="{ '--tree-depth': depth }"
+                            >
+                                <span
+                                    :class="getIcon(item)"
+                                    class="tree-node-icon"
+                                />
+                                <span class="tree-node-label">
+                                    {{
+                                        getItemLabel(
+                                            item,
+                                            selectedLanguage.code,
+                                            systemLanguage.code,
+                                        ).value
+                                    }}
+                                </span>
+                            </div>
+                        </div>
+                    </template>
                 </div>
             </div>
         </div>
@@ -244,25 +316,88 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
 </template>
 
 <style scoped>
-.lineage-section {
-    margin-inline-start: 1rem;
+.relationship-group {
     margin-top: 1rem;
-    margin-bottom: 1rem;
-    display: flex;
-    flex-direction: row;
-    align-items: start;
-    width: fit-content;
+    margin-bottom: 0.5rem;
+    border: thin solid var(--p-neutral-200);
+    border-radius: 0.125rem;
+    padding: 0.75rem 1rem;
+    overflow-x: auto;
 }
 
-.lineage-item {
-    margin-inline-end: 4rem;
-}
-
-.section-item {
+.relationship-group-header {
     display: flex;
-    height: 100%;
     align-items: center;
-    min-height: 2rem;
+    justify-content: space-between;
+    padding-bottom: 0.25rem;
+    border-bottom: thin solid var(--p-neutral-200);
+    margin-bottom: 0.25rem;
+}
+
+.relationship-group-label {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    font-weight: var(--p-lingo-font-weight-semibold, 600);
+    font-size: var(--p-lingo-font-size-medium);
+    color: var(--p-neutral-700);
+}
+
+.relationship-group-actions {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.path-count-badge {
+    font-size: var(--p-lingo-font-size-small, 0.75rem);
+    font-weight: var(--p-lingo-font-weight-normal, 400);
+    color: var(--p-neutral-500);
+    background: var(--p-neutral-100);
+    padding: 0.1rem 0.5rem;
+    border-radius: 1rem;
+}
+
+.lineage-paths12 {
+    margin-top: 0.5rem;
+}
+
+.lineage-path {
+    padding-inline-start: 0.5rem;
+}
+
+.lineage-divider {
+    border-top: thin dashed var(--p-neutral-200);
+    margin: 0.5rem 0;
+}
+
+.tree-node {
+    display: flex;
+    align-items: center;
+    min-height: 1.75rem;
+    position: relative;
+    padding-inline-start: calc(var(--tree-depth) * 1.25rem);
     white-space: nowrap;
+}
+
+.tree-node:not(:first-child)::before {
+    content: "";
+    position: absolute;
+    left: calc((var(--tree-depth) - 1) * 1.25rem + 0.35rem);
+    top: -50%;
+    bottom: 50%;
+    width: 0.65rem;
+    border-inline-start: thin solid var(--p-neutral-300);
+    border-bottom: thin solid var(--p-neutral-300);
+    border-end-start-radius: 0.2rem;
+}
+
+.tree-node-icon {
+    flex-shrink: 0;
+}
+
+.tree-node-label {
+    margin-inline-start: 0.5rem;
 }
 </style>
