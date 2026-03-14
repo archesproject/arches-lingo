@@ -6,6 +6,7 @@ import {
     CONCEPT_ICON,
     GUIDE_TERM_ICON,
     SCHEME_ICON,
+    TOP_CONCEPT_ICON,
     CONCEPT_TYPE_NODE_ALIAS,
 } from "@/arches_lingo/constants.ts";
 import { fetchTileData } from "@/arches_component_lab/generics/GenericCard/api.ts";
@@ -35,9 +36,15 @@ export function dataIsConcept(data: Concept | Scheme) {
 }
 
 export function getConceptIcon(
-    item: Concept | SearchResultItem | { guide_term?: boolean },
+    item:
+        | Concept
+        | SearchResultItem
+        | { guide_term?: boolean; top_concept?: boolean },
 ): string {
-    return item.guide_term ? GUIDE_TERM_ICON : CONCEPT_ICON;
+    if (item.guide_term) return GUIDE_TERM_ICON;
+    if ((item as { top_concept?: boolean }).top_concept)
+        return TOP_CONCEPT_ICON;
+    return CONCEPT_ICON;
 }
 
 export function getItemIcon(item: Concept | Scheme): string {
@@ -384,6 +391,10 @@ export function getIconLabel(
 
     if ((item as Concept).guide_term) {
         return iconLabels.guideTerm;
+    }
+
+    if ((item as Concept).top_concept) {
+        return iconLabels.topConcept;
     }
 
     return iconLabels.concept;

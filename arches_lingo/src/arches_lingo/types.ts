@@ -40,6 +40,7 @@ export interface Concept {
     labels: Label[];
     narrower: Concept[];
     guide_term?: boolean;
+    top_concept?: boolean;
 }
 
 export interface Scheme {
@@ -379,6 +380,7 @@ export interface IconLabels {
     concept: string;
     guideTerm: string;
     scheme: string;
+    topConcept: string;
 }
 
 export interface SideNavMenuItem extends MenuItem {
@@ -396,6 +398,7 @@ export interface SearchResultItem {
     }[][];
     polyhierarchical: boolean;
     guide_term?: boolean;
+    top_concept?: boolean;
 }
 
 export interface SearchResultHierarchy {

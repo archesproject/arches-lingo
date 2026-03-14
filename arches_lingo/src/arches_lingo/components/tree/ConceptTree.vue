@@ -82,6 +82,7 @@ const iconLabels: IconLabels = Object.freeze({
     concept: $gettext("Concept"),
     guideTerm: $gettext("Guide Term"),
     scheme: $gettext("Scheme"),
+    topConcept: $gettext("Top Concept"),
 });
 
 const schemes = ref<Scheme[]>([]);

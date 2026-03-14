@@ -44,6 +44,7 @@ export const FALLBACK_LANGUAGE: Language = {
 export const CONCEPT_ICON = "pi pi-tag";
 export const GUIDE_TERM_ICON = "pi pi-angle-double-right";
 export const SCHEME_ICON = "pi pi-folder";
+export const TOP_CONCEPT_ICON = "pi pi-arrow-circle-up";
 
 // URIs
 export const GUIDE_TERM_URI = "http://vocab.getty.edu/page/aat/300386700";
