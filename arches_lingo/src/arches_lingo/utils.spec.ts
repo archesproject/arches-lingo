@@ -26,6 +26,7 @@ const iconLabels: IconLabels = {
     concept: "Concept",
     guideTerm: "Guide Term",
     scheme: "Scheme",
+    topConcept: "Top Concept",
 };
 
 describe("Duck-typing helpers", () => {
