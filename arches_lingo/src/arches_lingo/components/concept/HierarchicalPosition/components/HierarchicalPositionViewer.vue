@@ -319,7 +319,7 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
 .relationship-group {
     margin-top: 1rem;
     margin-bottom: 0.5rem;
-    border: 1px solid var(--p-neutral-200);
+    border: thin solid var(--p-neutral-200);
     border-radius: 0.5rem;
     padding: 0.75rem 1rem;
     overflow-x: auto;
@@ -330,7 +330,7 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
     align-items: center;
     justify-content: space-between;
     padding-bottom: 0.25rem;
-    border-bottom: 1px solid var(--p-neutral-200);
+    border-bottom: thin solid var(--p-neutral-200);
     margin-bottom: 0.25rem;
 }
 
@@ -368,7 +368,7 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
 }
 
 .lineage-divider {
-    border-top: 1px dashed var(--p-neutral-200);
+    border-top: thin dashed var(--p-neutral-200);
     margin: 0.5rem 0;
 }
 
@@ -388,8 +388,8 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
     top: -50%;
     bottom: 50%;
     width: 0.65rem;
-    border-inline-start: 1px solid var(--p-neutral-300);
-    border-bottom: 1px solid var(--p-neutral-300);
+    border-inline-start: thin solid var(--p-neutral-300);
+    border-bottom: thin solid var(--p-neutral-300);
     border-end-start-radius: 0.2rem;
 }
 
