@@ -1,3 +1,10 @@
+import type { RouteLocationNormalized } from "vue-router";
+
+import {
+    resolveSchemeIdentifier,
+    resolveConceptIdentifier,
+} from "@/arches_lingo/api.ts";
+
 export const routes = [
     {
         path: "/login/:next?",
@@ -48,6 +55,39 @@ export const routes = [
         path: "/scheme/:id",
         name: "scheme",
         component: () => import("@/arches_lingo/pages/SchemePage.vue"),
+        meta: {
+            shouldShowNavigation: true,
+            requiresAuthentication: false,
+        },
+    },
+    {
+        path: "/schemes/:schemeIdentifier",
+        name: "scheme-by-identifier",
+        component: () => import("@/arches_lingo/pages/SchemePage.vue"),
+        beforeEnter: async (to: RouteLocationNormalized) => {
+            const result = await resolveSchemeIdentifier(
+                to.params.schemeIdentifier as string,
+            );
+            if (!result) return false;
+            to.meta.resolvedResourceId = result.resourceinstanceid;
+        },
+        meta: {
+            shouldShowNavigation: true,
+            requiresAuthentication: false,
+        },
+    },
+    {
+        path: "/schemes/:schemeIdentifier/concepts/:conceptIdentifier",
+        name: "concept-by-identifier",
+        component: () => import("@/arches_lingo/pages/ConceptPage.vue"),
+        beforeEnter: async (to: RouteLocationNormalized) => {
+            const result = await resolveConceptIdentifier(
+                to.params.schemeIdentifier as string,
+                to.params.conceptIdentifier as string,
+            );
+            if (!result) return false;
+            to.meta.resolvedResourceId = result.resourceinstanceid;
+        },
         meta: {
             shouldShowNavigation: true,
             requiresAuthentication: false,
@@ -109,6 +149,8 @@ export const routeNames = {
     schemes: "schemes",
     concept: "concept",
     scheme: "scheme",
+    schemeByIdentifier: "scheme-by-identifier",
+    conceptByIdentifier: "concept-by-identifier",
     sources: "sources",
     source: "source",
     contributors: "contributors",
