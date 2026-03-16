@@ -48,13 +48,13 @@ export function getItemIcon(item: Concept | Scheme): string {
     return getConceptIcon(item as Concept);
 }
 
-export function sortItemsByLabel<T extends Concept | Scheme>(
-    items: T[],
+export function sortItemsByLabel<LabelableItem extends Concept | Scheme>(
+    items: LabelableItem[],
     selectedLanguageCode: string,
     systemLanguageCode: string,
     sortAscending: boolean = true,
     pinnedFirstId?: string,
-): T[] {
+): LabelableItem[] {
     return [...items].sort((itemA, itemB) => {
         if (pinnedFirstId !== undefined) {
             if (itemA.id === pinnedFirstId) return -1;

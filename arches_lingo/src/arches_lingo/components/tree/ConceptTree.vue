@@ -164,6 +164,11 @@ onMounted(async () => {
     hasCompletedInitialLoad.value = true;
 });
 
+const sortIcon = computed(() => {
+    const direction = sortAscending.value ? "down" : "up";
+    return `pi pi-sort-alpha-${direction}`;
+});
+
 const tree = computed(() => {
     return treeFromSchemes(
         schemes.value,
@@ -744,11 +749,7 @@ function onNodeSelect(node: TreeNode) {
                     :aria-label="FILTER_CONCEPTS"
                 />
                 <Button
-                    :icon="
-                        sortAscending
-                            ? 'pi pi-sort-alpha-down'
-                            : 'pi pi-sort-alpha-up'
-                    "
+                    :icon="sortIcon"
                     :aria-label="
                         sortAscending ? SORT_ASCENDING : SORT_DESCENDING
                     "
