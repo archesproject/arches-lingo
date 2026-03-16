@@ -77,7 +77,7 @@
                         "en": ""
                     },
                     "name": {
-                        "en": "uri"
+                        "en": "URI"
                     },
                     "nodegroup_id": "7fdc87bb-6ef9-4a74-8e84-4bde69557eef",
                     "sortorder": 0,
@@ -3167,7 +3167,7 @@
                     "isrequired": false,
                     "issearchable": true,
                     "istopnode": false,
-                    "name": "uri",
+                    "name": "URI",
                     "nodegroup_id": "7fdc87bb-6ef9-4a74-8e84-4bde69557eef",
                     "nodeid": "7fdc87bb-6ef9-4a74-8e84-4bde69557eef",
                     "ontologyclass": "http://www.cidoc-crm.org/cidoc-crm/E42_Identifier",

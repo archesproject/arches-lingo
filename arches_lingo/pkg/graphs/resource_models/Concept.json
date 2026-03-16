@@ -5517,7 +5517,7 @@
                     "isrequired": false,
                     "issearchable": true,
                     "istopnode": false,
-                    "name": "uri",
+                    "name": "URI",
                     "nodegroup_id": "bf73e598-4888-11ee-8a8d-11afefc4bff7",
                     "nodeid": "bf73e598-4888-11ee-8a8d-11afefc4bff7",
                     "ontologyclass": "http://www.cidoc-crm.org/cidoc-crm/E42_Identifier",
