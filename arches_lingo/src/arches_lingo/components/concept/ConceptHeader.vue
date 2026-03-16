@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { inject, onMounted, ref, watch, computed } from "vue";
+import type { Ref } from "vue";
 
 import { useConfirm } from "primevue/useconfirm";
 import { useGettext } from "vue3-gettext";
@@ -35,8 +36,10 @@ import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 import { PREF_LABEL } from "@/arches_controlled_lists/constants.ts";
 
 import {
+    fetchLingoResource,
     deleteLingoResource,
     fetchConceptResource,
+    fetchResourceIdentifiers,
 } from "@/arches_lingo/api.ts";
 import { useResourceStore } from "@/arches_lingo/composables/useResourceStore.ts";
 import {
@@ -51,6 +54,7 @@ import type {
     ConceptClassificationStatusAliases,
     Identifier,
     ResourceInstanceResult,
+    ResourceInstanceLifecycleState,
     DataComponentMode,
 } from "@/arches_lingo/types.ts";
 import type { Label, Labellable } from "@/arches_controlled_lists/types";
@@ -89,7 +93,7 @@ const data = ref<ConceptHeaderData>();
 const isLoading = ref(true);
 const showExportDialog = ref(false);
 const exportDialogKey = ref(0);
-
+const conceptIdentifierValue = ref<string>();
 const conceptTypeTile = ref();
 
 function isGuideTermType(typeNodeValue: unknown): boolean {
@@ -180,15 +184,83 @@ async function onConceptTypeChange(newValue: ReferenceSelectValue) {
     }
 }
 
+const resourceInstanceLifecycleState = inject<
+    Ref<ResourceInstanceLifecycleState | undefined>
+>("resourceInstanceLifecycleState");
+
+const lifecycleStateLabel = computed(() => {
+    const state = resourceInstanceLifecycleState?.value;
+    if (!state) {
+        return "--";
+    }
+
+    return state?.name || "--";
+});
+
+const canEditResourceInstances = computed(() => {
+    return (
+        isEditor &&
+        props.resourceInstanceId &&
+        Boolean(
+            resourceInstanceLifecycleState?.value?.can_edit_resource_instances,
+        )
+    );
+});
+
+const canDeleteResourceInstances = computed(() => {
+    return (
+        isEditor &&
+        props.resourceInstanceId &&
+        Boolean(
+            resourceInstanceLifecycleState?.value
+                ?.can_delete_resource_instances,
+        )
+    );
+});
+
 onMounted(async () => {
-    if (!props.resourceInstanceId) {
-        label.value = {
-            value: $gettext("New Concept"),
-            language_id: selectedLanguage.value.code,
-            valuetype_id: PREF_LABEL,
-        };
+    try {
+        const resourceInstanceId = props.resourceInstanceId;
+
+        if (!resourceInstanceId) {
+            label.value = {
+                value: $gettext("New Concept"),
+                language_id: selectedLanguage.value.code,
+                valuetype_id: PREF_LABEL,
+            };
+            return;
+        }
+
+        const [fetchedConcept, conceptResource, resourceIdentifiers] =
+            await Promise.all([
+                fetchLingoResource(props.graphSlug, resourceInstanceId),
+                fetchConceptResource(resourceInstanceId),
+                fetchResourceIdentifiers(resourceInstanceId),
+            ]);
+
+        concept.value = fetchedConcept;
+
+        conceptTypeTile.value =
+            concept.value?.aliased_data?.[CONCEPT_TYPE_NODE_ALIAS];
+
+        label.value = getItemLabel(
+            conceptResource,
+            selectedLanguage.value.code,
+            systemLanguage.value.code,
+        );
+
+        conceptIdentifierValue.value = resourceIdentifiers?.[0]?.identifier;
+
+        extractConceptHeaderData(fetchedConcept);
+    } catch (error) {
+        toast.add({
+            severity: ERROR,
+            life: DEFAULT_ERROR_TOAST_LIFE,
+            summary: $gettext("Unable to fetch concept"),
+            detail: error instanceof Error ? error.message : undefined,
+        });
+    } finally {
         isLoading.value = false;
-        return;
     }
     // Resource data is loaded via the store watch above
 });
@@ -281,9 +353,8 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
     const name = concept?.name;
     const descriptor = extractDescriptors(concept, selectedLanguage.value);
     // TODO: get human-readable user name from resource endpoint
-    const principalUser = "Anonymous"; //concept?.principalUser; // returns userid int
-    // TODO: get human-readable life cycle state from resource endpoint
-    const lifeCycleState = $gettext("Draft");
+    const principalUser = "Anonymous";
+
     const uri = aliased_data?.uri?.aliased_data?.uri_content?.node_value;
     const partOfScheme =
         aliased_data?.part_of_scheme?.aliased_data?.part_of_scheme;
@@ -304,7 +375,7 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
         descriptor: descriptor,
         uri: uri,
         principalUser: principalUser,
-        lifeCycleState: lifeCycleState,
+        lifeCycleState: lifecycleStateLabel.value,
         partOfScheme: partOfScheme,
         parentConcepts: parentConcepts,
         identifier: identifier,
@@ -383,16 +454,15 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                     <span>{{ $gettext("Export") }}</span>
                 </Button>
                 <Button
-                    v-if="isEditor"
+                    v-if="canEditResourceInstances"
                     icon="pi pi-plus-circle"
                     :label="$gettext('Add Child')"
                     class="add-button"
                     @click="addChild"
                 />
 
-                <!-- TODO: button should reflect published state of concept: delete if draft, deprecate if URI is present -->
                 <Button
-                    v-if="isEditor"
+                    v-if="canDeleteResourceInstances"
                     icon="pi pi-trash"
                     severity="danger"
                     class="delete-button"
@@ -406,26 +476,25 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
         <div class="header-content">
             <div class="concept-header-section">
                 <div class="header-row">
-                    <!-- TODO: Life Cycle mgmt functionality goes here -->
                     <div class="header-item">
                         <span class="header-item-label">
                             {{ $gettext("Identifier:") }}
                         </span>
-                        <span class="header-item-value">{{
-                            data?.identifier || "--"
-                        }}</span>
+                        <span class="header-item-value">
+                            {{ conceptIdentifierValue || $gettext("None") }}
+                        </span>
                     </div>
                     <div>
                         <span class="header-item-label">{{
-                            $gettext("URI (provisonal): ")
+                            $gettext("URI: ")
                         }}</span>
                         <Button
                             v-if="data?.uri"
-                            :label="data?.uri?.url_label || data?.uri?.url"
+                            :label="data?.uri"
                             class="concept-uri"
                             variant="link"
                             as="a"
-                            :href="data?.uri?.url"
+                            :href="data?.uri"
                             target="_blank"
                             rel="noopener"
                             :disabled="!data?.uri"
@@ -439,7 +508,6 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                 </div>
 
                 <div class="header-row">
-                    <!-- TODO: Human-reable conceptid to be displayed here -->
                     <div class="header-item">
                         <span class="header-item-label">
                             {{ $gettext("Scheme:") }}
@@ -455,17 +523,12 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                         </span>
                     </div>
 
-                    <!-- TODO: Life Cycle mgmt functionality goes here -->
                     <div class="header-item">
                         <span class="header-item-label">
                             {{ $gettext("Life cycle state:") }}
                         </span>
                         <span class="header-item-value">
-                            {{
-                                data?.lifeCycleState
-                                    ? data?.lifeCycleState
-                                    : "--"
-                            }}
+                            {{ lifecycleStateLabel }}
                         </span>
                     </div>
                 </div>

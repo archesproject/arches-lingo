@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject, onMounted, ref, watch } from "vue";
+import { computed, inject, onMounted, ref, watch } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import { useEditLog } from "@/arches_lingo/composables/useEditLog.ts";
@@ -14,6 +14,10 @@ import ConfirmDialog from "primevue/confirmdialog";
 import Button from "primevue/button";
 
 import ExportThesauri from "@/arches_lingo/components/scheme/SchemeHeader/components/ExportThesauri.vue";
+import LifecycleButtons from "@/arches_lingo/components/scheme/SchemeHeader/components/LifecycleButtons.vue";
+import SchemeIdentifierField from "@/arches_lingo/components/scheme/SchemeHeader/components/SchemeIdentifierField.vue";
+import SchemeURITemplateField from "@/arches_lingo/components/scheme/SchemeHeader/components/SchemeURITemplateField.vue";
+import ConceptIdentifierCounterField from "@/arches_lingo/components/scheme/SchemeHeader/components/ConceptIdentifierCounterField.vue";
 
 import {
     DANGER,
@@ -27,10 +31,15 @@ import { PREF_LABEL } from "@/arches_controlled_lists/constants.ts";
 import {
     deleteLingoResource,
     fetchSchemeResource,
+    fetchResourceIdentifiers,
+    fetchConceptIdentifierCounter,
+    fetchSchemeURITemplate,
+    fetchResourceInstanceLifecycleState,
     fetchSchemeLabelCounts,
 } from "@/arches_lingo/api.ts";
 import { useResourceStore } from "@/arches_lingo/composables/useResourceStore.ts";
 import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
+import { useAppSettingsStore } from "@/arches_lingo/stores/useAppSettingsStore.ts";
 import {
     extractDescriptors,
     navigateToSchemeOrConcept,
@@ -40,13 +49,24 @@ import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 
 import type {
     DataComponentMode,
-    Identifier,
     LanguageLabelCount,
     ResourceInstanceResult,
     SchemeHeader,
+    ResourceInstanceLifecycleState,
 } from "@/arches_lingo/types.ts";
 import type { Label, Labellable } from "@/arches_controlled_lists/types";
 import { routeNames } from "@/arches_lingo/routes.ts";
+
+type ConceptIdentifierCounter = {
+    scheme_resource_instance_id: string;
+    start_number: number;
+    next_number: number;
+};
+
+type SchemeURITemplate = {
+    scheme_resource_instance_id: string;
+    url_template: string;
+};
 
 const props = defineProps<{
     mode: DataComponentMode;
@@ -74,9 +94,23 @@ const labelCounts = ref<LanguageLabelCount[]>([]);
 const isLoading = ref(true);
 const showExportDialog = ref(false);
 const exportDialogKey = ref(0);
+const identifierValue = ref<string>();
+
+const resourceIdentifierId = ref<number | undefined>();
+
+const conceptIdentifierCounter = ref<ConceptIdentifierCounter | undefined>();
+
+const schemeURITemplate = ref<SchemeURITemplate | undefined>();
+
+const currentLifecycleState = ref<ResourceInstanceLifecycleState | undefined>();
+
+const hasPersistedResourceInstance = computed(() => {
+    return Boolean(props.resourceInstanceId);
+});
 
 const store = useResourceStore();
 const { isEditor } = useUserStore();
+const { publicServerAddress } = storeToRefs(useAppSettingsStore());
 
 watch(
     [() => store.resource.value, () => store.error.value],
@@ -125,6 +159,88 @@ watch(
     { immediate: true },
 );
 
+const canEditResourceInstances = computed(() => {
+    return (
+        isEditor &&
+        hasPersistedResourceInstance.value &&
+        Boolean(currentLifecycleState.value?.can_edit_resource_instances)
+    );
+});
+
+const canDeleteResourceInstances = computed(() => {
+    return (
+        isEditor &&
+        hasPersistedResourceInstance.value &&
+        Boolean(currentLifecycleState.value?.can_delete_resource_instances)
+    );
+});
+
+const canAddTopConcept = computed(() => {
+    return canEditResourceInstances.value;
+});
+
+const defaultSchemeURITemplate = computed(() => {
+    const baseUrl = publicServerAddress.value?.trim();
+    if (!baseUrl) {
+        return undefined;
+    }
+
+    const normalizedBaseUrl = baseUrl.replace(/\/+$/, "");
+    return `${normalizedBaseUrl}/scheme/<scheme_identifier>/concept/<concept_identifier>`;
+});
+
+const schemeUri = computed(() => {
+    return scheme.value?.aliased_data?.uri?.aliased_data?.uri_content
+        ?.node_value;
+});
+
+onMounted(async () => {
+    if (!props.resourceInstanceId) {
+        label.value = {
+            value: $gettext("New Scheme"),
+            language_id: selectedLanguage.value.code,
+            valuetype_id: PREF_LABEL,
+        };
+        isLoading.value = false;
+        return;
+    }
+
+    try {
+        const resourceInstanceId = props.resourceInstanceId;
+
+        const [
+            fetchedResourceIdentifiers,
+            fetchedConceptIdentifierCounter,
+            fetchedSchemeURITemplate,
+            fetchedLifecycleState,
+        ] = await Promise.all([
+            fetchResourceIdentifiers(resourceInstanceId),
+            fetchConceptIdentifierCounter(resourceInstanceId).catch(
+                () => undefined,
+            ),
+            fetchSchemeURITemplate(resourceInstanceId).catch(() => undefined),
+            fetchResourceInstanceLifecycleState(resourceInstanceId),
+        ]);
+
+        identifierValue.value = fetchedResourceIdentifiers?.[0]?.identifier;
+        resourceIdentifierId.value = fetchedResourceIdentifiers?.[0]?.id;
+
+        conceptIdentifierCounter.value = fetchedConceptIdentifierCounter;
+        schemeURITemplate.value = fetchedSchemeURITemplate;
+
+        currentLifecycleState.value =
+            fetchedLifecycleState as ResourceInstanceLifecycleState;
+    } catch (error) {
+        toast.add({
+            severity: ERROR,
+            life: DEFAULT_ERROR_TOAST_LIFE,
+            summary: $gettext("Unable to fetch scheme"),
+            detail: error instanceof Error ? error.message : undefined,
+        });
+    }
+    // Resource data is loaded via the store watch above
+});
+
 function openExportDialog() {
     exportDialogKey.value++;
     showExportDialog.value = true;
@@ -144,41 +260,15 @@ function addTopConcept() {
 function extractSchemeHeaderData(scheme: ResourceInstanceResult) {
     const name = scheme?.name;
     const descriptor = extractDescriptors(scheme, selectedLanguage.value);
-    // TODO: get human-readable user name from resource endpoint
-    const principalUser = "Anonymous"; //scheme?.principalUser; // returns userid int
-    // TODO: get human-readable life cycle state from resource endpoint
-    const lifeCycleState = $gettext("Draft");
-    const uri =
-        scheme?.aliased_data?.uri?.aliased_data?.uri_content?.node_value;
-    const identifier = (scheme?.aliased_data?.identifier || [])
-        .map(
-            (tile: Identifier) =>
-                tile?.aliased_data?.identifier_content?.node_value,
-        )
-        .join(", ");
+    const principalUser = "Anonymous";
 
     data.value = {
         name: name,
         descriptor: descriptor,
         principalUser: principalUser,
-        lifeCycleState: lifeCycleState,
-        identifier: identifier,
-        uri: uri,
+        lifeCycleState: currentLifecycleState.value?.name || "--",
     };
 }
-
-onMounted(async () => {
-    if (!props.resourceInstanceId) {
-        label.value = {
-            value: $gettext("New Scheme"),
-            language_id: selectedLanguage.value.code,
-            valuetype_id: PREF_LABEL,
-        };
-        isLoading.value = false;
-        return;
-    }
-    // Resource data is loaded via the store watch above
-});
 
 watch(
     () => selectedLanguage.value.code,
@@ -195,6 +285,26 @@ watch(
         }
     },
 );
+
+function onIdentifierUpdate(updatedIdentifier: {
+    identifierValue: string | undefined;
+    resourceIdentifierId: number | undefined;
+}) {
+    identifierValue.value = updatedIdentifier.identifierValue;
+    resourceIdentifierId.value = updatedIdentifier.resourceIdentifierId;
+}
+
+function onSchemeURITemplateUpdate(updatedTemplate: {
+    schemeURITemplate: SchemeURITemplate | undefined;
+}) {
+    schemeURITemplate.value = updatedTemplate.schemeURITemplate;
+}
+
+function onConceptIdentifierCounterUpdate(updatedCounter: {
+    conceptIdentifierCounter: ConceptIdentifierCounter | undefined;
+}) {
+    conceptIdentifierCounter.value = updatedCounter.conceptIdentifierCounter;
+}
 
 function confirmDelete() {
     confirm.require({
@@ -236,6 +346,18 @@ function confirmDelete() {
             severity: DANGER,
         },
     });
+}
+
+function onLifecycleStateChange(
+    nextLifecycleState: ResourceInstanceLifecycleState,
+) {
+    currentLifecycleState.value = nextLifecycleState;
+
+    if (data.value) {
+        data.value.lifeCycleState = nextLifecycleState.name;
+    }
+
+    window.location.reload();
 }
 </script>
 
@@ -290,17 +412,17 @@ function confirmDelete() {
                             <span><i class="pi pi-cloud-download"></i></span>
                             <span>{{ $gettext("Export") }}</span>
                         </Button>
+
                         <Button
-                            v-if="isEditor"
+                            v-if="canAddTopConcept"
                             icon="pi pi-plus-circle"
                             :label="$gettext('Add Top Concept')"
                             class="add-button"
                             @click="addTopConcept"
                         />
 
-                        <!-- TODO: button should reflect published state of concept: delete if draft, deprecate if URI is present -->
                         <Button
-                            v-if="isEditor"
+                            v-if="canDeleteResourceInstances"
                             icon="pi pi-trash"
                             severity="danger"
                             class="delete-button"
@@ -309,40 +431,34 @@ function confirmDelete() {
                             @click="confirmDelete"
                         />
 
-                        <!-- TODO: button should allow user to publish scheme if draft, retire scheme if published -->
-                        <Button
-                            v-if="isEditor"
-                            icon="pi pi-book"
-                            :label="$gettext('Publish')"
-                            class="add-button"
-                        ></Button>
+                        <LifecycleButtons
+                            :resource-instance-id="props.resourceInstanceId"
+                            @change="onLifecycleStateChange"
+                        />
                     </div>
                 </div>
             </div>
 
             <div class="header-content">
-                <!-- TODO: show Scheme URI here -->
                 <div class="header-row">
-                    <!-- TODO: Life Cycle mgmt functionality goes here -->
-                    <div class="header-item">
-                        <span class="header-item-label">
-                            {{ $gettext("Identifier:") }}
-                        </span>
-                        <span class="header-item-value">{{
-                            data?.identifier || "--"
-                        }}</span>
-                    </div>
+                    <SchemeIdentifierField
+                        :resource-instance-id="props.resourceInstanceId"
+                        :identifier-value="identifierValue"
+                        :resource-identifier-id="resourceIdentifierId"
+                        :can-edit-resource-instances="canEditResourceInstances"
+                        @update="onIdentifierUpdate"
+                    />
                     <div>
                         <span class="header-item-label">{{
-                            $gettext("URI (provisonal): ")
+                            $gettext("URI: ")
                         }}</span>
                         <Button
-                            v-if="data?.uri"
-                            :label="data?.uri?.url_label || data?.uri?.url"
+                            v-if="schemeUri"
+                            :label="schemeUri"
                             class="concept-uri"
                             variant="link"
                             as="a"
-                            :href="data?.uri?.url"
+                            :href="schemeUri"
                             target="_blank"
                             rel="noopener"
                             :disabled="!data?.uri"
@@ -353,6 +469,30 @@ function confirmDelete() {
                             >{{ $gettext("No URI assigned") }}</span
                         >
                     </div>
+                </div>
+
+                <div class="header-row">
+                    <SchemeURITemplateField
+                        :resource-instance-id="props.resourceInstanceId"
+                        :can-edit-resource-instances="canEditResourceInstances"
+                        :scheme-u-r-i-template="schemeURITemplate"
+                        :default-scheme-u-r-i-template="
+                            defaultSchemeURITemplate
+                        "
+                        @update="onSchemeURITemplateUpdate"
+                    />
+                </div>
+
+                <div
+                    class="header-row"
+                    style="padding-bottom: 1rem"
+                >
+                    <ConceptIdentifierCounterField
+                        :resource-instance-id="props.resourceInstanceId"
+                        :can-edit-resource-instances="canEditResourceInstances"
+                        :concept-identifier-counter="conceptIdentifierCounter"
+                        @update="onConceptIdentifierCounterUpdate"
+                    />
                 </div>
 
                 <div class="header-row metadata-container">
@@ -519,7 +659,7 @@ h2 > span {
 
 .header-item {
     display: inline-flex;
-    align-items: baseline;
+    align-items: center;
     min-width: 0;
 }
 
@@ -533,6 +673,33 @@ h2 > span {
 .header-item-value {
     font-size: var(--p-lingo-font-size-smallnormal);
     color: var(--p-primary-500);
+    min-width: 0;
+}
+
+:deep(.header-item) {
+    display: inline-flex;
+    align-items: center;
+    min-width: 0;
+}
+
+:deep(.header-item-label) {
+    font-weight: var(--p-lingo-font-weight-normal);
+    font-size: var(--p-lingo-font-size-smallnormal);
+    color: var(--p-header-item-label);
+    margin-inline-end: 0.25rem;
+}
+
+:deep(.header-item-value) {
+    font-size: var(--p-lingo-font-size-smallnormal);
+    color: var(--p-primary-500);
+    min-width: 0;
+}
+
+:deep(.identifier-item) {
+    min-width: 0;
+}
+
+:deep(.identifier-value) {
     min-width: 0;
 }
 

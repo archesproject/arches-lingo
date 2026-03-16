@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject, ref, onMounted, nextTick } from "vue";
+import { inject, ref, onMounted, nextTick, computed } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import Button from "primevue/button";
@@ -36,6 +36,46 @@ const props = defineProps<{
 const openEditor =
     inject<(componentName: string, tileId?: string) => void>("openEditor");
 
+const resourceInstanceLifecycleState = inject<{
+    value:
+        | {
+              can_edit_resource_instances: boolean;
+              can_delete_resource_instances: boolean;
+          }
+        | undefined;
+}>("resourceInstanceLifecycleState");
+
+const canEditResourceInstances = computed(() => {
+    return Boolean(
+        resourceInstanceLifecycleState?.value?.can_edit_resource_instances,
+    );
+});
+
+const canDeleteResourceInstances = computed(() => {
+    return Boolean(
+        resourceInstanceLifecycleState?.value?.can_delete_resource_instances,
+    );
+});
+
+const isCreateDisabled = computed(() => {
+    return Boolean(
+        !props.resourceInstanceId || !canEditResourceInstances.value,
+    );
+});
+
+const createTooltipText = computed(() => {
+    if (!isCreateDisabled.value) {
+        return "";
+    }
+
+    if (!props.resourceInstanceId) {
+        return $gettext("Create a Concept Label before adding images");
+    }
+
+    return $gettext(
+        "This concept is not editable in its current lifecycle state",
+    );
+});
 const { isEditor } = useUserStore();
 
 const configurationError = ref();
@@ -165,10 +205,8 @@ function modifyResource(resourceInstanceId?: string) {
             <Button
                 v-if="isEditor"
                 v-tooltip.top="{
-                    disabled: Boolean(props.resourceInstanceId),
-                    value: $gettext(
-                        'Create a Concept Label before adding images',
-                    ),
+                    disabled: Boolean(!isCreateDisabled),
+                    value: createTooltipText,
                     showDelay: 300,
                     pt: {
                         text: {
@@ -177,7 +215,7 @@ function modifyResource(resourceInstanceId?: string) {
                         arrow: { style: { display: 'none' } },
                     },
                 }"
-                :disabled="Boolean(!props.resourceInstanceId)"
+                :disabled="isCreateDisabled"
                 :label="$gettext('Add Image')"
                 class="add-button"
                 icon="pi pi-plus-circle"
@@ -236,6 +274,7 @@ function modifyResource(resourceInstanceId?: string) {
                             class="buttons"
                         >
                             <Button
+                                v-if="canEditResourceInstances"
                                 icon="pi pi-file-edit"
                                 style="
                                     border: 0.0625rem solid
@@ -247,6 +286,7 @@ function modifyResource(resourceInstanceId?: string) {
                                 "
                             />
                             <Button
+                                v-if="canDeleteResourceInstances"
                                 icon="pi pi-trash"
                                 :aria-label="$gettext('Delete')"
                                 severity="danger"

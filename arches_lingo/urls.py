@@ -22,13 +22,22 @@ from arches_lingo.views.api.advanced_search import (
     SavedSearchDetailView,
     SavedSearchListView,
 )
+from arches_lingo.views.api.schemes import SchemeResourceView
 from arches_lingo.views.api.generic import (
     LingoResourceDetailView,
     LingoResourceListCreateView,
     LingoTileDetailView,
     LingoTileListCreateView,
 )
+from arches_lingo.views.api.concept_identifier_counter import (
+    ConceptIdentifierCounterView,
+)
+from arches_lingo.views.api.scheme_identifier import SchemeIdentifierView
+from arches_lingo.views.api.scheme_uri_template import (
+    SchemeURITemplateView,
+)
 from arches_lingo.views.api.settings import AppSettingsView
+from arches_lingo.views.api.identifier_resolve import IdentifierResolveView
 from arches_lingo.views.api.resource_list import (
     ContributorsListView,
     ResourceReferenceCountView,
@@ -55,6 +64,16 @@ urlpatterns = [
     path("scheme/new", LingoRootView.as_view(), name="new-scheme"),
     path("concept/<uuid:id>", LingoRootView.as_view(), name="concept"),
     path("concept/new", LingoRootView.as_view(), name="new-concept"),
+    path(
+        "schemes/<slug:scheme_identifier>",
+        LingoRootView.as_view(),
+        name="scheme-by-identifier",
+    ),
+    path(
+        "schemes/<slug:scheme_identifier>/concepts/<slug:concept_identifier>",
+        LingoRootView.as_view(),
+        name="concept-by-identifier",
+    ),
     path("sources", LingoRootView.as_view(), name="sources"),
     path("source/<uuid:id>", LingoRootView.as_view(), name="source"),
     path("contributors", LingoRootView.as_view(), name="contributors"),
@@ -92,6 +111,26 @@ urlpatterns = [
     ),
     path("api/concept-tree", ConceptTreeView.as_view(), name="api-concepts"),
     path("api/search", ValueSearchView.as_view(), name="api-search"),
+    path(
+        "api/scheme/<uuid:scheme_resource_instance_id>/concept-identifier-counter",
+        ConceptIdentifierCounterView.as_view(),
+        name="api-concept-identifier-counter",
+    ),
+    path(
+        "api/scheme/<uuid:scheme_resource_instance_id>/identifier",
+        SchemeIdentifierView.as_view(),
+        name="api-scheme-identifier",
+    ),
+    path(
+        "api/scheme/<uuid:scheme_resource_instance_id>/url-template",
+        SchemeURITemplateView.as_view(),
+        name="api-scheme-url-template",
+    ),
+    path(
+        "api/lingo/scheme-resource",
+        SchemeResourceView.as_view(),
+        name="api-lingo-scheme-resource",
+    ),
     path(
         "api/advanced-search",
         AdvancedSearchView.as_view(),
@@ -191,6 +230,16 @@ urlpatterns = [
         "api/lingo/<slug:graph>/<slug:nodegroup_alias>/<uuid:pk>",
         LingoTileDetailView.as_view(),
         name="api-lingo-tile",
+    ),
+    path(
+        "api/lingo/schemes/<slug:scheme_identifier>/resolve",
+        IdentifierResolveView.as_view(),
+        name="api-lingo-scheme-resolve",
+    ),
+    path(
+        "api/lingo/schemes/<slug:scheme_identifier>/concepts/<slug:concept_identifier>/resolve",
+        IdentifierResolveView.as_view(),
+        name="api-lingo-concept-resolve",
     ),
     path("", include("arches_controlled_lists.urls")),
     path("", include("arches_component_lab.urls")),

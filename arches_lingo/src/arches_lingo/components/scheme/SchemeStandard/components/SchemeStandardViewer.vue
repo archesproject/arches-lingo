@@ -26,6 +26,40 @@ const openEditor =
         "openEditor",
     );
 
+const resourceInstanceLifecycleState = inject<{
+    value:
+        | {
+              can_edit_resource_instances: boolean;
+              can_delete_resource_instances: boolean;
+          }
+        | undefined;
+}>("resourceInstanceLifecycleState");
+
+const canEditResourceInstances = computed(() => {
+    return Boolean(
+        resourceInstanceLifecycleState?.value?.can_edit_resource_instances,
+    );
+});
+
+const isCreateDisabled = computed(() => {
+    return Boolean(
+        !props.resourceInstanceId || !canEditResourceInstances.value,
+    );
+});
+
+const createTooltipText = computed(() => {
+    if (!isCreateDisabled.value) {
+        return "";
+    }
+
+    if (!props.resourceInstanceId) {
+        return $gettext("Create a Scheme Label before adding standards");
+    }
+
+    return $gettext(
+        "This scheme is not editable in its current lifecycle state",
+    );
+});
 const { isEditor } = useUserStore();
 
 const buttonLabel = computed(() => {
@@ -45,10 +79,8 @@ const buttonLabel = computed(() => {
             <Button
                 v-if="isEditor"
                 v-tooltip.top="{
-                    disabled: Boolean(props.resourceInstanceId),
-                    value: $gettext(
-                        'Create a Scheme Label before adding standards',
-                    ),
+                    disabled: Boolean(!isCreateDisabled),
+                    value: createTooltipText,
                     showDelay: 300,
                     pt: {
                         text: {
@@ -57,7 +89,7 @@ const buttonLabel = computed(() => {
                         arrow: { style: { display: 'none' } },
                     },
                 }"
-                :disabled="Boolean(!props.resourceInstanceId)"
+                :disabled="isCreateDisabled"
                 :label="buttonLabel"
                 class="add-button"
                 icon="pi pi-plus-circle"
