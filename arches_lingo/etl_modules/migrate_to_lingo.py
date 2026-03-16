@@ -470,7 +470,7 @@ class LingoResourceImporter(BaseImportModule):
             concept_hierarchy.append(concept_dict)
         return concept_hierarchy, concepts_to_migrate
 
-    def init_relationships(
+    def _init_relationships(
         self, cursor, loadid, concepts_to_migrate, concept_hierarchy
     ):
         # prefetch default values for hidden nodes
@@ -756,6 +756,22 @@ class LingoResourceImporter(BaseImportModule):
 
         LoadStaging.objects.bulk_create(part_of_scheme_tiles)
 
+    def _set_lifecycle_to_published(self):
+        PUBLISHED = models.ResourceInstanceLifecycleState.objects.get(name="Published")
+        new_resource_ids = list(
+            models.LoadStaging.objects.filter(load_event_id=self.loadid)
+            .values_list("resourceid", flat=True)
+            .distinct()
+        )
+        new_resources = models.ResourceInstance.objects.filter(
+            resourceinstanceid__in=new_resource_ids
+        )
+        for resource in new_resources:
+            resource.resource_instance_lifecycle_state = PUBLISHED
+        models.ResourceInstance.objects.bulk_update(
+            new_resources, ["resource_instance_lifecycle_state"]
+        )
+
     def start(self, request):
         load_details = {"operation": "Lingo Thesaurus Import"}
         if not self.loadid:
@@ -928,7 +944,7 @@ class LingoResourceImporter(BaseImportModule):
 
             # Create relationships
             if self.scheme_conceptid:
-                self.init_relationships(
+                self._init_relationships(
                     cursor, self.loadid, concepts_to_migrate, concept_hierarchy
                 )
 
@@ -943,6 +959,7 @@ class LingoResourceImporter(BaseImportModule):
                 cursor.execute(
                     """CALL __arches_update_resource_x_resource_with_graphids();"""
                 )
+                self._set_lifecycle_to_published()
                 cursor.execute("""SELECT __arches_refresh_spatial_views();""")
                 refresh_successful = cursor.fetchone()[0]
                 if not refresh_successful:
