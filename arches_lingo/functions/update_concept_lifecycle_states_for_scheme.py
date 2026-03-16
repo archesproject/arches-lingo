@@ -16,6 +16,16 @@ from arches.app.models.models import (
 from arches.app.models.tile import Tile
 
 from arches_controlled_lists.models import ListItem
+from arches_lingo.const import (
+    NAMESPACE_NODEGROUP,
+    NAMESPACE_NAME_NODE,
+    NAMESPACE_TYPE_NODE,
+    NAMESPACE_TYPE_LIST_ITEM_ID,
+    SCHEME_IDENTIFIER_NODEGROUP,
+    SCHEME_IDENTIFIER_CONTENT_NODE,
+)
+
+
 from arches_lingo.models import ConceptIdentifierCounter, SchemeURITemplate
 from arches_lingo.utils.concept_identifier_allocator import (
     allocate_concept_identifier_number,
@@ -83,9 +93,12 @@ class UpdateConceptLifecycleStatesForScheme(BaseFunction):
 
         with transaction.atomic():
             if is_scheme_promoting_to_active:
-                self._handle_scheme_promoted_to_active(
-                    scheme_resource_instance_id=scheme_resource_instance_id,
-                    request=request,
+                url_template, scheme_identifier_value = (
+                    self._handle_scheme_promoted_to_active(
+                        scheme_resource_instance_id=scheme_resource_instance_id,
+                        scheme_graph_id=resource_instance.graph_id,
+                        request=request,
+                    )
                 )
                 self._handle_draft_concepts_promoted_to_active(
                     scheme_resource_instance_id=scheme_resource_instance_id,
@@ -94,7 +107,8 @@ class UpdateConceptLifecycleStatesForScheme(BaseFunction):
                     request=request,
                 )
                 self._recalculate_non_retired_concept_uris(
-                    scheme_resource_instance_id=scheme_resource_instance_id,
+                    url_template=url_template,
+                    scheme_identifier_value=scheme_identifier_value,
                     concept_graph_id=concept_graph_id,
                     related_non_retired_concepts_queryset=related_non_retired_concepts_queryset,
                 )
@@ -139,11 +153,33 @@ class UpdateConceptLifecycleStatesForScheme(BaseFunction):
     def _handle_scheme_promoted_to_active(
         self,
         scheme_resource_instance_id,
+        scheme_graph_id,
         request,
     ):
-        scheme_uri_template_model, _ = SchemeURITemplate.objects.get_or_create(
+        scheme_uri_template, _ = SchemeURITemplate.objects.get_or_create(
             scheme_id=scheme_resource_instance_id
         )
+
+        namespace_type_value = [
+            ListItem.objects.get(pk=NAMESPACE_TYPE_LIST_ITEM_ID).build_tile_value()
+        ]
+        namespace_tile, created = TileModel.objects.get_or_create(
+            resourceinstance_id=scheme_resource_instance_id,
+            nodegroup_id=NAMESPACE_NODEGROUP,
+            defaults={
+                "data": {
+                    NAMESPACE_NAME_NODE: scheme_uri_template.url_template,
+                    NAMESPACE_TYPE_NODE: namespace_type_value,
+                }
+            },
+        )
+        if not created:
+            if not namespace_tile.data.get(NAMESPACE_NAME_NODE):
+                namespace_tile.data[NAMESPACE_NAME_NODE] = (
+                    scheme_uri_template.url_template
+                )
+            namespace_tile.data[NAMESPACE_TYPE_NODE] = namespace_type_value
+            namespace_tile.save()
 
         ConceptIdentifierCounter.objects.get_or_create(
             scheme_id=scheme_resource_instance_id
@@ -158,50 +194,61 @@ class UpdateConceptLifecycleStatesForScheme(BaseFunction):
             .first()
         )
         if not scheme_identifier_value:
-            return
-
-        template = scheme_uri_template_model.url_template
-        if "<scheme_identifier>" not in template:
-            return
-
-        scheme_uri_value = (
-            template.split("<scheme_identifier>")[0] + scheme_identifier_value
-        )
-
-        scheme_graph_id = (
-            ResourceInstance.objects.only("graph_id")
-            .get(resourceinstanceid=scheme_resource_instance_id)
-            .graph_id
-        )
-
-        uri_nodegroup_node = Node.objects.only("nodegroup_id").get(
-            graph_id=scheme_graph_id,
-            alias="uri",
-        )
-
-        uri_content_node = Node.objects.only("nodeid").get(
-            graph_id=scheme_graph_id,
-            alias="uri_content",
-        )
-
-        tile = Tile.objects.filter(
-            resourceinstance_id=scheme_resource_instance_id,
-            nodegroup_id=uri_nodegroup_node.nodegroup_id,
-        ).first()
-
-        if tile is None:
-            tile = Tile.get_blank_tile_from_nodegroup_id(
-                nodegroup_id=uri_nodegroup_node.nodegroup_id,
-                resourceid=scheme_resource_instance_id,
-                parenttile=None,
-            )
-            tile.data = self._get_nodegroup_data_with_widget_defaults(
-                nodegroup_id=uri_nodegroup_node.nodegroup_id,
+            identifier_tile = TileModel.objects.filter(
                 resourceinstance_id=scheme_resource_instance_id,
+                nodegroup_id=SCHEME_IDENTIFIER_NODEGROUP,
+            ).first()
+            if identifier_tile:
+                scheme_identifier_value = identifier_tile.data.get(
+                    SCHEME_IDENTIFIER_CONTENT_NODE
+                )
+            if scheme_identifier_value:
+                ResourceIdentifier.objects.create(
+                    resourceid_id=scheme_resource_instance_id,
+                    identifier=scheme_identifier_value,
+                    source="arches-lingo",
+                    identifier_type="identifier",
+                )
+
+        if (
+            scheme_identifier_value
+            and "<scheme_identifier>" in scheme_uri_template.url_template
+        ):
+            scheme_uri_value = (
+                scheme_uri_template.url_template.split("<scheme_identifier>")[0]
+                + scheme_identifier_value
             )
 
-        tile.data[str(uri_content_node.nodeid)] = scheme_uri_value
-        tile.save(request=request, index=False)
+            nodes = {
+                node.alias: node
+                for node in Node.objects.filter(
+                    graph_id=scheme_graph_id,
+                    alias__in=["uri", "uri_content"],
+                )
+            }
+            uri_nodegroup_id = nodes["uri"].nodegroup_id
+            uri_content_node_id = str(nodes["uri_content"].nodeid)
+
+            tile = Tile.objects.filter(
+                resourceinstance_id=scheme_resource_instance_id,
+                nodegroup_id=uri_nodegroup_id,
+            ).first()
+
+            if tile is None:
+                tile = Tile.get_blank_tile_from_nodegroup_id(
+                    nodegroup_id=uri_nodegroup_id,
+                    resourceid=scheme_resource_instance_id,
+                    parenttile=None,
+                )
+                tile.data = self._get_nodegroup_data_with_widget_defaults(
+                    nodegroup_id=uri_nodegroup_id,
+                    resourceinstance_id=scheme_resource_instance_id,
+                )
+
+            tile.data[uri_content_node_id] = scheme_uri_value
+            tile.save(request=request, index=False)
+
+        return scheme_uri_template.url_template, scheme_identifier_value
 
     def _handle_draft_concepts_promoted_to_active(
         self,
@@ -221,36 +268,39 @@ class UpdateConceptLifecycleStatesForScheme(BaseFunction):
         if not draft_concept_resource_instance_ids:
             return
 
-        identifier_nodegroup_node = Node.objects.only("nodegroup_id").get(
-            graph_id=concept_graph_id,
-            alias="identifier",
-        )
-
-        identifier_content_node = Node.objects.only("nodeid").get(
-            graph_id=concept_graph_id,
-            alias="identifier_content",
-        )
-
-        identifier_type_node = Node.objects.only("nodeid").get(
-            graph_id=concept_graph_id,
-            alias="identifier_type",
-        )
+        nodes = {
+            node.alias: node
+            for node in Node.objects.filter(
+                graph_id=concept_graph_id,
+                alias__in=["identifier", "identifier_content", "identifier_type"],
+            )
+        }
+        identifier_nodegroup_id = nodes["identifier"].nodegroup_id
+        identifier_content_node_id = str(nodes["identifier_content"].nodeid)
+        identifier_type_node_id = str(nodes["identifier_type"].nodeid)
 
         identifier_type_list_item = ListItem.objects.get(
             pk=IDENTIFIER_TYPE_LIST_ITEM_ID
         )
+        identifier_type_tile_value = [identifier_type_list_item.build_tile_value()]
 
         allocated_start_number = allocate_concept_identifier_number(
             scheme_resource_instance_id=scheme_resource_instance_id,
             count=len(draft_concept_resource_instance_ids),
         )
 
+        default_identifier_tile_data = self._get_nodegroup_data_with_widget_defaults(
+            nodegroup_id=identifier_nodegroup_id,
+            resourceinstance_id=draft_concept_resource_instance_ids[0],
+        )
+
         resource_identifiers_to_create = []
+        concept_tiles_to_create = []
+
         for concept_index, concept_resource_instance_id in enumerate(
             draft_concept_resource_instance_ids
         ):
-            concept_identifier_number = allocated_start_number + concept_index
-            concept_identifier_value = str(concept_identifier_number)
+            concept_identifier_value = str(allocated_start_number + concept_index)
 
             resource_identifiers_to_create.append(
                 ResourceIdentifier(
@@ -261,32 +311,14 @@ class UpdateConceptLifecycleStatesForScheme(BaseFunction):
                 )
             )
 
-        ResourceIdentifier.objects.bulk_create(resource_identifiers_to_create)
-
-        default_identifier_tile_data = self._get_nodegroup_data_with_widget_defaults(
-            nodegroup_id=identifier_nodegroup_node.nodegroup_id,
-            resourceinstance_id=draft_concept_resource_instance_ids[0],
-        )
-
-        concept_tiles_to_create = []
-        for concept_index, concept_resource_instance_id in enumerate(
-            draft_concept_resource_instance_ids
-        ):
-            concept_identifier_number = allocated_start_number + concept_index
-            concept_identifier_value = str(concept_identifier_number)
-
             concept_tile_data = copy.deepcopy(default_identifier_tile_data)
-            concept_tile_data[str(identifier_content_node.nodeid)] = (
-                concept_identifier_value
-            )
-            concept_tile_data[str(identifier_type_node.nodeid)] = [
-                identifier_type_list_item.build_tile_value()
-            ]
+            concept_tile_data[identifier_content_node_id] = concept_identifier_value
+            concept_tile_data[identifier_type_node_id] = identifier_type_tile_value
 
             concept_tiles_to_create.append(
                 TileModel(
                     resourceinstance_id=concept_resource_instance_id,
-                    nodegroup_id=identifier_nodegroup_node.nodegroup_id,
+                    nodegroup_id=identifier_nodegroup_id,
                     parenttile_id=None,
                     data=concept_tile_data,
                     sortorder=0,
@@ -294,28 +326,16 @@ class UpdateConceptLifecycleStatesForScheme(BaseFunction):
                 )
             )
 
+        ResourceIdentifier.objects.bulk_create(resource_identifiers_to_create)
         TileModel.objects.bulk_create(concept_tiles_to_create)
 
     def _recalculate_non_retired_concept_uris(
         self,
-        scheme_resource_instance_id,
+        url_template,
+        scheme_identifier_value,
         concept_graph_id,
         related_non_retired_concepts_queryset,
     ):
-        scheme_uri_template_value = (
-            SchemeURITemplate.objects.filter(scheme_id=scheme_resource_instance_id)
-            .values_list("url_template", flat=True)
-            .first()
-        )
-
-        scheme_identifier_value = (
-            ResourceIdentifier.objects.filter(
-                resourceid_id=scheme_resource_instance_id,
-                source="arches-lingo",
-            )
-            .values_list("identifier", flat=True)
-            .first()
-        )
         if not scheme_identifier_value:
             return
 
@@ -336,23 +356,15 @@ class UpdateConceptLifecycleStatesForScheme(BaseFunction):
         if not concept_identifier_by_resource_instance_id:
             return
 
-        uri_nodegroup_id = (
-            Node.objects.only("nodegroup_id")
-            .get(
+        nodes = {
+            node.alias: node
+            for node in Node.objects.filter(
                 graph_id=concept_graph_id,
-                alias="uri",
+                alias__in=["uri", "uri_content"],
             )
-            .nodegroup_id
-        )
-
-        uri_content_node_id_string = str(
-            Node.objects.only("nodeid")
-            .get(
-                graph_id=concept_graph_id,
-                alias="uri_content",
-            )
-            .nodeid
-        )
+        }
+        uri_nodegroup_id = nodes["uri"].nodegroup_id
+        uri_content_node_id_string = str(nodes["uri_content"].nodeid)
 
         existing_uri_tiles = list(
             TileModel.objects.filter(
@@ -381,7 +393,7 @@ class UpdateConceptLifecycleStatesForScheme(BaseFunction):
             if not concept_identifier_value:
                 continue
 
-            desired_uri_value = scheme_uri_template_value.replace(
+            desired_uri_value = url_template.replace(
                 "<scheme_identifier>", scheme_identifier_value
             ).replace("<concept_identifier>", concept_identifier_value)
 

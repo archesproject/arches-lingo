@@ -695,28 +695,21 @@ export const fetchResourceIdentifiers = async (resourceId: string) => {
     return parsed;
 };
 
-export const upsertResourceIdentifier = async (
-    resourceId: string,
-    resourceIdentifier: {
-        id?: number;
-        identifier: string;
-        source: string;
-        identifier_type?: string;
-    },
+export const upsertSchemeIdentifier = async (
+    schemeResourceInstanceId: string,
+    identifier: string,
 ) => {
-    const url = generateArchesURL("arches:api-resource-identifiers", {
-        resourceid: resourceId,
+    const url = generateArchesURL("arches_lingo:api-scheme-identifier", {
+        scheme_resource_instance_id: schemeResourceInstanceId,
     });
-
     const response = await fetch(url, {
         method: "POST",
         headers: {
             "X-CSRFTOKEN": getToken(),
             "Content-Type": "application/json",
         },
-        body: JSON.stringify(resourceIdentifier),
+        body: JSON.stringify({ identifier }),
     });
-
     const parsed = await response.json();
     if (!response.ok) throw new Error(parsed.message || response.statusText);
     return parsed;

@@ -5,7 +5,6 @@ import ComponentManager from "@/arches_lingo/components/generic/ComponentManager
 
 import SchemeHeader from "@/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue";
 import SchemeLabel from "@/arches_lingo/components/scheme/SchemeLabel/SchemeLabel.vue";
-import SchemeNamespace from "@/arches_lingo/components/scheme/SchemeNamespace/SchemeNamespace.vue";
 import SchemeNote from "@/arches_lingo/components/scheme/SchemeNote/SchemeNote.vue";
 import SchemeStandard from "@/arches_lingo/components/scheme/SchemeStandard/SchemeStandard.vue";
 import SchemeLicense from "@/arches_lingo/components/scheme/SchemeLicense/SchemeLicense.vue";
@@ -34,13 +33,6 @@ const componentData = [
         sectionTitle: $gettext("Scheme Notes"),
         graphSlug: "scheme",
         nodegroupAlias: "statement",
-    },
-    {
-        component: SchemeNamespace,
-        componentName: "SchemeNamespace",
-        sectionTitle: $gettext("Scheme Namespace"),
-        graphSlug: "scheme",
-        nodegroupAlias: "namespace",
     },
     {
         component: SchemeStandard,

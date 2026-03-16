@@ -6,7 +6,7 @@ import { useToast } from "primevue/usetoast";
 import Button from "primevue/button";
 import InputText from "primevue/inputtext";
 
-import { upsertResourceIdentifier } from "@/arches_lingo/api.ts";
+import { upsertSchemeIdentifier } from "@/arches_lingo/api.ts";
 import { DEFAULT_ERROR_TOAST_LIFE, ERROR } from "@/arches_lingo/constants.ts";
 
 const props = defineProps<{
@@ -55,13 +55,9 @@ async function saveIdentifier() {
     isSavingIdentifier.value = true;
 
     try {
-        const identifierData = await upsertResourceIdentifier(
+        const identifierData = await upsertSchemeIdentifier(
             props.resourceInstanceId,
-            {
-                id: props.resourceIdentifierId,
-                identifier: identifierDraft.value,
-                source: "arches-lingo",
-            },
+            identifierDraft.value,
         );
 
         emit("update", {

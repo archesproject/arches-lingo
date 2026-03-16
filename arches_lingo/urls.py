@@ -32,6 +32,7 @@ from arches_lingo.views.api.generic import (
 from arches_lingo.views.api.concept_identifier_counter import (
     ConceptIdentifierCounterView,
 )
+from arches_lingo.views.api.scheme_identifier import SchemeIdentifierView
 from arches_lingo.views.api.scheme_uri_template import (
     SchemeURITemplateView,
 )
@@ -114,6 +115,11 @@ urlpatterns = [
         "api/scheme/<uuid:scheme_resource_instance_id>/concept-identifier-counter",
         ConceptIdentifierCounterView.as_view(),
         name="api-concept-identifier-counter",
+    ),
+    path(
+        "api/scheme/<uuid:scheme_resource_instance_id>/identifier",
+        SchemeIdentifierView.as_view(),
+        name="api-scheme-identifier",
     ),
     path(
         "api/scheme/<uuid:scheme_resource_instance_id>/url-template",
