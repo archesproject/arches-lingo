@@ -486,7 +486,7 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                     </div>
                     <div>
                         <span class="header-item-label">{{
-                            $gettext("URI (provisonal): ")
+                            $gettext("URI: ")
                         }}</span>
                         <Button
                             v-if="data?.uri"

@@ -450,7 +450,7 @@ function onLifecycleStateChange(
                     />
                     <div>
                         <span class="header-item-label">{{
-                            $gettext("URI (provisonal): ")
+                            $gettext("URI: ")
                         }}</span>
                         <Button
                             v-if="schemeUri"
