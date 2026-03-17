@@ -6,7 +6,7 @@ from django.views.generic import View
 
 from arches.app.utils.response import JSONErrorResponse, JSONResponse
 
-from arches_lingo.mixins.anonymous_access import (
+from arches_lingo.mixins.permissions import (
     AnonymousAccessMixin,
     AuthenticatedUserMixin,
 )
