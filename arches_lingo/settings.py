@@ -565,9 +565,6 @@ LANGUAGES = [
 # override this to permenantly display/hide the language switcher
 SHOW_LANGUAGE_SWITCH = len(LANGUAGES) > 1
 
-# TODO: remove when finalizing release
-SILENCED_SYSTEM_CHECKS += ["arches.E002"]
-
 REFERENCES_INDEX_NAME = "references"
 ELASTICSEARCH_CUSTOM_INDEXES = [
     {
