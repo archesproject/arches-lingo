@@ -141,8 +141,7 @@ watch(
             conceptTypeTile.value =
                 resource.aliased_data?.[CONCEPT_TYPE_NODE_ALIAS];
 
-            isTopConcept.value =
-                (resource.aliased_data?.top_concept_of ?? []).length > 0;
+            isTopConcept.value = Boolean(resource.aliased_data?.top_concept_of);
 
             const fetchedConceptResource = await fetchConceptResource(
                 props.resourceInstanceId,
@@ -579,7 +578,10 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                     </div>
                 </div>
             </div>
-            <div class="header-row">
+            <div
+                class="header-row"
+                :class="{ 'top-concept-owner': isTopConcept }"
+            >
                 <div
                     v-if="!isTopConcept"
                     class="header-item"
@@ -820,6 +822,10 @@ h2 {
 :deep(a) {
     font-size: var(--p-lingo-font-size-smallnormal);
     color: var(--p-primary-500);
+}
+
+.top-concept-owner {
+    justify-self: end;
 }
 
 :deep(.p-selectbutton) {

@@ -3891,7 +3891,7 @@
                     "parentnodegroup_id": "bf73e5d7-4888-11ee-8a8d-11afefc4bff7"
                 },
                 {
-                    "cardinality": "n",
+                    "cardinality": "1",
                     "grouping_node_id": "bf73e5b9-4888-11ee-8a8d-11afefc4bff7",
                     "legacygroupid": null,
                     "nodegroupid": "bf73e5b9-4888-11ee-8a8d-11afefc4bff7",
