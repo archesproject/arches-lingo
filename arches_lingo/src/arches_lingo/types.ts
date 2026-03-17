@@ -23,6 +23,8 @@ export interface User {
 export interface AppSettings {
     allow_anonymous_access: boolean;
     public_server_address: string | null;
+    arches_version: string;
+    lingo_version: string;
 }
 
 export interface DisplayedRowRefAndSetter {
