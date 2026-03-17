@@ -270,13 +270,13 @@ class ViewTests(TestCase):
 
         self.assertEqual(scheme["labels"][0]["value"], "Test Scheme")
         self.assertEqual(scheme["labels"][0]["valuetype_id"], "prefLabel")
-        self.assertIn("lifecycle_state_id", scheme)
-        self.assertIsNotNone(scheme["lifecycle_state_id"])
+        self.assertIn("resource_instance_lifecycle_state_id", scheme)
+        self.assertIsNotNone(scheme["resource_instance_lifecycle_state_id"])
         self.assertEqual(len(scheme["top_concepts"]), 1)
         top = scheme["top_concepts"][0]
         self.assertEqual(top["labels"][0]["value"], "Concept 1")
-        self.assertIn("lifecycle_state_id", top)
-        self.assertIsNotNone(top["lifecycle_state_id"])
+        self.assertIn("resource_instance_lifecycle_state_id", top)
+        self.assertIsNotNone(top["resource_instance_lifecycle_state_id"])
         self.assertEqual(len(top["narrower"]), 4)
         self.assertEqual(
             {n["labels"][0]["value"] for n in top["narrower"]},

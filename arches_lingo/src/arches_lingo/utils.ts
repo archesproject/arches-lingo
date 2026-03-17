@@ -468,8 +468,8 @@ export function filterTreeByLifecycleStates(
 
         const nodeData = node.data as Concept | Scheme;
         const nodeMatchesFilter =
-            nodeData.lifecycle_state_id !== undefined &&
-            selectedStateIds.has(nodeData.lifecycle_state_id);
+            nodeData.resource_instance_lifecycle_state_id !== undefined &&
+            selectedStateIds.has(nodeData.resource_instance_lifecycle_state_id);
 
         if (nodeMatchesFilter || filteredChildren.length > 0) {
             visibleNodes.push({ ...node, children: filteredChildren });

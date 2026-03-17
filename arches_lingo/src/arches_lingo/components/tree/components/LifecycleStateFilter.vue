@@ -66,9 +66,7 @@ function handleStateToggle(stateId: string) {
             );
         }
 
-        if (newSelectedIds.length > 0) {
-            emit("update:selectedStateIds", newSelectedIds);
-        }
+        emit("update:selectedStateIds", newSelectedIds);
     } else {
         const newSelectedIds = [...props.selectedStateIds, stateId];
 

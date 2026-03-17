@@ -55,7 +55,7 @@ export interface Scheme {
     id: string;
     labels: Label[];
     top_concepts: Concept[];
-    lifecycle_state_id?: string;
+    resource_instance_lifecycle_state_id?: string;
 }
 
 export interface ControlledListResult {
