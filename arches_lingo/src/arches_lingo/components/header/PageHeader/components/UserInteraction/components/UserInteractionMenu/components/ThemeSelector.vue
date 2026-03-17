@@ -33,12 +33,6 @@ const options = ref([
         value: true,
         disabled: false,
     },
-    {
-        icon: "pi pi-users",
-        label: $gettext("Accessible"),
-        value: "",
-        disabled: true,
-    },
 ]);
 
 function setTheme(value: boolean) {

@@ -16,6 +16,10 @@ export const useAppSettingsStore = defineStore("appSettings", () => {
         () => settings.value?.public_server_address ?? undefined,
     );
 
+    const archesVersion = computed(() => settings.value?.arches_version ?? "");
+
+    const lingoVersion = computed(() => settings.value?.lingo_version ?? "");
+
     async function initialize() {
         settings.value = await fetchAppSettings();
     }
@@ -24,6 +28,8 @@ export const useAppSettingsStore = defineStore("appSettings", () => {
         settings,
         allowAnonymousAccess,
         publicServerAddress,
+        archesVersion,
+        lingoVersion,
         initialize,
     };
 });
