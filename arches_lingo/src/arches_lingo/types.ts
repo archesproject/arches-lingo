@@ -485,6 +485,7 @@ export type FacetType =
     | "relationship_associated"
     | "match_uri"
     | "scheme"
+    | "top_concept"
     | "uri"
     | "identifier"
     | "lifecycle_state"
