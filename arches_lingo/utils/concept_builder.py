@@ -382,8 +382,10 @@ class ConceptBuilder:
         for parent in concept_and_scheme_parents:
             if parent in working_path:
                 logger.warning(
-                    "Cycle detected in concept hierarchy: %s already appears in "
-                    "the current path and will be skipped. Path: %s",
+                    _(
+                        "Cycle detected in concept hierarchy: %s already appears in "
+                        "the current path and will be skipped. Path: %s"
+                    ),
                     parent,
                     working_path,
                 )
