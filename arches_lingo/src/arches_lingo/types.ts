@@ -18,6 +18,7 @@ export interface User {
     phone?: string;
     is_lingo_editor: boolean;
     is_anonymous: boolean;
+    is_staff: boolean;
 }
 
 export interface AppSettings {

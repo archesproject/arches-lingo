@@ -23,7 +23,7 @@ const children = <SideNavMenuItem[]>[
     },
     {
         key: "schemes",
-        label: $gettext("Schemes"),
+        label: $gettext("Schemes & Concepts"),
         icon: "pi pi-lightbulb",
         route: { name: routeNames.schemes },
         showIconIfCollapsed: true,
