@@ -1,11 +1,25 @@
+from http import HTTPStatus
+
+from django.utils.translation import gettext as _
 from arches.app.utils.betterJSONSerializer import JSONDeserializer, JSONSerializer
 from arches.app.utils.response import JSONResponse, JSONErrorResponse
 from arches.app.views.api import APIBase
 
 from arches_lingo.models import ConceptIdentifierCounter
+from arches_lingo.permissions import is_lingo_editor
 
 
 class ConceptIdentifierCounterView(APIBase):
+    def dispatch(self, request, *args, **kwargs):
+        if request.method not in ("GET", "HEAD", "OPTIONS"):
+            if not is_lingo_editor(request.user):
+                return JSONErrorResponse(
+                    title=_("Permission denied."),
+                    message=_("You must be a Lingo editor to perform this action."),
+                    status=HTTPStatus.FORBIDDEN,
+                )
+        return super().dispatch(request, *args, **kwargs)
+
     def get(self, request, scheme_resource_instance_id):
         concept_identifier_counter = ConceptIdentifierCounter.objects.filter(
             scheme_id=scheme_resource_instance_id

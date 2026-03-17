@@ -1,3 +1,6 @@
+from http import HTTPStatus
+
+from django.utils.translation import gettext as _
 from arches.app.models.models import ResourceIdentifier
 from arches.app.models.tile import Tile as TileModel
 from arches.app.utils.betterJSONSerializer import JSONDeserializer
@@ -13,9 +16,19 @@ from arches_lingo.const import (
     SCHEME_IDENTIFIER_TYPE_NODE,
     SCHEME_IDENTIFIER_TYPE_LIST_ITEM_ID,
 )
+from arches_lingo.permissions import is_lingo_editor
 
 
 class SchemeIdentifierView(APIBase):
+    def dispatch(self, request, *args, **kwargs):
+        if not is_lingo_editor(request.user):
+            return JSONErrorResponse(
+                title=_("Permission denied."),
+                message=_("You must be a Lingo editor to perform this action."),
+                status=HTTPStatus.FORBIDDEN,
+            )
+        return super().dispatch(request, *args, **kwargs)
+
     def post(self, request, scheme_resource_instance_id):
         request_json = JSONDeserializer().deserialize(request.body)
         identifier = request_json.get("identifier", "")

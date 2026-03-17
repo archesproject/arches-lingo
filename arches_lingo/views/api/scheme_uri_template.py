@@ -1,3 +1,6 @@
+from http import HTTPStatus
+
+from django.utils.translation import gettext as _
 from arches.app.models.tile import Tile as TileModel
 from arches.app.utils.betterJSONSerializer import JSONDeserializer
 from arches.app.utils.response import JSONResponse, JSONErrorResponse
@@ -12,9 +15,20 @@ from arches_lingo.const import (
     NAMESPACE_TYPE_LIST_ITEM_ID,
 )
 from arches_lingo.models import SchemeURITemplate
+from arches_lingo.permissions import is_lingo_editor
 
 
 class SchemeURITemplateView(APIBase):
+    def dispatch(self, request, *args, **kwargs):
+        if request.method not in ("GET", "HEAD", "OPTIONS"):
+            if not is_lingo_editor(request.user):
+                return JSONErrorResponse(
+                    title=_("Permission denied."),
+                    message=_("You must be a Lingo editor to perform this action."),
+                    status=HTTPStatus.FORBIDDEN,
+                )
+        return super().dispatch(request, *args, **kwargs)
+
     def get(self, request, scheme_resource_instance_id):
         scheme_uri_template = SchemeURITemplate.objects.filter(
             scheme_id=scheme_resource_instance_id
