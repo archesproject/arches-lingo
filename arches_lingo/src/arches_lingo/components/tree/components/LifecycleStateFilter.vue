@@ -7,20 +7,16 @@ import Checkbox from "primevue/checkbox";
 import Popover from "primevue/popover";
 
 import type { PopoverMethods } from "primevue/popover";
-
-interface LifecycleState {
-    id: string;
-    name: string;
-}
+import type { LifecycleState } from "@/arches_lingo/types";
 
 const props = defineProps<{
     lifecycleStates: LifecycleState[];
-    selectedStateIds: string[];
 }>();
 
-const emit = defineEmits<{
-    "update:selectedStateIds": [value: string[]];
-}>();
+const selectedLifecycleStateIds = defineModel<string[]>(
+    "selectedLifecycleStateIds",
+    { required: true },
+);
 
 const { $gettext } = useGettext();
 
@@ -30,23 +26,28 @@ const LIFECYCLE_STATE_FILTER_LABEL = $gettext("Lifecycle state filter");
 
 const popoverRef = useTemplateRef<PopoverMethods>("popover");
 
-const isFilterActive = computed(() => props.selectedStateIds.length > 0);
+const isFilterActive = computed(
+    () => selectedLifecycleStateIds.value.length > 0,
+);
 
 const allStatesChecked = computed(() => !isFilterActive.value);
 
 const someStatesChecked = computed(
     () =>
         isFilterActive.value &&
-        props.selectedStateIds.length < props.lifecycleStates.length,
+        selectedLifecycleStateIds.value.length < props.lifecycleStates.length,
 );
 
 function isStateChecked(stateId: string): boolean {
-    return !isFilterActive.value || props.selectedStateIds.includes(stateId);
+    return (
+        !isFilterActive.value ||
+        selectedLifecycleStateIds.value.includes(stateId)
+    );
 }
 
 function handleSelectAllToggle() {
     if (isFilterActive.value) {
-        emit("update:selectedStateIds", []);
+        selectedLifecycleStateIds.value = [];
     }
 }
 
@@ -61,19 +62,19 @@ function handleStateToggle(stateId: string) {
                 .map((state) => state.id)
                 .filter((id) => id !== stateId);
         } else {
-            newSelectedIds = props.selectedStateIds.filter(
+            newSelectedIds = selectedLifecycleStateIds.value.filter(
                 (id) => id !== stateId,
             );
         }
 
-        emit("update:selectedStateIds", newSelectedIds);
+        selectedLifecycleStateIds.value = newSelectedIds;
     } else {
-        const newSelectedIds = [...props.selectedStateIds, stateId];
+        const newSelectedIds = [...selectedLifecycleStateIds.value, stateId];
 
         if (newSelectedIds.length === props.lifecycleStates.length) {
-            emit("update:selectedStateIds", []);
+            selectedLifecycleStateIds.value = [];
         } else {
-            emit("update:selectedStateIds", newSelectedIds);
+            selectedLifecycleStateIds.value = newSelectedIds;
         }
     }
 }
@@ -90,22 +91,22 @@ function openPopover(event: MouseEvent) {
             :class="{ 'filter-active': isFilterActive }"
             :aria-label="FILTER_BY_LIFECYCLE_STATE"
             :title="FILTER_BY_LIFECYCLE_STATE"
-            text
-            rounded
+            :text="true"
+            :rounded="true"
             @click="openPopover"
         />
 
         <Popover ref="popover">
             <div class="lifecycle-filter-panel">
-                <p class="lifecycle-filter-heading">
+                <div class="lifecycle-filter-heading">
                     {{ LIFECYCLE_STATE_FILTER_LABEL }}
-                </p>
+                </div>
 
                 <div class="lifecycle-filter-option">
                     <Checkbox
                         :model-value="allStatesChecked"
                         :indeterminate="someStatesChecked"
-                        binary
+                        :binary="true"
                         input-id="lifecycle-state-all"
                         @update:model-value="handleSelectAllToggle"
                     />
@@ -119,7 +120,7 @@ function openPopover(event: MouseEvent) {
                 >
                     <Checkbox
                         :model-value="isStateChecked(state.id)"
-                        binary
+                        :binary="true"
                         :input-id="`lifecycle-state-${state.id}`"
                         @update:model-value="() => handleStateToggle(state.id)"
                     />

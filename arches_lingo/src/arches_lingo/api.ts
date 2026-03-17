@@ -14,6 +14,7 @@ import type {
     ConceptSetItem,
     DigitalObjectInstance,
     EditLogEntry,
+    LifecycleState,
     PaginatedResourceListResponse,
     SavedSearchItem,
     Scheme,
@@ -574,9 +575,7 @@ export const fetchConcepts = async () => {
     return parsed;
 };
 
-export const fetchLifecycleStates = async (): Promise<
-    { id: string; name: string }[]
-> => {
+export const fetchLifecycleStates = async (): Promise<LifecycleState[]> => {
     const response = await fetch(
         generateArchesURL("arches_lingo:api-lingo-lifecycle-states"),
     );
