@@ -364,7 +364,7 @@ function toggleNegated() {
             option-label="label"
             option-value="id"
             :placeholder="$gettext('Any scheme')"
-            show-clear
+            :show-clear="true"
             class="facet-value-input"
             @update:model-value="
                 (val: string | undefined) => updateField('value', val ?? '')
