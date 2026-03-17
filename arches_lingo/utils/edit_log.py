@@ -86,8 +86,30 @@ def revert_resource_to_timestamp(resourceid, target_timestamp, request):
         > target_timestamp
     }
 
+    # Build a nodegroup depth map so parent tiles are processed before their
+    # children — otherwise a child tile that needs recreation will fail because
+    # its parent hasn't been restored yet.
+    tileid_to_nodegroupid = {
+        edit.tileinstanceid: edit.nodegroupid
+        for edit in all_tile_edits_chronological
+        if edit.nodegroupid
+    }
+    unique_nodegroup_ids = set(tileid_to_nodegroupid.values())
+    nodegroups_by_id = {
+        str(ng.pk): ng
+        for ng in models.NodeGroup.objects.filter(pk__in=unique_nodegroup_ids)
+    }
+
+    def _nodegroup_depth(tileid):
+        nodegroup = nodegroups_by_id.get(tileid_to_nodegroupid.get(tileid, ""))
+        depth = 0
+        while nodegroup and nodegroup.parentnodegroup_id:
+            depth += 1
+            nodegroup = nodegroups_by_id.get(str(nodegroup.parentnodegroup_id))
+        return depth
+
     errors = []
-    for tileid in affected_tile_ids:
+    for tileid in sorted(affected_tile_ids, key=_nodegroup_depth):
         tile_edits_at_or_before_target = [
             edit
             for edit in all_tile_edits_chronological
@@ -161,21 +183,34 @@ def _recreate_deleted_tile_from_edit_log_entry(
 ):
     """Recreate a tile that was deleted after the target timestamp.
 
+    For nested tiles the parent tile is looked up by its nodegroup within the
+    resource; if no parent tile can be found the recreation fails with an error.
     Returns an error string on failure, or None on success.
     """
     try:
         nodegroup = models.NodeGroup.objects.get(pk=last_edit_before_target.nodegroupid)
+
+        parent_tile_id = None
         if nodegroup.parentnodegroup_id is not None:
-            return _(
-                "Cannot restore nested tile %(tileid)s: "
-                "parent tile information is not available "
-                "in the edit log."
-            ) % {"tileid": tileid}
+            parent_tile = Tile.objects.filter(
+                resourceinstance_id=str(resourceid),
+                nodegroup_id=nodegroup.parentnodegroup_id,
+            ).first()
+            if parent_tile is None:
+                return _(
+                    "Cannot restore nested tile %(tileid)s: "
+                    "no parent tile exists for nodegroup %(nodegroupid)s."
+                ) % {
+                    "tileid": tileid,
+                    "nodegroupid": str(nodegroup.parentnodegroup_id),
+                }
+            parent_tile_id = parent_tile.tileid
 
         tile = Tile()
         tile.tileid = uuid.UUID(tileid)
         tile.resourceinstance_id = str(resourceid)
         tile.nodegroup_id = last_edit_before_target.nodegroupid
+        tile.parenttile_id = parent_tile_id
         tile.data = last_edit_before_target.newvalue
         tile.save(request=request)
     except Exception as creation_error:
