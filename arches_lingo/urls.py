@@ -6,12 +6,12 @@ from arches_lingo.views.root import LingoRootView
 from arches_lingo.views.api.concepts import (
     ConceptDeleteView,
     ConceptTreeView,
-    LifecycleStatesView,
     ValueSearchView,
     ConceptResourceView,
     ConceptRelationshipView,
     ConceptMissingTranslationsView,
 )
+from arches_lingo.views.api.lifecycle import LifecycleStatesView
 from arches_lingo.views.api.dashboard import DashboardStatsView
 from arches_lingo.views.api.edit_log import ResourceEditLogAPIView
 from arches_lingo.views.api.schemes import SchemeResourceView, SchemeLabelCountView

@@ -55,6 +55,7 @@ import type {
 import type { TreeNode } from "primevue/treenode";
 import type {
     IconLabels,
+    LifecycleState,
     Scheme,
     Concept,
     ResourceInstanceLifecycleState,
@@ -106,7 +107,7 @@ const selectedKeys = ref<TreeSelectionKeys>({});
 const lastNonEmptySelectedKeys = ref<TreeSelectionKeys>({});
 const expandedKeys = ref<TreeExpandedKeys>({});
 const filterValue = ref((route.query.filter as string) ?? "");
-const lifecycleStates = ref<{ id: string; name: string }[]>([]);
+const lifecycleStates = ref<LifecycleState[]>([]);
 const selectedLifecycleStateIds = ref<string[]>([]);
 
 const FILTER_RENDER_CAP = 2500;
@@ -839,7 +840,9 @@ async function onNodeSelect(node: TreeNode) {
                     @click="shouldSortByAscending = !shouldSortByAscending"
                 />
                 <LifecycleStateFilter
-                    v-model:selected-state-ids="selectedLifecycleStateIds"
+                    v-model:selected-lifecycle-state-ids="
+                        selectedLifecycleStateIds
+                    "
                     :lifecycle-states="lifecycleStates"
                 />
             </div>

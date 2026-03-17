@@ -452,6 +452,11 @@ export interface PaginatorDetails {
     unread_notifications: number;
 }
 
+export interface LifecycleState {
+    id: string;
+    name: string;
+}
+
 export interface ResourceInstanceLifecycleState {
     id: string;
     name: string;
