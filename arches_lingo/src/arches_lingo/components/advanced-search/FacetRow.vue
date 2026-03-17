@@ -54,6 +54,7 @@ const facetTypes: { label: string; value: FacetType }[] = [
     },
     { label: $gettext("Matched URI"), value: "match_uri" },
     { label: $gettext("Scheme"), value: "scheme" },
+    { label: $gettext("Top Concept"), value: "top_concept" },
     { label: $gettext("URI"), value: "uri" },
     { label: $gettext("Identifier"), value: "identifier" },
     { label: $gettext("Lifecycle State"), value: "lifecycle_state" },
@@ -151,6 +152,10 @@ const showLanguageDropdown = computed(() =>
 
 const showLanguageSelect = computed(() => props.condition.facet === "language");
 const showSchemeSelect = computed(() => props.condition.facet === "scheme");
+
+const showTopConceptSchemeSelect = computed(
+    () => props.condition.facet === "top_concept",
+);
 
 const schemeDisplayOptions = computed(() =>
     props.options.schemes.map((scheme: SchemeOption) => ({
@@ -349,6 +354,21 @@ function toggleNegated() {
             :placeholder="$gettext('Select scheme')"
             class="facet-value-input"
             @update:model-value="(val: string) => updateField('value', val)"
+        />
+
+        <!-- Top concept facet: optionally filter by scheme -->
+        <Select
+            v-if="showTopConceptSchemeSelect"
+            :model-value="condition.value"
+            :options="schemeDisplayOptions"
+            option-label="label"
+            option-value="id"
+            :placeholder="$gettext('Any scheme')"
+            show-clear
+            class="facet-value-input"
+            @update:model-value="
+                (val: string | undefined) => updateField('value', val ?? '')
+            "
         />
 
         <!-- Lifecycle state facet -->

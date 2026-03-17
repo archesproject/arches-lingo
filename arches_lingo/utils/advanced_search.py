@@ -45,6 +45,7 @@ VALID_FACETS = {
     "relationship_associated",
     "match_uri",
     "scheme",
+    "top_concept",
     "uri",
     "identifier",
     "lifecycle_state",
@@ -347,6 +348,22 @@ class AdvancedSearchEvaluator:
             .values_list("resourceinstance_id", flat=True)
             .distinct()
         )
+
+    def _facet_top_concept(self, condition):
+        """Find concepts that are top concepts, optionally within a scheme."""
+        scheme_id = condition.get("value")
+
+        qs = TileModel.objects.filter(nodegroup_id=TOP_CONCEPT_OF_NODE_AND_NODEGROUP)
+        if scheme_id:
+            qs = qs.filter(
+                **{
+                    f"data__{TOP_CONCEPT_OF_NODE_AND_NODEGROUP}__contains": [
+                        {"resourceId": scheme_id}
+                    ]
+                }
+            )
+
+        return list(qs.values_list("resourceinstance_id", flat=True).distinct())
 
     def _facet_scheme(self, condition):
         """Find concepts that belong to a specific scheme."""
