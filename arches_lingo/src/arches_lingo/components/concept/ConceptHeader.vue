@@ -352,8 +352,7 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
 
     const name = concept?.name;
     const descriptor = extractDescriptors(concept, selectedLanguage.value);
-    // TODO: get human-readable user name from resource endpoint
-    const principalUser = "Anonymous";
+    const principalUser = concept?.principal_user_display_name ?? undefined;
 
     const uri = aliased_data?.uri?.aliased_data?.uri_content?.node_value;
     const partOfScheme =

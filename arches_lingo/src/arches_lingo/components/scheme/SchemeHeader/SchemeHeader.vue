@@ -260,7 +260,7 @@ function addTopConcept() {
 function extractSchemeHeaderData(scheme: ResourceInstanceResult) {
     const name = scheme?.name;
     const descriptor = extractDescriptors(scheme, selectedLanguage.value);
-    const principalUser = "Anonymous";
+    const principalUser = scheme?.principal_user_display_name ?? undefined;
 
     data.value = {
         name: name,
