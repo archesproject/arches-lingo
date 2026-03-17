@@ -288,11 +288,17 @@ class LingoResourceImporter(BaseImportModule):
 
     @staticmethod
     def create_mock_tile_from_relationship(relationship):
+        ontology_property_by_node_alias = {
+            "top_concept_of": const.TOP_CONCEPT_OF_ONTOLOGY_PROPERTY,
+            "part_of_scheme": const.PART_OF_SCHEME_ONTOLOGY_PROPERTY,
+            "classification_status_ascribed_classification": const.CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_ONTOLOGY_PROPERTY,
+            "relation_status_ascribed_comparate": const.RELATION_STATUS_ASCRIBED_COMPARATE_ONTOLOGY_PROPERTY,
+        }
+        node_alias = relationship["node_alias"]
         mock_tile = {
-            relationship["node_alias"]: {
+            node_alias: {
                 "resourceId": str(relationship["resourceId"]),
-                # TODO: populate ontologyProperty & inverseOntologyProperty
-                "ontologyProperty": "",
+                "ontologyProperty": ontology_property_by_node_alias.get(node_alias, ""),
                 "resourceXresourceId": "",
                 "inverseOntologyProperty": "",
             }
