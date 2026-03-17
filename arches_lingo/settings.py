@@ -2,6 +2,7 @@
 Django settings for arches_lingo project.
 """
 
+import importlib.metadata
 import os
 import inspect
 import semantic_version
@@ -142,7 +143,15 @@ if SECRETS_MODE == "AWS":
         pass
 
 
-APP_VERSION = semantic_version.Version(major=0, minor=0, patch=0)
+try:
+    _package_version = importlib.metadata.version("arches_lingo")
+    APP_VERSION = semantic_version.Version.coerce(_package_version)
+except (importlib.metadata.PackageNotFoundError, ValueError):
+    # falls back to 0.0.0 only if the package genuinely isn't installed
+    # (e.g. a bare Python path without the package) or if an unexpected
+    # version string form can't be coerced. This prevents settings import
+    # failures in edge environments.
+    APP_VERSION = semantic_version.Version(major=0, minor=0, patch=0)
 
 
 WEBPACK_LOADER = {
