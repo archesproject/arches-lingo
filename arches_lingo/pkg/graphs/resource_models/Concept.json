@@ -5330,6 +5330,10 @@
                                 "relationshipCollection": "00000000-0000-0000-0000-000000000005",
                                 "relationshipConcept": "ac41d9be-79db-4256-b368-2f4559cfbe55",
                                 "useOntologyRelationship": false
+                            },
+                            {
+                                "graphid": "ce57ee93-1f08-11ee-9071-214dbb482912",
+                                "name": "Digital Object (system)"
                             }
                         ],
                         "searchDsl": "",
@@ -5825,7 +5829,16 @@
                 {
                     "alias": "statement_data_assignment_object_used",
                     "config": {
-                        "graphs": [],
+                        "graphs": [
+                            {
+                                "graphid": "ce57ee93-1f08-11ee-9071-214dbb482912",
+                                "name": "Digital Object (system)"
+                            },
+                            {
+                                "graphid": "6dad61aa-b4b5-11ea-84f7-3af9d3b32b71",
+                                "name": "Textual Work"
+                            }
+                        ],
                         "rdmCollection": null,
                         "searchDsl": "",
                         "searchString": ""
@@ -6073,7 +6086,16 @@
                 {
                     "alias": "data_assignment_object_used",
                     "config": {
-                        "graphs": [],
+                        "graphs": [
+                            {
+                                "graphid": "ce57ee93-1f08-11ee-9071-214dbb482912",
+                                "name": "Digital Object (system)"
+                            },
+                            {
+                                "graphid": "6dad61aa-b4b5-11ea-84f7-3af9d3b32b71",
+                                "name": "Textual Work"
+                            }
+                        ],
                         "searchDsl": "",
                         "searchString": ""
                     },
@@ -6172,6 +6194,10 @@
                     "alias": "creation_source_reference",
                     "config": {
                         "graphs": [
+                            {
+                                "graphid": "ce57ee93-1f08-11ee-9071-214dbb482912",
+                                "name": "Digital Object (system)"
+                            },
                             {
                                 "graphid": "6dad61aa-b4b5-11ea-84f7-3af9d3b32b71",
                                 "name": "Textual Work"
@@ -6461,6 +6487,10 @@
                                 "relationshipCollection": "00000000-0000-0000-0000-000000000005",
                                 "relationshipConcept": "ac41d9be-79db-4256-b368-2f4559cfbe55",
                                 "useOntologyRelationship": false
+                            },
+                            {
+                                "graphid": "ce57ee93-1f08-11ee-9071-214dbb482912",
+                                "name": "Digital Object (system)"
                             }
                         ],
                         "searchDsl": "",
@@ -6615,8 +6645,12 @@
                     "config": {
                         "graphs": [
                             {
+                                "graphid": "ce57ee93-1f08-11ee-9071-214dbb482912",
+                                "name": "Digital Object (system)"
+                            },
+                            {
                                 "graphid": "6dad61aa-b4b5-11ea-84f7-3af9d3b32b71",
-                                "name": "Textual Work (system)"
+                                "name": "Textual Work"
                             }
                         ],
                         "searchDsl": "",
