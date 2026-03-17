@@ -91,6 +91,7 @@ export interface ResourceInstanceResult {
         [key: string]: any;
     };
     principalUser?: number | string;
+    principal_user_display_name?: string | null;
     resource_instance_lifecycle_state?: string;
 }
 

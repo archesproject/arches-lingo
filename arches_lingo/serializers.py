@@ -1,10 +1,27 @@
 from django.utils.translation import gettext as _
+from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 
 from arches_controlled_lists.models import ListItem
 from arches_querysets.models import ResourceTileTree
-from arches_querysets.rest_framework.serializers import ArchesTileSerializer
+from arches_querysets.rest_framework.serializers import (
+    ArchesResourceSerializer,
+    ArchesTileSerializer,
+)
+
+
+class LingoResourceSerializer(ArchesResourceSerializer):
+    principal_user_display_name = serializers.SerializerMethodField()
+
+    def get_principal_user_display_name(self, obj):
+        user = obj.principaluser
+        if user is None:
+            return None
+        return user.get_full_name() or user.username
+
+    class Meta(ArchesResourceSerializer.Meta):
+        pass
 
 
 class LingoTileSerializer(ArchesTileSerializer):
