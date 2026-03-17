@@ -1,3 +1,4 @@
+import logging
 from collections import defaultdict
 
 from django.contrib.postgres.expressions import ArraySubquery
@@ -6,6 +7,8 @@ from django.db.models.expressions import CombinedExpression
 from django.utils.translation import gettext as _
 
 from arches.app.models.models import Language, ResourceInstance, TileModel
+
+logger = logging.getLogger(__name__)
 
 from arches_lingo.const import (
     ALT_LABEL_URI,
@@ -366,13 +369,25 @@ class ConceptBuilder:
         return data
 
     def find_paths_to_root(self, working_path, conceptid) -> list[list[str]]:
-        """Return an array of paths (path: an array of scheme & concept ids)."""
+        """Return an array of paths (path: an array of scheme & concept ids).
+
+        Skips any parent already present in working_path to avoid infinite
+        recursion when cyclic broader-concept relationships exist in the data.
+        """
         concept_and_scheme_parents = sorted(self.broader_concepts[conceptid]) + sorted(
             self.schemes_by_top_concept[conceptid]
         )
 
         collected_paths = []
         for parent in concept_and_scheme_parents:
+            if parent in working_path:
+                logger.warning(
+                    "Cycle detected in concept hierarchy: %s already appears in "
+                    "the current path and will be skipped. Path: %s",
+                    parent,
+                    working_path,
+                )
+                continue
             forked_path = working_path[:]
             forked_path.insert(0, parent)
             collected_paths.extend(self.find_paths_to_root(forked_path, parent))
