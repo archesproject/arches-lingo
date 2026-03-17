@@ -4,7 +4,7 @@ from arches.app.models.models import GraphModel, ResourceInstanceLifecycleState
 from arches.app.utils.response import JSONResponse
 
 from arches_lingo.const import CONCEPTS_GRAPH_ID, SCHEMES_GRAPH_ID
-from arches_lingo.mixins.anonymous_access import AnonymousAccessMixin
+from arches_lingo.mixins.permissions import AnonymousAccessMixin
 
 
 class LifecycleStatesView(AnonymousAccessMixin, View):
