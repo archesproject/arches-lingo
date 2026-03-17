@@ -75,8 +75,15 @@ class AdvancedSearchEvaluator:
             "pk", flat=True
         )
 
+    def _empty_concept_ids(self):
+        return ResourceInstance.objects.none().values_list("pk", flat=True)
+
     def _evaluate_group(self, group_node):
-        """Evaluate a boolean group with AND/OR operator."""
+        """Evaluate a boolean group with AND/OR operator.
+
+        Uses database-level UNION/INTERSECT rather than loading full result
+        sets into Python memory.
+        """
         operator = group_node.get("operator", "and").lower()
         conditions = group_node.get("conditions", [])
 
@@ -85,33 +92,32 @@ class AdvancedSearchEvaluator:
 
         result_ids = None
         for condition in conditions:
-            child_ids = set(self.evaluate(condition))
+            child_ids = self.evaluate(condition)
             if result_ids is None:
                 result_ids = child_ids
             elif operator == "and":
-                result_ids &= child_ids
+                result_ids = result_ids.intersection(child_ids)
             else:  # "or"
-                result_ids |= child_ids
+                result_ids = result_ids.union(child_ids)
 
-        return list(result_ids) if result_ids is not None else []
+        return result_ids
 
     def _evaluate_condition(self, condition):
         """Evaluate a single facet condition and return concept IDs."""
         facet = condition.get("facet")
 
         if facet not in VALID_FACETS:
-            return []
+            return self._empty_concept_ids()
 
         handler = getattr(self, f"_facet_{facet}", None)
         if handler is None:
-            return []
+            return self._empty_concept_ids()
 
         result_ids = handler(condition)
 
-        # Apply negation: return all concepts *except* the matched ones.
+        # Apply negation using database-level EXCEPT rather than Python set subtraction.
         if condition.get("negated"):
-            all_ids = set(self._all_concept_ids())
-            return list(all_ids - set(result_ids))
+            return self._all_concept_ids().difference(result_ids)
 
         return result_ids
 
@@ -120,7 +126,7 @@ class AdvancedSearchEvaluator:
         qs = TileModel.objects.filter(nodegroup_id=nodegroup_id)
         if extra_filters:
             qs = qs.filter(extra_filters)
-        return list(qs.values_list("resourceinstance_id", flat=True).distinct())
+        return qs.values_list("resourceinstance_id", flat=True).distinct()
 
     MATCH_MODE_LOOKUPS = {
         "contains": "icontains",
@@ -166,7 +172,7 @@ class AdvancedSearchEvaluator:
             # Language datatype stores code string directly
             filters &= Q(**{f"data__{CONCEPT_NAME_LANGUAGE_NODE}": language})
 
-        return list(
+        return (
             TileModel.objects.filter(filters)
             .values_list("resourceinstance_id", flat=True)
             .distinct()
@@ -198,7 +204,7 @@ class AdvancedSearchEvaluator:
         if language:
             filters &= Q(**{f"data__{STATEMENT_LANGUAGE_NODE}": language})
 
-        return list(
+        return (
             TileModel.objects.filter(filters)
             .values_list("resourceinstance_id", flat=True)
             .distinct()
@@ -208,9 +214,9 @@ class AdvancedSearchEvaluator:
         """Find concepts that have any label or note in a specific language."""
         language = condition.get("value")
         if not language:
-            return list(self._all_concept_ids())
+            return self._all_concept_ids()
 
-        label_concepts = set(
+        label_concepts = (
             TileModel.objects.filter(
                 nodegroup_id=CONCEPT_NAME_NODEGROUP,
                 **{f"data__{CONCEPT_NAME_LANGUAGE_NODE}": language},
@@ -219,7 +225,7 @@ class AdvancedSearchEvaluator:
             .distinct()
         )
 
-        note_concepts = set(
+        note_concepts = (
             TileModel.objects.filter(
                 nodegroup_id=STATEMENT_NODEGROUP,
                 **{f"data__{STATEMENT_LANGUAGE_NODE}": language},
@@ -228,15 +234,15 @@ class AdvancedSearchEvaluator:
             .distinct()
         )
 
-        return list(label_concepts | note_concepts)
+        return label_concepts.union(note_concepts)
 
     def _facet_concept_type(self, condition):
         """Filter by concept type (reference data list_item_id)."""
         type_id = condition.get("value")
         if not type_id:
-            return list(self._all_concept_ids())
+            return self._all_concept_ids()
 
-        return list(
+        return (
             TileModel.objects.filter(
                 nodegroup_id=CONCEPT_TYPE_NODEGROUP,
                 **{
@@ -259,11 +265,11 @@ class AdvancedSearchEvaluator:
         direction = condition.get("direction", "broader")
 
         if not target_id:
-            return list(self._all_concept_ids())
+            return self._all_concept_ids()
 
         if direction == "broader":
             # Find concepts that have target_id as their broader concept
-            return list(
+            return (
                 TileModel.objects.filter(
                     nodegroup_id=CLASSIFICATION_STATUS_NODEGROUP,
                     **{
@@ -276,8 +282,8 @@ class AdvancedSearchEvaluator:
                 .distinct()
             )
         else:  # narrower
-            # Find concepts that are the broader concept of target_id
-            # i.e., target_id has this concept as its broader concept
+            # The broader-concept IDs are embedded in JSONB arrays, so we extract
+            # them in Python (bounded to a single concept's tile data).
             narrower_tiles = TileModel.objects.filter(
                 nodegroup_id=CLASSIFICATION_STATUS_NODEGROUP,
                 resourceinstance_id=target_id,
@@ -292,16 +298,18 @@ class AdvancedSearchEvaluator:
                         resource_id = item.get("resourceId")
                         if resource_id:
                             broader_ids.add(resource_id)
-            return list(broader_ids)
+            return ResourceInstance.objects.filter(pk__in=broader_ids).values_list(
+                "pk", flat=True
+            )
 
     def _facet_relationship_associated(self, condition):
         """Find concepts associated with a given concept."""
         target_id = condition.get("value")
         if not target_id:
-            return list(self._all_concept_ids())
+            return self._all_concept_ids()
 
         # Concepts that have target_id in their relation_status
-        forward = set(
+        forward = (
             TileModel.objects.filter(
                 nodegroup_id=RELATION_STATUS_NODEGROUP,
                 **{
@@ -314,7 +322,8 @@ class AdvancedSearchEvaluator:
             .distinct()
         )
 
-        # target_id's relation_status tiles (reverse direction)
+        # The comparate IDs for the reverse direction are embedded in JSONB arrays,
+        # so we extract them in Python (bounded to a single concept's tile data).
         reverse_tiles = TileModel.objects.filter(
             nodegroup_id=RELATION_STATUS_NODEGROUP,
             resourceinstance_id=target_id,
@@ -328,21 +337,24 @@ class AdvancedSearchEvaluator:
                     if resource_id:
                         reverse_ids.add(resource_id)
 
-        return list(forward | reverse_ids)
+        reverse_qs = ResourceInstance.objects.filter(pk__in=reverse_ids).values_list(
+            "pk", flat=True
+        )
+        return forward.union(reverse_qs)
 
     def _facet_match_uri(self, condition):
         """Find concepts with a matching URI in match_status."""
         value = condition.get("value", "").strip()
         match_mode = condition.get("match_mode", "contains")
         if not value and match_mode != "exists":
-            return list(self._all_concept_ids())
+            return self._all_concept_ids()
 
         filters = Q(nodegroup_id=MATCH_STATUS_NODEGROUP)
         filters &= self._text_filter(
             f"data__{MATCH_STATUS_COMPARATE_NODE}", value, match_mode
         )
 
-        return list(
+        return (
             TileModel.objects.filter(filters)
             .values_list("resourceinstance_id", flat=True)
             .distinct()
@@ -352,10 +364,10 @@ class AdvancedSearchEvaluator:
         """Find concepts that belong to a specific scheme."""
         scheme_id = condition.get("value")
         if not scheme_id:
-            return list(self._all_concept_ids())
+            return self._all_concept_ids()
 
         # Direct scheme membership via part_of_scheme
-        direct_members = set(
+        direct_members = (
             TileModel.objects.filter(
                 nodegroup_id=CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID,
                 **{
@@ -369,7 +381,7 @@ class AdvancedSearchEvaluator:
         )
 
         # Top concepts of the scheme
-        top_concepts = set(
+        top_concepts = (
             TileModel.objects.filter(
                 nodegroup_id=TOP_CONCEPT_OF_NODE_AND_NODEGROUP,
                 **{
@@ -382,14 +394,14 @@ class AdvancedSearchEvaluator:
             .distinct()
         )
 
-        return list(direct_members | top_concepts)
+        return direct_members.union(top_concepts)
 
     def _facet_uri(self, condition):
         """Search by concept URI."""
         value = condition.get("value", "").strip()
         match_mode = condition.get("match_mode", "contains")
         if not value and match_mode != "exists":
-            return list(self._all_concept_ids())
+            return self._all_concept_ids()
 
         filters = Q(nodegroup_id=URI_NODEGROUP)
         if match_mode == "exists":
@@ -398,7 +410,7 @@ class AdvancedSearchEvaluator:
             lookup = self.MATCH_MODE_LOOKUPS.get(match_mode, "icontains")
             filters &= Q(**{f"data__{URI_CONTENT_NODE}__{lookup}": value})
 
-        return list(
+        return (
             TileModel.objects.filter(filters)
             .values_list("resourceinstance_id", flat=True)
             .distinct()
@@ -409,14 +421,14 @@ class AdvancedSearchEvaluator:
         value = condition.get("value", "").strip()
         match_mode = condition.get("match_mode", "contains")
         if not value and match_mode != "exists":
-            return list(self._all_concept_ids())
+            return self._all_concept_ids()
 
         filters = Q(nodegroup_id=IDENTIFIER_NODEGROUP)
         filters &= self._text_filter(
             f"data__{IDENTIFIER_CONTENT_NODE}", value, match_mode
         )
 
-        return list(
+        return (
             TileModel.objects.filter(filters)
             .values_list("resourceinstance_id", flat=True)
             .distinct()
@@ -426,24 +438,22 @@ class AdvancedSearchEvaluator:
         """Filter by resource instance lifecycle state."""
         value = condition.get("value")
         if not value:
-            return list(self._all_concept_ids())
+            return self._all_concept_ids()
 
-        return list(
-            ResourceInstance.objects.filter(
-                graph_id=CONCEPTS_GRAPH_ID,
-                resource_instance_lifecycle_state_id=value,
-            ).values_list("pk", flat=True)
-        )
+        return ResourceInstance.objects.filter(
+            graph_id=CONCEPTS_GRAPH_ID,
+            resource_instance_lifecycle_state_id=value,
+        ).values_list("pk", flat=True)
 
     def _facet_concept_set(self, condition):
         """Return concepts from a saved concept set."""
         set_id = condition.get("value")
         if not set_id:
-            return []
+            return self._empty_concept_ids()
 
         try:
             concept_set = ConceptSet.objects.get(pk=set_id, user=self.user)
         except ConceptSet.DoesNotExist:
-            return []
+            return self._empty_concept_ids()
 
-        return list(concept_set.members.values_list("concept_id", flat=True))
+        return concept_set.members.values_list("concept_id", flat=True)
