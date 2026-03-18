@@ -765,18 +765,30 @@ class LingoResourceImporter(BaseImportModule):
 
         LoadStaging.objects.bulk_create(part_of_scheme_tiles)
 
-    def _set_lifecycle_to_published(self):
-        PUBLISHED = models.ResourceInstanceLifecycleState.objects.get(name="Published")
-        new_resource_ids = list(
-            models.LoadStaging.objects.filter(load_event_id=self.loadid)
-            .values_list("resourceid", flat=True)
-            .distinct()
+    def _assign_resource_lifecycle(self, schemes, concepts):
+        lifecycle_state_id = const.DRAFT_STATE_ID
+        concepts_with_identifiers = []
+        for concept in concepts:
+            if "identifier" in [list(tile.keys())[0] for tile in concept["tile_data"]]:
+                concepts_with_identifiers.append(concept["resourceinstanceid"])
+
+        if len(concepts_with_identifiers) == len(concepts):
+            lifecycle_state_id = const.PUBLISHED_STATE_ID
+        else:
+            lifecycle_state_id = const.EDITING_STATE_ID
+
+        for scheme in schemes:
+            if "identifier" in [list(tile.keys())[0] for tile in scheme["tile_data"]]:
+                concepts_with_identifiers.append(scheme["resourceinstanceid"])
+
+        lifecycle_state = models.ResourceInstanceLifecycleState.objects.get(
+            pk=lifecycle_state_id
         )
         new_resources = models.ResourceInstance.objects.filter(
-            resourceinstanceid__in=new_resource_ids
+            resourceinstanceid__in=concepts_with_identifiers
         )
         for resource in new_resources:
-            resource.resource_instance_lifecycle_state = PUBLISHED
+            resource.resource_instance_lifecycle_state = lifecycle_state
         models.ResourceInstance.objects.bulk_update(
             new_resources, ["resource_instance_lifecycle_state"]
         )
@@ -968,7 +980,7 @@ class LingoResourceImporter(BaseImportModule):
                 cursor.execute(
                     """CALL __arches_update_resource_x_resource_with_graphids();"""
                 )
-                self._set_lifecycle_to_published()
+                self._assign_resource_lifecycle(self.schemes, self.concepts)
                 cursor.execute("""SELECT __arches_refresh_spatial_views();""")
                 refresh_successful = cursor.fetchone()[0]
                 if not refresh_successful:

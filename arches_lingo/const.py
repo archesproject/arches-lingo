@@ -129,6 +129,11 @@ MATCH_STATUS_COMPARATE_NODE = "4cfaae24-0ed7-11ef-9493-0a58a9feac02"
 # status (lifecycle/status)
 STATUS_NODEGROUP = "152321b6-0f5e-11ef-9493-0a58a9feac02"
 
+# Lifecycle states
+DRAFT_STATE_ID = "0e7f8c6d-1f7b-4c2a-9a0c-2b9e0d6c8f11"
+PUBLISHED_STATE_ID = "6b0f1a7b-5b3d-4b2a-8a5b-7c3a1b0f2d9e"
+EDITING_STATE_ID = "b3a6a0d2-2b5c-4c2f-9d6c-0c2a5b7d1e8f"
+
 
 ### URIs ###
 PREF_LABEL_URI = "http://www.w3.org/2004/02/skos/core#prefLabel"
