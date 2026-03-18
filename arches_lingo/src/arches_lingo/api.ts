@@ -10,6 +10,7 @@ import type {
     AppSettings,
     ConceptInstance,
     ConceptSetDetail,
+    DeleteConceptStrategy,
     ConceptSetItem,
     DigitalObjectInstance,
     EditLogEntry,
@@ -264,6 +265,18 @@ export const updateLingoResource = async (
     const parsed = await response.json();
     if (!response.ok) throw new Error(parsed.message || response.statusText);
     return parsed;
+};
+
+export const deleteConceptWithStrategy = async (
+    graphSlug: string,
+    conceptId: string,
+    strategy: DeleteConceptStrategy,
+): Promise<void> => {
+    console.log("[stub] deleteConceptWithStrategy", {
+        graphSlug,
+        conceptId,
+        strategy,
+    });
 };
 
 export const deleteLingoResource = async (

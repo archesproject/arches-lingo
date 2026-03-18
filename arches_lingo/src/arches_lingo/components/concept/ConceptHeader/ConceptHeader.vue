@@ -1,69 +1,66 @@
 <script setup lang="ts">
-import { inject, onMounted, ref, watch, computed } from "vue";
-import type { Ref } from "vue";
+import { computed, inject, onMounted, ref, watch } from "vue";
 
-import { useConfirm } from "primevue/useconfirm";
 import { useGettext } from "vue3-gettext";
 import { useRouter } from "vue-router";
 import { useToast } from "primevue/usetoast";
 import { storeToRefs } from "pinia";
 
-import ConfirmDialog from "primevue/confirmdialog";
 import Button from "primevue/button";
-import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
-import { upsertLingoTile } from "@/arches_lingo/api.ts";
 import Skeleton from "primevue/skeleton";
 
+import DeleteConceptDialog from "@/arches_lingo/components/concept/ConceptHeader/components/DeleteConceptDialog.vue";
 import ExportThesauri from "@/arches_lingo/components/scheme/SchemeHeader/components/ExportThesauri.vue";
+import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
 
 import {
+    fetchLingoResource,
+    fetchResourceIdentifiers,
+    upsertLingoTile,
+} from "@/arches_lingo/api.ts";
+import {
+    CONCEPT_ICON,
+    CONCEPT_TYPE_NODE_ALIAS,
     DANGER,
     DEFAULT_ERROR_TOAST_LIFE,
     DEFAULT_TOAST_LIFE,
     EDIT,
     ERROR,
-    NEW_CONCEPT,
-    SECONDARY,
-    SUCCESS,
-    VIEW,
-    CONCEPT_TYPE_NODE_ALIAS,
-    CONCEPT_ICON,
     GUIDE_TERM_ICON,
     GUIDE_TERM_URI,
+    NEW_CONCEPT,
+    SUCCESS,
     TOP_CONCEPT_ICON,
+    VIEW,
 } from "@/arches_lingo/constants.ts";
-import { useEditLog } from "@/arches_lingo/composables/useEditLog.ts";
-import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 import { PREF_LABEL } from "@/arches_controlled_lists/constants.ts";
 
-import {
-    fetchLingoResource,
-    deleteLingoResource,
-    fetchConceptResource,
-    fetchResourceIdentifiers,
-    fetchSchemeResource,
-} from "@/arches_lingo/api.ts";
-import { useResourceStore } from "@/arches_lingo/composables/useResourceStore.ts";
+import { routeNames } from "@/arches_lingo/routes.ts";
+
 import {
     extractDescriptors,
     navigateToSchemeOrConcept,
 } from "@/arches_lingo/utils.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
+
+import { useEditLog } from "@/arches_lingo/composables/useEditLog.ts";
+import { useResourceStore } from "@/arches_lingo/composables/useResourceStore.ts";
+import { useConceptStore } from "@/arches_lingo/stores/useConceptStore.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
+import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 
+import type { Ref } from "vue";
 import type {
-    ConceptHeaderData,
     ConceptClassificationStatusAliases,
-    Identifier,
-    ResourceInstanceResult,
-    ResourceInstanceLifecycleState,
+    ConceptHeaderData,
     DataComponentMode,
-    SearchResultItem,
+    DeleteConceptStrategy,
+    Identifier,
+    ResourceInstanceLifecycleState,
+    ResourceInstanceResult,
 } from "@/arches_lingo/types.ts";
-import type { Label, Labellable } from "@/arches_controlled_lists/types";
+import type { Label } from "@/arches_controlled_lists/types.ts";
 import type { ReferenceSelectValue } from "@/arches_controlled_lists/datatypes/reference-select/types.ts";
-
-import { routeNames } from "@/arches_lingo/routes.ts";
 
 const props = defineProps<{
     mode: DataComponentMode;
@@ -74,217 +71,49 @@ const props = defineProps<{
     nodegroupAlias: string;
 }>();
 
+const resourceInstanceLifecycleState = inject<
+    Ref<ResourceInstanceLifecycleState | undefined>
+>("resourceInstanceLifecycleState");
 const refreshSchemeHierarchy = inject<() => void>("refreshSchemeHierarchy");
 const refreshReportSection = inject<(componentName: string) => void>(
     "refreshReportSection",
 );
-const { openEditLog } = useEditLog(() => props.graphSlug);
 
-const toast = useToast();
 const { $gettext } = useGettext();
-const confirm = useConfirm();
+const toast = useToast();
 const router = useRouter();
-const store = useResourceStore();
-const { isEditor } = useUserStore();
 
+const userStore = useUserStore();
+const { isEditor } = userStore;
+const resourceStore = useResourceStore();
+const conceptStore = useConceptStore();
+
+const { openEditLog } = useEditLog(() => props.graphSlug);
 const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
 
 const concept = ref<ResourceInstanceResult>();
-const conceptResource = ref<SearchResultItem>();
 const isTopConcept = ref(false);
-const parentConceptLabelMap = ref<Map<string, Label[]>>(new Map());
-const label = ref<Label>();
-const schemeResource = ref<Labellable>();
-const schemeLabel = ref<Label>();
 const data = ref<ConceptHeaderData>();
 const isLoading = ref(true);
 const showExportDialog = ref(false);
 const exportDialogKey = ref(0);
+const showDeleteDialog = ref(false);
 const conceptIdentifierValue = ref<string>();
 const conceptTypeTile = ref();
-
-function isGuideTermType(typeNodeValue: unknown): boolean {
-    if (!Array.isArray(typeNodeValue) || typeNodeValue.length === 0) {
-        return false;
-    }
-    return typeNodeValue.some(
-        (ref: { uri?: string }) => ref.uri === GUIDE_TERM_URI,
-    );
-}
-
-const conceptIcon = computed(() => {
-    const typeNodeValue =
-        conceptTypeTile.value?.aliased_data?.[CONCEPT_TYPE_NODE_ALIAS]
-            ?.node_value;
-    if (isGuideTermType(typeNodeValue)) return GUIDE_TERM_ICON;
-    if (isTopConcept.value) return TOP_CONCEPT_ICON;
-    return CONCEPT_ICON;
-});
-
-watch(
-    [() => store.resource.value, () => store.error.value],
-    async ([resource, storeError]) => {
-        if (storeError) {
-            toast.add({
-                severity: ERROR,
-                life: DEFAULT_ERROR_TOAST_LIFE,
-                summary: $gettext("Unable to fetch concept"),
-                detail: storeError.message,
-            });
-            isLoading.value = false;
-            return;
-        }
-        if (!resource || !props.resourceInstanceId) return;
-
-        try {
-            concept.value = resource;
-            conceptTypeTile.value =
-                resource.aliased_data?.[CONCEPT_TYPE_NODE_ALIAS];
-
-            isTopConcept.value =
-                (resource.aliased_data?.top_concept_of ?? []).length > 0;
-
-            const fetchedConceptResource = await fetchConceptResource(
-                props.resourceInstanceId,
-            );
-            conceptResource.value = fetchedConceptResource;
-
-            label.value = getItemLabel(
-                fetchedConceptResource,
-                selectedLanguage.value.code,
-                systemLanguage.value.code,
-            );
-
-            const labelMap = new Map<string, Label[]>();
-            for (const path of fetchedConceptResource?.parents ?? []) {
-                for (const item of path) {
-                    if (!labelMap.has(item.id)) {
-                        labelMap.set(item.id, item.labels);
-                    }
-                }
-            }
-            parentConceptLabelMap.value = labelMap;
-
-            extractConceptHeaderData(resource);
-
-            const schemeId =
-                data.value?.partOfScheme?.node_value?.[0]?.resourceId;
-            if (schemeId) {
-                const fetchedSchemeResource =
-                    await fetchSchemeResource(schemeId);
-                schemeResource.value = fetchedSchemeResource;
-                schemeLabel.value = getItemLabel(
-                    fetchedSchemeResource,
-                    selectedLanguage.value.code,
-                    systemLanguage.value.code,
-                );
-            }
-        } catch (error) {
-            toast.add({
-                severity: ERROR,
-                life: DEFAULT_ERROR_TOAST_LIFE,
-                summary: $gettext("Unable to fetch concept"),
-                detail: error instanceof Error ? error.message : undefined,
-            });
-        } finally {
-            isLoading.value = false;
-        }
-    },
-    { immediate: true },
-);
-
-async function onConceptTypeChange(newValue: ReferenceSelectValue) {
-    try {
-        await upsertLingoTile(props.graphSlug, CONCEPT_TYPE_NODE_ALIAS, {
-            resourceinstance: props.resourceInstanceId,
-            aliased_data: {
-                [CONCEPT_TYPE_NODE_ALIAS]: newValue,
-            },
-            tileid: conceptTypeTile.value?.tileid,
-        });
-        await store.refreshResource();
-        toast.add({
-            severity: SUCCESS,
-            summary: $gettext("Concept type updated"),
-            life: DEFAULT_TOAST_LIFE,
-        });
-        refreshSchemeHierarchy!();
-        refreshReportSection!("HierarchicalPosition");
-    } catch (error) {
-        toast.add({
-            severity: ERROR,
-            summary: $gettext("Failed to update concept type"),
-            detail: error instanceof Error ? error.message : undefined,
-            life: DEFAULT_ERROR_TOAST_LIFE,
-        });
-    }
-}
-
-const resourceInstanceLifecycleState = inject<
-    Ref<ResourceInstanceLifecycleState | undefined>
->("resourceInstanceLifecycleState");
-
-const lifecycleStateLabel = computed(() => {
-    const state = resourceInstanceLifecycleState?.value;
-    if (!state) {
-        return "--";
-    }
-
-    return state?.name || "--";
-});
-
-const canEditResourceInstances = computed(() => {
-    return (
-        isEditor &&
-        props.resourceInstanceId &&
-        Boolean(
-            resourceInstanceLifecycleState?.value?.can_edit_resource_instances,
-        )
-    );
-});
-
-const canDeleteResourceInstances = computed(() => {
-    return (
-        isEditor &&
-        props.resourceInstanceId &&
-        Boolean(
-            resourceInstanceLifecycleState?.value
-                ?.can_delete_resource_instances,
-        )
-    );
-});
 
 onMounted(async () => {
     try {
         const resourceInstanceId = props.resourceInstanceId;
+        if (!resourceInstanceId) return;
 
-        if (!resourceInstanceId) {
-            label.value = {
-                value: $gettext("New Concept"),
-                language_id: selectedLanguage.value.code,
-                valuetype_id: PREF_LABEL,
-            };
-            return;
-        }
-
-        const [fetchedConcept, conceptResource, resourceIdentifiers] =
-            await Promise.all([
-                fetchLingoResource(props.graphSlug, resourceInstanceId),
-                fetchConceptResource(resourceInstanceId),
-                fetchResourceIdentifiers(resourceInstanceId),
-            ]);
+        const [fetchedConcept, resourceIdentifiers] = await Promise.all([
+            fetchLingoResource(props.graphSlug, resourceInstanceId),
+            fetchResourceIdentifiers(resourceInstanceId),
+        ]);
 
         concept.value = fetchedConcept;
-
         conceptTypeTile.value =
             concept.value?.aliased_data?.[CONCEPT_TYPE_NODE_ALIAS];
-
-        label.value = getItemLabel(
-            conceptResource,
-            selectedLanguage.value.code,
-            systemLanguage.value.code,
-        );
-
         conceptIdentifierValue.value = resourceIdentifiers?.[0]?.identifier;
 
         extractConceptHeaderData(fetchedConcept);
@@ -298,77 +127,183 @@ onMounted(async () => {
     } finally {
         isLoading.value = false;
     }
-    // Resource data is loaded via the store watch above
 });
 
 watch(
+    [() => resourceStore.resource.value, () => resourceStore.error.value],
+    async ([resource, storeError]) => {
+        if (storeError) {
+            toast.add({
+                severity: ERROR,
+                life: DEFAULT_ERROR_TOAST_LIFE,
+                summary: $gettext("Unable to fetch concept"),
+                detail: storeError.message,
+            });
+            isLoading.value = false;
+            return;
+        }
+        if (!resource || !props.resourceInstanceId) return;
+
+        concept.value = resource;
+        conceptTypeTile.value =
+            resource.aliased_data?.[CONCEPT_TYPE_NODE_ALIAS];
+        isTopConcept.value =
+            (resource.aliased_data?.top_concept_of ?? []).length > 0;
+        extractConceptHeaderData(resource);
+        isLoading.value = false;
+    },
+    { immediate: true },
+);
+
+watch(
     () => selectedLanguage.value.code,
-    (newCode) => {
-        if (conceptResource.value) {
-            label.value = getItemLabel(
-                conceptResource.value,
-                newCode,
-                systemLanguage.value.code,
-            );
-        }
-        if (schemeResource.value) {
-            schemeLabel.value = getItemLabel(
-                schemeResource.value,
-                newCode,
-                systemLanguage.value.code,
-            );
-        }
+    () => {
         if (concept.value) {
             extractConceptHeaderData(concept.value);
         }
     },
 );
 
+const label = computed<Label | undefined>(() => {
+    if (!props.resourceInstanceId) {
+        return {
+            value: $gettext("New Concept"),
+            language_id: selectedLanguage.value.code,
+            valuetype_id: PREF_LABEL,
+        };
+    }
+
+    const storedConcept = conceptStore.findConcept(props.resourceInstanceId);
+    if (!storedConcept) return undefined;
+
+    return getItemLabel(
+        { labels: [...storedConcept.labels] },
+        selectedLanguage.value.code,
+        systemLanguage.value.code,
+    );
+});
+
+const parentConceptLabelMap = computed<Map<string, Label[]>>(() => {
+    const map = new Map<string, Label[]>();
+    for (const parent of data.value?.parentConcepts ?? []) {
+        const id = parent.details[0]?.resource_id;
+
+        if (id) {
+            map.set(id, conceptStore.findConcept(id)?.labels ?? []);
+        }
+    }
+    return map;
+});
+
+const conceptIcon = computed(() => {
+    const typeNodeValue =
+        conceptTypeTile.value?.aliased_data?.[CONCEPT_TYPE_NODE_ALIAS]
+            ?.node_value;
+    if (isGuideTermType(typeNodeValue)) return GUIDE_TERM_ICON;
+    if (isTopConcept.value) return TOP_CONCEPT_ICON;
+    return CONCEPT_ICON;
+});
+
+const lifecycleStateLabel = computed(() => {
+    return resourceInstanceLifecycleState?.value?.name ?? "--";
+});
+
+const canEditResourceInstances = computed(() => {
+    return (
+        isEditor &&
+        props.resourceInstanceId &&
+        resourceInstanceLifecycleState?.value?.can_edit_resource_instances
+    );
+});
+
+const canDeleteResourceInstances = computed(() => {
+    return (
+        isEditor &&
+        props.resourceInstanceId &&
+        resourceInstanceLifecycleState?.value?.can_delete_resource_instances
+    );
+});
+
+function isGuideTermType(typeNodeValue: unknown): boolean {
+    if (!Array.isArray(typeNodeValue) || typeNodeValue.length === 0) {
+        return false;
+    }
+    return typeNodeValue.some(
+        (typeRef: { uri?: string }) => typeRef.uri === GUIDE_TERM_URI,
+    );
+}
+
+async function onConceptTypeChange(newValue: ReferenceSelectValue) {
+    try {
+        await upsertLingoTile(props.graphSlug, CONCEPT_TYPE_NODE_ALIAS, {
+            resourceinstance: props.resourceInstanceId,
+            aliased_data: {
+                [CONCEPT_TYPE_NODE_ALIAS]: newValue,
+            },
+            tileid: conceptTypeTile.value?.tileid,
+        });
+
+        await resourceStore.refreshResource();
+
+        toast.add({
+            severity: SUCCESS,
+            summary: $gettext("Concept type updated"),
+            life: DEFAULT_TOAST_LIFE,
+        });
+
+        refreshSchemeHierarchy!();
+        refreshReportSection!("HierarchicalPosition");
+    } catch (error) {
+        toast.add({
+            severity: ERROR,
+            summary: $gettext("Failed to update concept type"),
+            detail: error instanceof Error ? error.message : undefined,
+            life: DEFAULT_ERROR_TOAST_LIFE,
+        });
+    }
+}
+
 function confirmDelete() {
-    confirm.require({
-        header: $gettext("Confirmation"),
-        message: $gettext("Are you sure you want to delete this concept?"),
-        group: "delete-concept",
-        accept: () => {
-            if (!concept.value) {
-                return;
-            }
+    if (!concept.value?.resourceinstanceid) return;
+    showDeleteDialog.value = true;
+}
 
-            try {
-                deleteLingoResource(
-                    props.graphSlug,
-                    concept.value.resourceinstanceid,
-                ).then(() => {
-                    const schemeIdentifier =
-                        concept.value!.aliased_data?.part_of_scheme
-                            ?.aliased_data.part_of_scheme?.node_value;
+async function onDeleteConfirmed(strategy: DeleteConceptStrategy | null) {
+    showDeleteDialog.value = false;
+    if (!concept.value) return;
 
-                    router.push({
-                        name: routeNames.scheme,
-                        params: { id: schemeIdentifier },
-                    });
+    const schemeIdentifier =
+        concept.value.aliased_data?.part_of_scheme?.aliased_data.part_of_scheme
+            ?.node_value;
 
-                    refreshSchemeHierarchy!();
-                });
-            } catch (error) {
-                toast.add({
-                    severity: ERROR,
-                    life: DEFAULT_ERROR_TOAST_LIFE,
-                    summary: $gettext("Error deleting concept"),
-                    detail: error instanceof Error ? error.message : undefined,
-                });
-            }
-        },
-        rejectProps: {
-            label: $gettext("Cancel"),
-            severity: SECONDARY,
-            outlined: true,
-        },
-        acceptProps: {
-            label: $gettext("Delete"),
-            severity: DANGER,
-        },
-    });
+    try {
+        if (strategy === null) {
+            console.log("[stub] deleteLingoResource", {
+                graphSlug: props.graphSlug,
+                conceptId: concept.value.resourceinstanceid,
+            });
+        } else {
+            console.log("[stub] deleteConceptWithStrategy", {
+                graphSlug: props.graphSlug,
+                conceptId: concept.value.resourceinstanceid,
+                strategy,
+            });
+        }
+
+        router.push({
+            name: routeNames.scheme,
+            params: { id: schemeIdentifier },
+        });
+
+        refreshSchemeHierarchy!();
+    } catch (error) {
+        toast.add({
+            severity: ERROR,
+            life: DEFAULT_ERROR_TOAST_LIFE,
+            summary: $gettext("Error deleting concept"),
+            detail: error instanceof Error ? error.message : undefined,
+        });
+    }
 }
 
 function openExportDialog() {
@@ -380,9 +315,7 @@ function addChild() {
     const schemeId = data.value?.partOfScheme?.node_value?.[0]?.resourceId;
     const parentId = props.resourceInstanceId;
 
-    if (!schemeId || !parentId) {
-        return;
-    }
+    if (!schemeId || !parentId) return;
 
     navigateToSchemeOrConcept(router, NEW_CONCEPT, {
         scheme: schemeId,
@@ -390,17 +323,29 @@ function addChild() {
     });
 }
 
-function extractConceptHeaderData(concept: ResourceInstanceResult) {
-    const aliased_data = concept?.aliased_data;
+function extractConceptHeaderData(resource: ResourceInstanceResult) {
+    const aliased_data = resource?.aliased_data;
 
-    const name = concept?.name;
-    const descriptor = extractDescriptors(concept, selectedLanguage.value);
-    // TODO: get human-readable user name from resource endpoint
+    const name = resource?.name;
+    const descriptor = extractDescriptors(resource, selectedLanguage.value);
     const principalUser = "Anonymous";
 
     const uri = aliased_data?.uri?.aliased_data?.uri_content?.node_value;
     const partOfScheme =
         aliased_data?.part_of_scheme?.aliased_data?.part_of_scheme;
+    const schemeId = partOfScheme?.node_value?.[0]?.resourceId;
+    const matchingScheme = conceptStore.schemes.find(
+        (candidateScheme) => candidateScheme.id === schemeId,
+    );
+    let schemeLabel: string | undefined;
+    if (matchingScheme) {
+        schemeLabel = getItemLabel(
+            { labels: [...matchingScheme.labels] },
+            selectedLanguage.value.code,
+            systemLanguage.value.code,
+        ).value;
+    }
+
     const parentConcepts = (aliased_data?.classification_status || []).flatMap(
         (tile: ConceptClassificationStatusAliases) =>
             tile?.aliased_data?.classification_status_ascribed_classification ||
@@ -414,20 +359,27 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
         .join(", ");
 
     data.value = {
-        name: name,
-        descriptor: descriptor,
-        uri: uri,
-        principalUser: principalUser,
+        name,
+        descriptor,
+        uri,
+        principalUser,
         lifeCycleState: lifecycleStateLabel.value,
-        partOfScheme: partOfScheme,
-        parentConcepts: parentConcepts,
-        identifier: identifier,
+        partOfScheme,
+        schemeLabel,
+        parentConcepts,
+        identifier,
     };
 }
 </script>
 
 <template>
-    <ConfirmDialog group="delete-concept" />
+    <DeleteConceptDialog
+        v-if="concept && showDeleteDialog"
+        :concept-id="concept.resourceinstanceid"
+        :concept-name="label?.value"
+        @confirm="onDeleteConfirmed"
+        @cancel="showDeleteDialog = false"
+    />
     <ExportThesauri
         v-if="concept && showExportDialog"
         :key="exportDialogKey"
@@ -435,8 +387,8 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
         :resource-name="label?.value"
     />
     <Skeleton
-        v-if="isLoading"
-        style="width: 100%; height: 9rem"
+        v-if="isLoading || !userStore.user"
+        class="loading-skeleton"
     />
     <div
         v-else
@@ -444,7 +396,7 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
     >
         <div class="concept-header-toolbar">
             <div class="concept-details">
-                <h2>
+                <div class="concept-header-title">
                     <div class="concept-name">
                         <i :class="conceptIcon"></i>
                         <span>
@@ -458,7 +410,7 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                             </span>
                         </span>
                     </div>
-                </h2>
+                </div>
                 <div class="card flex justify-center">
                     <GenericWidget
                         v-if="concept && concept.resourceinstanceid"
@@ -507,7 +459,7 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                 <Button
                     v-if="canDeleteResourceInstances"
                     icon="pi pi-trash"
-                    severity="danger"
+                    :severity="DANGER"
                     class="delete-button"
                     :label="$gettext('Delete')"
                     :aria-label="$gettext('Delete Concept')"
@@ -540,7 +492,6 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                             :href="data?.uri"
                             target="_blank"
                             rel="noopener"
-                            :disabled="!data?.uri"
                         ></Button>
                         <span
                             v-else
@@ -561,7 +512,7 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
                                 :to="`/scheme/${data?.partOfScheme?.node_value?.[0]?.resourceId}`"
                             >
                                 {{
-                                    schemeLabel?.value ||
+                                    data?.schemeLabel ||
                                     data?.partOfScheme?.display_value
                                 }}
                             </RouterLink>
@@ -693,7 +644,12 @@ function extractConceptHeaderData(concept: ResourceInstanceResult) {
     font-size: 0.875rem !important;
 }
 
-h2 {
+.loading-skeleton {
+    width: 100%;
+    height: 9rem;
+}
+
+.concept-header-title {
     margin-top: 0;
     margin-bottom: 0;
     font-size: var(--p-lingo-font-size-large);

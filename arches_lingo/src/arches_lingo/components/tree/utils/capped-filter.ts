@@ -19,21 +19,30 @@ export function useCappedTreeFilter(
 
     let filterDebounceTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
-    watch(filterValue, (nextFilterValue) => {
-        if (filterDebounceTimeoutId) {
-            clearTimeout(filterDebounceTimeoutId);
-            filterDebounceTimeoutId = null;
-        }
+    watch(
+        filterValue,
+        (nextFilterValue, previousFilterValue) => {
+            if (filterDebounceTimeoutId) {
+                clearTimeout(filterDebounceTimeoutId);
+                filterDebounceTimeoutId = null;
+            }
 
-        if (!nextFilterValue) {
-            debouncedFilterValue.value = "";
-            return;
-        }
+            if (!nextFilterValue) {
+                debouncedFilterValue.value = "";
+                return;
+            }
 
-        filterDebounceTimeoutId = setTimeout(() => {
-            debouncedFilterValue.value = nextFilterValue;
-        }, filterDebounceMs);
-    });
+            if (previousFilterValue === undefined) {
+                debouncedFilterValue.value = nextFilterValue;
+                return;
+            }
+
+            filterDebounceTimeoutId = setTimeout(() => {
+                debouncedFilterValue.value = nextFilterValue;
+            }, filterDebounceMs);
+        },
+        { immediate: true },
+    );
 
     watch(
         [tree, debouncedFilterValue],
@@ -162,10 +171,7 @@ export function useCappedTreeFilter(
     );
 
     onUnmounted(() => {
-        if (filterDebounceTimeoutId) {
-            clearTimeout(filterDebounceTimeoutId);
-            filterDebounceTimeoutId = null;
-        }
+        if (filterDebounceTimeoutId) clearTimeout(filterDebounceTimeoutId);
     });
 
     return {

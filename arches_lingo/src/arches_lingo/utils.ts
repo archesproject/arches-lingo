@@ -88,24 +88,25 @@ export function navigateToSchemeOrConcept(
     value: Concept | Scheme | typeof NEW_CONCEPT,
     queryParams: { [key: string]: string } = {},
 ) {
-    // TODO: Consider adding some sort of short-circuiting of fetchUser
+    const query = { ...router.currentRoute.value.query, ...queryParams };
+
     if (value === NEW_CONCEPT) {
         return router.push({
             name: routeNames.concept,
             params: { id: "new" },
-            query: queryParams,
+            query,
         });
     } else if (dataIsScheme(value)) {
         return router.push({
             name: routeNames.scheme,
             params: { id: value.id },
-            query: queryParams,
+            query,
         });
     } else if (dataIsConcept(value)) {
         return router.push({
             name: routeNames.concept,
             params: { id: value.id },
-            query: queryParams,
+            query,
         });
     }
 }

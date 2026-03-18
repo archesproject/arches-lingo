@@ -14,8 +14,10 @@ const router = createRouter({
     routes,
 });
 
-createVueApplication(ArchesLingo, LingoTheme).then(vueApp => {
+createVueApplication(ArchesLingo, LingoTheme).then(async (vueApp) => {
     vueApp.use(pinia);
     vueApp.use(router);
+    
+    await router.isReady();
     vueApp.mount('#lingo-mounting-point');
 });

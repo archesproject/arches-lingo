@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { onMounted, provide, ref, watchEffect } from "vue";
+import { onMounted, provide, ref, watch } from "vue";
 import { useRouter, useRoute } from "vue-router";
+import type { RouteLocationNormalized } from "vue-router";
 import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
 
@@ -16,15 +17,17 @@ import { DEFAULT_ERROR_TOAST_LIFE, ERROR } from "@/arches_lingo/constants.ts";
 import { routeNames } from "@/arches_lingo/routes.ts";
 import { useUnsavedChangesGuard } from "@/arches_lingo/composables/useUnsavedChangesGuard.ts";
 import { useAppSettingsStore } from "@/arches_lingo/stores/useAppSettingsStore.ts";
+import { useConceptStore } from "@/arches_lingo/stores/useConceptStore.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 import PageHeader from "@/arches_lingo/components/header/PageHeader/PageHeader.vue";
 import SideNav from "@/arches_lingo/components/sidenav/SideNav.vue";
 
-import type { RouteLocationNormalizedLoadedGeneric } from "vue-router";
+const PRESERVED_QUERY_PARAMS = ["filter", "sort", "hierarchy"];
 
 const { $gettext } = useGettext();
 const appSettingsStore = useAppSettingsStore();
+const conceptStore = useConceptStore();
 const languageStore = useLanguageStore();
 const userStore = useUserStore();
 
@@ -33,59 +36,93 @@ const route = useRoute();
 const toast = useToast();
 
 const isNavExpanded = ref(false);
-const shouldShowHierarchy = ref(false);
-
 const schemeHierarchyKey = ref(0);
+const shouldShowHierarchy = ref(route.query.hierarchy === "1");
 
-const refreshSchemeHierarchy = function () {
-    schemeHierarchyKey.value++;
-};
 provide("refreshSchemeHierarchy", refreshSchemeHierarchy);
 
 onMounted(function () {
-    useUnsavedChangesGuard(router);
     languageStore.initialize();
-});
+    userStore.initialize();
+    appSettingsStore.initialize();
 
-watchEffect(() => {
-    router.beforeEach(async (to, _from, next) => {
-        if (to.name === routeNames.login) {
-            shouldShowHierarchy.value = false;
-            next();
-            return;
+    useUnsavedChangesGuard(router);
+
+    router.beforeEach((to, from, next) => {
+        const carriedQuery = getCarriedQuery(to, from);
+        if (carriedQuery) {
+            return next({ ...to, query: carriedQuery });
         }
-        try {
-            await checkUserAuthentication(to);
-            next();
-        } catch (error) {
+
+        if (isAuthorizationBlocked(to)) {
             if (to.name !== routeNames.root) {
                 toast.add({
                     severity: ERROR,
                     life: DEFAULT_ERROR_TOAST_LIFE,
                     summary: $gettext("Login required."),
-                    detail: error instanceof Error ? error.message : undefined,
                 });
             }
-            next({ name: routeNames.login });
+            return next({ name: routeNames.login });
         }
+
+        next();
     });
 });
 
-async function checkUserAuthentication(
-    to: RouteLocationNormalizedLoadedGeneric,
-) {
-    await Promise.all([userStore.initialize(), appSettingsStore.initialize()]);
+watch(shouldShowHierarchy, (isOpen) => {
+    if (isOpen) {
+        router.replace({ query: { ...route.query, hierarchy: "1" } });
+        return;
+    }
+    const queryWithoutHierarchyParams = Object.fromEntries(
+        Object.entries(route.query).filter(
+            ([key]) => !PRESERVED_QUERY_PARAMS.includes(key),
+        ),
+    );
+    router.replace({ query: queryWithoutHierarchyParams });
+});
 
-    const requiresAuthentication = to.matched.some(
+watch(route, () => {
+    if (route.name === routeNames.login) {
+        shouldShowHierarchy.value = false;
+    }
+});
+
+function getCarriedQuery(
+    to: RouteLocationNormalized,
+    from: RouteLocationNormalized,
+) {
+    if (to.path === from.path) return null;
+
+    const missingParams = PRESERVED_QUERY_PARAMS.filter(
+        (param) =>
+            from.query[param] !== undefined && to.query[param] === undefined,
+    );
+
+    if (!missingParams.length) {
+        return null;
+    }
+
+    return {
+        ...to.query,
+        ...Object.fromEntries(
+            missingParams.map((param) => [param, from.query[param]]),
+        ),
+    };
+}
+
+function isAuthorizationBlocked(to: RouteLocationNormalized) {
+    const allowsAnonymous = appSettingsStore.allowAnonymousAccess;
+    const requiresAuth = to.matched.some(
         (record) => record.meta.requiresAuthentication,
     );
 
-    if (
-        userStore.isAnonymous &&
-        (!appSettingsStore.allowAnonymousAccess || requiresAuthentication)
-    ) {
-        throw new Error($gettext("Authentication required."));
-    }
+    return userStore.isAnonymous && (!allowsAnonymous || requiresAuth);
+}
+
+function refreshSchemeHierarchy() {
+    conceptStore.refresh();
+    schemeHierarchyKey.value++;
 }
 </script>
 
@@ -128,7 +165,7 @@ async function checkUserAuthentication(
                     </div>
                 </SplitterPanel>
                 <SplitterPanel :size="75">
-                    <RouterView :key="route.fullPath" />
+                    <RouterView :key="route.path" />
                 </SplitterPanel>
             </Splitter>
         </div>
