@@ -767,35 +767,48 @@ class LingoResourceImporter(BaseImportModule):
 
     def _assign_resource_lifecycle(self, schemes, concepts):
         lifecycle_state_id = const.DRAFT_STATE_ID
-        concepts_with_identifiers = []
+        resources_with_identifiers = defaultdict(dict)
+        new_resource_identifers = []
         for concept in concepts:
-            if "identifier" in [
-                key for val in concept["tile_data"] for key in val.keys()
-            ]:
-                concepts_with_identifiers.append(concept["resourceinstanceid"])
+            for mock_tile in concept["tile_data"]:
+                identifier = mock_tile.get("identifier", None)
+                if identifier:
+                    resourceid = concept["resourceinstanceid"]
+                    resources_with_identifiers[resourceid] = identifier
 
-        if len(concepts_with_identifiers) == len(concepts):
+        if len(resources_with_identifiers) == len(concepts):
             lifecycle_state_id = const.PUBLISHED_STATE_ID
         else:
             lifecycle_state_id = const.EDITING_STATE_ID
 
         for scheme in schemes:
-            if "identifier" in [
-                key for val in scheme["tile_data"] for key in val.keys()
-            ]:
-                concepts_with_identifiers.append(scheme["resourceinstanceid"])
+            for mock_tile in scheme["tile_data"]:
+                identifier = mock_tile.get("identifier", None)
+                if identifier:
+                    resourceid = scheme["resourceinstanceid"]
+                    resources_with_identifiers[resourceid] = identifier
 
         lifecycle_state = models.ResourceInstanceLifecycleState.objects.get(
             pk=lifecycle_state_id
         )
         new_resources = models.ResourceInstance.objects.filter(
-            resourceinstanceid__in=concepts_with_identifiers
+            resourceinstanceid__in=list(resources_with_identifiers.keys())
         )
         for resource in new_resources:
             resource.resource_instance_lifecycle_state = lifecycle_state
+            identifier = resources_with_identifiers[resource.pk]
+            resource_identifier = models.ResourceIdentifier(
+                resourceid_id=resource.pk,
+                identifier=identifier["identifier_content"],
+                identifier_type=identifier["identifier_type"],
+                source="arches-lingo",
+            )
+            new_resource_identifers.append(resource_identifier)
+
         models.ResourceInstance.objects.bulk_update(
             new_resources, ["resource_instance_lifecycle_state"]
         )
+        models.ResourceIdentifier.objects.bulk_create(new_resource_identifers)
 
     def start(self, request):
         load_details = {"operation": "Lingo Thesaurus Import"}
