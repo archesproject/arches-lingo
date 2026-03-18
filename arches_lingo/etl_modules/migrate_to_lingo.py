@@ -53,6 +53,13 @@ URL_REGEX = re.compile(
     r"https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)"
 )
 
+ONTOLOGY_PROPERTY_BY_NODE_ALIAS = {
+    "top_concept_of": const.TOP_CONCEPT_OF_ONTOLOGY_PROPERTY,
+    "part_of_scheme": const.PART_OF_SCHEME_ONTOLOGY_PROPERTY,
+    "classification_status_ascribed_classification": const.CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_ONTOLOGY_PROPERTY,
+    "relation_status_ascribed_comparate": const.RELATION_STATUS_ASCRIBED_COMPARATE_ONTOLOGY_PROPERTY,
+}
+
 
 class LingoResourceImporter(BaseImportModule):
     def __init__(self, request=None, loadid=None, userid=None, **kwargs):
@@ -296,17 +303,11 @@ class LingoResourceImporter(BaseImportModule):
 
     @staticmethod
     def create_mock_tile_from_relationship(relationship):
-        ontology_property_by_node_alias = {
-            "top_concept_of": const.TOP_CONCEPT_OF_ONTOLOGY_PROPERTY,
-            "part_of_scheme": const.PART_OF_SCHEME_ONTOLOGY_PROPERTY,
-            "classification_status_ascribed_classification": const.CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_ONTOLOGY_PROPERTY,
-            "relation_status_ascribed_comparate": const.RELATION_STATUS_ASCRIBED_COMPARATE_ONTOLOGY_PROPERTY,
-        }
         node_alias = relationship["node_alias"]
         mock_tile = {
             node_alias: {
                 "resourceId": str(relationship["resourceId"]),
-                "ontologyProperty": ontology_property_by_node_alias.get(node_alias, ""),
+                "ontologyProperty": ONTOLOGY_PROPERTY_BY_NODE_ALIAS.get(node_alias, ""),
                 "resourceXresourceId": "",
                 "inverseOntologyProperty": "",
             }
@@ -349,7 +350,7 @@ class LingoResourceImporter(BaseImportModule):
                         sortorder=sortorder,
                     )
                 )
-        staged_tiles = LoadStaging.objects.bulk_create(tiles_to_load)
+        LoadStaging.objects.bulk_create(tiles_to_load)
 
         cursor.execute(
             """CALL __arches_check_tile_cardinality_violation_for_load(%s)""",
