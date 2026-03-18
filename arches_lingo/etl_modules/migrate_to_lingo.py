@@ -144,7 +144,7 @@ class LingoResourceImporter(BaseImportModule):
                     concept.pk
                 )  # use old conceptid as new resourceinstanceid
                 mock_tile = self.create_mock_tile_from_value(
-                    value, isScheme=True, lang_lookup=self.language_lookup
+                    value, lang_lookup=self.language_lookup
                 )
                 if isinstance(mock_tile, list):
                     scheme_to_load["tile_data"].extend(mock_tile)
@@ -222,7 +222,7 @@ class LingoResourceImporter(BaseImportModule):
         return concepts
 
     @staticmethod
-    def create_mock_tile_from_value(value, isScheme=False, lang_lookup=None):
+    def create_mock_tile_from_value(value, lang_lookup=None):
         # Values coming directly from RDM models are django model instances
         if isinstance(value, models.Value):
             value = {
@@ -249,7 +249,7 @@ class LingoResourceImporter(BaseImportModule):
             return {"appellative_status": mock_tile}
         elif value_type_id == "identifier":
             val = value["value"]
-            if URL_REGEX.match(val) and not isScheme:
+            if URL_REGEX.match(val):
                 mock_tiles = [
                     {
                         "uri": {

@@ -62,7 +62,6 @@ class SKOSReader(SKOSReader):
 
             ### Schemes ###
             top_concept_mock_tiles = {}
-            isScheme = True
             for scheme, v, o in graph.triples((None, RDF.type, SKOS.ConceptScheme)):
                 scheme_pk = self.generate_uuidv5_from_subject(baseuuid, scheme)
 
@@ -85,9 +84,11 @@ class SKOSReader(SKOSReader):
                         or predicate_str in self.skos_note_and_label_types
                     ):
                         mock_tile = self.map_predicate_object_to_mock_tile(
-                            object, predicate_str, isScheme
+                            object, predicate_str
                         )
-                        if mock_tile:
+                        if isinstance(mock_tile, list):
+                            new_scheme["tile_data"].extend(mock_tile)
+                        elif mock_tile:
                             new_scheme["tile_data"].append(mock_tile)
 
                     elif predicate == SKOS.hasTopConcept:
@@ -110,15 +111,16 @@ class SKOSReader(SKOSReader):
                     key for val in new_scheme["tile_data"] for key in val.keys()
                 ]:
                     mock_tile = self.map_predicate_object_to_mock_tile(
-                        str(scheme), "identifier", isScheme
+                        str(scheme), "identifier"
                     )
-                    if mock_tile:
+                    if isinstance(mock_tile, list):
+                        new_scheme["tile_data"].extend(mock_tile)
+                    elif mock_tile:
                         new_scheme["tile_data"].append(mock_tile)
 
                 self.schemes.append(new_scheme)
 
                 ### Concepts ###
-                isScheme = False
                 for concept, v, o in graph.triples((None, SKOS.inScheme, scheme)):
                     concept_pk = self.generate_uuidv5_from_subject(baseuuid, concept)
                     new_concept = {
@@ -209,12 +211,12 @@ class SKOSReader(SKOSReader):
                                     break
                             if matched_URI:
                                 mock_tile = self.map_predicate_object_to_mock_tile(
-                                    matched_URI, predicate_str, isScheme
+                                    matched_URI, predicate_str
                                 )
                                 new_concept["tile_data"].append(mock_tile)
                         else:
                             mock_tile = self.map_predicate_object_to_mock_tile(
-                                object, predicate_str, isScheme
+                                object, predicate_str
                             )
                             if isinstance(mock_tile, list):
                                 new_concept["tile_data"].extend(mock_tile)
@@ -225,7 +227,7 @@ class SKOSReader(SKOSReader):
                         key for val in new_concept["tile_data"] for key in val.keys()
                     ]:
                         mock_tile = self.map_predicate_object_to_mock_tile(
-                            str(concept), "identifier", isScheme
+                            str(concept), "identifier"
                         )
                         if isinstance(mock_tile, list):
                             new_concept["tile_data"].extend(mock_tile)
@@ -249,8 +251,10 @@ class SKOSReader(SKOSReader):
             return self.schemes, self.concepts
 
     def map_predicate_object_to_mock_tile(
-        self, object: str | dict, predicate: str, isScheme: bool = False
-    ) -> dict:
+        self,
+        object: str | dict,
+        predicate: str,
+    ) -> dict | list | None:
         if (
             predicate not in self.dcterms_value_types
             and predicate not in self.skos_value_types
@@ -273,7 +277,7 @@ class SKOSReader(SKOSReader):
             "valuetype_id": predicate,
         }
         mock_tile = LingoResourceImporter.create_mock_tile_from_value(
-            mock_tile, isScheme=isScheme, lang_lookup=self.allowed_languages
+            mock_tile, lang_lookup=self.allowed_languages
         )
         return mock_tile
 
