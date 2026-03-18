@@ -33,8 +33,7 @@ const selectedCode = computed({
 const showSelector = computed(() => availableLanguages.value.length > 1);
 
 watchEffect(() => {
-    document.documentElement.dir =
-        selectedLanguage.value.default_direction ?? "ltr";
+    document.body.dir = selectedLanguage.value.default_direction ?? "ltr";
 });
 
 function openLanguageSelector(event: MouseEvent) {
