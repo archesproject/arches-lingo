@@ -769,7 +769,9 @@ class LingoResourceImporter(BaseImportModule):
         lifecycle_state_id = const.DRAFT_STATE_ID
         concepts_with_identifiers = []
         for concept in concepts:
-            if "identifier" in [list(tile.keys())[0] for tile in concept["tile_data"]]:
+            if "identifier" in [
+                key for val in concept["tile_data"] for key in val.keys()
+            ]:
                 concepts_with_identifiers.append(concept["resourceinstanceid"])
 
         if len(concepts_with_identifiers) == len(concepts):
@@ -778,7 +780,9 @@ class LingoResourceImporter(BaseImportModule):
             lifecycle_state_id = const.EDITING_STATE_ID
 
         for scheme in schemes:
-            if "identifier" in [list(tile.keys())[0] for tile in scheme["tile_data"]]:
+            if "identifier" in [
+                key for val in scheme["tile_data"] for key in val.keys()
+            ]:
                 concepts_with_identifiers.append(scheme["resourceinstanceid"])
 
         lifecycle_state = models.ResourceInstanceLifecycleState.objects.get(
