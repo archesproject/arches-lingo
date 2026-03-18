@@ -143,6 +143,14 @@ class LingoResourceImporter(BaseImportModule):
                 scheme_to_load["resourceinstanceid"] = (
                     concept.pk
                 )  # use old conceptid as new resourceinstanceid
+
+                if (
+                    value.valuetype_id == "identifier"
+                    and settings.ARCHES_NAMESPACE_FOR_DATA_EXPORT in value.value
+                ):
+                    # Schemes with an auto-generated identifier should be marked as draft and not have their identifier treated as a URI
+                    continue
+
                 mock_tile = self.create_mock_tile_from_value(
                     value, lang_lookup=self.language_lookup
                 )
