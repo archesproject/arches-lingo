@@ -146,7 +146,7 @@ class LingoResourceImporter(BaseImportModule):
 
                 if (
                     value.valuetype_id == "identifier"
-                    and settings.ARCHES_NAMESPACE_FOR_DATA_EXPORT in value.value
+                    and str(concept.pk) in value.value
                 ):
                     # Schemes with an auto-generated identifier should be marked as draft and not have their identifier treated as a URI
                     continue
@@ -178,7 +178,7 @@ class LingoResourceImporter(BaseImportModule):
 
                 if (
                     value.valuetype_id == "identifier"
-                    and settings.ARCHES_NAMESPACE_FOR_DATA_EXPORT in value.value
+                    and str(concept.pk) in value.value
                 ):
                     # Concepts with an auto-generated identifier should be marked as draft and not have their identifier treated as a URI
                     continue
