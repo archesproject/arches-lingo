@@ -3,6 +3,7 @@ import { storeToRefs } from "pinia";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 import { getParentLabels, getConceptIcon } from "@/arches_lingo/utils.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
+import LifecycleStateBadge from "@/arches_lingo/components/generic/LifecycleStateBadge.vue";
 
 import type { PropType } from "vue";
 import type { SearchResultItem } from "@/arches_lingo/types.ts";
@@ -23,7 +24,7 @@ defineProps({
         :class="{ 'is-even': searchResult.index % 2 === 0 }"
     >
         <div style="margin: 0 0.5rem">
-            <span>
+            <span class="result-label">
                 <i
                     :class="[
                         getConceptIcon(searchResult.option),
@@ -38,6 +39,15 @@ defineProps({
                         systemLanguage.code,
                     ).value
                 }}
+                <LifecycleStateBadge
+                    :lifecycle-state-id="
+                        searchResult.option.resource_instance_lifecycle_state_id
+                    "
+                    :lifecycle-state-name="
+                        searchResult.option
+                            .resource_instance_lifecycle_state_name
+                    "
+                />
             </span>
         </div>
 
@@ -68,6 +78,13 @@ defineProps({
     border-bottom: 0.0625rem solid var(--p-search-result-border-bottom);
     color: var(--p-search-result-color);
     gap: 0.125rem;
+}
+
+.result-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    flex-wrap: wrap;
 }
 
 .search-result-hierarchy {

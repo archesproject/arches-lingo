@@ -6,7 +6,12 @@ from django.db.models import CharField, F, OuterRef, Value
 from django.db.models.expressions import CombinedExpression
 from django.utils.translation import gettext as _
 
-from arches.app.models.models import Language, ResourceInstance, TileModel
+from arches.app.models.models import (
+    Language,
+    ResourceInstance,
+    ResourceInstanceLifecycleState,
+    TileModel,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -60,6 +65,7 @@ class ConceptBuilder:
         self.resource_instance_lifecycle_state_ids_by_resource_instance_id: dict[
             str, str | None
         ] = {}
+        self.lifecycle_state_names_by_id: dict[str, str] = {}
 
         if concept_ids is None:
             self.top_concepts_map()
@@ -142,6 +148,7 @@ class ConceptBuilder:
     ):
         resource_instance_ids = [*scheme_ids, *concept_ids]
         self.resource_instance_lifecycle_state_ids_by_resource_instance_id = {}
+        self.lifecycle_state_names_by_id = {}
 
         if not resource_instance_ids:
             return
@@ -158,6 +165,21 @@ class ConceptBuilder:
                 )
             )
         }
+
+        unique_state_ids = {
+            state_id
+            for state_id in self.resource_instance_lifecycle_state_ids_by_resource_instance_id.values()
+            if state_id is not None
+        }
+        if unique_state_ids:
+            self.lifecycle_state_names_by_id = {
+                str(state_id): str(state_name)
+                for state_id, state_name in ResourceInstanceLifecycleState.objects.filter(
+                    pk__in=unique_state_ids
+                ).values_list(
+                    "id", "name"
+                )
+            }
 
     def lookup_scheme(self, scheme_id: str):
         return self.schemes_by_id.get(scheme_id)
@@ -270,10 +292,16 @@ class ConceptBuilder:
 
     def serialize_scheme(self, scheme: ResourceInstance, *, children=True):
         scheme_id: str = str(scheme.pk)
+        scheme_lifecycle_state_id = (
+            self.resource_instance_lifecycle_state_ids_by_resource_instance_id.get(
+                scheme_id
+            )
+        )
         data = {
             "id": scheme_id,
-            "resource_instance_lifecycle_state_id": self.resource_instance_lifecycle_state_ids_by_resource_instance_id.get(
-                scheme_id
+            "resource_instance_lifecycle_state_id": scheme_lifecycle_state_id,
+            "resource_instance_lifecycle_state_name": self.lifecycle_state_names_by_id.get(
+                scheme_lifecycle_state_id or ""
             ),
             "labels": [self.serialize_scheme_label(label) for label in scheme.labels],
         }
@@ -323,10 +351,16 @@ class ConceptBuilder:
                 self.guide_term_concepts.add(str(tile["resourceinstance_id"]))
 
     def serialize_concept(self, conceptid: str, *, parents=False, children=True):
+        concept_lifecycle_state_id = (
+            self.resource_instance_lifecycle_state_ids_by_resource_instance_id.get(
+                conceptid
+            )
+        )
         data = {
             "id": conceptid,
-            "resource_instance_lifecycle_state_id": self.resource_instance_lifecycle_state_ids_by_resource_instance_id.get(
-                conceptid
+            "resource_instance_lifecycle_state_id": concept_lifecycle_state_id,
+            "resource_instance_lifecycle_state_name": self.lifecycle_state_names_by_id.get(
+                concept_lifecycle_state_id or ""
             ),
             "labels": [
                 self.serialize_concept_label(label) for label in self.labels[conceptid]

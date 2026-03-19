@@ -9,6 +9,7 @@ import Button from "primevue/button";
 import Skeleton from "primevue/skeleton";
 
 import ConceptHeaderToolbar from "@/arches_lingo/components/concept/ConceptHeader/components/ConceptHeaderToolbar.vue";
+import LifecycleStateBadge from "@/arches_lingo/components/generic/LifecycleStateBadge.vue";
 
 import {
     fetchLingoResource,
@@ -290,7 +291,17 @@ function extractConceptHeaderData(resource: ResourceInstanceResult) {
                             {{ $gettext("Life cycle state:") }}
                         </span>
                         <span class="header-item-value">
-                            {{ lifecycleStateLabel }}
+                            <LifecycleStateBadge
+                                :lifecycle-state-id="
+                                    resourceInstanceLifecycleState?.id
+                                "
+                                :lifecycle-state-name="
+                                    resourceInstanceLifecycleState?.name
+                                "
+                            />
+                            <span v-if="!resourceInstanceLifecycleState"
+                                >--</span
+                            >
                         </span>
                     </div>
                 </div>

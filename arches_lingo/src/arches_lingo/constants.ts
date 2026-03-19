@@ -56,6 +56,15 @@ export const GUIDE_TERM_ICON = "pi pi-angle-double-right";
 export const SCHEME_ICON = "pi pi-folder";
 export const TOP_CONCEPT_ICON = "pi pi-arrow-circle-up";
 
+// Lifecycle state IDs — fixed by migration 0009_update_scheme_concept_lifecycles
+export const DRAFT_LIFECYCLE_STATE_ID = "0e7f8c6d-1f7b-4c2a-9a0c-2b9e0d6c8f11";
+export const EDITING_LIFECYCLE_STATE_ID =
+    "b3a6a0d2-2b5c-4c2f-9d6c-0c2a5b7d1e8f";
+export const PUBLISHED_LIFECYCLE_STATE_ID =
+    "6b0f1a7b-5b3d-4b2a-8a5b-7c3a1b0f2d9e";
+export const RETIRED_LIFECYCLE_STATE_ID =
+    "9d2e1c0b-7a6b-4b3d-8c1a-0f2d9e6b0a7c";
+
 // URIs
 export const GUIDE_TERM_URI = "http://vocab.getty.edu/page/aat/300386700";
 

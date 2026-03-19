@@ -13,6 +13,7 @@ import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 import { getConceptIcon, getParentLabels } from "@/arches_lingo/utils.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 import { routeNames } from "@/arches_lingo/routes.ts";
+import LifecycleStateBadge from "@/arches_lingo/components/generic/LifecycleStateBadge.vue";
 
 import type { AdvancedSearchResponse } from "@/arches_lingo/types.ts";
 
@@ -143,6 +144,14 @@ function onPageChange(event: { page: number }) {
                                     systemLanguage.code,
                                 ).value
                             }}
+                            <LifecycleStateBadge
+                                :lifecycle-state-id="
+                                    item.resource_instance_lifecycle_state_id
+                                "
+                                :lifecycle-state-name="
+                                    item.resource_instance_lifecycle_state_name
+                                "
+                            />
                         </div>
                         <div class="result-hierarchy">
                             [{{
@@ -193,16 +202,6 @@ function onPageChange(event: { page: number }) {
                             $gettext("Identifier:")
                         }}</span>
                         <span>{{ item.identifier }}</span>
-                    </div>
-
-                    <div
-                        v-if="item.lifecycle_state"
-                        class="detail-row"
-                    >
-                        <span class="detail-label">{{
-                            $gettext("Lifecycle:")
-                        }}</span>
-                        <span>{{ item.lifecycle_state }}</span>
                     </div>
 
                     <div

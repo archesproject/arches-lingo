@@ -18,6 +18,7 @@ import LifecycleButtons from "@/arches_lingo/components/scheme/SchemeHeader/comp
 import SchemeIdentifierField from "@/arches_lingo/components/scheme/SchemeHeader/components/SchemeIdentifierField.vue";
 import SchemeURITemplateField from "@/arches_lingo/components/scheme/SchemeHeader/components/SchemeURITemplateField.vue";
 import ConceptIdentifierCounterField from "@/arches_lingo/components/scheme/SchemeHeader/components/ConceptIdentifierCounterField.vue";
+import LifecycleStateBadge from "@/arches_lingo/components/generic/LifecycleStateBadge.vue";
 
 import {
     DANGER,
@@ -513,7 +514,15 @@ function onLifecycleStateChange(
                                 {{ $gettext("Life cycle state:") }}
                             </span>
                             <span class="header-item-value">
-                                {{ data?.lifeCycleState }}
+                                <LifecycleStateBadge
+                                    :lifecycle-state-id="
+                                        currentLifecycleState?.id
+                                    "
+                                    :lifecycle-state-name="
+                                        currentLifecycleState?.name
+                                    "
+                                />
+                                <span v-if="!currentLifecycleState">--</span>
                             </span>
                         </div>
                         <div class="header-item">

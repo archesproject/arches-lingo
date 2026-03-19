@@ -58,7 +58,6 @@ def enrich_search_result(builder, concept_id):
     result["uri"] = get_first_uri_for_concept(concept_id)
     result["identifier"] = get_first_identifier_for_concept(concept_id)
     result["notes"] = get_notes_for_concept(concept_id)
-    result["lifecycle_state"] = get_lifecycle_state_for_concept(concept_id)
     return result
 
 
@@ -125,16 +124,6 @@ def extract_note_type_label(note_type_data):
     if labels:
         return labels[0].get("value", "")
     return ""
-
-
-def get_lifecycle_state_for_concept(concept_id):
-    """Get the lifecycle state name for a concept."""
-    try:
-        resource = ResourceInstance.objects.get(pk=concept_id)
-        state = resource.resource_instance_lifecycle_state
-        return state.name if state else None
-    except ResourceInstance.DoesNotExist:
-        return None
 
 
 def fetch_search_options():
