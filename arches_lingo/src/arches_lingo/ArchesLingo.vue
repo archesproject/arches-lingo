@@ -2,8 +2,6 @@
 import { onMounted, provide, ref, watch } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import type { RouteLocationNormalized } from "vue-router";
-import { useGettext } from "vue3-gettext";
-import { useToast } from "primevue/usetoast";
 
 import Splitter from "primevue/splitter";
 import SplitterPanel from "primevue/splitterpanel";
@@ -12,28 +10,20 @@ import Toast from "primevue/toast";
 
 import SchemeHierarchy from "@/arches_lingo/components/header/PageHeader/components/SchemeHierarchy/SchemeHierarchy.vue";
 
-import { DEFAULT_ERROR_TOAST_LIFE, ERROR } from "@/arches_lingo/constants.ts";
-
 import { routeNames } from "@/arches_lingo/routes.ts";
 import { useUnsavedChangesGuard } from "@/arches_lingo/composables/useUnsavedChangesGuard.ts";
-import { useAppSettingsStore } from "@/arches_lingo/stores/useAppSettingsStore.ts";
 import { useConceptStore } from "@/arches_lingo/stores/useConceptStore.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
-import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 import PageHeader from "@/arches_lingo/components/header/PageHeader/PageHeader.vue";
 import SideNav from "@/arches_lingo/components/sidenav/SideNav.vue";
 
 const PRESERVED_QUERY_PARAMS = ["filter", "sort", "hierarchy"];
 
-const { $gettext } = useGettext();
-const appSettingsStore = useAppSettingsStore();
 const conceptStore = useConceptStore();
 const languageStore = useLanguageStore();
-const userStore = useUserStore();
 
 const router = useRouter();
 const route = useRoute();
-const toast = useToast();
 
 const isNavExpanded = ref(false);
 const schemeHierarchyKey = ref(0);
@@ -43,9 +33,6 @@ provide("refreshSchemeHierarchy", refreshSchemeHierarchy);
 
 onMounted(function () {
     languageStore.initialize();
-    userStore.initialize();
-    appSettingsStore.initialize();
-
     useUnsavedChangesGuard(router);
 
     router.beforeEach((to, from, next) => {
@@ -53,18 +40,6 @@ onMounted(function () {
         if (carriedQuery) {
             return next({ ...to, query: carriedQuery });
         }
-
-        if (isAuthorizationBlocked(to)) {
-            if (to.name !== routeNames.root) {
-                toast.add({
-                    severity: ERROR,
-                    life: DEFAULT_ERROR_TOAST_LIFE,
-                    summary: $gettext("Login required."),
-                });
-            }
-            return next({ name: routeNames.login });
-        }
-
         next();
     });
 });
@@ -109,15 +84,6 @@ function getCarriedQuery(
             missingParams.map((param) => [param, from.query[param]]),
         ),
     };
-}
-
-function isAuthorizationBlocked(to: RouteLocationNormalized) {
-    const allowsAnonymous = appSettingsStore.allowAnonymousAccess;
-    const requiresAuth = to.matched.some(
-        (record) => record.meta.requiresAuthentication,
-    );
-
-    return userStore.isAnonymous && (!allowsAnonymous || requiresAuth);
 }
 
 function refreshSchemeHierarchy() {

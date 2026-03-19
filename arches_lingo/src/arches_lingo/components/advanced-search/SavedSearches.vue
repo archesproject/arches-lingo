@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from "vue";
+import { storeToRefs } from "pinia";
 import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
 
@@ -28,7 +29,7 @@ import type {
 const { $gettext } = useGettext();
 const toast = useToast();
 const userStore = useUserStore();
-const { isAnonymous } = userStore;
+const { isAnonymous } = storeToRefs(userStore);
 
 const props = defineProps<{
     currentQuery: AdvancedSearchQuery;
@@ -110,7 +111,7 @@ function loadSearch(search: SavedSearchItem) {
 }
 
 watch(
-    () => isAnonymous,
+    isAnonymous,
     (isAnonymous) => {
         if (!isAnonymous) {
             loadSavedSearches();

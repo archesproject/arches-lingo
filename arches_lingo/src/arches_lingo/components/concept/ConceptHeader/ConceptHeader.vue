@@ -84,7 +84,7 @@ const toast = useToast();
 const router = useRouter();
 
 const userStore = useUserStore();
-const { isEditor } = userStore;
+const { isEditor } = storeToRefs(userStore);
 const resourceStore = useResourceStore();
 const conceptStore = useConceptStore();
 
@@ -210,7 +210,7 @@ const lifecycleStateLabel = computed(() => {
 
 const canEditResourceInstances = computed(() => {
     return (
-        isEditor &&
+        isEditor.value &&
         props.resourceInstanceId &&
         resourceInstanceLifecycleState?.value?.can_edit_resource_instances
     );
@@ -218,7 +218,7 @@ const canEditResourceInstances = computed(() => {
 
 const canDeleteResourceInstances = computed(() => {
     return (
-        isEditor &&
+        isEditor.value &&
         props.resourceInstanceId &&
         resourceInstanceLifecycleState?.value?.can_delete_resource_instances
     );

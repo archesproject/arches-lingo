@@ -12,6 +12,7 @@ export const useUserStore = defineStore("user", () => {
     const isAnonymous = computed(() => user.value?.is_anonymous ?? true);
 
     async function initialize() {
+        if (user.value !== null) return;
         user.value = await fetchUser();
     }
 
