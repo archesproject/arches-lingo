@@ -10,7 +10,7 @@ import Paginator from "primevue/paginator";
 import { storeToRefs } from "pinia";
 
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
-import { getParentLabels } from "@/arches_lingo/utils.ts";
+import { getConceptIcon, getParentLabels } from "@/arches_lingo/utils.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 import { routeNames } from "@/arches_lingo/routes.ts";
 
@@ -133,7 +133,7 @@ function onPageChange(event: { page: number }) {
                     <div class="result-main">
                         <div class="result-label">
                             <i
-                                class="pi pi-tag concept-icon"
+                                :class="[getConceptIcon(item), 'concept-icon']"
                                 aria-hidden="true"
                             />
                             {{

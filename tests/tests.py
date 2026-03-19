@@ -638,6 +638,71 @@ class ViewTests(TestCase):
         self.assertEqual(response.status_code, 403)
 
 
+class ConceptBuilderCycleTests(TestCase):
+    """Unit tests for cycle detection in ConceptBuilder.find_paths_to_root."""
+
+    def _make_builder(self):
+        """Return a ConceptBuilder with no DB-loaded data for direct manipulation."""
+        return ConceptBuilder(concept_ids=[])
+
+    def test_direct_cycle_does_not_recurse_infinitely(self):
+        """A direct A→B→A cycle is detected, a warning is logged, and no paths are returned."""
+        builder = self._make_builder()
+        concept_a = str(uuid.uuid4())
+        concept_b = str(uuid.uuid4())
+
+        builder.broader_concepts[concept_a].add(concept_b)
+        builder.broader_concepts[concept_b].add(concept_a)
+
+        with self.assertLogs(
+            "arches_lingo.utils.concept_builder", level="WARNING"
+        ) as logged:
+            paths = builder.find_paths_to_root([concept_a], concept_a)
+
+        self.assertEqual(paths, [])
+        self.assertTrue(any("Cycle detected" in msg for msg in logged.output))
+
+    def test_deeper_cycle_does_not_recurse_infinitely(self):
+        """A three-node A→B→C→A cycle is detected and no paths are returned."""
+        builder = self._make_builder()
+        concept_a = str(uuid.uuid4())
+        concept_b = str(uuid.uuid4())
+        concept_c = str(uuid.uuid4())
+
+        builder.broader_concepts[concept_a].add(concept_b)
+        builder.broader_concepts[concept_b].add(concept_c)
+        builder.broader_concepts[concept_c].add(concept_a)
+
+        with self.assertLogs(
+            "arches_lingo.utils.concept_builder", level="WARNING"
+        ) as logged:
+            paths = builder.find_paths_to_root([concept_a], concept_a)
+
+        self.assertEqual(paths, [])
+        self.assertTrue(any("Cycle detected" in msg for msg in logged.output))
+
+    def test_partial_cycle_still_returns_valid_paths(self):
+        """When one parent is cyclic but another leads to a real root, valid paths are still returned."""
+        builder = self._make_builder()
+        concept_a = str(uuid.uuid4())
+        concept_b = str(uuid.uuid4())
+        scheme_s = str(uuid.uuid4())
+
+        # A→B (broader), B→A (cycle) plus B is a top concept of scheme_s (valid root)
+        builder.broader_concepts[concept_a].add(concept_b)
+        builder.broader_concepts[concept_b].add(concept_a)
+        builder.schemes_by_top_concept[concept_b].add(scheme_s)
+
+        with self.assertLogs(
+            "arches_lingo.utils.concept_builder", level="WARNING"
+        ) as logged:
+            paths = builder.find_paths_to_root([concept_a], concept_a)
+
+        self.assertEqual(len(paths), 1)
+        self.assertEqual(paths[0], [scheme_s, concept_b, concept_a])
+        self.assertTrue(any("Cycle detected" in msg for msg in logged.output))
+
+
 class IsGuideTermTileTests(TestCase):
     """Unit tests for ConceptBuilder.is_guide_term_tile static method."""
 

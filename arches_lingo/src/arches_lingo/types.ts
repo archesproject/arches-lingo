@@ -23,6 +23,8 @@ export interface User {
 export interface AppSettings {
     allow_anonymous_access: boolean;
     public_server_address: string | null;
+    arches_version: string;
+    lingo_version: string;
 }
 
 export interface DisplayedRowRefAndSetter {
@@ -94,6 +96,7 @@ export interface ResourceInstanceResult {
         [key: string]: any;
     };
     principalUser?: number | string;
+    principal_user_display_name?: string | null;
     resource_instance_lifecycle_state?: string;
 }
 
@@ -410,6 +413,7 @@ export interface SearchResultItem {
 export interface SearchResultHierarchy {
     tileid?: string;
     searchResults: SearchResultItem[];
+    isTopConcept?: boolean;
 }
 
 export interface archesPreset {
@@ -491,6 +495,7 @@ export type FacetType =
     | "relationship_associated"
     | "match_uri"
     | "scheme"
+    | "top_concept"
     | "uri"
     | "identifier"
     | "lifecycle_state"

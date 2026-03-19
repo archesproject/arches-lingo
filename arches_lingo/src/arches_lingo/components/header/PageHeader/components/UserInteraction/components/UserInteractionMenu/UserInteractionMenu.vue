@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import { storeToRefs } from "pinia";
 import Divider from "primevue/divider";
 
+import { useAppSettingsStore } from "@/arches_lingo/stores/useAppSettingsStore.ts";
 import ThemeSelector from "@/arches_lingo/components/header/PageHeader/components/UserInteraction/components/UserInteractionMenu/components/ThemeSelector.vue";
 import UserInteractionTools from "@/arches_lingo/components/header/PageHeader/components/UserInteraction/components/UserInteractionMenu/components/UserInteractionTools.vue";
 
@@ -8,6 +10,8 @@ defineProps<{
     displayName: string;
     email: string;
 }>();
+
+const { archesVersion, lingoVersion } = storeToRefs(useAppSettingsStore());
 </script>
 
 <template>
@@ -24,8 +28,9 @@ defineProps<{
 
         <Divider />
 
-        <!-- TODO: replace hard-coding with API call -->
-        <span class="application-version">Arches Lingo v8.0.1</span>
+        <span class="application-version"
+            >Lingo v{{ lingoVersion }} | Arches v{{ archesVersion }}</span
+        >
     </div>
 </template>
 

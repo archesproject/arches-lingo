@@ -10,7 +10,7 @@ from arches.app.utils.betterJSONSerializer import JSONDeserializer, JSONSerializ
 from arches.app.utils.response import JSONErrorResponse, JSONResponse
 
 from arches_querysets.models import ResourceTileTree, TileTree
-from arches_lingo.mixins.anonymous_access import AnonymousAccessMixin
+from arches_lingo.mixins.permissions import AnonymousAccessMixin
 from arches_lingo.permissions import anonymous_access_allowed, is_authenticated_user
 from arches_lingo.utils.concept_builder import ConceptBuilder
 from arches_lingo.utils.concepts import (

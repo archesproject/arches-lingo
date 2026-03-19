@@ -13,9 +13,10 @@ from arches_lingo.const import (
     SCHEME_IDENTIFIER_TYPE_NODE,
     SCHEME_IDENTIFIER_TYPE_LIST_ITEM_ID,
 )
+from arches_lingo.mixins.permissions import LingoEditorMixin
 
 
-class SchemeIdentifierView(APIBase):
+class SchemeIdentifierView(LingoEditorMixin, APIBase):
     def post(self, request, scheme_resource_instance_id):
         request_json = JSONDeserializer().deserialize(request.body)
         identifier = request_json.get("identifier", "")

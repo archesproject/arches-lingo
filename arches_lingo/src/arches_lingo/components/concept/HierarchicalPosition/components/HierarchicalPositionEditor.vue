@@ -106,6 +106,7 @@ async function save(e: FormSubmitEvent) {
     } catch (error) {
         console.error(error);
     } finally {
+        isSaving.value = false;
         refreshReportSection!(props.componentName);
         onSaveSettled?.();
     }

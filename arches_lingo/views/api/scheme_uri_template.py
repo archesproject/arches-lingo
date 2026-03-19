@@ -11,10 +11,11 @@ from arches_lingo.const import (
     NAMESPACE_TYPE_NODE,
     NAMESPACE_TYPE_LIST_ITEM_ID,
 )
+from arches_lingo.mixins.permissions import LingoEditorWriteMixin
 from arches_lingo.models import SchemeURITemplate
 
 
-class SchemeURITemplateView(APIBase):
+class SchemeURITemplateView(LingoEditorWriteMixin, APIBase):
     def get(self, request, scheme_resource_instance_id):
         scheme_uri_template = SchemeURITemplate.objects.filter(
             scheme_id=scheme_resource_instance_id

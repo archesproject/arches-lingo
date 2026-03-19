@@ -2,10 +2,11 @@ from arches.app.utils.betterJSONSerializer import JSONDeserializer, JSONSerializ
 from arches.app.utils.response import JSONResponse, JSONErrorResponse
 from arches.app.views.api import APIBase
 
+from arches_lingo.mixins.permissions import LingoEditorWriteMixin
 from arches_lingo.models import ConceptIdentifierCounter
 
 
-class ConceptIdentifierCounterView(APIBase):
+class ConceptIdentifierCounterView(LingoEditorWriteMixin, APIBase):
     def get(self, request, scheme_resource_instance_id):
         concept_identifier_counter = ConceptIdentifierCounter.objects.filter(
             scheme_id=scheme_resource_instance_id

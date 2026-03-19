@@ -328,7 +328,7 @@ function extractConceptHeaderData(resource: ResourceInstanceResult) {
 
     const name = resource?.name;
     const descriptor = extractDescriptors(resource, selectedLanguage.value);
-    const principalUser = "Anonymous";
+    const principalUser = resource?.principal_user_display_name ?? undefined;
 
     const uri = aliased_data?.uri?.aliased_data?.uri_content?.node_value;
     const partOfScheme =
@@ -530,7 +530,10 @@ function extractConceptHeaderData(resource: ResourceInstanceResult) {
                     </div>
                 </div>
             </div>
-            <div class="header-row">
+            <div
+                class="header-row"
+                :class="{ 'top-concept-owner': isTopConcept }"
+            >
                 <div
                     v-if="!isTopConcept"
                     class="header-item"
@@ -776,6 +779,10 @@ function extractConceptHeaderData(resource: ResourceInstanceResult) {
 :deep(a) {
     font-size: var(--p-lingo-font-size-smallnormal);
     color: var(--p-primary-500);
+}
+
+.top-concept-owner {
+    justify-self: end;
 }
 
 :deep(.p-selectbutton) {

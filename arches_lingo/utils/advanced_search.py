@@ -45,6 +45,7 @@ VALID_FACETS = {
     "relationship_associated",
     "match_uri",
     "scheme",
+    "top_concept",
     "uri",
     "identifier",
     "lifecycle_state",
@@ -117,10 +118,10 @@ class AdvancedSearchEvaluator:
 
     def _concept_ids_from_tiles(self, nodegroup_id, extra_filters=None):
         """Get distinct concept resource IDs from tiles in a nodegroup."""
-        qs = TileModel.objects.filter(nodegroup_id=nodegroup_id)
+        tiles = TileModel.objects.filter(nodegroup_id=nodegroup_id)
         if extra_filters:
-            qs = qs.filter(extra_filters)
-        return list(qs.values_list("resourceinstance_id", flat=True).distinct())
+            tiles = tiles.filter(extra_filters)
+        return list(tiles.values_list("resourceinstance_id", flat=True).distinct())
 
     MATCH_MODE_LOOKUPS = {
         "contains": "icontains",
@@ -347,6 +348,22 @@ class AdvancedSearchEvaluator:
             .values_list("resourceinstance_id", flat=True)
             .distinct()
         )
+
+    def _facet_top_concept(self, condition):
+        """Find concepts that are top concepts, optionally within a scheme."""
+        scheme_id = condition.get("value")
+
+        tiles = TileModel.objects.filter(nodegroup_id=TOP_CONCEPT_OF_NODE_AND_NODEGROUP)
+        if scheme_id:
+            tiles = tiles.filter(
+                **{
+                    f"data__{TOP_CONCEPT_OF_NODE_AND_NODEGROUP}__contains": [
+                        {"resourceId": scheme_id}
+                    ]
+                }
+            )
+
+        return list(tiles.values_list("resourceinstance_id", flat=True).distinct())
 
     def _facet_scheme(self, condition):
         """Find concepts that belong to a specific scheme."""
