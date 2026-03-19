@@ -47,12 +47,6 @@ details = {
     "helptemplate": "migrate-to-lingo-help",
 }
 
-# TODO: swap out for URLValidator?
-# from django.core.validators import URLValidator
-URL_REGEX = re.compile(
-    r"https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)"
-)
-
 ONTOLOGY_PROPERTY_BY_NODE_ALIAS = {
     "top_concept_of": const.TOP_CONCEPT_OF_ONTOLOGY_PROPERTY,
     "part_of_scheme": const.PART_OF_SCHEME_ONTOLOGY_PROPERTY,
@@ -154,9 +148,7 @@ class LingoResourceImporter(BaseImportModule):
                 mock_tile = self.create_mock_tile_from_value(
                     value, lang_lookup=self.language_lookup
                 )
-                if isinstance(mock_tile, list):
-                    scheme_to_load["tile_data"].extend(mock_tile)
-                elif mock_tile:
+                if mock_tile:
                     scheme_to_load["tile_data"].append(mock_tile)
             schemes.append(scheme_to_load)
         return schemes
@@ -186,9 +178,7 @@ class LingoResourceImporter(BaseImportModule):
                 mock_tile = self.create_mock_tile_from_value(
                     value, lang_lookup=self.language_lookup
                 )
-                if isinstance(mock_tile, list):
-                    concept_to_load["tile_data"].extend(mock_tile)
-                elif mock_tile:
+                if mock_tile:
                     concept_to_load["tile_data"].append(mock_tile)
 
             concepts.append(concept_to_load)
@@ -230,7 +220,7 @@ class LingoResourceImporter(BaseImportModule):
         return concepts
 
     @staticmethod
-    def create_mock_tile_from_value(value, lang_lookup=None):
+    def create_mock_tile_from_value(value, isScheme=False, lang_lookup=None):
         # Values coming directly from RDM models are django model instances
         if isinstance(value, models.Value):
             value = {
@@ -255,28 +245,11 @@ class LingoResourceImporter(BaseImportModule):
             mock_tile["appellative_status_ascribed_name_language"] = value["language"]
             mock_tile["appellative_status_ascribed_relation"] = value_type_id
             return {"appellative_status": mock_tile}
-        elif value_type_id == "identifier":
-            val = value["value"]
-            if URL_REGEX.match(val):
-                mock_tiles = [
-                    {
-                        "uri": {
-                            "uri_content": val,
-                            "uri_type": value_type_id,
-                        }
-                    },
-                    {
-                        "identifier": {
-                            "identifier_content": val.rstrip("/").split("/")[-1],
-                            "identifier_type": value_type_id,
-                        }
-                    },
-                ]
-                return mock_tiles
-            else:
-                mock_tile["identifier_content"] = val
-                mock_tile["identifier_type"] = value_type_id
-                return {"identifier": mock_tile}
+        elif value_type_id == "identifier" and not isScheme:
+            # treat identifiers as external exact-matched concepts
+            mock_tile["match_status_ascribed_comparate"] = value["value"]
+            mock_tile["match_status_ascribed_relation"] = "exactMatch"
+            return {"match_status": mock_tile}
         elif value_type_id in set(
             [
                 "note",
@@ -773,51 +746,6 @@ class LingoResourceImporter(BaseImportModule):
 
         LoadStaging.objects.bulk_create(part_of_scheme_tiles)
 
-    def _assign_resource_lifecycle(self, schemes, concepts):
-        lifecycle_state_id = const.DRAFT_STATE_ID
-        resources_with_identifiers = defaultdict(dict)
-        new_resource_identifers = []
-        for concept in concepts:
-            for mock_tile in concept["tile_data"]:
-                identifier = mock_tile.get("identifier", None)
-                if identifier:
-                    resourceid = concept["resourceinstanceid"]
-                    resources_with_identifiers[resourceid] = identifier
-
-        if len(resources_with_identifiers) == len(concepts):
-            lifecycle_state_id = const.PUBLISHED_STATE_ID
-        else:
-            lifecycle_state_id = const.EDITING_STATE_ID
-
-        for scheme in schemes:
-            for mock_tile in scheme["tile_data"]:
-                identifier = mock_tile.get("identifier", None)
-                if identifier:
-                    resourceid = scheme["resourceinstanceid"]
-                    resources_with_identifiers[resourceid] = identifier
-
-        lifecycle_state = models.ResourceInstanceLifecycleState.objects.get(
-            pk=lifecycle_state_id
-        )
-        new_resources = models.ResourceInstance.objects.filter(
-            resourceinstanceid__in=list(resources_with_identifiers.keys())
-        )
-        for resource in new_resources:
-            resource.resource_instance_lifecycle_state = lifecycle_state
-            identifier = resources_with_identifiers[resource.pk]
-            resource_identifier = models.ResourceIdentifier(
-                resourceid_id=resource.pk,
-                identifier=identifier["identifier_content"],
-                identifier_type=identifier["identifier_type"],
-                source="arches-lingo",
-            )
-            new_resource_identifers.append(resource_identifier)
-
-        models.ResourceInstance.objects.bulk_update(
-            new_resources, ["resource_instance_lifecycle_state"]
-        )
-        models.ResourceIdentifier.objects.bulk_create(new_resource_identifers)
-
     def start(self, request):
         load_details = {"operation": "Lingo Thesaurus Import"}
         if not self.loadid:
@@ -1005,7 +933,6 @@ class LingoResourceImporter(BaseImportModule):
                 cursor.execute(
                     """CALL __arches_update_resource_x_resource_with_graphids();"""
                 )
-                self._assign_resource_lifecycle(self.schemes, self.concepts)
                 cursor.execute("""SELECT __arches_refresh_spatial_views();""")
                 refresh_successful = cursor.fetchone()[0]
                 if not refresh_successful:
