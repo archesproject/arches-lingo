@@ -106,6 +106,15 @@ class SKOSReader(SKOSReader):
                         )
                         top_concept_mock_tiles[top_concept_id] = top_concept_mock_tile
 
+                if "appellative_status" not in [
+                    key for val in new_scheme["tile_data"] for key in val.keys()
+                ]:
+                    mock_tile = self.map_predicate_object_to_mock_tile(
+                        str(scheme), "prefLabel", isScheme
+                    )
+                    if mock_tile:
+                        new_scheme["tile_data"].append(mock_tile)
+
                 self.schemes.append(new_scheme)
 
                 ### Concepts ###
