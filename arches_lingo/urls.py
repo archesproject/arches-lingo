@@ -4,6 +4,7 @@ from django.urls import include, path
 
 from arches_lingo.views.root import LingoRootView
 from arches_lingo.views.api.concepts import (
+    ConceptDeleteView,
     ConceptTreeView,
     ValueSearchView,
     ConceptResourceView,
@@ -36,6 +37,7 @@ from arches_lingo.views.api.scheme_identifier import SchemeIdentifierView
 from arches_lingo.views.api.scheme_uri_template import (
     SchemeURITemplateView,
 )
+from arches_lingo.views.api.concept_lifecycle import ConceptRetireView
 from arches_lingo.views.api.settings import AppSettingsView
 from arches_lingo.views.api.identifier_resolve import IdentifierResolveView
 from arches_lingo.views.api.resource_list import (
@@ -205,6 +207,16 @@ urlpatterns = [
         "api/lingo/resource/<uuid:resourceid>/reference-count",
         ResourceReferenceCountView.as_view(),
         name="api-lingo-resource-reference-count",
+    ),
+    path(
+        "api/lingo/concept/<uuid:pk>/delete",
+        ConceptDeleteView.as_view(),
+        name="api-concept-delete",
+    ),
+    path(
+        "api/lingo/concept/<uuid:pk>/retire",
+        ConceptRetireView.as_view(),
+        name="api-concept-retire",
     ),
     path(
         "api/lingo/<slug:graph>",

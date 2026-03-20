@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { onMounted, ref, watch } from "vue";
 import { storeToRefs } from "pinia";
 import { RouterLink } from "vue-router";
 
@@ -36,6 +36,12 @@ const schemeLabel = ref<Label>();
 const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
 const store = useResourceStore();
 let initialized = false;
+
+onMounted(() => {
+    if (!props.resourceInstanceId) {
+        isLoading.value = false;
+    }
+});
 
 watch(
     [() => store.resource.value, () => store.error.value],

@@ -43,6 +43,7 @@ export interface Concept {
     narrower: Concept[];
     guide_term?: boolean;
     top_concept?: boolean;
+    resource_instance_lifecycle_state_id?: string;
 }
 
 export type ConceptPathNode = Pick<

@@ -32,6 +32,7 @@ import {
     DEFAULT_ERROR_TOAST_LIFE,
     ERROR,
 } from "@/arches_controlled_lists/constants.ts";
+import { RETIRED_LIFECYCLE_STATE_ID } from "@/arches_lingo/constants.ts";
 
 import { useConceptStore } from "@/arches_lingo/stores/useConceptStore.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
@@ -158,9 +159,25 @@ const resourceInstanceLifecycleStateCanEditById = computed(() =>
     ),
 );
 
+const resourceInstanceLifecycleStateIsRetiredById = computed(() =>
+    Object.fromEntries(
+        (resourceInstanceLifecycleStates?.value ?? []).map(
+            (state: ResourceInstanceLifecycleState) => [
+                state.id,
+                state.id === RETIRED_LIFECYCLE_STATE_ID,
+            ],
+        ),
+    ),
+);
+
 provide(
     "resourceInstanceLifecycleStateCanEditById",
     resourceInstanceLifecycleStateCanEditById,
+);
+
+provide(
+    "resourceInstanceLifecycleStateIsRetiredById",
+    resourceInstanceLifecycleStateIsRetiredById,
 );
 
 const sortIcon = computed(() => {
@@ -237,14 +254,15 @@ const displayTree = computed<TreeNode[]>(() => {
     return filteredTree.value;
 });
 
-watch(route, async (newRoute, oldRoute) => {
-    if (newRoute.path === oldRoute.path) return;
+watch(
+    () => route.path,
+    async () => {
+        const shouldScroll = !suppressScrollOnNextRouteSelect.value;
+        suppressScrollOnNextRouteSelect.value = false;
 
-    const shouldScroll = !suppressScrollOnNextRouteSelect.value;
-    suppressScrollOnNextRouteSelect.value = false;
-
-    await selectNodeFromRoute(newRoute, shouldScroll);
-});
+        await selectNodeFromRoute(route, shouldScroll);
+    },
+);
 
 watch(debouncedFilterValue, (currentFilter) => {
     router.replace({
@@ -369,6 +387,13 @@ function setExpandedKeysToOnly(theseExpandedKeys: Set<string>) {
     expandedKeys.value = Object.fromEntries(
         [...theseExpandedKeys].map((expandedKey) => [expandedKey, true]),
     ) as TreeExpandedKeys;
+}
+
+function mergeExpandedKeys(keysToAdd: Set<string>) {
+    expandedKeys.value = {
+        ...expandedKeys.value,
+        ...Object.fromEntries([...keysToAdd].map((key) => [key, true])),
+    } as TreeExpandedKeys;
 }
 
 function findAllNewOccurrencesInTree() {
@@ -506,7 +531,7 @@ function scrollToOccurrenceKeyInTree(
             }
 
             keysToExpand.add(occurrenceKey);
-            setExpandedKeysToOnly(keysToExpand);
+            mergeExpandedKeys(keysToExpand);
 
             selectedKeys.value = { [occurrenceKey]: true };
 
@@ -658,7 +683,7 @@ function scrollToItemInTree(
     }
 
     if (!debouncedFilterValue.value) {
-        setExpandedKeysToOnly(keysToExpand);
+        mergeExpandedKeys(keysToExpand);
     }
 
     const matchedKeysInOrder = matches.map(

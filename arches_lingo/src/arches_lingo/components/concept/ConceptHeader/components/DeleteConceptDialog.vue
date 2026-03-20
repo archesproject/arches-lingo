@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 
 import { useGettext } from "vue3-gettext";
 import Button from "primevue/button";
@@ -7,13 +7,22 @@ import Dialog from "primevue/dialog";
 import RadioButton from "primevue/radiobutton";
 import Skeleton from "primevue/skeleton";
 
-import { DANGER, SECONDARY } from "@/arches_lingo/constants.ts";
+import {
+    DANGER,
+    DELETE,
+    DEPRECATE,
+    SECONDARY,
+    STRATEGY_DELETE_CHILDREN,
+    STRATEGY_ORPHAN,
+    STRATEGY_REPARENT,
+} from "@/arches_lingo/constants.ts";
 import { useConceptStore } from "@/arches_lingo/stores/useConceptStore.ts";
 import type { Concept, DeleteConceptStrategy } from "@/arches_lingo/types.ts";
 
 const props = defineProps<{
     conceptId: string;
     conceptName: string | undefined;
+    mode: typeof DELETE | typeof DEPRECATE;
 }>();
 
 const emit = defineEmits<{
@@ -22,12 +31,11 @@ const emit = defineEmits<{
 }>();
 
 const { $gettext } = useGettext();
+const conceptStore = useConceptStore();
 
 const narrower = ref<Concept[]>([]);
 const isLoading = ref(true);
-const selectedStrategy = ref<DeleteConceptStrategy>("reparent");
-
-const conceptStore = useConceptStore();
+const selectedStrategy = ref<DeleteConceptStrategy>(STRATEGY_REPARENT);
 
 onMounted(async () => {
     try {
@@ -35,6 +43,68 @@ onMounted(async () => {
         narrower.value = conceptStore.getNarrower(props.conceptId);
     } finally {
         isLoading.value = false;
+    }
+});
+
+const isDelete = computed(function () {
+    return props.mode === DELETE;
+});
+
+const dialogHeader = computed(function () {
+    if (isDelete.value) {
+        return $gettext("Delete Concept");
+    } else {
+        return $gettext("Deprecate Concept");
+    }
+});
+
+const confirmationText = computed(function () {
+    if (isDelete.value) {
+        return $gettext('Are you sure you want to delete "%{name}"?', {
+            name: props.conceptName ?? "",
+        });
+    } else {
+        return $gettext('Are you sure you want to deprecate "%{name}"?', {
+            name: props.conceptName ?? "",
+        });
+    }
+});
+
+const deleteChildrenTitle = computed(function () {
+    if (isDelete.value) {
+        return $gettext("Delete all children");
+    } else {
+        return $gettext("Deprecate all children");
+    }
+});
+
+const deleteChildrenDesc = computed(function () {
+    if (isDelete.value) {
+        return $gettext(
+            "This concept and all its descendants will be permanently deleted.",
+        );
+    } else {
+        return $gettext(
+            "This concept and all its descendants will be deprecated.",
+        );
+    }
+});
+
+const childrenText = computed(function () {
+    return $gettext(
+        '"%{name}" has %{count} direct child concept(s). How should they be handled?',
+        {
+            name: props.conceptName ?? "",
+            count: String(narrower.value.length),
+        },
+    );
+});
+
+const confirmButtonLabel = computed(function () {
+    if (isDelete.value) {
+        return $gettext("Delete");
+    } else {
+        return $gettext("Deprecate");
     }
 });
 
@@ -47,7 +117,7 @@ function onConfirm() {
     <Dialog
         :visible="true"
         :modal="true"
-        :header="$gettext('Delete Concept')"
+        :header="dialogHeader"
         class="delete-concept-dialog"
         @update:visible="$emit('cancel')"
     >
@@ -60,11 +130,7 @@ function onConfirm() {
             v-else-if="narrower.length === 0"
             class="dialog-body"
         >
-            <div class="dialog-text">
-                {{ $gettext("Are you sure you want to delete") }}
-                "<span class="concept-name">{{ conceptName }}</span
-                >"?
-            </div>
+            <div class="dialog-text">{{ confirmationText }}</div>
             <div class="muted-note">
                 {{ $gettext("This action cannot be undone.") }}
             </div>
@@ -74,27 +140,20 @@ function onConfirm() {
             v-else
             class="dialog-body"
         >
-            <div class="dialog-text">
-                "<span class="concept-name">{{ conceptName }}</span
-                >"
-                {{
-                    $gettext(
-                        "has %{count} direct child concept(s). How should they be handled?",
-                        { count: String(narrower.length) },
-                    )
-                }}
-            </div>
+            <div class="dialog-text">{{ childrenText }}</div>
 
             <div class="strategy-options">
                 <label
                     class="strategy-option"
-                    :class="{ selected: selectedStrategy === 'reparent' }"
+                    :class="{
+                        selected: selectedStrategy === STRATEGY_REPARENT,
+                    }"
                     for="strategy-reparent"
                 >
                     <RadioButton
                         v-model="selectedStrategy"
                         input-id="strategy-reparent"
-                        value="reparent"
+                        :value="STRATEGY_REPARENT"
                     />
                     <div class="strategy-label">
                         <span class="strategy-title">{{
@@ -111,36 +170,34 @@ function onConfirm() {
                 <label
                     class="strategy-option"
                     :class="{
-                        selected: selectedStrategy === 'delete_children',
+                        selected: selectedStrategy === STRATEGY_DELETE_CHILDREN,
                     }"
                     for="strategy-delete"
                 >
                     <RadioButton
                         v-model="selectedStrategy"
                         input-id="strategy-delete"
-                        value="delete_children"
+                        :value="STRATEGY_DELETE_CHILDREN"
                     />
                     <div class="strategy-label">
                         <span class="strategy-title">{{
-                            $gettext("Delete all children")
+                            deleteChildrenTitle
                         }}</span>
                         <span class="strategy-desc">{{
-                            $gettext(
-                                "This concept and all its descendants will be permanently deleted.",
-                            )
+                            deleteChildrenDesc
                         }}</span>
                     </div>
                 </label>
 
                 <label
                     class="strategy-option"
-                    :class="{ selected: selectedStrategy === 'orphan' }"
+                    :class="{ selected: selectedStrategy === STRATEGY_ORPHAN }"
                     for="strategy-orphan"
                 >
                     <RadioButton
                         v-model="selectedStrategy"
                         input-id="strategy-orphan"
-                        value="orphan"
+                        :value="STRATEGY_ORPHAN"
                     />
                     <div class="strategy-label">
                         <span class="strategy-title">{{
@@ -167,7 +224,7 @@ function onConfirm() {
                 @click="$emit('cancel')"
             />
             <Button
-                :label="$gettext('Delete')"
+                :label="confirmButtonLabel"
                 :severity="DANGER"
                 :disabled="isLoading"
                 @click="onConfirm"

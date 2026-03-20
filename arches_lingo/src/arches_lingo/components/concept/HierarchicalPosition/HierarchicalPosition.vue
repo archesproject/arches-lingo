@@ -30,7 +30,6 @@ const props = defineProps<{
     tileId?: string;
 }>();
 
-const isLoading = ref(true);
 const fetchError = ref();
 const hierarchicalData = ref<SearchResultHierarchy[]>([]);
 const schemeId = ref<string>();
@@ -38,6 +37,7 @@ const tileData = ref<ConceptClassificationStatus[]>();
 const isTopConcept = ref(false);
 
 const shouldCreateNewTile = Boolean(props.mode === EDIT && !props.tileId);
+const isLoading = ref(props.resourceInstanceId || shouldCreateNewTile);
 
 const resourceStore = useResourceStore();
 const conceptStore = useConceptStore();
@@ -61,8 +61,6 @@ onMounted(async () => {
         tileData.value = [
             blankTileData as unknown as ConceptClassificationStatus,
         ];
-        isLoading.value = false;
-    } else if (!props.resourceInstanceId) {
         isLoading.value = false;
     }
 });

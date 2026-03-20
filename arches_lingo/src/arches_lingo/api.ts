@@ -298,6 +298,42 @@ export const deleteLingoResource = async (
     }
 };
 
+export const deleteConcept = async (
+    conceptId: string,
+    strategy?: string,
+): Promise<void> => {
+    const url = generateArchesURL("arches_lingo:api-concept-delete", {
+        pk: conceptId,
+    });
+    const fullUrl = strategy ? `${url}?strategy=${strategy}` : url;
+    const response = await fetch(fullUrl, {
+        method: "DELETE",
+        headers: { "X-CSRFTOKEN": getToken() },
+    });
+    if (!response.ok) {
+        const parsed = await response.json();
+        throw new Error(parsed.message || response.statusText);
+    }
+};
+
+export const retireConcept = async (
+    conceptId: string,
+    strategy?: string,
+): Promise<void> => {
+    const url = generateArchesURL("arches_lingo:api-concept-retire", {
+        pk: conceptId,
+    });
+    const fullUrl = strategy ? `${url}?strategy=${strategy}` : url;
+    const response = await fetch(fullUrl, {
+        method: "POST",
+        headers: { "X-CSRFTOKEN": getToken() },
+    });
+    if (!response.ok) {
+        const parsed = await response.json();
+        throw new Error(parsed.message || response.statusText);
+    }
+};
+
 export const fetchResourceReferenceCount = async (
     resourceId: string,
 ): Promise<number> => {

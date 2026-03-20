@@ -57,11 +57,23 @@ watch(shouldShowHierarchy, (isOpen) => {
     router.replace({ query: queryWithoutHierarchyParams });
 });
 
-watch(route, () => {
-    if (route.name === routeNames.login) {
-        shouldShowHierarchy.value = false;
-    }
-});
+watch(
+    () => route.name,
+    (newName) => {
+        if (newName === routeNames.login) {
+            shouldShowHierarchy.value = false;
+        }
+    },
+);
+
+watch(
+    () => route.params.id,
+    (newId, oldId) => {
+        if (oldId === "new" && newId && newId !== "new") {
+            refreshSchemeHierarchy();
+        }
+    },
+);
 
 function getCarriedQuery(
     to: RouteLocationNormalized,
