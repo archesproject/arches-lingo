@@ -197,7 +197,6 @@ function openEditor(componentName: string, tileId?: string) {
 }
 
 function updateEditorLoadingState(isLoading: boolean) {
-    console.log("component manager received editor loading state:", isLoading);
     isEditorLoading.value = isLoading;
 }
 

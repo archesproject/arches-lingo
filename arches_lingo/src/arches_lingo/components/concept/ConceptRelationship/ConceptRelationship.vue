@@ -57,6 +57,7 @@ watchEffect(async () => {
         tileData.value = [blankTileData as unknown as ConceptRelationStatus];
     }
     isLoading.value = false;
+    if (props.mode === EDIT) emit("update:isEditorLoading", false);
 });
 
 async function getSectionValue() {
@@ -113,7 +114,6 @@ async function getSectionValue() {
             :tile-id="props.tileId"
             :scheme="schemeId"
             :exclude="false"
-            @update:is-loading="emit('update:isEditorLoading', $event)"
         />
     </template>
 </template>

@@ -12,7 +12,6 @@ import Skeleton from "primevue/skeleton";
 import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
 
 import { createOrUpdateConcept } from "@/arches_lingo/utils.ts";
-import { provideWidgetReadyTracker } from "@/arches_lingo/composables/useWidgetReadyTracker.ts";
 
 import {
     DEFAULT_ERROR_TOAST_LIFE,
@@ -32,10 +31,6 @@ const props = defineProps<{
     nodegroupAlias: string;
     resourceInstanceId: string | undefined;
     tileId?: string;
-}>();
-
-const emit = defineEmits<{
-    (event: "update:isLoading", value: boolean): void;
 }>();
 
 const route = useRoute();
@@ -59,12 +54,6 @@ const onSaveSettled = inject<() => void>("onSaveSettled");
 
 const formRef = useTemplateRef("form");
 const isSaving = ref(false);
-
-const { allWidgetsReady } = provideWidgetReadyTracker();
-
-watch(allWidgetsReady, (ready) => {
-    emit("update:isLoading", !ready);
-});
 
 watch(
     () => formRef.value,

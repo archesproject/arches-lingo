@@ -45,12 +45,14 @@ watch(
         if (storeError) {
             fetchError.value = storeError;
             isLoading.value = false;
+            if (props.mode === EDIT) emit("update:isEditorLoading", false);
             return;
         }
         if (resource && props.resourceInstanceId && !shouldCreateNewTile) {
             tileData.value =
                 resource.aliased_data?.[props.nodegroupAlias] ?? [];
             isLoading.value = false;
+            if (props.mode === EDIT) emit("update:isEditorLoading", false);
         }
     },
     { immediate: true },
@@ -65,8 +67,10 @@ watchEffect(async () => {
         );
         tileData.value = [blankTileData as unknown as ConceptMatchStatus];
         isLoading.value = false;
+        if (props.mode === EDIT) emit("update:isEditorLoading", false);
     } else if (!props.resourceInstanceId) {
         isLoading.value = false;
+        if (props.mode === EDIT) emit("update:isEditorLoading", false);
     }
 });
 </script>
@@ -110,7 +114,6 @@ watchEffect(async () => {
                 })
             "
             :tile-id="props.tileId"
-            @update:is-loading="emit('update:isEditorLoading', $event)"
         />
     </template>
 </template>

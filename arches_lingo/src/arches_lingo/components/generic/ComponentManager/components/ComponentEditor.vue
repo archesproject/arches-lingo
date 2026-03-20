@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import {
     computed,
-    nextTick,
     onUnmounted,
     provide,
     ref,
@@ -60,37 +59,56 @@ const isFormDirty = computed(() => {
     return false;
 });
 
-const firstFieldKey = computed(() => {
-    if (!componentEditorFormRef.value?.fields) return null;
-    return Object.keys(componentEditorFormRef.value.fields)[0] ?? null;
-});
+const isComponentMounted = ref(true);
 
-watch([() => props.isEditorLoading, firstFieldKey], ([isLoading, fieldKey]) => {
-    console.log(firstFieldKey.value);
-    if (isLoading === false && fieldKey && !hasAutoFocused.value) {
-        hasAutoFocused.value = true;
-        nextTick(() => {
-            const formRef = componentEditorFormRef.value.$refs.formRef;
+watch(
+    () => props.isEditorLoading,
+    (isLoading) => {
+        if (isLoading === false && !hasAutoFocused.value) {
+            hasAutoFocused.value = true;
+            requestAnimationFrame(() => attemptFocusFirstField(5));
+        }
+    },
+);
+
+function attemptFocusFirstField(attemptsRemaining: number) {
+    if (!isComponentMounted.value) return;
+
+    const formInstance = componentEditorFormRef.value;
+    if (formInstance) {
+        const formElement = formInstance.$refs.formRef;
+        if (formElement) {
             try {
-                formRef[0].focus();
+                formElement[0].focus();
+                return;
             } catch {
-                const fields = componentEditorFormRef.value.fields;
-                const nodeAlias = Object.keys(fields)[0];
-                const firstField = formRef.querySelector(
-                    `#${nodeAlias}`,
-                ) as HTMLElement;
-                if (firstField) {
-                    firstField.focus();
-                } else {
-                    // @ts-expect-error This is an error in PrimeVue types
-                    toggleSizeButton.value!.$el.focus();
+                const fields = formInstance.fields;
+                const nodeAlias = fields ? Object.keys(fields)[0] : null;
+                if (nodeAlias) {
+                    const firstField = formElement.querySelector(
+                        `#${nodeAlias}`,
+                    ) as HTMLElement | null;
+                    if (firstField) {
+                        firstField.focus();
+                        return;
+                    }
                 }
             }
-        });
+        }
     }
-});
+
+    if (attemptsRemaining > 0) {
+        requestAnimationFrame(() =>
+            attemptFocusFirstField(attemptsRemaining - 1),
+        );
+    } else {
+        // @ts-expect-error This is an error in PrimeVue types
+        toggleSizeButton.value!.$el.focus();
+    }
+}
 
 onUnmounted(() => {
+    isComponentMounted.value = false;
     isEditorDirty.value = false;
 });
 

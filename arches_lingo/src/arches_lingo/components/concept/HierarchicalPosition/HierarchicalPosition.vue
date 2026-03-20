@@ -54,6 +54,7 @@ watch(
         if (storeError) {
             fetchError.value = storeError;
             isLoading.value = false;
+            if (props.mode === EDIT) emit("update:isEditorLoading", false);
             return;
         }
         if (
@@ -73,6 +74,7 @@ watch(
             // Top concepts should not show this section
             if (isTopConcept.value) {
                 isLoading.value = false;
+                if (props.mode === EDIT) emit("update:isEditorLoading", false);
                 return;
             }
 
@@ -115,6 +117,7 @@ watch(
             fetchError.value = error;
         } finally {
             isLoading.value = false;
+            if (props.mode === EDIT) emit("update:isEditorLoading", false);
         }
     },
     { immediate: true },
@@ -142,8 +145,10 @@ onMounted(async () => {
             blankTileData as unknown as ConceptClassificationStatus,
         ];
         isLoading.value = false;
+        if (props.mode === EDIT) emit("update:isEditorLoading", false);
     } else if (!props.resourceInstanceId) {
         isLoading.value = false;
+        if (props.mode === EDIT) emit("update:isEditorLoading", false);
     }
 });
 
@@ -203,7 +208,6 @@ async function getHierarchicalData(conceptIds: string[]) {
                 })
             "
             :tile-id="props.tileId"
-            @update:is-loading="emit('update:isEditorLoading', $event)"
         />
     </template>
 </template>
