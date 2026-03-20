@@ -57,6 +57,27 @@ class ImportTests(TransactionTestCase):
         self.assertEqual(schemes.count(), 1)
         self.assertEqual(concepts.count(), 16)
 
+        #### Scheme:
+        test_scheme = schemes.first()
+
+        # Labels
+        label_tile_trees = test_scheme.aliased_data.appellative_status
+        self.assertEqual(len(label_tile_trees), 1)
+        self.assertEqual(
+            "Test Thesaurus",
+            label_tile_trees[0].aliased_data.appellative_status_ascribed_name_content,
+        )
+        # ensure default values for hidden nodes have been assigned
+        self.assertIn("informational status", str(label_tile_trees[0].aliased_data))
+        self.assertIn("warrant assertion event", str(label_tile_trees[0].aliased_data))
+
+        # URIs and Identifiers
+        # These nodes should NOT be populated, scheme will not have these data imported
+        self.assertIsNone(test_scheme.aliased_data.uri)
+        self.assertEqual(len(test_scheme.aliased_data.identifier), 0)
+
+        ### Concepts:
+
         # Use Junk Sculpture because it has English and German labels & statements
         junk_sculpture = concepts.filter(
             appellative_status_ascribed_name_content__any_contains="Gerümpelplastik"
@@ -70,6 +91,11 @@ class ImportTests(TransactionTestCase):
         # ensure default values for hidden nodes have been assigned
         self.assertIn("informational status", str(label_tile_trees[0].aliased_data))
         self.assertIn("warrant assertion event", str(label_tile_trees[0].aliased_data))
+
+        # URIs and Identifiers
+        # These nodes should NOT be populated, indentifiers instead should be imported as matched concepts
+        self.assertIsNone(junk_sculpture.aliased_data.uri)
+        self.assertEqual(len(junk_sculpture.aliased_data.identifier), 0)
 
         # Statements
         statement_tile_trees = junk_sculpture.aliased_data.statement
@@ -98,7 +124,9 @@ class ImportTests(TransactionTestCase):
         self.assertEqual(parent.name["en"], "Top Concept")
 
         # Matched Concept
-        self.assertEqual(len(junk_sculpture.aliased_data.match_status), 1)
+        # we expect two matched concepts - one from the skos:exactMatch of the identifier,
+        # and a skos:relatedMatch
+        self.assertEqual(len(junk_sculpture.aliased_data.match_status), 2)
 
     def test_lingo_resource_importer(self):
         """
