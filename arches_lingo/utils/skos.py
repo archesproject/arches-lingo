@@ -147,15 +147,15 @@ class SKOSReader(SKOSReader):
                         new_concept["tile_data"].append(mock_tile)
 
                     for predicate, object in graph.predicate_objects(concept):
-                        # Cast dcterms:description to scopeNote (same behavior in RDM)
                         if predicate == DCTERMS.description:
+                            # Cast dcterms:description to scopeNote (same behavior in RDM)
                             predicate_str = "scopeNote"
-
-                        predicate_str = (
-                            predicate.replace(ARCHES, "")
-                            .replace(SKOS, "")
-                            .replace(DCTERMS, "")
-                        )
+                        else:
+                            predicate_str = (
+                                predicate.replace(ARCHES, "")
+                                .replace(SKOS, "")
+                                .replace(DCTERMS, "")
+                            )
 
                         if predicate in [
                             SKOS.broader,
@@ -211,7 +211,8 @@ class SKOSReader(SKOSReader):
                                 mock_tile = self.map_predicate_object_to_mock_tile(
                                     matched_URI, predicate_str, isScheme
                                 )
-                                new_concept["tile_data"].append(mock_tile)
+                                if mock_tile:
+                                    new_concept["tile_data"].append(mock_tile)
                         else:
                             mock_tile = self.map_predicate_object_to_mock_tile(
                                 object, predicate_str, isScheme
