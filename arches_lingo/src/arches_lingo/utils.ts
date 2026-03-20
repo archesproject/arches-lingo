@@ -377,7 +377,7 @@ export async function createOrUpdateConcept(
 
         const isTop = scheme === parent;
 
-        const aliased_data = {
+        const aliased_data: Record<string, unknown> = {
             [nodegroupAlias]: [{ aliased_data: formData }],
             part_of_scheme: {
                 aliased_data: { part_of_scheme: scheme },
@@ -386,11 +386,9 @@ export async function createOrUpdateConcept(
         };
 
         if (isTop) {
-            aliased_data.top_concept_of = [
-                {
-                    aliased_data: { top_concept_of: parent },
-                },
-            ];
+            aliased_data.top_concept_of = {
+                aliased_data: { top_concept_of: parent },
+            };
         } else {
             aliased_data.classification_status = [
                 {

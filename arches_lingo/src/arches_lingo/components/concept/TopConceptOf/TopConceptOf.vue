@@ -55,14 +55,13 @@ watch(
         initialized = true;
 
         try {
-            const topConceptOfTiles =
-                resource.aliased_data?.top_concept_of ?? [];
-            isTopConcept.value = topConceptOfTiles.length > 0;
+            const topConceptOfTile = resource.aliased_data?.top_concept_of;
+            isTopConcept.value = Boolean(topConceptOfTile);
 
             if (isTopConcept.value) {
                 const resolvedSchemeId =
-                    topConceptOfTiles[0]?.aliased_data?.top_concept_of
-                        ?.details?.[0]?.resource_id;
+                    topConceptOfTile?.aliased_data?.top_concept_of?.details?.[0]
+                        ?.resource_id;
                 if (resolvedSchemeId) {
                     schemeId.value = resolvedSchemeId;
                     const fetchedScheme =

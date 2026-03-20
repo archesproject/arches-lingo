@@ -115,8 +115,7 @@ watch(
         concept.value = resource;
         conceptTypeTile.value =
             resource.aliased_data?.[CONCEPT_TYPE_NODE_ALIAS];
-        isTopConcept.value =
-            (resource.aliased_data?.top_concept_of ?? []).length > 0;
+        isTopConcept.value = Boolean(resource.aliased_data?.top_concept_of);
         extractConceptHeaderData(resource);
         isLoading.value = false;
     },

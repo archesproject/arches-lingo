@@ -83,9 +83,7 @@ watch(
         positionInitialized = true;
 
         try {
-            const topConceptOfTiles =
-                resource.aliased_data?.top_concept_of ?? [];
-            isTopConcept.value = topConceptOfTiles.length > 0;
+            isTopConcept.value = Boolean(resource.aliased_data?.top_concept_of);
 
             // Top concepts should not show this section
             if (isTopConcept.value) {
