@@ -204,7 +204,10 @@ function updateAfterComponentDeletion(componentName: string, tileId: string) {
 
 async function refreshReportSection(componentName: string) {
     if (componentName === "all") {
-        await resourceStore.refreshResource();
+        await Promise.all([
+            resourceStore.refreshResource(),
+            loadResourceInstanceLifecycleState(),
+        ]);
         return;
     }
 

@@ -26,6 +26,9 @@ export const STRATEGY_DELETE_CHILDREN = "delete_children";
 export const STRATEGY_ORPHAN = "orphan";
 export const CONCEPT_TYPE_NODE_ALIAS = "type";
 
+export const DRAFT_LIFECYCLE_STATE_ID = "0e7f8c6d-1f7b-4c2a-9a0c-2b9e0d6c8f11";
+export const EDITING_LIFECYCLE_STATE_ID =
+    "b3a6a0d2-2b5c-4c2f-9d6c-0c2a5b7d1e8f";
 export const RETIRED_LIFECYCLE_STATE_ID =
     "9d2e1c0b-7a6b-4b3d-8c1a-0f2d9e6b0a7c";
 

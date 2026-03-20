@@ -25,12 +25,13 @@ import {
     DEFAULT_TOAST_LIFE,
     DELETE,
     DEPRECATE,
+    DRAFT_LIFECYCLE_STATE_ID,
     EDIT,
+    EDITING_LIFECYCLE_STATE_ID,
     ERROR,
     GUIDE_TERM_ICON,
     GUIDE_TERM_URI,
     NEW_CONCEPT,
-    RETIRED_LIFECYCLE_STATE_ID,
     SUCCESS,
     TOP_CONCEPT_ICON,
     VIEW,
@@ -110,27 +111,13 @@ const canEditResourceInstances = computed(function () {
 });
 
 const canDelete = computed(function () {
-    return (
-        isEditor.value === true &&
-        props.resourceInstanceId !== undefined &&
-        lifecycleState.value?.can_delete_resource_instances === true
-    );
+    if (!isEditor.value || !props.resourceInstanceId) return false;
+    return lifecycleState.value?.id === DRAFT_LIFECYCLE_STATE_ID;
 });
 
 const canDeprecate = computed(function () {
     if (!isEditor.value || !props.resourceInstanceId) return false;
-    const currentLifecycleState = lifecycleState.value;
-    const canTransitionToRetired =
-        currentLifecycleState?.next_resource_instance_lifecycle_states?.some(
-            function (nextState) {
-                return nextState.id === RETIRED_LIFECYCLE_STATE_ID;
-            },
-        );
-    return (
-        currentLifecycleState?.can_edit_resource_instances === true &&
-        !currentLifecycleState?.can_delete_resource_instances &&
-        canTransitionToRetired === true
-    );
+    return lifecycleState.value?.id === EDITING_LIFECYCLE_STATE_ID;
 });
 
 function isGuideTermType(typeNodeValue: unknown): boolean {
@@ -228,6 +215,7 @@ async function onDeprecateConfirmed(strategy: DeleteConceptStrategy | null) {
             query: router.currentRoute.value.query,
         });
         refreshSchemeHierarchy!();
+        refreshReportSection!("all");
     } catch (error) {
         toast.add({
             severity: ERROR,
