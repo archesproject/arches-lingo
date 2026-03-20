@@ -24,7 +24,7 @@ router.beforeEach(async (to, _from, next) => {
     const appSettingsStore = useAppSettingsStore(pinia);
 
     await Promise.allSettled([
-        userStore.initialize(),
+        userStore.refresh(),
         appSettingsStore.initialize(),
     ]);
 

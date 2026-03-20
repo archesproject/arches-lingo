@@ -88,25 +88,21 @@ export function navigateToSchemeOrConcept(
     value: Concept | Scheme | typeof NEW_CONCEPT,
     queryParams: { [key: string]: string } = {},
 ) {
-    const query = { ...router.currentRoute.value.query, ...queryParams };
-
     if (value === NEW_CONCEPT) {
         return router.push({
             name: routeNames.concept,
             params: { id: "new" },
-            query,
+            query: queryParams,
         });
     } else if (dataIsScheme(value)) {
         return router.push({
             name: routeNames.scheme,
             params: { id: value.id },
-            query,
         });
     } else if (dataIsConcept(value)) {
         return router.push({
             name: routeNames.concept,
             params: { id: value.id },
-            query,
         });
     }
 }

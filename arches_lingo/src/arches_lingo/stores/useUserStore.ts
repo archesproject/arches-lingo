@@ -11,8 +11,7 @@ export const useUserStore = defineStore("user", () => {
     const isEditor = computed(() => user.value?.is_lingo_editor ?? false);
     const isAnonymous = computed(() => user.value?.is_anonymous ?? true);
 
-    async function initialize() {
-        if (user.value !== null) return;
+    async function refresh() {
         user.value = await fetchUser();
     }
 
@@ -24,7 +23,7 @@ export const useUserStore = defineStore("user", () => {
         user,
         isEditor,
         isAnonymous,
-        initialize,
+        refresh,
         setUser,
     };
 });
