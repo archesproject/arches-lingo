@@ -17,8 +17,7 @@ import type { PopoverMethods } from "primevue/popover";
 const { $gettext } = useGettext();
 const router = useRouter();
 const userStore = useUserStore();
-const { user } = storeToRefs(userStore);
-const { isAnonymous } = userStore;
+const { user, isAnonymous } = storeToRefs(userStore);
 
 const popover = useTemplateRef<PopoverMethods>("popover");
 

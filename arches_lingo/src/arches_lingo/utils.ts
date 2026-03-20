@@ -88,7 +88,6 @@ export function navigateToSchemeOrConcept(
     value: Concept | Scheme | typeof NEW_CONCEPT,
     queryParams: { [key: string]: string } = {},
 ) {
-    // TODO: Consider adding some sort of short-circuiting of fetchUser
     if (value === NEW_CONCEPT) {
         return router.push({
             name: routeNames.concept,
@@ -99,13 +98,11 @@ export function navigateToSchemeOrConcept(
         return router.push({
             name: routeNames.scheme,
             params: { id: value.id },
-            query: queryParams,
         });
     } else if (dataIsConcept(value)) {
         return router.push({
             name: routeNames.concept,
             params: { id: value.id },
-            query: queryParams,
         });
     }
 }
@@ -380,7 +377,7 @@ export async function createOrUpdateConcept(
 
         const isTop = scheme === parent;
 
-        const aliased_data = {
+        const aliased_data: Record<string, unknown> = {
             [nodegroupAlias]: [{ aliased_data: formData }],
             part_of_scheme: {
                 aliased_data: { part_of_scheme: scheme },
@@ -389,11 +386,9 @@ export async function createOrUpdateConcept(
         };
 
         if (isTop) {
-            aliased_data.top_concept_of = [
-                {
-                    aliased_data: { top_concept_of: parent },
-                },
-            ];
+            aliased_data.top_concept_of = {
+                aliased_data: { top_concept_of: parent },
+            };
         } else {
             aliased_data.classification_status = [
                 {

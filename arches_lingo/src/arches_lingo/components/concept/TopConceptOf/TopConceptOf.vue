@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { onMounted, ref, watch } from "vue";
 import { storeToRefs } from "pinia";
 import { RouterLink } from "vue-router";
 
@@ -37,6 +37,12 @@ const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
 const store = useResourceStore();
 let initialized = false;
 
+onMounted(() => {
+    if (!props.resourceInstanceId) {
+        isLoading.value = false;
+    }
+});
+
 watch(
     [() => store.resource.value, () => store.error.value],
     async ([resource, storeError]) => {
@@ -49,14 +55,13 @@ watch(
         initialized = true;
 
         try {
-            const topConceptOfTiles =
-                resource.aliased_data?.top_concept_of ?? [];
-            isTopConcept.value = topConceptOfTiles.length > 0;
+            const topConceptOfTile = resource.aliased_data?.top_concept_of;
+            isTopConcept.value = Boolean(topConceptOfTile);
 
             if (isTopConcept.value) {
                 const resolvedSchemeId =
-                    topConceptOfTiles[0]?.aliased_data?.top_concept_of
-                        ?.details?.[0]?.resource_id;
+                    topConceptOfTile?.aliased_data?.top_concept_of?.details?.[0]
+                        ?.resource_id;
                 if (resolvedSchemeId) {
                     schemeId.value = resolvedSchemeId;
                     const fetchedScheme =

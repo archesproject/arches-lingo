@@ -10,11 +10,9 @@ import HierarchicalPositionEditor from "@/arches_lingo/components/concept/Hierar
 import { EDIT, VIEW } from "@/arches_lingo/constants.ts";
 
 import { fetchTileData } from "@/arches_component_lab/generics/GenericCard/api.ts";
-import {
-    fetchConceptResources,
-    fetchLingoResourcePartial,
-} from "@/arches_lingo/api.ts";
 import { useResourceStore } from "@/arches_lingo/composables/useResourceStore.ts";
+import { useConceptStore } from "@/arches_lingo/stores/useConceptStore.ts";
+
 import type {
     ConceptClassificationStatus,
     DataComponentMode,
@@ -32,7 +30,6 @@ const props = defineProps<{
     tileId?: string;
 }>();
 
-const isLoading = ref(true);
 const fetchError = ref();
 const hierarchicalData = ref<SearchResultHierarchy[]>([]);
 const schemeId = ref<string>();
@@ -40,12 +37,36 @@ const tileData = ref<ConceptClassificationStatus[]>();
 const isTopConcept = ref(false);
 
 const shouldCreateNewTile = Boolean(props.mode === EDIT && !props.tileId);
+const isLoading = ref(props.resourceInstanceId || shouldCreateNewTile);
 
-const store = useResourceStore();
+const resourceStore = useResourceStore();
+const conceptStore = useConceptStore();
 let positionInitialized = false;
 
+onMounted(async () => {
+    schemeId.value =
+        resourceStore.resource.value?.aliased_data?.part_of_scheme.aliased_data.part_of_scheme?.details[0]?.resource_id;
+
+    if (!schemeId.value && props.resourceInstanceId) {
+        schemeId.value = conceptStore.getParentPaths(
+            props.resourceInstanceId,
+        )[0]?.[0]?.id;
+    }
+
+    if (shouldCreateNewTile) {
+        const blankTileData = await fetchTileData(
+            props.graphSlug,
+            props.nodegroupAlias,
+        );
+        tileData.value = [
+            blankTileData as unknown as ConceptClassificationStatus,
+        ];
+        isLoading.value = false;
+    }
+});
+
 watch(
-    [() => store.resource.value, () => store.error.value],
+    [() => resourceStore.resource.value, () => resourceStore.error.value],
     async ([resource, storeError]) => {
         if (storeError) {
             fetchError.value = storeError;
@@ -62,9 +83,7 @@ watch(
         positionInitialized = true;
 
         try {
-            const topConceptOfTiles =
-                resource.aliased_data?.top_concept_of ?? [];
-            isTopConcept.value = topConceptOfTiles.length > 0;
+            isTopConcept.value = Boolean(resource.aliased_data?.top_concept_of);
 
             // Top concepts should not show this section
             if (isTopConcept.value) {
@@ -74,19 +93,16 @@ watch(
 
             tileData.value = resource.aliased_data?.[props.nodegroupAlias];
 
-            // Still need the search endpoint for hierarchy path data
-            const currentPosition = await getHierarchicalData([
+            await conceptStore.initialize();
+            const paths = conceptStore.getParentPaths(
                 props.resourceInstanceId!,
-            ]);
+            );
 
-            schemeId.value = currentPosition?.data[0]?.parents?.[0]?.[0]?.id;
+            schemeId.value = paths[0]?.[0]?.id;
 
-            hierarchicalData.value =
-                currentPosition?.data[0]?.parents?.map(
-                    (parent: SearchResultItem) => ({
-                        searchResults: parent,
-                    }),
-                ) ?? [];
+            hierarchicalData.value = paths.map((path) => ({
+                searchResults: path as SearchResultItem[],
+            }));
 
             if (hierarchicalData.value && tileData.value) {
                 for (const datum of hierarchicalData.value) {
@@ -115,47 +131,6 @@ watch(
     },
     { immediate: true },
 );
-
-onMounted(async () => {
-    schemeId.value =
-        store.resource.value?.aliased_data?.part_of_scheme.aliased_data.part_of_scheme?.details[0]?.resource_id;
-    if (!schemeId.value && props.resourceInstanceId) {
-        const partOfSchemeTile = await fetchLingoResourcePartial(
-            "concept",
-            props.resourceInstanceId!,
-            "part_of_scheme",
-        );
-        schemeId.value =
-            partOfSchemeTile.aliased_data?.part_of_scheme.aliased_data.part_of_scheme?.details[0]?.resource_id;
-    }
-
-    if (shouldCreateNewTile) {
-        const blankTileData = await fetchTileData(
-            props.graphSlug,
-            props.nodegroupAlias,
-        );
-        tileData.value = [
-            blankTileData as unknown as ConceptClassificationStatus,
-        ];
-        isLoading.value = false;
-    } else if (!props.resourceInstanceId) {
-        isLoading.value = false;
-    }
-});
-
-async function getHierarchicalData(conceptIds: string[]) {
-    if (conceptIds.length === 0) {
-        return;
-    }
-    return await fetchConceptResources(
-        "",
-        conceptIds.length,
-        1,
-        undefined,
-        undefined,
-        conceptIds,
-    );
-}
 </script>
 
 <template>
