@@ -87,6 +87,7 @@ const { openEditLog } = useEditLog(() => props.graphSlug);
 const showExportDialog = ref(false);
 const exportDialogKey = ref(0);
 const showDeleteDialog = ref(false);
+const isLoading = ref(false);
 const dialogMode = ref<typeof DELETE | typeof DEPRECATE>(DELETE);
 
 const lifecycleState = computed(function () {
@@ -171,66 +172,64 @@ function confirmDeprecate() {
     showDeleteDialog.value = true;
 }
 
-async function onDeleteConfirmed(strategy: DeleteConceptStrategy | null) {
-    showDeleteDialog.value = false;
-    if (!props.concept) return;
-
+async function executeDelete(strategy: DeleteConceptStrategy | undefined) {
     const schemeIdentifier =
-        props.concept.aliased_data?.part_of_scheme?.aliased_data.part_of_scheme
+        props.concept!.aliased_data?.part_of_scheme?.aliased_data.part_of_scheme
             ?.node_value?.[0]?.resourceId;
 
-    try {
-        await deleteConcept(
-            props.concept.resourceinstanceid,
-            strategy ?? undefined,
-        );
-        router.push({
-            name: routeNames.scheme,
-            params: { id: schemeIdentifier },
-            query: router.currentRoute.value.query,
-        });
-        refreshSchemeHierarchy!();
-    } catch (error) {
-        toast.add({
-            severity: ERROR,
-            life: DEFAULT_ERROR_TOAST_LIFE,
-            summary: $gettext("Error deleting concept"),
-            detail: error instanceof Error ? error.message : undefined,
-        });
-    }
+    await deleteConcept(props.concept!.resourceinstanceid, strategy);
+
+    refreshSchemeHierarchy!();
+
+    showDeleteDialog.value = false;
+
+    router.push({
+        name: routeNames.scheme,
+        params: { id: schemeIdentifier },
+        query: router.currentRoute.value.query,
+    });
 }
 
-async function onDeprecateConfirmed(strategy: DeleteConceptStrategy | null) {
+async function executeDeprecate(strategy: DeleteConceptStrategy | undefined) {
+    await retireConcept(props.concept!.resourceinstanceid, strategy);
+
+    refreshSchemeHierarchy!();
+
     showDeleteDialog.value = false;
+
+    router.push({
+        name: routeNames.concept,
+        params: { id: props.concept!.resourceinstanceid },
+        query: router.currentRoute.value.query,
+    });
+    refreshReportSection!("all");
+}
+
+async function onConfirmed(strategy: DeleteConceptStrategy | null) {
     if (!props.concept) return;
 
+    isLoading.value = true;
     try {
-        await retireConcept(
-            props.concept.resourceinstanceid,
-            strategy ?? undefined,
-        );
-        router.push({
-            name: routeNames.concept,
-            params: { id: props.concept.resourceinstanceid },
-            query: router.currentRoute.value.query,
-        });
-        refreshSchemeHierarchy!();
-        refreshReportSection!("all");
+        if (dialogMode.value === DELETE) {
+            await executeDelete(strategy ?? undefined);
+        } else {
+            await executeDeprecate(strategy ?? undefined);
+        }
     } catch (error) {
+        let summary;
+        if (dialogMode.value === DELETE) {
+            summary = $gettext("Error deleting concept");
+        } else {
+            summary = $gettext("Error deprecating concept");
+        }
         toast.add({
             severity: ERROR,
             life: DEFAULT_ERROR_TOAST_LIFE,
-            summary: $gettext("Error deprecating concept"),
+            summary,
             detail: error instanceof Error ? error.message : undefined,
         });
-    }
-}
-
-function onConfirmed(strategy: DeleteConceptStrategy | null) {
-    if (dialogMode.value === DELETE) {
-        onDeleteConfirmed(strategy);
-    } else {
-        onDeprecateConfirmed(strategy);
+    } finally {
+        isLoading.value = false;
     }
 }
 
@@ -260,6 +259,7 @@ function addChild() {
         :concept-id="concept.resourceinstanceid"
         :concept-name="label?.value"
         :mode="dialogMode"
+        :is-loading="isLoading"
         @confirm="onConfirmed"
         @cancel="showDeleteDialog = false"
     />

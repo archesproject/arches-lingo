@@ -1,6 +1,7 @@
 import uuid
 
 from arches.app.models.models import ResourceInstance, TileModel
+from arches.app.models.tile import Tile
 
 from arches_lingo.const import (
     CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID,
@@ -121,21 +122,23 @@ def reparent_children(concept_id: str, parent_ids: set[str], scheme_id: str | No
                 updated_broader_references.append({"resourceId": parent_id})
 
         if updated_broader_references:
-            classification_tile.data[
-                CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID
-            ] = updated_broader_references
-            classification_tile.save()
+            tile = Tile.objects.get(tileid=classification_tile.tileid)
+            tile.data = {
+                **tile.data,
+                CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID: updated_broader_references,
+            }
+            tile.save(request=None)
         else:
             classification_tile.delete()
 
             if scheme_id:
-                TileModel.objects.create(
+                Tile(
                     resourceinstance_id=classification_tile.resourceinstance_id,
                     nodegroup_id=TOP_CONCEPT_OF_NODE_AND_NODEGROUP,
                     data={
                         TOP_CONCEPT_OF_NODE_AND_NODEGROUP: [{"resourceId": scheme_id}]
                     },
-                )
+                ).save(request=None)
 
 
 def orphan_children(concept_id: str):
@@ -164,10 +167,12 @@ def orphan_children(concept_id: str):
         ]
 
         if updated_broader_references:
-            classification_tile.data[
-                CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID
-            ] = updated_broader_references
-            classification_tile.save()
+            tile = Tile.objects.get(tileid=classification_tile.tileid)
+            tile.data = {
+                **tile.data,
+                CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID: updated_broader_references,
+            }
+            tile.save(request=None)
         else:
             classification_tile.delete()
 

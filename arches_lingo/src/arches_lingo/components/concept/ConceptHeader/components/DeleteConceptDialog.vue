@@ -13,7 +13,6 @@ import {
     DEPRECATE,
     SECONDARY,
     STRATEGY_DELETE_CHILDREN,
-    STRATEGY_ORPHAN,
     STRATEGY_REPARENT,
 } from "@/arches_lingo/constants.ts";
 import { useConceptStore } from "@/arches_lingo/stores/useConceptStore.ts";
@@ -23,6 +22,7 @@ const props = defineProps<{
     conceptId: string;
     conceptName: string | undefined;
     mode: typeof DELETE | typeof DEPRECATE;
+    isLoading?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -34,7 +34,7 @@ const { $gettext } = useGettext();
 const conceptStore = useConceptStore();
 
 const narrower = ref<Concept[]>([]);
-const isLoading = ref(true);
+const isFetchingChildren = ref(true);
 const selectedStrategy = ref<DeleteConceptStrategy>(STRATEGY_REPARENT);
 
 onMounted(async () => {
@@ -42,7 +42,7 @@ onMounted(async () => {
         await conceptStore.initialize();
         narrower.value = conceptStore.getNarrower(props.conceptId);
     } finally {
-        isLoading.value = false;
+        isFetchingChildren.value = false;
     }
 });
 
@@ -118,11 +118,12 @@ function onConfirm() {
         :visible="true"
         :modal="true"
         :header="dialogHeader"
+        :closable="!isLoading"
         class="delete-concept-dialog"
-        @update:visible="$emit('cancel')"
+        @update:visible="!isLoading && $emit('cancel')"
     >
         <Skeleton
-            v-if="isLoading"
+            v-if="isFetchingChildren"
             class="loading-skeleton"
         />
 
@@ -188,31 +189,6 @@ function onConfirm() {
                         }}</span>
                     </div>
                 </label>
-
-                <label
-                    class="strategy-option"
-                    :class="{ selected: selectedStrategy === STRATEGY_ORPHAN }"
-                    for="strategy-orphan"
-                >
-                    <RadioButton
-                        v-model="selectedStrategy"
-                        input-id="strategy-orphan"
-                        :value="STRATEGY_ORPHAN"
-                    />
-                    <div class="strategy-label">
-                        <span class="strategy-title">{{
-                            $gettext("Leave children without parent")
-                        }}</span>
-                        <span class="strategy-desc warning-desc">
-                            <i class="pi pi-exclamation-triangle" />
-                            {{
-                                $gettext(
-                                    "Children will lose their hierarchical position and must be manually reassigned.",
-                                )
-                            }}
-                        </span>
-                    </div>
-                </label>
             </div>
         </div>
 
@@ -220,13 +196,15 @@ function onConfirm() {
             <Button
                 :label="$gettext('Cancel')"
                 :severity="SECONDARY"
-                outlined
+                :disabled="isLoading"
+                :outlined="true"
                 @click="$emit('cancel')"
             />
             <Button
                 :label="confirmButtonLabel"
                 :severity="DANGER"
-                :disabled="isLoading"
+                :disabled="isFetchingChildren || isLoading"
+                :loading="isLoading"
                 @click="onConfirm"
             />
         </template>
@@ -301,17 +279,5 @@ function onConfirm() {
 .strategy-desc {
     font-size: var(--p-lingo-font-size-smallnormal);
     color: var(--p-text-muted-color);
-}
-
-.warning-desc {
-    color: var(--p-warn-message-color, var(--p-orange-500));
-    display: flex;
-    align-items: flex-start;
-    gap: 0.3rem;
-}
-
-.warning-desc .pi {
-    flex-shrink: 0;
-    margin-top: 0.15rem;
 }
 </style>
