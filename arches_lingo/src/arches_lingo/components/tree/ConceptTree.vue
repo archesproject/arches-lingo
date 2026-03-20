@@ -132,18 +132,16 @@ onMounted(async () => {
         });
     }
 
-    fetchLifecycleStates()
-        .then((states) => {
-            lifecycleStates.value = states;
-        })
-        .catch((error) => {
-            toast.add({
-                severity: ERROR,
-                life: DEFAULT_ERROR_TOAST_LIFE,
-                summary: $gettext("Unable to fetch lifecycle states"),
-                detail: (error as Error).message,
-            });
+    try {
+        lifecycleStates.value = await fetchLifecycleStates();
+    } catch (error) {
+        toast.add({
+            severity: ERROR,
+            life: DEFAULT_ERROR_TOAST_LIFE,
+            summary: $gettext("Unable to fetch lifecycle states"),
+            detail: (error as Error).message,
         });
+    }
 
     const priorSortedSchemeIds = tree.value.map((treeNode) => treeNode.key);
 
