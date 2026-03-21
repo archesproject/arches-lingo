@@ -173,9 +173,7 @@ function getConceptScheme(concept: SearchResultItem): string {
     flex-direction: column;
     gap: 0.75rem;
     background: var(--p-content-background);
-    border: 0.0625rem solid var(--p-header-toolbar-border);
-    border-radius: 0.125rem;
-    padding: 1rem;
+    padding: 0 1rem 2rem 1rem;
 }
 
 .section-header {
