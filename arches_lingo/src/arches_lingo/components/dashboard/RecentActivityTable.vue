@@ -10,6 +10,8 @@ import Tag from "primevue/tag";
 
 import { storeToRefs } from "pinia";
 
+import { SUCCESS, INFO, SCHEME_ALIAS } from "@/arches_lingo/constants.ts";
+
 import { routeNames } from "@/arches_lingo/routes.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
@@ -93,6 +95,19 @@ function getDisplayName(item: DashboardActivityItem): string {
         return `${item.user_firstname} ${item.user_lastname}`.trim();
     }
     return item.user_username;
+}
+
+function getResourceTypeLabel(resourceType: string): string {
+    if (resourceType === SCHEME_ALIAS) {
+        return $gettext("Scheme");
+    }
+    return $gettext("Concept");
+}
+
+function getResourceTypeSeverity(
+    resourceType: string,
+): typeof SUCCESS | typeof INFO {
+    return resourceType === SCHEME_ALIAS ? SUCCESS : INFO;
 }
 </script>
 
@@ -184,14 +199,14 @@ function getDisplayName(item: DashboardActivityItem): string {
                     <template #body="slotProps">
                         <Tag
                             :value="
-                                slotProps.data.resource_type === 'scheme'
-                                    ? $gettext('Scheme')
-                                    : $gettext('Concept')
+                                getResourceTypeLabel(
+                                    slotProps.data.resource_type,
+                                )
                             "
                             :severity="
-                                slotProps.data.resource_type === 'scheme'
-                                    ? 'success'
-                                    : 'info'
+                                getResourceTypeSeverity(
+                                    slotProps.data.resource_type,
+                                )
                             "
                         />
                     </template>

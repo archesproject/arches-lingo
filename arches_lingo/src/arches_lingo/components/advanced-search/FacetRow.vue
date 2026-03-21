@@ -445,8 +445,8 @@ function toggleNegated() {
             <Button
                 icon="pi pi-times"
                 severity="danger"
-                text
-                rounded
+                :text="true"
+                :rounded="true"
                 :aria-label="$gettext('Remove condition')"
                 @click="$emit('remove')"
             />
