@@ -144,9 +144,9 @@ defineProps<{
     align-items: center;
     gap: 0.375rem;
     padding: 0.75rem 1.625rem;
-    border-radius: 0.125rem;
+    border-radius: 0.25rem;
     background: var(--p-highlight-background);
-    border: 0.0625rem solid var(--p-highlight-focus-background);
+    border: 0.125rem solid var(--p-highlight-focus-background);
     font-size: var(--p-lingo-font-size-smallnormal);
     text-transform: capitalize;
 }
