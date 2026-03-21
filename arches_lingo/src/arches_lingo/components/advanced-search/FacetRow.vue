@@ -245,8 +245,9 @@ function toggleNegated() {
         />
 
         <!-- Match mode (for text-based facets) -->
-        <template v-if="showMatchMode">
+        <template>
             <Select
+                v-if="showMatchMode"
                 :model-value="currentMatchMode"
                 :options="matchModes"
                 option-label="label"
@@ -257,8 +258,9 @@ function toggleNegated() {
         </template>
 
         <!-- Text input for label, note, URI, identifier, match_uri -->
-        <template v-if="showValueInput">
+        <template>
             <InputText
+                v-if="showValueInput"
                 :model-value="condition.value"
                 :placeholder="$gettext('Search text...')"
                 class="facet-value-input"
@@ -269,8 +271,9 @@ function toggleNegated() {
         </template>
 
         <!-- Concept picker for hierarchical and associated relationships -->
-        <template v-if="showConceptPicker">
+        <template>
             <Select
+                v-if="showConceptPicker"
                 :model-value="condition.value"
                 :options="conceptSearchResults"
                 option-label="display_value"
@@ -292,8 +295,9 @@ function toggleNegated() {
         </template>
 
         <!-- Label type filter (from controlled list) -->
-        <template v-if="showLabelTypeDropdown">
+        <template>
             <Select
+                v-if="showLabelTypeDropdown"
                 :model-value="condition.label_type"
                 :options="options.label_types"
                 option-label="label"
@@ -309,8 +313,9 @@ function toggleNegated() {
         </template>
 
         <!-- Note type filter (from controlled list) -->
-        <template v-if="showNoteTypeDropdown">
+        <template>
             <Select
+                v-if="showNoteTypeDropdown"
                 :model-value="condition.note_type"
                 :options="options.note_types"
                 option-label="label"
@@ -326,8 +331,9 @@ function toggleNegated() {
         </template>
 
         <!-- Language filter for label/note facets -->
-        <template v-if="showLanguageDropdown">
+        <template>
             <Select
+                v-if="showLanguageDropdown"
                 :model-value="condition.language"
                 :options="options.languages"
                 option-label="name"
@@ -342,8 +348,9 @@ function toggleNegated() {
         </template>
 
         <!-- Language facet (standalone) -->
-        <template v-if="showLanguageSelect">
+        <template>
             <Select
+                v-if="showLanguageSelect"
                 :model-value="condition.value"
                 :options="options.languages"
                 option-label="name"
@@ -355,8 +362,9 @@ function toggleNegated() {
         </template>
 
         <!-- Scheme facet -->
-        <template v-if="showSchemeSelect">
+        <template>
             <Select
+                v-if="showSchemeSelect"
                 :model-value="condition.value"
                 :options="schemeDisplayOptions"
                 option-label="label"
@@ -368,8 +376,9 @@ function toggleNegated() {
         </template>
 
         <!-- Top concept facet: optionally filter by scheme -->
-        <template v-if="showTopConceptSchemeSelect">
+        <template>
             <Select
+                v-if="showTopConceptSchemeSelect"
                 :model-value="condition.value"
                 :options="schemeDisplayOptions"
                 option-label="label"
@@ -384,8 +393,9 @@ function toggleNegated() {
         </template>
 
         <!-- Lifecycle state facet -->
-        <template v-if="showLifecycleSelect">
+        <template>
             <Select
+                v-if="showLifecycleSelect"
                 :model-value="condition.value"
                 :options="options.lifecycle_states"
                 option-label="name"
@@ -397,8 +407,9 @@ function toggleNegated() {
         </template>
 
         <!-- Concept set facet -->
-        <template v-if="showConceptSetSelect">
+        <template>
             <Select
+                v-if="showConceptSetSelect"
                 :model-value="condition.value"
                 :options="conceptSets"
                 option-label="name"
@@ -412,8 +423,9 @@ function toggleNegated() {
         </template>
 
         <!-- Concept type facet (from controlled list) -->
-        <template v-if="showConceptTypeDropdown">
+        <template>
             <Select
+                v-if="showConceptTypeDropdown"
                 :model-value="condition.value"
                 :options="options.concept_types"
                 option-label="label"
@@ -428,8 +440,9 @@ function toggleNegated() {
         </template>
 
         <!-- Direction for hierarchical relationships -->
-        <template v-if="showDirectionSelect">
+        <template>
             <Select
+                v-if="showDirectionSelect"
                 :model-value="condition.direction || 'broader'"
                 :options="hierarchyDirections"
                 option-label="label"
