@@ -17,7 +17,7 @@ import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 import PageHeader from "@/arches_lingo/components/header/PageHeader/PageHeader.vue";
 import SideNav from "@/arches_lingo/components/sidenav/SideNav.vue";
 
-const PRESERVED_QUERY_PARAMS = ["filter", "sort", "hierarchy"];
+const PRESERVED_QUERY_PARAMS = ["filter", "sort", "hierarchy", "lifecycle"];
 
 const conceptStore = useConceptStore();
 const languageStore = useLanguageStore();

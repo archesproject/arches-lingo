@@ -35,14 +35,17 @@ import {
 import { RETIRED_LIFECYCLE_STATE_ID } from "@/arches_lingo/constants.ts";
 
 import { useConceptStore } from "@/arches_lingo/stores/useConceptStore.ts";
+import { fetchLifecycleStates } from "@/arches_lingo/api.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 
 import {
     treeFromSchemes,
     navigateToSchemeOrConcept,
+    filterTreeByLifecycleStates,
 } from "@/arches_lingo/utils.ts";
 
 import { useCappedTreeFilter } from "@/arches_lingo/components/tree/utils/capped-filter.ts";
+import LifecycleStateFilter from "@/arches_lingo/components/tree/components/LifecycleStateFilter.vue";
 
 import type {
     TreePassThroughMethodOptions,
@@ -52,6 +55,7 @@ import type {
 import type { TreeNode } from "primevue/treenode";
 import type {
     IconLabels,
+    LifecycleState,
     Scheme,
     Concept,
     ResourceInstanceLifecycleState,
@@ -103,6 +107,8 @@ const selectedKeys = ref<TreeSelectionKeys>({});
 const lastNonEmptySelectedKeys = ref<TreeSelectionKeys>({});
 const expandedKeys = ref<TreeExpandedKeys>({});
 const filterValue = ref((route.query.filter as string) ?? "");
+const lifecycleStates = ref<LifecycleState[]>([]);
+const selectedLifecycleStateIds = ref<string[]>(getInitialLifecycleStateIds());
 
 const FILTER_RENDER_CAP = 2500;
 const FILTER_DEBOUNCE_MS = 500;
@@ -122,6 +128,23 @@ onMounted(async () => {
             severity: ERROR,
             life: DEFAULT_ERROR_TOAST_LIFE,
             summary: $gettext("Unable to fetch concepts"),
+            detail: (error as Error).message,
+        });
+    }
+
+    try {
+        lifecycleStates.value = await fetchLifecycleStates();
+
+        if (!route.query.lifecycle) {
+            selectedLifecycleStateIds.value = lifecycleStates.value.map(
+                (state) => state.id,
+            );
+        }
+    } catch (error) {
+        toast.add({
+            severity: ERROR,
+            life: DEFAULT_ERROR_TOAST_LIFE,
+            summary: $gettext("Unable to fetch lifecycle states"),
             detail: (error as Error).message,
         });
     }
@@ -196,9 +219,22 @@ const tree = computed(() => {
     );
 });
 
+const lifecycleStateFilteredTree = computed(() => {
+    const ids = selectedLifecycleStateIds.value;
+    const total = lifecycleStates.value.length;
+
+    if (total === 0 || ids.length >= total) {
+        return tree.value;
+    }
+    if (ids.length === 0) {
+        return [];
+    }
+    return filterTreeByLifecycleStates(tree.value, new Set(ids));
+});
+
 const { debouncedFilterValue, filteredTree, isFilterCapped } =
     useCappedTreeFilter(
-        tree,
+        lifecycleStateFilteredTree,
         expandedKeys,
         filterValue,
         FILTER_DEBOUNCE_MS,
@@ -290,6 +326,46 @@ watch(
     },
 );
 
+watch(selectedLifecycleStateIds, (ids) => {
+    const total = lifecycleStates.value.length;
+    let lifecycleParam: string | undefined;
+
+    if (ids.length === 0) {
+        lifecycleParam = "none";
+    } else if (ids.length >= total && total > 0) {
+        lifecycleParam = undefined;
+    } else {
+        lifecycleParam = ids.join(",");
+    }
+
+    router.replace({
+        query: { ...route.query, lifecycle: lifecycleParam },
+    });
+});
+
+watch(
+    () => route.query.lifecycle,
+    (queryLifecycle) => {
+        let newIds: string[];
+
+        if (queryLifecycle === "none") {
+            newIds = [];
+        } else if (queryLifecycle) {
+            newIds = (queryLifecycle as string).split(",");
+        } else {
+            newIds = lifecycleStates.value.map(
+                (lifecycleState) => lifecycleState.id,
+            );
+        }
+
+        if (newIds.join(",") === selectedLifecycleStateIds.value.join(",")) {
+            return;
+        }
+
+        selectedLifecycleStateIds.value = newIds;
+    },
+);
+
 watch(
     () => props.isOpen,
     async (nextIsOpen) => {
@@ -367,6 +443,16 @@ watch(
     },
     { flush: "post" },
 );
+
+function getInitialLifecycleStateIds(): string[] {
+    if (route.query.lifecycle === "none") {
+        return [];
+    }
+    if (route.query.lifecycle) {
+        return (route.query.lifecycle as string).split(",");
+    }
+    return [];
+}
 
 function getSearchableText(treeNode: TreeNode) {
     const nodeData = treeNode.data as unknown as Scheme | Concept;
@@ -811,6 +897,12 @@ async function onNodeSelect(node: TreeNode) {
                     variant="text"
                     size="small"
                     @click="shouldSortByAscending = !shouldSortByAscending"
+                />
+                <LifecycleStateFilter
+                    v-model:selected-lifecycle-state-ids="
+                        selectedLifecycleStateIds
+                    "
+                    :lifecycle-states="lifecycleStates"
                 />
             </div>
             <Message

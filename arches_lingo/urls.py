@@ -11,6 +11,7 @@ from arches_lingo.views.api.concepts import (
     ConceptRelationshipView,
     ConceptMissingTranslationsView,
 )
+from arches_lingo.views.api.lifecycle import LifecycleStatesView
 from arches_lingo.views.api.dashboard import DashboardStatsView
 from arches_lingo.views.api.edit_log import ResourceEditLogAPIView
 from arches_lingo.views.api.schemes import SchemeResourceView, SchemeLabelCountView
@@ -112,6 +113,11 @@ urlpatterns = [
         name="api-lingo-missing-translations",
     ),
     path("api/concept-tree", ConceptTreeView.as_view(), name="api-concepts"),
+    path(
+        "api/lingo/lifecycle-states",
+        LifecycleStatesView.as_view(),
+        name="api-lingo-lifecycle-states",
+    ),
     path("api/search", ValueSearchView.as_view(), name="api-search"),
     path(
         "api/scheme/<uuid:scheme_resource_instance_id>/concept-identifier-counter",

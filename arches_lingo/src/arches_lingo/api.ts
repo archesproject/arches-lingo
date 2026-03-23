@@ -14,6 +14,7 @@ import type {
     ConceptSetItem,
     DigitalObjectInstance,
     EditLogEntry,
+    LifecycleState,
     PaginatedResourceListResponse,
     SavedSearchItem,
     Scheme,
@@ -569,6 +570,15 @@ export const fetchI18nData = async (languageCode?: string) => {
 
 export const fetchConcepts = async () => {
     const response = await fetch(arches.urls.api_concepts);
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
+export const fetchLifecycleStates = async (): Promise<LifecycleState[]> => {
+    const response = await fetch(
+        generateArchesURL("arches_lingo:api-lingo-lifecycle-states"),
+    );
     const parsed = await response.json();
     if (!response.ok) throw new Error(parsed.message || response.statusText);
     return parsed;
