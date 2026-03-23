@@ -89,16 +89,15 @@ defineProps<{
 .stats-row {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 0.75rem;
+    gap: 2rem;
 }
 
 .stat-card {
     display: flex;
-    flex-direction: column;
+    flex-direction: column-reverse;
     gap: 0.5rem;
-    padding: 1rem;
-    border: 0.0625rem solid var(--p-header-toolbar-border);
-    border-radius: 0.125rem;
+    padding: 1rem 1rem 0.5rem 1rem;
+    border-bottom: 0.0625rem solid var(--p-header-toolbar-border);
     background: var(--p-content-background);
 }
 
@@ -119,7 +118,7 @@ defineProps<{
 }
 
 .stat-count {
-    font-size: 2rem;
+    font-size: 2.25rem;
     font-weight: var(--p-lingo-font-weight-normal);
     color: var(--p-text-color);
     line-height: 1;

@@ -6,7 +6,6 @@ import Button from "primevue/button";
 import PanelMenu from "primevue/panelmenu";
 
 import NavNavigation from "@/arches_lingo/components/sidenav/components/NavNavigation.vue";
-import NavAuthorityEditors from "@/arches_lingo/components/sidenav/components/NavAuthorityEditors.vue";
 import NavReferenceData from "@/arches_lingo/components/sidenav/components/NavReferenceData.vue";
 import NavSettings from "@/arches_lingo/components/sidenav/components/NavSettings.vue";
 
@@ -24,12 +23,6 @@ const items = ref<SideNavMenuItem[]>([
         component: markRaw(NavNavigation),
         key: "navigation",
         label: $gettext("Navigation"),
-        items: [],
-    },
-    {
-        component: markRaw(NavAuthorityEditors),
-        key: "editors",
-        label: $gettext("Authority Editors"),
         items: [],
     },
     {

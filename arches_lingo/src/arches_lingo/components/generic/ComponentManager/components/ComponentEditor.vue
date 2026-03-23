@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import {
     computed,
-    nextTick,
-    onMounted,
     onUnmounted,
     provide,
     ref,
@@ -23,17 +21,19 @@ import {
 
 const props = defineProps<{
     isEditorMaximized: boolean;
+    isEditorLoading: boolean;
     isFormEditor: boolean;
     headerTitle: string;
 }>();
+
+const emit = defineEmits([MAXIMIZE, MINIMIZE, CLOSE]);
 
 const { $gettext } = useGettext();
 const confirm = useConfirm();
 const { isEditorDirty } = useEditorDirtyState();
 
-const emit = defineEmits([MAXIMIZE, MINIMIZE, CLOSE]);
-
 const toggleSizeButton = useTemplateRef("toggleSizeButton");
+const hasAutoFocused = ref(false);
 
 const formKey = ref(0);
 const componentEditorFormRef = ref();
@@ -59,14 +59,56 @@ const isFormDirty = computed(() => {
     return false;
 });
 
-onMounted(() => {
-    nextTick(() => {
+const isComponentMounted = ref(true);
+
+watch(
+    () => props.isEditorLoading,
+    (isLoading) => {
+        if (isLoading === false && !hasAutoFocused.value) {
+            hasAutoFocused.value = true;
+            requestAnimationFrame(() => attemptFocusFirstField(5));
+        }
+    },
+);
+
+function attemptFocusFirstField(attemptsRemaining: number) {
+    if (!isComponentMounted.value) return;
+
+    const formInstance = componentEditorFormRef.value;
+    if (formInstance) {
+        const formElement = formInstance.$refs.formRef;
+        if (formElement) {
+            try {
+                formElement[0].focus();
+                return;
+            } catch {
+                const fields = formInstance.fields;
+                const nodeAlias = fields ? Object.keys(fields)[0] : null;
+                if (nodeAlias) {
+                    const firstField = formElement.querySelector(
+                        `#${nodeAlias}`,
+                    ) as HTMLElement | null;
+                    if (firstField) {
+                        firstField.focus();
+                        return;
+                    }
+                }
+            }
+        }
+    }
+
+    if (attemptsRemaining > 0) {
+        requestAnimationFrame(() =>
+            attemptFocusFirstField(attemptsRemaining - 1),
+        );
+    } else {
         // @ts-expect-error This is an error in PrimeVue types
         toggleSizeButton.value!.$el.focus();
-    });
-});
+    }
+}
 
 onUnmounted(() => {
+    isComponentMounted.value = false;
     isEditorDirty.value = false;
 });
 

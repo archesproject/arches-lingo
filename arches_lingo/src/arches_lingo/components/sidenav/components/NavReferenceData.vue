@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, watchEffect } from "vue";
 import { useGettext } from "vue3-gettext";
 
+import { generateArchesURL } from "@/arches/utils/generate-arches-url.ts";
 import { routeNames } from "@/arches_lingo/routes.ts";
+import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 import SideNavSection from "@/arches_lingo/components/sidenav/components/SideNavSection.vue";
 
 import type { SideNavMenuItem } from "@/arches_lingo/types.ts";
@@ -13,7 +15,9 @@ const props = defineProps<{
     item: SideNavMenuItem;
 }>();
 
-const children = <SideNavMenuItem[]>[
+const userStore = useUserStore();
+
+const baseChildren: SideNavMenuItem[] = [
     {
         key: "contributors",
         label: $gettext("Contributors"),
@@ -28,18 +32,27 @@ const children = <SideNavMenuItem[]>[
         route: { name: routeNames.sources },
         showIconIfCollapsed: true,
     },
-    {
-        key: "controlled_lists",
-        label: $gettext("Controlled List Manager"),
-        icon: "pi pi-list",
-        route: { name: routeNames.root },
-        disabled: true,
-        showIconIfCollapsed: true,
-    },
 ];
 
+const controlledListManagerItem: SideNavMenuItem = {
+    key: "controlled_lists",
+    label: $gettext("Controlled List Manager"),
+    icon: "pi pi-list",
+    url: generateArchesURL("arches:plugins", {
+        slug: "controlled-list-manager",
+    }),
+    showIconIfCollapsed: true,
+};
+
 const navSection = ref<SideNavMenuItem>(props.item);
-navSection.value.items = children;
+
+watchEffect(() => {
+    if (userStore.isStaff) {
+        navSection.value.items = [...baseChildren, controlledListManagerItem];
+    } else {
+        navSection.value.items = [...baseChildren];
+    }
+});
 </script>
 
 <template>

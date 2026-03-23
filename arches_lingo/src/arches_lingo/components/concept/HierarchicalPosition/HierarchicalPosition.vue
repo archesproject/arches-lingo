@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 
 import Message from "primevue/message";
 import Skeleton from "primevue/skeleton";
@@ -30,30 +30,42 @@ const props = defineProps<{
     tileId?: string;
 }>();
 
+const emit = defineEmits<{
+    (event: "update:isEditorLoading", value: boolean): void;
+}>();
+
+const resourceStore = useResourceStore();
+const conceptStore = useConceptStore();
+
 const fetchError = ref();
 const hierarchicalData = ref<SearchResultHierarchy[]>([]);
 const schemeId = ref<string>();
 const tileData = ref<ConceptClassificationStatus[]>();
 const isTopConcept = ref(false);
 
-const shouldCreateNewTile = Boolean(props.mode === EDIT && !props.tileId);
-const isLoading = ref(props.resourceInstanceId || shouldCreateNewTile);
+const shouldCreateNewTile = computed(
+    () => props.mode === EDIT && !props.tileId,
+);
+const isLoading = ref(
+    Boolean(props.resourceInstanceId) || shouldCreateNewTile.value,
+);
 
-const resourceStore = useResourceStore();
-const conceptStore = useConceptStore();
-let positionInitialized = false;
+const activeTileData = computed((): ConceptClassificationStatus | undefined => {
+    if (shouldCreateNewTile.value) {
+        return tileData.value?.find((tileDatum) => !tileDatum.tileid);
+    }
+    return tileData.value?.find(
+        (tileDatum) => tileDatum.tileid === props.tileId,
+    );
+});
 
 onMounted(async () => {
     schemeId.value =
-        resourceStore.resource.value?.aliased_data?.part_of_scheme.aliased_data.part_of_scheme?.details[0]?.resource_id;
+        resourceStore.resource.value?.aliased_data?.part_of_scheme.aliased_data
+            .part_of_scheme?.details[0]?.resource_id ??
+        conceptStore.getParentPaths(props.resourceInstanceId ?? "")[0]?.[0]?.id;
 
-    if (!schemeId.value && props.resourceInstanceId) {
-        schemeId.value = conceptStore.getParentPaths(
-            props.resourceInstanceId,
-        )[0]?.[0]?.id;
-    }
-
-    if (shouldCreateNewTile) {
+    if (shouldCreateNewTile.value) {
         const blankTileData = await fetchTileData(
             props.graphSlug,
             props.nodegroupAlias,
@@ -62,6 +74,7 @@ onMounted(async () => {
             blankTileData as unknown as ConceptClassificationStatus,
         ];
         isLoading.value = false;
+        if (props.mode === EDIT) emit("update:isEditorLoading", false);
     }
 });
 
@@ -71,62 +84,52 @@ watch(
         if (storeError) {
             fetchError.value = storeError;
             isLoading.value = false;
+            if (props.mode === EDIT) emit("update:isEditorLoading", false);
             return;
         }
-        if (
-            !resource ||
-            !props.resourceInstanceId ||
-            shouldCreateNewTile ||
-            positionInitialized
-        )
+
+        if (!resource || !props.resourceInstanceId || shouldCreateNewTile.value)
             return;
-        positionInitialized = true;
 
         try {
             isTopConcept.value = Boolean(resource.aliased_data?.top_concept_of);
 
-            // Top concepts should not show this section
             if (isTopConcept.value) {
                 isLoading.value = false;
+                if (props.mode === EDIT) emit("update:isEditorLoading", false);
                 return;
             }
 
-            tileData.value = resource.aliased_data?.[props.nodegroupAlias];
+            tileData.value = resource.aliased_data?.[
+                props.nodegroupAlias
+            ] as ConceptClassificationStatus[];
 
             await conceptStore.initialize();
+
             const paths = conceptStore.getParentPaths(
                 props.resourceInstanceId!,
             );
 
             schemeId.value = paths[0]?.[0]?.id;
-
             hierarchicalData.value = paths.map((path) => ({
                 searchResults: path as SearchResultItem[],
             }));
 
-            if (hierarchicalData.value && tileData.value) {
-                for (const datum of hierarchicalData.value) {
-                    const parentConceptResourceId =
-                        datum.searchResults[datum.searchResults.length - 2].id;
-                    const parentConceptTile = tileData.value.find((tile) => {
-                        const ascribedValues =
-                            tile.aliased_data
-                                .classification_status_ascribed_classification
-                                .node_value;
-                        return ascribedValues?.some(
-                            (value) =>
-                                value.resourceId === parentConceptResourceId,
-                        );
-                    });
-                    if (parentConceptTile) {
-                        datum.tileid = parentConceptTile.tileid;
-                    }
-                }
+            for (const datum of hierarchicalData.value) {
+                const parentId =
+                    datum.searchResults[datum.searchResults.length - 2].id;
+                const match = tileData.value?.find((tile) =>
+                    tile.aliased_data.classification_status_ascribed_classification.node_value?.some(
+                        (nodeValue) => nodeValue.resourceId === parentId,
+                    ),
+                );
+                if (match) datum.tileid = match.tileid;
             }
         } catch (error) {
             fetchError.value = error;
         } finally {
             isLoading.value = false;
+            if (props.mode === EDIT) emit("update:isEditorLoading", false);
         }
     },
     { immediate: true },
@@ -164,15 +167,7 @@ watch(
             :resource-instance-id="props.resourceInstanceId"
             :section-title="props.sectionTitle"
             :scheme="schemeId"
-            :tile-data="
-                tileData!.find((tileDatum) => {
-                    if (shouldCreateNewTile) {
-                        return !tileDatum.tileid;
-                    }
-
-                    return tileDatum.tileid === props.tileId;
-                })
-            "
+            :tile-data="activeTileData"
             :tile-id="props.tileId"
         />
     </template>

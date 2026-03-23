@@ -27,6 +27,10 @@ const props = defineProps<{
     tileId?: string;
 }>();
 
+const emit = defineEmits<{
+    (event: "update:isEditorLoading", value: boolean): void;
+}>();
+
 const isLoading = ref(true);
 const tileData = ref<ConceptRelationStatus[]>([]);
 const fetchError = ref();
@@ -53,6 +57,7 @@ watchEffect(async () => {
         tileData.value = [blankTileData as unknown as ConceptRelationStatus];
     }
     isLoading.value = false;
+    if (props.mode === EDIT) emit("update:isEditorLoading", false);
 });
 
 async function getSectionValue() {
@@ -108,6 +113,7 @@ async function getSectionValue() {
             "
             :tile-id="props.tileId"
             :scheme="schemeId"
+            :exclude="false"
         />
     </template>
 </template>

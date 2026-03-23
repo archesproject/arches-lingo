@@ -12,6 +12,7 @@ import Skeleton from "primevue/skeleton";
 import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
 
 import { createOrUpdateConcept } from "@/arches_lingo/utils.ts";
+
 import {
     DEFAULT_ERROR_TOAST_LIFE,
     EDIT,
