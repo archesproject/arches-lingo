@@ -2,18 +2,18 @@
 import { ref } from "vue";
 import { useGettext } from "vue3-gettext";
 import { useRouter } from "vue-router";
+import { storeToRefs } from "pinia";
 
 import Button from "primevue/button";
 import Checkbox from "primevue/checkbox";
 import Paginator from "primevue/paginator";
 
-import { storeToRefs } from "pinia";
+import LifecycleStateBadge from "@/arches_lingo/components/generic/LifecycleStateBadge.vue";
 
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 import { getConceptIcon, getParentLabels } from "@/arches_lingo/utils.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 import { routeNames } from "@/arches_lingo/routes.ts";
-import LifecycleStateBadge from "@/arches_lingo/components/generic/LifecycleStateBadge.vue";
 
 import type { AdvancedSearchResponse } from "@/arches_lingo/types.ts";
 

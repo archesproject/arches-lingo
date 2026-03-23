@@ -299,9 +299,9 @@ function extractConceptHeaderData(resource: ResourceInstanceResult) {
                                     resourceInstanceLifecycleState?.name
                                 "
                             />
-                            <span v-if="!resourceInstanceLifecycleState"
-                                >--</span
-                            >
+                            <span v-if="!resourceInstanceLifecycleState">
+                                --
+                            </span>
                         </span>
                     </div>
                 </div>

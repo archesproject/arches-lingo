@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
+
+import LifecycleStateBadge from "@/arches_lingo/components/generic/LifecycleStateBadge.vue";
+
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 import { getParentLabels, getConceptIcon } from "@/arches_lingo/utils.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
-import LifecycleStateBadge from "@/arches_lingo/components/generic/LifecycleStateBadge.vue";
 
 import type { PropType } from "vue";
 import type { SearchResultItem } from "@/arches_lingo/types.ts";
