@@ -47,12 +47,11 @@ const controlledListManagerItem: SideNavMenuItem = {
 const navSection = ref<SideNavMenuItem>(props.item);
 
 watchEffect(() => {
-    navSection.value.items = [
-        ...baseChildren,
-        ...(userStore.canAccessAdminInterface
-            ? [controlledListManagerItem]
-            : []),
-    ];
+    if (userStore.isStaff) {
+        navSection.value.items = [...baseChildren, controlledListManagerItem];
+    } else {
+        navSection.value.items = [...baseChildren];
+    }
 });
 </script>
 

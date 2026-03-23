@@ -44,12 +44,15 @@ const djangoAdminItem: SideNavMenuItem = {
 const navSection = ref<SideNavMenuItem>(props.item);
 
 watchEffect(() => {
-    navSection.value.items = [
-        profileItem,
-        ...(userStore.canAccessAdminInterface
-            ? [systemSettingsItem, djangoAdminItem]
-            : []),
-    ];
+    if (userStore.isStaff) {
+        navSection.value.items = [
+            profileItem,
+            systemSettingsItem,
+            djangoAdminItem,
+        ];
+    } else {
+        navSection.value.items = [profileItem];
+    }
 });
 </script>
 
