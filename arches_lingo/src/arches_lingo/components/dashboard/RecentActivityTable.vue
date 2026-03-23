@@ -153,11 +153,6 @@ function getDisplayName(item: DashboardActivityItem): string {
                     </span>
                 </template>
             </Column>
-            <Column
-                field="edittype_label"
-                :header="$gettext('Action')"
-                style="width: 14rem"
-            />
             <Column :header="$gettext('Resource')">
                 <template #body="slotProps">
                     <a
@@ -175,6 +170,11 @@ function getDisplayName(item: DashboardActivityItem): string {
                     </a>
                 </template>
             </Column>
+            <Column
+                field="edittype_label"
+                :header="$gettext('Action')"
+                style="width: 30rem"
+            />
             <Column
                 :header="$gettext('Type')"
                 style="width: 6.5rem"
@@ -196,7 +196,7 @@ function getDisplayName(item: DashboardActivityItem): string {
             </Column>
             <Column
                 :header="$gettext('User')"
-                style="width: 11rem"
+                style="width: 15rem"
             >
                 <template #body="slotProps">
                     <div class="user-cell">
@@ -225,9 +225,7 @@ function getDisplayName(item: DashboardActivityItem): string {
     flex-direction: column;
     gap: 0.75rem;
     background: var(--p-content-background);
-    border: 0.0625rem solid var(--p-header-toolbar-border);
-    border-radius: 0.125rem;
-    padding: 1rem;
+    padding: 0 1rem 2rem 1rem;
 }
 
 .section-header {

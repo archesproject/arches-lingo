@@ -245,7 +245,7 @@ onMounted(async () => {
 }
 
 .welcome-heading {
-    font-size: var(--p-lingo-font-size-large);
+    font-size: var(--p-lingo-font-size-xlarge);
     font-weight: var(--p-lingo-font-weight-normal);
     margin: 0;
     color: var(--p-text-color);
