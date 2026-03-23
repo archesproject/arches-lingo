@@ -27,60 +27,51 @@ const LIFECYCLE_STATE_FILTER_LABEL = $gettext("Lifecycle state filter");
 const popoverRef = useTemplateRef<PopoverMethods>("popover");
 
 const isFilterActive = computed(
-    () => selectedLifecycleStateIds.value.length > 0,
+    () => selectedLifecycleStateIds.value.length < props.lifecycleStates.length,
 );
 
-const allStatesChecked = computed(() => !isFilterActive.value);
+const allStates = computed({
+    get(): boolean {
+        return (
+            selectedLifecycleStateIds.value.length >=
+            props.lifecycleStates.length
+        );
+    },
+    set(checked: boolean) {
+        if (checked) {
+            selectedLifecycleStateIds.value = props.lifecycleStates.map(
+                (state) => state.id,
+            );
+        } else {
+            selectedLifecycleStateIds.value = [];
+        }
+    },
+});
 
 const someStatesChecked = computed(
     () =>
-        isFilterActive.value &&
+        selectedLifecycleStateIds.value.length > 0 &&
         selectedLifecycleStateIds.value.length < props.lifecycleStates.length,
 );
 
 function isStateChecked(stateId: string): boolean {
-    return (
-        !isFilterActive.value ||
-        selectedLifecycleStateIds.value.includes(stateId)
-    );
+    return selectedLifecycleStateIds.value.includes(stateId);
 }
 
-function handleSelectAllToggle() {
-    if (isFilterActive.value) {
-        selectedLifecycleStateIds.value = [];
-    }
-}
-
-function handleStateToggle(stateId: string) {
-    const currentlyChecked = isStateChecked(stateId);
-
-    if (currentlyChecked) {
-        let newSelectedIds: string[];
-
-        if (!isFilterActive.value) {
-            newSelectedIds = props.lifecycleStates
-                .map((state) => state.id)
-                .filter((id) => id !== stateId);
-        } else {
-            newSelectedIds = selectedLifecycleStateIds.value.filter(
-                (id) => id !== stateId,
-            );
-        }
-
-        selectedLifecycleStateIds.value = newSelectedIds;
+function setStateChecked(stateId: string, checked: boolean) {
+    if (checked) {
+        selectedLifecycleStateIds.value = [
+            ...selectedLifecycleStateIds.value,
+            stateId,
+        ];
     } else {
-        const newSelectedIds = [...selectedLifecycleStateIds.value, stateId];
-
-        if (newSelectedIds.length === props.lifecycleStates.length) {
-            selectedLifecycleStateIds.value = [];
-        } else {
-            selectedLifecycleStateIds.value = newSelectedIds;
-        }
+        selectedLifecycleStateIds.value =
+            selectedLifecycleStateIds.value.filter((id) => id !== stateId);
     }
 }
 
 function openPopover(event: MouseEvent) {
-    popoverRef.value!.toggle(event);
+    popoverRef.value?.toggle(event);
 }
 </script>
 
@@ -104,11 +95,10 @@ function openPopover(event: MouseEvent) {
 
                 <div class="lifecycle-filter-option">
                     <Checkbox
-                        :model-value="allStatesChecked"
+                        v-model="allStates"
                         :indeterminate="someStatesChecked"
                         :binary="true"
                         input-id="lifecycle-state-all"
-                        @update:model-value="handleSelectAllToggle"
                     />
                     <label for="lifecycle-state-all">{{ ALL_STATES }}</label>
                 </div>
@@ -122,7 +112,9 @@ function openPopover(event: MouseEvent) {
                         :model-value="isStateChecked(state.id)"
                         :binary="true"
                         :input-id="`lifecycle-state-${state.id}`"
-                        @update:model-value="() => handleStateToggle(state.id)"
+                        @update:model-value="
+                            (value) => setStateChecked(state.id, value)
+                        "
                     />
                     <label :for="`lifecycle-state-${state.id}`">
                         {{ state.name }}

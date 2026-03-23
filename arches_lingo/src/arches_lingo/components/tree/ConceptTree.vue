@@ -108,7 +108,7 @@ const lastNonEmptySelectedKeys = ref<TreeSelectionKeys>({});
 const expandedKeys = ref<TreeExpandedKeys>({});
 const filterValue = ref((route.query.filter as string) ?? "");
 const lifecycleStates = ref<LifecycleState[]>([]);
-const selectedLifecycleStateIds = ref<string[]>([]);
+const selectedLifecycleStateIds = ref<string[]>(getInitialLifecycleStateIds());
 
 const FILTER_RENDER_CAP = 2500;
 const FILTER_DEBOUNCE_MS = 500;
@@ -134,6 +134,12 @@ onMounted(async () => {
 
     try {
         lifecycleStates.value = await fetchLifecycleStates();
+
+        if (!route.query.lifecycle) {
+            selectedLifecycleStateIds.value = lifecycleStates.value.map(
+                (state) => state.id,
+            );
+        }
     } catch (error) {
         toast.add({
             severity: ERROR,
@@ -213,13 +219,18 @@ const tree = computed(() => {
     );
 });
 
-const lifecycleStateSelectedSet = computed(
-    () => new Set(selectedLifecycleStateIds.value),
-);
+const lifecycleStateFilteredTree = computed(() => {
+    const ids = selectedLifecycleStateIds.value;
+    const total = lifecycleStates.value.length;
 
-const lifecycleStateFilteredTree = computed(() =>
-    filterTreeByLifecycleStates(tree.value, lifecycleStateSelectedSet.value),
-);
+    if (total === 0 || ids.length >= total) {
+        return tree.value;
+    }
+    if (ids.length === 0) {
+        return [];
+    }
+    return filterTreeByLifecycleStates(tree.value, new Set(ids));
+});
 
 const { debouncedFilterValue, filteredTree, isFilterCapped } =
     useCappedTreeFilter(
@@ -315,6 +326,46 @@ watch(
     },
 );
 
+watch(selectedLifecycleStateIds, (ids) => {
+    const total = lifecycleStates.value.length;
+    let lifecycleParam: string | undefined;
+
+    if (ids.length === 0) {
+        lifecycleParam = "none";
+    } else if (ids.length >= total && total > 0) {
+        lifecycleParam = undefined;
+    } else {
+        lifecycleParam = ids.join(",");
+    }
+
+    router.replace({
+        query: { ...route.query, lifecycle: lifecycleParam },
+    });
+});
+
+watch(
+    () => route.query.lifecycle,
+    (queryLifecycle) => {
+        let newIds: string[];
+
+        if (queryLifecycle === "none") {
+            newIds = [];
+        } else if (queryLifecycle) {
+            newIds = (queryLifecycle as string).split(",");
+        } else {
+            newIds = lifecycleStates.value.map(
+                (lifecycleState) => lifecycleState.id,
+            );
+        }
+
+        if (newIds.join(",") === selectedLifecycleStateIds.value.join(",")) {
+            return;
+        }
+
+        selectedLifecycleStateIds.value = newIds;
+    },
+);
+
 watch(
     () => props.isOpen,
     async (nextIsOpen) => {
@@ -392,6 +443,16 @@ watch(
     },
     { flush: "post" },
 );
+
+function getInitialLifecycleStateIds(): string[] {
+    if (route.query.lifecycle === "none") {
+        return [];
+    }
+    if (route.query.lifecycle) {
+        return (route.query.lifecycle as string).split(",");
+    }
+    return [];
+}
 
 function getSearchableText(treeNode: TreeNode) {
     const nodeData = treeNode.data as unknown as Scheme | Concept;
