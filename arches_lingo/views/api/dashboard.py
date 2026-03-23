@@ -7,7 +7,7 @@ from arches.app.models import models
 from arches.app.utils.response import JSONErrorResponse, JSONResponse
 
 from arches_lingo.const import SCHEMES_GRAPH_ID
-from arches_lingo.mixins.anonymous_access import AnonymousAccessMixin
+from arches_lingo.mixins.permissions import AnonymousAccessMixin
 from arches_lingo.utils.dashboard import (
     attach_activity_labels,
     build_recent_activity,

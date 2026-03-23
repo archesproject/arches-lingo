@@ -3891,7 +3891,7 @@
                     "parentnodegroup_id": "bf73e5d7-4888-11ee-8a8d-11afefc4bff7"
                 },
                 {
-                    "cardinality": "n",
+                    "cardinality": "1",
                     "grouping_node_id": "bf73e5b9-4888-11ee-8a8d-11afefc4bff7",
                     "legacygroupid": null,
                     "nodegroupid": "bf73e5b9-4888-11ee-8a8d-11afefc4bff7",
@@ -5330,6 +5330,10 @@
                                 "relationshipCollection": "00000000-0000-0000-0000-000000000005",
                                 "relationshipConcept": "ac41d9be-79db-4256-b368-2f4559cfbe55",
                                 "useOntologyRelationship": false
+                            },
+                            {
+                                "graphid": "ce57ee93-1f08-11ee-9071-214dbb482912",
+                                "name": "Digital Object (system)"
                             }
                         ],
                         "searchDsl": "",
@@ -5825,7 +5829,16 @@
                 {
                     "alias": "statement_data_assignment_object_used",
                     "config": {
-                        "graphs": [],
+                        "graphs": [
+                            {
+                                "graphid": "ce57ee93-1f08-11ee-9071-214dbb482912",
+                                "name": "Digital Object (system)"
+                            },
+                            {
+                                "graphid": "6dad61aa-b4b5-11ea-84f7-3af9d3b32b71",
+                                "name": "Textual Work (system)"
+                            }
+                        ],
                         "rdmCollection": null,
                         "searchDsl": "",
                         "searchString": ""
@@ -6073,7 +6086,16 @@
                 {
                     "alias": "data_assignment_object_used",
                     "config": {
-                        "graphs": [],
+                        "graphs": [
+                            {
+                                "graphid": "ce57ee93-1f08-11ee-9071-214dbb482912",
+                                "name": "Digital Object (system)"
+                            },
+                            {
+                                "graphid": "6dad61aa-b4b5-11ea-84f7-3af9d3b32b71",
+                                "name": "Textual Work (system)"
+                            }
+                        ],
                         "searchDsl": "",
                         "searchString": ""
                     },
@@ -6172,6 +6194,10 @@
                     "alias": "creation_source_reference",
                     "config": {
                         "graphs": [
+                            {
+                                "graphid": "ce57ee93-1f08-11ee-9071-214dbb482912",
+                                "name": "Digital Object (system)"
+                            },
                             {
                                 "graphid": "6dad61aa-b4b5-11ea-84f7-3af9d3b32b71",
                                 "name": "Textual Work"
@@ -6461,6 +6487,10 @@
                                 "relationshipCollection": "00000000-0000-0000-0000-000000000005",
                                 "relationshipConcept": "ac41d9be-79db-4256-b368-2f4559cfbe55",
                                 "useOntologyRelationship": false
+                            },
+                            {
+                                "graphid": "ce57ee93-1f08-11ee-9071-214dbb482912",
+                                "name": "Digital Object (system)"
                             }
                         ],
                         "searchDsl": "",
@@ -6614,6 +6644,10 @@
                     "alias": "appellative_status_data_assignment_object_used",
                     "config": {
                         "graphs": [
+                            {
+                                "graphid": "ce57ee93-1f08-11ee-9071-214dbb482912",
+                                "name": "Digital Object (system)"
+                            },
                             {
                                 "graphid": "6dad61aa-b4b5-11ea-84f7-3af9d3b32b71",
                                 "name": "Textual Work (system)"
@@ -6823,7 +6857,7 @@
                     "alias": "statement_type",
                     "config": {
                         "controlledList": "aba2a0b4-75a4-45ba-8b57-021f3ca92a6a",
-                        "multiValue": true
+                        "multiValue": false
                     },
                     "datatype": "reference",
                     "description": null,

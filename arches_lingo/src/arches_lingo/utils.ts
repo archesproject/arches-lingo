@@ -2,10 +2,12 @@ import { routeNames } from "@/arches_lingo/routes.ts";
 
 import { createLingoResource, upsertLingoTile } from "@/arches_lingo/api.ts";
 import {
+    NEW,
     NEW_CONCEPT,
     CONCEPT_ICON,
     GUIDE_TERM_ICON,
     SCHEME_ICON,
+    TOP_CONCEPT_ICON,
     CONCEPT_TYPE_NODE_ALIAS,
 } from "@/arches_lingo/constants.ts";
 import { fetchTileData } from "@/arches_component_lab/generics/GenericCard/api.ts";
@@ -35,9 +37,15 @@ export function dataIsConcept(data: Concept | Scheme) {
 }
 
 export function getConceptIcon(
-    item: Concept | SearchResultItem | { guide_term?: boolean },
+    item:
+        | Concept
+        | SearchResultItem
+        | { guide_term?: boolean; top_concept?: boolean },
 ): string {
-    return item.guide_term ? GUIDE_TERM_ICON : CONCEPT_ICON;
+    if (item.guide_term) return GUIDE_TERM_ICON;
+    if ((item as { top_concept?: boolean }).top_concept)
+        return TOP_CONCEPT_ICON;
+    return CONCEPT_ICON;
 }
 
 export function getItemIcon(item: Concept | Scheme): string {
@@ -47,12 +55,39 @@ export function getItemIcon(item: Concept | Scheme): string {
     return getConceptIcon(item as Concept);
 }
 
+export function sortItemsByLabel<LabelableItem extends Concept | Scheme>(
+    items: LabelableItem[],
+    selectedLanguageCode: string,
+    systemLanguageCode: string,
+    sortAscending: boolean = true,
+    pinnedFirstId?: string,
+): LabelableItem[] {
+    return [...items].sort((itemA, itemB) => {
+        if (pinnedFirstId !== undefined) {
+            if (itemA.id === pinnedFirstId) return -1;
+            if (itemB.id === pinnedFirstId) return 1;
+        }
+        const labelA = getItemLabel(
+            itemA,
+            selectedLanguageCode,
+            systemLanguageCode,
+        ).value.toLowerCase();
+        const labelB = getItemLabel(
+            itemB,
+            selectedLanguageCode,
+            systemLanguageCode,
+        ).value.toLowerCase();
+        return sortAscending
+            ? labelA.localeCompare(labelB)
+            : labelB.localeCompare(labelA);
+    });
+}
+
 export function navigateToSchemeOrConcept(
     router: Router,
     value: Concept | Scheme | typeof NEW_CONCEPT,
     queryParams: { [key: string]: string } = {},
 ) {
-    // TODO: Consider adding some sort of short-circuiting of fetchUser
     if (value === NEW_CONCEPT) {
         return router.push({
             name: routeNames.concept,
@@ -63,13 +98,11 @@ export function navigateToSchemeOrConcept(
         return router.push({
             name: routeNames.scheme,
             params: { id: value.id },
-            query: queryParams,
         });
     } else if (dataIsConcept(value)) {
         return router.push({
             name: routeNames.concept,
             params: { id: value.id },
-            query: queryParams,
         });
     }
 }
@@ -80,6 +113,7 @@ export function treeFromSchemes(
     systemLanguage: Language,
     iconLabels: IconLabels,
     focusedOccurrenceKey: string | null,
+    sortAscending: boolean = true,
 ): TreeNode[] {
     function buildOccurrenceKey(schemeId: string, pathIds: string[]) {
         return `${schemeId}::${pathIds.join(">")}`;
@@ -121,7 +155,15 @@ export function treeFromSchemes(
         schemeId: string,
         pathIds: string[],
     ): NodeAndParentInstruction {
-        const nodesAndInstructions = children.map((child) =>
+        const sortedChildren = sortItemsByLabel(
+            children,
+            selectedLanguage.code,
+            systemLanguage.code,
+            sortAscending,
+            NEW,
+        );
+
+        const nodesAndInstructions = sortedChildren.map((child) =>
             processItem(child, child.narrower, schemeId, [
                 ...pathIds,
                 child.id,
@@ -172,8 +214,15 @@ export function treeFromSchemes(
         ];
     }
 
+    const sortedSchemes = sortItemsByLabel(
+        schemes,
+        selectedLanguage.code,
+        systemLanguage.code,
+        sortAscending,
+    );
+
     const reshapedSchemes = [];
-    for (const scheme of schemes) {
+    for (const scheme of sortedSchemes) {
         const { node, shouldHideSiblings } = processItem(
             scheme,
             scheme.top_concepts,
@@ -328,7 +377,7 @@ export async function createOrUpdateConcept(
 
         const isTop = scheme === parent;
 
-        const aliased_data = {
+        const aliased_data: Record<string, unknown> = {
             [nodegroupAlias]: [{ aliased_data: formData }],
             part_of_scheme: {
                 aliased_data: { part_of_scheme: scheme },
@@ -337,11 +386,9 @@ export async function createOrUpdateConcept(
         };
 
         if (isTop) {
-            aliased_data.top_concept_of = [
-                {
-                    aliased_data: { top_concept_of: parent },
-                },
-            ];
+            aliased_data.top_concept_of = {
+                aliased_data: { top_concept_of: parent },
+            };
         } else {
             aliased_data.classification_status = [
                 {
@@ -384,6 +431,10 @@ export function getIconLabel(
 
     if ((item as Concept).guide_term) {
         return iconLabels.guideTerm;
+    }
+
+    if ((item as Concept).top_concept) {
+        return iconLabels.topConcept;
     }
 
     return iconLabels.concept;

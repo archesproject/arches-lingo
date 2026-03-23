@@ -14,7 +14,7 @@ export const useUserStore = defineStore("user", () => {
         () => user.value?.is_staff ?? false,
     );
 
-    async function initialize() {
+    async function refresh() {
         user.value = await fetchUser();
     }
 
@@ -27,7 +27,7 @@ export const useUserStore = defineStore("user", () => {
         isEditor,
         isAnonymous,
         canAccessAdminInterface,
-        initialize,
+        refresh,
         setUser,
     };
 });

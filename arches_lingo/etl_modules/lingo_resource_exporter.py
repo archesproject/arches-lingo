@@ -156,7 +156,8 @@ class LingoResourceExporter:
         try:
             response = self.run_export_task(self.resourceid, filename, format)
             return response
-        except:
+        except Exception:
+            logger.exception("Unexpected error during export (loadid=%s)", self.loadid)
             error = _("An unexpected error occurred during export.")
             self._handle_error(error)
             raise
@@ -256,6 +257,12 @@ class LingoResourceExporter:
             root_concept = ResourceTileTree.get_tiles(
                 graph_slug="concept", resource_ids=[resourceid]
             ).first()
+            if root_concept is None:
+                error = _(
+                    "The selected resource could not be found and cannot be exported."
+                )
+                self._handle_error(error)
+                return [], []
             part_of_scheme = root_concept.aliased_data.part_of_scheme
             if not part_of_scheme:
                 error = _(
@@ -437,6 +444,11 @@ class LingoResourceExporter:
             root_concept = ResourceTileTree.get_tiles(
                 graph_slug="concept", resource_ids=[resourceid]
             ).first()
+            if root_concept is None:
+                error = _(
+                    "The selected resource could not be found and cannot be exported."
+                )
+                return self._handle_error(error)
             part_of_scheme = root_concept.aliased_data.part_of_scheme
             if not part_of_scheme:
                 error = _(

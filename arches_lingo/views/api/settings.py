@@ -1,6 +1,8 @@
 from django.conf import settings
 from django.views.generic import View
 
+import arches
+import arches_lingo
 from arches.app.utils.response import JSONResponse
 
 from arches_lingo.permissions import anonymous_access_allowed
@@ -16,5 +18,7 @@ class AppSettingsView(View):
                 "public_server_address": getattr(
                     settings, "PUBLIC_SERVER_ADDRESS", None
                 ),
+                "arches_version": arches.__version__,
+                "lingo_version": arches_lingo.__version__,
             }
         )

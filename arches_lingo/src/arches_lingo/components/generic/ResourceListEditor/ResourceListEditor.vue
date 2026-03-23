@@ -387,6 +387,7 @@ defineExpose({
                 <ComponentEditor
                     :key="editorInstanceKey"
                     :is-editor-maximized="isEditorMaximized"
+                    :is-editor-loading="false"
                     :is-form-editor="true"
                     :header-title="editorTitle"
                     @maximize="isEditorMaximized = true"

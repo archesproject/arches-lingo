@@ -35,6 +35,7 @@ const showSelector = computed(() => availableLanguages.value.length > 1);
 watchEffect(() => {
     document.documentElement.dir =
         selectedLanguage.value.default_direction ?? "ltr";
+    document.body.dir = document.documentElement.dir;
 });
 
 function openLanguageSelector(event: MouseEvent) {

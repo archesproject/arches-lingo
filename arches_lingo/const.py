@@ -88,6 +88,18 @@ METATYPES_LIST_ID = "ef69e772-de53-45fe-98d4-bf3e7b10eb57"
 ### URIs ###
 GUIDE_TERM_URI = "http://vocab.getty.edu/page/aat/300386700"
 
+### Ontology Properties
+TOP_CONCEPT_OF_ONTOLOGY_PROPERTY = "http://www.w3.org/2004/02/skos/core#topConceptOf"
+PART_OF_SCHEME_ONTOLOGY_PROPERTY = (
+    "http://www.cidoc-crm.org/cidoc-crm/P71i_is_listed_in"
+)
+CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_ONTOLOGY_PROPERTY = (
+    "https://ontology.swissartresearch.net/aaao/ZP12_ascribes_classification"
+)
+RELATION_STATUS_ASCRIBED_COMPARATE_ONTOLOGY_PROPERTY = (
+    "https://ontology.swissartresearch.net/aaao/ZP44_ascribes_similarity_target"
+)
+
 
 # statement (notes)
 STATEMENT_NODEGROUP = "bf73e5d7-4888-11ee-8a8d-11afefc4bff7"
@@ -116,7 +128,6 @@ MATCH_STATUS_COMPARATE_NODE = "4cfaae24-0ed7-11ef-9493-0a58a9feac02"
 
 # status (lifecycle/status)
 STATUS_NODEGROUP = "152321b6-0f5e-11ef-9493-0a58a9feac02"
-
 
 ### URIs ###
 PREF_LABEL_URI = "http://www.w3.org/2004/02/skos/core#prefLabel"

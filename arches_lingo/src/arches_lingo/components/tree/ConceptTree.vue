@@ -9,8 +9,14 @@ import {
     watch,
 } from "vue";
 import type { Ref } from "vue";
+import Button from "primevue/button";
 
-import { useRoute, useRouter } from "vue-router";
+import {
+    useRoute,
+    useRouter,
+    isNavigationFailure,
+    NavigationFailureType,
+} from "vue-router";
 import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
 import { storeToRefs } from "pinia";
@@ -26,8 +32,9 @@ import {
     DEFAULT_ERROR_TOAST_LIFE,
     ERROR,
 } from "@/arches_controlled_lists/constants.ts";
+import { RETIRED_LIFECYCLE_STATE_ID } from "@/arches_lingo/constants.ts";
 
-import { fetchConcepts } from "@/arches_lingo/api.ts";
+import { useConceptStore } from "@/arches_lingo/stores/useConceptStore.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 
 import {
@@ -52,16 +59,16 @@ import type {
 
 const props = withDefaults(
     defineProps<{
-        concepts?: {
-            schemes: Scheme[];
-        };
         isOpen?: boolean;
     }>(),
     {
-        concepts: undefined,
         isOpen: true,
     },
 );
+
+const resourceInstanceLifecycleStates = inject<
+    Ref<ResourceInstanceLifecycleState[] | undefined>
+>("resourceInstanceLifecycleStates");
 
 const toast = useToast();
 const { $gettext } = useGettext();
@@ -77,46 +84,25 @@ const EXPORT = $gettext("Export");
 
 const FILTER_CONCEPTS = $gettext("Filter concepts");
 const FILTER_CAPPED_MESSAGE = $gettext("Please refine your query.");
+const SORT_ASCENDING = $gettext("Sort ascending");
+const SORT_DESCENDING = $gettext("Sort descending");
 
 const iconLabels: IconLabels = Object.freeze({
     concept: $gettext("Concept"),
     guideTerm: $gettext("Guide Term"),
     scheme: $gettext("Scheme"),
+    topConcept: $gettext("Top Concept"),
 });
 
 const schemes = ref<Scheme[]>([]);
+const shouldSortByAscending = ref(route.query.sort !== "desc");
 const focusedNode = ref<TreeNode | null>(null);
 const focusedOccurrenceKey = ref<string | null>(null);
 
 const selectedKeys = ref<TreeSelectionKeys>({});
 const lastNonEmptySelectedKeys = ref<TreeSelectionKeys>({});
 const expandedKeys = ref<TreeExpandedKeys>({});
-const filterValue = ref("");
-
-const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
-
-const resourceInstanceLifecycleStates = inject<
-    Ref<ResourceInstanceLifecycleState[] | undefined>
->("resourceInstanceLifecycleStates");
-
-const resourceInstanceLifecycleStateCanEditById = computed(() =>
-    Object.fromEntries(
-        (resourceInstanceLifecycleStates?.value ?? []).map(
-            (
-                resourceInstanceLifecycleState: ResourceInstanceLifecycleState,
-            ) => [
-                resourceInstanceLifecycleState.id,
-                resourceInstanceLifecycleState.can_edit_resource_instances ===
-                    true,
-            ],
-        ),
-    ),
-);
-
-provide(
-    "resourceInstanceLifecycleStateCanEditById",
-    resourceInstanceLifecycleStateCanEditById,
-);
+const filterValue = ref((route.query.filter as string) ?? "");
 
 const FILTER_RENDER_CAP = 2500;
 const FILTER_DEBOUNCE_MS = 500;
@@ -125,25 +111,24 @@ const SKELETON_ROW_COUNT = 14;
 const suppressScrollOnNextRouteSelect = ref(false);
 const hasCompletedInitialLoad = ref(false);
 
-onMounted(async () => {
-    let concepts = props.concepts;
+const conceptStore = useConceptStore();
+const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
 
-    if (!props.concepts) {
-        try {
-            concepts = await fetchConcepts();
-        } catch (error) {
-            toast.add({
-                severity: ERROR,
-                life: DEFAULT_ERROR_TOAST_LIFE,
-                summary: $gettext("Unable to fetch concepts"),
-                detail: (error as Error).message,
-            });
-        }
+onMounted(async () => {
+    try {
+        await conceptStore.initialize();
+    } catch (error) {
+        toast.add({
+            severity: ERROR,
+            life: DEFAULT_ERROR_TOAST_LIFE,
+            summary: $gettext("Unable to fetch concepts"),
+            detail: (error as Error).message,
+        });
     }
 
     const priorSortedSchemeIds = tree.value.map((treeNode) => treeNode.key);
 
-    schemes.value = (concepts!.schemes as Scheme[]).sort((schemeA, schemeB) => {
+    schemes.value = [...conceptStore.schemes].sort((schemeA, schemeB) => {
         return (
             priorSortedSchemeIds.indexOf(schemeA.id) -
             priorSortedSchemeIds.indexOf(schemeB.id)
@@ -160,6 +145,46 @@ onMounted(async () => {
     hasCompletedInitialLoad.value = true;
 });
 
+const resourceInstanceLifecycleStateCanEditById = computed(() =>
+    Object.fromEntries(
+        (resourceInstanceLifecycleStates?.value ?? []).map(
+            (
+                resourceInstanceLifecycleState: ResourceInstanceLifecycleState,
+            ) => [
+                resourceInstanceLifecycleState.id,
+                resourceInstanceLifecycleState.can_edit_resource_instances ===
+                    true,
+            ],
+        ),
+    ),
+);
+
+const resourceInstanceLifecycleStateIsRetiredById = computed(() =>
+    Object.fromEntries(
+        (resourceInstanceLifecycleStates?.value ?? []).map(
+            (state: ResourceInstanceLifecycleState) => [
+                state.id,
+                state.id === RETIRED_LIFECYCLE_STATE_ID,
+            ],
+        ),
+    ),
+);
+
+provide(
+    "resourceInstanceLifecycleStateCanEditById",
+    resourceInstanceLifecycleStateCanEditById,
+);
+
+provide(
+    "resourceInstanceLifecycleStateIsRetiredById",
+    resourceInstanceLifecycleStateIsRetiredById,
+);
+
+const sortIcon = computed(() => {
+    const direction = shouldSortByAscending.value ? "down" : "up";
+    return `pi pi-sort-alpha-${direction}`;
+});
+
 const tree = computed(() => {
     return treeFromSchemes(
         schemes.value,
@@ -167,6 +192,7 @@ const tree = computed(() => {
         systemLanguage.value,
         iconLabels,
         focusedOccurrenceKey.value,
+        shouldSortByAscending.value,
     );
 });
 
@@ -228,12 +254,41 @@ const displayTree = computed<TreeNode[]>(() => {
     return filteredTree.value;
 });
 
-watch(route, async (newRoute) => {
-    const shouldScroll = !suppressScrollOnNextRouteSelect.value;
-    suppressScrollOnNextRouteSelect.value = false;
+watch(
+    () => route.path,
+    async () => {
+        const shouldScroll = !suppressScrollOnNextRouteSelect.value;
+        suppressScrollOnNextRouteSelect.value = false;
 
-    await selectNodeFromRoute(newRoute, shouldScroll);
+        await selectNodeFromRoute(route, shouldScroll);
+    },
+);
+
+watch(debouncedFilterValue, (currentFilter) => {
+    router.replace({
+        query: { ...route.query, filter: currentFilter || undefined },
+    });
 });
+
+watch(shouldSortByAscending, (isAscending) => {
+    router.replace({
+        query: { ...route.query, sort: isAscending ? undefined : "desc" },
+    });
+});
+
+watch(
+    () => route.query.filter,
+    (queryFilter) => {
+        filterValue.value = (queryFilter as string) ?? "";
+    },
+);
+
+watch(
+    () => route.query.sort,
+    (querySort) => {
+        shouldSortByAscending.value = querySort !== "desc";
+    },
+);
 
 watch(
     () => props.isOpen,
@@ -332,6 +387,13 @@ function setExpandedKeysToOnly(theseExpandedKeys: Set<string>) {
     expandedKeys.value = Object.fromEntries(
         [...theseExpandedKeys].map((expandedKey) => [expandedKey, true]),
     ) as TreeExpandedKeys;
+}
+
+function mergeExpandedKeys(keysToAdd: Set<string>) {
+    expandedKeys.value = {
+        ...expandedKeys.value,
+        ...Object.fromEntries([...keysToAdd].map((key) => [key, true])),
+    } as TreeExpandedKeys;
 }
 
 function findAllNewOccurrencesInTree() {
@@ -469,7 +531,7 @@ function scrollToOccurrenceKeyInTree(
             }
 
             keysToExpand.add(occurrenceKey);
-            setExpandedKeysToOnly(keysToExpand);
+            mergeExpandedKeys(keysToExpand);
 
             selectedKeys.value = { [occurrenceKey]: true };
 
@@ -620,7 +682,9 @@ function scrollToItemInTree(
         keysToExpand.add(matchItem.treeNode.key);
     }
 
-    setExpandedKeysToOnly(keysToExpand);
+    if (!debouncedFilterValue.value) {
+        mergeExpandedKeys(keysToExpand);
+    }
 
     const matchedKeysInOrder = matches.map(
         (matchItem) => matchItem.treeNode.key,
@@ -701,42 +765,54 @@ async function selectNodeFromRoute(
     await ensureFilterParentsExpanded();
 }
 
-function onNodeSelect(node: TreeNode) {
-    if (node.data.id === NEW) {
-        return;
-    }
+async function onNodeSelect(node: TreeNode) {
+    if (node.data.id === NEW) return;
 
     const selectedKeysBeforeNavigation = { ...selectedKeys.value };
 
-    suppressScrollOnNextRouteSelect.value = true;
-    navigateToSchemeOrConcept(router, node.data)?.then((failure) => {
-        if (failure) {
-            // Navigation was cancelled (e.g. by the unsaved-changes guard).
-            // PrimeVue Tree already updated selectedKeys; restore the previous selection.
-            suppressScrollOnNextRouteSelect.value = false;
-            selectedKeys.value = selectedKeysBeforeNavigation;
+    await nextTick();
+    scrollToItemInTree(node.data.id, false);
 
-            const primaryOriginalKey = Object.keys(
-                selectedKeysBeforeNavigation,
-            )[0];
-            if (primaryOriginalKey) {
-                scrollOccurrenceIntoView(primaryOriginalKey);
-            }
-        }
-    });
+    suppressScrollOnNextRouteSelect.value = true;
+    const navigationResult = await navigateToSchemeOrConcept(router, node.data);
+
+    if (!isNavigationFailure(navigationResult)) return;
+
+    suppressScrollOnNextRouteSelect.value = false;
+
+    if (isNavigationFailure(navigationResult, NavigationFailureType.duplicated))
+        return;
+
+    selectedKeys.value = selectedKeysBeforeNavigation;
+    const primaryOriginalKey = Object.keys(selectedKeysBeforeNavigation)[0];
+
+    if (primaryOriginalKey) {
+        scrollOccurrenceIntoView(primaryOriginalKey);
+    }
 }
 </script>
 
 <template>
     <div class="concept-tree-layout">
         <div class="filter-container">
-            <InputText
-                v-model="filterValue"
-                class="tree-filter-input"
-                type="text"
-                :placeholder="FILTER_CONCEPTS"
-                :aria-label="FILTER_CONCEPTS"
-            />
+            <div class="filter-toolbar">
+                <InputText
+                    v-model="filterValue"
+                    class="tree-filter-input"
+                    type="text"
+                    :placeholder="FILTER_CONCEPTS"
+                    :aria-label="FILTER_CONCEPTS"
+                />
+                <Button
+                    :icon="sortIcon"
+                    :aria-label="
+                        shouldSortByAscending ? SORT_ASCENDING : SORT_DESCENDING
+                    "
+                    variant="text"
+                    size="small"
+                    @click="shouldSortByAscending = !shouldSortByAscending"
+                />
+            </div>
             <Message
                 v-if="isFilterCapped"
                 severity="warn"
@@ -822,9 +898,15 @@ function onNodeSelect(node: TreeNode) {
     margin-bottom: 0.5rem;
 }
 
+.filter-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
 .tree-filter-input {
     border-radius: 0.125rem;
-    width: 100%;
+    flex: 1;
     font-size: 0.875rem;
 }
 

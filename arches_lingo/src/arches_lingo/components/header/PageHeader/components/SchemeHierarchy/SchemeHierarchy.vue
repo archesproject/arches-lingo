@@ -8,11 +8,11 @@ import Button from "primevue/button";
 
 import ConceptTree from "@/arches_lingo/components/tree/ConceptTree.vue";
 
-import {
-    fetchConcepts,
-    fetchResourceInstanceLifecycleStates,
-} from "@/arches_lingo/api.ts";
+import { fetchResourceInstanceLifecycleStates } from "@/arches_lingo/api.ts";
+
 import { ERROR, DEFAULT_ERROR_TOAST_LIFE } from "@/arches_lingo/constants.ts";
+
+import { useConceptStore } from "@/arches_lingo/stores/useConceptStore.ts";
 
 const props = withDefaults(
     defineProps<{
@@ -26,8 +26,9 @@ const props = withDefaults(
 const { $gettext } = useGettext();
 const toast = useToast();
 
+const conceptStore = useConceptStore();
+
 const conceptTreeKey = ref(0);
-const concepts = ref();
 const resourceInstanceLifecycleStates = ref();
 
 const emit = defineEmits<{
@@ -38,13 +39,11 @@ provide("resourceInstanceLifecycleStates", resourceInstanceLifecycleStates);
 
 onMounted(async () => {
     try {
-        const [fetchedConcepts, fetchedResourceInstanceLifecycleStates] =
-            await Promise.all([
-                fetchConcepts(),
-                fetchResourceInstanceLifecycleStates(),
-            ]);
+        const [, fetchedResourceInstanceLifecycleStates] = await Promise.all([
+            conceptStore.initialize(),
+            fetchResourceInstanceLifecycleStates(),
+        ]);
 
-        concepts.value = fetchedConcepts;
         resourceInstanceLifecycleStates.value =
             fetchedResourceInstanceLifecycleStates;
     } catch (error) {
@@ -77,7 +76,6 @@ onMounted(async () => {
     </div>
     <ConceptTree
         :key="conceptTreeKey"
-        :concepts="concepts"
         :is-open="props.isOpen"
     />
 </template>

@@ -74,6 +74,7 @@ const editorTileId = ref();
 const editorState = ref(CLOSED);
 const selectedComponentDatum = ref();
 const isFormEditor = ref(true);
+const isEditorLoading = ref(false);
 
 const resourceInstanceLifecycleState = ref<object | undefined>(undefined);
 const isFetchingResourceInstanceLifecycleState = ref(false);
@@ -108,6 +109,12 @@ watch(resourceInstanceId, async () => {
 });
 
 const isConfirmDialogOpen = ref(false);
+
+onMounted(() => {
+    if (route.params.id === NEW) {
+        initNewLabel();
+    }
+});
 
 window.addEventListener(
     "keydown",
@@ -156,9 +163,11 @@ function closeEditor() {
     selectedComponentDatum.value = null;
     editorState.value = CLOSED;
     editorTileId.value = null;
+    isEditorLoading.value = false;
 }
 
 function doOpenEditor(componentName: string, tileId?: string) {
+    isEditorLoading.value = true;
     const componentDatum = processedComponentData.value.find(
         (componentDatum) => {
             return componentDatum.componentName === componentName;
@@ -187,6 +196,10 @@ function openEditor(componentName: string, tileId?: string) {
     }
 }
 
+function updateEditorLoadingState(isLoading: boolean) {
+    isEditorLoading.value = isLoading;
+}
+
 function maximizeEditor() {
     editorState.value = MAXIMIZED;
 }
@@ -204,7 +217,10 @@ function updateAfterComponentDeletion(componentName: string, tileId: string) {
 
 async function refreshReportSection(componentName: string) {
     if (componentName === "all") {
-        await resourceStore.refreshResource();
+        await Promise.all([
+            resourceStore.refreshResource(),
+            loadResourceInstanceLifecycleState(),
+        ]);
         return;
     }
 
@@ -274,6 +290,17 @@ function openPanelComponent(
     isFormEditor.value = false;
 }
 
+function initNewLabel() {
+    const labelComponent = processedComponentData.value.filter(
+        (componentDatum) => componentDatum.componentName.includes("Label"),
+    );
+    openEditor(labelComponent[0].componentName);
+}
+
+provide("openEditor", openEditor);
+provide("closeEditor", closeEditor);
+provide("updateAfterComponentDeletion", updateAfterComponentDeletion);
+provide("refreshReportSection", refreshReportSection);
 provide(openPanelComponentKey, openPanelComponent);
 </script>
 
@@ -327,6 +354,7 @@ provide(openPanelComponentKey, openPanelComponent);
                     class="splitter-panel-content"
                     :is-editor-maximized="editorState === MAXIMIZED"
                     :is-form-editor="isFormEditor"
+                    :is-editor-loading="isEditorLoading"
                     :header-title="selectedComponentDatum.sectionTitle"
                     @maximize="maximizeEditor"
                     @minimize="minimizeEditor"
@@ -341,6 +369,9 @@ provide(openPanelComponentKey, openPanelComponent);
                         :section-title="selectedComponentDatum.sectionTitle"
                         :component-name="selectedComponentDatum.componentName"
                         :mode="EDIT"
+                        @update:is-editor-loading="
+                            updateEditorLoadingState($event)
+                        "
                     />
                 </ComponentEditor>
             </SplitterPanel>
@@ -397,6 +428,7 @@ provide(openPanelComponentKey, openPanelComponent);
                     class="splitter-panel-content"
                     :is-editor-maximized="editorState === MAXIMIZED"
                     :is-form-editor="isFormEditor"
+                    :is-editor-loading="isEditorLoading"
                     :header-title="selectedComponentDatum.sectionTitle"
                     @maximize="maximizeEditor"
                     @minimize="minimizeEditor"
@@ -411,6 +443,9 @@ provide(openPanelComponentKey, openPanelComponent);
                         :section-title="selectedComponentDatum.sectionTitle"
                         :component-name="selectedComponentDatum.componentName"
                         :mode="EDIT"
+                        @update:is-editor-loading="
+                            updateEditorLoadingState($event)
+                        "
                     />
                 </ComponentEditor>
             </SplitterPanel>

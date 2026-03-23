@@ -10,7 +10,7 @@ from arches.app.utils.response import JSONErrorResponse, JSONResponse
 from arches_querysets.models import ResourceTileTree
 
 from arches_lingo.const import CONCEPT_NAME_NODEGROUP, CONCEPT_NAME_LANGUAGE_NODE
-from arches_lingo.mixins.anonymous_access import AnonymousAccessMixin
+from arches_lingo.mixins.permissions import AnonymousAccessMixin
 from arches_lingo.utils.concept_builder import ConceptBuilder
 
 

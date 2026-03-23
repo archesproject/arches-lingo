@@ -88,29 +88,12 @@ async function save(e: FormSubmitEvent) {
             updatedTileId =
                 updatedConcept.aliased_data[props.nodegroupAlias][0].tileid;
         } else {
-            let nodegroupAlias;
-            let values;
-            if (
-                formData.classification_status_ascribed_classification
-                    .node_value.resourceId == props.scheme
-            ) {
-                nodegroupAlias = "top_concept_of";
-                values = {
-                    top_concept_of:
-                        formData.classification_status_ascribed_classification
-                            .node_value,
-                };
-            } else {
-                nodegroupAlias = props.nodegroupAlias;
-                values = updatedTileData;
-            }
-
             const updatedConcept = await upsertLingoTile(
                 props.graphSlug,
-                nodegroupAlias,
+                props.nodegroupAlias,
                 {
                     resourceinstance: props.resourceInstanceId,
-                    aliased_data: { ...values },
+                    aliased_data: { ...updatedTileData },
                     tileid: props.tileId,
                 },
             );
@@ -123,6 +106,7 @@ async function save(e: FormSubmitEvent) {
     } catch (error) {
         console.error(error);
     } finally {
+        isSaving.value = false;
         refreshReportSection!(props.componentName);
         onSaveSettled?.();
     }
@@ -157,7 +141,6 @@ async function save(e: FormSubmitEvent) {
                     "
                     :mode="EDIT"
                     :scheme="props.scheme"
-                    :scheme-selectable="true"
                 />
             </Form>
         </div>

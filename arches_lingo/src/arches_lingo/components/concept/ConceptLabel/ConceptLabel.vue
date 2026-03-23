@@ -27,7 +27,12 @@ const props = defineProps<{
     tileId?: string;
 }>();
 
-const isLoading = ref(true);
+const emit = defineEmits<{
+    (event: "update:isEditorLoading", value: boolean): void;
+}>();
+
+const isDataLoading = ref(true);
+
 const tileData = ref<AppellativeStatus[]>([]);
 const fetchError = ref();
 
@@ -40,13 +45,15 @@ watch(
     ([resource, storeError]) => {
         if (storeError) {
             fetchError.value = storeError;
-            isLoading.value = false;
+            isDataLoading.value = false;
+            if (props.mode === EDIT) emit("update:isEditorLoading", false);
             return;
         }
         if (resource && props.resourceInstanceId && !shouldCreateNewTile) {
             tileData.value =
                 resource.aliased_data?.[props.nodegroupAlias] ?? [];
-            isLoading.value = false;
+            isDataLoading.value = false;
+            if (props.mode === EDIT) emit("update:isEditorLoading", false);
         }
     },
     { immediate: true },
@@ -59,16 +66,18 @@ onMounted(async () => {
             props.nodegroupAlias,
         );
         tileData.value = [blankTileData as unknown as AppellativeStatus];
-        isLoading.value = false;
+        isDataLoading.value = false;
+        emit("update:isEditorLoading", false);
     } else if (!props.resourceInstanceId) {
-        isLoading.value = false;
+        isDataLoading.value = false;
+        if (props.mode === EDIT) emit("update:isEditorLoading", false);
     }
 });
 </script>
 
 <template>
     <Skeleton
-        v-if="isLoading"
+        v-if="isDataLoading"
         style="width: 100%"
     />
     <Message

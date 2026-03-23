@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 
 import Message from "primevue/message";
 import Skeleton from "primevue/skeleton";
@@ -10,11 +10,9 @@ import HierarchicalPositionEditor from "@/arches_lingo/components/concept/Hierar
 import { EDIT, VIEW } from "@/arches_lingo/constants.ts";
 
 import { fetchTileData } from "@/arches_component_lab/generics/GenericCard/api.ts";
-import {
-    fetchConceptResources,
-    fetchLingoResourcePartial,
-} from "@/arches_lingo/api.ts";
 import { useResourceStore } from "@/arches_lingo/composables/useResourceStore.ts";
+import { useConceptStore } from "@/arches_lingo/stores/useConceptStore.ts";
+
 import type {
     ConceptClassificationStatus,
     DataComponentMode,
@@ -32,100 +30,42 @@ const props = defineProps<{
     tileId?: string;
 }>();
 
-const isLoading = ref(true);
+const emit = defineEmits<{
+    (event: "update:isEditorLoading", value: boolean): void;
+}>();
+
+const resourceStore = useResourceStore();
+const conceptStore = useConceptStore();
+
 const fetchError = ref();
 const hierarchicalData = ref<SearchResultHierarchy[]>([]);
 const schemeId = ref<string>();
 const tileData = ref<ConceptClassificationStatus[]>();
-const topConceptOfTileId = ref<string>();
+const isTopConcept = ref(false);
 
-const shouldCreateNewTile = Boolean(props.mode === EDIT && !props.tileId);
-
-const store = useResourceStore();
-let positionInitialized = false;
-
-watch(
-    [() => store.resource.value, () => store.error.value],
-    async ([resource, storeError]) => {
-        if (storeError) {
-            fetchError.value = storeError;
-            isLoading.value = false;
-            return;
-        }
-        if (
-            !resource ||
-            !props.resourceInstanceId ||
-            shouldCreateNewTile ||
-            positionInitialized
-        )
-            return;
-        positionInitialized = true;
-
-        try {
-            // Read classification_status and top_concept_of from the store
-            tileData.value = resource.aliased_data?.[props.nodegroupAlias];
-            topConceptOfTileId.value =
-                resource.aliased_data?.top_concept_of?.[0]?.tileid;
-
-            // Still need the search endpoint for hierarchy path data
-            const currentPosition = await getHierarchicalData([
-                props.resourceInstanceId!,
-            ]);
-
-            schemeId.value = currentPosition?.data[0]?.parents?.[0]?.[0]?.id;
-
-            hierarchicalData.value =
-                currentPosition?.data[0]?.parents?.map(
-                    (parent: SearchResultItem) => ({
-                        searchResults: parent,
-                    }),
-                ) ?? [];
-
-            if (hierarchicalData.value && tileData.value) {
-                for (const datum of hierarchicalData.value) {
-                    const parentConceptResourceId =
-                        datum.searchResults[datum.searchResults.length - 2].id;
-                    const parentConceptTile = tileData.value.find((tile) => {
-                        const ascribedValues =
-                            tile.aliased_data
-                                .classification_status_ascribed_classification
-                                .node_value;
-                        return ascribedValues?.some(
-                            (value) =>
-                                value.resourceId === parentConceptResourceId,
-                        );
-                    });
-                    if (parentConceptTile) {
-                        datum.tileid = parentConceptTile.tileid;
-                    } else if (topConceptOfTileId.value) {
-                        datum.tileid = topConceptOfTileId.value;
-                        datum.isTopConcept = true;
-                    }
-                }
-            }
-        } catch (error) {
-            fetchError.value = error;
-        } finally {
-            isLoading.value = false;
-        }
-    },
-    { immediate: true },
+const shouldCreateNewTile = computed(
+    () => props.mode === EDIT && !props.tileId,
 );
+const isLoading = ref(
+    Boolean(props.resourceInstanceId) || shouldCreateNewTile.value,
+);
+
+const activeTileData = computed((): ConceptClassificationStatus | undefined => {
+    if (shouldCreateNewTile.value) {
+        return tileData.value?.find((tileDatum) => !tileDatum.tileid);
+    }
+    return tileData.value?.find(
+        (tileDatum) => tileDatum.tileid === props.tileId,
+    );
+});
 
 onMounted(async () => {
     schemeId.value =
-        store.resource.value?.aliased_data?.part_of_scheme.aliased_data.part_of_scheme?.details[0]?.resource_id;
-    if (!schemeId.value && props.resourceInstanceId) {
-        const partOfSchemeTile = await fetchLingoResourcePartial(
-            "concept",
-            props.resourceInstanceId!,
-            "part_of_scheme",
-        );
-        schemeId.value =
-            partOfSchemeTile.aliased_data?.part_of_scheme.aliased_data.part_of_scheme?.details[0]?.resource_id;
-    }
+        resourceStore.resource.value?.aliased_data?.part_of_scheme.aliased_data
+            .part_of_scheme?.details[0]?.resource_id ??
+        conceptStore.getParentPaths(props.resourceInstanceId ?? "")[0]?.[0]?.id;
 
-    if (shouldCreateNewTile) {
+    if (shouldCreateNewTile.value) {
         const blankTileData = await fetchTileData(
             props.graphSlug,
             props.nodegroupAlias,
@@ -134,24 +74,66 @@ onMounted(async () => {
             blankTileData as unknown as ConceptClassificationStatus,
         ];
         isLoading.value = false;
-    } else if (!props.resourceInstanceId) {
-        isLoading.value = false;
+        if (props.mode === EDIT) emit("update:isEditorLoading", false);
     }
 });
 
-async function getHierarchicalData(conceptIds: string[]) {
-    if (conceptIds.length === 0) {
-        return;
-    }
-    return await fetchConceptResources(
-        "",
-        conceptIds.length,
-        1,
-        undefined,
-        undefined,
-        conceptIds,
-    );
-}
+watch(
+    [() => resourceStore.resource.value, () => resourceStore.error.value],
+    async ([resource, storeError]) => {
+        if (storeError) {
+            fetchError.value = storeError;
+            isLoading.value = false;
+            if (props.mode === EDIT) emit("update:isEditorLoading", false);
+            return;
+        }
+
+        if (!resource || !props.resourceInstanceId || shouldCreateNewTile.value)
+            return;
+
+        try {
+            isTopConcept.value = Boolean(resource.aliased_data?.top_concept_of);
+
+            if (isTopConcept.value) {
+                isLoading.value = false;
+                if (props.mode === EDIT) emit("update:isEditorLoading", false);
+                return;
+            }
+
+            tileData.value = resource.aliased_data?.[
+                props.nodegroupAlias
+            ] as ConceptClassificationStatus[];
+
+            await conceptStore.initialize();
+
+            const paths = conceptStore.getParentPaths(
+                props.resourceInstanceId!,
+            );
+
+            schemeId.value = paths[0]?.[0]?.id;
+            hierarchicalData.value = paths.map((path) => ({
+                searchResults: path as SearchResultItem[],
+            }));
+
+            for (const datum of hierarchicalData.value) {
+                const parentId =
+                    datum.searchResults[datum.searchResults.length - 2].id;
+                const match = tileData.value?.find((tile) =>
+                    tile.aliased_data.classification_status_ascribed_classification.node_value?.some(
+                        (nodeValue) => nodeValue.resourceId === parentId,
+                    ),
+                );
+                if (match) datum.tileid = match.tileid;
+            }
+        } catch (error) {
+            fetchError.value = error;
+        } finally {
+            isLoading.value = false;
+            if (props.mode === EDIT) emit("update:isEditorLoading", false);
+        }
+    },
+    { immediate: true },
+);
 </script>
 
 <template>
@@ -166,7 +148,7 @@ async function getHierarchicalData(conceptIds: string[]) {
     >
         {{ fetchError.message }}
     </Message>
-    <template v-else>
+    <template v-else-if="!isTopConcept">
         <HierarchicalPositionViewer
             v-if="mode === VIEW"
             :component-name="props.componentName"
@@ -185,15 +167,7 @@ async function getHierarchicalData(conceptIds: string[]) {
             :resource-instance-id="props.resourceInstanceId"
             :section-title="props.sectionTitle"
             :scheme="schemeId"
-            :tile-data="
-                tileData!.find((tileDatum) => {
-                    if (shouldCreateNewTile) {
-                        return !tileDatum.tileid;
-                    }
-
-                    return tileDatum.tileid === props.tileId;
-                })
-            "
+            :tile-data="activeTileData"
             :tile-id="props.tileId"
         />
     </template>

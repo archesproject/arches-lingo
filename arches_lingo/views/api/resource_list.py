@@ -3,7 +3,7 @@ from django.views.generic import View
 from arches.app.models.system_settings import settings
 from arches.app.utils.response import JSONResponse
 
-from arches_lingo.mixins.anonymous_access import AnonymousAccessMixin
+from arches_lingo.mixins.permissions import AnonymousAccessMixin
 from arches_lingo.utils.resource_list import (
     get_paginated_resource_summaries,
     get_resource_reference_count,

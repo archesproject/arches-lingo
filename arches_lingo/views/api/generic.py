@@ -6,16 +6,21 @@ from arches_querysets.rest_framework.generic_views import (
 )
 
 from arches_lingo.permissions import ReadOnlyOrLingoEditor
-from arches_lingo.serializers import LingoTileSerializer
+from arches_lingo.serializers import LingoResourceSerializer, LingoTileSerializer
 
 
 class LingoResourceListCreateView(ArchesResourceListCreateView):
     permission_classes = [ReadOnlyOrLingoEditor]
     pagination_class = None
+    serializer_class = LingoResourceSerializer
 
 
 class LingoResourceDetailView(ArchesResourceDetailView):
     permission_classes = [ReadOnlyOrLingoEditor]
+    serializer_class = LingoResourceSerializer
+
+    def get_queryset(self):
+        return super().get_queryset().select_related("principaluser")
 
 
 class LingoTileListCreateView(ArchesTileListCreateView):

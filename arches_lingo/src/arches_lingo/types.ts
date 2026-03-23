@@ -24,6 +24,8 @@ export interface User {
 export interface AppSettings {
     allow_anonymous_access: boolean;
     public_server_address: string | null;
+    arches_version: string;
+    lingo_version: string;
 }
 
 export interface DisplayedRowRefAndSetter {
@@ -41,7 +43,14 @@ export interface Concept {
     labels: Label[];
     narrower: Concept[];
     guide_term?: boolean;
+    top_concept?: boolean;
+    resource_instance_lifecycle_state_id?: string;
 }
+
+export type ConceptPathNode = Pick<
+    Concept,
+    "id" | "labels" | "guide_term" | "top_concept"
+>;
 
 export interface Scheme {
     id: string;
@@ -89,6 +98,7 @@ export interface ResourceInstanceResult {
         [key: string]: any;
     };
     principalUser?: number | string;
+    principal_user_display_name?: string | null;
     resource_instance_lifecycle_state?: string;
 }
 
@@ -334,6 +344,7 @@ export interface ConceptHeaderData {
     principalUser?: number | string;
     lifeCycleState: string;
     partOfScheme?: ResourceInstanceListValue;
+    schemeLabel?: string;
     parentConcepts?: ResourceInstanceListValue[];
     type?: ReferenceSelectTreeNode[];
     status?: ReferenceSelectTreeNode[];
@@ -380,6 +391,7 @@ export interface IconLabels {
     concept: string;
     guideTerm: string;
     scheme: string;
+    topConcept: string;
 }
 
 export interface SideNavMenuItem extends MenuItem {
@@ -397,6 +409,7 @@ export interface SearchResultItem {
     }[][];
     polyhierarchical: boolean;
     guide_term?: boolean;
+    top_concept?: boolean;
 }
 
 export interface SearchResultHierarchy {
@@ -484,6 +497,7 @@ export type FacetType =
     | "relationship_associated"
     | "match_uri"
     | "scheme"
+    | "top_concept"
     | "uri"
     | "identifier"
     | "lifecycle_state"
@@ -566,3 +580,5 @@ export interface ConceptSetItem {
 export interface ConceptSetDetail extends ConceptSetItem {
     members: SearchResultItem[];
 }
+
+export type DeleteConceptStrategy = "reparent" | "delete_children" | "orphan";
