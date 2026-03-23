@@ -70,14 +70,11 @@ watchEffect(async () => {
         const cardXNodeXWidgetDataPromise =
             fetchCardXNodeXWidgetDataFromNodeGroup(graphSlug, nodegroupAlias);
 
-        aliasedTileData.value = await fetchTileData(
-            graphSlug,
-            nodegroupAlias,
-            tileId,
-        );
+        const tileData = await fetchTileData(graphSlug, nodegroupAlias, tileId);
         if (!tileId && resourceInstanceId) {
-            aliasedTileData.value.resourceinstance = resourceInstanceId;
+            tileData.resourceinstance = resourceInstanceId;
         }
+        aliasedTileData.value = tileData;
 
         cardXNodeXWidgetData.value = await cardXNodeXWidgetDataPromise;
     } catch (error) {
