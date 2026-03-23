@@ -173,7 +173,7 @@ function getDisplayName(item: DashboardActivityItem): string {
             <Column
                 field="edittype_label"
                 :header="$gettext('Action')"
-                style="width: 14rem"
+                style="width: 30rem"
             />
             <Column
                 :header="$gettext('Type')"
@@ -196,7 +196,7 @@ function getDisplayName(item: DashboardActivityItem): string {
             </Column>
             <Column
                 :header="$gettext('User')"
-                style="width: 11rem"
+                style="width: 15rem"
             >
                 <template #body="slotProps">
                     <div class="user-cell">

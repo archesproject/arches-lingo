@@ -99,7 +99,7 @@ defineProps<{
     font-size: var(--p-lingo-font-size-medium);
     font-weight: var(--p-lingo-font-weight-normal);
     color: var(--p-neutral-500);
-    border-bottom: 0.0625rem solid var(--p-header-toolbar-border);
+    border-bottom: 0.0625rem solid var(--p-highlight-focus-background);
     padding-bottom: .5rem;
 }
 
@@ -149,6 +149,7 @@ defineProps<{
     border: 0.125rem solid var(--p-highlight-focus-background);
     font-size: var(--p-lingo-font-size-smallnormal);
     text-transform: capitalize;
+    min-width: 9.0rem;
 }
 
 .type-label {
