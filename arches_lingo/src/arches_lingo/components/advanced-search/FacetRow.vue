@@ -74,6 +74,20 @@ const hierarchyDirections = [
     { label: $gettext("Narrower (child of)"), value: "narrower" },
 ];
 
+const searchTextPlaceholder = $gettext("Search text...");
+const noConceptsFoundMessage = $gettext("No concepts found");
+const searchConceptsFilterPlaceholder = $gettext("Search concepts...");
+const selectConceptPlaceholder = $gettext("Select concept...");
+const anyTypePlaceholder = $gettext("Any type");
+const anyLanguagePlaceholder = $gettext("Any language");
+const selectLanguagePlaceholder = $gettext("Select language");
+const selectSchemePlaceholder = $gettext("Select scheme");
+const anyScheme = $gettext("Any scheme");
+const selectStatePlaceholder = $gettext("Select state");
+const selectConceptSetPlaceholder = $gettext("Select concept set");
+const selectConceptTypePlaceholder = $gettext("Select concept type");
+const removeConditionLabel = $gettext("Remove condition");
+
 const conceptSearchResults = ref<
     { display_value: string; resource_id: string }[]
 >([]);
@@ -245,225 +259,192 @@ function toggleNegated() {
         />
 
         <!-- Match mode (for text-based facets) -->
-        <template>
-            <Select
-                v-if="showMatchMode"
-                :model-value="currentMatchMode"
-                :options="matchModes"
-                option-label="label"
-                option-value="value"
-                class="match-mode-dropdown"
-                @update:model-value="updateMatchMode"
-            />
-        </template>
+        <Select
+            v-if="showMatchMode"
+            :model-value="currentMatchMode"
+            :options="matchModes"
+            option-label="label"
+            option-value="value"
+            class="match-mode-dropdown"
+            @update:model-value="updateMatchMode"
+        />
 
         <!-- Text input for label, note, URI, identifier, match_uri -->
-        <template>
-            <InputText
-                v-if="showValueInput"
-                :model-value="condition.value"
-                :placeholder="$gettext('Search text...')"
-                class="facet-value-input"
-                @update:model-value="
-                    (val: string | undefined) => updateField('value', val ?? '')
-                "
-            />
-        </template>
+        <InputText
+            v-if="showValueInput"
+            :model-value="condition.value"
+            :placeholder="searchTextPlaceholder"
+            class="facet-value-input"
+            @update:model-value="
+                (val: string | undefined) => updateField('value', val ?? '')
+            "
+        />
 
         <!-- Concept picker for hierarchical and associated relationships -->
-        <template>
-            <Select
-                v-if="showConceptPicker"
-                :model-value="condition.value"
-                :options="conceptSearchResults"
-                option-label="display_value"
-                option-value="resource_id"
-                :filter="true"
-                :filter-fields="['display_value', 'resource_id']"
-                :empty-filter-message="$gettext('No concepts found')"
-                :filter-placeholder="$gettext('Search concepts...')"
-                :loading="isLoadingConcepts"
-                :placeholder="$gettext('Select concept...')"
-                :show-clear="true"
-                class="facet-value-input"
-                @filter="onConceptFilter"
-                @before-show="loadConcepts()"
-                @update:model-value="
-                    (val: string | null) => updateField('value', val ?? '')
-                "
-            />
-        </template>
+        <Select
+            v-if="showConceptPicker"
+            :model-value="condition.value"
+            :options="conceptSearchResults"
+            option-label="display_value"
+            option-value="resource_id"
+            :filter="true"
+            :filter-fields="['display_value', 'resource_id']"
+            :empty-filter-message="noConceptsFoundMessage"
+            :filter-placeholder="searchConceptsFilterPlaceholder"
+            :loading="isLoadingConcepts"
+            :placeholder="selectConceptPlaceholder"
+            :show-clear="true"
+            class="facet-value-input"
+            @filter="onConceptFilter"
+            @before-show="loadConcepts()"
+            @update:model-value="
+                (val: string | null) => updateField('value', val ?? '')
+            "
+        />
 
         <!-- Label type filter (from controlled list) -->
-        <template>
-            <Select
-                v-if="showLabelTypeDropdown"
-                :model-value="condition.label_type"
-                :options="options.label_types"
-                option-label="label"
-                option-value="value"
-                :placeholder="$gettext('Any type')"
-                show-clear
-                class="facet-sub-dropdown"
-                @update:model-value="
-                    (val: string | undefined) =>
-                        updateField('label_type', val ?? '')
-                "
-            />
-        </template>
+        <Select
+            v-if="showLabelTypeDropdown"
+            :model-value="condition.label_type"
+            :options="options.label_types"
+            option-label="label"
+            option-value="value"
+            :placeholder="anyTypePlaceholder"
+            show-clear
+            class="facet-sub-dropdown"
+            @update:model-value="
+                (val: string | undefined) =>
+                    updateField('label_type', val ?? '')
+            "
+        />
 
         <!-- Note type filter (from controlled list) -->
-        <template>
-            <Select
-                v-if="showNoteTypeDropdown"
-                :model-value="condition.note_type"
-                :options="options.note_types"
-                option-label="label"
-                option-value="value"
-                :placeholder="$gettext('Any type')"
-                show-clear
-                class="facet-sub-dropdown"
-                @update:model-value="
-                    (val: string | undefined) =>
-                        updateField('note_type', val ?? '')
-                "
-            />
-        </template>
+        <Select
+            v-if="showNoteTypeDropdown"
+            :model-value="condition.note_type"
+            :options="options.note_types"
+            option-label="label"
+            option-value="value"
+            :placeholder="anyTypePlaceholder"
+            show-clear
+            class="facet-sub-dropdown"
+            @update:model-value="
+                (val: string | undefined) => updateField('note_type', val ?? '')
+            "
+        />
 
         <!-- Language filter for label/note facets -->
-        <template>
-            <Select
-                v-if="showLanguageDropdown"
-                :model-value="condition.language"
-                :options="options.languages"
-                option-label="name"
-                option-value="code"
-                :placeholder="$gettext('Any language')"
-                show-clear
-                class="facet-sub-dropdown"
-                @update:model-value="
-                    (val: string) => updateField('language', val)
-                "
-            />
-        </template>
+        <Select
+            v-if="showLanguageDropdown"
+            :model-value="condition.language"
+            :options="options.languages"
+            option-label="name"
+            option-value="code"
+            :placeholder="anyLanguagePlaceholder"
+            show-clear
+            class="facet-sub-dropdown"
+            @update:model-value="(val: string) => updateField('language', val)"
+        />
 
         <!-- Language facet (standalone) -->
-        <template>
-            <Select
-                v-if="showLanguageSelect"
-                :model-value="condition.value"
-                :options="options.languages"
-                option-label="name"
-                option-value="code"
-                :placeholder="$gettext('Select language')"
-                class="facet-value-input"
-                @update:model-value="(val: string) => updateField('value', val)"
-            />
-        </template>
+        <Select
+            v-if="showLanguageSelect"
+            :model-value="condition.value"
+            :options="options.languages"
+            option-label="name"
+            option-value="code"
+            :placeholder="selectLanguagePlaceholder"
+            class="facet-value-input"
+            @update:model-value="(val: string) => updateField('value', val)"
+        />
 
         <!-- Scheme facet -->
-        <template>
-            <Select
-                v-if="showSchemeSelect"
-                :model-value="condition.value"
-                :options="schemeDisplayOptions"
-                option-label="label"
-                option-value="id"
-                :placeholder="$gettext('Select scheme')"
-                class="facet-value-input"
-                @update:model-value="(val: string) => updateField('value', val)"
-            />
-        </template>
+        <Select
+            v-if="showSchemeSelect"
+            :model-value="condition.value"
+            :options="schemeDisplayOptions"
+            option-label="label"
+            option-value="id"
+            :placeholder="selectSchemePlaceholder"
+            class="facet-value-input"
+            @update:model-value="(val: string) => updateField('value', val)"
+        />
 
         <!-- Top concept facet: optionally filter by scheme -->
-        <template>
-            <Select
-                v-if="showTopConceptSchemeSelect"
-                :model-value="condition.value"
-                :options="schemeDisplayOptions"
-                option-label="label"
-                option-value="id"
-                :placeholder="$gettext('Any scheme')"
-                :show-clear="true"
-                class="facet-value-input"
-                @update:model-value="
-                    (val: string | undefined) => updateField('value', val ?? '')
-                "
-            />
-        </template>
+        <Select
+            v-if="showTopConceptSchemeSelect"
+            :model-value="condition.value"
+            :options="schemeDisplayOptions"
+            option-label="label"
+            option-value="id"
+            :placeholder="anyScheme"
+            :show-clear="true"
+            class="facet-value-input"
+            @update:model-value="
+                (val: string | undefined) => updateField('value', val ?? '')
+            "
+        />
 
         <!-- Lifecycle state facet -->
-        <template>
-            <Select
-                v-if="showLifecycleSelect"
-                :model-value="condition.value"
-                :options="options.lifecycle_states"
-                option-label="name"
-                option-value="id"
-                :placeholder="$gettext('Select state')"
-                class="facet-value-input"
-                @update:model-value="(val: string) => updateField('value', val)"
-            />
-        </template>
+        <Select
+            v-if="showLifecycleSelect"
+            :model-value="condition.value"
+            :options="options.lifecycle_states"
+            option-label="name"
+            option-value="id"
+            :placeholder="selectStatePlaceholder"
+            class="facet-value-input"
+            @update:model-value="(val: string) => updateField('value', val)"
+        />
 
         <!-- Concept set facet -->
-        <template>
-            <Select
-                v-if="showConceptSetSelect"
-                :model-value="condition.value"
-                :options="conceptSets"
-                option-label="name"
-                option-value="id"
-                :placeholder="$gettext('Select concept set')"
-                class="facet-value-input"
-                @update:model-value="
-                    (val: string) => updateField('value', String(val))
-                "
-            />
-        </template>
+        <Select
+            v-if="showConceptSetSelect"
+            :model-value="condition.value"
+            :options="conceptSets"
+            option-label="name"
+            option-value="id"
+            :placeholder="selectConceptSetPlaceholder"
+            class="facet-value-input"
+            @update:model-value="
+                (val: string) => updateField('value', String(val))
+            "
+        />
 
         <!-- Concept type facet (from controlled list) -->
-        <template>
-            <Select
-                v-if="showConceptTypeDropdown"
-                :model-value="condition.value"
-                :options="options.concept_types"
-                option-label="label"
-                option-value="value"
-                :placeholder="$gettext('Select concept type')"
-                show-clear
-                class="facet-value-input"
-                @update:model-value="
-                    (val: string | undefined) => updateField('value', val ?? '')
-                "
-            />
-        </template>
+        <Select
+            v-if="showConceptTypeDropdown"
+            :model-value="condition.value"
+            :options="options.concept_types"
+            option-label="label"
+            option-value="value"
+            :placeholder="selectConceptTypePlaceholder"
+            show-clear
+            class="facet-value-input"
+            @update:model-value="
+                (val: string | undefined) => updateField('value', val ?? '')
+            "
+        />
 
         <!-- Direction for hierarchical relationships -->
-        <template>
-            <Select
-                v-if="showDirectionSelect"
-                :model-value="condition.direction || 'broader'"
-                :options="hierarchyDirections"
-                option-label="label"
-                option-value="value"
-                class="facet-sub-dropdown"
-                @update:model-value="
-                    (val: string) => updateField('direction', val)
-                "
-            />
-        </template>
+        <Select
+            v-if="showDirectionSelect"
+            :model-value="condition.direction || 'broader'"
+            :options="hierarchyDirections"
+            option-label="label"
+            option-value="value"
+            class="facet-sub-dropdown"
+            @update:model-value="(val: string) => updateField('direction', val)"
+        />
 
-        <template>
-            <Button
-                icon="pi pi-times"
-                severity="danger"
-                :text="true"
-                :rounded="true"
-                :aria-label="$gettext('Remove condition')"
-                @click="$emit('remove')"
-            />
-        </template>
+        <Button
+            icon="pi pi-times"
+            severity="danger"
+            :text="true"
+            :rounded="true"
+            :aria-label="removeConditionLabel"
+            @click="$emit('remove')"
+        />
     </div>
 </template>
 
