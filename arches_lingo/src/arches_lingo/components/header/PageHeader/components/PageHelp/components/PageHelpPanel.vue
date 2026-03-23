@@ -257,14 +257,51 @@ const shouldShowPageHelpPanel = defineModel("shouldShowPageHelpPanel", {
                         </div>
                     </li>
                     <li>
-                        <i class="pi pi-link help-list-icon" />
+                        <i class="pi pi-hashtag help-list-icon" />
                         <div>
                             <span class="help-term">{{
-                                $gettext("Namespace")
+                                $gettext("Identifier")
                             }}</span>
                             {{
                                 $gettext(
-                                    " — define a base URI used to mint stable, linked-data identifiers for concepts in this scheme.",
+                                    " — a short code for the scheme (e.g. ",
+                                )
+                            }}<em>{{ $gettext("GETT") }}</em
+                            >{{ $gettext("). Used as the ")
+                            }}<code class="help-code"
+                                >&lt;scheme_identifier&gt;</code
+                            >{{ $gettext(" placeholder in the URI template.") }}
+                        </div>
+                    </li>
+                    <li>
+                        <i class="pi pi-link help-list-icon" />
+                        <div>
+                            <span class="help-term">{{
+                                $gettext("URI template")
+                            }}</span>
+                            {{
+                                $gettext(
+                                    " — the pattern used to mint stable linked-data URIs for every concept when the scheme is published. Use the placeholders ",
+                                )
+                            }}<code class="help-code"
+                                >&lt;scheme_identifier&gt;</code
+                            >
+                            {{ $gettext("and ") }}
+                            <code class="help-code"
+                                >&lt;concept_identifier&gt;</code
+                            >
+                            {{ $gettext(" to build the URI structure.") }}
+                        </div>
+                    </li>
+                    <li>
+                        <i class="pi pi-sort-numeric-up help-list-icon" />
+                        <div>
+                            <span class="help-term">{{
+                                $gettext("Concept counter")
+                            }}</span>
+                            {{
+                                $gettext(
+                                    " — the starting number for auto-incrementing concept identifiers. Set this before publishing — once identifiers have been assigned the counter is locked.",
                                 )
                             }}
                         </div>
@@ -523,6 +560,133 @@ const shouldShowPageHelpPanel = defineModel("shouldShowPageHelpPanel", {
                     {{
                         $gettext(
                             "Expand a search result row to see additional details such as identifier, lifecycle state, and notes.",
+                        )
+                    }}
+                </div>
+            </section>
+
+            <!-- Lifecycle States -->
+            <section class="help-section">
+                <h3 class="help-section-title">
+                    <i class="pi pi-refresh" />
+                    {{ $gettext("Lifecycle States") }}
+                </h3>
+                <p class="help-text">
+                    {{
+                        $gettext(
+                            "Every scheme and concept has a lifecycle state that tracks its maturity from initial creation through to publication and eventual retirement.",
+                        )
+                    }}
+                </p>
+                <div class="help-label-types">
+                    <div class="help-label-type">
+                        <span class="help-badge help-badge--lifecycle-draft">{{
+                            $gettext("Draft")
+                        }}</span>
+                        <span class="help-label-desc">{{
+                            $gettext(
+                                "Initial working state. The record can be freely edited and deleted.",
+                            )
+                        }}</span>
+                    </div>
+                    <div class="help-label-type">
+                        <span
+                            class="help-badge help-badge--lifecycle-editing"
+                            >{{ $gettext("Editing") }}</span
+                        >
+                        <span class="help-label-desc">{{
+                            $gettext(
+                                "Back under active revision after prior publication.",
+                            )
+                        }}</span>
+                    </div>
+                    <div class="help-label-type">
+                        <span
+                            class="help-badge help-badge--lifecycle-published"
+                            >{{ $gettext("Published") }}</span
+                        >
+                        <span class="help-label-desc">{{
+                            $gettext(
+                                "Finalized and stable. The URI is now authoritative.",
+                            )
+                        }}</span>
+                    </div>
+                    <div class="help-label-type">
+                        <span
+                            class="help-badge help-badge--lifecycle-retired"
+                            >{{ $gettext("Retired") }}</span
+                        >
+                        <span class="help-label-desc">{{
+                            $gettext(
+                                "No longer active. Retired records are preserved for reference and their URIs remain resolvable.",
+                            )
+                        }}</span>
+                    </div>
+                </div>
+                <ul
+                    class="help-list"
+                    style="margin-top: 0.875rem"
+                >
+                    <li>
+                        <i class="pi pi-tag help-list-icon" />
+                        <div>
+                            <span class="help-term">{{
+                                $gettext("State badges")
+                            }}</span>
+                            {{
+                                $gettext(
+                                    " — the current state appears as a color-coded badge in concept and scheme headers and in search results. In the hierarchy tree, badges are shown for Draft and Retired records so they stand out at a glance.",
+                                )
+                            }}
+                        </div>
+                    </li>
+                    <li>
+                        <i
+                            class="pi pi-arrow-right-arrow-left help-list-icon"
+                        />
+                        <div>
+                            <span class="help-term">{{
+                                $gettext("Scheme-level transitions")
+                            }}</span>
+                            {{
+                                $gettext(
+                                    " — Publishing and moving a scheme back into Editing are controlled from the scheme header and cascade automatically to all of its concepts. When a scheme is published, concept identifiers and URIs are generated for every concept using the scheme's identifier, URI template, and concept counter.",
+                                )
+                            }}
+                        </div>
+                    </li>
+                    <li>
+                        <i class="pi pi-trash help-list-icon" />
+                        <div>
+                            <span class="help-term">{{
+                                $gettext("Concept-level actions")
+                            }}</span>
+                            {{
+                                $gettext(
+                                    " — at the concept level, editors can delete a Draft concept (permanent removal) or deprecate an Editing concept (soft retirement that preserves its URI and history). Publish and Editing transitions are not available directly on individual concepts.",
+                                )
+                            }}
+                        </div>
+                    </li>
+                    <li>
+                        <i class="pi pi-filter help-list-icon" />
+                        <div>
+                            <span class="help-term">{{
+                                $gettext("Lifecycle filter")
+                            }}</span>
+                            {{
+                                $gettext(
+                                    " — use the filter button in the Explore panel to show only concepts in one or more specific states, for example to review all Draft concepts before publishing a scheme.",
+                                )
+                            }}
+                        </div>
+                    </li>
+                </ul>
+                <div class="help-tip">
+                    <i class="pi pi-info-circle help-tip-icon" />
+                    {{
+                        $gettext(
+                            "You can also filter by lifecycle state in the Advanced Search query builder to find all concepts at a particular stage across every scheme.",
                         )
                     }}
                 </div>
@@ -825,10 +989,45 @@ const shouldShowPageHelpPanel = defineModel("shouldShowPageHelpPanel", {
     border: 0.0625rem solid var(--p-header-toolbar-border);
 }
 
+.help-badge--lifecycle-draft {
+    background: var(--p-tag-secondary-background);
+    color: var(--p-tag-secondary-color);
+    border: 0.0625rem solid var(--p-tag-secondary-border-color);
+}
+
+.help-badge--lifecycle-editing {
+    background: var(--p-tag-warn-background);
+    color: var(--p-tag-warn-color);
+    border: 0.0625rem solid var(--p-tag-warn-border-color);
+}
+
+.help-badge--lifecycle-published {
+    background: var(--p-tag-success-background);
+    color: var(--p-tag-success-color);
+    border: 0.0625rem solid var(--p-tag-success-border-color);
+}
+
+.help-badge--lifecycle-retired {
+    background: var(--p-tag-danger-background);
+    color: var(--p-tag-danger-color);
+    border: 0.0625rem solid var(--p-tag-danger-border-color);
+}
+
 .help-label-desc {
     font-size: var(--p-lingo-font-size-small);
     color: var(--p-neutral-500);
     line-height: 1.5;
+}
+
+/* ── Inline code ── */
+.help-code {
+    font-family: monospace;
+    font-size: var(--p-lingo-font-size-xsmall);
+    background: var(--p-highlight-background);
+    border: 0.0625rem solid var(--p-header-toolbar-border);
+    border-radius: 0.125rem;
+    padding: 0 0.25rem;
+    color: var(--p-text-color);
 }
 
 /* ── Link ── */
