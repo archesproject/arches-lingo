@@ -20,7 +20,9 @@ defineProps<{
         </div>
         <div class="breakdowns-grid">
             <section
-                v-if="stats.concepts_by_type && stats.concepts_by_type.length > 0"
+                v-if="
+                    stats.concepts_by_type && stats.concepts_by_type.length > 0
+                "
                 class="dashboard-section"
             >
                 <div class="section-header">
@@ -63,7 +65,8 @@ defineProps<{
 
             <section
                 v-if="
-                    stats.labels_by_language && stats.labels_by_language.length > 0
+                    stats.labels_by_language &&
+                    stats.labels_by_language.length > 0
                 "
                 class="dashboard-section"
             >
@@ -94,13 +97,13 @@ defineProps<{
     padding: 1rem 1rem 0 1rem;
 }
 
-.data-section-header h2{
+.data-section-header h2 {
     margin: 0;
     font-size: var(--p-lingo-font-size-medium);
     font-weight: var(--p-lingo-font-weight-normal);
     color: var(--p-neutral-500);
     border-bottom: 0.0625rem solid var(--p-highlight-focus-background);
-    padding-bottom: .5rem;
+    padding-bottom: 0.5rem;
 }
 
 .breakdowns-grid {
@@ -115,7 +118,7 @@ defineProps<{
     flex-direction: column;
     gap: 0.25rem;
     background: var(--p-content-background);
-    padding: .5rem 0;
+    padding: 0.5rem 0;
 }
 
 .section-header {
@@ -149,7 +152,7 @@ defineProps<{
     border: 0.125rem solid var(--p-highlight-focus-background);
     font-size: var(--p-lingo-font-size-smallnormal);
     text-transform: capitalize;
-    min-width: 9.0rem;
+    min-width: 9rem;
 }
 
 .type-label {

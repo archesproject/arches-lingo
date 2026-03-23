@@ -89,7 +89,7 @@ defineProps<{
 .stats-row {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 2.0rem;
+    gap: 2rem;
 }
 
 .stat-card {
