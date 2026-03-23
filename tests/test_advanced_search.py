@@ -926,7 +926,7 @@ class AdvancedSearchViewTests(TestCase):
         self.assertIn(str(self.concept.pk), ids)
 
     def test_search_returns_enriched_fields(self):
-        """Enriched results should include notes, uri, identifier, lifecycle_state."""
+        """Enriched results should include notes, uri, identifier, and lifecycle state."""
         response = self.client.post(
             reverse("api-advanced-search"),
             data=json.dumps(
@@ -948,7 +948,8 @@ class AdvancedSearchViewTests(TestCase):
         self.assertIn("uri", item)
         self.assertIn("identifier", item)
         self.assertIn("notes", item)
-        self.assertIn("lifecycle_state", item)
+        self.assertIn("resource_instance_lifecycle_state_id", item)
+        self.assertIn("resource_instance_lifecycle_state_name", item)
 
     def test_search_invalid_json(self):
         response = self.client.post(

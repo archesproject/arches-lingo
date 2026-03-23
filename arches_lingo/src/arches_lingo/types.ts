@@ -45,6 +45,7 @@ export interface Concept {
     guide_term?: boolean;
     top_concept?: boolean;
     resource_instance_lifecycle_state_id?: string;
+    resource_instance_lifecycle_state_name?: string;
 }
 
 export type ConceptPathNode = Pick<
@@ -57,6 +58,7 @@ export interface Scheme {
     labels: Label[];
     top_concepts: Concept[];
     resource_instance_lifecycle_state_id?: string;
+    resource_instance_lifecycle_state_name?: string;
 }
 
 export interface ControlledListResult {
@@ -411,6 +413,8 @@ export interface SearchResultItem {
     polyhierarchical: boolean;
     guide_term?: boolean;
     top_concept?: boolean;
+    resource_instance_lifecycle_state_id?: string;
+    resource_instance_lifecycle_state_name?: string;
 }
 
 export interface SearchResultHierarchy {
@@ -536,7 +540,6 @@ interface AdvancedSearchResultItem extends SearchResultItem {
     uri?: string | null;
     identifier?: string | null;
     notes: { content: string; language: string; type: string }[];
-    lifecycle_state?: string | null;
 }
 
 export interface AdvancedSearchResponse {
