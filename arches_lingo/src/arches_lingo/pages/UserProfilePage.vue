@@ -41,6 +41,7 @@ const profile = ref<User>({
     email: "",
     phone: "",
     is_lingo_editor: false,
+    is_resource_editor: false,
     is_anonymous: true,
 });
 

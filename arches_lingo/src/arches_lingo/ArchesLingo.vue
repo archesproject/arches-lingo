@@ -157,6 +157,7 @@ function refreshSchemeHierarchy() {
             },
         }"
     />
+    <ConfirmDialog group="task-confirm" />
     <ConfirmDialog group="unsaved-changes" />
 </template>
 

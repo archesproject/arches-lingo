@@ -45,6 +45,7 @@ from arches_lingo.views.api.resource_list import (
     ResourceReferenceCountView,
     SourcesListView,
 )
+from arches_lingo.views.api.tasks import UserTaskDetailView, UserTaskListView
 from arches_lingo.views.api.user_profile import (
     ChangePasswordAPIView,
     LingoUserView,
@@ -81,6 +82,7 @@ urlpatterns = [
     path("contributors", LingoRootView.as_view(), name="contributors"),
     path("contributor/<uuid:id>", LingoRootView.as_view(), name="contributor"),
     path("profile", LingoRootView.as_view(), name="profile"),
+    path("tasks", LingoRootView.as_view(), name="tasks"),
     path(
         "api/lingo/user-profile",
         UserProfileAPIView.as_view(),
@@ -100,6 +102,16 @@ urlpatterns = [
         "api/lingo/change-password",
         ChangePasswordAPIView.as_view(),
         name="api-lingo-change-password",
+    ),
+    path(
+        "api/lingo/tasks",
+        UserTaskListView.as_view(),
+        name="api-lingo-tasks",
+    ),
+    path(
+        "api/lingo/tasks/<uuid:loadid>",
+        UserTaskDetailView.as_view(),
+        name="api-lingo-task-detail",
     ),
     path(
         "api/lingo/dashboard",

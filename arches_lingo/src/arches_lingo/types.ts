@@ -17,6 +17,7 @@ export interface User {
     email: string;
     phone?: string;
     is_lingo_editor: boolean;
+    is_resource_editor: boolean;
     is_anonymous: boolean;
 }
 
