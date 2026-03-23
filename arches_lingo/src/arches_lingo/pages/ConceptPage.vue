@@ -3,7 +3,7 @@ import { useGettext } from "vue3-gettext";
 
 import ComponentManager from "@/arches_lingo/components/generic/ComponentManager/ComponentManager.vue";
 
-import ConceptHeader from "@/arches_lingo/components/concept/ConceptHeader.vue";
+import ConceptHeader from "@/arches_lingo/components/concept/ConceptHeader/ConceptHeader.vue";
 import ConceptLabel from "@/arches_lingo/components/concept/ConceptLabel/ConceptLabel.vue";
 import ConceptNote from "@/arches_lingo/components/concept/ConceptNote/ConceptNote.vue";
 import ConceptRelationship from "@/arches_lingo/components/concept/ConceptRelationship/ConceptRelationship.vue";

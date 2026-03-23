@@ -47,11 +47,12 @@ details = {
     "helptemplate": "migrate-to-lingo-help",
 }
 
-# TODO: swap out for URLValidator?
-# from django.core.validators import URLValidator
-URL_REGEX = re.compile(
-    r"https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)"
-)
+ONTOLOGY_PROPERTY_BY_NODE_ALIAS = {
+    "top_concept_of": const.TOP_CONCEPT_OF_ONTOLOGY_PROPERTY,
+    "part_of_scheme": const.PART_OF_SCHEME_ONTOLOGY_PROPERTY,
+    "classification_status_ascribed_classification": const.CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_ONTOLOGY_PROPERTY,
+    "relation_status_ascribed_comparate": const.RELATION_STATUS_ASCRIBED_COMPARATE_ONTOLOGY_PROPERTY,
+}
 
 
 class LingoResourceImporter(BaseImportModule):
@@ -136,12 +137,18 @@ class LingoResourceImporter(BaseImportModule):
                 scheme_to_load["resourceinstanceid"] = (
                     concept.pk
                 )  # use old conceptid as new resourceinstanceid
+
+                if (
+                    value.valuetype_id == "identifier"
+                    and str(concept.pk) in value.value
+                ):
+                    # Schemes with an auto-generated identifier should be marked as draft and not have their identifier treated as a URI
+                    continue
+
                 mock_tile = self.create_mock_tile_from_value(
-                    value, isScheme=True, lang_lookup=self.language_lookup
+                    value, lang_lookup=self.language_lookup
                 )
-                if isinstance(mock_tile, list):
-                    scheme_to_load["tile_data"].extend(mock_tile)
-                elif mock_tile:
+                if mock_tile:
                     scheme_to_load["tile_data"].append(mock_tile)
             schemes.append(scheme_to_load)
         return schemes
@@ -160,12 +167,18 @@ class LingoResourceImporter(BaseImportModule):
                 concept_to_load["resourceinstanceid"] = (
                     concept.pk
                 )  # use old conceptid as new resourceinstanceid
+
+                if (
+                    value.valuetype_id == "identifier"
+                    and str(concept.pk) in value.value
+                ):
+                    # Concepts with an auto-generated identifier should be marked as draft and not have their identifier treated as a URI
+                    continue
+
                 mock_tile = self.create_mock_tile_from_value(
                     value, lang_lookup=self.language_lookup
                 )
-                if isinstance(mock_tile, list):
-                    concept_to_load["tile_data"].extend(mock_tile)
-                elif mock_tile:
+                if mock_tile:
                     concept_to_load["tile_data"].append(mock_tile)
 
             concepts.append(concept_to_load)
@@ -232,28 +245,11 @@ class LingoResourceImporter(BaseImportModule):
             mock_tile["appellative_status_ascribed_name_language"] = value["language"]
             mock_tile["appellative_status_ascribed_relation"] = value_type_id
             return {"appellative_status": mock_tile}
-        elif value_type_id == "identifier":
-            val = value["value"]
-            if URL_REGEX.match(val) and not isScheme:
-                mock_tiles = [
-                    {
-                        "uri": {
-                            "uri_content": val,
-                            "uri_type": value_type_id,
-                        }
-                    },
-                    {
-                        "identifier": {
-                            "identifier_content": val.rstrip("/").split("/")[-1],
-                            "identifier_type": value_type_id,
-                        }
-                    },
-                ]
-                return mock_tiles
-            else:
-                mock_tile["identifier_content"] = val
-                mock_tile["identifier_type"] = value_type_id
-                return {"identifier": mock_tile}
+        elif value_type_id == "identifier" and not isScheme:
+            # treat identifiers as external exact-matched concepts
+            mock_tile["match_status_ascribed_comparate"] = value["value"]
+            mock_tile["match_status_ascribed_relation"] = "exactMatch"
+            return {"match_status": mock_tile}
         elif value_type_id in set(
             [
                 "note",
@@ -288,17 +284,11 @@ class LingoResourceImporter(BaseImportModule):
 
     @staticmethod
     def create_mock_tile_from_relationship(relationship):
-        ontology_property_by_node_alias = {
-            "top_concept_of": const.TOP_CONCEPT_OF_ONTOLOGY_PROPERTY,
-            "part_of_scheme": const.PART_OF_SCHEME_ONTOLOGY_PROPERTY,
-            "classification_status_ascribed_classification": const.CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_ONTOLOGY_PROPERTY,
-            "relation_status_ascribed_comparate": const.RELATION_STATUS_ASCRIBED_COMPARATE_ONTOLOGY_PROPERTY,
-        }
         node_alias = relationship["node_alias"]
         mock_tile = {
             node_alias: {
                 "resourceId": str(relationship["resourceId"]),
-                "ontologyProperty": ontology_property_by_node_alias.get(node_alias, ""),
+                "ontologyProperty": ONTOLOGY_PROPERTY_BY_NODE_ALIAS.get(node_alias, ""),
                 "resourceXresourceId": "",
                 "inverseOntologyProperty": "",
             }
@@ -341,7 +331,7 @@ class LingoResourceImporter(BaseImportModule):
                         sortorder=sortorder,
                     )
                 )
-        staged_tiles = LoadStaging.objects.bulk_create(tiles_to_load)
+        LoadStaging.objects.bulk_create(tiles_to_load)
 
         cursor.execute(
             """CALL __arches_check_tile_cardinality_violation_for_load(%s)""",
@@ -470,7 +460,7 @@ class LingoResourceImporter(BaseImportModule):
             concept_hierarchy.append(concept_dict)
         return concept_hierarchy, concepts_to_migrate
 
-    def init_relationships(
+    def _init_relationships(
         self, cursor, loadid, concepts_to_migrate, concept_hierarchy
     ):
         # prefetch default values for hidden nodes
@@ -928,7 +918,7 @@ class LingoResourceImporter(BaseImportModule):
 
             # Create relationships
             if self.scheme_conceptid:
-                self.init_relationships(
+                self._init_relationships(
                     cursor, self.loadid, concepts_to_migrate, concept_hierarchy
                 )
 

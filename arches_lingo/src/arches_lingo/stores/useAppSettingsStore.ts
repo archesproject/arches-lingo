@@ -21,6 +21,7 @@ export const useAppSettingsStore = defineStore("appSettings", () => {
     const lingoVersion = computed(() => settings.value?.lingo_version ?? "");
 
     async function initialize() {
+        if (settings.value !== null) return;
         settings.value = await fetchAppSettings();
     }
 

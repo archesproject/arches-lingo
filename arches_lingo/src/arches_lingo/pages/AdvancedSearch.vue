@@ -46,7 +46,7 @@ import type {
 
 const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
 const userStore = useUserStore();
-const { isAnonymous } = userStore;
+const { isAnonymous } = storeToRefs(userStore);
 
 const { $gettext } = useGettext();
 const toast = useToast();

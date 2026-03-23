@@ -620,8 +620,46 @@ class EditLogRevertUtilTests(EditLogTestMixin, ViewTests):
         self.assertEqual(len(errors), 1)
         self.assertIn("Failed to restore tile", errors[0])
 
-    def test_reports_error_when_nested_tile_needs_recreation(self):
-        """Recreating a nested tile reports an error since parent context is unavailable."""
+    def test_recreates_nested_tile_when_parent_tile_exists(self):
+        """A nested tile deleted after target timestamp is recreated when a parent tile is found."""
+        concept = self.concepts[0]
+        tileid = uuid.uuid4()
+        target_data = {"some_node": "data"}
+        mock_new_tile = MagicMock()
+
+        nested_nodegroup = NodeGroup.objects.filter(
+            parentnodegroup__isnull=False
+        ).first()
+        if not nested_nodegroup:
+            self.skipTest("No nested nodegroup available in test data")
+
+        self._create_edit(
+            concept,
+            "tile create",
+            self.base_time - timedelta(hours=2),
+            tileid=tileid,
+            nodegroupid=str(nested_nodegroup.pk),
+            newvalue=target_data,
+        )
+        self._create_edit(
+            concept,
+            "tile delete",
+            self.base_time + timedelta(hours=1),
+            tileid=tileid,
+            nodegroupid=str(nested_nodegroup.pk),
+        )
+
+        with patch(self.TILE_PATCH_TARGET) as MockTile:
+            MockTile.DoesNotExist = RealTile.DoesNotExist
+            MockTile.objects.get.side_effect = RealTile.DoesNotExist
+            MockTile.return_value = mock_new_tile
+            errors = self._revert(concept)
+
+        self.assertEqual(errors, [])
+        mock_new_tile.save.assert_called_once()
+
+    def test_reports_error_when_nested_tile_parent_is_missing(self):
+        """Recreating a nested tile reports an error when no parent tile can be found in the DB."""
         concept = self.concepts[0]
         tileid = uuid.uuid4()
 
@@ -647,7 +685,10 @@ class EditLogRevertUtilTests(EditLogTestMixin, ViewTests):
             nodegroupid=str(nested_nodegroup.pk),
         )
 
-        with self._patch_tile(side_effect=RealTile.DoesNotExist):
+        with patch(self.TILE_PATCH_TARGET) as MockTile:
+            MockTile.DoesNotExist = RealTile.DoesNotExist
+            MockTile.objects.get.side_effect = RealTile.DoesNotExist
+            MockTile.objects.filter.return_value.first.return_value = None
             errors = self._revert(concept)
 
         self.assertEqual(len(errors), 1)

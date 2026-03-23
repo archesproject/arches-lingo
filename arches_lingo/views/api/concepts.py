@@ -2,17 +2,22 @@ from http import HTTPStatus
 
 from django.conf import settings
 from django.core.paginator import Paginator
-from django.http import JsonResponse
+from django.db import transaction
 from django.utils.translation import get_language, gettext as _
 from django.views.generic import View
 
-from arches.app.utils.betterJSONSerializer import JSONDeserializer, JSONSerializer
+from arches.app.models.models import ResourceInstance
 from arches.app.utils.response import JSONErrorResponse, JSONResponse
 
 from arches_querysets.models import ResourceTileTree, TileTree
-from arches_lingo.mixins.permissions import AnonymousAccessMixin
-from arches_lingo.permissions import anonymous_access_allowed, is_authenticated_user
+from arches_lingo.mixins.permissions import AnonymousAccessMixin, LingoEditorMixin
 from arches_lingo.utils.concept_builder import ConceptBuilder
+from arches_lingo.utils.concept_lifecycle import (
+    DRAFT_STATE_ID,
+    VALID_STRATEGIES,
+    delete_concept,
+    get_narrower_ids,
+)
 from arches_lingo.utils.concepts import (
     resolve_max_edit_distance,
     build_ranked_concept_ids_for_term,
@@ -195,6 +200,49 @@ class ConceptRelationshipView(ConceptTreeView):
         }
 
         return JSONResponse(return_data)
+
+
+class ConceptDeleteView(LingoEditorMixin, View):
+    def delete(self, request, pk):
+        try:
+            concept = ResourceInstance.objects.get(pk=pk)
+        except ResourceInstance.DoesNotExist:
+            return JSONErrorResponse(
+                title=_("Not found"),
+                message=_("Concept not found."),
+                status=HTTPStatus.NOT_FOUND,
+            )
+
+        if concept.resource_instance_lifecycle_state_id != DRAFT_STATE_ID:
+            return JSONErrorResponse(
+                title=_("Cannot delete"),
+                message=_("Only concepts in Draft state can be deleted."),
+                status=HTTPStatus.BAD_REQUEST,
+            )
+
+        strategy = request.GET.get("strategy")
+
+        if get_narrower_ids(str(pk)) and strategy not in VALID_STRATEGIES:
+            return JSONErrorResponse(
+                title=_("Strategy required"),
+                message=_(
+                    "This concept has children. Provide a strategy: "
+                    "reparent, delete_children, or orphan."
+                ),
+                status=HTTPStatus.BAD_REQUEST,
+            )
+
+        try:
+            with transaction.atomic():
+                delete_concept(concept, strategy)
+        except ValueError as error:
+            return JSONErrorResponse(
+                title=_("Cannot delete"),
+                message=str(error),
+                status=HTTPStatus.BAD_REQUEST,
+            )
+
+        return JSONResponse({"deleted": True})
 
 
 class ConceptMissingTranslationsView(AnonymousAccessMixin, View):

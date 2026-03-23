@@ -32,33 +32,34 @@ const resourceInstanceLifecycleStateCanEditById = inject(
     "resourceInstanceLifecycleStateCanEditById",
 ) as Ref<Record<string, boolean>>;
 
-const shouldShowAddChildButton = computed(() => {
-    if (node.data.id === NEW) {
-        return false;
-    }
+const resourceInstanceLifecycleStateIsRetiredById = inject(
+    "resourceInstanceLifecycleStateIsRetiredById",
+) as Ref<Record<string, boolean>>;
 
-    if (!userStore.isEditor) {
-        return false;
-    }
+const isRetired = computed(function () {
+    return (
+        resourceInstanceLifecycleStateIsRetiredById?.value?.[
+            node.data.resource_instance_lifecycle_state_id
+        ] === true
+    );
+});
 
-    const nodeDataObject = node.data as unknown as Record<string, unknown>;
-    const lifecycleStateIdValue =
-        nodeDataObject.resource_instance_lifecycle_state_id;
-
-    if (typeof lifecycleStateIdValue !== "string") {
-        return false;
-    }
-
-    return Boolean(
+const shouldShowAddChildButton = computed(function () {
+    return (
+        node.data.id !== NEW &&
+        userStore.isEditor &&
         resourceInstanceLifecycleStateCanEditById?.value?.[
-            lifecycleStateIdValue
-        ],
+            node.data.resource_instance_lifecycle_state_id
+        ] === true
     );
 });
 </script>
 
 <template>
-    <div class="tree-row">
+    <div
+        class="tree-row"
+        :class="{ retired: isRetired }"
+    >
         <TreeRowLabel
             :filter-value="filterValue"
             :node="node"
@@ -92,5 +93,10 @@ const shouldShowAddChildButton = computed(() => {
     align-items: center;
     gap: 0.5rem;
     margin: 0 0.5rem;
+}
+
+.tree-row.retired {
+    opacity: 0.5;
+    text-decoration: line-through;
 }
 </style>

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from "vue";
+import { storeToRefs } from "pinia";
 import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
 
@@ -29,7 +30,7 @@ import type { ConceptSetItem } from "@/arches_lingo/types.ts";
 const { $gettext } = useGettext();
 const toast = useToast();
 const userStore = useUserStore();
-const { isAnonymous } = userStore;
+const { isAnonymous } = storeToRefs(userStore);
 
 defineProps<{
     selectedConceptIds: Set<string>;
@@ -182,7 +183,7 @@ defineExpose({
 });
 
 watch(
-    () => isAnonymous,
+    isAnonymous,
     (isAnonymous) => {
         if (!isAnonymous) {
             loadConceptSets();

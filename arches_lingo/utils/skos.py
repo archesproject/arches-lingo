@@ -106,11 +106,11 @@ class SKOSReader(SKOSReader):
                         )
                         top_concept_mock_tiles[top_concept_id] = top_concept_mock_tile
 
-                if "identifier" not in [
+                if "appellative_status" not in [
                     key for val in new_scheme["tile_data"] for key in val.keys()
                 ]:
                     mock_tile = self.map_predicate_object_to_mock_tile(
-                        str(scheme), "identifier", isScheme
+                        str(scheme), "prefLabel", isScheme
                     )
                     if mock_tile:
                         new_scheme["tile_data"].append(mock_tile)
@@ -147,15 +147,15 @@ class SKOSReader(SKOSReader):
                         new_concept["tile_data"].append(mock_tile)
 
                     for predicate, object in graph.predicate_objects(concept):
-                        # Cast dcterms:description to scopeNote (same behavior in RDM)
                         if predicate == DCTERMS.description:
+                            # Cast dcterms:description to scopeNote (same behavior in RDM)
                             predicate_str = "scopeNote"
-
-                        predicate_str = (
-                            predicate.replace(ARCHES, "")
-                            .replace(SKOS, "")
-                            .replace(DCTERMS, "")
-                        )
+                        else:
+                            predicate_str = (
+                                predicate.replace(ARCHES, "")
+                                .replace(SKOS, "")
+                                .replace(DCTERMS, "")
+                            )
 
                         if predicate in [
                             SKOS.broader,
@@ -211,26 +211,14 @@ class SKOSReader(SKOSReader):
                                 mock_tile = self.map_predicate_object_to_mock_tile(
                                     matched_URI, predicate_str, isScheme
                                 )
-                                new_concept["tile_data"].append(mock_tile)
+                                if mock_tile:
+                                    new_concept["tile_data"].append(mock_tile)
                         else:
                             mock_tile = self.map_predicate_object_to_mock_tile(
                                 object, predicate_str, isScheme
                             )
-                            if isinstance(mock_tile, list):
-                                new_concept["tile_data"].extend(mock_tile)
-                            elif mock_tile:
+                            if mock_tile:
                                 new_concept["tile_data"].append(mock_tile)
-
-                    if "identifier" not in [
-                        key for val in new_concept["tile_data"] for key in val.keys()
-                    ]:
-                        mock_tile = self.map_predicate_object_to_mock_tile(
-                            str(concept), "identifier", isScheme
-                        )
-                        if isinstance(mock_tile, list):
-                            new_concept["tile_data"].extend(mock_tile)
-                        elif mock_tile:
-                            new_concept["tile_data"].append(mock_tile)
 
                     type_tile = {
                         "type": {"type": "concept", "type_metatype": "classification"}
@@ -249,8 +237,11 @@ class SKOSReader(SKOSReader):
             return self.schemes, self.concepts
 
     def map_predicate_object_to_mock_tile(
-        self, object: str | dict, predicate: str, isScheme: bool = False
-    ) -> dict:
+        self,
+        object: str | dict,
+        predicate: str,
+        isScheme: bool = False,
+    ) -> dict | list | None:
         if (
             predicate not in self.dcterms_value_types
             and predicate not in self.skos_value_types

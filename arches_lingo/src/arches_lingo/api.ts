@@ -10,6 +10,7 @@ import type {
     AppSettings,
     ConceptInstance,
     ConceptSetDetail,
+    DeleteConceptStrategy,
     ConceptSetItem,
     DigitalObjectInstance,
     EditLogEntry,
@@ -266,6 +267,18 @@ export const updateLingoResource = async (
     return parsed;
 };
 
+export const deleteConceptWithStrategy = async (
+    graphSlug: string,
+    conceptId: string,
+    strategy: DeleteConceptStrategy,
+): Promise<void> => {
+    console.log("[stub] deleteConceptWithStrategy", {
+        graphSlug,
+        conceptId,
+        strategy,
+    });
+};
+
 export const deleteLingoResource = async (
     graphSlug: string,
     resourceId: string,
@@ -282,6 +295,42 @@ export const deleteLingoResource = async (
         throw new Error(parsed.message || response.statusText);
     } else {
         return true;
+    }
+};
+
+export const deleteConcept = async (
+    conceptId: string,
+    strategy?: string,
+): Promise<void> => {
+    const url = generateArchesURL("arches_lingo:api-concept-delete", {
+        pk: conceptId,
+    });
+    const fullUrl = strategy ? `${url}?strategy=${strategy}` : url;
+    const response = await fetch(fullUrl, {
+        method: "DELETE",
+        headers: { "X-CSRFTOKEN": getToken() },
+    });
+    if (!response.ok) {
+        const parsed = await response.json();
+        throw new Error(parsed.message || response.statusText);
+    }
+};
+
+export const retireConcept = async (
+    conceptId: string,
+    strategy?: string,
+): Promise<void> => {
+    const url = generateArchesURL("arches_lingo:api-concept-retire", {
+        pk: conceptId,
+    });
+    const fullUrl = strategy ? `${url}?strategy=${strategy}` : url;
+    const response = await fetch(fullUrl, {
+        method: "POST",
+        headers: { "X-CSRFTOKEN": getToken() },
+    });
+    if (!response.ok) {
+        const parsed = await response.json();
+        throw new Error(parsed.message || response.statusText);
     }
 };
 

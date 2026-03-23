@@ -10,6 +10,7 @@ import Button from "primevue/button";
 import { login } from "@/arches_lingo/api.ts";
 import { DEFAULT_ERROR_TOAST_LIFE, ERROR } from "@/arches_lingo/constants.ts";
 import { routeNames } from "@/arches_lingo/routes.ts";
+import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 
 import LoginLinks from "@/arches_lingo/components/login/LoginLinks.vue";
 
@@ -17,6 +18,7 @@ const { $gettext } = useGettext();
 const toast = useToast();
 const router = useRouter();
 const route = useRoute();
+const userStore = useUserStore();
 
 const username = ref();
 const password = ref();
@@ -24,6 +26,7 @@ const password = ref();
 const submit = async () => {
     try {
         await login(username.value, password.value);
+        userStore.setUser(null);
         router.push(route.redirectedFrom || { name: routeNames.root });
     } catch (error) {
         toast.add({
