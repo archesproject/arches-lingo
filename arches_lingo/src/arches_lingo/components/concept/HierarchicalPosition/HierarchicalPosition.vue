@@ -66,11 +66,13 @@ onMounted(async () => {
         conceptStore.getParentPaths(props.resourceInstanceId ?? "")[0]?.[0]?.id;
 
     if (shouldCreateNewTile.value) {
-        const blankTileData = await fetchTileData<ConceptClassificationStatus>(
+        const blankTileData = await fetchTileData(
             props.graphSlug,
             props.nodegroupAlias,
         );
-        tileData.value = [blankTileData];
+        tileData.value = [
+            blankTileData as unknown as ConceptClassificationStatus,
+        ];
         isLoading.value = false;
         if (props.mode === EDIT) emit("update:isEditorLoading", false);
     }
