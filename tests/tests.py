@@ -767,6 +767,7 @@ class PermissionTests(TestCase):
         result = json.loads(response.content)
         self.assertTrue(result["is_anonymous"])
         self.assertFalse(result["is_lingo_editor"])
+        self.assertFalse(result["is_staff"])
         self.assertNotIn("allow_anonymous_access", result)
 
     def test_lingo_user_view_regular_user(self):
@@ -775,6 +776,7 @@ class PermissionTests(TestCase):
         result = json.loads(response.content)
         self.assertFalse(result["is_anonymous"])
         self.assertFalse(result["is_lingo_editor"])
+        self.assertFalse(result["is_staff"])
         self.assertEqual(result["username"], "regular")
 
     def test_lingo_user_view_editor(self):
@@ -783,7 +785,15 @@ class PermissionTests(TestCase):
         result = json.loads(response.content)
         self.assertFalse(result["is_anonymous"])
         self.assertTrue(result["is_lingo_editor"])
+        self.assertFalse(result["is_staff"])
         self.assertEqual(result["username"], "editor")
+
+    def test_lingo_user_view_admin(self):
+        self.client.force_login(self.admin)
+        response = self.client.get(reverse("api-lingo-user"))
+        result = json.loads(response.content)
+        self.assertFalse(result["is_anonymous"])
+        self.assertTrue(result["is_staff"])
 
     @override_settings(LINGO_ALLOW_ANONYMOUS_ACCESS=True)
     def test_app_settings_view_anonymous_access_enabled(self):

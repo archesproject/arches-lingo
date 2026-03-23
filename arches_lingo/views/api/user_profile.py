@@ -41,6 +41,7 @@ class LingoUserView(View):
                 "phone": phone,
                 "is_lingo_editor": is_lingo_editor(user),
                 "is_anonymous": is_anonymous,
+                "is_staff": getattr(user, "is_staff", False),
             }
         )
 

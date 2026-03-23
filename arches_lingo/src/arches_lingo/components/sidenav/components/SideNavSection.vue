@@ -64,6 +64,37 @@ const isNavExpanded = inject("isNavExpanded", false);
                 </span>
             </a>
         </RouterLink>
+        <a
+            v-else-if="
+                child.url && (child.showIconIfCollapsed || isNavExpanded)
+            "
+            v-tooltip="{
+                value: child.label,
+                pt: {
+                    text: {
+                        style: { fontFamily: 'var(--p-lingo-font-family)' },
+                    },
+                },
+                disabled: isNavExpanded,
+            }"
+            :href="child.url"
+            :style="{
+                paddingInlineStart: isNavExpanded ? '2rem' : '0.75rem',
+            }"
+            class="nav-button p-button"
+            :class="child.disabled ? 'disabled' : ''"
+        >
+            <i
+                v-if="child.icon"
+                :class="child.icon"
+            ></i>
+            <span
+                v-if="isNavExpanded"
+                style="white-space: nowrap; flex-shrink: 0"
+            >
+                {{ child.label }}
+            </span>
+        </a>
     </div>
 </template>
 
