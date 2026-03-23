@@ -24,6 +24,10 @@ const props = defineProps<{
     tileId?: string;
 }>();
 
+const emit = defineEmits<{
+    (event: "update:isEditorLoading", value: boolean): void;
+}>();
+
 const isLoading = ref(true);
 const tileData = ref<SchemeRights>();
 const fetchError = ref();
@@ -38,11 +42,13 @@ watch(
         if (storeError) {
             fetchError.value = storeError;
             isLoading.value = false;
+            if (props.mode === EDIT) emit("update:isEditorLoading", false);
             return;
         }
         if (resource && props.resourceInstanceId && !shouldCreateNewTile) {
             tileData.value = resource.aliased_data?.[props.nodegroupAlias];
             isLoading.value = false;
+            if (props.mode === EDIT) emit("update:isEditorLoading", false);
         }
     },
     { immediate: true },
@@ -56,8 +62,10 @@ onMounted(async () => {
         );
         tileData.value = blankTileData as unknown as SchemeRights;
         isLoading.value = false;
+        if (props.mode === EDIT) emit("update:isEditorLoading", false);
     } else if (!props.resourceInstanceId) {
         isLoading.value = false;
+        if (props.mode === EDIT) emit("update:isEditorLoading", false);
     }
 });
 </script>

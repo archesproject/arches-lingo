@@ -19,6 +19,7 @@ import Skeleton from "primevue/skeleton";
 import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
 
 import { createLingoResource, upsertLingoTile } from "@/arches_lingo/api.ts";
+
 import {
     DEFAULT_ERROR_TOAST_LIFE,
     EDIT,
