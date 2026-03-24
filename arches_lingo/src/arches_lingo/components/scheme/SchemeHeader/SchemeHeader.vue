@@ -433,6 +433,7 @@ function onLifecycleStateChange(
                         />
 
                         <LifecycleButtons
+                            v-if="isEditor"
                             :resource-instance-id="props.resourceInstanceId"
                             @change="onLifecycleStateChange"
                         />
