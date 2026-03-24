@@ -880,7 +880,7 @@ const shouldShowPageHelpPanel = defineModel("shouldShowPageHelpPanel", {
     text-transform: uppercase;
     letter-spacing: 0.06em;
     padding: 1rem;
-    background: var(--p-datatable-row-striped-background);
+    background: var(--p-highlight-background);
 }
 
 .help-section-title .pi {
