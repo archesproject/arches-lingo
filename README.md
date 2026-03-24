@@ -120,18 +120,13 @@ For developer install instructions, see the [Developer Setup](#developer-setup-f
     python manage.py packages -o load_package -a arches_lingo --yes
     ```
 
-9. Run database migrations:
-    ```
-    python manage.py migrate
-    ```
-
-10. Install and build front-end dependencies. Navigate to your project's app directory (the one with package.json) and run:
+9. Install and build front-end dependencies. Navigate to your project's app directory (the one with package.json) and run:
     ```
     npm install
     npm run build_development
     ```
 
-11. Start your project:
+10. Start your project:
     ```
     python manage.py runserver
     ```
