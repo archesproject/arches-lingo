@@ -70,16 +70,19 @@ For developer install instructions, see the [Developer Setup](#developer-setup-f
     ]
     ```
 
+    Note: the `should_update_asynchronously: True` setting requires Celery to be running. See the [Arches documentation](http://archesproject.org/documentation/) for instructions on configuring and running Celery.
+
 4. Optionally, enable anonymous (read-only) access by adding the following setting to your project's `settings.py` or `settings_local.py`:
     ```
     LINGO_ALLOW_ANONYMOUS_ACCESS = True
     ```
     When enabled, unauthenticated users can browse schemes, concepts, and search results in a read-only mode. When disabled (the default), all users must log in to access any Lingo content. Authenticated users who are not members of the "Lingo Editor" group will still see a read-only experience regardless of this setting.
 
-5. Next ensure arches and arches_lingo are included as dependencies in package.json
+5. Next ensure arches, arches-component-lab, and arches_lingo are included as dependencies in package.json
     ```
     "dependencies": {
-        "arches": "archesproject/arches#dev/8.0.x",
+        "arches": "archesproject/arches#dev/8.1.x",
+        "arches-component-lab": "archesproject/arches-component-lab#main",
         "arches_lingo": "archesproject/arches-lingo#main"
     }
     ```
@@ -114,18 +117,23 @@ For developer install instructions, see the [Developer Setup](#developer-setup-f
 
 8. Install the arches application package (models and other data)
     ```
-    python manage.py packages -o load_package -a arches_lingo -dev -y
+    python manage.py packages -o load_package -a arches_lingo --yes
     ```
 
-9. Start your project
+9. Run database migrations:
     ```
-    python manage.py runserver
+    python manage.py migrate
     ```
 
-10. Next cd into your project's app directory (the one with package.json) install and build front-end dependencies:
+10. Install and build front-end dependencies. Navigate to your project's app directory (the one with package.json) and run:
     ```
     npm install
     npm run build_development
+    ```
+
+11. Start your project:
+    ```
+    python manage.py runserver
     ```
 
 ## Developer Setup (for contributing to the Arches Lingo project)
@@ -147,7 +155,7 @@ For developer install instructions, see the [Developer Setup](#developer-setup-f
     python3 -m venv ENV
     ```
 
-4. Activate the virtual enviroment in your terminal:
+4. Activate the virtual environment in your terminal:
     ```
     source ENV/bin/activate
     ```
@@ -158,46 +166,48 @@ For developer install instructions, see the [Developer Setup](#developer-setup-f
     pip install -e . --group dev
     ```
 
+    Note: `--group dev` requires pip >= 25.0. If you have an older pip, upgrade first with `pip install --upgrade pip`.
+
 6. Also install core arches for local development:
     ```
     pip install -e ../arches
     ```
 
-1. Create a settings_local.py file with `DEBUG=True`:
+7. Create a settings_local.py file with `DEBUG=True`:
     ```
     echo "DEBUG = True" > arches_lingo/settings_local.py
     ```
 
-7. Run the Django server:
+8. Run the Django server:
     ```
     python manage.py runserver
     ```
 
-8.  (From the `arches-lingo` top-level directory) install the frontend dependencies:
+9.  (From the `arches-lingo` top-level directory) install the frontend dependencies:
     ```
     npm install
     ```
 
-9.  Once the dependencies have been installed, generate the static asset bundle:
+10. Once the dependencies have been installed, generate the static asset bundle:
 
     a. If you're planning on editing HTML/CSS/JavaScript files, run `npm start`. This will start a development server that will automatically detect changes to static assets and rebuild the bundle.
 
     b. If you're not planning on editing HTML/CSS/JavaScript files, run `npm run build_development`
 
-10. If you ran `npm start` in the previous step, you will need to open a new terminal window and activate the virtual environment in the new terminal window. If you ran `npm run build_development` then you can skip this step.
+11. If you ran `npm start` in the previous step, you will need to open a new terminal window and activate the virtual environment in the new terminal window. If you ran `npm run build_development` then you can skip this step.
 
-11. Install the ontologies, branches, and resource models from the package.
+12. Install the ontologies, branches, and resource models from the package.
     ```
     python manage.py setup_db
     python manage.py packages -o load_package -a arches_lingo --yes -db
     ```
 
-12. Load the test data:
+13. Load the test data:
     ```
     python manage.py loaddata tests/fixtures/data/FISH_Example_Thesauri.json.xz
     ```
 
-13. In the terminal window that is running the Django server, halt the server and restart it.
+14. In the terminal window that is running the Django server, halt the server and restart it.
     ```
     (ctrl+c to halt the server)
     python manage.py runserver
