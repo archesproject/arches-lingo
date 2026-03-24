@@ -341,7 +341,6 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
 
 <style scoped>
 .relationship-group {
-    margin-top: 1rem;
     margin-bottom: 0.5rem;
     padding: 0.75rem 1rem;
     overflow-x: auto;
@@ -360,11 +359,12 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
     align-items: center;
     flex-wrap: wrap;
     gap: 0.5rem;
+    background: var(--p-neutral-100);
     border-bottom: thin solid var(--p-neutral-200);
     font-weight: var(--p-lingo-font-weight-normal);
-    font-size: var(--p-lingo-font-size-medium);
-    color: var(--p-neutral-700);
-    padding-bottom: .25rem;
+    font-size: 1rem;
+    color: var(--p-neutral-500);
+    padding: .5rem 0.75rem;
 }
 
 .relationship-group-actions {
@@ -376,9 +376,9 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
 .path-count-badge {
     font-size: var(--p-lingo-font-size-xsmall, 0.75rem);
     font-weight: var(--p-lingo-font-weight-normal, 400);
-    color: var(--p-neutral-500);
-    background: var(--p-neutral-100);
-    padding: 0.5rem 0.75rem;
+    color: var(--p-neutral-600);
+    background: var(--p-neutral-300);
+    padding: 0.25rem 0.75rem;
     border-radius: 1rem;
 }
 
@@ -423,6 +423,7 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
 
 .tree-node-label {
     margin-inline-start: 0.5rem;
+    font-size: var(--p-lingo-font-size-small);
 }
 
 .button-container {
