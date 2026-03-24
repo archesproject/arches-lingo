@@ -52,7 +52,7 @@ const shouldRender = computed(
 <style scoped>
 .lifecycle-state-badge {
     font-size: var(--p-lingo-font-size-xxsmall);
-    padding: 0.125rem 0.375rem;
+    padding: 0.1875rem 0.5rem;
     border-radius: 0.75rem;
     white-space: nowrap;
 }

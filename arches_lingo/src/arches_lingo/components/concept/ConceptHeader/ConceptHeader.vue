@@ -28,7 +28,6 @@ import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 import { useResourceStore } from "@/arches_lingo/composables/useResourceStore.ts";
 import { useConceptStore } from "@/arches_lingo/stores/useConceptStore.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
-import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 
 import type { Ref } from "vue";
 import type {
@@ -57,7 +56,6 @@ const resourceInstanceLifecycleState = inject<
 const { $gettext } = useGettext();
 const toast = useToast();
 
-const userStore = useUserStore();
 const resourceStore = useResourceStore();
 const conceptStore = useConceptStore();
 
@@ -66,9 +64,16 @@ const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
 const concept = ref<ResourceInstanceResult>();
 const isTopConcept = ref(false);
 const data = ref<ConceptHeaderData>();
-const isLoading = ref(true);
+const isResourceLoaded = ref(false);
+const isIdentifierLoaded = ref(false);
 const conceptIdentifierValue = ref<string>();
 const conceptTypeTile = ref();
+
+const isLoading = computed(function () {
+    if (!isIdentifierLoaded.value) return true;
+    if (props.resourceInstanceId && !isResourceLoaded.value) return true;
+    return false;
+});
 
 onMounted(async () => {
     try {
@@ -94,7 +99,7 @@ onMounted(async () => {
             detail: error instanceof Error ? error.message : undefined,
         });
     } finally {
-        isLoading.value = false;
+        isIdentifierLoaded.value = true;
     }
 });
 
@@ -108,7 +113,7 @@ watch(
                 summary: $gettext("Unable to fetch concept"),
                 detail: storeError.message,
             });
-            isLoading.value = false;
+            isResourceLoaded.value = true;
             return;
         }
         if (!resource || !props.resourceInstanceId) return;
@@ -118,7 +123,7 @@ watch(
             resource.aliased_data?.[CONCEPT_TYPE_NODE_ALIAS];
         isTopConcept.value = Boolean(resource.aliased_data?.top_concept_of);
         extractConceptHeaderData(resource);
-        isLoading.value = false;
+        isResourceLoaded.value = true;
     },
     { immediate: true },
 );
@@ -142,13 +147,23 @@ const label = computed<Label | undefined>(function () {
     }
 
     const storedConcept = conceptStore.findConcept(props.resourceInstanceId);
-    if (!storedConcept) return undefined;
+    if (storedConcept) {
+        return getItemLabel(
+            { labels: [...storedConcept.labels] },
+            selectedLanguage.value.code,
+            systemLanguage.value.code,
+        );
+    }
 
-    return getItemLabel(
-        { labels: [...storedConcept.labels] },
-        selectedLanguage.value.code,
-        systemLanguage.value.code,
-    );
+    if (data.value?.name) {
+        return {
+            value: data.value.name,
+            language_id: selectedLanguage.value.code,
+            valuetype_id: PREF_LABEL,
+        };
+    }
+
+    return undefined;
 });
 
 const parentConceptLabelMap = computed<Map<string, Label[]>>(function () {
@@ -218,7 +233,7 @@ function extractConceptHeaderData(resource: ResourceInstanceResult) {
 
 <template>
     <Skeleton
-        v-if="isLoading || !userStore.user"
+        v-if="isLoading"
         class="loading-skeleton"
     />
     <div
@@ -355,18 +370,13 @@ function extractConceptHeaderData(resource: ResourceInstanceResult) {
 
 <style scoped>
 .concept-header {
-    padding-top: 0rem;
-    padding-bottom: 1rem;
     background: var(--p-header-background);
     border-bottom: 0.0625rem solid var(--p-header-toolbar-border);
-    min-height: 8.5rem;
     box-sizing: border-box;
 }
 
 .header-content {
-    padding-top: 0.75rem;
-    padding-inline-start: 1rem;
-    padding-inline-end: 1rem;
+    padding: 0 1rem 0.5rem;
     box-sizing: border-box;
 }
 
@@ -392,7 +402,8 @@ function extractConceptHeaderData(resource: ResourceInstanceResult) {
     align-items: baseline;
     flex-wrap: wrap;
     column-gap: 1rem;
-    row-gap: 0.25rem;
+    row-gap: 0.5rem;
+    padding-top: 0.5rem;
     min-width: 0;
 }
 

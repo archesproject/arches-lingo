@@ -276,11 +276,9 @@ function modifyResource(resourceInstanceId?: string) {
                             <Button
                                 v-if="canEditResourceInstances"
                                 icon="pi pi-file-edit"
-                                style="
-                                    border: 0.0625rem solid
-                                        var(--p-header-button-border);
-                                "
-                                rounded
+                                variant="text"
+                                :aria-label="$gettext('edit')"
+                                size="small"
                                 @click="
                                     editResource(resource.resourceinstanceid)
                                 "
@@ -289,8 +287,9 @@ function modifyResource(resourceInstanceId?: string) {
                                 v-if="canDeleteResourceInstances"
                                 icon="pi pi-trash"
                                 :aria-label="$gettext('Delete')"
+                                variant="text"
                                 severity="danger"
-                                rounded
+                                size="small"
                                 @click="
                                     confirmDelete(resource.resourceinstanceid)
                                 "

@@ -7,6 +7,7 @@ import { useToast } from "primevue/usetoast";
 import { storeToRefs } from "pinia";
 
 import Button from "primevue/button";
+import Tag from "primevue/tag";
 
 import DeleteConceptDialog from "@/arches_lingo/components/concept/ConceptHeader/components/DeleteConceptDialog.vue";
 import ExportThesauri from "@/arches_lingo/components/scheme/SchemeHeader/components/ExportThesauri.vue";
@@ -79,7 +80,7 @@ const { $gettext } = useGettext();
 const toast = useToast();
 const router = useRouter();
 
-const { isEditor } = storeToRefs(useUserStore());
+const { isAnonymous, isEditor } = storeToRefs(useUserStore());
 const resourceStore = useResourceStore();
 
 const { openEditLog } = useEditLog(() => props.graphSlug);
@@ -92,6 +93,13 @@ const dialogMode = ref<typeof DELETE | typeof DEPRECATE>(DELETE);
 
 const lifecycleState = computed(function () {
     return resourceInstanceLifecycleState?.value;
+});
+
+const conceptTypeLabel = computed(function () {
+    const aliasedData =
+        props.conceptTypeTile?.aliased_data?.[CONCEPT_TYPE_NODE_ALIAS];
+    return (aliasedData as { display_value?: string } | undefined)
+        ?.display_value;
 });
 
 const conceptIcon = computed(function () {
@@ -286,8 +294,14 @@ function addChild() {
                 </div>
             </div>
             <div class="card flex justify-center">
+                <Tag
+                    v-if="isAnonymous && conceptTypeLabel"
+                    :value="conceptTypeLabel"
+                    severity="secondary"
+                    class="concept-type-badge"
+                />
                 <GenericWidget
-                    v-if="concept && concept.resourceinstanceid"
+                    v-else-if="concept && concept.resourceinstanceid"
                     :node-alias="CONCEPT_TYPE_NODE_ALIAS"
                     :graph-slug="graphSlug"
                     :mode="isEditor ? EDIT : VIEW"
@@ -361,7 +375,7 @@ function addChild() {
     flex-wrap: wrap;
     row-gap: 0.5rem;
     padding-inline-start: 1rem;
-    padding-inline-end: 1rem;
+    padding-inline-end: 0.5rem;
     padding-top: 0.375rem;
     padding-bottom: 0.375rem;
     box-sizing: border-box;
@@ -442,5 +456,14 @@ function addChild() {
 
 :deep(.concept-type-widget .p-icon.p-treeselect-clear-icon) {
     display: none;
+}
+
+.concept-type-badge {
+    font-size: var(--p-lingo-font-size-xxsmall);
+    background: var(--p-header-button-background);
+    color: var(--p-header-button-color);
+    padding: 0.1875rem 0.5rem;
+    border-radius: 0.75rem;
+    white-space: nowrap;
 }
 </style>

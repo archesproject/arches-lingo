@@ -157,8 +157,9 @@ async function deleteSectionValue(tileId: string) {
                         <Button
                             v-if="canEditResourceInstances"
                             icon="pi pi-file-edit"
+                            variant="text"
                             :aria-label="$gettext('edit')"
-                            rounded
+                            size="small"
                             @click="
                                 openEditor!(
                                     componentName,
@@ -169,9 +170,10 @@ async function deleteSectionValue(tileId: string) {
                         <Button
                             v-if="canEditResourceInstances"
                             icon="pi pi-trash"
+                            variant="text"
                             :aria-label="$gettext('delete')"
                             severity="danger"
-                            rounded
+                            size="small"
                             @click="confirmDelete(slotProps.data.tileid)"
                         />
                     </div>
@@ -209,10 +211,6 @@ async function deleteSectionValue(tileId: string) {
 
 .controls button {
     margin: 0 0.2rem;
-}
-
-.controls button:first-child {
-    border: 0.0625rem solid var(--p-button-primary-active-border-color);
 }
 
 .no-data {

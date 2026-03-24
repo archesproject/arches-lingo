@@ -7,6 +7,7 @@ import { storeToRefs } from "pinia";
 
 import Button from "primevue/button";
 import ConfirmDialog from "primevue/confirmdialog";
+import Tag from "primevue/tag";
 
 import { deleteLingoTile } from "@/arches_lingo/api.ts";
 import { getConceptIcon } from "@/arches_lingo/utils.ts";
@@ -194,6 +195,16 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
         });
     }
 }
+
+function getTreeNodeStyle(depth: number) {
+    const indentation = `${depth * 1.25}rem`;
+    const connectorLeft = `${(depth - 1) * 1.25 + 0.35}rem`;
+
+    return {
+        "padding-inline-start": indentation,
+        "--tree-connector-left": connectorLeft,
+    };
+}
 </script>
 
 <template>
@@ -245,35 +256,30 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
                             v-if="group.parentConcept"
                             :class="getIcon(group.parentConcept)"
                         />
-                        <!-- $gettext HTML-encodes interpolated values, so v-html is safe here -->
-                        <!-- eslint-disable-next-line vue/no-v-html -->
-                        <span
-                            v-if="group.isTopConcept"
-                            v-html="
-                                $gettext('Top Concept Of: %{parent}', {
-                                    parent: getParentLabel(group),
-                                })
-                            "
-                        />
-                        <!-- eslint-disable-next-line vue/no-v-html -->
-                        <span
-                            v-else
-                            v-html="
-                                $gettext('Broader Concept: %{parent}', {
-                                    parent: getParentLabel(group),
-                                })
-                            "
-                        />
-                        <span
-                            v-if="group.lineages.length > 1"
-                            class="path-count-badge"
-                        >
+                        <span v-if="group.isTopConcept">
                             {{
-                                $gettext("%{count} paths", {
-                                    count: String(group.lineages.length),
+                                $gettext("Top Concept Of: %{parent}", {
+                                    parent: getParentLabel(group),
                                 })
                             }}
                         </span>
+                        <span v-else>
+                            {{
+                                $gettext("Broader Concept: %{parent}", {
+                                    parent: getParentLabel(group),
+                                })
+                            }}
+                        </span>
+                        <Tag
+                            v-if="group.lineages.length > 1"
+                            :value="
+                                $gettext('%{count} paths', {
+                                    count: String(group.lineages.length),
+                                })
+                            "
+                            severity="secondary"
+                            class="path-count-badge"
+                        />
                     </span>
                     <div
                         v-if="isEditor"
@@ -313,7 +319,7 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
                                 v-for="(item, depth) in hierarchy.searchResults"
                                 :key="item.id"
                                 class="tree-node"
-                                :style="{ '--tree-depth': depth }"
+                                :style="getTreeNodeStyle(depth)"
                             >
                                 <span
                                     :class="getIcon(item)"
@@ -351,8 +357,8 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
 .relationship-group {
     margin-top: 1rem;
     margin-bottom: 0.5rem;
-    border: thin solid var(--p-neutral-200);
-    border-radius: 0.125rem;
+    border: thin solid var(--p-inputtext-border-color);
+    border-radius: 0.25rem;
     padding: 0.75rem 1rem;
     overflow-x: auto;
 }
@@ -361,9 +367,9 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding-bottom: 0.25rem;
-    border-bottom: thin solid var(--p-neutral-200);
-    margin-bottom: 0.25rem;
+    padding-bottom: 0.5rem;
+    border-bottom: thin solid var(--p-inputtext-border-color);
+    margin-bottom: 0.5rem;
 }
 
 .relationship-group-label {
@@ -373,7 +379,7 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
     gap: 0.5rem;
     font-weight: var(--p-lingo-font-weight-semibold, 600);
     font-size: var(--p-lingo-font-size-medium);
-    color: var(--p-neutral-700);
+    color: var(--p-inputtext-placeholder-color);
 }
 
 .relationship-group-actions {
@@ -383,15 +389,15 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
 }
 
 .path-count-badge {
-    font-size: var(--p-lingo-font-size-small, 0.75rem);
-    font-weight: var(--p-lingo-font-weight-normal, 400);
-    color: var(--p-neutral-500);
-    background: var(--p-neutral-100);
-    padding: 0.1rem 0.5rem;
-    border-radius: 1rem;
+    font-size: var(--p-lingo-font-size-xxsmall);
+    background: var(--p-header-button-background);
+    color: var(--p-header-button-color);
+    padding: 0.1875rem 0.5rem;
+    border-radius: 0.75rem;
+    white-space: nowrap;
 }
 
-.lineage-paths12 {
+.lineage-paths {
     margin-top: 0.5rem;
 }
 
@@ -400,7 +406,7 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
 }
 
 .lineage-divider {
-    border-top: thin dashed var(--p-neutral-200);
+    border-top: thin dashed var(--p-inputtext-border-color);
     margin: 0.5rem 0;
 }
 
@@ -409,27 +415,30 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
     align-items: center;
     min-height: 1.75rem;
     position: relative;
-    padding-inline-start: calc(var(--tree-depth) * 1.25rem);
     white-space: nowrap;
 }
 
 .tree-node:not(:first-child)::before {
     content: "";
     position: absolute;
-    left: calc((var(--tree-depth) - 1) * 1.25rem + 0.35rem);
-    top: -50%;
+    left: var(--tree-connector-left);
+    top: 0;
     bottom: 50%;
-    width: 0.65rem;
-    border-inline-start: thin solid var(--p-neutral-300);
-    border-bottom: thin solid var(--p-neutral-300);
+    width: 0.9rem;
+    border-inline-start: thin solid var(--p-inputtext-border-color);
+    border-bottom: thin solid var(--p-inputtext-border-color);
     border-end-start-radius: 0.2rem;
 }
 
 .tree-node-icon {
     flex-shrink: 0;
+    position: relative;
+    background-color: var(--p-content-background);
+    padding-inline: 0.1rem;
 }
 
 .tree-node-label {
-    margin-inline-start: 0.5rem;
+    margin-inline-start: 0.4rem;
+    color: var(--p-inputtext-placeholder-color);
 }
 </style>
