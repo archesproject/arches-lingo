@@ -245,20 +245,25 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
                             v-if="group.parentConcept"
                             :class="getIcon(group.parentConcept)"
                         />
-                        <span v-if="group.isTopConcept">
-                            {{
-                                $gettext("Top Concept Of: %{parent}", {
+                        <!-- $gettext HTML-encodes interpolated values, so v-html is safe here -->
+                        <!-- eslint-disable-next-line vue/no-v-html -->
+                        <span
+                            v-if="group.isTopConcept"
+                            v-html="
+                                $gettext('Top Concept Of: %{parent}', {
                                     parent: getParentLabel(group),
                                 })
-                            }}
-                        </span>
-                        <span v-else>
-                            {{
-                                $gettext("Broader Concept: %{parent}", {
+                            "
+                        />
+                        <!-- eslint-disable-next-line vue/no-v-html -->
+                        <span
+                            v-else
+                            v-html="
+                                $gettext('Broader Concept: %{parent}', {
                                     parent: getParentLabel(group),
                                 })
-                            }}
-                        </span>
+                            "
+                        />
                         <span
                             v-if="group.lineages.length > 1"
                             class="path-count-badge"
