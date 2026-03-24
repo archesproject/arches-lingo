@@ -51,6 +51,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   Add reciprocal concept relationship handling
 -   Add concept images section [#452](https://github.com/archesproject/arches-lingo/pull/452)
 -   Add default concept type value on concept creation [#552](https://github.com/archesproject/arches-lingo/issues/552)
+-   Add lifecycle state badges throughout the UI [#676](https://github.com/archesproject/arches-lingo/pull/676)
+-   Add help content [#590](https://github.com/archesproject/arches-lingo/issues/590)
+-   Add lifecycle state filter to hierarchy view [#628](https://github.com/archesproject/arches-lingo/pull/628)
+-   Add ability to delete and deprecate concepts [#674](https://github.com/archesproject/arches-lingo/pull/674)
+-   Add label editor on new scheme and concept creation [#538](https://github.com/archesproject/arches-lingo/issues/538)
+-   Assign correct lifecycle state to schemes and concepts during import [#653](https://github.com/archesproject/arches-lingo/issues/653)
 
 ### Changed
 -   Upgrade Lingo to Arches 8.1 [#453](https://github.com/archesproject/arches-lingo/pull/453)
@@ -66,6 +72,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   Remove URL clashes on graph slug [#605](https://github.com/archesproject/arches-lingo/pull/605)
 -   Use alternate icon for guide terms [#604](https://github.com/archesproject/arches-lingo/pull/604)
 -   General UI cleaning, styling, and polish [#506](https://github.com/archesproject/arches-lingo/pull/506)
+-   Improve dashboard UI [#623](https://github.com/archesproject/arches-lingo/issues/623)
+-   Update side navigation with admin-only menu items [#655](https://github.com/archesproject/arches-lingo/pull/655)
+-   Enforce single value for statement type nodes [#530](https://github.com/archesproject/arches-lingo/issues/530)
+-   Assign ontology property on concept migration [#671](https://github.com/archesproject/arches-lingo/pull/671)
+-   Update concept model resource relationships [#511](https://github.com/archesproject/arches-lingo/issues/511)
+-   Catch missing gettext strings [#675](https://github.com/archesproject/arches-lingo/pull/675)
 
 ### Fixed
 -   Merge language finder implementations [#92](https://github.com/archesproject/arches-lingo/issues/92)
@@ -79,5 +91,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   Fix matched concept date form labels [#535](https://github.com/archesproject/arches-lingo/issues/535)
 -   Surface error messages from file list validation [#492](https://github.com/archesproject/arches-lingo/pull/492)
 -   Ensure dirty state is cleared after saving a new resource [#613](https://github.com/archesproject/arches-lingo/pull/613)
+-   Fix export handling for orphaned and deleted concepts [#652](https://github.com/archesproject/arches-lingo/issues/652)
+-   Fix edit log revert exception handling [#667](https://github.com/archesproject/arches-lingo/pull/667)
+-   Fix text direction change on language selection [#673](https://github.com/archesproject/arches-lingo/pull/673)
 
 [1.0.0]: https://github.com/archesproject/arches-lingo/releases/tag/1.0.0
