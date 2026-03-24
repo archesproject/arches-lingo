@@ -619,6 +619,8 @@ except ImportError:
     except ImportError as e:
         pass
 
+os.environ.setdefault("ARCHES_SITE_ID", APP_NAME)
+
 try:
     from .settings_local import *
 except ImportError as e:
