@@ -544,6 +544,7 @@ provide(openPanelComponentKey, openPanelComponent);
 :deep(.concept-header .add-button:hover),
 :deep(.scheme-header .add-button:hover) {
     background: var(--p-highlight-background);
+    color: var(--p-text-hover-muted-color);
 }
 
 .p-splitter .p-splitterpanel .splitter-panel-content .p-skeleton {
