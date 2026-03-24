@@ -52,7 +52,7 @@ const isRevertDialogVisible = computed(
 
 const dateTimeFormatter = new Intl.DateTimeFormat(undefined, {
     dateStyle: "medium",
-    timeStyle: "short",
+    timeStyle: "medium",
 });
 
 const tileEditTypes = new Set(["tile create", "tile edit", "tile delete"]);
@@ -362,7 +362,12 @@ async function acceptRevert() {
 .edit-entry {
     display: flex;
     gap: 0.75rem;
-    margin-bottom: 0;
+    padding: .5rem .5rem 0 .5rem;
+    border-radius: .25rem;
+}
+
+.edit-entry:hover {
+    background: var(--p-surface-100);
 }
 
 .edit-entry-timeline {
