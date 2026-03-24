@@ -10,6 +10,8 @@ import Tag from "primevue/tag";
 
 import { storeToRefs } from "pinia";
 
+import { SUCCESS, INFO, SCHEME_ALIAS } from "@/arches_lingo/constants.ts";
+
 import { routeNames } from "@/arches_lingo/routes.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
@@ -94,6 +96,19 @@ function getDisplayName(item: DashboardActivityItem): string {
     }
     return item.user_username;
 }
+
+function getResourceTypeLabel(resourceType: string): string {
+    if (resourceType === SCHEME_ALIAS) {
+        return $gettext("Scheme");
+    }
+    return $gettext("Concept");
+}
+
+function getResourceTypeSeverity(
+    resourceType: string,
+): typeof SUCCESS | typeof INFO {
+    return resourceType === SCHEME_ALIAS ? SUCCESS : INFO;
+}
 </script>
 
 <template>
@@ -127,95 +142,98 @@ function getDisplayName(item: DashboardActivityItem): string {
                 height="2.25rem"
             />
         </div>
-        <DataTable
-            v-else
-            :value="stats?.recent_activity ?? []"
-            striped-rows
-            size="small"
-            class="activity-table"
-        >
-            <template #empty>
-                <div class="empty-state">
-                    <i class="pi pi-inbox empty-icon" />
-                    <span>{{ $gettext("No recent activity") }}</span>
-                </div>
-            </template>
-            <Column
-                :header="$gettext('When')"
-                style="width: 8rem"
+        <template v-else>
+            <DataTable
+                :value="stats?.recent_activity ?? []"
+                striped-rows
+                size="small"
+                class="activity-table"
             >
-                <template #body="slotProps">
-                    <span
-                        class="relative-time"
-                        :title="formatFullTimestamp(slotProps.data.timestamp)"
-                    >
-                        {{ formatRelativeTime(slotProps.data.timestamp) }}
-                    </span>
-                </template>
-            </Column>
-            <Column :header="$gettext('Resource')">
-                <template #body="slotProps">
-                    <a
-                        class="resource-link"
-                        href="#"
-                        @click.prevent="navigateToResource(slotProps.data)"
-                    >
-                        {{
-                            getItemLabel(
-                                slotProps.data,
-                                selectedLanguage.code,
-                                systemLanguage.code,
-                            ).value || slotProps.data.resource_id
-                        }}
-                    </a>
-                </template>
-            </Column>
-            <Column
-                field="edittype_label"
-                :header="$gettext('Action')"
-                style="width: 30rem"
-            />
-            <Column
-                :header="$gettext('Type')"
-                style="width: 6.5rem"
-            >
-                <template #body="slotProps">
-                    <Tag
-                        :value="
-                            slotProps.data.resource_type === 'scheme'
-                                ? $gettext('Scheme')
-                                : $gettext('Concept')
-                        "
-                        :severity="
-                            slotProps.data.resource_type === 'scheme'
-                                ? 'success'
-                                : 'info'
-                        "
-                    />
-                </template>
-            </Column>
-            <Column
-                :header="$gettext('User')"
-                style="width: 15rem"
-            >
-                <template #body="slotProps">
-                    <div class="user-cell">
-                        <span class="user-avatar">
-                            {{
-                                getInitials(
-                                    slotProps.data.user_firstname,
-                                    slotProps.data.user_lastname,
-                                    slotProps.data.user_username,
-                                )
-                            }}
-                        </span>
-                        <span>
-                            {{ getDisplayName(slotProps.data) }}
-                        </span>
+                <template #empty>
+                    <div class="empty-state">
+                        <i class="pi pi-inbox empty-icon" />
+                        <span>{{ $gettext("No recent activity") }}</span>
                     </div>
                 </template>
-            </Column>
-        </DataTable>
+                <Column
+                    :header="$gettext('When')"
+                    style="width: 8rem"
+                >
+                    <template #body="slotProps">
+                        <span
+                            class="relative-time"
+                            :title="
+                                formatFullTimestamp(slotProps.data.timestamp)
+                            "
+                        >
+                            {{ formatRelativeTime(slotProps.data.timestamp) }}
+                        </span>
+                    </template>
+                </Column>
+                <Column :header="$gettext('Resource')">
+                    <template #body="slotProps">
+                        <a
+                            class="resource-link"
+                            href="#"
+                            @click.prevent="navigateToResource(slotProps.data)"
+                        >
+                            {{
+                                getItemLabel(
+                                    slotProps.data,
+                                    selectedLanguage.code,
+                                    systemLanguage.code,
+                                ).value || slotProps.data.resource_id
+                            }}
+                        </a>
+                    </template>
+                </Column>
+                <Column
+                    field="edittype_label"
+                    :header="$gettext('Action')"
+                    style="width: 30rem"
+                />
+                <Column
+                    :header="$gettext('Type')"
+                    style="width: 6.5rem"
+                >
+                    <template #body="slotProps">
+                        <Tag
+                            :value="
+                                getResourceTypeLabel(
+                                    slotProps.data.resource_type,
+                                )
+                            "
+                            :severity="
+                                getResourceTypeSeverity(
+                                    slotProps.data.resource_type,
+                                )
+                            "
+                        />
+                    </template>
+                </Column>
+                <Column
+                    :header="$gettext('User')"
+                    style="width: 15rem"
+                >
+                    <template #body="slotProps">
+                        <div class="user-cell">
+                            <span class="user-avatar">
+                                {{
+                                    getInitials(
+                                        slotProps.data.user_firstname,
+                                        slotProps.data.user_lastname,
+                                        slotProps.data.user_username,
+                                    )
+                                }}
+                            </span>
+                            <span>
+                                {{ getDisplayName(slotProps.data) }}
+                            </span>
+                        </div>
+                    </template>
+                </Column>
+            </DataTable>
+        </template>
     </section>
 </template>
 

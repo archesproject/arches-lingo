@@ -4,6 +4,7 @@ import type { Concept } from "@/arches_lingo/types.ts";
 
 export const ERROR = "error";
 export const SUCCESS = "success";
+export const INFO = "info";
 export const DANGER = "danger";
 export const SECONDARY = "secondary";
 export const CONTRAST = "contrast";
@@ -25,6 +26,7 @@ export const STRATEGY_REPARENT = "reparent";
 export const STRATEGY_DELETE_CHILDREN = "delete_children";
 export const STRATEGY_ORPHAN = "orphan";
 export const CONCEPT_TYPE_NODE_ALIAS = "type";
+export const SCHEME_ALIAS = "scheme";
 
 export const LABEL_TYPE_LIST_ID = "deb847fc-f4c3-4e82-be19-04641579f129";
 export const NOTE_TYPE_LIST_ID = "aba2a0b4-75a4-45ba-8b57-021f3ca92a6a";

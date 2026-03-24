@@ -74,6 +74,20 @@ const hierarchyDirections = [
     { label: $gettext("Narrower (child of)"), value: "narrower" },
 ];
 
+const searchTextPlaceholder = $gettext("Search text...");
+const noConceptsFoundMessage = $gettext("No concepts found");
+const searchConceptsFilterPlaceholder = $gettext("Search concepts...");
+const selectConceptPlaceholder = $gettext("Select concept...");
+const anyTypePlaceholder = $gettext("Any type");
+const anyLanguagePlaceholder = $gettext("Any language");
+const selectLanguagePlaceholder = $gettext("Select language");
+const selectSchemePlaceholder = $gettext("Select scheme");
+const anyScheme = $gettext("Any scheme");
+const selectStatePlaceholder = $gettext("Select state");
+const selectConceptSetPlaceholder = $gettext("Select concept set");
+const selectConceptTypePlaceholder = $gettext("Select concept type");
+const removeConditionLabel = $gettext("Remove condition");
+
 const conceptSearchResults = ref<
     { display_value: string; resource_id: string }[]
 >([]);
@@ -259,7 +273,7 @@ function toggleNegated() {
         <InputText
             v-if="showValueInput"
             :model-value="condition.value"
-            :placeholder="$gettext('Search text...')"
+            :placeholder="searchTextPlaceholder"
             class="facet-value-input"
             @update:model-value="
                 (val: string | undefined) => updateField('value', val ?? '')
@@ -275,10 +289,10 @@ function toggleNegated() {
             option-value="resource_id"
             :filter="true"
             :filter-fields="['display_value', 'resource_id']"
-            :empty-filter-message="$gettext('No concepts found')"
-            :filter-placeholder="$gettext('Search concepts...')"
+            :empty-filter-message="noConceptsFoundMessage"
+            :filter-placeholder="searchConceptsFilterPlaceholder"
             :loading="isLoadingConcepts"
-            :placeholder="$gettext('Select concept...')"
+            :placeholder="selectConceptPlaceholder"
             :show-clear="true"
             class="facet-value-input"
             @filter="onConceptFilter"
@@ -295,7 +309,7 @@ function toggleNegated() {
             :options="options.label_types"
             option-label="label"
             option-value="value"
-            :placeholder="$gettext('Any type')"
+            :placeholder="anyTypePlaceholder"
             show-clear
             class="facet-sub-dropdown"
             @update:model-value="
@@ -311,7 +325,7 @@ function toggleNegated() {
             :options="options.note_types"
             option-label="label"
             option-value="value"
-            :placeholder="$gettext('Any type')"
+            :placeholder="anyTypePlaceholder"
             show-clear
             class="facet-sub-dropdown"
             @update:model-value="
@@ -326,7 +340,7 @@ function toggleNegated() {
             :options="options.languages"
             option-label="name"
             option-value="code"
-            :placeholder="$gettext('Any language')"
+            :placeholder="anyLanguagePlaceholder"
             show-clear
             class="facet-sub-dropdown"
             @update:model-value="(val: string) => updateField('language', val)"
@@ -339,7 +353,7 @@ function toggleNegated() {
             :options="options.languages"
             option-label="name"
             option-value="code"
-            :placeholder="$gettext('Select language')"
+            :placeholder="selectLanguagePlaceholder"
             class="facet-value-input"
             @update:model-value="(val: string) => updateField('value', val)"
         />
@@ -351,7 +365,7 @@ function toggleNegated() {
             :options="schemeDisplayOptions"
             option-label="label"
             option-value="id"
-            :placeholder="$gettext('Select scheme')"
+            :placeholder="selectSchemePlaceholder"
             class="facet-value-input"
             @update:model-value="(val: string) => updateField('value', val)"
         />
@@ -363,7 +377,7 @@ function toggleNegated() {
             :options="schemeDisplayOptions"
             option-label="label"
             option-value="id"
-            :placeholder="$gettext('Any scheme')"
+            :placeholder="anyScheme"
             :show-clear="true"
             class="facet-value-input"
             @update:model-value="
@@ -378,7 +392,7 @@ function toggleNegated() {
             :options="options.lifecycle_states"
             option-label="name"
             option-value="id"
-            :placeholder="$gettext('Select state')"
+            :placeholder="selectStatePlaceholder"
             class="facet-value-input"
             @update:model-value="(val: string) => updateField('value', val)"
         />
@@ -390,7 +404,7 @@ function toggleNegated() {
             :options="conceptSets"
             option-label="name"
             option-value="id"
-            :placeholder="$gettext('Select concept set')"
+            :placeholder="selectConceptSetPlaceholder"
             class="facet-value-input"
             @update:model-value="
                 (val: string) => updateField('value', String(val))
@@ -404,7 +418,7 @@ function toggleNegated() {
             :options="options.concept_types"
             option-label="label"
             option-value="value"
-            :placeholder="$gettext('Select concept type')"
+            :placeholder="selectConceptTypePlaceholder"
             show-clear
             class="facet-value-input"
             @update:model-value="
@@ -426,9 +440,9 @@ function toggleNegated() {
         <Button
             icon="pi pi-times"
             severity="danger"
-            text
-            rounded
-            :aria-label="$gettext('Remove condition')"
+            :text="true"
+            :rounded="true"
+            :aria-label="removeConditionLabel"
             @click="$emit('remove')"
         />
     </div>
