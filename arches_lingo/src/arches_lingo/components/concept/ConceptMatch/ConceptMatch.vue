@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, watchEffect } from "vue";
+import { onMounted, ref, watch } from "vue";
 
 import Message from "primevue/message";
 import Skeleton from "primevue/skeleton";
@@ -58,8 +58,7 @@ watch(
     { immediate: true },
 );
 
-watchEffect(async () => {
-    isLoading.value = true;
+onMounted(async () => {
     if (shouldCreateNewTile) {
         const blankTileData = await fetchTileData(
             props.graphSlug,

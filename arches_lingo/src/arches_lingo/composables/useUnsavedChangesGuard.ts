@@ -8,7 +8,7 @@ import {
     unsavedChangesConfirmOptions,
 } from "@/arches_lingo/composables/useEditorDirtyState.ts";
 
-import type { Router } from "vue-router";
+import type { Router, RouteLocationNormalized } from "vue-router";
 
 /**
  * Composable that installs:
@@ -27,8 +27,12 @@ export function useUnsavedChangesGuard(router: Router) {
     const confirm = useConfirm();
     const { isEditorDirty } = useEditorDirtyState();
 
-    const removeGuard = router.beforeEach(() => {
+    const removeGuard = router.beforeEach((to, from) => {
         if (!isEditorDirty.value) {
+            return true;
+        }
+
+        if (isQueryOnlyNavigation(to, from)) {
             return true;
         }
 
@@ -51,4 +55,15 @@ export function useUnsavedChangesGuard(router: Router) {
         window.removeEventListener("beforeunload", onBeforeUnload);
         removeGuard();
     });
+}
+
+function isQueryOnlyNavigation(
+    to: RouteLocationNormalized,
+    from: RouteLocationNormalized,
+) {
+    if (to.path !== from.path) {
+        return false;
+    }
+
+    return to.fullPath.split("?")[0] === from.fullPath.split("?")[0];
 }

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, inject, ref } from "vue";
+import { computed, inject, ref, watch } from "vue";
 
 import { useGettext } from "vue3-gettext";
 import { useRouter } from "vue-router";
@@ -35,7 +35,6 @@ import {
     NEW_CONCEPT,
     SUCCESS,
     TOP_CONCEPT_ICON,
-    VIEW,
 } from "@/arches_lingo/constants.ts";
 
 import { routeNames } from "@/arches_lingo/routes.ts";
@@ -53,6 +52,10 @@ import type {
 } from "@/arches_lingo/types.ts";
 import type { Label } from "@/arches_controlled_lists/types.ts";
 import type { ReferenceSelectValue } from "@/arches_controlled_lists/datatypes/reference-select/types.ts";
+
+const emit = defineEmits<{
+    (event: "update:isWidgetLoading", isWidgetLoading: boolean): void;
+}>();
 
 const props = defineProps<{
     concept: ResourceInstanceResult | undefined;
@@ -80,7 +83,7 @@ const { $gettext } = useGettext();
 const toast = useToast();
 const router = useRouter();
 
-const { isAnonymous, isEditor } = storeToRefs(useUserStore());
+const { isEditor } = storeToRefs(useUserStore());
 const resourceStore = useResourceStore();
 
 const { openEditLog } = useEditLog(() => props.graphSlug);
@@ -89,7 +92,12 @@ const showExportDialog = ref(false);
 const exportDialogKey = ref(0);
 const showDeleteDialog = ref(false);
 const isLoading = ref(false);
+const isWidgetLoading = ref(false);
 const dialogMode = ref<typeof DELETE | typeof DEPRECATE>(DELETE);
+
+watch(isWidgetLoading, (newValue) => {
+    emit("update:isWidgetLoading", newValue);
+});
 
 const lifecycleState = computed(function () {
     return resourceInstanceLifecycleState?.value;
@@ -295,7 +303,7 @@ function addChild() {
             </div>
             <div class="card flex justify-center">
                 <Tag
-                    v-if="isAnonymous && conceptTypeLabel"
+                    v-if="conceptTypeLabel && !canEditResourceInstances"
                     :value="conceptTypeLabel"
                     severity="secondary"
                     class="concept-type-badge"
@@ -304,12 +312,13 @@ function addChild() {
                     v-else-if="concept && concept.resourceinstanceid"
                     :node-alias="CONCEPT_TYPE_NODE_ALIAS"
                     :graph-slug="graphSlug"
-                    :mode="isEditor ? EDIT : VIEW"
+                    :mode="EDIT"
                     :aliased-node-data="
                         conceptTypeTile?.aliased_data?.[CONCEPT_TYPE_NODE_ALIAS]
                     "
                     :should-show-label="false"
                     class="concept-type-widget"
+                    @update:is-loading="isWidgetLoading = $event"
                     @update:value="onConceptTypeChange"
                 />
             </div>
@@ -459,11 +468,14 @@ function addChild() {
 }
 
 .concept-type-badge {
+    display: inline-flex;
+    align-items: center;
+    line-height: 1;
     font-size: var(--p-lingo-font-size-xxsmall);
     background: var(--p-header-button-background);
     color: var(--p-header-button-color);
-    padding: 0.1875rem 0.5rem;
-    border-radius: 0.75rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
     white-space: nowrap;
 }
 </style>

@@ -11,10 +11,7 @@ import Skeleton from "primevue/skeleton";
 import ConceptHeaderToolbar from "@/arches_lingo/components/concept/ConceptHeader/components/ConceptHeaderToolbar.vue";
 import LifecycleStateBadge from "@/arches_lingo/components/generic/LifecycleStateBadge.vue";
 
-import {
-    fetchLingoResource,
-    fetchResourceIdentifiers,
-} from "@/arches_lingo/api.ts";
+import { fetchResourceIdentifiers } from "@/arches_lingo/api.ts";
 import {
     CONCEPT_TYPE_NODE_ALIAS,
     DEFAULT_ERROR_TOAST_LIFE,
@@ -68,39 +65,38 @@ const isResourceLoaded = ref(false);
 const isIdentifierLoaded = ref(false);
 const conceptIdentifierValue = ref<string>();
 const conceptTypeTile = ref();
+const isWidgetLoading = ref(false);
 
 const isLoading = computed(function () {
     if (!isIdentifierLoaded.value) return true;
     if (props.resourceInstanceId && !isResourceLoaded.value) return true;
+    if (props.resourceInstanceId && conceptStore.isLoading) return true;
+    if (isWidgetLoading.value) return true;
+
     return false;
 });
 
-onMounted(async () => {
-    try {
-        const resourceInstanceId = props.resourceInstanceId;
-        if (!resourceInstanceId) return;
-
-        const [fetchedConcept, resourceIdentifiers] = await Promise.all([
-            fetchLingoResource(props.graphSlug, resourceInstanceId),
-            fetchResourceIdentifiers(resourceInstanceId),
-        ]);
-
-        concept.value = fetchedConcept;
-        conceptTypeTile.value =
-            concept.value?.aliased_data?.[CONCEPT_TYPE_NODE_ALIAS];
-        conceptIdentifierValue.value = resourceIdentifiers?.[0]?.identifier;
-
-        extractConceptHeaderData(fetchedConcept);
-    } catch (error) {
-        toast.add({
-            severity: ERROR,
-            life: DEFAULT_ERROR_TOAST_LIFE,
-            summary: $gettext("Unable to fetch concept"),
-            detail: error instanceof Error ? error.message : undefined,
-        });
-    } finally {
+onMounted(() => {
+    if (!props.resourceInstanceId) {
         isIdentifierLoaded.value = true;
+        return;
     }
+
+    fetchResourceIdentifiers(props.resourceInstanceId)
+        .then((resourceIdentifiers) => {
+            conceptIdentifierValue.value = resourceIdentifiers?.[0]?.identifier;
+        })
+        .catch((error) => {
+            toast.add({
+                severity: ERROR,
+                life: DEFAULT_ERROR_TOAST_LIFE,
+                summary: $gettext("Unable to fetch concept"),
+                detail: error instanceof Error ? error.message : undefined,
+            });
+        })
+        .finally(() => {
+            isIdentifierLoaded.value = true;
+        });
 });
 
 watch(
@@ -153,14 +149,6 @@ const label = computed<Label | undefined>(function () {
             selectedLanguage.value.code,
             systemLanguage.value.code,
         );
-    }
-
-    if (data.value?.name) {
-        return {
-            value: data.value.name,
-            language_id: selectedLanguage.value.code,
-            valuetype_id: PREF_LABEL,
-        };
     }
 
     return undefined;
@@ -234,10 +222,11 @@ function extractConceptHeaderData(resource: ResourceInstanceResult) {
 <template>
     <Skeleton
         v-if="isLoading"
+        height="9rem"
         class="loading-skeleton"
     />
     <div
-        v-else
+        v-show="!isLoading"
         class="concept-header"
     >
         <ConceptHeaderToolbar
@@ -247,6 +236,7 @@ function extractConceptHeaderData(resource: ResourceInstanceResult) {
             :resource-instance-id="resourceInstanceId"
             :concept-type-tile="conceptTypeTile"
             :is-top-concept="isTopConcept"
+            @update:is-widget-loading="isWidgetLoading = $event"
         />
 
         <div class="header-content">
@@ -376,13 +366,8 @@ function extractConceptHeaderData(resource: ResourceInstanceResult) {
 }
 
 .header-content {
-    padding: 0 1rem 0.5rem;
+    padding: 0.5rem 1rem 1rem;
     box-sizing: border-box;
-}
-
-.loading-skeleton {
-    width: 100%;
-    height: 9rem;
 }
 
 .concept-uri {

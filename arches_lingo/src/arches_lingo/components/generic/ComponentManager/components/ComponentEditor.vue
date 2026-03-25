@@ -286,11 +286,10 @@ h2 {
 }
 
 .editor-content :deep(.form-header) {
-    padding-top: 0;
-    padding-bottom: 1rem;
+    padding: 1rem;
     background: var(--p-header-background);
     border-bottom: 0.0625rem solid var(--p-header-toolbar-border);
-    min-height: 5.4rem;
+    min-height: 6.55rem;
 }
 
 .editor-content :deep(h3) {
@@ -300,7 +299,8 @@ h2 {
 
 .editor-content :deep(.form-header h3) {
     margin: 0;
-    padding: 0.5rem 1rem 0 1rem;
+    padding: 0;
+    padding-bottom: 0.5rem;
     font-size: 1.125rem;
 }
 
@@ -310,7 +310,6 @@ h2 {
 }
 
 .editor-content :deep(.form-description) {
-    padding: 0.125rem 1rem;
     font-weight: var(--p-lingo-font-weight-normal);
     font-size: var(--p-lingo-font-size-small);
     color: var(--p-header-item-label);

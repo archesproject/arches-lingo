@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject, computed } from "vue";
+import { inject, computed, ref } from "vue";
 import { useGettext } from "vue3-gettext";
 import { useConfirm } from "primevue/useconfirm";
 import { useToast } from "primevue/usetoast";
@@ -16,11 +16,9 @@ import type {
     SearchResultHierarchy,
 } from "@/arches_lingo/types.ts";
 import {
-    DANGER,
     DEFAULT_ERROR_TOAST_LIFE,
     ERROR,
     SCHEME_ICON,
-    SECONDARY,
 } from "@/arches_lingo/constants.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
@@ -42,7 +40,7 @@ const props = defineProps<{
     sectionTitle: string;
     scheme?: string;
 }>();
-const { $gettext } = useGettext();
+const { $gettext, interpolate } = useGettext();
 const confirm = useConfirm();
 const toast = useToast();
 
@@ -98,6 +96,7 @@ const createTooltipText = computed(() => {
     );
 });
 const { isEditor } = useUserStore();
+const isDeletePending = ref(false);
 
 const relationshipGroups = computed<RelationshipGroup[]>(() => {
     const groupMap = new Map<string, RelationshipGroup>();
@@ -142,6 +141,22 @@ function getParentLabel(group: RelationshipGroup): string {
     ).value;
 }
 
+function getTopConceptOfLabel(group: RelationshipGroup): string {
+    return interpolate(
+        $gettext("Top Concept Of: %{parent}"),
+        { parent: getParentLabel(group) },
+        true,
+    );
+}
+
+function getBroaderConceptLabel(group: RelationshipGroup): string {
+    return interpolate(
+        $gettext("Broader Concept: %{parent}"),
+        { parent: getParentLabel(group) },
+        true,
+    );
+}
+
 function confirmDelete(group: RelationshipGroup) {
     if (!group.tileid) return;
     const representativeLineage = group.lineages[0];
@@ -151,23 +166,13 @@ function confirmDelete(group: RelationshipGroup) {
             "Are you sure you want to delete relationship to parent?",
         ),
         group: "delete-parent",
-        accept: () => {
-            deleteSectionValue(representativeLineage);
-        },
-        rejectProps: {
-            label: $gettext("Cancel"),
-            severity: SECONDARY,
-            outlined: true,
-        },
-        acceptProps: {
-            label: $gettext("Delete"),
-            severity: DANGER,
-        },
-    });
+        data: { hierarchy: representativeLineage },
+    } as object);
 }
 
 async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
     try {
+        isDeletePending.value = true;
         if (relationshipGroups.value.length !== 1) {
             await deleteLingoTile(
                 props.graphSlug,
@@ -183,9 +188,11 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
                 summary: $gettext("Failed to delete data."),
                 detail: $gettext("Cannot delete the last relationship."),
             });
+            return false;
         }
         refreshReportSection!(props.componentName);
         updateAfterComponentDeletion!(props.componentName, hierarchy.tileid!);
+        return true;
     } catch (error) {
         toast.add({
             severity: ERROR,
@@ -193,6 +200,9 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
             summary: $gettext("Failed to delete data."),
             detail: error instanceof Error ? error.message : undefined,
         });
+        return false;
+    } finally {
+        isDeletePending.value = false;
     }
 }
 
@@ -215,7 +225,56 @@ function getTreeNodeStyle(depth: number) {
         <ConfirmDialog
             :pt="{ root: { style: { fontFamily: 'sans-serif' } } }"
             group="delete-parent"
-        ></ConfirmDialog>
+        >
+            <template #container="{ message, rejectCallback }">
+                <div
+                    class="confirm-dialog-content"
+                    @click.stop
+                    @mousedown.stop
+                    @mouseup.stop
+                >
+                    <div class="confirm-dialog-header">
+                        {{ message.header }}
+                    </div>
+                    <div class="confirm-dialog-message">
+                        {{ message.message }}
+                    </div>
+                    <div class="confirm-dialog-actions">
+                        <Button
+                            :label="$gettext('Cancel')"
+                            :disabled="isDeletePending"
+                            severity="secondary"
+                            outlined
+                            @click.stop="
+                                () => {
+                                    rejectCallback();
+                                    confirm.close();
+                                }
+                            "
+                            @mousedown.stop
+                            @mouseup.stop
+                        />
+                        <Button
+                            :label="$gettext('Delete')"
+                            :loading="isDeletePending"
+                            severity="danger"
+                            @click="
+                                async () => {
+                                    const didDelete = await deleteSectionValue(
+                                        message.data.hierarchy,
+                                    );
+                                    if (didDelete) {
+                                        confirm.close();
+                                    }
+                                }
+                            "
+                            @mousedown.stop
+                            @mouseup.stop
+                        />
+                    </div>
+                </div>
+            </template>
+        </ConfirmDialog>
 
         <div class="section-header">
             <h2>{{ props.sectionTitle }}</h2>
@@ -243,7 +302,7 @@ function getTreeNodeStyle(depth: number) {
 
         <div
             v-if="props.data.length"
-            style="overflow-x: auto"
+            style="overflow-x: auto; margin-top: 0.5rem"
         >
             <div
                 v-for="(group, groupIndex) in relationshipGroups"
@@ -256,20 +315,14 @@ function getTreeNodeStyle(depth: number) {
                             v-if="group.parentConcept"
                             :class="getIcon(group.parentConcept)"
                         />
+
                         <span v-if="group.isTopConcept">
-                            {{
-                                $gettext("Top Concept Of: %{parent}", {
-                                    parent: getParentLabel(group),
-                                })
-                            }}
+                            {{ getTopConceptOfLabel(group) }}
                         </span>
                         <span v-else>
-                            {{
-                                $gettext("Broader Concept: %{parent}", {
-                                    parent: getParentLabel(group),
-                                })
-                            }}
+                            {{ getBroaderConceptLabel(group) }}
                         </span>
+
                         <Tag
                             v-if="group.lineages.length > 1"
                             :value="
@@ -365,9 +418,9 @@ function getTreeNodeStyle(depth: number) {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding-bottom: 0.25rem;
     border-bottom: thin solid var(--p-inputtext-border-color);
-    margin-bottom: 0.25rem;
+    padding-bottom: 0.5rem;
+    margin-bottom: 0.5rem;
 }
 
 .relationship-group-label {
@@ -375,12 +428,9 @@ function getTreeNodeStyle(depth: number) {
     align-items: center;
     flex-wrap: wrap;
     gap: 0.5rem;
-    background: var(--p-neutral-100);
-    border-bottom: thin solid var(--p-neutral-200);
     font-weight: var(--p-lingo-font-weight-semibold, 600);
-    font-size: var(--p-lingo-font-size-medium);
-    color: var(--p-inputtext-placeholder-color);
-    padding: 0.5rem 0.75rem;
+    font-size: var(--p-lingo-font-size-smallnormal);
+    color: var(--p-header-item-label);
 }
 
 .relationship-group-actions {
@@ -449,6 +499,34 @@ function getTreeNodeStyle(depth: number) {
 .button-container {
     display: flex;
     gap: 0.25rem;
+}
+
+.confirm-dialog-content {
+    background: var(--p-dialog-background);
+    border-radius: 0.125rem;
+    color: var(--p-text-color);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    min-width: 24rem;
+    padding: 1.5rem;
+}
+
+.confirm-dialog-header {
+    font-size: var(--p-lingo-font-size-large);
+    font-weight: var(--p-lingo-font-weight-normal);
+}
+
+.confirm-dialog-message {
+    color: var(--p-inputtext-placeholder-color);
+    font-size: var(--p-lingo-font-size-smallnormal);
+    line-height: 1.5;
+}
+
+.confirm-dialog-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
 }
 
 .controls {
