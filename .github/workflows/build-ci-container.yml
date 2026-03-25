@@ -3,7 +3,7 @@ name: Build Container Image
 on:
   push:
     branches:
-      - "deploy"
+      - "deploy-legacy"
       - "test/*"
   repository_dispatch:
     type:

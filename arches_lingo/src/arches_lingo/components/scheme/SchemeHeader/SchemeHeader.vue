@@ -396,7 +396,10 @@ function onLifecycleStateChange(
                         </h2>
                     </div>
 
-                    <div class="header-buttons">
+                    <div
+                        v-if="props?.resourceInstanceId !== undefined"
+                        class="header-buttons"
+                    >
                         <Button
                             :aria-label="$gettext('Edit History')"
                             class="add-button"
