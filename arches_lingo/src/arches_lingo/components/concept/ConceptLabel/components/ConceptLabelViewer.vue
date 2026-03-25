@@ -48,7 +48,7 @@ const isCreateDisabled = computed(() => {
     return Boolean(props.resourceInstanceId && !canEditResourceInstances.value);
 });
 
-const metaStringLabel: MetaStringText = {
+const metaStringLabel = computed<MetaStringText>(() => ({
     deleteConfirm: $gettext("Are you sure you want to delete this label?"),
     language: $gettext("Language"),
     name: $gettext("Label"),
@@ -60,7 +60,7 @@ const metaStringLabel: MetaStringText = {
         language:
             "aliased_data.appellative_status_ascribed_name_language.display_value",
     },
-};
+}));
 </script>
 
 <template>

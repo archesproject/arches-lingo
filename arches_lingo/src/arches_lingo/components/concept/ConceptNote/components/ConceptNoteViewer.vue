@@ -61,7 +61,7 @@ const createTooltipText = computed(() => {
     );
 });
 
-const metaStringLabel: MetaStringText = {
+const metaStringLabel = computed<MetaStringText>(() => ({
     deleteConfirm: $gettext("Are you sure you want to delete this note?"),
     language: $gettext("Language"),
     name: $gettext("Note"),
@@ -72,7 +72,7 @@ const metaStringLabel: MetaStringText = {
         type: "aliased_data.statement_type.display_value",
         language: "aliased_data.statement_language.display_value",
     },
-};
+}));
 </script>
 
 <template>
