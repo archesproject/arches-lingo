@@ -17,33 +17,33 @@ const props = defineProps<{
 
 const userStore = useUserStore();
 
-const profileItem: SideNavMenuItem = {
-    key: "profile",
-    label: $gettext("Profile"),
-    icon: "pi pi-user",
-    route: { name: routeNames.profile },
-    showIconIfCollapsed: true,
-};
-
-const systemSettingsItem: SideNavMenuItem = {
-    key: "system_settings",
-    label: $gettext("System Settings"),
-    icon: "pi pi-cog",
-    url: generateArchesURL("arches:config"),
-    showIconIfCollapsed: true,
-};
-
-const djangoAdminItem: SideNavMenuItem = {
-    key: "django_admin",
-    label: $gettext("Django Admin"),
-    icon: "pi pi-wrench",
-    url: "/admin/",
-    showIconIfCollapsed: true,
-};
-
 const navSection = ref<SideNavMenuItem>(props.item);
 
 watchEffect(() => {
+    const profileItem: SideNavMenuItem = {
+        key: "profile",
+        label: $gettext("Profile"),
+        icon: "pi pi-user",
+        route: { name: routeNames.profile },
+        showIconIfCollapsed: true,
+    };
+
+    const systemSettingsItem: SideNavMenuItem = {
+        key: "system_settings",
+        label: $gettext("System Settings"),
+        icon: "pi pi-cog",
+        url: generateArchesURL("arches:config"),
+        showIconIfCollapsed: true,
+    };
+
+    const djangoAdminItem: SideNavMenuItem = {
+        key: "django_admin",
+        label: $gettext("Django Admin"),
+        icon: "pi pi-wrench",
+        url: "/admin/",
+        showIconIfCollapsed: true,
+    };
+
     if (userStore.isStaff) {
         navSection.value.items = [
             profileItem,

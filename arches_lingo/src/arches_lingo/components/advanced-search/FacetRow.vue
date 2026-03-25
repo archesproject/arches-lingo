@@ -39,7 +39,7 @@ const emit = defineEmits<{
     (event: "remove"): void;
 }>();
 
-const facetTypes: { label: string; value: FacetType }[] = [
+const facetTypes = computed<{ label: string; value: FacetType }[]>(() => [
     { label: $gettext("Label"), value: "label" },
     { label: $gettext("Note"), value: "note" },
     { label: $gettext("Language"), value: "language" },
@@ -59,34 +59,40 @@ const facetTypes: { label: string; value: FacetType }[] = [
     { label: $gettext("Identifier"), value: "identifier" },
     { label: $gettext("Lifecycle State"), value: "lifecycle_state" },
     { label: $gettext("Concept Set"), value: "concept_set" },
-];
+]);
 
-const matchModes: { label: string; value: MatchMode }[] = [
+const matchModes = computed<{ label: string; value: MatchMode }[]>(() => [
     { label: $gettext("Contains"), value: "contains" },
     { label: $gettext("Exact"), value: "exact" },
     { label: $gettext("Starts with"), value: "starts_with" },
     { label: $gettext("Ends with"), value: "ends_with" },
     { label: $gettext("Exists (any value)"), value: "exists" },
-];
+]);
 
-const hierarchyDirections = [
+const hierarchyDirections = computed(() => [
     { label: $gettext("Broader (parent of)"), value: "broader" },
     { label: $gettext("Narrower (child of)"), value: "narrower" },
-];
+]);
 
-const searchTextPlaceholder = $gettext("Search text...");
-const noConceptsFoundMessage = $gettext("No concepts found");
-const searchConceptsFilterPlaceholder = $gettext("Search concepts...");
-const selectConceptPlaceholder = $gettext("Select concept...");
-const anyTypePlaceholder = $gettext("Any type");
-const anyLanguagePlaceholder = $gettext("Any language");
-const selectLanguagePlaceholder = $gettext("Select language");
-const selectSchemePlaceholder = $gettext("Select scheme");
-const anyScheme = $gettext("Any scheme");
-const selectStatePlaceholder = $gettext("Select state");
-const selectConceptSetPlaceholder = $gettext("Select concept set");
-const selectConceptTypePlaceholder = $gettext("Select concept type");
-const removeConditionLabel = $gettext("Remove condition");
+const searchTextPlaceholder = computed(() => $gettext("Search text..."));
+const noConceptsFoundMessage = computed(() => $gettext("No concepts found"));
+const searchConceptsFilterPlaceholder = computed(() =>
+    $gettext("Search concepts..."),
+);
+const selectConceptPlaceholder = computed(() => $gettext("Select concept..."));
+const anyTypePlaceholder = computed(() => $gettext("Any type"));
+const anyLanguagePlaceholder = computed(() => $gettext("Any language"));
+const selectLanguagePlaceholder = computed(() => $gettext("Select language"));
+const selectSchemePlaceholder = computed(() => $gettext("Select scheme"));
+const anyScheme = computed(() => $gettext("Any scheme"));
+const selectStatePlaceholder = computed(() => $gettext("Select state"));
+const selectConceptSetPlaceholder = computed(() =>
+    $gettext("Select concept set"),
+);
+const selectConceptTypePlaceholder = computed(() =>
+    $gettext("Select concept type"),
+);
+const removeConditionLabel = computed(() => $gettext("Remove condition"));
 
 const conceptSearchResults = ref<
     { display_value: string; resource_id: string }[]

@@ -20,9 +20,13 @@ const selectedLifecycleStateIds = defineModel<string[]>(
 
 const { $gettext } = useGettext();
 
-const FILTER_BY_LIFECYCLE_STATE = $gettext("Filter by lifecycle state");
-const ALL_STATES = $gettext("All states");
-const LIFECYCLE_STATE_FILTER_LABEL = $gettext("Lifecycle state filter");
+const FILTER_BY_LIFECYCLE_STATE = computed(() =>
+    $gettext("Filter by lifecycle state"),
+);
+const ALL_STATES = computed(() => $gettext("All states"));
+const LIFECYCLE_STATE_FILTER_LABEL = computed(() =>
+    $gettext("Lifecycle state filter"),
+);
 
 const popoverRef = useTemplateRef<PopoverMethods>("popover");
 

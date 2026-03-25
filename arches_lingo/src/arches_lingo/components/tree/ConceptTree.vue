@@ -80,23 +80,27 @@ const route = useRoute();
 const router = useRouter();
 
 const NEW = "new";
-const FOCUS = $gettext("Focus");
-const UNFOCUS = $gettext("Unfocus");
-const ADD_CHILD = $gettext("Add child");
-const DELETE = $gettext("Delete");
-const EXPORT = $gettext("Export");
+const FOCUS = computed(() => $gettext("Focus"));
+const UNFOCUS = computed(() => $gettext("Unfocus"));
+const ADD_CHILD = computed(() => $gettext("Add child"));
+const DELETE = computed(() => $gettext("Delete"));
+const EXPORT = computed(() => $gettext("Export"));
 
-const FILTER_CONCEPTS = $gettext("Filter concepts");
-const FILTER_CAPPED_MESSAGE = $gettext("Please refine your query.");
-const SORT_ASCENDING = $gettext("Sort ascending");
-const SORT_DESCENDING = $gettext("Sort descending");
+const FILTER_CONCEPTS = computed(() => $gettext("Filter concepts"));
+const FILTER_CAPPED_MESSAGE = computed(() =>
+    $gettext("Please refine your query."),
+);
+const SORT_ASCENDING = computed(() => $gettext("Sort ascending"));
+const SORT_DESCENDING = computed(() => $gettext("Sort descending"));
 
-const iconLabels: IconLabels = Object.freeze({
-    concept: $gettext("Concept"),
-    guideTerm: $gettext("Guide Term"),
-    scheme: $gettext("Scheme"),
-    topConcept: $gettext("Top Concept"),
-});
+const iconLabels = computed<IconLabels>(() =>
+    Object.freeze({
+        concept: $gettext("Concept"),
+        guideTerm: $gettext("Guide Term"),
+        scheme: $gettext("Scheme"),
+        topConcept: $gettext("Top Concept"),
+    }),
+);
 
 const schemes = ref<Scheme[]>([]);
 const shouldSortByAscending = ref(route.query.sort !== "desc");
@@ -213,7 +217,7 @@ const tree = computed(() => {
         schemes.value,
         selectedLanguage.value,
         systemLanguage.value,
-        iconLabels,
+        iconLabels.value,
         focusedOccurrenceKey.value,
         shouldSortByAscending.value,
     );
