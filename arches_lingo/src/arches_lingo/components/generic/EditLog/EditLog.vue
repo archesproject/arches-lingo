@@ -362,8 +362,8 @@ async function acceptRevert() {
 .edit-entry {
     display: flex;
     gap: 0.75rem;
-    padding: .5rem .5rem 0 .5rem;
-    border-radius: .25rem;
+    padding: 0.5rem 0.5rem 0 0.5rem;
+    border-radius: 0.25rem;
 }
 
 .edit-entry:hover {

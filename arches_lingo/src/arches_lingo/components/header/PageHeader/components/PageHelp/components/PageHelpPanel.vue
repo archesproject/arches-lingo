@@ -862,7 +862,7 @@ const shouldShowPageHelpPanel = defineModel("shouldShowPageHelpPanel", {
 /* ── Sections ── */
 .help-section {
     border-bottom: 0.0625rem solid var(--p-header-toolbar-border);
-    padding-bottom: .75rem;
+    padding-bottom: 0.75rem;
 }
 
 .help-section--last {
@@ -900,7 +900,7 @@ const shouldShowPageHelpPanel = defineModel("shouldShowPageHelpPanel", {
 .help-list {
     list-style: none;
     margin: 0;
-    padding: 1.0rem;
+    padding: 1rem;
     display: flex;
     flex-direction: column;
     gap: 0.625rem;

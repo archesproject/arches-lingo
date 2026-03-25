@@ -136,7 +136,6 @@ function isGroup(item: SearchCondition | SearchGroup): item is SearchGroup {
                 v-for="(child, index) in group.conditions"
                 :key="child.id"
             >
-            
                 <div
                     v-if="index > 0"
                     class="operator-label"

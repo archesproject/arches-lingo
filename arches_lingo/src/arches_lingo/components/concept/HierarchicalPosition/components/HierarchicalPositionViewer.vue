@@ -275,14 +275,16 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
                         class="relationship-group-actions"
                     >
                         <div class="button-container">
-                            <Button 
+                            <Button
                                 v-if="canEditResourceInstances"
                                 class="controls edit-button"
                                 icon="pi pi-file-edit"
                                 variant="text"
                                 :aria-label="$gettext('edit')"
                                 :disabled="group.isTopConcept"
-                                @click="openEditor!(componentName, group.tileid)"
+                                @click="
+                                    openEditor!(componentName, group.tileid)
+                                "
                             />
                             <Button
                                 v-if="group.tileid && canEditResourceInstances"
@@ -364,7 +366,7 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
     font-weight: var(--p-lingo-font-weight-normal);
     font-size: 1rem;
     color: var(--p-neutral-500);
-    padding: .5rem 0.75rem;
+    padding: 0.5rem 0.75rem;
 }
 
 .relationship-group-actions {
@@ -451,16 +453,15 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
     color: var(--p-button-danger-color);
 }
 
-.edit-button:hover {
-    background: var(--p-button-primary-hover-background) !important;
-    border: 1px solid var(--p-button-primary-hover-border-color) !important;
-    color: var(--p-button-primary-hover-color) !important;
+.button-container .edit-button:hover {
+    background: var(--p-button-primary-hover-background);
+    border: 1px solid var(--p-button-primary-hover-border-color);
+    color: var(--p-button-primary-hover-color);
 }
 
-.delete-button:hover {
-    background: var(--p-button-danger-hover-background) !important;
-    border: 1px solid var(--p-button-danger-hover-border-color)!important;
-    color: var(--p-button-danger-hover-color)!important;
+.button-container .delete-button:hover {
+    background: var(--p-button-danger-hover-background);
+    border: 1px solid var(--p-button-danger-hover-border-color);
+    color: var(--p-button-danger-hover-color);
 }
-
 </style>
