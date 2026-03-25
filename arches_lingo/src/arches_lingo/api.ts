@@ -369,11 +369,22 @@ export const upsertLingoTile = async (
     );
 
     const parsed = await response.json();
-    if (!response.ok)
+    if (!response.ok) {
+        let node_validations;
+        if (parsed.aliased_data) {
+            for (const msg of parsed.aliased_data[nodegroupAlias]) {
+                if (msg) {
+                    node_validations = node_validations || msg;
+                }
+            }
+        }
         throw new Error(
-            // TODO: show all errors
-            parsed.non_field_errors || parsed.message || response.statusText,
+            node_validations ||
+                parsed.non_field_errors ||
+                parsed.message ||
+                response.statusText,
         );
+    }
     return parsed;
 };
 
