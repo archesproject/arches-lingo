@@ -136,6 +136,7 @@ function isGroup(item: SearchCondition | SearchGroup): item is SearchGroup {
                 v-for="(child, index) in group.conditions"
                 :key="child.id"
             >
+            
                 <div
                     v-if="index > 0"
                     class="operator-label"
@@ -178,8 +179,6 @@ export default {
 
 <style scoped>
 .facet-group {
-    border: 0.0625rem solid var(--p-highlight-focus-background);
-    border-radius: 0.125rem;
     padding: 0.75rem;
     background-color: var(--p-surface-card);
     font-family: var(--p-lingo-font-family);
