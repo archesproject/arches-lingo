@@ -861,8 +861,8 @@ const shouldShowPageHelpPanel = defineModel("shouldShowPageHelpPanel", {
 
 /* ── Sections ── */
 .help-section {
-    padding: 1rem;
     border-bottom: 0.0625rem solid var(--p-header-toolbar-border);
+    padding-bottom: 0.75rem;
 }
 
 .help-section--last {
@@ -876,9 +876,11 @@ const shouldShowPageHelpPanel = defineModel("shouldShowPageHelpPanel", {
     margin: 0 0 0.75rem;
     font-size: var(--p-lingo-font-size-xsmall);
     font-weight: var(--p-lingo-font-weight-normal);
-    color: var(--p-neutral-500);
+    color: var(--p-neutral-600);
     text-transform: uppercase;
     letter-spacing: 0.06em;
+    padding: 1rem;
+    background: var(--p-highlight-background);
 }
 
 .help-section-title .pi {
@@ -891,13 +893,14 @@ const shouldShowPageHelpPanel = defineModel("shouldShowPageHelpPanel", {
     font-size: var(--p-lingo-font-size-small);
     color: var(--p-neutral-500);
     line-height: 1.5;
+    padding: 0 1rem;
 }
 
 /* ── List ── */
 .help-list {
     list-style: none;
     margin: 0;
-    padding: 0;
+    padding: 1rem;
     display: flex;
     flex-direction: column;
     gap: 0.625rem;
@@ -929,7 +932,7 @@ const shouldShowPageHelpPanel = defineModel("shouldShowPageHelpPanel", {
     display: flex;
     align-items: flex-start;
     gap: 0.5rem;
-    margin-top: 0.875rem;
+    margin: 0.875rem;
     padding: 0.625rem 0.75rem;
     background: var(--p-highlight-background);
     border-left: 0.1875rem solid var(--p-primary-400);
@@ -951,6 +954,7 @@ const shouldShowPageHelpPanel = defineModel("shouldShowPageHelpPanel", {
     display: flex;
     flex-direction: column;
     gap: 0.625rem;
+    padding: 0 1rem;
 }
 
 .help-label-type {

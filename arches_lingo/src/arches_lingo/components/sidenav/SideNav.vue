@@ -65,7 +65,10 @@ const emit = defineEmits(["update:isNavExpanded"]);
                 pt: {
                     root: { style: { marginInlineStart: '3rem' } },
                     text: {
-                        style: { fontFamily: 'var(--p-lingo-font-family)' },
+                        style: {
+                            fontFamily: 'var(--p-lingo-font-family)',
+                            fontSize: 'var(--p-lingo-font-size-xsmall)',
+                        },
                     },
                     arrow: { style: { display: 'none' } },
                 },

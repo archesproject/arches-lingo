@@ -371,6 +371,11 @@ function resetForm() {
     border: none;
 }
 
+:deep(.file-list) {
+    display: flex;
+    gap: 1rem;
+}
+
 :deep(.p-fileupload-header) {
     padding: 0;
 }

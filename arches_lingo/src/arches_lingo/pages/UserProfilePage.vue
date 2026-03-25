@@ -459,6 +459,7 @@ async function submitPasswordChange() {
 
 .form-input {
     width: 100%;
+    border-radius: 0.125rem;
 }
 
 .field-hint {
@@ -474,6 +475,10 @@ async function submitPasswordChange() {
 
 .form-actions :deep(.p-button) {
     border-radius: 0.125rem;
+}
+
+:deep(.p-password:has(.p-password-toggle-mask-icon) .p-password-input) {
+    border-radius: 0.125rem !important;
 }
 
 @media screen and (max-width: 600px) {

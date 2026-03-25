@@ -279,24 +279,27 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
                         v-if="isEditor"
                         class="relationship-group-actions"
                     >
-                        <Button
-                            v-if="canEditResourceInstances"
-                            icon="pi pi-file-edit"
-                            variant="text"
-                            :aria-label="$gettext('edit')"
-                            :disabled="group.isTopConcept"
-                            size="small"
-                            @click="openEditor!(componentName, group.tileid)"
-                        />
-                        <Button
-                            v-if="group.tileid && canEditResourceInstances"
-                            icon="pi pi-trash"
-                            variant="text"
-                            :aria-label="$gettext('delete')"
-                            severity="danger"
-                            size="small"
-                            @click="confirmDelete(group)"
-                        />
+                        <div class="button-container">
+                            <Button
+                                v-if="canEditResourceInstances"
+                                class="controls edit-button"
+                                icon="pi pi-file-edit"
+                                variant="text"
+                                :aria-label="$gettext('edit')"
+                                :disabled="group.isTopConcept"
+                                @click="
+                                    openEditor!(componentName, group.tileid)
+                                "
+                            />
+                            <Button
+                                v-if="group.tileid && canEditResourceInstances"
+                                class="controls delete-button"
+                                icon="pi pi-trash"
+                                variant="text"
+                                :aria-label="$gettext('delete')"
+                                @click="confirmDelete(group)"
+                            />
+                        </div>
                     </div>
                 </div>
                 <div class="lineage-paths">
@@ -304,10 +307,6 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
                         v-for="(hierarchy, lineageIndex) in group.lineages"
                         :key="lineageIndex"
                     >
-                        <div
-                            v-if="group.lineages.length > 1 && lineageIndex > 0"
-                            class="lineage-divider"
-                        />
                         <div class="lineage-path">
                             <div
                                 v-for="(item, depth) in hierarchy.searchResults"
@@ -349,10 +348,7 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
 
 <style scoped>
 .relationship-group {
-    margin-top: 1rem;
     margin-bottom: 0.5rem;
-    border: thin solid var(--p-neutral-200);
-    border-radius: 0.125rem;
     padding: 0.75rem 1rem;
     overflow-x: auto;
 }
@@ -362,7 +358,6 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
     align-items: center;
     justify-content: space-between;
     padding-bottom: 0.25rem;
-    border-bottom: thin solid var(--p-neutral-200);
     margin-bottom: 0.25rem;
 }
 
@@ -371,9 +366,12 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
     align-items: center;
     flex-wrap: wrap;
     gap: 0.5rem;
-    font-weight: var(--p-lingo-font-weight-semibold, 600);
-    font-size: var(--p-lingo-font-size-medium);
-    color: var(--p-neutral-700);
+    background: var(--p-neutral-100);
+    border-bottom: thin solid var(--p-neutral-200);
+    font-weight: var(--p-lingo-font-weight-normal);
+    font-size: 1rem;
+    color: var(--p-neutral-500);
+    padding: 0.5rem 0.75rem;
 }
 
 .relationship-group-actions {
@@ -383,11 +381,11 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
 }
 
 .path-count-badge {
-    font-size: var(--p-lingo-font-size-small, 0.75rem);
+    font-size: var(--p-lingo-font-size-xsmall, 0.75rem);
     font-weight: var(--p-lingo-font-weight-normal, 400);
-    color: var(--p-neutral-500);
-    background: var(--p-neutral-100);
-    padding: 0.1rem 0.5rem;
+    color: var(--p-neutral-600);
+    background: var(--p-neutral-300);
+    padding: 0.25rem 0.75rem;
     border-radius: 1rem;
 }
 
@@ -397,6 +395,7 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
 
 .lineage-path {
     padding-inline-start: 0.5rem;
+    padding-bottom: 1rem;
 }
 
 .lineage-divider {
@@ -431,5 +430,43 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
 
 .tree-node-label {
     margin-inline-start: 0.5rem;
+    font-size: var(--p-lingo-font-size-small);
+}
+
+.button-container {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.controls {
+    padding: 0.25rem;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    padding: 1.2rem;
+    color: var(--p-button-primary-color);
+}
+
+.edit-button {
+    background: var(--p-button-primary-background);
+    border: 0.0625rem solid var(--p-button-primary-active-border-color);
+}
+
+.delete-button {
+    background: var(--p-button-danger-background);
+    border: 1px solid var(--p-button-danger-border-color);
+    color: var(--p-button-danger-color);
+}
+
+.button-container .edit-button:hover {
+    background: var(--p-button-primary-hover-background);
+    border: 1px solid var(--p-button-primary-hover-border-color);
+    color: var(--p-button-primary-hover-color);
+}
+
+.button-container .delete-button:hover {
+    background: var(--p-button-danger-hover-background);
+    border: 1px solid var(--p-button-danger-hover-border-color);
+    color: var(--p-button-danger-hover-color);
 }
 </style>
