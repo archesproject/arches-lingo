@@ -6,12 +6,24 @@ import { useGettext } from "vue3-gettext";
 import Button from "primevue/button";
 
 import { generateArchesURL } from "@/arches/utils/generate-arches-url.ts";
+import BasicSearch from "@/arches_lingo/components/basic-search/BasicSearch.vue";
+import {
+    SEARCH_RESULTS_PER_PAGE,
+    SEARCH_RESULT_ITEM_SIZE,
+} from "@/arches_lingo/constants.ts";
 import { routeNames } from "@/arches_lingo/routes.ts";
+import { useAppSettingsStore } from "@/arches_lingo/stores/useAppSettingsStore.ts";
 import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 
 const { $gettext } = useGettext();
 const router = useRouter();
 const userStore = useUserStore();
+
+const appSettingsStore = useAppSettingsStore();
+
+const shouldShowSearch = computed(
+    () => !userStore.isAnonymous || appSettingsStore.allowAnonymousAccess,
+);
 
 const userDisplayName = computed(() => {
     const user = userStore.user;
@@ -277,6 +289,20 @@ function navigateTo(route: { name: string }) {
             </div>
         </section>
 
+        <section
+            v-if="shouldShowSearch"
+            class="landing-search-section"
+        >
+            <div class="landing-search-container">
+                <BasicSearch
+                    :search-results-per-page="SEARCH_RESULTS_PER_PAGE"
+                    :search-result-item-size="SEARCH_RESULT_ITEM_SIZE"
+                    :toggle-modal="() => {}"
+                    :floating-overlay="true"
+                />
+            </div>
+        </section>
+
         <section class="landing-cards-section">
             <div class="action-cards">
                 <button
@@ -421,6 +447,20 @@ function navigateTo(route: { name: string }) {
         transform: scale(1);
         opacity: 0;
     }
+}
+
+/* ── Search section ────────────────────────────────────────── */
+
+.landing-search-section {
+    border-bottom: 1px solid #d1dde8;
+    background: var(--p-inputtext-background);
+    padding: 1.5rem 2rem;
+    flex-shrink: 0;
+}
+
+.landing-search-container {
+    max-width: 60rem;
+    margin: 0 auto;
 }
 
 /* ── Action cards ───────────────────────────────────────────── */

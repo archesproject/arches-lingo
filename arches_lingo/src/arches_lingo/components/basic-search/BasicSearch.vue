@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { nextTick, ref, watch, onMounted, useTemplateRef } from "vue";
+import { computed, nextTick, ref, watch, onMounted, useTemplateRef } from "vue";
 import { useGettext } from "vue3-gettext";
 import { useRouter } from "vue-router";
 
@@ -27,10 +27,43 @@ interface Props {
     searchResultsPerPage: number;
     searchResultItemSize: number;
     toggleModal: () => void;
+    floatingOverlay?: boolean;
 }
 const props = defineProps<Props>();
 
+// When floatingOverlay is true the overlay is appended to <body> and
+// positioned by PrimeVue using its default absolute/fixed strategy, which
+// lets it float over page content without disturbing document flow.
+// When false (modal usage) it is appended inside #basic-search-container and
+// forced to position:static so it expands the modal height inline.
+const autoCompleteAppendTo = computed(() =>
+    props.floatingOverlay ? "body" : "#basic-search-container",
+);
+
+const autoCompletePt = computed(() => ({
+    option: {
+        style: {
+            padding: "0",
+            borderRadius: "0",
+        },
+    },
+    overlay: {
+        style: {
+            padding: "0",
+            borderRadius: "0",
+            borderTop: "0.0725rem solid var(--p-dialog-border-color)",
+        },
+    },
+    list: {
+        style: {
+            padding: "0",
+            gap: "0",
+        },
+    },
+}));
+
 const autoCompleteInstance = useTemplateRef("autoCompleteInstance");
+const searchContainerRef = useTemplateRef<HTMLElement>("searchContainer");
 const autoCompleteKey = ref(0);
 const computedSearchResultsHeight = ref("");
 const isLoading = ref(false);
@@ -184,11 +217,24 @@ watch(searchResults, (newSearchResults) => {
         const itemHeightInRem = props.searchResultItemSize / rootFontSize;
         const computedHeightInRem = newSearchResults.length * itemHeightInRem;
 
-        const viewHeightInPixels = window.innerHeight * 0.6;
-        const viewHeightInRem = viewHeightInPixels / rootFontSize;
+        // In floating overlay mode, cap the height to the actual space below
+        // the search container so PrimeVue never needs to flip the overlay above
+        // the input (which can cause it to be cut off at the top of the viewport).
+        let maxHeightInRem: number;
+        if (props.floatingOverlay && searchContainerRef.value) {
+            const spaceBelowInPixels =
+                window.innerHeight -
+                searchContainerRef.value.getBoundingClientRect().bottom -
+                rootFontSize * 2; // 2rem breathing room above viewport bottom
+            maxHeightInRem = Math.max(spaceBelowInPixels / rootFontSize, 5);
+        } else {
+            maxHeightInRem = (window.innerHeight * 0.6) / rootFontSize;
+        }
 
-        if (computedHeightInRem > viewHeightInRem) {
-            computedSearchResultsHeight.value = "60vh";
+        if (computedHeightInRem > maxHeightInRem) {
+            computedSearchResultsHeight.value = props.floatingOverlay
+                ? `${maxHeightInRem}rem`
+                : "60vh";
         } else {
             computedSearchResultsHeight.value = `${computedHeightInRem}rem`;
         }
@@ -199,8 +245,19 @@ watch(searchResults, (newSearchResults) => {
 </script>
 
 <template>
-    <div id="basic-search-container">
-        <div style="display: flex; align-items: center">
+    <div
+        id="basic-search-container"
+        ref="searchContainer"
+    >
+        <!-- In floating overlay mode the sort controls are placed above the
+             input so that PrimeVue's naturally-below-input overlay position
+             puts results after the sort controls, not between them and
+             the input. -->
+        <SortAndFilterControls
+            v-if="props.floatingOverlay"
+            v-model:order-mode="orderMode"
+        />
+        <div style="display: flex; align-items: center; position: relative">
             <i
                 class="pi pi-search search-icon"
                 aria-hidden="true"
@@ -211,30 +268,11 @@ watch(searchResults, (newSearchResults) => {
                 :key="autoCompleteKey"
                 v-model="query"
                 option-label="id"
-                append-to="#basic-search-container"
+                :append-to="autoCompleteAppendTo"
                 :delay="500"
                 :loading="isLoading && !isLoadingAdditionalResults"
                 :placeholder="$gettext('Quick Search')"
-                :pt="{
-                    option: {
-                        style: {
-                            padding: '0',
-                            borderRadius: '0',
-                        },
-                    },
-                    overlay: {
-                        style: {
-                            padding: '0',
-                            borderRadius: '0',
-                        },
-                    },
-                    list: {
-                        style: {
-                            padding: '0',
-                            gap: '0',
-                        },
-                    },
-                }"
+                :pt="autoCompletePt"
                 :suggestions="searchResults"
                 :virtual-scroller-options="{
                     itemSize: props.searchResultItemSize,
@@ -303,7 +341,10 @@ watch(searchResults, (newSearchResults) => {
             style="height: 0.25rem"
         />
 
-        <SortAndFilterControls v-model:order-mode="orderMode" />
+        <SortAndFilterControls
+            v-if="!props.floatingOverlay"
+            v-model:order-mode="orderMode"
+        />
     </div>
 </template>
 
