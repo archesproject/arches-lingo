@@ -10,7 +10,6 @@ import Toast from "primevue/toast";
 
 import SchemeHierarchy from "@/arches_lingo/components/header/PageHeader/components/SchemeHierarchy/SchemeHierarchy.vue";
 
-import { routeNames } from "@/arches_lingo/routes.ts";
 import { useUnsavedChangesGuard } from "@/arches_lingo/composables/useUnsavedChangesGuard.ts";
 import { useConceptStore } from "@/arches_lingo/stores/useConceptStore.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
@@ -27,7 +26,9 @@ const route = useRoute();
 
 const isNavExpanded = ref(false);
 const schemeHierarchyKey = ref(0);
-const shouldShowHierarchy = ref(route.query.hierarchy === "1");
+const shouldShowHierarchy = ref(
+    Boolean(route.meta.shouldShowNavigation) && route.query.hierarchy === "1",
+);
 
 provide("refreshSchemeHierarchy", refreshSchemeHierarchy);
 
@@ -59,8 +60,8 @@ watch(shouldShowHierarchy, (isOpen) => {
 
 watch(
     () => route.name,
-    (newName) => {
-        if (newName === routeNames.login) {
+    () => {
+        if (!route.meta.shouldShowNavigation) {
             shouldShowHierarchy.value = false;
         }
     },

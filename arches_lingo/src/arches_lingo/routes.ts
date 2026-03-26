@@ -13,10 +13,21 @@ export const routes = [
         meta: {
             shouldShowNavigation: false,
             requiresAuthentication: false,
+            alwaysPublic: true,
         },
     },
     {
         path: "/",
+        name: "landing",
+        component: () => import("@/arches_lingo/pages/LandingPage.vue"),
+        meta: {
+            shouldShowNavigation: false,
+            requiresAuthentication: false,
+            alwaysPublic: true,
+        },
+    },
+    {
+        path: "/dashboard",
         name: "dashboard",
         component: () => import("@/arches_lingo/pages/HomePage.vue"),
         meta: {
@@ -141,8 +152,9 @@ export const routes = [
 ];
 
 export const routeNames = {
-    root: "dashboard",
+    root: "landing",
     login: "login",
+    landing: "landing",
     search: "search",
     advancedSearch: "advanced-search",
     dashboard: "dashboard",

@@ -18,8 +18,6 @@ const router = createRouter({
 });
 
 router.beforeEach(async (to, _from, next) => {
-    if (to.name === routeNames.login) return next();
-
     const userStore = useUserStore(pinia);
     const appSettingsStore = useAppSettingsStore(pinia);
 
@@ -27,6 +25,9 @@ router.beforeEach(async (to, _from, next) => {
         userStore.refresh(),
         appSettingsStore.initialize(),
     ]);
+
+    const isAlwaysPublic = to.matched.some((record) => record.meta.alwaysPublic);
+    if (isAlwaysPublic) return next();
 
     const requiresAuth = to.matched.some(
         (record) => record.meta.requiresAuthentication,
