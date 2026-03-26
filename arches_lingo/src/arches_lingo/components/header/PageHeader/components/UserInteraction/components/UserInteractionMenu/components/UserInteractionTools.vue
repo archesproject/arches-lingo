@@ -5,7 +5,6 @@ import { useToast } from "primevue/usetoast";
 import { useConfirm } from "primevue/useconfirm";
 
 import Button from "primevue/button";
-import ConfirmDialog from "primevue/confirmdialog";
 
 import { logout } from "@/arches_lingo/api.ts";
 import { DEFAULT_ERROR_TOAST_LIFE, ERROR } from "@/arches_lingo/constants.ts";
@@ -18,6 +17,7 @@ const router = useRouter();
 
 function confirmLogout() {
     confirm.require({
+        group: "logout",
         header: $gettext("Confirmation"),
         message: $gettext("Are you sure you want to log out?"),
         accept: () => {
@@ -58,7 +58,6 @@ async function issueLogout() {
     <div>
         <div class="section-title tools-section">{{ $gettext("Tools") }}</div>
 
-        <ConfirmDialog @click.stop.prevent />
         <div class="button-container">
             <Button
                 as="a"

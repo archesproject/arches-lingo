@@ -110,9 +110,7 @@ async function save(e: FormSubmitEvent) {
             updatedTileId = updatedTile.tileid;
         }
 
-        if (updatedTileId !== props.tileId) {
-            openEditor!(props.componentName, updatedTileId);
-        }
+        openEditor!(props.componentName, updatedTileId);
 
         refreshReportSection!(props.componentName);
         refreshSchemeHierarchy!();

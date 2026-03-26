@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, inject, ref } from "vue";
+import { computed, inject, ref, watch } from "vue";
 
 import { useGettext } from "vue3-gettext";
 import { useRouter } from "vue-router";
@@ -7,6 +7,7 @@ import { useToast } from "primevue/usetoast";
 import { storeToRefs } from "pinia";
 
 import Button from "primevue/button";
+import Tag from "primevue/tag";
 
 import DeleteConceptDialog from "@/arches_lingo/components/concept/ConceptHeader/components/DeleteConceptDialog.vue";
 import ExportThesauri from "@/arches_lingo/components/scheme/SchemeHeader/components/ExportThesauri.vue";
@@ -34,7 +35,6 @@ import {
     NEW_CONCEPT,
     SUCCESS,
     TOP_CONCEPT_ICON,
-    VIEW,
 } from "@/arches_lingo/constants.ts";
 
 import { routeNames } from "@/arches_lingo/routes.ts";
@@ -52,6 +52,10 @@ import type {
 } from "@/arches_lingo/types.ts";
 import type { Label } from "@/arches_controlled_lists/types.ts";
 import type { ReferenceSelectValue } from "@/arches_controlled_lists/datatypes/reference-select/types.ts";
+
+const emit = defineEmits<{
+    (event: "update:isWidgetLoading", isWidgetLoading: boolean): void;
+}>();
 
 const props = defineProps<{
     concept: ResourceInstanceResult | undefined;
@@ -88,10 +92,22 @@ const showExportDialog = ref(false);
 const exportDialogKey = ref(0);
 const showDeleteDialog = ref(false);
 const isLoading = ref(false);
+const isWidgetLoading = ref(false);
 const dialogMode = ref<typeof DELETE | typeof DEPRECATE>(DELETE);
+
+watch(isWidgetLoading, (newValue) => {
+    emit("update:isWidgetLoading", newValue);
+});
 
 const lifecycleState = computed(function () {
     return resourceInstanceLifecycleState?.value;
+});
+
+const conceptTypeLabel = computed(function () {
+    const aliasedData =
+        props.conceptTypeTile?.aliased_data?.[CONCEPT_TYPE_NODE_ALIAS];
+    return (aliasedData as { display_value?: string } | undefined)
+        ?.display_value;
 });
 
 const conceptIcon = computed(function () {
@@ -286,16 +302,23 @@ function addChild() {
                 </div>
             </div>
             <div class="card flex justify-center">
+                <Tag
+                    v-if="conceptTypeLabel && !canEditResourceInstances"
+                    :value="conceptTypeLabel"
+                    severity="secondary"
+                    class="concept-type-badge"
+                />
                 <GenericWidget
-                    v-if="concept && concept.resourceinstanceid"
+                    v-else-if="concept && concept.resourceinstanceid"
                     :node-alias="CONCEPT_TYPE_NODE_ALIAS"
                     :graph-slug="graphSlug"
-                    :mode="isEditor ? EDIT : VIEW"
+                    :mode="EDIT"
                     :aliased-node-data="
                         conceptTypeTile?.aliased_data?.[CONCEPT_TYPE_NODE_ALIAS]
                     "
                     :should-show-label="false"
                     class="concept-type-widget"
+                    @update:is-loading="isWidgetLoading = $event"
                     @update:value="onConceptTypeChange"
                 />
             </div>
@@ -361,7 +384,7 @@ function addChild() {
     flex-wrap: wrap;
     row-gap: 0.5rem;
     padding-inline-start: 1rem;
-    padding-inline-end: 1rem;
+    padding-inline-end: 0.5rem;
     padding-top: 0.375rem;
     padding-bottom: 0.375rem;
     box-sizing: border-box;
@@ -442,5 +465,17 @@ function addChild() {
 
 :deep(.concept-type-widget .p-icon.p-treeselect-clear-icon) {
     display: none;
+}
+
+.concept-type-badge {
+    display: inline-flex;
+    align-items: center;
+    line-height: 1;
+    font-size: var(--p-lingo-font-size-xxsmall);
+    background: var(--p-header-button-background);
+    color: var(--p-header-button-color);
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    white-space: nowrap;
 }
 </style>

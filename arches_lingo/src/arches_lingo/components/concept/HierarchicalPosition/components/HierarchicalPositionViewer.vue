@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject, computed } from "vue";
+import { inject, computed, ref } from "vue";
 import { useGettext } from "vue3-gettext";
 import { useConfirm } from "primevue/useconfirm";
 import { useToast } from "primevue/usetoast";
@@ -7,6 +7,7 @@ import { storeToRefs } from "pinia";
 
 import Button from "primevue/button";
 import ConfirmDialog from "primevue/confirmdialog";
+import Tag from "primevue/tag";
 
 import { deleteLingoTile } from "@/arches_lingo/api.ts";
 import { getConceptIcon } from "@/arches_lingo/utils.ts";
@@ -15,11 +16,9 @@ import type {
     SearchResultHierarchy,
 } from "@/arches_lingo/types.ts";
 import {
-    DANGER,
     DEFAULT_ERROR_TOAST_LIFE,
     ERROR,
     SCHEME_ICON,
-    SECONDARY,
 } from "@/arches_lingo/constants.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
@@ -41,7 +40,7 @@ const props = defineProps<{
     sectionTitle: string;
     scheme?: string;
 }>();
-const { $gettext } = useGettext();
+const { $gettext, interpolate } = useGettext();
 const confirm = useConfirm();
 const toast = useToast();
 
@@ -97,6 +96,7 @@ const createTooltipText = computed(() => {
     );
 });
 const { isEditor } = useUserStore();
+const isDeletePending = ref(false);
 
 const relationshipGroups = computed<RelationshipGroup[]>(() => {
     const groupMap = new Map<string, RelationshipGroup>();
@@ -141,6 +141,22 @@ function getParentLabel(group: RelationshipGroup): string {
     ).value;
 }
 
+function getTopConceptOfLabel(group: RelationshipGroup): string {
+    return interpolate(
+        $gettext("Top Concept Of: %{parent}"),
+        { parent: getParentLabel(group) },
+        true,
+    );
+}
+
+function getBroaderConceptLabel(group: RelationshipGroup): string {
+    return interpolate(
+        $gettext("Broader Concept: %{parent}"),
+        { parent: getParentLabel(group) },
+        true,
+    );
+}
+
 function confirmDelete(group: RelationshipGroup) {
     if (!group.tileid) return;
     const representativeLineage = group.lineages[0];
@@ -150,41 +166,35 @@ function confirmDelete(group: RelationshipGroup) {
             "Are you sure you want to delete relationship to parent?",
         ),
         group: "delete-parent",
-        accept: () => {
-            deleteSectionValue(representativeLineage);
-        },
-        rejectProps: {
-            label: $gettext("Cancel"),
-            severity: SECONDARY,
-            outlined: true,
-        },
-        acceptProps: {
-            label: $gettext("Delete"),
-            severity: DANGER,
-        },
-    });
+        data: { hierarchy: representativeLineage },
+    } as object);
 }
 
 async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
-    try {
-        if (relationshipGroups.value.length !== 1) {
-            await deleteLingoTile(
-                props.graphSlug,
-                props.nodegroupAlias,
-                hierarchy.tileid!,
-            );
+    if (relationshipGroups.value.length === 1) {
+        toast.add({
+            severity: ERROR,
+            life: DEFAULT_ERROR_TOAST_LIFE,
+            summary: $gettext("Failed to delete data."),
+            detail: $gettext("Cannot delete the last relationship."),
+        });
+        return;
+    }
 
-            refreshSchemeHierarchy!();
-        } else {
-            toast.add({
-                severity: ERROR,
-                life: DEFAULT_ERROR_TOAST_LIFE,
-                summary: $gettext("Failed to delete data."),
-                detail: $gettext("Cannot delete the last relationship."),
-            });
-        }
+    try {
+        isDeletePending.value = true;
+
+        await deleteLingoTile(
+            props.graphSlug,
+            props.nodegroupAlias,
+            hierarchy.tileid!,
+        );
+
+        refreshSchemeHierarchy!();
         refreshReportSection!(props.componentName);
         updateAfterComponentDeletion!(props.componentName, hierarchy.tileid!);
+
+        confirm.close();
     } catch (error) {
         toast.add({
             severity: ERROR,
@@ -192,7 +202,19 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
             summary: $gettext("Failed to delete data."),
             detail: error instanceof Error ? error.message : undefined,
         });
+    } finally {
+        isDeletePending.value = false;
     }
+}
+
+function getTreeNodeStyle(depth: number) {
+    const indentation = `${depth * 1.25}rem`;
+    const connectorLeft = `${(depth - 1) * 1.25 + 0.35}rem`;
+
+    return {
+        "padding-inline-start": indentation,
+        "--tree-connector-left": connectorLeft,
+    };
 }
 </script>
 
@@ -204,7 +226,45 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
         <ConfirmDialog
             :pt="{ root: { style: { fontFamily: 'sans-serif' } } }"
             group="delete-parent"
-        ></ConfirmDialog>
+        >
+            <template #container="{ message, rejectCallback }">
+                <div
+                    class="confirm-dialog-content"
+                    @click.stop
+                    @mousedown.stop
+                    @mouseup.stop
+                >
+                    <div class="confirm-dialog-header">
+                        {{ message.header }}
+                    </div>
+                    <div class="confirm-dialog-message">
+                        {{ message.message }}
+                    </div>
+                    <div class="confirm-dialog-actions">
+                        <Button
+                            :label="$gettext('Cancel')"
+                            :disabled="isDeletePending"
+                            severity="secondary"
+                            outlined
+                            @click="
+                                () => {
+                                    rejectCallback();
+                                    confirm.close();
+                                }
+                            "
+                        />
+                        <Button
+                            :label="$gettext('Delete')"
+                            :loading="isDeletePending"
+                            severity="danger"
+                            @click="
+                                () => deleteSectionValue(message.data.hierarchy)
+                            "
+                        />
+                    </div>
+                </div>
+            </template>
+        </ConfirmDialog>
 
         <div class="section-header">
             <h2>{{ props.sectionTitle }}</h2>
@@ -232,7 +292,7 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
 
         <div
             v-if="props.data.length"
-            style="overflow-x: auto"
+            style="overflow-x: auto; margin-top: 0.5rem"
         >
             <div
                 v-for="(group, groupIndex) in relationshipGroups"
@@ -245,35 +305,24 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
                             v-if="group.parentConcept"
                             :class="getIcon(group.parentConcept)"
                         />
-                        <!-- $gettext HTML-encodes interpolated values, so v-html is safe here -->
-                        <!-- eslint-disable-next-line vue/no-v-html -->
-                        <span
-                            v-if="group.isTopConcept"
-                            v-html="
-                                $gettext('Top Concept Of: %{parent}', {
-                                    parent: getParentLabel(group),
-                                })
-                            "
-                        />
-                        <!-- eslint-disable-next-line vue/no-v-html -->
-                        <span
-                            v-else
-                            v-html="
-                                $gettext('Broader Concept: %{parent}', {
-                                    parent: getParentLabel(group),
-                                })
-                            "
-                        />
-                        <span
+
+                        <span v-if="group.isTopConcept">
+                            {{ getTopConceptOfLabel(group) }}
+                        </span>
+                        <span v-else>
+                            {{ getBroaderConceptLabel(group) }}
+                        </span>
+
+                        <Tag
                             v-if="group.lineages.length > 1"
-                            class="path-count-badge"
-                        >
-                            {{
-                                $gettext("%{count} paths", {
+                            :value="
+                                $gettext('%{count} paths', {
                                     count: String(group.lineages.length),
                                 })
-                            }}
-                        </span>
+                            "
+                            severity="secondary"
+                            class="path-count-badge"
+                        />
                     </span>
                     <div
                         v-if="isEditor"
@@ -312,7 +361,7 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
                                 v-for="(item, depth) in hierarchy.searchResults"
                                 :key="item.id"
                                 class="tree-node"
-                                :style="{ '--tree-depth': depth }"
+                                :style="getTreeNodeStyle(depth)"
                             >
                                 <span
                                     :class="getIcon(item)"
@@ -349,6 +398,7 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
 <style scoped>
 .relationship-group {
     margin-bottom: 0.5rem;
+    border-radius: 0.25rem;
     padding: 0.75rem 1rem;
     overflow-x: auto;
 }
@@ -357,8 +407,9 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding-bottom: 0.25rem;
-    margin-bottom: 0.25rem;
+    border-bottom: thin solid var(--p-inputtext-border-color);
+    padding-bottom: 0.5rem;
+    margin-bottom: 0.5rem;
 }
 
 .relationship-group-label {
@@ -366,12 +417,9 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
     align-items: center;
     flex-wrap: wrap;
     gap: 0.5rem;
-    background: var(--p-neutral-100);
-    border-bottom: thin solid var(--p-neutral-200);
-    font-weight: var(--p-lingo-font-weight-normal);
-    font-size: 1rem;
-    color: var(--p-neutral-500);
-    padding: 0.5rem 0.75rem;
+    font-weight: var(--p-lingo-font-weight-semibold, 600);
+    font-size: var(--p-lingo-font-size-smallnormal);
+    color: var(--p-header-item-label);
 }
 
 .relationship-group-actions {
@@ -387,9 +435,10 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
     background: var(--p-neutral-300);
     padding: 0.25rem 0.75rem;
     border-radius: 1rem;
+    white-space: nowrap;
 }
 
-.lineage-paths12 {
+.lineage-paths {
     margin-top: 0.5rem;
 }
 
@@ -399,7 +448,7 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
 }
 
 .lineage-divider {
-    border-top: thin dashed var(--p-neutral-200);
+    border-top: thin dashed var(--p-inputtext-border-color);
     margin: 0.5rem 0;
 }
 
@@ -408,34 +457,65 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
     align-items: center;
     min-height: 1.75rem;
     position: relative;
-    padding-inline-start: calc(var(--tree-depth) * 1.25rem);
     white-space: nowrap;
 }
 
 .tree-node:not(:first-child)::before {
     content: "";
     position: absolute;
-    left: calc((var(--tree-depth) - 1) * 1.25rem + 0.35rem);
-    top: -50%;
+    left: var(--tree-connector-left);
+    top: 0;
     bottom: 50%;
-    width: 0.65rem;
-    border-inline-start: thin solid var(--p-neutral-300);
-    border-bottom: thin solid var(--p-neutral-300);
+    width: 0.9rem;
+    border-inline-start: thin solid var(--p-inputtext-border-color);
+    border-bottom: thin solid var(--p-inputtext-border-color);
     border-end-start-radius: 0.2rem;
 }
 
 .tree-node-icon {
     flex-shrink: 0;
+    position: relative;
+    background-color: var(--p-content-background);
+    padding-inline: 0.1rem;
 }
 
 .tree-node-label {
     margin-inline-start: 0.5rem;
     font-size: var(--p-lingo-font-size-small);
+    color: var(--p-inputtext-placeholder-color);
 }
 
 .button-container {
     display: flex;
     gap: 0.25rem;
+}
+
+.confirm-dialog-content {
+    background: var(--p-dialog-background);
+    border-radius: 0.125rem;
+    color: var(--p-text-color);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    min-width: 24rem;
+    padding: 1.5rem;
+}
+
+.confirm-dialog-header {
+    font-size: var(--p-lingo-font-size-large);
+    font-weight: var(--p-lingo-font-weight-normal);
+}
+
+.confirm-dialog-message {
+    color: var(--p-inputtext-placeholder-color);
+    font-size: var(--p-lingo-font-size-smallnormal);
+    line-height: 1.5;
+}
+
+.confirm-dialog-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
 }
 
 .controls {

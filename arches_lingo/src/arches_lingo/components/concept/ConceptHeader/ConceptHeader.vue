@@ -11,10 +11,7 @@ import Skeleton from "primevue/skeleton";
 import ConceptHeaderToolbar from "@/arches_lingo/components/concept/ConceptHeader/components/ConceptHeaderToolbar.vue";
 import LifecycleStateBadge from "@/arches_lingo/components/generic/LifecycleStateBadge.vue";
 
-import {
-    fetchLingoResource,
-    fetchResourceIdentifiers,
-} from "@/arches_lingo/api.ts";
+import { fetchResourceIdentifiers } from "@/arches_lingo/api.ts";
 import {
     CONCEPT_TYPE_NODE_ALIAS,
     DEFAULT_ERROR_TOAST_LIFE,
@@ -28,7 +25,6 @@ import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 import { useResourceStore } from "@/arches_lingo/composables/useResourceStore.ts";
 import { useConceptStore } from "@/arches_lingo/stores/useConceptStore.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
-import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 
 import type { Ref } from "vue";
 import type {
@@ -57,7 +53,6 @@ const resourceInstanceLifecycleState = inject<
 const { $gettext } = useGettext();
 const toast = useToast();
 
-const userStore = useUserStore();
 const resourceStore = useResourceStore();
 const conceptStore = useConceptStore();
 
@@ -66,36 +61,42 @@ const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
 const concept = ref<ResourceInstanceResult>();
 const isTopConcept = ref(false);
 const data = ref<ConceptHeaderData>();
-const isLoading = ref(true);
+const isResourceLoaded = ref(false);
+const isIdentifierLoaded = ref(false);
 const conceptIdentifierValue = ref<string>();
 const conceptTypeTile = ref();
+const isWidgetLoading = ref(false);
 
-onMounted(async () => {
-    try {
-        const resourceInstanceId = props.resourceInstanceId;
-        if (!resourceInstanceId) return;
+const isLoading = computed(function () {
+    if (!isIdentifierLoaded.value) return true;
+    if (props.resourceInstanceId && !isResourceLoaded.value) return true;
+    if (props.resourceInstanceId && conceptStore.isLoading) return true;
+    if (isWidgetLoading.value) return true;
 
-        const [fetchedConcept, resourceIdentifiers] = await Promise.all([
-            fetchLingoResource(props.graphSlug, resourceInstanceId),
-            fetchResourceIdentifiers(resourceInstanceId),
-        ]);
+    return false;
+});
 
-        concept.value = fetchedConcept;
-        conceptTypeTile.value =
-            concept.value?.aliased_data?.[CONCEPT_TYPE_NODE_ALIAS];
-        conceptIdentifierValue.value = resourceIdentifiers?.[0]?.identifier;
-
-        extractConceptHeaderData(fetchedConcept);
-    } catch (error) {
-        toast.add({
-            severity: ERROR,
-            life: DEFAULT_ERROR_TOAST_LIFE,
-            summary: $gettext("Unable to fetch concept"),
-            detail: error instanceof Error ? error.message : undefined,
-        });
-    } finally {
-        isLoading.value = false;
+onMounted(() => {
+    if (!props.resourceInstanceId) {
+        isIdentifierLoaded.value = true;
+        return;
     }
+
+    fetchResourceIdentifiers(props.resourceInstanceId)
+        .then((resourceIdentifiers) => {
+            conceptIdentifierValue.value = resourceIdentifiers?.[0]?.identifier;
+        })
+        .catch((error) => {
+            toast.add({
+                severity: ERROR,
+                life: DEFAULT_ERROR_TOAST_LIFE,
+                summary: $gettext("Unable to fetch concept"),
+                detail: error instanceof Error ? error.message : undefined,
+            });
+        })
+        .finally(() => {
+            isIdentifierLoaded.value = true;
+        });
 });
 
 watch(
@@ -108,7 +109,7 @@ watch(
                 summary: $gettext("Unable to fetch concept"),
                 detail: storeError.message,
             });
-            isLoading.value = false;
+            isResourceLoaded.value = true;
             return;
         }
         if (!resource || !props.resourceInstanceId) return;
@@ -118,7 +119,7 @@ watch(
             resource.aliased_data?.[CONCEPT_TYPE_NODE_ALIAS];
         isTopConcept.value = Boolean(resource.aliased_data?.top_concept_of);
         extractConceptHeaderData(resource);
-        isLoading.value = false;
+        isResourceLoaded.value = true;
     },
     { immediate: true },
 );
@@ -142,13 +143,15 @@ const label = computed<Label | undefined>(function () {
     }
 
     const storedConcept = conceptStore.findConcept(props.resourceInstanceId);
-    if (!storedConcept) return undefined;
+    if (storedConcept) {
+        return getItemLabel(
+            { labels: [...storedConcept.labels] },
+            selectedLanguage.value.code,
+            systemLanguage.value.code,
+        );
+    }
 
-    return getItemLabel(
-        { labels: [...storedConcept.labels] },
-        selectedLanguage.value.code,
-        systemLanguage.value.code,
-    );
+    return undefined;
 });
 
 const parentConceptLabelMap = computed<Map<string, Label[]>>(function () {
@@ -218,11 +221,12 @@ function extractConceptHeaderData(resource: ResourceInstanceResult) {
 
 <template>
     <Skeleton
-        v-if="isLoading || !userStore.user"
+        v-if="isLoading"
+        height="9rem"
         class="loading-skeleton"
     />
     <div
-        v-else
+        v-show="!isLoading"
         class="concept-header"
     >
         <ConceptHeaderToolbar
@@ -232,6 +236,7 @@ function extractConceptHeaderData(resource: ResourceInstanceResult) {
             :resource-instance-id="resourceInstanceId"
             :concept-type-tile="conceptTypeTile"
             :is-top-concept="isTopConcept"
+            @update:is-widget-loading="isWidgetLoading = $event"
         />
 
         <div class="header-content">
@@ -355,24 +360,14 @@ function extractConceptHeaderData(resource: ResourceInstanceResult) {
 
 <style scoped>
 .concept-header {
-    padding-top: 0rem;
-    padding-bottom: 1rem;
     background: var(--p-header-background);
     border-bottom: 0.0625rem solid var(--p-header-toolbar-border);
-    min-height: 8.5rem;
     box-sizing: border-box;
 }
 
 .header-content {
-    padding-top: 0.75rem;
-    padding-inline-start: 1rem;
-    padding-inline-end: 1rem;
+    padding: 0.5rem 1rem 1rem;
     box-sizing: border-box;
-}
-
-.loading-skeleton {
-    width: 100%;
-    height: 9rem;
 }
 
 .concept-uri {
@@ -392,7 +387,8 @@ function extractConceptHeaderData(resource: ResourceInstanceResult) {
     align-items: baseline;
     flex-wrap: wrap;
     column-gap: 1rem;
-    row-gap: 0.25rem;
+    row-gap: 0.5rem;
+    padding-top: 0.5rem;
     min-width: 0;
 }
 

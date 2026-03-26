@@ -300,6 +300,11 @@ watch(
     },
 );
 
+watch([() => route.query.scheme, () => route.query.parent], async () => {
+    if (route.params.id !== NEW) return;
+    await selectNodeFromRoute(route, true);
+});
+
 watch(debouncedFilterValue, (currentFilter) => {
     router.replace({
         query: { ...route.query, filter: currentFilter || undefined },

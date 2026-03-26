@@ -158,6 +158,7 @@ function refreshSchemeHierarchy() {
         }"
     />
     <ConfirmDialog group="unsaved-changes" />
+    <ConfirmDialog group="logout" />
 </template>
 
 <style scoped>

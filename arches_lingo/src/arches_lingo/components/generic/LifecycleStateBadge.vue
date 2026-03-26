@@ -51,9 +51,11 @@ const shouldRender = computed(
 
 <style scoped>
 .lifecycle-state-badge {
+    display: inline-flex;
+    align-items: center;
     font-size: var(--p-lingo-font-size-xxsmall);
-    padding: 0.125rem 0.375rem;
-    border-radius: 0.75rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
     white-space: nowrap;
 }
 </style>

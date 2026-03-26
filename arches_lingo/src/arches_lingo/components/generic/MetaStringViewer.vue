@@ -11,12 +11,7 @@ import Button from "primevue/button";
 import ConfirmDialog from "primevue/confirmdialog";
 
 import { deleteLingoTile } from "@/arches_lingo/api.ts";
-import {
-    DANGER,
-    DEFAULT_ERROR_TOAST_LIFE,
-    ERROR,
-    SECONDARY,
-} from "@/arches_lingo/constants.ts";
+import { DEFAULT_ERROR_TOAST_LIFE, ERROR } from "@/arches_lingo/constants.ts";
 import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 
 import type { MetaStringText } from "@/arches_lingo/types.ts";
@@ -60,34 +55,28 @@ const canEditResourceInstances = computed(() => {
 });
 
 const expandedRows = ref([]);
+const isDeletePending = ref(false);
 
 function confirmDelete(tileId: string) {
     confirm.require({
         header: $gettext("Confirmation"),
         message: props.metaStringText.deleteConfirm,
         group: props.metaStringText.name,
-        accept: () => {
-            deleteSectionValue(tileId);
-        },
-        rejectProps: {
-            label: $gettext("Cancel"),
-            severity: SECONDARY,
-            outlined: true,
-        },
-        acceptProps: {
-            label: $gettext("Delete"),
-            severity: DANGER,
-        },
-    });
+        data: { tileId },
+    } as object);
 }
 
 async function deleteSectionValue(tileId: string) {
     try {
+        isDeletePending.value = true;
+
         await deleteLingoTile(props.graphSlug, props.nodegroupAlias, tileId);
 
         refreshReportSection!(props.componentName);
         updateAfterComponentDeletion!(props.componentName, tileId);
         refreshSchemeHierarchy!();
+
+        confirm.close();
     } catch (error) {
         toast.add({
             severity: ERROR,
@@ -95,6 +84,8 @@ async function deleteSectionValue(tileId: string) {
             summary: $gettext("Failed to delete data."),
             detail: error instanceof Error ? error.message : undefined,
         });
+    } finally {
+        isDeletePending.value = false;
     }
 }
 </script>
@@ -103,11 +94,49 @@ async function deleteSectionValue(tileId: string) {
     <ConfirmDialog
         :pt="{ root: { style: { fontFamily: 'sans-serif' } } }"
         :group="metaStringText.name"
-    ></ConfirmDialog>
+    >
+        <template #container="{ message, rejectCallback }">
+            <div
+                class="confirm-dialog-content"
+                @click.stop
+                @mousedown.stop
+                @mouseup.stop
+            >
+                <div class="confirm-dialog-header">
+                    {{ message.header }}
+                </div>
+                <div class="confirm-dialog-message">
+                    {{ message.message }}
+                </div>
+                <div class="confirm-dialog-actions">
+                    <Button
+                        :label="$gettext('Cancel')"
+                        :disabled="isDeletePending"
+                        severity="secondary"
+                        outlined
+                        @click="
+                            () => {
+                                rejectCallback();
+                                confirm.close();
+                            }
+                        "
+                    />
+                    <Button
+                        :label="$gettext('Delete')"
+                        :loading="isDeletePending"
+                        severity="danger"
+                        @click="() => deleteSectionValue(message.data.tileId)"
+                    />
+                </div>
+            </div>
+        </template>
+    </ConfirmDialog>
     <div v-if="props.metaStrings?.length">
         <DataTable
             v-model:expanded-rows="expandedRows"
+            class="meta-string-table"
             striped-rows
+            table-style="min-width: 100%"
             :value="props.metaStrings"
         >
             <Column
@@ -151,14 +180,20 @@ async function deleteSectionValue(tileId: string) {
                     ></slot>
                 </template>
             </Column>
-            <Column v-if="isEditor">
+            <Column
+                v-if="isEditor"
+                body-class="action-column"
+                header-class="action-column"
+                header-style="width: 1%;"
+            >
                 <template #body="slotProps">
-                    <div class="controls">
+                    <div class="button-container">
                         <Button
                             v-if="canEditResourceInstances"
+                            class="controls edit-button"
                             icon="pi pi-file-edit"
+                            variant="text"
                             :aria-label="$gettext('edit')"
-                            rounded
                             @click="
                                 openEditor!(
                                     componentName,
@@ -168,10 +203,10 @@ async function deleteSectionValue(tileId: string) {
                         />
                         <Button
                             v-if="canEditResourceInstances"
+                            class="controls delete-button"
                             icon="pi pi-trash"
+                            variant="text"
                             :aria-label="$gettext('delete')"
-                            severity="danger"
-                            rounded
                             @click="confirmDelete(slotProps.data.tileid)"
                         />
                     </div>
@@ -201,18 +236,42 @@ async function deleteSectionValue(tileId: string) {
     padding: 1rem 2rem;
 }
 
-.controls {
+.button-container {
     display: flex;
-    flex-direction: row;
-    justify-content: end;
+    gap: 0.25rem;
+    justify-content: flex-end;
+    width: 100%;
 }
 
-.controls button {
-    margin: 0 0.2rem;
+.controls {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    padding: 1.2rem;
+    color: var(--p-button-primary-color);
 }
 
-.controls button:first-child {
+.edit-button {
+    background: var(--p-button-primary-background);
     border: 0.0625rem solid var(--p-button-primary-active-border-color);
+}
+
+.delete-button {
+    background: var(--p-button-danger-background);
+    border: 0.0625rem solid var(--p-button-danger-border-color);
+    color: var(--p-button-danger-color);
+}
+
+.button-container .edit-button:hover {
+    background: var(--p-button-primary-hover-background);
+    border: 0.0625rem solid var(--p-button-primary-hover-border-color);
+    color: var(--p-button-primary-hover-color);
+}
+
+.button-container .delete-button:hover {
+    background: var(--p-button-danger-hover-background);
+    border: 0.0625rem solid var(--p-button-danger-hover-border-color);
+    color: var(--p-button-danger-hover-color);
 }
 
 .no-data {
@@ -240,5 +299,38 @@ async function deleteSectionValue(tileId: string) {
 
 :deep(.p-datatable-row-expansion td) {
     padding: 0.5rem 0rem;
+}
+
+:deep(.meta-string-table .action-column) {
+    text-align: right;
+    white-space: nowrap;
+}
+
+.confirm-dialog-content {
+    background: var(--p-dialog-background);
+    border-radius: 0.125rem;
+    color: var(--p-text-color);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    min-width: 24rem;
+    padding: 1.5rem;
+}
+
+.confirm-dialog-header {
+    font-size: var(--p-lingo-font-size-large);
+    font-weight: var(--p-lingo-font-weight-normal);
+}
+
+.confirm-dialog-message {
+    color: var(--p-inputtext-placeholder-color);
+    font-size: var(--p-lingo-font-size-smallnormal);
+    line-height: 1.5;
+}
+
+.confirm-dialog-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
 }
 </style>
