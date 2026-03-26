@@ -398,7 +398,6 @@ function getTreeNodeStyle(depth: number) {
 <style scoped>
 .relationship-group {
     margin-bottom: 0.5rem;
-    border: thin solid var(--p-inputtext-border-color);
     border-radius: 0.25rem;
     padding: 0.75rem 1rem;
     overflow-x: auto;
