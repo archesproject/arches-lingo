@@ -69,12 +69,14 @@ function confirmDelete(tileId: string) {
 async function deleteSectionValue(tileId: string) {
     try {
         isDeletePending.value = true;
+
         await deleteLingoTile(props.graphSlug, props.nodegroupAlias, tileId);
 
         refreshReportSection!(props.componentName);
         updateAfterComponentDeletion!(props.componentName, tileId);
         refreshSchemeHierarchy!();
-        return true;
+
+        confirm.close();
     } catch (error) {
         toast.add({
             severity: ERROR,
@@ -82,7 +84,6 @@ async function deleteSectionValue(tileId: string) {
             summary: $gettext("Failed to delete data."),
             detail: error instanceof Error ? error.message : undefined,
         });
-        return false;
     } finally {
         isDeletePending.value = false;
     }
@@ -113,31 +114,18 @@ async function deleteSectionValue(tileId: string) {
                         :disabled="isDeletePending"
                         severity="secondary"
                         outlined
-                        @click.stop="
+                        @click="
                             () => {
                                 rejectCallback();
                                 confirm.close();
                             }
                         "
-                        @mousedown.stop
-                        @mouseup.stop
                     />
                     <Button
                         :label="$gettext('Delete')"
                         :loading="isDeletePending"
                         severity="danger"
-                        @click="
-                            async () => {
-                                const didDelete = await deleteSectionValue(
-                                    message.data.tileId,
-                                );
-                                if (didDelete) {
-                                    confirm.close();
-                                }
-                            }
-                        "
-                        @mousedown.stop
-                        @mouseup.stop
+                        @click="() => deleteSectionValue(message.data.tileId)"
                     />
                 </div>
             </div>
