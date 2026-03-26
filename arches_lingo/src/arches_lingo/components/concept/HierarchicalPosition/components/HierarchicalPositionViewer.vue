@@ -171,28 +171,30 @@ function confirmDelete(group: RelationshipGroup) {
 }
 
 async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
+    if (relationshipGroups.value.length === 1) {
+        toast.add({
+            severity: ERROR,
+            life: DEFAULT_ERROR_TOAST_LIFE,
+            summary: $gettext("Failed to delete data."),
+            detail: $gettext("Cannot delete the last relationship."),
+        });
+        return;
+    }
+
     try {
         isDeletePending.value = true;
-        if (relationshipGroups.value.length !== 1) {
-            await deleteLingoTile(
-                props.graphSlug,
-                props.nodegroupAlias,
-                hierarchy.tileid!,
-            );
 
-            refreshSchemeHierarchy!();
-        } else {
-            toast.add({
-                severity: ERROR,
-                life: DEFAULT_ERROR_TOAST_LIFE,
-                summary: $gettext("Failed to delete data."),
-                detail: $gettext("Cannot delete the last relationship."),
-            });
-            return false;
-        }
+        await deleteLingoTile(
+            props.graphSlug,
+            props.nodegroupAlias,
+            hierarchy.tileid!,
+        );
+
+        refreshSchemeHierarchy!();
         refreshReportSection!(props.componentName);
         updateAfterComponentDeletion!(props.componentName, hierarchy.tileid!);
-        return true;
+
+        confirm.close();
     } catch (error) {
         toast.add({
             severity: ERROR,
@@ -200,7 +202,6 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
             summary: $gettext("Failed to delete data."),
             detail: error instanceof Error ? error.message : undefined,
         });
-        return false;
     } finally {
         isDeletePending.value = false;
     }
@@ -245,31 +246,20 @@ function getTreeNodeStyle(depth: number) {
                             :disabled="isDeletePending"
                             severity="secondary"
                             outlined
-                            @click.stop="
+                            @click="
                                 () => {
                                     rejectCallback();
                                     confirm.close();
                                 }
                             "
-                            @mousedown.stop
-                            @mouseup.stop
                         />
                         <Button
                             :label="$gettext('Delete')"
                             :loading="isDeletePending"
                             severity="danger"
                             @click="
-                                async () => {
-                                    const didDelete = await deleteSectionValue(
-                                        message.data.hierarchy,
-                                    );
-                                    if (didDelete) {
-                                        confirm.close();
-                                    }
-                                }
+                                () => deleteSectionValue(message.data.hierarchy)
                             "
-                            @mousedown.stop
-                            @mouseup.stop
                         />
                     </div>
                 </div>
