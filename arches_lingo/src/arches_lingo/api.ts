@@ -369,11 +369,21 @@ export const upsertLingoTile = async (
     );
 
     const parsed = await response.json();
-    if (!response.ok)
+    if (!response.ok) {
+        let node_validations;
+        if (parsed.aliased_data) {
+            const msgs = parsed.aliased_data[nodegroupAlias];
+            if (msgs.length) {
+                node_validations = msgs.join("; ");
+            }
+        }
         throw new Error(
-            // TODO: show all errors
-            parsed.non_field_errors || parsed.message || response.statusText,
+            node_validations ||
+                parsed.non_field_errors ||
+                parsed.message ||
+                response.statusText,
         );
+    }
     return parsed;
 };
 
