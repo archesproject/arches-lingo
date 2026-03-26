@@ -36,9 +36,24 @@ const refreshReportSection = inject<(componentName: string) => void>(
     "refreshReportSection",
 );
 
+const resourceInstanceLifecycleState = inject<{
+    value:
+        | {
+              can_edit_resource_instances: boolean;
+              can_delete_resource_instances: boolean;
+          }
+        | undefined;
+}>("resourceInstanceLifecycleState");
+
 const toast = useToast();
 const { $gettext } = useGettext();
 const { isEditor } = useUserStore();
+
+const canEditResourceInstances = computed(() => {
+    return Boolean(
+        resourceInstanceLifecycleState?.value?.can_edit_resource_instances,
+    );
+});
 
 const isLoading = ref(true);
 const isReverting = ref(false);
@@ -161,7 +176,11 @@ function shouldShowCardNameRow(editEntry: EditLogEntry) {
 }
 
 function canRevert(editEntry: EditLogEntry) {
-    return !nonRevertableEditTypes.has(editEntry.edittype) && isEditor;
+    return (
+        !nonRevertableEditTypes.has(editEntry.edittype) &&
+        isEditor &&
+        canEditResourceInstances.value
+    );
 }
 
 function confirmRevert(editEntry: EditLogEntry) {
