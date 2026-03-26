@@ -338,11 +338,19 @@ function navigateTo(route: { name: string }) {
 .landing-hero {
     /*
      * Gradient built from Lingo's paleBlue (#d7e7f6) and lightBlueGray (#ebeef0)
-     * toward off-white (#fcfcfc).  Hardcoded here because gradients require
-     * specific stop values, not CSS-variable interpolation.
+     * toward off-white (#fcfcfc).  Hardcoded via custom properties so the dark-mode
+     * override below can swap the stop values without duplicating the gradient rule.
      */
-    background: linear-gradient(155deg, #dce8f5 0%, #eef4fa 45%, #f8fafc 100%);
-    border-bottom: 1px solid #d1dde8;
+    --hero-gradient-start: #dce8f5;
+    --hero-gradient-mid: #eef4fa;
+    --hero-gradient-end: #f8fafc;
+    background: linear-gradient(
+        155deg,
+        var(--hero-gradient-start) 0%,
+        var(--hero-gradient-mid) 45%,
+        var(--hero-gradient-end) 100%
+    );
+    border-bottom: 1px solid var(--p-content-border-color);
     padding: 3.5rem 2rem 3rem;
     flex-shrink: 0;
 }
@@ -375,6 +383,11 @@ function navigateTo(route: { name: string }) {
      */
     filter: invert(1) invert(40%) sepia(1) hue-rotate(175deg) saturate(2)
         brightness(0.9);
+}
+
+:global(.arches-dark .landing-logo) {
+    /* Logo is white — no recolouring needed against a dark hero background. */
+    filter: none;
 }
 
 .landing-title {
@@ -452,7 +465,7 @@ function navigateTo(route: { name: string }) {
 /* ── Search section ────────────────────────────────────────── */
 
 .landing-search-section {
-    border-bottom: 1px solid #d1dde8;
+    border-bottom: 1px solid var(--p-content-border-color);
     background: var(--p-inputtext-background);
     padding: 1.5rem 2rem;
     flex-shrink: 0;
@@ -486,7 +499,7 @@ function navigateTo(route: { name: string }) {
     gap: 0.875rem;
     padding: 2rem 1.5rem;
     background: var(--p-inputtext-background);
-    border: 1px solid #d1dde8;
+    border: 1px solid var(--p-content-border-color);
     border-radius: 0.25rem;
     cursor: pointer;
     text-align: center;
@@ -512,8 +525,19 @@ function navigateTo(route: { name: string }) {
     width: 3rem;
     height: 3rem;
     /* Lingo paleBlue tint background */
-    background: linear-gradient(135deg, #dce8f5 0%, #eef4fa 100%);
+    --icon-wrap-gradient-start: #dce8f5;
+    --icon-wrap-gradient-end: #eef4fa;
+    background: linear-gradient(
+        135deg,
+        var(--icon-wrap-gradient-start) 0%,
+        var(--icon-wrap-gradient-end) 100%
+    );
     border-radius: 50%;
+}
+
+:global(.arches-dark .action-card-icon-wrap) {
+    --icon-wrap-gradient-start: #1e2d42;
+    --icon-wrap-gradient-end: #1a2838;
 }
 
 .action-card-icon {
@@ -532,6 +556,14 @@ function navigateTo(route: { name: string }) {
     font-size: var(--p-lingo-font-size-small);
     color: var(--p-text-muted-color);
     line-height: 1.45;
+}
+
+/* ── Dark mode ──────────────────────────────────────────────── */
+
+:global(.arches-dark .landing-hero) {
+    --hero-gradient-start: #1c2b3a;
+    --hero-gradient-mid: #1a2535;
+    --hero-gradient-end: #18222d;
 }
 
 /* ── Responsive ─────────────────────────────────────────────── */
