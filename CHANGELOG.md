@@ -82,6 +82,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   Catch missing gettext strings [#675](https://github.com/archesproject/arches-lingo/pull/675)
 -   Hide lifecycle state buttons from non-editor users [#683](https://github.com/archesproject/arches-lingo/pull/683)
 -   General UI style updates [#686](https://github.com/archesproject/arches-lingo/issues/686)
+-   Polish concept page frontend interactions and editor loading states [#688](https://github.com/archesproject/arches-lingo/pull/688)
 
 ### Fixed
 -   Merge language finder implementations [#92](https://github.com/archesproject/arches-lingo/issues/92)
