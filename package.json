@@ -23,12 +23,12 @@
         "vitest": "vitest --run --coverage"
     },
     "devDependencies": {
-        "arches-dev-dependencies": "archesproject/arches-dev-dependencies#dev/8.1.x"
+        "arches-dev-dependencies": "archesproject/arches-dev-dependencies#stable/8.1.1"
     },
     "dependencies": {
         "@primevue/forms": "4.3.7",
-        "arches": "archesproject/arches#dev/8.1.x",
-        "arches-component-lab": "archesproject/arches-component-lab#main",
+        "arches": "archesproject/arches#stable/8.1.1",
+        "arches-component-lab": "archesproject/arches-component-lab#alpha/0.0.1a11",
         "pinia": "3.0.4",
         "vue-router": "4.4.3"
     },
