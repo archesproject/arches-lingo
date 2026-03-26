@@ -91,9 +91,7 @@ async function save(e: FormSubmitEvent) {
             props.tileId,
         );
 
-        if (updatedTileId !== props.tileId) {
-            openEditor!(props.componentName, updatedTileId);
-        }
+        openEditor!(props.componentName, updatedTileId);
 
         refreshReportSection!(props.componentName);
     } catch (error) {
