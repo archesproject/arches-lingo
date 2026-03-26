@@ -57,6 +57,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   Add ability to delete and deprecate concepts [#674](https://github.com/archesproject/arches-lingo/pull/674)
 -   Add label editor on new scheme and concept creation [#538](https://github.com/archesproject/arches-lingo/issues/538)
 -   Assign correct lifecycle state to schemes and concepts during import [#653](https://github.com/archesproject/arches-lingo/issues/653)
+-   Add landing page [#693](https://github.com/archesproject/arches-lingo/pull/693)
+-   Surface node-level validation errors to user [#691](https://github.com/archesproject/arches-lingo/pull/691)
 
 ### Changed
 -   Upgrade Lingo to Arches 8.1 [#453](https://github.com/archesproject/arches-lingo/pull/453)
@@ -78,6 +80,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   Assign ontology property on concept migration [#671](https://github.com/archesproject/arches-lingo/pull/671)
 -   Update concept model resource relationships [#511](https://github.com/archesproject/arches-lingo/issues/511)
 -   Catch missing gettext strings [#675](https://github.com/archesproject/arches-lingo/pull/675)
+-   Hide lifecycle state buttons from non-editor users [#683](https://github.com/archesproject/arches-lingo/pull/683)
+-   General UI style updates [#686](https://github.com/archesproject/arches-lingo/issues/686)
 
 ### Fixed
 -   Merge language finder implementations [#92](https://github.com/archesproject/arches-lingo/issues/92)
@@ -94,5 +98,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   Fix export handling for orphaned and deleted concepts [#652](https://github.com/archesproject/arches-lingo/issues/652)
 -   Fix edit log revert exception handling [#667](https://github.com/archesproject/arches-lingo/pull/667)
 -   Fix text direction change on language selection [#673](https://github.com/archesproject/arches-lingo/pull/673)
+-   Fix encoded HTML strings in hierarchy labels [#685](https://github.com/archesproject/arches-lingo/pull/685)
+-   Fix scheme header action buttons displaying for unsaved new schemes [#684](https://github.com/archesproject/arches-lingo/pull/684)
+-   Fix revert button displaying in edit log for non-editable resources [#694](https://github.com/archesproject/arches-lingo/pull/694)
+-   Fix translatable strings in script tags not updating on language change [#692](https://github.com/archesproject/arches-lingo/pull/692)
 
 [1.0.0]: https://github.com/archesproject/arches-lingo/releases/tag/1.0.0
