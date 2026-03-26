@@ -36,14 +36,20 @@ const selectedSchemeIds = ref<string[]>([]);
 const isStatsLoading = ref(true);
 const stats = ref<DashboardStats | null>(null);
 
-const ACTIVITY_PERIODS: ActivityPeriod[] = [
+const ACTIVITY_PERIODS = computed<ActivityPeriod[]>(() => [
     { label: $gettext("Last 24 hours"), days: 1 },
     { label: $gettext("Last 7 days"), days: 7 },
     { label: $gettext("Last 30 days"), days: 30 },
     { label: $gettext("Last 90 days"), days: 90 },
     { label: $gettext("All time"), days: 0 },
-];
-const selectedActivityPeriod = ref<ActivityPeriod>(ACTIVITY_PERIODS[1]);
+]);
+const selectedActivityPeriod = ref<ActivityPeriod>(ACTIVITY_PERIODS.value[1]);
+watch(ACTIVITY_PERIODS, (periods) => {
+    const match = periods.find(
+        (p) => p.days === selectedActivityPeriod.value.days,
+    );
+    if (match) selectedActivityPeriod.value = match;
+});
 
 const languages = ref<Language[]>([]);
 const translationLanguage = ref<Language | null>(null);

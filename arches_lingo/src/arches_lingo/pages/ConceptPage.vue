@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import ComponentManager from "@/arches_lingo/components/generic/ComponentManager/ComponentManager.vue";
@@ -14,7 +15,7 @@ import ConceptImages from "@/arches_lingo/components/concept/ConceptImages/Conce
 
 const { $gettext } = useGettext();
 
-const componentData = [
+const componentData = computed(() => [
     {
         component: ConceptHeader,
         componentName: "ConceptHeader",
@@ -71,7 +72,7 @@ const componentData = [
         graphSlug: "concept",
         nodegroupAlias: "top_concept_of",
     },
-];
+]);
 </script>
 
 <template>

@@ -17,36 +17,36 @@ const props = defineProps<{
 
 const userStore = useUserStore();
 
-const baseChildren: SideNavMenuItem[] = [
-    {
-        key: "contributors",
-        label: $gettext("Contributors"),
-        icon: "pi pi-user-edit",
-        route: { name: routeNames.contributors },
-        showIconIfCollapsed: true,
-    },
-    {
-        key: "sources",
-        label: $gettext("Sources"),
-        icon: "pi pi-bookmark-fill",
-        route: { name: routeNames.sources },
-        showIconIfCollapsed: true,
-    },
-];
-
-const controlledListManagerItem: SideNavMenuItem = {
-    key: "controlled_lists",
-    label: $gettext("Controlled List Manager"),
-    icon: "pi pi-list",
-    url: generateArchesURL("arches:plugins", {
-        slug: "controlled-list-manager",
-    }),
-    showIconIfCollapsed: true,
-};
-
 const navSection = ref<SideNavMenuItem>(props.item);
 
 watchEffect(() => {
+    const baseChildren: SideNavMenuItem[] = [
+        {
+            key: "contributors",
+            label: $gettext("Contributors"),
+            icon: "pi pi-user-edit",
+            route: { name: routeNames.contributors },
+            showIconIfCollapsed: true,
+        },
+        {
+            key: "sources",
+            label: $gettext("Sources"),
+            icon: "pi pi-bookmark-fill",
+            route: { name: routeNames.sources },
+            showIconIfCollapsed: true,
+        },
+    ];
+
+    const controlledListManagerItem: SideNavMenuItem = {
+        key: "controlled_lists",
+        label: $gettext("Controlled List Manager"),
+        icon: "pi pi-list",
+        url: generateArchesURL("arches:plugins", {
+            slug: "controlled-list-manager",
+        }),
+        showIconIfCollapsed: true,
+    };
+
     if (userStore.isStaff) {
         navSection.value.items = [...baseChildren, controlledListManagerItem];
     } else {

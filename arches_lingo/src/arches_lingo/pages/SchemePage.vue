@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import ComponentManager from "@/arches_lingo/components/generic/ComponentManager/ComponentManager.vue";
@@ -12,7 +13,7 @@ import SchemeTopConcepts from "@/arches_lingo/components/scheme/SchemeTopConcept
 
 const { $gettext } = useGettext();
 
-const componentData = [
+const componentData = computed(() => [
     {
         component: SchemeHeader,
         componentName: "SchemeHeader",
@@ -55,7 +56,7 @@ const componentData = [
         graphSlug: "scheme",
         nodegroupAlias: "",
     },
-];
+]);
 </script>
 
 <template>

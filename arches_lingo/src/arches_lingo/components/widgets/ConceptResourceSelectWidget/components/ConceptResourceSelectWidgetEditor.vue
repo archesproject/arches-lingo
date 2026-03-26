@@ -44,7 +44,11 @@ const isLoading = ref(false);
 const searchResultsPage = ref(0);
 const searchResultsTotalCount = ref(0);
 const fetchError = ref<string | null>(null);
-const emptyFilterMessage = ref($gettext("Search returned no results"));
+const emptyFilterMessage = computed(() =>
+    isLoading.value
+        ? $gettext("Searching...")
+        : $gettext("Search returned no results"),
+);
 
 const searchResultsCurrentCount = computed(() => options.value.length);
 
@@ -81,7 +85,6 @@ function onFilter(event: MultiSelectFilterEvent) {
 async function getOptions(page: number, filterTerm?: string) {
     try {
         isLoading.value = true;
-        emptyFilterMessage.value = $gettext("Searching...");
 
         const parsedResponse = await fetchConceptResources(
             filterTerm || "",

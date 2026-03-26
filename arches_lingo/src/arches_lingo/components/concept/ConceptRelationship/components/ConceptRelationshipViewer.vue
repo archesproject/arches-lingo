@@ -67,7 +67,7 @@ const createTooltipText = computed(() => {
     );
 });
 
-const metaStringLabel: MetaStringText = {
+const metaStringLabel = computed<MetaStringText>(() => ({
     deleteConfirm: $gettext(
         "Are you sure you want to delete this relationship?",
     ),
@@ -80,7 +80,7 @@ const metaStringLabel: MetaStringText = {
         language:
             "aliased_data.relation_status_ascribed_comparate.display_value",
     },
-};
+}));
 </script>
 
 <template>

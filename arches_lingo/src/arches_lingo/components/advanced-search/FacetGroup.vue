@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import Button from "primevue/button";
@@ -30,10 +31,10 @@ const emit = defineEmits<{
     (event: "remove"): void;
 }>();
 
-const operatorOptions = [
+const operatorOptions = computed(() => [
     { label: $gettext("AND"), value: "and" as SearchOperator },
     { label: $gettext("OR"), value: "or" as SearchOperator },
-];
+]);
 
 function updateOperator(value: SearchOperator) {
     emit("update:group", { ...props.group, operator: value });

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { markRaw, provide, ref } from "vue";
+import { computed, markRaw, provide, ref } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import Button from "primevue/button";
@@ -18,7 +18,7 @@ const { $gettext } = useGettext();
 const isNavExpanded = ref(false);
 provide("isNavExpanded", isNavExpanded);
 
-const items = ref<SideNavMenuItem[]>([
+const items = computed<SideNavMenuItem[]>(() => [
     {
         component: markRaw(NavNavigation),
         key: "navigation",

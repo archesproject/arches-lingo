@@ -67,7 +67,7 @@ const createTooltipText = computed(() => {
     );
 });
 
-const metaStringLabel: MetaStringText = {
+const metaStringLabel = computed<MetaStringText>(() => ({
     deleteConfirm: $gettext(
         "Are you sure you want to delete this relationship?",
     ),
@@ -78,7 +78,7 @@ const metaStringLabel: MetaStringText = {
         name: "aliased_data.match_status_ascribed_relation.display_value",
         type: "aliased_data.match_status_ascribed_comparate.display_value",
     },
-};
+}));
 
 function matchedConceptURIIsLink(rowData: ConceptMatchStatus): boolean {
     const uri = rowData.aliased_data.match_status_ascribed_comparate
