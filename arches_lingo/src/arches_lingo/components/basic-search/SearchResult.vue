@@ -99,6 +99,11 @@ defineProps({
     background-color: var(--p-search-result-focus-background);
 }
 
+:deep(.p-autocomplete-option:hover) > .search-result,
+:deep(.p-autocomplete-option-active) > .search-result {
+    background-color: var(--p-search-result-focus-background);
+}
+
 .is-even {
     background-color: var(--p-search-result-is-even-background);
 }

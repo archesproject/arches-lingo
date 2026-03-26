@@ -71,15 +71,17 @@ function navigateTo(route: { name: string }) {
         <section class="landing-hero">
             <div class="hero-content">
                 <div class="hero-text">
-                    <img
-                        :src="
-                            generateArchesURL('arches_lingo:static_url') +
-                            'img/arches_logo_light.png'
-                        "
-                        :alt="$gettext('Arches Logo')"
-                        class="landing-logo"
-                    />
-                    <h1 class="landing-title">{{ $gettext("Lingo") }}</h1>
+                    <div class="landing-brand">
+                        <img
+                            :src="
+                                generateArchesURL('arches_lingo:static_url') +
+                                'img/arches_logo_light.png'
+                            "
+                            :alt="$gettext('Arches Logo')"
+                            class="landing-logo"
+                        />
+                        <h1 class="landing-title">{{ $gettext("Lingo") }}</h1>
+                    </div>
                     <p class="landing-subtitle">
                         {{
                             $gettext(
@@ -297,8 +299,7 @@ function navigateTo(route: { name: string }) {
                 <BasicSearch
                     :search-results-per-page="SEARCH_RESULTS_PER_PAGE"
                     :search-result-item-size="SEARCH_RESULT_ITEM_SIZE"
-                    :toggle-modal="() => {}"
-                    :floating-overlay="true"
+                    results-display="floating"
                 />
             </div>
         </section>
@@ -371,10 +372,15 @@ function navigateTo(route: { name: string }) {
     min-width: 0;
 }
 
+.landing-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
 .landing-logo {
     height: 3rem;
     width: auto;
-    align-self: flex-start;
     /*
      * Recolour the white logo to Lingo's deepSteelBlue (#486A8B) for
      * legibility against the light hero gradient.
@@ -392,10 +398,10 @@ function navigateTo(route: { name: string }) {
 
 .landing-title {
     margin: 0;
+    margin-top: 1rem;
     font-size: var(--p-lingo-font-size-xxlarge);
-    font-weight: var(--p-lingo-font-weight-light);
+    font-weight: var(--p-lingo-font-weight-semibold);
     color: var(--p-text-color);
-    letter-spacing: 0.08em;
     line-height: 1.1;
 }
 
@@ -576,8 +582,8 @@ function navigateTo(route: { name: string }) {
         gap: 2rem;
     }
 
-    .landing-logo {
-        align-self: center;
+    .landing-brand {
+        justify-content: center;
     }
 
     .landing-subtitle {

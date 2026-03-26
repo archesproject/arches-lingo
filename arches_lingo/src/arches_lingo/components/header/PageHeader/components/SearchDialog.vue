@@ -53,7 +53,7 @@ const toggleModal = () => {
             <BasicSearch
                 :search-results-per-page="SEARCH_RESULTS_PER_PAGE"
                 :search-result-item-size="SEARCH_RESULT_ITEM_SIZE"
-                :toggle-modal="toggleModal"
+                @select="toggleModal"
             />
         </div>
     </Dialog>
