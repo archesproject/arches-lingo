@@ -372,10 +372,9 @@ export const upsertLingoTile = async (
     if (!response.ok) {
         let node_validations;
         if (parsed.aliased_data) {
-            for (const msg of parsed.aliased_data[nodegroupAlias]) {
-                if (msg) {
-                    node_validations = node_validations || msg;
-                }
+            const msgs = parsed.aliased_data[nodegroupAlias];
+            if (msgs.length) {
+                node_validations = msgs.join("; ");
             }
         }
         throw new Error(
