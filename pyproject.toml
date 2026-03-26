@@ -9,7 +9,6 @@ authors = [
     {"name" = "Arches Project"}
 ]
 license = "AGPL-3.0-or-later"
-license-files = ["LICENSE"]
 description = "An Arches application designed to support the creation of thesaurus/vocabulary data."
 classifiers = [
     "Development Status :: 5 - Production/Stable",
