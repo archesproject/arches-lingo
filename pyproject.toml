@@ -16,15 +16,14 @@ classifiers = [
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Framework :: Django",
-    "Framework :: Django :: 5.2",
+    "Framework :: Django :: 6.0",
     "Intended Audience :: Developers",
     "Intended Audience :: Information Technology",
 ]
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 dependencies = [
     "arches @ git+https://github.com/archesproject/arches@dev/8.1.x",
     "arches_component_lab @ git+https://github.com/archesproject/arches-component-lab@main",
@@ -44,7 +43,7 @@ dev = [
     "livereload",
     "sst",
     "coverage",
-    "django-silk==5.1.0",
+    "django-silk==5.3.2",
     "pre-commit",
     "black==24.4.2",
 ]

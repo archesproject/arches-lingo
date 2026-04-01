@@ -22,12 +22,10 @@
         "start": "cross-env webpack serve --config ./webpack/webpack.config.dev.js",
         "vitest": "vitest --run --coverage"
     },
-    "devDependencies": {
-        "arches-dev-dependencies": "archesproject/arches-dev-dependencies#dev/8.1.x"
-    },
+    "devDependencies": {},
     "dependencies": {
         "@primevue/forms": "4.3.7",
-        "arches": "archesproject/arches#dev/8.1.x",
+        "arches": "archesproject/arches#dev/8.2.x",
         "arches-component-lab": "archesproject/arches-component-lab#main",
         "pinia": "3.0.4",
         "vue-router": "4.4.3"

@@ -7,7 +7,6 @@ import {
     ref,
     useTemplateRef,
     watch,
-    withDefaults,
 } from "vue";
 import { useGettext } from "vue3-gettext";
 import { useRouter } from "vue-router";
