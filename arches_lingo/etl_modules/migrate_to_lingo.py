@@ -17,14 +17,13 @@ from django.utils.translation import gettext as _
 
 from arches.app.datatypes.datatypes import DataTypeFactory
 from arches.app.etl_modules.save import save_to_tiles
-from arches.app.etl_modules.decorators import load_data_async
+from arches_lingo.etl_modules.decorators import load_data_async
 from arches.app.etl_modules.base_import_module import BaseImportModule
 from arches.app.models import models
 from arches.app.models.models import LoadStaging, NodeGroup, LoadEvent
 from arches.app.models.concept import Concept
 from arches.app.models.system_settings import settings
 from arches.app.tasks import notify_completion
-import arches.app.utils.task_management as task_management
 
 import arches_lingo.tasks as tasks
 import arches_lingo.const as const
@@ -807,10 +806,6 @@ class LingoResourceImporter(BaseImportModule):
                 if num_concepts_to_import <= 1000:
                     self.run_load_task()
                 elif num_concepts_to_import > 1000:
-                    if not task_management.check_if_celery_available():
-                        return self.return_with_error(
-                            task_management.CeleryNotAvailableError()
-                        )
                     self.run_load_task_async(request, self.loadid)
                 message = "Schemes and Concept Migration to Lingo Models Complete"
                 return {"success": True, "data": message}
@@ -851,11 +846,7 @@ class LingoResourceImporter(BaseImportModule):
                     self.run_load_task()
 
                 elif self.file.size > use_celery_file_size_threshold:
-                    if not task_management.check_if_celery_available():
-                        return self.return_with_error(
-                            task_management.CeleryNotAvailableError()
-                        )
-                    # Save file to temp storage so it can be accessed by celery worker
+                    # Save file to temp storage so it can be accessed by the task
                     temp_dir = os.path.join(
                         settings.UPLOADED_FILES_DIR, "tmp", self.loadid
                     )
@@ -896,7 +887,7 @@ class LingoResourceImporter(BaseImportModule):
                         cursor, self.scheme_conceptid
                     )
                 )
-            # If using celery and importing from SKOS file, read from temp file path
+            # If importing from SKOS file via async task, read from temp file path
             elif self.temp_file_path:
                 file = default_storage.open(self.temp_file_path, "rb")
                 # Prevent circular import
@@ -966,21 +957,19 @@ class LingoResourceImporter(BaseImportModule):
 
     @load_data_async
     def run_load_task_async(self, request):
-        task = tasks.load_lingo_resources_task.apply_async(
-            args=[
-                self.loadid,
-                self.userid,
-                {
-                    "scheme_conceptid": self.scheme_conceptid,
-                    "temp_file_path": self.temp_file_path,
-                    "mode": self.mode,
-                },
-            ]
+        task_result = tasks.load_lingo_resources_task.enqueue(
+            self.loadid,
+            self.userid,
+            {
+                "scheme_conceptid": self.scheme_conceptid,
+                "temp_file_path": self.temp_file_path,
+                "mode": self.mode,
+            },
         )
         with connection.cursor() as cursor:
             cursor.execute(
                 """UPDATE load_event SET taskid = %s WHERE loadid = %s""",
-                (task.task_id, self.loadid),
+                (task_result.id, self.loadid),
             )
 
     def return_with_error(self, error):
@@ -993,16 +982,10 @@ class LingoResourceImporter(BaseImportModule):
         thesaurus_name = getattr(self, "thesaurus_name", None)
         if thesaurus_name is None and type(self.load_event.load_details) is list:
             thesaurus_name = self.load_event.load_details[1].get("thesaurus_name")
-        if isinstance(error, task_management.CeleryNotAvailableError):
-            message = _(
-                "The thesaurus exceeds threshold for synchronous processing, but Celery is not available. Please contact your system administrator."
-            )
-            error = message
-        else:
-            message = (
-                _("{} import failed").format(thesaurus_name)
-                if thesaurus_name
-                else _("Import failed")
-            )
+        message = (
+            _("{} import failed").format(thesaurus_name)
+            if thesaurus_name
+            else _("Import failed")
+        )
         notify_completion(message, models.User.objects.get(id=self.userid))
         return {"success": False, "message": error}

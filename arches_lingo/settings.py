@@ -494,6 +494,8 @@ CELERY_CHECK_ONLY_INSPECT_BROKER = False
 CANTALOUPE_DIR = os.path.join(ROOT_DIR, UPLOADED_FILES_DIR)
 CANTALOUPE_HTTP_ENDPOINT = "http://localhost:8182/"
 
+TASKS = {"default": {"BACKEND": "django.tasks.backends.immediate.ImmediateBackend"}}
+
 ACCESSIBILITY_MODE = False
 
 RENDERERS = [
