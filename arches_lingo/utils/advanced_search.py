@@ -285,7 +285,7 @@ class AdvancedSearchEvaluator:
                 )
                 .annotate(
                     broader_id=RawSQL(
-                        f"jsonb_array_elements(data->'{CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID}') ->> 'resourceId'",
+                        f"jsonb_array_elements(tiledata->'{CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID}') ->> 'resourceId'",
                         [],
                     )
                 )
@@ -320,7 +320,7 @@ class AdvancedSearchEvaluator:
             )
             .annotate(
                 comparate_id=RawSQL(
-                    f"jsonb_array_elements(data->'{RELATION_STATUS_ASCRIBED_COMPARATE_NODEID}') ->> 'resourceId'",
+                    f"jsonb_array_elements(tiledata->'{RELATION_STATUS_ASCRIBED_COMPARATE_NODEID}') ->> 'resourceId'",
                     [],
                 )
             )

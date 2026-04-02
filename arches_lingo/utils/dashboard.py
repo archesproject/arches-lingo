@@ -120,16 +120,16 @@ def get_label_stats(concept_qs) -> tuple:
     # Group language codes in the database; returns ~50 rows instead of
     # loading hundreds of thousands of tile records into Python.
     language_rows = label_tiles.values(
-        lang=RawSQL("data->>%s", [CONCEPT_NAME_LANGUAGE_NODE])
+        lang=RawSQL("tiledata->>%s", [CONCEPT_NAME_LANGUAGE_NODE])
     ).annotate(count=Count("pk"))
     language_counter: Counter = Counter(
         {row["lang"]: row["count"] for row in language_rows if row["lang"]}
     )
 
     # Each label tile has exactly one type reference (a single-element JSONB
-    # array).  Extract the URI with data->'node_id'->0->>'uri' in the DB.
+    # array).  Extract the URI with tiledata->'node_id'->0->>'uri' in the DB.
     type_rows = label_tiles.values(
-        uri=RawSQL("data->%s->0->>'uri'", [CONCEPT_NAME_TYPE_NODE])
+        uri=RawSQL("tiledata->%s->0->>'uri'", [CONCEPT_NAME_TYPE_NODE])
     ).annotate(count=Count("pk"))
     type_counter: Counter = Counter(
         {row["uri"]: row["count"] for row in type_rows if row["uri"]}
