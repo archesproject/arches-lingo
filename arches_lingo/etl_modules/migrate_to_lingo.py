@@ -438,11 +438,7 @@ class LingoResourceImporter(BaseImportModule):
                     if default_value != "" and default_value is not None:
                         blank_tile[str(node.nodeid)]["value"] = default_value
             self.blank_tile_lookup[nodegroupid] = blank_tile
-        # A shallow copy of each inner dict is sufficient: all inner values are
-        # primitives (str, bool, None, or a simple default from widget config).
-        # deepcopy of 470k+ tiles across a large import accounts for significant
-        # overhead that is entirely avoidable here.
-        return {k: dict(v) for k, v in self.blank_tile_lookup[nodegroupid].items()}
+        return copy.deepcopy(self.blank_tile_lookup[nodegroupid])
 
     def build_concept_hierarchy(self, cursor, scheme_conceptid):
         cursor.execute(
@@ -869,8 +865,9 @@ class LingoResourceImporter(BaseImportModule):
                     from arches_lingo.utils.skos import SKOSReader
 
                     skos_reader = SKOSReader()
+                    rdf = skos_reader.read_file(self.file)
                     self.schemes, self.concepts = (
-                        skos_reader.extract_from_skos_xml_file(self.file)
+                        skos_reader.extract_concepts_from_skos_for_lingo_import(rdf)
                     )
                     self.run_load_task()
 
@@ -927,8 +924,9 @@ class LingoResourceImporter(BaseImportModule):
                 from arches_lingo.utils.skos import SKOSReader
 
                 skos_reader = SKOSReader()
-                self.schemes, self.concepts = skos_reader.extract_from_skos_xml_file(
-                    file
+                rdf = skos_reader.read_file(file)
+                self.schemes, self.concepts = (
+                    skos_reader.extract_concepts_from_skos_for_lingo_import(rdf)
                 )
 
             # Populate staging table with schemes and concepts
