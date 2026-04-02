@@ -250,6 +250,46 @@ class SKOSReader(SKOSReader):
 
             return self.schemes, self.concepts
 
+    def language_exists(self, rdf_tag, allowed_languages):
+        """
+        Override the parent implementation to fix two issues with extended BCP-47
+        language tags (e.g. zh-latn-pinyin-x-notone):
+
+        1. Case mismatch: arches core's capitalize_region() uppercases only the
+           second subtag ('zh-latn-...' → 'zh-LATN-...'), but Language records
+           stored from ensure_aat_languages.py use fully lower-case codes.  A
+           case-insensitive pre-check avoids calling get_language_info when the
+           language is already in the database under a differently-cased key.
+
+        2. Unknown BCP-47 tags: Django's get_language_info() raises KeyError for
+           any tag it does not recognise.  When the parent would raise, we create
+           a minimal Language record and return False so the caller refreshes its
+           allowed_languages cache.
+        """
+        if not (
+            hasattr(rdf_tag, "language")
+            and rdf_tag.language is not None
+            and rdf_tag.language.strip() != ""
+        ):
+            return True
+
+        lower_code = rdf_tag.language.lower()
+        if any(code.lower() == lower_code for code in allowed_languages):
+            return True
+
+        try:
+            return super().language_exists(rdf_tag, allowed_languages)
+        except KeyError:
+            from arches.app.utils.i18n import capitalize_region
+
+            newlang = models.Language()
+            newlang.code = capitalize_region(rdf_tag.language)
+            newlang.name = rdf_tag.language
+            newlang.default_direction = "ltr"
+            newlang.isdefault = False
+            newlang.save()
+            return False
+
     def map_predicate_object_to_mock_tile(
         self,
         object: str | dict,
