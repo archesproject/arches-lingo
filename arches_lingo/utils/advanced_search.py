@@ -100,8 +100,18 @@ class AdvancedSearchEvaluator:
             if result_qs is None:
                 result_qs = child_qs
             elif operator == "and":
-                # Intersect: keep only PKs present in both sets via subquery.
-                result_qs = result_qs.filter(pk__in=child_qs)
+                # Intersect via two ResourceInstance subqueries.  Normalising to
+                # ResourceInstance here is necessary because facet handlers may
+                # return TileModel querysets (selecting resourceinstance_id) or
+                # ResourceInstance querysets — mixing them with a plain
+                # .filter(pk__in=child_qs) would filter by TileModel.pk (tileid)
+                # instead of the FK value, always producing an empty result.
+                result_qs = (
+                    ResourceInstance.objects.filter(graph_id=CONCEPTS_GRAPH_ID)
+                    .filter(pk__in=result_qs)
+                    .filter(pk__in=child_qs)
+                    .values_list("pk", flat=True)
+                )
             else:  # "or"
                 # Union: combine via Q(pk__in) | Q(pk__in) so the DB resolves it.
                 result_qs = (
@@ -170,7 +180,9 @@ class AdvancedSearchEvaluator:
             filters &= Q(**{f"data__{CONCEPT_NAME_LANGUAGE_NODE}": language})
 
         return (
-            TileModel.objects.filter(filters).values("resourceinstance_id").distinct()
+            TileModel.objects.filter(filters)
+            .values_list("resourceinstance_id", flat=True)
+            .distinct()
         )
 
     def _facet_note(self, condition):
@@ -199,7 +211,9 @@ class AdvancedSearchEvaluator:
             filters &= Q(**{f"data__{STATEMENT_LANGUAGE_NODE}": language})
 
         return (
-            TileModel.objects.filter(filters).values("resourceinstance_id").distinct()
+            TileModel.objects.filter(filters)
+            .values_list("resourceinstance_id", flat=True)
+            .distinct()
         )
 
     def _facet_language(self, condition):
@@ -219,7 +233,7 @@ class AdvancedSearchEvaluator:
                     **{f"data__{STATEMENT_LANGUAGE_NODE}": language},
                 )
             )
-            .values("resourceinstance_id")
+            .values_list("resourceinstance_id", flat=True)
             .distinct()
         )
 
@@ -238,7 +252,7 @@ class AdvancedSearchEvaluator:
                     ]
                 },
             )
-            .values("resourceinstance_id")
+            .values_list("resourceinstance_id", flat=True)
             .distinct()
         )
 
@@ -260,7 +274,7 @@ class AdvancedSearchEvaluator:
                         ]
                     },
                 )
-                .values("resourceinstance_id")
+                .values_list("resourceinstance_id", flat=True)
                 .distinct()
             )
         else:  # narrower — find the broader IDs of target_id via JSON extraction in DB
@@ -337,7 +351,9 @@ class AdvancedSearchEvaluator:
         )
 
         return (
-            TileModel.objects.filter(filters).values("resourceinstance_id").distinct()
+            TileModel.objects.filter(filters)
+            .values_list("resourceinstance_id", flat=True)
+            .distinct()
         )
 
     def _facet_top_concept(self, condition):
@@ -354,7 +370,7 @@ class AdvancedSearchEvaluator:
                 }
             )
 
-        return tiles.values("resourceinstance_id").distinct()
+        return tiles.values_list("resourceinstance_id", flat=True).distinct()
 
     def _facet_scheme(self, condition):
         """Find concepts that belong to a specific scheme."""
@@ -381,7 +397,7 @@ class AdvancedSearchEvaluator:
                     },
                 )
             )
-            .values("resourceinstance_id")
+            .values_list("resourceinstance_id", flat=True)
             .distinct()
         )
 
@@ -400,7 +416,9 @@ class AdvancedSearchEvaluator:
             filters &= Q(**{f"data__{URI_CONTENT_NODE}__{lookup}": value})
 
         return (
-            TileModel.objects.filter(filters).values("resourceinstance_id").distinct()
+            TileModel.objects.filter(filters)
+            .values_list("resourceinstance_id", flat=True)
+            .distinct()
         )
 
     def _facet_identifier(self, condition):
@@ -416,7 +434,9 @@ class AdvancedSearchEvaluator:
         )
 
         return (
-            TileModel.objects.filter(filters).values("resourceinstance_id").distinct()
+            TileModel.objects.filter(filters)
+            .values_list("resourceinstance_id", flat=True)
+            .distinct()
         )
 
     def _facet_lifecycle_state(self, condition):
@@ -441,4 +461,4 @@ class AdvancedSearchEvaluator:
         except ConceptSet.DoesNotExist:
             return self._all_concept_ids().none()
 
-        return concept_set.members.values("concept_id")
+        return concept_set.members.values_list("concept_id", flat=True)
