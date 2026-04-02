@@ -357,8 +357,8 @@ def get_missing_translation_ids(
         ).values_list("resourceinstance_id", flat=True)
     )
 
-    _concept_count, all_concept_id_strings = get_concept_ids(scheme_ids)
-    all_concept_ids = [uuid.UUID(pk) for pk in all_concept_id_strings]
+    _concept_count, concept_qs = get_concept_ids(scheme_ids)
+    all_concept_ids = set(concept_qs.values_list("pk", flat=True))
 
     missing_ids = [
         str(pk) for pk in all_concept_ids if pk not in concepts_with_pref_ids
