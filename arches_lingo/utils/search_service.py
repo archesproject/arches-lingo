@@ -148,14 +148,7 @@ def extract_note_type_label(note_type_data):
 
 def fetch_search_options():
     """Return filter option data for the advanced search UI."""
-    languages = list(
-        Language.objects.filter(isdefault=True)
-        .union(Language.objects.filter(scope="system"))
-        .values("code", "name")
-        .order_by("name")
-    )
-    if not languages:
-        languages = list(Language.objects.all().values("code", "name").order_by("name"))
+    languages = list(Language.objects.all().values("code", "name").order_by("name"))
 
     # Use a lightweight builder that only populates scheme labels — avoids
     # loading all broader/top-concept tiles (which is expensive at AAT scale).
