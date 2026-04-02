@@ -55,6 +55,32 @@ class ConceptChildrenView(AnonymousAccessMixin, View):
         return JSONResponse({"children": children})
 
 
+class ConceptAncestorsView(AnonymousAccessMixin, View):
+    def get(self, request, concept_id):
+        concept_id_str = str(concept_id)
+        builder = ConceptBuilder([concept_id_str], include_parents=True)
+        paths = builder.find_paths_to_root([concept_id_str], concept_id_str)
+
+        ancestor_paths = []
+        for path in paths:
+            search_results = []
+            for node_id in path:
+                scheme = builder.lookup_scheme(node_id)
+                if scheme is not None:
+                    search_results.append(
+                        builder.serialize_scheme(scheme, children=False)
+                    )
+                else:
+                    search_results.append(
+                        builder.serialize_concept(
+                            node_id, parents=False, children=False
+                        )
+                    )
+            ancestor_paths.append({"searchResults": search_results})
+
+        return JSONResponse({"paths": ancestor_paths})
+
+
 class ValueSearchView(ConceptTreeView):
     def get(self, request):
         term = request.GET.get("term")
@@ -107,31 +133,41 @@ class ValueSearchView(ConceptTreeView):
             active_language = get_language() or settings.LANGUAGE_CODE
             system_language = settings.LANGUAGE_CODE
 
-            ordered_concepts = rank_concepts_for_unsorted_term(
+            ordered_concept_ids = rank_concepts_for_unsorted_term(
                 concept_ids,
                 term,
                 active_language,
                 system_language,
             )
 
-            paginator = Paginator(ordered_concepts, items_per_page)
+            paginator = Paginator(ordered_concept_ids, items_per_page)
             page = paginator.get_page(page_number)
 
             if paginator.count:
-                data = list(page.object_list)
+                page_concept_ids = [str(concept_uuid) for concept_uuid in page]
+                concept_builder = ConceptBuilder(page_concept_ids, include_parents=True)
+                data = [
+                    concept_builder.serialize_concept(
+                        concept_id,
+                        parents=True,
+                        children=False,
+                    )
+                    for concept_id in page_concept_ids
+                ]
         else:
             paginator = Paginator(concept_ids, items_per_page)
             page = paginator.get_page(page_number)
 
             if paginator.count:
-                concept_builder = ConceptBuilder()
+                page_concept_ids = [str(concept_uuid) for concept_uuid in page]
+                concept_builder = ConceptBuilder(page_concept_ids, include_parents=True)
                 data = [
                     concept_builder.serialize_concept(
-                        str(concept_uuid),
+                        concept_id,
                         parents=True,
                         children=False,
                     )
-                    for concept_uuid in page
+                    for concept_id in page_concept_ids
                 ]
 
         return JSONResponse(

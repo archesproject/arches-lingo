@@ -208,10 +208,13 @@ provide(
     resourceInstanceLifecycleStateIsRetiredById,
 );
 
-// Tracks concept IDs whose children are currently being fetched so the tree
-// can show a loading indicator on the relevant expand toggle.
-const loadingConceptIds = reactive(new Set<string>());
-provide("loadingConceptIds", loadingConceptIds);
+// Tracks occurrence keys of tree nodes whose children are currently being
+// fetched so the tree can show a loading indicator on the relevant expand
+// toggle.  Using the occurrence key (rather than the concept ID) means that
+// when a polyhierarchical concept appears in multiple places in the tree,
+// only the one node that was actually clicked shows the spinner.
+const loadingNodeKeys = reactive(new Set<string>());
+provide("loadingNodeKeys", loadingNodeKeys);
 
 const sortIcon = computed(() => {
     const direction = shouldSortByAscending.value ? "down" : "up";
@@ -899,7 +902,8 @@ async function onNodeExpand(node: TreeNode) {
     const concept = conceptStore.findConcept(conceptId);
     if (!concept || concept.childrenLoaded) return;
 
-    loadingConceptIds.add(conceptId);
+    const nodeKey: string = node.key as string;
+    loadingNodeKeys.add(nodeKey);
     try {
         await conceptStore.loadChildren(conceptId);
     } catch {
@@ -910,7 +914,7 @@ async function onNodeExpand(node: TreeNode) {
             detail: $gettext("Failed to load child concepts."),
         });
     } finally {
-        loadingConceptIds.delete(conceptId);
+        loadingNodeKeys.delete(nodeKey);
     }
 }
 </script>
@@ -990,8 +994,8 @@ async function onNodeExpand(node: TreeNode) {
                     instance,
                 }: TreePassThroughMethodOptions) => ({
                     class: {
-                        'node-children-loading': loadingConceptIds.has(
-                            instance.node?.data?.id,
+                        'node-children-loading': loadingNodeKeys.has(
+                            instance.node?.key as string,
                         ),
                     },
                 }),

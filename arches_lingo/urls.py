@@ -4,6 +4,7 @@ from django.urls import include, path
 
 from arches_lingo.views.root import LingoRootView
 from arches_lingo.views.api.concepts import (
+    ConceptAncestorsView,
     ConceptChildrenView,
     ConceptDeleteView,
     ConceptTreeView,
@@ -118,6 +119,11 @@ urlpatterns = [
         "api/concept-tree/children/<uuid:concept_id>",
         ConceptChildrenView.as_view(),
         name="api-concept-children",
+    ),
+    path(
+        "api/concept-tree/ancestors/<uuid:concept_id>",
+        ConceptAncestorsView.as_view(),
+        name="api-concept-ancestors",
     ),
     path(
         "api/lingo/lifecycle-states",

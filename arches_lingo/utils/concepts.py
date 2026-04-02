@@ -1,7 +1,16 @@
+from collections import defaultdict
+
 from django.db.models import Min
 from django.db.models.functions import Lower
 
+from arches.app.models.models import TileModel
 from arches.app.models.system_settings import settings
+from arches_lingo.const import (
+    CONCEPT_NAME_NODEGROUP,
+    CONCEPT_NAME_CONTENT_NODE,
+    CONCEPT_NAME_LANGUAGE_NODE,
+    CONCEPT_NAME_TYPE_NODE,
+)
 from arches_lingo.querysets import fuzzy_search
 from arches_lingo.utils.concept_builder import ConceptBuilder
 
@@ -163,37 +172,66 @@ def score_concept_for_term(
     return best_score
 
 
+def _fetch_labels_for_scoring(concept_ids):
+    """Fetch lightweight label data for ranking without full serialization."""
+    label_data = defaultdict(list)
+    label_tiles = (
+        TileModel.objects.filter(
+            nodegroup_id=CONCEPT_NAME_NODEGROUP,
+            resourceinstance_id__in=concept_ids,
+        )
+        .exclude(**{f"data__{CONCEPT_NAME_TYPE_NODE}": None})
+        .exclude(**{f"data__{CONCEPT_NAME_LANGUAGE_NODE}": None})
+        .values("resourceinstance_id", "data")
+    )
+
+    for tile in label_tiles.iterator():
+        concept_id = str(tile["resourceinstance_id"])
+        data = tile["data"]
+        type_refs = data.get(CONCEPT_NAME_TYPE_NODE)
+        valuetype_id = (
+            ConceptBuilder.find_valuetype_id_from_uri(type_refs[0]["uri"])
+            if type_refs
+            else "unknown"
+        )
+        label_data[concept_id].append(
+            {
+                "value": data.get(CONCEPT_NAME_CONTENT_NODE),
+                "language_id": data.get(CONCEPT_NAME_LANGUAGE_NODE),
+                "valuetype_id": valuetype_id,
+            }
+        )
+
+    return label_data
+
+
 def rank_concepts_for_unsorted_term(
     concept_identifiers,
     search_term,
     active_language,
     system_language,
 ):
-    concept_builder = ConceptBuilder()
+    """Return concept IDs ranked by relevance to the search term.
 
-    scored_concepts = []
+    Uses lightweight label fetching rather than full concept serialization
+    so that only a single label query is needed regardless of result count.
+    """
+    if not concept_identifiers:
+        return []
+
+    concept_id_strings = [str(cid) for cid in concept_identifiers]
+    label_data_by_concept = _fetch_labels_for_scoring(concept_id_strings)
+
+    scored_ids = []
     for concept_index, concept_identifier in enumerate(concept_identifiers):
-        concept_data = concept_builder.serialize_concept(
-            str(concept_identifier),
-            parents=True,
-            children=False,
-        )
+        labels = label_data_by_concept.get(str(concept_identifier), [])
         concept_score = score_concept_for_term(
-            concept_data,
+            {"labels": labels},
             search_term,
             active_language,
             system_language,
         )
-        scored_concepts.append(
-            (concept_score, concept_index, concept_data),
-        )
+        scored_ids.append((concept_score, concept_index, concept_identifier))
 
-    scored_concepts.sort(
-        key=lambda scored_entry: (
-            scored_entry[0],
-            scored_entry[1],
-        )
-    )
-
-    ordered_concepts = [scored_entry[2] for scored_entry in scored_concepts]
-    return ordered_concepts
+    scored_ids.sort(key=lambda entry: (entry[0], entry[1]))
+    return [entry[2] for entry in scored_ids]

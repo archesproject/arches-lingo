@@ -61,6 +61,7 @@ Required attribution:
 import argparse
 import collections
 import os
+import re
 import sys
 import tempfile
 import urllib.request
@@ -205,6 +206,13 @@ def _parse_nt_triple(line):
     return subject_uri, predicate_uri, raw_object
 
 
+def _decode_nt_unicode_escapes(value):
+    """Decode N-Triples \\uXXXX and \\UXXXXXXXX Unicode escape sequences."""
+    value = re.sub(r"\\u([0-9a-fA-F]{4})", lambda m: chr(int(m.group(1), 16)), value)
+    value = re.sub(r"\\U([0-9a-fA-F]{8})", lambda m: chr(int(m.group(1), 16)), value)
+    return value
+
+
 def _parse_literal(raw_object):
     """Return (value_str, lang_or_None) from a raw NTriples literal token."""
     if not raw_object.startswith('"'):
@@ -228,6 +236,7 @@ def _parse_literal(raw_object):
         .replace("\\t", "\t")
         .replace("\\\\", "\\")
     )
+    value = _decode_nt_unicode_escapes(value)
     suffix = raw_object[pos + 1 :].lstrip()
     if suffix.startswith("@"):
         lang_tag = suffix[1:].split()[0] if suffix[1:].split() else ""
