@@ -256,7 +256,7 @@ class ViewTests(TestCase):
         with self.assertNumQueries(9):
             # 1: session
             # 2: auth
-            # 3: select broader tiles, subquery for labels
+            # 3: select broader tiles (narrower_exists_map), subquery for labels
             # 4: select top concept tiles, subquery for labels
             # 5: select guide term concept type tiles
             # 6: select schemes, subquery for labels
@@ -282,24 +282,49 @@ class ViewTests(TestCase):
         self.assertIsNotNone(top["resource_instance_lifecycle_state_id"])
         self.assertIn("resource_instance_lifecycle_state_name", top)
         self.assertIsNotNone(top["resource_instance_lifecycle_state_name"])
-        self.assertEqual(len(top["narrower"]), 4)
+        # Shallow response: no narrower array, but has_narrower flag.
+        self.assertNotIn("narrower", top)
+        self.assertTrue(top["has_narrower"])
+
+    def test_get_concept_children(self):
+        response = self.client.get(
+            reverse(
+                "api-concept-children",
+                kwargs={"concept_id": self.concepts[0].pk},
+            )
+        )
+        self.assertEqual(response.status_code, 200)
+        result = json.loads(response.content)
+
+        self.assertIn("children", result)
+        self.assertEqual(len(result["children"]), 4)
         self.assertEqual(
-            {n["labels"][0]["value"] for n in top["narrower"]},
+            {c["labels"][0]["value"] for c in result["children"]},
             {"Concept 2", "Concept 3", "Concept 4", "Concept 5"},
         )
-        concept_2 = [
-            concept
-            for concept in top["narrower"]
-            if concept["labels"][0]["value"] == "Concept 2"
-        ][0]
-        self.assertEqual(
-            {n["labels"][0]["value"] for n in concept_2["narrower"]},
-            {"Concept 3"},
+        # Each child should have a has_narrower flag but no narrower array.
+        for child in result["children"]:
+            self.assertIn("has_narrower", child)
+            self.assertNotIn("narrower", child)
+
+        # Concept 2 should report has_narrower=True (it has Concept 3 as child).
+        concept_2 = next(
+            c for c in result["children"] if c["labels"][0]["value"] == "Concept 2"
         )
-        self.assertEqual(
-            {n["labels"][0]["valuetype_id"] for n in concept_2["narrower"]},
-            {"prefLabel"},
+        self.assertTrue(concept_2["has_narrower"])
+
+    def test_get_leaf_concept_children(self):
+        # Concepts 3-5 have no narrower children.
+        response = self.client.get(
+            reverse(
+                "api-concept-children",
+                kwargs={"concept_id": self.concepts[2].pk},
+            )
         )
+        self.assertEqual(response.status_code, 200)
+        result = json.loads(response.content)
+        # Concept 3 has Concept 4 as narrower.
+        self.assertEqual(len(result["children"]), 1)
 
     def test_lifecycle_states_endpoint(self):
         response = self.client.get(reverse("api-lingo-lifecycle-states"))
@@ -507,7 +532,7 @@ class ViewTests(TestCase):
         self.assertEqual(response.status_code, 403)
 
     def test_guide_term_flag_in_concept_tree(self):
-        """Concepts with guide term concept type should be flagged."""
+        """Concepts with guide term concept type should be flagged in children response."""
         guide_concept = self.concepts[1]  # Concept 2
 
         # Add a type tile with guide term type
@@ -524,27 +549,28 @@ class ViewTests(TestCase):
             },
         )
 
-        response = self.client.get(reverse("api-concepts"))
+        # The shallow tree only returns top concepts; guide_term check is done
+        # via the children endpoint for the top concept.
+        response = self.client.get(
+            reverse(
+                "api-concept-children",
+                kwargs={"concept_id": self.concepts[0].pk},
+            )
+        )
         self.assertEqual(response.status_code, 200)
         result = json.loads(response.content)
-        scheme = result["schemes"][0]
-        top = scheme["top_concepts"][0]
-
-        # The top concept (Concept 1) should NOT be a guide term
-        self.assertFalse(top["guide_term"])
+        children = result["children"]
 
         # Find Concept 2 in narrower list -- it should be flagged as guide term
         concept_2 = next(
-            narrower_concept
-            for narrower_concept in top["narrower"]
-            if narrower_concept["labels"][0]["value"] == "Concept 2"
+            child for child in children if child["labels"][0]["value"] == "Concept 2"
         )
         self.assertTrue(concept_2["guide_term"])
 
         # Other narrower concepts should not be guide terms
-        for narrower_concept in top["narrower"]:
-            if narrower_concept["labels"][0]["value"] != "Concept 2":
-                self.assertFalse(narrower_concept["guide_term"])
+        for child in children:
+            if child["labels"][0]["value"] != "Concept 2":
+                self.assertFalse(child["guide_term"])
 
     def test_guide_term_flag_in_search(self):
         """Guide term flag should appear in search results."""
@@ -588,8 +614,17 @@ class ViewTests(TestCase):
         top = scheme["top_concepts"][0]
 
         self.assertFalse(top["guide_term"])
-        for narrower_concept in top["narrower"]:
-            self.assertFalse(narrower_concept["guide_term"])
+
+        # Verify children also have guide_term=False
+        children_response = self.client.get(
+            reverse(
+                "api-concept-children",
+                kwargs={"concept_id": self.concepts[0].pk},
+            )
+        )
+        children_result = json.loads(children_response.content)
+        for child in children_result["children"]:
+            self.assertFalse(child["guide_term"])
 
     @override_settings(LINGO_ALLOW_ANONYMOUS_ACCESS=True)
     def test_anonymous_can_read_concept_trees(self):

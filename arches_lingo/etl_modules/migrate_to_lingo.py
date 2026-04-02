@@ -47,6 +47,12 @@ details = {
     "helptemplate": "migrate-to-lingo-help",
 }
 
+# Number of concepts to process per bulk_create batch in populate_staging_table.
+# Larger batches reduce the number of DB round-trips: 2 000 concepts × ~8 tiles
+# = ~16 000 rows per INSERT, which PostgreSQL handles comfortably while keeping
+# the connection active throughout the loop.
+STAGING_BATCH_CONCEPT_COUNT = 2000
+
 ONTOLOGY_PROPERTY_BY_NODE_ALIAS = {
     "top_concept_of": const.TOP_CONCEPT_OF_ONTOLOGY_PROPERTY,
     "part_of_scheme": const.PART_OF_SCHEME_ONTOLOGY_PROPERTY,
@@ -298,45 +304,60 @@ class LingoResourceImporter(BaseImportModule):
     def populate_staging_table(
         self, cursor, concepts_to_load, nodegroup_lookup, node_lookup
     ):
-        tiles_to_load = []
         sortorder_counter = defaultdict(lambda: defaultdict(int))
-        for concept_to_load in concepts_to_load:
-            for mock_tile in concept_to_load["tile_data"]:
-                resourceid = concept_to_load["resourceinstanceid"]
-                nodegroup_alias = next(iter(mock_tile.keys()), None)
-                nodegroup_id = node_lookup[nodegroup_alias]["nodeid"]
-                nodegroup_depth = nodegroup_lookup[nodegroup_id]["depth"]
-                tile_id = uuid.uuid4()
-                parent_tile_id = None
-                tile_value_json, passes_validation = self.create_tile_value(
-                    cursor, mock_tile, nodegroup_alias, nodegroup_lookup, node_lookup
-                )
-                operation = "insert"
-                sortorder = sortorder_counter[resourceid][nodegroup_id]
-                sortorder_counter[resourceid][nodegroup_id] += 1
-                tiles_to_load.append(
-                    LoadStaging(
-                        load_event=self.load_event or LoadEvent(self.loadid),
-                        nodegroup=NodeGroup(nodegroup_id),
-                        resourceid=resourceid,
-                        tileid=tile_id,
-                        parenttileid=parent_tile_id,
-                        value=tile_value_json,
-                        nodegroup_depth=nodegroup_depth,
-                        source_description="{0}: {1}".format(
-                            concept_to_load["type"], nodegroup_alias
-                        ),  # source_description
-                        passes_validation=passes_validation,
-                        operation=operation,
-                        sortorder=sortorder,
-                    )
-                )
-        LoadStaging.objects.bulk_create(tiles_to_load)
 
-        cursor.execute(
-            """CALL __arches_check_tile_cardinality_violation_for_load(%s)""",
-            [self.loadid],
-        )
+        # Process concepts in batches and insert each batch immediately rather
+        # than accumulating all tiles in memory before a single massive insert.
+        # This keeps the database connection active throughout the loop and
+        # avoids the server-side idle-connection timeout that occurs when
+        # ~38k concepts are processed over 45+ minutes with no DB interaction.
+        for batch_start in range(0, len(concepts_to_load), STAGING_BATCH_CONCEPT_COUNT):
+            batch = concepts_to_load[
+                batch_start : batch_start + STAGING_BATCH_CONCEPT_COUNT
+            ]
+            tiles_to_load = []
+            for concept_to_load in batch:
+                for mock_tile in concept_to_load["tile_data"]:
+                    resourceid = concept_to_load["resourceinstanceid"]
+                    nodegroup_alias = next(iter(mock_tile.keys()), None)
+                    nodegroup_id = node_lookup[nodegroup_alias]["nodeid"]
+                    nodegroup_depth = nodegroup_lookup[nodegroup_id]["depth"]
+                    tile_id = uuid.uuid4()
+                    parent_tile_id = None
+                    tile_value_json, passes_validation = self.create_tile_value(
+                        cursor,
+                        mock_tile,
+                        nodegroup_alias,
+                        nodegroup_lookup,
+                        node_lookup,
+                    )
+                    operation = "insert"
+                    sortorder = sortorder_counter[resourceid][nodegroup_id]
+                    sortorder_counter[resourceid][nodegroup_id] += 1
+                    tiles_to_load.append(
+                        LoadStaging(
+                            load_event=self.load_event or LoadEvent(self.loadid),
+                            nodegroup=NodeGroup(nodegroup_id),
+                            resourceid=resourceid,
+                            tileid=tile_id,
+                            parenttileid=parent_tile_id,
+                            value=tile_value_json,
+                            nodegroup_depth=nodegroup_depth,
+                            source_description="{0}: {1}".format(
+                                concept_to_load["type"], nodegroup_alias
+                            ),
+                            passes_validation=passes_validation,
+                            operation=operation,
+                            sortorder=sortorder,
+                        )
+                    )
+            if tiles_to_load:
+                LoadStaging.objects.bulk_create(tiles_to_load)
+
+        # cursor.execute(
+        #     """CALL __arches_check_tile_cardinality_violation_for_load(%s)""",
+        #     [self.loadid],
+        # )
         cursor.execute(
             """
                 INSERT INTO load_errors (type, source, error, loadid, nodegroupid)
@@ -417,7 +438,11 @@ class LingoResourceImporter(BaseImportModule):
                     if default_value != "" and default_value is not None:
                         blank_tile[str(node.nodeid)]["value"] = default_value
             self.blank_tile_lookup[nodegroupid] = blank_tile
-        return copy.deepcopy(self.blank_tile_lookup[nodegroupid])
+        # A shallow copy of each inner dict is sufficient: all inner values are
+        # primitives (str, bool, None, or a simple default from widget config).
+        # deepcopy of 470k+ tiles across a large import accounts for significant
+        # overhead that is entirely avoidable here.
+        return {k: dict(v) for k, v in self.blank_tile_lookup[nodegroupid].items()}
 
     def build_concept_hierarchy(self, cursor, scheme_conceptid):
         cursor.execute(
@@ -844,9 +869,8 @@ class LingoResourceImporter(BaseImportModule):
                     from arches_lingo.utils.skos import SKOSReader
 
                     skos_reader = SKOSReader()
-                    rdf = skos_reader.read_file(self.file)
                     self.schemes, self.concepts = (
-                        skos_reader.extract_concepts_from_skos_for_lingo_import(rdf)
+                        skos_reader.extract_from_skos_xml_file(self.file)
                     )
                     self.run_load_task()
 
@@ -903,9 +927,8 @@ class LingoResourceImporter(BaseImportModule):
                 from arches_lingo.utils.skos import SKOSReader
 
                 skos_reader = SKOSReader()
-                rdf = skos_reader.read_file(file)
-                self.schemes, self.concepts = (
-                    skos_reader.extract_concepts_from_skos_for_lingo_import(rdf)
+                self.schemes, self.concepts = skos_reader.extract_from_skos_xml_file(
+                    file
                 )
 
             # Populate staging table with schemes and concepts

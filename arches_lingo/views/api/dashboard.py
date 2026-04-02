@@ -1,5 +1,3 @@
-import uuid
-
 from django.utils.translation import gettext as _
 from django.views.generic import View
 
@@ -11,7 +9,6 @@ from arches_lingo.mixins.permissions import AnonymousAccessMixin
 from arches_lingo.utils.dashboard import (
     attach_activity_labels,
     build_recent_activity,
-    build_resource_type_map,
     get_all_scheme_ids,
     get_concept_ids,
     get_concept_type_breakdown,
@@ -42,12 +39,9 @@ class DashboardStatsView(AnonymousAccessMixin, View):
         ).count()
         scheme_count = len(scheme_ids) if scheme_ids else total_scheme_count
 
-        concept_count, concept_ids_list = get_concept_ids(scheme_ids)
+        concept_count, concept_qs = get_concept_ids(scheme_ids)
 
         resolved_scheme_ids = scheme_ids or get_all_scheme_ids()
-        all_resource_ids = concept_ids_list + resolved_scheme_ids
-
-        resource_type_map = build_resource_type_map(all_resource_ids)
 
         try:
             activity_cutoff = parse_days_param(request)
@@ -59,13 +53,12 @@ class DashboardStatsView(AnonymousAccessMixin, View):
             )
 
         recent_activity = build_recent_activity(
-            all_resource_ids, resource_type_map, activity_cutoff
+            concept_qs, resolved_scheme_ids, activity_cutoff
         )
         attach_activity_labels(recent_activity)
 
-        concept_uuids = [uuid.UUID(concept_id) for concept_id in concept_ids_list]
-        concepts_by_type = get_concept_type_breakdown(concept_uuids)
-        label_count, labels_by_type, labels_by_language = get_label_stats(concept_uuids)
+        concepts_by_type = get_concept_type_breakdown(concept_qs, concept_count)
+        label_count, labels_by_type, labels_by_language = get_label_stats(concept_qs)
 
         labels_per_concept = (
             round(label_count / concept_count, 1) if concept_count else 0

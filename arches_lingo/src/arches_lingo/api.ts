@@ -585,6 +585,13 @@ export const fetchConcepts = async () => {
     return parsed;
 };
 
+export const fetchConceptChildren = async (conceptId: string) => {
+    const response = await fetch(arches.urls.api_concept_children(conceptId));
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed.children;
+};
+
 export const fetchLifecycleStates = async (): Promise<LifecycleState[]> => {
     const response = await fetch(
         generateArchesURL("arches_lingo:api-lingo-lifecycle-states"),

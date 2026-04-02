@@ -5,6 +5,9 @@ from collections import Counter
 from datetime import timedelta
 
 from django.core.paginator import Paginator
+from django.db.models import CharField, Count, Q, TextField
+from django.db.models.expressions import CombinedExpression, F, RawSQL, Value
+from django.db.models.functions import Cast
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
@@ -27,6 +30,7 @@ from arches_lingo.const import (
     SCHEMES_GRAPH_ID,
     TILE_EDIT_TYPE_LABEL_TEMPLATES,
 )
+from arches_lingo.query_expressions import JsonbArrayElements
 from arches_lingo.utils.concept_builder import ConceptBuilder
 
 
@@ -72,26 +76,20 @@ def parse_days_param(request):
 
 
 def get_concept_ids(scheme_ids: list) -> tuple:
-    """Return ``(concept_count, concept_id_strings)`` for the given scheme filter."""
+    """
+    Return ``(concept_count, concept_qs)`` for the given scheme filter.
+
+    ``concept_qs`` is a lazy QuerySet suitable for use as a DB subquery —
+    it is never materialised into a Python list, avoiding the O(N) cost of
+    building a huge ``IN (…)`` clause for every downstream query.
+    """
     if scheme_ids:
-        concept_queryset = ResourceTileTree.get_tiles("concept").filter(
+        concept_qs = ResourceTileTree.get_tiles("concept").filter(
             part_of_scheme__id__in=scheme_ids,
         )
-        concept_count = concept_queryset.count()
-        concept_ids_list = [
-            str(pk) for pk in concept_queryset.values_list("pk", flat=True)
-        ]
     else:
-        concept_count = models.ResourceInstance.objects.filter(
-            graph_id=CONCEPTS_GRAPH_ID
-        ).count()
-        concept_ids_list = [
-            str(pk)
-            for pk in models.ResourceInstance.objects.filter(
-                graph_id=CONCEPTS_GRAPH_ID
-            ).values_list("pk", flat=True)
-        ]
-    return concept_count, concept_ids_list
+        concept_qs = models.ResourceInstance.objects.filter(graph_id=CONCEPTS_GRAPH_ID)
+    return concept_qs.count(), concept_qs
 
 
 def get_all_scheme_ids() -> list:
@@ -104,28 +102,38 @@ def get_all_scheme_ids() -> list:
     ]
 
 
-def get_label_stats(concept_resource_ids: list) -> tuple:
-    """Return ``(label_count, labels_by_type, labels_by_language)`` for the given concepts."""
-    tiles = models.TileModel.objects.filter(
+def get_label_stats(concept_qs) -> tuple:
+    """
+    Return ``(label_count, labels_by_type, labels_by_language)`` for the given concepts.
+
+    ``concept_qs`` is a lazy QuerySet (from ``get_concept_ids``).  All counting
+    is pushed to the database via aggregation — no tile JSONB data is loaded
+    into Python memory.
+    """
+    label_tiles = models.TileModel.objects.filter(
         nodegroup_id=CONCEPT_NAME_NODEGROUP,
-        resourceinstance_id__in=concept_resource_ids,
-    ).values_list("data", flat=True)
+        resourceinstance_id__in=concept_qs.values("pk"),
+    )
 
-    type_counter: Counter = Counter()
-    language_counter: Counter = Counter()
-    total = 0
+    label_count = label_tiles.count()
 
-    for data in tiles:
-        total += 1
-        language_code = data.get(CONCEPT_NAME_LANGUAGE_NODE)
-        if language_code:
-            language_counter[language_code] += 1
-        reference_values = data.get(CONCEPT_NAME_TYPE_NODE)
-        if reference_values and isinstance(reference_values, list):
-            for reference_value in reference_values:
-                uri = reference_value.get("uri")
-                if uri:
-                    type_counter[uri] += 1
+    # Group language codes in the database; returns ~50 rows instead of
+    # loading hundreds of thousands of tile records into Python.
+    language_rows = label_tiles.values(
+        lang=RawSQL("data->>%s", [CONCEPT_NAME_LANGUAGE_NODE])
+    ).annotate(count=Count("pk"))
+    language_counter: Counter = Counter(
+        {row["lang"]: row["count"] for row in language_rows if row["lang"]}
+    )
+
+    # Each label tile has exactly one type reference (a single-element JSONB
+    # array).  Extract the URI with data->'node_id'->0->>'uri' in the DB.
+    type_rows = label_tiles.values(
+        uri=RawSQL("data->%s->0->>'uri'", [CONCEPT_NAME_TYPE_NODE])
+    ).annotate(count=Count("pk"))
+    type_counter: Counter = Counter(
+        {row["uri"]: row["count"] for row in type_rows if row["uri"]}
+    )
 
     uri_label_map = build_uri_label_map(LABEL_LIST_ID)
 
@@ -151,11 +159,17 @@ def get_label_stats(concept_resource_ids: list) -> tuple:
     ]
     labels_by_language.sort(key=lambda entry: -entry["count"])
 
-    return total, labels_by_type, labels_by_language
+    return label_count, labels_by_type, labels_by_language
 
 
-def get_concept_type_breakdown(concept_resource_ids: list) -> list:
-    """Return a ``{label, uri, count}`` breakdown for each concept type."""
+def get_concept_type_breakdown(concept_qs, concept_count: int) -> list:
+    """
+    Return a ``{label, uri, count}`` breakdown for each concept type.
+
+    ``concept_qs`` is a lazy QuerySet (from ``get_concept_ids``).
+    ``concept_count`` is the pre-computed total so it is not re-queried here.
+    Aggregation is performed in the database via ``JsonbArrayElements``.
+    """
     type_node = models.Node.objects.get(nodeid=CONCEPT_TYPE_NODEID)
     controlled_list_id = type_node.config.get("controlledList")
     if not controlled_list_id:
@@ -163,24 +177,29 @@ def get_concept_type_breakdown(concept_resource_ids: list) -> list:
 
     uri_label_map = build_uri_label_map(controlled_list_id)
 
-    uri_counter: Counter = Counter()
-    typed_resource_ids: set = set()
-
     type_tiles = models.TileModel.objects.filter(
         nodegroup_id=CONCEPT_TYPE_NODEGROUP,
-        resourceinstance_id__in=concept_resource_ids,
-    ).values_list("resourceinstance_id", "data")
+        resourceinstance_id__in=concept_qs.values("pk"),
+    )
 
-    for resource_id, data in type_tiles:
-        reference_values = data.get(CONCEPT_TYPE_NODEID) if data else None
-        if reference_values and isinstance(reference_values, list):
-            for reference_value in reference_values:
-                uri = reference_value.get("uri")
-                if uri:
-                    uri_counter[uri] += 1
-            typed_resource_ids.add(resource_id)
+    # Expand the JSONB array of type references and group by URI in the database.
+    type_counts = (
+        type_tiles.annotate(
+            type_ref=JsonbArrayElements(F(f"data__{CONCEPT_TYPE_NODEID}"))
+        )
+        .values(
+            uri=CombinedExpression(
+                F("type_ref"), "->>", Value("uri"), output_field=CharField()
+            )
+        )
+        .annotate(count=Count("pk"))
+    )
+    uri_counter: Counter = Counter(
+        {row["uri"]: row["count"] for row in type_counts if row["uri"]}
+    )
 
-    untyped_count = len(concept_resource_ids) - len(typed_resource_ids)
+    typed_count = type_tiles.values("resourceinstance_id").distinct().count()
+    untyped_count = concept_count - typed_count
 
     breakdown = [
         {"label": label, "uri": uri, "count": uri_counter.get(uri, 0)}
@@ -207,20 +226,48 @@ def build_resource_type_map(resource_ids: list) -> dict:
 
 
 def build_recent_activity(
-    all_resource_ids: list,
-    type_map: dict,
+    concept_qs,
+    scheme_ids: list,
     since,
     *,
     max_items: int = 20,
     fetch_limit: int = 100,
 ) -> list:
-    """Return the *max_items* most recent edits, deduplicated by transaction."""
+    """
+    Return the *max_items* most recent edits, deduplicated by transaction.
+
+    Uses DB subqueries for EditLog filtering rather than materialising all
+    resource IDs into Python, which would create a huge ``IN (…)`` clause.
+    The resource-type lookup is deferred until after the small result set is
+    known, so ``build_resource_type_map`` is only called with at most
+    ``fetch_limit`` IDs.
+    """
+    # Cast UUID PKs to text so the subquery is comparable against
+    # EditLog.resourceinstanceid (a TextField storing UUID strings).
+    concept_text_ids = concept_qs.annotate(
+        _id_text=Cast("resourceinstanceid", output_field=TextField())
+    ).values("_id_text")
+
+    scheme_qs = (
+        models.ResourceInstance.objects.filter(pk__in=scheme_ids)
+        if scheme_ids
+        else models.ResourceInstance.objects.filter(graph_id=SCHEMES_GRAPH_ID)
+    )
+    scheme_text_ids = scheme_qs.annotate(
+        _id_text=Cast("resourceinstanceid", output_field=TextField())
+    ).values("_id_text")
+
     edit_queryset = models.EditLog.objects.filter(
-        resourceinstanceid__in=all_resource_ids,
+        Q(resourceinstanceid__in=concept_text_ids)
+        | Q(resourceinstanceid__in=scheme_text_ids)
     ).order_by("-timestamp")
     if since:
         edit_queryset = edit_queryset.filter(timestamp__gte=since)
     edits = edit_queryset[:fetch_limit]
+
+    # Determine resource types only for the small fetched set.
+    fetched_resource_ids = list({str(edit.resourceinstanceid) for edit in edits})
+    type_map = build_resource_type_map(fetched_resource_ids)
 
     nodegroup_ids = {edit.nodegroupid for edit in edits if edit.nodegroupid}
     card_lookup: dict = {}

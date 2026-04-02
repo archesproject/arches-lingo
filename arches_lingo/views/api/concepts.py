@@ -33,11 +33,26 @@ from arches_lingo.utils.dashboard import (
 
 class ConceptTreeView(AnonymousAccessMixin, View):
     def get(self, request):
-        builder = ConceptBuilder()
+        builder = ConceptBuilder(shallow=True)
         data = {
-            "schemes": [builder.serialize_scheme(scheme) for scheme in builder.schemes]
+            "schemes": [
+                builder.serialize_scheme(scheme, shallow=True)
+                for scheme in builder.schemes
+            ]
         }
         return JSONResponse(data)
+
+
+class ConceptChildrenView(AnonymousAccessMixin, View):
+    def get(self, request, concept_id):
+        builder = ConceptBuilder.for_concept_children(str(concept_id))
+        children = [
+            builder.serialize_concept_shallow(child_id)
+            for child_id in sorted(
+                builder.narrower_concepts.get(str(concept_id), set())
+            )
+        ]
+        return JSONResponse({"children": children})
 
 
 class ValueSearchView(ConceptTreeView):
