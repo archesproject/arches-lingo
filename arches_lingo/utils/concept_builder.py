@@ -250,8 +250,8 @@ class ConceptBuilder:
             EXISTS (
                 SELECT 1
                 FROM "{_tile_table}" sub
-                WHERE sub.{_nodegroup_col} = '{CLASSIFICATION_STATUS_NODEGROUP}'::uuid
-                  AND sub."{_data_col}"->'{CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID}'
+                WHERE sub.{_nodegroup_col} = %s::uuid
+                  AND sub."{_data_col}"->%s
                       @> jsonb_build_array(
                           jsonb_build_object(
                               'resourceId',
@@ -260,7 +260,10 @@ class ConceptBuilder:
                       )
             )
             """,
-            [],
+            [
+                CLASSIFICATION_STATUS_NODEGROUP,
+                CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID,
+            ],
             output_field=BooleanField(),
         )
 
