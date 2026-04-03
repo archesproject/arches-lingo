@@ -47,7 +47,8 @@ def export_lingo_resources_task(
         notify_completion(message, user)
 
 
-@task
+@task(queue_name="import")
+# @shared_task
 def load_lingo_resources_task(loadid, userid, kwargs={}):
     logger = logging.getLogger(__name__)
 
