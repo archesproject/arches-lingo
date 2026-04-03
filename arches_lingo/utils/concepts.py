@@ -1,35 +1,20 @@
-from collections import defaultdict
+from django.db import connection
+from django.utils.translation import gettext as _
 
-from django.db.models import Min
-from django.db.models.functions import Lower
-
-from arches.app.models.models import TileModel
 from arches.app.models.system_settings import settings
 from arches_lingo.const import (
-    CONCEPT_NAME_NODEGROUP,
+    ALT_LABEL_URI,
     CONCEPT_NAME_CONTENT_NODE,
     CONCEPT_NAME_LANGUAGE_NODE,
+    CONCEPT_NAME_NODEGROUP,
     CONCEPT_NAME_TYPE_NODE,
+    PREF_LABEL_URI,
 )
-from arches_lingo.querysets import fuzzy_search
-from arches_lingo.utils.concept_builder import ConceptBuilder
 
 
 ORDER_MODE_ALPHABETICAL = "alphabetical"
 ORDER_MODE_REVERSE_ALPHABETICAL = "reverse-alphabetical"
 ORDER_MODE_UNSORTED = "unsorted"
-
-VALUETYPE_PREF_LABEL = "prefLabel"
-VALUETYPE_ALT_LABEL = "altLabel"
-VALUETYPE_OTHER = "other"
-
-# text_match_rank indices:
-# 0 = exact, 1 = prefix, 2 = substring, 3 = no match
-MATCH_RANK_TABLE = {
-    VALUETYPE_PREF_LABEL: (0, 2, 3, 6),
-    VALUETYPE_ALT_LABEL: (1, 4, 5, 6),
-    VALUETYPE_OTHER: (4, 5, 6, 7),
-}
 
 
 def resolve_max_edit_distance(term):
@@ -56,182 +41,255 @@ def resolve_max_edit_distance(term):
     return min(base_max_edit_distance, 2)
 
 
-def build_ranked_concept_ids_for_term(
-    labels,
+def build_search_queryset(
+    labels_queryset,
     term,
     max_edit_distance,
     order_mode,
+    active_language=None,
+    system_language=None,
 ):
-    fuzzy_tiles = fuzzy_search(labels, term, max_edit_distance)
+    """Return a SearchResultSet of concept IDs matching a search term.
 
-    concept_identifiers_in_fuzzy_order = []
-    seen_concept_identifiers = set()
+    Uses raw SQL with ILIKE and pg_trgm similarity to leverage the GIN
+    trigram index on label content, avoiding the sequential scan that the
+    ORM's UPPER()/LIKE pattern would cause on large datasets.
+    """
+    if len(term) > 255:
+        raise ValueError(_("Fuzzy search terms cannot exceed 255 characters."))
 
-    for concept_identifier in fuzzy_tiles.values_list("resourceinstance", flat=True):
-        if concept_identifier not in seen_concept_identifiers:
-            seen_concept_identifiers.add(concept_identifier)
-            concept_identifiers_in_fuzzy_order.append(concept_identifier)
+    try:
+        max_edit_distance = int(max_edit_distance)
+    except (ValueError, TypeError):
+        raise ValueError(_("Edit distance could not be converted to an integer."))
 
-    if order_mode == ORDER_MODE_UNSORTED:
-        return concept_identifiers_in_fuzzy_order
-
-    labeled_concepts = (
-        labels.filter(resourceinstance__in=concept_identifiers_in_fuzzy_order)
-        .values("resourceinstance")
-        .annotate(
-            sort_label=Min(Lower("appellative_status_ascribed_name_content")),
-        )
+    use_fuzzy = max_edit_distance > 0
+    similarity_threshold = _edit_distance_to_similarity_threshold(
+        max_edit_distance, len(term)
     )
 
-    sort_label_by_concept_identifier = {
-        labeled_concept["resourceinstance"]: labeled_concept["sort_label"]
-        for labeled_concept in labeled_concepts
-    }
-
-    concept_identifiers_in_fuzzy_order.sort(
-        key=lambda concept_identifier: sort_label_by_concept_identifier.get(
-            concept_identifier,
-            "",
-        ),
-        reverse=(order_mode == ORDER_MODE_REVERSE_ALPHABETICAL),
+    return SearchResultSet(
+        term=term,
+        use_fuzzy=use_fuzzy,
+        similarity_threshold=similarity_threshold,
+        order_mode=order_mode,
+        active_language=active_language or "",
+        system_language=system_language or "",
     )
 
-    return concept_identifiers_in_fuzzy_order
+
+def _edit_distance_to_similarity_threshold(max_edit_distance, term_length):
+    """Convert a max edit distance to an approximate pg_trgm similarity threshold."""
+    if max_edit_distance == 0 or term_length == 0:
+        return 1.0
+    ratio = max_edit_distance / max(term_length, 1)
+    return max(0.1, round(1.0 - ratio, 2))
 
 
 def build_concept_ids_for_non_fuzzy(labels_queryset, order_mode):
-    base_query = labels_queryset.values("resourceinstance").annotate(
-        sort_label=Min(Lower("appellative_status_ascribed_name_content")),
+    """Return a SearchResultSet for browsing (no search term)."""
+    return SearchResultSet(
+        term=None,
+        use_fuzzy=False,
+        similarity_threshold=1.0,
+        order_mode=order_mode,
+        active_language="",
+        system_language="",
     )
 
-    if order_mode == ORDER_MODE_ALPHABETICAL:
-        ordered_query = base_query.order_by("sort_label", "resourceinstance")
-    elif order_mode == ORDER_MODE_REVERSE_ALPHABETICAL:
-        ordered_query = base_query.order_by("-sort_label", "resourceinstance")
-    else:
-        ordered_query = base_query.order_by("resourceinstance")
 
-    return ordered_query.values_list("resourceinstance", flat=True)
+class SearchResultSet:
+    """Paginator-compatible object backed by raw SQL against the GIN trigram index.
 
-
-def score_concept_for_term(
-    concept_data,
-    search_term,
-    active_language,
-    system_language,
-):
-    search_term_lower = (search_term or "").lower()
-    best_score = None
-
-    for label_data in concept_data.get("labels", []):
-        raw_label_value = label_data.get("value") or ""
-        label_value_lower = raw_label_value.lower()
-
-        if not search_term_lower:
-            text_match_rank = 3
-        elif label_value_lower == search_term_lower:
-            text_match_rank = 0
-        elif label_value_lower.startswith(search_term_lower):
-            text_match_rank = 1
-        elif search_term_lower in label_value_lower:
-            text_match_rank = 2
-        else:
-            text_match_rank = 3
-
-        label_language_identifier = label_data.get("language_id")
-        if label_language_identifier == active_language:
-            language_rank = 0
-        elif label_language_identifier == system_language:
-            language_rank = 1
-        else:
-            language_rank = 2
-
-        raw_label_rank = label_data.get("rank")
-        if isinstance(raw_label_rank, int):
-            label_rank = -raw_label_rank
-        else:
-            label_rank = 0
-
-        valuetype = label_data.get("valuetype_id") or VALUETYPE_OTHER
-        match_ranks_for_type = MATCH_RANK_TABLE.get(
-            valuetype,
-            MATCH_RANK_TABLE[VALUETYPE_OTHER],
-        )
-        match_rank = match_ranks_for_type[text_match_rank]
-
-        label_score = (
-            match_rank,
-            language_rank,
-            label_rank,
-            label_value_lower,
-        )
-
-        if best_score is None or label_score < best_score:
-            best_score = label_score
-
-    return best_score
-
-
-def _fetch_labels_for_scoring(concept_ids):
-    """Fetch lightweight label data for ranking without full serialization."""
-    label_data = defaultdict(list)
-    label_tiles = (
-        TileModel.objects.filter(
-            nodegroup_id=CONCEPT_NAME_NODEGROUP,
-            resourceinstance_id__in=concept_ids,
-        )
-        .exclude(**{f"data__{CONCEPT_NAME_TYPE_NODE}": None})
-        .exclude(**{f"data__{CONCEPT_NAME_LANGUAGE_NODE}": None})
-        .values("resourceinstance_id", "data")
-    )
-
-    for tile in label_tiles.iterator():
-        concept_id = str(tile["resourceinstance_id"])
-        data = tile["data"]
-        type_refs = data.get(CONCEPT_NAME_TYPE_NODE)
-        valuetype_id = (
-            ConceptBuilder.find_valuetype_id_from_uri(type_refs[0]["uri"])
-            if type_refs
-            else "unknown"
-        )
-        label_data[concept_id].append(
-            {
-                "value": data.get(CONCEPT_NAME_CONTENT_NODE),
-                "language_id": data.get(CONCEPT_NAME_LANGUAGE_NODE),
-                "valuetype_id": valuetype_id,
-            }
-        )
-
-    return label_data
-
-
-def rank_concepts_for_unsorted_term(
-    concept_identifiers,
-    search_term,
-    active_language,
-    system_language,
-):
-    """Return concept IDs ranked by relevance to the search term.
-
-    Uses lightweight label fetching rather than full concept serialization
-    so that only a single label query is needed regardless of result count.
+    Supports .count() and slice access (__getitem__) as required by
+    Django's Paginator.  All SQL uses ``tiledata ->> 'node_id'`` directly
+    so PostgreSQL can use the GIN trigram index for fast filtering.
     """
-    if not concept_identifiers:
-        return []
 
-    concept_id_strings = [str(cid) for cid in concept_identifiers]
-    label_data_by_concept = _fetch_labels_for_scoring(concept_id_strings)
+    CONTENT_COL = f"(tiledata ->> '{CONCEPT_NAME_CONTENT_NODE}')"
+    TYPE_COL = f"(tiledata -> '{CONCEPT_NAME_TYPE_NODE}' -> 0 ->> 'uri')"
+    LANG_COL = f"(tiledata ->> '{CONCEPT_NAME_LANGUAGE_NODE}')"
+    NODEGROUP_FILTER = f"nodegroupid = '{CONCEPT_NAME_NODEGROUP}'"
 
-    scored_ids = []
-    for concept_index, concept_identifier in enumerate(concept_identifiers):
-        labels = label_data_by_concept.get(str(concept_identifier), [])
-        concept_score = score_concept_for_term(
-            {"labels": labels},
-            search_term,
-            active_language,
-            system_language,
-        )
-        scored_ids.append((concept_score, concept_index, concept_identifier))
+    def __init__(
+        self,
+        term,
+        use_fuzzy,
+        similarity_threshold,
+        order_mode,
+        active_language,
+        system_language,
+        exact_match=False,
+    ):
+        self.term = term
+        self.use_fuzzy = use_fuzzy
+        self.similarity_threshold = similarity_threshold
+        self.order_mode = order_mode
+        self.active_language = active_language
+        self.system_language = system_language
+        self.exact_match = exact_match
+        self._count_cache = None
 
-    scored_ids.sort(key=lambda entry: (entry[0], entry[1]))
-    return [entry[2] for entry in scored_ids]
+    def _where_clause(self):
+        """Return (sql_fragment, params) for the WHERE filter."""
+        base = self.NODEGROUP_FILTER
+
+        if self.term is None:
+            return base, []
+
+        if self.exact_match:
+            return f"{base} AND {self.CONTENT_COL} = %s", [self.term]
+
+        if self.use_fuzzy:
+            # ILIKE uses the GIN trigram index; %% is the pg_trgm similarity
+            # operator (escaped for cursor.execute parameter substitution).
+            return (
+                f"{base} AND ({self.CONTENT_COL} ILIKE %s"
+                f" OR {self.CONTENT_COL} %% %s)",
+                [f"%{self.term}%", self.term],
+            )
+
+        return f"{base} AND {self.CONTENT_COL} ILIKE %s", [f"%{self.term}%"]
+
+    def _build_base_sql(self):
+        """Build the core query that filters, ranks, and deduplicates."""
+        where_sql, where_params = self._where_clause()
+
+        if self.term is None:
+            return self._build_browse_sql(where_sql, where_params)
+
+        return self._build_search_sql(where_sql, where_params)
+
+    def _build_browse_sql(self, where_sql, where_params):
+        """SQL for browsing without a search term."""
+        if self.order_mode == ORDER_MODE_ALPHABETICAL:
+            order_clause = "ORDER BY sort_label ASC, resourceinstanceid"
+        elif self.order_mode == ORDER_MODE_REVERSE_ALPHABETICAL:
+            order_clause = "ORDER BY sort_label DESC, resourceinstanceid"
+        else:
+            order_clause = "ORDER BY resourceinstanceid"
+
+        sql = f"""
+            SELECT resourceinstanceid
+            FROM (
+                SELECT
+                    resourceinstanceid,
+                    MIN(LOWER({self.CONTENT_COL})) AS sort_label
+                FROM tiles
+                WHERE {where_sql}
+                GROUP BY resourceinstanceid
+            ) grouped
+            {order_clause}
+        """
+        return sql, where_params
+
+    def _build_search_sql(self, where_sql, where_params):
+        """SQL for term search with ranking."""
+        if self.order_mode == ORDER_MODE_UNSORTED:
+            order_clause = "ORDER BY best_rank, sort_label"
+        elif self.order_mode == ORDER_MODE_ALPHABETICAL:
+            order_clause = "ORDER BY sort_label ASC, resourceinstanceid"
+        else:
+            order_clause = "ORDER BY sort_label DESC, resourceinstanceid"
+
+        sql = f"""
+            SELECT resourceinstanceid
+            FROM (
+                SELECT
+                    resourceinstanceid,
+                    MIN(
+                        (CASE
+                            WHEN ({self.TYPE_COL}) = %s
+                                 AND ({self.CONTENT_COL}) ILIKE %s
+                            THEN 0
+                            WHEN ({self.TYPE_COL}) = %s
+                                 AND ({self.CONTENT_COL}) ILIKE %s
+                            THEN 1
+                            WHEN ({self.TYPE_COL}) = %s
+                                 AND ({self.CONTENT_COL}) ILIKE %s
+                            THEN 2
+                            WHEN ({self.TYPE_COL}) = %s
+                                 AND ({self.CONTENT_COL}) ILIKE %s
+                            THEN 3
+                            WHEN ({self.TYPE_COL}) = %s
+                                 AND ({self.CONTENT_COL}) ILIKE %s
+                            THEN 4
+                            WHEN ({self.CONTENT_COL}) ILIKE %s
+                            THEN 4
+                            WHEN ({self.TYPE_COL}) = %s
+                                 AND ({self.CONTENT_COL}) ILIKE %s
+                            THEN 5
+                            WHEN ({self.CONTENT_COL}) ILIKE %s
+                            THEN 5
+                            WHEN ({self.CONTENT_COL}) ILIKE %s
+                            THEN 6
+                            ELSE 7
+                        END) * 1000
+                        + (CASE
+                            WHEN ({self.LANG_COL}) = %s THEN 0
+                            WHEN ({self.LANG_COL}) = %s THEN 1
+                            ELSE 2
+                        END)
+                    ) AS best_rank,
+                    MIN(LOWER({self.CONTENT_COL})) AS sort_label
+                FROM tiles
+                WHERE {where_sql}
+                GROUP BY resourceinstanceid
+            ) ranked
+            {order_clause}
+        """
+
+        rank_params = [
+            PREF_LABEL_URI,
+            self.term,  # prefLabel exact
+            ALT_LABEL_URI,
+            self.term,  # altLabel exact
+            PREF_LABEL_URI,
+            f"{self.term}%",  # prefLabel prefix
+            PREF_LABEL_URI,
+            f"%{self.term}%",  # prefLabel contains
+            ALT_LABEL_URI,
+            f"{self.term}%",  # altLabel prefix
+            self.term,  # any exact
+            ALT_LABEL_URI,
+            f"%{self.term}%",  # altLabel contains
+            f"{self.term}%",  # any prefix
+            f"%{self.term}%",  # any contains
+            self.active_language,
+            self.system_language,
+        ]
+
+        params = rank_params + where_params
+        return sql, params
+
+    def count(self):
+        if self._count_cache is not None:
+            return self._count_cache
+
+        where_sql, where_params = self._where_clause()
+        sql = f"""
+            SELECT COUNT(DISTINCT resourceinstanceid)
+            FROM tiles
+            WHERE {where_sql}
+        """
+        with connection.cursor() as cursor:
+            cursor.execute(sql, where_params)
+            self._count_cache = cursor.fetchone()[0]
+        return self._count_cache
+
+    def __getitem__(self, key):
+        if isinstance(key, slice):
+            offset = key.start or 0
+            limit = (key.stop or offset) - offset
+            if limit <= 0:
+                return []
+
+            base_sql, base_params = self._build_base_sql()
+            sql = f"{base_sql} LIMIT %s OFFSET %s"
+            params = base_params + [limit, offset]
+
+            with connection.cursor() as cursor:
+                cursor.execute(sql, params)
+                return [row[0] for row in cursor.fetchall()]
+
+        raise TypeError("SearchResultSet only supports slice indexing.")
