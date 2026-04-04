@@ -140,14 +140,17 @@ const metaStringLabel = computed<MetaStringText>(() => ({
                     node-alias="statement_data_assignment_object_used"
                     :graph-slug="props.graphSlug"
                     :aliased-node-data="
-                        rowData.statement_data_assignment_object_used
+                        rowData.aliased_data
+                            .statement_data_assignment_object_used
                     "
                     :mode="VIEW"
                 />
                 <GenericWidget
                     node-alias="statement_data_assignment_actor"
                     :graph-slug="props.graphSlug"
-                    :aliased-node-data="rowData.statement_data_assignment_actor"
+                    :aliased-node-data="
+                        rowData.aliased_data.statement_data_assignment_actor
+                    "
                     :mode="VIEW"
                 />
             </template>

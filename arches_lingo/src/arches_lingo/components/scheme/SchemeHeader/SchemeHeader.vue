@@ -92,6 +92,7 @@ const schemeResource = ref<Labellable>();
 const label = ref<Label>();
 const data = ref<SchemeHeader>();
 const labelCounts = ref<LanguageLabelCount[]>([]);
+const labelCountsLoading = ref(false);
 const isLoading = ref(true);
 const showExportDialog = ref(false);
 const exportDialogKey = ref(0);
@@ -143,9 +144,14 @@ watch(
 
             extractSchemeHeaderData(resource);
 
-            fetchSchemeLabelCounts(props.resourceInstanceId).then((counts) => {
-                labelCounts.value = counts;
-            });
+            labelCountsLoading.value = true;
+            fetchSchemeLabelCounts(props.resourceInstanceId)
+                .then((counts) => {
+                    labelCounts.value = counts;
+                })
+                .finally(() => {
+                    labelCountsLoading.value = false;
+                });
         } catch (error) {
             toast.add({
                 severity: ERROR,
@@ -502,8 +508,14 @@ function onLifecycleStateChange(
 
                 <div class="header-row metadata-container">
                     <div class="language-chip-container">
+                        <Skeleton
+                            v-if="labelCountsLoading"
+                            width="12rem"
+                            height="2rem"
+                        />
                         <span
                             v-for="entry in labelCounts"
+                            v-else
                             :key="entry.code"
                             class="scheme-language"
                         >
