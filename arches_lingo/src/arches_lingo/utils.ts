@@ -130,6 +130,19 @@ export function treeFromSchemes(
                 ? item.id
                 : buildOccurrenceKey(schemeId, pathIds);
 
+        const concept = item as Concept;
+        // leaf=false tells PrimeVue Tree the node has children that haven't
+        // been loaded yet. For schemes and fully-loaded concepts use undefined
+        // (PrimeVue defaults to checking children array length).
+        let leaf: boolean | undefined;
+        if (!("top_concepts" in item)) {
+            if (concept.has_narrower && !concept.childrenLoaded) {
+                leaf = false;
+            } else if (!concept.has_narrower && !concept.narrower?.length) {
+                leaf = true;
+            }
+        }
+
         return {
             key,
             label: getItemLabel(
@@ -144,6 +157,7 @@ export function treeFromSchemes(
             },
             icon: getItemIcon(item),
             iconLabel: getIconLabel(item, iconLabels),
+            ...(leaf !== undefined ? { leaf } : {}),
         };
     }
 

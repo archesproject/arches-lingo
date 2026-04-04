@@ -33,11 +33,52 @@ from arches_lingo.utils.dashboard import (
 
 class ConceptTreeView(AnonymousAccessMixin, View):
     def get(self, request):
-        builder = ConceptBuilder()
+        builder = ConceptBuilder(shallow=True)
         data = {
-            "schemes": [builder.serialize_scheme(scheme) for scheme in builder.schemes]
+            "schemes": [
+                builder.serialize_scheme(scheme, shallow=True)
+                for scheme in builder.schemes
+            ]
         }
         return JSONResponse(data)
+
+
+class ConceptChildrenView(AnonymousAccessMixin, View):
+    def get(self, request, concept_id):
+        builder = ConceptBuilder.for_concept_children(str(concept_id))
+        children = [
+            builder.serialize_concept_shallow(child_id)
+            for child_id in sorted(
+                builder.narrower_concepts.get(str(concept_id), set())
+            )
+        ]
+        return JSONResponse({"children": children})
+
+
+class ConceptAncestorsView(AnonymousAccessMixin, View):
+    def get(self, request, concept_id):
+        concept_id_str = str(concept_id)
+        builder = ConceptBuilder([concept_id_str], include_parents=True)
+        paths = builder.find_paths_to_root([concept_id_str], concept_id_str)
+
+        ancestor_paths = []
+        for path in paths:
+            search_results = []
+            for node_id in path:
+                scheme = builder.lookup_scheme(node_id)
+                if scheme is not None:
+                    search_results.append(
+                        builder.serialize_scheme(scheme, children=False)
+                    )
+                else:
+                    search_results.append(
+                        builder.serialize_concept(
+                            node_id, parents=False, children=False
+                        )
+                    )
+            ancestor_paths.append({"searchResults": search_results})
+
+        return JSONResponse({"paths": ancestor_paths})
 
 
 class ValueSearchView(ConceptTreeView):

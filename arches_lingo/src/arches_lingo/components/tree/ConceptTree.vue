@@ -5,6 +5,7 @@ import {
     nextTick,
     onMounted,
     provide,
+    reactive,
     ref,
     watch,
 } from "vue";
@@ -206,6 +207,14 @@ provide(
     "resourceInstanceLifecycleStateIsRetiredById",
     resourceInstanceLifecycleStateIsRetiredById,
 );
+
+// Tracks occurrence keys of tree nodes whose children are currently being
+// fetched so the tree can show a loading indicator on the relevant expand
+// toggle.  Using the occurrence key (rather than the concept ID) means that
+// when a polyhierarchical concept appears in multiple places in the tree,
+// only the one node that was actually clicked shows the spinner.
+const loadingNodeKeys = reactive(new Set<string>());
+provide("loadingNodeKeys", loadingNodeKeys);
 
 const sortIcon = computed(() => {
     const direction = shouldSortByAscending.value ? "down" : "up";
@@ -885,6 +894,29 @@ async function onNodeSelect(node: TreeNode) {
         scrollOccurrenceIntoView(primaryOriginalKey);
     }
 }
+
+async function onNodeExpand(node: TreeNode) {
+    const conceptId: string = node.data?.id;
+    if (!conceptId || node.data?.top_concepts !== undefined) return;
+
+    const concept = conceptStore.findConcept(conceptId);
+    if (!concept || concept.childrenLoaded) return;
+
+    const nodeKey: string = node.key as string;
+    loadingNodeKeys.add(nodeKey);
+    try {
+        await conceptStore.loadChildren(conceptId);
+    } catch {
+        toast.add({
+            severity: ERROR,
+            life: DEFAULT_ERROR_TOAST_LIFE,
+            summary: $gettext("Unable to fetch concepts"),
+            detail: $gettext("Failed to load child concepts."),
+        });
+    } finally {
+        loadingNodeKeys.delete(nodeKey);
+    }
+}
 </script>
 
 <template>
@@ -958,8 +990,18 @@ async function onNodeSelect(node: TreeNode) {
                 nodeLabel: {
                     style: { textWrap: 'nowrap' },
                 },
+                nodeToggleButton: ({
+                    instance,
+                }: TreePassThroughMethodOptions) => ({
+                    class: {
+                        'node-children-loading': loadingNodeKeys.has(
+                            instance.node?.key as string,
+                        ),
+                    },
+                }),
             }"
             @node-select="onNodeSelect"
+            @node-expand="onNodeExpand"
         >
             <template #default="slotProps">
                 <div :id="`tree-node-${slotProps.node.key}`">
@@ -1079,5 +1121,20 @@ async function onNodeSelect(node: TreeNode) {
 
 :deep(.p-tree-node-selected.new-node) {
     background: var(--p-yellow-500) !important;
+}
+
+/* Spin the expand toggle icon while children are being fetched */
+:deep(.node-children-loading .p-tree-node-toggle-icon) {
+    animation: tree-toggle-spin 0.6s linear infinite;
+    pointer-events: none;
+}
+
+@keyframes tree-toggle-spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
 }
 </style>
