@@ -306,7 +306,7 @@ class AdvancedSearchEvaluatorTests(TestCase):
 
     def test_invalid_facet_returns_empty(self):
         result = self.evaluator.evaluate({"facet": "nonexistent", "value": "x"})
-        self.assertEqual(result, [])
+        self.assertFalse(list(result))
 
     def test_group_no_conditions_returns_all(self):
         result = self.evaluator.evaluate({"operator": "and", "conditions": []})
@@ -515,11 +515,11 @@ class AdvancedSearchEvaluatorTests(TestCase):
 
     def test_facet_concept_set_empty_returns_empty(self):
         result = self.evaluator.evaluate({"facet": "concept_set", "value": ""})
-        self.assertEqual(result, [])
+        self.assertFalse(list(result))
 
     def test_facet_concept_set_nonexistent_returns_empty(self):
         result = self.evaluator.evaluate({"facet": "concept_set", "value": "99999"})
-        self.assertEqual(result, [])
+        self.assertFalse(list(result))
 
     def test_and_group_intersection(self):
         """AND of label=Alpha + note=definition → only concept A."""
