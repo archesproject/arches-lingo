@@ -601,7 +601,12 @@ export const fetchControlledListOptions = async (controlledListId: string) => {
     return parsed;
 };
 
-export const importThesaurus = async (file: File, overwriteOption: string) => {
+export const importThesaurus = async (
+    file: File,
+    overwriteOption: string,
+    importIdentifiers: boolean = false,
+    namespaceTemplate: string = "",
+) => {
     const formData = new FormData();
     formData.append("action", "start");
     formData.append("mode", "ui");
@@ -621,6 +626,13 @@ export const importThesaurus = async (file: File, overwriteOption: string) => {
         const loadId = parsed.result.load_id;
         formData.append("load_id", loadId);
         formData.append("overwrite_option", overwriteOption);
+        formData.append(
+            "import_identifiers",
+            importIdentifiers ? "true" : "false",
+        );
+        if (importIdentifiers && namespaceTemplate) {
+            formData.append("namespace_template", namespaceTemplate);
+        }
         formData.append("file", file);
         formData.set("action", "write");
         // Subsequent 'Write' request to actually upload the file and start the import
