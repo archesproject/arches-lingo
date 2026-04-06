@@ -354,10 +354,6 @@ class LingoResourceImporter(BaseImportModule):
             if tiles_to_load:
                 LoadStaging.objects.bulk_create(tiles_to_load)
 
-        # cursor.execute(
-        #     """CALL __arches_check_tile_cardinality_violation_for_load(%s)""",
-        #     [self.loadid],
-        # )
         cursor.execute(
             """
                 INSERT INTO load_errors (type, source, error, loadid, nodegroupid)
