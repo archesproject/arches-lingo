@@ -51,7 +51,7 @@ class ImportTests(TransactionTestCase):
         cls.file_name = "skos_rdf_import_example.xml"
         cls.fixture_path = Path(PROJECT_TEST_ROOT) / "fixtures" / "data" / cls.file_name
 
-    def _assert_resources_loaded(self):
+    def _assert_resources_loaded(self, import_identifiers=False):
         schemes = ResourceTileTree.get_tiles(graph_slug="scheme")
         concepts = ResourceTileTree.get_tiles(graph_slug="concept")
         self.assertEqual(schemes.count(), 1)
@@ -72,9 +72,13 @@ class ImportTests(TransactionTestCase):
         self.assertIn("warrant assertion event", str(label_tile_trees[0].aliased_data))
 
         # URIs and Identifiers
-        # These nodes should NOT be populated, scheme will not have these data imported
-        self.assertIsNone(test_scheme.aliased_data.uri)
-        self.assertEqual(len(test_scheme.aliased_data.identifier), 0)
+        if import_identifiers:
+            # Despite importing identifiers, this scheme only has an RDM default identifier, which is not imported
+            self.assertIsNone(test_scheme.aliased_data.uri)
+            self.assertEqual(len(test_scheme.aliased_data.identifier), 0)
+        else:
+            self.assertIsNone(test_scheme.aliased_data.uri)
+            self.assertEqual(len(test_scheme.aliased_data.identifier), 0)
 
         ### Concepts:
 
@@ -93,9 +97,18 @@ class ImportTests(TransactionTestCase):
         self.assertIn("warrant assertion event", str(label_tile_trees[0].aliased_data))
 
         # URIs and Identifiers
-        # These nodes should NOT be populated, indentifiers instead should be imported as matched concepts
-        self.assertIsNone(junk_sculpture.aliased_data.uri)
-        self.assertEqual(len(junk_sculpture.aliased_data.identifier), 0)
+        if import_identifiers:
+            uri = "http://vocab.getty.edu/aat/300047196"
+            identifier = "300047196"
+            self.assertIn(uri, str(junk_sculpture.aliased_data.uri.aliased_data))
+            identifier_tile = str(
+                junk_sculpture.aliased_data.identifier[0].aliased_data
+            )
+            self.assertIn(identifier, identifier_tile)
+            self.assertNotIn(uri, identifier_tile)
+        else:
+            self.assertIsNone(junk_sculpture.aliased_data.uri)
+            self.assertEqual(len(junk_sculpture.aliased_data.identifier), 0)
 
         # Statements
         statement_tile_trees = junk_sculpture.aliased_data.statement
@@ -123,10 +136,13 @@ class ImportTests(TransactionTestCase):
         parent = hierarchy.classification_status_ascribed_classification
         self.assertEqual(parent.name["en"], "Top Concept")
 
-        # Matched Concept
-        # we expect two matched concepts - one from the skos:exactMatch of the identifier,
-        # and a skos:relatedMatch
-        self.assertEqual(len(junk_sculpture.aliased_data.match_status), 2)
+        # Matched Concepts
+        # import_identifiers=False: identifier becomes exactMatch + relatedMatch
+        # import_identifiers=True: identifier becomes URI/identifier; only relatedMatch remains
+        expected_match_count = 1 if import_identifiers else 2
+        self.assertEqual(
+            len(junk_sculpture.aliased_data.match_status), expected_match_count
+        )
 
     def _assert_typed_relation_loaded(self):
         """Assert that a GVP typed associative relation (gvp:aat2285_practiced-studied_by)
@@ -189,6 +205,28 @@ class ImportTests(TransactionTestCase):
         self.assertEqual(ResourceTileTree.get_tiles(graph_slug="scheme").count(), 0)
         self.assertEqual(ResourceTileTree.get_tiles(graph_slug="concept").count(), 0)
 
+        # 1b. Test Import from SKOS via management command path with identifier import enabled
+        management.call_command(
+            "packages",
+            operation="import_lingo_resources",
+            source=str(self.fixture_path),
+            overwrite=True,
+            import_identifiers=True,
+            namespace_template="https://example.org/schemes/<scheme_identifier>/concepts/<concept_identifier>",
+            stdout=stdout,
+        )
+        self._assert_resources_loaded(import_identifiers=True)
+        print("Test import from CLI with identifiers completed.\n")
+
+        # Reverse load to clear out the loaded resources
+        loadid = LoadEvent.objects.first().loadid
+        importer = LingoResourceImporter(load_id=loadid, userid=1)
+        importer.reverse_load(loadid=loadid)
+
+        # Confirm resources have been removed before moving on to next test
+        self.assertEqual(ResourceTileTree.get_tiles(graph_slug="scheme").count(), 0)
+        self.assertEqual(ResourceTileTree.get_tiles(graph_slug="concept").count(), 0)
+
         # 2. Test Import from SKOS via HTTP Request path
         self.client.login(username="admin", password="admin")
         start_event0 = LoadEvent.objects.create(
@@ -201,6 +239,10 @@ class ImportTests(TransactionTestCase):
         request0.POST["module"] = str(self.moduleid)
         request0.POST["overwrite_option"] = "overwrite"
         request0.POST["action"] = "write"
+        request0.POST["import_identifiers"] = "true"
+        request0.POST["namespace_template"] = (
+            "https://example.org/schemes/<scheme_identifier>/concepts/<concept_identifier>"
+        )
 
         with open(self.fixture_path, "rb") as file:
             file_data = file.read()
@@ -219,6 +261,7 @@ class ImportTests(TransactionTestCase):
         self.assertTrue(write_request0["success"])
         self._assert_resources_loaded()
         self._assert_typed_relation_loaded()
+        self._assert_resources_loaded(import_identifiers=True)
         print("Test import from Lingo UI completed.\n")
 
         # Reverse load to clear out the loaded resources
@@ -255,11 +298,15 @@ class ImportTests(TransactionTestCase):
         request1.POST["overwrite_option"] = "overwrite"
         request1.POST["action"] = "write"
         request1.POST["scheme"] = str(test_scheme.concept_id)
+        request1.POST["import_identifiers"] = "true"
+        request1.POST["namespace_template"] = (
+            "https://example.org/schemes/<scheme_identifier>/concepts/<concept_identifier>"
+        )
 
         importer = LingoResourceImporter(request=request1)
         write_request1 = importer.write(request=request1)
         self.assertTrue(write_request1["success"])
-        self._assert_resources_loaded()
+        self._assert_resources_loaded(import_identifiers=True)
         print("Test migrate from RDM completed.\n")
         importer.reverse_load(loadid=start_event1.loadid)
 

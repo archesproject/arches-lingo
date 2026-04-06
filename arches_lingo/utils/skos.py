@@ -115,6 +115,12 @@ class SKOSReader(SKOSReader):
                         .replace(DCTERMS, "")
                     )
 
+                    if predicate_str in DCTERMS.identifier and str(scheme_pk) in str(
+                        object
+                    ):
+                        # Don't import RDM default identifiers
+                        continue
+
                     if (
                         predicate_str in self.dcterms_value_types
                         or predicate_str in self.skos_note_and_label_types
@@ -194,6 +200,13 @@ class SKOSReader(SKOSReader):
                                 .replace(SKOS, "")
                                 .replace(DCTERMS, "")
                             )
+
+
+                        if predicate_str in DCTERMS.identifier and str(
+                            concept_pk
+                        ) in str(object):
+                            # Don't import RDM default identifiers
+                            continue
 
                         if predicate == SKOS.topConceptOf and not new_concept.get(
                             "is_top_concept"
