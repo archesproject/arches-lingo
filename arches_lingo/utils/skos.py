@@ -1,8 +1,6 @@
 import uuid
 from collections import defaultdict
-from django.db import transaction
-from django.db.models import Max, Q
-from django.utils import translation
+from django.db.models import Q
 from rdflib import Literal, Namespace, RDF, URIRef
 from rdflib.namespace import SKOS, DCTERMS
 from rdflib.graph import Graph
@@ -132,6 +130,7 @@ class SKOSReader(SKOSReader):
                         new_concept["tile_data"].append(
                             top_concept_mock_tiles.get(concept_pk)
                         )
+                        new_concept["is_top_concept"] = True
 
                     mock_tile = (
                         LingoResourceImporter.create_mock_tile_from_relationship(
@@ -157,7 +156,29 @@ class SKOSReader(SKOSReader):
                                 .replace(DCTERMS, "")
                             )
 
-                        if predicate in [
+                        if predicate == SKOS.topConceptOf and not new_concept.get(
+                            "is_top_concept"
+                        ):
+                            # SKOS.topConceptOf is the inverse of SKOS.hasTopConcept.
+                            # Some thesauri (e.g. Getty AAT) only declare this on the
+                            # concept side rather than using hasTopConcept on the scheme.
+                            # Guard against thesauri that declare both hasTopConcept on
+                            # the scheme and topConceptOf on the concept, which would
+                            # cause cardinality issues.
+                            scheme_of_top_concept_pk = (
+                                self.generate_uuidv5_from_subject(baseuuid, object)
+                            )
+                            top_concept_mock_tile = LingoResourceImporter.create_mock_tile_from_relationship(
+                                {
+                                    "resourceId": scheme_of_top_concept_pk,
+                                    "node_alias": "top_concept_of",
+                                    "nodegroup_alias": "top_concept_of",
+                                    "resourceinstanceid": concept_pk,
+                                }
+                            )
+                            new_concept["tile_data"].append(top_concept_mock_tile)
+                            new_concept["is_top_concept"] = True
+                        elif predicate in [
                             SKOS.broader,
                             SKOS.narrower,
                             SKOS.related,
@@ -236,6 +257,46 @@ class SKOSReader(SKOSReader):
 
             return self.schemes, self.concepts
 
+    def language_exists(self, rdf_tag, allowed_languages):
+        """
+        Override the parent implementation to fix two issues with extended BCP-47
+        language tags (e.g. zh-latn-pinyin-x-notone):
+
+        1. Case mismatch: arches core's capitalize_region() uppercases only the
+           second subtag ('zh-latn-...' → 'zh-LATN-...'), but Language records
+           stored from ensure_aat_languages.py use fully lower-case codes.  A
+           case-insensitive pre-check avoids calling get_language_info when the
+           language is already in the database under a differently-cased key.
+
+        2. Unknown BCP-47 tags: Django's get_language_info() raises KeyError for
+           any tag it does not recognise.  When the parent would raise, we create
+           a minimal Language record and return False so the caller refreshes its
+           allowed_languages cache.
+        """
+        if not (
+            hasattr(rdf_tag, "language")
+            and rdf_tag.language is not None
+            and rdf_tag.language.strip() != ""
+        ):
+            return True
+
+        lower_code = rdf_tag.language.lower()
+        if any(code.lower() == lower_code for code in allowed_languages):
+            return True
+
+        try:
+            return super().language_exists(rdf_tag, allowed_languages)
+        except KeyError:
+            from arches.app.utils.i18n import capitalize_region
+
+            newlang = models.Language()
+            newlang.code = capitalize_region(rdf_tag.language)
+            newlang.name = rdf_tag.language
+            newlang.default_direction = "ltr"
+            newlang.isdefault = False
+            newlang.save()
+            return False
+
     def map_predicate_object_to_mock_tile(
         self,
         object: str | dict,
@@ -255,6 +316,21 @@ class SKOSReader(SKOSReader):
             if object_lang and not self.language_exists(object, self.allowed_languages):
                 for lang in models.Language.objects.all():
                     self.allowed_languages[lang.code] = lang
+        elif isinstance(object, Literal) and object.language:
+            # rdflib Literal carries the language tag directly; extract it here
+            # so the mock tile receives the correct language rather than falling
+            # back to self.default_lang (which would assign English to every label).
+            if not self.language_exists(object, self.allowed_languages):
+                for lang in models.Language.objects.all():
+                    self.allowed_languages[lang.code] = lang
+            # Resolve to the key actually present in allowed_languages (the DB-stored
+            # code may differ in case from the rdflib tag, e.g. 'zh-latn-...' vs
+            # 'zh-LATN-...').  Fall back to the raw tag if not matched.
+            lower_code = object.language.lower()
+            object_lang = next(
+                (code for code in self.allowed_languages if code.lower() == lower_code),
+                object.language,
+            )
 
         val = self.unwrapJsonLiteral(object)
         mock_tile = {
