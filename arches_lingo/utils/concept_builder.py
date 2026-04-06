@@ -2,8 +2,9 @@ import logging
 from collections import defaultdict
 
 from django.contrib.postgres.expressions import ArraySubquery
-from django.db.models import BooleanField, CharField, F, OuterRef, Value
-from django.db.models.expressions import CombinedExpression, RawSQL
+from django.db import connection
+from django.db.models import CharField, F, OuterRef, Value
+from django.db.models.expressions import CombinedExpression
 from django.utils.translation import gettext as _
 
 from arches.app.models.models import (
@@ -211,6 +212,9 @@ class ConceptBuilder:
         The resulting instance has `narrower_concepts`, `labels`,
         `schemes_by_top_concept`, and `guide_term_concepts` populated only for
         the immediate children of `parent_concept_id`.
+
+        Uses separate batch queries instead of correlated subqueries for
+        labels and has_children to avoid O(N * table_scan) execution plans.
         """
         builder = cls.__new__(cls)
         builder.schemes = ResourceInstance.objects.none()
@@ -228,90 +232,78 @@ class ConceptBuilder:
         builder.resource_instance_lifecycle_state_ids_by_resource_instance_id = {}
         builder.lifecycle_state_names_by_id = {}
 
-        # Per-child EXISTS subquery: checks whether any tile records this
-        # child concept as its broader target, i.e. whether the child already
-        # has its own narrower concepts.  The check uses the JSONB @> (contains)
-        # operator with jsonb_build_array/jsonb_build_object so that the JSON
-        # value is constructed dynamically per row without any set-returning
-        # function (which PostgreSQL forbids in correlated WHERE clauses).  This
-        # folds the old separate narrower_exists_map call into the same query,
-        # removing the previous O(n) OR-based containment checks that were very
-        # slow for nodes with many children.
-        #
-        # Column names come from the model metadata because arches uses
-        # Django's legacy "my_fk_field" → "my_fk_fieldid" (no underscore)
-        # column naming, which RawSQL must reference explicitly.
-        _tile_table = TileModel._meta.db_table
-        _nodegroup_col = TileModel._meta.get_field("nodegroup").column
-        _resourceinstance_col = TileModel._meta.get_field("resourceinstance").column
-        _data_col = TileModel._meta.get_field("data").column
-        has_children_sql = RawSQL(
-            f"""
-            EXISTS (
-                SELECT 1
-                FROM "{_tile_table}" sub
-                WHERE sub.{_nodegroup_col} = %s::uuid
-                  AND sub."{_data_col}"->%s
-                      @> jsonb_build_array(
-                          jsonb_build_object(
-                              'resourceId',
-                              "{_tile_table}".{_resourceinstance_col}::text
-                          )
-                      )
-            )
-            """,
-            [
-                CLASSIFICATION_STATUS_NODEGROUP,
-                CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID,
-            ],
-            output_field=BooleanField(),
-        )
-
-        # Load direct children of this concept.
+        # Query 1: Get direct child resource instance IDs.
         child_ids: set[str] = set()
-        broader_tiles = (
-            TileModel.objects.filter(
-                nodegroup_id=CLASSIFICATION_STATUS_NODEGROUP,
-                **{f"{BROADER_LOOKUP}__contains": [{"resourceId": parent_concept_id}]},
-            )
-            .annotate(labels=builder.labels_subquery(CONCEPT_NAME_NODEGROUP))
-            .annotate(has_children=has_children_sql)
-            .values("resourceinstance_id", "labels", "has_children")
-        )
-        for tile in broader_tiles.iterator():
-            child_id = str(tile["resourceinstance_id"])
+        child_tiles = TileModel.objects.filter(
+            nodegroup_id=CLASSIFICATION_STATUS_NODEGROUP,
+            **{f"{BROADER_LOOKUP}__contains": [{"resourceId": parent_concept_id}]},
+        ).values_list("resourceinstance_id", flat=True)
+        for resource_instance_id in child_tiles.iterator():
+            child_id = str(resource_instance_id)
             child_ids.add(child_id)
             builder.narrower_concepts[parent_concept_id].add(child_id)
-            builder.labels[child_id] = tile["labels"]
-            if tile["has_children"]:
-                # Mark this child as having narrower concepts so the frontend
-                # knows to show the expand toggle.  The sentinel value is
-                # sufficient — the actual grandchildren aren't loaded yet.
-                builder.narrower_concepts[child_id].add("__narrower_exists__")
+
+        if not child_ids:
+            return builder
+
+        # Query 2: Batch-fetch labels for all children at once.
+        builder.populate_concept_labels(list(child_ids))
+
+        # Query 3: Batch-check which children have their own narrower
+        # concepts. Uses a single unnest + EXISTS query so the GIN index
+        # on the broader-concept JSONB column is hit once per child_id
+        # instead of running a correlated subquery per outer row.
+        _tile_table = TileModel._meta.db_table
+        _nodegroup_col = TileModel._meta.get_field("nodegroup").column
+        _data_col = TileModel._meta.get_field("data").column
+        with connection.cursor() as cursor:
+            cursor.execute(
+                f"""
+                SELECT child_id
+                FROM unnest(%(child_ids)s::text[]) AS child_id
+                WHERE EXISTS (
+                    SELECT 1
+                    FROM "{_tile_table}" sub
+                    WHERE sub."{_nodegroup_col}" = %(nodegroup)s::uuid
+                      AND sub."{_data_col}"->%(node_id)s
+                          @> jsonb_build_array(
+                              jsonb_build_object('resourceId', child_id)
+                          )
+                )
+                """,
+                {
+                    "child_ids": list(child_ids),
+                    "nodegroup": str(CLASSIFICATION_STATUS_NODEGROUP),
+                    "node_id": str(
+                        CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID
+                    ),
+                },
+            )
+            children_with_narrower = {row[0] for row in cursor.fetchall()}
+
+        for child_id in children_with_narrower:
+            builder.narrower_concepts[child_id].add("__narrower_exists__")
 
         # Track which children are top concepts of any scheme.
-        if child_ids:
-            top_concept_of_tiles = (
-                TileModel.objects.filter(
-                    nodegroup_id=TOP_CONCEPT_OF_NODE_AND_NODEGROUP,
-                    resourceinstance_id__in=child_ids,
-                )
-                .annotate(
-                    top_concept_of=builder.resources_from_tiles(TOP_CONCEPT_OF_LOOKUP)
-                )
-                .values("resourceinstance_id", "top_concept_of")
+        top_concept_of_tiles = (
+            TileModel.objects.filter(
+                nodegroup_id=TOP_CONCEPT_OF_NODE_AND_NODEGROUP,
+                resourceinstance_id__in=child_ids,
             )
-            for tile in top_concept_of_tiles.iterator():
-                top_concept_id = str(tile["resourceinstance_id"])
-                builder.schemes_by_top_concept[top_concept_id].add(
-                    tile["top_concept_of"]
-                )
+            .annotate(
+                top_concept_of=builder.resources_from_tiles(TOP_CONCEPT_OF_LOOKUP)
+            )
+            .values("resourceinstance_id", "top_concept_of")
+        )
+        for tile in top_concept_of_tiles.iterator():
+            top_concept_id = str(tile["resourceinstance_id"])
+            builder.schemes_by_top_concept[top_concept_id].add(tile["top_concept_of"])
 
-            builder.populate_guide_term_concepts(list(child_ids))
-            builder.populate_resource_instance_lifecycle_state_ids(
-                scheme_ids=[],
-                concept_ids=list(child_ids),
-            )
+        builder.populate_guide_term_concepts(list(child_ids))
+        builder.populate_resource_instance_lifecycle_state_ids(
+            scheme_ids=[],
+            concept_ids=list(child_ids),
+        )
 
         return builder
 
