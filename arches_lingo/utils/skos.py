@@ -65,9 +65,10 @@ class SKOSReader(SKOSReader):
         return self._gvp_relation_type_lookup
 
     def extract_concepts_from_skos_for_lingo_import(
-        self, graph, overwrite_options="overwrite"
+        self, graph, overwrite_options="overwrite", import_identifiers=False
     ):
         baseuuid = uuid.uuid4()
+        self.import_identifiers = import_identifiers
         self.allowed_languages = {}
         for lang in models.Language.objects.all():
             self.allowed_languages[lang.code] = lang
@@ -121,7 +122,9 @@ class SKOSReader(SKOSReader):
                         mock_tile = self.map_predicate_object_to_mock_tile(
                             object, predicate_str, isScheme
                         )
-                        if mock_tile:
+                        if isinstance(mock_tile, list):
+                            new_scheme["tile_data"].extend(mock_tile)
+                        elif mock_tile:
                             new_scheme["tile_data"].append(mock_tile)
 
                     elif predicate == SKOS.hasTopConcept:
@@ -303,13 +306,17 @@ class SKOSReader(SKOSReader):
                                 mock_tile = self.map_predicate_object_to_mock_tile(
                                     matched_URI, predicate_str, isScheme
                                 )
-                                if mock_tile:
+                                if isinstance(mock_tile, list):
+                                    new_concept["tile_data"].extend(mock_tile)
+                                elif mock_tile:
                                     new_concept["tile_data"].append(mock_tile)
                         else:
                             mock_tile = self.map_predicate_object_to_mock_tile(
                                 object, predicate_str, isScheme
                             )
-                            if mock_tile:
+                            if isinstance(mock_tile, list):
+                                new_concept["tile_data"].extend(mock_tile)
+                            elif mock_tile:
                                 new_concept["tile_data"].append(mock_tile)
 
                     type_tile = {
@@ -411,7 +418,10 @@ class SKOSReader(SKOSReader):
             "valuetype_id": predicate,
         }
         mock_tile = LingoResourceImporter.create_mock_tile_from_value(
-            mock_tile, isScheme=isScheme, lang_lookup=self.allowed_languages
+            mock_tile,
+            isScheme=isScheme,
+            import_identifiers=self.import_identifiers,
+            lang_lookup=self.allowed_languages,
         )
         return mock_tile
 
