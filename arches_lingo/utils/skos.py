@@ -130,6 +130,7 @@ class SKOSReader(SKOSReader):
                         new_concept["tile_data"].append(
                             top_concept_mock_tiles.get(concept_pk)
                         )
+                        new_concept["is_top_concept"] = True
 
                     mock_tile = (
                         LingoResourceImporter.create_mock_tile_from_relationship(
@@ -155,10 +156,15 @@ class SKOSReader(SKOSReader):
                                 .replace(DCTERMS, "")
                             )
 
-                        if predicate == SKOS.topConceptOf:
+                        if predicate == SKOS.topConceptOf and not new_concept.get(
+                            "is_top_concept"
+                        ):
                             # SKOS.topConceptOf is the inverse of SKOS.hasTopConcept.
                             # Some thesauri (e.g. Getty AAT) only declare this on the
                             # concept side rather than using hasTopConcept on the scheme.
+                            # Guard against thesauri that declare both hasTopConcept on
+                            # the scheme and topConceptOf on the concept, which would
+                            # cause cardinality issues.
                             scheme_of_top_concept_pk = (
                                 self.generate_uuidv5_from_subject(baseuuid, object)
                             )
@@ -171,6 +177,7 @@ class SKOSReader(SKOSReader):
                                 }
                             )
                             new_concept["tile_data"].append(top_concept_mock_tile)
+                            new_concept["is_top_concept"] = True
                         elif predicate in [
                             SKOS.broader,
                             SKOS.narrower,
