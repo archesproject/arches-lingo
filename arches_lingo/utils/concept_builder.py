@@ -74,15 +74,16 @@ class ConceptBuilder:
 
         if concept_ids is None:
             self.top_concepts_map()
+            top_concept_ids = list(self.labels.keys())
             if not shallow:
                 self.narrower_concepts_map()
             else:
-                self.narrower_exists_map()
-            self.populate_guide_term_concepts()
+                self.batch_check_has_narrower(top_concept_ids)
+            self.populate_guide_term_concepts(top_concept_ids if shallow else None)
             self.populate_schemes()
             self.populate_resource_instance_lifecycle_state_ids(
                 scheme_ids=list(self.schemes_by_id.keys()),
-                concept_ids=list(self.labels.keys()),
+                concept_ids=top_concept_ids,
             )
             return
 
@@ -253,36 +254,7 @@ class ConceptBuilder:
         # concepts. Uses a single unnest + EXISTS query so the GIN index
         # on the broader-concept JSONB column is hit once per child_id
         # instead of running a correlated subquery per outer row.
-        _tile_table = TileModel._meta.db_table
-        _nodegroup_col = TileModel._meta.get_field("nodegroup").column
-        _data_col = TileModel._meta.get_field("data").column
-        with connection.cursor() as cursor:
-            cursor.execute(
-                f"""
-                SELECT child_id
-                FROM unnest(%(child_ids)s::text[]) AS child_id
-                WHERE EXISTS (
-                    SELECT 1
-                    FROM "{_tile_table}" sub
-                    WHERE sub."{_nodegroup_col}" = %(nodegroup)s::uuid
-                      AND sub."{_data_col}"->%(node_id)s
-                          @> jsonb_build_array(
-                              jsonb_build_object('resourceId', child_id)
-                          )
-                )
-                """,
-                {
-                    "child_ids": list(child_ids),
-                    "nodegroup": str(CLASSIFICATION_STATUS_NODEGROUP),
-                    "node_id": str(
-                        CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID
-                    ),
-                },
-            )
-            children_with_narrower = {row[0] for row in cursor.fetchall()}
-
-        for child_id in children_with_narrower:
-            builder.narrower_concepts[child_id].add("__narrower_exists__")
+        builder.batch_check_has_narrower(list(child_ids))
 
         # Track which children are top concepts of any scheme.
         top_concept_of_tiles = (
@@ -345,6 +317,44 @@ class ConceptBuilder:
             child_id = str(tile["resourceinstance_id"])
             if broader_concept_id:
                 self.narrower_concepts[broader_concept_id].add(child_id)
+
+    def batch_check_has_narrower(self, concept_ids: list[str]) -> None:
+        """Check which of the given concept IDs have narrower concepts.
+
+        Uses a single unnest + EXISTS query against the GIN-indexed broader
+        concept column, avoiding a full scan of all classification tiles.
+        """
+        if not concept_ids:
+            return
+
+        _tile_table = TileModel._meta.db_table
+        _nodegroup_col = TileModel._meta.get_field("nodegroup").column
+        _data_col = TileModel._meta.get_field("data").column
+        with connection.cursor() as cursor:
+            cursor.execute(
+                f"""
+                SELECT concept_id
+                FROM unnest(%(concept_ids)s::text[]) AS concept_id
+                WHERE EXISTS (
+                    SELECT 1
+                    FROM "{_tile_table}" sub
+                    WHERE sub."{_nodegroup_col}" = %(nodegroup)s::uuid
+                      AND sub."{_data_col}"->%(node_id)s
+                          @> jsonb_build_array(
+                              jsonb_build_object('resourceId', concept_id)
+                          )
+                )
+                """,
+                {
+                    "concept_ids": concept_ids,
+                    "nodegroup": str(CLASSIFICATION_STATUS_NODEGROUP),
+                    "node_id": str(
+                        CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID
+                    ),
+                },
+            )
+            for (concept_id,) in cursor.fetchall():
+                self.narrower_concepts[concept_id].add("__narrower_exists__")
 
     def narrower_concepts_map(self):
         broader_concept_tiles = (
