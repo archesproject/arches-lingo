@@ -36,7 +36,10 @@ import {
 import { RETIRED_LIFECYCLE_STATE_ID } from "@/arches_lingo/constants.ts";
 
 import { useConceptStore } from "@/arches_lingo/stores/useConceptStore.ts";
-import { fetchLifecycleStates } from "@/arches_lingo/api.ts";
+import {
+    fetchLifecycleStates,
+    fetchConceptAncestorPaths,
+} from "@/arches_lingo/api.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 
 import {
@@ -775,7 +778,7 @@ function scrollToItemInTree(
     }
 
     if (!matches.length) {
-        return;
+        return false;
     }
 
     const keysToExpand = new Set<string>();
@@ -825,10 +828,77 @@ function scrollToItemInTree(
     );
 
     if (!shouldScroll) {
-        return;
+        return true;
     }
 
     scrollOccurrenceIntoView(primaryOccurrenceKey);
+    return true;
+}
+
+// Ensures a concept is visible and selected in the tree, loading ancestor
+// levels on demand when the concept has not yet been loaded into the tree.
+//
+// For concepts already present in the tree (common case after in-app
+// navigation) this is just a direct call to scrollToItemInTree.  For deep
+// concepts reached via direct URL or an external link, the ancestor path is
+// fetched from the API and each level is loaded in sequence, showing the
+// spinning caret on each ancestor node while its children are being fetched.
+async function revealConceptInTree(
+    conceptId: string,
+    shouldScroll: boolean,
+    preferredOccurrenceKey?: string,
+) {
+    if (scrollToItemInTree(conceptId, shouldScroll, preferredOccurrenceKey)) {
+        return;
+    }
+
+    let paths: Array<{ searchResults: Array<{ id: string }> }>;
+    try {
+        paths = await fetchConceptAncestorPaths(conceptId);
+    } catch {
+        return;
+    }
+
+    if (!paths?.length || !paths[0].searchResults?.length) return;
+
+    const pathNodes = paths[0].searchResults;
+
+    // pathNodes is ordered root → target:
+    //   [scheme, top_concept, concept, ..., direct_parent, target]
+    // To make `target` visible we must load the children of every ancestor
+    // between the scheme (already loaded at init) and the target itself.
+    // pathNodes.slice(1, -1) gives exactly those intermediate ancestors.
+    const schemeId: string = pathNodes[0].id;
+    const ancestorsToLoad = pathNodes.slice(1, -1);
+
+    for (let i = 0; i < ancestorsToLoad.length; i++) {
+        const ancestor = ancestorsToLoad[i];
+        if (conceptStore.findConcept(ancestor.id)?.childrenLoaded) continue;
+
+        // The occurrence key for the ancestor at position i in ancestorsToLoad
+        // is pathNodes[i+1], so its path from the scheme root is
+        // pathNodes[1..i+1] (the concept IDs below the scheme down to here).
+        const pathIds = pathNodes.slice(1, i + 2).map((n) => n.id);
+        const occurrenceKey = `${schemeId}::${pathIds.join(">")}`;
+
+        loadingNodeKeys.add(occurrenceKey);
+        try {
+            await conceptStore.loadChildren(ancestor.id);
+        } catch {
+            toast.add({
+                severity: ERROR,
+                life: DEFAULT_ERROR_TOAST_LIFE,
+                summary: $gettext("Unable to fetch concepts"),
+                detail: $gettext("Failed to load concept path."),
+            });
+            return;
+        } finally {
+            loadingNodeKeys.delete(occurrenceKey);
+        }
+        await nextTick();
+    }
+
+    scrollToItemInTree(conceptId, shouldScroll, preferredOccurrenceKey);
 }
 
 async function selectNodeFromRoute(
@@ -864,13 +934,40 @@ async function selectNodeFromRoute(
         preferredOccurrenceKey = priorSelectedPrimaryKey ?? undefined;
     }
 
-    scrollToItemInTree(routeNodeId, shouldScroll, preferredOccurrenceKey);
+    await revealConceptInTree(
+        routeNodeId,
+        shouldScroll,
+        preferredOccurrenceKey,
+    );
 
     await ensureFilterParentsExpanded();
 }
 
 async function onNodeSelect(node: TreeNode) {
     if (node.data.id === NEW) return;
+
+    // When a concept with unloaded children is selected, prefetch the children
+    // immediately so they are ready by the time the user expands.  This also
+    // drives the spinning caret while the fetch is in progress, matching the
+    // behaviour the user already gets when clicking the expand toggle directly.
+    const conceptId: string = node.data?.id;
+    const isConcept = node.data?.top_concepts === undefined;
+    const concept = isConcept ? conceptStore.findConcept(conceptId) : null;
+    if (concept && !concept.childrenLoaded && concept.has_narrower) {
+        const nodeKey = node.key as string;
+        loadingNodeKeys.add(nodeKey);
+        conceptStore
+            .loadChildren(conceptId)
+            .catch(() => {
+                toast.add({
+                    severity: ERROR,
+                    life: DEFAULT_ERROR_TOAST_LIFE,
+                    summary: $gettext("Unable to fetch concepts"),
+                    detail: $gettext("Failed to load child concepts."),
+                });
+            })
+            .finally(() => loadingNodeKeys.delete(nodeKey));
+    }
 
     const selectedKeysBeforeNavigation = { ...selectedKeys.value };
 
