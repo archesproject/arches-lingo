@@ -9,7 +9,7 @@ from django.views.generic import View
 from arches.app.models.models import ResourceInstance
 from arches.app.utils.response import JSONErrorResponse, JSONResponse
 
-from arches_querysets.models import ResourceTileTree, TileTree
+from arches_querysets.models import ResourceTileTree
 from arches_lingo.mixins.permissions import AnonymousAccessMixin, LingoEditorMixin
 from arches_lingo.utils.concept_builder import ConceptBuilder
 from arches_lingo.utils.concept_lifecycle import (
@@ -20,9 +20,9 @@ from arches_lingo.utils.concept_lifecycle import (
 )
 from arches_lingo.utils.concepts import (
     resolve_max_edit_distance,
-    build_ranked_concept_ids_for_term,
+    build_search_queryset,
     build_concept_ids_for_non_fuzzy,
-    rank_concepts_for_unsorted_term,
+    SearchResultSet,
 )
 from arches_lingo.utils.dashboard import (
     get_missing_translation_ids,
@@ -52,26 +52,32 @@ class ValueSearchView(ConceptTreeView):
         if order_mode not in ("alphabetical", "reverse-alphabetical", "unsorted"):
             order_mode = "unsorted"
 
-        labels = TileTree.get_tiles("concept", nodegroup_alias="appellative_status")
-
         if raw_max_edit_distance is None:
             max_edit_distance = resolve_max_edit_distance(term)
         else:
             max_edit_distance = raw_max_edit_distance
 
         if exact and term:
-            concept_query = labels.filter(appellative_status_ascribed_name_content=term)
-            concept_ids = build_concept_ids_for_non_fuzzy(
-                concept_query,
-                order_mode,
+            concept_ids = SearchResultSet(
+                term=term,
+                use_fuzzy=False,
+                similarity_threshold=1.0,
+                order_mode=order_mode,
+                active_language="",
+                system_language="",
+                exact_match=True,
             )
         elif term:
+            active_language = get_language() or settings.LANGUAGE_CODE
+            system_language = settings.LANGUAGE_CODE
             try:
-                concept_ids = build_ranked_concept_ids_for_term(
-                    labels,
+                concept_ids = build_search_queryset(
+                    None,
                     term,
                     max_edit_distance,
                     order_mode,
+                    active_language,
+                    system_language,
                 )
             except ValueError as value_error:
                 return JSONErrorResponse(
@@ -80,44 +86,23 @@ class ValueSearchView(ConceptTreeView):
                     status=HTTPStatus.BAD_REQUEST,
                 )
         else:
-            concept_query = labels
-            concept_ids = build_concept_ids_for_non_fuzzy(
-                concept_query,
-                order_mode,
-            )
+            concept_ids = build_concept_ids_for_non_fuzzy(None, order_mode)
+
+        paginator = Paginator(concept_ids, items_per_page)
+        page = paginator.get_page(page_number)
 
         data = []
-
-        if term and order_mode == "unsorted":
-            active_language = get_language() or settings.LANGUAGE_CODE
-            system_language = settings.LANGUAGE_CODE
-
-            ordered_concepts = rank_concepts_for_unsorted_term(
-                concept_ids,
-                term,
-                active_language,
-                system_language,
-            )
-
-            paginator = Paginator(ordered_concepts, items_per_page)
-            page = paginator.get_page(page_number)
-
-            if paginator.count:
-                data = list(page.object_list)
-        else:
-            paginator = Paginator(concept_ids, items_per_page)
-            page = paginator.get_page(page_number)
-
-            if paginator.count:
-                concept_builder = ConceptBuilder()
-                data = [
-                    concept_builder.serialize_concept(
-                        str(concept_uuid),
-                        parents=True,
-                        children=False,
-                    )
-                    for concept_uuid in page
-                ]
+        if paginator.count:
+            page_concept_ids = [str(concept_uuid) for concept_uuid in page]
+            concept_builder = ConceptBuilder(page_concept_ids, include_parents=True)
+            data = [
+                concept_builder.serialize_concept(
+                    concept_id,
+                    parents=True,
+                    children=False,
+                )
+                for concept_id in page_concept_ids
+            ]
 
         return JSONResponse(
             {
