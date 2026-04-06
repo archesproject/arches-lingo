@@ -1,6 +1,7 @@
-from collections import Counter
 from http import HTTPStatus
 
+from django.db import models
+from django.db.models import Count
 from django.utils.translation import gettext as _
 from django.views.generic import View
 
@@ -49,23 +50,19 @@ class SchemeLabelCountView(AnonymousAccessMixin, View):
         scheme_id = str(pk)
 
         Concept = ResourceTileTree.get_tiles("concept")
-        concept_ids = list(
-            Concept.filter(part_of_scheme__id=scheme_id).values_list("pk", flat=True)
-        )
+        concept_ids = Concept.filter(part_of_scheme__id=scheme_id).values("pk")
 
-        lang_counter: Counter = Counter()
-        if concept_ids:
-            tiles = TileModel.objects.filter(
+        rows = list(
+            TileModel.objects.filter(
                 nodegroup_id=CONCEPT_NAME_NODEGROUP,
                 resourceinstance_id__in=concept_ids,
-            ).values_list("data", flat=True)
+            )
+            .values(lang_code=models.F(f"data__{CONCEPT_NAME_LANGUAGE_NODE}"))
+            .annotate(count=Count("tileid"))
+            .order_by("-count")
+        )
 
-            for data in tiles:
-                lang = data.get(CONCEPT_NAME_LANGUAGE_NODE)
-                if lang:
-                    lang_counter[lang] += 1
-
-        lang_codes = list(lang_counter.keys())
+        lang_codes = [row["lang_code"] for row in rows if row["lang_code"]]
         lang_name_map: dict = {}
         if lang_codes:
             for lang_obj in Language.objects.filter(code__in=lang_codes):
@@ -73,12 +70,12 @@ class SchemeLabelCountView(AnonymousAccessMixin, View):
 
         labels_by_language = [
             {
-                "language": lang_name_map.get(code, code),
-                "code": code,
-                "count": count,
+                "language": lang_name_map.get(row["lang_code"], row["lang_code"]),
+                "code": row["lang_code"],
+                "count": row["count"],
             }
-            for code, count in lang_counter.items()
+            for row in rows
+            if row["lang_code"]
         ]
-        labels_by_language.sort(key=lambda x: -x["count"])
 
         return JSONResponse(labels_by_language)
