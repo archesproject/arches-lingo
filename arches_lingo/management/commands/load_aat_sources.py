@@ -657,7 +657,7 @@ class Command(BaseCommand):
 
         # Query both concept and scheme URI tiles
         uri_tiles = TileModel.objects.filter(
-            nodegroup_id__in=[const.URI_NODEGROUP, SCHEME_URI_NODEGROUP],
+            nodegroup_id__in=[const.CONCEPT_URI_NODEGROUP, SCHEME_URI_NODEGROUP],
         ).values_list("resourceinstance_id", "nodegroup_id", "data")
 
         lookup = {}
@@ -668,7 +668,7 @@ class Command(BaseCommand):
             uri_node = (
                 SCHEME_URI_CONTENT_NODE
                 if str(nodegroup_id) == SCHEME_URI_NODEGROUP
-                else const.URI_CONTENT_NODE
+                else const.CONCEPT_URI_CONTENT_NODE
             )
             uri_value = data.get(uri_node)
             if isinstance(uri_value, str) and uri_value.startswith(AAT_CONCEPT_PREFIX):
@@ -770,7 +770,7 @@ class Command(BaseCommand):
             f"  Creating URI tiles for {len(concept_uri_to_resource)} resources ..."
         )
 
-        concept_ng = NodeGroup.objects.get(nodegroupid=const.URI_NODEGROUP)
+        concept_ng = NodeGroup.objects.get(nodegroupid=const.CONCEPT_URI_NODEGROUP)
         SCHEME_URI_NODEGROUP = "7fdc87bb-6ef9-4a74-8e84-4bde69557eef"
         SCHEME_URI_CONTENT_NODE = "1bd0f20b-b945-4231-b872-cba02cc4bc25"
         scheme_ng = NodeGroup.objects.get(nodegroupid=SCHEME_URI_NODEGROUP)
@@ -778,7 +778,7 @@ class Command(BaseCommand):
         # Check which resources already have URI tiles
         existing = set(
             TileModel.objects.filter(
-                nodegroup_id__in=[const.URI_NODEGROUP, SCHEME_URI_NODEGROUP],
+                nodegroup_id__in=[const.CONCEPT_URI_NODEGROUP, SCHEME_URI_NODEGROUP],
                 resourceinstance_id__in=concept_uri_to_resource.values(),
             ).values_list("resourceinstance_id", flat=True)
         )
@@ -802,7 +802,7 @@ class Command(BaseCommand):
                 content_node = SCHEME_URI_CONTENT_NODE
             else:
                 nodegroup = concept_ng
-                content_node = const.URI_CONTENT_NODE
+                content_node = const.CONCEPT_URI_CONTENT_NODE
 
             tiles_to_create.append(
                 TileModel(

@@ -3,10 +3,19 @@ from django.utils.translation import gettext_lazy as _
 ### Groups ###
 LINGO_EDITOR_GROUP_NAME = "Lingo Editor"
 
+
 ### Concepts Model Nodes & Nodegroups ###
 CONCEPTS_GRAPH_ID = "bf73e576-4888-11ee-8a8d-11afefc4bff7"
 
 TOP_CONCEPT_OF_NODE_AND_NODEGROUP = "bf73e5b9-4888-11ee-8a8d-11afefc4bff7"
+
+# uri
+CONCEPT_URI_NODEGROUP = "bf73e598-4888-11ee-8a8d-11afefc4bff7"
+CONCEPT_URI_CONTENT_NODE = "bf73e64a-4888-11ee-8a8d-11afefc4bff7"
+
+# identifier
+CONCEPT_IDENTIFIER_NODEGROUP = "bf73e5d1-4888-11ee-8a8d-11afefc4bff7"
+CONCEPT_IDENTIFIER_CONTENT_NODE = "bf73e6ba-4888-11ee-8a8d-11afefc4bff7"
 
 # classification_status
 CLASSIFICATION_STATUS_NODEGROUP = "f3f7bbea-0eb9-11ef-93db-0a58a9feac02"
@@ -41,6 +50,12 @@ CONCEPT_NAME_LANGUAGE_NODE = "a8ecaf54-0eb7-11ef-93db-0a58a9feac02"
 # appellative_status_ascribed_relation
 CONCEPT_NAME_TYPE_NODE = "1ddffab4-0eb8-11ef-93db-0a58a9feac02"
 
+# statement (notes)
+STATEMENT_NODEGROUP = "bf73e5d7-4888-11ee-8a8d-11afefc4bff7"
+STATEMENT_CONTENT_NODE = "bf73e6ab-4888-11ee-8a8d-11afefc4bff7"
+STATEMENT_LANGUAGE_NODE = "da0c9d52-0f5b-11ef-9493-0a58a9feac02"
+STATEMENT_TYPE_NODE = "fbfc89d6-0f5b-11ef-9493-0a58a9feac02"
+
 CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID = "bf73e60a-4888-11ee-8a8d-11afefc4bff7"
 
 # Associated Concepts Nodegroup and Nodes
@@ -59,8 +74,24 @@ RELATION_STATUS_DATA_ASSIGNMENT_OBJECT_USED_NODEID = (
 )
 RELATION_STATUS_DATA_ASSIGNMENT_TYPE_NODEID = "09aa0568-1772-11ef-b270-0a58a9feac02"
 
+# match_status
+MATCH_STATUS_NODEGROUP = "4cfaaa64-0ed7-11ef-9493-0a58a9feac02"
+MATCH_STATUS_COMPARATE_NODE = "4cfaae24-0ed7-11ef-9493-0a58a9feac02"
+
+# status (lifecycle/status)
+STATUS_NODEGROUP = "152321b6-0f5e-11ef-9493-0a58a9feac02"
+
+
 ### Scheme Model Nodes & Nodegroups ###
 SCHEMES_GRAPH_ID = "56788995-423b-11ee-8a8d-11afefc4bff7"
+
+# uri
+SCHEME_URI_NODEGROUP = "7fdc87bb-6ef9-4a74-8e84-4bde69557eef"
+SCHEME_URI_CONTENT_NODE = "1bd0f20b-b945-4231-b872-cba02cc4bc25"
+
+# identifier
+SCHEME_IDENTIFIER_NODEGROUP = "8e34b47f-423c-11ee-8a8d-11afefc4bff7"
+SCHEME_IDENTIFIER_CONTENT_NODE = "8e34b483-423c-11ee-8a8d-11afefc4bff7"
 
 # appellative_status
 SCHEME_NAME_NODEGROUP = "ef87ac28-11de-11ef-9493-0a58a9feac02"
@@ -104,34 +135,12 @@ RELATION_STATUS_ASCRIBED_COMPARATE_ONTOLOGY_PROPERTY = (
     "https://ontology.swissartresearch.net/aaao/ZP44_ascribes_similarity_target"
 )
 
-
-# statement (notes)
-STATEMENT_NODEGROUP = "bf73e5d7-4888-11ee-8a8d-11afefc4bff7"
-STATEMENT_CONTENT_NODE = "bf73e6ab-4888-11ee-8a8d-11afefc4bff7"
-STATEMENT_LANGUAGE_NODE = "da0c9d52-0f5b-11ef-9493-0a58a9feac02"
-STATEMENT_TYPE_NODE = "fbfc89d6-0f5b-11ef-9493-0a58a9feac02"
-
 # namespace
 NAMESPACE_NODEGROUP = "92c68f1d-423c-11ee-8a8d-11afefc4bff7"
 NAMESPACE_NAME_NODE = "92c68f21-423c-11ee-8a8d-11afefc4bff7"
 NAMESPACE_TYPE_NODE = "915ad9fc-0f65-11ef-9493-0a58a9feac02"
 NAMESPACE_TYPE_LIST_ITEM_ID = "de263fe8-5ebd-4d6c-a7c7-8068598ba962"
 
-# uri
-URI_NODEGROUP = "bf73e598-4888-11ee-8a8d-11afefc4bff7"
-URI_CONTENT_NODE = "bf73e64a-4888-11ee-8a8d-11afefc4bff7"
-
-# identifier
-IDENTIFIER_NODEGROUP = "bf73e5d1-4888-11ee-8a8d-11afefc4bff7"
-IDENTIFIER_CONTENT_NODE = "bf73e6ba-4888-11ee-8a8d-11afefc4bff7"
-
-# match_status
-MATCH_STATUS_NODEGROUP = "4cfaaa64-0ed7-11ef-9493-0a58a9feac02"
-MATCH_STATUS_COMPARATE_NODE = "4cfaae24-0ed7-11ef-9493-0a58a9feac02"
-
-
-# status (lifecycle/status)
-STATUS_NODEGROUP = "152321b6-0f5e-11ef-9493-0a58a9feac02"
 
 ### URIs ###
 PREF_LABEL_URI = "http://www.w3.org/2004/02/skos/core#prefLabel"
