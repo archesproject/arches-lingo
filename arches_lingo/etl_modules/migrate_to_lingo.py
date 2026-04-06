@@ -26,8 +26,11 @@ from arches.app.models.system_settings import settings
 from arches.app.tasks import notify_completion
 import arches.app.utils.task_management as task_management
 
+from arches_querysets.models import ResourceTileTree
+
 import arches_lingo.tasks as tasks
 import arches_lingo.const as const
+from arches_lingo.models import ConceptIdentifierCounter, SchemeURITemplate
 
 logger = logging.getLogger(__name__)
 
@@ -52,6 +55,10 @@ details = {
 # = ~16 000 rows per INSERT, which PostgreSQL handles comfortably while keeping
 # the connection active throughout the loop.
 STAGING_BATCH_CONCEPT_COUNT = 2000
+
+URL_REGEX = re.compile(
+    r"https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)"
+)
 
 ONTOLOGY_PROPERTY_BY_NODE_ALIAS = {
     "top_concept_of": const.TOP_CONCEPT_OF_ONTOLOGY_PROPERTY,
@@ -87,6 +94,16 @@ class LingoResourceImporter(BaseImportModule):
             request.POST.get("scheme")
             if request
             else kwargs.get("scheme_conceptid", None)
+        )
+        self.import_identifiers = (
+            request.POST.get("import_identifiers", "").lower() == "true"
+            if request
+            else kwargs.get("import_identifiers", False)
+        )
+        self.namespace_template = (
+            request.POST.get("namespace_template", "")
+            if request
+            else kwargs.get("namespace_template", "")
         )
         self.language_lookup = {
             lang.code: lang.name for lang in models.Language.objects.all()
@@ -152,9 +169,14 @@ class LingoResourceImporter(BaseImportModule):
                     continue
 
                 mock_tile = self.create_mock_tile_from_value(
-                    value, lang_lookup=self.language_lookup
+                    value,
+                    isScheme=True,
+                    import_identifiers=self.import_identifiers,
+                    lang_lookup=self.language_lookup,
                 )
-                if mock_tile:
+                if isinstance(mock_tile, list):
+                    scheme_to_load["tile_data"].extend(mock_tile)
+                elif mock_tile:
                     scheme_to_load["tile_data"].append(mock_tile)
             schemes.append(scheme_to_load)
         return schemes
@@ -182,9 +204,13 @@ class LingoResourceImporter(BaseImportModule):
                     continue
 
                 mock_tile = self.create_mock_tile_from_value(
-                    value, lang_lookup=self.language_lookup
+                    value,
+                    import_identifiers=self.import_identifiers,
+                    lang_lookup=self.language_lookup,
                 )
-                if mock_tile:
+                if isinstance(mock_tile, list):
+                    concept_to_load["tile_data"].extend(mock_tile)
+                elif mock_tile:
                     concept_to_load["tile_data"].append(mock_tile)
 
             concepts.append(concept_to_load)
@@ -226,7 +252,9 @@ class LingoResourceImporter(BaseImportModule):
         return concepts
 
     @staticmethod
-    def create_mock_tile_from_value(value, isScheme=False, lang_lookup=None):
+    def create_mock_tile_from_value(
+        value, isScheme=False, import_identifiers=False, lang_lookup=None
+    ):
         # Values coming directly from RDM models are django model instances
         if isinstance(value, models.Value):
             value = {
@@ -251,11 +279,31 @@ class LingoResourceImporter(BaseImportModule):
             mock_tile["appellative_status_ascribed_name_language"] = value["language"]
             mock_tile["appellative_status_ascribed_relation"] = value_type_id
             return {"appellative_status": mock_tile}
-        elif value_type_id == "identifier" and not isScheme:
-            # treat identifiers as external exact-matched concepts
-            mock_tile["match_status_ascribed_comparate"] = value["value"]
-            mock_tile["match_status_ascribed_relation"] = "exactMatch"
-            return {"match_status": mock_tile}
+        elif value_type_id == "identifier":
+            val = value["value"]
+            if import_identifiers and URL_REGEX.match(val):
+                return [
+                    {
+                        "uri": {
+                            "uri_content": val,
+                            "uri_type": value_type_id,
+                        }
+                    },
+                    {
+                        "identifier": {
+                            "identifier_content": val.rstrip("/").split("/")[-1],
+                            "identifier_type": value_type_id,
+                        }
+                    },
+                ]
+            elif import_identifiers:
+                mock_tile["identifier_content"] = val
+                mock_tile["identifier_type"] = value_type_id
+                return {"identifier": mock_tile}
+            elif not isScheme:
+                mock_tile["match_status_ascribed_comparate"] = val
+                mock_tile["match_status_ascribed_relation"] = "exactMatch"
+                return {"match_status": mock_tile}
         elif value_type_id in set(
             [
                 "note",
@@ -763,6 +811,118 @@ class LingoResourceImporter(BaseImportModule):
 
         LoadStaging.objects.bulk_create(part_of_scheme_tiles)
 
+    def _post_import_identifier_setup(self):
+        scheme_resourceid = str(self.schemes[0]["resourceinstanceid"])
+        scheme_resource = models.ResourceInstance.objects.get(pk=scheme_resourceid)
+
+        if self.namespace_template:
+            self._create_namespace_tile(scheme_resource)
+
+        concepts_in_scheme = ResourceTileTree.objects.get_tiles(
+            graph_slug="concept"
+        ).filter(part_of_scheme__id=scheme_resourceid)
+
+        resource_identifiers, numeric_identifiers, concepts_with_identifiers = (
+            self._collect_concept_identifier_data(concepts_in_scheme)
+        )
+
+        models.ResourceIdentifier.objects.bulk_create(resource_identifiers)
+        self._assign_lifecycle_states(
+            scheme_resource, concepts_in_scheme, concepts_with_identifiers
+        )
+        ConceptIdentifierCounter.objects.update_or_create(
+            scheme=scheme_resource,
+            defaults={
+                "start_number": min(numeric_identifiers) if numeric_identifiers else 1,
+                "next_number": (
+                    max(numeric_identifiers) + 1 if numeric_identifiers else 1
+                ),
+            },
+        )
+
+    def _create_namespace_tile(self, scheme_resource):
+        reference_datatype = self.datatype_factory.get_instance("reference")
+        namespace_type_tile_value = reference_datatype.transform_value_for_tile(
+            "namespaces", controlledList=const.IDENTIFIER_TYPES_LIST_ID
+        )
+        models.TileModel(
+            resourceinstance=scheme_resource,
+            data={
+                const.NAMESPACE_NAME_NODE: self.namespace_template,
+                const.NAMESPACE_TYPE_NODE: namespace_type_tile_value,
+            },
+            nodegroup_id=const.NAMESPACE_NODEGROUP,
+        ).save()
+        SchemeURITemplate.objects.update_or_create(
+            scheme=scheme_resource,
+            defaults={"url_template": self.namespace_template},
+        )
+
+    def _collect_concept_identifier_data(self, concepts_in_scheme):
+        concept_resources = {
+            resource.pk: resource
+            for resource in models.ResourceInstance.objects.filter(
+                graph_id=const.CONCEPTS_GRAPH_ID
+            )
+        }
+
+        resource_identifiers = []
+        numeric_identifiers = []
+        concepts_with_identifiers = []
+
+        for concept_tile_tree in concepts_in_scheme:
+            identifier_tiles = concept_tile_tree.aliased_data.identifier
+            if len(identifier_tiles) != 1:
+                continue
+
+            concept_resource = concept_resources.get(
+                concept_tile_tree.resourceinstanceid
+            )
+            if concept_resource is None:
+                continue
+
+            # TODO: evaluate need to handle multiple identifiers
+            identifier_value = identifier_tiles[0].aliased_data.identifier_content
+            resource_identifiers.append(
+                models.ResourceIdentifier(
+                    resourceid=concept_resource,
+                    identifier=identifier_value,
+                    source="arches-lingo",
+                    identifier_type="identifier",
+                )
+            )
+            try:
+                numeric_identifiers.append(int(identifier_value))
+            except (ValueError, TypeError):
+                pass
+
+            concepts_with_identifiers.append(concept_resource)
+
+        return resource_identifiers, numeric_identifiers, concepts_with_identifiers
+
+    def _assign_lifecycle_states(
+        self, scheme_resource, concepts_in_scheme, concepts_with_identifiers
+    ):
+        published_state = models.ResourceInstanceLifecycleState.objects.get(
+            pk=const.PUBLISHED_STATE_ID
+        )
+        editing_state = models.ResourceInstanceLifecycleState.objects.get(
+            pk=const.EDITING_STATE_ID
+        )
+
+        for concept_resource in concepts_with_identifiers:
+            concept_resource.resource_instance_lifecycle_state = published_state
+
+        if len(concepts_in_scheme) == len(concepts_with_identifiers):
+            scheme_resource.resource_instance_lifecycle_state = published_state
+        else:
+            scheme_resource.resource_instance_lifecycle_state = editing_state
+
+        models.ResourceInstance.objects.bulk_update(
+            concepts_with_identifiers + [scheme_resource],
+            ["resource_instance_lifecycle_state"],
+        )
+
     def start(self, request):
         load_details = {"operation": "Lingo Thesaurus Import"}
         if not self.loadid:
@@ -863,7 +1023,9 @@ class LingoResourceImporter(BaseImportModule):
                     skos_reader = SKOSReader()
                     rdf = skos_reader.read_file(self.file)
                     self.schemes, self.concepts = (
-                        skos_reader.extract_concepts_from_skos_for_lingo_import(rdf)
+                        skos_reader.extract_concepts_from_skos_for_lingo_import(
+                            rdf, import_identifiers=self.import_identifiers
+                        )
                     )
                     self.run_load_task()
 
@@ -922,7 +1084,9 @@ class LingoResourceImporter(BaseImportModule):
                 skos_reader = SKOSReader()
                 rdf = skos_reader.read_file(file)
                 self.schemes, self.concepts = (
-                    skos_reader.extract_concepts_from_skos_for_lingo_import(rdf)
+                    skos_reader.extract_concepts_from_skos_for_lingo_import(
+                        rdf, import_identifiers=self.import_identifiers
+                    )
                 )
 
             # Populate staging table with schemes and concepts
@@ -954,6 +1118,8 @@ class LingoResourceImporter(BaseImportModule):
                 refresh_successful = cursor.fetchone()[0]
                 if not refresh_successful:
                     raise Exception("Unable to refresh spatial views")
+                if self.import_identifiers:
+                    self._post_import_identifier_setup()
             else:
                 cursor.execute(
                     """UPDATE load_event SET status = %s, load_end_time = %s WHERE loadid = %s""",
@@ -991,6 +1157,8 @@ class LingoResourceImporter(BaseImportModule):
                     "scheme_conceptid": self.scheme_conceptid,
                     "temp_file_path": self.temp_file_path,
                     "mode": self.mode,
+                    "import_identifiers": self.import_identifiers,
+                    "namespace_template": self.namespace_template,
                 },
             ]
         )
