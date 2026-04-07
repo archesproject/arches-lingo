@@ -321,8 +321,9 @@ class ConceptBuilder:
     def batch_check_has_narrower(self, concept_ids: list[str]) -> None:
         """Check which of the given concept IDs have narrower concepts.
 
-        Uses a single unnest + EXISTS query against the GIN-indexed broader
-        concept column, avoiding a full scan of all classification tiles.
+        The node ID for the broader-concept JSON key is embedded as a literal
+        so that the query expression structurally matches the partial GIN index
+        definition on that column, enabling per-row GIN bitmap index scans.
         """
         if not concept_ids:
             return
@@ -330,6 +331,9 @@ class ConceptBuilder:
         _tile_table = TileModel._meta.db_table
         _nodegroup_col = TileModel._meta.get_field("nodegroup").column
         _data_col = TileModel._meta.get_field("data").column
+        _node_key = str(CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID)
+        _nodegroup_id = str(CLASSIFICATION_STATUS_NODEGROUP)
+
         with connection.cursor() as cursor:
             cursor.execute(
                 f"""
@@ -339,7 +343,7 @@ class ConceptBuilder:
                     SELECT 1
                     FROM "{_tile_table}" sub
                     WHERE sub."{_nodegroup_col}" = %(nodegroup)s::uuid
-                      AND sub."{_data_col}"->%(node_id)s
+                      AND sub."{_data_col}"->'{_node_key}'
                           @> jsonb_build_array(
                               jsonb_build_object('resourceId', concept_id)
                           )
@@ -347,10 +351,7 @@ class ConceptBuilder:
                 """,
                 {
                     "concept_ids": concept_ids,
-                    "nodegroup": str(CLASSIFICATION_STATUS_NODEGROUP),
-                    "node_id": str(
-                        CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID
-                    ),
+                    "nodegroup": _nodegroup_id,
                 },
             )
             for (concept_id,) in cursor.fetchall():
