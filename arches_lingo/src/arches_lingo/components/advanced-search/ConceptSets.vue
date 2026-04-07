@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { ref, watch, withDefaults } from "vue";
 import { storeToRefs } from "pinia";
 import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
@@ -16,6 +16,7 @@ import {
     deleteConceptSet,
     addToConceptSet,
     removeFromConceptSet,
+    executeAdvancedSearch,
 } from "@/arches_lingo/api.ts";
 import {
     DEFAULT_ERROR_TOAST_LIFE,
@@ -25,17 +26,30 @@ import {
 } from "@/arches_lingo/constants.ts";
 import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 
-import type { ConceptSetItem } from "@/arches_lingo/types.ts";
+import type {
+    AdvancedSearchQuery,
+    ConceptSetItem,
+} from "@/arches_lingo/types.ts";
 
 const { $gettext } = useGettext();
 const toast = useToast();
 const userStore = useUserStore();
 const { isAnonymous } = storeToRefs(userStore);
 
-defineProps<{
-    selectedConceptIds: Set<string>;
-    activeConceptSetId: number | null;
-}>();
+const props = withDefaults(
+    defineProps<{
+        selectedConceptIds: Set<string>;
+        activeConceptSetId: number | null;
+        allResultsSelected?: boolean;
+        currentQueryForSet?: AdvancedSearchQuery | null;
+        totalResults?: number;
+    }>(),
+    {
+        allResultsSelected: false,
+        currentQueryForSet: null,
+        totalResults: 0,
+    },
+);
 
 const emit = defineEmits<{
     (event: "load-set", conceptSetId: number): void;
@@ -117,34 +131,48 @@ async function deleteSet(setItem: ConceptSetItem) {
     }
 }
 
-function handleAddToSet(selectedIds: Set<string>) {
-    if (targetSetId.value === null || selectedIds.size === 0) return;
+async function handleAddToSet(selectedIds: Set<string>) {
+    if (targetSetId.value === null) return;
+    if (!props.allResultsSelected && selectedIds.size === 0) return;
 
     isLoading.value = true;
-    addToConceptSet(targetSetId.value, Array.from(selectedIds))
-        .then((result) => {
-            showAddToSetDialog.value = false;
-            targetSetId.value = null;
-            toast.add({
-                severity: SUCCESS,
-                life: DEFAULT_TOAST_LIFE,
-                summary: $gettext("%{count} concepts added to set.", {
-                    count: String(result.added),
-                }),
-            });
-            loadConceptSets();
-        })
-        .catch((error) => {
-            toast.add({
-                severity: ERROR,
-                life: DEFAULT_ERROR_TOAST_LIFE,
-                summary: $gettext("Failed to add concepts to set."),
-                detail: error instanceof Error ? error.message : undefined,
-            });
-        })
-        .finally(() => {
-            isLoading.value = false;
+    try {
+        let conceptIdsToAdd: string[];
+        if (props.allResultsSelected && props.currentQueryForSet) {
+            const allResults = await executeAdvancedSearch(
+                props.currentQueryForSet,
+                1,
+                props.totalResults,
+            );
+            conceptIdsToAdd = allResults.data.map((item) => item.id);
+        } else {
+            conceptIdsToAdd = Array.from(selectedIds);
+        }
+
+        const result = await addToConceptSet(
+            targetSetId.value,
+            conceptIdsToAdd,
+        );
+        showAddToSetDialog.value = false;
+        targetSetId.value = null;
+        toast.add({
+            severity: SUCCESS,
+            life: DEFAULT_TOAST_LIFE,
+            summary: $gettext("%{count} concepts added to set.", {
+                count: String(result.added),
+            }),
         });
+        loadConceptSets();
+    } catch (error) {
+        toast.add({
+            severity: ERROR,
+            life: DEFAULT_ERROR_TOAST_LIFE,
+            summary: $gettext("Failed to add concepts to set."),
+            detail: error instanceof Error ? error.message : undefined,
+        });
+    } finally {
+        isLoading.value = false;
+    }
 }
 
 function loadSet(setItem: ConceptSetItem) {
@@ -200,7 +228,9 @@ watch(
                 :label="$gettext('Add to Set')"
                 icon="pi pi-plus-circle"
                 size="small"
-                :disabled="selectedConceptIds.size === 0"
+                :disabled="
+                    !props.allResultsSelected && selectedConceptIds.size === 0
+                "
                 @click="showAddToSetDialog = true"
             />
             <Button
@@ -323,9 +353,13 @@ watch(
         <Dialog
             v-model:visible="showAddToSetDialog"
             :header="
-                $gettext('Add %{count} concepts to set', {
-                    count: String(selectedConceptIds.size),
-                })
+                props.allResultsSelected
+                    ? $gettext('Add all %{count} results to set', {
+                          count: String(props.totalResults),
+                      })
+                    : $gettext('Add %{count} concepts to set', {
+                          count: String(selectedConceptIds.size),
+                      })
             "
             modal
             :style="{ width: '25rem' }"
