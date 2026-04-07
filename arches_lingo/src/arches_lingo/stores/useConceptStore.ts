@@ -92,13 +92,32 @@ export const useConceptStore = defineStore("concepts", () => {
         }
 
         const fetchPromise = (async () => {
-            const children = (await fetchConceptChildren(
+            const fetchedChildren = (await fetchConceptChildren(
                 conceptId,
             )) as Concept[];
-            for (const child of children) {
+
+            // For each fetched child, reuse the canonical Concept object
+            // already in the map if one exists. A polyhierarchical concept
+            // (one with multiple parents) appears in the API response for
+            // every parent that is expanded. Without this, each parent load
+            // creates a separate JS object for the same concept:
+            //   parentA.narrower = [C_a]
+            //   parentE.narrower = [C_e]   (different objects, same id)
+            // When loadChildren("C") later fires, it updates only the object
+            // in conceptsById (whichever was stored last), leaving the other
+            // stale copy permanently un-expandable. Reusing the canonical
+            // object ensures all parents share the same reference, so a
+            // single update propagates to every occurrence in the tree.
+            const children = fetchedChildren.map((child) => {
+                const canonicalChild = conceptsById.value.get(child.id);
+                if (canonicalChild) {
+                    return canonicalChild;
+                }
                 child.narrower = child.narrower ?? [];
                 conceptsById.value.set(child.id, child);
-            }
+                return child;
+            });
+
             const concept = conceptsById.value.get(conceptId);
             if (concept) {
                 concept.narrower = children;
