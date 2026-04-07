@@ -12,6 +12,7 @@ import {
     fetchConceptSetDetail,
     createConceptSet,
     deleteConceptSet,
+    addToConceptSet,
     removeFromConceptSet,
 } from "@/arches_lingo/api.ts";
 import {
@@ -102,6 +103,33 @@ async function handleDeleteSet(setItem: ConceptSetItem) {
     }
 }
 
+async function handleAddCurrentConcept(conceptId: string) {
+    if (!activeSetDetail.value) return;
+    const setId = activeSetDetail.value.id;
+    try {
+        const result = await addToConceptSet(setId, [conceptId]);
+        activeSetDetail.value = await fetchConceptSetDetail(setId);
+        const matchingSetInList = conceptSets.value.find(
+            (existingSet) => existingSet.id === setId,
+        );
+        if (matchingSetInList) {
+            matchingSetInList.member_count = result.member_count;
+        }
+        toast.add({
+            severity: SUCCESS,
+            life: DEFAULT_TOAST_LIFE,
+            summary: $gettext("Concept added to set."),
+        });
+    } catch (error) {
+        toast.add({
+            severity: ERROR,
+            life: DEFAULT_ERROR_TOAST_LIFE,
+            summary: $gettext("Failed to add concept to set."),
+            detail: error instanceof Error ? error.message : undefined,
+        });
+    }
+}
+
 async function handleRemoveMembers(conceptIds: string[]) {
     if (!activeSetDetail.value) return;
     const setId = activeSetDetail.value.id;
@@ -149,6 +177,7 @@ watch(
             :set-detail="activeSetDetail"
             @back="handleBackToList"
             @remove-members="handleRemoveMembers"
+            @add-current-concept="handleAddCurrentConcept"
         />
         <ConceptSetList
             v-else
