@@ -699,7 +699,7 @@ class Command(BaseCommand):
             for concept_uri, label_list in labels.items():
                 for lbl in label_list:
                     if (
-                        lbl.get("language", "").lower().startswith("en")
+                        (lbl.get("language") or "").lower().startswith("en")
                         and lbl.get("label_type") == "prefLabel"
                         and lbl.get("literal_form")
                     ):
@@ -791,9 +791,11 @@ class Command(BaseCommand):
         )
 
         tiles_to_create = []
+        already_queued = set()
         for concept_uri, resource_id in concept_uri_to_resource.items():
-            if resource_id in existing:
+            if resource_id in existing or resource_id in already_queued:
                 continue
+            already_queued.add(resource_id)
             graph_id = str(resource_graphs.get(resource_id, ""))
             if graph_id == const.SCHEMES_GRAPH_ID:
                 nodegroup = scheme_ng
