@@ -633,11 +633,12 @@ function scrollToOccurrenceKeyInTree(
         if (currentTreeNode.key === occurrenceKey) {
             const keysToExpand = new Set<string>();
 
-            for (const pathNode of currentPath) {
-                keysToExpand.add(pathNode.key);
+            // Expand only the ancestors (currentPath includes the target node
+            // as its last element; slice(0, -1) excludes it).
+            for (const ancestorNode of currentPath.slice(0, -1)) {
+                keysToExpand.add(ancestorNode.key);
             }
 
-            keysToExpand.add(occurrenceKey);
             mergeExpandedKeys(keysToExpand);
 
             selectedKeys.value = { [occurrenceKey]: true };
@@ -783,10 +784,14 @@ function scrollToItemInTree(
 
     const keysToExpand = new Set<string>();
     for (const matchItem of matches) {
-        for (const pathNode of matchItem.path) {
-            keysToExpand.add(pathNode.key);
+        // Expand only the ancestors. The path array includes the target node
+        // as its last element, so slice(0, -1) gives only ancestors. The
+        // target itself must not be auto-expanded: if its children have not
+        // been fetched yet, adding it to expandedKeys produces a visually
+        // empty open node with the expand toggle stuck in the open position.
+        for (const ancestorNode of matchItem.path.slice(0, -1)) {
+            keysToExpand.add(ancestorNode.key);
         }
-        keysToExpand.add(matchItem.treeNode.key);
     }
 
     if (!debouncedFilterValue.value) {
