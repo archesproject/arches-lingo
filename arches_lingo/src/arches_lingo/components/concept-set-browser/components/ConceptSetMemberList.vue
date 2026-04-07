@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import { storeToRefs } from "pinia";
 import { useGettext } from "vue3-gettext";
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 
 import Button from "primevue/button";
 import Checkbox from "primevue/checkbox";
@@ -22,11 +22,27 @@ const props = defineProps<{
 const emit = defineEmits<{
     (event: "back"): void;
     (event: "remove-members", conceptIds: string[]): void;
+    (event: "add-current-concept", conceptId: string): void;
 }>();
 
 const { $gettext } = useGettext();
+const route = useRoute();
 const router = useRouter();
 const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
+
+const isOnConceptPage = computed(() => route.name === routeNames.concept);
+
+const currentConceptId = computed(() =>
+    isOnConceptPage.value ? (route.params.id as string) : null,
+);
+
+const currentConceptIsAlreadyMember = computed(
+    () =>
+        currentConceptId.value !== null &&
+        props.setDetail.members.some(
+            (member) => member.id === currentConceptId.value,
+        ),
+);
 
 const selectedConceptIds = ref<Set<string>>(new Set());
 
@@ -78,6 +94,18 @@ function handleRemoveSelected() {
         </div>
 
         <div class="member-actions">
+            <Button
+                v-if="isOnConceptPage"
+                :label="
+                    currentConceptIsAlreadyMember
+                        ? $gettext('Already in set')
+                        : $gettext('Add current concept')
+                "
+                icon="pi pi-plus-circle"
+                size="small"
+                :disabled="currentConceptIsAlreadyMember"
+                @click="emit('add-current-concept', currentConceptId!)"
+            />
             <Button
                 :label="$gettext('Remove from Set')"
                 icon="pi pi-minus-circle"
