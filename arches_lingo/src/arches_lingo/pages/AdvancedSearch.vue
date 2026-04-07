@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, useTemplateRef } from "vue";
+import { computed, onMounted, ref, useTemplateRef } from "vue";
 import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
 
@@ -81,8 +81,13 @@ const searchResults = ref<AdvancedSearchResponse | null>(null);
 const isSearching = ref(false);
 const currentPage = ref(1);
 const selectedConceptIds = ref<Set<string>>(new Set());
+const allResultsSelected = ref(false);
 const activeConceptSetId = ref<number | null>(null);
 const showSidePanel = ref(true);
+
+const currentQueryForSet = computed(() =>
+    allResultsSelected.value ? buildQuery() : null,
+);
 
 function flattenListItems(items: Labellable[]): ControlledListOption[] {
     const result: ControlledListOption[] = [];
@@ -186,11 +191,13 @@ function clearSearch() {
     };
     searchResults.value = null;
     selectedConceptIds.value = new Set();
+    allResultsSelected.value = false;
     currentPage.value = 1;
     activeConceptSetId.value = null;
 }
 
 function toggleSelectConcept(id: string) {
+    allResultsSelected.value = false;
     const newSet = new Set(selectedConceptIds.value);
     if (newSet.has(id)) {
         newSet.delete(id);
@@ -202,6 +209,7 @@ function toggleSelectConcept(id: string) {
 
 function selectAll() {
     if (!searchResults.value) return;
+    allResultsSelected.value = true;
     const newSet = new Set(selectedConceptIds.value);
     for (const item of searchResults.value.data) {
         newSet.add(item.id);
@@ -210,6 +218,7 @@ function selectAll() {
 }
 
 function deselectAll() {
+    allResultsSelected.value = false;
     selectedConceptIds.value = new Set();
 }
 
@@ -228,6 +237,7 @@ function onSetsUpdated(sets: ConceptSetItem[]) {
 }
 
 function loadConceptSet(conceptSetId: number) {
+    allResultsSelected.value = false;
     activeConceptSetId.value = conceptSetId;
     queryGroup.value = {
         id: generateConditionId(),
@@ -345,6 +355,9 @@ onMounted(loadSearchOptions);
                             ref="conceptSetsRef"
                             :selected-concept-ids="selectedConceptIds"
                             :active-concept-set-id="activeConceptSetId"
+                            :all-results-selected="allResultsSelected"
+                            :current-query-for-set="currentQueryForSet"
+                            :total-results="searchResults?.total_results ?? 0"
                             @load-set="loadConceptSet"
                             @sets-updated="onSetsUpdated"
                             @concepts-removed="onConceptsRemoved"
