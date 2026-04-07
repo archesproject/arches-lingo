@@ -149,15 +149,7 @@ class SKOSReader(SKOSReader):
                         )
                         top_concept_mock_tiles[top_concept_id] = top_concept_mock_tile
 
-                if "appellative_status" not in [
-                    key for val in new_scheme["tile_data"] for key in val.keys()
-                ]:
-                    mock_tile = self.map_predicate_object_to_mock_tile(
-                        str(scheme), "prefLabel", isScheme
-                    )
-                    if mock_tile:
-                        new_scheme["tile_data"].append(mock_tile)
-
+                self._add_label_and_identifier_fallbacks(new_scheme, scheme, isScheme)
                 self.schemes.append(new_scheme)
 
                 ### Concepts ###
@@ -200,7 +192,6 @@ class SKOSReader(SKOSReader):
                                 .replace(SKOS, "")
                                 .replace(DCTERMS, "")
                             )
-
 
                         if predicate_str in DCTERMS.identifier and str(
                             concept_pk
@@ -336,7 +327,9 @@ class SKOSReader(SKOSReader):
                         "type": {"type": "concept", "type_metatype": "classification"}
                     }
                     new_concept["tile_data"].append(type_tile)
-
+                    self._add_label_and_identifier_fallbacks(
+                        new_concept, concept, isScheme
+                    )
                     self.concepts.append(new_concept)
 
             # Map relationships to their respective concept resources
@@ -437,6 +430,32 @@ class SKOSReader(SKOSReader):
             lang_lookup=self.allowed_languages,
         )
         return mock_tile
+
+    def _add_label_and_identifier_fallbacks(self, resource, rdf_node, isScheme):
+        """
+        If a scheme or concept has not been imported with a prefLabel and/or identifier (in the case of `import_identifiers=True`),
+        map those properties from the rdf:about value
+        """
+        tile_aliases = [
+            alias
+            for tile_entry in resource["tile_data"]
+            for tile in (tile_entry if isinstance(tile_entry, list) else [tile_entry])
+            for alias in tile.keys()
+        ]
+        if "appellative_status" not in tile_aliases:
+            mock_tile = self.map_predicate_object_to_mock_tile(
+                str(rdf_node), "prefLabel", isScheme
+            )
+            if mock_tile:
+                resource["tile_data"].append(mock_tile)
+        if self.import_identifiers and "identifier" not in tile_aliases:
+            mock_tile = self.map_predicate_object_to_mock_tile(
+                str(rdf_node), "identifier", isScheme
+            )
+            if isinstance(mock_tile, list):
+                resource["tile_data"].extend(mock_tile)
+            elif mock_tile:
+                resource["tile_data"].append(mock_tile)
 
 
 class SKOSWriter:
