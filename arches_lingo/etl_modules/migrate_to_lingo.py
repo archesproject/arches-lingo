@@ -17,7 +17,6 @@ from django.utils.translation import gettext as _
 
 from arches.app.datatypes.datatypes import DataTypeFactory
 from arches.app.etl_modules.save import save_to_tiles
-from arches_lingo.etl_modules.decorators import load_data_async
 from arches.app.etl_modules.base_import_module import BaseImportModule
 from arches.app.models import models
 from arches.app.models.models import LoadStaging, NodeGroup, LoadEvent
@@ -806,7 +805,7 @@ class LingoResourceImporter(BaseImportModule):
                 if num_concepts_to_import <= 1000:
                     self.run_load_task()
                 elif num_concepts_to_import > 1000:
-                    self.run_load_task_async(request, self.loadid)
+                    self.run_load_task_async()
                 message = "Schemes and Concept Migration to Lingo Models Complete"
                 return {"success": True, "data": message}
             except Exception as error:
@@ -854,7 +853,7 @@ class LingoResourceImporter(BaseImportModule):
                     self.temp_file_path = os.path.join(temp_dir, self.file.name)
                     default_storage.save(self.temp_file_path, self.file)
                     self.file.close()
-                    self.run_load_task_async(request, self.loadid)
+                    self.run_load_task_async()
 
                 message = "Schemes and Concept Migration to Lingo Models Complete"
                 return {"success": True, "data": message}
@@ -955,8 +954,7 @@ class LingoResourceImporter(BaseImportModule):
             )
         notify_completion(message, user)
 
-    @load_data_async
-    def run_load_task_async(self, request):
+    def run_load_task_async(self):
         task_result = tasks.load_lingo_resources_task.enqueue(
             self.loadid,
             self.userid,
