@@ -107,6 +107,13 @@ GVP_BROADER_GENERIC = GVP_NS + "broaderGeneric"
 GVP_BROADER_PARTITIV = GVP_NS + "broaderPartitive"
 GVP_BROADER_INSTANTI = GVP_NS + "broaderInstantial"
 
+# GVP typed associative relation predicates encode the semantic relation type
+# in the predicate URI local name (e.g. aat2285_practiced-studied_by). These
+# are subproperties of skos:related and carry richer meaning than plain
+# skos:related.  The prefix below is used to detect them during streaming;
+# they are collected in subject_data and output using the gvp: namespace.
+GVP_TYPED_RELATION_PREFIX = "http://vocab.getty.edu/ontology#aat"
+
 # Only predicates in this set are retained; everything else is discarded
 # immediately to keep memory usage low.
 COLLECT_PREDICATES = frozenset(
@@ -297,6 +304,19 @@ def collect_aat_data(nt_stream):
         subject_uri, predicate_uri, raw_object = parsed
 
         if predicate_uri not in COLLECT_PREDICATES:
+            # Collect GVP typed associative relation predicates alongside the
+            # standard SKOS predicates.  Identifying triples look like:
+            #   <concept> <http://vocab.getty.edu/ontology#aat2285_practiced-studied_by> <concept>
+            # The full.zip also emits inferred skos:related for these; the
+            # write step deduplicates so the XML carries only the typed form.
+            if (
+                predicate_uri.startswith(GVP_TYPED_RELATION_PREFIX)
+                and len(predicate_uri) > len(GVP_TYPED_RELATION_PREFIX)
+                and predicate_uri[len(GVP_TYPED_RELATION_PREFIX)].isdigit()
+            ):
+                target_uri = _parse_uri_object(raw_object)
+                if target_uri:
+                    subject_data[subject_uri][predicate_uri].append(raw_object)
             continue
 
         if predicate_uri == RDF_TYPE:
@@ -573,6 +593,7 @@ def write_skos_xml(output_path, concepts, schemes, subject_data):
         out.write('  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"\n')
         out.write('  xmlns:skos="http://www.w3.org/2004/02/skos/core#"\n')
         out.write('  xmlns:dcterms="http://purl.org/dc/terms/"\n')
+        out.write('  xmlns:gvp="http://vocab.getty.edu/ontology#"\n')
         out.write(">\n\n")
 
         # --- ConceptScheme(s) ---
@@ -593,12 +614,30 @@ def write_skos_xml(output_path, concepts, schemes, subject_data):
 
         # --- Concepts ---
         written_count = 0
+        gvp_ns_len = len("http://vocab.getty.edu/ontology#")
         for concept_uri in sorted(concepts):
             out.write(f'  <skos:Concept rdf:about="{escape(concept_uri)}">\n')
             concept_data = subject_data.get(concept_uri, {})
+
+            # Build the set of target URIs covered by typed GVP relation
+            # predicates for this concept, so plain skos:related triples that
+            # duplicate a typed predicate can be omitted from the output.
+            typed_relation_targets = set()
+            for pred_uri, raw_objects in concept_data.items():
+                if (
+                    pred_uri.startswith(GVP_TYPED_RELATION_PREFIX)
+                    and len(pred_uri) > len(GVP_TYPED_RELATION_PREFIX)
+                    and pred_uri[len(GVP_TYPED_RELATION_PREFIX)].isdigit()
+                ):
+                    for raw in raw_objects:
+                        target = _parse_uri_object(raw)
+                        if target:
+                            typed_relation_targets.add(target)
+
             for pred_uri, raw_objects in concept_data.items():
                 if pred_uri == RDF_TYPE:
                     continue
+
                 # Deduplicate skos:broader: the NTriples may contain both
                 # gvp:broaderGeneric (remapped) and skos:broader for the same
                 # subject/object pair.  Use seen set to emit each once.
@@ -611,8 +650,38 @@ def write_skos_xml(output_path, concepts, schemes, subject_data):
                             seen_broader_uris.add(uri)
                             deduped.append(raw)
                     _write_predicate_elements(out, pred_uri, deduped)
+
+                # Suppress plain skos:related for targets already expressed via
+                # a typed GVP predicate to avoid duplicate relation_status tiles
+                # on import.  Any remaining (untyped) related targets are kept.
+                elif pred_uri == SKOS_RELATED:
+                    untyped_objects = [
+                        raw
+                        for raw in raw_objects
+                        if _parse_uri_object(raw) not in typed_relation_targets
+                    ]
+                    if untyped_objects:
+                        _write_predicate_elements(out, pred_uri, untyped_objects)
+
+                # Output typed GVP associative relation predicates using the
+                # gvp: namespace so the arches-lingo SKOS reader can preserve
+                # the semantic relation type.
+                elif (
+                    pred_uri.startswith(GVP_TYPED_RELATION_PREFIX)
+                    and len(pred_uri) > len(GVP_TYPED_RELATION_PREFIX)
+                    and pred_uri[len(GVP_TYPED_RELATION_PREFIX)].isdigit()
+                ):
+                    local_name = pred_uri[gvp_ns_len:]
+                    for raw in raw_objects:
+                        target = _parse_uri_object(raw)
+                        if target:
+                            out.write(
+                                f'    <gvp:{escape(local_name)} rdf:resource="{escape(target)}"/>\n'
+                            )
+
                 else:
                     _write_predicate_elements(out, pred_uri, raw_objects)
+
             out.write("  </skos:Concept>\n\n")
 
             written_count += 1
@@ -645,6 +714,16 @@ def validate_output(concepts, schemes, subject_data):
     concepts_with_scope_note = sum(
         1 for uri in concepts if subject_data.get(uri, {}).get(SKOS_SCOPE_NOTE)
     )
+    concepts_with_typed_relations = sum(
+        1
+        for uri in concepts
+        if any(
+            pred.startswith(GVP_TYPED_RELATION_PREFIX)
+            and len(pred) > len(GVP_TYPED_RELATION_PREFIX)
+            and pred[len(GVP_TYPED_RELATION_PREFIX)].isdigit()
+            for pred in subject_data.get(uri, {})
+        )
+    )
     top_concept_count = sum(
         1 for uri in concepts if SKOS_TOP_CONCEPT_OF in subject_data.get(uri, {})
     )
@@ -664,6 +743,7 @@ def validate_output(concepts, schemes, subject_data):
     print(f"  Concepts with broader (any):         {concepts_with_broader:>7,}")
     print(f"  Concepts with broader (in-set):      {concepts_with_inset_broader:>7,}")
     print(f"  Concepts with scope note:            {concepts_with_scope_note:>7,}")
+    print(f"  Concepts with typed relations:       {concepts_with_typed_relations:>7,}")
     print(f"  Top concepts (topConceptOf):         {top_concept_count:>7,}")
     if not schemes:
         print("\n  ERROR: No scheme produced -- the output XML will not import.")
