@@ -5,6 +5,7 @@ from django.utils.translation import gettext as _
 from arches.app.models import models
 from arches_lingo.etl_modules import migrate_to_lingo
 from arches.app.tasks import notify_completion
+from django.tasks import task
 
 
 @shared_task
@@ -46,7 +47,8 @@ def export_lingo_resources_task(
         notify_completion(message, user)
 
 
-@shared_task
+@task(queue_name="import")
+# @shared_task
 def load_lingo_resources_task(loadid, userid, kwargs={}):
     logger = logging.getLogger(__name__)
 

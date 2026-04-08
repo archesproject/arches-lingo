@@ -274,6 +274,7 @@ INSTALLED_APPS = (
     "corsheaders",
     "oauth2_provider",
     "django_celery_results",
+    "django_tasks_db",
     "pgtrigger",
     # "silk",
 )
@@ -493,6 +494,16 @@ CELERY_CHECK_ONLY_INSPECT_BROKER = False
 
 CANTALOUPE_DIR = os.path.join(ROOT_DIR, UPLOADED_FILES_DIR)
 CANTALOUPE_HTTP_ENDPOINT = "http://localhost:8182/"
+
+TASKS = {
+    "default": {
+        "BACKEND": "django_tasks_db.DatabaseBackend",
+        "QUEUES": ["default", "import", "export"],
+    },
+    "reserve": {
+        "BACKEND": "django.tasks.backends.immediate.ImmediateBackend",
+    },
+}
 
 ACCESSIBILITY_MODE = False
 
