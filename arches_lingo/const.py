@@ -84,10 +84,13 @@ LABEL_LIST_ID = "deb847fc-f4c3-4e82-be19-04641579f129"
 EVENT_TYPES_LIST_ID = "6eaa2c6f-af83-464c-9200-051c4cfe7e8e"
 METATYPES_LIST_ID = "ef69e772-de53-45fe-98d4-bf3e7b10eb57"
 RELATED_PROPERTIES_LIST_ID = "ed3f8d46-c372-4c99-a326-8f726076fb97"
+CONCEPT_TYPE_LIST_ID = "4f9b2c82-59c6-4173-99ea-2a6bfbab6aa2"
 
 
 ### URIs ###
 GUIDE_TERM_URI = "http://vocab.getty.edu/page/aat/300386700"
+HIERARCHY_NAME_URI = "http://vocab.getty.edu/ontology#HierarchyNode"
+FACET_URI = "http://vocab.getty.edu/ontology#Facet"
 
 ### Ontology Properties
 TOP_CONCEPT_OF_ONTOLOGY_PROPERTY = "http://www.w3.org/2004/02/skos/core#topConceptOf"

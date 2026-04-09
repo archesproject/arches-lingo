@@ -16,11 +16,25 @@
     <skos:prefLabel xml:lang="en">guide term</skos:prefLabel>
     <skos:definition xml:lang="en"><![CDATA[A guide term is a record represented by a term or phrase that is created as a hierarchical level to provide order and structure to thesauri by grouping narrower terms according to a given logic. Guide terms are not used for indexing and are often enclosed in angled brackets or otherwise distinguished from other terms in displays (for example, <photographs by form>).]]></skos:definition>
   </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/e3738c52-2a10-4f48-9b93-c4ec3ccbc647">
+    <dcterms:identifier>http://vocab.getty.edu/ontology#HierarchyNode</dcterms:identifier>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/4f9b2c82-59c6-4173-99ea-2a6bfbab6aa2"/>
+    <skos:prefLabel xml:lang="en">hierarchy name</skos:prefLabel>
+    <skos:definition xml:lang="en">A hierarchy name is a record that names a level in the hierarchy of a thesaurus. It identifies the top of a hierarchy or subgroup, providing a label for that organisational level. Hierarchy names are not used for indexing.</skos:definition>
+  </skos:Concept>
   <skos:Concept rdf:about="http://localhost:8000/d1012561-bd8f-4498-b7b1-fea78cb73afa">
     <skos:inScheme rdf:resource="http://localhost:8000/4f9b2c82-59c6-4173-99ea-2a6bfbab6aa2"/>
     <skos:definition xml:lang="en">A term is a word or group of words representing a single concept; a vocabulary record comprises terms and other information, including relationships, scope note, sources, etc. Additionally, in the jargon of thesaurus construction, the word term is often used as shorthand to actually refer to the concept that is represented by that term (for example, BT and NT actually refer to the relationships between concepts). The distinction between a term in the strict sense and term meaning a record must often be inferred from the context of the discussion.</skos:definition>
     <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">3</arches:sortorder>
     <skos:prefLabel xml:lang="en">concept</skos:prefLabel>
     <dcterms:identifier>http://vocab.getty.edu/page/aat/300387329</dcterms:identifier>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/1f88f375-3d7e-4f2d-b2c6-8b5b1e944d22">
+    <dcterms:identifier>http://vocab.getty.edu/ontology#Facet</dcterms:identifier>
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/4f9b2c82-59c6-4173-99ea-2a6bfbab6aa2"/>
+    <skos:prefLabel xml:lang="en">facet</skos:prefLabel>
+    <skos:definition xml:lang="en">A facet is a top-level organisational grouping in a thesaurus that groups related hierarchies according to a fundamental characteristic of division. In the AAT, facets serve as the highest level of organisation, above hierarchy names.</skos:definition>
   </skos:Concept>
 </rdf:RDF>
