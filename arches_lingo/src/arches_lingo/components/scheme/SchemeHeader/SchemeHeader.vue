@@ -93,6 +93,20 @@ const label = ref<Label>();
 const data = ref<SchemeHeader>();
 const labelCounts = ref<LanguageLabelCount[]>([]);
 const labelCountsLoading = ref(false);
+const showAllLanguages = ref(false);
+
+const LANGUAGE_CHIPS_TRUNCATE_COUNT = 8;
+
+const visibleLabelCounts = computed(() =>
+    showAllLanguages.value
+        ? labelCounts.value
+        : labelCounts.value.slice(0, LANGUAGE_CHIPS_TRUNCATE_COUNT),
+);
+
+const hiddenLanguageCount = computed(() =>
+    Math.max(0, labelCounts.value.length - LANGUAGE_CHIPS_TRUNCATE_COUNT),
+);
+
 const isLoading = ref(true);
 const showExportDialog = ref(false);
 const exportDialogKey = ref(0);
@@ -494,10 +508,7 @@ function onLifecycleStateChange(
                     />
                 </div>
 
-                <div
-                    class="header-row"
-                    style="padding-bottom: 1rem"
-                >
+                <div class="header-row">
                     <ConceptIdentifierCounterField
                         :resource-instance-id="props.resourceInstanceId"
                         :can-edit-resource-instances="canEditResourceInstances"
@@ -507,21 +518,51 @@ function onLifecycleStateChange(
                 </div>
 
                 <div class="header-row metadata-container">
-                    <div class="language-chip-container">
-                        <Skeleton
-                            v-if="labelCountsLoading"
-                            width="12rem"
-                            height="2rem"
-                        />
-                        <span
-                            v-for="entry in labelCounts"
-                            v-else
-                            :key="entry.code"
-                            class="scheme-language"
+                    <div class="language-chip-wrapper">
+                        <div class="language-section-header">
+                            <span class="header-item-label">{{
+                                $gettext("Languages:")
+                            }}</span>
+                            <button
+                                v-if="hiddenLanguageCount > 0"
+                                type="button"
+                                class="language-expand-toggle"
+                                :aria-expanded="showAllLanguages"
+                                @click="showAllLanguages = !showAllLanguages"
+                            >
+                                <template v-if="showAllLanguages">
+                                    <i class="pi pi-chevron-up"></i>
+                                    {{ $gettext("Show less") }}
+                                </template>
+                                <template v-else>
+                                    <i class="pi pi-chevron-down"></i>
+                                    +{{ hiddenLanguageCount }}
+                                    {{ $gettext("more") }}
+                                </template>
+                            </button>
+                        </div>
+                        <div
+                            class="language-chip-container"
+                            :class="{
+                                'language-chip-container--expanded':
+                                    showAllLanguages,
+                            }"
                         >
-                            {{ entry.language }} ({{ entry.code }}):
-                            {{ entry.count }}
-                        </span>
+                            <Skeleton
+                                v-if="labelCountsLoading"
+                                width="12rem"
+                                height="2rem"
+                            />
+                            <span
+                                v-for="entry in visibleLabelCounts"
+                                v-else
+                                :key="entry.code"
+                                class="scheme-language"
+                            >
+                                {{ entry.language }} ({{ entry.code }}):
+                                {{ entry.count }}
+                            </span>
+                        </div>
                     </div>
 
                     <div class="lifecycle-container">
@@ -649,11 +690,12 @@ h2 > span {
 }
 
 .metadata-container {
-    gap: 0.25rem;
+    gap: 0.75rem;
     margin-top: 0;
     padding-bottom: 1rem;
     justify-content: space-between;
     align-items: flex-start;
+    flex-wrap: nowrap;
 }
 
 .language-chip-container {
@@ -664,6 +706,50 @@ h2 > span {
     min-width: 0;
 }
 
+.language-chip-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 0;
+    flex: 1 1 0;
+}
+
+.language-section-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.language-chip-container--expanded {
+    max-height: 10rem;
+    overflow-y: auto;
+    align-items: flex-start;
+    align-content: flex-start;
+}
+
+.language-expand-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.125rem 0.375rem;
+    font-size: var(--p-lingo-font-size-smallnormal);
+    color: var(--p-primary-500);
+    background: none;
+    border: 0;
+    cursor: pointer;
+    font-family: inherit;
+    line-height: 1.4;
+}
+
+.language-expand-toggle:hover {
+    color: var(--p-primary-600);
+    background: var(--p-primary-50);
+}
+
+.language-expand-toggle .pi {
+    font-size: 0.6rem;
+}
+
 .add-language:hover {
     cursor: pointer;
 }
@@ -672,7 +758,7 @@ h2 > span {
     display: flex;
     flex-direction: column;
     align-items: flex-end;
-    min-width: 0;
+    flex-shrink: 0;
 }
 
 .add-language {
