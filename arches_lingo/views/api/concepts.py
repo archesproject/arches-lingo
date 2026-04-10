@@ -171,7 +171,11 @@ class ConceptResourceView(ConceptTreeView):
             active_language = get_language() or settings.LANGUAGE_CODE
             system_language = settings.LANGUAGE_CODE
             if term:
-                max_edit_distance = resolve_max_edit_distance(term)
+                raw_max_edit_distance = request.GET.get("maxEditDistance")
+                if raw_max_edit_distance is None:
+                    max_edit_distance = resolve_max_edit_distance(term)
+                else:
+                    max_edit_distance = raw_max_edit_distance
                 try:
                     concept_ids = build_search_queryset(
                         None,
