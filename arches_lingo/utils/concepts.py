@@ -1,3 +1,5 @@
+import json
+
 from django.db import connection
 from django.utils.translation import gettext as _
 
@@ -8,6 +10,7 @@ from arches_lingo.const import (
     CONCEPT_NAME_LANGUAGE_NODE,
     CONCEPT_NAME_NODEGROUP,
     CONCEPT_NAME_TYPE_NODE,
+    CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID,
     PREF_LABEL_URI,
 )
 
@@ -48,6 +51,8 @@ def build_search_queryset(
     order_mode,
     active_language=None,
     system_language=None,
+    scheme_id=None,
+    excluded_ids=None,
 ):
     """Return a SearchResultSet of concept IDs matching a search term.
 
@@ -75,6 +80,8 @@ def build_search_queryset(
         order_mode=order_mode,
         active_language=active_language or "",
         system_language=system_language or "",
+        scheme_id=scheme_id,
+        excluded_ids=excluded_ids,
     )
 
 
@@ -86,7 +93,9 @@ def _edit_distance_to_similarity_threshold(max_edit_distance, term_length):
     return max(0.1, round(1.0 - ratio, 2))
 
 
-def build_concept_ids_for_non_fuzzy(labels_queryset, order_mode):
+def build_concept_ids_for_non_fuzzy(
+    labels_queryset, order_mode, scheme_id=None, excluded_ids=None
+):
     """Return a SearchResultSet for browsing (no search term)."""
     return SearchResultSet(
         term=None,
@@ -95,6 +104,8 @@ def build_concept_ids_for_non_fuzzy(labels_queryset, order_mode):
         order_mode=order_mode,
         active_language="",
         system_language="",
+        scheme_id=scheme_id,
+        excluded_ids=excluded_ids,
     )
 
 
@@ -120,6 +131,8 @@ class SearchResultSet:
         active_language,
         system_language,
         exact_match=False,
+        scheme_id=None,
+        excluded_ids=None,
     ):
         self.term = term
         self.use_fuzzy = use_fuzzy
@@ -128,28 +141,47 @@ class SearchResultSet:
         self.active_language = active_language
         self.system_language = system_language
         self.exact_match = exact_match
+        self.scheme_id = scheme_id
+        self.excluded_ids = excluded_ids or []
         self._count_cache = None
 
     def _where_clause(self):
         """Return (sql_fragment, params) for the WHERE filter."""
-        base = self.NODEGROUP_FILTER
+        where_sql = self.NODEGROUP_FILTER
+        params = []
 
-        if self.term is None:
-            return base, []
+        if self.term is not None:
+            if self.exact_match:
+                where_sql += f" AND {self.CONTENT_COL} = %s"
+                params.append(self.term)
+            elif self.use_fuzzy:
+                # ILIKE uses the GIN trigram index; %% is the pg_trgm similarity
+                # operator (escaped for cursor.execute parameter substitution).
+                where_sql += (
+                    f" AND ({self.CONTENT_COL} ILIKE %s"
+                    f" OR {self.CONTENT_COL} %% %s)"
+                )
+                params.extend([f"%{self.term}%", self.term])
+            else:
+                where_sql += f" AND {self.CONTENT_COL} ILIKE %s"
+                params.append(f"%{self.term}%")
 
-        if self.exact_match:
-            return f"{base} AND {self.CONTENT_COL} = %s", [self.term]
-
-        if self.use_fuzzy:
-            # ILIKE uses the GIN trigram index; %% is the pg_trgm similarity
-            # operator (escaped for cursor.execute parameter substitution).
-            return (
-                f"{base} AND ({self.CONTENT_COL} ILIKE %s"
-                f" OR {self.CONTENT_COL} %% %s)",
-                [f"%{self.term}%", self.term],
+        if self.scheme_id:
+            where_sql += (
+                f" AND resourceinstanceid IN ("
+                f"SELECT resourceinstanceid FROM tiles"
+                f" WHERE nodegroupid = '{CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID}'"
+                f" AND tiledata -> '{CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID}'"
+                f" @> %s::jsonb)"
             )
+            params.append(json.dumps([{"resourceId": self.scheme_id}]))
 
-        return f"{base} AND {self.CONTENT_COL} ILIKE %s", [f"%{self.term}%"]
+        if self.excluded_ids:
+            placeholders = ", ".join(["%s"] * len(self.excluded_ids))
+            where_sql += f" AND resourceinstanceid NOT IN ({placeholders})"
+            params.extend(str(excluded_id) for excluded_id in self.excluded_ids)
+
+        return where_sql, params
 
     def _build_base_sql(self):
         """Build the core query that filters, ranks, and deduplicates."""
