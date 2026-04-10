@@ -35,7 +35,7 @@ class SchemeResourceView(AnonymousAccessMixin, View):
         if include_top_concepts:
             builder.top_concepts_map()
             top_concept_ids = list(builder.top_concepts.get(scheme_id, set()))
-            builder.populate_guide_term_concepts(top_concept_ids)
+            builder.populate_concept_type_sets(top_concept_ids)
 
         return JSONResponse(
             builder.serialize_scheme(
