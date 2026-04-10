@@ -32,6 +32,8 @@ import {
     ERROR,
     GUIDE_TERM_ICON,
     GUIDE_TERM_URI,
+    HIERARCHY_NAME_ICON,
+    HIERARCHY_NAME_URI,
     NEW_CONCEPT,
     SUCCESS,
     TOP_CONCEPT_ICON,
@@ -115,6 +117,7 @@ const conceptIcon = computed(function () {
         props.conceptTypeTile?.aliased_data?.[CONCEPT_TYPE_NODE_ALIAS]
             ?.node_value;
     if (isGuideTermType(typeNodeValue)) return GUIDE_TERM_ICON;
+    if (isHierarchyNameType(typeNodeValue)) return HIERARCHY_NAME_ICON;
     if (props.isTopConcept) return TOP_CONCEPT_ICON;
     return CONCEPT_ICON;
 });
@@ -143,6 +146,15 @@ function isGuideTermType(typeNodeValue: unknown): boolean {
     }
     return typeNodeValue.some(
         (typeRef: { uri?: string }) => typeRef.uri === GUIDE_TERM_URI,
+    );
+}
+
+function isHierarchyNameType(typeNodeValue: unknown): boolean {
+    if (!Array.isArray(typeNodeValue) || typeNodeValue.length === 0) {
+        return false;
+    }
+    return typeNodeValue.some(
+        (typeRef: { uri?: string }) => typeRef.uri === HIERARCHY_NAME_URI,
     );
 }
 

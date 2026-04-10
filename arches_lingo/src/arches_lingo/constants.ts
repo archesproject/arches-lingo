@@ -49,6 +49,7 @@ export const FALLBACK_LANGUAGE: Language = {
 // Icons
 export const CONCEPT_ICON = "pi pi-tag";
 export const GUIDE_TERM_ICON = "pi pi-angle-double-right";
+export const HIERARCHY_NAME_ICON = "pi pi-sitemap";
 export const SCHEME_ICON = "pi pi-folder";
 export const TOP_CONCEPT_ICON = "pi pi-arrow-circle-up";
 
@@ -62,6 +63,8 @@ export const RETIRED_LIFECYCLE_STATE_ID =
 
 // URIs
 export const GUIDE_TERM_URI = "http://vocab.getty.edu/page/aat/300386700";
+export const HIERARCHY_NAME_URI =
+    "http://vocab.getty.edu/ontology#HierarchyNode";
 
 // Injection keys
 export const openPanelComponentKey = Symbol() as InjectionKey<

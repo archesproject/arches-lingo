@@ -6,6 +6,7 @@ import {
     NEW_CONCEPT,
     CONCEPT_ICON,
     GUIDE_TERM_ICON,
+    HIERARCHY_NAME_ICON,
     SCHEME_ICON,
     TOP_CONCEPT_ICON,
     CONCEPT_TYPE_NODE_ALIAS,
@@ -40,9 +41,15 @@ export function getConceptIcon(
     item:
         | Concept
         | SearchResultItem
-        | { guide_term?: boolean; top_concept?: boolean },
+        | {
+              guide_term?: boolean;
+              hierarchy_name?: boolean;
+              top_concept?: boolean;
+          },
 ): string {
     if (item.guide_term) return GUIDE_TERM_ICON;
+    if ((item as { hierarchy_name?: boolean }).hierarchy_name)
+        return HIERARCHY_NAME_ICON;
     if ((item as { top_concept?: boolean }).top_concept)
         return TOP_CONCEPT_ICON;
     return CONCEPT_ICON;
