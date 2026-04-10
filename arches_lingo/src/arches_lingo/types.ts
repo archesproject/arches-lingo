@@ -514,7 +514,9 @@ export type FacetType =
     | "uri"
     | "identifier"
     | "lifecycle_state"
-    | "concept_set";
+    | "concept_set"
+    | "attribution_source"
+    | "attribution_contributor";
 
 export interface SearchCondition {
     id: string;
