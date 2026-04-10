@@ -166,22 +166,36 @@ class ConceptResourceView(ConceptTreeView):
         items_per_page = int(request.GET.get("items", 25))
         concepts = request.GET.get("concepts", None)
         concept_ids = concepts.split(",") if concepts else None
-        Concept = ResourceTileTree.get_tiles("concept")
 
         if not concept_ids:
-            if scheme:
-                concept_query = Concept.filter(part_of_scheme__id=scheme)
-            else:
-                concept_query = Concept.all()
-
+            active_language = get_language() or settings.LANGUAGE_CODE
+            system_language = settings.LANGUAGE_CODE
             if term:
-                concept_query = concept_query.filter(
-                    appellative_status_ascribed_name_content__icontains=term
+                max_edit_distance = resolve_max_edit_distance(term)
+                try:
+                    concept_ids = build_search_queryset(
+                        None,
+                        term,
+                        max_edit_distance,
+                        "unsorted",
+                        active_language,
+                        system_language,
+                        scheme_id=scheme,
+                        excluded_ids=excluded_ids,
+                    )
+                except ValueError as value_error:
+                    return JSONErrorResponse(
+                        title=_("Unable to perform search."),
+                        message=value_error.args[0],
+                        status=HTTPStatus.BAD_REQUEST,
+                    )
+            else:
+                concept_ids = build_concept_ids_for_non_fuzzy(
+                    None,
+                    "alphabetical",
+                    scheme_id=scheme,
+                    excluded_ids=excluded_ids,
                 )
-            if exclude:
-                concept_query = concept_query.exclude(pk__in=excluded_ids)
-
-            concept_ids = concept_query.order_by("pk").values_list("pk", flat=True)
 
         paginator = Paginator(concept_ids, items_per_page)
         page = paginator.get_page(page_number)
