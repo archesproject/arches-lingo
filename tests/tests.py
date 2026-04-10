@@ -865,3 +865,62 @@ class PermissionTests(TestCase):
         response = self.client.get(reverse("api-lingo-settings"))
         result = json.loads(response.content)
         self.assertFalse(result["allow_anonymous_access"])
+
+
+class ConceptResourceViewTests(ViewTests):
+    """Tests for ConceptResourceView — verifies the optimized SQL path via SearchResultSet."""
+
+    def test_browse_returns_all_concepts_alphabetically(self):
+        response = self.client.get(reverse("api-lingo-concept-resources"))
+        result = json.loads(response.content)
+        self.assertEqual(result["total_results"], 5)
+
+    def test_term_search_returns_matching_concepts(self):
+        cases = (
+            ["term=Concept 1", 5],
+            ["term=Concept 1&maxEditDistance=0", 1],
+            ["term=Con&maxEditDistance=0", 5],
+        )
+        for query, expected_count in cases:
+            with self.subTest(query=query):
+                response = self.client.get(
+                    reverse("api-lingo-concept-resources"), QUERY_STRING=query
+                )
+                result = json.loads(response.content)
+                self.assertEqual(result["total_results"], expected_count, result)
+
+    def test_scheme_filter_restricts_results_to_scheme(self):
+        response = self.client.get(
+            reverse("api-lingo-concept-resources"),
+            QUERY_STRING=f"scheme={self.scheme.pk}",
+        )
+        result = json.loads(response.content)
+        self.assertEqual(result["total_results"], 5)
+
+    def test_scheme_filter_with_unknown_scheme_returns_no_results(self):
+        unknown_scheme_id = str(uuid.uuid4())
+        response = self.client.get(
+            reverse("api-lingo-concept-resources"),
+            QUERY_STRING=f"scheme={unknown_scheme_id}",
+        )
+        result = json.loads(response.content)
+        self.assertEqual(result["total_results"], 0)
+
+    def test_exclude_removes_specified_concept_from_results(self):
+        excluded_concept_id = str(self.concepts[0].pk)
+        response = self.client.get(
+            reverse("api-lingo-concept-resources"),
+            QUERY_STRING=f"term=Concept&maxEditDistance=0&exclude={excluded_concept_id}",
+        )
+        result = json.loads(response.content)
+        self.assertEqual(result["total_results"], 4)
+        returned_ids = [concept["resourceinstanceid"] for concept in result["data"]]
+        self.assertNotIn(excluded_concept_id, returned_ids)
+
+    def test_invalid_term_returns_bad_request(self):
+        with self.assertLogs("django.request", level="WARNING"):
+            response = self.client.get(
+                reverse("api-lingo-concept-resources"),
+                QUERY_STRING="term=" + ("!" * 256),
+            )
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
