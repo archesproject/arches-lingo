@@ -912,7 +912,7 @@ class ConceptResourceViewTests(ViewTests):
         )
         result = json.loads(response.content)
         self.assertEqual(result["total_results"], 4)
-        returned_ids = [concept["resourceinstanceid"] for concept in result["data"]]
+        returned_ids = [concept["id"] for concept in result["data"]]
         self.assertNotIn(excluded_concept_id, returned_ids)
 
     def test_invalid_term_returns_bad_request(self):
