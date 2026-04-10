@@ -44,6 +44,7 @@ export interface Concept {
     narrower: Concept[];
     has_narrower?: boolean;
     guide_term?: boolean;
+    hierarchy_name?: boolean;
     top_concept?: boolean;
     resource_instance_lifecycle_state_id?: string;
     resource_instance_lifecycle_state_name?: string;
@@ -51,7 +52,7 @@ export interface Concept {
 
 export type ConceptPathNode = Pick<
     Concept,
-    "id" | "labels" | "guide_term" | "top_concept"
+    "id" | "labels" | "guide_term" | "hierarchy_name" | "top_concept"
 >;
 
 export interface Scheme {
