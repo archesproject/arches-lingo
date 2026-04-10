@@ -87,6 +87,7 @@ METATYPES_LIST_ID = "ef69e772-de53-45fe-98d4-bf3e7b10eb57"
 
 ### URIs ###
 GUIDE_TERM_URI = "http://vocab.getty.edu/page/aat/300386700"
+HIERARCHY_NAME_URI = "http://vocab.getty.edu/ontology#HierarchyNode"
 
 ### Ontology Properties
 TOP_CONCEPT_OF_ONTOLOGY_PROPERTY = "http://www.w3.org/2004/02/skos/core#topConceptOf"
