@@ -20,6 +20,8 @@ from arches_lingo.const import (
     CONCEPTS_GRAPH_ID,
     CONCEPT_NAME_NODEGROUP,
     CONCEPT_NAME_CONTENT_NODE,
+    CONCEPT_NAME_DATA_ASSIGNMENT_ACTOR_NODE,
+    CONCEPT_NAME_DATA_ASSIGNMENT_OBJ_USED_NODE,
     CONCEPT_NAME_LANGUAGE_NODE,
     CONCEPT_NAME_TYPE_NODE,
     CLASSIFICATION_STATUS_NODEGROUP,
@@ -30,6 +32,8 @@ from arches_lingo.const import (
     TOP_CONCEPT_OF_NODE_AND_NODEGROUP,
     STATEMENT_NODEGROUP,
     STATEMENT_CONTENT_NODE,
+    STATEMENT_DATA_ASSIGNMENT_ACTOR_NODE,
+    STATEMENT_DATA_ASSIGNMENT_OBJ_USED_NODE,
     STATEMENT_LANGUAGE_NODE,
     STATEMENT_TYPE_NODE,
     URI_NODEGROUP,
@@ -58,6 +62,8 @@ VALID_FACETS = {
     "identifier",
     "lifecycle_state",
     "concept_set",
+    "attribution_source",
+    "attribution_contributor",
 }
 
 
@@ -462,3 +468,95 @@ class AdvancedSearchEvaluator:
             return self._all_concept_ids().none()
 
         return concept_set.members.values_list("concept_id", flat=True)
+
+    def _facet_attribution_source(self, condition):
+        """Find concepts whose labels or notes are attributed to a specific source.
+
+        A source is a textual work referenced via the data_assignment_object_used node
+        on both appellative_status (label) and statement (note) tiles.  When the
+        match_mode is 'exists', returns all concepts that have any source attributed
+        to at least one label or note.
+        """
+        resource_id = condition.get("value", "").strip()
+        match_mode = condition.get("match_mode", "")
+
+        if match_mode == "exists":
+            filters = Q(
+                nodegroup_id=CONCEPT_NAME_NODEGROUP,
+                **{
+                    f"data__{CONCEPT_NAME_DATA_ASSIGNMENT_OBJ_USED_NODE}__contains": [
+                        {}
+                    ]
+                },
+            ) | Q(
+                nodegroup_id=STATEMENT_NODEGROUP,
+                **{f"data__{STATEMENT_DATA_ASSIGNMENT_OBJ_USED_NODE}__contains": [{}]},
+            )
+        elif resource_id:
+            filters = Q(
+                nodegroup_id=CONCEPT_NAME_NODEGROUP,
+                **{
+                    f"data__{CONCEPT_NAME_DATA_ASSIGNMENT_OBJ_USED_NODE}__contains": [
+                        {"resourceId": resource_id}
+                    ]
+                },
+            ) | Q(
+                nodegroup_id=STATEMENT_NODEGROUP,
+                **{
+                    f"data__{STATEMENT_DATA_ASSIGNMENT_OBJ_USED_NODE}__contains": [
+                        {"resourceId": resource_id}
+                    ]
+                },
+            )
+        else:
+            return self._all_concept_ids()
+
+        return (
+            TileModel.objects.filter(filters)
+            .values_list("resourceinstance_id", flat=True)
+            .distinct()
+        )
+
+    def _facet_attribution_contributor(self, condition):
+        """Find concepts whose labels or notes are attributed to a specific contributor.
+
+        A contributor is a person or organization referenced via the
+        data_assignment_actor node on both appellative_status (label) and statement
+        (note) tiles.  When the match_mode is 'exists', returns all concepts that
+        have any contributor attributed to at least one label or note.
+        """
+        resource_id = condition.get("value", "").strip()
+        match_mode = condition.get("match_mode", "")
+
+        if match_mode == "exists":
+            filters = Q(
+                nodegroup_id=CONCEPT_NAME_NODEGROUP,
+                **{f"data__{CONCEPT_NAME_DATA_ASSIGNMENT_ACTOR_NODE}__contains": [{}]},
+            ) | Q(
+                nodegroup_id=STATEMENT_NODEGROUP,
+                **{f"data__{STATEMENT_DATA_ASSIGNMENT_ACTOR_NODE}__contains": [{}]},
+            )
+        elif resource_id:
+            filters = Q(
+                nodegroup_id=CONCEPT_NAME_NODEGROUP,
+                **{
+                    f"data__{CONCEPT_NAME_DATA_ASSIGNMENT_ACTOR_NODE}__contains": [
+                        {"resourceId": resource_id}
+                    ]
+                },
+            ) | Q(
+                nodegroup_id=STATEMENT_NODEGROUP,
+                **{
+                    f"data__{STATEMENT_DATA_ASSIGNMENT_ACTOR_NODE}__contains": [
+                        {"resourceId": resource_id}
+                    ]
+                },
+            )
+        else:
+            return self._all_concept_ids()
+
+        return (
+            TileModel.objects.filter(filters)
+            .values_list("resourceinstance_id", flat=True)
+            .distinct()
+        )
