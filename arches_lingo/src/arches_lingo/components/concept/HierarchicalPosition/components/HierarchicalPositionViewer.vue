@@ -374,7 +374,20 @@ function getTreeNodeStyle(depth: number) {
                                     :class="getIcon(item)"
                                     class="tree-node-icon"
                                 />
+                                <span
+                                    v-if="item.id === props.resourceInstanceId"
+                                    class="tree-node-label tree-node-label-current"
+                                >
+                                    {{
+                                        getItemLabel(
+                                            item,
+                                            selectedLanguage.code,
+                                            systemLanguage.code,
+                                        ).value
+                                    }}
+                                </span>
                                 <RouterLink
+                                    v-else
                                     :to="getItemRoute(item)"
                                     class="tree-node-label"
                                 >
@@ -493,6 +506,11 @@ function getTreeNodeStyle(depth: number) {
     margin-inline-start: 0.5rem;
     font-size: var(--p-lingo-font-size-small);
     color: var(--p-primary-500);
+}
+
+.tree-node-label-current {
+    color: var(--p-text-color);
+    font-weight: var(--p-lingo-font-weight-semibold, 600);
 }
 
 .button-container {
