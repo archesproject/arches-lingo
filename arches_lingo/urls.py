@@ -53,6 +53,7 @@ from arches_lingo.views.api.user_profile import (
     LingoUserView,
     UserProfileAPIView,
 )
+from arches_lingo.views.api.sparql import SparqlExamplesView, SparqlQueryView
 
 handler400 = "arches.app.views.main.custom_400"
 handler403 = "arches.app.views.main.custom_403"
@@ -235,6 +236,16 @@ urlpatterns = [
         "api/lingo/concept/<uuid:pk>/retire",
         ConceptRetireView.as_view(),
         name="api-concept-retire",
+    ),
+    path(
+        "api/lingo/sparql",
+        SparqlQueryView.as_view(),
+        name="api-lingo-sparql",
+    ),
+    path(
+        "api/lingo/sparql/examples",
+        SparqlExamplesView.as_view(),
+        name="api-lingo-sparql-examples",
     ),
     path(
         "api/lingo/<slug:graph>",
