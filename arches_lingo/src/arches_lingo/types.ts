@@ -595,3 +595,23 @@ export interface ConceptSetDetail extends ConceptSetItem {
 }
 
 export type DeleteConceptStrategy = "reparent" | "delete_children" | "orphan";
+
+export interface SparqlBindingValue {
+    type: "uri" | "literal";
+    value: string;
+    "xml:lang"?: string;
+    datatype?: string;
+}
+
+export interface SparqlResults {
+    head: { vars: string[] };
+    results: {
+        bindings: Record<string, SparqlBindingValue>[];
+    };
+}
+
+export interface SparqlExample {
+    title: string;
+    description: string;
+    query: string;
+}

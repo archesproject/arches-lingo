@@ -7,14 +7,20 @@ import Button from "primevue/button";
 import Panel from "primevue/panel";
 import Splitter from "primevue/splitter";
 import SplitterPanel from "primevue/splitterpanel";
+import Tab from "primevue/tab";
+import TabList from "primevue/tablist";
+import Tabs from "primevue/tabs";
 
 import SearchQueryBuilder from "@/arches_lingo/components/advanced-search/SearchQueryBuilder.vue";
 import SearchResults from "@/arches_lingo/components/advanced-search/SearchResults.vue";
 import SavedSearches from "@/arches_lingo/components/advanced-search/SavedSearches.vue";
 import ConceptSets from "@/arches_lingo/components/advanced-search/ConceptSets.vue";
+import SparqlEditor from "@/arches_lingo/components/advanced-search/SparqlEditor.vue";
+import SparqlResultsTable from "@/arches_lingo/components/advanced-search/SparqlResults.vue";
 
 import {
     executeAdvancedSearch,
+    executeSparqlQuery,
     fetchAdvancedSearchOptions,
     fetchControlledListOptions,
 } from "@/arches_lingo/api.ts";
@@ -42,6 +48,7 @@ import type {
     ControlledListOption,
     SearchCondition,
     SearchGroup,
+    SparqlResults as SparqlResultsData,
 } from "@/arches_lingo/types.ts";
 
 const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
@@ -84,6 +91,9 @@ const selectedConceptIds = ref<Set<string>>(new Set());
 const allResultsSelected = ref(false);
 const activeConceptSetId = ref<number | null>(null);
 const showSidePanel = ref(true);
+const activeSearchTab = ref("query-builder");
+const sparqlResults = ref<SparqlResultsData | null>(null);
+const isSparqlExecuting = ref(false);
 
 const currentQueryForSet = computed(() =>
     allResultsSelected.value ? buildQuery() : null,
@@ -257,21 +267,98 @@ function onConceptsRemoved() {
     executeSearch(currentPage.value);
 }
 
+async function executeSparql(query: string, schemeId?: string) {
+    isSparqlExecuting.value = true;
+    sparqlResults.value = null;
+    try {
+        const results = await executeSparqlQuery(query, schemeId, "json");
+        sparqlResults.value = results as SparqlResultsData;
+    } catch (error) {
+        toast.add({
+            severity: ERROR,
+            life: DEFAULT_ERROR_TOAST_LIFE,
+            summary: $gettext("SPARQL query failed."),
+            detail: error instanceof Error ? error.message : undefined,
+        });
+    } finally {
+        isSparqlExecuting.value = false;
+    }
+}
+
+async function downloadSparqlResults(format: string) {
+    if (!sparqlResults.value) return;
+
+    if (format === "json") {
+        const blob = new Blob([JSON.stringify(sparqlResults.value, null, 2)], {
+            type: "application/json",
+        });
+        downloadBlob(blob, "sparql_results.json");
+        return;
+    }
+
+    try {
+        const lastQueryTextarea = document.querySelector(
+            ".sparql-editor .query-textarea",
+        ) as HTMLTextAreaElement | null;
+        const query = lastQueryTextarea?.value || "";
+        if (!query) return;
+        const blob = (await executeSparqlQuery(
+            query,
+            undefined,
+            "csv",
+        )) as Blob;
+        downloadBlob(blob, "sparql_results.csv");
+    } catch (error) {
+        toast.add({
+            severity: ERROR,
+            life: DEFAULT_ERROR_TOAST_LIFE,
+            summary: $gettext("Download failed."),
+            detail: error instanceof Error ? error.message : undefined,
+        });
+    }
+}
+
+function downloadBlob(blob: Blob, filename: string) {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+}
+
 onMounted(loadSearchOptions);
 </script>
 
 <template>
     <div class="advanced-search">
         <div class="search-header">
-            <h2 class="search-header-title">
-                <i
-                    class="pi pi-search"
-                    aria-hidden="true"
-                />
-                {{ $gettext("Advanced Search") }}
-            </h2>
+            <div class="search-header-left">
+                <h2 class="search-header-title">
+                    <i
+                        class="pi pi-search"
+                        aria-hidden="true"
+                    />
+                    {{ $gettext("Advanced Search") }}
+                </h2>
+                <Tabs
+                    v-model:value="activeSearchTab"
+                    class="search-mode-tabs"
+                >
+                    <TabList>
+                        <Tab value="query-builder">
+                            {{ $gettext("Query Builder") }}
+                        </Tab>
+                        <Tab value="sparql">
+                            {{ $gettext("SPARQL") }}
+                        </Tab>
+                    </TabList>
+                </Tabs>
+            </div>
             <Button
-                v-if="!isAnonymous"
+                v-if="!isAnonymous && activeSearchTab === 'query-builder'"
                 :label="
                     showSidePanel
                         ? $gettext('Hide Saved Searches & Sets')
@@ -289,6 +376,7 @@ onMounted(loadSearchOptions);
         </div>
 
         <Splitter
+            v-show="activeSearchTab === 'query-builder'"
             class="search-splitter"
             :pt="{
                 gutter: {
@@ -366,6 +454,29 @@ onMounted(loadSearchOptions);
                 </div>
             </SplitterPanel>
         </Splitter>
+
+        <div
+            v-show="activeSearchTab === 'sparql'"
+            class="sparql-content"
+        >
+            <SparqlEditor
+                :schemes="searchOptions.schemes"
+                :is-executing="isSparqlExecuting"
+                @execute="executeSparql"
+            />
+
+            <Panel
+                v-if="sparqlResults || isSparqlExecuting"
+                :header="$gettext('Results')"
+                class="sparql-results-panel"
+            >
+                <SparqlResultsTable
+                    :results="sparqlResults"
+                    :loading="isSparqlExecuting"
+                    @download="downloadSparqlResults"
+                />
+            </Panel>
+        </div>
     </div>
 </template>
 
@@ -390,6 +501,21 @@ onMounted(loadSearchOptions);
     border-bottom: 0.0625rem solid var(--p-header-toolbar-border);
     flex-shrink: 0;
     box-sizing: border-box;
+}
+
+.search-header-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.search-mode-tabs :deep(.p-tablist) {
+    border: none;
+}
+
+.search-mode-tabs :deep(.p-tab) {
+    font-size: var(--p-lingo-font-size-small);
+    padding: 0.25rem 0.75rem;
 }
 
 .search-header-title {
@@ -519,5 +645,45 @@ onMounted(loadSearchOptions);
 
 .advanced-search :deep(.p-dialog .p-button) {
     border-radius: 0.125rem;
+}
+
+.sparql-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+    flex: 1 1 auto;
+    overflow: hidden;
+}
+
+.sparql-results-panel {
+    flex: 1 1 auto;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.sparql-results-panel :deep(.p-panel-header) {
+    font-size: var(--p-lingo-font-size-medium);
+    font-weight: var(--p-lingo-font-weight-normal);
+    border-radius: 0.125rem 0.125rem 0 0;
+    flex-shrink: 0;
+}
+
+.sparql-results-panel :deep(.p-panel-content-container) {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.sparql-results-panel :deep(.p-panel-content) {
+    flex: 1 1 auto;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
 }
 </style>

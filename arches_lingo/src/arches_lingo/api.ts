@@ -1180,3 +1180,46 @@ export const fetchMissingTranslations = async (
     if (!response.ok) throw new Error(parsed.message || response.statusText);
     return parsed;
 };
+
+export const executeSparqlQuery = async (
+    query: string,
+    schemeId?: string,
+    format: string = "json",
+) => {
+    const response = await fetch(
+        generateArchesURL("arches_lingo:api-lingo-sparql"),
+        {
+            method: "POST",
+            headers: {
+                "X-CSRFTOKEN": getToken(),
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                query,
+                scheme_id: schemeId || null,
+                format,
+            }),
+        },
+    );
+
+    if (format === "csv") {
+        if (!response.ok) {
+            const parsed = await response.json();
+            throw new Error(parsed.message || response.statusText);
+        }
+        return response.blob();
+    }
+
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
+export const fetchSparqlExamples = async () => {
+    const response = await fetch(
+        generateArchesURL("arches_lingo:api-lingo-sparql-examples"),
+    );
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
