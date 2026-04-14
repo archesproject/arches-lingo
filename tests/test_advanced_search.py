@@ -299,13 +299,9 @@ class AdvancedSearchEvaluatorTests(TestCase):
             },
         )
 
-        # Attribution test data: fake source and contributor resource IDs so
-        # we can test the attribution facets without needing real Person/Source
-        # resource graphs loaded.
         cls.source_resource_id = str(uuid.uuid4())
         cls.contributor_resource_id = str(uuid.uuid4())
 
-        # concept_a: label has source_resource_id in object_used
         TileModel.objects.create(
             resourceinstance=cls.concept_a,
             nodegroup_id=CONCEPT_NAME_NODEGROUP,
@@ -319,7 +315,6 @@ class AdvancedSearchEvaluatorTests(TestCase):
             },
         )
 
-        # concept_b: note has contributor_resource_id in actor
         TileModel.objects.create(
             resourceinstance=cls.concept_b,
             nodegroup_id=CONCEPT_NAME_NODEGROUP,

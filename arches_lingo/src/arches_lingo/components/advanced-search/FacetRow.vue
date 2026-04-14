@@ -274,18 +274,14 @@ const showDirectionSelect = computed(
     () => props.condition.facet === "relationship_hierarchical",
 );
 
-const isExistsMatchMode = computed(() => currentMatchMode.value === "exists");
-
 const showSourcePicker = computed(
-    () =>
-        props.condition.facet === "attribution_source" &&
-        !isExistsMatchMode.value,
+    () => props.condition.facet === "attribution_source" && !isExistsMode.value,
 );
 
 const showContributorPicker = computed(
     () =>
         props.condition.facet === "attribution_contributor" &&
-        !isExistsMatchMode.value,
+        !isExistsMode.value,
 );
 
 const showAttributionMatchMode = computed(() =>
@@ -298,20 +294,12 @@ const attributionMatchModes = computed<{ label: string; value: MatchMode }[]>(
     () => [{ label: $gettext("Exists (any value)"), value: "exists" }],
 );
 
-const noSourcesFoundMessage = computed(() => $gettext("No sources found"));
-const searchSourcesFilterPlaceholder = computed(() =>
-    $gettext("Search sources..."),
-);
-const selectSourcePlaceholder = computed(() => $gettext("Select source..."));
-const noContributorsFoundMessage = computed(() =>
-    $gettext("No contributors found"),
-);
-const searchContributorsFilterPlaceholder = computed(() =>
-    $gettext("Search contributors..."),
-);
-const selectContributorPlaceholder = computed(() =>
-    $gettext("Select contributor..."),
-);
+const noSourcesFoundMessage = $gettext("No sources found");
+const searchSourcesFilterPlaceholder = $gettext("Search sources...");
+const selectSourcePlaceholder = $gettext("Select source...");
+const noContributorsFoundMessage = $gettext("No contributors found");
+const searchContributorsFilterPlaceholder = $gettext("Search contributors...");
+const selectContributorPlaceholder = $gettext("Select contributor...");
 
 const showMatchMode = computed(() => {
     return ["label", "note", "match_uri", "uri", "identifier"].includes(
@@ -337,6 +325,16 @@ function updateMatchMode(mode: MatchMode) {
     const updated = { ...props.condition, match_mode: mode };
     if (mode === "exists") {
         updated.value = "";
+    }
+    emit("update:condition", updated);
+}
+
+function updateAttributionMatchMode(val: MatchMode | null) {
+    const updated = { ...props.condition, value: "" };
+    if (val === "exists") {
+        updated.match_mode = "exists";
+    } else {
+        delete updated.match_mode;
     }
     emit("update:condition", updated);
 }
@@ -384,27 +382,16 @@ function toggleNegated() {
             @update:model-value="updateMatchMode"
         />
 
-        <!-- Exists-only match mode for attribution facets -->
         <Select
             v-if="showAttributionMatchMode"
-            :model-value="isExistsMatchMode ? 'exists' : null"
+            :model-value="isExistsMode ? 'exists' : null"
             :options="attributionMatchModes"
             option-label="label"
             option-value="value"
             :placeholder="$gettext('Is attributed to...')"
             :show-clear="true"
             class="match-mode-dropdown"
-            @update:model-value="
-                (val: MatchMode | null) => {
-                    const updated = { ...props.condition, value: '' };
-                    if (val === 'exists') {
-                        updated.match_mode = 'exists';
-                    } else {
-                        delete updated.match_mode;
-                    }
-                    emit('update:condition', updated);
-                }
-            "
+            @update:model-value="updateAttributionMatchMode"
         />
 
         <!-- Text input for label, note, URI, identifier, match_uri -->
@@ -549,7 +536,6 @@ function toggleNegated() {
             "
         />
 
-        <!-- Source picker for attribution_source facet -->
         <Select
             v-if="showSourcePicker"
             :model-value="condition.value"
@@ -571,7 +557,6 @@ function toggleNegated() {
             "
         />
 
-        <!-- Contributor picker for attribution_contributor facet -->
         <Select
             v-if="showContributorPicker"
             :model-value="condition.value"
