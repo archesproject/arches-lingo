@@ -33,7 +33,7 @@ from arches_lingo.utils.dashboard import (
 
 class ConceptTreeView(AnonymousAccessMixin, View):
     def get(self, request):
-        builder = ConceptBuilder(shallow=True)
+        builder = ConceptBuilder(depth=1)
         data = {
             "schemes": [
                 builder.serialize_scheme(scheme, shallow=True)
@@ -45,7 +45,7 @@ class ConceptTreeView(AnonymousAccessMixin, View):
 
 class ConceptChildrenView(AnonymousAccessMixin, View):
     def get(self, request, concept_id):
-        builder = ConceptBuilder.for_concept_children(str(concept_id))
+        builder = ConceptBuilder([str(concept_id)], depth=1)
         children = [
             builder.serialize_concept_shallow(child_id)
             for child_id in sorted(
