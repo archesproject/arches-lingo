@@ -132,9 +132,11 @@ function getIcon(item: SearchResultItem) {
 }
 
 function getItemRoute(item: SearchResultItem) {
-    return item.id === props.scheme
-        ? { name: routeNames.scheme, params: { id: item.id } }
-        : { name: routeNames.concept, params: { id: item.id } };
+    if (item.id === props.scheme) {
+        return { name: routeNames.scheme, params: { id: item.id } };
+    } else {
+        return { name: routeNames.concept, params: { id: item.id } };
+    }
 }
 
 function getParentLabel(group: RelationshipGroup): string {
