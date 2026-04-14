@@ -84,7 +84,7 @@ const { openEditLog } = useEditLog(() => props.graphSlug);
 const confirm = useConfirm();
 const router = useRouter();
 const toast = useToast();
-const { $gettext } = useGettext();
+const { $gettext, interpolate } = useGettext();
 const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
 
 const scheme = ref<ResourceInstanceResult>();
@@ -97,14 +97,30 @@ const showAllLanguages = ref(false);
 
 const LANGUAGE_CHIPS_TRUNCATE_COUNT = 8;
 
-const visibleLabelCounts = computed(() =>
-    showAllLanguages.value
-        ? labelCounts.value
-        : labelCounts.value.slice(0, LANGUAGE_CHIPS_TRUNCATE_COUNT),
+const visibleLabelCounts = computed(() => {
+    if (showAllLanguages.value) return labelCounts.value;
+    return labelCounts.value.slice(0, LANGUAGE_CHIPS_TRUNCATE_COUNT);
+});
+
+const hiddenLanguageCount = computed(
+    () => labelCounts.value.length - LANGUAGE_CHIPS_TRUNCATE_COUNT,
 );
 
-const hiddenLanguageCount = computed(() =>
-    Math.max(0, labelCounts.value.length - LANGUAGE_CHIPS_TRUNCATE_COUNT),
+const visibleLabelChips = computed(() =>
+    visibleLabelCounts.value.map((entry) => ({
+        key: entry.code,
+        label: interpolate(
+            $gettext("%{language} (%{code}): %{count}"),
+            { language: entry.language, code: entry.code, count: entry.count },
+            true,
+        ),
+    })),
+);
+
+const showMoreLabel = computed(() =>
+    interpolate($gettext("+%{count} more"), {
+        count: hiddenLanguageCount.value,
+    }),
 );
 
 const isLoading = ref(true);
@@ -523,23 +539,27 @@ function onLifecycleStateChange(
                             <span class="header-item-label">{{
                                 $gettext("Languages:")
                             }}</span>
-                            <button
+                            <Button
                                 v-if="hiddenLanguageCount > 0"
-                                type="button"
+                                text
+                                size="small"
                                 class="language-expand-toggle"
                                 :aria-expanded="showAllLanguages"
                                 @click="showAllLanguages = !showAllLanguages"
                             >
-                                <template v-if="showAllLanguages">
-                                    <i class="pi pi-chevron-up"></i>
-                                    {{ $gettext("Show less") }}
-                                </template>
-                                <template v-else>
-                                    <i class="pi pi-chevron-down"></i>
-                                    +{{ hiddenLanguageCount }}
-                                    {{ $gettext("more") }}
-                                </template>
-                            </button>
+                                <i
+                                    :class="
+                                        showAllLanguages
+                                            ? 'pi pi-chevron-up'
+                                            : 'pi pi-chevron-down'
+                                    "
+                                ></i>
+                                <span>{{
+                                    showAllLanguages
+                                        ? $gettext("Show less")
+                                        : showMoreLabel
+                                }}</span>
+                            </Button>
                         </div>
                         <div
                             class="language-chip-container"
@@ -554,13 +574,12 @@ function onLifecycleStateChange(
                                 height="2rem"
                             />
                             <span
-                                v-for="entry in visibleLabelCounts"
+                                v-for="chip in visibleLabelChips"
                                 v-else
-                                :key="entry.code"
+                                :key="chip.key"
                                 class="scheme-language"
                             >
-                                {{ entry.language }} ({{ entry.code }}):
-                                {{ entry.count }}
+                                {{ chip.label }}
                             </span>
                         </div>
                     </div>
@@ -721,8 +740,6 @@ h2 > span {
 }
 
 .language-chip-container--expanded {
-    max-height: 10rem;
-    overflow-y: auto;
     align-items: flex-start;
     align-content: flex-start;
 }
