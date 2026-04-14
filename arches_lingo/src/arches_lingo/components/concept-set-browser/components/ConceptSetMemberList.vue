@@ -82,7 +82,7 @@ function handleRemoveSelected() {
                     class="pi pi-folder"
                     aria-hidden="true"
                 />
-                {{ props.setDetail.name }}
+                <span>{{ props.setDetail.name }}</span>
             </div>
         </div>
 
@@ -138,7 +138,9 @@ function handleRemoveSelected() {
                     binary
                     @update:model-value="toggleSelectConcept(member.id)"
                 />
-                <button
+                <Button
+                    text
+                    plain
                     class="member-label"
                     @click="navigateToConcept(member.id)"
                 >
@@ -146,13 +148,13 @@ function handleRemoveSelected() {
                         :class="[getConceptIcon(member), 'concept-icon']"
                         aria-hidden="true"
                     />
-                    {{
+                    <span>{{
                         getItemLabel(
                             member,
                             selectedLanguage.code,
                             systemLanguage.code,
                         ).value
-                    }}
+                    }}</span>
                     <LifecycleStateBadge
                         :lifecycle-state-id="
                             member.resource_instance_lifecycle_state_id
@@ -161,7 +163,7 @@ function handleRemoveSelected() {
                             member.resource_instance_lifecycle_state_name
                         "
                     />
-                </button>
+                </Button>
             </li>
         </ul>
     </div>
