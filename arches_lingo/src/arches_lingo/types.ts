@@ -47,7 +47,6 @@ export interface Concept {
     top_concept?: boolean;
     resource_instance_lifecycle_state_id?: string;
     resource_instance_lifecycle_state_name?: string;
-    childrenLoaded?: boolean;
 }
 
 export type ConceptPathNode = Pick<

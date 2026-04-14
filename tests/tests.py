@@ -309,7 +309,9 @@ class ViewTests(TestCase):
 
         # Concept 2 should report has_narrower=True (it has Concept 3 as child).
         concept_2 = next(
-            c for c in result["children"] if c["labels"][0]["value"] == "Concept 2"
+            concept
+            for concept in result["children"]
+            if concept["labels"][0]["value"] == "Concept 2"
         )
         self.assertTrue(concept_2["has_narrower"])
 

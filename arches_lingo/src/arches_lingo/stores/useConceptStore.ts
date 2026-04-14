@@ -37,11 +37,9 @@ export const useConceptStore = defineStore("concepts", () => {
     const isLoading = ref(false);
     const error = ref<Error | null>(null);
 
-    // Flat lookup map for O(1) concept access without recursive search.
     const conceptsById = ref<Map<string, Concept>>(new Map());
-
-    // Track in-flight child fetch requests to avoid duplicate requests.
     const inflightChildFetches = new Map<string, Promise<Concept[]>>();
+    const loadedChildrenIds = new Set<string>();
 
     let inflightRefresh: Promise<void> | null = null;
 
@@ -58,8 +56,6 @@ export const useConceptStore = defineStore("concepts", () => {
             try {
                 const data = await fetchConcepts();
                 const fetchedSchemes = data.schemes as Scheme[];
-                // Initialize every shallow concept with an empty narrower array
-                // so consumers can always rely on concept.narrower being an array.
                 for (const scheme of fetchedSchemes) {
                     for (const topConcept of scheme.top_concepts) {
                         topConcept.narrower = topConcept.narrower ?? [];
@@ -67,6 +63,7 @@ export const useConceptStore = defineStore("concepts", () => {
                     }
                 }
                 schemes.value = fetchedSchemes;
+                loadedChildrenIds.clear();
             } catch (err) {
                 error.value =
                     err instanceof Error ? err : new Error(String(err));
@@ -83,7 +80,7 @@ export const useConceptStore = defineStore("concepts", () => {
     async function loadChildren(conceptId: string): Promise<Concept[]> {
         const existing = conceptsById.value.get(conceptId);
 
-        if (existing?.childrenLoaded) {
+        if (existing && loadedChildrenIds.has(conceptId)) {
             return existing.narrower;
         }
 
@@ -96,18 +93,6 @@ export const useConceptStore = defineStore("concepts", () => {
                 conceptId,
             )) as Concept[];
 
-            // For each fetched child, reuse the canonical Concept object
-            // already in the map if one exists. A polyhierarchical concept
-            // (one with multiple parents) appears in the API response for
-            // every parent that is expanded. Without this, each parent load
-            // creates a separate JS object for the same concept:
-            //   parentA.narrower = [C_a]
-            //   parentE.narrower = [C_e]   (different objects, same id)
-            // When loadChildren("C") later fires, it updates only the object
-            // in conceptsById (whichever was stored last), leaving the other
-            // stale copy permanently un-expandable. Reusing the canonical
-            // object ensures all parents share the same reference, so a
-            // single update propagates to every occurrence in the tree.
             const children = fetchedChildren.map((child) => {
                 const canonicalChild = conceptsById.value.get(child.id);
                 if (canonicalChild) {
@@ -121,7 +106,7 @@ export const useConceptStore = defineStore("concepts", () => {
             const concept = conceptsById.value.get(conceptId);
             if (concept) {
                 concept.narrower = children;
-                concept.childrenLoaded = true;
+                loadedChildrenIds.add(conceptId);
             }
             inflightChildFetches.delete(conceptId);
             return children;
@@ -129,6 +114,10 @@ export const useConceptStore = defineStore("concepts", () => {
 
         inflightChildFetches.set(conceptId, fetchPromise);
         return fetchPromise;
+    }
+
+    function hasLoadedChildren(conceptId: string): boolean {
+        return loadedChildrenIds.has(conceptId);
     }
 
     function findConcept(conceptId: string): Concept | null {
@@ -164,6 +153,7 @@ export const useConceptStore = defineStore("concepts", () => {
         initialize,
         refresh,
         loadChildren,
+        hasLoadedChildren,
         getNarrower,
         findConcept,
         getParentPaths,

@@ -211,11 +211,6 @@ provide(
     resourceInstanceLifecycleStateIsRetiredById,
 );
 
-// Tracks occurrence keys of tree nodes whose children are currently being
-// fetched so the tree can show a loading indicator on the relevant expand
-// toggle.  Using the occurrence key (rather than the concept ID) means that
-// when a polyhierarchical concept appears in multiple places in the tree,
-// only the one node that was actually clicked shows the spinner.
 const loadingNodeKeys = reactive(new Set<string>());
 provide("loadingNodeKeys", loadingNodeKeys);
 
@@ -232,6 +227,7 @@ const tree = computed(() => {
         iconLabels.value,
         focusedOccurrenceKey.value,
         shouldSortByAscending.value,
+        conceptStore.hasLoadedChildren,
     );
 });
 
@@ -633,8 +629,6 @@ function scrollToOccurrenceKeyInTree(
         if (currentTreeNode.key === occurrenceKey) {
             const keysToExpand = new Set<string>();
 
-            // Expand only the ancestors (currentPath includes the target node
-            // as its last element; slice(0, -1) excludes it).
             for (const ancestorNode of currentPath.slice(0, -1)) {
                 keysToExpand.add(ancestorNode.key);
             }
@@ -784,11 +778,6 @@ function scrollToItemInTree(
 
     const keysToExpand = new Set<string>();
     for (const matchItem of matches) {
-        // Expand only the ancestors. The path array includes the target node
-        // as its last element, so slice(0, -1) gives only ancestors. The
-        // target itself must not be auto-expanded: if its children have not
-        // been fetched yet, adding it to expandedKeys produces a visually
-        // empty open node with the expand toggle stuck in the open position.
         for (const ancestorNode of matchItem.path.slice(0, -1)) {
             keysToExpand.add(ancestorNode.key);
         }
@@ -840,14 +829,6 @@ function scrollToItemInTree(
     return true;
 }
 
-// Ensures a concept is visible and selected in the tree, loading ancestor
-// levels on demand when the concept has not yet been loaded into the tree.
-//
-// For concepts already present in the tree (common case after in-app
-// navigation) this is just a direct call to scrollToItemInTree.  For deep
-// concepts reached via direct URL or an external link, the ancestor path is
-// fetched from the API and each level is loaded in sequence, showing the
-// spinning caret on each ancestor node while its children are being fetched.
 async function revealConceptInTree(
     conceptId: string,
     shouldScroll: boolean,
@@ -867,23 +848,13 @@ async function revealConceptInTree(
     if (!paths?.length || !paths[0].searchResults?.length) return;
 
     const pathNodes = paths[0].searchResults;
-
-    // pathNodes is ordered root → target:
-    //   [scheme, top_concept, concept, ..., direct_parent, target]
-    // To make `target` visible we must load the children of every ancestor
-    // between the scheme (already loaded at init) and the target itself.
-    // pathNodes.slice(1, -1) gives exactly those intermediate ancestors.
     const schemeId: string = pathNodes[0].id;
     const ancestorsToLoad = pathNodes.slice(1, -1);
 
-    for (let i = 0; i < ancestorsToLoad.length; i++) {
-        const ancestor = ancestorsToLoad[i];
-        if (conceptStore.findConcept(ancestor.id)?.childrenLoaded) continue;
+    for (const [index, ancestor] of ancestorsToLoad.entries()) {
+        if (conceptStore.hasLoadedChildren(ancestor.id)) continue;
 
-        // The occurrence key for the ancestor at position i in ancestorsToLoad
-        // is pathNodes[i+1], so its path from the scheme root is
-        // pathNodes[1..i+1] (the concept IDs below the scheme down to here).
-        const pathIds = pathNodes.slice(1, i + 2).map((n) => n.id);
+        const pathIds = pathNodes.slice(1, index + 2).map((node) => node.id);
         const occurrenceKey = `${schemeId}::${pathIds.join(">")}`;
 
         loadingNodeKeys.add(occurrenceKey);
@@ -951,14 +922,14 @@ async function selectNodeFromRoute(
 async function onNodeSelect(node: TreeNode) {
     if (node.data.id === NEW) return;
 
-    // When a concept with unloaded children is selected, prefetch the children
-    // immediately so they are ready by the time the user expands.  This also
-    // drives the spinning caret while the fetch is in progress, matching the
-    // behaviour the user already gets when clicking the expand toggle directly.
     const conceptId: string = node.data?.id;
     const isConcept = node.data?.top_concepts === undefined;
     const concept = isConcept ? conceptStore.findConcept(conceptId) : null;
-    if (concept && !concept.childrenLoaded && concept.has_narrower) {
+    if (
+        concept &&
+        !conceptStore.hasLoadedChildren(conceptId) &&
+        concept.has_narrower
+    ) {
         const nodeKey = node.key as string;
         loadingNodeKeys.add(nodeKey);
         conceptStore
@@ -1002,7 +973,7 @@ async function onNodeExpand(node: TreeNode) {
     if (!conceptId || node.data?.top_concepts !== undefined) return;
 
     const concept = conceptStore.findConcept(conceptId);
-    if (!concept || concept.childrenLoaded) return;
+    if (!concept || conceptStore.hasLoadedChildren(conceptId)) return;
 
     const nodeKey: string = node.key as string;
     loadingNodeKeys.add(nodeKey);

@@ -114,6 +114,7 @@ export function treeFromSchemes(
     iconLabels: IconLabels,
     focusedOccurrenceKey: string | null,
     sortAscending: boolean = true,
+    hasLoadedChildren: (id: string) => boolean = () => false,
 ): TreeNode[] {
     function buildOccurrenceKey(schemeId: string, pathIds: string[]) {
         return `${schemeId}::${pathIds.join(">")}`;
@@ -136,7 +137,7 @@ export function treeFromSchemes(
         // (PrimeVue defaults to checking children array length).
         let leaf: boolean | undefined;
         if (!("top_concepts" in item)) {
-            if (concept.has_narrower && !concept.childrenLoaded) {
+            if (concept.has_narrower && !hasLoadedChildren(concept.id)) {
                 leaf = false;
             } else if (!concept.has_narrower && !concept.narrower?.length) {
                 leaf = true;

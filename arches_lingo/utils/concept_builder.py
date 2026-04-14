@@ -49,7 +49,6 @@ class ConceptBuilder:
     def __init__(
         self,
         concept_ids: list[str] | None = None,
-        *,
         include_parents: bool = False,
         shallow: bool = False,
     ):
@@ -233,7 +232,6 @@ class ConceptBuilder:
         builder.resource_instance_lifecycle_state_ids_by_resource_instance_id = {}
         builder.lifecycle_state_names_by_id = {}
 
-        # Query 1: Get direct child resource instance IDs.
         child_ids: set[str] = set()
         child_tiles = TileModel.objects.filter(
             nodegroup_id=CLASSIFICATION_STATUS_NODEGROUP,

@@ -19,6 +19,8 @@ import {
     CONCEPT_TYPE_NODE_ALIAS,
     DEFAULT_ERROR_TOAST_LIFE,
     ERROR,
+    SKOS_PREF_LABEL_URI,
+    SKOS_ALT_LABEL_URI,
 } from "@/arches_lingo/constants.ts";
 import { PREF_LABEL, ALT_LABEL } from "@/arches_controlled_lists/constants.ts";
 
@@ -125,8 +127,6 @@ watch(
         extractConceptHeaderData(resource);
         isResourceLoaded.value = true;
 
-        // Fetch ancestor paths to populate labels for parent concepts
-        // (the concept store may not have them if navigated directly).
         fetchConceptAncestorPaths(props.resourceInstanceId)
             .then((paths) => {
                 const map = new Map<string, Label[]>();
@@ -139,9 +139,7 @@ watch(
                 }
                 ancestorLabelsById.value = map;
             })
-            .catch(() => {
-                // Non-critical; parent labels fall back to display_value
-            });
+            .catch(() => {});
     },
     { immediate: true },
 );
@@ -155,9 +153,6 @@ watch(
     },
 );
 
-const SKOS_PREF_LABEL_URI = "http://www.w3.org/2004/02/skos/core#prefLabel";
-const SKOS_ALT_LABEL_URI = "http://www.w3.org/2004/02/skos/core#altLabel";
-
 function valuetypeFromUri(uri: string | undefined): string {
     if (uri === SKOS_PREF_LABEL_URI) return PREF_LABEL;
     if (uri === SKOS_ALT_LABEL_URI) return ALT_LABEL;
@@ -169,19 +164,22 @@ function extractLabelsFromResource(resource: ResourceInstanceResult): Label[] {
         resource.aliased_data?.appellative_status ?? [];
     const labels: Label[] = [];
     for (const tile of tiles) {
-        const ad = tile.aliased_data;
-        if (!ad) continue;
+        const aliasedData = tile.aliased_data;
+        if (!aliasedData) continue;
         const value =
-            ad.appellative_status_ascribed_name_content?.display_value;
-        // node_value is the language code (e.g. "en")
-        const languageNodeValue =
-            ad.appellative_status_ascribed_name_language?.node_value;
-        const languageId =
-            typeof languageNodeValue === "string"
-                ? languageNodeValue
-                : ad.appellative_status_ascribed_name_language?.display_value;
+            aliasedData.appellative_status_ascribed_name_content?.display_value;
+        const termLanguageNode =
+            aliasedData.appellative_status_ascribed_name_language;
+        const termLanguageNodeValue = termLanguageNode?.node_value;
+        let languageId: string | undefined;
+        if (typeof termLanguageNodeValue === "string") {
+            languageId = termLanguageNodeValue;
+        } else {
+            languageId = termLanguageNode?.display_value;
+        }
         const typeUri =
-            ad.appellative_status_ascribed_relation?.node_value?.[0]?.uri;
+            aliasedData.appellative_status_ascribed_relation?.node_value?.[0]
+                ?.uri;
         if (value && languageId) {
             labels.push({
                 value,

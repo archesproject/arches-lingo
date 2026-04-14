@@ -62,6 +62,10 @@ export const RETIRED_LIFECYCLE_STATE_ID =
 
 // URIs
 export const GUIDE_TERM_URI = "http://vocab.getty.edu/page/aat/300386700";
+export const SKOS_PREF_LABEL_URI =
+    "http://www.w3.org/2004/02/skos/core#prefLabel";
+export const SKOS_ALT_LABEL_URI =
+    "http://www.w3.org/2004/02/skos/core#altLabel";
 
 // Injection keys
 export const openPanelComponentKey = Symbol() as InjectionKey<
