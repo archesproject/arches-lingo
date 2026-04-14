@@ -89,8 +89,8 @@ onMounted(async () => {
         <div class="section-header">
             <h2>{{ sectionTitle }}</h2>
             <Tag
-                v-if="sortedTopConcepts.length"
-                :value="String(sortedTopConcepts.length)"
+                v-if="topConcepts.length"
+                :value="topConcepts.length"
                 severity="secondary"
                 class="concept-count-badge"
             />
