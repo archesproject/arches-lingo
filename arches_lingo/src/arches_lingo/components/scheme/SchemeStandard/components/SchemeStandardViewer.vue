@@ -65,9 +65,15 @@ const { isEditor } = useUserStore();
 const buttonLabel = computed(() => {
     if (props.tileData) {
         return $gettext("Edit Scheme Standard");
-    } else {
-        return $gettext("Add Standard");
     }
+    return $gettext("Add Standard");
+});
+
+const buttonIcon = computed(() => {
+    if (props.tileData) {
+        return "pi pi-pencil";
+    }
+    return "pi pi-plus-circle";
 });
 </script>
 
@@ -91,21 +97,27 @@ const buttonLabel = computed(() => {
                 }"
                 :disabled="isCreateDisabled"
                 :label="buttonLabel"
+                :icon="buttonIcon"
                 class="add-button"
-                icon="pi pi-plus-circle"
                 @click="
                     openEditor!(props.componentName, props.tileData?.tileid)
                 "
             ></Button>
         </div>
 
-        <GenericWidget
+        <div
             v-if="props.tileData"
-            node-alias="creation_sources"
-            :graph-slug="props.graphSlug"
-            :aliased-node-data="props.tileData.aliased_data.creation_sources"
-            :mode="VIEW"
-        />
+            class="fields-container"
+        >
+            <GenericWidget
+                node-alias="creation_sources"
+                :graph-slug="props.graphSlug"
+                :aliased-node-data="
+                    props.tileData.aliased_data.creation_sources
+                "
+                :mode="VIEW"
+            />
+        </div>
 
         <div
             v-else
@@ -115,3 +127,27 @@ const buttonLabel = computed(() => {
         </div>
     </div>
 </template>
+
+<style scoped>
+.fields-container {
+    padding-top: 0.5rem;
+    color: var(--p-inputtext-placeholder-color);
+    font-size: var(--p-lingo-font-size-smallnormal);
+    font-weight: var(--p-lingo-font-weight-light);
+}
+
+:deep(.widget-label) {
+    font-size: var(--p-lingo-font-size-smallnormal);
+    font-weight: var(--p-lingo-font-weight-normal);
+    color: var(--p-neutral-400);
+    margin-bottom: 0.125rem;
+}
+
+:deep(.widget > div) {
+    padding-inline-start: 0.75rem;
+}
+
+:deep(.add-button .pi-pencil) {
+    font-size: 0.7rem;
+}
+</style>

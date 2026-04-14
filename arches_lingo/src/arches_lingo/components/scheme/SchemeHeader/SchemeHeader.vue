@@ -408,7 +408,8 @@ function onLifecycleStateChange(
     />
     <Skeleton
         v-if="isLoading"
-        style="width: 100%; height: 9rem"
+        height="9rem"
+        class="loading-skeleton"
     />
 
     <div
@@ -417,66 +418,64 @@ function onLifecycleStateChange(
     >
         <div class="scheme-header-panel">
             <div class="scheme-header-toolbar">
-                <div class="header-row">
-                    <div class="scheme-title">
-                        <h2>
-                            <span class="scheme-title-text">{{
-                                label?.value
-                            }}</span>
-                            <span
-                                v-if="label?.language_id"
-                                class="scheme-label-lang"
-                            >
-                                ({{ label?.language_id }})
-                            </span>
-                        </h2>
-                    </div>
+                <div class="scheme-title">
+                    <h2>
+                        <span class="scheme-title-text">{{
+                            label?.value
+                        }}</span>
+                        <span
+                            v-if="label?.language_id"
+                            class="scheme-label-lang"
+                        >
+                            ({{ label?.language_id }})
+                        </span>
+                    </h2>
+                </div>
 
-                    <div
-                        v-if="props?.resourceInstanceId !== undefined"
-                        class="header-buttons"
+                <div
+                    v-if="props?.resourceInstanceId !== undefined"
+                    class="header-buttons"
+                >
+                    <Button
+                        :aria-label="$gettext('Edit History')"
+                        class="add-button"
+                        @click="openEditLog"
                     >
-                        <Button
-                            :aria-label="$gettext('Edit History')"
-                            class="add-button"
-                            @click="openEditLog"
-                        >
-                            <span><i class="pi pi-history"></i></span>
-                            <span>{{ $gettext("History") }}</span>
-                        </Button>
-                        <Button
-                            :aria-label="$gettext('Export')"
-                            class="add-button"
-                            @click="openExportDialog"
-                        >
-                            <span><i class="pi pi-cloud-download"></i></span>
-                            <span>{{ $gettext("Export") }}</span>
-                        </Button>
+                        <span><i class="pi pi-history"></i></span>
+                        <span>{{ $gettext("History") }}</span>
+                    </Button>
+                    <Button
+                        :aria-label="$gettext('Export')"
+                        class="add-button"
+                        @click="openExportDialog"
+                    >
+                        <span><i class="pi pi-cloud-download"></i></span>
+                        <span>{{ $gettext("Export") }}</span>
+                    </Button>
 
-                        <Button
-                            v-if="canAddTopConcept"
-                            icon="pi pi-plus-circle"
-                            :label="$gettext('Add Top Concept')"
-                            class="add-button"
-                            @click="addTopConcept"
-                        />
+                    <Button
+                        v-if="canAddTopConcept"
+                        icon="pi pi-plus-circle"
+                        :label="$gettext('Add Top Concept')"
+                        class="add-button"
+                        @click="addTopConcept"
+                    />
 
-                        <Button
-                            v-if="canDeleteResourceInstances"
-                            icon="pi pi-trash"
-                            severity="danger"
-                            class="delete-button"
-                            :label="$gettext('Delete')"
-                            :aria-label="$gettext('Delete Concept')"
-                            @click="confirmDelete"
-                        />
+                    <Button
+                        v-if="canDeleteResourceInstances"
+                        icon="pi pi-trash"
+                        severity="danger"
+                        class="delete-button"
+                        :label="$gettext('Delete')"
+                        :aria-label="$gettext('Delete Concept')"
+                        @click="confirmDelete"
+                    />
 
-                        <LifecycleButtons
-                            v-if="isEditor"
-                            :resource-instance-id="props.resourceInstanceId"
-                            @change="onLifecycleStateChange"
-                        />
-                    </div>
+                    <LifecycleButtons
+                        v-if="isEditor"
+                        :resource-instance-id="props.resourceInstanceId"
+                        @change="onLifecycleStateChange"
+                    />
                 </div>
             </div>
 
@@ -489,20 +488,19 @@ function onLifecycleStateChange(
                         :can-edit-resource-instances="canEditResourceInstances"
                         @update="onIdentifierUpdate"
                     />
-                    <div>
+                    <div class="header-item">
                         <span class="header-item-label">{{
                             $gettext("URI: ")
                         }}</span>
                         <Button
                             v-if="schemeUri"
                             :label="schemeUri"
-                            class="concept-uri"
+                            class="scheme-uri"
                             variant="link"
                             as="a"
                             :href="schemeUri"
                             target="_blank"
                             rel="noopener"
-                            :disabled="!data?.uri"
                         ></Button>
                         <span
                             v-else
@@ -620,9 +618,16 @@ function onLifecycleStateChange(
 
 <style scoped>
 .scheme-header {
+    --scheme-header-row-gap: 0.2rem;
+    --scheme-header-field-min-height: 2rem;
+
     background: var(--p-header-background);
     border-bottom: 0.0625rem solid var(--p-header-toolbar-border);
     box-sizing: border-box;
+}
+
+.loading-skeleton {
+    width: 100%;
 }
 
 .scheme-header-panel {
@@ -634,8 +639,13 @@ function onLifecycleStateChange(
     height: auto;
     background: var(--p-header-toolbar-background);
     border-bottom: 0.0625rem solid var(--p-header-toolbar-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    row-gap: 0.5rem;
     padding-inline-start: 1rem;
-    padding-inline-end: 1rem;
+    padding-inline-end: 0.5rem;
     padding-top: 0.375rem;
     padding-bottom: 0.375rem;
     box-sizing: border-box;
@@ -673,11 +683,10 @@ h2 > span {
 }
 
 .header-content {
-    min-height: 5.45rem;
-    padding-top: 0.5rem;
-    padding-inline-start: 1rem;
-    padding-inline-end: 1rem;
+    display: flex;
+    flex-direction: column;
     box-sizing: border-box;
+    padding: 0.5rem 1rem 1rem;
 }
 
 .header-buttons {
@@ -692,6 +701,21 @@ h2 > span {
     font-size: var(--p-lingo-font-size-small);
 }
 
+.scheme-uri {
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+    font-size: var(--p-lingo-font-size-small);
+    font-weight: var(--p-lingo-font-weight-normal);
+    color: var(--p-primary-500);
+}
+
+:deep(.scheme-uri .p-button-label) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .p-button-link {
     padding: 0;
     margin: 0;
@@ -700,18 +724,17 @@ h2 > span {
 .header-row {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
     flex-wrap: wrap;
     column-gap: 1rem;
-    row-gap: 0.5rem;
-    padding: 0.2rem 0 0 0;
+    row-gap: var(--scheme-header-row-gap);
+    min-height: var(--scheme-header-field-min-height);
     min-width: 0;
 }
 
 .metadata-container {
-    gap: 0.75rem;
+    gap: var(--scheme-header-row-gap) 0.75rem;
     margin-top: 0;
-    padding-bottom: 1rem;
     justify-content: space-between;
     align-items: flex-start;
     flex-wrap: nowrap;
@@ -728,7 +751,7 @@ h2 > span {
 .language-chip-wrapper {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    gap: var(--scheme-header-row-gap);
     min-width: 0;
     flex: 1 1 0;
 }
@@ -737,6 +760,7 @@ h2 > span {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    min-height: var(--scheme-header-field-min-height);
 }
 
 .language-chip-container--expanded {
@@ -776,6 +800,7 @@ h2 > span {
     flex-direction: column;
     align-items: flex-end;
     flex-shrink: 0;
+    gap: var(--scheme-header-row-gap);
 }
 
 .add-language {
@@ -785,39 +810,30 @@ h2 > span {
     padding: 0 0.5rem;
 }
 
-.header-item {
-    display: inline-flex;
-    align-items: center;
-    min-width: 0;
-}
-
-.header-item-label {
-    font-weight: var(--p-lingo-font-weight-normal);
-    font-size: var(--p-lingo-font-size-smallnormal);
-    color: var(--p-header-item-label);
-    margin-inline-end: 0.25rem;
-}
-
-.header-item-value {
-    font-size: var(--p-lingo-font-size-smallnormal);
-    color: var(--p-primary-500);
-    min-width: 0;
-}
-
+.header-item,
 :deep(.header-item) {
     display: inline-flex;
     align-items: center;
+    min-height: var(--scheme-header-field-min-height);
     min-width: 0;
+    max-width: 100%;
 }
 
+.header-item-label,
 :deep(.header-item-label) {
+    flex-shrink: 0;
     font-weight: var(--p-lingo-font-weight-normal);
     font-size: var(--p-lingo-font-size-smallnormal);
     color: var(--p-header-item-label);
     margin-inline-end: 0.25rem;
+    white-space: nowrap;
 }
 
+.header-item-value,
 :deep(.header-item-value) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     font-size: var(--p-lingo-font-size-smallnormal);
     color: var(--p-primary-500);
     min-width: 0;
