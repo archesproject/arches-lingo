@@ -212,11 +212,11 @@ onMounted(async () => {
             class="stats-loading-notice"
         >
             <i class="pi pi-spin pi-sync stats-loading-spinner" />
-            {{
+            <span>{{
                 $gettext(
                     "Gathering the latest statistics, this may take a moment...",
                 )
-            }}
+            }}</span>
         </Message>
 
         <DashboardStatCards

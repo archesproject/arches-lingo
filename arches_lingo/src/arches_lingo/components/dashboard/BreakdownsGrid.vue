@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { storeToRefs } from "pinia";
 import { useGettext } from "vue3-gettext";
 
 import Column from "primevue/column";
@@ -8,7 +9,10 @@ import Tag from "primevue/tag";
 
 import type { DashboardStats } from "@/arches_lingo/types/dashboard.ts";
 
+import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
+
 const { $gettext } = useGettext();
+const { selectedLanguage } = storeToRefs(useLanguageStore());
 
 defineProps<{
     stats: DashboardStats | null;
@@ -89,7 +93,7 @@ defineProps<{
                         >
                             <span class="type-label">{{ item.label }}</span>
                             <span class="type-count">{{
-                                item.count.toLocaleString()
+                                item.count.toLocaleString(selectedLanguage.code)
                             }}</span>
                         </div>
                     </div>
@@ -112,7 +116,7 @@ defineProps<{
                         >
                             <span class="type-label">{{ item.label }}</span>
                             <span class="type-count">{{
-                                item.count.toLocaleString()
+                                item.count.toLocaleString(selectedLanguage.code)
                             }}</span>
                         </div>
                     </div>
@@ -155,7 +159,11 @@ defineProps<{
                             style="width: 6rem"
                         >
                             <template #body="slotProps">
-                                {{ slotProps.data.count.toLocaleString() }}
+                                {{
+                                    slotProps.data.count.toLocaleString(
+                                        selectedLanguage.code,
+                                    )
+                                }}
                             </template>
                         </Column>
                     </DataTable>
