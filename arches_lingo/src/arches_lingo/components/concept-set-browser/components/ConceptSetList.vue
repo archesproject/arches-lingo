@@ -25,6 +25,14 @@ const showCreateDialog = ref(false);
 const newSetName = ref("");
 const newSetDescription = ref("");
 
+function formatMemberCount(count: number): string {
+    return $gettext("%{count} concepts", { count: String(count) });
+}
+
+function formatUpdatedDate(dateString: string): string {
+    return new Date(dateString).toLocaleDateString();
+}
+
 function submitCreateSet() {
     const name = newSetName.value.trim();
     if (!name) return;
@@ -69,7 +77,9 @@ function cancelCreateDialog() {
                 :key="setItem.id"
                 class="set-item"
             >
-                <button
+                <Button
+                    text
+                    plain
                     class="set-info"
                     @click="emit('select-set', setItem)"
                 >
@@ -81,13 +91,9 @@ function cancelCreateDialog() {
                         {{ setItem.name }}
                     </div>
                     <div class="set-meta">
-                        {{
-                            $gettext("%{count} concepts", {
-                                count: String(setItem.member_count),
-                            })
-                        }}
+                        {{ formatMemberCount(setItem.member_count) }}
                         &middot;
-                        {{ new Date(setItem.updated).toLocaleDateString() }}
+                        {{ formatUpdatedDate(setItem.updated) }}
                     </div>
                     <div
                         v-if="setItem.description"
@@ -95,7 +101,7 @@ function cancelCreateDialog() {
                     >
                         {{ setItem.description }}
                     </div>
-                </button>
+                </Button>
                 <Button
                     icon="pi pi-trash"
                     severity="danger"
