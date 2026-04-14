@@ -520,7 +520,7 @@ provide(openPanelComponentKey, openPanelComponent);
     font-weight: var(--p-lingo-font-weight-normal);
     border-color: var(--p-button-primary-active-border-color);
     border-radius: 0.125rem;
-    min-width: 11rem;
+    min-width: 12rem;
 
     &.wide {
         min-width: 14rem;
