@@ -93,6 +93,7 @@ const buttonLabel = computed(() => {
                 :label="buttonLabel"
                 class="add-button"
                 icon="pi pi-plus-circle"
+                size="small"
                 @click="
                     openEditor!(props.componentName, props.tileData?.tileid)
                 "
