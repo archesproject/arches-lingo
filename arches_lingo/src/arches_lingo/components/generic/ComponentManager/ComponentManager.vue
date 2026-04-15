@@ -518,13 +518,7 @@ provide(openPanelComponentKey, openPanelComponent);
 :deep(.section-header .add-button) {
     font-size: var(--p-lingo-font-size-xsmall);
     font-weight: var(--p-lingo-font-weight-normal);
-    border-color: var(--p-button-primary-active-border-color);
     border-radius: 0.125rem;
-    min-width: 12rem;
-
-    &.wide {
-        min-width: 14rem;
-    }
 }
 
 :deep(.concept-header .p-button),

@@ -219,6 +219,7 @@ function modifyResource(resourceInstanceId?: string) {
                 :label="$gettext('Add Image')"
                 class="add-button"
                 icon="pi pi-plus-circle"
+                size="small"
                 @click="newResource"
             ></Button>
         </div>
@@ -275,20 +276,17 @@ function modifyResource(resourceInstanceId?: string) {
                         >
                             <Button
                                 v-if="canEditResourceInstances"
-                                class="controls edit-button"
                                 icon="pi pi-file-edit"
                                 variant="text"
-                                :aria-label="$gettext('edit')"
                                 @click="
                                     editResource(resource.resourceinstanceid)
                                 "
                             />
                             <Button
                                 v-if="canDeleteResourceInstances"
-                                class="controls delete-button"
                                 icon="pi pi-trash"
-                                :aria-label="$gettext('Delete')"
                                 variant="text"
+                                severity="danger"
                                 @click="
                                     confirmDelete(resource.resourceinstanceid)
                                 "
@@ -325,37 +323,6 @@ function modifyResource(resourceInstanceId?: string) {
 .button-container {
     display: flex;
     gap: 0.25rem;
-}
-
-.controls {
-    width: 2rem;
-    height: 2rem;
-    border-radius: 50%;
-    padding: 1.2rem;
-    color: var(--p-button-primary-color);
-}
-
-.edit-button {
-    background: var(--p-button-primary-background);
-    border: 0.0625rem solid var(--p-button-primary-active-border-color);
-}
-
-.delete-button {
-    background: var(--p-button-danger-background);
-    border: 0.0625rem solid var(--p-button-danger-border-color);
-    color: var(--p-button-danger-color);
-}
-
-.button-container .edit-button:hover {
-    background: var(--p-button-primary-hover-background);
-    border: 0.0625rem solid var(--p-button-primary-hover-border-color);
-    color: var(--p-button-primary-hover-color);
-}
-
-.button-container .delete-button:hover {
-    background: var(--p-button-danger-hover-background);
-    border: 0.0625rem solid var(--p-button-danger-hover-border-color);
-    color: var(--p-button-danger-hover-color);
 }
 
 .concept-images {

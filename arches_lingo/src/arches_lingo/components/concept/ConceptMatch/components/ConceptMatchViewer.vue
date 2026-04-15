@@ -107,8 +107,9 @@ function matchedConceptURIIsLink(rowData: ConceptMatchStatus): boolean {
                 }"
                 :disabled="isCreateDisabled"
                 :label="$gettext('Add Matched Concept')"
-                class="add-button wide"
+                class="add-button"
                 icon="pi pi-plus-circle"
+                size="small"
                 @click="openEditor!(props.componentName)"
             ></Button>
         </div>
