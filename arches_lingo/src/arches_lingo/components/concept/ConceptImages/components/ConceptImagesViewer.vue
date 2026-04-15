@@ -278,6 +278,7 @@ function modifyResource(resourceInstanceId?: string) {
                                 v-if="canEditResourceInstances"
                                 icon="pi pi-file-edit"
                                 variant="text"
+                                :aria-label="$gettext('edit')"
                                 @click="
                                     editResource(resource.resourceinstanceid)
                                 "
@@ -287,6 +288,7 @@ function modifyResource(resourceInstanceId?: string) {
                                 icon="pi pi-trash"
                                 variant="text"
                                 severity="danger"
+                                :aria-label="$gettext('delete')"
                                 @click="
                                     confirmDelete(resource.resourceinstanceid)
                                 "
