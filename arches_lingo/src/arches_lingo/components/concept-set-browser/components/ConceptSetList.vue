@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from "vue";
+import { storeToRefs } from "pinia";
 import { useGettext } from "vue3-gettext";
 
 import Button from "primevue/button";
@@ -7,9 +8,12 @@ import Dialog from "primevue/dialog";
 import InputText from "primevue/inputtext";
 import Textarea from "primevue/textarea";
 
+import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
+
 import type { ConceptSetItem } from "@/arches_lingo/types.ts";
 
 const { $gettext } = useGettext();
+const { selectedLanguage } = storeToRefs(useLanguageStore());
 
 defineProps<{
     conceptSets: ConceptSetItem[];
@@ -25,12 +29,14 @@ const showCreateDialog = ref(false);
 const newSetName = ref("");
 const newSetDescription = ref("");
 
-function formatMemberCount(count: number): string {
-    return $gettext("%{count} concepts", { count: String(count) });
-}
-
-function formatUpdatedDate(dateString: string): string {
-    return new Date(dateString).toLocaleDateString();
+function formatSetMetadata(setItem: ConceptSetItem): string {
+    const count = $gettext("%{count} concepts", {
+        count: String(setItem.member_count),
+    });
+    const updated = new Date(setItem.updated).toLocaleDateString(
+        selectedLanguage.value.code,
+    );
+    return `${count} · ${updated}`;
 }
 
 function submitCreateSet() {
@@ -78,6 +84,7 @@ function cancelCreateDialog() {
                 class="set-item"
             >
                 <Button
+                    v-tooltip="setItem.description || undefined"
                     text
                     plain
                     class="set-info"
@@ -91,15 +98,7 @@ function cancelCreateDialog() {
                         {{ setItem.name }}
                     </div>
                     <div class="set-meta">
-                        {{ formatMemberCount(setItem.member_count) }}
-                        &middot;
-                        {{ formatUpdatedDate(setItem.updated) }}
-                    </div>
-                    <div
-                        v-if="setItem.description"
-                        class="set-description"
-                    >
-                        {{ setItem.description }}
+                        <span>{{ formatSetMetadata(setItem) }}</span>
                     </div>
                 </Button>
                 <Button
@@ -232,15 +231,6 @@ function cancelCreateDialog() {
     font-size: var(--p-lingo-font-size-xsmall);
     color: var(--p-text-muted-color);
     margin-top: 0.125rem;
-}
-
-.set-description {
-    font-size: var(--p-lingo-font-size-small);
-    color: var(--p-text-muted-color);
-    margin-top: 0.25rem;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
 }
 
 .dialog-content {

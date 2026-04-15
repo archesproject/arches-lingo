@@ -37,7 +37,11 @@ const { isAnonymous } = storeToRefs(useUserStore());
 
 const conceptTreeKey = ref(0);
 const resourceInstanceLifecycleStates = ref();
-const activeTabValue = ref("hierarchies");
+
+const HIERARCHIES_TAB = "hierarchies";
+const SETS_TAB = "sets";
+
+const activeTabValue = ref(HIERARCHIES_TAB);
 
 const emit = defineEmits<{
     (e: "shouldShowHierarchy", value: boolean): void;
@@ -73,12 +77,12 @@ onMounted(async () => {
                 class="hierarchy-tabs"
             >
                 <TabList>
-                    <Tab value="hierarchies">
+                    <Tab :value="HIERARCHIES_TAB">
                         {{ $gettext("Explore Hierarchies") }}
                     </Tab>
                     <Tab
                         v-if="!isAnonymous"
-                        value="sets"
+                        :value="SETS_TAB"
                     >
                         {{ $gettext("Concept Sets") }}
                     </Tab>
@@ -95,13 +99,13 @@ onMounted(async () => {
         </div>
         <div class="hierarchy-content">
             <ConceptTree
-                v-show="activeTabValue === 'hierarchies'"
+                v-show="activeTabValue === HIERARCHIES_TAB"
                 :key="conceptTreeKey"
                 :is-open="props.isOpen"
             />
             <ConceptSetBrowser
                 v-if="!isAnonymous"
-                v-show="activeTabValue === 'sets'"
+                v-show="activeTabValue === SETS_TAB"
             />
         </div>
     </div>
