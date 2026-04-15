@@ -29,6 +29,7 @@ from arches_lingo.const import (
     CONCEPT_NAME_LANGUAGE_NODE,
     CONCEPT_NAME_TYPE_NODE,
     GUIDE_TERM_URI,
+    HIERARCHY_NAME_URI,
     HIDDEN_LABEL_URI,
     PREF_LABEL_URI,
     SCHEME_NAME_NODEGROUP,
@@ -64,6 +65,7 @@ class ConceptBuilder:
 
         self.polyhierarchical_concepts = set()
         self.guide_term_concepts: set[str] = set()
+        self.hierarchy_name_concepts: set[str] = set()
         self.language_lookup = {lang.code: lang.name for lang in Language.objects.all()}
 
         self.resource_instance_lifecycle_state_ids_by_resource_instance_id: dict[
@@ -78,7 +80,7 @@ class ConceptBuilder:
                 self.narrower_concepts_map()
             else:
                 self.batch_check_has_narrower(top_concept_ids)
-            self.populate_guide_term_concepts(
+            self.populate_concept_type_sets(
                 top_concept_ids if depth is not None else None
             )
             self.populate_schemes()
@@ -124,7 +126,7 @@ class ConceptBuilder:
                 top_concept_id = str(tile["resourceinstance_id"])
                 self.schemes_by_top_concept[top_concept_id].add(tile["top_concept_of"])
 
-            self.populate_guide_term_concepts(list(child_ids))
+            self.populate_concept_type_sets(list(child_ids))
             self.populate_resource_instance_lifecycle_state_ids(
                 scheme_ids=[],
                 concept_ids=list(child_ids),
@@ -136,7 +138,7 @@ class ConceptBuilder:
             scheme_ids=list(self.schemes_by_id.keys()),
             concept_ids=concept_ids,
         )
-        self.populate_guide_term_concepts(concept_ids)
+        self.populate_concept_type_sets(concept_ids)
 
     @staticmethod
     def find_valuetype_id_from_uri(uri):
@@ -390,7 +392,7 @@ class ConceptBuilder:
             scheme_ids=list(self.schemes_by_id.keys()),
             concept_ids=list(closure_concept_ids),
         )
-        self.populate_guide_term_concepts(list(closure_concept_ids))
+        self.populate_concept_type_sets(list(closure_concept_ids))
 
     def serialize_scheme(
         self, scheme: ResourceInstance, *, children=True, shallow=False
@@ -445,10 +447,19 @@ class ConceptBuilder:
                 return True
         return False
 
-    def populate_guide_term_concepts(
-        self, concept_ids: list[str] | None = None
-    ) -> None:
-        """Populate guide_term_concepts set from concept type tiles."""
+    @staticmethod
+    def is_hierarchy_name_tile(tile_data: dict) -> bool:
+        """Check if a concept type tile has hierarchy name type."""
+        type_values = tile_data.get(CONCEPT_TYPE_NODEID)
+        if not type_values:
+            return False
+        for ref in type_values:
+            if ref.get("uri") == HIERARCHY_NAME_URI:
+                return True
+        return False
+
+    def populate_concept_type_sets(self, concept_ids: list[str] | None = None) -> None:
+        """Populate guide_term_concepts and hierarchy_name_concepts in a single query."""
         tiles = TileModel.objects.filter(
             nodegroup_id=CONCEPT_TYPE_NODEGROUP,
         ).exclude(**{CONCEPT_TYPE_LOOKUP: None})
@@ -457,8 +468,11 @@ class ConceptBuilder:
             tiles = tiles.filter(resourceinstance_id__in=concept_ids)
 
         for tile in tiles.values("resourceinstance_id", "data").iterator():
+            concept_id = str(tile["resourceinstance_id"])
             if self.is_guide_term_tile(tile["data"]):
-                self.guide_term_concepts.add(str(tile["resourceinstance_id"]))
+                self.guide_term_concepts.add(concept_id)
+            if self.is_hierarchy_name_tile(tile["data"]):
+                self.hierarchy_name_concepts.add(concept_id)
 
     def serialize_concept(self, conceptid: str, *, parents=False, children=True):
         concept_lifecycle_state_id = (
@@ -476,6 +490,7 @@ class ConceptBuilder:
                 self.serialize_concept_label(label) for label in self.labels[conceptid]
             ],
             "guide_term": conceptid in self.guide_term_concepts,
+            "hierarchy_name": conceptid in self.hierarchy_name_concepts,
             "top_concept": bool(self.schemes_by_top_concept.get(conceptid)),
         }
         if children:
@@ -533,6 +548,7 @@ class ConceptBuilder:
                 self.serialize_concept_label(label) for label in self.labels[conceptid]
             ],
             "guide_term": conceptid in self.guide_term_concepts,
+            "hierarchy_name": conceptid in self.hierarchy_name_concepts,
             "top_concept": bool(self.schemes_by_top_concept.get(conceptid)),
             "has_narrower": bool(self.narrower_concepts.get(conceptid)),
         }
