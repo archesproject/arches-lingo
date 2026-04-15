@@ -343,6 +343,7 @@ function getTreeNodeStyle(depth: number) {
                                 v-if="canEditResourceInstances"
                                 icon="pi pi-file-edit"
                                 variant="text"
+                                :aria-label="$gettext('edit')"
                                 :disabled="group.isTopConcept"
                                 @click="
                                     openEditor!(componentName, group.tileid)
@@ -353,6 +354,7 @@ function getTreeNodeStyle(depth: number) {
                                 icon="pi pi-trash"
                                 variant="text"
                                 severity="danger"
+                                :aria-label="$gettext('delete')"
                                 @click="confirmDelete(group)"
                             />
                         </div>

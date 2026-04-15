@@ -192,6 +192,7 @@ async function deleteSectionValue(tileId: string) {
                             v-if="canEditResourceInstances"
                             icon="pi pi-file-edit"
                             variant="text"
+                            :aria-label="$gettext('edit')"
                             @click="
                                 openEditor!(
                                     componentName,
@@ -204,6 +205,7 @@ async function deleteSectionValue(tileId: string) {
                             icon="pi pi-trash"
                             variant="text"
                             severity="danger"
+                            :aria-label="$gettext('delete')"
                             @click="confirmDelete(slotProps.data.tileid)"
                         />
                     </div>
