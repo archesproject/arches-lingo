@@ -11,6 +11,7 @@ import Tag from "primevue/tag";
 
 import { deleteLingoTile } from "@/arches_lingo/api.ts";
 import { getConceptIcon } from "@/arches_lingo/utils.ts";
+import { routeNames } from "@/arches_lingo/routes.ts";
 import type {
     SearchResultItem,
     SearchResultHierarchy,
@@ -128,6 +129,14 @@ const relationshipGroups = computed<RelationshipGroup[]>(() => {
 function getIcon(item: SearchResultItem) {
     //TODO need a better way to determine if item is a scheme or not
     return item.id === props.scheme ? SCHEME_ICON : getConceptIcon(item);
+}
+
+function getItemRoute(item: SearchResultItem) {
+    if (item.id === props.scheme) {
+        return { name: routeNames.scheme, params: { id: item.id } };
+    } else {
+        return { name: routeNames.concept, params: { id: item.id } };
+    }
 }
 
 function getParentLabel(group: RelationshipGroup): string {
@@ -367,7 +376,10 @@ function getTreeNodeStyle(depth: number) {
                                     :class="getIcon(item)"
                                     class="tree-node-icon"
                                 />
-                                <span class="tree-node-label">
+                                <span
+                                    v-if="item.id === props.resourceInstanceId"
+                                    class="tree-node-label tree-node-label-current"
+                                >
                                     {{
                                         getItemLabel(
                                             item,
@@ -376,6 +388,19 @@ function getTreeNodeStyle(depth: number) {
                                         ).value
                                     }}
                                 </span>
+                                <RouterLink
+                                    v-else
+                                    :to="getItemRoute(item)"
+                                    class="tree-node-label"
+                                >
+                                    {{
+                                        getItemLabel(
+                                            item,
+                                            selectedLanguage.code,
+                                            systemLanguage.code,
+                                        ).value
+                                    }}
+                                </RouterLink>
                             </div>
                         </div>
                     </template>
@@ -482,7 +507,12 @@ function getTreeNodeStyle(depth: number) {
 .tree-node-label {
     margin-inline-start: 0.5rem;
     font-size: var(--p-lingo-font-size-small);
-    color: var(--p-inputtext-placeholder-color);
+    color: var(--p-primary-500);
+}
+
+.tree-node-label-current {
+    color: var(--p-text-color);
+    font-weight: var(--p-lingo-font-weight-semibold, 600);
 }
 
 .button-container {
