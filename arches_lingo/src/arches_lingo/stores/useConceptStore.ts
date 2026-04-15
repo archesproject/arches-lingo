@@ -1,21 +1,9 @@
 import { ref } from "vue";
 import { defineStore } from "pinia";
 
-import { fetchConcepts } from "@/arches_lingo/api.ts";
+import { fetchConcepts, fetchConceptChildren } from "@/arches_lingo/api.ts";
 
 import type { Concept, ConceptPathNode, Scheme } from "@/arches_lingo/types.ts";
-
-function searchConcepts(
-    concepts: Concept[],
-    conceptId: string,
-): Concept | null {
-    for (const concept of concepts) {
-        if (concept.id === conceptId) return concept;
-        const found = searchConcepts(concept.narrower, conceptId);
-        if (found !== null) return found;
-    }
-    return null;
-}
 
 function searchParentPaths(
     concepts: Concept[],
@@ -49,6 +37,10 @@ export const useConceptStore = defineStore("concepts", () => {
     const isLoading = ref(false);
     const error = ref<Error | null>(null);
 
+    const conceptsById = ref<Map<string, Concept>>(new Map());
+    const inflightChildFetches = new Map<string, Promise<Concept[]>>();
+    const loadedChildrenIds = new Set<string>();
+
     let inflightRefresh: Promise<void> | null = null;
 
     async function initialize() {
@@ -63,7 +55,15 @@ export const useConceptStore = defineStore("concepts", () => {
             error.value = null;
             try {
                 const data = await fetchConcepts();
-                schemes.value = data.schemes as Scheme[];
+                const fetchedSchemes = data.schemes as Scheme[];
+                for (const scheme of fetchedSchemes) {
+                    for (const topConcept of scheme.top_concepts) {
+                        topConcept.narrower = topConcept.narrower ?? [];
+                        conceptsById.value.set(topConcept.id, topConcept);
+                    }
+                }
+                schemes.value = fetchedSchemes;
+                loadedChildrenIds.clear();
             } catch (err) {
                 error.value =
                     err instanceof Error ? err : new Error(String(err));
@@ -77,12 +77,51 @@ export const useConceptStore = defineStore("concepts", () => {
         return fetchPromise;
     }
 
-    function findConcept(conceptId: string): Concept | null {
-        for (const scheme of schemes.value) {
-            const found = searchConcepts(scheme.top_concepts, conceptId);
-            if (found !== null) return found;
+    async function loadChildren(conceptId: string): Promise<Concept[]> {
+        const existing = conceptsById.value.get(conceptId);
+
+        if (existing && loadedChildrenIds.has(conceptId)) {
+            return existing.narrower;
         }
-        return null;
+
+        if (inflightChildFetches.has(conceptId)) {
+            return inflightChildFetches.get(conceptId)!;
+        }
+
+        const fetchPromise = (async () => {
+            const fetchedChildren = (await fetchConceptChildren(
+                conceptId,
+            )) as Concept[];
+
+            const children = fetchedChildren.map((child) => {
+                const canonicalChild = conceptsById.value.get(child.id);
+                if (canonicalChild) {
+                    return canonicalChild;
+                }
+                child.narrower = child.narrower ?? [];
+                conceptsById.value.set(child.id, child);
+                return child;
+            });
+
+            const concept = conceptsById.value.get(conceptId);
+            if (concept) {
+                concept.narrower = children;
+                loadedChildrenIds.add(conceptId);
+            }
+            inflightChildFetches.delete(conceptId);
+            return children;
+        })();
+
+        inflightChildFetches.set(conceptId, fetchPromise);
+        return fetchPromise;
+    }
+
+    function hasLoadedChildren(conceptId: string): boolean {
+        return loadedChildrenIds.has(conceptId);
+    }
+
+    function findConcept(conceptId: string): Concept | null {
+        return conceptsById.value.get(conceptId) ?? null;
     }
 
     function getNarrower(conceptId: string): Concept[] {
@@ -113,6 +152,8 @@ export const useConceptStore = defineStore("concepts", () => {
         error,
         initialize,
         refresh,
+        loadChildren,
+        hasLoadedChildren,
         getNarrower,
         findConcept,
         getParentPaths,

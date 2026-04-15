@@ -2,6 +2,7 @@ import logging
 from collections import defaultdict
 
 from django.contrib.postgres.expressions import ArraySubquery
+from django.db import connection
 from django.db.models import CharField, F, OuterRef, Value
 from django.db.models.expressions import CombinedExpression
 from django.utils.translation import gettext as _
@@ -46,7 +47,10 @@ CONCEPT_TYPE_LOOKUP = f"data__{CONCEPT_TYPE_NODEID}"
 
 class ConceptBuilder:
     def __init__(
-        self, concept_ids: list[str] | None = None, *, include_parents: bool = False
+        self,
+        concept_ids: list[str] | None = None,
+        include_parents: bool = False,
+        depth: int | None = None,
     ):
         self.schemes = ResourceInstance.objects.none()
         self.schemes_by_id: dict[str, ResourceInstance] = {}
@@ -69,17 +73,62 @@ class ConceptBuilder:
 
         if concept_ids is None:
             self.top_concepts_map()
-            self.narrower_concepts_map()
-            self.populate_guide_term_concepts()
+            top_concept_ids = list(self.labels.keys())
+            if depth is None:
+                self.narrower_concepts_map()
+            else:
+                self.batch_check_has_narrower(top_concept_ids)
+            self.populate_guide_term_concepts(
+                top_concept_ids if depth is not None else None
+            )
             self.populate_schemes()
             self.populate_resource_instance_lifecycle_state_ids(
                 scheme_ids=list(self.schemes_by_id.keys()),
-                concept_ids=list(self.labels.keys()),
+                concept_ids=top_concept_ids,
             )
             return
 
         if include_parents:
             self.build_scoped_parents(concept_ids)
+            return
+
+        if depth == 1:
+            child_ids: set[str] = set()
+            for parent_id in concept_ids:
+                child_tiles = TileModel.objects.filter(
+                    nodegroup_id=CLASSIFICATION_STATUS_NODEGROUP,
+                    **{f"{BROADER_LOOKUP}__contains": [{"resourceId": parent_id}]},
+                ).values_list("resourceinstance_id", flat=True)
+                for resource_instance_id in child_tiles.iterator():
+                    child_id = str(resource_instance_id)
+                    child_ids.add(child_id)
+                    self.narrower_concepts[parent_id].add(child_id)
+
+            if not child_ids:
+                return
+
+            self.populate_concept_labels(list(child_ids))
+            self.batch_check_has_narrower(list(child_ids))
+
+            top_concept_of_tiles = (
+                TileModel.objects.filter(
+                    nodegroup_id=TOP_CONCEPT_OF_NODE_AND_NODEGROUP,
+                    resourceinstance_id__in=child_ids,
+                )
+                .annotate(
+                    top_concept_of=self.resources_from_tiles(TOP_CONCEPT_OF_LOOKUP)
+                )
+                .values("resourceinstance_id", "top_concept_of")
+            )
+            for tile in top_concept_of_tiles.iterator():
+                top_concept_id = str(tile["resourceinstance_id"])
+                self.schemes_by_top_concept[top_concept_id].add(tile["top_concept_of"])
+
+            self.populate_guide_term_concepts(list(child_ids))
+            self.populate_resource_instance_lifecycle_state_ids(
+                scheme_ids=[],
+                concept_ids=list(child_ids),
+            )
             return
 
         self.populate_concept_labels(concept_ids)
@@ -211,6 +260,59 @@ class ConceptBuilder:
             self.schemes_by_top_concept[top_concept_id].add(scheme_id)
             self.labels[top_concept_id] = tile["labels"]
 
+    def narrower_exists_map(self):
+        broader_tiles = (
+            TileModel.objects.filter(
+                nodegroup_id=CLASSIFICATION_STATUS_NODEGROUP,
+            )
+            .annotate(broader_concept=self.resources_from_tiles(BROADER_LOOKUP))
+            .values("resourceinstance_id", "broader_concept")
+        )
+        for tile in broader_tiles.iterator():
+            broader_concept_id = tile["broader_concept"]
+            child_id = str(tile["resourceinstance_id"])
+            if broader_concept_id:
+                self.narrower_concepts[broader_concept_id].add(child_id)
+
+    def batch_check_has_narrower(self, concept_ids: list[str]) -> None:
+        """Check which of the given concept IDs have narrower concepts.
+
+        The node ID for the broader-concept JSON key is embedded as a literal
+        so that the query expression structurally matches the partial GIN index
+        definition on that column, enabling per-row GIN bitmap index scans.
+        """
+        if not concept_ids:
+            return
+
+        _tile_table = TileModel._meta.db_table
+        _nodegroup_col = TileModel._meta.get_field("nodegroup").column
+        _data_col = TileModel._meta.get_field("data").column
+        _node_key = str(CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID)
+        _nodegroup_id = str(CLASSIFICATION_STATUS_NODEGROUP)
+
+        with connection.cursor() as cursor:
+            cursor.execute(
+                f"""
+                SELECT concept_id
+                FROM unnest(%(concept_ids)s::text[]) AS concept_id
+                WHERE EXISTS (
+                    SELECT 1
+                    FROM "{_tile_table}" sub
+                    WHERE sub."{_nodegroup_col}" = %(nodegroup)s::uuid
+                      AND sub."{_data_col}"->'{_node_key}'
+                          @> jsonb_build_array(
+                              jsonb_build_object('resourceId', concept_id)
+                          )
+                )
+                """,
+                {
+                    "concept_ids": concept_ids,
+                    "nodegroup": _nodegroup_id,
+                },
+            )
+            for (concept_id,) in cursor.fetchall():
+                self.narrower_concepts[concept_id].add("__narrower_exists__")
+
     def narrower_concepts_map(self):
         broader_concept_tiles = (
             TileModel.objects.filter(nodegroup_id=CLASSIFICATION_STATUS_NODEGROUP)
@@ -290,7 +392,9 @@ class ConceptBuilder:
         )
         self.populate_guide_term_concepts(list(closure_concept_ids))
 
-    def serialize_scheme(self, scheme: ResourceInstance, *, children=True):
+    def serialize_scheme(
+        self, scheme: ResourceInstance, *, children=True, shallow=False
+    ):
         scheme_id: str = str(scheme.pk)
         scheme_lifecycle_state_id = (
             self.resource_instance_lifecycle_state_ids_by_resource_instance_id.get(
@@ -306,10 +410,16 @@ class ConceptBuilder:
             "labels": [self.serialize_scheme_label(label) for label in scheme.labels],
         }
         if children:
-            data["top_concepts"] = [
-                self.serialize_concept(concept_id)
-                for concept_id in sorted(self.top_concepts[scheme_id])
-            ]
+            if shallow:
+                data["top_concepts"] = [
+                    self.serialize_concept_shallow(concept_id)
+                    for concept_id in sorted(self.top_concepts[scheme_id])
+                ]
+            else:
+                data["top_concepts"] = [
+                    self.serialize_concept(concept_id)
+                    for concept_id in sorted(self.top_concepts[scheme_id])
+                ]
         return data
 
     def serialize_scheme_label(self, label_tile: dict):
@@ -382,7 +492,7 @@ class ConceptBuilder:
             for scheme_id, *parent_concept_ids in paths:
                 scheme_object = self.lookup_scheme(scheme_id)
                 if scheme_object is None:
-                    # skip any path whose scheme_id isn’t found
+                    # skip any path whose scheme_id isn't found
                     continue
 
                 serialized_scheme = self.serialize_scheme(scheme_object, children=False)
@@ -401,6 +511,31 @@ class ConceptBuilder:
             )
 
         return data
+
+    def serialize_concept_shallow(self, conceptid: str) -> dict:
+        """Serialize a concept without recursing into its children.
+
+        Includes a `has_narrower` boolean so the frontend can show an expand
+        toggle without having loaded the children yet.
+        """
+        concept_lifecycle_state_id = (
+            self.resource_instance_lifecycle_state_ids_by_resource_instance_id.get(
+                conceptid
+            )
+        )
+        return {
+            "id": conceptid,
+            "resource_instance_lifecycle_state_id": concept_lifecycle_state_id,
+            "resource_instance_lifecycle_state_name": self.lifecycle_state_names_by_id.get(
+                concept_lifecycle_state_id or ""
+            ),
+            "labels": [
+                self.serialize_concept_label(label) for label in self.labels[conceptid]
+            ],
+            "guide_term": conceptid in self.guide_term_concepts,
+            "top_concept": bool(self.schemes_by_top_concept.get(conceptid)),
+            "has_narrower": bool(self.narrower_concepts.get(conceptid)),
+        }
 
     def find_paths_to_root(self, working_path, conceptid) -> list[list[str]]:
         """Return an array of paths (path: an array of scheme & concept ids).

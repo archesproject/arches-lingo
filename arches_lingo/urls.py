@@ -4,6 +4,8 @@ from django.urls import include, path
 
 from arches_lingo.views.root import LingoRootView
 from arches_lingo.views.api.concepts import (
+    ConceptAncestorsView,
+    ConceptChildrenView,
     ConceptDeleteView,
     ConceptTreeView,
     ValueSearchView,
@@ -113,6 +115,16 @@ urlpatterns = [
         name="api-lingo-missing-translations",
     ),
     path("api/concept-tree", ConceptTreeView.as_view(), name="api-concepts"),
+    path(
+        "api/concept-tree/children/<uuid:concept_id>",
+        ConceptChildrenView.as_view(),
+        name="api-concept-children",
+    ),
+    path(
+        "api/concept-tree/ancestors/<uuid:concept_id>",
+        ConceptAncestorsView.as_view(),
+        name="api-concept-ancestors",
+    ),
     path(
         "api/lingo/lifecycle-states",
         LifecycleStatesView.as_view(),

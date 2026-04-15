@@ -5,6 +5,7 @@ import {
     nextTick,
     onMounted,
     provide,
+    reactive,
     ref,
     watch,
 } from "vue";
@@ -35,7 +36,10 @@ import {
 import { RETIRED_LIFECYCLE_STATE_ID } from "@/arches_lingo/constants.ts";
 
 import { useConceptStore } from "@/arches_lingo/stores/useConceptStore.ts";
-import { fetchLifecycleStates } from "@/arches_lingo/api.ts";
+import {
+    fetchLifecycleStates,
+    fetchConceptAncestorPaths,
+} from "@/arches_lingo/api.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 
 import {
@@ -207,6 +211,9 @@ provide(
     resourceInstanceLifecycleStateIsRetiredById,
 );
 
+const loadingNodeKeys = reactive(new Set<string>());
+provide("loadingNodeKeys", loadingNodeKeys);
+
 const sortIcon = computed(() => {
     const direction = shouldSortByAscending.value ? "down" : "up";
     return `pi pi-sort-alpha-${direction}`;
@@ -220,6 +227,7 @@ const tree = computed(() => {
         iconLabels.value,
         focusedOccurrenceKey.value,
         shouldSortByAscending.value,
+        conceptStore.hasLoadedChildren,
     );
 });
 
@@ -621,11 +629,10 @@ function scrollToOccurrenceKeyInTree(
         if (currentTreeNode.key === occurrenceKey) {
             const keysToExpand = new Set<string>();
 
-            for (const pathNode of currentPath) {
-                keysToExpand.add(pathNode.key);
+            for (const ancestorNode of currentPath.slice(0, -1)) {
+                keysToExpand.add(ancestorNode.key);
             }
 
-            keysToExpand.add(occurrenceKey);
             mergeExpandedKeys(keysToExpand);
 
             selectedKeys.value = { [occurrenceKey]: true };
@@ -766,15 +773,14 @@ function scrollToItemInTree(
     }
 
     if (!matches.length) {
-        return;
+        return false;
     }
 
     const keysToExpand = new Set<string>();
     for (const matchItem of matches) {
-        for (const pathNode of matchItem.path) {
-            keysToExpand.add(pathNode.key);
+        for (const ancestorNode of matchItem.path.slice(0, -1)) {
+            keysToExpand.add(ancestorNode.key);
         }
-        keysToExpand.add(matchItem.treeNode.key);
     }
 
     if (!debouncedFilterValue.value) {
@@ -816,10 +822,59 @@ function scrollToItemInTree(
     );
 
     if (!shouldScroll) {
-        return;
+        return true;
     }
 
     scrollOccurrenceIntoView(primaryOccurrenceKey);
+    return true;
+}
+
+async function revealConceptInTree(
+    conceptId: string,
+    shouldScroll: boolean,
+    preferredOccurrenceKey?: string,
+) {
+    if (scrollToItemInTree(conceptId, shouldScroll, preferredOccurrenceKey)) {
+        return;
+    }
+
+    let paths: Array<{ searchResults: Array<{ id: string }> }>;
+    try {
+        paths = await fetchConceptAncestorPaths(conceptId);
+    } catch {
+        return;
+    }
+
+    if (!paths?.length || !paths[0].searchResults?.length) return;
+
+    const pathNodes = paths[0].searchResults;
+    const schemeId: string = pathNodes[0].id;
+    const ancestorsToLoad = pathNodes.slice(1, -1);
+
+    for (const [index, ancestor] of ancestorsToLoad.entries()) {
+        if (conceptStore.hasLoadedChildren(ancestor.id)) continue;
+
+        const pathIds = pathNodes.slice(1, index + 2).map((node) => node.id);
+        const occurrenceKey = `${schemeId}::${pathIds.join(">")}`;
+
+        loadingNodeKeys.add(occurrenceKey);
+        try {
+            await conceptStore.loadChildren(ancestor.id);
+        } catch {
+            toast.add({
+                severity: ERROR,
+                life: DEFAULT_ERROR_TOAST_LIFE,
+                summary: $gettext("Unable to fetch concepts"),
+                detail: $gettext("Failed to load concept path."),
+            });
+            return;
+        } finally {
+            loadingNodeKeys.delete(occurrenceKey);
+        }
+        await nextTick();
+    }
+
+    scrollToItemInTree(conceptId, shouldScroll, preferredOccurrenceKey);
 }
 
 async function selectNodeFromRoute(
@@ -855,13 +910,40 @@ async function selectNodeFromRoute(
         preferredOccurrenceKey = priorSelectedPrimaryKey ?? undefined;
     }
 
-    scrollToItemInTree(routeNodeId, shouldScroll, preferredOccurrenceKey);
+    await revealConceptInTree(
+        routeNodeId,
+        shouldScroll,
+        preferredOccurrenceKey,
+    );
 
     await ensureFilterParentsExpanded();
 }
 
 async function onNodeSelect(node: TreeNode) {
     if (node.data.id === NEW) return;
+
+    const conceptId: string = node.data?.id;
+    const isConcept = node.data?.top_concepts === undefined;
+    const concept = isConcept ? conceptStore.findConcept(conceptId) : null;
+    if (
+        concept &&
+        !conceptStore.hasLoadedChildren(conceptId) &&
+        concept.has_narrower
+    ) {
+        const nodeKey = node.key as string;
+        loadingNodeKeys.add(nodeKey);
+        conceptStore
+            .loadChildren(conceptId)
+            .catch(() => {
+                toast.add({
+                    severity: ERROR,
+                    life: DEFAULT_ERROR_TOAST_LIFE,
+                    summary: $gettext("Unable to fetch concepts"),
+                    detail: $gettext("Failed to load child concepts."),
+                });
+            })
+            .finally(() => loadingNodeKeys.delete(nodeKey));
+    }
 
     const selectedKeysBeforeNavigation = { ...selectedKeys.value };
 
@@ -883,6 +965,29 @@ async function onNodeSelect(node: TreeNode) {
 
     if (primaryOriginalKey) {
         scrollOccurrenceIntoView(primaryOriginalKey);
+    }
+}
+
+async function onNodeExpand(node: TreeNode) {
+    const conceptId: string = node.data?.id;
+    if (!conceptId || node.data?.top_concepts !== undefined) return;
+
+    const concept = conceptStore.findConcept(conceptId);
+    if (!concept || conceptStore.hasLoadedChildren(conceptId)) return;
+
+    const nodeKey: string = node.key as string;
+    loadingNodeKeys.add(nodeKey);
+    try {
+        await conceptStore.loadChildren(conceptId);
+    } catch {
+        toast.add({
+            severity: ERROR,
+            life: DEFAULT_ERROR_TOAST_LIFE,
+            summary: $gettext("Unable to fetch concepts"),
+            detail: $gettext("Failed to load child concepts."),
+        });
+    } finally {
+        loadingNodeKeys.delete(nodeKey);
     }
 }
 </script>
@@ -958,8 +1063,18 @@ async function onNodeSelect(node: TreeNode) {
                 nodeLabel: {
                     style: { textWrap: 'nowrap' },
                 },
+                nodeToggleButton: ({
+                    instance,
+                }: TreePassThroughMethodOptions) => ({
+                    class: {
+                        'node-children-loading': loadingNodeKeys.has(
+                            instance.node?.key as string,
+                        ),
+                    },
+                }),
             }"
             @node-select="onNodeSelect"
+            @node-expand="onNodeExpand"
         >
             <template #default="slotProps">
                 <div :id="`tree-node-${slotProps.node.key}`">
@@ -1079,5 +1194,20 @@ async function onNodeSelect(node: TreeNode) {
 
 :deep(.p-tree-node-selected.new-node) {
     background: var(--p-yellow-500) !important;
+}
+
+/* Spin the expand toggle icon while children are being fetched */
+:deep(.node-children-loading .p-tree-node-toggle-icon) {
+    animation: tree-toggle-spin 0.6s linear infinite;
+    pointer-events: none;
+}
+
+@keyframes tree-toggle-spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
 }
 </style>

@@ -11,13 +11,18 @@ import Skeleton from "primevue/skeleton";
 import ConceptHeaderToolbar from "@/arches_lingo/components/concept/ConceptHeader/components/ConceptHeaderToolbar.vue";
 import LifecycleStateBadge from "@/arches_lingo/components/generic/LifecycleStateBadge.vue";
 
-import { fetchResourceIdentifiers } from "@/arches_lingo/api.ts";
+import {
+    fetchResourceIdentifiers,
+    fetchConceptAncestorPaths,
+} from "@/arches_lingo/api.ts";
 import {
     CONCEPT_TYPE_NODE_ALIAS,
     DEFAULT_ERROR_TOAST_LIFE,
     ERROR,
+    SKOS_PREF_LABEL_URI,
+    SKOS_ALT_LABEL_URI,
 } from "@/arches_lingo/constants.ts";
-import { PREF_LABEL } from "@/arches_controlled_lists/constants.ts";
+import { PREF_LABEL, ALT_LABEL } from "@/arches_controlled_lists/constants.ts";
 
 import { extractDescriptors } from "@/arches_lingo/utils.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
@@ -28,6 +33,7 @@ import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 
 import type { Ref } from "vue";
 import type {
+    AppellativeStatus,
     ConceptClassificationStatusAliases,
     ConceptHeaderData,
     DataComponentMode,
@@ -66,11 +72,11 @@ const isIdentifierLoaded = ref(false);
 const conceptIdentifierValue = ref<string>();
 const conceptTypeTile = ref();
 const isWidgetLoading = ref(false);
+const ancestorLabelsById = ref<Map<string, Label[]>>(new Map());
 
 const isLoading = computed(function () {
     if (!isIdentifierLoaded.value) return true;
     if (props.resourceInstanceId && !isResourceLoaded.value) return true;
-    if (props.resourceInstanceId && conceptStore.isLoading) return true;
     if (isWidgetLoading.value) return true;
 
     return false;
@@ -120,6 +126,20 @@ watch(
         isTopConcept.value = Boolean(resource.aliased_data?.top_concept_of);
         extractConceptHeaderData(resource);
         isResourceLoaded.value = true;
+
+        fetchConceptAncestorPaths(props.resourceInstanceId)
+            .then((paths) => {
+                const map = new Map<string, Label[]>();
+                for (const path of paths) {
+                    for (const node of path.searchResults) {
+                        if (node.labels?.length) {
+                            map.set(node.id, node.labels);
+                        }
+                    }
+                }
+                ancestorLabelsById.value = map;
+            })
+            .catch(() => {});
     },
     { immediate: true },
 );
@@ -132,6 +152,44 @@ watch(
         }
     },
 );
+
+function valuetypeFromUri(uri: string | undefined): string {
+    if (uri === SKOS_PREF_LABEL_URI) return PREF_LABEL;
+    if (uri === SKOS_ALT_LABEL_URI) return ALT_LABEL;
+    return "unknown";
+}
+
+function extractLabelsFromResource(resource: ResourceInstanceResult): Label[] {
+    const tiles: AppellativeStatus[] =
+        resource.aliased_data?.appellative_status ?? [];
+    const labels: Label[] = [];
+    for (const tile of tiles) {
+        const aliasedData = tile.aliased_data;
+        if (!aliasedData) continue;
+        const value =
+            aliasedData.appellative_status_ascribed_name_content?.display_value;
+        const termLanguageNode =
+            aliasedData.appellative_status_ascribed_name_language;
+        const termLanguageNodeValue = termLanguageNode?.node_value;
+        let languageId: string | undefined;
+        if (typeof termLanguageNodeValue === "string") {
+            languageId = termLanguageNodeValue;
+        } else {
+            languageId = termLanguageNode?.display_value;
+        }
+        const typeUri =
+            aliasedData.appellative_status_ascribed_relation?.node_value?.[0]
+                ?.uri;
+        if (value && languageId) {
+            labels.push({
+                value,
+                language_id: languageId,
+                valuetype_id: valuetypeFromUri(typeUri),
+            });
+        }
+    }
+    return labels;
+}
 
 const label = computed<Label | undefined>(function () {
     if (!props.resourceInstanceId) {
@@ -151,6 +209,17 @@ const label = computed<Label | undefined>(function () {
         );
     }
 
+    if (concept.value) {
+        const resourceLabels = extractLabelsFromResource(concept.value);
+        if (resourceLabels.length) {
+            return getItemLabel(
+                { labels: resourceLabels },
+                selectedLanguage.value.code,
+                systemLanguage.value.code,
+            );
+        }
+    }
+
     return undefined;
 });
 
@@ -160,7 +229,9 @@ const parentConceptLabelMap = computed<Map<string, Label[]>>(function () {
         const id = parent.details[0]?.resource_id;
 
         if (id) {
-            map.set(id, conceptStore.findConcept(id)?.labels ?? []);
+            const storeLabels = conceptStore.findConcept(id)?.labels;
+            const ancestorLabels = ancestorLabelsById.value.get(id);
+            map.set(id, storeLabels ?? ancestorLabels ?? []);
         }
     }
     return map;

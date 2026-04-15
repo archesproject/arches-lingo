@@ -10,13 +10,12 @@ import HierarchicalPositionEditor from "@/arches_lingo/components/concept/Hierar
 import { EDIT, VIEW } from "@/arches_lingo/constants.ts";
 
 import { fetchTileData } from "@/arches_component_lab/generics/GenericCard/api.ts";
+import { fetchConceptAncestorPaths } from "@/arches_lingo/api.ts";
 import { useResourceStore } from "@/arches_lingo/composables/useResourceStore.ts";
-import { useConceptStore } from "@/arches_lingo/stores/useConceptStore.ts";
 
 import type {
     ConceptClassificationStatus,
     DataComponentMode,
-    SearchResultItem,
     SearchResultHierarchy,
 } from "@/arches_lingo/types.ts";
 
@@ -35,7 +34,6 @@ const emit = defineEmits<{
 }>();
 
 const resourceStore = useResourceStore();
-const conceptStore = useConceptStore();
 
 const fetchError = ref();
 const hierarchicalData = ref<SearchResultHierarchy[]>([]);
@@ -60,11 +58,6 @@ const activeTileData = computed((): ConceptClassificationStatus | undefined => {
 });
 
 onMounted(async () => {
-    schemeId.value =
-        resourceStore.resource.value?.aliased_data?.part_of_scheme.aliased_data
-            .part_of_scheme?.details[0]?.resource_id ??
-        conceptStore.getParentPaths(props.resourceInstanceId ?? "")[0]?.[0]?.id;
-
     if (shouldCreateNewTile.value) {
         const blankTileData = await fetchTileData(
             props.graphSlug,
@@ -104,20 +97,18 @@ watch(
                 props.nodegroupAlias
             ] as ConceptClassificationStatus[];
 
-            await conceptStore.initialize();
-
-            const paths = conceptStore.getParentPaths(
+            const ancestorPaths = await fetchConceptAncestorPaths(
                 props.resourceInstanceId!,
             );
 
-            schemeId.value = paths[0]?.[0]?.id;
-            hierarchicalData.value = paths.map((path) => ({
-                searchResults: path as SearchResultItem[],
-            }));
+            const paths = ancestorPaths as SearchResultHierarchy[];
+            schemeId.value = paths[0]?.searchResults[0]?.id;
+            hierarchicalData.value = paths;
 
             for (const datum of hierarchicalData.value) {
-                const parentId =
-                    datum.searchResults[datum.searchResults.length - 2].id;
+                const pathLength = datum.searchResults.length;
+                const parentId = datum.searchResults[pathLength - 2]?.id;
+                if (!parentId) continue;
                 const match = tileData.value?.find((tile) =>
                     tile.aliased_data.classification_status_ascribed_classification.node_value?.some(
                         (nodeValue) => nodeValue.resourceId === parentId,

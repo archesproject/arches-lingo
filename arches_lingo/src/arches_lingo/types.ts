@@ -42,6 +42,7 @@ export interface Concept {
     id: string;
     labels: Label[];
     narrower: Concept[];
+    has_narrower?: boolean;
     guide_term?: boolean;
     top_concept?: boolean;
     resource_instance_lifecycle_state_id?: string;
