@@ -246,7 +246,7 @@ watch(
                         class="pi pi-folder"
                         aria-hidden="true"
                     />
-                    {{ setItem.name }}
+                    <span>{{ setItem.name }}</span>
                 </div>
                 <div class="set-meta">
                     {{

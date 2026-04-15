@@ -30,13 +30,12 @@ const newSetName = ref("");
 const newSetDescription = ref("");
 
 function formatSetMetadata(setItem: ConceptSetItem): string {
-    const count = $gettext("%{count} concepts", {
+    return $gettext("%{count} concepts · %{updated}", {
         count: String(setItem.member_count),
+        updated: new Date(setItem.updated).toLocaleDateString(
+            selectedLanguage.value.code,
+        ),
     });
-    const updated = new Date(setItem.updated).toLocaleDateString(
-        selectedLanguage.value.code,
-    );
-    return `${count} · ${updated}`;
 }
 
 function submitCreateSet() {
@@ -95,7 +94,7 @@ function cancelCreateDialog() {
                             class="pi pi-folder"
                             aria-hidden="true"
                         />
-                        {{ setItem.name }}
+                        <span>{{ setItem.name }}</span>
                     </div>
                     <div class="set-meta">
                         <span>{{ formatSetMetadata(setItem) }}</span>
