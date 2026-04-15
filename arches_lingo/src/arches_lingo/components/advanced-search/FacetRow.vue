@@ -9,7 +9,11 @@ import ToggleButton from "primevue/togglebutton";
 
 import { storeToRefs } from "pinia";
 
-import { fetchConceptResources } from "@/arches_lingo/api.ts";
+import {
+    fetchConceptResources,
+    fetchContributors,
+    fetchSources,
+} from "@/arches_lingo/api.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 
@@ -59,6 +63,8 @@ const facetTypes = computed<{ label: string; value: FacetType }[]>(() => [
     { label: $gettext("Identifier"), value: "identifier" },
     { label: $gettext("Lifecycle State"), value: "lifecycle_state" },
     { label: $gettext("Concept Set"), value: "concept_set" },
+    { label: $gettext("Source"), value: "attribution_source" },
+    { label: $gettext("Contributor"), value: "attribution_contributor" },
 ]);
 
 const matchModes = computed<{ label: string; value: MatchMode }[]>(() => [
@@ -100,6 +106,18 @@ const conceptSearchResults = ref<
 const isLoadingConcepts = ref(false);
 let conceptSearchTimeout: ReturnType<typeof setTimeout> | null = null;
 
+const sourceSearchResults = ref<
+    { display_value: string; resource_id: string }[]
+>([]);
+const isLoadingSources = ref(false);
+let sourceSearchTimeout: ReturnType<typeof setTimeout> | null = null;
+
+const contributorSearchResults = ref<
+    { display_value: string; resource_id: string }[]
+>([]);
+const isLoadingContributors = ref(false);
+let contributorSearchTimeout: ReturnType<typeof setTimeout> | null = null;
+
 function onConceptFilter(event: { value: string }) {
     if (conceptSearchTimeout) {
         clearTimeout(conceptSearchTimeout);
@@ -128,6 +146,58 @@ async function loadConcepts(term?: string) {
         conceptSearchResults.value = [];
     } finally {
         isLoadingConcepts.value = false;
+    }
+}
+
+function onSourceFilter(event: { value: string }) {
+    if (sourceSearchTimeout) {
+        clearTimeout(sourceSearchTimeout);
+    }
+    sourceSearchTimeout = setTimeout(async () => {
+        await loadSources(event.value);
+    }, 400);
+}
+
+async function loadSources(term?: string) {
+    try {
+        isLoadingSources.value = true;
+        const result = await fetchSources(term || "", 50, 0);
+        sourceSearchResults.value = (result.results || []).map(
+            (item: { resourceinstanceid: string; display_name: string }) => ({
+                display_value: item.display_name || item.resourceinstanceid,
+                resource_id: item.resourceinstanceid,
+            }),
+        );
+    } catch {
+        sourceSearchResults.value = [];
+    } finally {
+        isLoadingSources.value = false;
+    }
+}
+
+function onContributorFilter(event: { value: string }) {
+    if (contributorSearchTimeout) {
+        clearTimeout(contributorSearchTimeout);
+    }
+    contributorSearchTimeout = setTimeout(async () => {
+        await loadContributors(event.value);
+    }, 400);
+}
+
+async function loadContributors(term?: string) {
+    try {
+        isLoadingContributors.value = true;
+        const result = await fetchContributors(term || "", 50, 0);
+        contributorSearchResults.value = (result.results || []).map(
+            (item: { resourceinstanceid: string; display_name: string }) => ({
+                display_value: item.display_name || item.resourceinstanceid,
+                resource_id: item.resourceinstanceid,
+            }),
+        );
+    } catch {
+        contributorSearchResults.value = [];
+    } finally {
+        isLoadingContributors.value = false;
     }
 }
 
@@ -204,6 +274,33 @@ const showDirectionSelect = computed(
     () => props.condition.facet === "relationship_hierarchical",
 );
 
+const showSourcePicker = computed(
+    () => props.condition.facet === "attribution_source" && !isExistsMode.value,
+);
+
+const showContributorPicker = computed(
+    () =>
+        props.condition.facet === "attribution_contributor" &&
+        !isExistsMode.value,
+);
+
+const showAttributionMatchMode = computed(() =>
+    ["attribution_source", "attribution_contributor"].includes(
+        props.condition.facet,
+    ),
+);
+
+const attributionMatchModes = computed<{ label: string; value: MatchMode }[]>(
+    () => [{ label: $gettext("Exists (any value)"), value: "exists" }],
+);
+
+const noSourcesFoundMessage = $gettext("No sources found");
+const searchSourcesFilterPlaceholder = $gettext("Search sources...");
+const selectSourcePlaceholder = $gettext("Select source...");
+const noContributorsFoundMessage = $gettext("No contributors found");
+const searchContributorsFilterPlaceholder = $gettext("Search contributors...");
+const selectContributorPlaceholder = $gettext("Select contributor...");
+
 const showMatchMode = computed(() => {
     return ["label", "note", "match_uri", "uri", "identifier"].includes(
         props.condition.facet,
@@ -228,6 +325,16 @@ function updateMatchMode(mode: MatchMode) {
     const updated = { ...props.condition, match_mode: mode };
     if (mode === "exists") {
         updated.value = "";
+    }
+    emit("update:condition", updated);
+}
+
+function updateAttributionMatchMode(val: MatchMode | null) {
+    const updated = { ...props.condition, value: "" };
+    if (val === "exists") {
+        updated.match_mode = "exists";
+    } else {
+        delete updated.match_mode;
     }
     emit("update:condition", updated);
 }
@@ -273,6 +380,18 @@ function toggleNegated() {
             option-value="value"
             class="match-mode-dropdown"
             @update:model-value="updateMatchMode"
+        />
+
+        <Select
+            v-if="showAttributionMatchMode"
+            :model-value="isExistsMode ? 'exists' : null"
+            :options="attributionMatchModes"
+            option-label="label"
+            option-value="value"
+            :placeholder="$gettext('Is attributed to...')"
+            :show-clear="true"
+            class="match-mode-dropdown"
+            @update:model-value="updateAttributionMatchMode"
         />
 
         <!-- Text input for label, note, URI, identifier, match_uri -->
@@ -414,6 +533,48 @@ function toggleNegated() {
             class="facet-value-input"
             @update:model-value="
                 (val: string) => updateField('value', String(val))
+            "
+        />
+
+        <Select
+            v-if="showSourcePicker"
+            :model-value="condition.value"
+            :options="sourceSearchResults"
+            option-label="display_value"
+            option-value="resource_id"
+            :filter="true"
+            :filter-fields="['display_value', 'resource_id']"
+            :empty-filter-message="noSourcesFoundMessage"
+            :filter-placeholder="searchSourcesFilterPlaceholder"
+            :loading="isLoadingSources"
+            :placeholder="selectSourcePlaceholder"
+            :show-clear="true"
+            class="facet-value-input"
+            @filter="onSourceFilter"
+            @before-show="loadSources()"
+            @update:model-value="
+                (val: string | null) => updateField('value', val ?? '')
+            "
+        />
+
+        <Select
+            v-if="showContributorPicker"
+            :model-value="condition.value"
+            :options="contributorSearchResults"
+            option-label="display_value"
+            option-value="resource_id"
+            :filter="true"
+            :filter-fields="['display_value', 'resource_id']"
+            :empty-filter-message="noContributorsFoundMessage"
+            :filter-placeholder="searchContributorsFilterPlaceholder"
+            :loading="isLoadingContributors"
+            :placeholder="selectContributorPlaceholder"
+            :show-clear="true"
+            class="facet-value-input"
+            @filter="onContributorFilter"
+            @before-show="loadContributors()"
+            @update:model-value="
+                (val: string | null) => updateField('value', val ?? '')
             "
         />
 

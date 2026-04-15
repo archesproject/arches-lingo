@@ -37,6 +37,8 @@ from arches_lingo.const import (
     CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID,
     CONCEPT_NAME_NODEGROUP,
     CONCEPT_NAME_CONTENT_NODE,
+    CONCEPT_NAME_DATA_ASSIGNMENT_ACTOR_NODE,
+    CONCEPT_NAME_DATA_ASSIGNMENT_OBJ_USED_NODE,
     CONCEPT_NAME_LANGUAGE_NODE,
     CONCEPT_NAME_TYPE_NODE,
     SCHEME_NAME_NODEGROUP,
@@ -48,6 +50,8 @@ from arches_lingo.const import (
     LABEL_LIST_ID,
     STATEMENT_NODEGROUP,
     STATEMENT_CONTENT_NODE,
+    STATEMENT_DATA_ASSIGNMENT_ACTOR_NODE,
+    STATEMENT_DATA_ASSIGNMENT_OBJ_USED_NODE,
     STATEMENT_LANGUAGE_NODE,
     STATEMENT_TYPE_NODE,
     URI_NODEGROUP,
@@ -291,6 +295,35 @@ class AdvancedSearchEvaluatorTests(TestCase):
                         "resourceId": str(cls.concept_c.pk),
                         "resourceXresourceId": str(assoc_rxr.pk),
                     },
+                ],
+            },
+        )
+
+        cls.source_resource_id = str(uuid.uuid4())
+        cls.contributor_resource_id = str(uuid.uuid4())
+
+        TileModel.objects.create(
+            resourceinstance=cls.concept_a,
+            nodegroup_id=CONCEPT_NAME_NODEGROUP,
+            data={
+                CONCEPT_NAME_CONTENT_NODE: "Alpha Attributed Label",
+                CONCEPT_NAME_TYPE_NODE: cls.prefLabel_ref,
+                CONCEPT_NAME_LANGUAGE_NODE: "en",
+                CONCEPT_NAME_DATA_ASSIGNMENT_OBJ_USED_NODE: [
+                    {"resourceId": cls.source_resource_id}
+                ],
+            },
+        )
+
+        TileModel.objects.create(
+            resourceinstance=cls.concept_b,
+            nodegroup_id=CONCEPT_NAME_NODEGROUP,
+            data={
+                CONCEPT_NAME_CONTENT_NODE: "Beta Attributed Label",
+                CONCEPT_NAME_TYPE_NODE: cls.prefLabel_ref,
+                CONCEPT_NAME_LANGUAGE_NODE: "en",
+                CONCEPT_NAME_DATA_ASSIGNMENT_ACTOR_NODE: [
+                    {"resourceId": cls.contributor_resource_id}
                 ],
             },
         )
@@ -801,6 +834,88 @@ class AdvancedSearchEvaluatorTests(TestCase):
         result = self.evaluator.evaluate(query)
         ids = set(result)
         # All have labels with "Concept", but A has "definition" note → excluded
+        self.assertNotIn(self.concept_a.pk, ids)
+        self.assertIn(self.concept_b.pk, ids)
+        self.assertIn(self.concept_c.pk, ids)
+
+    def test_facet_attribution_source_specific_resource(self):
+        """Searching for a specific source finds only concepts attributed to it."""
+        result = self.evaluator.evaluate(
+            {"facet": "attribution_source", "value": self.source_resource_id}
+        )
+        ids = set(result)
+        self.assertIn(self.concept_a.pk, ids)
+        self.assertNotIn(self.concept_b.pk, ids)
+        self.assertNotIn(self.concept_c.pk, ids)
+
+    def test_facet_attribution_source_unknown_resource_returns_empty(self):
+        """Searching for an unknown source resource ID returns no concepts."""
+        result = self.evaluator.evaluate(
+            {"facet": "attribution_source", "value": str(uuid.uuid4())}
+        )
+        self.assertFalse(list(result))
+
+    def test_facet_attribution_source_empty_value_returns_all(self):
+        """No value and no exists mode returns all concepts."""
+        result = self.evaluator.evaluate({"facet": "attribution_source", "value": ""})
+        all_concepts = {self.concept_a.pk, self.concept_b.pk, self.concept_c.pk}
+        self.assertTrue(all_concepts.issubset(set(result)))
+
+    def test_facet_attribution_source_exists_mode(self):
+        """Exists mode returns only concepts that have any source attribution."""
+        result = self.evaluator.evaluate(
+            {"facet": "attribution_source", "value": "", "match_mode": "exists"}
+        )
+        ids = set(result)
+        self.assertIn(self.concept_a.pk, ids)
+        self.assertNotIn(self.concept_b.pk, ids)
+        self.assertNotIn(self.concept_c.pk, ids)
+
+    def test_facet_attribution_contributor_specific_resource(self):
+        """Searching for a specific contributor finds only concepts attributed to it."""
+        result = self.evaluator.evaluate(
+            {
+                "facet": "attribution_contributor",
+                "value": self.contributor_resource_id,
+            }
+        )
+        ids = set(result)
+        self.assertIn(self.concept_b.pk, ids)
+        self.assertNotIn(self.concept_a.pk, ids)
+        self.assertNotIn(self.concept_c.pk, ids)
+
+    def test_facet_attribution_contributor_empty_value_returns_all(self):
+        """No value and no exists mode returns all concepts."""
+        result = self.evaluator.evaluate(
+            {"facet": "attribution_contributor", "value": ""}
+        )
+        all_concepts = {self.concept_a.pk, self.concept_b.pk, self.concept_c.pk}
+        self.assertTrue(all_concepts.issubset(set(result)))
+
+    def test_facet_attribution_contributor_exists_mode(self):
+        """Exists mode returns only concepts that have any contributor attribution."""
+        result = self.evaluator.evaluate(
+            {
+                "facet": "attribution_contributor",
+                "value": "",
+                "match_mode": "exists",
+            }
+        )
+        ids = set(result)
+        self.assertIn(self.concept_b.pk, ids)
+        self.assertNotIn(self.concept_a.pk, ids)
+        self.assertNotIn(self.concept_c.pk, ids)
+
+    def test_facet_attribution_source_negated(self):
+        """Negated source facet excludes concepts attributed to that source."""
+        result = self.evaluator.evaluate(
+            {
+                "facet": "attribution_source",
+                "value": self.source_resource_id,
+                "negated": True,
+            }
+        )
+        ids = set(result)
         self.assertNotIn(self.concept_a.pk, ids)
         self.assertIn(self.concept_b.pk, ids)
         self.assertIn(self.concept_c.pk, ids)
