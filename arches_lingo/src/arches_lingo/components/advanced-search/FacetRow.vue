@@ -108,6 +108,8 @@ const isLoadingConcepts = ref(false);
 const conceptSearchPage = ref(0);
 const conceptSearchTotalCount = ref(0);
 const preloadedConceptOptions = ref<SearchResultItem[]>([]);
+let conceptFilterDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+let activeConceptRequestId = 0;
 
 const sourceSearchResults = ref<
     { display_value: string; resource_id: string }[]
@@ -123,7 +125,12 @@ let contributorSearchTimeout: ReturnType<typeof setTimeout> | null = null;
 
 function onConceptFilter(event: { value: string }) {
     conceptOptions.value = preloadedConceptOptions.value;
-    loadConceptPage(1, event.value);
+    if (conceptFilterDebounceTimer) {
+        clearTimeout(conceptFilterDebounceTimer);
+    }
+    conceptFilterDebounceTimer = setTimeout(() => {
+        loadConceptPage(1, event.value);
+    }, 300);
 }
 
 function mergeSelectedIntoOptions(
@@ -142,6 +149,7 @@ function mergeSelectedIntoOptions(
 }
 
 async function loadConceptPage(page: number, filterTerm?: string) {
+    const requestId = ++activeConceptRequestId;
     try {
         isLoadingConcepts.value = true;
         const parsedResponse = await fetchConceptResources(
@@ -149,6 +157,7 @@ async function loadConceptPage(page: number, filterTerm?: string) {
             conceptItemSize,
             page,
         );
+        if (requestId !== activeConceptRequestId) return;
         parsedResponse.data.forEach((option: SearchResultItem) => {
             option.label = getItemLabel(
                 option,
@@ -169,9 +178,13 @@ async function loadConceptPage(page: number, filterTerm?: string) {
         conceptSearchPage.value = parsedResponse.current_page;
         conceptSearchTotalCount.value = parsedResponse.total_results;
     } catch {
-        conceptOptions.value = preloadedConceptOptions.value;
+        if (requestId === activeConceptRequestId) {
+            conceptOptions.value = preloadedConceptOptions.value;
+        }
     } finally {
-        isLoadingConcepts.value = false;
+        if (requestId === activeConceptRequestId) {
+            isLoadingConcepts.value = false;
+        }
     }
 }
 
@@ -573,6 +586,7 @@ function toggleCascade() {
                 onLazyLoad: onConceptLazyLoad,
                 resizeDelay: 200,
             }"
+            :auto-filter-focus="true"
             class="facet-value-input"
             @before-show="loadConceptPage(1)"
             @filter="onConceptFilter"
