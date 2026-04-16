@@ -15,12 +15,14 @@ class SourcesListView(AnonymousAccessMixin, View):
         search_term = request.GET.get("search", "")
         limit = int(request.GET.get("limit", settings.RESOURCE_LIST_PAGE_SIZE))
         offset = int(request.GET.get("offset", 0))
+        resource_ids = request.GET.getlist("ids") or None
 
         data = get_paginated_resource_summaries(
             ["textual_work"],
             search_term=search_term,
             limit=limit,
             offset=offset,
+            resource_ids=resource_ids,
         )
         return JSONResponse(data)
 
@@ -30,12 +32,14 @@ class ContributorsListView(AnonymousAccessMixin, View):
         search_term = request.GET.get("search", "")
         limit = int(request.GET.get("limit", settings.RESOURCE_LIST_PAGE_SIZE))
         offset = int(request.GET.get("offset", 0))
+        resource_ids = request.GET.getlist("ids") or None
 
         data = get_paginated_resource_summaries(
             ["person_system", "group"],
             search_term=search_term,
             limit=limit,
             offset=offset,
+            resource_ids=resource_ids,
         )
         return JSONResponse(data)
 
