@@ -185,12 +185,7 @@ onMounted(async () => {
 }
 
 .narrower-concepts-list.fade-bottom {
-    /* Fade-out at the bottom hints that the list continues below */
-    mask-image: linear-gradient(
-        to bottom,
-        black calc(100% - 2rem),
-        transparent 100%
-    );
+    mask-image: linear-gradient(to bottom, black 93.75%, transparent 100%);
 }
 
 .narrower-concept-item {
