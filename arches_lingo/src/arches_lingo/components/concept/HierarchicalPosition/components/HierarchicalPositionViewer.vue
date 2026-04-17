@@ -603,6 +603,7 @@ function getTreeNodeStyle(depth: number) {
     margin-bottom: 0.5rem;
     border-radius: 0.25rem;
     padding: 0.75rem 1rem;
+    padding-bottom: 0;
     overflow-x: auto;
 }
 
@@ -657,7 +658,6 @@ function getTreeNodeStyle(depth: number) {
 
 .lineage-path {
     padding-inline-start: 0.5rem;
-    padding-bottom: 1rem;
 }
 
 .lineage-divider {
