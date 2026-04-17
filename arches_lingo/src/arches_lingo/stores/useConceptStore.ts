@@ -56,6 +56,7 @@ export const useConceptStore = defineStore("concepts", () => {
             try {
                 const data = await fetchConcepts();
                 const fetchedSchemes = data.schemes as Scheme[];
+                conceptsById.value.clear();
                 for (const scheme of fetchedSchemes) {
                     for (const topConcept of scheme.top_concepts) {
                         topConcept.narrower = topConcept.narrower ?? [];

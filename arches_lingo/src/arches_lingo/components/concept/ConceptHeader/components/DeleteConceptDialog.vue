@@ -40,7 +40,7 @@ const selectedStrategy = ref<DeleteConceptStrategy>(STRATEGY_REPARENT);
 onMounted(async () => {
     try {
         await conceptStore.initialize();
-        narrower.value = conceptStore.getNarrower(props.conceptId);
+        narrower.value = await conceptStore.loadChildren(props.conceptId);
     } finally {
         isFetchingChildren.value = false;
     }
@@ -133,7 +133,11 @@ function onConfirm() {
         >
             <div class="dialog-text">{{ confirmationText }}</div>
             <div class="muted-note">
-                {{ $gettext("This action cannot be undone.") }}
+                {{
+                    isDelete
+                        ? $gettext("This action cannot be undone.")
+                        : $gettext("This concept can be reinstated later.")
+                }}
             </div>
         </div>
 

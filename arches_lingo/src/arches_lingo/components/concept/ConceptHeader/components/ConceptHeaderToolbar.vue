@@ -9,13 +9,17 @@ import { storeToRefs } from "pinia";
 import Button from "primevue/button";
 import Tag from "primevue/tag";
 
+import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
+
 import DeleteConceptDialog from "@/arches_lingo/components/concept/ConceptHeader/components/DeleteConceptDialog.vue";
 import ExportThesauri from "@/arches_lingo/components/scheme/SchemeHeader/components/ExportThesauri.vue";
-import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
+import LifecycleButtons from "@/arches_lingo/components/scheme/SchemeHeader/components/LifecycleButtons.vue";
+import ReinstateDialog from "@/arches_lingo/components/generic/ReinstateDialog.vue";
 
 import {
     deleteConcept,
     retireConcept,
+    unretireConcept,
     upsertLingoTile,
 } from "@/arches_lingo/api.ts";
 import {
@@ -26,15 +30,15 @@ import {
     DEFAULT_TOAST_LIFE,
     DELETE,
     DEPRECATE,
-    DRAFT_LIFECYCLE_STATE_ID,
     EDIT,
-    EDITING_LIFECYCLE_STATE_ID,
     ERROR,
     GUIDE_TERM_ICON,
     GUIDE_TERM_URI,
     HIERARCHY_NAME_ICON,
     HIERARCHY_NAME_URI,
     NEW_CONCEPT,
+    PUBLISHED_LIFECYCLE_STATE_ID,
+    RETIRED_LIFECYCLE_STATE_ID,
     SUCCESS,
     TOP_CONCEPT_ICON,
 } from "@/arches_lingo/constants.ts";
@@ -44,6 +48,7 @@ import { navigateToSchemeOrConcept } from "@/arches_lingo/utils.ts";
 
 import { useEditLog } from "@/arches_lingo/composables/useEditLog.ts";
 import { useResourceStore } from "@/arches_lingo/composables/useResourceStore.ts";
+import { useConceptStore } from "@/arches_lingo/stores/useConceptStore.ts";
 import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 
 import type { Ref } from "vue";
@@ -87,12 +92,18 @@ const router = useRouter();
 
 const { isEditor } = storeToRefs(useUserStore());
 const resourceStore = useResourceStore();
+const conceptStore = useConceptStore();
 
 const { openEditLog } = useEditLog(() => props.graphSlug);
+
+const lifecycleButtonsRef = ref<InstanceType<typeof LifecycleButtons> | null>(
+    null,
+);
 
 const showExportDialog = ref(false);
 const exportDialogKey = ref(0);
 const showDeleteDialog = ref(false);
+const showReinstateDialog = ref(false);
 const isLoading = ref(false);
 const isWidgetLoading = ref(false);
 const dialogMode = ref<typeof DELETE | typeof DEPRECATE>(DELETE);
@@ -132,12 +143,38 @@ const canEditResourceInstances = computed(function () {
 
 const canDelete = computed(function () {
     if (!isEditor.value || !props.resourceInstanceId) return false;
-    return lifecycleState.value?.id === DRAFT_LIFECYCLE_STATE_ID;
+    return lifecycleState.value?.can_delete_resource_instances === true;
 });
 
-const canDeprecate = computed(function () {
-    if (!isEditor.value || !props.resourceInstanceId) return false;
-    return lifecycleState.value?.id === EDITING_LIFECYCLE_STATE_ID;
+const schemeId = computed(function () {
+    return props.concept?.aliased_data?.part_of_scheme?.aliased_data
+        ?.part_of_scheme?.node_value?.[0]?.resourceId;
+});
+
+const isSchemeRetired = computed(function () {
+    if (!schemeId.value) return false;
+    const scheme = conceptStore.schemes.find(
+        (candidate) => candidate.id === schemeId.value,
+    );
+    return (
+        scheme?.resource_instance_lifecycle_state_id ===
+        RETIRED_LIFECYCLE_STATE_ID
+    );
+});
+
+const isSchemePublished = computed(function () {
+    if (!schemeId.value) return false;
+    const scheme = conceptStore.schemes.find(
+        (candidate) => candidate.id === schemeId.value,
+    );
+    return (
+        scheme?.resource_instance_lifecycle_state_id ===
+        PUBLISHED_LIFECYCLE_STATE_ID
+    );
+});
+
+const showLifecycleButtons = computed(function () {
+    return isEditor.value && !isSchemeRetired.value && !isSchemePublished.value;
 });
 
 function isGuideTermType(typeNodeValue: unknown): boolean {
@@ -194,12 +231,6 @@ function confirmDelete() {
     showDeleteDialog.value = true;
 }
 
-function confirmDeprecate() {
-    if (!props.concept?.resourceinstanceid) return;
-    dialogMode.value = DEPRECATE;
-    showDeleteDialog.value = true;
-}
-
 async function executeDelete(strategy: DeleteConceptStrategy | undefined) {
     const schemeIdentifier =
         props.concept!.aliased_data?.part_of_scheme?.aliased_data.part_of_scheme
@@ -225,11 +256,7 @@ async function executeDeprecate(strategy: DeleteConceptStrategy | undefined) {
 
     showDeleteDialog.value = false;
 
-    router.push({
-        name: routeNames.concept,
-        params: { id: props.concept!.resourceinstanceid },
-        query: router.currentRoute.value.query,
-    });
+    lifecycleButtonsRef.value?.refreshLifecycleState();
     refreshReportSection!("all");
 }
 
@@ -261,6 +288,28 @@ async function onConfirmed(strategy: DeleteConceptStrategy | null) {
     }
 }
 
+async function executeUnretire(cascade: boolean) {
+    if (!props.concept) return;
+
+    isLoading.value = true;
+    try {
+        await unretireConcept(props.concept.resourceinstanceid, cascade);
+        refreshSchemeHierarchy!();
+        showReinstateDialog.value = false;
+        lifecycleButtonsRef.value?.refreshLifecycleState();
+        refreshReportSection!("all");
+    } catch (error) {
+        toast.add({
+            severity: ERROR,
+            life: DEFAULT_ERROR_TOAST_LIFE,
+            summary: $gettext("Error reinstating concept"),
+            detail: error instanceof Error ? error.message : undefined,
+        });
+    } finally {
+        isLoading.value = false;
+    }
+}
+
 function openExportDialog() {
     exportDialogKey.value++;
     showExportDialog.value = true;
@@ -279,6 +328,16 @@ function addChild() {
         parent: parentId,
     });
 }
+
+function onRetireRequested() {
+    if (!props.concept?.resourceinstanceid) return;
+    dialogMode.value = DEPRECATE;
+    showDeleteDialog.value = true;
+}
+
+function onReinstateRequested() {
+    showReinstateDialog.value = true;
+}
 </script>
 
 <template>
@@ -290,6 +349,15 @@ function addChild() {
         :is-loading="isLoading"
         @confirm="onConfirmed"
         @cancel="showDeleteDialog = false"
+    />
+    <ReinstateDialog
+        v-if="concept && showReinstateDialog"
+        :resource-id="concept.resourceinstanceid"
+        :resource-name="label?.value"
+        resource-type="concept"
+        :is-loading="isLoading"
+        @confirm="executeUnretire"
+        @cancel="showReinstateDialog = false"
     />
     <ExportThesauri
         v-if="concept && showExportDialog"
@@ -371,14 +439,13 @@ function addChild() {
                 :aria-label="$gettext('Delete Concept')"
                 @click="confirmDelete"
             />
-            <Button
-                v-if="canDeprecate"
-                icon="pi pi-ban"
-                :severity="DANGER"
-                class="delete-button"
-                :label="$gettext('Deprecate')"
-                :aria-label="$gettext('Deprecate Concept')"
-                @click="confirmDeprecate"
+            <LifecycleButtons
+                v-if="showLifecycleButtons"
+                ref="lifecycleButtonsRef"
+                :resource-instance-id="resourceInstanceId"
+                :retire-reinstate-only="true"
+                @retire-requested="onRetireRequested"
+                @reinstate-requested="onReinstateRequested"
             />
         </div>
     </div>

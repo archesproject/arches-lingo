@@ -11,6 +11,7 @@ from arches_lingo.const import (
 
 
 DRAFT_STATE_ID = uuid.UUID("0e7f8c6d-1f7b-4c2a-9a0c-2b9e0d6c8f11")
+EDITING_STATE_ID = uuid.UUID("b3a6a0d2-2b5c-4c2f-9d6c-0c2a5b7d1e8f")
 RETIRED_STATE_ID = uuid.UUID("9d2e1c0b-7a6b-4b3d-8c1a-0f2d9e6b0a7c")
 
 STRATEGY_REPARENT = "reparent"
@@ -225,4 +226,16 @@ def retire_concept(concept: ResourceInstance, strategy: str | None):
         orphan_children(concept_id)
 
     concept.resource_instance_lifecycle_state_id = RETIRED_STATE_ID
+    concept.save(update_fields=["resource_instance_lifecycle_state"])
+
+
+def unretire_concept(concept: ResourceInstance, cascade: bool):
+    if cascade:
+        descendant_ids = get_all_descendant_ids(str(concept.pk))
+        ResourceInstance.objects.filter(
+            pk__in=descendant_ids,
+            resource_instance_lifecycle_state_id=RETIRED_STATE_ID,
+        ).update(resource_instance_lifecycle_state_id=EDITING_STATE_ID)
+
+    concept.resource_instance_lifecycle_state_id = EDITING_STATE_ID
     concept.save(update_fields=["resource_instance_lifecycle_state"])

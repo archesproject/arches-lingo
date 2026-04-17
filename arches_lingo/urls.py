@@ -40,7 +40,11 @@ from arches_lingo.views.api.scheme_identifier import SchemeIdentifierView
 from arches_lingo.views.api.scheme_uri_template import (
     SchemeURITemplateView,
 )
-from arches_lingo.views.api.concept_lifecycle import ConceptRetireView
+from arches_lingo.views.api.concept_lifecycle import (
+    ConceptRetireView,
+    ConceptUnretireView,
+    SchemeUnretireConceptsView,
+)
 from arches_lingo.views.api.settings import AppSettingsView
 from arches_lingo.views.api.identifier_resolve import IdentifierResolveView
 from arches_lingo.views.api.resource_list import (
@@ -235,6 +239,16 @@ urlpatterns = [
         "api/lingo/concept/<uuid:pk>/retire",
         ConceptRetireView.as_view(),
         name="api-concept-retire",
+    ),
+    path(
+        "api/lingo/concept/<uuid:pk>/unretire",
+        ConceptUnretireView.as_view(),
+        name="api-concept-unretire",
+    ),
+    path(
+        "api/lingo/scheme/<uuid:pk>/unretire-concepts",
+        SchemeUnretireConceptsView.as_view(),
+        name="api-scheme-unretire-concepts",
     ),
     path(
         "api/lingo/<slug:graph>",

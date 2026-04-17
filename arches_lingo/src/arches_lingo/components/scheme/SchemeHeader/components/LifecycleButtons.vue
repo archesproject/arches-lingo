@@ -11,7 +11,13 @@ import {
     updateResourceInstanceLifecycleState,
 } from "@/arches_lingo/api.ts";
 
-import { DEFAULT_ERROR_TOAST_LIFE, ERROR } from "@/arches_lingo/constants.ts";
+import {
+    DANGER,
+    DEFAULT_ERROR_TOAST_LIFE,
+    EDITING_LIFECYCLE_STATE_ID,
+    ERROR,
+    RETIRED_LIFECYCLE_STATE_ID,
+} from "@/arches_lingo/constants.ts";
 
 type ResourceInstanceLifecycleState = {
     id: string;
@@ -23,6 +29,7 @@ type ResourceInstanceLifecycleState = {
 const props = defineProps<{
     resourceInstanceId: string | undefined;
     buttonClass?: string;
+    retireReinstateOnly?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -30,7 +37,11 @@ const emit = defineEmits<{
         eventName: "change",
         currentResourceInstanceLifecycleState: ResourceInstanceLifecycleState,
     ): void;
+    (eventName: "retire-requested", nextStateId: string): void;
+    (eventName: "reinstate-requested", nextStateId: string): void;
 }>();
+
+defineExpose({ executeTransition, refreshLifecycleState });
 
 const toast = useToast();
 const { $gettext } = useGettext();
@@ -41,11 +52,28 @@ const currentResourceInstanceLifecycleState = ref<
     ResourceInstanceLifecycleState | undefined
 >();
 
-const nextResourceInstanceLifecycleStates = computed(() => {
+const isCurrentlyRetired = computed(() => {
     return (
-        currentResourceInstanceLifecycleState.value
-            ?.next_resource_instance_lifecycle_states || []
+        currentResourceInstanceLifecycleState.value?.id ===
+        RETIRED_LIFECYCLE_STATE_ID
     );
+});
+
+const nextResourceInstanceLifecycleStates = computed(() => {
+    const states =
+        currentResourceInstanceLifecycleState.value
+            ?.next_resource_instance_lifecycle_states || [];
+    if (!props.retireReinstateOnly) return states;
+    if (isCurrentlyRetired.value) return states;
+    if (
+        currentResourceInstanceLifecycleState.value?.id ===
+        EDITING_LIFECYCLE_STATE_ID
+    ) {
+        return states.filter(
+            (state) => state.id === RETIRED_LIFECYCLE_STATE_ID,
+        );
+    }
+    return [];
 });
 
 async function refreshLifecycleState() {
@@ -72,7 +100,7 @@ async function refreshLifecycleState() {
     }
 }
 
-async function onUpdateLifecycleState(nextStateId: string) {
+async function executeTransition(nextStateId: string) {
     if (!props.resourceInstanceId) {
         return;
     }
@@ -99,6 +127,40 @@ async function onUpdateLifecycleState(nextStateId: string) {
     } finally {
         activeRequestStateId.value = undefined;
     }
+}
+
+function handleButtonClick(nextState: ResourceInstanceLifecycleState) {
+    if (nextState.id === RETIRED_LIFECYCLE_STATE_ID) {
+        emit("retire-requested", nextState.id);
+        return;
+    }
+
+    if (isCurrentlyRetired.value) {
+        emit("reinstate-requested", nextState.id);
+        return;
+    }
+
+    executeTransition(nextState.id);
+}
+
+function buttonSeverity(nextStateId: string): string | undefined {
+    if (nextStateId === RETIRED_LIFECYCLE_STATE_ID) {
+        return DANGER;
+    }
+    return undefined;
+}
+
+function buttonIcon(nextStateId: string): string {
+    if (nextStateId === RETIRED_LIFECYCLE_STATE_ID) {
+        return "pi pi-ban";
+    }
+    if (
+        isCurrentlyRetired.value &&
+        nextStateId === EDITING_LIFECYCLE_STATE_ID
+    ) {
+        return "pi pi-refresh";
+    }
+    return "pi pi-book";
 }
 
 onMounted(async () => {
@@ -130,10 +192,11 @@ watch(
                 :label="nextState.action_label"
                 :aria-label="nextState.action_label"
                 :class="buttonClass"
+                :severity="buttonSeverity(nextState.id)"
                 :loading="activeRequestStateId === nextState.id"
                 :disabled="activeRequestStateId !== undefined"
-                icon="pi pi-book"
-                @click="onUpdateLifecycleState(nextState.id)"
+                :icon="buttonIcon(nextState.id)"
+                @click="handleButtonClick(nextState)"
             />
         </template>
     </div>
