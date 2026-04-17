@@ -1106,9 +1106,7 @@ async function onNodeExpand(node: TreeNode) {
 }
 
 .filter-container {
-    padding-top: 0;
-    padding-inline: 1rem;
-    padding-bottom: 1rem;
+    padding: 1rem;
     background: var(--p-header-toolbar-background);
     border-bottom: 0.0625rem solid var(--p-menubar-border-color);
     margin-bottom: 0.5rem;
