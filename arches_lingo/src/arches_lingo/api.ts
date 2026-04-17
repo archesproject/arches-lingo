@@ -353,7 +353,7 @@ export const unretireConcept = async (
     }
 };
 
-export const unretireSchemeConceptsView = async (
+export const unretireSchemeConcepts = async (
     schemeId: string,
 ): Promise<void> => {
     const url = generateArchesURL("arches_lingo:api-scheme-unretire-concepts", {

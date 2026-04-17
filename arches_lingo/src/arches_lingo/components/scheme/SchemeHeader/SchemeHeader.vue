@@ -39,7 +39,7 @@ import {
     fetchSchemeURITemplate,
     fetchResourceInstanceLifecycleState,
     fetchSchemeLabelCounts,
-    unretireSchemeConceptsView,
+    unretireSchemeConcepts,
 } from "@/arches_lingo/api.ts";
 import { useResourceStore } from "@/arches_lingo/composables/useResourceStore.ts";
 import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
@@ -415,7 +415,9 @@ function onRetireRequested(nextStateId: string) {
 
 function onRetireConfirmed() {
     if (!pendingRetireStateId.value) return;
-    lifecycleButtonsRef.value?.executeTransition(pendingRetireStateId.value);
+    lifecycleButtonsRef.value?.transitionLifecycleState(
+        pendingRetireStateId.value,
+    );
     showRetireDialog.value = false;
     pendingRetireStateId.value = undefined;
 }
@@ -433,9 +435,9 @@ async function onReinstateConfirmed(cascade: boolean) {
     isReinstateLoading.value = true;
     try {
         if (cascade) {
-            await unretireSchemeConceptsView(props.resourceInstanceId);
+            await unretireSchemeConcepts(props.resourceInstanceId);
         }
-        lifecycleButtonsRef.value?.executeTransition(
+        lifecycleButtonsRef.value?.transitionLifecycleState(
             pendingReinstateStateId.value,
         );
     } catch (error) {

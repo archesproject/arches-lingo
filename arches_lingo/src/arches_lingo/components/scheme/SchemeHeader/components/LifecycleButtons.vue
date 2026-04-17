@@ -41,7 +41,7 @@ const emit = defineEmits<{
     (eventName: "reinstate-requested", nextStateId: string): void;
 }>();
 
-defineExpose({ executeTransition, refreshLifecycleState });
+defineExpose({ transitionLifecycleState, refreshLifecycleState });
 
 const toast = useToast();
 const { $gettext } = useGettext();
@@ -100,7 +100,7 @@ async function refreshLifecycleState() {
     }
 }
 
-async function executeTransition(nextStateId: string) {
+async function transitionLifecycleState(nextStateId: string) {
     if (!props.resourceInstanceId) {
         return;
     }
@@ -140,7 +140,7 @@ function handleButtonClick(nextState: ResourceInstanceLifecycleState) {
         return;
     }
 
-    executeTransition(nextState.id);
+    transitionLifecycleState(nextState.id);
 }
 
 function buttonSeverity(nextStateId: string): string | undefined {

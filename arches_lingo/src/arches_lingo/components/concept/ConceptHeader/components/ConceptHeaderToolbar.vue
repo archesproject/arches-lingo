@@ -231,44 +231,40 @@ function confirmDelete() {
     showDeleteDialog.value = true;
 }
 
-async function executeDelete(strategy: DeleteConceptStrategy | undefined) {
-    const schemeIdentifier =
-        props.concept!.aliased_data?.part_of_scheme?.aliased_data.part_of_scheme
-            ?.node_value?.[0]?.resourceId;
-
-    await deleteConcept(props.concept!.resourceinstanceid, strategy);
-
-    refreshSchemeHierarchy!();
-
-    showDeleteDialog.value = false;
-
-    router.push({
-        name: routeNames.scheme,
-        params: { id: schemeIdentifier },
-        query: router.currentRoute.value.query,
-    });
-}
-
-async function executeDeprecate(strategy: DeleteConceptStrategy | undefined) {
-    await retireConcept(props.concept!.resourceinstanceid, strategy);
-
-    refreshSchemeHierarchy!();
-
-    showDeleteDialog.value = false;
-
-    lifecycleButtonsRef.value?.refreshLifecycleState();
-    refreshReportSection!("all");
-}
-
 async function onConfirmed(strategy: DeleteConceptStrategy | null) {
     if (!props.concept) return;
 
     isLoading.value = true;
     try {
         if (dialogMode.value === DELETE) {
-            await executeDelete(strategy ?? undefined);
+            const schemeIdentifier =
+                props.concept.aliased_data?.part_of_scheme?.aliased_data
+                    .part_of_scheme?.node_value?.[0]?.resourceId;
+
+            await deleteConcept(
+                props.concept.resourceinstanceid,
+                strategy ?? undefined,
+            );
+
+            refreshSchemeHierarchy!();
+            showDeleteDialog.value = false;
+
+            router.push({
+                name: routeNames.scheme,
+                params: { id: schemeIdentifier },
+                query: router.currentRoute.value.query,
+            });
         } else {
-            await executeDeprecate(strategy ?? undefined);
+            await retireConcept(
+                props.concept.resourceinstanceid,
+                strategy ?? undefined,
+            );
+
+            refreshSchemeHierarchy!();
+            showDeleteDialog.value = false;
+
+            lifecycleButtonsRef.value?.refreshLifecycleState();
+            refreshReportSection!("all");
         }
     } catch (error) {
         let summary;
@@ -288,7 +284,7 @@ async function onConfirmed(strategy: DeleteConceptStrategy | null) {
     }
 }
 
-async function executeUnretire(cascade: boolean) {
+async function onReinstateConfirmed(cascade: boolean) {
     if (!props.concept) return;
 
     isLoading.value = true;
@@ -356,7 +352,7 @@ function onReinstateRequested() {
         :resource-name="label?.value"
         resource-type="concept"
         :is-loading="isLoading"
-        @confirm="executeUnretire"
+        @confirm="onReinstateConfirmed"
         @cancel="showReinstateDialog = false"
     />
     <ExportThesauri
