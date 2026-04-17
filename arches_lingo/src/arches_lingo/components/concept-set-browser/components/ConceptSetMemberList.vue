@@ -229,7 +229,7 @@ function handleRemoveSelected() {
     flex-wrap: wrap;
     justify-content: flex-end;
     gap: 0.375rem;
-    padding: 0.5rem 0;
+    padding: 0.5rem;
     border-bottom: 0.0625rem solid var(--p-highlight-focus-background);
     flex-shrink: 0;
 }

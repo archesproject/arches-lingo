@@ -61,7 +61,6 @@ function cancelCreateDialog() {
                 :label="$gettext('New Set')"
                 icon="pi pi-folder"
                 size="small"
-                outlined
                 @click="showCreateDialog = true"
             />
         </div>
@@ -179,7 +178,7 @@ function cancelCreateDialog() {
 .list-actions {
     display: flex;
     justify-content: flex-end;
-    padding-bottom: 0.5rem;
+    padding: 0.5rem;
     border-bottom: 0.0625rem solid var(--p-highlight-focus-background);
     flex-shrink: 0;
 }
