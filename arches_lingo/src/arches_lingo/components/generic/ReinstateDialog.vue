@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { ref } from "vue";
 
 import { useGettext } from "vue3-gettext";
 import Button from "primevue/button";
@@ -8,7 +8,7 @@ import RadioButton from "primevue/radiobutton";
 
 import { INFO, SECONDARY } from "@/arches_lingo/constants.ts";
 
-const props = defineProps<{
+const { resourceName, resourceType, isLoading } = defineProps<{
     resourceId: string;
     resourceName: string | undefined;
     resourceType: "concept" | "scheme";
@@ -24,46 +24,46 @@ const { $gettext } = useGettext();
 
 const selectedCascade = ref(false);
 
-const dialogHeader = computed(function () {
+function dialogHeader(): string {
     return $gettext("Reinstate");
-});
+}
 
-const confirmationText = computed(function () {
+function confirmationText(): string {
     return $gettext(
         'Are you sure you want to reinstate "%{name}"? It will return to Editing state.',
-        { name: props.resourceName ?? "" },
+        { name: resourceName ?? "" },
     );
-});
+}
 
-const childrenText = computed(function () {
-    if (props.resourceType === "scheme") {
+function childrenText(): string {
+    if (resourceType === "scheme") {
         return $gettext(
             'Would you also like to reinstate the concepts within "%{name}"?',
-            { name: props.resourceName ?? "" },
+            { name: resourceName ?? "" },
         );
     }
     return $gettext(
         'Would you also like to reinstate the child concepts within "%{name}"?',
-        { name: props.resourceName ?? "" },
+        { name: resourceName ?? "" },
     );
-});
+}
 
-const reinstateOnlyLabel = computed(function () {
-    if (props.resourceType === "scheme") {
+function reinstateOnlyLabel(): string {
+    if (resourceType === "scheme") {
         return $gettext("Reinstate this scheme only");
     }
     return $gettext("Reinstate this concept only");
-});
+}
 
-const reinstateAllLabel = computed(function () {
-    if (props.resourceType === "scheme") {
+function reinstateAllLabel(): string {
+    if (resourceType === "scheme") {
         return $gettext("Reinstate this scheme and all its concepts");
     }
     return $gettext("Reinstate this concept and all its descendants");
-});
+}
 
-const reinstateAllDesc = computed(function () {
-    if (props.resourceType === "scheme") {
+function reinstateAllDesc(): string {
+    if (resourceType === "scheme") {
         return $gettext(
             "All retired concepts within this scheme will be moved to Editing state.",
         );
@@ -71,7 +71,7 @@ const reinstateAllDesc = computed(function () {
     return $gettext(
         "This concept and all its retired descendants will be moved to Editing state.",
     );
-});
+}
 
 function onConfirm() {
     emit("confirm", selectedCascade.value);
@@ -83,14 +83,14 @@ function onConfirm() {
         :visible="true"
         :modal="true"
         :dismissable-mask="false"
-        :header="dialogHeader"
+        :header="dialogHeader()"
         :closable="!isLoading"
         class="reinstate-dialog"
         @update:visible="!isLoading && $emit('cancel')"
     >
         <div class="dialog-body">
-            <div class="dialog-text">{{ confirmationText }}</div>
-            <div class="dialog-text">{{ childrenText }}</div>
+            <div class="dialog-text">{{ confirmationText() }}</div>
+            <div class="dialog-text">{{ childrenText() }}</div>
 
             <div class="strategy-options">
                 <label
@@ -105,7 +105,7 @@ function onConfirm() {
                     />
                     <div class="strategy-label">
                         <span class="strategy-title">{{
-                            reinstateOnlyLabel
+                            reinstateOnlyLabel()
                         }}</span>
                     </div>
                 </label>
@@ -122,10 +122,10 @@ function onConfirm() {
                     />
                     <div class="strategy-label">
                         <span class="strategy-title">{{
-                            reinstateAllLabel
+                            reinstateAllLabel()
                         }}</span>
                         <span class="strategy-desc">{{
-                            reinstateAllDesc
+                            reinstateAllDesc()
                         }}</span>
                     </div>
                 </label>
