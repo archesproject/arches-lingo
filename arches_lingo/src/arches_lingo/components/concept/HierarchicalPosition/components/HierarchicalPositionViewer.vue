@@ -98,6 +98,80 @@ const createTooltipText = computed(() => {
 });
 const { isEditor } = useUserStore();
 const isDeletePending = ref(false);
+const expandedGroupIndices = ref(new Set<number>());
+const collapsedGroupIndices = ref(new Set<number>());
+
+function isGroupExpanded(groupIndex: number): boolean {
+    return expandedGroupIndices.value.has(groupIndex);
+}
+
+function isGroupCollapsed(groupIndex: number): boolean {
+    return collapsedGroupIndices.value.has(groupIndex);
+}
+
+function toggleGroupCollapse(groupIndex: number) {
+    const updatedSet = new Set(collapsedGroupIndices.value);
+    if (updatedSet.has(groupIndex)) {
+        updatedSet.delete(groupIndex);
+    } else {
+        updatedSet.add(groupIndex);
+    }
+    collapsedGroupIndices.value = updatedSet;
+}
+
+const allGroupsCollapsed = computed(() => {
+    return (
+        relationshipGroups.value.length > 0 &&
+        relationshipGroups.value.every((_, index) =>
+            collapsedGroupIndices.value.has(index),
+        )
+    );
+});
+
+function collapseAllGroups() {
+    collapsedGroupIndices.value = new Set(
+        relationshipGroups.value.map((_, index) => index),
+    );
+}
+
+function expandAllGroups() {
+    collapsedGroupIndices.value = new Set();
+}
+
+const groupsWithMultiplePaths = computed(() => {
+    return relationshipGroups.value
+        .map((group, index) => ({ group, index }))
+        .filter(({ group }) => group.lineages.length > 1);
+});
+
+const allPathsExpanded = computed(() => {
+    return (
+        groupsWithMultiplePaths.value.length > 0 &&
+        groupsWithMultiplePaths.value.every(({ index }) =>
+            expandedGroupIndices.value.has(index),
+        )
+    );
+});
+
+function expandAllPaths() {
+    expandedGroupIndices.value = new Set(
+        groupsWithMultiplePaths.value.map(({ index }) => index),
+    );
+}
+
+function collapseAllPaths() {
+    expandedGroupIndices.value = new Set();
+}
+
+function toggleGroupExpansion(groupIndex: number) {
+    const updatedSet = new Set(expandedGroupIndices.value);
+    if (updatedSet.has(groupIndex)) {
+        updatedSet.delete(groupIndex);
+    } else {
+        updatedSet.add(groupIndex);
+    }
+    expandedGroupIndices.value = updatedSet;
+}
 
 const relationshipGroups = computed<RelationshipGroup[]>(() => {
     const groupMap = new Map<string, RelationshipGroup>();
@@ -228,10 +302,7 @@ function getTreeNodeStyle(depth: number) {
 </script>
 
 <template>
-    <div
-        class="viewer-section"
-        style="padding-bottom: 0"
-    >
+    <div class="viewer-section">
         <ConfirmDialog
             :pt="{ root: { style: { fontFamily: 'sans-serif' } } }"
             group="delete-parent"
@@ -276,144 +347,239 @@ function getTreeNodeStyle(depth: number) {
         </ConfirmDialog>
 
         <div class="section-header">
-            <h2>{{ props.sectionTitle }}</h2>
+            <div class="section-title">
+                <h2>{{ props.sectionTitle }}</h2>
+                <Tag
+                    v-if="relationshipGroups.length"
+                    :value="String(relationshipGroups.length)"
+                    severity="secondary"
+                />
+                <Button
+                    v-if="relationshipGroups.length > 1"
+                    variant="text"
+                    size="small"
+                    class="bulk-action-button"
+                    :icon="
+                        allGroupsCollapsed ? 'pi pi-expand' : 'pi pi-compress'
+                    "
+                    :label="
+                        allGroupsCollapsed
+                            ? $gettext('Expand all')
+                            : $gettext('Collapse all')
+                    "
+                    @click="
+                        allGroupsCollapsed
+                            ? expandAllGroups()
+                            : collapseAllGroups()
+                    "
+                />
+                <Button
+                    v-if="groupsWithMultiplePaths.length > 0"
+                    variant="text"
+                    size="small"
+                    class="bulk-action-button"
+                    :icon="
+                        allPathsExpanded
+                            ? 'pi pi-minus-circle'
+                            : 'pi pi-plus-circle'
+                    "
+                    :label="
+                        allPathsExpanded
+                            ? $gettext('Collapse all paths')
+                            : $gettext('Expand all paths')
+                    "
+                    @click="
+                        allPathsExpanded ? collapseAllPaths() : expandAllPaths()
+                    "
+                />
+            </div>
 
-            <Button
-                v-if="isEditor"
-                v-tooltip.top="{
-                    disabled: Boolean(!isCreateDisabled),
-                    value: createTooltipText,
-                    showDelay: 300,
-                    pt: {
-                        text: {
-                            style: { fontFamily: 'var(--p-lingo-font-family)' },
+            <div class="section-header-actions">
+                <Button
+                    v-if="isEditor"
+                    v-tooltip.top="{
+                        disabled: Boolean(!isCreateDisabled),
+                        value: createTooltipText,
+                        showDelay: 300,
+                        pt: {
+                            text: {
+                                style: {
+                                    fontFamily: 'var(--p-lingo-font-family)',
+                                },
+                            },
+                            arrow: { style: { display: 'none' } },
                         },
-                        arrow: { style: { display: 'none' } },
-                    },
-                }"
-                :disabled="isCreateDisabled"
-                :label="$gettext('Add Hierarchical Parent')"
-                class="add-button wide"
-                icon="pi pi-plus-circle"
-                @click="openEditor!(props.componentName)"
-            ></Button>
+                    }"
+                    :disabled="isCreateDisabled"
+                    :label="$gettext('Add Hierarchical Parent')"
+                    class="add-button wide"
+                    icon="pi pi-plus-circle"
+                    @click="openEditor!(props.componentName)"
+                ></Button>
+            </div>
         </div>
 
         <div
             v-if="props.data.length"
-            style="overflow-x: auto; margin-top: 0.5rem"
+            class="hierarchy-container"
         >
-            <div
-                v-for="(group, groupIndex) in relationshipGroups"
-                :key="group.tileid ?? groupIndex"
-                class="relationship-group"
-            >
-                <div class="relationship-group-header">
-                    <span class="relationship-group-label">
-                        <span
-                            v-if="group.parentConcept"
-                            :class="getIcon(group.parentConcept)"
-                        />
-
-                        <span v-if="group.isTopConcept">
-                            {{ getTopConceptOfLabel(group) }}
-                        </span>
-                        <span v-else>
-                            {{ getBroaderConceptLabel(group) }}
-                        </span>
-
-                        <Tag
-                            v-if="group.lineages.length > 1"
-                            :value="
-                                $gettext('%{count} paths', {
-                                    count: String(group.lineages.length),
-                                })
-                            "
-                            severity="secondary"
-                            class="path-count-badge"
-                        />
-                    </span>
-                    <div
-                        v-if="isEditor"
-                        class="relationship-group-actions"
-                    >
-                        <div class="button-container">
-                            <Button
-                                v-if="canEditResourceInstances"
-                                class="controls edit-button"
-                                icon="pi pi-file-edit"
-                                variant="text"
-                                :aria-label="$gettext('edit')"
-                                :disabled="group.isTopConcept"
-                                @click="
-                                    openEditor!(componentName, group.tileid)
+            <div class="hierarchy-scroll-area">
+                <div
+                    v-for="(group, groupIndex) in relationshipGroups"
+                    :key="group.tileid ?? groupIndex"
+                    class="relationship-group"
+                >
+                    <div class="relationship-group-header">
+                        <button
+                            class="relationship-group-label"
+                            :aria-expanded="!isGroupCollapsed(groupIndex)"
+                            @click="toggleGroupCollapse(groupIndex)"
+                        >
+                            <i
+                                class="pi"
+                                :class="
+                                    isGroupCollapsed(groupIndex)
+                                        ? 'pi-chevron-right'
+                                        : 'pi-chevron-down'
                                 "
+                                aria-hidden="true"
                             />
-                            <Button
-                                v-if="group.tileid && canEditResourceInstances"
-                                class="controls delete-button"
-                                icon="pi pi-trash"
-                                variant="text"
-                                :aria-label="$gettext('delete')"
-                                @click="confirmDelete(group)"
+                            <span
+                                v-if="group.parentConcept"
+                                :class="getIcon(group.parentConcept)"
                             />
-                        </div>
-                    </div>
-                </div>
-                <div class="lineage-paths">
-                    <template
-                        v-for="(hierarchy, lineageIndex) in group.lineages"
-                        :key="lineageIndex"
-                    >
-                        <div class="lineage-path">
-                            <div
-                                v-for="(item, depth) in hierarchy.searchResults"
-                                :key="item.id"
-                                class="tree-node"
-                                :style="getTreeNodeStyle(depth)"
-                            >
-                                <span
-                                    :class="getIcon(item)"
-                                    class="tree-node-icon"
+
+                            <span v-if="group.isTopConcept">
+                                {{ getTopConceptOfLabel(group) }}
+                            </span>
+                            <span v-else>
+                                {{ getBroaderConceptLabel(group) }}
+                            </span>
+
+                            <Tag
+                                v-if="group.lineages.length > 1"
+                                :value="
+                                    $gettext('%{count} paths', {
+                                        count: String(group.lineages.length),
+                                    })
+                                "
+                                severity="secondary"
+                                class="path-count-badge"
+                            />
+                        </button>
+                        <div
+                            v-if="isEditor"
+                            class="relationship-group-actions"
+                        >
+                            <div class="button-container">
+                                <Button
+                                    v-if="canEditResourceInstances"
+                                    class="controls edit-button"
+                                    icon="pi pi-file-edit"
+                                    variant="text"
+                                    :aria-label="$gettext('edit')"
+                                    :disabled="group.isTopConcept"
+                                    @click="
+                                        openEditor!(componentName, group.tileid)
+                                    "
                                 />
-                                <span
-                                    v-if="item.id === props.resourceInstanceId"
-                                    class="tree-node-label tree-node-label-current"
-                                >
-                                    {{
-                                        getItemLabel(
-                                            item,
-                                            selectedLanguage.code,
-                                            systemLanguage.code,
-                                        ).value
-                                    }}
-                                </span>
-                                <RouterLink
-                                    v-else
-                                    :to="getItemRoute(item)"
-                                    class="tree-node-label"
-                                >
-                                    {{
-                                        getItemLabel(
-                                            item,
-                                            selectedLanguage.code,
-                                            systemLanguage.code,
-                                        ).value
-                                    }}
-                                </RouterLink>
+                                <Button
+                                    v-if="
+                                        group.tileid && canEditResourceInstances
+                                    "
+                                    class="controls delete-button"
+                                    icon="pi pi-trash"
+                                    variant="text"
+                                    :aria-label="$gettext('delete')"
+                                    @click="confirmDelete(group)"
+                                />
                             </div>
                         </div>
-                    </template>
+                    </div>
+                    <div
+                        v-if="!isGroupCollapsed(groupIndex)"
+                        class="lineage-paths"
+                    >
+                        <template
+                            v-for="(hierarchy, lineageIndex) in group.lineages"
+                            :key="lineageIndex"
+                        >
+                            <div
+                                v-if="
+                                    lineageIndex === 0 ||
+                                    isGroupExpanded(groupIndex)
+                                "
+                                class="lineage-path"
+                            >
+                                <div
+                                    v-for="(
+                                        item, depth
+                                    ) in hierarchy.searchResults"
+                                    :key="item.id"
+                                    class="tree-node"
+                                    :style="getTreeNodeStyle(depth)"
+                                >
+                                    <span
+                                        :class="getIcon(item)"
+                                        class="tree-node-icon"
+                                    />
+                                    <span
+                                        v-if="
+                                            item.id === props.resourceInstanceId
+                                        "
+                                        class="tree-node-label tree-node-label-current"
+                                    >
+                                        {{
+                                            getItemLabel(
+                                                item,
+                                                selectedLanguage.code,
+                                                systemLanguage.code,
+                                            ).value
+                                        }}
+                                    </span>
+                                    <RouterLink
+                                        v-else
+                                        :to="getItemRoute(item)"
+                                        class="tree-node-label"
+                                    >
+                                        {{
+                                            getItemLabel(
+                                                item,
+                                                selectedLanguage.code,
+                                                systemLanguage.code,
+                                            ).value
+                                        }}
+                                    </RouterLink>
+                                </div>
+                            </div>
+                        </template>
+                        <Button
+                            v-if="group.lineages.length > 1"
+                            variant="text"
+                            size="small"
+                            class="expand-paths-button"
+                            @click="toggleGroupExpansion(groupIndex)"
+                        >
+                            <span v-if="!isGroupExpanded(groupIndex)">
+                                {{
+                                    $gettext("Show %{count} more paths", {
+                                        count: String(
+                                            group.lineages.length - 1,
+                                        ),
+                                    })
+                                }}
+                            </span>
+                            <span v-else>
+                                {{ $gettext("Show fewer paths") }}
+                            </span>
+                        </Button>
+                    </div>
                 </div>
             </div>
         </div>
         <div
             v-else
-            style="
-                padding-top: 0.5rem;
-                font-size: var(--p-lingo-font-size-smallnormal);
-                color: var(--p-inputtext-placeholder-color);
-            "
+            class="no-hierarchy-data"
         >
             {{ $gettext("No hierarchical parents were found.") }}
         </div>
@@ -421,6 +587,18 @@ function getTreeNodeStyle(depth: number) {
 </template>
 
 <style scoped>
+.section-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.bulk-action-button {
+    font-size: var(--p-lingo-font-size-xsmall);
+    font-weight: var(--p-lingo-font-weight-normal);
+    color: var(--p-neutral-500);
+}
+
 .relationship-group {
     margin-bottom: 0.5rem;
     border-radius: 0.25rem;
@@ -445,6 +623,16 @@ function getTreeNodeStyle(depth: number) {
     font-weight: var(--p-lingo-font-weight-semibold, 600);
     font-size: var(--p-lingo-font-size-smallnormal);
     color: var(--p-header-item-label);
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    text-align: start;
+    font-family: var(--p-lingo-font-family);
+}
+
+.relationship-group-label:hover {
+    color: var(--p-primary-500);
 }
 
 .relationship-group-actions {
@@ -578,5 +766,32 @@ function getTreeNodeStyle(depth: number) {
     background: var(--p-button-danger-hover-background);
     border: 1px solid var(--p-button-danger-hover-border-color);
     color: var(--p-button-danger-hover-color);
+}
+
+.hierarchy-container {
+    margin-block-start: 0.75rem;
+    overflow-x: auto;
+}
+
+.hierarchy-scroll-area {
+    overflow-x: auto;
+}
+
+.no-hierarchy-data {
+    padding-block-start: 0.5rem;
+    font-size: var(--p-lingo-font-size-smallnormal);
+    color: var(--p-inputtext-placeholder-color);
+}
+
+.lineage-path + .lineage-path {
+    border-top: thin dashed var(--p-inputtext-border-color);
+    padding-block-start: 0.75rem;
+}
+
+.expand-paths-button {
+    margin-block-start: 0.25rem;
+    padding-inline-start: 0;
+    font-size: var(--p-lingo-font-size-xsmall);
+    color: var(--p-primary-500);
 }
 </style>
