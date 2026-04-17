@@ -61,37 +61,44 @@ const childrenText = computed(function () {
 });
 
 function dialogHeader(): string {
-    return isDelete.value
-        ? $gettext("Delete Concept")
-        : $gettext("Deprecate Concept");
+    if (isDelete.value) {
+        return $gettext("Delete Concept");
+    }
+    return $gettext("Deprecate Concept");
 }
 
 function confirmationText(): string {
-    return isDelete.value
-        ? $gettext('Are you sure you want to delete "%{name}"?', {
-              name: conceptName ?? "",
-          })
-        : $gettext('Are you sure you want to deprecate "%{name}"?', {
-              name: conceptName ?? "",
-          });
+    if (isDelete.value) {
+        return $gettext('Are you sure you want to delete "%{name}"?', {
+            name: conceptName ?? "",
+        });
+    }
+    return $gettext('Are you sure you want to deprecate "%{name}"?', {
+        name: conceptName ?? "",
+    });
 }
 
 function deleteChildrenTitle(): string {
-    return isDelete.value
-        ? $gettext("Delete all children")
-        : $gettext("Deprecate all children");
+    if (isDelete.value) {
+        return $gettext("Delete all children");
+    }
+    return $gettext("Deprecate all children");
 }
 
 function deleteChildrenDesc(): string {
-    return isDelete.value
-        ? $gettext(
-              "This concept and all its descendants will be permanently deleted.",
-          )
-        : $gettext("This concept and all its descendants will be deprecated.");
+    if (isDelete.value) {
+        return $gettext(
+            "This concept and all its descendants will be permanently deleted.",
+        );
+    }
+    return $gettext("This concept and all its descendants will be deprecated.");
 }
 
 function confirmButtonLabel(): string {
-    return isDelete.value ? $gettext("Delete") : $gettext("Deprecate");
+    if (isDelete.value) {
+        return $gettext("Delete");
+    }
+    return $gettext("Deprecate");
 }
 
 function onConfirm() {
