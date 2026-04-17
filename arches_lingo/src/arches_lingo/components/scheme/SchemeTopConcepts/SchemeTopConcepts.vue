@@ -7,6 +7,7 @@ import { storeToRefs } from "pinia";
 
 import Skeleton from "primevue/skeleton";
 import Message from "primevue/message";
+import Tag from "primevue/tag";
 
 import { fetchSchemeTopConcepts } from "@/arches_lingo/api.ts";
 import { getConceptIcon, sortItemsByLabel } from "@/arches_lingo/utils.ts";
@@ -87,6 +88,12 @@ onMounted(async () => {
     >
         <div class="section-header">
             <h2>{{ sectionTitle }}</h2>
+            <Tag
+                v-if="topConcepts.length"
+                :value="topConcepts.length"
+                severity="secondary"
+                class="concept-count-badge"
+            />
         </div>
         <div
             v-if="topConcepts.length"
@@ -101,7 +108,10 @@ onMounted(async () => {
                 }"
                 class="top-concept-item"
             >
-                <span :class="getConceptIcon(concept)"></span>
+                <span
+                    :class="getConceptIcon(concept)"
+                    class="top-concept-icon"
+                ></span>
                 <span class="top-concept-label">
                     {{
                         getItemLabel(
@@ -126,27 +136,47 @@ onMounted(async () => {
 .top-concepts-list {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    gap: 0.125rem;
     padding-top: 0.5rem;
 }
 
 .top-concept-item {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.375rem 0.5rem;
+    gap: 0.625rem;
+    padding: 0.5rem 0.625rem;
     border-radius: 0.25rem;
+    border-bottom: 0.0625rem solid var(--p-highlight-focus-background);
     cursor: pointer;
     font-size: var(--p-lingo-font-size-smallnormal);
     text-decoration: none;
     color: inherit;
 }
 
+.top-concept-item:last-child {
+    border-bottom: none;
+}
+
 .top-concept-item:hover {
     background: var(--p-highlight-background);
 }
 
+.top-concept-icon {
+    color: var(--p-neutral-400);
+    flex-shrink: 0;
+    font-size: var(--p-lingo-font-size-smallnormal);
+}
+
 .top-concept-label {
     color: var(--p-primary-500);
+}
+
+.concept-count-badge {
+    font-size: var(--p-lingo-font-size-xsmall, 0.7rem);
+    font-weight: var(--p-lingo-font-weight-normal);
+    color: var(--p-neutral-600);
+    background: var(--p-neutral-200);
+    padding: 0.2rem 0.6rem;
+    border-radius: 1rem;
 }
 </style>

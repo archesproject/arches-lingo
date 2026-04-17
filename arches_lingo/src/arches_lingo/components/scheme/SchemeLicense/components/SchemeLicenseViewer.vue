@@ -65,9 +65,15 @@ const { isEditor } = useUserStore();
 const buttonLabel = computed(() => {
     if (props.tileData) {
         return $gettext("Edit Rights");
-    } else {
-        return $gettext("Add Rights");
     }
+    return $gettext("Add Rights");
+});
+
+const buttonIcon = computed(() => {
+    if (props.tileData) {
+        return "pi pi-pencil";
+    }
+    return "pi pi-plus-circle";
 });
 </script>
 <template>
@@ -90,63 +96,71 @@ const buttonLabel = computed(() => {
                 }"
                 :disabled="isCreateDisabled"
                 :label="buttonLabel"
+                :icon="buttonIcon"
                 class="add-button"
-                icon="pi pi-plus-circle"
                 @click="
                     openEditor!(props.componentName, props.tileData?.tileid)
                 "
             ></Button>
         </div>
 
-        <div v-if="props.tileData">
-            <GenericWidget
-                node-alias="right_holder"
-                :graph-slug="props.graphSlug"
-                :aliased-node-data="props.tileData?.aliased_data.right_holder"
-                :mode="VIEW"
-            />
-            <GenericWidget
-                node-alias="right_type"
-                :graph-slug="props.graphSlug"
-                :aliased-node-data="props.tileData?.aliased_data.right_type"
-                :mode="VIEW"
-            />
-            <GenericWidget
-                node-alias="right_statement_content"
-                :graph-slug="props.graphSlug"
-                :aliased-node-data="
-                    props.tileData?.aliased_data.right_statement?.aliased_data
-                        ?.right_statement_content
-                "
-                :mode="VIEW"
-            />
-            <GenericWidget
-                node-alias="right_statement_language"
-                :graph-slug="props.graphSlug"
-                :aliased-node-data="
-                    props.tileData?.aliased_data.right_statement?.aliased_data
-                        .right_statement_language
-                "
-                :mode="VIEW"
-            />
-            <GenericWidget
-                node-alias="right_statement_type"
-                :graph-slug="props.graphSlug"
-                :aliased-node-data="
-                    props.tileData?.aliased_data.right_statement?.aliased_data
-                        .right_statement_type
-                "
-                :mode="VIEW"
-            />
-            <GenericWidget
-                node-alias="right_statement_type_metatype"
-                :graph-slug="props.graphSlug"
-                :aliased-node-data="
-                    props.tileData?.aliased_data.right_statement?.aliased_data
-                        .right_statement_type_metatype
-                "
-                :mode="VIEW"
-            />
+        <div
+            v-if="props.tileData"
+            class="fields-container"
+        >
+            <div class="primary-fields">
+                <GenericWidget
+                    node-alias="right_holder"
+                    :graph-slug="props.graphSlug"
+                    :aliased-node-data="
+                        props.tileData?.aliased_data.right_holder
+                    "
+                    :mode="VIEW"
+                />
+                <GenericWidget
+                    node-alias="right_type"
+                    :graph-slug="props.graphSlug"
+                    :aliased-node-data="props.tileData?.aliased_data.right_type"
+                    :mode="VIEW"
+                />
+            </div>
+            <div
+                v-if="props.tileData?.aliased_data.right_statement"
+                class="statement-section"
+            >
+                <span class="group-label">{{
+                    $gettext("Rights Statement")
+                }}</span>
+                <div class="right-statement-group">
+                    <GenericWidget
+                        node-alias="right_statement_content"
+                        :graph-slug="props.graphSlug"
+                        :aliased-node-data="
+                            props.tileData?.aliased_data.right_statement
+                                ?.aliased_data?.right_statement_content
+                        "
+                        :mode="VIEW"
+                    />
+                    <GenericWidget
+                        node-alias="right_statement_language"
+                        :graph-slug="props.graphSlug"
+                        :aliased-node-data="
+                            props.tileData?.aliased_data.right_statement
+                                ?.aliased_data.right_statement_language
+                        "
+                        :mode="VIEW"
+                    />
+                    <GenericWidget
+                        node-alias="right_statement_type"
+                        :graph-slug="props.graphSlug"
+                        :aliased-node-data="
+                            props.tileData?.aliased_data.right_statement
+                                ?.aliased_data.right_statement_type
+                        "
+                        :mode="VIEW"
+                    />
+                </div>
+            </div>
         </div>
         <div
             v-else
@@ -156,3 +170,62 @@ const buttonLabel = computed(() => {
         </div>
     </div>
 </template>
+
+<style scoped>
+.fields-container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 1.25rem;
+    padding-top: 0.5rem;
+    color: var(--p-inputtext-placeholder-color);
+    font-size: var(--p-lingo-font-size-smallnormal);
+    font-weight: var(--p-lingo-font-weight-light);
+}
+
+.primary-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    flex: 1;
+    min-width: 14rem;
+}
+
+.statement-section {
+    flex: 1;
+    min-width: 16rem;
+}
+
+.group-label {
+    display: block;
+    font-size: var(--p-lingo-font-size-smallnormal);
+    font-weight: var(--p-lingo-font-weight-normal);
+    color: var(--p-neutral-400);
+    margin-bottom: 0.5rem;
+}
+
+.right-statement-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    border-inline-start: 0.125rem solid var(--p-highlight-focus-background);
+    padding-inline-start: 1.25rem;
+}
+
+:deep(.widget-label) {
+    font-size: var(--p-lingo-font-size-smallnormal);
+    font-weight: var(--p-lingo-font-weight-normal);
+    color: var(--p-neutral-400);
+    margin-bottom: 0.125rem;
+}
+
+:deep(.widget > div),
+:deep(.widget > span) {
+    padding-inline-start: 1rem;
+}
+
+:deep(.add-button .pi-pencil) {
+    font-size: 0.7rem;
+}
+</style>
