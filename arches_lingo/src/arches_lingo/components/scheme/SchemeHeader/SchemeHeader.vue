@@ -11,10 +11,12 @@ import { storeToRefs } from "pinia";
 
 import Skeleton from "primevue/skeleton";
 import ConfirmDialog from "primevue/confirmdialog";
+import Dialog from "primevue/dialog";
 import Button from "primevue/button";
 
 import ExportThesauri from "@/arches_lingo/components/scheme/SchemeHeader/components/ExportThesauri.vue";
 import LifecycleButtons from "@/arches_lingo/components/scheme/SchemeHeader/components/LifecycleButtons.vue";
+import ReinstateDialog from "@/arches_lingo/components/generic/ReinstateDialog.vue";
 import SchemeIdentifierField from "@/arches_lingo/components/scheme/SchemeHeader/components/SchemeIdentifierField.vue";
 import SchemeURITemplateField from "@/arches_lingo/components/scheme/SchemeHeader/components/SchemeURITemplateField.vue";
 import ConceptIdentifierCounterField from "@/arches_lingo/components/scheme/SchemeHeader/components/ConceptIdentifierCounterField.vue";
@@ -37,6 +39,7 @@ import {
     fetchSchemeURITemplate,
     fetchResourceInstanceLifecycleState,
     fetchSchemeLabelCounts,
+    unretireSchemeConceptsView,
 } from "@/arches_lingo/api.ts";
 import { useResourceStore } from "@/arches_lingo/composables/useResourceStore.ts";
 import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
@@ -126,6 +129,14 @@ const showMoreLabel = computed(() =>
 const isLoading = ref(true);
 const showExportDialog = ref(false);
 const exportDialogKey = ref(0);
+const showReinstateDialog = ref(false);
+const showRetireDialog = ref(false);
+const isReinstateLoading = ref(false);
+const pendingReinstateStateId = ref<string | undefined>();
+const pendingRetireStateId = ref<string | undefined>();
+const lifecycleButtonsRef = ref<InstanceType<typeof LifecycleButtons> | null>(
+    null,
+);
 const identifierValue = ref<string>();
 
 const resourceIdentifierId = ref<number | undefined>();
@@ -396,10 +407,92 @@ function onLifecycleStateChange(
 
     window.location.reload();
 }
+
+function onRetireRequested(nextStateId: string) {
+    pendingRetireStateId.value = nextStateId;
+    showRetireDialog.value = true;
+}
+
+function onRetireConfirmed() {
+    if (!pendingRetireStateId.value) return;
+    lifecycleButtonsRef.value?.executeTransition(pendingRetireStateId.value);
+    showRetireDialog.value = false;
+    pendingRetireStateId.value = undefined;
+}
+
+function onReinstateRequested(nextStateId: string) {
+    pendingReinstateStateId.value = nextStateId;
+    showReinstateDialog.value = true;
+}
+
+async function onReinstateConfirmed(cascade: boolean) {
+    if (!props.resourceInstanceId || !pendingReinstateStateId.value) {
+        return;
+    }
+
+    isReinstateLoading.value = true;
+    try {
+        if (cascade) {
+            await unretireSchemeConceptsView(props.resourceInstanceId);
+        }
+        lifecycleButtonsRef.value?.executeTransition(
+            pendingReinstateStateId.value,
+        );
+    } catch (error) {
+        toast.add({
+            severity: ERROR,
+            life: DEFAULT_ERROR_TOAST_LIFE,
+            summary: $gettext("Error reinstating scheme"),
+            detail: error instanceof Error ? error.message : undefined,
+        });
+    } finally {
+        isReinstateLoading.value = false;
+        showReinstateDialog.value = false;
+        pendingReinstateStateId.value = undefined;
+    }
+}
 </script>
 
 <template>
     <ConfirmDialog group="delete-scheme" />
+    <Dialog
+        v-if="showRetireDialog"
+        :visible="true"
+        :modal="true"
+        :dismissable-mask="false"
+        :header="$gettext('Confirmation')"
+        @update:visible="showRetireDialog = false"
+    >
+        <p>
+            {{
+                $gettext(
+                    "Are you sure you want to retire this vocabulary? All concepts within it will also be retired.",
+                )
+            }}
+        </p>
+        <template #footer>
+            <Button
+                :label="$gettext('Cancel')"
+                :severity="SECONDARY"
+                :outlined="true"
+                @click="showRetireDialog = false"
+            />
+            <Button
+                :label="$gettext('Retire')"
+                :severity="DANGER"
+                @click="onRetireConfirmed"
+            />
+        </template>
+    </Dialog>
+    <ReinstateDialog
+        v-if="showReinstateDialog && resourceInstanceId"
+        :resource-id="resourceInstanceId"
+        :resource-name="label?.value"
+        resource-type="scheme"
+        :is-loading="isReinstateLoading"
+        @confirm="onReinstateConfirmed"
+        @cancel="showReinstateDialog = false"
+    />
     <ExportThesauri
         v-if="scheme && showExportDialog"
         :key="exportDialogKey"
@@ -473,8 +566,11 @@ function onLifecycleStateChange(
 
                         <LifecycleButtons
                             v-if="isEditor"
+                            ref="lifecycleButtonsRef"
                             :resource-instance-id="props.resourceInstanceId"
                             @change="onLifecycleStateChange"
+                            @retire-requested="onRetireRequested"
+                            @reinstate-requested="onReinstateRequested"
                         />
                     </div>
                 </div>
