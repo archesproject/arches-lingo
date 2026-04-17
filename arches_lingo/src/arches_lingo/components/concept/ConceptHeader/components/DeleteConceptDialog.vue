@@ -60,14 +60,14 @@ const childrenText = computed(function () {
     );
 });
 
-function dialogHeader(): string {
+const dialogHeader = computed(function () {
     if (isDelete.value) {
         return $gettext("Delete Concept");
     }
     return $gettext("Deprecate Concept");
-}
+});
 
-function confirmationText(): string {
+const confirmationText = computed(function () {
     if (isDelete.value) {
         return $gettext('Are you sure you want to delete "%{name}"?', {
             name: conceptName ?? "",
@@ -76,30 +76,30 @@ function confirmationText(): string {
     return $gettext('Are you sure you want to deprecate "%{name}"?', {
         name: conceptName ?? "",
     });
-}
+});
 
-function deleteChildrenTitle(): string {
+const deleteChildrenTitle = computed(function () {
     if (isDelete.value) {
         return $gettext("Delete all children");
     }
     return $gettext("Deprecate all children");
-}
+});
 
-function deleteChildrenDesc(): string {
+const deleteChildrenDesc = computed(function () {
     if (isDelete.value) {
         return $gettext(
             "This concept and all its descendants will be permanently deleted.",
         );
     }
     return $gettext("This concept and all its descendants will be deprecated.");
-}
+});
 
-function confirmButtonLabel(): string {
+const confirmButtonLabel = computed(function () {
     if (isDelete.value) {
         return $gettext("Delete");
     }
     return $gettext("Deprecate");
-}
+});
 
 function onConfirm() {
     emit("confirm", narrower.value.length > 0 ? selectedStrategy.value : null);
@@ -110,7 +110,7 @@ function onConfirm() {
     <Dialog
         :visible="true"
         :modal="true"
-        :header="dialogHeader()"
+        :header="dialogHeader"
         :closable="!isLoading"
         class="delete-concept-dialog"
         @update:visible="!isLoading && $emit('cancel')"
@@ -124,7 +124,7 @@ function onConfirm() {
             v-else-if="narrower.length === 0"
             class="dialog-body"
         >
-            <div class="dialog-text">{{ confirmationText() }}</div>
+            <div class="dialog-text">{{ confirmationText }}</div>
             <div class="muted-note">
                 {{
                     isDelete
@@ -179,10 +179,10 @@ function onConfirm() {
                     />
                     <div class="strategy-label">
                         <span class="strategy-title">{{
-                            deleteChildrenTitle()
+                            deleteChildrenTitle
                         }}</span>
                         <span class="strategy-desc">{{
-                            deleteChildrenDesc()
+                            deleteChildrenDesc
                         }}</span>
                     </div>
                 </label>
@@ -198,7 +198,7 @@ function onConfirm() {
                 @click="$emit('cancel')"
             />
             <Button
-                :label="confirmButtonLabel()"
+                :label="confirmButtonLabel"
                 :severity="DANGER"
                 :disabled="isFetchingChildren || isLoading"
                 :loading="isLoading"

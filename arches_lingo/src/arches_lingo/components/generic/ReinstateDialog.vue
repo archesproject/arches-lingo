@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { computed, ref } from "vue";
 
 import { useGettext } from "vue3-gettext";
 import Button from "primevue/button";
@@ -24,18 +24,14 @@ const { $gettext } = useGettext();
 
 const selectedCascade = ref(false);
 
-function dialogHeader(): string {
-    return $gettext("Reinstate");
-}
-
-function confirmationText(): string {
+const confirmationText = computed(function () {
     return $gettext(
         'Are you sure you want to reinstate "%{name}"? It will return to Editing state.',
         { name: resourceName ?? "" },
     );
-}
+});
 
-function childrenText(): string {
+const childrenText = computed(function () {
     if (resourceType === "scheme") {
         return $gettext(
             'Would you also like to reinstate the concepts within "%{name}"?',
@@ -46,23 +42,23 @@ function childrenText(): string {
         'Would you also like to reinstate the child concepts within "%{name}"?',
         { name: resourceName ?? "" },
     );
-}
+});
 
-function reinstateOnlyLabel(): string {
+const reinstateOnlyLabel = computed(function () {
     if (resourceType === "scheme") {
         return $gettext("Reinstate this scheme only");
     }
     return $gettext("Reinstate this concept only");
-}
+});
 
-function reinstateAllLabel(): string {
+const reinstateAllLabel = computed(function () {
     if (resourceType === "scheme") {
         return $gettext("Reinstate this scheme and all its concepts");
     }
     return $gettext("Reinstate this concept and all its descendants");
-}
+});
 
-function reinstateAllDesc(): string {
+const reinstateAllDesc = computed(function () {
     if (resourceType === "scheme") {
         return $gettext(
             "All retired concepts within this scheme will be moved to Editing state.",
@@ -71,7 +67,7 @@ function reinstateAllDesc(): string {
     return $gettext(
         "This concept and all its retired descendants will be moved to Editing state.",
     );
-}
+});
 
 function onConfirm() {
     emit("confirm", selectedCascade.value);
@@ -83,14 +79,14 @@ function onConfirm() {
         :visible="true"
         :modal="true"
         :dismissable-mask="false"
-        :header="dialogHeader()"
+        :header="$gettext('Reinstate')"
         :closable="!isLoading"
         class="reinstate-dialog"
         @update:visible="!isLoading && $emit('cancel')"
     >
         <div class="dialog-body">
-            <div class="dialog-text">{{ confirmationText() }}</div>
-            <div class="dialog-text">{{ childrenText() }}</div>
+            <div class="dialog-text">{{ confirmationText }}</div>
+            <div class="dialog-text">{{ childrenText }}</div>
 
             <div class="strategy-options">
                 <label
@@ -105,7 +101,7 @@ function onConfirm() {
                     />
                     <div class="strategy-label">
                         <span class="strategy-title">{{
-                            reinstateOnlyLabel()
+                            reinstateOnlyLabel
                         }}</span>
                     </div>
                 </label>
@@ -122,10 +118,10 @@ function onConfirm() {
                     />
                     <div class="strategy-label">
                         <span class="strategy-title">{{
-                            reinstateAllLabel()
+                            reinstateAllLabel
                         }}</span>
                         <span class="strategy-desc">{{
-                            reinstateAllDesc()
+                            reinstateAllDesc
                         }}</span>
                     </div>
                 </label>
