@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { computed, inject, ref, watch } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import Button from "primevue/button";
@@ -486,6 +486,8 @@ function updateAttributionMatchMode(val: MatchMode | null) {
     emit("update:condition", updated);
 }
 
+const executeSearch = inject<() => void>("executeSearch");
+
 function toggleNegated() {
     const updated = {
         ...props.condition,
@@ -558,6 +560,7 @@ function toggleCascade() {
             @update:model-value="
                 (val: string | undefined) => updateField('value', val ?? '')
             "
+            @keyup.enter="executeSearch?.()"
         />
 
         <!-- Concept picker for hierarchical and associated relationships -->
