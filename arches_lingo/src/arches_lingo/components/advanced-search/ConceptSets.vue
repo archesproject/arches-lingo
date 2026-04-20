@@ -11,7 +11,6 @@ import Select from "primevue/select";
 import Textarea from "primevue/textarea";
 
 import {
-    fetchConceptSets,
     createConceptSet,
     deleteConceptSet,
     addToConceptSet,
@@ -25,6 +24,7 @@ import {
     SUCCESS,
 } from "@/arches_lingo/constants.ts";
 import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
+import { useConceptSetStore } from "@/arches_lingo/stores/useConceptSetStore.ts";
 
 import type {
     AdvancedSearchQuery,
@@ -33,8 +33,10 @@ import type {
 
 const { $gettext } = useGettext();
 const toast = useToast();
-const userStore = useUserStore();
-const { isAnonymous } = storeToRefs(userStore);
+const { isAnonymous } = storeToRefs(useUserStore());
+
+const conceptSetStore = useConceptSetStore();
+const { conceptSets } = storeToRefs(conceptSetStore);
 
 const props = withDefaults(
     defineProps<{
@@ -57,7 +59,6 @@ const emit = defineEmits<{
     (event: "concepts-removed"): void;
 }>();
 
-const conceptSets = ref<ConceptSetItem[]>([]);
 const showCreateDialog = ref(false);
 const showAddToSetDialog = ref(false);
 const newSetName = ref("");
@@ -67,8 +68,7 @@ const isLoading = ref(false);
 
 async function loadConceptSets() {
     try {
-        const result = await fetchConceptSets();
-        conceptSets.value = result.data;
+        await conceptSetStore.loadConceptSets();
         emit("sets-updated", conceptSets.value);
     } catch (error) {
         toast.add({
