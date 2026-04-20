@@ -525,6 +525,7 @@ export interface SearchCondition {
     note_type?: string;
     language?: string;
     direction?: "broader" | "narrower";
+    cascade?: boolean;
     match_mode?: MatchMode;
     negated?: boolean;
 }

@@ -9,12 +9,16 @@ def get_resource_reference_count(resource_id):
     ).count()
 
 
-def get_paginated_resource_summaries(graph_slugs, search_term="", limit=25, offset=0):
+def get_paginated_resource_summaries(
+    graph_slugs, search_term="", limit=25, offset=0, resource_ids=None
+):
     queryset = ResourceInstance.objects.filter(
         graph__slug__in=graph_slugs,
     ).select_related("graph")
 
-    if search_term:
+    if resource_ids is not None:
+        queryset = queryset.filter(resourceinstanceid__in=resource_ids)
+    elif search_term:
         queryset = queryset.filter(name__icontains=search_term)
 
     total_count = queryset.count()

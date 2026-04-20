@@ -459,7 +459,7 @@ class AdvancedSearchEvaluatorTests(TestCase):
         result = self.evaluator.evaluate(
             {
                 "facet": "relationship_hierarchical",
-                "value": str(self.concept_a.pk),
+                "value": [str(self.concept_a.pk)],
                 "direction": "broader",
             }
         )
@@ -473,7 +473,7 @@ class AdvancedSearchEvaluatorTests(TestCase):
         result = self.evaluator.evaluate(
             {
                 "facet": "relationship_hierarchical",
-                "value": str(self.concept_b.pk),
+                "value": [str(self.concept_b.pk)],
                 "direction": "narrower",
             }
         )
@@ -485,18 +485,46 @@ class AdvancedSearchEvaluatorTests(TestCase):
         result = self.evaluator.evaluate(
             {
                 "facet": "relationship_hierarchical",
-                "value": "",
+                "value": [],
             }
         )
         all_concepts = {self.concept_a.pk, self.concept_b.pk, self.concept_c.pk}
         self.assertTrue(all_concepts.issubset(set(result)))
+
+    def test_facet_relationship_hierarchical_multi_select(self):
+        """Multi-select: broader of both A and B should include B, C (broader of A) and A (broader of B)."""
+        result = self.evaluator.evaluate(
+            {
+                "facet": "relationship_hierarchical",
+                "value": [str(self.concept_a.pk), str(self.concept_b.pk)],
+                "direction": "broader",
+            }
+        )
+        ids = set(result)
+        # B and C are broader of A; nothing is broader of B aside from tiles
+        # referencing A (which is B's broader). So B, C should be in results.
+        self.assertIn(self.concept_b.pk, ids)
+        self.assertIn(self.concept_c.pk, ids)
+
+    def test_facet_relationship_hierarchical_string_value_backward_compat(self):
+        """Single string value still works for backward compatibility."""
+        result = self.evaluator.evaluate(
+            {
+                "facet": "relationship_hierarchical",
+                "value": str(self.concept_a.pk),
+                "direction": "broader",
+            }
+        )
+        ids = set(result)
+        self.assertIn(self.concept_b.pk, ids)
+        self.assertIn(self.concept_c.pk, ids)
 
     def test_facet_relationship_associated_forward(self):
         """A has C as an associated concept."""
         result = self.evaluator.evaluate(
             {
                 "facet": "relationship_associated",
-                "value": str(self.concept_c.pk),
+                "value": [str(self.concept_c.pk)],
             }
         )
         ids = set(result)
@@ -507,7 +535,7 @@ class AdvancedSearchEvaluatorTests(TestCase):
         result = self.evaluator.evaluate(
             {
                 "facet": "relationship_associated",
-                "value": str(self.concept_a.pk),
+                "value": [str(self.concept_a.pk)],
             }
         )
         # reverse handler returns string IDs from tile data JSON
@@ -521,11 +549,22 @@ class AdvancedSearchEvaluatorTests(TestCase):
         result = self.evaluator.evaluate(
             {
                 "facet": "relationship_associated",
-                "value": "",
+                "value": [],
             }
         )
         all_concepts = {self.concept_a.pk, self.concept_b.pk, self.concept_c.pk}
         self.assertTrue(all_concepts.issubset(set(result)))
+
+    def test_facet_relationship_associated_string_value_backward_compat(self):
+        """Single string value still works for backward compatibility."""
+        result = self.evaluator.evaluate(
+            {
+                "facet": "relationship_associated",
+                "value": str(self.concept_c.pk),
+            }
+        )
+        ids = set(result)
+        self.assertIn(self.concept_a.pk, ids)
 
     def test_facet_concept_set(self):
         concept_set = ConceptSet.objects.create(user=self.admin, name="Eval Set")
@@ -919,6 +958,134 @@ class AdvancedSearchEvaluatorTests(TestCase):
         self.assertNotIn(self.concept_a.pk, ids)
         self.assertIn(self.concept_b.pk, ids)
         self.assertIn(self.concept_c.pk, ids)
+
+
+# ────────────────────────────────────────────────────────────────
+# Cascade traversal tests — uses a deeper hierarchy: A → B → D
+# ────────────────────────────────────────────────────────────────
+
+
+class HierarchicalCascadeTests(AdvancedSearchEvaluatorTests):
+    """Extend the base fixture with concept D (broader = B) to test cascade."""
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+
+        now = datetime.datetime.now()
+        cls.concept_d = ResourceInstance.objects.create(
+            graph_id=CONCEPTS_GRAPH_ID, name="Delta Concept"
+        )
+        TileModel.objects.create(
+            resourceinstance=cls.concept_d,
+            nodegroup_id=CONCEPT_NAME_NODEGROUP,
+            data={
+                CONCEPT_NAME_CONTENT_NODE: "Delta Concept",
+                CONCEPT_NAME_TYPE_NODE: cls.prefLabel_ref,
+                CONCEPT_NAME_LANGUAGE_NODE: "en",
+            },
+        )
+        hier_rxr = ResourceXResource.objects.create(
+            from_resource=cls.concept_d,
+            from_resource_graph_id=CONCEPTS_GRAPH_ID,
+            to_resource=cls.concept_b,
+            to_resource_graph_id=CONCEPTS_GRAPH_ID,
+            created=now,
+            modified=now,
+        )
+        TileModel.objects.create(
+            resourceinstance=cls.concept_d,
+            nodegroup_id=CLASSIFICATION_STATUS_NODEGROUP,
+            data={
+                CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID: [
+                    {
+                        "resourceId": str(cls.concept_b.pk),
+                        "resourceXresourceId": str(hier_rxr.pk),
+                    }
+                ],
+            },
+        )
+
+    def setUp(self):
+        self.evaluator = AdvancedSearchEvaluator(user=self.admin)
+
+    def test_cascade_broader_direct_only_excludes_grandchild(self):
+        """Without cascade, broader of A returns only B and C — not D (grandchild)."""
+        result = self.evaluator.evaluate(
+            {
+                "facet": "relationship_hierarchical",
+                "value": [str(self.concept_a.pk)],
+                "direction": "broader",
+                "cascade": False,
+            }
+        )
+        ids = set(result)
+        self.assertIn(self.concept_b.pk, ids)
+        self.assertIn(self.concept_c.pk, ids)
+        self.assertNotIn(self.concept_d.pk, ids)
+
+    def test_cascade_broader_includes_all_descendants(self):
+        """With cascade, broader of A returns B, C, and D (grandchild through B)."""
+        result = self.evaluator.evaluate(
+            {
+                "facet": "relationship_hierarchical",
+                "value": [str(self.concept_a.pk)],
+                "direction": "broader",
+                "cascade": True,
+            }
+        )
+        ids = set(result)
+        self.assertIn(self.concept_b.pk, ids)
+        self.assertIn(self.concept_c.pk, ids)
+        self.assertIn(self.concept_d.pk, ids)
+        self.assertNotIn(self.concept_a.pk, ids)
+
+    def test_cascade_narrower_direct_only_excludes_grandparent(self):
+        """Without cascade, narrower of D returns only B — not A (grandparent)."""
+        result = self.evaluator.evaluate(
+            {
+                "facet": "relationship_hierarchical",
+                "value": [str(self.concept_d.pk)],
+                "direction": "narrower",
+                "cascade": False,
+            }
+        )
+        ids = set(str(pk) for pk in result)
+        self.assertIn(str(self.concept_b.pk), ids)
+        self.assertNotIn(str(self.concept_a.pk), ids)
+
+    def test_cascade_narrower_includes_all_ancestors(self):
+        """With cascade, narrower of D returns B and A (all ancestors)."""
+        result = self.evaluator.evaluate(
+            {
+                "facet": "relationship_hierarchical",
+                "value": [str(self.concept_d.pk)],
+                "direction": "narrower",
+                "cascade": True,
+            }
+        )
+        ids = set(str(pk) for pk in result)
+        self.assertIn(str(self.concept_b.pk), ids)
+        self.assertIn(str(self.concept_a.pk), ids)
+        self.assertNotIn(str(self.concept_d.pk), ids)
+
+    def test_cascade_empty_value_returns_all(self):
+        """Empty value with cascade still returns all concepts."""
+        result = self.evaluator.evaluate(
+            {
+                "facet": "relationship_hierarchical",
+                "value": [],
+                "direction": "broader",
+                "cascade": True,
+            }
+        )
+        all_concepts = {
+            self.concept_a.pk,
+            self.concept_b.pk,
+            self.concept_c.pk,
+            self.concept_d.pk,
+        }
+        self.assertTrue(all_concepts.issubset(set(result)))
 
 
 # ────────────────────────────────────────────────────────────────

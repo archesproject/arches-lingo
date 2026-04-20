@@ -9,8 +9,16 @@ Every facet handler returns a **QuerySet** (not a materialised Python list).
 Boolean AND/OR combinations are composed using Django subquery expressions so
 that the database performs all set operations rather than Python.  The final
 result is paginated before any rows are fetched.
+
+Cascade (full-hierarchy) traversal uses a PostgreSQL recursive CTE executed
+in a single round-trip rather than a Python BFS loop that would require one
+database query per level of the hierarchy.  The CTE results are materialised
+as a list of UUIDs in Python before being passed back to a QuerySet filter so
+that the rest of the AND/OR composition machinery can continue to use lazy
+QuerySets.
 """
 
+from django.db import connection
 from django.db.models import Q
 from django.db.models.expressions import RawSQL
 
@@ -262,67 +270,196 @@ class AdvancedSearchEvaluator:
             .distinct()
         )
 
-    def _facet_relationship_hierarchical(self, condition):
-        """Find concepts with a hierarchical relationship to a given concept."""
-        target_id = condition.get("value")
-        direction = condition.get("direction", "broader")
+    def _normalize_target_ids(self, value):
+        """Normalize a value that may be a single ID string or list of IDs."""
+        if isinstance(value, list):
+            return [tid for tid in value if tid]
+        if value:
+            return [value]
+        return []
 
-        if not target_id:
+    def _direct_children_of(self, parent_ids):
+        """Return a QuerySet of resource-instance PKs whose broader is one of parent_ids."""
+        q_filter = Q()
+        for parent_id in parent_ids:
+            q_filter |= Q(
+                **{
+                    f"data__{CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID}__contains": [
+                        {"resourceId": str(parent_id)}
+                    ]
+                }
+            )
+        return (
+            TileModel.objects.filter(nodegroup_id=CLASSIFICATION_STATUS_NODEGROUP)
+            .filter(q_filter)
+            .values_list("resourceinstance_id", flat=True)
+            .distinct()
+        )
+
+    def _direct_parents_of(self, child_ids):
+        """Return a QuerySet of resource-instance PKs that are the broader of any child in child_ids."""
+        return (
+            TileModel.objects.filter(
+                nodegroup_id=CLASSIFICATION_STATUS_NODEGROUP,
+                resourceinstance_id__in=child_ids,
+            )
+            .annotate(
+                broader_id=RawSQL(
+                    "(jsonb_array_elements(tiledata->%s) ->> 'resourceId')::uuid",
+                    [CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID],
+                )
+            )
+            .values_list("broader_id", flat=True)
+            .distinct()
+        )
+
+    def _cascade_descendants(self, seed_ids):
+        """Return all descendant concept IDs via a single recursive CTE.
+
+        The edge_list CTE extracts every (child, parent) pair from
+        classification tiles exactly once.  The recursive term then joins
+        against that in-memory edge list using simple UUID equality, so the
+        tiles table is never scanned again during recursion.  This avoids the
+        O(depth × table_size) cost of the previous approach where the full
+        tiles table was re-scanned at each recursion level.
+        """
+        seed_id_strings = [str(sid) for sid in seed_ids]
+        node_id = str(CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID)
+        nodegroup_id = str(CLASSIFICATION_STATUS_NODEGROUP)
+        sql = """
+            WITH RECURSIVE
+            edge_list AS MATERIALIZED (
+                SELECT
+                    t.resourceinstanceid::uuid AS child_id,
+                    (elem ->> 'resourceId')::uuid AS parent_id
+                FROM tiles t
+                CROSS JOIN LATERAL jsonb_array_elements(t.tiledata -> %s) AS elem
+                WHERE t.nodegroupid = %s::uuid
+                  AND elem ->> 'resourceId' IS NOT NULL
+            ),
+            descendants(concept_id) AS (
+                SELECT child_id AS concept_id
+                FROM edge_list
+                WHERE parent_id::text = ANY(%s)
+              UNION
+                SELECT e.child_id
+                FROM edge_list e
+                JOIN descendants d ON e.parent_id = d.concept_id
+            )
+            SELECT concept_id FROM descendants
+        """
+        with connection.cursor() as cursor:
+            cursor.execute(sql, [node_id, nodegroup_id, seed_id_strings])
+            return [row[0] for row in cursor.fetchall()]
+
+    def _cascade_ancestors(self, seed_ids):
+        """Return all ancestor concept IDs via a single recursive CTE.
+
+        The edge_list CTE extracts every (child, parent) pair from
+        classification tiles exactly once.  The recursive term then joins
+        against that in-memory edge list using simple UUID equality, so the
+        tiles table is never scanned again during recursion.  This avoids the
+        O(depth × table_size) cost of the previous approach where the full
+        tiles table was re-scanned at each recursion level.
+        """
+        seed_id_strings = [str(sid) for sid in seed_ids]
+        node_id = str(CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID)
+        nodegroup_id = str(CLASSIFICATION_STATUS_NODEGROUP)
+        sql = """
+            WITH RECURSIVE
+            edge_list AS MATERIALIZED (
+                SELECT
+                    t.resourceinstanceid::uuid AS child_id,
+                    (elem ->> 'resourceId')::uuid AS parent_id
+                FROM tiles t
+                CROSS JOIN LATERAL jsonb_array_elements(t.tiledata -> %s) AS elem
+                WHERE t.nodegroupid = %s::uuid
+                  AND elem ->> 'resourceId' IS NOT NULL
+            ),
+            ancestors(concept_id) AS (
+                SELECT parent_id AS concept_id
+                FROM edge_list
+                WHERE child_id::text = ANY(%s)
+              UNION
+                SELECT e.parent_id
+                FROM edge_list e
+                JOIN ancestors a ON e.child_id = a.concept_id
+            )
+            SELECT concept_id FROM ancestors WHERE concept_id IS NOT NULL
+        """
+        with connection.cursor() as cursor:
+            cursor.execute(sql, [node_id, nodegroup_id, seed_id_strings])
+            return [row[0] for row in cursor.fetchall()]
+
+    def _facet_relationship_hierarchical(self, condition):
+        """Find concepts with a hierarchical relationship to given concept(s).
+
+        When cascade is True the search traverses the full hierarchy rather than
+        matching only direct broader/narrower relationships.  Cascade traversal
+        uses a recursive CTE executed in a single database round-trip.
+        """
+        target_ids = self._normalize_target_ids(condition.get("value"))
+        direction = condition.get("direction", "broader")
+        cascade = condition.get("cascade", False)
+
+        if not target_ids:
             return self._all_concept_ids()
 
         if direction == "broader":
-            return (
-                TileModel.objects.filter(
-                    nodegroup_id=CLASSIFICATION_STATUS_NODEGROUP,
-                    **{
-                        f"data__{CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID}__contains": [
-                            {"resourceId": target_id}
-                        ]
-                    },
-                )
-                .values_list("resourceinstance_id", flat=True)
-                .distinct()
-            )
-        else:  # narrower — find the broader IDs of target_id via JSON extraction in DB
-            broader_ids_qs = (
-                TileModel.objects.filter(
-                    nodegroup_id=CLASSIFICATION_STATUS_NODEGROUP,
-                    resourceinstance_id=target_id,
-                )
-                .annotate(
-                    broader_id=RawSQL(
-                        "(jsonb_array_elements(tiledata->%s) ->> 'resourceId')::uuid",
-                        [CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID],
-                    )
-                )
-                .values("broader_id")
-            )
-            return ResourceInstance.objects.filter(
-                graph_id=CONCEPTS_GRAPH_ID,
-                resourceinstanceid__in=broader_ids_qs.values("broader_id"),
-            ).values_list("pk", flat=True)
+            if cascade:
+                descendant_ids = self._cascade_descendants(target_ids)
+                if not descendant_ids:
+                    return ResourceInstance.objects.none().values_list("pk", flat=True)
+                return ResourceInstance.objects.filter(
+                    graph_id=CONCEPTS_GRAPH_ID,
+                    resourceinstanceid__in=descendant_ids,
+                ).values_list("pk", flat=True)
+            else:
+                return self._direct_children_of(target_ids)
+        else:  # narrower
+            if cascade:
+                ancestor_ids = self._cascade_ancestors(target_ids)
+                if not ancestor_ids:
+                    return ResourceInstance.objects.none().values_list("pk", flat=True)
+                return ResourceInstance.objects.filter(
+                    graph_id=CONCEPTS_GRAPH_ID,
+                    resourceinstanceid__in=ancestor_ids,
+                ).values_list("pk", flat=True)
+            else:
+                return ResourceInstance.objects.filter(
+                    graph_id=CONCEPTS_GRAPH_ID,
+                    resourceinstanceid__in=self._direct_parents_of(target_ids),
+                ).values_list("pk", flat=True)
 
     def _facet_relationship_associated(self, condition):
-        """Find concepts associated with a given concept."""
-        target_id = condition.get("value")
-        if not target_id:
+        """Find concepts associated with given concept(s)."""
+        target_ids = self._normalize_target_ids(condition.get("value"))
+        if not target_ids:
             return self._all_concept_ids()
 
-        # Forward: concepts that list target_id in their relation_status.
-        forward_qs = TileModel.objects.filter(
-            nodegroup_id=RELATION_STATUS_NODEGROUP,
-            **{
-                f"data__{RELATION_STATUS_ASCRIBED_COMPARATE_NODEID}__contains": [
-                    {"resourceId": target_id}
-                ]
-            },
-        ).values("resourceinstance_id")
+        # Forward: concepts that list any target_id in their relation_status.
+        forward_q = Q()
+        for target_id in target_ids:
+            forward_q |= Q(
+                **{
+                    f"data__{RELATION_STATUS_ASCRIBED_COMPARATE_NODEID}__contains": [
+                        {"resourceId": target_id}
+                    ]
+                }
+            )
+        forward_qs = (
+            TileModel.objects.filter(
+                nodegroup_id=RELATION_STATUS_NODEGROUP,
+            )
+            .filter(forward_q)
+            .values("resourceinstance_id")
+        )
 
-        # Reverse: extract IDs from target_id's relation_status tiles via DB.
+        # Reverse: extract IDs from target_ids' relation_status tiles via DB.
         reverse_ids_qs = (
             TileModel.objects.filter(
                 nodegroup_id=RELATION_STATUS_NODEGROUP,
-                resourceinstance_id=target_id,
+                resourceinstance_id__in=target_ids,
             )
             .annotate(
                 comparate_id=RawSQL(
