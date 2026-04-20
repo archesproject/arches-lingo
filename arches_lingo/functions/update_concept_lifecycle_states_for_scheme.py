@@ -210,21 +210,21 @@ class UpdateConceptLifecycleStatesForScheme(BaseFunction):
                     identifier_type="identifier",
                 )
 
-        is_combined_mode = (
+        uses_shared_counter = (
             "<scheme_and_concept_counter>" in scheme_uri_template.url_template
         )
 
         scheme_uri_value = None
         if scheme_identifier_value:
             if (
-                not is_combined_mode
+                not uses_shared_counter
                 and "<scheme_identifier>" in scheme_uri_template.url_template
             ):
                 scheme_uri_value = (
                     scheme_uri_template.url_template.split("<scheme_identifier>")[0]
                     + scheme_identifier_value
                 )
-            elif is_combined_mode and concept_identifier_counter.start_number != 1:
+            elif uses_shared_counter and concept_identifier_counter.start_number != 1:
                 if (
                     concept_identifier_counter.next_number
                     == concept_identifier_counter.start_number

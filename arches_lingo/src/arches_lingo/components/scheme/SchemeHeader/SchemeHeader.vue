@@ -239,9 +239,11 @@ const derivedSchemeUri = computed(() => {
         return undefined;
     }
 
-    const isCombinedMode = urlTemplate.includes("<scheme_and_concept_counter>");
+    const usesSharedCounter = urlTemplate.includes(
+        "<scheme_and_concept_counter>",
+    );
 
-    if (isCombinedMode) {
+    if (usesSharedCounter) {
         const counterStart = conceptIdentifierCounter.value?.start_number;
         if (!counterStart || counterStart === 1) {
             return undefined;
@@ -265,9 +267,11 @@ const exampleConceptUri = computed(() => {
         return undefined;
     }
 
-    const isCombinedMode = urlTemplate.includes("<scheme_and_concept_counter>");
+    const usesSharedCounter = urlTemplate.includes(
+        "<scheme_and_concept_counter>",
+    );
 
-    if (isCombinedMode) {
+    if (usesSharedCounter) {
         const counterStart = conceptIdentifierCounter.value?.start_number;
         if (!counterStart || counterStart === 1) {
             return undefined;
