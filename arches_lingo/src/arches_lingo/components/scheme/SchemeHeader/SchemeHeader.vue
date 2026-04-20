@@ -680,10 +680,7 @@ function onLifecycleStateChange(
                                     >
                                 </span>
                             </div>
-                            <div
-                                class="header-item"
-                                style="justify-content: flex-end"
-                            >
+                            <div class="header-item">
                                 <span class="header-item-label">
                                     {{ $gettext("Owner:") }}
                                 </span>
@@ -835,7 +832,6 @@ h2 > span {
 
 .header-col--right {
     align-items: flex-end;
-    justify-content: flex-end;
 }
 
 .header-col--right .header-item,

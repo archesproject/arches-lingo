@@ -212,11 +212,11 @@ async function saveSchemeURITemplate() {
 </template>
 
 <style scoped>
-.info-button {
+.header-item > .info-button {
     padding: 0;
-    width: unset !important;
+    width: unset;
     height: auto;
-    margin-inline-end: 0.25rem !important;
+    margin-inline-end: 0.25rem;
 }
 
 .uri-input-wrapper {
