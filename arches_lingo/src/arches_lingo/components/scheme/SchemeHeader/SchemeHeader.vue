@@ -223,12 +223,70 @@ const defaultSchemeURITemplate = computed(() => {
     }
 
     const normalizedBaseUrl = baseUrl.replace(/\/+$/, "");
-    return `${normalizedBaseUrl}/scheme/<scheme_identifier>/concept/<concept_identifier>`;
+    return `${normalizedBaseUrl}/scheme/<scheme_identifier>/concept/<concept_counter>`;
 });
 
 const schemeUri = computed(() => {
     return scheme.value?.aliased_data?.uri?.aliased_data?.uri_content
         ?.node_value;
+});
+
+const derivedSchemeUri = computed(() => {
+    const urlTemplate =
+        schemeURITemplate.value?.url_template?.trim() ||
+        defaultSchemeURITemplate.value;
+    if (!urlTemplate || !identifierValue.value) {
+        return undefined;
+    }
+
+    const isCombinedMode = urlTemplate.includes("<scheme_and_concept_counter>");
+
+    if (isCombinedMode) {
+        const counterStart = conceptIdentifierCounter.value?.start_number;
+        if (!counterStart || counterStart === 1) {
+            return undefined;
+        }
+        return urlTemplate
+            .replace("<scheme_identifier>", identifierValue.value)
+            .replace("<scheme_and_concept_counter>", String(counterStart));
+    }
+
+    if (!urlTemplate.includes("<scheme_identifier>")) {
+        return undefined;
+    }
+    return urlTemplate.split("<scheme_identifier>")[0] + identifierValue.value;
+});
+
+const exampleConceptUri = computed(() => {
+    const urlTemplate =
+        schemeURITemplate.value?.url_template?.trim() ||
+        defaultSchemeURITemplate.value;
+    if (!urlTemplate || !identifierValue.value) {
+        return undefined;
+    }
+
+    const isCombinedMode = urlTemplate.includes("<scheme_and_concept_counter>");
+
+    if (isCombinedMode) {
+        const counterStart = conceptIdentifierCounter.value?.start_number;
+        if (!counterStart || counterStart === 1) {
+            return undefined;
+        }
+        return urlTemplate
+            .replace("<scheme_identifier>", identifierValue.value)
+            .replace("<scheme_and_concept_counter>", String(counterStart + 1));
+    }
+
+    if (!urlTemplate.includes("<scheme_identifier>")) {
+        return undefined;
+    }
+    const exampleConceptNumber = String(
+        conceptIdentifierCounter.value?.start_number ?? 1,
+    );
+    return urlTemplate
+        .replace("<scheme_identifier>", identifierValue.value)
+        .replace("<concept_counter>", exampleConceptNumber)
+        .replace("<concept_identifier>", exampleConceptNumber);
 });
 
 onMounted(async () => {
@@ -480,134 +538,162 @@ function onLifecycleStateChange(
             </div>
 
             <div class="header-content">
-                <div class="header-row">
-                    <SchemeIdentifierField
-                        :resource-instance-id="props.resourceInstanceId"
-                        :identifier-value="identifierValue"
-                        :resource-identifier-id="resourceIdentifierId"
-                        :can-edit-resource-instances="canEditResourceInstances"
-                        @update="onIdentifierUpdate"
-                    />
-                    <div class="header-item">
-                        <span class="header-item-label">{{
-                            $gettext("URI: ")
-                        }}</span>
-                        <Button
-                            v-if="schemeUri"
-                            :label="schemeUri"
-                            class="scheme-uri"
-                            variant="link"
-                            as="a"
-                            :href="schemeUri"
-                            target="_blank"
-                            rel="noopener"
-                        ></Button>
-                        <span
-                            v-else
-                            class="header-item-value"
-                            >{{ $gettext("No URI assigned") }}</span
-                        >
+                <div class="header-columns">
+                    <div class="header-col">
+                        <SchemeIdentifierField
+                            :resource-instance-id="props.resourceInstanceId"
+                            :identifier-value="identifierValue"
+                            :resource-identifier-id="resourceIdentifierId"
+                            :can-edit-resource-instances="
+                                canEditResourceInstances
+                            "
+                            @update="onIdentifierUpdate"
+                        />
+                        <SchemeURITemplateField
+                            :resource-instance-id="props.resourceInstanceId"
+                            :can-edit-resource-instances="
+                                canEditResourceInstances
+                            "
+                            :scheme-u-r-i-template="schemeURITemplate"
+                            :default-scheme-u-r-i-template="
+                                defaultSchemeURITemplate
+                            "
+                            @update="onSchemeURITemplateUpdate"
+                        />
+                        <ConceptIdentifierCounterField
+                            :resource-instance-id="props.resourceInstanceId"
+                            :can-edit-resource-instances="
+                                canEditResourceInstances
+                            "
+                            :concept-identifier-counter="
+                                conceptIdentifierCounter
+                            "
+                            @update="onConceptIdentifierCounterUpdate"
+                        />
+                        <div class="language-chip-wrapper">
+                            <div class="language-section-header">
+                                <span class="header-item-label">{{
+                                    $gettext("Languages:")
+                                }}</span>
+                                <Button
+                                    v-if="hiddenLanguageCount > 0"
+                                    text
+                                    size="small"
+                                    class="language-expand-toggle"
+                                    :aria-expanded="showAllLanguages"
+                                    @click="
+                                        showAllLanguages = !showAllLanguages
+                                    "
+                                >
+                                    <i
+                                        :class="
+                                            showAllLanguages
+                                                ? 'pi pi-chevron-up'
+                                                : 'pi pi-chevron-down'
+                                        "
+                                    ></i>
+                                    <span>{{
+                                        showAllLanguages
+                                            ? $gettext("Show less")
+                                            : showMoreLabel
+                                    }}</span>
+                                </Button>
+                            </div>
+                            <div
+                                class="language-chip-container"
+                                :class="{
+                                    'language-chip-container--expanded':
+                                        showAllLanguages,
+                                }"
+                            >
+                                <Skeleton
+                                    v-if="labelCountsLoading"
+                                    width="12rem"
+                                    height="2rem"
+                                />
+                                <span
+                                    v-for="chip in visibleLabelChips"
+                                    v-else
+                                    :key="chip.key"
+                                    class="scheme-language"
+                                >
+                                    {{ chip.label }}
+                                </span>
+                            </div>
+                        </div>
                     </div>
-                </div>
 
-                <div class="header-row">
-                    <SchemeURITemplateField
-                        :resource-instance-id="props.resourceInstanceId"
-                        :can-edit-resource-instances="canEditResourceInstances"
-                        :scheme-u-r-i-template="schemeURITemplate"
-                        :default-scheme-u-r-i-template="
-                            defaultSchemeURITemplate
-                        "
-                        @update="onSchemeURITemplateUpdate"
-                    />
-                </div>
-
-                <div class="header-row">
-                    <ConceptIdentifierCounterField
-                        :resource-instance-id="props.resourceInstanceId"
-                        :can-edit-resource-instances="canEditResourceInstances"
-                        :concept-identifier-counter="conceptIdentifierCounter"
-                        @update="onConceptIdentifierCounterUpdate"
-                    />
-                </div>
-
-                <div class="header-row metadata-container">
-                    <div class="language-chip-wrapper">
-                        <div class="language-section-header">
+                    <div class="header-col header-col--right">
+                        <div class="header-item">
                             <span class="header-item-label">{{
-                                $gettext("Languages:")
+                                $gettext("URI: ")
                             }}</span>
                             <Button
-                                v-if="hiddenLanguageCount > 0"
-                                text
-                                size="small"
-                                class="language-expand-toggle"
-                                :aria-expanded="showAllLanguages"
-                                @click="showAllLanguages = !showAllLanguages"
+                                v-if="schemeUri"
+                                :label="schemeUri"
+                                class="scheme-uri"
+                                variant="link"
+                                as="a"
+                                :href="schemeUri"
+                                target="_blank"
+                                rel="noopener"
+                            ></Button>
+                            <span
+                                v-else-if="derivedSchemeUri"
+                                class="header-item-value scheme-uri-preview"
+                                >{{ derivedSchemeUri }}</span
                             >
-                                <i
-                                    :class="
-                                        showAllLanguages
-                                            ? 'pi pi-chevron-up'
-                                            : 'pi pi-chevron-down'
-                                    "
-                                ></i>
-                                <span>{{
-                                    showAllLanguages
-                                        ? $gettext("Show less")
-                                        : showMoreLabel
-                                }}</span>
-                            </Button>
+                            <span
+                                v-else
+                                class="header-item-value"
+                                >{{ $gettext("No URI assigned") }}</span
+                            >
                         </div>
                         <div
-                            class="language-chip-container"
-                            :class="{
-                                'language-chip-container--expanded':
-                                    showAllLanguages,
-                            }"
+                            v-if="exampleConceptUri"
+                            class="header-item"
                         >
-                            <Skeleton
-                                v-if="labelCountsLoading"
-                                width="12rem"
-                                height="2rem"
-                            />
+                            <span class="header-item-label">{{
+                                $gettext("Example concept URI: ")
+                            }}</span>
                             <span
-                                v-for="chip in visibleLabelChips"
-                                v-else
-                                :key="chip.key"
-                                class="scheme-language"
+                                class="header-item-value scheme-uri-preview"
+                                >{{ exampleConceptUri }}</span
                             >
-                                {{ chip.label }}
-                            </span>
                         </div>
-                    </div>
-
-                    <div class="lifecycle-container">
-                        <div class="header-item">
-                            <span class="header-item-label">
-                                {{ $gettext("Life cycle state:") }}
-                            </span>
-                            <span class="header-item-value">
-                                <LifecycleStateBadge
-                                    :lifecycle-state-id="
-                                        currentLifecycleState?.id
-                                    "
-                                    :lifecycle-state-name="
-                                        currentLifecycleState?.name
-                                    "
-                                />
-                                <span v-if="!currentLifecycleState">--</span>
-                            </span>
-                        </div>
-                        <div class="header-item">
-                            <span class="header-item-label">
-                                {{ $gettext("Owner:") }}
-                            </span>
-                            <span class="header-item-value">
-                                {{
-                                    data?.principalUser || $gettext("Anonymous")
-                                }}
-                            </span>
+                        <div class="lifecycle-container">
+                            <div class="header-item">
+                                <span class="header-item-label">
+                                    {{ $gettext("Life cycle state:") }}
+                                </span>
+                                <span class="header-item-value">
+                                    <LifecycleStateBadge
+                                        :lifecycle-state-id="
+                                            currentLifecycleState?.id
+                                        "
+                                        :lifecycle-state-name="
+                                            currentLifecycleState?.name
+                                        "
+                                    />
+                                    <span v-if="!currentLifecycleState"
+                                        >--</span
+                                    >
+                                </span>
+                            </div>
+                            <div
+                                class="header-item"
+                                style="justify-content: flex-end"
+                            >
+                                <span class="header-item-label">
+                                    {{ $gettext("Owner:") }}
+                                </span>
+                                <span class="header-item-value">
+                                    {{
+                                        data?.principalUser ||
+                                        $gettext("Anonymous")
+                                    }}
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -721,6 +807,42 @@ h2 > span {
     margin: 0;
 }
 
+.scheme-uri-preview {
+    color: var(--p-text-muted-color);
+    font-style: italic;
+    padding-inline-end: 0.15rem;
+}
+
+.header-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 1rem;
+    row-gap: var(--scheme-header-row-gap);
+    min-width: 0;
+}
+
+.header-col {
+    display: flex;
+    flex-direction: column;
+    gap: var(--scheme-header-row-gap);
+    min-width: 0;
+}
+
+.header-col :deep(.header-item) {
+    display: flex;
+    width: 100%;
+}
+
+.header-col--right {
+    align-items: flex-end;
+    justify-content: flex-end;
+}
+
+.header-col--right .header-item,
+.header-col--right :deep(.header-item) {
+    width: auto;
+}
+
 .header-row {
     display: flex;
     justify-content: space-between;
@@ -730,14 +852,6 @@ h2 > span {
     row-gap: var(--scheme-header-row-gap);
     min-height: var(--scheme-header-field-min-height);
     min-width: 0;
-}
-
-.metadata-container {
-    gap: var(--scheme-header-row-gap) 0.75rem;
-    margin-top: 0;
-    justify-content: space-between;
-    align-items: flex-start;
-    flex-wrap: nowrap;
 }
 
 .language-chip-container {
@@ -753,7 +867,6 @@ h2 > span {
     flex-direction: column;
     gap: var(--scheme-header-row-gap);
     min-width: 0;
-    flex: 1 1 0;
 }
 
 .language-section-header {
@@ -798,8 +911,6 @@ h2 > span {
 .lifecycle-container {
     display: flex;
     flex-direction: column;
-    align-items: flex-end;
-    flex-shrink: 0;
     gap: var(--scheme-header-row-gap);
 }
 

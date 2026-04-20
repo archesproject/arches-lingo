@@ -181,7 +181,7 @@ class UpdateConceptLifecycleStatesForScheme(BaseFunction):
             namespace_tile.data[NAMESPACE_TYPE_NODE] = namespace_type_value
             namespace_tile.save()
 
-        ConceptIdentifierCounter.objects.get_or_create(
+        concept_identifier_counter, _ = ConceptIdentifierCounter.objects.get_or_create(
             scheme_id=scheme_resource_instance_id
         )
 
@@ -210,15 +210,37 @@ class UpdateConceptLifecycleStatesForScheme(BaseFunction):
                     identifier_type="identifier",
                 )
 
-        if (
-            scheme_identifier_value
-            and "<scheme_identifier>" in scheme_uri_template.url_template
-        ):
-            scheme_uri_value = (
-                scheme_uri_template.url_template.split("<scheme_identifier>")[0]
-                + scheme_identifier_value
-            )
+        is_combined_mode = (
+            "<scheme_and_concept_counter>" in scheme_uri_template.url_template
+        )
 
+        scheme_uri_value = None
+        if scheme_identifier_value:
+            if (
+                not is_combined_mode
+                and "<scheme_identifier>" in scheme_uri_template.url_template
+            ):
+                scheme_uri_value = (
+                    scheme_uri_template.url_template.split("<scheme_identifier>")[0]
+                    + scheme_identifier_value
+                )
+            elif is_combined_mode and concept_identifier_counter.start_number != 1:
+                if (
+                    concept_identifier_counter.next_number
+                    == concept_identifier_counter.start_number
+                ):
+                    concept_identifier_counter.next_number = (
+                        concept_identifier_counter.start_number + 1
+                    )
+                    concept_identifier_counter.save(update_fields=["next_number"])
+                scheme_uri_value = scheme_uri_template.url_template.replace(
+                    "<scheme_identifier>", scheme_identifier_value
+                ).replace(
+                    "<scheme_and_concept_counter>",
+                    str(concept_identifier_counter.start_number),
+                )
+
+        if scheme_uri_value:
             nodes = {
                 node.alias: node
                 for node in Node.objects.filter(
@@ -395,7 +417,12 @@ class UpdateConceptLifecycleStatesForScheme(BaseFunction):
 
             desired_uri_value = url_template.replace(
                 "<scheme_identifier>", scheme_identifier_value
-            ).replace("<concept_identifier>", concept_identifier_value)
+            )
+            desired_uri_value = (
+                desired_uri_value.replace("<concept_counter>", concept_identifier_value)
+                .replace("<scheme_and_concept_counter>", concept_identifier_value)
+                .replace("<concept_identifier>", concept_identifier_value)
+            )
 
             existing_uri_tile = existing_uri_tile_by_resource_instance_id.get(
                 concept_resource_instance_id
