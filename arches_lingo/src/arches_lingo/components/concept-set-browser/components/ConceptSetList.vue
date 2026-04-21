@@ -61,7 +61,6 @@ function cancelCreateDialog() {
                 :label="$gettext('New Set')"
                 icon="pi pi-folder"
                 size="small"
-                outlined
                 @click="showCreateDialog = true"
             />
         </div>
@@ -87,6 +86,17 @@ function cancelCreateDialog() {
                     text
                     plain
                     class="set-info"
+                    :pt="{
+                        root: {
+                            style: {
+                                flexDirection: 'column',
+                                alignItems: 'flex-start',
+                                justifyContent: 'flex-start',
+                                padding: '0.375rem 0',
+                                gap: '0.125rem',
+                            },
+                        },
+                    }"
                     @click="emit('select-set', setItem)"
                 >
                     <div class="set-name">
@@ -196,9 +206,8 @@ function cancelCreateDialog() {
 
 .set-item {
     display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    padding: 0.5rem;
+    align-items: center;
+    padding: 0 0.25rem 0 0.5rem;
     border-radius: 0.125rem;
 }
 
@@ -209,12 +218,6 @@ function cancelCreateDialog() {
 .set-info {
     flex: 1;
     min-width: 0;
-    cursor: pointer;
-    background: none;
-    border: none;
-    padding: 0;
-    text-align: left;
-    color: var(--p-text-color);
     font-family: var(--p-lingo-font-family);
 }
 
@@ -224,12 +227,15 @@ function cancelCreateDialog() {
     display: flex;
     align-items: center;
     gap: 0.375rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
 }
 
 .set-meta {
     font-size: var(--p-lingo-font-size-xsmall);
     color: var(--p-text-muted-color);
-    margin-top: 0.125rem;
 }
 
 .dialog-content {

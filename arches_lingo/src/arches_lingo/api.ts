@@ -168,6 +168,7 @@ export const fetchSources = async (
     search: string = "",
     limit: number = 25,
     offset: number = 0,
+    resourceIds?: string[],
 ): Promise<PaginatedResourceListResponse> => {
     const params = new URLSearchParams({
         limit: String(limit),
@@ -175,6 +176,9 @@ export const fetchSources = async (
     });
     if (search) {
         params.set("search", search);
+    }
+    if (resourceIds?.length) {
+        resourceIds.forEach((id) => params.append("ids", id));
     }
     const response = await fetch(
         `${generateArchesURL("arches_lingo:api-lingo-sources")}?${params}`,
@@ -188,6 +192,7 @@ export const fetchContributors = async (
     search: string = "",
     limit: number = 25,
     offset: number = 0,
+    resourceIds?: string[],
 ): Promise<PaginatedResourceListResponse> => {
     const params = new URLSearchParams({
         limit: String(limit),
@@ -195,6 +200,9 @@ export const fetchContributors = async (
     });
     if (search) {
         params.set("search", search);
+    }
+    if (resourceIds?.length) {
+        resourceIds.forEach((id) => params.append("ids", id));
     }
     const response = await fetch(
         `${generateArchesURL("arches_lingo:api-lingo-contributors")}?${params}`,
