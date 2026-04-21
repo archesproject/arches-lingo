@@ -38,8 +38,14 @@ import {
     unsavedChangesConfirmOptions,
 } from "@/arches_lingo/composables/useEditorDirtyState.ts";
 
-import { fetchResourceInstanceLifecycleState } from "@/arches_lingo/api.ts";
+import {
+    fetchResourceInstanceLifecycleState,
+    fetchSchemeLabelCounts,
+} from "@/arches_lingo/api.ts";
 import { DEFAULT_ERROR_TOAST_LIFE, ERROR } from "@/arches_lingo/constants.ts";
+
+import type { Ref } from "vue";
+import type { LanguageLabelCount } from "@/arches_lingo/types.ts";
 
 import type { Component } from "vue";
 
@@ -79,6 +85,9 @@ const isEditorLoading = ref(false);
 const resourceInstanceLifecycleState = ref<object | undefined>(undefined);
 const isFetchingResourceInstanceLifecycleState = ref(false);
 
+const schemeLabelCounts = ref<LanguageLabelCount[]>([]);
+const schemeLabelCountsLoading = ref(false);
+
 const resourceInstanceId = computed<string | undefined>(() => {
     if (route.meta.resolvedResourceId) {
         return route.meta.resolvedResourceId as string;
@@ -102,6 +111,16 @@ const remainingComponentData = computed(() => {
 
 onMounted(async () => {
     await loadResourceInstanceLifecycleState();
+    if (graphSlug === "scheme" && resourceInstanceId.value) {
+        schemeLabelCountsLoading.value = true;
+        fetchSchemeLabelCounts(resourceInstanceId.value)
+            .then((counts) => {
+                schemeLabelCounts.value = counts;
+            })
+            .finally(() => {
+                schemeLabelCountsLoading.value = false;
+            });
+    }
 });
 
 watch(resourceInstanceId, async () => {
@@ -158,6 +177,8 @@ provide("closeEditor", closeEditor);
 provide("updateAfterComponentDeletion", updateAfterComponentDeletion);
 provide("refreshReportSection", refreshReportSection);
 provide("resourceInstanceLifecycleState", resourceInstanceLifecycleState);
+provide("schemeLabelCounts", schemeLabelCounts as Ref<LanguageLabelCount[]>);
+provide("schemeLabelCountsLoading", schemeLabelCountsLoading);
 
 function closeEditor() {
     selectedComponentDatum.value = null;

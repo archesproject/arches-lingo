@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, inject, onMounted, ref, watch } from "vue";
+import type { Ref } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import { useEditLog } from "@/arches_lingo/composables/useEditLog.ts";
@@ -38,7 +39,6 @@ import {
     fetchConceptIdentifierCounter,
     fetchSchemeURITemplate,
     fetchResourceInstanceLifecycleState,
-    fetchSchemeLabelCounts,
     unretireSchemeConcepts,
 } from "@/arches_lingo/api.ts";
 import { useResourceStore } from "@/arches_lingo/composables/useResourceStore.ts";
@@ -94,8 +94,14 @@ const scheme = ref<ResourceInstanceResult>();
 const schemeResource = ref<Labellable>();
 const label = ref<Label>();
 const data = ref<SchemeHeader>();
-const labelCounts = ref<LanguageLabelCount[]>([]);
-const labelCountsLoading = ref(false);
+const labelCounts = inject<Ref<LanguageLabelCount[]>>(
+    "schemeLabelCounts",
+    ref([]),
+);
+const labelCountsLoading = inject<Ref<boolean>>(
+    "schemeLabelCountsLoading",
+    ref(false),
+);
 const showAllLanguages = ref(false);
 
 const LANGUAGE_CHIPS_TRUNCATE_COUNT = 8;
@@ -184,15 +190,6 @@ watch(
             );
 
             extractSchemeHeaderData(resource);
-
-            labelCountsLoading.value = true;
-            fetchSchemeLabelCounts(props.resourceInstanceId)
-                .then((counts) => {
-                    labelCounts.value = counts;
-                })
-                .finally(() => {
-                    labelCountsLoading.value = false;
-                });
         } catch (error) {
             toast.add({
                 severity: ERROR,

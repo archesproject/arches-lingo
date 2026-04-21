@@ -2,6 +2,7 @@ from http import HTTPStatus
 
 from django.db import models
 from django.db.models import Count
+from django.db.models.expressions import RawSQL
 from django.utils.translation import gettext as _
 from django.views.generic import View
 
@@ -57,7 +58,7 @@ class SchemeLabelCountView(AnonymousAccessMixin, View):
                 nodegroup_id=CONCEPT_NAME_NODEGROUP,
                 resourceinstance_id__in=concept_ids,
             )
-            .values(lang_code=models.F(f"data__{CONCEPT_NAME_LANGUAGE_NODE}"))
+            .values(lang_code=RawSQL("tiledata->>%s", [CONCEPT_NAME_LANGUAGE_NODE]))
             .annotate(count=Count("tileid"))
             .order_by("-count")
         )
