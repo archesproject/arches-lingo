@@ -8,7 +8,6 @@ import ConceptSetList from "@/arches_lingo/components/concept-set-browser/compon
 import ConceptSetMemberList from "@/arches_lingo/components/concept-set-browser/components/ConceptSetMemberList.vue";
 
 import {
-    fetchConceptSets,
     fetchConceptSetDetail,
     createConceptSet,
     deleteConceptSet,
@@ -22,6 +21,7 @@ import {
     SUCCESS,
 } from "@/arches_lingo/constants.ts";
 import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
+import { useConceptSetStore } from "@/arches_lingo/stores/useConceptSetStore.ts";
 
 import type { ConceptSetDetail, ConceptSetItem } from "@/arches_lingo/types.ts";
 
@@ -29,13 +29,13 @@ const { $gettext } = useGettext();
 const toast = useToast();
 const { isAnonymous } = storeToRefs(useUserStore());
 
-const conceptSets = ref<ConceptSetItem[]>([]);
+const conceptSetStore = useConceptSetStore();
+const { conceptSets } = storeToRefs(conceptSetStore);
 const activeSetDetail = ref<ConceptSetDetail | null>(null);
 
 async function loadConceptSets() {
     try {
-        const result = await fetchConceptSets();
-        conceptSets.value = result.data;
+        await conceptSetStore.loadConceptSets();
     } catch (error) {
         toast.add({
             severity: ERROR,
