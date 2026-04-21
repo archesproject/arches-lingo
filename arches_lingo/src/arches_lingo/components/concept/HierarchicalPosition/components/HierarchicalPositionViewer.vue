@@ -474,7 +474,6 @@ function getTreeNodeStyle(depth: number) {
                             <div class="button-container">
                                 <Button
                                     v-if="canEditResourceInstances"
-                                    class="controls edit-button"
                                     icon="pi pi-file-edit"
                                     variant="text"
                                     :aria-label="$gettext('edit')"
@@ -487,9 +486,9 @@ function getTreeNodeStyle(depth: number) {
                                     v-if="
                                         group.tileid && canEditResourceInstances
                                     "
-                                    class="controls delete-button"
                                     icon="pi pi-trash"
                                     variant="text"
+                                    severity="danger"
                                     :aria-label="$gettext('delete')"
                                     @click="confirmDelete(group)"
                                 />
@@ -734,38 +733,6 @@ function getTreeNodeStyle(depth: number) {
     display: flex;
     gap: 0.75rem;
     justify-content: flex-end;
-}
-
-.controls {
-    padding: 0.25rem;
-    width: 2rem;
-    height: 2rem;
-    border-radius: 50%;
-    padding: 1.2rem;
-    color: var(--p-button-primary-color);
-}
-
-.edit-button {
-    background: var(--p-button-primary-background);
-    border: 0.0625rem solid var(--p-button-primary-active-border-color);
-}
-
-.delete-button {
-    background: var(--p-button-danger-background);
-    border: 1px solid var(--p-button-danger-border-color);
-    color: var(--p-button-danger-color);
-}
-
-.button-container .edit-button:hover {
-    background: var(--p-button-primary-hover-background);
-    border: 1px solid var(--p-button-primary-hover-border-color);
-    color: var(--p-button-primary-hover-color);
-}
-
-.button-container .delete-button:hover {
-    background: var(--p-button-danger-hover-background);
-    border: 1px solid var(--p-button-danger-hover-border-color);
-    color: var(--p-button-danger-hover-color);
 }
 
 .hierarchy-container {
