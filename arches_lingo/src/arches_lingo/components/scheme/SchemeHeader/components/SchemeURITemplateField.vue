@@ -32,6 +32,11 @@ const emit = defineEmits<{
 const toast = useToast();
 const { $gettext } = useGettext();
 
+const uriTemplateExamples = [
+    "http://example.org/schemes/<scheme_identifier>/concepts/<concept_counter>",
+    "http://example.org/<scheme_identifier>/<scheme_and_concept_counter>",
+];
+
 const isEditingSchemeURITemplate = ref(false);
 const schemeURITemplateDraft = ref("");
 const isSavingSchemeURITemplate = ref(false);
@@ -91,15 +96,6 @@ async function saveSchemeURITemplate() {
 
 <template>
     <div class="header-item">
-        <Button
-            icon="pi pi-info-circle"
-            variant="text"
-            size="small"
-            :rounded="true"
-            class="info-button"
-            :aria-label="$gettext('URI template information')"
-            @click="toggleInfoPopover"
-        />
         <Popover ref="infoPopoverRef">
             <div class="template-info">
                 <p class="intro">
@@ -147,18 +143,28 @@ async function saveSchemeURITemplate() {
                 </div>
 
                 <p class="examples-heading">{{ $gettext("Examples:") }}</p>
-                <code class="template-example">
-                    http://example.org/schemes/&lt;scheme_identifier&gt;/concepts/&lt;concept_counter&gt;
-                </code>
-                <code class="template-example">
-                    http://example.org/&lt;scheme_identifier&gt;/&lt;scheme_and_concept_counter&gt;
+                <code
+                    v-for="example in uriTemplateExamples"
+                    :key="example"
+                    class="template-example"
+                >
+                    {{ example }}
                 </code>
             </div>
         </Popover>
 
-        <span class="header-item-label">
-            {{ $gettext("URI template:") }}
-        </span>
+        <div class="header-item-label uri-template-label">
+            <span>{{ $gettext("URI template") }}</span>
+            <Button
+                icon="pi pi-info-circle"
+                variant="text"
+                size="small"
+                :rounded="true"
+                class="info-button"
+                :aria-label="$gettext('URI template information')"
+                @click="toggleInfoPopover"
+            />
+        </div>
 
         <template v-if="isEditingSchemeURITemplate">
             <div class="uri-input-wrapper">
@@ -212,11 +218,19 @@ async function saveSchemeURITemplate() {
 </template>
 
 <style scoped>
-.header-item > .info-button {
+.uri-template-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.uri-template-label::after {
+    content: ":";
+}
+
+.uri-template-label .info-button {
+    width: auto;
     padding: 0;
-    width: unset;
-    height: auto;
-    margin-inline-end: 0.25rem;
 }
 
 .uri-input-wrapper {
