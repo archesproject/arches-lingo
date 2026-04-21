@@ -132,6 +132,9 @@ function handleRemoveSelected() {
                 v-for="member in props.setDetail.members"
                 :key="member.id"
                 class="member-item"
+                :class="{
+                    'member-item--active': member.id === currentConceptId,
+                }"
             >
                 <Checkbox
                     :model-value="selectedConceptIds.has(member.id)"
@@ -141,7 +144,21 @@ function handleRemoveSelected() {
                 <Button
                     text
                     plain
-                    class="member-label"
+                    :class="[
+                        'member-label',
+                        {
+                            'member-label--active':
+                                member.id === currentConceptId,
+                        },
+                    ]"
+                    :pt="{
+                        root: {
+                            style: {
+                                justifyContent: 'flex-start',
+                                padding: '0.25rem 0',
+                            },
+                        },
+                    }"
                     @click="navigateToConcept(member.id)"
                 >
                     <i
@@ -209,7 +226,9 @@ function handleRemoveSelected() {
 
 .member-actions {
     display: flex;
+    flex-wrap: wrap;
     justify-content: flex-end;
+    gap: 0.375rem;
     padding: 0.5rem;
     border-bottom: 0.0625rem solid var(--p-highlight-focus-background);
     flex-shrink: 0;
@@ -249,27 +268,25 @@ function handleRemoveSelected() {
     background-color: var(--p-highlight-background);
 }
 
+.member-item--active,
+.member-item--active:hover {
+    background: var(--p-header-button-background);
+    color: var(--p-header-button-color);
+}
+
+.member-label--active.p-button,
+.member-label--active.p-button:hover {
+    color: var(--p-header-button-color);
+}
+
 .member-label {
     flex: 1;
     min-width: 0;
-    display: flex;
-    align-items: center;
-    gap: 0.375rem;
-    cursor: pointer;
-    background: none;
-    border: none;
-    padding: 0;
-    text-align: left;
-    color: var(--p-text-color);
     font-family: var(--p-lingo-font-family);
     font-size: var(--p-lingo-font-size-smallnormal);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-}
-
-.member-label:hover {
-    color: var(--p-primary-color);
 }
 
 .concept-icon {

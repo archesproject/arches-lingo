@@ -3,6 +3,7 @@ import { inject, computed } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import Button from "primevue/button";
+import Tag from "primevue/tag";
 
 import MetaStringViewer from "@/arches_lingo/components/generic/MetaStringViewer.vue";
 
@@ -77,7 +78,14 @@ const metaStringLabel = computed<MetaStringText>(() => ({
 <template>
     <div class="viewer-section">
         <div class="section-header">
-            <h2>{{ props.sectionTitle }}</h2>
+            <div class="section-title">
+                <h2>{{ props.sectionTitle }}</h2>
+                <Tag
+                    v-if="props.tileData.length"
+                    :value="String(props.tileData.length)"
+                    severity="secondary"
+                />
+            </div>
 
             <Button
                 v-if="isEditor"
