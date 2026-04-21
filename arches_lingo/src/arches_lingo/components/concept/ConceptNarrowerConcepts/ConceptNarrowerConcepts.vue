@@ -7,6 +7,7 @@ import { storeToRefs } from "pinia";
 
 import Skeleton from "primevue/skeleton";
 import Message from "primevue/message";
+import Tag from "primevue/tag";
 
 import { fetchConceptChildren } from "@/arches_lingo/api.ts";
 import { getConceptIcon, sortItemsByLabel } from "@/arches_lingo/utils.ts";
@@ -108,12 +109,11 @@ onMounted(async () => {
         <div class="section-header">
             <div class="section-title">
                 <h2>{{ sectionTitle }}</h2>
-                <span
+                <Tag
                     v-if="narrowerConcepts.length"
-                    class="count-badge"
-                >
-                    {{ narrowerConcepts.length }}
-                </span>
+                    severity="secondary"
+                    :value="narrowerConcepts.length"
+                />
             </div>
         </div>
         <div
@@ -159,19 +159,6 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-.count-badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--p-primary-100);
-    color: var(--p-primary-700);
-    font-size: var(--p-lingo-font-size-xsmall);
-    font-weight: var(--p-lingo-font-weight-normal);
-    padding: 0.125rem 0.5rem;
-    border-radius: 0.125rem;
-    min-width: 1.5rem;
-}
-
 .narrower-concepts-list {
     display: flex;
     flex-direction: column;
