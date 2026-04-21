@@ -343,6 +343,40 @@ export const retireConcept = async (
     }
 };
 
+export const unretireConcept = async (
+    conceptId: string,
+    cascade: boolean,
+): Promise<void> => {
+    const url = generateArchesURL("arches_lingo:api-concept-unretire", {
+        pk: conceptId,
+    });
+    const fullUrl = cascade ? `${url}?cascade=true` : url;
+    const response = await fetch(fullUrl, {
+        method: "POST",
+        headers: { "X-CSRFTOKEN": getToken() },
+    });
+    if (!response.ok) {
+        const parsed = await response.json();
+        throw new Error(parsed.message || response.statusText);
+    }
+};
+
+export const unretireSchemeConcepts = async (
+    schemeId: string,
+): Promise<void> => {
+    const url = generateArchesURL("arches_lingo:api-scheme-unretire-concepts", {
+        pk: schemeId,
+    });
+    const response = await fetch(url, {
+        method: "POST",
+        headers: { "X-CSRFTOKEN": getToken() },
+    });
+    if (!response.ok) {
+        const parsed = await response.json();
+        throw new Error(parsed.message || response.statusText);
+    }
+};
+
 export const fetchResourceReferenceCount = async (
     resourceId: string,
 ): Promise<number> => {
