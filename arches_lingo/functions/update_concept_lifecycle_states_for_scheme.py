@@ -47,6 +47,8 @@ RETIRED_RESOURCE_INSTANCE_LIFECYCLE_STATE_ID = uuid.UUID(
     "9d2e1c0b-7a6b-4b3d-8c1a-0f2d9e6b0a7c"
 )
 
+CHUNK_SIZE = 2000
+
 
 details = {
     "name": "Update Concept Lifecycle States For Scheme",
@@ -316,40 +318,47 @@ class UpdateConceptLifecycleStatesForScheme(BaseFunction):
             resourceinstance_id=draft_concept_resource_instance_ids[0],
         )
 
-        resource_identifiers_to_create = []
-        concept_tiles_to_create = []
-
-        for concept_index, concept_resource_instance_id in enumerate(
-            draft_concept_resource_instance_ids
+        for chunk_start in range(
+            0, len(draft_concept_resource_instance_ids), CHUNK_SIZE
         ):
-            concept_identifier_value = str(allocated_start_number + concept_index)
+            chunk_ids = draft_concept_resource_instance_ids[
+                chunk_start : chunk_start + CHUNK_SIZE
+            ]
 
-            resource_identifiers_to_create.append(
-                ResourceIdentifier(
-                    resourceid_id=concept_resource_instance_id,
-                    identifier=concept_identifier_value,
-                    source="arches-lingo",
-                    identifier_type="identifier",
+            resource_identifiers_to_create = []
+            concept_tiles_to_create = []
+
+            for concept_index, concept_resource_instance_id in enumerate(
+                chunk_ids, start=chunk_start
+            ):
+                concept_identifier_value = str(allocated_start_number + concept_index)
+
+                resource_identifiers_to_create.append(
+                    ResourceIdentifier(
+                        resourceid_id=concept_resource_instance_id,
+                        identifier=concept_identifier_value,
+                        source="arches-lingo",
+                        identifier_type="identifier",
+                    )
                 )
-            )
 
-            concept_tile_data = copy.deepcopy(default_identifier_tile_data)
-            concept_tile_data[identifier_content_node_id] = concept_identifier_value
-            concept_tile_data[identifier_type_node_id] = identifier_type_tile_value
+                concept_tile_data = copy.deepcopy(default_identifier_tile_data)
+                concept_tile_data[identifier_content_node_id] = concept_identifier_value
+                concept_tile_data[identifier_type_node_id] = identifier_type_tile_value
 
-            concept_tiles_to_create.append(
-                TileModel(
-                    resourceinstance_id=concept_resource_instance_id,
-                    nodegroup_id=identifier_nodegroup_id,
-                    parenttile_id=None,
-                    data=concept_tile_data,
-                    sortorder=0,
-                    provisionaledits=None,
+                concept_tiles_to_create.append(
+                    TileModel(
+                        resourceinstance_id=concept_resource_instance_id,
+                        nodegroup_id=identifier_nodegroup_id,
+                        parenttile_id=None,
+                        data=concept_tile_data,
+                        sortorder=0,
+                        provisionaledits=None,
+                    )
                 )
-            )
 
-        ResourceIdentifier.objects.bulk_create(resource_identifiers_to_create)
-        TileModel.objects.bulk_create(concept_tiles_to_create)
+            ResourceIdentifier.objects.bulk_create(resource_identifiers_to_create)
+            TileModel.objects.bulk_create(concept_tiles_to_create)
 
     def _recalculate_non_retired_concept_uris(
         self,
@@ -369,15 +378,6 @@ class UpdateConceptLifecycleStatesForScheme(BaseFunction):
         if not concept_resource_instance_ids:
             return
 
-        concept_identifier_by_resource_instance_id = dict(
-            ResourceIdentifier.objects.filter(
-                resourceid_id__in=concept_resource_instance_ids,
-                source="arches-lingo",
-            ).values_list("resourceid_id", "identifier")
-        )
-        if not concept_identifier_by_resource_instance_id:
-            return
-
         nodes = {
             node.alias: node
             for node in Node.objects.filter(
@@ -388,74 +388,87 @@ class UpdateConceptLifecycleStatesForScheme(BaseFunction):
         uri_nodegroup_id = nodes["uri"].nodegroup_id
         uri_content_node_id_string = str(nodes["uri_content"].nodeid)
 
-        existing_uri_tiles = list(
-            TileModel.objects.filter(
-                resourceinstance_id__in=concept_resource_instance_ids,
-                nodegroup_id=uri_nodegroup_id,
-            ).only("tileid", "resourceinstance_id", "data")
-        )
-
-        existing_uri_tile_by_resource_instance_id = {
-            existing_uri_tile.resourceinstance_id: existing_uri_tile
-            for existing_uri_tile in existing_uri_tiles
-        }
-
         default_uri_tile_data = self._get_nodegroup_data_with_widget_defaults(
             nodegroup_id=uri_nodegroup_id,
             resourceinstance_id=concept_resource_instance_ids[0],
         )
 
-        uri_tiles_to_create = []
-        uri_tiles_to_update = []
+        for chunk_start in range(0, len(concept_resource_instance_ids), CHUNK_SIZE):
+            chunk_ids = concept_resource_instance_ids[
+                chunk_start : chunk_start + CHUNK_SIZE
+            ]
 
-        for concept_resource_instance_id in concept_resource_instance_ids:
-            concept_identifier_value = concept_identifier_by_resource_instance_id.get(
-                concept_resource_instance_id
+            chunk_identifier_by_resource_instance_id = dict(
+                ResourceIdentifier.objects.filter(
+                    resourceid_id__in=chunk_ids,
+                    source="arches-lingo",
+                ).values_list("resourceid_id", "identifier")
             )
-            if not concept_identifier_value:
-                continue
 
-            desired_uri_value = url_template.replace(
+            chunk_existing_tile_by_resource_instance_id = {
+                tile.resourceinstance_id: tile
+                for tile in TileModel.objects.filter(
+                    resourceinstance_id__in=chunk_ids,
+                    nodegroup_id=uri_nodegroup_id,
+                ).only("tileid", "resourceinstance_id", "data")
+            }
+
+            uri_template_with_scheme = url_template.replace(
                 "<scheme_identifier>", scheme_identifier_value
             )
-            desired_uri_value = (
-                desired_uri_value.replace("<concept_counter>", concept_identifier_value)
-                .replace("<scheme_and_concept_counter>", concept_identifier_value)
-                .replace("<concept_identifier>", concept_identifier_value)
-            )
 
-            existing_uri_tile = existing_uri_tile_by_resource_instance_id.get(
-                concept_resource_instance_id
-            )
+            uri_tiles_to_create = []
+            uri_tiles_to_update = []
 
-            if existing_uri_tile is None:
-                new_tile_data = copy.deepcopy(default_uri_tile_data)
-                new_tile_data[uri_content_node_id_string] = desired_uri_value
-                uri_tiles_to_create.append(
-                    TileModel(
-                        resourceinstance_id=concept_resource_instance_id,
-                        nodegroup_id=uri_nodegroup_id,
-                        parenttile_id=None,
-                        data=new_tile_data,
-                        sortorder=0,
-                        provisionaledits=None,
-                    )
+            for concept_resource_instance_id in chunk_ids:
+                concept_identifier_value = chunk_identifier_by_resource_instance_id.get(
+                    concept_resource_instance_id
                 )
-                continue
+                if not concept_identifier_value:
+                    continue
 
-            existing_uri_value = existing_uri_tile.data.get(uri_content_node_id_string)
+                desired_uri_value = (
+                    uri_template_with_scheme.replace(
+                        "<concept_counter>", concept_identifier_value
+                    )
+                    .replace("<scheme_and_concept_counter>", concept_identifier_value)
+                    .replace("<concept_identifier>", concept_identifier_value)
+                )
 
-            if existing_uri_value == desired_uri_value:
-                continue
+                existing_uri_tile = chunk_existing_tile_by_resource_instance_id.get(
+                    concept_resource_instance_id
+                )
 
-            existing_uri_tile.data[uri_content_node_id_string] = desired_uri_value
-            uri_tiles_to_update.append(existing_uri_tile)
+                if existing_uri_tile is None:
+                    new_tile_data = copy.deepcopy(default_uri_tile_data)
+                    new_tile_data[uri_content_node_id_string] = desired_uri_value
+                    uri_tiles_to_create.append(
+                        TileModel(
+                            resourceinstance_id=concept_resource_instance_id,
+                            nodegroup_id=uri_nodegroup_id,
+                            parenttile_id=None,
+                            data=new_tile_data,
+                            sortorder=0,
+                            provisionaledits=None,
+                        )
+                    )
+                    continue
 
-        if uri_tiles_to_create:
-            TileModel.objects.bulk_create(uri_tiles_to_create)
+                existing_uri_value = existing_uri_tile.data.get(
+                    uri_content_node_id_string
+                )
 
-        if uri_tiles_to_update:
-            TileModel.objects.bulk_update(uri_tiles_to_update, ["data"])
+                if existing_uri_value == desired_uri_value:
+                    continue
+
+                existing_uri_tile.data[uri_content_node_id_string] = desired_uri_value
+                uri_tiles_to_update.append(existing_uri_tile)
+
+            if uri_tiles_to_create:
+                TileModel.objects.bulk_create(uri_tiles_to_create)
+
+            if uri_tiles_to_update:
+                TileModel.objects.bulk_update(uri_tiles_to_update, ["data"])
 
     def _get_nodegroup_data_with_widget_defaults(
         self,
