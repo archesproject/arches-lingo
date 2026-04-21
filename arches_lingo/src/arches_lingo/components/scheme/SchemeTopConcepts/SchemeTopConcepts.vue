@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useGettext } from "vue3-gettext";
 import { RouterLink } from "vue-router";
 import { useToast } from "primevue/usetoast";
@@ -18,6 +18,8 @@ import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 import { DEFAULT_ERROR_TOAST_LIFE, ERROR } from "@/arches_lingo/constants.ts";
 
 import type { Concept, DataComponentMode } from "@/arches_lingo/types.ts";
+
+const SCROLL_THRESHOLD = 8;
 
 const props = defineProps<{
     mode: DataComponentMode;
@@ -43,6 +45,25 @@ const sortedTopConcepts = computed(() =>
         systemLanguage.value.code,
     ),
 );
+
+const isScrollable = computed(
+    () => topConcepts.value.length > SCROLL_THRESHOLD,
+);
+
+const listElement = ref<HTMLElement | null>(null);
+const isListScrolledToBottom = ref(false);
+
+function checkScrollBottom() {
+    if (!listElement.value) return;
+    const { scrollTop, scrollHeight, clientHeight } = listElement.value;
+    isListScrolledToBottom.value = scrollTop + clientHeight >= scrollHeight - 1;
+}
+
+watch(isScrollable, (scrollable) => {
+    if (scrollable) {
+        isListScrolledToBottom.value = false;
+    }
+});
 
 onMounted(async () => {
     if (!props.resourceInstanceId) {
@@ -87,17 +108,26 @@ onMounted(async () => {
         class="viewer-section"
     >
         <div class="section-header">
-            <h2>{{ sectionTitle }}</h2>
-            <Tag
-                v-if="topConcepts.length"
-                :value="topConcepts.length"
-                severity="secondary"
-                class="concept-count-badge"
-            />
+            <div class="section-title">
+                <h2>{{ sectionTitle }}</h2>
+                <Tag
+                    v-if="topConcepts.length"
+                    severity="secondary"
+                    :value="topConcepts.length"
+                />
+            </div>
         </div>
         <div
             v-if="topConcepts.length"
-            class="top-concepts-list"
+            :ref="(el) => (listElement = el as HTMLElement | null)"
+            :class="[
+                'top-concepts-list',
+                {
+                    scrollable: isScrollable,
+                    'fade-bottom': isScrollable && !isListScrolledToBottom,
+                },
+            ]"
+            @scroll="checkScrollBottom"
         >
             <RouterLink
                 v-for="concept in sortedTopConcepts"
@@ -108,10 +138,7 @@ onMounted(async () => {
                 }"
                 class="top-concept-item"
             >
-                <span
-                    :class="getConceptIcon(concept)"
-                    class="top-concept-icon"
-                ></span>
+                <span :class="getConceptIcon(concept)"></span>
                 <span class="top-concept-label">
                     {{
                         getItemLabel(
@@ -136,47 +163,36 @@ onMounted(async () => {
 .top-concepts-list {
     display: flex;
     flex-direction: column;
-    gap: 0.125rem;
+    gap: 0.25rem;
     padding-top: 0.5rem;
+}
+
+.top-concepts-list.scrollable {
+    max-height: 32rem;
+    overflow-y: auto;
+}
+
+.top-concepts-list.fade-bottom {
+    mask-image: linear-gradient(to bottom, black 93.75%, transparent 100%);
 }
 
 .top-concept-item {
     display: flex;
     align-items: center;
-    gap: 0.625rem;
-    padding: 0.5rem 0.625rem;
+    gap: 0.5rem;
+    padding: 0.375rem 0.5rem;
     border-radius: 0.25rem;
-    border-bottom: 0.0625rem solid var(--p-highlight-focus-background);
     cursor: pointer;
     font-size: var(--p-lingo-font-size-smallnormal);
     text-decoration: none;
     color: inherit;
 }
 
-.top-concept-item:last-child {
-    border-bottom: none;
-}
-
 .top-concept-item:hover {
     background: var(--p-highlight-background);
 }
 
-.top-concept-icon {
-    color: var(--p-neutral-400);
-    flex-shrink: 0;
-    font-size: var(--p-lingo-font-size-smallnormal);
-}
-
 .top-concept-label {
     color: var(--p-primary-500);
-}
-
-.concept-count-badge {
-    font-size: var(--p-lingo-font-size-xsmall, 0.7rem);
-    font-weight: var(--p-lingo-font-weight-normal);
-    color: var(--p-neutral-600);
-    background: var(--p-neutral-200);
-    padding: 0.2rem 0.6rem;
-    border-radius: 1rem;
 }
 </style>
