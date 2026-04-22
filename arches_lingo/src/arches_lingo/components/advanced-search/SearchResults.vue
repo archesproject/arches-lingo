@@ -303,8 +303,6 @@ function onPageChange(event: { page: number }) {
     flex: 1 1 auto;
     overflow-y: auto;
     min-height: 0;
-    border: 0.0625rem solid var(--p-highlight-focus-background);
-    border-radius: 0.125rem;
 }
 
 :deep(.p-paginator) {
