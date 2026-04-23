@@ -119,6 +119,7 @@ form {
 input {
     width: 100%;
     margin-bottom: 0.5rem;
+    font-size: 0.9rem;
 }
 
 button {

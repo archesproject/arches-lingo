@@ -506,7 +506,7 @@ onMounted(loadSearchOptions);
 }
 
 .advanced-search :deep(.p-panel-header) {
-    padding: 0;
+    padding: 0 1.0rem;
 }
 
 .advanced-search :deep(.p-panel-content) {
