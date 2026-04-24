@@ -101,13 +101,13 @@ async function save(e: FormSubmitEvent) {
             updatedTileId = updatedConcept.tileid;
         }
 
-        openEditor!(props.componentName, updatedTileId);
         refreshSchemeHierarchy!();
+        await refreshReportSection!(props.componentName);
+        openEditor!(props.componentName, updatedTileId);
     } catch (error) {
         console.error(error);
     } finally {
         isSaving.value = false;
-        refreshReportSection!(props.componentName);
         onSaveSettled?.();
     }
 }
@@ -135,9 +135,10 @@ async function save(e: FormSubmitEvent) {
                 <ConceptResourceSelectWidget
                     :graph-slug="props.graphSlug"
                     node-alias="classification_status_ascribed_classification"
-                    :aliased-node-data="
+                    :node-value="
                         props.tileData?.aliased_data
                             .classification_status_ascribed_classification
+                            ?.node_value
                     "
                     :mode="EDIT"
                     :scheme="props.scheme"

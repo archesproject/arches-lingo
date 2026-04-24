@@ -109,9 +109,8 @@ async function save(e: FormSubmitEvent) {
             updatedTileId = updatedTile.tileid;
         }
 
+        await refreshReportSection!(props.componentName);
         openEditor!(props.componentName, updatedTileId);
-
-        refreshReportSection!(props.componentName);
     } catch (error) {
         toast.add({
             severity: ERROR,
@@ -152,8 +151,9 @@ async function save(e: FormSubmitEvent) {
                     <GenericWidget
                         :graph-slug="props.graphSlug"
                         node-alias="statement_content"
-                        :aliased-node-data="
+                        :node-value="
                             props.tileData?.aliased_data?.statement_content
+                                ?.node_value
                         "
                         :mode="EDIT"
                     />
@@ -162,8 +162,9 @@ async function save(e: FormSubmitEvent) {
                     <GenericWidget
                         :graph-slug="props.graphSlug"
                         node-alias="statement_type"
-                        :aliased-node-data="
+                        :node-value="
                             props.tileData?.aliased_data?.statement_type
+                                ?.node_value
                         "
                         :mode="EDIT"
                     />
@@ -172,8 +173,9 @@ async function save(e: FormSubmitEvent) {
                     <GenericWidget
                         :graph-slug="props.graphSlug"
                         node-alias="statement_language"
-                        :aliased-node-data="
+                        :node-value="
                             props.tileData?.aliased_data?.statement_language
+                                ?.node_value
                         "
                         :mode="EDIT"
                     />
@@ -182,9 +184,9 @@ async function save(e: FormSubmitEvent) {
                     <GenericWidget
                         :graph-slug="props.graphSlug"
                         node-alias="statement_data_assignment_actor"
-                        :aliased-node-data="
+                        :node-value="
                             props.tileData?.aliased_data
-                                ?.statement_data_assignment_actor
+                                ?.statement_data_assignment_actor?.node_value
                         "
                         :mode="EDIT"
                     />
@@ -193,9 +195,10 @@ async function save(e: FormSubmitEvent) {
                     <GenericWidget
                         :graph-slug="props.graphSlug"
                         node-alias="statement_data_assignment_object_used"
-                        :aliased-node-data="
+                        :node-value="
                             props.tileData?.aliased_data
                                 ?.statement_data_assignment_object_used
+                                ?.node_value
                         "
                         :mode="EDIT"
                     />

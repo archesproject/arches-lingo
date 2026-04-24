@@ -112,8 +112,8 @@ const buttonIcon = computed(() => {
             <GenericWidget
                 node-alias="creation_sources"
                 :graph-slug="props.graphSlug"
-                :aliased-node-data="
-                    props.tileData.aliased_data.creation_sources
+                :node-value="
+                    props.tileData.aliased_data.creation_sources?.node_value
                 "
                 :mode="VIEW"
             />

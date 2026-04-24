@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, watchEffect, ref } from "vue";
+import { watchEffect, ref } from "vue";
 
 import Message from "primevue/message";
 import Skeleton from "primevue/skeleton";
@@ -14,19 +14,16 @@ import { fetchConceptResources } from "@/arches_lingo/api.ts";
 import { useWidgetReadyTracker } from "@/arches_lingo/composables/useWidgetReadyTracker.ts";
 import { EDIT, VIEW } from "@/arches_component_lab/widgets/constants.ts";
 
-import type {
-    AliasedNodeData,
-    CardXNodeXWidgetData,
-} from "@/arches_component_lab/types.ts";
+import type { CardXNodeXWidgetData } from "@/arches_component_lab/types.ts";
 import type { WidgetMode } from "@/arches_component_lab/widgets/types.ts";
-import type { ResourceInstanceListValue } from "@/arches_component_lab/datatypes/resource-instance-list/types";
+import type { ResourceInstanceReference } from "@/arches_component_lab/datatypes/resource-instance-list/types";
 
 const {
     graphSlug,
     mode,
     nodeAlias,
     resourceInstanceId,
-    aliasedNodeData,
+    nodeValue,
     shouldShowLabel = true,
     isDirty = false,
     scheme = "",
@@ -37,7 +34,7 @@ const {
     mode: WidgetMode;
     nodeAlias: string;
     resourceInstanceId?: string;
-    aliasedNodeData: ResourceInstanceListValue | null | undefined;
+    nodeValue: ResourceInstanceReference[] | null | undefined;
     shouldShowLabel?: boolean;
     scheme?: string;
     schemeSelectable?: boolean | false;
@@ -59,22 +56,8 @@ if (widgetReadyTracker) {
     widgetReadyTracker.register();
 }
 
-const conceptIds = aliasedNodeData?.details.map(
-    (resource: { display_value: string; resource_id: string }) =>
-        resource.resource_id,
-) as string[] | undefined;
+const conceptIds = nodeValue?.map((ref) => ref.resourceId);
 const searchResult = ref();
-
-const widgetValue = computed(() => {
-    if (aliasedNodeData !== undefined) {
-        return aliasedNodeData as AliasedNodeData;
-    } else if (cardXNodeXWidgetData.value?.config?.defaultValue) {
-        return cardXNodeXWidgetData.value.config
-            .defaultValue as AliasedNodeData;
-    } else {
-        return null;
-    }
-});
 
 watchEffect(async () => {
     if (cardXNodeXWidgetData.value) {
@@ -135,7 +118,7 @@ async function getConceptHierarchy(conceptIds: string[]) {
         <GenericFormField
             v-if="mode === EDIT"
             v-slot="{ onUpdateValue }"
-            :aliased-node-data="widgetValue!"
+            :node-value="nodeValue"
             :is-dirty="isDirty"
             :node-alias="nodeAlias"
             @update:is-dirty="emit('update:isDirty', $event)"

@@ -263,9 +263,9 @@ function modifyResource(resourceInstanceId?: string) {
                                 class="image-title"
                                 graph-slug="digital_object_system"
                                 :mode="VIEW"
-                                :aliased-node-data="
+                                :node-value="
                                     resource.aliased_data.name?.aliased_data
-                                        .name_content
+                                        .name_content?.node_value
                                 "
                             />
                         </label>
@@ -298,8 +298,9 @@ function modifyResource(resourceInstanceId?: string) {
                     <GenericWidget
                         node-alias="content"
                         graph-slug="digital_object_system"
-                        :aliased-node-data="
+                        :node-value="
                             resource.aliased_data.content?.aliased_data.content
+                                ?.node_value
                         "
                         :mode="VIEW"
                         :should-show-label="false"
@@ -309,9 +310,9 @@ function modifyResource(resourceInstanceId?: string) {
                             node-alias="statement_content"
                             graph-slug="digital_object_system"
                             :mode="VIEW"
-                            :aliased-node-data="
+                            :node-value="
                                 resource.aliased_data.statement?.aliased_data
-                                    .statement_content
+                                    .statement_content?.node_value
                             "
                         />
                     </div>

@@ -128,8 +128,9 @@ const metaStringLabel = computed<MetaStringText>(() => ({
                 <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="relation_status_ascribed_relation"
-                    :aliased-node-data="
+                    :node-value="
                         rowData.aliased_data.relation_status_ascribed_relation
+                            ?.node_value
                     "
                     :mode="VIEW"
                     :should-show-label="false"
@@ -139,8 +140,9 @@ const metaStringLabel = computed<MetaStringText>(() => ({
                 <ConceptResourceSelectWidget
                     :graph-slug="props.graphSlug"
                     node-alias="relation_status_ascribed_comparate"
-                    :aliased-node-data="
+                    :node-value="
                         rowData.aliased_data.relation_status_ascribed_comparate
+                            ?.node_value
                     "
                     :mode="VIEW"
                     :should-show-label="false"
@@ -150,17 +152,18 @@ const metaStringLabel = computed<MetaStringText>(() => ({
                 <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="relation_status_data_assignment_actor"
-                    :aliased-node-data="
+                    :node-value="
                         rowData.aliased_data
-                            .relation_status_data_assignment_actor
+                            .relation_status_data_assignment_actor?.node_value
                     "
                     :mode="VIEW"
                 />
                 <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="relation_status_data_assignment_object_used"
-                    :aliased-node-data="
+                    :node-value="
                         rowData.relation_status_data_assignment_object_used
+                            ?.node_value
                     "
                     :mode="VIEW"
                 />

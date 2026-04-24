@@ -108,9 +108,8 @@ async function save(e: FormSubmitEvent) {
             updatedTileId = updatedTile.tileid;
         }
 
+        await refreshReportSection!(props.componentName);
         openEditor!(props.componentName, updatedTileId);
-
-        refreshReportSection!(props.componentName);
     } catch (error) {
         toast.add({
             severity: ERROR,
@@ -151,8 +150,9 @@ async function save(e: FormSubmitEvent) {
                     <GenericWidget
                         graph-slug="scheme"
                         node-alias="creation_sources"
-                        :aliased-node-data="
+                        :node-value="
                             props.tileData?.aliased_data.creation_sources
+                                ?.node_value
                         "
                         :mode="EDIT"
                     />

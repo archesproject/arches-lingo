@@ -112,15 +112,17 @@ const buttonIcon = computed(() => {
                 <GenericWidget
                     node-alias="right_holder"
                     :graph-slug="props.graphSlug"
-                    :aliased-node-data="
-                        props.tileData?.aliased_data.right_holder
+                    :node-value="
+                        props.tileData?.aliased_data.right_holder?.node_value
                     "
                     :mode="VIEW"
                 />
                 <GenericWidget
                     node-alias="right_type"
                     :graph-slug="props.graphSlug"
-                    :aliased-node-data="props.tileData?.aliased_data.right_type"
+                    :node-value="
+                        props.tileData?.aliased_data.right_type?.node_value
+                    "
                     :mode="VIEW"
                 />
             </div>
@@ -135,27 +137,29 @@ const buttonIcon = computed(() => {
                     <GenericWidget
                         node-alias="right_statement_content"
                         :graph-slug="props.graphSlug"
-                        :aliased-node-data="
+                        :node-value="
                             props.tileData?.aliased_data.right_statement
                                 ?.aliased_data?.right_statement_content
+                                ?.node_value
                         "
                         :mode="VIEW"
                     />
                     <GenericWidget
                         node-alias="right_statement_language"
                         :graph-slug="props.graphSlug"
-                        :aliased-node-data="
+                        :node-value="
                             props.tileData?.aliased_data.right_statement
                                 ?.aliased_data.right_statement_language
+                                ?.node_value
                         "
                         :mode="VIEW"
                     />
                     <GenericWidget
                         node-alias="right_statement_type"
                         :graph-slug="props.graphSlug"
-                        :aliased-node-data="
+                        :node-value="
                             props.tileData?.aliased_data.right_statement
-                                ?.aliased_data.right_statement_type
+                                ?.aliased_data.right_statement_type?.node_value
                         "
                         :mode="VIEW"
                     />

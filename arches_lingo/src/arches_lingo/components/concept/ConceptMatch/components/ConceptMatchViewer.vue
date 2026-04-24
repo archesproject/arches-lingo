@@ -132,8 +132,9 @@ function matchedConceptURIIsLink(rowData: ConceptMatchStatus): boolean {
                 <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="match_status_ascribed_relation"
-                    :aliased-node-data="
+                    :node-value="
                         rowData.aliased_data.match_status_ascribed_relation
+                            ?.node_value
                     "
                     :mode="VIEW"
                     :should-show-label="false"
@@ -166,17 +167,19 @@ function matchedConceptURIIsLink(rowData: ConceptMatchStatus): boolean {
                 <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="match_status_data_assignment_actor"
-                    :aliased-node-data="
+                    :node-value="
                         rowData.aliased_data.match_status_data_assignment_actor
+                            ?.node_value
                     "
                     :mode="VIEW"
                 />
                 <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="match_status_data_assignment_object_used"
-                    :aliased-node-data="
+                    :node-value="
                         rowData.aliased_data
                             .match_status_data_assignment_object_used
+                            ?.node_value
                     "
                     :mode="VIEW"
                 />

@@ -389,8 +389,9 @@ function onReinstateRequested() {
                     :node-alias="CONCEPT_TYPE_NODE_ALIAS"
                     :graph-slug="graphSlug"
                     :mode="EDIT"
-                    :aliased-node-data="
+                    :node-value="
                         conceptTypeTile?.aliased_data?.[CONCEPT_TYPE_NODE_ALIAS]
+                            ?.node_value
                     "
                     :should-show-label="false"
                     class="concept-type-widget"

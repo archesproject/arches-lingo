@@ -120,7 +120,9 @@ const metaStringLabel = computed<MetaStringText>(() => ({
                 <GenericWidget
                     node-alias="statement_content"
                     :graph-slug="props.graphSlug"
-                    :aliased-node-data="rowData.aliased_data.statement_content"
+                    :node-value="
+                        rowData.aliased_data.statement_content?.node_value
+                    "
                     :mode="VIEW"
                     :should-show-label="false"
                 />
@@ -129,7 +131,9 @@ const metaStringLabel = computed<MetaStringText>(() => ({
                 <GenericWidget
                     node-alias="statement_type"
                     :graph-slug="props.graphSlug"
-                    :aliased-node-data="rowData.aliased_data.statement_type"
+                    :node-value="
+                        rowData.aliased_data.statement_type?.node_value
+                    "
                     :mode="VIEW"
                     :should-show-label="false"
                 />
@@ -138,7 +142,9 @@ const metaStringLabel = computed<MetaStringText>(() => ({
                 <GenericWidget
                     node-alias="statement_language"
                     :graph-slug="props.graphSlug"
-                    :aliased-node-data="rowData.aliased_data.statement_language"
+                    :node-value="
+                        rowData.aliased_data.statement_language?.node_value
+                    "
                     :mode="VIEW"
                     :should-show-label="false"
                 />
@@ -147,17 +153,18 @@ const metaStringLabel = computed<MetaStringText>(() => ({
                 <GenericWidget
                     node-alias="statement_data_assignment_object_used"
                     :graph-slug="props.graphSlug"
-                    :aliased-node-data="
+                    :node-value="
                         rowData.aliased_data
-                            .statement_data_assignment_object_used
+                            .statement_data_assignment_object_used?.node_value
                     "
                     :mode="VIEW"
                 />
                 <GenericWidget
                     node-alias="statement_data_assignment_actor"
                     :graph-slug="props.graphSlug"
-                    :aliased-node-data="
+                    :node-value="
                         rowData.aliased_data.statement_data_assignment_actor
+                            ?.node_value
                     "
                     :mode="VIEW"
                 />

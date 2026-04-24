@@ -39,7 +39,8 @@ import {
 
 import type { Component, Ref } from "vue";
 import type { FormSubmitEvent } from "@primevue/forms";
-import type { FileListValue } from "@/arches_component_lab/datatypes/file-list/types.ts";
+import type { FileReference } from "@/arches_component_lab/datatypes/file-list/types.ts";
+import type { AliasedNodeData } from "@/arches_component_lab/types.ts";
 
 import type {
     ConceptImages,
@@ -47,7 +48,7 @@ import type {
     DigitalObjectInstanceAliases,
 } from "@/arches_lingo/types.ts";
 
-type PossiblyNewFile = FileListValue & {
+type PossiblyNewFile = FileReference & {
     file?: File;
     name?: string;
     lastModified?: number;
@@ -192,13 +193,13 @@ async function save(e: FormSubmitEvent) {
                 aliased_data: {
                     content: {
                         node_value: [...fileJsonObjects],
-                    } as unknown as FileListValue[],
+                    } as unknown as AliasedNodeData,
                 },
             };
         } else {
             digitalObjectInstanceAliases.content.aliased_data.content = {
                 node_value: [...fileJsonObjects],
-            } as unknown as FileListValue[];
+            } as unknown as AliasedNodeData;
         }
 
         // this fork was requested because the multipartjson parser is unstable
@@ -262,6 +263,8 @@ async function save(e: FormSubmitEvent) {
             }
         }
 
+        await refreshReportSection!(props.componentName);
+
         nextTick(() => {
             const openConceptImagesEditor = new CustomEvent(
                 "openConceptImagesEditor",
@@ -274,8 +277,6 @@ async function save(e: FormSubmitEvent) {
             );
             document.dispatchEvent(openConceptImagesEditor);
         });
-
-        refreshReportSection!(props.componentName);
     } catch (error) {
         toast.add({
             severity: ERROR,
@@ -335,9 +336,9 @@ function resetForm() {
                     node-alias="name_content"
                     graph-slug="digital_object_system"
                     :mode="EDIT"
-                    :aliased-node-data="
+                    :node-value="
                         digitalObjectResource?.aliased_data.name?.aliased_data
-                            .name_content
+                            .name_content?.node_value
                     "
                     class="widget-container column"
                 />
@@ -345,18 +346,18 @@ function resetForm() {
                     node-alias="statement_content"
                     graph-slug="digital_object_system"
                     :mode="EDIT"
-                    :aliased-node-data="
+                    :node-value="
                         digitalObjectResource?.aliased_data.statement
-                            ?.aliased_data.statement_content
+                            ?.aliased_data.statement_content?.node_value
                     "
                     class="widget-container column"
                 />
                 <GenericWidget
                     node-alias="content"
                     graph-slug="digital_object_system"
-                    :aliased-node-data="
+                    :node-value="
                         digitalObjectResource?.aliased_data?.content
-                            ?.aliased_data.content
+                            ?.aliased_data.content?.node_value
                     "
                     :mode="EDIT"
                     :should-show-label="false"
