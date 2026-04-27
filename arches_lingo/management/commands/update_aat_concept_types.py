@@ -178,7 +178,7 @@ def update_concept_type_tiles(uris_by_type, type_items_by_label, dry_run=False):
 
     Performs one SQL UPDATE per concept type so that all resources of the same
     type are updated in a single round-trip.  The URI lookup joins on the
-    ``URI_NODEGROUP`` tile, which stores each concept's canonical AAT URI.
+    ``CONCEPT_URI_NODEGROUP`` tile, which stores each concept's canonical AAT URI.
 
     Returns a dict mapping concept type label → number of tiles updated.
     """
@@ -210,8 +210,8 @@ def update_concept_type_tiles(uris_by_type, type_items_by_label, dry_run=False):
                 [
                     str(const.CONCEPT_TYPE_NODEID),
                     new_type_json,
-                    str(const.URI_NODEGROUP),
-                    str(const.URI_CONTENT_NODE),
+                    str(const.CONCEPT_URI_NODEGROUP),
+                    str(const.CONCEPT_URI_CONTENT_NODE),
                     aat_uris,
                     str(const.CONCEPT_TYPE_NODEGROUP),
                 ],
