@@ -9,55 +9,260 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:252
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:266
+msgid " — a short code for the scheme (e.g. "
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:137
+msgid ""
+" — access your Profile from the Settings section of the sidebar to update "
+"your name, email, and password."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:253
+msgid ""
+" — add a scope note, definition, or editorial note to describe the "
+"vocabulary's purpose."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:665
+msgid ""
+" — at the concept level, editors can delete a Draft concept (permanent "
+"removal) or deprecate an Editing concept (soft retirement that preserves its "
+"URI and history). Publish and Editing transitions are not available directly "
+"on individual concepts."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:356
+msgid " — attach illustrative images to help identify or describe the concept."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:85
+msgid ""
+" — browse, create, and manage your vocabulary schemes and their concepts."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:98
+msgid ""
+" — click Explore in the top bar to open a collapsible hierarchy tree on the "
+"left side of the screen."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:505
+msgid ""
+" — combine facets such as label, scheme, language, note content, URI, "
+"identifier, and lifecycle state. Group conditions with AND / OR logic."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:124
+msgid ""
+" — find Contributors and Sources in this sidebar section to manage the "
+"people, organizations, and bibliographic references that support your "
+"vocabulary."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:240
+msgid " — give your scheme a name in one or more languages."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:531
+msgid ""
+" — group selected concepts into named sets. Add concepts from search "
+"results, view a set's members, or remove concepts from a set."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:369
+msgid ""
+" — link concepts that are semantically associated but do not have a broader/"
+"narrower relationship."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:716
+msgid ""
+" — manage the people and organizations that contribute to your vocabularies. "
+"Contributors can be recorded as individuals (Person) or as collective bodies "
+"(Group)."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:382
+msgid ""
+" — map this concept to equivalent terms in external thesauri or authority "
+"files (e.g. exactMatch, closeMatch)."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:652
+msgid ""
+" — Publishing and moving a scheme back into Editing are controlled from the "
+"scheme header and cascade automatically to all of its concepts. When a "
+"scheme is published, concept identifiers and URIs are generated for every "
+"concept using the scheme's identifier, URI template, and concept counter."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:729
+msgid ""
+" — record the bibliographic sources that inform or support your vocabulary "
+"content, such as reference publications or authority files."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:316
+msgid ""
+" — record the standards your vocabulary conforms to and the license under "
+"which it is published."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:518
+msgid ""
+" — save your current query for quick re-use later. Saved searches appear in "
+"the Collections panel on the right."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:637
+msgid ""
+" — the current state appears as a color-coded badge in concept and scheme "
+"headers and in search results. In the hierarchy tree, badges are shown for "
+"Draft and Retired records so they stand out at a glance."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:283
+msgid ""
+" — the pattern used to mint stable linked-data URIs for every concept when "
+"the scheme is published. Use the placeholders "
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:303
+msgid ""
+" — the starting number for auto-incrementing concept identifiers. Set this "
+"before publishing — once identifiers have been assigned the counter is "
+"locked."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:678
+msgid ""
+" — use the filter button in the Explore panel to show only concepts in one "
+"or more specific states, for example to review all Draft concepts before "
+"publishing a scheme."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:111
+msgid ""
+" — use the search icon in the header to quickly find any concept or scheme "
+"by name."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:72
+msgid ""
+" — your home screen with vocabulary statistics, recent activity, and "
+"translation gaps."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:806
+msgid " for platform documentation."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:273
+#, fuzzy
+msgid " placeholder in the URI template."
+msgstr "编辑网址模板"
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:293
+msgid " to build the URI structure."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/DeleteConceptDialog.vue:54
+msgid ""
+"\"%{name}\" has %{count} direct child concept(s). How should they be handled?"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:270
+msgid "). Used as the "
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:283
 msgid "%{count} concepts"
 msgstr "%{count} 概念"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:130
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/components/ConceptSetList.vue:33
+#, fuzzy
+msgid "%{count} concepts · %{updated}"
+msgstr "%{count} 概念"
+
+#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:161
 msgid "%{count} concepts added to set."
 msgstr "%{count} 概念已添加到集合中。"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:161
+#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:190
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/ConceptSetBrowser.vue:148
 msgid "%{count} concepts removed from set."
 msgstr "%{count} 概念已从集中删除。"
 
-#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:267
+#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:462
 msgid "%{count} paths"
 msgstr "%{count} 路径"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/SearchResults.vue:69
+#: arches_lingo/src/arches_lingo/components/advanced-search/SearchResults.vue:71
 msgid "%{count} results found"
 msgstr "找到 %{count} 结果"
 
-#: arches_lingo/src/arches_lingo/pages/HomePage.vue:182
+#: arches_lingo/src/arches_lingo/pages/HomePage.vue:189
 msgid "%{count} schemes selected"
 msgstr "已选择 %{count} 方案"
 
-#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/UserInteraction/UserInteraction.vue:31
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/UserInteraction/UserInteraction.vue:30
 msgid "%{firstName} %{lastName}"
 msgstr "占位符0X 占位符1X"
 
-#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:53
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:116
+msgid "%{language} (%{code}): %{count}"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:55
 msgid "%{n} hr ago"
 msgstr "%{n} 小时前"
 
-#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:51
+#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:53
 msgid "%{n} min ago"
 msgstr "%{n} 分钟前"
 
-#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:55
+#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:57
 msgid "%{n}d ago"
 msgstr "%{n}天前"
+
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:124
+#, fuzzy
+msgid "+%{count} more"
+msgstr "%{count} 概念"
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:333
+msgid ""
+"A Concept represents a single idea or term in your vocabulary. Concepts live "
+"inside Schemes and can be arranged in a hierarchy."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:217
+msgid ""
+"A Scheme is the top-level container for a controlled vocabulary — think of "
+"it as the \"book\" that holds all your concepts."
+msgstr ""
 
 #: arches_lingo/src/arches_lingo/components/basic-search/SortAndFilterControls.vue:13
 msgid "A to Z"
 msgstr "从头到尾"
 
-#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:160
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:50
+msgid ""
+"A web-based tool for creating and managing controlled vocabularies and "
+"thesauri."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:746
+msgid "Access your profile from Settings > Profile in the sidebar."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:192
 msgid "Action"
 msgstr "行动"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:324
+#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:359
 msgid "Add %{count} concepts to set"
 msgstr "添加 %{count} 概念进行设置"
 
@@ -65,19 +270,24 @@ msgstr "添加 %{count} 概念进行设置"
 msgid "Add a new thesaurus, manage concept hierarchies"
 msgstr "添加新的同义词库，管理概念层次结构"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptRelationship/components/ConceptRelationshipViewer.vue:105
+#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:356
+#, fuzzy
+msgid "Add all %{count} results to set"
+msgstr "添加 %{count} 概念进行设置"
+
+#: arches_lingo/src/arches_lingo/components/concept/ConceptRelationship/components/ConceptRelationshipViewer.vue:113
 msgid "Add Associated Concept"
 msgstr "添加相关概念"
 
-#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:75
+#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:89
 msgid "Add child"
 msgstr "添加孩子"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:500
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/ConceptHeaderToolbar.vue:425
 msgid "Add Child"
 msgstr "添加孩子"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetGroup.vue:108
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetGroup.vue:109
 msgid "Add Condition"
 msgstr "添加条件"
 
@@ -85,11 +295,16 @@ msgstr "添加条件"
 msgid "Add Contributor"
 msgstr "添加贡献者"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetGroup.vue:115
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/components/ConceptSetMemberList.vue:102
+#, fuzzy
+msgid "Add current concept"
+msgstr "添加匹配的概念"
+
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetGroup.vue:116
 msgid "Add Group"
 msgstr "添加组"
 
-#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:226
+#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:414
 msgid "Add Hierarchical Parent"
 msgstr "添加分层父级"
 
@@ -103,12 +318,12 @@ msgid ""
 "the concept."
 msgstr "添加图像、图像标题和描述以帮助说明概念的特征。"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptLabel/components/ConceptLabelViewer.vue:87
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeLabel/components/SchemeLabelViewer.vue:96
+#: arches_lingo/src/arches_lingo/components/concept/ConceptLabel/components/ConceptLabelViewer.vue:95
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeLabel/components/SchemeLabelViewer.vue:104
 msgid "Add Label"
 msgstr "添加标签"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptMatch/components/ConceptMatchViewer.vue:109
+#: arches_lingo/src/arches_lingo/components/concept/ConceptMatch/components/ConceptMatchViewer.vue:117
 msgid "Add Matched Concept"
 msgstr "添加匹配的概念"
 
@@ -116,16 +331,16 @@ msgstr "添加匹配的概念"
 msgid "Add Namespace"
 msgstr "添加命名空间"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptNote/components/ConceptNoteViewer.vue:97
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeNote/components/SchemeNoteViewer.vue:97
+#: arches_lingo/src/arches_lingo/components/concept/ConceptNote/components/ConceptNoteViewer.vue:105
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeNote/components/SchemeNoteViewer.vue:105
 msgid "Add Note"
 msgstr "添加注释"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptNote/components/ConceptNoteEditor.vue:126
+#: arches_lingo/src/arches_lingo/components/concept/ConceptNote/components/ConceptNoteEditor.vue:125
 msgid "Add notes to define and provide context for concept."
 msgstr "添加注释来定义概念并提供上下文。"
 
-#: arches_lingo/src/arches_lingo/components/generic/ResourceListEditor/ResourceListEditor.vue:400
+#: arches_lingo/src/arches_lingo/components/generic/ResourceListEditor/ResourceListEditor.vue:401
 msgid "Add or edit resource name information."
 msgstr "添加或编辑资源名称信息。"
 
@@ -141,16 +356,18 @@ msgstr "添加来源"
 msgid "Add Standard"
 msgstr "添加标准"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:199
+#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:228
 msgid "Add to Set"
 msgstr "添加到集合"
 
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:419
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:554
 msgid "Add Top Concept"
 msgstr "添加顶级概念"
 
-#: arches_lingo/src/arches_lingo/components/sidenav/components/NavNavigation.vue:33
-#: arches_lingo/src/arches_lingo/pages/AdvancedSearch.vue:261
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:488
+#: arches_lingo/src/arches_lingo/components/sidenav/components/NavNavigation.vue:36
+#: arches_lingo/src/arches_lingo/pages/AdvancedSearch.vue:271
+#: arches_lingo/src/arches_lingo/pages/LandingPage.vue:55
 msgid "Advanced Search"
 msgstr "高级搜索"
 
@@ -158,101 +375,149 @@ msgstr "高级搜索"
 msgid "All concepts have a preferred label in this language."
 msgstr "所有概念在该语言中都有一个首选标签。"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:104
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:105
 msgid "All password fields are required."
 msgstr "所有密码字段均为必填字段。"
 
-#: arches_lingo/src/arches_lingo/pages/HomePage.vue:179
+#: arches_lingo/src/arches_lingo/components/generic/ReinstateDialog.vue:63
+msgid "All retired concepts within this scheme will be moved to Editing state."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/pages/HomePage.vue:186
 msgid "All schemes"
 msgstr "所有方案"
 
-#: arches_lingo/src/arches_lingo/pages/HomePage.vue:44
+#: arches_lingo/src/arches_lingo/components/tree/components/LifecycleStateFilter.vue:26
+#, fuzzy
+msgid "All states"
+msgstr "所有方案"
+
+#: arches_lingo/src/arches_lingo/pages/HomePage.vue:45
 msgid "All time"
 msgstr "所有时间"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:133
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/components/ConceptSetMemberList.vue:101
+msgid "Already in set"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:425
+msgid "Alternate"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:134
 msgid "An error occurred."
 msgstr "发生错误。"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetGroup.vue:145
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetGroup.vue:34
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetGroup.vue:146
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetGroup.vue:35
 msgid "AND"
 msgstr "和"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:619
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:525
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:289
+msgid "and "
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/ConceptHeader.vue:424
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:706
 msgid "Anonymous"
 msgstr "匿名的"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:335
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:92
 msgid "Any language"
 msgstr "任何语言"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:377
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:95
 msgid "Any scheme"
 msgstr "任何方案"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:301
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:318
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:91
 msgid "Any type"
 msgstr "任何类型"
 
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:46
+msgid "Arches Lingo"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/pages/LandingPage.vue:80
+msgid "Arches Logo"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/DeleteConceptDialog.vue:72
 #: arches_lingo/src/arches_lingo/components/generic/ResourceListEditor/ResourceListEditor.vue:184
 msgid "Are you sure you want to delete \"%{name}\"?"
 msgstr "您确定要删除“%{name}”吗？"
 
-#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:149
+#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:248
 msgid "Are you sure you want to delete relationship to parent?"
 msgstr "您确定要删除与父母的关系吗？"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:329
-msgid "Are you sure you want to delete this concept?"
-msgstr "您确定要删除这个概念吗？"
-
-#: arches_lingo/src/arches_lingo/components/concept/ConceptLabel/components/ConceptLabelViewer.vue:52
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeLabel/components/SchemeLabelViewer.vue:63
+#: arches_lingo/src/arches_lingo/components/concept/ConceptLabel/components/ConceptLabelViewer.vue:53
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeLabel/components/SchemeLabelViewer.vue:64
 msgid "Are you sure you want to delete this label?"
 msgstr "您确定要删除此标签吗？"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptNote/components/ConceptNoteViewer.vue:65
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeNote/components/SchemeNoteViewer.vue:65
+#: arches_lingo/src/arches_lingo/components/concept/ConceptNote/components/ConceptNoteViewer.vue:66
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeNote/components/SchemeNoteViewer.vue:66
 msgid "Are you sure you want to delete this note?"
 msgstr "您确定要删除此注释吗？"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptMatch/components/ConceptMatchViewer.vue:71
-#: arches_lingo/src/arches_lingo/components/concept/ConceptRelationship/components/ConceptRelationshipViewer.vue:71
+#: arches_lingo/src/arches_lingo/components/concept/ConceptMatch/components/ConceptMatchViewer.vue:72
+#: arches_lingo/src/arches_lingo/components/concept/ConceptRelationship/components/ConceptRelationshipViewer.vue:72
 msgid "Are you sure you want to delete this relationship?"
 msgstr "您确定要删除此关系吗？"
 
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:312
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:360
 msgid "Are you sure you want to delete this scheme?"
 msgstr "您确定要删除该方案吗？"
+
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/DeleteConceptDialog.vue:76
+#, fuzzy
+msgid "Are you sure you want to deprecate \"%{name}\"?"
+msgstr "您确定要删除“%{name}”吗？"
 
 #: arches_lingo/src/arches_lingo/components/header/PageHeader/components/UserInteraction/components/UserInteractionMenu/components/UserInteractionTools.vue:22
 msgid "Are you sure you want to log out?"
 msgstr "您确定要退出吗？"
 
-#: arches_lingo/src/arches_lingo/components/generic/EditLog/EditLog.vue:82
+#: arches_lingo/src/arches_lingo/components/generic/ReinstateDialog.vue:28
+#, fuzzy
+msgid ""
+"Are you sure you want to reinstate \"%{name}\"? It will return to Editing "
+"state."
+msgstr "您确定要删除“%{name}”吗？"
+
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:470
+#, fuzzy
+msgid ""
+"Are you sure you want to retire this vocabulary? All concepts within it will "
+"also be retired."
+msgstr "您确定要恢复到 %{timestamp} 的状态吗？此后所做的所有更改都将被撤消。"
+
+#: arches_lingo/src/arches_lingo/components/generic/EditLog/EditLog.vue:97
 msgid ""
 "Are you sure you want to revert to the state at %{timestamp}? All changes "
 "made after this point will be undone."
 msgstr "您确定要恢复到 %{timestamp} 的状态吗？此后所做的所有更改都将被撤消。"
 
-#: arches_lingo/src/arches_lingo/pages/ConceptPage.vue:49
+#: arches_lingo/src/arches_lingo/pages/ConceptPage.vue:51
 msgid "Associated Concepts"
 msgstr "相关概念"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:52
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:58
 msgid "Associated Relationship"
 msgstr "关联关系"
 
-#: arches_lingo/src/arches_lingo/ArchesLingo.vue:87
-msgid "Authentication required."
-msgstr "需要身份验证。"
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/DeleteConceptDialog.vue:158
+msgid "Attach children to parent"
+msgstr ""
 
-#: arches_lingo/src/arches_lingo/components/sidenav/SideNav.vue:32
-msgid "Authority Editors"
-msgstr "权威编辑"
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/components/ConceptSetMemberList.vue:77
+msgid "Back to sets"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:598
+msgid "Back under active revision after prior publication."
+msgstr ""
 
 #: arches_lingo/src/arches_lingo/components/basic-search/SortAndFilterControls.vue:12
 msgid "Best Match"
@@ -262,157 +527,230 @@ msgstr "最佳匹配"
 msgid "Bright"
 msgstr "明亮的"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:73
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:81
 msgid "Broader (parent of)"
 msgstr "更广泛（父级）"
 
-#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:257
+#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:237
 msgid "Broader Concept: %{parent}"
 msgstr "更广泛的概念：%{parent}"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:185
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:362
+#: arches_lingo/src/arches_lingo/pages/LandingPage.vue:47
+#, fuzzy
+msgid "Browse and manage controlled vocabularies and concept hierarchies"
+msgstr "添加新的同义词库，管理概念层次结构"
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:492
+msgid ""
+"Build complex queries to find concepts across all schemes using multiple "
+"criteria at once."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:186
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/DeleteConceptDialog.vue:194
 #: arches_lingo/src/arches_lingo/components/concept/ConceptImages/components/ConceptImagesViewer.vue:155
-#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:157
-#: arches_lingo/src/arches_lingo/components/generic/ComponentManager/components/ComponentEditor.vue:173
-#: arches_lingo/src/arches_lingo/components/generic/EditLog/EditLog.vue:229
-#: arches_lingo/src/arches_lingo/components/generic/MetaStringViewer.vue:73
+#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:325
+#: arches_lingo/src/arches_lingo/components/generic/ComponentManager/components/ComponentEditor.vue:215
+#: arches_lingo/src/arches_lingo/components/generic/EditLog/EditLog.vue:248
+#: arches_lingo/src/arches_lingo/components/generic/MetaStringViewer.vue:142
+#: arches_lingo/src/arches_lingo/components/generic/ReinstateDialog.vue:133
 #: arches_lingo/src/arches_lingo/components/generic/ResourceListEditor/ResourceListEditor.vue:211
 #: arches_lingo/src/arches_lingo/components/header/PageHeader/components/UserInteraction/components/UserInteractionMenu/components/UserInteractionTools.vue:27
 #: arches_lingo/src/arches_lingo/components/scheme/ImportThesauri.vue:184
 #: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/ConceptIdentifierCounterField.vue:128
 #: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/ExportThesauri.vue:186
 #: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/SchemeIdentifierField.vue:109
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/SchemeURITemplateField.vue:118
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:340
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/SchemeURITemplateField.vue:120
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:388
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:477
 msgid "Cancel"
 msgstr "取消"
 
-#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:183
+#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:262
 msgid "Cannot delete the last relationship."
 msgstr "无法删除最后一个关系。"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:287
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:288
 msgid "Change Password"
 msgstr "更改密码"
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:766
+msgid ""
+"Change your password using the Password section — enter your current "
+"password and choose a new one."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/DeleteConceptDialog.vue:161
+msgid ""
+"Child concepts will be moved up to this concept's parent. For "
+"polyhierarchical concepts, all parents will receive the children."
+msgstr ""
 
 #: arches_lingo/src/arches_lingo/components/scheme/ImportThesauri.vue:137
 msgid "Choose File"
 msgstr "选择文件"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/SearchQueryBuilder.vue:48
+#: arches_lingo/src/arches_lingo/components/advanced-search/SearchQueryBuilder.vue:51
 msgid "Clear"
 msgstr "清除"
 
-#: arches_lingo/src/arches_lingo/components/basic-search/BasicSearch.vue:295
+#: arches_lingo/src/arches_lingo/components/basic-search/BasicSearch.vue:393
 msgid "Clear Input"
 msgstr "清除输入"
 
-#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/SchemeHierarchy/SchemeHierarchy.vue:73
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:551
+msgid ""
+"Click the Collections button in the toolbar to show or hide the Saved "
+"Searches and Concept Sets panel."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/SchemeHierarchy/SchemeHierarchy.vue:96
 msgid "Close"
 msgstr "关闭"
 
-#: arches_lingo/src/arches_lingo/components/generic/ComponentManager/components/ComponentEditor.vue:146
+#: arches_lingo/src/arches_lingo/components/generic/ComponentManager/components/ComponentEditor.vue:188
 msgid "close editor"
 msgstr "关闭编辑器"
 
+#: arches_lingo/src/arches_lingo/components/dashboard/BreakdownsGrid.vue:147
+msgid "Code"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:368
+msgid "Collapse all"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:388
+msgid "Collapse all paths"
+msgstr ""
+
 #: arches_lingo/src/arches_lingo/components/dashboard/MissingTranslationsPanel.vue:138
-#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:189
-#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:85
+#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:104
+#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:102
 msgid "Concept"
 msgstr "概念"
+
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/ConceptSetBrowser.vue:121
+#, fuzzy
+msgid "Concept added to set."
+msgstr "%{count} 概念已添加到集合中。"
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:300
+#, fuzzy
+msgid "Concept counter"
+msgstr "概念计数器："
 
 #: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/ConceptIdentifierCounterField.vue:104
 msgid "Concept counter:"
 msgstr "概念计数器："
 
-#: arches_lingo/src/arches_lingo/pages/ConceptPage.vue:42
+#: arches_lingo/src/arches_lingo/pages/ConceptPage.vue:44
 msgid "Concept Images"
 msgstr "概念图像"
 
-#: arches_lingo/src/arches_lingo/pages/ConceptPage.vue:28
+#: arches_lingo/src/arches_lingo/pages/ConceptPage.vue:30
 msgid "Concept Labels"
 msgstr "概念标签"
 
-#: arches_lingo/src/arches_lingo/pages/ConceptPage.vue:21
+#: arches_lingo/src/arches_lingo/pages/ConceptPage.vue:23
 msgid "Concept Metadata"
 msgstr "概念元数据"
 
-#: arches_lingo/src/arches_lingo/pages/ConceptPage.vue:35
+#: arches_lingo/src/arches_lingo/pages/ConceptPage.vue:37
 msgid "Concept Notes"
 msgstr "概念笔记"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:61
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:67
 msgid "Concept Set"
 msgstr "概念集"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:83
+#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:98
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/ConceptSetBrowser.vue:73
 msgid "Concept set created."
 msgstr "创建概念集。"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:107
+#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:122
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/ConceptSetBrowser.vue:94
 msgid "Concept set deleted."
 msgstr "概念集已删除。"
 
-#: arches_lingo/src/arches_lingo/pages/AdvancedSearch.vue:340
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:528
+#, fuzzy
+msgid "Concept sets"
+msgstr "概念集"
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/SchemeHierarchy/SchemeHierarchy.vue:87
+#: arches_lingo/src/arches_lingo/pages/AdvancedSearch.vue:350
 msgid "Concept Sets"
 msgstr "概念集"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:46
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:52
 msgid "Concept Type"
 msgstr "概念类型"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:207
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/ConceptHeaderToolbar.vue:212
 msgid "Concept type updated"
 msgstr "概念类型已更新"
 
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:662
+#, fuzzy
+msgid "Concept-level actions"
+msgstr "概念集"
+
 #: arches_lingo/src/arches_lingo/components/dashboard/DashboardStatCards.vue:37
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:329
 msgid "Concepts"
 msgstr "概念"
 
-#: arches_lingo/src/arches_lingo/components/dashboard/BreakdownsGrid.vue:23
+#: arches_lingo/src/arches_lingo/components/dashboard/BreakdownsGrid.vue:86
 msgid "Concepts by Type"
 msgstr "按类型划分的概念"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:345
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:346
 msgid "Confirm new password"
 msgstr "确认新密码"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:337
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:338
 msgid "Confirm New Password"
 msgstr "确认新密码"
 
-#: arches_lingo/src/arches_lingo/components/generic/EditLog/EditLog.vue:222
+#: arches_lingo/src/arches_lingo/components/generic/EditLog/EditLog.vue:241
 msgid "Confirm Revert"
 msgstr "确认恢复"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:328
 #: arches_lingo/src/arches_lingo/components/concept/ConceptImages/components/ConceptImagesViewer.vue:109
-#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:148
-#: arches_lingo/src/arches_lingo/components/generic/MetaStringViewer.vue:66
+#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:247
+#: arches_lingo/src/arches_lingo/components/generic/MetaStringViewer.vue:91
 #: arches_lingo/src/arches_lingo/components/header/PageHeader/components/UserInteraction/components/UserInteractionMenu/components/UserInteractionTools.vue:21
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:311
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:359
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:465
 msgid "Confirmation"
 msgstr "确认"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:65
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:73
 msgid "Contains"
 msgstr "包含"
+
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:69
+#, fuzzy
+msgid "Contributor"
+msgstr "贡献者"
 
 #: arches_lingo/src/arches_lingo/pages/ContributorsPage.vue:97
 msgid "Contributor Type"
 msgstr "贡献者类型"
 
-#: arches_lingo/src/arches_lingo/components/sidenav/components/NavReferenceData.vue:19
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:713
+#: arches_lingo/src/arches_lingo/components/sidenav/components/NavReferenceData.vue:26
 #: arches_lingo/src/arches_lingo/pages/ContributorsPage.vue:74
 msgid "Contributors"
 msgstr "贡献者"
 
-#: arches_lingo/src/arches_lingo/components/sidenav/components/NavReferenceData.vue:33
+#: arches_lingo/src/arches_lingo/components/sidenav/components/NavReferenceData.vue:42
 msgid "Controlled List Manager"
 msgstr "受控列表管理器"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptRelationship/components/ConceptRelationshipViewer.vue:60
+#: arches_lingo/src/arches_lingo/components/concept/ConceptRelationship/components/ConceptRelationshipViewer.vue:61
 msgid "Create a Concept Label before adding associated concepts"
 msgstr "在添加关联概念之前创建概念标签"
 
@@ -424,19 +762,25 @@ msgstr "在添加分层父级之前创建概念标签"
 msgid "Create a Concept Label before adding images"
 msgstr "添加图像之前创建概念标签"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptMatch/components/ConceptMatchViewer.vue:60
+#: arches_lingo/src/arches_lingo/components/concept/ConceptMatch/components/ConceptMatchViewer.vue:61
 msgid "Create a Concept Label before adding matched concepts"
 msgstr "在添加匹配的概念之前创建概念标签"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptNote/components/ConceptNoteViewer.vue:56
+#: arches_lingo/src/arches_lingo/components/concept/ConceptNote/components/ConceptNoteViewer.vue:57
 msgid "Create a Concept Label before adding notes"
 msgstr "添加注释之前创建概念标签"
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:227
+msgid ""
+"Create a new scheme from the Schemes list, or import one from a SKOS/RDF "
+"file."
+msgstr ""
 
 #: arches_lingo/src/arches_lingo/components/scheme/SchemeNamespace/components/SchemeNamespaceViewer.vue:56
 msgid "Create a Scheme Label before adding a namespace"
 msgstr "添加命名空间之前创建方案标签"
 
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeNote/components/SchemeNoteViewer.vue:56
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeNote/components/SchemeNoteViewer.vue:57
 msgid "Create a Scheme Label before adding notes"
 msgstr "添加注释之前创建方案标签"
 
@@ -448,15 +792,15 @@ msgstr "添加权限之前创建方案标签"
 msgid "Create a Scheme Label before adding standards"
 msgstr "添加标准之前创建方案标签"
 
-#: arches_lingo/src/arches_lingo/components/login/LoginForm.vue:75
+#: arches_lingo/src/arches_lingo/components/login/LoginForm.vue:78
 msgid "Create an account or log in using multi-factor authentication"
 msgstr "创建帐户或使用多重身份验证登录"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:314
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:315
 msgid "Current password"
 msgstr "当前密码"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:306
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:307
 msgid "Current Password"
 msgstr "当前密码"
 
@@ -464,54 +808,62 @@ msgstr "当前密码"
 msgid "Dark"
 msgstr "黑暗的"
 
-#: arches_lingo/src/arches_lingo/components/sidenav/components/NavNavigation.vue:19
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:158
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:69
+#: arches_lingo/src/arches_lingo/components/sidenav/components/NavNavigation.vue:22
+#: arches_lingo/src/arches_lingo/pages/LandingPage.vue:37
 msgid "Dashboard"
 msgstr "仪表板"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptLabel/components/ConceptLabelEditor.vue:125
+#: arches_lingo/src/arches_lingo/components/concept/ConceptLabel/components/ConceptLabelEditor.vue:123
 msgid ""
 "Define the label type, status, language, and time span over which it was "
 "used."
 msgstr "定义标签类型、状态、语言及其使用时间跨度。"
 
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeLicense/components/SchemeLicenseEditor.vue:158
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeLicense/components/SchemeLicenseEditor.vue:156
 msgid "Define the rights or license under which this scheme is managed."
 msgstr "定义管理该方案的权利或许可。"
 
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeStandard/components/SchemeStandardEditor.vue:140
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeStandard/components/SchemeStandardEditor.vue:139
 msgid "Define the standards that this scheme implements."
 msgstr "定义该方案实施的标准。"
 
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeLabel/components/SchemeLabelEditor.vue:143
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeLabel/components/SchemeLabelEditor.vue:142
 msgid "Define this scheme's labels, contributors, and sources."
 msgstr "定义该方案的标签、贡献者和来源。"
 
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeNamespace/components/SchemeNamespaceEditor.vue:145
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeNamespace/components/SchemeNamespaceEditor.vue:144
 msgid "Define this scheme's unique namespaces."
 msgstr "定义该方案的唯一名称空间。"
 
-#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:290
-#: arches_lingo/src/arches_lingo/components/generic/MetaStringViewer.vue:172
+#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:493
+#: arches_lingo/src/arches_lingo/components/generic/MetaStringViewer.vue:245
 msgid "delete"
 msgstr "删除"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:272
-#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:161
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:367
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:510
+#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:303
+#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:162
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/ConceptHeaderToolbar.vue:434
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/DeleteConceptDialog.vue:99
 #: arches_lingo/src/arches_lingo/components/concept/ConceptImages/components/ConceptImagesViewer.vue:160
-#: arches_lingo/src/arches_lingo/components/concept/ConceptImages/components/ConceptImagesViewer.vue:291
-#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:162
-#: arches_lingo/src/arches_lingo/components/generic/MetaStringViewer.vue:78
+#: arches_lingo/src/arches_lingo/components/concept/ConceptImages/components/ConceptImagesViewer.vue:290
+#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:337
+#: arches_lingo/src/arches_lingo/components/generic/MetaStringViewer.vue:154
 #: arches_lingo/src/arches_lingo/components/generic/ResourceListEditor/ResourceListEditor.vue:207
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:345
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:429
-#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:76
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:393
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:564
+#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:90
 msgid "Delete"
 msgstr "删除"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:511
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:430
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/DeleteConceptDialog.vue:83
+msgid "Delete all children"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/ConceptHeaderToolbar.vue:435
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/DeleteConceptDialog.vue:65
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:565
 msgid "Delete Concept"
 msgstr "删除概念"
 
@@ -523,13 +875,36 @@ msgstr "删除资源"
 msgid "Delete Resource"
 msgstr "删除资源"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:295
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/components/ConceptSetList.vue:119
+#, fuzzy
+msgid "Delete set"
+msgstr "删除概念"
+
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/DeleteConceptDialog.vue:101
+msgid "Deprecate"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/DeleteConceptDialog.vue:85
+msgid "Deprecate all children"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/DeleteConceptDialog.vue:67
+#, fuzzy
+msgid "Deprecate Concept"
+msgstr "删除概念"
+
+#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:326
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/components/ConceptSetList.vue:141
 msgid "Description"
 msgstr "描述"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/SearchResults.vue:82
+#: arches_lingo/src/arches_lingo/components/advanced-search/SearchResults.vue:84
 msgid "Deselect All"
 msgstr "取消全选"
+
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:806
+msgid "Direct only"
+msgstr ""
 
 #: arches_lingo/src/arches_lingo/composables/useEditorDirtyState.ts:33
 msgid "Discard Changes"
@@ -538,6 +913,10 @@ msgstr "放弃更改"
 #: arches_lingo/src/arches_lingo/components/header/PageHeader/components/NotificationsInteraction/components/NotificationsPanel.vue:135
 msgid "Dismiss All"
 msgstr "全部驳回"
+
+#: arches_lingo/src/arches_lingo/components/sidenav/components/NavSettings.vue:41
+msgid "Django Admin"
+msgstr ""
 
 #: arches_lingo/src/arches_lingo/components/scheme/ImportThesauri.vue:35
 msgid "Do nothing if the Scheme or Concept already exists"
@@ -557,8 +936,13 @@ msgstr "下载失败"
 msgid "Download Zip File"
 msgstr "下载压缩文件"
 
-#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:281
-#: arches_lingo/src/arches_lingo/components/generic/MetaStringViewer.vue:160
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:584
+msgid "Draft"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/concept/ConceptImages/components/ConceptImagesViewer.vue:281
+#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:480
+#: arches_lingo/src/arches_lingo/components/generic/MetaStringViewer.vue:232
 msgid "edit"
 msgstr "编辑"
 
@@ -566,8 +950,8 @@ msgstr "编辑"
 msgid "Edit concept identifier counter"
 msgstr "编辑概念标识符计数器"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:482
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:400
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/ConceptHeaderToolbar.vue:407
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:535
 #: arches_lingo/src/arches_lingo/composables/useEditLog.ts:14
 msgid "Edit History"
 msgstr "编辑历史记录"
@@ -588,23 +972,28 @@ msgstr "编辑权"
 msgid "Edit Scheme Standard"
 msgstr "编辑方案标准"
 
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/SchemeURITemplateField.vue:134
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/SchemeURITemplateField.vue:136
 msgid "Edit URL template"
 msgstr "编辑网址模板"
 
-#: arches_lingo/src/arches_lingo/components/generic/ComponentManager/components/ComponentEditor.vue:124
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:595
+#, fuzzy
+msgid "Editing"
+msgstr "继续编辑"
+
+#: arches_lingo/src/arches_lingo/components/generic/ComponentManager/components/ComponentEditor.vue:166
 msgid "Editor Tools"
 msgstr "编辑器工具"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:245
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:246
 msgid "Email"
 msgstr "电子邮件"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:251
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:252
 msgid "Email address"
 msgstr "电子邮件"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:68
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:76
 msgid "Ends with"
 msgstr "结束于"
 
@@ -612,28 +1001,72 @@ msgstr "结束于"
 msgid "Enter file name"
 msgstr "输入文件名"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:177
+#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:178
 msgid "Enter search name"
 msgstr "输入搜索名称"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:356
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/ConceptHeaderToolbar.vue:272
 msgid "Error deleting concept"
 msgstr "删除概念时出错"
 
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:334
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:382
 msgid "Error deleting scheme"
 msgstr "删除方案时出错"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:66
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/ConceptHeaderToolbar.vue:274
+#, fuzzy
+msgid "Error deprecating concept"
+msgstr "删除概念时出错"
+
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/ConceptHeaderToolbar.vue:301
+#, fuzzy
+msgid "Error reinstating concept"
+msgstr "删除概念时出错"
+
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:447
+#, fuzzy
+msgid "Error reinstating scheme"
+msgstr "删除方案时出错"
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:407
+#, fuzzy
+msgid ""
+"Every concept should have at least one Preferred Label. Labels can be added "
+"in multiple languages."
+msgstr "所有概念在该语言中都有一个首选标签。"
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:576
+msgid ""
+"Every scheme and concept has a lifecycle state that tracks its maturity from "
+"initial creation through to publication and eventual retirement."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:74
 msgid "Exact"
 msgstr "精确的"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:69
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:437
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:77
 msgid "Exists (any value)"
 msgstr "存在（任何值）"
 
-#: arches_lingo/src/arches_lingo/components/sidenav/SideNav.vue:69
-#: arches_lingo/src/arches_lingo/components/sidenav/SideNav.vue:82
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:561
+msgid ""
+"Expand a search result row to see additional details such as identifier, "
+"lifecycle state, and notes."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:367
+msgid "Expand all"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:389
+#, fuzzy
+msgid "Expand all paths"
+msgstr "展开导航"
+
+#: arches_lingo/src/arches_lingo/components/sidenav/SideNav.vue:62
+#: arches_lingo/src/arches_lingo/components/sidenav/SideNav.vue:78
 msgid "Expand navigation"
 msgstr "展开导航"
 
@@ -642,18 +1075,29 @@ msgstr "展开导航"
 msgid "Explore"
 msgstr "探索"
 
-#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/SchemeHierarchy/SchemeHierarchy.vue:65
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/SchemeHierarchy/SchemeHierarchy.vue:81
 msgid "Explore Hierarchies"
 msgstr "探索层次结构"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:490
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:495
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:95
+#, fuzzy
+msgid "Explore panel"
+msgstr "探索"
+
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/ConceptHeaderToolbar.vue:415
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/ConceptHeaderToolbar.vue:420
 #: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/ExportThesauri.vue:194
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:408
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:413
-#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:77
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:543
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:548
+#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:91
 msgid "Export"
 msgstr "出口"
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:475
+msgid ""
+"Export any scheme from its detail page to share your vocabulary or use it in "
+"another system."
+msgstr ""
 
 #: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/ExportThesauri.vue:131
 msgid "Export Format"
@@ -667,21 +1111,28 @@ msgstr "开始出口"
 msgid "Export Thesauri"
 msgstr "导出叙词表"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:140
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/ConceptSetBrowser.vue:127
+#, fuzzy
+msgid "Failed to add concept to set."
+msgstr "无法添加概念集。"
+
+#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:170
 msgid "Failed to add concepts to set."
 msgstr "无法添加概念集。"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:89
+#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:104
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/ConceptSetBrowser.vue:79
 msgid "Failed to create concept set."
 msgstr "无法创建概念集。"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:113
+#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:128
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/ConceptSetBrowser.vue:100
 msgid "Failed to delete concept set."
 msgstr "无法删除概念集。"
 
-#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:182
-#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:192
-#: arches_lingo/src/arches_lingo/components/generic/MetaStringViewer.vue:95
+#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:261
+#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:285
+#: arches_lingo/src/arches_lingo/components/generic/MetaStringViewer.vue:113
 msgid "Failed to delete data."
 msgstr "删除数据失败。"
 
@@ -689,48 +1140,66 @@ msgstr "删除数据失败。"
 msgid "Failed to delete resource"
 msgstr "删除资源失败"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:102
+#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:103
 msgid "Failed to delete search."
 msgstr "删除搜索失败。"
 
-#: arches_lingo/src/arches_lingo/components/basic-search/BasicSearch.vue:93
+#: arches_lingo/src/arches_lingo/components/basic-search/BasicSearch.vue:210
 msgid "Failed to fetch data."
 msgstr "获取数据失败。"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:62
+#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:942
+#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:987
+#, fuzzy
+msgid "Failed to load child concepts."
+msgstr "无法加载概念集。"
+
+#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:868
+#, fuzzy
+msgid "Failed to load concept path."
+msgstr "无法加载概念集。"
+
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/ConceptSetBrowser.vue:56
+#, fuzzy
+msgid "Failed to load concept set."
+msgstr "无法加载概念集。"
+
+#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:77
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/ConceptSetBrowser.vue:43
 msgid "Failed to load concept sets."
 msgstr "无法加载概念集。"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:54
+#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:55
 msgid "Failed to load saved searches."
 msgstr "无法加载已保存的搜索。"
 
-#: arches_lingo/src/arches_lingo/pages/AdvancedSearch.vue:142
+#: arches_lingo/src/arches_lingo/pages/AdvancedSearch.vue:147
 msgid "Failed to load search options."
 msgstr "无法加载搜索选项。"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:171
+#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:200
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/ConceptSetBrowser.vue:156
 msgid "Failed to remove concepts from set."
 msgstr "无法从集合中删除概念。"
 
 #: arches_lingo/src/arches_lingo/components/concept/ConceptImages/components/ConceptImagesEditor.vue:283
-#: arches_lingo/src/arches_lingo/components/concept/ConceptLabel/components/ConceptLabelEditor.vue:104
-#: arches_lingo/src/arches_lingo/components/concept/ConceptMatch/components/ConceptMatchEditor.vue:103
-#: arches_lingo/src/arches_lingo/components/concept/ConceptNote/components/ConceptNoteEditor.vue:105
-#: arches_lingo/src/arches_lingo/components/concept/ConceptRelationship/components/ConceptRelationshipEditor.vue:106
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeLabel/components/SchemeLabelEditor.vue:122
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeLicense/components/SchemeLicenseEditor.vue:137
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeNamespace/components/SchemeNamespaceEditor.vue:125
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeNote/components/SchemeNoteEditor.vue:120
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeStandard/components/SchemeStandardEditor.vue:119
+#: arches_lingo/src/arches_lingo/components/concept/ConceptLabel/components/ConceptLabelEditor.vue:102
+#: arches_lingo/src/arches_lingo/components/concept/ConceptMatch/components/ConceptMatchEditor.vue:101
+#: arches_lingo/src/arches_lingo/components/concept/ConceptNote/components/ConceptNoteEditor.vue:104
+#: arches_lingo/src/arches_lingo/components/concept/ConceptRelationship/components/ConceptRelationshipEditor.vue:104
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeLabel/components/SchemeLabelEditor.vue:121
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeLicense/components/SchemeLicenseEditor.vue:135
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeNamespace/components/SchemeNamespaceEditor.vue:124
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeNote/components/SchemeNoteEditor.vue:119
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeStandard/components/SchemeStandardEditor.vue:118
 msgid "Failed to save data."
 msgstr "保存数据失败。"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:79
+#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:80
 msgid "Failed to save search."
 msgstr "无法保存搜索。"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:215
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/ConceptHeaderToolbar.vue:221
 msgid "Failed to update concept type"
 msgstr "无法更新概念类型"
 
@@ -738,25 +1207,51 @@ msgstr "无法更新概念类型"
 msgid "File Name (optional)"
 msgstr "文件名（可选）"
 
-#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:79
+#: arches_lingo/src/arches_lingo/components/tree/components/LifecycleStateFilter.vue:24
+#, fuzzy
+msgid "Filter by lifecycle state"
+msgstr "无法获取生命周期状态"
+
+#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:93
 msgid "Filter concepts"
 msgstr "过滤概念"
 
-#: arches_lingo/src/arches_lingo/components/widgets/ConceptResourceSelectWidget/components/ConceptResourceSelectWidgetEditor.vue:194
+#: arches_lingo/src/arches_lingo/components/widgets/ConceptResourceSelectWidget/components/ConceptResourceSelectWidgetEditor.vue:202
 msgid "Filter Concepts"
 msgstr "过滤器概念"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:228
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:609
+msgid "Finalized and stable. The URI is now authoritative."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:229
 msgid "First name"
 msgstr "名"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:222
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:223
 msgid "First Name"
 msgstr "名"
 
-#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:73
+#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:87
 msgid "Focus"
 msgstr "重点"
+
+#: arches_lingo/src/arches_lingo/pages/HomePage.vue:216
+msgid "Gathering the latest statistics, this may take a moment..."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:269
+msgid "GETT"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:62
+msgid "Getting Around"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/pages/LandingPage.vue:104
+#, fuzzy
+msgid "Go to Dashboard"
+msgstr "仪表板"
 
 #: arches_lingo/src/arches_lingo/pages/ContributorsPage.vue:27
 msgid "Group"
@@ -766,7 +1261,7 @@ msgstr "团体"
 msgid "Groups"
 msgstr "团体"
 
-#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:86
+#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:103
 msgid "Guide Term"
 msgstr "指导术语"
 
@@ -775,34 +1270,39 @@ msgstr "指导术语"
 msgid "Help"
 msgstr "帮助"
 
-#: arches_lingo/src/arches_lingo/pages/AdvancedSearch.vue:267
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:435
+msgid "Hidden"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/pages/AdvancedSearch.vue:277
 msgid "Hide Saved Searches & Sets"
 msgstr "隐藏保存的搜索和设置"
 
-#: arches_lingo/src/arches_lingo/pages/ConceptPage.vue:63
+#: arches_lingo/src/arches_lingo/pages/ConceptPage.vue:65
 msgid "Hierarchical Position"
 msgstr "等级位置"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:48
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:54
 msgid "Hierarchical Relationship"
 msgstr "层级关系"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:487
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:405
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/ConceptHeaderToolbar.vue:412
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:540
 msgid "History"
 msgstr "历史"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:59
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:65
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:263
 msgid "Identifier"
 msgstr "标识符"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/SearchResults.vue:193
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:522
+#: arches_lingo/src/arches_lingo/components/advanced-search/SearchResults.vue:203
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/ConceptHeader.vue:318
 #: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/SchemeIdentifierField.vue:85
 msgid "Identifier:"
 msgstr "标识符："
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptRelationship/components/ConceptRelationshipEditor.vue:127
+#: arches_lingo/src/arches_lingo/components/concept/ConceptRelationship/components/ConceptRelationshipEditor.vue:125
 msgid ""
 "Identify concepts in this scheme that may be associated with this concept."
 msgstr "识别该方案中可能与该概念相关的概念。"
@@ -819,6 +1319,21 @@ msgstr "如果方案或概念已存在，请将其替换为新方案或概念"
 msgid "Ignore"
 msgstr "忽略"
 
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:353
+#, fuzzy
+msgid "Images"
+msgstr "添加图片"
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:458
+msgid "Import & Export"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:465
+msgid ""
+"Import an existing thesaurus in SKOS/RDF format from the Schemes list page "
+"using the Import button. Hierarchies, labels, and notes are preserved."
+msgstr ""
+
 #: arches_lingo/src/arches_lingo/components/scheme/ImportThesauri.vue:70
 msgid "Import initiated"
 msgstr "导入已启动"
@@ -831,7 +1346,19 @@ msgstr "从 SKOS 文件导入 Lingo 资源"
 msgid "Import Thesauri"
 msgstr "导入叙词表"
 
-#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:49
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:805
+msgid "Include all"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:587
+msgid "Initial working state. The record can be freely edited and deleted."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:548
+msgid "Is attributed to..."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:51
 msgid "Just now"
 msgstr "现在"
 
@@ -839,12 +1366,20 @@ msgstr "现在"
 msgid "Keep Editing"
 msgstr "继续编辑"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:43
-#: arches_lingo/src/arches_lingo/components/concept/ConceptLabel/components/ConceptLabelViewer.vue:54
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:49
+#: arches_lingo/src/arches_lingo/components/concept/ConceptLabel/components/ConceptLabelViewer.vue:55
 msgid "Label"
 msgstr "标签"
 
+#: arches_lingo/src/arches_lingo/components/dashboard/BreakdownsGrid.vue:26
+#, fuzzy
+msgid "Label Metrics"
+msgstr "标签"
+
+#: arches_lingo/src/arches_lingo/components/dashboard/BreakdownsGrid.vue:158
 #: arches_lingo/src/arches_lingo/components/dashboard/DashboardStatCards.vue:54
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:237
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:403
 msgid "Labels"
 msgstr "标签"
 
@@ -852,20 +1387,21 @@ msgstr "标签"
 msgid "Labels / Concept"
 msgstr "标签/概念"
 
-#: arches_lingo/src/arches_lingo/components/dashboard/BreakdownsGrid.vue:67
+#: arches_lingo/src/arches_lingo/components/dashboard/BreakdownsGrid.vue:133
 msgid "Labels by Language"
 msgstr "按语言分类的标签"
 
-#: arches_lingo/src/arches_lingo/components/dashboard/BreakdownsGrid.vue:44
+#: arches_lingo/src/arches_lingo/components/dashboard/BreakdownsGrid.vue:109
 msgid "Labels by Type"
 msgstr "按类型分类的标签"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:45
-#: arches_lingo/src/arches_lingo/components/concept/ConceptLabel/components/ConceptLabelViewer.vue:53
-#: arches_lingo/src/arches_lingo/components/concept/ConceptNote/components/ConceptNoteViewer.vue:66
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:51
+#: arches_lingo/src/arches_lingo/components/concept/ConceptLabel/components/ConceptLabelViewer.vue:54
+#: arches_lingo/src/arches_lingo/components/concept/ConceptNote/components/ConceptNoteViewer.vue:67
+#: arches_lingo/src/arches_lingo/components/dashboard/BreakdownsGrid.vue:144
 #: arches_lingo/src/arches_lingo/components/dashboard/MissingTranslationsPanel.vue:86
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeLabel/components/SchemeLabelViewer.vue:64
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeNote/components/SchemeNoteViewer.vue:66
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeLabel/components/SchemeLabelViewer.vue:65
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeNote/components/SchemeNoteViewer.vue:67
 msgid "Language"
 msgstr "语言"
 
@@ -873,85 +1409,111 @@ msgstr "语言"
 msgid "Language Selection"
 msgstr "语言选择"
 
-#: arches_lingo/src/arches_lingo/pages/HomePage.vue:40
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:636
+#, fuzzy
+msgid "Languages:"
+msgstr "语言"
+
+#: arches_lingo/src/arches_lingo/pages/HomePage.vue:41
 msgid "Last 24 hours"
 msgstr "过去 24 小时"
 
-#: arches_lingo/src/arches_lingo/pages/HomePage.vue:42
+#: arches_lingo/src/arches_lingo/pages/HomePage.vue:43
 msgid "Last 30 days"
 msgstr "过去 30 天"
 
-#: arches_lingo/src/arches_lingo/pages/HomePage.vue:41
+#: arches_lingo/src/arches_lingo/pages/HomePage.vue:42
 msgid "Last 7 days"
 msgstr "过去 7 天"
 
-#: arches_lingo/src/arches_lingo/pages/HomePage.vue:43
+#: arches_lingo/src/arches_lingo/pages/HomePage.vue:44
 msgid "Last 90 days"
 msgstr "过去 90 天"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:239
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:240
 msgid "Last name"
 msgstr "姓"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:233
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:234
 msgid "Last Name"
 msgstr "姓"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:572
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:513
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/ConceptHeader.vue:367
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:686
 msgid "Life cycle state:"
 msgstr "生命周期状态："
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:60
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:675
+#, fuzzy
+msgid "Lifecycle filter"
+msgstr "生命周期状态"
+
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:66
 msgid "Lifecycle State"
 msgstr "生命周期状态"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/SearchResults.vue:203
-msgid "Lifecycle:"
-msgstr "生命周期："
+#: arches_lingo/src/arches_lingo/components/tree/components/LifecycleStateFilter.vue:28
+#, fuzzy
+msgid "Lifecycle state filter"
+msgstr "生命周期状态："
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:572
+#, fuzzy
+msgid "Lifecycle States"
+msgstr "生命周期状态"
 
 #: arches_lingo/src/arches_lingo/components/header/PageHeader/components/ArchesLingoBadge.vue:53
 #: arches_lingo/src/arches_lingo/components/header/PageHeader/components/ArchesLingoBadge.vue:68
+#: arches_lingo/src/arches_lingo/pages/LandingPage.vue:83
 msgid "Lingo"
 msgstr "行话"
 
-#: arches_lingo/src/arches_lingo/components/login/LoginForm.vue:42
+#: arches_lingo/src/arches_lingo/components/login/LoginForm.vue:45
 msgid "LINGO"
 msgstr "林戈"
 
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:343
+msgid ""
+"Lingo supports polyhierarchy — a concept can have multiple broader (parent) "
+"concepts and appear in more than one branch of the tree."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:147
+msgid ""
+"Lingo will warn you before navigating away if you have unsaved edits on the "
+"current page."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/UserInteraction/UserInteraction.vue:65
 #: arches_lingo/src/arches_lingo/components/header/PageHeader/components/UserInteraction/UserInteraction.vue:66
-#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/UserInteraction/UserInteraction.vue:67
 msgid "Login"
 msgstr "登录"
 
-#: arches_lingo/src/arches_lingo/ArchesLingo.vue:65
-msgid "Login required."
-msgstr "需要登录。"
-
 #: arches_lingo/src/arches_lingo/components/header/PageHeader/components/UserInteraction/components/UserInteractionMenu/components/UserInteractionTools.vue:31
-#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/UserInteraction/components/UserInteractionMenu/components/UserInteractionTools.vue:65
-#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/UserInteraction/components/UserInteractionMenu/components/UserInteractionTools.vue:72
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/UserInteraction/components/UserInteractionMenu/components/UserInteractionTools.vue:64
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/UserInteraction/components/UserInteractionMenu/components/UserInteractionTools.vue:71
 msgid "Logout"
 msgstr "退出"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:153
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:154
 msgid "Manage your account information and security settings."
 msgstr "管理您的帐户信息和安全设置。"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptMatch/components/ConceptMatchEditor.vue:124
+#: arches_lingo/src/arches_lingo/components/concept/ConceptMatch/components/ConceptMatchEditor.vue:122
 msgid ""
 "Match concepts from other schemes that may be associated with this concept."
 msgstr "匹配可能与此概念相关的其他方案中的概念。"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptMatch/components/ConceptMatchViewer.vue:74
+#: arches_lingo/src/arches_lingo/components/concept/ConceptMatch/components/ConceptMatchViewer.vue:75
 msgid "Match Type"
 msgstr "比赛类型"
 
-#: arches_lingo/src/arches_lingo/pages/ConceptPage.vue:56
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:379
+#: arches_lingo/src/arches_lingo/pages/ConceptPage.vue:58
 msgid "Matched Concepts"
 msgstr "匹配的概念"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:55
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:61
 msgid "Matched URI"
 msgstr "匹配的URI"
 
@@ -959,52 +1521,65 @@ msgstr "匹配的URI"
 msgid "Missing Translations"
 msgstr "缺少翻译"
 
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:192
+msgid ""
+"Missing Translations shows concepts that lack a preferred label in a chosen "
+"language. Select a language to reveal the list."
+msgstr ""
+
 #: arches_lingo/src/arches_lingo/components/login/LoginLinks.vue:25
 msgid "Multi-factor login"
 msgstr "多因素登录"
 
-#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/UserInteraction/components/UserInteractionMenu/components/UserInteractionTools.vue:79
-#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/UserInteraction/components/UserInteractionMenu/components/UserInteractionTools.vue:86
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:149
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/UserInteraction/components/UserInteractionMenu/components/UserInteractionTools.vue:78
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/UserInteraction/components/UserInteractionMenu/components/UserInteractionTools.vue:85
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:150
 msgid "My Profile"
 msgstr "我的个人资料"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:285
-#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:173
+#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:316
+#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:174
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/components/ConceptSetList.vue:132
 #: arches_lingo/src/arches_lingo/components/generic/ResourceListEditor/ResourceListEditor.vue:311
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeLabel/components/SchemeLabelViewer.vue:65
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeLabel/components/SchemeLabelViewer.vue:66
 msgid "Name"
 msgstr "姓名"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:74
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:82
 msgid "Narrower (child of)"
 msgstr "更窄（子级）"
 
-#: arches_lingo/src/arches_lingo/components/sidenav/SideNav.vue:26
+#: arches_lingo/src/arches_lingo/pages/ConceptPage.vue:79
+#, fuzzy
+msgid "Narrower Concepts"
+msgstr "新概念"
+
+#: arches_lingo/src/arches_lingo/components/sidenav/SideNav.vue:25
 msgid "Navigation"
 msgstr "导航"
 
-#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:536
+#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:689
 msgid "New concept"
 msgstr "新概念"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:262
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/ConceptHeader.vue:197
 msgid "New Concept"
 msgstr "新概念"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:280
+#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:311
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/components/ConceptSetList.vue:127
 msgid "New Concept Set"
 msgstr "新概念集"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:330
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:331
 msgid "New password"
 msgstr "新密码"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:323
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:324
 msgid "New Password"
 msgstr "新密码"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:110
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:111
 msgid "New password and confirmation must match."
 msgstr "新密码和确认密码必须匹配。"
 
@@ -1013,15 +1588,16 @@ msgid "New Resource"
 msgstr "新资源"
 
 #: arches_lingo/src/arches_lingo/components/scheme/SchemeCard.vue:69
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:200
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:248
 msgid "New Scheme"
 msgstr "新方案"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:218
+#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:249
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/components/ConceptSetList.vue:61
 msgid "New Set"
 msgstr "新套装"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptRelationship/components/ConceptRelationshipViewer.vue:76
+#: arches_lingo/src/arches_lingo/components/concept/ConceptRelationship/components/ConceptRelationshipViewer.vue:77
 msgid "No associated concepts were found."
 msgstr "没有找到相关概念。"
 
@@ -1029,35 +1605,52 @@ msgstr "没有找到相关概念。"
 msgid "No concept images were found."
 msgstr "未找到概念图。"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptLabel/components/ConceptLabelViewer.vue:56
+#: arches_lingo/src/arches_lingo/components/concept/ConceptLabel/components/ConceptLabelViewer.vue:57
 msgid "No concept labels were found."
 msgstr "未找到概念标签。"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptNote/components/ConceptNoteViewer.vue:69
+#: arches_lingo/src/arches_lingo/components/concept/ConceptNote/components/ConceptNoteViewer.vue:70
 msgid "No concept notes were found."
 msgstr "未找到概念注释。"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:230
+#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:261
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/components/ConceptSetList.vue:72
 msgid "No concept sets yet."
 msgstr "尚未确定概念。"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:280
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:86
 msgid "No concepts found"
 msgstr "没有找到概念"
 
-#: arches_lingo/src/arches_lingo/components/generic/EditLog/EditLog.vue:254
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:443
+#, fuzzy
+msgid "No contributors found"
+msgstr "没有找到概念"
+
+#: arches_lingo/src/arches_lingo/components/generic/EditLog/EditLog.vue:273
 msgid "No edit history found."
 msgstr "未找到编辑历史记录。"
 
-#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:340
+#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:584
 msgid "No hierarchical parents were found."
 msgstr "没有发现有等级制度的父母。"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptMatch/components/ConceptMatchViewer.vue:76
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:620
+msgid ""
+"No longer active. Retired records are preserved for reference and their URIs "
+"remain resolvable."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/concept/ConceptMatch/components/ConceptMatchViewer.vue:77
 msgid "No matched concepts were found."
 msgstr "未找到匹配的概念。"
 
-#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:140
+#: arches_lingo/src/arches_lingo/components/concept/ConceptNarrowerConcepts/ConceptNarrowerConcepts.vue:156
+#, fuzzy
+msgid "No narrower concepts found."
+msgstr "未找到顶级概念。"
+
+#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:155
 msgid "No recent activity"
 msgstr "最近没有活动"
 
@@ -1069,15 +1662,15 @@ msgstr "尚未创建任何资源。"
 msgid "No resources match the search criteria."
 msgstr "没有符合搜索条件的资源。"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/SearchResults.vue:102
+#: arches_lingo/src/arches_lingo/components/advanced-search/SearchResults.vue:104
 msgid "No results found."
 msgstr "没有找到结果。"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:138
+#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:139
 msgid "No saved searches yet."
 msgstr "尚未保存的搜索。"
 
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeLabel/components/SchemeLabelViewer.vue:67
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeLabel/components/SchemeLabelViewer.vue:68
 msgid "No scheme labels were found."
 msgstr "未找到方案标签。"
 
@@ -1085,48 +1678,58 @@ msgstr "未找到方案标签。"
 msgid "No Scheme Namespaces were found."
 msgstr "未找到方案命名空间。"
 
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeNote/components/SchemeNoteViewer.vue:69
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeNote/components/SchemeNoteViewer.vue:70
 msgid "No scheme notes were found."
 msgstr "未找到方案注释。"
 
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeLicense/components/SchemeLicenseViewer.vue:155
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeLicense/components/SchemeLicenseViewer.vue:169
 msgid "No Scheme Rights were found."
 msgstr "未找到方案权利。"
 
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeStandard/components/SchemeStandardViewer.vue:114
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeStandard/components/SchemeStandardViewer.vue:126
 msgid "No Scheme Standards were found."
 msgstr "未找到方案标准。"
 
-#: arches_lingo/src/arches_lingo/components/basic-search/BasicSearch.vue:274
+#: arches_lingo/src/arches_lingo/components/basic-search/BasicSearch.vue:370
 msgid "No search results found"
 msgstr "没有找到搜索结果"
 
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeTopConcepts/SchemeTopConcepts.vue:120
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:440
+#, fuzzy
+msgid "No sources found"
+msgstr "没有找到概念"
+
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeTopConcepts/SchemeTopConcepts.vue:157
 msgid "No top concepts found."
 msgstr "未找到顶级概念。"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:546
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:469
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/ConceptHeader.vue:341
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:606
 msgid "No URI assigned"
 msgstr "未分配 URI"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:525
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/ConceptHeader.vue:321
 #: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/ConceptIdentifierCounterField.vue:136
 #: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/SchemeIdentifierField.vue:117
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/SchemeURITemplateField.vue:126
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/SchemeURITemplateField.vue:128
 msgid "None"
 msgstr "没有任何"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:229
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:230
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:513
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:514
 msgid "NOT"
 msgstr "不是"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:44
-#: arches_lingo/src/arches_lingo/components/concept/ConceptNote/components/ConceptNoteViewer.vue:67
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeNote/components/SchemeNoteViewer.vue:67
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:50
+#: arches_lingo/src/arches_lingo/components/concept/ConceptNote/components/ConceptNoteViewer.vue:68
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeNote/components/SchemeNoteViewer.vue:68
 msgid "Note"
 msgstr "笔记"
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:250
+#, fuzzy
+msgid "Notes"
+msgstr "笔记："
 
 #: arches_lingo/src/arches_lingo/components/advanced-search/SearchResults.vue:213
 msgid "Notes:"
@@ -1141,16 +1744,17 @@ msgstr "通知"
 msgid "Open language selector"
 msgstr "打开语言选择器"
 
-#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/UserInteraction/UserInteraction.vue:74
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/UserInteraction/UserInteraction.vue:73
 msgid "Open user menu"
 msgstr "打开用户菜单"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:300
+#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:331
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/components/ConceptSetList.vue:146
 msgid "Optional description"
 msgstr "可选描述"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetGroup.vue:146
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetGroup.vue:35
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetGroup.vue:147
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetGroup.vue:36
 msgid "OR"
 msgstr "或者"
 
@@ -1162,17 +1766,17 @@ msgstr "覆盖"
 msgid "Overwrite Options"
 msgstr "覆盖选项"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:616
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:521
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/ConceptHeader.vue:421
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:702
 msgid "Owner:"
 msgstr "所有者："
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:589
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/ConceptHeader.vue:394
 msgid "Parent Concept(s):"
 msgstr "父概念："
 
-#: arches_lingo/src/arches_lingo/components/login/LoginForm.vue:60
-#: arches_lingo/src/arches_lingo/components/login/LoginForm.vue:61
+#: arches_lingo/src/arches_lingo/components/login/LoginForm.vue:63
+#: arches_lingo/src/arches_lingo/components/login/LoginForm.vue:64
 msgid "Password"
 msgstr "密码"
 
@@ -1188,19 +1792,19 @@ msgstr "经期"
 msgid "Person"
 msgstr "人"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:169
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:170
 msgid "Personal Information"
 msgstr "个人信息"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:256
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:257
 msgid "Phone"
 msgstr "电话"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:262
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:263
 msgid "Phone number (optional)"
 msgstr "电话号码（可选）"
 
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/SchemeURITemplateField.vue:97
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/SchemeURITemplateField.vue:98
 msgid "Placeholders: <scheme_identifier>, <concept_identifier>"
 msgstr "占位符：<scheme_identifier>、<concept_identifier>"
 
@@ -1208,33 +1812,52 @@ msgstr "占位符：<scheme_identifier>、<concept_identifier>"
 msgid "Places"
 msgstr "地点"
 
-#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:80
+#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:95
 msgid "Please refine your query."
 msgstr "请完善您的查询。"
 
-#: arches_lingo/src/arches_lingo/components/sidenav/components/NavSettings.vue:19
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:415
+msgid "Preferred"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/sidenav/components/NavSettings.vue:25
 msgid "Profile"
 msgstr "轮廓"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:85
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:86
 msgid "Profile updated"
 msgstr "个人资料已更新"
 
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeNote/components/SchemeNoteEditor.vue:141
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeNote/components/SchemeNoteEditor.vue:140
 msgid ""
-"Provide notes and descriptions describing the scope and usage of this "
-"scheme."
+"Provide notes and descriptions describing the scope and usage of this scheme."
 msgstr "提供说明和说明，描述该方案的范围和用法。"
 
-#: arches_lingo/src/arches_lingo/components/basic-search/BasicSearch.vue:217
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:606
+msgid "Published"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:502
+msgid "Query builder"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/basic-search/BasicSearch.vue:343
 msgid "Quick Search"
 msgstr "快速搜索"
 
-#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:102
+#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:117
 msgid "Recent Activity"
 msgstr "最近的活动"
 
-#: arches_lingo/src/arches_lingo/components/sidenav/SideNav.vue:38
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:182
+msgid ""
+"Recent Activity lists the latest edits across all schemes. Click any "
+"resource name to navigate directly to it."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:121
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:699
+#: arches_lingo/src/arches_lingo/components/sidenav/SideNav.vue:31
 msgid "Reference Data"
 msgstr "参考数据"
 
@@ -1242,31 +1865,62 @@ msgstr "参考数据"
 msgid "Register"
 msgstr "登记"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptRelationship/components/ConceptRelationshipViewer.vue:75
+#: arches_lingo/src/arches_lingo/components/generic/ReinstateDialog.vue:140
+#: arches_lingo/src/arches_lingo/components/generic/ReinstateDialog.vue:82
+msgid "Reinstate"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/generic/ReinstateDialog.vue:58
+msgid "Reinstate this concept and all its descendants"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/generic/ReinstateDialog.vue:51
+msgid "Reinstate this concept only"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/generic/ReinstateDialog.vue:56
+msgid "Reinstate this scheme and all its concepts"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/generic/ReinstateDialog.vue:49
+msgid "Reinstate this scheme only"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/concept/ConceptRelationship/components/ConceptRelationshipViewer.vue:76
 msgid "Related Concept"
 msgstr "相关概念"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptMatch/components/ConceptMatchViewer.vue:75
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:366
+#, fuzzy
+msgid "Related Concepts"
+msgstr "相关概念"
+
+#: arches_lingo/src/arches_lingo/components/concept/ConceptMatch/components/ConceptMatchViewer.vue:76
 msgid "Related URI"
 msgstr "相关网址"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptRelationship/components/ConceptRelationshipViewer.vue:74
+#: arches_lingo/src/arches_lingo/components/concept/ConceptRelationship/components/ConceptRelationshipViewer.vue:75
 msgid "Relationship"
 msgstr "关系"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:450
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:103
 msgid "Remove condition"
 msgstr "删除条件"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:207
+#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:238
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/components/ConceptSetMemberList.vue:110
 msgid "Remove from Set"
 msgstr "从集合中删除"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetGroup.vue:128
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetGroup.vue:129
 msgid "Remove group"
 msgstr "删除组"
 
-#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:163
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:785
+msgid "Report issues or contribute on "
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:173
 msgid "Resource"
 msgstr "资源"
 
@@ -1274,35 +1928,47 @@ msgstr "资源"
 msgid "Resource deleted"
 msgstr "资源已删除"
 
-#: arches_lingo/src/arches_lingo/components/generic/EditLog/EditLog.vue:196
+#: arches_lingo/src/arches_lingo/components/generic/EditLog/EditLog.vue:215
 msgid "Resource partially reverted"
 msgstr "资源部分恢复"
 
-#: arches_lingo/src/arches_lingo/components/generic/EditLog/EditLog.vue:195
+#: arches_lingo/src/arches_lingo/components/generic/EditLog/EditLog.vue:214
 msgid "Resource reverted successfully"
 msgstr "资源恢复成功"
 
-#: arches_lingo/src/arches_lingo/pages/AdvancedSearch.vue:307
+#: arches_lingo/src/arches_lingo/pages/AdvancedSearch.vue:317
 msgid "Results"
 msgstr "结果"
 
-#: arches_lingo/src/arches_lingo/components/generic/EditLog/EditLog.vue:235
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:483
+msgid "Retire"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:617
+msgid "Retired"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/generic/EditLog/EditLog.vue:254
 msgid "Revert"
 msgstr "恢复"
 
-#: arches_lingo/src/arches_lingo/components/generic/EditLog/EditLog.vue:206
+#: arches_lingo/src/arches_lingo/components/generic/EditLog/EditLog.vue:225
 msgid "Revert failed"
 msgstr "恢复失败"
 
-#: arches_lingo/src/arches_lingo/components/generic/EditLog/EditLog.vue:291
+#: arches_lingo/src/arches_lingo/components/generic/EditLog/EditLog.vue:310
 msgid "Revert to here"
 msgstr "回到这里"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:190
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeLicense/components/SchemeLicenseViewer.vue:132
+msgid "Rights Statement"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:191
 msgid "Save"
 msgstr "节省"
 
-#: arches_lingo/src/arches_lingo/components/generic/ComponentManager/components/ComponentEditor.vue:167
+#: arches_lingo/src/arches_lingo/components/generic/ComponentManager/components/ComponentEditor.vue:209
 msgid "Save Changes"
 msgstr "保存更改"
 
@@ -1310,7 +1976,7 @@ msgstr "保存更改"
 msgid "Save concept identifier counter"
 msgstr "保存概念标识符计数器"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:127
+#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:128
 msgid "Save Current"
 msgstr "保存当前"
 
@@ -1318,99 +1984,126 @@ msgstr "保存当前"
 msgid "Save Identifier"
 msgstr "保存标识符"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:270
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:271
 msgid "Save Profile"
 msgstr "保存个人资料"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:168
+#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:169
 msgid "Save Search"
 msgstr "保存搜索"
 
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/SchemeURITemplateField.vue:108
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/SchemeURITemplateField.vue:110
 msgid "Save URL template"
 msgstr "保存网址模板"
 
-#: arches_lingo/src/arches_lingo/pages/AdvancedSearch.vue:329
+#: arches_lingo/src/arches_lingo/pages/AdvancedSearch.vue:339
 msgid "Saved"
 msgstr "已保存"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:56
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:515
+#, fuzzy
+msgid "Saved searches"
+msgstr "保存搜索"
+
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:62
 #: arches_lingo/src/arches_lingo/components/dashboard/MissingTranslationsPanel.vue:151
-#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:188
-#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:87
+#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:102
+#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:104
 msgid "Scheme"
 msgstr "方案"
 
-#: arches_lingo/src/arches_lingo/pages/SchemePage.vue:26
+#: arches_lingo/src/arches_lingo/pages/SchemePage.vue:27
 msgid "Scheme Labels"
 msgstr "方案标签"
 
-#: arches_lingo/src/arches_lingo/pages/SchemePage.vue:19
+#: arches_lingo/src/arches_lingo/pages/SchemePage.vue:20
 msgid "Scheme Metadata"
 msgstr "方案元数据"
 
-#: arches_lingo/src/arches_lingo/pages/SchemePage.vue:33
+#: arches_lingo/src/arches_lingo/pages/SchemePage.vue:34
 msgid "Scheme Notes"
 msgstr "方案注释"
 
-#: arches_lingo/src/arches_lingo/pages/SchemePage.vue:47
+#: arches_lingo/src/arches_lingo/pages/SchemePage.vue:48
 msgid "Scheme Rights"
 msgstr "计划权利"
 
-#: arches_lingo/src/arches_lingo/pages/SchemePage.vue:40
+#: arches_lingo/src/arches_lingo/pages/SchemePage.vue:41
 msgid "Scheme Standards"
 msgstr "方案标准"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:554
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:649
+msgid "Scheme-level transitions"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/ConceptHeader.vue:349
 msgid "Scheme:"
 msgstr "方案："
 
 #: arches_lingo/src/arches_lingo/components/dashboard/DashboardStatCards.vue:20
-#: arches_lingo/src/arches_lingo/components/sidenav/components/NavNavigation.vue:26
-#: arches_lingo/src/arches_lingo/pages/HomePage.vue:171
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:213
+#: arches_lingo/src/arches_lingo/pages/HomePage.vue:178
 msgid "Schemes"
 msgstr "方案"
 
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:82
 #: arches_lingo/src/arches_lingo/components/sidenav/components/NavAuthorityEditors.vue:19
+#: arches_lingo/src/arches_lingo/components/sidenav/components/NavNavigation.vue:29
+#: arches_lingo/src/arches_lingo/pages/LandingPage.vue:46
 msgid "Schemes & Concepts"
 msgstr "方案与概念"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/SearchQueryBuilder.vue:42
+#: arches_lingo/src/arches_lingo/components/advanced-search/SearchQueryBuilder.vue:45
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:108
 #: arches_lingo/src/arches_lingo/components/header/PageHeader/components/SearchDialog.vue:28
 #: arches_lingo/src/arches_lingo/components/header/PageHeader/components/SearchDialog.vue:35
 msgid "Search"
 msgstr "搜索"
 
+#: arches_lingo/src/arches_lingo/pages/LandingPage.vue:56
+msgid "Search across schemes, concepts, labels, and more"
+msgstr ""
+
 #: arches_lingo/src/arches_lingo/components/generic/ResourceListEditor/ResourceListEditor.vue:284
 msgid "Search by name..."
 msgstr "按名称搜索..."
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:281
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:88
 msgid "Search concepts..."
 msgstr "搜索概念..."
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:96
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:444
+#, fuzzy
+msgid "Search contributors..."
+msgstr "搜索概念..."
+
+#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:97
 msgid "Search deleted."
 msgstr "搜索已删除。"
 
-#: arches_lingo/src/arches_lingo/pages/AdvancedSearch.vue:166
+#: arches_lingo/src/arches_lingo/pages/AdvancedSearch.vue:171
 msgid "Search failed."
 msgstr "搜索失败。"
 
-#: arches_lingo/src/arches_lingo/components/widgets/ConceptResourceSelectWidget/components/ConceptResourceSelectWidgetEditor.vue:46
+#: arches_lingo/src/arches_lingo/components/widgets/ConceptResourceSelectWidget/components/ConceptResourceSelectWidgetEditor.vue:50
 msgid "Search returned no results"
 msgstr "搜索没有返回结果"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:73
+#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:74
 msgid "Search saved."
 msgstr "搜索已保存。"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:263
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:441
+#, fuzzy
+msgid "Search sources..."
+msgstr "搜索概念..."
+
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:85
 msgid "Search text..."
 msgstr "搜索文字..."
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/SearchResults.vue:95
-#: arches_lingo/src/arches_lingo/components/widgets/ConceptResourceSelectWidget/components/ConceptResourceSelectWidgetEditor.vue:79
+#: arches_lingo/src/arches_lingo/components/advanced-search/SearchResults.vue:97
+#: arches_lingo/src/arches_lingo/components/widgets/ConceptResourceSelectWidget/components/ConceptResourceSelectWidgetEditor.vue:49
 msgid "Searching..."
 msgstr "正在寻找..."
 
@@ -1422,39 +2115,49 @@ msgstr "选择语言"
 msgid "Select a language to see concepts missing translations."
 msgstr "选择一种语言以查看缺少翻译的概念。"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/SearchResults.vue:76
+#: arches_lingo/src/arches_lingo/components/advanced-search/SearchResults.vue:78
 msgid "Select All"
 msgstr "选择全部"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:406
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:98
 msgid "Select concept set"
 msgstr "选择概念集"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:421
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:101
 msgid "Select concept type"
 msgstr "选择概念类型"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:283
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:90
 msgid "Select concept..."
 msgstr "选择概念..."
 
-#: arches_lingo/src/arches_lingo/components/widgets/ConceptResourceSelectWidget/components/ConceptResourceSelectWidgetEditor.vue:199
+#: arches_lingo/src/arches_lingo/components/widgets/ConceptResourceSelectWidget/components/ConceptResourceSelectWidgetEditor.vue:207
 msgid "Select Concepts"
 msgstr "选择概念"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:242
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:445
+#, fuzzy
+msgid "Select contributor..."
+msgstr "选择概念..."
+
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:526
 msgid "Select facet"
 msgstr "选择面"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:351
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:93
 msgid "Select language"
 msgstr "选择语言"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:364
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:94
 msgid "Select scheme"
 msgstr "选择方案"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:393
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:442
+#, fuzzy
+msgid "Select source..."
+msgstr "选择概念..."
+
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:96
 msgid "Select state"
 msgstr "选择状态"
 
@@ -1462,15 +2165,30 @@ msgstr "选择状态"
 msgid "Select type"
 msgstr "选择类型"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:289
+#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:320
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/components/ConceptSetList.vue:136
 msgid "Set name"
 msgstr "设置名称"
 
-#: arches_lingo/src/arches_lingo/components/sidenav/SideNav.vue:44
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:134
+#: arches_lingo/src/arches_lingo/components/sidenav/SideNav.vue:37
 msgid "Settings"
 msgstr "设置"
 
-#: arches_lingo/src/arches_lingo/pages/AdvancedSearch.vue:268
+#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:565
+#, fuzzy
+msgid "Show %{count} more paths"
+msgstr "%{count} 路径"
+
+#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:573
+msgid "Show fewer paths"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:655
+msgid "Show less"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/pages/AdvancedSearch.vue:278
 msgid "Show Saved Searches & Sets"
 msgstr "显示保存的搜索和设置"
 
@@ -1478,11 +2196,12 @@ msgstr "显示保存的搜索和设置"
 msgid "Show Unread Only"
 msgstr "仅显示未读"
 
-#: arches_lingo/src/arches_lingo/components/login/LoginForm.vue:68
+#: arches_lingo/src/arches_lingo/components/login/LoginForm.vue:71
+#: arches_lingo/src/arches_lingo/pages/LandingPage.vue:113
 msgid "Sign In"
 msgstr "登入"
 
-#: arches_lingo/src/arches_lingo/components/login/LoginForm.vue:32
+#: arches_lingo/src/arches_lingo/components/login/LoginForm.vue:35
 msgid "Sign in failed."
 msgstr "登录失败。"
 
@@ -1494,11 +2213,11 @@ msgstr "注销失败。"
 msgid "SKOS File"
 msgstr "SKOS文件"
 
-#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:81
+#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:97
 msgid "Sort ascending"
 msgstr "升序排序"
 
-#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:82
+#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:98
 msgid "Sort descending"
 msgstr "降序排序"
 
@@ -1506,18 +2225,64 @@ msgstr "降序排序"
 msgid "Sorting:"
 msgstr "排序："
 
-#: arches_lingo/src/arches_lingo/components/sidenav/components/NavReferenceData.vue:26
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:68
+#, fuzzy
+msgid "Source"
+msgstr "来源"
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:726
+#: arches_lingo/src/arches_lingo/components/sidenav/components/NavReferenceData.vue:33
 #: arches_lingo/src/arches_lingo/pages/SourcesPage.vue:55
 msgid "Sources"
 msgstr "来源"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:67
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:313
+#, fuzzy
+msgid "Standards & Rights"
+msgstr "添加权利"
+
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:75
 msgid "Starts with"
 msgstr "开始于"
 
-#: arches_lingo/src/arches_lingo/components/sidenav/components/NavSettings.vue:26
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:172
+msgid ""
+"Stat cards show total Schemes, Concepts, Labels, and the average number of "
+"labels per concept."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:634
+msgid "State badges"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:779
+msgid "Support & Resources"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:428
+msgid ""
+"Synonyms or variant spellings — help users find the concept via different "
+"terms."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/sidenav/components/NavSettings.vue:33
 msgid "System Settings"
 msgstr "系统设置"
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:162
+msgid "The Dashboard gives you a bird's-eye view of your vocabulary data."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:418
+msgid ""
+"The primary display term. Each concept should have exactly one per language."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:703
+msgid ""
+"The Reference Data section of the sidebar lets you manage supporting "
+"resources that can be linked to vocabulary content."
+msgstr ""
 
 #: arches_lingo/src/arches_lingo/components/header/PageHeader/components/NotificationsInteraction/components/NotificationLinkViewer.vue:22
 msgid "The requested file could not be downloaded."
@@ -1531,14 +2296,40 @@ msgstr "主题"
 msgid "Theme Selector"
 msgstr "主题选择器"
 
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/DeleteConceptDialog.vue:131
+msgid "This action cannot be undone."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/DeleteConceptDialog.vue:94
+msgid "This concept and all its descendants will be deprecated."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/DeleteConceptDialog.vue:90
+msgid "This concept and all its descendants will be permanently deleted."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/generic/ReinstateDialog.vue:67
+msgid ""
+"This concept and all its retired descendants will be moved to Editing state."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/DeleteConceptDialog.vue:132
+msgid "This concept can be reinstated later."
+msgstr ""
+
 #: arches_lingo/src/arches_lingo/components/concept/ConceptImages/components/ConceptImagesViewer.vue:75
-#: arches_lingo/src/arches_lingo/components/concept/ConceptLabel/components/ConceptLabelViewer.vue:75
-#: arches_lingo/src/arches_lingo/components/concept/ConceptMatch/components/ConceptMatchViewer.vue:65
-#: arches_lingo/src/arches_lingo/components/concept/ConceptNote/components/ConceptNoteViewer.vue:59
-#: arches_lingo/src/arches_lingo/components/concept/ConceptRelationship/components/ConceptRelationshipViewer.vue:65
+#: arches_lingo/src/arches_lingo/components/concept/ConceptLabel/components/ConceptLabelViewer.vue:83
+#: arches_lingo/src/arches_lingo/components/concept/ConceptMatch/components/ConceptMatchViewer.vue:66
+#: arches_lingo/src/arches_lingo/components/concept/ConceptNote/components/ConceptNoteViewer.vue:60
+#: arches_lingo/src/arches_lingo/components/concept/ConceptRelationship/components/ConceptRelationshipViewer.vue:66
 #: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:95
 msgid "This concept is not editable in its current lifecycle state"
 msgstr "此概念在其当前生命周期状态下不可编辑"
+
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/components/ConceptSetMemberList.vue:124
+#, fuzzy
+msgid "This concept set has no members."
+msgstr "尚未确定概念。"
 
 #: arches_lingo/src/arches_lingo/components/generic/ResourceListEditor/ResourceListEditor.vue:189
 msgid ""
@@ -1550,19 +2341,25 @@ msgid_plural ""
 msgstr[0] ""
 msgstr[1] ""
 
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeLabel/components/SchemeLabelViewer.vue:57
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeLabel/components/SchemeLabelViewer.vue:58
 #: arches_lingo/src/arches_lingo/components/scheme/SchemeLicense/components/SchemeLicenseViewer.vue:59
 #: arches_lingo/src/arches_lingo/components/scheme/SchemeNamespace/components/SchemeNamespaceViewer.vue:59
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeNote/components/SchemeNoteViewer.vue:59
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeNote/components/SchemeNoteViewer.vue:60
 #: arches_lingo/src/arches_lingo/components/scheme/SchemeStandard/components/SchemeStandardViewer.vue:59
 msgid "This scheme is not editable in its current lifecycle state"
 msgstr "该方案在其当前生命周期状态下不可编辑"
 
-#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:108
+#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:123
 msgid "Time frame"
 msgstr "大体时间"
 
-#: arches_lingo/src/arches_lingo/components/generic/ComponentManager/components/ComponentEditor.vue:133
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:392
+msgid ""
+"To add a child concept, open the Explore panel and use the \"+\" icon that "
+"appears when hovering over a concept in the tree."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/generic/ComponentManager/components/ComponentEditor.vue:175
 msgid "toggle editor size"
 msgstr "切换编辑器大小"
 
@@ -1570,33 +2367,33 @@ msgstr "切换编辑器大小"
 msgid "Tools"
 msgstr "工具"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:57
-#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:88
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:63
+#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:105
 msgid "Top Concept"
 msgstr "顶级概念"
 
-#: arches_lingo/src/arches_lingo/pages/ConceptPage.vue:70
+#: arches_lingo/src/arches_lingo/pages/ConceptPage.vue:72
 msgid "Top Concept Of"
 msgstr "顶级概念"
 
-#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:250
+#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:229
 msgid "Top Concept Of: %{parent}"
 msgstr "顶级概念：%{parent}"
 
-#: arches_lingo/src/arches_lingo/pages/SchemePage.vue:54
+#: arches_lingo/src/arches_lingo/pages/SchemePage.vue:55
 msgid "Top Concepts"
 msgstr "热门概念"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptLabel/components/ConceptLabelViewer.vue:55
-#: arches_lingo/src/arches_lingo/components/concept/ConceptNote/components/ConceptNoteViewer.vue:68
-#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:181
+#: arches_lingo/src/arches_lingo/components/concept/ConceptLabel/components/ConceptLabelViewer.vue:56
+#: arches_lingo/src/arches_lingo/components/concept/ConceptNote/components/ConceptNoteViewer.vue:69
+#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:196
 #: arches_lingo/src/arches_lingo/components/generic/ResourceListEditor/ResourceListEditor.vue:332
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeLabel/components/SchemeLabelViewer.vue:66
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeNote/components/SchemeNoteViewer.vue:68
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeLabel/components/SchemeLabelViewer.vue:67
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeNote/components/SchemeNoteViewer.vue:69
 msgid "Type"
 msgstr "类型"
 
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/LifecycleButtons.vue:96
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/LifecycleButtons.vue:124
 msgid "Unable to change lifecycle state"
 msgstr "无法更改生命周期状态"
 
@@ -1604,54 +2401,66 @@ msgstr "无法更改生命周期状态"
 msgid "Unable to export thesaurus"
 msgstr "无法导出同义词库"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:131
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:185
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:294
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/ConceptHeader.vue:115
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/ConceptHeader.vue:99
 msgid "Unable to fetch concept"
 msgstr "无法获取概念"
 
-#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/SchemeHierarchy/SchemeHierarchy.vue:54
-#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:143
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/SchemeHierarchy/SchemeHierarchy.vue:65
+#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:138
+#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:867
+#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:941
+#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:986
 msgid "Unable to fetch concepts"
 msgstr "无法获取概念"
 
-#: arches_lingo/src/arches_lingo/pages/HomePage.vue:95
+#: arches_lingo/src/arches_lingo/pages/HomePage.vue:102
 msgid "Unable to fetch dashboard data"
 msgstr "无法获取仪表板数据"
 
-#: arches_lingo/src/arches_lingo/components/generic/EditLog/EditLog.vue:106
+#: arches_lingo/src/arches_lingo/components/generic/EditLog/EditLog.vue:121
 msgid "Unable to fetch edit history"
 msgstr "无法获取编辑历史记录"
 
-#: arches_lingo/src/arches_lingo/pages/HomePage.vue:76
+#: arches_lingo/src/arches_lingo/pages/HomePage.vue:83
 msgid "Unable to fetch languages"
 msgstr "无法获取语言"
 
-#: arches_lingo/src/arches_lingo/components/generic/ComponentManager/ComponentManager.vue:248
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/LifecycleButtons.vue:67
+#: arches_lingo/src/arches_lingo/components/generic/ComponentManager/ComponentManager.vue:264
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/LifecycleButtons.vue:95
 msgid "Unable to fetch lifecycle state"
 msgstr "无法获取生命周期状态"
 
-#: arches_lingo/src/arches_lingo/pages/HomePage.vue:117
+#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:155
+#, fuzzy
+msgid "Unable to fetch lifecycle states"
+msgstr "无法获取生命周期状态"
+
+#: arches_lingo/src/arches_lingo/pages/HomePage.vue:124
 msgid "Unable to fetch missing translations"
 msgstr "无法获取缺失的翻译"
+
+#: arches_lingo/src/arches_lingo/components/concept/ConceptNarrowerConcepts/ConceptNarrowerConcepts.vue:84
+#, fuzzy
+msgid "Unable to fetch narrower concepts"
+msgstr "无法获取热门概念"
 
 #: arches_lingo/src/arches_lingo/components/generic/ResourceListEditor/ResourceListEditor.vue:112
 msgid "Unable to fetch resources"
 msgstr "无法获取资源"
 
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:122
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:152
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:237
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:165
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:200
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:285
 msgid "Unable to fetch scheme"
 msgstr "无法获取方案"
 
-#: arches_lingo/src/arches_lingo/pages/HomePage.vue:62
-#: arches_lingo/src/arches_lingo/pages/SchemeList.vue:55
+#: arches_lingo/src/arches_lingo/pages/HomePage.vue:69
+#: arches_lingo/src/arches_lingo/pages/SchemeList.vue:81
 msgid "Unable to fetch schemes"
 msgstr "无法获取方案"
 
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeTopConcepts/SchemeTopConcepts.vue:63
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeTopConcepts/SchemeTopConcepts.vue:85
 msgid "Unable to fetch top concepts"
 msgstr "无法获取热门概念"
 
@@ -1659,7 +2468,7 @@ msgstr "无法获取热门概念"
 msgid "Unable to import SKOS file"
 msgstr "无法导入 SKOS 文件"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:62
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:63
 msgid "Unable to load profile"
 msgstr "无法加载配置文件"
 
@@ -1675,23 +2484,23 @@ msgstr "无法保存标识符"
 msgid "Unable to save scheme URL template"
 msgstr "无法保存方案 URL 模板"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:92
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:93
 msgid "Unable to update profile"
 msgstr "无法更新个人资料"
 
-#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:74
+#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:88
 msgid "Unfocus"
 msgstr "散焦"
 
-#: arches_lingo/src/arches_lingo/components/generic/EditLog/EditLog.vue:129
+#: arches_lingo/src/arches_lingo/components/generic/EditLog/EditLog.vue:144
 msgid "Unknown"
 msgstr "未知"
 
-#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:135
+#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:218
 msgid "Unknown Parent"
 msgstr "未知的父母"
 
-#: arches_lingo/src/arches_lingo/pages/HomePage.vue:194
+#: arches_lingo/src/arches_lingo/pages/HomePage.vue:201
 msgid "Unnamed scheme"
 msgstr "未命名方案"
 
@@ -1705,64 +2514,127 @@ msgstr "未保存的更改"
 msgid "Untitled"
 msgstr "无题"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:353
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:354
 msgid "Update Password"
 msgstr "更新密码"
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:756
+msgid "Update your display name, email address, and phone number."
+msgstr ""
 
 #: arches_lingo/src/arches_lingo/components/scheme/ImportThesauri.vue:191
 msgid "Upload File"
 msgstr "上传文件"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:58
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:64
 msgid "URI"
 msgstr "统一资源标识符"
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:280
+#, fuzzy
+msgid "URI template"
+msgstr "URI 模板："
 
 #: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/SchemeURITemplateField.vue:89
 msgid "URI template:"
 msgstr "URI 模板："
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:530
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:453
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/ConceptHeader.vue:326
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:591
 msgid "URI: "
 msgstr "网址："
 
-#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:200
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:541
+msgid ""
+"Use the checkboxes in search results to select concepts, then use the "
+"Concept Sets actions to add or remove them."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:447
+msgid ""
+"Use the Missing Translations table on the Dashboard to identify concepts "
+"that still need a preferred label in a given language."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:202
+msgid ""
+"Use the Schemes filter at the top of the Dashboard to focus all stats and "
+"activity on one or more specific schemes."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:438
+msgid "Used for search indexing only — not shown in displays or exports."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:215
 msgid "User"
 msgstr "用户"
 
-#: arches_lingo/src/arches_lingo/components/login/LoginForm.vue:54
-#: arches_lingo/src/arches_lingo/components/login/LoginForm.vue:55
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:206
+#: arches_lingo/src/arches_lingo/components/login/LoginForm.vue:57
+#: arches_lingo/src/arches_lingo/components/login/LoginForm.vue:58
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:207
 msgid "Username"
 msgstr "用户名"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:215
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:216
 msgid "Username cannot be changed."
 msgstr "用户名无法更改。"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/SearchResults.vue:165
+#: arches_lingo/src/arches_lingo/components/advanced-search/SearchResults.vue:175
 msgid "View"
 msgstr "看法"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/SearchResults.vue:172
+#: arches_lingo/src/arches_lingo/components/advanced-search/SearchResults.vue:182
 msgid "View concept %{label}"
 msgstr "查看概念 %{label}"
 
-#: arches_lingo/src/arches_lingo/components/login/LoginForm.vue:45
+#: arches_lingo/src/arches_lingo/pages/LandingPage.vue:38
+msgid "View statistics, recent activity, and translation coverage"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:798
+msgid "Visit "
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/pages/LandingPage.vue:87
+#, fuzzy
+msgid "Vocabulary and authority data management powered by Arches"
+msgstr "由 Arches 提供支持的词汇和规范数据管理。"
+
+#: arches_lingo/src/arches_lingo/components/login/LoginForm.vue:48
 msgid "Vocabulary and authority data management powered by Arches."
 msgstr "由 Arches 提供支持的词汇和规范数据管理。"
 
-#: arches_lingo/src/arches_lingo/pages/HomePage.vue:129
+#: arches_lingo/src/arches_lingo/pages/HomePage.vue:136
 msgid "Welcome"
 msgstr "欢迎"
 
-#: arches_lingo/src/arches_lingo/pages/HomePage.vue:127
+#: arches_lingo/src/arches_lingo/pages/LandingPage.vue:98
+#, fuzzy
+msgid "Welcome back, %{name}!"
+msgstr "欢迎，占位符0X"
+
+#: arches_lingo/src/arches_lingo/pages/HomePage.vue:134
 msgid "Welcome, %{name}"
 msgstr "欢迎，占位符0X"
 
-#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:144
+#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:159
 msgid "When"
 msgstr "什么时候"
+
+#: arches_lingo/src/arches_lingo/components/generic/ReinstateDialog.vue:41
+msgid "Would you also like to reinstate the child concepts within \"%{name}\"?"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/generic/ReinstateDialog.vue:36
+msgid "Would you also like to reinstate the concepts within \"%{name}\"?"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:688
+msgid ""
+"You can also filter by lifecycle state in the Advanced Search query builder "
+"to find all concepts at a particular stage across every scheme."
+msgstr ""
 
 #: arches_lingo/src/arches_lingo/components/header/PageHeader/components/NotificationsInteraction/components/NotificationsPanel.vue:93
 msgid "You have no new notifications"
@@ -1782,7 +2654,12 @@ msgid ""
 "Your import is being processed. You will be notified when it is complete."
 msgstr "您的导入正在处理中。完成后您将收到通知。"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:86
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:742
+#, fuzzy
+msgid "Your Profile"
+msgstr "轮廓"
+
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:87
 msgid "Your profile has been saved successfully."
 msgstr "您的个人资料已成功保存。"
 
@@ -1795,3 +2672,18 @@ msgstr "正在处理您的同义词库导出。完成后您将收到通知。"
 #: arches_lingo/src/arches_lingo/components/basic-search/SortAndFilterControls.vue:14
 msgid "Z to A"
 msgstr "Z 到 A"
+
+#~ msgid "Are you sure you want to delete this concept?"
+#~ msgstr "您确定要删除这个概念吗？"
+
+#~ msgid "Authentication required."
+#~ msgstr "需要身份验证。"
+
+#~ msgid "Authority Editors"
+#~ msgstr "权威编辑"
+
+#~ msgid "Lifecycle:"
+#~ msgstr "生命周期："
+
+#~ msgid "Login required."
+#~ msgstr "需要登录。"

@@ -10,55 +10,260 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:252
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:266
+msgid " — a short code for the scheme (e.g. "
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:137
+msgid ""
+" — access your Profile from the Settings section of the sidebar to update "
+"your name, email, and password."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:253
+msgid ""
+" — add a scope note, definition, or editorial note to describe the "
+"vocabulary's purpose."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:665
+msgid ""
+" — at the concept level, editors can delete a Draft concept (permanent "
+"removal) or deprecate an Editing concept (soft retirement that preserves its "
+"URI and history). Publish and Editing transitions are not available directly "
+"on individual concepts."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:356
+msgid " — attach illustrative images to help identify or describe the concept."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:85
+msgid ""
+" — browse, create, and manage your vocabulary schemes and their concepts."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:98
+msgid ""
+" — click Explore in the top bar to open a collapsible hierarchy tree on the "
+"left side of the screen."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:505
+msgid ""
+" — combine facets such as label, scheme, language, note content, URI, "
+"identifier, and lifecycle state. Group conditions with AND / OR logic."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:124
+msgid ""
+" — find Contributors and Sources in this sidebar section to manage the "
+"people, organizations, and bibliographic references that support your "
+"vocabulary."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:240
+msgid " — give your scheme a name in one or more languages."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:531
+msgid ""
+" — group selected concepts into named sets. Add concepts from search "
+"results, view a set's members, or remove concepts from a set."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:369
+msgid ""
+" — link concepts that are semantically associated but do not have a broader/"
+"narrower relationship."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:716
+msgid ""
+" — manage the people and organizations that contribute to your vocabularies. "
+"Contributors can be recorded as individuals (Person) or as collective bodies "
+"(Group)."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:382
+msgid ""
+" — map this concept to equivalent terms in external thesauri or authority "
+"files (e.g. exactMatch, closeMatch)."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:652
+msgid ""
+" — Publishing and moving a scheme back into Editing are controlled from the "
+"scheme header and cascade automatically to all of its concepts. When a "
+"scheme is published, concept identifiers and URIs are generated for every "
+"concept using the scheme's identifier, URI template, and concept counter."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:729
+msgid ""
+" — record the bibliographic sources that inform or support your vocabulary "
+"content, such as reference publications or authority files."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:316
+msgid ""
+" — record the standards your vocabulary conforms to and the license under "
+"which it is published."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:518
+msgid ""
+" — save your current query for quick re-use later. Saved searches appear in "
+"the Collections panel on the right."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:637
+msgid ""
+" — the current state appears as a color-coded badge in concept and scheme "
+"headers and in search results. In the hierarchy tree, badges are shown for "
+"Draft and Retired records so they stand out at a glance."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:283
+msgid ""
+" — the pattern used to mint stable linked-data URIs for every concept when "
+"the scheme is published. Use the placeholders "
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:303
+msgid ""
+" — the starting number for auto-incrementing concept identifiers. Set this "
+"before publishing — once identifiers have been assigned the counter is "
+"locked."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:678
+msgid ""
+" — use the filter button in the Explore panel to show only concepts in one "
+"or more specific states, for example to review all Draft concepts before "
+"publishing a scheme."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:111
+msgid ""
+" — use the search icon in the header to quickly find any concept or scheme "
+"by name."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:72
+msgid ""
+" — your home screen with vocabulary statistics, recent activity, and "
+"translation gaps."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:806
+msgid " for platform documentation."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:273
+#, fuzzy
+msgid " placeholder in the URI template."
+msgstr "Επεξεργασία προτύπου διεύθυνσης URL"
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:293
+msgid " to build the URI structure."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/DeleteConceptDialog.vue:54
+msgid ""
+"\"%{name}\" has %{count} direct child concept(s). How should they be handled?"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:270
+msgid "). Used as the "
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:283
 msgid "%{count} concepts"
 msgstr "Έννοιες %{count}"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:130
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/components/ConceptSetList.vue:33
+#, fuzzy
+msgid "%{count} concepts · %{updated}"
+msgstr "Έννοιες %{count}"
+
+#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:161
 msgid "%{count} concepts added to set."
 msgstr "Έννοιες %{count} προστέθηκαν στο σύνολο."
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:161
+#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:190
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/ConceptSetBrowser.vue:148
 msgid "%{count} concepts removed from set."
 msgstr "Οι έννοιες %{count} καταργήθηκαν από το σύνολο."
 
-#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:267
+#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:462
 msgid "%{count} paths"
 msgstr "Διαδρομές %{count}"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/SearchResults.vue:69
+#: arches_lingo/src/arches_lingo/components/advanced-search/SearchResults.vue:71
 msgid "%{count} results found"
 msgstr "Βρέθηκαν αποτελέσματα %{count}"
 
-#: arches_lingo/src/arches_lingo/pages/HomePage.vue:182
+#: arches_lingo/src/arches_lingo/pages/HomePage.vue:189
 msgid "%{count} schemes selected"
 msgstr "Επιλέχθηκαν σχήματα %{count}"
 
-#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/UserInteraction/UserInteraction.vue:31
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/UserInteraction/UserInteraction.vue:30
 msgid "%{firstName} %{lastName}"
 msgstr "%{firstName} %{lastName}"
 
-#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:53
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:116
+msgid "%{language} (%{code}): %{count}"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:55
 msgid "%{n} hr ago"
 msgstr "%{n} ώρες πριν"
 
-#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:51
+#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:53
 msgid "%{n} min ago"
 msgstr "%{n} λεπτά πριν"
 
-#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:55
+#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:57
 msgid "%{n}d ago"
 msgstr "%{n}d πριν"
+
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:124
+#, fuzzy
+msgid "+%{count} more"
+msgstr "Έννοιες %{count}"
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:333
+msgid ""
+"A Concept represents a single idea or term in your vocabulary. Concepts live "
+"inside Schemes and can be arranged in a hierarchy."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:217
+msgid ""
+"A Scheme is the top-level container for a controlled vocabulary — think of "
+"it as the \"book\" that holds all your concepts."
+msgstr ""
 
 #: arches_lingo/src/arches_lingo/components/basic-search/SortAndFilterControls.vue:13
 msgid "A to Z"
 msgstr "Α έως Ω"
 
-#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:160
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:50
+msgid ""
+"A web-based tool for creating and managing controlled vocabularies and "
+"thesauri."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:746
+msgid "Access your profile from Settings > Profile in the sidebar."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:192
 msgid "Action"
 msgstr "Δράση"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:324
+#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:359
 msgid "Add %{count} concepts to set"
 msgstr "Προσθέστε έννοιες %{count} για ρύθμιση"
 
@@ -66,19 +271,24 @@ msgstr "Προσθέστε έννοιες %{count} για ρύθμιση"
 msgid "Add a new thesaurus, manage concept hierarchies"
 msgstr "Προσθέστε έναν νέο θησαυρό, διαχειριστείτε τις ιεραρχίες εννοιών"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptRelationship/components/ConceptRelationshipViewer.vue:105
+#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:356
+#, fuzzy
+msgid "Add all %{count} results to set"
+msgstr "Προσθέστε έννοιες %{count} για ρύθμιση"
+
+#: arches_lingo/src/arches_lingo/components/concept/ConceptRelationship/components/ConceptRelationshipViewer.vue:113
 msgid "Add Associated Concept"
 msgstr "Προσθήκη σχετικής έννοιας"
 
-#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:75
+#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:89
 msgid "Add child"
 msgstr "Προσθήκη παιδιού"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:500
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/ConceptHeaderToolbar.vue:425
 msgid "Add Child"
 msgstr "Προσθήκη παιδιού"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetGroup.vue:108
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetGroup.vue:109
 msgid "Add Condition"
 msgstr "Προσθήκη συνθήκης"
 
@@ -86,11 +296,16 @@ msgstr "Προσθήκη συνθήκης"
 msgid "Add Contributor"
 msgstr "Προσθήκη Συντελεστή"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetGroup.vue:115
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/components/ConceptSetMemberList.vue:102
+#, fuzzy
+msgid "Add current concept"
+msgstr "Προσθήκη Αντιστοιχισμένης έννοιας"
+
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetGroup.vue:116
 msgid "Add Group"
 msgstr "Προσθήκη ομάδας"
 
-#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:226
+#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:414
 msgid "Add Hierarchical Parent"
 msgstr "Προσθήκη Ιεραρχικού Γονέα"
 
@@ -106,12 +321,12 @@ msgstr ""
 "Προσθέστε εικόνες, τίτλους εικόνων και περιγραφές για να βοηθήσετε στην "
 "απεικόνιση των χαρακτηριστικών της έννοιας."
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptLabel/components/ConceptLabelViewer.vue:87
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeLabel/components/SchemeLabelViewer.vue:96
+#: arches_lingo/src/arches_lingo/components/concept/ConceptLabel/components/ConceptLabelViewer.vue:95
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeLabel/components/SchemeLabelViewer.vue:104
 msgid "Add Label"
 msgstr "Προσθήκη ετικέτας"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptMatch/components/ConceptMatchViewer.vue:109
+#: arches_lingo/src/arches_lingo/components/concept/ConceptMatch/components/ConceptMatchViewer.vue:117
 msgid "Add Matched Concept"
 msgstr "Προσθήκη Αντιστοιχισμένης έννοιας"
 
@@ -119,18 +334,18 @@ msgstr "Προσθήκη Αντιστοιχισμένης έννοιας"
 msgid "Add Namespace"
 msgstr "Προσθήκη χώρου ονομάτων"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptNote/components/ConceptNoteViewer.vue:97
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeNote/components/SchemeNoteViewer.vue:97
+#: arches_lingo/src/arches_lingo/components/concept/ConceptNote/components/ConceptNoteViewer.vue:105
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeNote/components/SchemeNoteViewer.vue:105
 msgid "Add Note"
 msgstr "Προσθήκη Σημείωσης"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptNote/components/ConceptNoteEditor.vue:126
+#: arches_lingo/src/arches_lingo/components/concept/ConceptNote/components/ConceptNoteEditor.vue:125
 msgid "Add notes to define and provide context for concept."
 msgstr ""
 "Προσθέστε σημειώσεις για να ορίσετε και να παρέχετε το πλαίσιο για την "
 "έννοια."
 
-#: arches_lingo/src/arches_lingo/components/generic/ResourceListEditor/ResourceListEditor.vue:400
+#: arches_lingo/src/arches_lingo/components/generic/ResourceListEditor/ResourceListEditor.vue:401
 msgid "Add or edit resource name information."
 msgstr "Προσθήκη ή επεξεργασία πληροφοριών ονόματος πόρου."
 
@@ -146,16 +361,18 @@ msgstr "Προσθήκη πηγής"
 msgid "Add Standard"
 msgstr "Προσθήκη Standard"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:199
+#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:228
 msgid "Add to Set"
 msgstr "Προσθήκη στο Σετ"
 
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:419
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:554
 msgid "Add Top Concept"
 msgstr "Προσθήκη Top Concept"
 
-#: arches_lingo/src/arches_lingo/components/sidenav/components/NavNavigation.vue:33
-#: arches_lingo/src/arches_lingo/pages/AdvancedSearch.vue:261
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:488
+#: arches_lingo/src/arches_lingo/components/sidenav/components/NavNavigation.vue:36
+#: arches_lingo/src/arches_lingo/pages/AdvancedSearch.vue:271
+#: arches_lingo/src/arches_lingo/pages/LandingPage.vue:55
 msgid "Advanced Search"
 msgstr "Σύνθετη αναζήτηση"
 
@@ -163,81 +380,127 @@ msgstr "Σύνθετη αναζήτηση"
 msgid "All concepts have a preferred label in this language."
 msgstr "Όλες οι έννοιες έχουν μια προτιμώμενη ετικέτα σε αυτήν τη γλώσσα."
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:104
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:105
 msgid "All password fields are required."
 msgstr "Απαιτούνται όλα τα πεδία κωδικού πρόσβασης."
 
-#: arches_lingo/src/arches_lingo/pages/HomePage.vue:179
+#: arches_lingo/src/arches_lingo/components/generic/ReinstateDialog.vue:63
+msgid "All retired concepts within this scheme will be moved to Editing state."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/pages/HomePage.vue:186
 msgid "All schemes"
 msgstr "Όλα τα σχήματα"
 
-#: arches_lingo/src/arches_lingo/pages/HomePage.vue:44
+#: arches_lingo/src/arches_lingo/components/tree/components/LifecycleStateFilter.vue:26
+#, fuzzy
+msgid "All states"
+msgstr "Όλα τα σχήματα"
+
+#: arches_lingo/src/arches_lingo/pages/HomePage.vue:45
 msgid "All time"
 msgstr "Όλο το χρόνο"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:133
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/components/ConceptSetMemberList.vue:101
+msgid "Already in set"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:425
+msgid "Alternate"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:134
 msgid "An error occurred."
 msgstr "Παρουσιάστηκε σφάλμα."
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetGroup.vue:145
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetGroup.vue:34
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetGroup.vue:146
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetGroup.vue:35
 msgid "AND"
 msgstr "ΚΑΙ"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:619
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:525
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:289
+msgid "and "
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/ConceptHeader.vue:424
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:706
 msgid "Anonymous"
 msgstr "Ανώνυμος"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:335
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:92
 msgid "Any language"
 msgstr "Οποιαδήποτε γλώσσα"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:377
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:95
 msgid "Any scheme"
 msgstr "Οποιοδήποτε σχέδιο"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:301
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:318
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:91
 msgid "Any type"
 msgstr "Οποιουδήποτε τύπου"
 
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:46
+msgid "Arches Lingo"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/pages/LandingPage.vue:80
+msgid "Arches Logo"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/DeleteConceptDialog.vue:72
 #: arches_lingo/src/arches_lingo/components/generic/ResourceListEditor/ResourceListEditor.vue:184
 msgid "Are you sure you want to delete \"%{name}\"?"
 msgstr "Είστε βέβαιοι ότι θέλετε να διαγράψετε το \"%{name}\";"
 
-#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:149
+#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:248
 msgid "Are you sure you want to delete relationship to parent?"
 msgstr "Είστε βέβαιοι ότι θέλετε να διαγράψετε τη σχέση με τον γονέα;"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:329
-msgid "Are you sure you want to delete this concept?"
-msgstr "Είστε βέβαιοι ότι θέλετε να διαγράψετε αυτήν την έννοια;"
-
-#: arches_lingo/src/arches_lingo/components/concept/ConceptLabel/components/ConceptLabelViewer.vue:52
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeLabel/components/SchemeLabelViewer.vue:63
+#: arches_lingo/src/arches_lingo/components/concept/ConceptLabel/components/ConceptLabelViewer.vue:53
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeLabel/components/SchemeLabelViewer.vue:64
 msgid "Are you sure you want to delete this label?"
 msgstr "Είστε βέβαιοι ότι θέλετε να διαγράψετε αυτήν την ετικέτα;"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptNote/components/ConceptNoteViewer.vue:65
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeNote/components/SchemeNoteViewer.vue:65
+#: arches_lingo/src/arches_lingo/components/concept/ConceptNote/components/ConceptNoteViewer.vue:66
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeNote/components/SchemeNoteViewer.vue:66
 msgid "Are you sure you want to delete this note?"
 msgstr "Είστε βέβαιοι ότι θέλετε να διαγράψετε αυτήν τη σημείωση;"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptMatch/components/ConceptMatchViewer.vue:71
-#: arches_lingo/src/arches_lingo/components/concept/ConceptRelationship/components/ConceptRelationshipViewer.vue:71
+#: arches_lingo/src/arches_lingo/components/concept/ConceptMatch/components/ConceptMatchViewer.vue:72
+#: arches_lingo/src/arches_lingo/components/concept/ConceptRelationship/components/ConceptRelationshipViewer.vue:72
 msgid "Are you sure you want to delete this relationship?"
 msgstr "Είστε βέβαιοι ότι θέλετε να διαγράψετε αυτήν τη σχέση;"
 
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:312
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:360
 msgid "Are you sure you want to delete this scheme?"
 msgstr "Είστε βέβαιοι ότι θέλετε να διαγράψετε αυτό το σχήμα;"
+
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/DeleteConceptDialog.vue:76
+#, fuzzy
+msgid "Are you sure you want to deprecate \"%{name}\"?"
+msgstr "Είστε βέβαιοι ότι θέλετε να διαγράψετε το \"%{name}\";"
 
 #: arches_lingo/src/arches_lingo/components/header/PageHeader/components/UserInteraction/components/UserInteractionMenu/components/UserInteractionTools.vue:22
 msgid "Are you sure you want to log out?"
 msgstr "Είστε βέβαιοι ότι θέλετε να αποσυνδεθείτε;"
 
-#: arches_lingo/src/arches_lingo/components/generic/EditLog/EditLog.vue:82
+#: arches_lingo/src/arches_lingo/components/generic/ReinstateDialog.vue:28
+#, fuzzy
+msgid ""
+"Are you sure you want to reinstate \"%{name}\"? It will return to Editing "
+"state."
+msgstr "Είστε βέβαιοι ότι θέλετε να διαγράψετε το \"%{name}\";"
+
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:470
+#, fuzzy
+msgid ""
+"Are you sure you want to retire this vocabulary? All concepts within it will "
+"also be retired."
+msgstr ""
+"Είστε βέβαιοι ότι θέλετε να επιστρέψετε στην κατάσταση στο %{timestamp}; "
+"Όλες οι αλλαγές που έγιναν μετά από αυτό το σημείο θα αναιρεθούν."
+
+#: arches_lingo/src/arches_lingo/components/generic/EditLog/EditLog.vue:97
 msgid ""
 "Are you sure you want to revert to the state at %{timestamp}? All changes "
 "made after this point will be undone."
@@ -245,21 +508,25 @@ msgstr ""
 "Είστε βέβαιοι ότι θέλετε να επιστρέψετε στην κατάσταση στο %{timestamp}; "
 "Όλες οι αλλαγές που έγιναν μετά από αυτό το σημείο θα αναιρεθούν."
 
-#: arches_lingo/src/arches_lingo/pages/ConceptPage.vue:49
+#: arches_lingo/src/arches_lingo/pages/ConceptPage.vue:51
 msgid "Associated Concepts"
 msgstr "Συναφείς Έννοιες"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:52
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:58
 msgid "Associated Relationship"
 msgstr "Συνδεδεμένη σχέση"
 
-#: arches_lingo/src/arches_lingo/ArchesLingo.vue:87
-msgid "Authentication required."
-msgstr "Απαιτείται έλεγχος ταυτότητας."
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/DeleteConceptDialog.vue:158
+msgid "Attach children to parent"
+msgstr ""
 
-#: arches_lingo/src/arches_lingo/components/sidenav/SideNav.vue:32
-msgid "Authority Editors"
-msgstr "Αρχισυντάκτες"
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/components/ConceptSetMemberList.vue:77
+msgid "Back to sets"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:598
+msgid "Back under active revision after prior publication."
+msgstr ""
 
 #: arches_lingo/src/arches_lingo/components/basic-search/SortAndFilterControls.vue:12
 msgid "Best Match"
@@ -269,157 +536,230 @@ msgstr "Καλύτερος αγώνας"
 msgid "Bright"
 msgstr "Ευφυής"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:73
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:81
 msgid "Broader (parent of)"
 msgstr "Ευρύτερη (γονική)"
 
-#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:257
+#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:237
 msgid "Broader Concept: %{parent}"
 msgstr "Ευρύτερη έννοια: %{parent}"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:185
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:362
+#: arches_lingo/src/arches_lingo/pages/LandingPage.vue:47
+#, fuzzy
+msgid "Browse and manage controlled vocabularies and concept hierarchies"
+msgstr "Προσθέστε έναν νέο θησαυρό, διαχειριστείτε τις ιεραρχίες εννοιών"
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:492
+msgid ""
+"Build complex queries to find concepts across all schemes using multiple "
+"criteria at once."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:186
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/DeleteConceptDialog.vue:194
 #: arches_lingo/src/arches_lingo/components/concept/ConceptImages/components/ConceptImagesViewer.vue:155
-#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:157
-#: arches_lingo/src/arches_lingo/components/generic/ComponentManager/components/ComponentEditor.vue:173
-#: arches_lingo/src/arches_lingo/components/generic/EditLog/EditLog.vue:229
-#: arches_lingo/src/arches_lingo/components/generic/MetaStringViewer.vue:73
+#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:325
+#: arches_lingo/src/arches_lingo/components/generic/ComponentManager/components/ComponentEditor.vue:215
+#: arches_lingo/src/arches_lingo/components/generic/EditLog/EditLog.vue:248
+#: arches_lingo/src/arches_lingo/components/generic/MetaStringViewer.vue:142
+#: arches_lingo/src/arches_lingo/components/generic/ReinstateDialog.vue:133
 #: arches_lingo/src/arches_lingo/components/generic/ResourceListEditor/ResourceListEditor.vue:211
 #: arches_lingo/src/arches_lingo/components/header/PageHeader/components/UserInteraction/components/UserInteractionMenu/components/UserInteractionTools.vue:27
 #: arches_lingo/src/arches_lingo/components/scheme/ImportThesauri.vue:184
 #: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/ConceptIdentifierCounterField.vue:128
 #: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/ExportThesauri.vue:186
 #: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/SchemeIdentifierField.vue:109
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/SchemeURITemplateField.vue:118
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:340
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/SchemeURITemplateField.vue:120
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:388
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:477
 msgid "Cancel"
 msgstr "Ματαίωση"
 
-#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:183
+#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:262
 msgid "Cannot delete the last relationship."
 msgstr "Δεν είναι δυνατή η διαγραφή της τελευταίας σχέσης."
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:287
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:288
 msgid "Change Password"
 msgstr "Αλλαγή κωδικού πρόσβασης"
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:766
+msgid ""
+"Change your password using the Password section — enter your current "
+"password and choose a new one."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/DeleteConceptDialog.vue:161
+msgid ""
+"Child concepts will be moved up to this concept's parent. For "
+"polyhierarchical concepts, all parents will receive the children."
+msgstr ""
 
 #: arches_lingo/src/arches_lingo/components/scheme/ImportThesauri.vue:137
 msgid "Choose File"
 msgstr "Επιλέξτε Αρχείο"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/SearchQueryBuilder.vue:48
+#: arches_lingo/src/arches_lingo/components/advanced-search/SearchQueryBuilder.vue:51
 msgid "Clear"
 msgstr "Σαφής"
 
-#: arches_lingo/src/arches_lingo/components/basic-search/BasicSearch.vue:295
+#: arches_lingo/src/arches_lingo/components/basic-search/BasicSearch.vue:393
 msgid "Clear Input"
 msgstr "Διαγραφή εισόδου"
 
-#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/SchemeHierarchy/SchemeHierarchy.vue:73
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:551
+msgid ""
+"Click the Collections button in the toolbar to show or hide the Saved "
+"Searches and Concept Sets panel."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/SchemeHierarchy/SchemeHierarchy.vue:96
 msgid "Close"
 msgstr "Κοντά"
 
-#: arches_lingo/src/arches_lingo/components/generic/ComponentManager/components/ComponentEditor.vue:146
+#: arches_lingo/src/arches_lingo/components/generic/ComponentManager/components/ComponentEditor.vue:188
 msgid "close editor"
 msgstr "κλείσιμο συντάκτη"
 
+#: arches_lingo/src/arches_lingo/components/dashboard/BreakdownsGrid.vue:147
+msgid "Code"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:368
+msgid "Collapse all"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:388
+msgid "Collapse all paths"
+msgstr ""
+
 #: arches_lingo/src/arches_lingo/components/dashboard/MissingTranslationsPanel.vue:138
-#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:189
-#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:85
+#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:104
+#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:102
 msgid "Concept"
 msgstr "Εννοια"
+
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/ConceptSetBrowser.vue:121
+#, fuzzy
+msgid "Concept added to set."
+msgstr "Έννοιες %{count} προστέθηκαν στο σύνολο."
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:300
+#, fuzzy
+msgid "Concept counter"
+msgstr "Μετρητής εννοιών:"
 
 #: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/ConceptIdentifierCounterField.vue:104
 msgid "Concept counter:"
 msgstr "Μετρητής εννοιών:"
 
-#: arches_lingo/src/arches_lingo/pages/ConceptPage.vue:42
+#: arches_lingo/src/arches_lingo/pages/ConceptPage.vue:44
 msgid "Concept Images"
 msgstr "Εννοιολογικές εικόνες"
 
-#: arches_lingo/src/arches_lingo/pages/ConceptPage.vue:28
+#: arches_lingo/src/arches_lingo/pages/ConceptPage.vue:30
 msgid "Concept Labels"
 msgstr "Ετικέτες έννοιας"
 
-#: arches_lingo/src/arches_lingo/pages/ConceptPage.vue:21
+#: arches_lingo/src/arches_lingo/pages/ConceptPage.vue:23
 msgid "Concept Metadata"
 msgstr "Concept Metadata"
 
-#: arches_lingo/src/arches_lingo/pages/ConceptPage.vue:35
+#: arches_lingo/src/arches_lingo/pages/ConceptPage.vue:37
 msgid "Concept Notes"
 msgstr "Σημειώσεις έννοιας"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:61
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:67
 msgid "Concept Set"
 msgstr "Σύνολο έννοιας"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:83
+#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:98
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/ConceptSetBrowser.vue:73
 msgid "Concept set created."
 msgstr "Δημιουργήθηκε σύνολο έννοιας."
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:107
+#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:122
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/ConceptSetBrowser.vue:94
 msgid "Concept set deleted."
 msgstr "Το σύνολο έννοιας διαγράφηκε."
 
-#: arches_lingo/src/arches_lingo/pages/AdvancedSearch.vue:340
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:528
+#, fuzzy
+msgid "Concept sets"
+msgstr "Έννοια σύνολα"
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/SchemeHierarchy/SchemeHierarchy.vue:87
+#: arches_lingo/src/arches_lingo/pages/AdvancedSearch.vue:350
 msgid "Concept Sets"
 msgstr "Έννοια σύνολα"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:46
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:52
 msgid "Concept Type"
 msgstr "Τύπος έννοιας"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:207
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/ConceptHeaderToolbar.vue:212
 msgid "Concept type updated"
 msgstr "Ο τύπος έννοιας ενημερώθηκε"
 
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:662
+#, fuzzy
+msgid "Concept-level actions"
+msgstr "Έννοια σύνολα"
+
 #: arches_lingo/src/arches_lingo/components/dashboard/DashboardStatCards.vue:37
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:329
 msgid "Concepts"
 msgstr "Έννοιες"
 
-#: arches_lingo/src/arches_lingo/components/dashboard/BreakdownsGrid.vue:23
+#: arches_lingo/src/arches_lingo/components/dashboard/BreakdownsGrid.vue:86
 msgid "Concepts by Type"
 msgstr "Έννοιες ανά τύπο"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:345
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:346
 msgid "Confirm new password"
 msgstr "Επιβεβαίωση νέου κωδικού πρόσβασης"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:337
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:338
 msgid "Confirm New Password"
 msgstr "Επιβεβαίωση νέου κωδικού πρόσβασης"
 
-#: arches_lingo/src/arches_lingo/components/generic/EditLog/EditLog.vue:222
+#: arches_lingo/src/arches_lingo/components/generic/EditLog/EditLog.vue:241
 msgid "Confirm Revert"
 msgstr "Επιβεβαίωση Επαναφοράς"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:328
 #: arches_lingo/src/arches_lingo/components/concept/ConceptImages/components/ConceptImagesViewer.vue:109
-#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:148
-#: arches_lingo/src/arches_lingo/components/generic/MetaStringViewer.vue:66
+#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:247
+#: arches_lingo/src/arches_lingo/components/generic/MetaStringViewer.vue:91
 #: arches_lingo/src/arches_lingo/components/header/PageHeader/components/UserInteraction/components/UserInteractionMenu/components/UserInteractionTools.vue:21
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:311
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:359
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:465
 msgid "Confirmation"
 msgstr "Επιβεβαίωση"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:65
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:73
 msgid "Contains"
 msgstr "Περιέχει"
+
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:69
+#, fuzzy
+msgid "Contributor"
+msgstr "Συνεισφέροντες"
 
 #: arches_lingo/src/arches_lingo/pages/ContributorsPage.vue:97
 msgid "Contributor Type"
 msgstr "Τύπος συντελεστή"
 
-#: arches_lingo/src/arches_lingo/components/sidenav/components/NavReferenceData.vue:19
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:713
+#: arches_lingo/src/arches_lingo/components/sidenav/components/NavReferenceData.vue:26
 #: arches_lingo/src/arches_lingo/pages/ContributorsPage.vue:74
 msgid "Contributors"
 msgstr "Συνεισφέροντες"
 
-#: arches_lingo/src/arches_lingo/components/sidenav/components/NavReferenceData.vue:33
+#: arches_lingo/src/arches_lingo/components/sidenav/components/NavReferenceData.vue:42
 msgid "Controlled List Manager"
 msgstr "Διαχείριση ελεγχόμενης λίστας"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptRelationship/components/ConceptRelationshipViewer.vue:60
+#: arches_lingo/src/arches_lingo/components/concept/ConceptRelationship/components/ConceptRelationshipViewer.vue:61
 msgid "Create a Concept Label before adding associated concepts"
 msgstr "Δημιουργήστε μια ετικέτα έννοιας πριν προσθέσετε σχετικές έννοιες"
 
@@ -431,20 +771,26 @@ msgstr "Δημιουργήστε μια ετικέτα έννοιας πριν �
 msgid "Create a Concept Label before adding images"
 msgstr "Δημιουργήστε μια ετικέτα έννοιας πριν προσθέσετε εικόνες"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptMatch/components/ConceptMatchViewer.vue:60
+#: arches_lingo/src/arches_lingo/components/concept/ConceptMatch/components/ConceptMatchViewer.vue:61
 msgid "Create a Concept Label before adding matched concepts"
 msgstr ""
 "Δημιουργήστε μια ετικέτα έννοιας πριν προσθέσετε αντιστοιχισμένες έννοιες"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptNote/components/ConceptNoteViewer.vue:56
+#: arches_lingo/src/arches_lingo/components/concept/ConceptNote/components/ConceptNoteViewer.vue:57
 msgid "Create a Concept Label before adding notes"
 msgstr "Δημιουργήστε μια ετικέτα έννοιας πριν προσθέσετε σημειώσεις"
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:227
+msgid ""
+"Create a new scheme from the Schemes list, or import one from a SKOS/RDF "
+"file."
+msgstr ""
 
 #: arches_lingo/src/arches_lingo/components/scheme/SchemeNamespace/components/SchemeNamespaceViewer.vue:56
 msgid "Create a Scheme Label before adding a namespace"
 msgstr "Δημιουργήστε μια ετικέτα σχήματος πριν προσθέσετε έναν χώρο ονομάτων"
 
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeNote/components/SchemeNoteViewer.vue:56
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeNote/components/SchemeNoteViewer.vue:57
 msgid "Create a Scheme Label before adding notes"
 msgstr "Δημιουργήστε μια ετικέτα σχήματος πριν προσθέσετε σημειώσεις"
 
@@ -456,17 +802,17 @@ msgstr "Δημιουργήστε μια ετικέτα σχήματος πριν
 msgid "Create a Scheme Label before adding standards"
 msgstr "Δημιουργήστε μια ετικέτα σχήματος πριν προσθέσετε πρότυπα"
 
-#: arches_lingo/src/arches_lingo/components/login/LoginForm.vue:75
+#: arches_lingo/src/arches_lingo/components/login/LoginForm.vue:78
 msgid "Create an account or log in using multi-factor authentication"
 msgstr ""
 "Δημιουργήστε έναν λογαριασμό ή συνδεθείτε χρησιμοποιώντας έλεγχο ταυτότητας "
 "πολλαπλών παραγόντων"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:314
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:315
 msgid "Current password"
 msgstr "Τρέχων κωδικός πρόσβασης"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:306
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:307
 msgid "Current Password"
 msgstr "Τρέχων κωδικός πρόσβασης"
 
@@ -474,11 +820,14 @@ msgstr "Τρέχων κωδικός πρόσβασης"
 msgid "Dark"
 msgstr "Σκοτάδι"
 
-#: arches_lingo/src/arches_lingo/components/sidenav/components/NavNavigation.vue:19
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:158
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:69
+#: arches_lingo/src/arches_lingo/components/sidenav/components/NavNavigation.vue:22
+#: arches_lingo/src/arches_lingo/pages/LandingPage.vue:37
 msgid "Dashboard"
 msgstr "Ταμπλό"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptLabel/components/ConceptLabelEditor.vue:125
+#: arches_lingo/src/arches_lingo/components/concept/ConceptLabel/components/ConceptLabelEditor.vue:123
 msgid ""
 "Define the label type, status, language, and time span over which it was "
 "used."
@@ -486,47 +835,52 @@ msgstr ""
 "Καθορίστε τον τύπο της ετικέτας, την κατάσταση, τη γλώσσα και το χρονικό "
 "διάστημα κατά το οποίο χρησιμοποιήθηκε."
 
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeLicense/components/SchemeLicenseEditor.vue:158
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeLicense/components/SchemeLicenseEditor.vue:156
 msgid "Define the rights or license under which this scheme is managed."
 msgstr ""
 "Καθορίστε τα δικαιώματα ή την άδεια βάσει των οποίων γίνεται η διαχείριση "
 "αυτού του συστήματος."
 
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeStandard/components/SchemeStandardEditor.vue:140
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeStandard/components/SchemeStandardEditor.vue:139
 msgid "Define the standards that this scheme implements."
 msgstr "Καθορίστε τα πρότυπα που εφαρμόζει αυτό το σχήμα."
 
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeLabel/components/SchemeLabelEditor.vue:143
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeLabel/components/SchemeLabelEditor.vue:142
 msgid "Define this scheme's labels, contributors, and sources."
 msgstr ""
 "Καθορίστε τις ετικέτες, τους συντελεστές και τις πηγές αυτού του σχήματος."
 
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeNamespace/components/SchemeNamespaceEditor.vue:145
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeNamespace/components/SchemeNamespaceEditor.vue:144
 msgid "Define this scheme's unique namespaces."
 msgstr "Ορίστε τους μοναδικούς χώρους ονομάτων αυτού του σχήματος."
 
-#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:290
-#: arches_lingo/src/arches_lingo/components/generic/MetaStringViewer.vue:172
+#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:493
+#: arches_lingo/src/arches_lingo/components/generic/MetaStringViewer.vue:245
 msgid "delete"
 msgstr "διαγράφω"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:272
-#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:161
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:367
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:510
+#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:303
+#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:162
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/ConceptHeaderToolbar.vue:434
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/DeleteConceptDialog.vue:99
 #: arches_lingo/src/arches_lingo/components/concept/ConceptImages/components/ConceptImagesViewer.vue:160
-#: arches_lingo/src/arches_lingo/components/concept/ConceptImages/components/ConceptImagesViewer.vue:291
-#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:162
-#: arches_lingo/src/arches_lingo/components/generic/MetaStringViewer.vue:78
+#: arches_lingo/src/arches_lingo/components/concept/ConceptImages/components/ConceptImagesViewer.vue:290
+#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:337
+#: arches_lingo/src/arches_lingo/components/generic/MetaStringViewer.vue:154
 #: arches_lingo/src/arches_lingo/components/generic/ResourceListEditor/ResourceListEditor.vue:207
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:345
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:429
-#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:76
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:393
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:564
+#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:90
 msgid "Delete"
 msgstr "Διαγράφω"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:511
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:430
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/DeleteConceptDialog.vue:83
+msgid "Delete all children"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/ConceptHeaderToolbar.vue:435
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/DeleteConceptDialog.vue:65
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:565
 msgid "Delete Concept"
 msgstr "Διαγραφή έννοιας"
 
@@ -538,13 +892,36 @@ msgstr "Διαγραφή πόρου"
 msgid "Delete Resource"
 msgstr "Διαγραφή πόρου"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:295
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/components/ConceptSetList.vue:119
+#, fuzzy
+msgid "Delete set"
+msgstr "Διαγραφή έννοιας"
+
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/DeleteConceptDialog.vue:101
+msgid "Deprecate"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/DeleteConceptDialog.vue:85
+msgid "Deprecate all children"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/DeleteConceptDialog.vue:67
+#, fuzzy
+msgid "Deprecate Concept"
+msgstr "Διαγραφή έννοιας"
+
+#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:326
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/components/ConceptSetList.vue:141
 msgid "Description"
 msgstr "Περιγραφή"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/SearchResults.vue:82
+#: arches_lingo/src/arches_lingo/components/advanced-search/SearchResults.vue:84
 msgid "Deselect All"
 msgstr "Καταργήστε την επιλογή όλων"
+
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:806
+msgid "Direct only"
+msgstr ""
 
 #: arches_lingo/src/arches_lingo/composables/useEditorDirtyState.ts:33
 msgid "Discard Changes"
@@ -553,6 +930,10 @@ msgstr "Απόρριψη αλλαγών"
 #: arches_lingo/src/arches_lingo/components/header/PageHeader/components/NotificationsInteraction/components/NotificationsPanel.vue:135
 msgid "Dismiss All"
 msgstr "Απόρριψη όλων"
+
+#: arches_lingo/src/arches_lingo/components/sidenav/components/NavSettings.vue:41
+msgid "Django Admin"
+msgstr ""
 
 #: arches_lingo/src/arches_lingo/components/scheme/ImportThesauri.vue:35
 msgid "Do nothing if the Scheme or Concept already exists"
@@ -574,8 +955,13 @@ msgstr "Η λήψη απέτυχε"
 msgid "Download Zip File"
 msgstr "Κατεβάστε το αρχείο Zip"
 
-#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:281
-#: arches_lingo/src/arches_lingo/components/generic/MetaStringViewer.vue:160
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:584
+msgid "Draft"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/concept/ConceptImages/components/ConceptImagesViewer.vue:281
+#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:480
+#: arches_lingo/src/arches_lingo/components/generic/MetaStringViewer.vue:232
 msgid "edit"
 msgstr "εκδίδω"
 
@@ -583,8 +969,8 @@ msgstr "εκδίδω"
 msgid "Edit concept identifier counter"
 msgstr "Επεξεργασία μετρητή αναγνωριστικού έννοιας"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:482
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:400
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/ConceptHeaderToolbar.vue:407
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:535
 #: arches_lingo/src/arches_lingo/composables/useEditLog.ts:14
 msgid "Edit History"
 msgstr "Επεξεργασία Ιστορικού"
@@ -605,23 +991,28 @@ msgstr "Δικαιώματα επεξεργασίας"
 msgid "Edit Scheme Standard"
 msgstr "Επεξεργασία προτύπου σχήματος"
 
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/SchemeURITemplateField.vue:134
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/SchemeURITemplateField.vue:136
 msgid "Edit URL template"
 msgstr "Επεξεργασία προτύπου διεύθυνσης URL"
 
-#: arches_lingo/src/arches_lingo/components/generic/ComponentManager/components/ComponentEditor.vue:124
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:595
+#, fuzzy
+msgid "Editing"
+msgstr "Συνεχίστε την επεξεργασία"
+
+#: arches_lingo/src/arches_lingo/components/generic/ComponentManager/components/ComponentEditor.vue:166
 msgid "Editor Tools"
 msgstr "Εργαλεία επεξεργασίας"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:245
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:246
 msgid "Email"
 msgstr "E-mail"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:251
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:252
 msgid "Email address"
 msgstr "Διεύθυνση ηλεκτρονικού ταχυδρομείου"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:68
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:76
 msgid "Ends with"
 msgstr "Τελειώνει με"
 
@@ -629,28 +1020,72 @@ msgstr "Τελειώνει με"
 msgid "Enter file name"
 msgstr "Εισαγάγετε το όνομα αρχείου"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:177
+#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:178
 msgid "Enter search name"
 msgstr "Εισαγάγετε το όνομα αναζήτησης"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:356
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/ConceptHeaderToolbar.vue:272
 msgid "Error deleting concept"
 msgstr "Σφάλμα κατά τη διαγραφή της έννοιας"
 
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:334
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:382
 msgid "Error deleting scheme"
 msgstr "Σφάλμα κατά τη διαγραφή του σχήματος"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:66
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/ConceptHeaderToolbar.vue:274
+#, fuzzy
+msgid "Error deprecating concept"
+msgstr "Σφάλμα κατά τη διαγραφή της έννοιας"
+
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/ConceptHeaderToolbar.vue:301
+#, fuzzy
+msgid "Error reinstating concept"
+msgstr "Σφάλμα κατά τη διαγραφή της έννοιας"
+
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:447
+#, fuzzy
+msgid "Error reinstating scheme"
+msgstr "Σφάλμα κατά τη διαγραφή του σχήματος"
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:407
+#, fuzzy
+msgid ""
+"Every concept should have at least one Preferred Label. Labels can be added "
+"in multiple languages."
+msgstr "Όλες οι έννοιες έχουν μια προτιμώμενη ετικέτα σε αυτήν τη γλώσσα."
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:576
+msgid ""
+"Every scheme and concept has a lifecycle state that tracks its maturity from "
+"initial creation through to publication and eventual retirement."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:74
 msgid "Exact"
 msgstr "Ακριβής"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:69
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:437
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:77
 msgid "Exists (any value)"
 msgstr "Υπάρχει (οποιαδήποτε τιμή)"
 
-#: arches_lingo/src/arches_lingo/components/sidenav/SideNav.vue:69
-#: arches_lingo/src/arches_lingo/components/sidenav/SideNav.vue:82
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:561
+msgid ""
+"Expand a search result row to see additional details such as identifier, "
+"lifecycle state, and notes."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:367
+msgid "Expand all"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:389
+#, fuzzy
+msgid "Expand all paths"
+msgstr "Αναπτύξτε την πλοήγηση"
+
+#: arches_lingo/src/arches_lingo/components/sidenav/SideNav.vue:62
+#: arches_lingo/src/arches_lingo/components/sidenav/SideNav.vue:78
 msgid "Expand navigation"
 msgstr "Αναπτύξτε την πλοήγηση"
 
@@ -659,18 +1094,29 @@ msgstr "Αναπτύξτε την πλοήγηση"
 msgid "Explore"
 msgstr "Εξερευνώ"
 
-#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/SchemeHierarchy/SchemeHierarchy.vue:65
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/SchemeHierarchy/SchemeHierarchy.vue:81
 msgid "Explore Hierarchies"
 msgstr "Εξερευνήστε Ιεραρχίες"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:490
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:495
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:95
+#, fuzzy
+msgid "Explore panel"
+msgstr "Εξερευνώ"
+
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/ConceptHeaderToolbar.vue:415
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/ConceptHeaderToolbar.vue:420
 #: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/ExportThesauri.vue:194
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:408
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:413
-#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:77
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:543
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:548
+#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:91
 msgid "Export"
 msgstr "Εξαγωγή"
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:475
+msgid ""
+"Export any scheme from its detail page to share your vocabulary or use it in "
+"another system."
+msgstr ""
 
 #: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/ExportThesauri.vue:131
 msgid "Export Format"
@@ -684,21 +1130,28 @@ msgstr "Ξεκίνησε η εξαγωγή"
 msgid "Export Thesauri"
 msgstr "Θησαυροί εξαγωγής"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:140
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/ConceptSetBrowser.vue:127
+#, fuzzy
+msgid "Failed to add concept to set."
+msgstr "Αποτυχία προσθήκης εννοιών στο σύνολο."
+
+#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:170
 msgid "Failed to add concepts to set."
 msgstr "Αποτυχία προσθήκης εννοιών στο σύνολο."
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:89
+#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:104
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/ConceptSetBrowser.vue:79
 msgid "Failed to create concept set."
 msgstr "Αποτυχία δημιουργίας συνόλου ιδέας."
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:113
+#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:128
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/ConceptSetBrowser.vue:100
 msgid "Failed to delete concept set."
 msgstr "Αποτυχία διαγραφής συνόλου εννοιών."
 
-#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:182
-#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:192
-#: arches_lingo/src/arches_lingo/components/generic/MetaStringViewer.vue:95
+#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:261
+#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:285
+#: arches_lingo/src/arches_lingo/components/generic/MetaStringViewer.vue:113
 msgid "Failed to delete data."
 msgstr "Αποτυχία διαγραφής δεδομένων."
 
@@ -706,48 +1159,66 @@ msgstr "Αποτυχία διαγραφής δεδομένων."
 msgid "Failed to delete resource"
 msgstr "Απέτυχε η διαγραφή του πόρου"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:102
+#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:103
 msgid "Failed to delete search."
 msgstr "Αποτυχία διαγραφής αναζήτησης."
 
-#: arches_lingo/src/arches_lingo/components/basic-search/BasicSearch.vue:93
+#: arches_lingo/src/arches_lingo/components/basic-search/BasicSearch.vue:210
 msgid "Failed to fetch data."
 msgstr "Η ανάκτηση δεδομένων απέτυχε."
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:62
+#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:942
+#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:987
+#, fuzzy
+msgid "Failed to load child concepts."
+msgstr "Αποτυχία φόρτωσης συνόλων εννοιών."
+
+#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:868
+#, fuzzy
+msgid "Failed to load concept path."
+msgstr "Αποτυχία φόρτωσης συνόλων εννοιών."
+
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/ConceptSetBrowser.vue:56
+#, fuzzy
+msgid "Failed to load concept set."
+msgstr "Αποτυχία φόρτωσης συνόλων εννοιών."
+
+#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:77
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/ConceptSetBrowser.vue:43
 msgid "Failed to load concept sets."
 msgstr "Αποτυχία φόρτωσης συνόλων εννοιών."
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:54
+#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:55
 msgid "Failed to load saved searches."
 msgstr "Αποτυχία φόρτωσης αποθηκευμένων αναζητήσεων."
 
-#: arches_lingo/src/arches_lingo/pages/AdvancedSearch.vue:142
+#: arches_lingo/src/arches_lingo/pages/AdvancedSearch.vue:147
 msgid "Failed to load search options."
 msgstr "Η φόρτωση των επιλογών αναζήτησης απέτυχε."
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:171
+#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:200
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/ConceptSetBrowser.vue:156
 msgid "Failed to remove concepts from set."
 msgstr "Αποτυχία κατάργησης εννοιών από το σύνολο."
 
 #: arches_lingo/src/arches_lingo/components/concept/ConceptImages/components/ConceptImagesEditor.vue:283
-#: arches_lingo/src/arches_lingo/components/concept/ConceptLabel/components/ConceptLabelEditor.vue:104
-#: arches_lingo/src/arches_lingo/components/concept/ConceptMatch/components/ConceptMatchEditor.vue:103
-#: arches_lingo/src/arches_lingo/components/concept/ConceptNote/components/ConceptNoteEditor.vue:105
-#: arches_lingo/src/arches_lingo/components/concept/ConceptRelationship/components/ConceptRelationshipEditor.vue:106
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeLabel/components/SchemeLabelEditor.vue:122
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeLicense/components/SchemeLicenseEditor.vue:137
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeNamespace/components/SchemeNamespaceEditor.vue:125
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeNote/components/SchemeNoteEditor.vue:120
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeStandard/components/SchemeStandardEditor.vue:119
+#: arches_lingo/src/arches_lingo/components/concept/ConceptLabel/components/ConceptLabelEditor.vue:102
+#: arches_lingo/src/arches_lingo/components/concept/ConceptMatch/components/ConceptMatchEditor.vue:101
+#: arches_lingo/src/arches_lingo/components/concept/ConceptNote/components/ConceptNoteEditor.vue:104
+#: arches_lingo/src/arches_lingo/components/concept/ConceptRelationship/components/ConceptRelationshipEditor.vue:104
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeLabel/components/SchemeLabelEditor.vue:121
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeLicense/components/SchemeLicenseEditor.vue:135
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeNamespace/components/SchemeNamespaceEditor.vue:124
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeNote/components/SchemeNoteEditor.vue:119
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeStandard/components/SchemeStandardEditor.vue:118
 msgid "Failed to save data."
 msgstr "Αποτυχία αποθήκευσης δεδομένων."
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:79
+#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:80
 msgid "Failed to save search."
 msgstr "Αποτυχία αποθήκευσης αναζήτησης."
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:215
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/ConceptHeaderToolbar.vue:221
 msgid "Failed to update concept type"
 msgstr "Η ενημέρωση του τύπου έννοιας απέτυχε"
 
@@ -755,25 +1226,51 @@ msgstr "Η ενημέρωση του τύπου έννοιας απέτυχε"
 msgid "File Name (optional)"
 msgstr "Όνομα αρχείου (προαιρετικό)"
 
-#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:79
+#: arches_lingo/src/arches_lingo/components/tree/components/LifecycleStateFilter.vue:24
+#, fuzzy
+msgid "Filter by lifecycle state"
+msgstr "Δεν είναι δυνατή η ανάκτηση της κατάστασης του κύκλου ζωής"
+
+#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:93
 msgid "Filter concepts"
 msgstr "Έννοιες φίλτρου"
 
-#: arches_lingo/src/arches_lingo/components/widgets/ConceptResourceSelectWidget/components/ConceptResourceSelectWidgetEditor.vue:194
+#: arches_lingo/src/arches_lingo/components/widgets/ConceptResourceSelectWidget/components/ConceptResourceSelectWidgetEditor.vue:202
 msgid "Filter Concepts"
 msgstr "Έννοιες φίλτρου"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:228
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:609
+msgid "Finalized and stable. The URI is now authoritative."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:229
 msgid "First name"
 msgstr "Ονομα"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:222
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:223
 msgid "First Name"
 msgstr "Ονομα"
 
-#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:73
+#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:87
 msgid "Focus"
 msgstr "Εστία"
+
+#: arches_lingo/src/arches_lingo/pages/HomePage.vue:216
+msgid "Gathering the latest statistics, this may take a moment..."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:269
+msgid "GETT"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:62
+msgid "Getting Around"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/pages/LandingPage.vue:104
+#, fuzzy
+msgid "Go to Dashboard"
+msgstr "Ταμπλό"
 
 #: arches_lingo/src/arches_lingo/pages/ContributorsPage.vue:27
 msgid "Group"
@@ -783,7 +1280,7 @@ msgstr "Ομάδα"
 msgid "Groups"
 msgstr "Ομάδες"
 
-#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:86
+#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:103
 msgid "Guide Term"
 msgstr "Όρος οδηγός"
 
@@ -792,39 +1289,44 @@ msgstr "Όρος οδηγός"
 msgid "Help"
 msgstr "Βοήθεια"
 
-#: arches_lingo/src/arches_lingo/pages/AdvancedSearch.vue:267
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:435
+msgid "Hidden"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/pages/AdvancedSearch.vue:277
 msgid "Hide Saved Searches & Sets"
 msgstr "Απόκρυψη αποθηκευμένων αναζητήσεων και συνόλων"
 
-#: arches_lingo/src/arches_lingo/pages/ConceptPage.vue:63
+#: arches_lingo/src/arches_lingo/pages/ConceptPage.vue:65
 msgid "Hierarchical Position"
 msgstr "Ιεραρχική Θέση"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:48
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:54
 msgid "Hierarchical Relationship"
 msgstr "Ιεραρχική Σχέση"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:487
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:405
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/ConceptHeaderToolbar.vue:412
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:540
 msgid "History"
 msgstr "Ιστορία"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:59
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:65
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:263
 msgid "Identifier"
 msgstr "Αναγνωριστικό"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/SearchResults.vue:193
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:522
+#: arches_lingo/src/arches_lingo/components/advanced-search/SearchResults.vue:203
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/ConceptHeader.vue:318
 #: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/SchemeIdentifierField.vue:85
 msgid "Identifier:"
 msgstr "Αναγνωριστικό:"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptRelationship/components/ConceptRelationshipEditor.vue:127
+#: arches_lingo/src/arches_lingo/components/concept/ConceptRelationship/components/ConceptRelationshipEditor.vue:125
 msgid ""
 "Identify concepts in this scheme that may be associated with this concept."
 msgstr ""
-"Προσδιορίστε έννοιες σε αυτό το σχήμα που μπορεί να σχετίζονται με αυτήν την"
-" έννοια."
+"Προσδιορίστε έννοιες σε αυτό το σχήμα που μπορεί να σχετίζονται με αυτήν την "
+"έννοια."
 
 #: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionEditor.vue:126
 msgid "Identify this concept's parent(s)."
@@ -838,6 +1340,21 @@ msgstr "Εάν υπάρχει ήδη ένα Σχέδιο ή Έννοια, αντ
 msgid "Ignore"
 msgstr "Αγνοώ"
 
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:353
+#, fuzzy
+msgid "Images"
+msgstr "Προσθήκη εικόνας"
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:458
+msgid "Import & Export"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:465
+msgid ""
+"Import an existing thesaurus in SKOS/RDF format from the Schemes list page "
+"using the Import button. Hierarchies, labels, and notes are preserved."
+msgstr ""
+
 #: arches_lingo/src/arches_lingo/components/scheme/ImportThesauri.vue:70
 msgid "Import initiated"
 msgstr "Ξεκίνησε η εισαγωγή"
@@ -850,7 +1367,19 @@ msgstr "Εισαγωγή πόρων Lingo από το αρχείο SKOS"
 msgid "Import Thesauri"
 msgstr "Εισαγωγή Θησαυρών"
 
-#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:49
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:805
+msgid "Include all"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:587
+msgid "Initial working state. The record can be freely edited and deleted."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:548
+msgid "Is attributed to..."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:51
 msgid "Just now"
 msgstr "Μόλις τώρα"
 
@@ -858,12 +1387,20 @@ msgstr "Μόλις τώρα"
 msgid "Keep Editing"
 msgstr "Συνεχίστε την επεξεργασία"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:43
-#: arches_lingo/src/arches_lingo/components/concept/ConceptLabel/components/ConceptLabelViewer.vue:54
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:49
+#: arches_lingo/src/arches_lingo/components/concept/ConceptLabel/components/ConceptLabelViewer.vue:55
 msgid "Label"
 msgstr "Επιγραφή"
 
+#: arches_lingo/src/arches_lingo/components/dashboard/BreakdownsGrid.vue:26
+#, fuzzy
+msgid "Label Metrics"
+msgstr "Ετικέτες"
+
+#: arches_lingo/src/arches_lingo/components/dashboard/BreakdownsGrid.vue:158
 #: arches_lingo/src/arches_lingo/components/dashboard/DashboardStatCards.vue:54
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:237
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:403
 msgid "Labels"
 msgstr "Ετικέτες"
 
@@ -871,20 +1408,21 @@ msgstr "Ετικέτες"
 msgid "Labels / Concept"
 msgstr "Ετικέτες / Έννοια"
 
-#: arches_lingo/src/arches_lingo/components/dashboard/BreakdownsGrid.vue:67
+#: arches_lingo/src/arches_lingo/components/dashboard/BreakdownsGrid.vue:133
 msgid "Labels by Language"
 msgstr "Ετικέτες ανά γλώσσα"
 
-#: arches_lingo/src/arches_lingo/components/dashboard/BreakdownsGrid.vue:44
+#: arches_lingo/src/arches_lingo/components/dashboard/BreakdownsGrid.vue:109
 msgid "Labels by Type"
 msgstr "Ετικέτες ανά τύπο"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:45
-#: arches_lingo/src/arches_lingo/components/concept/ConceptLabel/components/ConceptLabelViewer.vue:53
-#: arches_lingo/src/arches_lingo/components/concept/ConceptNote/components/ConceptNoteViewer.vue:66
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:51
+#: arches_lingo/src/arches_lingo/components/concept/ConceptLabel/components/ConceptLabelViewer.vue:54
+#: arches_lingo/src/arches_lingo/components/concept/ConceptNote/components/ConceptNoteViewer.vue:67
+#: arches_lingo/src/arches_lingo/components/dashboard/BreakdownsGrid.vue:144
 #: arches_lingo/src/arches_lingo/components/dashboard/MissingTranslationsPanel.vue:86
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeLabel/components/SchemeLabelViewer.vue:64
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeNote/components/SchemeNoteViewer.vue:66
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeLabel/components/SchemeLabelViewer.vue:65
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeNote/components/SchemeNoteViewer.vue:67
 msgid "Language"
 msgstr "Γλώσσα"
 
@@ -892,89 +1430,115 @@ msgstr "Γλώσσα"
 msgid "Language Selection"
 msgstr "Επιλογή Γλώσσας"
 
-#: arches_lingo/src/arches_lingo/pages/HomePage.vue:40
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:636
+#, fuzzy
+msgid "Languages:"
+msgstr "Γλώσσα"
+
+#: arches_lingo/src/arches_lingo/pages/HomePage.vue:41
 msgid "Last 24 hours"
 msgstr "Τελευταίες 24 ώρες"
 
-#: arches_lingo/src/arches_lingo/pages/HomePage.vue:42
+#: arches_lingo/src/arches_lingo/pages/HomePage.vue:43
 msgid "Last 30 days"
 msgstr "Τελευταίες 30 ημέρες"
 
-#: arches_lingo/src/arches_lingo/pages/HomePage.vue:41
+#: arches_lingo/src/arches_lingo/pages/HomePage.vue:42
 msgid "Last 7 days"
 msgstr "Τελευταίες 7 μέρες"
 
-#: arches_lingo/src/arches_lingo/pages/HomePage.vue:43
+#: arches_lingo/src/arches_lingo/pages/HomePage.vue:44
 msgid "Last 90 days"
 msgstr "Τελευταίες 90 ημέρες"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:239
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:240
 msgid "Last name"
 msgstr "Επώνυμο"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:233
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:234
 msgid "Last Name"
 msgstr "Επώνυμο"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:572
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:513
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/ConceptHeader.vue:367
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:686
 msgid "Life cycle state:"
 msgstr "Κατάσταση κύκλου ζωής:"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:60
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:675
+#, fuzzy
+msgid "Lifecycle filter"
+msgstr "Κατάσταση κύκλου ζωής"
+
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:66
 msgid "Lifecycle State"
 msgstr "Κατάσταση κύκλου ζωής"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/SearchResults.vue:203
-msgid "Lifecycle:"
-msgstr "Κύκλος ζωής:"
+#: arches_lingo/src/arches_lingo/components/tree/components/LifecycleStateFilter.vue:28
+#, fuzzy
+msgid "Lifecycle state filter"
+msgstr "Κατάσταση κύκλου ζωής:"
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:572
+#, fuzzy
+msgid "Lifecycle States"
+msgstr "Κατάσταση κύκλου ζωής"
 
 #: arches_lingo/src/arches_lingo/components/header/PageHeader/components/ArchesLingoBadge.vue:53
 #: arches_lingo/src/arches_lingo/components/header/PageHeader/components/ArchesLingoBadge.vue:68
+#: arches_lingo/src/arches_lingo/pages/LandingPage.vue:83
 msgid "Lingo"
 msgstr "Κορακίστικα"
 
-#: arches_lingo/src/arches_lingo/components/login/LoginForm.vue:42
+#: arches_lingo/src/arches_lingo/components/login/LoginForm.vue:45
 msgid "LINGO"
 msgstr "ΚΟΡΑΚΙΣΤΙΚΑ"
 
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:343
+msgid ""
+"Lingo supports polyhierarchy — a concept can have multiple broader (parent) "
+"concepts and appear in more than one branch of the tree."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:147
+msgid ""
+"Lingo will warn you before navigating away if you have unsaved edits on the "
+"current page."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/UserInteraction/UserInteraction.vue:65
 #: arches_lingo/src/arches_lingo/components/header/PageHeader/components/UserInteraction/UserInteraction.vue:66
-#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/UserInteraction/UserInteraction.vue:67
 msgid "Login"
 msgstr "Σύνδεση"
 
-#: arches_lingo/src/arches_lingo/ArchesLingo.vue:65
-msgid "Login required."
-msgstr "Απαιτείται σύνδεση."
-
 #: arches_lingo/src/arches_lingo/components/header/PageHeader/components/UserInteraction/components/UserInteractionMenu/components/UserInteractionTools.vue:31
-#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/UserInteraction/components/UserInteractionMenu/components/UserInteractionTools.vue:65
-#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/UserInteraction/components/UserInteractionMenu/components/UserInteractionTools.vue:72
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/UserInteraction/components/UserInteractionMenu/components/UserInteractionTools.vue:64
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/UserInteraction/components/UserInteractionMenu/components/UserInteractionTools.vue:71
 msgid "Logout"
 msgstr "Αποσύνδεση"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:153
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:154
 msgid "Manage your account information and security settings."
 msgstr ""
 "Διαχειριστείτε τις πληροφορίες του λογαριασμού σας και τις ρυθμίσεις "
 "ασφαλείας."
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptMatch/components/ConceptMatchEditor.vue:124
+#: arches_lingo/src/arches_lingo/components/concept/ConceptMatch/components/ConceptMatchEditor.vue:122
 msgid ""
 "Match concepts from other schemes that may be associated with this concept."
 msgstr ""
 "Αντιστοιχίστε έννοιες από άλλα σχήματα που μπορεί να σχετίζονται με αυτήν "
 "την έννοια."
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptMatch/components/ConceptMatchViewer.vue:74
+#: arches_lingo/src/arches_lingo/components/concept/ConceptMatch/components/ConceptMatchViewer.vue:75
 msgid "Match Type"
 msgstr "Τύπος αντιστοίχισης"
 
-#: arches_lingo/src/arches_lingo/pages/ConceptPage.vue:56
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:379
+#: arches_lingo/src/arches_lingo/pages/ConceptPage.vue:58
 msgid "Matched Concepts"
 msgstr "Αντιστοιχισμένες έννοιες"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:55
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:61
 msgid "Matched URI"
 msgstr "Αντιστοιχισμένο URI"
 
@@ -982,52 +1546,65 @@ msgstr "Αντιστοιχισμένο URI"
 msgid "Missing Translations"
 msgstr "Λείπουν μεταφράσεις"
 
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:192
+msgid ""
+"Missing Translations shows concepts that lack a preferred label in a chosen "
+"language. Select a language to reveal the list."
+msgstr ""
+
 #: arches_lingo/src/arches_lingo/components/login/LoginLinks.vue:25
 msgid "Multi-factor login"
 msgstr "Σύνδεση πολλαπλών παραγόντων"
 
-#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/UserInteraction/components/UserInteractionMenu/components/UserInteractionTools.vue:79
-#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/UserInteraction/components/UserInteractionMenu/components/UserInteractionTools.vue:86
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:149
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/UserInteraction/components/UserInteractionMenu/components/UserInteractionTools.vue:78
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/UserInteraction/components/UserInteractionMenu/components/UserInteractionTools.vue:85
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:150
 msgid "My Profile"
 msgstr "Το προφίλ μου"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:285
-#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:173
+#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:316
+#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:174
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/components/ConceptSetList.vue:132
 #: arches_lingo/src/arches_lingo/components/generic/ResourceListEditor/ResourceListEditor.vue:311
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeLabel/components/SchemeLabelViewer.vue:65
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeLabel/components/SchemeLabelViewer.vue:66
 msgid "Name"
 msgstr "Ονομα"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:74
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:82
 msgid "Narrower (child of)"
 msgstr "Στενό (παιδί του)"
 
-#: arches_lingo/src/arches_lingo/components/sidenav/SideNav.vue:26
+#: arches_lingo/src/arches_lingo/pages/ConceptPage.vue:79
+#, fuzzy
+msgid "Narrower Concepts"
+msgstr "Νέα ιδέα"
+
+#: arches_lingo/src/arches_lingo/components/sidenav/SideNav.vue:25
 msgid "Navigation"
 msgstr "Πλοήγηση"
 
-#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:536
+#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:689
 msgid "New concept"
 msgstr "Νέα ιδέα"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:262
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/ConceptHeader.vue:197
 msgid "New Concept"
 msgstr "Νέα ιδέα"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:280
+#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:311
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/components/ConceptSetList.vue:127
 msgid "New Concept Set"
 msgstr "New Concept Set"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:330
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:331
 msgid "New password"
 msgstr "Νέος κωδικός πρόσβασης"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:323
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:324
 msgid "New Password"
 msgstr "Νέος κωδικός πρόσβασης"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:110
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:111
 msgid "New password and confirmation must match."
 msgstr "Ο νέος κωδικός πρόσβασης και η επιβεβαίωση πρέπει να ταιριάζουν."
 
@@ -1036,15 +1613,16 @@ msgid "New Resource"
 msgstr "Νέος πόρος"
 
 #: arches_lingo/src/arches_lingo/components/scheme/SchemeCard.vue:69
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:200
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:248
 msgid "New Scheme"
 msgstr "Νέο Σχέδιο"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:218
+#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:249
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/components/ConceptSetList.vue:61
 msgid "New Set"
 msgstr "Νέο Σετ"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptRelationship/components/ConceptRelationshipViewer.vue:76
+#: arches_lingo/src/arches_lingo/components/concept/ConceptRelationship/components/ConceptRelationshipViewer.vue:77
 msgid "No associated concepts were found."
 msgstr "Δεν βρέθηκαν σχετικές έννοιες."
 
@@ -1052,35 +1630,52 @@ msgstr "Δεν βρέθηκαν σχετικές έννοιες."
 msgid "No concept images were found."
 msgstr "Δεν βρέθηκαν εικόνες έννοιας."
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptLabel/components/ConceptLabelViewer.vue:56
+#: arches_lingo/src/arches_lingo/components/concept/ConceptLabel/components/ConceptLabelViewer.vue:57
 msgid "No concept labels were found."
 msgstr "Δεν βρέθηκαν ετικέτες έννοιας."
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptNote/components/ConceptNoteViewer.vue:69
+#: arches_lingo/src/arches_lingo/components/concept/ConceptNote/components/ConceptNoteViewer.vue:70
 msgid "No concept notes were found."
 msgstr "Δεν βρέθηκαν σημειώσεις έννοιας."
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:230
+#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:261
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/components/ConceptSetList.vue:72
 msgid "No concept sets yet."
 msgstr "Δεν υπάρχουν ακόμη σύνολα ιδέας."
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:280
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:86
 msgid "No concepts found"
 msgstr "Δεν βρέθηκαν έννοιες"
 
-#: arches_lingo/src/arches_lingo/components/generic/EditLog/EditLog.vue:254
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:443
+#, fuzzy
+msgid "No contributors found"
+msgstr "Δεν βρέθηκαν έννοιες"
+
+#: arches_lingo/src/arches_lingo/components/generic/EditLog/EditLog.vue:273
 msgid "No edit history found."
 msgstr "Δεν βρέθηκε ιστορικό επεξεργασίας."
 
-#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:340
+#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:584
 msgid "No hierarchical parents were found."
 msgstr "Δεν βρέθηκαν ιεραρχικοί γονείς."
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptMatch/components/ConceptMatchViewer.vue:76
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:620
+msgid ""
+"No longer active. Retired records are preserved for reference and their URIs "
+"remain resolvable."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/concept/ConceptMatch/components/ConceptMatchViewer.vue:77
 msgid "No matched concepts were found."
 msgstr "Δεν βρέθηκαν αντιστοιχισμένες έννοιες."
 
-#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:140
+#: arches_lingo/src/arches_lingo/components/concept/ConceptNarrowerConcepts/ConceptNarrowerConcepts.vue:156
+#, fuzzy
+msgid "No narrower concepts found."
+msgstr "Δεν βρέθηκαν κορυφαίες έννοιες."
+
+#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:155
 msgid "No recent activity"
 msgstr "Καμία πρόσφατη δραστηριότητα"
 
@@ -1092,15 +1687,15 @@ msgstr "Δεν έχουν δημιουργηθεί ακόμη πόροι."
 msgid "No resources match the search criteria."
 msgstr "Κανένας πόρος δεν ταιριάζει με τα κριτήρια αναζήτησης."
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/SearchResults.vue:102
+#: arches_lingo/src/arches_lingo/components/advanced-search/SearchResults.vue:104
 msgid "No results found."
 msgstr "Δεν βρέθηκαν αποτελέσματα."
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:138
+#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:139
 msgid "No saved searches yet."
 msgstr "Δεν υπάρχουν ακόμα αποθηκευμένες αναζητήσεις."
 
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeLabel/components/SchemeLabelViewer.vue:67
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeLabel/components/SchemeLabelViewer.vue:68
 msgid "No scheme labels were found."
 msgstr "Δεν βρέθηκαν ετικέτες σχήματος."
 
@@ -1108,48 +1703,58 @@ msgstr "Δεν βρέθηκαν ετικέτες σχήματος."
 msgid "No Scheme Namespaces were found."
 msgstr "Δεν βρέθηκαν χώροι ονομάτων σχήματος."
 
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeNote/components/SchemeNoteViewer.vue:69
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeNote/components/SchemeNoteViewer.vue:70
 msgid "No scheme notes were found."
 msgstr "Δεν βρέθηκαν σημειώσεις συστήματος."
 
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeLicense/components/SchemeLicenseViewer.vue:155
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeLicense/components/SchemeLicenseViewer.vue:169
 msgid "No Scheme Rights were found."
 msgstr "Δεν βρέθηκαν δικαιώματα προγράμματος."
 
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeStandard/components/SchemeStandardViewer.vue:114
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeStandard/components/SchemeStandardViewer.vue:126
 msgid "No Scheme Standards were found."
 msgstr "Δεν βρέθηκαν Πρότυπα Σχεδίου."
 
-#: arches_lingo/src/arches_lingo/components/basic-search/BasicSearch.vue:274
+#: arches_lingo/src/arches_lingo/components/basic-search/BasicSearch.vue:370
 msgid "No search results found"
 msgstr "Δεν βρέθηκαν αποτελέσματα αναζήτησης"
 
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeTopConcepts/SchemeTopConcepts.vue:120
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:440
+#, fuzzy
+msgid "No sources found"
+msgstr "Δεν βρέθηκαν έννοιες"
+
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeTopConcepts/SchemeTopConcepts.vue:157
 msgid "No top concepts found."
 msgstr "Δεν βρέθηκαν κορυφαίες έννοιες."
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:546
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:469
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/ConceptHeader.vue:341
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:606
 msgid "No URI assigned"
 msgstr "Δεν έχει εκχωρηθεί URI"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:525
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/ConceptHeader.vue:321
 #: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/ConceptIdentifierCounterField.vue:136
 #: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/SchemeIdentifierField.vue:117
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/SchemeURITemplateField.vue:126
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/SchemeURITemplateField.vue:128
 msgid "None"
 msgstr "Κανένας"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:229
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:230
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:513
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:514
 msgid "NOT"
 msgstr "ΔΕΝ"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:44
-#: arches_lingo/src/arches_lingo/components/concept/ConceptNote/components/ConceptNoteViewer.vue:67
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeNote/components/SchemeNoteViewer.vue:67
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:50
+#: arches_lingo/src/arches_lingo/components/concept/ConceptNote/components/ConceptNoteViewer.vue:68
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeNote/components/SchemeNoteViewer.vue:68
 msgid "Note"
 msgstr "Σημείωμα"
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:250
+#, fuzzy
+msgid "Notes"
+msgstr "Σημειώσεις:"
 
 #: arches_lingo/src/arches_lingo/components/advanced-search/SearchResults.vue:213
 msgid "Notes:"
@@ -1164,16 +1769,17 @@ msgstr "Ειδοποιήσεις"
 msgid "Open language selector"
 msgstr "Ανοίξτε τον επιλογέα γλώσσας"
 
-#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/UserInteraction/UserInteraction.vue:74
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/UserInteraction/UserInteraction.vue:73
 msgid "Open user menu"
 msgstr "Ανοίξτε το μενού χρήστη"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:300
+#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:331
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/components/ConceptSetList.vue:146
 msgid "Optional description"
 msgstr "Προαιρετική περιγραφή"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetGroup.vue:146
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetGroup.vue:35
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetGroup.vue:147
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetGroup.vue:36
 msgid "OR"
 msgstr "Ή"
 
@@ -1185,17 +1791,17 @@ msgstr "Αντικατάσταση"
 msgid "Overwrite Options"
 msgstr "Επιλογές αντικατάστασης"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:616
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:521
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/ConceptHeader.vue:421
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:702
 msgid "Owner:"
 msgstr "Ιδιοκτήτης:"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:589
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/ConceptHeader.vue:394
 msgid "Parent Concept(s):"
 msgstr "Γονική έννοια:"
 
-#: arches_lingo/src/arches_lingo/components/login/LoginForm.vue:60
-#: arches_lingo/src/arches_lingo/components/login/LoginForm.vue:61
+#: arches_lingo/src/arches_lingo/components/login/LoginForm.vue:63
+#: arches_lingo/src/arches_lingo/components/login/LoginForm.vue:64
 msgid "Password"
 msgstr "Σύνθημα"
 
@@ -1211,19 +1817,19 @@ msgstr "Εμμηνα"
 msgid "Person"
 msgstr "Πρόσωπο"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:169
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:170
 msgid "Personal Information"
 msgstr "Προσωπικές Πληροφορίες"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:256
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:257
 msgid "Phone"
 msgstr "Τηλέφωνο"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:262
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:263
 msgid "Phone number (optional)"
 msgstr "Αριθμός τηλεφώνου (προαιρετικό)"
 
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/SchemeURITemplateField.vue:97
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/SchemeURITemplateField.vue:98
 msgid "Placeholders: <scheme_identifier>, <concept_identifier>"
 msgstr "Placeholders: <scheme_identifier>, <concept_identifier>"
 
@@ -1231,35 +1837,54 @@ msgstr "Placeholders: <scheme_identifier>, <concept_identifier>"
 msgid "Places"
 msgstr "Μέρη"
 
-#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:80
+#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:95
 msgid "Please refine your query."
 msgstr "Κάντε πιο συγκεκριμένο το ερώτημά σας."
 
-#: arches_lingo/src/arches_lingo/components/sidenav/components/NavSettings.vue:19
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:415
+msgid "Preferred"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/sidenav/components/NavSettings.vue:25
 msgid "Profile"
 msgstr "Προφίλ"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:85
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:86
 msgid "Profile updated"
 msgstr "Το προφίλ ενημερώθηκε"
 
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeNote/components/SchemeNoteEditor.vue:141
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeNote/components/SchemeNoteEditor.vue:140
 msgid ""
-"Provide notes and descriptions describing the scope and usage of this "
-"scheme."
+"Provide notes and descriptions describing the scope and usage of this scheme."
 msgstr ""
 "Παρέχετε σημειώσεις και περιγραφές που περιγράφουν το εύρος και τη χρήση "
 "αυτού του σχήματος."
 
-#: arches_lingo/src/arches_lingo/components/basic-search/BasicSearch.vue:217
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:606
+msgid "Published"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:502
+msgid "Query builder"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/basic-search/BasicSearch.vue:343
 msgid "Quick Search"
 msgstr "Γρήγορη αναζήτηση"
 
-#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:102
+#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:117
 msgid "Recent Activity"
 msgstr "Πρόσφατη Δραστηριότητα"
 
-#: arches_lingo/src/arches_lingo/components/sidenav/SideNav.vue:38
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:182
+msgid ""
+"Recent Activity lists the latest edits across all schemes. Click any "
+"resource name to navigate directly to it."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:121
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:699
+#: arches_lingo/src/arches_lingo/components/sidenav/SideNav.vue:31
 msgid "Reference Data"
 msgstr "Δεδομένα Αναφοράς"
 
@@ -1267,31 +1892,62 @@ msgstr "Δεδομένα Αναφοράς"
 msgid "Register"
 msgstr "Μητρώο"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptRelationship/components/ConceptRelationshipViewer.vue:75
+#: arches_lingo/src/arches_lingo/components/generic/ReinstateDialog.vue:140
+#: arches_lingo/src/arches_lingo/components/generic/ReinstateDialog.vue:82
+msgid "Reinstate"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/generic/ReinstateDialog.vue:58
+msgid "Reinstate this concept and all its descendants"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/generic/ReinstateDialog.vue:51
+msgid "Reinstate this concept only"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/generic/ReinstateDialog.vue:56
+msgid "Reinstate this scheme and all its concepts"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/generic/ReinstateDialog.vue:49
+msgid "Reinstate this scheme only"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/concept/ConceptRelationship/components/ConceptRelationshipViewer.vue:76
 msgid "Related Concept"
 msgstr "Σχετική έννοια"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptMatch/components/ConceptMatchViewer.vue:75
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:366
+#, fuzzy
+msgid "Related Concepts"
+msgstr "Σχετική έννοια"
+
+#: arches_lingo/src/arches_lingo/components/concept/ConceptMatch/components/ConceptMatchViewer.vue:76
 msgid "Related URI"
 msgstr "Σχετικό URI"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptRelationship/components/ConceptRelationshipViewer.vue:74
+#: arches_lingo/src/arches_lingo/components/concept/ConceptRelationship/components/ConceptRelationshipViewer.vue:75
 msgid "Relationship"
 msgstr "Σχέση"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:450
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:103
 msgid "Remove condition"
 msgstr "Κατάργηση συνθήκης"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:207
+#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:238
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/components/ConceptSetMemberList.vue:110
 msgid "Remove from Set"
 msgstr "Αφαίρεση από το Σετ"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetGroup.vue:128
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetGroup.vue:129
 msgid "Remove group"
 msgstr "Κατάργηση ομάδας"
 
-#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:163
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:785
+msgid "Report issues or contribute on "
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:173
 msgid "Resource"
 msgstr "Πόρος"
 
@@ -1299,35 +1955,47 @@ msgstr "Πόρος"
 msgid "Resource deleted"
 msgstr "Ο πόρος διαγράφηκε"
 
-#: arches_lingo/src/arches_lingo/components/generic/EditLog/EditLog.vue:196
+#: arches_lingo/src/arches_lingo/components/generic/EditLog/EditLog.vue:215
 msgid "Resource partially reverted"
 msgstr "Έγινε μερική επαναφορά του πόρου"
 
-#: arches_lingo/src/arches_lingo/components/generic/EditLog/EditLog.vue:195
+#: arches_lingo/src/arches_lingo/components/generic/EditLog/EditLog.vue:214
 msgid "Resource reverted successfully"
 msgstr "Ο πόρος επανήλθε με επιτυχία"
 
-#: arches_lingo/src/arches_lingo/pages/AdvancedSearch.vue:307
+#: arches_lingo/src/arches_lingo/pages/AdvancedSearch.vue:317
 msgid "Results"
 msgstr "Αποτελέσματα"
 
-#: arches_lingo/src/arches_lingo/components/generic/EditLog/EditLog.vue:235
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:483
+msgid "Retire"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:617
+msgid "Retired"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/generic/EditLog/EditLog.vue:254
 msgid "Revert"
 msgstr "Επαναστρέφω"
 
-#: arches_lingo/src/arches_lingo/components/generic/EditLog/EditLog.vue:206
+#: arches_lingo/src/arches_lingo/components/generic/EditLog/EditLog.vue:225
 msgid "Revert failed"
 msgstr "Η επαναφορά απέτυχε"
 
-#: arches_lingo/src/arches_lingo/components/generic/EditLog/EditLog.vue:291
+#: arches_lingo/src/arches_lingo/components/generic/EditLog/EditLog.vue:310
 msgid "Revert to here"
 msgstr "Επιστροφή εδώ"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:190
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeLicense/components/SchemeLicenseViewer.vue:132
+msgid "Rights Statement"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:191
 msgid "Save"
 msgstr "Εκτός"
 
-#: arches_lingo/src/arches_lingo/components/generic/ComponentManager/components/ComponentEditor.vue:167
+#: arches_lingo/src/arches_lingo/components/generic/ComponentManager/components/ComponentEditor.vue:209
 msgid "Save Changes"
 msgstr "Αποθήκευση αλλαγών"
 
@@ -1335,7 +2003,7 @@ msgstr "Αποθήκευση αλλαγών"
 msgid "Save concept identifier counter"
 msgstr "Αποθήκευση μετρητή αναγνωριστικού έννοιας"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:127
+#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:128
 msgid "Save Current"
 msgstr "Αποθήκευση ρεύματος"
 
@@ -1343,99 +2011,126 @@ msgstr "Αποθήκευση ρεύματος"
 msgid "Save Identifier"
 msgstr "Αποθήκευση αναγνωριστικού"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:270
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:271
 msgid "Save Profile"
 msgstr "Αποθήκευση προφίλ"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:168
+#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:169
 msgid "Save Search"
 msgstr "Αποθήκευση αναζήτησης"
 
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/SchemeURITemplateField.vue:108
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/SchemeURITemplateField.vue:110
 msgid "Save URL template"
 msgstr "Αποθήκευση προτύπου URL"
 
-#: arches_lingo/src/arches_lingo/pages/AdvancedSearch.vue:329
+#: arches_lingo/src/arches_lingo/pages/AdvancedSearch.vue:339
 msgid "Saved"
 msgstr "Αποθηκεύτηκε"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:56
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:515
+#, fuzzy
+msgid "Saved searches"
+msgstr "Αποθήκευση αναζήτησης"
+
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:62
 #: arches_lingo/src/arches_lingo/components/dashboard/MissingTranslationsPanel.vue:151
-#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:188
-#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:87
+#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:102
+#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:104
 msgid "Scheme"
 msgstr "Σχέδιο"
 
-#: arches_lingo/src/arches_lingo/pages/SchemePage.vue:26
+#: arches_lingo/src/arches_lingo/pages/SchemePage.vue:27
 msgid "Scheme Labels"
 msgstr "Ετικέτες σχήματος"
 
-#: arches_lingo/src/arches_lingo/pages/SchemePage.vue:19
+#: arches_lingo/src/arches_lingo/pages/SchemePage.vue:20
 msgid "Scheme Metadata"
 msgstr "Μεταδεδομένα σχήματος"
 
-#: arches_lingo/src/arches_lingo/pages/SchemePage.vue:33
+#: arches_lingo/src/arches_lingo/pages/SchemePage.vue:34
 msgid "Scheme Notes"
 msgstr "Σημειώσεις Σχεδίου"
 
-#: arches_lingo/src/arches_lingo/pages/SchemePage.vue:47
+#: arches_lingo/src/arches_lingo/pages/SchemePage.vue:48
 msgid "Scheme Rights"
 msgstr "Δικαιώματα Σχεδίου"
 
-#: arches_lingo/src/arches_lingo/pages/SchemePage.vue:40
+#: arches_lingo/src/arches_lingo/pages/SchemePage.vue:41
 msgid "Scheme Standards"
 msgstr "Πρότυπα Σχεδίων"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:554
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:649
+msgid "Scheme-level transitions"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/ConceptHeader.vue:349
 msgid "Scheme:"
 msgstr "Σχέδιο:"
 
 #: arches_lingo/src/arches_lingo/components/dashboard/DashboardStatCards.vue:20
-#: arches_lingo/src/arches_lingo/components/sidenav/components/NavNavigation.vue:26
-#: arches_lingo/src/arches_lingo/pages/HomePage.vue:171
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:213
+#: arches_lingo/src/arches_lingo/pages/HomePage.vue:178
 msgid "Schemes"
 msgstr "Σχέδια"
 
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:82
 #: arches_lingo/src/arches_lingo/components/sidenav/components/NavAuthorityEditors.vue:19
+#: arches_lingo/src/arches_lingo/components/sidenav/components/NavNavigation.vue:29
+#: arches_lingo/src/arches_lingo/pages/LandingPage.vue:46
 msgid "Schemes & Concepts"
 msgstr "Σχέδια & Έννοιες"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/SearchQueryBuilder.vue:42
+#: arches_lingo/src/arches_lingo/components/advanced-search/SearchQueryBuilder.vue:45
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:108
 #: arches_lingo/src/arches_lingo/components/header/PageHeader/components/SearchDialog.vue:28
 #: arches_lingo/src/arches_lingo/components/header/PageHeader/components/SearchDialog.vue:35
 msgid "Search"
 msgstr "Ερευνα"
 
+#: arches_lingo/src/arches_lingo/pages/LandingPage.vue:56
+msgid "Search across schemes, concepts, labels, and more"
+msgstr ""
+
 #: arches_lingo/src/arches_lingo/components/generic/ResourceListEditor/ResourceListEditor.vue:284
 msgid "Search by name..."
 msgstr "Αναζήτηση με όνομα..."
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:281
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:88
 msgid "Search concepts..."
 msgstr "Έννοιες αναζήτησης..."
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:96
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:444
+#, fuzzy
+msgid "Search contributors..."
+msgstr "Έννοιες αναζήτησης..."
+
+#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:97
 msgid "Search deleted."
 msgstr "Η αναζήτηση διαγράφηκε."
 
-#: arches_lingo/src/arches_lingo/pages/AdvancedSearch.vue:166
+#: arches_lingo/src/arches_lingo/pages/AdvancedSearch.vue:171
 msgid "Search failed."
 msgstr "Η αναζήτηση απέτυχε."
 
-#: arches_lingo/src/arches_lingo/components/widgets/ConceptResourceSelectWidget/components/ConceptResourceSelectWidgetEditor.vue:46
+#: arches_lingo/src/arches_lingo/components/widgets/ConceptResourceSelectWidget/components/ConceptResourceSelectWidgetEditor.vue:50
 msgid "Search returned no results"
 msgstr "Η αναζήτηση δεν επέστρεψε κανένα αποτέλεσμα"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:73
+#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:74
 msgid "Search saved."
 msgstr "Η αναζήτηση αποθηκεύτηκε."
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:263
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:441
+#, fuzzy
+msgid "Search sources..."
+msgstr "Έννοιες αναζήτησης..."
+
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:85
 msgid "Search text..."
 msgstr "Αναζήτηση κειμένου..."
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/SearchResults.vue:95
-#: arches_lingo/src/arches_lingo/components/widgets/ConceptResourceSelectWidget/components/ConceptResourceSelectWidgetEditor.vue:79
+#: arches_lingo/src/arches_lingo/components/advanced-search/SearchResults.vue:97
+#: arches_lingo/src/arches_lingo/components/widgets/ConceptResourceSelectWidget/components/ConceptResourceSelectWidgetEditor.vue:49
 msgid "Searching..."
 msgstr "Ερευνητικός..."
 
@@ -1447,39 +2142,49 @@ msgstr "Επιλέξτε μια γλώσσα"
 msgid "Select a language to see concepts missing translations."
 msgstr "Επιλέξτε μια γλώσσα για να δείτε έννοιες που λείπουν μεταφράσεις."
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/SearchResults.vue:76
+#: arches_lingo/src/arches_lingo/components/advanced-search/SearchResults.vue:78
 msgid "Select All"
 msgstr "Επιλέξτε Όλα"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:406
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:98
 msgid "Select concept set"
 msgstr "Επιλέξτε σύνολο εννοιών"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:421
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:101
 msgid "Select concept type"
 msgstr "Επιλέξτε τύπο έννοιας"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:283
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:90
 msgid "Select concept..."
 msgstr "Επιλέξτε ιδέα..."
 
-#: arches_lingo/src/arches_lingo/components/widgets/ConceptResourceSelectWidget/components/ConceptResourceSelectWidgetEditor.vue:199
+#: arches_lingo/src/arches_lingo/components/widgets/ConceptResourceSelectWidget/components/ConceptResourceSelectWidgetEditor.vue:207
 msgid "Select Concepts"
 msgstr "Επιλέξτε Έννοιες"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:242
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:445
+#, fuzzy
+msgid "Select contributor..."
+msgstr "Επιλέξτε ιδέα..."
+
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:526
 msgid "Select facet"
 msgstr "Επιλέξτε πτυχή"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:351
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:93
 msgid "Select language"
 msgstr "Επιλέξτε γλώσσα"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:364
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:94
 msgid "Select scheme"
 msgstr "Επιλέξτε σχήμα"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:393
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:442
+#, fuzzy
+msgid "Select source..."
+msgstr "Επιλέξτε ιδέα..."
+
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:96
 msgid "Select state"
 msgstr "Επιλέξτε κατάσταση"
 
@@ -1487,15 +2192,30 @@ msgstr "Επιλέξτε κατάσταση"
 msgid "Select type"
 msgstr "Επιλέξτε τύπο"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:289
+#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:320
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/components/ConceptSetList.vue:136
 msgid "Set name"
 msgstr "Όνομα ορισμού"
 
-#: arches_lingo/src/arches_lingo/components/sidenav/SideNav.vue:44
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:134
+#: arches_lingo/src/arches_lingo/components/sidenav/SideNav.vue:37
 msgid "Settings"
 msgstr "Ρυθμίσεις"
 
-#: arches_lingo/src/arches_lingo/pages/AdvancedSearch.vue:268
+#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:565
+#, fuzzy
+msgid "Show %{count} more paths"
+msgstr "Διαδρομές %{count}"
+
+#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:573
+msgid "Show fewer paths"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:655
+msgid "Show less"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/pages/AdvancedSearch.vue:278
 msgid "Show Saved Searches & Sets"
 msgstr "Εμφάνιση αποθηκευμένων αναζητήσεων και συνόλων"
 
@@ -1503,11 +2223,12 @@ msgstr "Εμφάνιση αποθηκευμένων αναζητήσεων κα�
 msgid "Show Unread Only"
 msgstr "Εμφάνιση μόνο μη αναγνωσμένων"
 
-#: arches_lingo/src/arches_lingo/components/login/LoginForm.vue:68
+#: arches_lingo/src/arches_lingo/components/login/LoginForm.vue:71
+#: arches_lingo/src/arches_lingo/pages/LandingPage.vue:113
 msgid "Sign In"
 msgstr "Είσοδος"
 
-#: arches_lingo/src/arches_lingo/components/login/LoginForm.vue:32
+#: arches_lingo/src/arches_lingo/components/login/LoginForm.vue:35
 msgid "Sign in failed."
 msgstr "Η σύνδεση απέτυχε."
 
@@ -1519,11 +2240,11 @@ msgstr "Η έξοδος απέτυχε."
 msgid "SKOS File"
 msgstr "Αρχείο ΣΚΟΣ"
 
-#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:81
+#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:97
 msgid "Sort ascending"
 msgstr "Ταξινόμηση αύξουσα"
 
-#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:82
+#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:98
 msgid "Sort descending"
 msgstr "Ταξινόμηση φθίνουσα"
 
@@ -1531,18 +2252,64 @@ msgstr "Ταξινόμηση φθίνουσα"
 msgid "Sorting:"
 msgstr "Ταξινόμηση:"
 
-#: arches_lingo/src/arches_lingo/components/sidenav/components/NavReferenceData.vue:26
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:68
+#, fuzzy
+msgid "Source"
+msgstr "Πηγές"
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:726
+#: arches_lingo/src/arches_lingo/components/sidenav/components/NavReferenceData.vue:33
 #: arches_lingo/src/arches_lingo/pages/SourcesPage.vue:55
 msgid "Sources"
 msgstr "Πηγές"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:67
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:313
+#, fuzzy
+msgid "Standards & Rights"
+msgstr "Προσθήκη Δικαιωμάτων"
+
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:75
 msgid "Starts with"
 msgstr "Ξεκινά με"
 
-#: arches_lingo/src/arches_lingo/components/sidenav/components/NavSettings.vue:26
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:172
+msgid ""
+"Stat cards show total Schemes, Concepts, Labels, and the average number of "
+"labels per concept."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:634
+msgid "State badges"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:779
+msgid "Support & Resources"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:428
+msgid ""
+"Synonyms or variant spellings — help users find the concept via different "
+"terms."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/sidenav/components/NavSettings.vue:33
 msgid "System Settings"
 msgstr "Ρυθμίσεις συστήματος"
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:162
+msgid "The Dashboard gives you a bird's-eye view of your vocabulary data."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:418
+msgid ""
+"The primary display term. Each concept should have exactly one per language."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:703
+msgid ""
+"The Reference Data section of the sidebar lets you manage supporting "
+"resources that can be linked to vocabulary content."
+msgstr ""
 
 #: arches_lingo/src/arches_lingo/components/header/PageHeader/components/NotificationsInteraction/components/NotificationLinkViewer.vue:22
 msgid "The requested file could not be downloaded."
@@ -1556,16 +2323,42 @@ msgstr "Θέμα"
 msgid "Theme Selector"
 msgstr "Επιλογέας θεμάτων"
 
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/DeleteConceptDialog.vue:131
+msgid "This action cannot be undone."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/DeleteConceptDialog.vue:94
+msgid "This concept and all its descendants will be deprecated."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/DeleteConceptDialog.vue:90
+msgid "This concept and all its descendants will be permanently deleted."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/generic/ReinstateDialog.vue:67
+msgid ""
+"This concept and all its retired descendants will be moved to Editing state."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/DeleteConceptDialog.vue:132
+msgid "This concept can be reinstated later."
+msgstr ""
+
 #: arches_lingo/src/arches_lingo/components/concept/ConceptImages/components/ConceptImagesViewer.vue:75
-#: arches_lingo/src/arches_lingo/components/concept/ConceptLabel/components/ConceptLabelViewer.vue:75
-#: arches_lingo/src/arches_lingo/components/concept/ConceptMatch/components/ConceptMatchViewer.vue:65
-#: arches_lingo/src/arches_lingo/components/concept/ConceptNote/components/ConceptNoteViewer.vue:59
-#: arches_lingo/src/arches_lingo/components/concept/ConceptRelationship/components/ConceptRelationshipViewer.vue:65
+#: arches_lingo/src/arches_lingo/components/concept/ConceptLabel/components/ConceptLabelViewer.vue:83
+#: arches_lingo/src/arches_lingo/components/concept/ConceptMatch/components/ConceptMatchViewer.vue:66
+#: arches_lingo/src/arches_lingo/components/concept/ConceptNote/components/ConceptNoteViewer.vue:60
+#: arches_lingo/src/arches_lingo/components/concept/ConceptRelationship/components/ConceptRelationshipViewer.vue:66
 #: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:95
 msgid "This concept is not editable in its current lifecycle state"
 msgstr ""
-"Αυτή η έννοια δεν είναι επεξεργάσιμη στην τρέχουσα κατάσταση του κύκλου ζωής"
-" της"
+"Αυτή η έννοια δεν είναι επεξεργάσιμη στην τρέχουσα κατάσταση του κύκλου ζωής "
+"της"
+
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/components/ConceptSetMemberList.vue:124
+#, fuzzy
+msgid "This concept set has no members."
+msgstr "Δεν υπάρχουν ακόμη σύνολα ιδέας."
 
 #: arches_lingo/src/arches_lingo/components/generic/ResourceListEditor/ResourceListEditor.vue:189
 msgid ""
@@ -1577,21 +2370,27 @@ msgid_plural ""
 msgstr[0] ""
 msgstr[1] ""
 
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeLabel/components/SchemeLabelViewer.vue:57
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeLabel/components/SchemeLabelViewer.vue:58
 #: arches_lingo/src/arches_lingo/components/scheme/SchemeLicense/components/SchemeLicenseViewer.vue:59
 #: arches_lingo/src/arches_lingo/components/scheme/SchemeNamespace/components/SchemeNamespaceViewer.vue:59
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeNote/components/SchemeNoteViewer.vue:59
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeNote/components/SchemeNoteViewer.vue:60
 #: arches_lingo/src/arches_lingo/components/scheme/SchemeStandard/components/SchemeStandardViewer.vue:59
 msgid "This scheme is not editable in its current lifecycle state"
 msgstr ""
-"Αυτό το σχήμα δεν είναι επεξεργάσιμο στην τρέχουσα κατάσταση του κύκλου ζωής"
-" του"
+"Αυτό το σχήμα δεν είναι επεξεργάσιμο στην τρέχουσα κατάσταση του κύκλου ζωής "
+"του"
 
-#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:108
+#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:123
 msgid "Time frame"
 msgstr "Χρονικό πλαίσιο"
 
-#: arches_lingo/src/arches_lingo/components/generic/ComponentManager/components/ComponentEditor.vue:133
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:392
+msgid ""
+"To add a child concept, open the Explore panel and use the \"+\" icon that "
+"appears when hovering over a concept in the tree."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/generic/ComponentManager/components/ComponentEditor.vue:175
 msgid "toggle editor size"
 msgstr "εναλλαγή μεγέθους επεξεργαστή"
 
@@ -1599,33 +2398,33 @@ msgstr "εναλλαγή μεγέθους επεξεργαστή"
 msgid "Tools"
 msgstr "Εργαλεία"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:57
-#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:88
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:63
+#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:105
 msgid "Top Concept"
 msgstr "Κορυφαία έννοια"
 
-#: arches_lingo/src/arches_lingo/pages/ConceptPage.vue:70
+#: arches_lingo/src/arches_lingo/pages/ConceptPage.vue:72
 msgid "Top Concept Of"
 msgstr "Κορυφαία έννοια του"
 
-#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:250
+#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:229
 msgid "Top Concept Of: %{parent}"
 msgstr "Κορυφαία ιδέα: %{parent}"
 
-#: arches_lingo/src/arches_lingo/pages/SchemePage.vue:54
+#: arches_lingo/src/arches_lingo/pages/SchemePage.vue:55
 msgid "Top Concepts"
 msgstr "Κορυφαίες Έννοιες"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptLabel/components/ConceptLabelViewer.vue:55
-#: arches_lingo/src/arches_lingo/components/concept/ConceptNote/components/ConceptNoteViewer.vue:68
-#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:181
+#: arches_lingo/src/arches_lingo/components/concept/ConceptLabel/components/ConceptLabelViewer.vue:56
+#: arches_lingo/src/arches_lingo/components/concept/ConceptNote/components/ConceptNoteViewer.vue:69
+#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:196
 #: arches_lingo/src/arches_lingo/components/generic/ResourceListEditor/ResourceListEditor.vue:332
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeLabel/components/SchemeLabelViewer.vue:66
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeNote/components/SchemeNoteViewer.vue:68
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeLabel/components/SchemeLabelViewer.vue:67
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeNote/components/SchemeNoteViewer.vue:69
 msgid "Type"
 msgstr "Τύπος"
 
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/LifecycleButtons.vue:96
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/LifecycleButtons.vue:124
 msgid "Unable to change lifecycle state"
 msgstr "Δεν είναι δυνατή η αλλαγή της κατάστασης του κύκλου ζωής"
 
@@ -1633,54 +2432,66 @@ msgstr "Δεν είναι δυνατή η αλλαγή της κατάσταση
 msgid "Unable to export thesaurus"
 msgstr "Δεν είναι δυνατή η εξαγωγή του θησαυρού"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:131
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:185
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:294
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/ConceptHeader.vue:115
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/ConceptHeader.vue:99
 msgid "Unable to fetch concept"
 msgstr "Δεν είναι δυνατή η ανάκτηση της έννοιας"
 
-#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/SchemeHierarchy/SchemeHierarchy.vue:54
-#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:143
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/SchemeHierarchy/SchemeHierarchy.vue:65
+#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:138
+#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:867
+#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:941
+#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:986
 msgid "Unable to fetch concepts"
 msgstr "Δεν είναι δυνατή η ανάκτηση εννοιών"
 
-#: arches_lingo/src/arches_lingo/pages/HomePage.vue:95
+#: arches_lingo/src/arches_lingo/pages/HomePage.vue:102
 msgid "Unable to fetch dashboard data"
 msgstr "Δεν είναι δυνατή η ανάκτηση δεδομένων πίνακα ελέγχου"
 
-#: arches_lingo/src/arches_lingo/components/generic/EditLog/EditLog.vue:106
+#: arches_lingo/src/arches_lingo/components/generic/EditLog/EditLog.vue:121
 msgid "Unable to fetch edit history"
 msgstr "Δεν είναι δυνατή η ανάκτηση του ιστορικού επεξεργασίας"
 
-#: arches_lingo/src/arches_lingo/pages/HomePage.vue:76
+#: arches_lingo/src/arches_lingo/pages/HomePage.vue:83
 msgid "Unable to fetch languages"
 msgstr "Δεν είναι δυνατή η ανάκτηση γλωσσών"
 
-#: arches_lingo/src/arches_lingo/components/generic/ComponentManager/ComponentManager.vue:248
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/LifecycleButtons.vue:67
+#: arches_lingo/src/arches_lingo/components/generic/ComponentManager/ComponentManager.vue:264
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/LifecycleButtons.vue:95
 msgid "Unable to fetch lifecycle state"
 msgstr "Δεν είναι δυνατή η ανάκτηση της κατάστασης του κύκλου ζωής"
 
-#: arches_lingo/src/arches_lingo/pages/HomePage.vue:117
+#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:155
+#, fuzzy
+msgid "Unable to fetch lifecycle states"
+msgstr "Δεν είναι δυνατή η ανάκτηση της κατάστασης του κύκλου ζωής"
+
+#: arches_lingo/src/arches_lingo/pages/HomePage.vue:124
 msgid "Unable to fetch missing translations"
 msgstr "Δεν είναι δυνατή η ανάκτηση μεταφράσεων που λείπουν"
+
+#: arches_lingo/src/arches_lingo/components/concept/ConceptNarrowerConcepts/ConceptNarrowerConcepts.vue:84
+#, fuzzy
+msgid "Unable to fetch narrower concepts"
+msgstr "Δεν είναι δυνατή η ανάκτηση κορυφαίων εννοιών"
 
 #: arches_lingo/src/arches_lingo/components/generic/ResourceListEditor/ResourceListEditor.vue:112
 msgid "Unable to fetch resources"
 msgstr "Δεν είναι δυνατή η ανάκτηση πόρων"
 
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:122
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:152
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:237
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:165
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:200
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:285
 msgid "Unable to fetch scheme"
 msgstr "Δεν είναι δυνατή η ανάκτηση του σχήματος"
 
-#: arches_lingo/src/arches_lingo/pages/HomePage.vue:62
-#: arches_lingo/src/arches_lingo/pages/SchemeList.vue:55
+#: arches_lingo/src/arches_lingo/pages/HomePage.vue:69
+#: arches_lingo/src/arches_lingo/pages/SchemeList.vue:81
 msgid "Unable to fetch schemes"
 msgstr "Δεν είναι δυνατή η ανάκτηση σχημάτων"
 
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeTopConcepts/SchemeTopConcepts.vue:63
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeTopConcepts/SchemeTopConcepts.vue:85
 msgid "Unable to fetch top concepts"
 msgstr "Δεν είναι δυνατή η ανάκτηση κορυφαίων εννοιών"
 
@@ -1688,7 +2499,7 @@ msgstr "Δεν είναι δυνατή η ανάκτηση κορυφαίων ε
 msgid "Unable to import SKOS file"
 msgstr "Δεν είναι δυνατή η εισαγωγή του αρχείου SKOS"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:62
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:63
 msgid "Unable to load profile"
 msgstr "Δεν είναι δυνατή η φόρτωση του προφίλ"
 
@@ -1704,23 +2515,23 @@ msgstr "Δεν είναι δυνατή η αποθήκευση του αναγν
 msgid "Unable to save scheme URL template"
 msgstr "Δεν είναι δυνατή η αποθήκευση του προτύπου διεύθυνσης URL σχήματος"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:92
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:93
 msgid "Unable to update profile"
 msgstr "Δεν είναι δυνατή η ενημέρωση του προφίλ"
 
-#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:74
+#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:88
 msgid "Unfocus"
 msgstr "Μη εστίαση"
 
-#: arches_lingo/src/arches_lingo/components/generic/EditLog/EditLog.vue:129
+#: arches_lingo/src/arches_lingo/components/generic/EditLog/EditLog.vue:144
 msgid "Unknown"
 msgstr "Αγνωστος"
 
-#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:135
+#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:218
 msgid "Unknown Parent"
 msgstr "Άγνωστος Γονέας"
 
-#: arches_lingo/src/arches_lingo/pages/HomePage.vue:194
+#: arches_lingo/src/arches_lingo/pages/HomePage.vue:201
 msgid "Unnamed scheme"
 msgstr "Σύστημα χωρίς όνομα"
 
@@ -1734,65 +2545,129 @@ msgstr "Μη αποθηκευμένες αλλαγές"
 msgid "Untitled"
 msgstr "Χωρίς τίτλο"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:353
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:354
 msgid "Update Password"
 msgstr "Ενημέρωση κωδικού πρόσβασης"
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:756
+msgid "Update your display name, email address, and phone number."
+msgstr ""
 
 #: arches_lingo/src/arches_lingo/components/scheme/ImportThesauri.vue:191
 msgid "Upload File"
 msgstr "Μεταφόρτωση αρχείου"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:58
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:64
 msgid "URI"
 msgstr "URI"
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:280
+#, fuzzy
+msgid "URI template"
+msgstr "Πρότυπο URI:"
 
 #: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/SchemeURITemplateField.vue:89
 msgid "URI template:"
 msgstr "Πρότυπο URI:"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:530
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:453
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/ConceptHeader.vue:326
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:591
 msgid "URI: "
 msgstr "URI:"
 
-#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:200
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:541
+msgid ""
+"Use the checkboxes in search results to select concepts, then use the "
+"Concept Sets actions to add or remove them."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:447
+msgid ""
+"Use the Missing Translations table on the Dashboard to identify concepts "
+"that still need a preferred label in a given language."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:202
+msgid ""
+"Use the Schemes filter at the top of the Dashboard to focus all stats and "
+"activity on one or more specific schemes."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:438
+msgid "Used for search indexing only — not shown in displays or exports."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:215
 msgid "User"
 msgstr "Μεταχειριζόμενος"
 
-#: arches_lingo/src/arches_lingo/components/login/LoginForm.vue:54
-#: arches_lingo/src/arches_lingo/components/login/LoginForm.vue:55
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:206
+#: arches_lingo/src/arches_lingo/components/login/LoginForm.vue:57
+#: arches_lingo/src/arches_lingo/components/login/LoginForm.vue:58
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:207
 msgid "Username"
 msgstr "Όνομα χρήστη"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:215
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:216
 msgid "Username cannot be changed."
 msgstr "Το όνομα χρήστη δεν μπορεί να αλλάξει."
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/SearchResults.vue:165
+#: arches_lingo/src/arches_lingo/components/advanced-search/SearchResults.vue:175
 msgid "View"
 msgstr "Θέα"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/SearchResults.vue:172
+#: arches_lingo/src/arches_lingo/components/advanced-search/SearchResults.vue:182
 msgid "View concept %{label}"
 msgstr "Προβολή έννοιας %{label}"
 
-#: arches_lingo/src/arches_lingo/components/login/LoginForm.vue:45
+#: arches_lingo/src/arches_lingo/pages/LandingPage.vue:38
+msgid "View statistics, recent activity, and translation coverage"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:798
+msgid "Visit "
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/pages/LandingPage.vue:87
+#, fuzzy
+msgid "Vocabulary and authority data management powered by Arches"
+msgstr ""
+"Λεξιλόγιο και διαχείριση δεδομένων αρχής που υποστηρίζεται από το Arches."
+
+#: arches_lingo/src/arches_lingo/components/login/LoginForm.vue:48
 msgid "Vocabulary and authority data management powered by Arches."
 msgstr ""
 "Λεξιλόγιο και διαχείριση δεδομένων αρχής που υποστηρίζεται από το Arches."
 
-#: arches_lingo/src/arches_lingo/pages/HomePage.vue:129
+#: arches_lingo/src/arches_lingo/pages/HomePage.vue:136
 msgid "Welcome"
 msgstr "Καλωσόρισμα"
 
-#: arches_lingo/src/arches_lingo/pages/HomePage.vue:127
+#: arches_lingo/src/arches_lingo/pages/LandingPage.vue:98
+#, fuzzy
+msgid "Welcome back, %{name}!"
+msgstr "Καλώς ορίσατε, %{name}"
+
+#: arches_lingo/src/arches_lingo/pages/HomePage.vue:134
 msgid "Welcome, %{name}"
 msgstr "Καλώς ορίσατε, %{name}"
 
-#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:144
+#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:159
 msgid "When"
 msgstr "Οταν"
+
+#: arches_lingo/src/arches_lingo/components/generic/ReinstateDialog.vue:41
+msgid "Would you also like to reinstate the child concepts within \"%{name}\"?"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/generic/ReinstateDialog.vue:36
+msgid "Would you also like to reinstate the concepts within \"%{name}\"?"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:688
+msgid ""
+"You can also filter by lifecycle state in the Advanced Search query builder "
+"to find all concepts at a particular stage across every scheme."
+msgstr ""
 
 #: arches_lingo/src/arches_lingo/components/header/PageHeader/components/NotificationsInteraction/components/NotificationsPanel.vue:93
 msgid "You have no new notifications"
@@ -1814,7 +2689,12 @@ msgid ""
 msgstr ""
 "Η εισαγωγή σας βρίσκεται υπό επεξεργασία. Θα ειδοποιηθείτε όταν ολοκληρωθεί."
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:86
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:742
+#, fuzzy
+msgid "Your Profile"
+msgstr "Προφίλ"
+
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:87
 msgid "Your profile has been saved successfully."
 msgstr "Το προφίλ σας αποθηκεύτηκε με επιτυχία."
 
@@ -1829,3 +2709,18 @@ msgstr ""
 #: arches_lingo/src/arches_lingo/components/basic-search/SortAndFilterControls.vue:14
 msgid "Z to A"
 msgstr "Ζ σε Α"
+
+#~ msgid "Are you sure you want to delete this concept?"
+#~ msgstr "Είστε βέβαιοι ότι θέλετε να διαγράψετε αυτήν την έννοια;"
+
+#~ msgid "Authentication required."
+#~ msgstr "Απαιτείται έλεγχος ταυτότητας."
+
+#~ msgid "Authority Editors"
+#~ msgstr "Αρχισυντάκτες"
+
+#~ msgid "Lifecycle:"
+#~ msgstr "Κύκλος ζωής:"
+
+#~ msgid "Login required."
+#~ msgstr "Απαιτείται σύνδεση."

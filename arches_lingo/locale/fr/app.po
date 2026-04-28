@@ -10,55 +10,260 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:252
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:266
+msgid " — a short code for the scheme (e.g. "
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:137
+msgid ""
+" — access your Profile from the Settings section of the sidebar to update "
+"your name, email, and password."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:253
+msgid ""
+" — add a scope note, definition, or editorial note to describe the "
+"vocabulary's purpose."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:665
+msgid ""
+" — at the concept level, editors can delete a Draft concept (permanent "
+"removal) or deprecate an Editing concept (soft retirement that preserves its "
+"URI and history). Publish and Editing transitions are not available directly "
+"on individual concepts."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:356
+msgid " — attach illustrative images to help identify or describe the concept."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:85
+msgid ""
+" — browse, create, and manage your vocabulary schemes and their concepts."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:98
+msgid ""
+" — click Explore in the top bar to open a collapsible hierarchy tree on the "
+"left side of the screen."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:505
+msgid ""
+" — combine facets such as label, scheme, language, note content, URI, "
+"identifier, and lifecycle state. Group conditions with AND / OR logic."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:124
+msgid ""
+" — find Contributors and Sources in this sidebar section to manage the "
+"people, organizations, and bibliographic references that support your "
+"vocabulary."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:240
+msgid " — give your scheme a name in one or more languages."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:531
+msgid ""
+" — group selected concepts into named sets. Add concepts from search "
+"results, view a set's members, or remove concepts from a set."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:369
+msgid ""
+" — link concepts that are semantically associated but do not have a broader/"
+"narrower relationship."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:716
+msgid ""
+" — manage the people and organizations that contribute to your vocabularies. "
+"Contributors can be recorded as individuals (Person) or as collective bodies "
+"(Group)."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:382
+msgid ""
+" — map this concept to equivalent terms in external thesauri or authority "
+"files (e.g. exactMatch, closeMatch)."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:652
+msgid ""
+" — Publishing and moving a scheme back into Editing are controlled from the "
+"scheme header and cascade automatically to all of its concepts. When a "
+"scheme is published, concept identifiers and URIs are generated for every "
+"concept using the scheme's identifier, URI template, and concept counter."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:729
+msgid ""
+" — record the bibliographic sources that inform or support your vocabulary "
+"content, such as reference publications or authority files."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:316
+msgid ""
+" — record the standards your vocabulary conforms to and the license under "
+"which it is published."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:518
+msgid ""
+" — save your current query for quick re-use later. Saved searches appear in "
+"the Collections panel on the right."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:637
+msgid ""
+" — the current state appears as a color-coded badge in concept and scheme "
+"headers and in search results. In the hierarchy tree, badges are shown for "
+"Draft and Retired records so they stand out at a glance."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:283
+msgid ""
+" — the pattern used to mint stable linked-data URIs for every concept when "
+"the scheme is published. Use the placeholders "
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:303
+msgid ""
+" — the starting number for auto-incrementing concept identifiers. Set this "
+"before publishing — once identifiers have been assigned the counter is "
+"locked."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:678
+msgid ""
+" — use the filter button in the Explore panel to show only concepts in one "
+"or more specific states, for example to review all Draft concepts before "
+"publishing a scheme."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:111
+msgid ""
+" — use the search icon in the header to quickly find any concept or scheme "
+"by name."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:72
+msgid ""
+" — your home screen with vocabulary statistics, recent activity, and "
+"translation gaps."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:806
+msgid " for platform documentation."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:273
+#, fuzzy
+msgid " placeholder in the URI template."
+msgstr "Modifier le modèle d'URL"
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:293
+msgid " to build the URI structure."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/DeleteConceptDialog.vue:54
+msgid ""
+"\"%{name}\" has %{count} direct child concept(s). How should they be handled?"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:270
+msgid "). Used as the "
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:283
 msgid "%{count} concepts"
 msgstr "Concepts %{count}"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:130
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/components/ConceptSetList.vue:33
+#, fuzzy
+msgid "%{count} concepts · %{updated}"
+msgstr "Concepts %{count}"
+
+#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:161
 msgid "%{count} concepts added to set."
 msgstr "Concepts %{count} ajoutés à l'ensemble."
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:161
+#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:190
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/ConceptSetBrowser.vue:148
 msgid "%{count} concepts removed from set."
 msgstr "Concepts %{count} supprimés de l'ensemble."
 
-#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:267
+#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:462
 msgid "%{count} paths"
 msgstr "Chemins %{count}"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/SearchResults.vue:69
+#: arches_lingo/src/arches_lingo/components/advanced-search/SearchResults.vue:71
 msgid "%{count} results found"
 msgstr "Résultats %{count} trouvés"
 
-#: arches_lingo/src/arches_lingo/pages/HomePage.vue:182
+#: arches_lingo/src/arches_lingo/pages/HomePage.vue:189
 msgid "%{count} schemes selected"
 msgstr "Schémas %{count} sélectionnés"
 
-#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/UserInteraction/UserInteraction.vue:31
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/UserInteraction/UserInteraction.vue:30
 msgid "%{firstName} %{lastName}"
 msgstr "%{firstName} %{lastName}"
 
-#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:53
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:116
+msgid "%{language} (%{code}): %{count}"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:55
 msgid "%{n} hr ago"
 msgstr "PLACEHOLDER il y a 0 heures"
 
-#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:51
+#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:53
 msgid "%{n} min ago"
 msgstr "PLACEHOLDERil y a 0 minutes"
 
-#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:55
+#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:57
 msgid "%{n}d ago"
 msgstr "PLACEHOLDERil y a 0Xd"
+
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:124
+#, fuzzy
+msgid "+%{count} more"
+msgstr "Concepts %{count}"
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:333
+msgid ""
+"A Concept represents a single idea or term in your vocabulary. Concepts live "
+"inside Schemes and can be arranged in a hierarchy."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:217
+msgid ""
+"A Scheme is the top-level container for a controlled vocabulary — think of "
+"it as the \"book\" that holds all your concepts."
+msgstr ""
 
 #: arches_lingo/src/arches_lingo/components/basic-search/SortAndFilterControls.vue:13
 msgid "A to Z"
 msgstr "De A à Z"
 
-#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:160
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:50
+msgid ""
+"A web-based tool for creating and managing controlled vocabularies and "
+"thesauri."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:746
+msgid "Access your profile from Settings > Profile in the sidebar."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:192
 msgid "Action"
 msgstr "Action"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:324
+#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:359
 msgid "Add %{count} concepts to set"
 msgstr "Ajouter des concepts %{count} à définir"
 
@@ -66,19 +271,24 @@ msgstr "Ajouter des concepts %{count} à définir"
 msgid "Add a new thesaurus, manage concept hierarchies"
 msgstr "Ajouter un nouveau thésaurus, gérer les hiérarchies de concepts"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptRelationship/components/ConceptRelationshipViewer.vue:105
+#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:356
+#, fuzzy
+msgid "Add all %{count} results to set"
+msgstr "Ajouter des concepts %{count} à définir"
+
+#: arches_lingo/src/arches_lingo/components/concept/ConceptRelationship/components/ConceptRelationshipViewer.vue:113
 msgid "Add Associated Concept"
 msgstr "Ajouter un concept associé"
 
-#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:75
+#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:89
 msgid "Add child"
 msgstr "Ajouter un enfant"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:500
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/ConceptHeaderToolbar.vue:425
 msgid "Add Child"
 msgstr "Ajouter un enfant"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetGroup.vue:108
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetGroup.vue:109
 msgid "Add Condition"
 msgstr "Ajouter une condition"
 
@@ -86,11 +296,16 @@ msgstr "Ajouter une condition"
 msgid "Add Contributor"
 msgstr "Ajouter un contributeur"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetGroup.vue:115
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/components/ConceptSetMemberList.vue:102
+#, fuzzy
+msgid "Add current concept"
+msgstr "Ajouter un concept correspondant"
+
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetGroup.vue:116
 msgid "Add Group"
 msgstr "Ajouter un groupe"
 
-#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:226
+#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:414
 msgid "Add Hierarchical Parent"
 msgstr "Ajouter un parent hiérarchique"
 
@@ -106,12 +321,12 @@ msgstr ""
 "Ajoutez des images, des titres d'images et des descriptions pour illustrer "
 "les caractéristiques du concept."
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptLabel/components/ConceptLabelViewer.vue:87
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeLabel/components/SchemeLabelViewer.vue:96
+#: arches_lingo/src/arches_lingo/components/concept/ConceptLabel/components/ConceptLabelViewer.vue:95
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeLabel/components/SchemeLabelViewer.vue:104
 msgid "Add Label"
 msgstr "Ajouter une étiquette"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptMatch/components/ConceptMatchViewer.vue:109
+#: arches_lingo/src/arches_lingo/components/concept/ConceptMatch/components/ConceptMatchViewer.vue:117
 msgid "Add Matched Concept"
 msgstr "Ajouter un concept correspondant"
 
@@ -119,16 +334,16 @@ msgstr "Ajouter un concept correspondant"
 msgid "Add Namespace"
 msgstr "Ajouter un espace de noms"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptNote/components/ConceptNoteViewer.vue:97
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeNote/components/SchemeNoteViewer.vue:97
+#: arches_lingo/src/arches_lingo/components/concept/ConceptNote/components/ConceptNoteViewer.vue:105
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeNote/components/SchemeNoteViewer.vue:105
 msgid "Add Note"
 msgstr "Ajouter une note"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptNote/components/ConceptNoteEditor.vue:126
+#: arches_lingo/src/arches_lingo/components/concept/ConceptNote/components/ConceptNoteEditor.vue:125
 msgid "Add notes to define and provide context for concept."
 msgstr "Ajoutez des notes pour définir et fournir un contexte au concept."
 
-#: arches_lingo/src/arches_lingo/components/generic/ResourceListEditor/ResourceListEditor.vue:400
+#: arches_lingo/src/arches_lingo/components/generic/ResourceListEditor/ResourceListEditor.vue:401
 msgid "Add or edit resource name information."
 msgstr "Ajoutez ou modifiez les informations sur le nom de la ressource."
 
@@ -144,16 +359,18 @@ msgstr "Ajouter une source"
 msgid "Add Standard"
 msgstr "Ajouter une norme"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:199
+#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:228
 msgid "Add to Set"
 msgstr "Ajouter à l'ensemble"
 
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:419
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:554
 msgid "Add Top Concept"
 msgstr "Ajouter un concept supérieur"
 
-#: arches_lingo/src/arches_lingo/components/sidenav/components/NavNavigation.vue:33
-#: arches_lingo/src/arches_lingo/pages/AdvancedSearch.vue:261
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:488
+#: arches_lingo/src/arches_lingo/components/sidenav/components/NavNavigation.vue:36
+#: arches_lingo/src/arches_lingo/pages/AdvancedSearch.vue:271
+#: arches_lingo/src/arches_lingo/pages/LandingPage.vue:55
 msgid "Advanced Search"
 msgstr "Recherche avancée"
 
@@ -161,81 +378,127 @@ msgstr "Recherche avancée"
 msgid "All concepts have a preferred label in this language."
 msgstr "Tous les concepts ont une étiquette préférée dans cette langue."
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:104
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:105
 msgid "All password fields are required."
 msgstr "Tous les champs de mot de passe sont obligatoires."
 
-#: arches_lingo/src/arches_lingo/pages/HomePage.vue:179
+#: arches_lingo/src/arches_lingo/components/generic/ReinstateDialog.vue:63
+msgid "All retired concepts within this scheme will be moved to Editing state."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/pages/HomePage.vue:186
 msgid "All schemes"
 msgstr "Tous les régimes"
 
-#: arches_lingo/src/arches_lingo/pages/HomePage.vue:44
+#: arches_lingo/src/arches_lingo/components/tree/components/LifecycleStateFilter.vue:26
+#, fuzzy
+msgid "All states"
+msgstr "Tous les régimes"
+
+#: arches_lingo/src/arches_lingo/pages/HomePage.vue:45
 msgid "All time"
 msgstr "Tout le temps"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:133
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/components/ConceptSetMemberList.vue:101
+msgid "Already in set"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:425
+msgid "Alternate"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:134
 msgid "An error occurred."
 msgstr "Une erreur s'est produite."
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetGroup.vue:145
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetGroup.vue:34
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetGroup.vue:146
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetGroup.vue:35
 msgid "AND"
 msgstr "ET"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:619
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:525
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:289
+msgid "and "
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/ConceptHeader.vue:424
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:706
 msgid "Anonymous"
 msgstr "Anonyme"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:335
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:92
 msgid "Any language"
 msgstr "N'importe quelle langue"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:377
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:95
 msgid "Any scheme"
 msgstr "N'importe quel schéma"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:301
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:318
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:91
 msgid "Any type"
 msgstr "N'importe quel type"
 
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:46
+msgid "Arches Lingo"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/pages/LandingPage.vue:80
+msgid "Arches Logo"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/DeleteConceptDialog.vue:72
 #: arches_lingo/src/arches_lingo/components/generic/ResourceListEditor/ResourceListEditor.vue:184
 msgid "Are you sure you want to delete \"%{name}\"?"
 msgstr "Etes-vous sûr de vouloir supprimer « %{name} » ?"
 
-#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:149
+#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:248
 msgid "Are you sure you want to delete relationship to parent?"
 msgstr "Êtes-vous sûr de vouloir supprimer la relation avec le parent ?"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:329
-msgid "Are you sure you want to delete this concept?"
-msgstr "Êtes-vous sûr de vouloir supprimer ce concept ?"
-
-#: arches_lingo/src/arches_lingo/components/concept/ConceptLabel/components/ConceptLabelViewer.vue:52
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeLabel/components/SchemeLabelViewer.vue:63
+#: arches_lingo/src/arches_lingo/components/concept/ConceptLabel/components/ConceptLabelViewer.vue:53
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeLabel/components/SchemeLabelViewer.vue:64
 msgid "Are you sure you want to delete this label?"
 msgstr "Êtes-vous sûr de vouloir supprimer ce libellé ?"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptNote/components/ConceptNoteViewer.vue:65
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeNote/components/SchemeNoteViewer.vue:65
+#: arches_lingo/src/arches_lingo/components/concept/ConceptNote/components/ConceptNoteViewer.vue:66
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeNote/components/SchemeNoteViewer.vue:66
 msgid "Are you sure you want to delete this note?"
 msgstr "Êtes-vous sûr de vouloir supprimer cette note ?"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptMatch/components/ConceptMatchViewer.vue:71
-#: arches_lingo/src/arches_lingo/components/concept/ConceptRelationship/components/ConceptRelationshipViewer.vue:71
+#: arches_lingo/src/arches_lingo/components/concept/ConceptMatch/components/ConceptMatchViewer.vue:72
+#: arches_lingo/src/arches_lingo/components/concept/ConceptRelationship/components/ConceptRelationshipViewer.vue:72
 msgid "Are you sure you want to delete this relationship?"
 msgstr "Êtes-vous sûr de vouloir supprimer cette relation ?"
 
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:312
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:360
 msgid "Are you sure you want to delete this scheme?"
 msgstr "Êtes-vous sûr de vouloir supprimer ce schéma ?"
+
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/DeleteConceptDialog.vue:76
+#, fuzzy
+msgid "Are you sure you want to deprecate \"%{name}\"?"
+msgstr "Etes-vous sûr de vouloir supprimer « %{name} » ?"
 
 #: arches_lingo/src/arches_lingo/components/header/PageHeader/components/UserInteraction/components/UserInteractionMenu/components/UserInteractionTools.vue:22
 msgid "Are you sure you want to log out?"
 msgstr "Êtes-vous sûr de vouloir vous déconnecter ?"
 
-#: arches_lingo/src/arches_lingo/components/generic/EditLog/EditLog.vue:82
+#: arches_lingo/src/arches_lingo/components/generic/ReinstateDialog.vue:28
+#, fuzzy
+msgid ""
+"Are you sure you want to reinstate \"%{name}\"? It will return to Editing "
+"state."
+msgstr "Etes-vous sûr de vouloir supprimer « %{name} » ?"
+
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:470
+#, fuzzy
+msgid ""
+"Are you sure you want to retire this vocabulary? All concepts within it will "
+"also be retired."
+msgstr ""
+"Êtes-vous sûr de vouloir revenir à l'état dans %{timestamp} ? Toutes les "
+"modifications apportées après ce point seront annulées."
+
+#: arches_lingo/src/arches_lingo/components/generic/EditLog/EditLog.vue:97
 msgid ""
 "Are you sure you want to revert to the state at %{timestamp}? All changes "
 "made after this point will be undone."
@@ -243,21 +506,25 @@ msgstr ""
 "Êtes-vous sûr de vouloir revenir à l'état dans %{timestamp} ? Toutes les "
 "modifications apportées après ce point seront annulées."
 
-#: arches_lingo/src/arches_lingo/pages/ConceptPage.vue:49
+#: arches_lingo/src/arches_lingo/pages/ConceptPage.vue:51
 msgid "Associated Concepts"
 msgstr "Concepts associés"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:52
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:58
 msgid "Associated Relationship"
 msgstr "Relation associée"
 
-#: arches_lingo/src/arches_lingo/ArchesLingo.vue:87
-msgid "Authentication required."
-msgstr "Authentification requise."
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/DeleteConceptDialog.vue:158
+msgid "Attach children to parent"
+msgstr ""
 
-#: arches_lingo/src/arches_lingo/components/sidenav/SideNav.vue:32
-msgid "Authority Editors"
-msgstr "Éditeurs d'autorité"
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/components/ConceptSetMemberList.vue:77
+msgid "Back to sets"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:598
+msgid "Back under active revision after prior publication."
+msgstr ""
 
 #: arches_lingo/src/arches_lingo/components/basic-search/SortAndFilterControls.vue:12
 msgid "Best Match"
@@ -267,157 +534,230 @@ msgstr "Meilleure correspondance"
 msgid "Bright"
 msgstr "Brillant"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:73
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:81
 msgid "Broader (parent of)"
 msgstr "Plus large (parent de)"
 
-#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:257
+#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:237
 msgid "Broader Concept: %{parent}"
 msgstr "Concept plus large : %{parent}"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:185
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:362
+#: arches_lingo/src/arches_lingo/pages/LandingPage.vue:47
+#, fuzzy
+msgid "Browse and manage controlled vocabularies and concept hierarchies"
+msgstr "Ajouter un nouveau thésaurus, gérer les hiérarchies de concepts"
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:492
+msgid ""
+"Build complex queries to find concepts across all schemes using multiple "
+"criteria at once."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:186
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/DeleteConceptDialog.vue:194
 #: arches_lingo/src/arches_lingo/components/concept/ConceptImages/components/ConceptImagesViewer.vue:155
-#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:157
-#: arches_lingo/src/arches_lingo/components/generic/ComponentManager/components/ComponentEditor.vue:173
-#: arches_lingo/src/arches_lingo/components/generic/EditLog/EditLog.vue:229
-#: arches_lingo/src/arches_lingo/components/generic/MetaStringViewer.vue:73
+#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:325
+#: arches_lingo/src/arches_lingo/components/generic/ComponentManager/components/ComponentEditor.vue:215
+#: arches_lingo/src/arches_lingo/components/generic/EditLog/EditLog.vue:248
+#: arches_lingo/src/arches_lingo/components/generic/MetaStringViewer.vue:142
+#: arches_lingo/src/arches_lingo/components/generic/ReinstateDialog.vue:133
 #: arches_lingo/src/arches_lingo/components/generic/ResourceListEditor/ResourceListEditor.vue:211
 #: arches_lingo/src/arches_lingo/components/header/PageHeader/components/UserInteraction/components/UserInteractionMenu/components/UserInteractionTools.vue:27
 #: arches_lingo/src/arches_lingo/components/scheme/ImportThesauri.vue:184
 #: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/ConceptIdentifierCounterField.vue:128
 #: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/ExportThesauri.vue:186
 #: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/SchemeIdentifierField.vue:109
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/SchemeURITemplateField.vue:118
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:340
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/SchemeURITemplateField.vue:120
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:388
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:477
 msgid "Cancel"
 msgstr "Annuler"
 
-#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:183
+#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:262
 msgid "Cannot delete the last relationship."
 msgstr "Impossible de supprimer la dernière relation."
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:287
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:288
 msgid "Change Password"
 msgstr "Changer le mot de passe"
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:766
+msgid ""
+"Change your password using the Password section — enter your current "
+"password and choose a new one."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/DeleteConceptDialog.vue:161
+msgid ""
+"Child concepts will be moved up to this concept's parent. For "
+"polyhierarchical concepts, all parents will receive the children."
+msgstr ""
 
 #: arches_lingo/src/arches_lingo/components/scheme/ImportThesauri.vue:137
 msgid "Choose File"
 msgstr "Choisir un fichier"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/SearchQueryBuilder.vue:48
+#: arches_lingo/src/arches_lingo/components/advanced-search/SearchQueryBuilder.vue:51
 msgid "Clear"
 msgstr "Clair"
 
-#: arches_lingo/src/arches_lingo/components/basic-search/BasicSearch.vue:295
+#: arches_lingo/src/arches_lingo/components/basic-search/BasicSearch.vue:393
 msgid "Clear Input"
 msgstr "Effacer la saisie"
 
-#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/SchemeHierarchy/SchemeHierarchy.vue:73
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:551
+msgid ""
+"Click the Collections button in the toolbar to show or hide the Saved "
+"Searches and Concept Sets panel."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/SchemeHierarchy/SchemeHierarchy.vue:96
 msgid "Close"
 msgstr "Fermer"
 
-#: arches_lingo/src/arches_lingo/components/generic/ComponentManager/components/ComponentEditor.vue:146
+#: arches_lingo/src/arches_lingo/components/generic/ComponentManager/components/ComponentEditor.vue:188
 msgid "close editor"
 msgstr "fermer l'éditeur"
 
+#: arches_lingo/src/arches_lingo/components/dashboard/BreakdownsGrid.vue:147
+msgid "Code"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:368
+msgid "Collapse all"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:388
+msgid "Collapse all paths"
+msgstr ""
+
 #: arches_lingo/src/arches_lingo/components/dashboard/MissingTranslationsPanel.vue:138
-#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:189
-#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:85
+#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:104
+#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:102
 msgid "Concept"
 msgstr "Concept"
+
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/ConceptSetBrowser.vue:121
+#, fuzzy
+msgid "Concept added to set."
+msgstr "Concepts %{count} ajoutés à l'ensemble."
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:300
+#, fuzzy
+msgid "Concept counter"
+msgstr "Compteur conceptuel :"
 
 #: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/ConceptIdentifierCounterField.vue:104
 msgid "Concept counter:"
 msgstr "Compteur conceptuel :"
 
-#: arches_lingo/src/arches_lingo/pages/ConceptPage.vue:42
+#: arches_lingo/src/arches_lingo/pages/ConceptPage.vue:44
 msgid "Concept Images"
 msgstr "Images conceptuelles"
 
-#: arches_lingo/src/arches_lingo/pages/ConceptPage.vue:28
+#: arches_lingo/src/arches_lingo/pages/ConceptPage.vue:30
 msgid "Concept Labels"
 msgstr "Étiquettes conceptuelles"
 
-#: arches_lingo/src/arches_lingo/pages/ConceptPage.vue:21
+#: arches_lingo/src/arches_lingo/pages/ConceptPage.vue:23
 msgid "Concept Metadata"
 msgstr "Métadonnées conceptuelles"
 
-#: arches_lingo/src/arches_lingo/pages/ConceptPage.vue:35
+#: arches_lingo/src/arches_lingo/pages/ConceptPage.vue:37
 msgid "Concept Notes"
 msgstr "Notes conceptuelles"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:61
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:67
 msgid "Concept Set"
 msgstr "Ensemble de concepts"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:83
+#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:98
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/ConceptSetBrowser.vue:73
 msgid "Concept set created."
 msgstr "Ensemble de concepts créé."
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:107
+#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:122
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/ConceptSetBrowser.vue:94
 msgid "Concept set deleted."
 msgstr "Ensemble de concepts supprimé."
 
-#: arches_lingo/src/arches_lingo/pages/AdvancedSearch.vue:340
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:528
+#, fuzzy
+msgid "Concept sets"
+msgstr "Ensembles de concepts"
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/SchemeHierarchy/SchemeHierarchy.vue:87
+#: arches_lingo/src/arches_lingo/pages/AdvancedSearch.vue:350
 msgid "Concept Sets"
 msgstr "Ensembles de concepts"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:46
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:52
 msgid "Concept Type"
 msgstr "Type de concept"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:207
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/ConceptHeaderToolbar.vue:212
 msgid "Concept type updated"
 msgstr "Type de concept mis à jour"
 
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:662
+#, fuzzy
+msgid "Concept-level actions"
+msgstr "Ensembles de concepts"
+
 #: arches_lingo/src/arches_lingo/components/dashboard/DashboardStatCards.vue:37
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:329
 msgid "Concepts"
 msgstr "Concepts"
 
-#: arches_lingo/src/arches_lingo/components/dashboard/BreakdownsGrid.vue:23
+#: arches_lingo/src/arches_lingo/components/dashboard/BreakdownsGrid.vue:86
 msgid "Concepts by Type"
 msgstr "Concepts par type"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:345
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:346
 msgid "Confirm new password"
 msgstr "Confirmer le nouveau mot de passe"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:337
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:338
 msgid "Confirm New Password"
 msgstr "Confirmer le nouveau mot de passe"
 
-#: arches_lingo/src/arches_lingo/components/generic/EditLog/EditLog.vue:222
+#: arches_lingo/src/arches_lingo/components/generic/EditLog/EditLog.vue:241
 msgid "Confirm Revert"
 msgstr "Confirmer le retour"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:328
 #: arches_lingo/src/arches_lingo/components/concept/ConceptImages/components/ConceptImagesViewer.vue:109
-#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:148
-#: arches_lingo/src/arches_lingo/components/generic/MetaStringViewer.vue:66
+#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:247
+#: arches_lingo/src/arches_lingo/components/generic/MetaStringViewer.vue:91
 #: arches_lingo/src/arches_lingo/components/header/PageHeader/components/UserInteraction/components/UserInteractionMenu/components/UserInteractionTools.vue:21
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:311
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:359
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:465
 msgid "Confirmation"
 msgstr "Confirmation"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:65
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:73
 msgid "Contains"
 msgstr "Contient"
+
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:69
+#, fuzzy
+msgid "Contributor"
+msgstr "Contributeurs"
 
 #: arches_lingo/src/arches_lingo/pages/ContributorsPage.vue:97
 msgid "Contributor Type"
 msgstr "Type de contributeur"
 
-#: arches_lingo/src/arches_lingo/components/sidenav/components/NavReferenceData.vue:19
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:713
+#: arches_lingo/src/arches_lingo/components/sidenav/components/NavReferenceData.vue:26
 #: arches_lingo/src/arches_lingo/pages/ContributorsPage.vue:74
 msgid "Contributors"
 msgstr "Contributeurs"
 
-#: arches_lingo/src/arches_lingo/components/sidenav/components/NavReferenceData.vue:33
+#: arches_lingo/src/arches_lingo/components/sidenav/components/NavReferenceData.vue:42
 msgid "Controlled List Manager"
 msgstr "Gestionnaire de liste contrôlée"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptRelationship/components/ConceptRelationshipViewer.vue:60
+#: arches_lingo/src/arches_lingo/components/concept/ConceptRelationship/components/ConceptRelationshipViewer.vue:61
 msgid "Create a Concept Label before adding associated concepts"
 msgstr "Créer une étiquette de concept avant d'ajouter des concepts associés"
 
@@ -430,20 +770,26 @@ msgstr ""
 msgid "Create a Concept Label before adding images"
 msgstr "Créez une étiquette conceptuelle avant d'ajouter des images"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptMatch/components/ConceptMatchViewer.vue:60
+#: arches_lingo/src/arches_lingo/components/concept/ConceptMatch/components/ConceptMatchViewer.vue:61
 msgid "Create a Concept Label before adding matched concepts"
 msgstr ""
 "Créez une étiquette de concept avant d'ajouter des concepts correspondants"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptNote/components/ConceptNoteViewer.vue:56
+#: arches_lingo/src/arches_lingo/components/concept/ConceptNote/components/ConceptNoteViewer.vue:57
 msgid "Create a Concept Label before adding notes"
 msgstr "Créez une étiquette conceptuelle avant d'ajouter des notes"
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:227
+msgid ""
+"Create a new scheme from the Schemes list, or import one from a SKOS/RDF "
+"file."
+msgstr ""
 
 #: arches_lingo/src/arches_lingo/components/scheme/SchemeNamespace/components/SchemeNamespaceViewer.vue:56
 msgid "Create a Scheme Label before adding a namespace"
 msgstr "Créez une étiquette de schéma avant d'ajouter un espace de noms"
 
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeNote/components/SchemeNoteViewer.vue:56
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeNote/components/SchemeNoteViewer.vue:57
 msgid "Create a Scheme Label before adding notes"
 msgstr "Créez une étiquette de schéma avant d'ajouter des notes"
 
@@ -455,17 +801,16 @@ msgstr "Créez une étiquette de schéma avant d'ajouter des droits"
 msgid "Create a Scheme Label before adding standards"
 msgstr "Créer une étiquette de schéma avant d'ajouter des normes"
 
-#: arches_lingo/src/arches_lingo/components/login/LoginForm.vue:75
+#: arches_lingo/src/arches_lingo/components/login/LoginForm.vue:78
 msgid "Create an account or log in using multi-factor authentication"
 msgstr ""
-"Créez un compte ou connectez-vous à l'aide de l'authentification "
-"multifacteur"
+"Créez un compte ou connectez-vous à l'aide de l'authentification multifacteur"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:314
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:315
 msgid "Current password"
 msgstr "Mot de passe actuel"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:306
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:307
 msgid "Current Password"
 msgstr "Mot de passe actuel"
 
@@ -473,11 +818,14 @@ msgstr "Mot de passe actuel"
 msgid "Dark"
 msgstr "Sombre"
 
-#: arches_lingo/src/arches_lingo/components/sidenav/components/NavNavigation.vue:19
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:158
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:69
+#: arches_lingo/src/arches_lingo/components/sidenav/components/NavNavigation.vue:22
+#: arches_lingo/src/arches_lingo/pages/LandingPage.vue:37
 msgid "Dashboard"
 msgstr "Tableau de bord"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptLabel/components/ConceptLabelEditor.vue:125
+#: arches_lingo/src/arches_lingo/components/concept/ConceptLabel/components/ConceptLabelEditor.vue:123
 msgid ""
 "Define the label type, status, language, and time span over which it was "
 "used."
@@ -485,46 +833,50 @@ msgstr ""
 "Définissez le type d'étiquette, le statut, la langue et la période pendant "
 "laquelle elle a été utilisée."
 
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeLicense/components/SchemeLicenseEditor.vue:158
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeLicense/components/SchemeLicenseEditor.vue:156
 msgid "Define the rights or license under which this scheme is managed."
-msgstr ""
-"Définissez les droits ou la licence sous lesquels ce système est géré."
+msgstr "Définissez les droits ou la licence sous lesquels ce système est géré."
 
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeStandard/components/SchemeStandardEditor.vue:140
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeStandard/components/SchemeStandardEditor.vue:139
 msgid "Define the standards that this scheme implements."
 msgstr "Définir les normes que ce système met en œuvre."
 
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeLabel/components/SchemeLabelEditor.vue:143
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeLabel/components/SchemeLabelEditor.vue:142
 msgid "Define this scheme's labels, contributors, and sources."
 msgstr ""
 "Définissez les étiquettes, les contributeurs et les sources de ce schéma."
 
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeNamespace/components/SchemeNamespaceEditor.vue:145
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeNamespace/components/SchemeNamespaceEditor.vue:144
 msgid "Define this scheme's unique namespaces."
 msgstr "Définissez les espaces de noms uniques de ce schéma."
 
-#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:290
-#: arches_lingo/src/arches_lingo/components/generic/MetaStringViewer.vue:172
+#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:493
+#: arches_lingo/src/arches_lingo/components/generic/MetaStringViewer.vue:245
 msgid "delete"
 msgstr "supprimer"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:272
-#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:161
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:367
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:510
+#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:303
+#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:162
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/ConceptHeaderToolbar.vue:434
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/DeleteConceptDialog.vue:99
 #: arches_lingo/src/arches_lingo/components/concept/ConceptImages/components/ConceptImagesViewer.vue:160
-#: arches_lingo/src/arches_lingo/components/concept/ConceptImages/components/ConceptImagesViewer.vue:291
-#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:162
-#: arches_lingo/src/arches_lingo/components/generic/MetaStringViewer.vue:78
+#: arches_lingo/src/arches_lingo/components/concept/ConceptImages/components/ConceptImagesViewer.vue:290
+#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:337
+#: arches_lingo/src/arches_lingo/components/generic/MetaStringViewer.vue:154
 #: arches_lingo/src/arches_lingo/components/generic/ResourceListEditor/ResourceListEditor.vue:207
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:345
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:429
-#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:76
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:393
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:564
+#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:90
 msgid "Delete"
 msgstr "Supprimer"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:511
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:430
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/DeleteConceptDialog.vue:83
+msgid "Delete all children"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/ConceptHeaderToolbar.vue:435
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/DeleteConceptDialog.vue:65
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:565
 msgid "Delete Concept"
 msgstr "Supprimer le concept"
 
@@ -536,13 +888,36 @@ msgstr "Supprimer la ressource"
 msgid "Delete Resource"
 msgstr "Supprimer la ressource"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:295
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/components/ConceptSetList.vue:119
+#, fuzzy
+msgid "Delete set"
+msgstr "Supprimer le concept"
+
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/DeleteConceptDialog.vue:101
+msgid "Deprecate"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/DeleteConceptDialog.vue:85
+msgid "Deprecate all children"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/DeleteConceptDialog.vue:67
+#, fuzzy
+msgid "Deprecate Concept"
+msgstr "Supprimer le concept"
+
+#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:326
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/components/ConceptSetList.vue:141
 msgid "Description"
 msgstr "Description"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/SearchResults.vue:82
+#: arches_lingo/src/arches_lingo/components/advanced-search/SearchResults.vue:84
 msgid "Deselect All"
 msgstr "Désélectionner tout"
+
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:806
+msgid "Direct only"
+msgstr ""
 
 #: arches_lingo/src/arches_lingo/composables/useEditorDirtyState.ts:33
 msgid "Discard Changes"
@@ -551,6 +926,10 @@ msgstr "Ignorer les modifications"
 #: arches_lingo/src/arches_lingo/components/header/PageHeader/components/NotificationsInteraction/components/NotificationsPanel.vue:135
 msgid "Dismiss All"
 msgstr "Tout rejeter"
+
+#: arches_lingo/src/arches_lingo/components/sidenav/components/NavSettings.vue:41
+msgid "Django Admin"
+msgstr ""
 
 #: arches_lingo/src/arches_lingo/components/scheme/ImportThesauri.vue:35
 msgid "Do nothing if the Scheme or Concept already exists"
@@ -572,8 +951,13 @@ msgstr "Échec du téléchargement"
 msgid "Download Zip File"
 msgstr "Télécharger le fichier zip"
 
-#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:281
-#: arches_lingo/src/arches_lingo/components/generic/MetaStringViewer.vue:160
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:584
+msgid "Draft"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/concept/ConceptImages/components/ConceptImagesViewer.vue:281
+#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:480
+#: arches_lingo/src/arches_lingo/components/generic/MetaStringViewer.vue:232
 msgid "edit"
 msgstr "modifier"
 
@@ -581,8 +965,8 @@ msgstr "modifier"
 msgid "Edit concept identifier counter"
 msgstr "Modifier le compteur d'identifiant de concept"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:482
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:400
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/ConceptHeaderToolbar.vue:407
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:535
 #: arches_lingo/src/arches_lingo/composables/useEditLog.ts:14
 msgid "Edit History"
 msgstr "Modifier l'historique"
@@ -603,23 +987,28 @@ msgstr "Modifier les droits"
 msgid "Edit Scheme Standard"
 msgstr "Modifier la norme du schéma"
 
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/SchemeURITemplateField.vue:134
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/SchemeURITemplateField.vue:136
 msgid "Edit URL template"
 msgstr "Modifier le modèle d'URL"
 
-#: arches_lingo/src/arches_lingo/components/generic/ComponentManager/components/ComponentEditor.vue:124
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:595
+#, fuzzy
+msgid "Editing"
+msgstr "Continuer à modifier"
+
+#: arches_lingo/src/arches_lingo/components/generic/ComponentManager/components/ComponentEditor.vue:166
 msgid "Editor Tools"
 msgstr "Outils d'édition"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:245
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:246
 msgid "Email"
 msgstr "E-mail"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:251
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:252
 msgid "Email address"
 msgstr "Adresse email"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:68
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:76
 msgid "Ends with"
 msgstr "Se termine par"
 
@@ -627,28 +1016,72 @@ msgstr "Se termine par"
 msgid "Enter file name"
 msgstr "Entrez le nom du fichier"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:177
+#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:178
 msgid "Enter search name"
 msgstr "Entrez le nom de la recherche"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:356
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/ConceptHeaderToolbar.vue:272
 msgid "Error deleting concept"
 msgstr "Erreur lors de la suppression du concept"
 
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:334
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:382
 msgid "Error deleting scheme"
 msgstr "Erreur lors de la suppression du schéma"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:66
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/ConceptHeaderToolbar.vue:274
+#, fuzzy
+msgid "Error deprecating concept"
+msgstr "Erreur lors de la suppression du concept"
+
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/ConceptHeaderToolbar.vue:301
+#, fuzzy
+msgid "Error reinstating concept"
+msgstr "Erreur lors de la suppression du concept"
+
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:447
+#, fuzzy
+msgid "Error reinstating scheme"
+msgstr "Erreur lors de la suppression du schéma"
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:407
+#, fuzzy
+msgid ""
+"Every concept should have at least one Preferred Label. Labels can be added "
+"in multiple languages."
+msgstr "Tous les concepts ont une étiquette préférée dans cette langue."
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:576
+msgid ""
+"Every scheme and concept has a lifecycle state that tracks its maturity from "
+"initial creation through to publication and eventual retirement."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:74
 msgid "Exact"
 msgstr "Exact"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:69
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:437
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:77
 msgid "Exists (any value)"
 msgstr "Existe (n'importe quelle valeur)"
 
-#: arches_lingo/src/arches_lingo/components/sidenav/SideNav.vue:69
-#: arches_lingo/src/arches_lingo/components/sidenav/SideNav.vue:82
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:561
+msgid ""
+"Expand a search result row to see additional details such as identifier, "
+"lifecycle state, and notes."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:367
+msgid "Expand all"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:389
+#, fuzzy
+msgid "Expand all paths"
+msgstr "Développer la navigation"
+
+#: arches_lingo/src/arches_lingo/components/sidenav/SideNav.vue:62
+#: arches_lingo/src/arches_lingo/components/sidenav/SideNav.vue:78
 msgid "Expand navigation"
 msgstr "Développer la navigation"
 
@@ -657,18 +1090,29 @@ msgstr "Développer la navigation"
 msgid "Explore"
 msgstr "Explorer"
 
-#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/SchemeHierarchy/SchemeHierarchy.vue:65
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/SchemeHierarchy/SchemeHierarchy.vue:81
 msgid "Explore Hierarchies"
 msgstr "Explorer les hiérarchies"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:490
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:495
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:95
+#, fuzzy
+msgid "Explore panel"
+msgstr "Explorer"
+
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/ConceptHeaderToolbar.vue:415
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/ConceptHeaderToolbar.vue:420
 #: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/ExportThesauri.vue:194
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:408
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:413
-#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:77
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:543
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:548
+#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:91
 msgid "Export"
 msgstr "Exporter"
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:475
+msgid ""
+"Export any scheme from its detail page to share your vocabulary or use it in "
+"another system."
+msgstr ""
 
 #: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/ExportThesauri.vue:131
 msgid "Export Format"
@@ -682,21 +1126,28 @@ msgstr "Exportation lancée"
 msgid "Export Thesauri"
 msgstr "Exporter des thésaurus"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:140
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/ConceptSetBrowser.vue:127
+#, fuzzy
+msgid "Failed to add concept to set."
+msgstr "Échec de l'ajout de concepts à définir."
+
+#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:170
 msgid "Failed to add concepts to set."
 msgstr "Échec de l'ajout de concepts à définir."
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:89
+#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:104
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/ConceptSetBrowser.vue:79
 msgid "Failed to create concept set."
 msgstr "Échec de la création d'un ensemble de concepts."
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:113
+#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:128
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/ConceptSetBrowser.vue:100
 msgid "Failed to delete concept set."
 msgstr "Échec de la suppression de l'ensemble de concepts."
 
-#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:182
-#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:192
-#: arches_lingo/src/arches_lingo/components/generic/MetaStringViewer.vue:95
+#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:261
+#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:285
+#: arches_lingo/src/arches_lingo/components/generic/MetaStringViewer.vue:113
 msgid "Failed to delete data."
 msgstr "Échec de la suppression des données."
 
@@ -704,48 +1155,66 @@ msgstr "Échec de la suppression des données."
 msgid "Failed to delete resource"
 msgstr "Échec de la suppression de la ressource"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:102
+#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:103
 msgid "Failed to delete search."
 msgstr "Échec de la suppression de la recherche."
 
-#: arches_lingo/src/arches_lingo/components/basic-search/BasicSearch.vue:93
+#: arches_lingo/src/arches_lingo/components/basic-search/BasicSearch.vue:210
 msgid "Failed to fetch data."
 msgstr "Échec de la récupération des données."
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:62
+#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:942
+#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:987
+#, fuzzy
+msgid "Failed to load child concepts."
+msgstr "Échec du chargement des ensembles de concepts."
+
+#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:868
+#, fuzzy
+msgid "Failed to load concept path."
+msgstr "Échec du chargement des ensembles de concepts."
+
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/ConceptSetBrowser.vue:56
+#, fuzzy
+msgid "Failed to load concept set."
+msgstr "Échec du chargement des ensembles de concepts."
+
+#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:77
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/ConceptSetBrowser.vue:43
 msgid "Failed to load concept sets."
 msgstr "Échec du chargement des ensembles de concepts."
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:54
+#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:55
 msgid "Failed to load saved searches."
 msgstr "Échec du chargement des recherches enregistrées."
 
-#: arches_lingo/src/arches_lingo/pages/AdvancedSearch.vue:142
+#: arches_lingo/src/arches_lingo/pages/AdvancedSearch.vue:147
 msgid "Failed to load search options."
 msgstr "Échec du chargement des options de recherche."
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:171
+#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:200
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/ConceptSetBrowser.vue:156
 msgid "Failed to remove concepts from set."
 msgstr "Échec de la suppression des concepts de l'ensemble."
 
 #: arches_lingo/src/arches_lingo/components/concept/ConceptImages/components/ConceptImagesEditor.vue:283
-#: arches_lingo/src/arches_lingo/components/concept/ConceptLabel/components/ConceptLabelEditor.vue:104
-#: arches_lingo/src/arches_lingo/components/concept/ConceptMatch/components/ConceptMatchEditor.vue:103
-#: arches_lingo/src/arches_lingo/components/concept/ConceptNote/components/ConceptNoteEditor.vue:105
-#: arches_lingo/src/arches_lingo/components/concept/ConceptRelationship/components/ConceptRelationshipEditor.vue:106
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeLabel/components/SchemeLabelEditor.vue:122
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeLicense/components/SchemeLicenseEditor.vue:137
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeNamespace/components/SchemeNamespaceEditor.vue:125
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeNote/components/SchemeNoteEditor.vue:120
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeStandard/components/SchemeStandardEditor.vue:119
+#: arches_lingo/src/arches_lingo/components/concept/ConceptLabel/components/ConceptLabelEditor.vue:102
+#: arches_lingo/src/arches_lingo/components/concept/ConceptMatch/components/ConceptMatchEditor.vue:101
+#: arches_lingo/src/arches_lingo/components/concept/ConceptNote/components/ConceptNoteEditor.vue:104
+#: arches_lingo/src/arches_lingo/components/concept/ConceptRelationship/components/ConceptRelationshipEditor.vue:104
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeLabel/components/SchemeLabelEditor.vue:121
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeLicense/components/SchemeLicenseEditor.vue:135
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeNamespace/components/SchemeNamespaceEditor.vue:124
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeNote/components/SchemeNoteEditor.vue:119
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeStandard/components/SchemeStandardEditor.vue:118
 msgid "Failed to save data."
 msgstr "Échec de l'enregistrement des données."
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:79
+#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:80
 msgid "Failed to save search."
 msgstr "Échec de l'enregistrement de la recherche."
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:215
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/ConceptHeaderToolbar.vue:221
 msgid "Failed to update concept type"
 msgstr "Échec de la mise à jour du type de concept"
 
@@ -753,25 +1222,51 @@ msgstr "Échec de la mise à jour du type de concept"
 msgid "File Name (optional)"
 msgstr "Nom du fichier (facultatif)"
 
-#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:79
+#: arches_lingo/src/arches_lingo/components/tree/components/LifecycleStateFilter.vue:24
+#, fuzzy
+msgid "Filter by lifecycle state"
+msgstr "Impossible de récupérer l'état du cycle de vie"
+
+#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:93
 msgid "Filter concepts"
 msgstr "Concepts de filtrage"
 
-#: arches_lingo/src/arches_lingo/components/widgets/ConceptResourceSelectWidget/components/ConceptResourceSelectWidgetEditor.vue:194
+#: arches_lingo/src/arches_lingo/components/widgets/ConceptResourceSelectWidget/components/ConceptResourceSelectWidgetEditor.vue:202
 msgid "Filter Concepts"
 msgstr "Concepts de filtrage"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:228
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:609
+msgid "Finalized and stable. The URI is now authoritative."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:229
 msgid "First name"
 msgstr "Prénom"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:222
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:223
 msgid "First Name"
 msgstr "Prénom"
 
-#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:73
+#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:87
 msgid "Focus"
 msgstr "Se concentrer"
+
+#: arches_lingo/src/arches_lingo/pages/HomePage.vue:216
+msgid "Gathering the latest statistics, this may take a moment..."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:269
+msgid "GETT"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:62
+msgid "Getting Around"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/pages/LandingPage.vue:104
+#, fuzzy
+msgid "Go to Dashboard"
+msgstr "Tableau de bord"
 
 #: arches_lingo/src/arches_lingo/pages/ContributorsPage.vue:27
 msgid "Group"
@@ -781,7 +1276,7 @@ msgstr "Groupe"
 msgid "Groups"
 msgstr "Groupes"
 
-#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:86
+#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:103
 msgid "Guide Term"
 msgstr "Terme indicatif"
 
@@ -790,34 +1285,39 @@ msgstr "Terme indicatif"
 msgid "Help"
 msgstr "Aide"
 
-#: arches_lingo/src/arches_lingo/pages/AdvancedSearch.vue:267
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:435
+msgid "Hidden"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/pages/AdvancedSearch.vue:277
 msgid "Hide Saved Searches & Sets"
 msgstr "Masquer les recherches et les ensembles enregistrés"
 
-#: arches_lingo/src/arches_lingo/pages/ConceptPage.vue:63
+#: arches_lingo/src/arches_lingo/pages/ConceptPage.vue:65
 msgid "Hierarchical Position"
 msgstr "Position hiérarchique"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:48
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:54
 msgid "Hierarchical Relationship"
 msgstr "Relation hiérarchique"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:487
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:405
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/ConceptHeaderToolbar.vue:412
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:540
 msgid "History"
 msgstr "Histoire"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:59
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:65
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:263
 msgid "Identifier"
 msgstr "Identifiant"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/SearchResults.vue:193
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:522
+#: arches_lingo/src/arches_lingo/components/advanced-search/SearchResults.vue:203
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/ConceptHeader.vue:318
 #: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/SchemeIdentifierField.vue:85
 msgid "Identifier:"
 msgstr "Identifiant :"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptRelationship/components/ConceptRelationshipEditor.vue:127
+#: arches_lingo/src/arches_lingo/components/concept/ConceptRelationship/components/ConceptRelationshipEditor.vue:125
 msgid ""
 "Identify concepts in this scheme that may be associated with this concept."
 msgstr ""
@@ -835,6 +1335,21 @@ msgstr "Si un schéma ou un concept existe déjà, remplacez-le par le nouveau"
 msgid "Ignore"
 msgstr "Ignorer"
 
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:353
+#, fuzzy
+msgid "Images"
+msgstr "Ajouter une image"
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:458
+msgid "Import & Export"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:465
+msgid ""
+"Import an existing thesaurus in SKOS/RDF format from the Schemes list page "
+"using the Import button. Hierarchies, labels, and notes are preserved."
+msgstr ""
+
 #: arches_lingo/src/arches_lingo/components/scheme/ImportThesauri.vue:70
 msgid "Import initiated"
 msgstr "Importation lancée"
@@ -847,7 +1362,19 @@ msgstr "Importer des ressources Lingo à partir d'un fichier SKOS"
 msgid "Import Thesauri"
 msgstr "Importer des thésaurus"
 
-#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:49
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:805
+msgid "Include all"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:587
+msgid "Initial working state. The record can be freely edited and deleted."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:548
+msgid "Is attributed to..."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:51
 msgid "Just now"
 msgstr "Tout à l' heure"
 
@@ -855,12 +1382,20 @@ msgstr "Tout à l' heure"
 msgid "Keep Editing"
 msgstr "Continuer à modifier"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:43
-#: arches_lingo/src/arches_lingo/components/concept/ConceptLabel/components/ConceptLabelViewer.vue:54
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:49
+#: arches_lingo/src/arches_lingo/components/concept/ConceptLabel/components/ConceptLabelViewer.vue:55
 msgid "Label"
 msgstr "Étiquette"
 
+#: arches_lingo/src/arches_lingo/components/dashboard/BreakdownsGrid.vue:26
+#, fuzzy
+msgid "Label Metrics"
+msgstr "Étiquettes"
+
+#: arches_lingo/src/arches_lingo/components/dashboard/BreakdownsGrid.vue:158
 #: arches_lingo/src/arches_lingo/components/dashboard/DashboardStatCards.vue:54
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:237
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:403
 msgid "Labels"
 msgstr "Étiquettes"
 
@@ -868,20 +1403,21 @@ msgstr "Étiquettes"
 msgid "Labels / Concept"
 msgstr "Étiquettes / Concept"
 
-#: arches_lingo/src/arches_lingo/components/dashboard/BreakdownsGrid.vue:67
+#: arches_lingo/src/arches_lingo/components/dashboard/BreakdownsGrid.vue:133
 msgid "Labels by Language"
 msgstr "Étiquettes par langue"
 
-#: arches_lingo/src/arches_lingo/components/dashboard/BreakdownsGrid.vue:44
+#: arches_lingo/src/arches_lingo/components/dashboard/BreakdownsGrid.vue:109
 msgid "Labels by Type"
 msgstr "Étiquettes par type"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:45
-#: arches_lingo/src/arches_lingo/components/concept/ConceptLabel/components/ConceptLabelViewer.vue:53
-#: arches_lingo/src/arches_lingo/components/concept/ConceptNote/components/ConceptNoteViewer.vue:66
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:51
+#: arches_lingo/src/arches_lingo/components/concept/ConceptLabel/components/ConceptLabelViewer.vue:54
+#: arches_lingo/src/arches_lingo/components/concept/ConceptNote/components/ConceptNoteViewer.vue:67
+#: arches_lingo/src/arches_lingo/components/dashboard/BreakdownsGrid.vue:144
 #: arches_lingo/src/arches_lingo/components/dashboard/MissingTranslationsPanel.vue:86
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeLabel/components/SchemeLabelViewer.vue:64
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeNote/components/SchemeNoteViewer.vue:66
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeLabel/components/SchemeLabelViewer.vue:65
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeNote/components/SchemeNoteViewer.vue:67
 msgid "Language"
 msgstr "Langue"
 
@@ -889,87 +1425,113 @@ msgstr "Langue"
 msgid "Language Selection"
 msgstr "Sélection de la langue"
 
-#: arches_lingo/src/arches_lingo/pages/HomePage.vue:40
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:636
+#, fuzzy
+msgid "Languages:"
+msgstr "Langue"
+
+#: arches_lingo/src/arches_lingo/pages/HomePage.vue:41
 msgid "Last 24 hours"
 msgstr "Dernières 24 heures"
 
-#: arches_lingo/src/arches_lingo/pages/HomePage.vue:42
+#: arches_lingo/src/arches_lingo/pages/HomePage.vue:43
 msgid "Last 30 days"
 msgstr "30 derniers jours"
 
-#: arches_lingo/src/arches_lingo/pages/HomePage.vue:41
+#: arches_lingo/src/arches_lingo/pages/HomePage.vue:42
 msgid "Last 7 days"
 msgstr "7 derniers jours"
 
-#: arches_lingo/src/arches_lingo/pages/HomePage.vue:43
+#: arches_lingo/src/arches_lingo/pages/HomePage.vue:44
 msgid "Last 90 days"
 msgstr "90 derniers jours"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:239
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:240
 msgid "Last name"
 msgstr "Nom de famille"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:233
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:234
 msgid "Last Name"
 msgstr "Nom de famille"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:572
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:513
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/ConceptHeader.vue:367
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:686
 msgid "Life cycle state:"
 msgstr "État du cycle de vie :"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:60
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:675
+#, fuzzy
+msgid "Lifecycle filter"
+msgstr "État du cycle de vie"
+
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:66
 msgid "Lifecycle State"
 msgstr "État du cycle de vie"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/SearchResults.vue:203
-msgid "Lifecycle:"
-msgstr "Cycle de vie:"
+#: arches_lingo/src/arches_lingo/components/tree/components/LifecycleStateFilter.vue:28
+#, fuzzy
+msgid "Lifecycle state filter"
+msgstr "État du cycle de vie :"
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:572
+#, fuzzy
+msgid "Lifecycle States"
+msgstr "État du cycle de vie"
 
 #: arches_lingo/src/arches_lingo/components/header/PageHeader/components/ArchesLingoBadge.vue:53
 #: arches_lingo/src/arches_lingo/components/header/PageHeader/components/ArchesLingoBadge.vue:68
+#: arches_lingo/src/arches_lingo/pages/LandingPage.vue:83
 msgid "Lingo"
 msgstr "Jargon"
 
-#: arches_lingo/src/arches_lingo/components/login/LoginForm.vue:42
+#: arches_lingo/src/arches_lingo/components/login/LoginForm.vue:45
 msgid "LINGO"
 msgstr "JARGON"
 
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:343
+msgid ""
+"Lingo supports polyhierarchy — a concept can have multiple broader (parent) "
+"concepts and appear in more than one branch of the tree."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:147
+msgid ""
+"Lingo will warn you before navigating away if you have unsaved edits on the "
+"current page."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/UserInteraction/UserInteraction.vue:65
 #: arches_lingo/src/arches_lingo/components/header/PageHeader/components/UserInteraction/UserInteraction.vue:66
-#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/UserInteraction/UserInteraction.vue:67
 msgid "Login"
 msgstr "Se connecter"
 
-#: arches_lingo/src/arches_lingo/ArchesLingo.vue:65
-msgid "Login required."
-msgstr "Connexion requise."
-
 #: arches_lingo/src/arches_lingo/components/header/PageHeader/components/UserInteraction/components/UserInteractionMenu/components/UserInteractionTools.vue:31
-#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/UserInteraction/components/UserInteractionMenu/components/UserInteractionTools.vue:65
-#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/UserInteraction/components/UserInteractionMenu/components/UserInteractionTools.vue:72
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/UserInteraction/components/UserInteractionMenu/components/UserInteractionTools.vue:64
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/UserInteraction/components/UserInteractionMenu/components/UserInteractionTools.vue:71
 msgid "Logout"
 msgstr "Déconnexion"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:153
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:154
 msgid "Manage your account information and security settings."
 msgstr "Gérez les informations de votre compte et les paramètres de sécurité."
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptMatch/components/ConceptMatchEditor.vue:124
+#: arches_lingo/src/arches_lingo/components/concept/ConceptMatch/components/ConceptMatchEditor.vue:122
 msgid ""
 "Match concepts from other schemes that may be associated with this concept."
 msgstr ""
 "Faites correspondre les concepts d'autres schémas qui peuvent être associés "
 "à ce concept."
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptMatch/components/ConceptMatchViewer.vue:74
+#: arches_lingo/src/arches_lingo/components/concept/ConceptMatch/components/ConceptMatchViewer.vue:75
 msgid "Match Type"
 msgstr "Type de correspondance"
 
-#: arches_lingo/src/arches_lingo/pages/ConceptPage.vue:56
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:379
+#: arches_lingo/src/arches_lingo/pages/ConceptPage.vue:58
 msgid "Matched Concepts"
 msgstr "Concepts assortis"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:55
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:61
 msgid "Matched URI"
 msgstr "URI correspondant"
 
@@ -977,52 +1539,65 @@ msgstr "URI correspondant"
 msgid "Missing Translations"
 msgstr "Traductions manquantes"
 
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:192
+msgid ""
+"Missing Translations shows concepts that lack a preferred label in a chosen "
+"language. Select a language to reveal the list."
+msgstr ""
+
 #: arches_lingo/src/arches_lingo/components/login/LoginLinks.vue:25
 msgid "Multi-factor login"
 msgstr "Connexion multifacteur"
 
-#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/UserInteraction/components/UserInteractionMenu/components/UserInteractionTools.vue:79
-#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/UserInteraction/components/UserInteractionMenu/components/UserInteractionTools.vue:86
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:149
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/UserInteraction/components/UserInteractionMenu/components/UserInteractionTools.vue:78
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/UserInteraction/components/UserInteractionMenu/components/UserInteractionTools.vue:85
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:150
 msgid "My Profile"
 msgstr "Mon profil"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:285
-#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:173
+#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:316
+#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:174
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/components/ConceptSetList.vue:132
 #: arches_lingo/src/arches_lingo/components/generic/ResourceListEditor/ResourceListEditor.vue:311
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeLabel/components/SchemeLabelViewer.vue:65
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeLabel/components/SchemeLabelViewer.vue:66
 msgid "Name"
 msgstr "Nom"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:74
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:82
 msgid "Narrower (child of)"
 msgstr "Plus étroit (enfant de)"
 
-#: arches_lingo/src/arches_lingo/components/sidenav/SideNav.vue:26
+#: arches_lingo/src/arches_lingo/pages/ConceptPage.vue:79
+#, fuzzy
+msgid "Narrower Concepts"
+msgstr "Nouveau concept"
+
+#: arches_lingo/src/arches_lingo/components/sidenav/SideNav.vue:25
 msgid "Navigation"
 msgstr "Navigation"
 
-#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:536
+#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:689
 msgid "New concept"
 msgstr "Nouveau concept"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:262
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/ConceptHeader.vue:197
 msgid "New Concept"
 msgstr "Nouveau concept"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:280
+#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:311
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/components/ConceptSetList.vue:127
 msgid "New Concept Set"
 msgstr "Nouvel ensemble de concepts"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:330
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:331
 msgid "New password"
 msgstr "Nouveau mot de passe"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:323
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:324
 msgid "New Password"
 msgstr "Nouveau mot de passe"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:110
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:111
 msgid "New password and confirmation must match."
 msgstr "Le nouveau mot de passe et la confirmation doivent correspondre."
 
@@ -1031,15 +1606,16 @@ msgid "New Resource"
 msgstr "Nouvelle ressource"
 
 #: arches_lingo/src/arches_lingo/components/scheme/SchemeCard.vue:69
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:200
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:248
 msgid "New Scheme"
 msgstr "Nouveau programme"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:218
+#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:249
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/components/ConceptSetList.vue:61
 msgid "New Set"
 msgstr "Nouvel ensemble"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptRelationship/components/ConceptRelationshipViewer.vue:76
+#: arches_lingo/src/arches_lingo/components/concept/ConceptRelationship/components/ConceptRelationshipViewer.vue:77
 msgid "No associated concepts were found."
 msgstr "Aucun concept associé n'a été trouvé."
 
@@ -1047,35 +1623,52 @@ msgstr "Aucun concept associé n'a été trouvé."
 msgid "No concept images were found."
 msgstr "Aucune image conceptuelle n'a été trouvée."
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptLabel/components/ConceptLabelViewer.vue:56
+#: arches_lingo/src/arches_lingo/components/concept/ConceptLabel/components/ConceptLabelViewer.vue:57
 msgid "No concept labels were found."
 msgstr "Aucune étiquette de concept n'a été trouvée."
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptNote/components/ConceptNoteViewer.vue:69
+#: arches_lingo/src/arches_lingo/components/concept/ConceptNote/components/ConceptNoteViewer.vue:70
 msgid "No concept notes were found."
 msgstr "Aucune note conceptuelle n’a été trouvée."
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:230
+#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:261
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/components/ConceptSetList.vue:72
 msgid "No concept sets yet."
 msgstr "Aucun ensemble de concepts pour l'instant."
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:280
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:86
 msgid "No concepts found"
 msgstr "Aucun concept trouvé"
 
-#: arches_lingo/src/arches_lingo/components/generic/EditLog/EditLog.vue:254
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:443
+#, fuzzy
+msgid "No contributors found"
+msgstr "Aucun concept trouvé"
+
+#: arches_lingo/src/arches_lingo/components/generic/EditLog/EditLog.vue:273
 msgid "No edit history found."
 msgstr "Aucun historique de modifications trouvé."
 
-#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:340
+#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:584
 msgid "No hierarchical parents were found."
 msgstr "Aucun parent hiérarchique n'a été trouvé."
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptMatch/components/ConceptMatchViewer.vue:76
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:620
+msgid ""
+"No longer active. Retired records are preserved for reference and their URIs "
+"remain resolvable."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/concept/ConceptMatch/components/ConceptMatchViewer.vue:77
 msgid "No matched concepts were found."
 msgstr "Aucun concept correspondant n'a été trouvé."
 
-#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:140
+#: arches_lingo/src/arches_lingo/components/concept/ConceptNarrowerConcepts/ConceptNarrowerConcepts.vue:156
+#, fuzzy
+msgid "No narrower concepts found."
+msgstr "Aucun concept phare trouvé."
+
+#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:155
 msgid "No recent activity"
 msgstr "Aucune activité récente"
 
@@ -1087,15 +1680,15 @@ msgstr "Aucune ressource n'a encore été créée."
 msgid "No resources match the search criteria."
 msgstr "Aucune ressource ne correspond aux critères de recherche."
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/SearchResults.vue:102
+#: arches_lingo/src/arches_lingo/components/advanced-search/SearchResults.vue:104
 msgid "No results found."
 msgstr "Aucun résultat trouvé."
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:138
+#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:139
 msgid "No saved searches yet."
 msgstr "Aucune recherche enregistrée pour l'instant."
 
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeLabel/components/SchemeLabelViewer.vue:67
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeLabel/components/SchemeLabelViewer.vue:68
 msgid "No scheme labels were found."
 msgstr "Aucune étiquette de schéma n'a été trouvée."
 
@@ -1103,48 +1696,58 @@ msgstr "Aucune étiquette de schéma n'a été trouvée."
 msgid "No Scheme Namespaces were found."
 msgstr "Aucun espace de noms de schéma n'a été trouvé."
 
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeNote/components/SchemeNoteViewer.vue:69
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeNote/components/SchemeNoteViewer.vue:70
 msgid "No scheme notes were found."
 msgstr "Aucune note de projet n'a été trouvée."
 
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeLicense/components/SchemeLicenseViewer.vue:155
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeLicense/components/SchemeLicenseViewer.vue:169
 msgid "No Scheme Rights were found."
 msgstr "Aucun droit relatif au programme n'a été trouvé."
 
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeStandard/components/SchemeStandardViewer.vue:114
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeStandard/components/SchemeStandardViewer.vue:126
 msgid "No Scheme Standards were found."
 msgstr "Aucune norme de système n'a été trouvée."
 
-#: arches_lingo/src/arches_lingo/components/basic-search/BasicSearch.vue:274
+#: arches_lingo/src/arches_lingo/components/basic-search/BasicSearch.vue:370
 msgid "No search results found"
 msgstr "Aucun résultat de recherche trouvé"
 
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeTopConcepts/SchemeTopConcepts.vue:120
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:440
+#, fuzzy
+msgid "No sources found"
+msgstr "Aucun concept trouvé"
+
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeTopConcepts/SchemeTopConcepts.vue:157
 msgid "No top concepts found."
 msgstr "Aucun concept phare trouvé."
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:546
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:469
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/ConceptHeader.vue:341
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:606
 msgid "No URI assigned"
 msgstr "Aucun URI attribué"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:525
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/ConceptHeader.vue:321
 #: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/ConceptIdentifierCounterField.vue:136
 #: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/SchemeIdentifierField.vue:117
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/SchemeURITemplateField.vue:126
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/SchemeURITemplateField.vue:128
 msgid "None"
 msgstr "Aucun"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:229
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:230
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:513
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:514
 msgid "NOT"
 msgstr "PAS"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:44
-#: arches_lingo/src/arches_lingo/components/concept/ConceptNote/components/ConceptNoteViewer.vue:67
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeNote/components/SchemeNoteViewer.vue:67
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:50
+#: arches_lingo/src/arches_lingo/components/concept/ConceptNote/components/ConceptNoteViewer.vue:68
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeNote/components/SchemeNoteViewer.vue:68
 msgid "Note"
 msgstr "Note"
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:250
+#, fuzzy
+msgid "Notes"
+msgstr "Remarques :"
 
 #: arches_lingo/src/arches_lingo/components/advanced-search/SearchResults.vue:213
 msgid "Notes:"
@@ -1159,16 +1762,17 @@ msgstr "Notifications"
 msgid "Open language selector"
 msgstr "Ouvrir le sélecteur de langue"
 
-#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/UserInteraction/UserInteraction.vue:74
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/UserInteraction/UserInteraction.vue:73
 msgid "Open user menu"
 msgstr "Ouvrir le menu utilisateur"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:300
+#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:331
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/components/ConceptSetList.vue:146
 msgid "Optional description"
 msgstr "Description facultative"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetGroup.vue:146
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetGroup.vue:35
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetGroup.vue:147
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetGroup.vue:36
 msgid "OR"
 msgstr "OU"
 
@@ -1180,17 +1784,17 @@ msgstr "Écraser"
 msgid "Overwrite Options"
 msgstr "Options d'écrasement"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:616
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:521
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/ConceptHeader.vue:421
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:702
 msgid "Owner:"
 msgstr "Propriétaire:"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:589
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/ConceptHeader.vue:394
 msgid "Parent Concept(s):"
 msgstr "Concept(s) parental(s) :"
 
-#: arches_lingo/src/arches_lingo/components/login/LoginForm.vue:60
-#: arches_lingo/src/arches_lingo/components/login/LoginForm.vue:61
+#: arches_lingo/src/arches_lingo/components/login/LoginForm.vue:63
+#: arches_lingo/src/arches_lingo/components/login/LoginForm.vue:64
 msgid "Password"
 msgstr "Mot de passe"
 
@@ -1206,19 +1810,19 @@ msgstr "Périodes"
 msgid "Person"
 msgstr "Personne"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:169
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:170
 msgid "Personal Information"
 msgstr "Informations personnelles"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:256
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:257
 msgid "Phone"
 msgstr "Téléphone"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:262
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:263
 msgid "Phone number (optional)"
 msgstr "Numéro de téléphone (facultatif)"
 
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/SchemeURITemplateField.vue:97
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/SchemeURITemplateField.vue:98
 msgid "Placeholders: <scheme_identifier>, <concept_identifier>"
 msgstr "Espaces réservés : <scheme_identifier>, <concept_identifier>"
 
@@ -1226,35 +1830,54 @@ msgstr "Espaces réservés : <scheme_identifier>, <concept_identifier>"
 msgid "Places"
 msgstr "Lieux"
 
-#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:80
+#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:95
 msgid "Please refine your query."
 msgstr "Veuillez affiner votre requête."
 
-#: arches_lingo/src/arches_lingo/components/sidenav/components/NavSettings.vue:19
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:415
+msgid "Preferred"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/sidenav/components/NavSettings.vue:25
 msgid "Profile"
 msgstr "Profil"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:85
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:86
 msgid "Profile updated"
 msgstr "Profil mis à jour"
 
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeNote/components/SchemeNoteEditor.vue:141
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeNote/components/SchemeNoteEditor.vue:140
 msgid ""
-"Provide notes and descriptions describing the scope and usage of this "
-"scheme."
+"Provide notes and descriptions describing the scope and usage of this scheme."
 msgstr ""
 "Fournissez des notes et des descriptions décrivant la portée et "
 "l’utilisation de ce programme."
 
-#: arches_lingo/src/arches_lingo/components/basic-search/BasicSearch.vue:217
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:606
+msgid "Published"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:502
+msgid "Query builder"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/basic-search/BasicSearch.vue:343
 msgid "Quick Search"
 msgstr "Recherche rapide"
 
-#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:102
+#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:117
 msgid "Recent Activity"
 msgstr "Activité récente"
 
-#: arches_lingo/src/arches_lingo/components/sidenav/SideNav.vue:38
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:182
+msgid ""
+"Recent Activity lists the latest edits across all schemes. Click any "
+"resource name to navigate directly to it."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:121
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:699
+#: arches_lingo/src/arches_lingo/components/sidenav/SideNav.vue:31
 msgid "Reference Data"
 msgstr "Données de référence"
 
@@ -1262,31 +1885,62 @@ msgstr "Données de référence"
 msgid "Register"
 msgstr "Registre"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptRelationship/components/ConceptRelationshipViewer.vue:75
+#: arches_lingo/src/arches_lingo/components/generic/ReinstateDialog.vue:140
+#: arches_lingo/src/arches_lingo/components/generic/ReinstateDialog.vue:82
+msgid "Reinstate"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/generic/ReinstateDialog.vue:58
+msgid "Reinstate this concept and all its descendants"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/generic/ReinstateDialog.vue:51
+msgid "Reinstate this concept only"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/generic/ReinstateDialog.vue:56
+msgid "Reinstate this scheme and all its concepts"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/generic/ReinstateDialog.vue:49
+msgid "Reinstate this scheme only"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/concept/ConceptRelationship/components/ConceptRelationshipViewer.vue:76
 msgid "Related Concept"
 msgstr "Concept connexe"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptMatch/components/ConceptMatchViewer.vue:75
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:366
+#, fuzzy
+msgid "Related Concepts"
+msgstr "Concept connexe"
+
+#: arches_lingo/src/arches_lingo/components/concept/ConceptMatch/components/ConceptMatchViewer.vue:76
 msgid "Related URI"
 msgstr "URI associé"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptRelationship/components/ConceptRelationshipViewer.vue:74
+#: arches_lingo/src/arches_lingo/components/concept/ConceptRelationship/components/ConceptRelationshipViewer.vue:75
 msgid "Relationship"
 msgstr "Relation"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:450
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:103
 msgid "Remove condition"
 msgstr "Supprimer la condition"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:207
+#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:238
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/components/ConceptSetMemberList.vue:110
 msgid "Remove from Set"
 msgstr "Supprimer de l'ensemble"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetGroup.vue:128
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetGroup.vue:129
 msgid "Remove group"
 msgstr "Supprimer le groupe"
 
-#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:163
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:785
+msgid "Report issues or contribute on "
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:173
 msgid "Resource"
 msgstr "Ressource"
 
@@ -1294,35 +1948,47 @@ msgstr "Ressource"
 msgid "Resource deleted"
 msgstr "Ressource supprimée"
 
-#: arches_lingo/src/arches_lingo/components/generic/EditLog/EditLog.vue:196
+#: arches_lingo/src/arches_lingo/components/generic/EditLog/EditLog.vue:215
 msgid "Resource partially reverted"
 msgstr "Ressource partiellement restaurée"
 
-#: arches_lingo/src/arches_lingo/components/generic/EditLog/EditLog.vue:195
+#: arches_lingo/src/arches_lingo/components/generic/EditLog/EditLog.vue:214
 msgid "Resource reverted successfully"
 msgstr "Ressource restaurée avec succès"
 
-#: arches_lingo/src/arches_lingo/pages/AdvancedSearch.vue:307
+#: arches_lingo/src/arches_lingo/pages/AdvancedSearch.vue:317
 msgid "Results"
 msgstr "Résultats"
 
-#: arches_lingo/src/arches_lingo/components/generic/EditLog/EditLog.vue:235
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:483
+msgid "Retire"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:617
+msgid "Retired"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/generic/EditLog/EditLog.vue:254
 msgid "Revert"
 msgstr "Revenir"
 
-#: arches_lingo/src/arches_lingo/components/generic/EditLog/EditLog.vue:206
+#: arches_lingo/src/arches_lingo/components/generic/EditLog/EditLog.vue:225
 msgid "Revert failed"
 msgstr "Échec de la restauration"
 
-#: arches_lingo/src/arches_lingo/components/generic/EditLog/EditLog.vue:291
+#: arches_lingo/src/arches_lingo/components/generic/EditLog/EditLog.vue:310
 msgid "Revert to here"
 msgstr "Revenir ici"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:190
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeLicense/components/SchemeLicenseViewer.vue:132
+msgid "Rights Statement"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:191
 msgid "Save"
 msgstr "Sauvegarder"
 
-#: arches_lingo/src/arches_lingo/components/generic/ComponentManager/components/ComponentEditor.vue:167
+#: arches_lingo/src/arches_lingo/components/generic/ComponentManager/components/ComponentEditor.vue:209
 msgid "Save Changes"
 msgstr "Enregistrer les modifications"
 
@@ -1330,7 +1996,7 @@ msgstr "Enregistrer les modifications"
 msgid "Save concept identifier counter"
 msgstr "Enregistrer le compteur d'identifiant de concept"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:127
+#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:128
 msgid "Save Current"
 msgstr "Enregistrer le courant"
 
@@ -1338,99 +2004,126 @@ msgstr "Enregistrer le courant"
 msgid "Save Identifier"
 msgstr "Enregistrer l'identifiant"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:270
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:271
 msgid "Save Profile"
 msgstr "Enregistrer le profil"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:168
+#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:169
 msgid "Save Search"
 msgstr "Enregistrer la recherche"
 
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/SchemeURITemplateField.vue:108
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/SchemeURITemplateField.vue:110
 msgid "Save URL template"
 msgstr "Enregistrer le modèle d'URL"
 
-#: arches_lingo/src/arches_lingo/pages/AdvancedSearch.vue:329
+#: arches_lingo/src/arches_lingo/pages/AdvancedSearch.vue:339
 msgid "Saved"
 msgstr "Enregistré"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:56
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:515
+#, fuzzy
+msgid "Saved searches"
+msgstr "Enregistrer la recherche"
+
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:62
 #: arches_lingo/src/arches_lingo/components/dashboard/MissingTranslationsPanel.vue:151
-#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:188
-#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:87
+#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:102
+#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:104
 msgid "Scheme"
 msgstr "Schème"
 
-#: arches_lingo/src/arches_lingo/pages/SchemePage.vue:26
+#: arches_lingo/src/arches_lingo/pages/SchemePage.vue:27
 msgid "Scheme Labels"
 msgstr "Étiquettes de schéma"
 
-#: arches_lingo/src/arches_lingo/pages/SchemePage.vue:19
+#: arches_lingo/src/arches_lingo/pages/SchemePage.vue:20
 msgid "Scheme Metadata"
 msgstr "Métadonnées du schéma"
 
-#: arches_lingo/src/arches_lingo/pages/SchemePage.vue:33
+#: arches_lingo/src/arches_lingo/pages/SchemePage.vue:34
 msgid "Scheme Notes"
 msgstr "Notes sur le schéma"
 
-#: arches_lingo/src/arches_lingo/pages/SchemePage.vue:47
+#: arches_lingo/src/arches_lingo/pages/SchemePage.vue:48
 msgid "Scheme Rights"
 msgstr "Droits liés au système"
 
-#: arches_lingo/src/arches_lingo/pages/SchemePage.vue:40
+#: arches_lingo/src/arches_lingo/pages/SchemePage.vue:41
 msgid "Scheme Standards"
 msgstr "Normes du système"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:554
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:649
+msgid "Scheme-level transitions"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/ConceptHeader.vue:349
 msgid "Scheme:"
 msgstr "Schème:"
 
 #: arches_lingo/src/arches_lingo/components/dashboard/DashboardStatCards.vue:20
-#: arches_lingo/src/arches_lingo/components/sidenav/components/NavNavigation.vue:26
-#: arches_lingo/src/arches_lingo/pages/HomePage.vue:171
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:213
+#: arches_lingo/src/arches_lingo/pages/HomePage.vue:178
 msgid "Schemes"
 msgstr "Schémas"
 
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:82
 #: arches_lingo/src/arches_lingo/components/sidenav/components/NavAuthorityEditors.vue:19
+#: arches_lingo/src/arches_lingo/components/sidenav/components/NavNavigation.vue:29
+#: arches_lingo/src/arches_lingo/pages/LandingPage.vue:46
 msgid "Schemes & Concepts"
 msgstr "Schémas et concepts"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/SearchQueryBuilder.vue:42
+#: arches_lingo/src/arches_lingo/components/advanced-search/SearchQueryBuilder.vue:45
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:108
 #: arches_lingo/src/arches_lingo/components/header/PageHeader/components/SearchDialog.vue:28
 #: arches_lingo/src/arches_lingo/components/header/PageHeader/components/SearchDialog.vue:35
 msgid "Search"
 msgstr "Recherche"
 
+#: arches_lingo/src/arches_lingo/pages/LandingPage.vue:56
+msgid "Search across schemes, concepts, labels, and more"
+msgstr ""
+
 #: arches_lingo/src/arches_lingo/components/generic/ResourceListEditor/ResourceListEditor.vue:284
 msgid "Search by name..."
 msgstr "Rechercher par nom..."
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:281
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:88
 msgid "Search concepts..."
 msgstr "Concepts de recherche..."
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:96
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:444
+#, fuzzy
+msgid "Search contributors..."
+msgstr "Concepts de recherche..."
+
+#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:97
 msgid "Search deleted."
 msgstr "Recherche supprimée."
 
-#: arches_lingo/src/arches_lingo/pages/AdvancedSearch.vue:166
+#: arches_lingo/src/arches_lingo/pages/AdvancedSearch.vue:171
 msgid "Search failed."
 msgstr "La recherche a échoué."
 
-#: arches_lingo/src/arches_lingo/components/widgets/ConceptResourceSelectWidget/components/ConceptResourceSelectWidgetEditor.vue:46
+#: arches_lingo/src/arches_lingo/components/widgets/ConceptResourceSelectWidget/components/ConceptResourceSelectWidgetEditor.vue:50
 msgid "Search returned no results"
 msgstr "La recherche n'a donné aucun résultat"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:73
+#: arches_lingo/src/arches_lingo/components/advanced-search/SavedSearches.vue:74
 msgid "Search saved."
 msgstr "Recherche enregistrée."
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:263
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:441
+#, fuzzy
+msgid "Search sources..."
+msgstr "Concepts de recherche..."
+
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:85
 msgid "Search text..."
 msgstr "Rechercher du texte..."
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/SearchResults.vue:95
-#: arches_lingo/src/arches_lingo/components/widgets/ConceptResourceSelectWidget/components/ConceptResourceSelectWidgetEditor.vue:79
+#: arches_lingo/src/arches_lingo/components/advanced-search/SearchResults.vue:97
+#: arches_lingo/src/arches_lingo/components/widgets/ConceptResourceSelectWidget/components/ConceptResourceSelectWidgetEditor.vue:49
 msgid "Searching..."
 msgstr "Recherche..."
 
@@ -1440,42 +2133,51 @@ msgstr "Sélectionnez une langue"
 
 #: arches_lingo/src/arches_lingo/components/dashboard/MissingTranslationsPanel.vue:105
 msgid "Select a language to see concepts missing translations."
-msgstr ""
-"Sélectionnez une langue pour voir les concepts manquant de traduction."
+msgstr "Sélectionnez une langue pour voir les concepts manquant de traduction."
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/SearchResults.vue:76
+#: arches_lingo/src/arches_lingo/components/advanced-search/SearchResults.vue:78
 msgid "Select All"
 msgstr "Sélectionner tout"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:406
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:98
 msgid "Select concept set"
 msgstr "Sélectionner un ensemble de concepts"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:421
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:101
 msgid "Select concept type"
 msgstr "Sélectionnez le type de concept"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:283
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:90
 msgid "Select concept..."
 msgstr "Sélectionnez une notion..."
 
-#: arches_lingo/src/arches_lingo/components/widgets/ConceptResourceSelectWidget/components/ConceptResourceSelectWidgetEditor.vue:199
+#: arches_lingo/src/arches_lingo/components/widgets/ConceptResourceSelectWidget/components/ConceptResourceSelectWidgetEditor.vue:207
 msgid "Select Concepts"
 msgstr "Sélectionner des concepts"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:242
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:445
+#, fuzzy
+msgid "Select contributor..."
+msgstr "Sélectionnez une notion..."
+
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:526
 msgid "Select facet"
 msgstr "Sélectionner une facette"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:351
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:93
 msgid "Select language"
 msgstr "Sélectionnez la langue"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:364
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:94
 msgid "Select scheme"
 msgstr "Sélectionnez le schéma"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:393
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:442
+#, fuzzy
+msgid "Select source..."
+msgstr "Sélectionnez une notion..."
+
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:96
 msgid "Select state"
 msgstr "Sélectionnez l'état"
 
@@ -1483,15 +2185,30 @@ msgstr "Sélectionnez l'état"
 msgid "Select type"
 msgstr "Sélectionnez le type"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:289
+#: arches_lingo/src/arches_lingo/components/advanced-search/ConceptSets.vue:320
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/components/ConceptSetList.vue:136
 msgid "Set name"
 msgstr "Définir le nom"
 
-#: arches_lingo/src/arches_lingo/components/sidenav/SideNav.vue:44
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:134
+#: arches_lingo/src/arches_lingo/components/sidenav/SideNav.vue:37
 msgid "Settings"
 msgstr "Paramètres"
 
-#: arches_lingo/src/arches_lingo/pages/AdvancedSearch.vue:268
+#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:565
+#, fuzzy
+msgid "Show %{count} more paths"
+msgstr "Chemins %{count}"
+
+#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:573
+msgid "Show fewer paths"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:655
+msgid "Show less"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/pages/AdvancedSearch.vue:278
 msgid "Show Saved Searches & Sets"
 msgstr "Afficher les recherches et les ensembles enregistrés"
 
@@ -1499,11 +2216,12 @@ msgstr "Afficher les recherches et les ensembles enregistrés"
 msgid "Show Unread Only"
 msgstr "Afficher uniquement les fichiers non lus"
 
-#: arches_lingo/src/arches_lingo/components/login/LoginForm.vue:68
+#: arches_lingo/src/arches_lingo/components/login/LoginForm.vue:71
+#: arches_lingo/src/arches_lingo/pages/LandingPage.vue:113
 msgid "Sign In"
 msgstr "Se connecter"
 
-#: arches_lingo/src/arches_lingo/components/login/LoginForm.vue:32
+#: arches_lingo/src/arches_lingo/components/login/LoginForm.vue:35
 msgid "Sign in failed."
 msgstr "Échec de la connexion."
 
@@ -1515,11 +2233,11 @@ msgstr "Échec de la déconnexion."
 msgid "SKOS File"
 msgstr "Fichier SKOS"
 
-#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:81
+#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:97
 msgid "Sort ascending"
 msgstr "Trier par ordre croissant"
 
-#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:82
+#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:98
 msgid "Sort descending"
 msgstr "Trier par ordre décroissant"
 
@@ -1527,18 +2245,64 @@ msgstr "Trier par ordre décroissant"
 msgid "Sorting:"
 msgstr "Tri:"
 
-#: arches_lingo/src/arches_lingo/components/sidenav/components/NavReferenceData.vue:26
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:68
+#, fuzzy
+msgid "Source"
+msgstr "Sources"
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:726
+#: arches_lingo/src/arches_lingo/components/sidenav/components/NavReferenceData.vue:33
 #: arches_lingo/src/arches_lingo/pages/SourcesPage.vue:55
 msgid "Sources"
 msgstr "Sources"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:67
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:313
+#, fuzzy
+msgid "Standards & Rights"
+msgstr "Ajouter des droits"
+
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:75
 msgid "Starts with"
 msgstr "Commence par"
 
-#: arches_lingo/src/arches_lingo/components/sidenav/components/NavSettings.vue:26
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:172
+msgid ""
+"Stat cards show total Schemes, Concepts, Labels, and the average number of "
+"labels per concept."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:634
+msgid "State badges"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:779
+msgid "Support & Resources"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:428
+msgid ""
+"Synonyms or variant spellings — help users find the concept via different "
+"terms."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/sidenav/components/NavSettings.vue:33
 msgid "System Settings"
 msgstr "Paramètres système"
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:162
+msgid "The Dashboard gives you a bird's-eye view of your vocabulary data."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:418
+msgid ""
+"The primary display term. Each concept should have exactly one per language."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:703
+msgid ""
+"The Reference Data section of the sidebar lets you manage supporting "
+"resources that can be linked to vocabulary content."
+msgstr ""
 
 #: arches_lingo/src/arches_lingo/components/header/PageHeader/components/NotificationsInteraction/components/NotificationLinkViewer.vue:22
 msgid "The requested file could not be downloaded."
@@ -1552,14 +2316,40 @@ msgstr "Thème"
 msgid "Theme Selector"
 msgstr "Sélecteur de thème"
 
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/DeleteConceptDialog.vue:131
+msgid "This action cannot be undone."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/DeleteConceptDialog.vue:94
+msgid "This concept and all its descendants will be deprecated."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/DeleteConceptDialog.vue:90
+msgid "This concept and all its descendants will be permanently deleted."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/generic/ReinstateDialog.vue:67
+msgid ""
+"This concept and all its retired descendants will be moved to Editing state."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/components/DeleteConceptDialog.vue:132
+msgid "This concept can be reinstated later."
+msgstr ""
+
 #: arches_lingo/src/arches_lingo/components/concept/ConceptImages/components/ConceptImagesViewer.vue:75
-#: arches_lingo/src/arches_lingo/components/concept/ConceptLabel/components/ConceptLabelViewer.vue:75
-#: arches_lingo/src/arches_lingo/components/concept/ConceptMatch/components/ConceptMatchViewer.vue:65
-#: arches_lingo/src/arches_lingo/components/concept/ConceptNote/components/ConceptNoteViewer.vue:59
-#: arches_lingo/src/arches_lingo/components/concept/ConceptRelationship/components/ConceptRelationshipViewer.vue:65
+#: arches_lingo/src/arches_lingo/components/concept/ConceptLabel/components/ConceptLabelViewer.vue:83
+#: arches_lingo/src/arches_lingo/components/concept/ConceptMatch/components/ConceptMatchViewer.vue:66
+#: arches_lingo/src/arches_lingo/components/concept/ConceptNote/components/ConceptNoteViewer.vue:60
+#: arches_lingo/src/arches_lingo/components/concept/ConceptRelationship/components/ConceptRelationshipViewer.vue:66
 #: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:95
 msgid "This concept is not editable in its current lifecycle state"
 msgstr "Ce concept n'est pas modifiable dans son état actuel du cycle de vie"
+
+#: arches_lingo/src/arches_lingo/components/concept-set-browser/components/ConceptSetMemberList.vue:124
+#, fuzzy
+msgid "This concept set has no members."
+msgstr "Aucun ensemble de concepts pour l'instant."
 
 #: arches_lingo/src/arches_lingo/components/generic/ResourceListEditor/ResourceListEditor.vue:189
 msgid ""
@@ -1571,19 +2361,25 @@ msgid_plural ""
 msgstr[0] ""
 msgstr[1] ""
 
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeLabel/components/SchemeLabelViewer.vue:57
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeLabel/components/SchemeLabelViewer.vue:58
 #: arches_lingo/src/arches_lingo/components/scheme/SchemeLicense/components/SchemeLicenseViewer.vue:59
 #: arches_lingo/src/arches_lingo/components/scheme/SchemeNamespace/components/SchemeNamespaceViewer.vue:59
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeNote/components/SchemeNoteViewer.vue:59
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeNote/components/SchemeNoteViewer.vue:60
 #: arches_lingo/src/arches_lingo/components/scheme/SchemeStandard/components/SchemeStandardViewer.vue:59
 msgid "This scheme is not editable in its current lifecycle state"
 msgstr "Ce schéma n'est pas modifiable dans son état actuel du cycle de vie"
 
-#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:108
+#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:123
 msgid "Time frame"
 msgstr "Laps de temps"
 
-#: arches_lingo/src/arches_lingo/components/generic/ComponentManager/components/ComponentEditor.vue:133
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:392
+msgid ""
+"To add a child concept, open the Explore panel and use the \"+\" icon that "
+"appears when hovering over a concept in the tree."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/generic/ComponentManager/components/ComponentEditor.vue:175
 msgid "toggle editor size"
 msgstr "basculer la taille de l'éditeur"
 
@@ -1591,33 +2387,33 @@ msgstr "basculer la taille de l'éditeur"
 msgid "Tools"
 msgstr "Outils"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:57
-#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:88
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:63
+#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:105
 msgid "Top Concept"
 msgstr "Concept supérieur"
 
-#: arches_lingo/src/arches_lingo/pages/ConceptPage.vue:70
+#: arches_lingo/src/arches_lingo/pages/ConceptPage.vue:72
 msgid "Top Concept Of"
 msgstr "Concept supérieur de"
 
-#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:250
+#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:229
 msgid "Top Concept Of: %{parent}"
 msgstr "Concept supérieur de : %{parent}"
 
-#: arches_lingo/src/arches_lingo/pages/SchemePage.vue:54
+#: arches_lingo/src/arches_lingo/pages/SchemePage.vue:55
 msgid "Top Concepts"
 msgstr "Principaux concepts"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptLabel/components/ConceptLabelViewer.vue:55
-#: arches_lingo/src/arches_lingo/components/concept/ConceptNote/components/ConceptNoteViewer.vue:68
-#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:181
+#: arches_lingo/src/arches_lingo/components/concept/ConceptLabel/components/ConceptLabelViewer.vue:56
+#: arches_lingo/src/arches_lingo/components/concept/ConceptNote/components/ConceptNoteViewer.vue:69
+#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:196
 #: arches_lingo/src/arches_lingo/components/generic/ResourceListEditor/ResourceListEditor.vue:332
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeLabel/components/SchemeLabelViewer.vue:66
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeNote/components/SchemeNoteViewer.vue:68
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeLabel/components/SchemeLabelViewer.vue:67
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeNote/components/SchemeNoteViewer.vue:69
 msgid "Type"
 msgstr "Taper"
 
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/LifecycleButtons.vue:96
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/LifecycleButtons.vue:124
 msgid "Unable to change lifecycle state"
 msgstr "Impossible de modifier l'état du cycle de vie"
 
@@ -1625,54 +2421,66 @@ msgstr "Impossible de modifier l'état du cycle de vie"
 msgid "Unable to export thesaurus"
 msgstr "Impossible d'exporter le thésaurus"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:131
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:185
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:294
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/ConceptHeader.vue:115
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/ConceptHeader.vue:99
 msgid "Unable to fetch concept"
 msgstr "Impossible de récupérer le concept"
 
-#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/SchemeHierarchy/SchemeHierarchy.vue:54
-#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:143
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/SchemeHierarchy/SchemeHierarchy.vue:65
+#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:138
+#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:867
+#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:941
+#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:986
 msgid "Unable to fetch concepts"
 msgstr "Impossible de récupérer les concepts"
 
-#: arches_lingo/src/arches_lingo/pages/HomePage.vue:95
+#: arches_lingo/src/arches_lingo/pages/HomePage.vue:102
 msgid "Unable to fetch dashboard data"
 msgstr "Impossible de récupérer les données du tableau de bord"
 
-#: arches_lingo/src/arches_lingo/components/generic/EditLog/EditLog.vue:106
+#: arches_lingo/src/arches_lingo/components/generic/EditLog/EditLog.vue:121
 msgid "Unable to fetch edit history"
 msgstr "Impossible de récupérer l'historique des modifications"
 
-#: arches_lingo/src/arches_lingo/pages/HomePage.vue:76
+#: arches_lingo/src/arches_lingo/pages/HomePage.vue:83
 msgid "Unable to fetch languages"
 msgstr "Impossible de récupérer les langues"
 
-#: arches_lingo/src/arches_lingo/components/generic/ComponentManager/ComponentManager.vue:248
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/LifecycleButtons.vue:67
+#: arches_lingo/src/arches_lingo/components/generic/ComponentManager/ComponentManager.vue:264
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/LifecycleButtons.vue:95
 msgid "Unable to fetch lifecycle state"
 msgstr "Impossible de récupérer l'état du cycle de vie"
 
-#: arches_lingo/src/arches_lingo/pages/HomePage.vue:117
+#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:155
+#, fuzzy
+msgid "Unable to fetch lifecycle states"
+msgstr "Impossible de récupérer l'état du cycle de vie"
+
+#: arches_lingo/src/arches_lingo/pages/HomePage.vue:124
 msgid "Unable to fetch missing translations"
 msgstr "Impossible de récupérer les traductions manquantes"
+
+#: arches_lingo/src/arches_lingo/components/concept/ConceptNarrowerConcepts/ConceptNarrowerConcepts.vue:84
+#, fuzzy
+msgid "Unable to fetch narrower concepts"
+msgstr "Impossible de récupérer les principaux concepts"
 
 #: arches_lingo/src/arches_lingo/components/generic/ResourceListEditor/ResourceListEditor.vue:112
 msgid "Unable to fetch resources"
 msgstr "Impossible de récupérer les ressources"
 
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:122
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:152
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:237
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:165
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:200
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:285
 msgid "Unable to fetch scheme"
 msgstr "Impossible de récupérer le schéma"
 
-#: arches_lingo/src/arches_lingo/pages/HomePage.vue:62
-#: arches_lingo/src/arches_lingo/pages/SchemeList.vue:55
+#: arches_lingo/src/arches_lingo/pages/HomePage.vue:69
+#: arches_lingo/src/arches_lingo/pages/SchemeList.vue:81
 msgid "Unable to fetch schemes"
 msgstr "Impossible de récupérer les schémas"
 
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeTopConcepts/SchemeTopConcepts.vue:63
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeTopConcepts/SchemeTopConcepts.vue:85
 msgid "Unable to fetch top concepts"
 msgstr "Impossible de récupérer les principaux concepts"
 
@@ -1680,7 +2488,7 @@ msgstr "Impossible de récupérer les principaux concepts"
 msgid "Unable to import SKOS file"
 msgstr "Impossible d'importer le fichier SKOS"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:62
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:63
 msgid "Unable to load profile"
 msgstr "Impossible de charger le profil"
 
@@ -1696,23 +2504,23 @@ msgstr "Impossible d'enregistrer l'identifiant"
 msgid "Unable to save scheme URL template"
 msgstr "Impossible d'enregistrer le modèle d'URL du schéma"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:92
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:93
 msgid "Unable to update profile"
 msgstr "Impossible de mettre à jour le profil"
 
-#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:74
+#: arches_lingo/src/arches_lingo/components/tree/ConceptTree.vue:88
 msgid "Unfocus"
 msgstr "flou"
 
-#: arches_lingo/src/arches_lingo/components/generic/EditLog/EditLog.vue:129
+#: arches_lingo/src/arches_lingo/components/generic/EditLog/EditLog.vue:144
 msgid "Unknown"
 msgstr "Inconnu"
 
-#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:135
+#: arches_lingo/src/arches_lingo/components/concept/HierarchicalPosition/components/HierarchicalPositionViewer.vue:218
 msgid "Unknown Parent"
 msgstr "Parent inconnu"
 
-#: arches_lingo/src/arches_lingo/pages/HomePage.vue:194
+#: arches_lingo/src/arches_lingo/pages/HomePage.vue:201
 msgid "Unnamed scheme"
 msgstr "Schéma sans nom"
 
@@ -1726,65 +2534,127 @@ msgstr "Modifications non enregistrées"
 msgid "Untitled"
 msgstr "Sans titre"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:353
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:354
 msgid "Update Password"
 msgstr "Mettre à jour le mot de passe"
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:756
+msgid "Update your display name, email address, and phone number."
+msgstr ""
 
 #: arches_lingo/src/arches_lingo/components/scheme/ImportThesauri.vue:191
 msgid "Upload File"
 msgstr "Télécharger le fichier"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:58
+#: arches_lingo/src/arches_lingo/components/advanced-search/FacetRow.vue:64
 msgid "URI"
 msgstr "URI"
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:280
+#, fuzzy
+msgid "URI template"
+msgstr "Modèle d'URI :"
 
 #: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/components/SchemeURITemplateField.vue:89
 msgid "URI template:"
 msgstr "Modèle d'URI :"
 
-#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader.vue:530
-#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:453
+#: arches_lingo/src/arches_lingo/components/concept/ConceptHeader/ConceptHeader.vue:326
+#: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:591
 msgid "URI: "
 msgstr "URI :"
 
-#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:200
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:541
+msgid ""
+"Use the checkboxes in search results to select concepts, then use the "
+"Concept Sets actions to add or remove them."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:447
+msgid ""
+"Use the Missing Translations table on the Dashboard to identify concepts "
+"that still need a preferred label in a given language."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:202
+msgid ""
+"Use the Schemes filter at the top of the Dashboard to focus all stats and "
+"activity on one or more specific schemes."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:438
+msgid "Used for search indexing only — not shown in displays or exports."
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:215
 msgid "User"
 msgstr "Utilisateur"
 
-#: arches_lingo/src/arches_lingo/components/login/LoginForm.vue:54
-#: arches_lingo/src/arches_lingo/components/login/LoginForm.vue:55
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:206
+#: arches_lingo/src/arches_lingo/components/login/LoginForm.vue:57
+#: arches_lingo/src/arches_lingo/components/login/LoginForm.vue:58
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:207
 msgid "Username"
 msgstr "Nom d'utilisateur"
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:215
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:216
 msgid "Username cannot be changed."
 msgstr "Le nom d'utilisateur ne peut pas être modifié."
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/SearchResults.vue:165
+#: arches_lingo/src/arches_lingo/components/advanced-search/SearchResults.vue:175
 msgid "View"
 msgstr "Voir"
 
-#: arches_lingo/src/arches_lingo/components/advanced-search/SearchResults.vue:172
+#: arches_lingo/src/arches_lingo/components/advanced-search/SearchResults.vue:182
 msgid "View concept %{label}"
 msgstr "Voir le concept %{label}"
 
-#: arches_lingo/src/arches_lingo/components/login/LoginForm.vue:45
-msgid "Vocabulary and authority data management powered by Arches."
+#: arches_lingo/src/arches_lingo/pages/LandingPage.vue:38
+msgid "View statistics, recent activity, and translation coverage"
 msgstr ""
-"Gestion des données de vocabulaire et d'autorité optimisée par Arches."
 
-#: arches_lingo/src/arches_lingo/pages/HomePage.vue:129
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:798
+msgid "Visit "
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/pages/LandingPage.vue:87
+#, fuzzy
+msgid "Vocabulary and authority data management powered by Arches"
+msgstr "Gestion des données de vocabulaire et d'autorité optimisée par Arches."
+
+#: arches_lingo/src/arches_lingo/components/login/LoginForm.vue:48
+msgid "Vocabulary and authority data management powered by Arches."
+msgstr "Gestion des données de vocabulaire et d'autorité optimisée par Arches."
+
+#: arches_lingo/src/arches_lingo/pages/HomePage.vue:136
 msgid "Welcome"
 msgstr "Accueillir"
 
-#: arches_lingo/src/arches_lingo/pages/HomePage.vue:127
+#: arches_lingo/src/arches_lingo/pages/LandingPage.vue:98
+#, fuzzy
+msgid "Welcome back, %{name}!"
+msgstr "Bienvenue, %{name}"
+
+#: arches_lingo/src/arches_lingo/pages/HomePage.vue:134
 msgid "Welcome, %{name}"
 msgstr "Bienvenue, %{name}"
 
-#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:144
+#: arches_lingo/src/arches_lingo/components/dashboard/RecentActivityTable.vue:159
 msgid "When"
 msgstr "Quand"
+
+#: arches_lingo/src/arches_lingo/components/generic/ReinstateDialog.vue:41
+msgid "Would you also like to reinstate the child concepts within \"%{name}\"?"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/generic/ReinstateDialog.vue:36
+msgid "Would you also like to reinstate the concepts within \"%{name}\"?"
+msgstr ""
+
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:688
+msgid ""
+"You can also filter by lifecycle state in the Advanced Search query builder "
+"to find all concepts at a particular stage across every scheme."
+msgstr ""
 
 #: arches_lingo/src/arches_lingo/components/header/PageHeader/components/NotificationsInteraction/components/NotificationsPanel.vue:93
 msgid "You have no new notifications"
@@ -1808,7 +2678,12 @@ msgstr ""
 "Votre importation est en cours de traitement. Vous serez averti lorsqu'il "
 "sera terminé."
 
-#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:86
+#: arches_lingo/src/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue:742
+#, fuzzy
+msgid "Your Profile"
+msgstr "Profil"
+
+#: arches_lingo/src/arches_lingo/pages/UserProfilePage.vue:87
 msgid "Your profile has been saved successfully."
 msgstr "Votre profil a été enregistré avec succès."
 
@@ -1823,3 +2698,18 @@ msgstr ""
 #: arches_lingo/src/arches_lingo/components/basic-search/SortAndFilterControls.vue:14
 msgid "Z to A"
 msgstr "Z à A"
+
+#~ msgid "Are you sure you want to delete this concept?"
+#~ msgstr "Êtes-vous sûr de vouloir supprimer ce concept ?"
+
+#~ msgid "Authentication required."
+#~ msgstr "Authentification requise."
+
+#~ msgid "Authority Editors"
+#~ msgstr "Éditeurs d'autorité"
+
+#~ msgid "Lifecycle:"
+#~ msgstr "Cycle de vie:"
+
+#~ msgid "Login required."
+#~ msgstr "Connexion requise."
