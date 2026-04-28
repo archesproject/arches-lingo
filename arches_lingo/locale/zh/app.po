@@ -209,7 +209,7 @@ msgstr "已选择 %{count} 方案"
 
 #: arches_lingo/src/arches_lingo/components/header/PageHeader/components/UserInteraction/UserInteraction.vue:30
 msgid "%{firstName} %{lastName}"
-msgstr "占位符0X 占位符1X"
+msgstr "%{firstName} %{lastName}"
 
 #: arches_lingo/src/arches_lingo/components/scheme/SchemeHeader/SchemeHeader.vue:116
 msgid "%{language} (%{code}): %{count}"
