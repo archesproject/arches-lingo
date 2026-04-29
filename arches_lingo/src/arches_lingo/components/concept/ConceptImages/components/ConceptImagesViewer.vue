@@ -1,16 +1,20 @@
 <script setup lang="ts">
-import { inject, ref, onMounted, nextTick, computed } from "vue";
+import arches from "arches";
+import { inject, ref, onMounted, computed } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import Button from "primevue/button";
 import ConfirmDialog from "primevue/confirmdialog";
+import Image from "primevue/image";
 import Message from "primevue/message";
 import Skeleton from "primevue/skeleton";
+import Tag from "primevue/tag";
 import { useConfirm } from "primevue/useconfirm";
 
 import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
 
 import { DANGER, SECONDARY, VIEW } from "@/arches_lingo/constants.ts";
+import { targetDigitalObjectResourceInstanceId } from "@/arches_lingo/components/concept/ConceptImages/components/editorState.ts";
 import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 
 import type {
@@ -18,6 +22,7 @@ import type {
     ConceptInstance,
     DigitalObjectInstance,
 } from "@/arches_lingo/types.ts";
+import type { FileListValue } from "@/arches_component_lab/datatypes/file-list/types.ts";
 import {
     fetchLingoResourcePartial,
     fetchLingoResourcesBatch,
@@ -51,12 +56,6 @@ const canEditResourceInstances = computed(() => {
     );
 });
 
-const canDeleteResourceInstances = computed(() => {
-    return Boolean(
-        resourceInstanceLifecycleState?.value?.can_delete_resource_instances,
-    );
-});
-
 const isCreateDisabled = computed(() => {
     return Boolean(
         !props.resourceInstanceId || !canEditResourceInstances.value,
@@ -83,6 +82,35 @@ const isLoading = ref(true);
 const resources = ref<DigitalObjectInstance[]>();
 const { $gettext } = useGettext();
 const confirm = useConfirm();
+
+function getFileUrl(originalUrl: string): string {
+    const httpRegex = /^(blob:|https?:\/\/)/;
+    if (
+        !originalUrl ||
+        httpRegex.test(originalUrl) ||
+        originalUrl.startsWith(arches.urls.url_subpath)
+    ) {
+        return originalUrl;
+    }
+    return (arches.urls.url_subpath + originalUrl).replace("//", "/");
+}
+
+function getImageUrl(resource: DigitalObjectInstance): string | undefined {
+    const contentData = resource.aliased_data.content?.aliased_data
+        .content as unknown as FileListValue | undefined;
+    const fileReference = contentData?.node_value?.[0];
+    if (fileReference?.url) {
+        return getFileUrl(fileReference.url);
+    }
+    return undefined;
+}
+
+function getImageAlt(resource: DigitalObjectInstance): string {
+    const contentData = resource.aliased_data.content?.aliased_data
+        .content as unknown as FileListValue | undefined;
+    const fileReference = contentData?.node_value?.[0];
+    return fileReference?.altText || fileReference?.name || "";
+}
 
 onMounted(async () => {
     if (props.tileData) {
@@ -172,27 +200,8 @@ function editResource(resourceInstanceId: string) {
 }
 
 function modifyResource(resourceInstanceId?: string) {
-    async function openConceptImagesEditor() {
-        await nextTick();
-
-        document.dispatchEvent(
-            new CustomEvent("openConceptImagesEditor", {
-                detail: { resourceInstanceId },
-            }),
-        );
-    }
-
+    targetDigitalObjectResourceInstanceId.value = resourceInstanceId;
     openEditor!(props.componentName);
-
-    document.removeEventListener(
-        "conceptImagesEditor:ready",
-        openConceptImagesEditor,
-    );
-    document.addEventListener(
-        "conceptImagesEditor:ready",
-        openConceptImagesEditor,
-        { once: true },
-    );
 }
 </script>
 
@@ -201,7 +210,14 @@ function modifyResource(resourceInstanceId?: string) {
         <ConfirmDialog />
 
         <div class="section-header">
-            <h2>{{ props.sectionTitle }}</h2>
+            <div class="section-title">
+                <h2>{{ props.sectionTitle }}</h2>
+                <Tag
+                    v-if="resources?.length"
+                    :value="String(resources.length)"
+                    severity="secondary"
+                />
+            </div>
             <Button
                 v-if="isEditor"
                 v-tooltip.top="{
@@ -245,75 +261,91 @@ function modifyResource(resourceInstanceId?: string) {
 
         <div
             v-else
-            style="overflow-x: auto; overflow-y: hidden"
+            class="concept-images-scroll"
         >
             <div class="concept-images">
                 <div
                     v-for="resource in resources"
                     :key="resource.resourceinstanceid"
-                    class="concept-image"
+                    class="concept-image-card"
                 >
-                    <div class="header">
-                        <label
-                            for="concept-image"
-                            class="image-title-label"
-                        >
-                            <GenericWidget
-                                node-alias="name_content"
-                                class="image-title"
-                                graph-slug="digital_object_system"
-                                :mode="VIEW"
-                                :aliased-node-data="
-                                    resource.aliased_data.name?.aliased_data
-                                        .name_content
-                                "
-                            />
-                        </label>
+                    <div class="image-container">
+                        <Image
+                            v-if="getImageUrl(resource)"
+                            :src="getImageUrl(resource)"
+                            :alt="getImageAlt(resource)"
+                            preview
+                            class="card-image"
+                        />
                         <div
-                            v-if="isEditor"
-                            class="button-container"
+                            v-else
+                            class="image-placeholder"
                         >
-                            <Button
-                                v-if="canEditResourceInstances"
-                                class="controls edit-button"
-                                icon="pi pi-file-edit"
-                                variant="text"
-                                :aria-label="$gettext('edit')"
-                                @click="
-                                    editResource(resource.resourceinstanceid)
-                                "
-                            />
-                            <Button
-                                v-if="canDeleteResourceInstances"
-                                class="controls delete-button"
-                                icon="pi pi-trash"
-                                :aria-label="$gettext('Delete')"
-                                variant="text"
-                                @click="
-                                    confirmDelete(resource.resourceinstanceid)
-                                "
-                            />
+                            <i class="pi pi-image" />
                         </div>
                     </div>
-                    <GenericWidget
-                        node-alias="content"
-                        graph-slug="digital_object_system"
-                        :aliased-node-data="
-                            resource.aliased_data.content?.aliased_data.content
-                        "
-                        :mode="VIEW"
-                        :should-show-label="false"
-                    />
-                    <div class="footer">
-                        <GenericWidget
-                            node-alias="statement_content"
-                            graph-slug="digital_object_system"
-                            :mode="VIEW"
-                            :aliased-node-data="
+                    <div class="card-body">
+                        <div class="card-header">
+                            <span class="image-title">
+                                <GenericWidget
+                                    node-alias="name_content"
+                                    graph-slug="digital_object_system"
+                                    :mode="VIEW"
+                                    :aliased-node-data="
+                                        resource.aliased_data.name?.aliased_data
+                                            .name_content
+                                    "
+                                    :should-show-label="false"
+                                />
+                            </span>
+                            <div
+                                v-if="isEditor"
+                                class="button-container"
+                            >
+                                <Button
+                                    v-if="canEditResourceInstances"
+                                    class="controls edit-button"
+                                    icon="pi pi-file-edit"
+                                    variant="text"
+                                    :aria-label="$gettext('edit')"
+                                    @click="
+                                        editResource(
+                                            resource.resourceinstanceid,
+                                        )
+                                    "
+                                />
+                                <Button
+                                    v-if="canEditResourceInstances"
+                                    class="controls delete-button"
+                                    icon="pi pi-trash"
+                                    :aria-label="$gettext('Delete')"
+                                    variant="text"
+                                    @click="
+                                        confirmDelete(
+                                            resource.resourceinstanceid,
+                                        )
+                                    "
+                                />
+                            </div>
+                        </div>
+                        <div
+                            v-if="
                                 resource.aliased_data.statement?.aliased_data
                                     .statement_content
                             "
-                        />
+                            class="card-description"
+                        >
+                            <GenericWidget
+                                node-alias="statement_content"
+                                graph-slug="digital_object_system"
+                                :mode="VIEW"
+                                :aliased-node-data="
+                                    resource.aliased_data.statement
+                                        ?.aliased_data.statement_content
+                                "
+                                :should-show-label="false"
+                            />
+                        </div>
                     </div>
                 </div>
             </div>
@@ -322,9 +354,97 @@ function modifyResource(resourceInstanceId?: string) {
 </template>
 
 <style scoped>
+.concept-images-scroll {
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0.75rem 0;
+}
+
+.concept-images {
+    display: flex;
+    gap: 1rem;
+    width: fit-content;
+}
+
+.concept-image-card {
+    width: 20rem;
+    border-radius: 0.25rem;
+    border: 0.0625rem solid var(--p-content-border-color);
+    background: var(--p-content-background);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.image-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--p-surface-100);
+    overflow: hidden;
+    min-height: 12rem;
+    max-height: 16rem;
+}
+
+.image-container :deep(.card-image img) {
+    max-height: 16rem;
+    width: 100%;
+    object-fit: cover;
+    display: block;
+    cursor: pointer;
+}
+
+.image-container :deep(.card-image) {
+    width: 100%;
+    height: 100%;
+    display: flex;
+}
+
+.image-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 12rem;
+    color: var(--p-text-muted-color);
+    font-size: 2rem;
+}
+
+.card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.75rem;
+}
+
+.card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.image-title {
+    font-size: var(--p-lingo-font-size-smallnormal);
+    font-weight: var(--p-lingo-font-weight-normal);
+    color: var(--p-text-color);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+    min-width: 0;
+}
+
+.card-description {
+    font-size: var(--p-lingo-font-size-xsmall);
+    color: var(--p-inputtext-placeholder-color);
+    line-height: 1.4;
+}
+
 .button-container {
     display: flex;
     gap: 0.25rem;
+    flex-shrink: 0;
 }
 
 .controls {
@@ -356,51 +476,5 @@ function modifyResource(resourceInstanceId?: string) {
     background: var(--p-button-danger-hover-background);
     border: 0.0625rem solid var(--p-button-danger-hover-border-color);
     color: var(--p-button-danger-hover-color);
-}
-
-.concept-images {
-    display: flex;
-    flex-direction: row;
-    align-items: start;
-    width: fit-content;
-    color: var(--p-inputtext-placeholder-color);
-    font-size: var(--p-lingo-font-size-smallnormal);
-}
-
-.concept-image {
-    width: 30rem;
-    margin: 0 1rem;
-}
-
-.image-title-label {
-    color: var(--p-header-item-label);
-}
-
-.image-title {
-    color: var(--p-header-item-label);
-}
-
-.concept-image .header {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    padding: 1rem 0;
-}
-
-.concept-image .footer {
-    padding-top: 1rem;
-}
-
-.concept-image .header .text {
-    display: flex;
-    align-items: start;
-    flex-direction: column;
-}
-
-.concept-images :deep(.p-galleria) {
-    border: none;
-}
-
-:deep(.p-galleria) {
-    border-radius: 0.125rem;
 }
 </style>
