@@ -25,9 +25,11 @@ import LifecycleStateBadge from "@/arches_lingo/components/generic/LifecycleStat
 import {
     DANGER,
     DEFAULT_ERROR_TOAST_LIFE,
+    DEFAULT_TOAST_LIFE,
     ERROR,
     NEW_CONCEPT,
     SECONDARY,
+    SUCCESS,
 } from "@/arches_lingo/constants.ts";
 import { PREF_LABEL } from "@/arches_controlled_lists/constants.ts";
 
@@ -241,6 +243,15 @@ const schemeUri = computed(() => {
     return scheme.value?.aliased_data?.uri?.aliased_data?.uri_content
         ?.node_value;
 });
+
+async function copyUriToClipboard(uri: string) {
+    await navigator.clipboard.writeText(uri);
+    toast.add({
+        severity: SUCCESS,
+        life: DEFAULT_TOAST_LIFE,
+        summary: $gettext("URI copied to clipboard"),
+    });
+}
 
 onMounted(async () => {
     if (!props.resourceInstanceId) {
@@ -590,16 +601,27 @@ async function onReinstateConfirmed(cascade: boolean) {
                         <span class="header-item-label">{{
                             $gettext("URI: ")
                         }}</span>
-                        <Button
+                        <div
                             v-if="schemeUri"
-                            :label="schemeUri"
-                            class="scheme-uri"
-                            variant="link"
-                            as="a"
-                            :href="schemeUri"
-                            target="_blank"
-                            rel="noopener"
-                        ></Button>
+                            class="uri-display"
+                        >
+                            <Button
+                                :label="schemeUri"
+                                class="scheme-uri"
+                                variant="link"
+                                as="a"
+                                :href="schemeUri"
+                                target="_blank"
+                                rel="noopener"
+                            ></Button>
+                            <Button
+                                icon="pi pi-copy"
+                                class="uri-copy-button"
+                                variant="link"
+                                :aria-label="$gettext('Copy URI')"
+                                @click="copyUriToClipboard(schemeUri)"
+                            ></Button>
+                        </div>
                         <span
                             v-else
                             class="header-item-value"
@@ -799,12 +821,24 @@ h2 > span {
     font-size: var(--p-lingo-font-size-small);
 }
 
+.uri-display {
+    display: inline-flex;
+    align-items: center;
+    min-width: 0;
+}
+
 .scheme-uri {
     min-width: 0;
     max-width: 100%;
     overflow: hidden;
     font-size: var(--p-lingo-font-size-small);
     font-weight: var(--p-lingo-font-weight-normal);
+    color: var(--p-primary-500);
+}
+
+.uri-copy-button {
+    flex-shrink: 0;
+    font-size: var(--p-lingo-font-size-small);
     color: var(--p-primary-500);
 }
 

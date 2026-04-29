@@ -18,9 +18,11 @@ import {
 import {
     CONCEPT_TYPE_NODE_ALIAS,
     DEFAULT_ERROR_TOAST_LIFE,
+    DEFAULT_TOAST_LIFE,
     ERROR,
     SKOS_PREF_LABEL_URI,
     SKOS_ALT_LABEL_URI,
+    SUCCESS,
 } from "@/arches_lingo/constants.ts";
 import { PREF_LABEL, ALT_LABEL } from "@/arches_controlled_lists/constants.ts";
 
@@ -73,6 +75,15 @@ const conceptIdentifierValue = ref<string>();
 const conceptTypeTile = ref();
 const isWidgetLoading = ref(false);
 const ancestorLabelsById = ref<Map<string, Label[]>>(new Map());
+
+async function copyUriToClipboard(uri: string) {
+    await navigator.clipboard.writeText(uri);
+    toast.add({
+        severity: SUCCESS,
+        life: DEFAULT_TOAST_LIFE,
+        summary: $gettext("URI copied to clipboard"),
+    });
+}
 
 const isLoading = computed(function () {
     if (!isIdentifierLoaded.value) return true;
@@ -325,16 +336,27 @@ function extractConceptHeaderData(resource: ResourceInstanceResult) {
                         <span class="header-item-label">{{
                             $gettext("URI: ")
                         }}</span>
-                        <Button
+                        <div
                             v-if="data?.uri"
-                            :label="data?.uri"
-                            class="concept-uri"
-                            variant="link"
-                            as="a"
-                            :href="data?.uri"
-                            target="_blank"
-                            rel="noopener"
-                        ></Button>
+                            class="uri-display"
+                        >
+                            <Button
+                                :label="data?.uri"
+                                class="concept-uri"
+                                variant="link"
+                                as="a"
+                                :href="data?.uri"
+                                target="_blank"
+                                rel="noopener"
+                            ></Button>
+                            <Button
+                                icon="pi pi-copy"
+                                class="uri-copy-button"
+                                variant="link"
+                                :aria-label="$gettext('Copy URI')"
+                                @click="copyUriToClipboard(data.uri)"
+                            ></Button>
+                        </div>
                         <span
                             v-else
                             class="header-item-value"
@@ -441,9 +463,21 @@ function extractConceptHeaderData(resource: ResourceInstanceResult) {
     box-sizing: border-box;
 }
 
+.uri-display {
+    display: inline-flex;
+    align-items: center;
+    min-width: 0;
+}
+
 .concept-uri {
     font-size: var(--p-lingo-font-size-small);
     font-weight: var(--p-lingo-font-weight-normal);
+    color: var(--p-primary-500);
+}
+
+.uri-copy-button {
+    flex-shrink: 0;
+    font-size: var(--p-lingo-font-size-small);
     color: var(--p-primary-500);
 }
 
