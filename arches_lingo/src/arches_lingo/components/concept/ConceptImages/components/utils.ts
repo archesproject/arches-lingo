@@ -110,7 +110,14 @@ export async function createFormDataForFileUpload(
         );
     }
     for (const file of submittedFormData.content.node_value) {
-        formData.append(`file-list_${digitalObjectContentNodeId}`, file.file);
+        if (file.file instanceof File) {
+            const sanitizedName = file.file.name.replace(/ /g, "_");
+            formData.append(
+                `file-list_${digitalObjectContentNodeId}`,
+                file.file,
+                sanitizedName,
+            );
+        }
     }
     return formData;
 }
