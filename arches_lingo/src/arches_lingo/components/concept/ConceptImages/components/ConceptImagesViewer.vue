@@ -389,7 +389,7 @@ function modifyResource(resourceInstanceId?: string) {
 .image-container :deep(.card-image img) {
     max-height: 16rem;
     width: 100%;
-    object-fit: cover;
+    object-fit: contain;
     display: block;
     cursor: pointer;
 }
