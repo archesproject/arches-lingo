@@ -19,10 +19,11 @@ Step 1 — convert (downloads ~172 MB, processes without full decompression):
 
 Step 2 — import into arches-lingo:
 
-    python manage.py packages \\
-        -o import_lingo_resources \\
-        -s /path/to/getty_aat_skos.xml \\
+    python manage.py packages -o import_lingo_resources -s getty_aat_skos.xml 
         -ow overwrite
+        --import-identifiers
+        --namespace-template "http://vocab.getty.edu/aat/{concept_identifier}"
+        
 
 Background
 ----------
@@ -39,11 +40,6 @@ differs from plain SKOS in ways arches-lingo's importer cannot handle directly:
   - The AATOut_Full.nt file does NOT contain a rdf:type skos:ConceptScheme
     triple for http://vocab.getty.edu/aat/ -- the scheme is synthesised from
     the skos:inScheme values found on the concepts.
-
-  - Getty facets (top-level hierarchy nodes) use skos:topConceptOf pointing
-    up to the scheme, not skos:hasTopConcept pointing down from the scheme.
-    The script preserves these triples; arches-lingo's SKOS reader handles
-    the inverse property.
 
   - Output format: SKOS RDF/XML (the format arches-lingo's importer parses).
 
