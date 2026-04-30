@@ -140,6 +140,9 @@ async function save(e: FormSubmitEvent) {
                     :aliased-node-data="
                         props.tileData?.aliased_data.statement_content
                     "
+                    :card-x-node-x-widget-data-overrides="{
+                        config: { multiline: true },
+                    }"
                     :mode="EDIT"
                     class="widget-container column"
                 />

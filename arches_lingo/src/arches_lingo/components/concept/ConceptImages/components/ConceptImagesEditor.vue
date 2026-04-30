@@ -349,6 +349,9 @@ function resetForm() {
                         digitalObjectResource?.aliased_data.statement
                             ?.aliased_data.statement_content
                     "
+                    :card-x-node-x-widget-data-overrides="{
+                        config: { multiline: true },
+                    }"
                     class="widget-container column"
                 />
                 <GenericWidget
