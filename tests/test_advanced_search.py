@@ -50,10 +50,10 @@ from arches_lingo.const import (
     STATEMENT_CONTENT_NODE,
     STATEMENT_LANGUAGE_NODE,
     STATEMENT_TYPE_NODE,
-    URI_NODEGROUP,
-    URI_CONTENT_NODE,
-    IDENTIFIER_NODEGROUP,
-    IDENTIFIER_CONTENT_NODE,
+    CONCEPT_URI_NODEGROUP,
+    CONCEPT_URI_CONTENT_NODE,
+    CONCEPT_IDENTIFIER_NODEGROUP,
+    CONCEPT_IDENTIFIER_CONTENT_NODE,
     MATCH_STATUS_NODEGROUP,
     MATCH_STATUS_COMPARATE_NODE,
 )
@@ -187,17 +187,17 @@ class AdvancedSearchEvaluatorTests(TestCase):
 
         TileModel.objects.create(
             resourceinstance=cls.concept_a,
-            nodegroup_id=URI_NODEGROUP,
+            nodegroup_id=CONCEPT_URI_NODEGROUP,
             data={
-                URI_CONTENT_NODE: "http://example.com/alpha",
+                CONCEPT_URI_CONTENT_NODE: "http://example.com/alpha",
             },
         )
 
         TileModel.objects.create(
             resourceinstance=cls.concept_b,
-            nodegroup_id=IDENTIFIER_NODEGROUP,
+            nodegroup_id=CONCEPT_IDENTIFIER_NODEGROUP,
             data={
-                IDENTIFIER_CONTENT_NODE: "ID-BETA-001",
+                CONCEPT_IDENTIFIER_CONTENT_NODE: "ID-BETA-001",
             },
         )
 

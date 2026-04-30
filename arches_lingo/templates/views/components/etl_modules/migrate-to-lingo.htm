@@ -26,6 +26,31 @@
                 chosen: {width: '500px'}"
             ></select>
         </div>
+        <div class="etl-module-component-block">
+            <div class="checkbox">
+                <label>
+                    <input type="checkbox" data-bind="checked: importIdentifiers" />
+                    {% trans "Import identifiers as URIs" %}
+                </label>
+                <p class="help-block">
+                    {% blocktrans %}If checked, dcterms:identifiers will be imported as URIs, with the last segment imported as an identifier. Life cycle states will be applied based on presence of URIs. If left unchecked, dcterms:identifiers will be imported as matched concepts{% endblocktrans %}
+                </p>
+            </div>
+        </div>
+        <!-- ko if: importIdentifiers() -->
+        <div class="etl-module-component-block">
+            <div class="h4">
+                <label for="namespace-template-input">{% trans "Namespace Template" %}</label>
+            </div>
+            <input id="namespace-template-input" type="text" class="form-control" style="width: 500px;"
+                data-bind="value: namespaceTemplate"
+                placeholder="https://example.org/schemes/<scheme_identifier>/concepts/<concept_identifier>"
+            />
+            <p class="help-block">
+                {% blocktrans %}A URL template for generating concept URIs within this scheme.{% endblocktrans %}
+            </p>
+        </div>
+        <!-- /ko -->
     </div>
     <div class="tabbed-workflow-footer, etl-module-footer">
         <button class="btn btn-success"

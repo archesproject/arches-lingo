@@ -32,10 +32,10 @@ from arches_lingo.const import (
     STATEMENT_CONTENT_NODE,
     STATEMENT_LANGUAGE_NODE,
     STATEMENT_TYPE_NODE,
-    URI_NODEGROUP,
-    URI_CONTENT_NODE,
-    IDENTIFIER_NODEGROUP,
-    IDENTIFIER_CONTENT_NODE,
+    CONCEPT_URI_NODEGROUP,
+    CONCEPT_URI_CONTENT_NODE,
+    CONCEPT_IDENTIFIER_NODEGROUP,
+    CONCEPT_IDENTIFIER_CONTENT_NODE,
     MATCH_STATUS_NODEGROUP,
     MATCH_STATUS_COMPARATE_NODE,
     CONCEPT_TYPE_NODEGROUP,
@@ -408,12 +408,12 @@ class AdvancedSearchEvaluator:
         if not value and match_mode != "exists":
             return self._all_concept_ids()
 
-        filters = Q(nodegroup_id=URI_NODEGROUP)
+        filters = Q(nodegroup_id=CONCEPT_URI_NODEGROUP)
         if match_mode == "exists":
-            filters &= ~Q(**{f"data__{URI_CONTENT_NODE}": None})
+            filters &= ~Q(**{f"data__{CONCEPT_URI_CONTENT_NODE}": None})
         else:
             lookup = self.MATCH_MODE_LOOKUPS.get(match_mode, "icontains")
-            filters &= Q(**{f"data__{URI_CONTENT_NODE}__{lookup}": value})
+            filters &= Q(**{f"data__{CONCEPT_URI_CONTENT_NODE}__{lookup}": value})
 
         return (
             TileModel.objects.filter(filters)
@@ -428,9 +428,9 @@ class AdvancedSearchEvaluator:
         if not value and match_mode != "exists":
             return self._all_concept_ids()
 
-        filters = Q(nodegroup_id=IDENTIFIER_NODEGROUP)
+        filters = Q(nodegroup_id=CONCEPT_IDENTIFIER_NODEGROUP)
         filters &= self._text_filter(
-            f"data__{IDENTIFIER_CONTENT_NODE}", value, match_mode
+            f"data__{CONCEPT_IDENTIFIER_CONTENT_NODE}", value, match_mode
         )
 
         return (

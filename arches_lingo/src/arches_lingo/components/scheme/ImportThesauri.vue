@@ -4,8 +4,10 @@ import { useGettext } from "vue3-gettext";
 
 import { useToast } from "primevue/usetoast";
 import Button from "primevue/button";
+import Checkbox from "primevue/checkbox";
 import Dialog from "primevue/dialog";
 import InputFile from "primevue/fileupload";
+import InputText from "primevue/inputtext";
 import RadioButton from "primevue/radiobutton";
 import ProgressSpinner from "primevue/progressspinner";
 
@@ -27,6 +29,10 @@ const visible = ref(true);
 const loading = ref(false);
 const file = ref<File | null>(null);
 const overwriteOption = ref("overwrite");
+const importIdentifiers = ref(false);
+const namespaceTemplate = ref(
+    "https://example.org/schemes/<scheme_identifier>/concepts/<concept_identifier>",
+);
 
 const overwriteOptions = ref([
     {
@@ -62,7 +68,12 @@ async function submit() {
         return;
     }
     loading.value = true;
-    await importThesaurus(file.value, overwriteOption.value)
+    await importThesaurus(
+        file.value,
+        overwriteOption.value,
+        importIdentifiers.value,
+        importIdentifiers.value ? namespaceTemplate.value : "",
+    )
         .then(() => {
             toast.add({
                 severity: "success",
@@ -176,6 +187,52 @@ async function submit() {
                         </span>
                     </div>
                 </div>
+                <div class="form-field">
+                    <div class="checkbox-field">
+                        <Checkbox
+                            v-model="importIdentifiers"
+                            input-id="import-identifiers"
+                            :binary="true"
+                        />
+                        <label for="import-identifiers">{{
+                            $gettext("Import identifiers as URIs")
+                        }}</label>
+                    </div>
+                    <small class="help-text">{{
+                        $gettext(
+                            "If checked, dcterms:identifiers will be imported as URIs, with the last segment imported as an identifier. Life cycle states will be applied based on presence of URIs. If left unchecked, dcterms:identifiers will be imported as matched concepts",
+                        )
+                    }}</small>
+                </div>
+                <div
+                    v-if="importIdentifiers"
+                    class="form-field"
+                >
+                    <label for="namespace-template">{{
+                        $gettext("Namespace Template")
+                    }}</label>
+                    <div class="namespace-input-group">
+                        <InputText
+                            id="namespace-template"
+                            v-model="namespaceTemplate"
+                            style="width: 100%"
+                        />
+                        <Button
+                            icon="pi pi-times"
+                            severity="secondary"
+                            text
+                            rounded
+                            aria-label="Clear"
+                            :disabled="!namespaceTemplate"
+                            @click="namespaceTemplate = ''"
+                        />
+                    </div>
+                    <small class="help-text">{{
+                        $gettext(
+                            "A URL template for generating concept URIs within this scheme.",
+                        )
+                    }}</small>
+                </div>
             </div>
         </template>
         <template #footer>
@@ -212,6 +269,24 @@ async function submit() {
     label {
         margin-bottom: 0.125rem;
     }
+}
+
+.checkbox-field {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.namespace-input-group {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.help-text {
+    display: block;
+    margin-top: 0.25rem;
+    color: var(--p-text-muted-color);
 }
 
 .radiogroup {

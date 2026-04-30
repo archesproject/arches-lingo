@@ -15,14 +15,14 @@ from arches.app.models.models import (
 
 from arches_lingo.const import (
     CONCEPTS_GRAPH_ID,
-    IDENTIFIER_CONTENT_NODE,
-    IDENTIFIER_NODEGROUP,
+    CONCEPT_IDENTIFIER_CONTENT_NODE,
+    CONCEPT_IDENTIFIER_NODEGROUP,
     STATEMENT_CONTENT_NODE,
     STATEMENT_LANGUAGE_NODE,
     STATEMENT_NODEGROUP,
     STATEMENT_TYPE_NODE,
-    URI_CONTENT_NODE,
-    URI_NODEGROUP,
+    CONCEPT_URI_CONTENT_NODE,
+    CONCEPT_URI_NODEGROUP,
 )
 from arches_lingo.models import ConceptSetMember
 from arches_lingo.utils.advanced_search import AdvancedSearchEvaluator
@@ -75,7 +75,7 @@ def get_uris_for_concepts(concept_ids):
     """Return ``{concept_id: url_string}`` for a batch of concepts (1 query)."""
     tiles = TileModel.objects.filter(
         resourceinstance_id__in=concept_ids,
-        nodegroup_id=URI_NODEGROUP,
+        nodegroup_id=CONCEPT_URI_NODEGROUP,
     ).values("resourceinstance_id", "data")
 
     result = {}
@@ -83,7 +83,7 @@ def get_uris_for_concepts(concept_ids):
         concept_id = str(tile["resourceinstance_id"])
         if concept_id in result:
             continue
-        uri_data = tile["data"].get(URI_CONTENT_NODE)
+        uri_data = tile["data"].get(CONCEPT_URI_CONTENT_NODE)
         if isinstance(uri_data, dict):
             result[concept_id] = uri_data.get("url")
         elif isinstance(uri_data, str):
@@ -95,7 +95,7 @@ def get_identifiers_for_concepts(concept_ids):
     """Return ``{concept_id: identifier_string}`` for a batch of concepts (1 query)."""
     tiles = TileModel.objects.filter(
         resourceinstance_id__in=concept_ids,
-        nodegroup_id=IDENTIFIER_NODEGROUP,
+        nodegroup_id=CONCEPT_IDENTIFIER_NODEGROUP,
     ).values("resourceinstance_id", "data")
 
     result = {}
@@ -103,7 +103,7 @@ def get_identifiers_for_concepts(concept_ids):
         concept_id = str(tile["resourceinstance_id"])
         if concept_id in result:
             continue
-        result[concept_id] = tile["data"].get(IDENTIFIER_CONTENT_NODE)
+        result[concept_id] = tile["data"].get(CONCEPT_IDENTIFIER_CONTENT_NODE)
     return result
 
 

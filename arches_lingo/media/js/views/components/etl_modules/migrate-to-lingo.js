@@ -32,6 +32,8 @@ const viewModel = function(params) {
     this.schemes = ko.observable();
     this.selectedScheme = ko.observable();
     this.selectedSchemeName = ko.observable();
+    this.importIdentifiers = ko.observable(false);
+    this.namespaceTemplate = ko.observable('');
     this.selectedLoadEvent = params.selectedLoadEvent || ko.observable();
     this.formatTime = params.formatTime;
     this.timeDifference = params.timeDifference;
@@ -66,6 +68,10 @@ const viewModel = function(params) {
         }
         self.loading(true);
         self.formData.append('scheme', self.selectedScheme());
+        self.formData.append('import_identifiers', self.importIdentifiers() ? 'true' : 'false');
+        if (self.importIdentifiers() && self.namespaceTemplate()) {
+            self.formData.append('namespace_template', self.namespaceTemplate());
+        }
         self.submit('start').then(data => {
             params.activeTab("import");
             self.formData.append('async', true);

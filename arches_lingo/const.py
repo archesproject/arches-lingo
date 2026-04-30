@@ -3,10 +3,19 @@ from django.utils.translation import gettext_lazy as _
 ### Groups ###
 LINGO_EDITOR_GROUP_NAME = "Lingo Editor"
 
+
 ### Concepts Model Nodes & Nodegroups ###
 CONCEPTS_GRAPH_ID = "bf73e576-4888-11ee-8a8d-11afefc4bff7"
 
 TOP_CONCEPT_OF_NODE_AND_NODEGROUP = "bf73e5b9-4888-11ee-8a8d-11afefc4bff7"
+
+# uri
+CONCEPT_URI_NODEGROUP = "bf73e598-4888-11ee-8a8d-11afefc4bff7"
+CONCEPT_URI_CONTENT_NODE = "bf73e64a-4888-11ee-8a8d-11afefc4bff7"
+
+# identifier
+CONCEPT_IDENTIFIER_NODEGROUP = "bf73e5d1-4888-11ee-8a8d-11afefc4bff7"
+CONCEPT_IDENTIFIER_CONTENT_NODE = "bf73e6ba-4888-11ee-8a8d-11afefc4bff7"
 
 # classification_status
 CLASSIFICATION_STATUS_NODEGROUP = "f3f7bbea-0eb9-11ef-93db-0a58a9feac02"
@@ -41,6 +50,12 @@ CONCEPT_NAME_LANGUAGE_NODE = "a8ecaf54-0eb7-11ef-93db-0a58a9feac02"
 # appellative_status_ascribed_relation
 CONCEPT_NAME_TYPE_NODE = "1ddffab4-0eb8-11ef-93db-0a58a9feac02"
 
+# statement (notes)
+STATEMENT_NODEGROUP = "bf73e5d7-4888-11ee-8a8d-11afefc4bff7"
+STATEMENT_CONTENT_NODE = "bf73e6ab-4888-11ee-8a8d-11afefc4bff7"
+STATEMENT_LANGUAGE_NODE = "da0c9d52-0f5b-11ef-9493-0a58a9feac02"
+STATEMENT_TYPE_NODE = "fbfc89d6-0f5b-11ef-9493-0a58a9feac02"
+
 CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID = "bf73e60a-4888-11ee-8a8d-11afefc4bff7"
 
 # Associated Concepts Nodegroup and Nodes
@@ -59,8 +74,24 @@ RELATION_STATUS_DATA_ASSIGNMENT_OBJECT_USED_NODEID = (
 )
 RELATION_STATUS_DATA_ASSIGNMENT_TYPE_NODEID = "09aa0568-1772-11ef-b270-0a58a9feac02"
 
+# match_status
+MATCH_STATUS_NODEGROUP = "4cfaaa64-0ed7-11ef-9493-0a58a9feac02"
+MATCH_STATUS_COMPARATE_NODE = "4cfaae24-0ed7-11ef-9493-0a58a9feac02"
+
+# status (lifecycle/status)
+STATUS_NODEGROUP = "152321b6-0f5e-11ef-9493-0a58a9feac02"
+
+
 ### Scheme Model Nodes & Nodegroups ###
 SCHEMES_GRAPH_ID = "56788995-423b-11ee-8a8d-11afefc4bff7"
+
+# uri
+SCHEME_URI_NODEGROUP = "7fdc87bb-6ef9-4a74-8e84-4bde69557eef"
+SCHEME_URI_CONTENT_NODE = "1bd0f20b-b945-4231-b872-cba02cc4bc25"
+
+# identifier
+SCHEME_IDENTIFIER_NODEGROUP = "8e34b47f-423c-11ee-8a8d-11afefc4bff7"
+SCHEME_IDENTIFIER_CONTENT_NODE = "8e34b483-423c-11ee-8a8d-11afefc4bff7"
 
 # appellative_status
 SCHEME_NAME_NODEGROUP = "ef87ac28-11de-11ef-9493-0a58a9feac02"
@@ -80,11 +111,18 @@ SCHEME_IDENTIFIER_TYPE_LIST_ITEM_ID = "9baf3cd5-33d4-4fbc-b1d1-a2d218732f1e"
 
 
 ### Lists and List Items ###
-LABEL_LIST_ID = "deb847fc-f4c3-4e82-be19-04641579f129"
 EVENT_TYPES_LIST_ID = "6eaa2c6f-af83-464c-9200-051c4cfe7e8e"
+IDENTIFIER_TYPES_LIST_ID = "a8da34eb-575b-498c-ada7-161ee745fd16"
+LABEL_LIST_ID = "deb847fc-f4c3-4e82-be19-04641579f129"
 METATYPES_LIST_ID = "ef69e772-de53-45fe-98d4-bf3e7b10eb57"
 RELATED_PROPERTIES_LIST_ID = "ed3f8d46-c372-4c99-a326-8f726076fb97"
 CONCEPT_TYPE_LIST_ID = "4f9b2c82-59c6-4173-99ea-2a6bfbab6aa2"
+
+
+### Lifecycle State IDs ###
+DRAFT_STATE_ID = "0e7f8c6d-1f7b-4c2a-9a0c-2b9e0d6c8f11"
+PUBLISHED_STATE_ID = "6b0f1a7b-5b3d-4b2a-8a5b-7c3a1b0f2d9e"
+EDITING_STATE_ID = "b3a6a0d2-2b5c-4c2f-9d6c-0c2a5b7d1e8f"
 
 
 ### URIs ###
@@ -104,34 +142,12 @@ RELATION_STATUS_ASCRIBED_COMPARATE_ONTOLOGY_PROPERTY = (
     "https://ontology.swissartresearch.net/aaao/ZP44_ascribes_similarity_target"
 )
 
-
-# statement (notes)
-STATEMENT_NODEGROUP = "bf73e5d7-4888-11ee-8a8d-11afefc4bff7"
-STATEMENT_CONTENT_NODE = "bf73e6ab-4888-11ee-8a8d-11afefc4bff7"
-STATEMENT_LANGUAGE_NODE = "da0c9d52-0f5b-11ef-9493-0a58a9feac02"
-STATEMENT_TYPE_NODE = "fbfc89d6-0f5b-11ef-9493-0a58a9feac02"
-
 # namespace
 NAMESPACE_NODEGROUP = "92c68f1d-423c-11ee-8a8d-11afefc4bff7"
 NAMESPACE_NAME_NODE = "92c68f21-423c-11ee-8a8d-11afefc4bff7"
 NAMESPACE_TYPE_NODE = "915ad9fc-0f65-11ef-9493-0a58a9feac02"
 NAMESPACE_TYPE_LIST_ITEM_ID = "de263fe8-5ebd-4d6c-a7c7-8068598ba962"
 
-# uri
-URI_NODEGROUP = "bf73e598-4888-11ee-8a8d-11afefc4bff7"
-URI_CONTENT_NODE = "bf73e64a-4888-11ee-8a8d-11afefc4bff7"
-
-# identifier
-IDENTIFIER_NODEGROUP = "bf73e5d1-4888-11ee-8a8d-11afefc4bff7"
-IDENTIFIER_CONTENT_NODE = "bf73e6ba-4888-11ee-8a8d-11afefc4bff7"
-
-# match_status
-MATCH_STATUS_NODEGROUP = "4cfaaa64-0ed7-11ef-9493-0a58a9feac02"
-MATCH_STATUS_COMPARATE_NODE = "4cfaae24-0ed7-11ef-9493-0a58a9feac02"
-
-
-# status (lifecycle/status)
-STATUS_NODEGROUP = "152321b6-0f5e-11ef-9493-0a58a9feac02"
 
 ### URIs ###
 PREF_LABEL_URI = "http://www.w3.org/2004/02/skos/core#prefLabel"
