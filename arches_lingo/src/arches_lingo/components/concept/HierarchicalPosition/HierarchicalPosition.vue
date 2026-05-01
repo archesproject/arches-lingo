@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 
 import Message from "primevue/message";
 import Skeleton from "primevue/skeleton";
@@ -40,6 +40,8 @@ const hierarchicalData = ref<SearchResultHierarchy[]>([]);
 const schemeId = ref<string>();
 const tileData = ref<ConceptClassificationStatus[]>();
 const isTopConcept = ref(false);
+
+let ancestorAbortController: AbortController | null = null;
 
 const shouldCreateNewTile = computed(
     () => props.mode === EDIT && !props.tileId,
@@ -84,6 +86,10 @@ watch(
         if (!resource || !props.resourceInstanceId || shouldCreateNewTile.value)
             return;
 
+        ancestorAbortController?.abort();
+        ancestorAbortController = new AbortController();
+        const signal = ancestorAbortController.signal;
+
         try {
             isTopConcept.value = Boolean(resource.aliased_data?.top_concept_of);
 
@@ -99,6 +105,7 @@ watch(
 
             const ancestorPaths = await fetchConceptAncestorPaths(
                 props.resourceInstanceId!,
+                signal,
             );
 
             const paths = ancestorPaths as SearchResultHierarchy[];
@@ -117,14 +124,21 @@ watch(
                 if (match) datum.tileid = match.tileid;
             }
         } catch (error) {
+            if (error instanceof Error && error.name === "AbortError") return;
             fetchError.value = error;
         } finally {
-            isLoading.value = false;
-            if (props.mode === EDIT) emit("update:isEditorLoading", false);
+            if (!signal.aborted) {
+                isLoading.value = false;
+                if (props.mode === EDIT) emit("update:isEditorLoading", false);
+            }
         }
     },
     { immediate: true },
 );
+
+onUnmounted(() => {
+    ancestorAbortController?.abort();
+});
 </script>
 
 <template>

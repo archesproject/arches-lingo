@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, inject, onMounted, ref, watch } from "vue";
+import { computed, inject, onMounted, onUnmounted, ref, watch } from "vue";
 
 import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
@@ -76,6 +76,8 @@ const conceptTypeTile = ref();
 const isWidgetLoading = ref(false);
 const ancestorLabelsById = ref<Map<string, Label[]>>(new Map());
 
+let ancestorAbortController: AbortController | null = null;
+
 async function copyUriToClipboard(uri: string) {
     await navigator.clipboard.writeText(uri);
     toast.add({
@@ -138,7 +140,12 @@ watch(
         extractConceptHeaderData(resource);
         isResourceLoaded.value = true;
 
-        fetchConceptAncestorPaths(props.resourceInstanceId)
+        ancestorAbortController?.abort();
+        ancestorAbortController = new AbortController();
+        fetchConceptAncestorPaths(
+            props.resourceInstanceId,
+            ancestorAbortController.signal,
+        )
             .then((paths) => {
                 const map = new Map<string, Label[]>();
                 for (const path of paths) {
@@ -154,6 +161,10 @@ watch(
     },
     { immediate: true },
 );
+
+onUnmounted(() => {
+    ancestorAbortController?.abort();
+});
 
 watch(
     () => selectedLanguage.value.code,

@@ -11,7 +11,7 @@ import {
 import schemesFixture from "./fixtures/test_scheme.json";
 
 import type { Language } from "@/arches_component_lab/types.ts";
-import type { IconLabels, Scheme } from "@/arches_lingo/types";
+import type { Scheme } from "@/arches_lingo/types";
 
 const ENGLISH: Language = {
     code: "en",
@@ -20,13 +20,6 @@ const ENGLISH: Language = {
     isdefault: true,
     name: "English",
     scope: "system",
-};
-
-const iconLabels: IconLabels = {
-    concept: "Concept",
-    guideTerm: "Guide Term",
-    scheme: "Scheme",
-    topConcept: "Top Concept",
 };
 
 describe("Duck-typing helpers", () => {
@@ -43,12 +36,10 @@ describe("Build scheme hierarchy", () => {
             schemesFixture["schemes"] as Scheme[],
             ENGLISH,
             ENGLISH,
-            iconLabels,
             null,
         );
         const schemeNode = nodes[0];
         expect(schemeNode.label).toEqual("Test Scheme");
-        expect(schemeNode.iconLabel).toEqual("Scheme");
         expect(schemeNode.data.top_concepts.length).toEqual(2);
 
         const topConcept = schemeNode.data.top_concepts[0];
@@ -60,7 +51,6 @@ describe("Build scheme hierarchy", () => {
             schemesFixture["schemes"] as Scheme[],
             ENGLISH,
             ENGLISH,
-            iconLabels,
             null,
         );
         const focusedNode = nodesBeforeFocus[0].children![0].children!.find(
@@ -70,7 +60,6 @@ describe("Build scheme hierarchy", () => {
             schemesFixture["schemes"] as Scheme[],
             ENGLISH,
             ENGLISH,
-            iconLabels,
             focusedNode as unknown as string,
         );
         const scheme = nodesAfterFocus[0];
@@ -82,7 +71,6 @@ describe("Build scheme hierarchy", () => {
             schemesFixture["schemes"] as Scheme[],
             ENGLISH,
             ENGLISH,
-            iconLabels,
             null,
         );
         const schemeNode = nodes[0];

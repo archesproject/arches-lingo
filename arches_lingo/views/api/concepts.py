@@ -2,7 +2,7 @@ from http import HTTPStatus
 
 from django.conf import settings
 from django.core.paginator import Paginator
-from django.db import transaction
+from django.db import connection, transaction
 from django.utils.translation import get_language, gettext as _
 from django.views.generic import View
 
@@ -57,6 +57,9 @@ class ConceptChildrenView(AnonymousAccessMixin, View):
 
 class ConceptAncestorsView(AnonymousAccessMixin, View):
     def get(self, request, concept_id):
+        with connection.cursor() as cursor:
+            cursor.execute("SET statement_timeout = 15000")  # 15 s per request
+
         concept_id_str = str(concept_id)
         builder = ConceptBuilder([concept_id_str], include_parents=True)
         paths = builder.find_paths_to_root([concept_id_str], concept_id_str)

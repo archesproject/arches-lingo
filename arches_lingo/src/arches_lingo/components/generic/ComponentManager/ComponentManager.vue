@@ -4,6 +4,7 @@ import {
     markRaw,
     nextTick,
     onMounted,
+    onUnmounted,
     provide,
     ref,
     watch,
@@ -116,25 +117,27 @@ onMounted(() => {
     }
 });
 
-window.addEventListener(
-    "keydown",
-    (event) => {
-        if (event.key === "Escape" && editorState.value !== CLOSED) {
-            if (isConfirmDialogOpen.value) {
-                return;
-            }
-            if (isEditorDirty.value) {
-                // Stop propagation so PrimeVue's document-level keydown handler
-                // doesn't immediately close the dialog we're about to open.
-                event.stopPropagation();
-                confirmDiscard(closeEditor);
-            } else {
-                closeEditor();
-            }
+function onKeydown(event: KeyboardEvent) {
+    if (event.key === "Escape" && editorState.value !== CLOSED) {
+        if (isConfirmDialogOpen.value) {
+            return;
         }
-    },
-    true,
-);
+        if (isEditorDirty.value) {
+            // Stop propagation so PrimeVue's document-level keydown handler
+            // doesn't immediately close the dialog we're about to open.
+            event.stopPropagation();
+            confirmDiscard(closeEditor);
+        } else {
+            closeEditor();
+        }
+    }
+}
+
+window.addEventListener("keydown", onKeydown, true);
+
+onUnmounted(() => {
+    window.removeEventListener("keydown", onKeydown, true);
+});
 
 function confirmDiscard(callback: () => void) {
     isConfirmDialogOpen.value = true;

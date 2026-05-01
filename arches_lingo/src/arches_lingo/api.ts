@@ -634,11 +634,14 @@ export const fetchConceptChildren = async (conceptId: string) => {
     return parsed.children;
 };
 
-export const fetchConceptAncestorPaths = async (conceptId: string) => {
+export const fetchConceptAncestorPaths = async (
+    conceptId: string,
+    signal?: AbortSignal,
+) => {
     const url = generateArchesURL("arches_lingo:api-concept-ancestors", {
         concept_id: conceptId,
     });
-    const response = await fetch(url);
+    const response = await fetch(url, { signal });
     const parsed = await response.json();
     if (!response.ok) throw new Error(parsed.message || response.statusText);
     return parsed.paths;

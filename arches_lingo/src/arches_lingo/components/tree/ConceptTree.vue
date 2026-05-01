@@ -4,6 +4,7 @@ import {
     inject,
     nextTick,
     onMounted,
+    onUnmounted,
     provide,
     reactive,
     ref,
@@ -46,6 +47,7 @@ import {
     treeFromSchemes,
     navigateToSchemeOrConcept,
     filterTreeByLifecycleStates,
+    getIconLabel,
 } from "@/arches_lingo/utils.ts";
 
 import { useCappedTreeFilter } from "@/arches_lingo/components/tree/utils/capped-filter.ts";
@@ -176,6 +178,10 @@ onMounted(async () => {
     hasCompletedInitialLoad.value = true;
 });
 
+onUnmounted(() => {
+    revealAbortController?.abort();
+});
+
 const resourceInstanceLifecycleStateCanEditById = computed(() =>
     Object.fromEntries(
         (resourceInstanceLifecycleStates?.value ?? []).map(
@@ -224,7 +230,6 @@ const tree = computed(() => {
         schemes.value,
         selectedLanguage.value,
         systemLanguage.value,
-        iconLabels.value,
         focusedOccurrenceKey.value,
         shouldSortByAscending.value,
         conceptStore.hasLoadedChildren,
@@ -829,6 +834,8 @@ function scrollToItemInTree(
     return true;
 }
 
+let revealAbortController: AbortController | null = null;
+
 async function revealConceptInTree(
     conceptId: string,
     shouldScroll: boolean,
@@ -838,9 +845,15 @@ async function revealConceptInTree(
         return;
     }
 
+    revealAbortController?.abort();
+    revealAbortController = new AbortController();
+
     let paths: Array<{ searchResults: Array<{ id: string }> }>;
     try {
-        paths = await fetchConceptAncestorPaths(conceptId);
+        paths = await fetchConceptAncestorPaths(
+            conceptId,
+            revealAbortController.signal,
+        );
     } catch {
         return;
     }
@@ -1058,7 +1071,9 @@ async function onNodeExpand(node: TreeNode) {
                     return { class: className };
                 },
                 nodeIcon: ({ instance }: TreePassThroughMethodOptions) => {
-                    return { ariaLabel: instance.node.iconLabel };
+                    return {
+                        ariaLabel: getIconLabel(instance.node.data, iconLabels),
+                    };
                 },
                 nodeLabel: {
                     style: { textWrap: 'nowrap' },

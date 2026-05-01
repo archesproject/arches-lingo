@@ -118,7 +118,6 @@ export function treeFromSchemes(
     schemes: Scheme[],
     selectedLanguage: Language,
     systemLanguage: Language,
-    iconLabels: IconLabels,
     focusedOccurrenceKey: string | null,
     sortAscending: boolean = true,
     hasLoadedChildren: (id: string) => boolean = () => false,
@@ -164,7 +163,6 @@ export function treeFromSchemes(
                 schemeId,
             },
             icon: getItemIcon(item),
-            iconLabel: getIconLabel(item, iconLabels),
             ...(leaf !== undefined ? { leaf } : {}),
         };
     }
