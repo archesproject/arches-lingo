@@ -76,6 +76,7 @@ const componentEditorFormRef = inject<Ref<Component | null>>(
 );
 const openEditor =
     inject<(componentName: string, tileid?: string) => void>("openEditor");
+const closeEditor = inject<() => void>("closeEditor");
 const refreshReportSection = inject<(componentName: string) => void>(
     "refreshReportSection",
 );
@@ -276,6 +277,7 @@ async function save(e: FormSubmitEvent) {
         });
 
         refreshReportSection!(props.componentName);
+        closeEditor!();
     } catch (error) {
         toast.add({
             severity: ERROR,

@@ -47,8 +47,7 @@ const componentEditorFormRef = inject<Ref<Component | null>>(
     "componentEditorFormRef",
 );
 
-const openEditor =
-    inject<(componentName: string, tileid?: string) => void>("openEditor");
+const closeEditor = inject<() => void>("closeEditor");
 const refreshReportSection = inject<(componentName: string) => void>(
     "refreshReportSection",
 );
@@ -84,8 +83,6 @@ async function save(e: FormSubmitEvent) {
             },
         };
 
-        let updatedTileId;
-
         if (!props.resourceInstanceId) {
             const updatedScheme = await createLingoResource(
                 {
@@ -102,9 +99,6 @@ async function save(e: FormSubmitEvent) {
                 name: props.graphSlug,
                 params: { id: updatedScheme.resourceinstanceid },
             });
-
-            updatedTileId =
-                updatedScheme.aliased_data[props.nodegroupAlias].tileid;
         } else {
             if (props.tileData?.aliased_data.right_statement?.tileid) {
                 (
@@ -112,22 +106,16 @@ async function save(e: FormSubmitEvent) {
                 ).tileid = props.tileData.aliased_data.right_statement.tileid;
             }
 
-            const updatedTile = await upsertLingoTile(
-                props.graphSlug,
-                props.nodegroupAlias,
-                {
-                    resourceinstance: props.resourceInstanceId,
-                    aliased_data: { ...expectedTileShape },
-                    tileid: props.tileId,
-                },
-            );
-
-            updatedTileId = updatedTile.tileid;
+            await upsertLingoTile(props.graphSlug, props.nodegroupAlias, {
+                resourceinstance: props.resourceInstanceId,
+                aliased_data: { ...expectedTileShape },
+                tileid: props.tileId,
+            });
         }
 
-        openEditor!(props.componentName, updatedTileId);
-
         refreshReportSection!(props.componentName);
+
+        closeEditor!();
     } catch (error) {
         toast.add({
             severity: ERROR,
