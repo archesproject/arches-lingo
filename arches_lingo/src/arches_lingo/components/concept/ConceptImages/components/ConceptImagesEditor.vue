@@ -17,12 +17,12 @@ import { Form } from "@primevue/forms";
 import Skeleton from "primevue/skeleton";
 
 import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
-
 import { DIGITAL_OBJECT_GRAPH_SLUG } from "@/arches_lingo/components/concept/ConceptImages/components/constants.ts";
 import {
     DEFAULT_ERROR_TOAST_LIFE,
     EDIT,
     ERROR,
+    MULTILINE_RENDER_CONTEXT,
 } from "@/arches_lingo/constants.ts";
 
 import {
@@ -349,9 +349,7 @@ function resetForm() {
                         digitalObjectResource?.aliased_data.statement
                             ?.aliased_data.statement_content
                     "
-                    :card-x-node-x-widget-data-overrides="{
-                        config: { multiline: true },
-                    }"
+                    :render-context="MULTILINE_RENDER_CONTEXT"
                     class="widget-container column"
                 />
                 <GenericWidget
