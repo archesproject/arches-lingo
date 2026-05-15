@@ -55,28 +55,29 @@ export async function addDigitalObjectToConceptImageCollection(
             conceptDigitalObjectRelationshipList.aliased_data.depicting_digital_asset_internal =
                 {
                     aliased_data: {
-                        depicting_digital_asset_internal: {
-                            display_value: "",
-                            node_value: [],
-                            details: [],
-                        },
+                        depicting_digital_asset_internal: [],
                     },
                 };
         }
 
-        if (
-            !conceptDigitalObjectRelationshipList?.aliased_data
-                .depicting_digital_asset_internal?.aliased_data
-                .depicting_digital_asset_internal.node_value
-        ) {
-            conceptDigitalObjectRelationshipList.aliased_data.depicting_digital_asset_internal.aliased_data.depicting_digital_asset_internal.node_value =
-                [];
+        const depictingList = conceptDigitalObjectRelationshipList.aliased_data
+            .depicting_digital_asset_internal?.aliased_data
+            ?.depicting_digital_asset_internal as unknown as Array<{
+            resourceId: string;
+        }> | null;
+        if (!depictingList) {
+            conceptDigitalObjectRelationshipList.aliased_data.depicting_digital_asset_internal!.aliased_data.depicting_digital_asset_internal =
+                [] as unknown;
         }
-        conceptDigitalObjectRelationshipList.aliased_data.depicting_digital_asset_internal.aliased_data.depicting_digital_asset_internal.node_value.push(
-            {
-                resourceId: digitalObjectResource.resourceinstanceid,
-            },
-        );
+        (
+            conceptDigitalObjectRelationshipList.aliased_data
+                .depicting_digital_asset_internal!.aliased_data
+                .depicting_digital_asset_internal as unknown as Array<{
+                resourceId: string;
+            }>
+        ).push({
+            resourceId: digitalObjectResource.resourceinstanceid,
+        });
         await updateLingoResource(
             conceptGraphSlug,
             conceptResourceInstanceId,
@@ -109,8 +110,14 @@ export async function createFormDataForFileUpload(
             }),
         );
     }
-    for (const file of submittedFormData.content.node_value) {
-        formData.append(`file-list_${digitalObjectContentNodeId}`, file.file);
+    for (const file of (submittedFormData.content as Array<{ file?: File }>) ??
+        []) {
+        if (file.file) {
+            formData.append(
+                `file-list_${digitalObjectContentNodeId}`,
+                file.file,
+            );
+        }
     }
     return formData;
 }

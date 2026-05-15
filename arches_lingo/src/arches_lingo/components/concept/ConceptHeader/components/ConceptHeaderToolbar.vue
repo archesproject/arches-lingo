@@ -117,16 +117,15 @@ const lifecycleState = computed(function () {
 });
 
 const conceptTypeLabel = computed(function () {
-    const aliasedData =
-        props.conceptTypeTile?.aliased_data?.[CONCEPT_TYPE_NODE_ALIAS];
-    return (aliasedData as { display_value?: string } | undefined)
-        ?.display_value;
+    const refs = props.conceptTypeTile?.aliased_data?.[
+        CONCEPT_TYPE_NODE_ALIAS
+    ] as Array<{ labels: Array<{ value: string }> }> | null | undefined;
+    return refs?.[0]?.labels?.[0]?.value;
 });
 
 const conceptIcon = computed(function () {
     const typeNodeValue =
-        props.conceptTypeTile?.aliased_data?.[CONCEPT_TYPE_NODE_ALIAS]
-            ?.node_value;
+        props.conceptTypeTile?.aliased_data?.[CONCEPT_TYPE_NODE_ALIAS];
     if (isGuideTermType(typeNodeValue)) return GUIDE_TERM_ICON;
     if (isHierarchyNameType(typeNodeValue)) return HIERARCHY_NAME_ICON;
     if (props.isTopConcept) return TOP_CONCEPT_ICON;
@@ -147,8 +146,11 @@ const canDelete = computed(function () {
 });
 
 const schemeId = computed(function () {
-    return props.concept?.aliased_data?.part_of_scheme?.aliased_data
-        ?.part_of_scheme?.node_value?.[0]?.resourceId;
+    const partOfScheme =
+        props.concept?.aliased_data?.part_of_scheme?.aliased_data
+            ?.part_of_scheme;
+    return (partOfScheme as { resourceinstanceid?: string } | null | undefined)
+        ?.resourceinstanceid;
 });
 
 const isSchemeRetired = computed(function () {
@@ -237,9 +239,15 @@ async function onConfirmed(strategy: DeleteConceptStrategy | null) {
     isLoading.value = true;
     try {
         if (dialogMode.value === DELETE) {
-            const schemeIdentifier =
+            const partOfScheme =
                 props.concept.aliased_data?.part_of_scheme?.aliased_data
-                    .part_of_scheme?.node_value?.[0]?.resourceId;
+                    ?.part_of_scheme;
+            const schemeIdentifier = (
+                partOfScheme as
+                    | { resourceinstanceid?: string }
+                    | null
+                    | undefined
+            )?.resourceinstanceid;
 
             await deleteConcept(
                 props.concept.resourceinstanceid,
@@ -312,9 +320,12 @@ function openExportDialog() {
 }
 
 function addChild() {
-    const schemeId =
+    const partOfSchemeRef =
         props.concept?.aliased_data?.part_of_scheme?.aliased_data
-            ?.part_of_scheme?.node_value?.[0]?.resourceId;
+            ?.part_of_scheme;
+    const schemeId = (
+        partOfSchemeRef as { resourceinstanceid?: string } | null | undefined
+    )?.resourceinstanceid;
     const parentId = props.resourceInstanceId;
 
     if (!schemeId || !parentId) return;
@@ -389,9 +400,10 @@ function onReinstateRequested() {
                     :node-alias="CONCEPT_TYPE_NODE_ALIAS"
                     :graph-slug="graphSlug"
                     :mode="EDIT"
-                    :node-value="
-                        conceptTypeTile?.aliased_data?.[CONCEPT_TYPE_NODE_ALIAS]
-                            ?.node_value
+                    :value="
+                        conceptTypeTile?.aliased_data?.[
+                            CONCEPT_TYPE_NODE_ALIAS
+                        ] ?? null
                     "
                     :should-show-label="false"
                     class="concept-type-widget"

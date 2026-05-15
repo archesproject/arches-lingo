@@ -169,42 +169,45 @@ async function save(e: FormSubmitEvent) {
 
         // files do not respect json.stringify
         const fileJsonObjects =
-            submittedFormData.content.node_value?.map(
-                (file: PossiblyNewFile) => {
-                    if (!file?.file) {
-                        return file;
-                    } else {
-                        return {
-                            name: file.name?.replace(/ /g, "_"),
-                            lastModified: file.lastModified,
-                            size: file.size,
-                            type: file.type,
-                            url: null,
-                            file_id: null,
-                            content: URL.createObjectURL(file?.file),
-                            altText: "Replaceable alt text",
-                        };
-                    }
-                },
-            ) ?? [];
+            (
+                submittedFormData.content as
+                    | PossiblyNewFile[]
+                    | null
+                    | undefined
+            )?.map((file: PossiblyNewFile) => {
+                if (!file?.file) {
+                    return file;
+                } else {
+                    return {
+                        name: file.name?.replace(/ /g, "_"),
+                        lastModified: file.lastModified,
+                        size: file.size,
+                        type: file.type,
+                        url: null,
+                        file_id: null,
+                        content: URL.createObjectURL(file?.file),
+                        altText: "Replaceable alt text",
+                    };
+                }
+            }) ?? [];
 
         if (!digitalObjectInstanceAliases.content) {
             digitalObjectInstanceAliases.content = {
                 aliased_data: {
-                    content: {
-                        node_value: [...fileJsonObjects],
-                    } as unknown as AliasedNodeData,
+                    content: [...fileJsonObjects] as unknown as AliasedNodeData,
                 },
             };
         } else {
-            digitalObjectInstanceAliases.content.aliased_data.content = {
-                node_value: [...fileJsonObjects],
-            } as unknown as AliasedNodeData;
+            digitalObjectInstanceAliases.content.aliased_data.content = [
+                ...fileJsonObjects,
+            ] as unknown as AliasedNodeData;
         }
 
         // this fork was requested because the multipartjson parser is unstable
         // if files go one way, if no files go the traditional way
-        if (submittedFormData.content.node_value?.length) {
+        if (
+            (submittedFormData.content as unknown[] | null | undefined)?.length
+        ) {
             if (digitalObjectResource.value) {
                 digitalObjectResource.value.aliased_data = {
                     ...digitalObjectInstanceAliases,
@@ -336,9 +339,9 @@ function resetForm() {
                     node-alias="name_content"
                     graph-slug="digital_object_system"
                     :mode="EDIT"
-                    :node-value="
+                    :value="
                         digitalObjectResource?.aliased_data.name?.aliased_data
-                            .name_content?.node_value
+                            .name_content ?? null
                     "
                     class="widget-container column"
                 />
@@ -346,18 +349,18 @@ function resetForm() {
                     node-alias="statement_content"
                     graph-slug="digital_object_system"
                     :mode="EDIT"
-                    :node-value="
+                    :value="
                         digitalObjectResource?.aliased_data.statement
-                            ?.aliased_data.statement_content?.node_value
+                            ?.aliased_data.statement_content ?? null
                     "
                     class="widget-container column"
                 />
                 <GenericWidget
                     node-alias="content"
                     graph-slug="digital_object_system"
-                    :node-value="
+                    :value="
                         digitalObjectResource?.aliased_data?.content
-                            ?.aliased_data.content?.node_value
+                            ?.aliased_data.content ?? null
                     "
                     :mode="EDIT"
                     :should-show-label="false"

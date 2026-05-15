@@ -109,11 +109,16 @@ watch(
                 const pathLength = datum.searchResults.length;
                 const parentId = datum.searchResults[pathLength - 2]?.id;
                 if (!parentId) continue;
-                const match = tileData.value?.find((tile) =>
-                    tile.aliased_data.classification_status_ascribed_classification.node_value?.some(
-                        (nodeValue) => nodeValue.resourceId === parentId,
-                    ),
-                );
+                const match = tileData.value?.find((tile) => {
+                    const refs = tile.aliased_data
+                        .classification_status_ascribed_classification as Array<{
+                        resourceinstanceid: string;
+                    }> | null;
+                    return refs?.some(
+                        (nodeValue) =>
+                            nodeValue.resourceinstanceid === parentId,
+                    );
+                });
                 if (match) datum.tileid = match.tileid;
             }
         } catch (error) {

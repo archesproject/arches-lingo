@@ -103,7 +103,7 @@ const buttonLabel = computed(() => {
             v-if="props.tileData"
             node-alias="namespace_name"
             :graph-slug="props.graphSlug"
-            :node-value="props.tileData.aliased_data.namespace_name?.node_value"
+            :value="props.tileData.aliased_data.namespace_name ?? null"
             :mode="VIEW"
         />
         <div

@@ -369,16 +369,40 @@ export function getStatementText(
     }
 
     const best = statements.reduce((bestMatch, current) => {
-        const currentLang =
-            current.aliased_data?.statement_language?.display_value?.toLowerCase();
-        const bestLang =
-            bestMatch.aliased_data?.statement_language?.display_value?.toLowerCase();
+        const currentRefs = current.aliased_data
+            ?.statement_language as unknown as
+            | Array<{ uri: string }>
+            | null
+            | undefined;
+        const currentLang = currentRefs?.[0]?.uri
+            ?.split("/")
+            .pop()
+            ?.toLowerCase();
+        const bestRefs = bestMatch.aliased_data
+            ?.statement_language as unknown as
+            | Array<{ uri: string }>
+            | null
+            | undefined;
+        const bestLang = bestRefs?.[0]?.uri?.split("/").pop()?.toLowerCase();
         return rankLanguage(currentLang) > rankLanguage(bestLang)
             ? current
             : bestMatch;
     });
 
-    return best.aliased_data?.statement_content?.display_value ?? "";
+    const bestLangRefs = best.aliased_data?.statement_language as unknown as
+        | Array<{ uri: string }>
+        | null
+        | undefined;
+    const bestLangCode = bestLangRefs?.[0]?.uri?.split("/").pop();
+    const contentMap = best.aliased_data?.statement_content as unknown as
+        | Record<string, { value: string }>
+        | null
+        | undefined;
+    return (
+        (bestLangCode
+            ? contentMap?.[bestLangCode]?.value
+            : Object.values(contentMap ?? {})[0]?.value) ?? ""
+    );
 }
 
 export async function createOrUpdateConcept(

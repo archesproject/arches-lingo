@@ -3,11 +3,13 @@ import type { MenuItem } from "primevue/menuitem";
 import type { TreeNode } from "primevue/treenode";
 import type { EDIT, VIEW } from "@/arches_lingo/constants.ts";
 
-import type { ReferenceSelectTreeNode } from "@/arches_controlled_lists/datatypes/reference-select/types.ts";
+import type {
+    ReferenceSelectTreeNode,
+    ReferenceSelectNodeValue,
+} from "@/arches_controlled_lists/datatypes/reference-select/types.ts";
 import type { Label } from "@/arches_controlled_lists/types.ts";
 
 import type { AliasedNodeData } from "@/arches_component_lab/types.ts";
-import type { FileReference } from "@/arches_component_lab/datatypes/file-list/types.ts";
 
 export interface User {
     first_name: string;
@@ -148,10 +150,7 @@ export interface ResourceData<T extends AliasedData = AliasedData> {
     aliased_data: T;
 }
 
-interface QuerysetsReferenceSelectFetchedOption {
-    display_value: string;
-    node_value: ReferenceSelectTreeNode[];
-}
+type QuerysetsReferenceSelectFetchedOption = ReferenceSelectNodeValue[] | null;
 
 export interface AppellativeStatusAliases extends AliasedData {
     appellative_status_ascribed_name_content: AliasedNodeData;

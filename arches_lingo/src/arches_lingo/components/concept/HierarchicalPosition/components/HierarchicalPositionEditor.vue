@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject, ref, useTemplateRef, watch } from "vue";
+import { computed, inject, ref, useTemplateRef, watch } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import { useRouter } from "vue-router";
@@ -15,6 +15,7 @@ import { EDIT } from "@/arches_lingo/constants.ts";
 import type { Component, Ref } from "vue";
 import type { FormSubmitEvent } from "@primevue/forms";
 import type { ConceptClassificationStatus } from "@/arches_lingo/types.ts";
+import type { ResourceInstanceReference } from "@/arches_component_lab/datatypes/resource-instance-list/types";
 
 const { $gettext } = useGettext();
 
@@ -46,6 +47,13 @@ const onSaveSettled = inject<() => void>("onSaveSettled");
 
 const formRef = useTemplateRef("form");
 const isSaving = ref(false);
+
+const classificationNodeValue = computed(function () {
+    return (props.tileData?.aliased_data
+        .classification_status_ascribed_classification ?? null) as
+        | ResourceInstanceReference[]
+        | null;
+});
 
 watch(
     () => formRef.value,
@@ -135,11 +143,7 @@ async function save(e: FormSubmitEvent) {
                 <ConceptResourceSelectWidget
                     :graph-slug="props.graphSlug"
                     node-alias="classification_status_ascribed_classification"
-                    :node-value="
-                        props.tileData?.aliased_data
-                            .classification_status_ascribed_classification
-                            ?.node_value
-                    "
+                    :value="classificationNodeValue"
                     :mode="EDIT"
                     :scheme="props.scheme"
                 />

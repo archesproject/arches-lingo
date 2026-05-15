@@ -150,9 +150,9 @@ async function save(e: FormSubmitEvent) {
                     <GenericWidget
                         graph-slug="scheme"
                         node-alias="creation_sources"
-                        :node-value="
-                            props.tileData?.aliased_data.creation_sources
-                                ?.node_value
+                        :value="
+                            props.tileData?.aliased_data.creation_sources ??
+                            null
                         "
                         :mode="EDIT"
                     />

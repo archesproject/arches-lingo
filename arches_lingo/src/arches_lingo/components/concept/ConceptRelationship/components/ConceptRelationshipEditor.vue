@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject, ref, useTemplateRef, watch } from "vue";
+import { computed, inject, ref, useTemplateRef, watch } from "vue";
 
 import { useRoute, useRouter } from "vue-router";
 import { useGettext } from "vue3-gettext";
@@ -23,6 +23,7 @@ import {
 import type { Component, Ref } from "vue";
 import type { FormSubmitEvent } from "@primevue/forms";
 import type { ConceptRelationStatus } from "@/arches_lingo/types.ts";
+import type { ResourceInstanceReference } from "@/arches_component_lab/datatypes/resource-instance-list/types";
 
 const props = defineProps<{
     tileData: ConceptRelationStatus | undefined;
@@ -53,6 +54,11 @@ const onSaveSettled = inject<() => void>("onSaveSettled");
 
 const formRef = useTemplateRef("form");
 const isSaving = ref(false);
+
+const comparateNodeValue = computed(function () {
+    return (props.tileData?.aliased_data.relation_status_ascribed_comparate ??
+        null) as ResourceInstanceReference[] | null;
+});
 
 watch(
     () => formRef.value,
@@ -137,19 +143,16 @@ async function save(e: FormSubmitEvent) {
                     :graph-slug="props.graphSlug"
                     node-alias="relation_status_ascribed_comparate"
                     :resource-instance-id="props.resourceInstanceId"
-                    :node-value="
-                        props.tileData?.aliased_data
-                            .relation_status_ascribed_comparate?.node_value
-                    "
+                    :value="comparateNodeValue"
                     :scheme="props.scheme"
                     :mode="EDIT"
                 />
                 <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="relation_status_ascribed_relation"
-                    :node-value="
+                    :value="
                         props.tileData?.aliased_data
-                            .relation_status_ascribed_relation?.node_value
+                            .relation_status_ascribed_relation ?? null
                     "
                     :mode="EDIT"
                     class="widget-container column"
@@ -157,9 +160,9 @@ async function save(e: FormSubmitEvent) {
                 <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="relation_status_status"
-                    :node-value="
-                        props.tileData?.aliased_data.relation_status_status
-                            ?.node_value
+                    :value="
+                        props.tileData?.aliased_data.relation_status_status ??
+                        null
                     "
                     :mode="EDIT"
                     class="widget-container column"
@@ -168,20 +171,19 @@ async function save(e: FormSubmitEvent) {
                     <GenericWidget
                         :graph-slug="props.graphSlug"
                         node-alias="relation_status_timespan_begin_of_the_begin"
-                        :node-value="
+                        :value="
                             props.tileData?.aliased_data
-                                .relation_status_timespan_begin_of_the_begin
-                                ?.node_value
+                                .relation_status_timespan_begin_of_the_begin ??
+                            null
                         "
                         :mode="EDIT"
                     />
                     <GenericWidget
                         :graph-slug="props.graphSlug"
                         node-alias="relation_status_timespan_end_of_the_end"
-                        :node-value="
+                        :value="
                             props.tileData?.aliased_data
-                                .relation_status_timespan_end_of_the_end
-                                ?.node_value
+                                .relation_status_timespan_end_of_the_end ?? null
                         "
                         :mode="EDIT"
                     />
@@ -189,9 +191,9 @@ async function save(e: FormSubmitEvent) {
                 <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="relation_status_data_assignment_actor"
-                    :node-value="
+                    :value="
                         props.tileData?.aliased_data
-                            .relation_status_data_assignment_actor?.node_value
+                            .relation_status_data_assignment_actor ?? null
                     "
                     :mode="EDIT"
                     class="widget-container column"
@@ -199,10 +201,9 @@ async function save(e: FormSubmitEvent) {
                 <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="relation_status_data_assignment_object_used"
-                    :node-value="
+                    :value="
                         props.tileData?.aliased_data
-                            .relation_status_data_assignment_object_used
-                            ?.node_value
+                            .relation_status_data_assignment_object_used ?? null
                     "
                     :mode="EDIT"
                     class="widget-container column"

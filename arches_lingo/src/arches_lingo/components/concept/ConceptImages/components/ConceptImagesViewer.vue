@@ -87,10 +87,12 @@ const confirm = useConfirm();
 onMounted(async () => {
     if (props.tileData) {
         try {
-            const digitalObjectInstances =
-                props.tileData.aliased_data.depicting_digital_asset_internal?.node_value?.map(
-                    (resource) => resource.resourceId,
-                );
+            const digitalObjectInstances = (
+                props.tileData.aliased_data
+                    .depicting_digital_asset_internal as unknown as Array<{
+                    resourceinstanceid: string;
+                }> | null
+            )?.map((resource) => resource.resourceinstanceid);
             if (digitalObjectInstances) {
                 resources.value = await fetchLingoResourcesBatch(
                     "digital_object_system",
@@ -129,12 +131,23 @@ function confirmDelete(removedResourceInstanceId: string) {
                 if (
                     depictingDigitalAssetInternalData?.depicting_digital_asset_internal
                 ) {
-                    depictingDigitalAssetInternalData.depicting_digital_asset_internal.node_value =
-                        depictingDigitalAssetInternalData.depicting_digital_asset_internal.node_value.filter(
+                    const filtered = (
+                        depictingDigitalAssetInternalData.depicting_digital_asset_internal as unknown as Array<{
+                            resourceinstanceid: string;
+                        }>
+                    )
+                        .filter(
                             (assetReference) =>
-                                assetReference.resourceId !==
+                                assetReference.resourceinstanceid !==
                                 removedResourceInstanceId,
-                        );
+                        )
+                        .map((r) => ({
+                            resourceId: r.resourceinstanceid,
+                            ontologyProperty: "",
+                            inverseOntologyProperty: "",
+                        }));
+                    depictingDigitalAssetInternalData.depicting_digital_asset_internal =
+                        filtered as unknown;
                     resources.value = resources.value?.filter(
                         (resource) =>
                             resource.resourceinstanceid !==
@@ -263,9 +276,9 @@ function modifyResource(resourceInstanceId?: string) {
                                 class="image-title"
                                 graph-slug="digital_object_system"
                                 :mode="VIEW"
-                                :node-value="
+                                :value="
                                     resource.aliased_data.name?.aliased_data
-                                        .name_content?.node_value
+                                        .name_content ?? null
                                 "
                             />
                         </label>
@@ -298,9 +311,9 @@ function modifyResource(resourceInstanceId?: string) {
                     <GenericWidget
                         node-alias="content"
                         graph-slug="digital_object_system"
-                        :node-value="
-                            resource.aliased_data.content?.aliased_data.content
-                                ?.node_value
+                        :value="
+                            resource.aliased_data.content?.aliased_data
+                                .content ?? null
                         "
                         :mode="VIEW"
                         :should-show-label="false"
@@ -310,9 +323,9 @@ function modifyResource(resourceInstanceId?: string) {
                             node-alias="statement_content"
                             graph-slug="digital_object_system"
                             :mode="VIEW"
-                            :node-value="
+                            :value="
                                 resource.aliased_data.statement?.aliased_data
-                                    .statement_content?.node_value
+                                    .statement_content ?? null
                             "
                         />
                     </div>

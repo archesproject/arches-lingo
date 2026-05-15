@@ -166,20 +166,26 @@ function extractLabelsFromResource(resource: ResourceInstanceResult): Label[] {
     for (const tile of tiles) {
         const aliasedData = tile.aliased_data;
         if (!aliasedData) continue;
-        const value =
-            aliasedData.appellative_status_ascribed_name_content?.display_value;
-        const termLanguageNode =
-            aliasedData.appellative_status_ascribed_name_language;
-        const termLanguageNodeValue = termLanguageNode?.node_value;
-        let languageId: string | undefined;
-        if (typeof termLanguageNodeValue === "string") {
-            languageId = termLanguageNodeValue;
-        } else {
-            languageId = termLanguageNode?.display_value;
-        }
-        const typeUri =
-            aliasedData.appellative_status_ascribed_relation?.node_value?.[0]
-                ?.uri;
+        const languageRefs =
+            aliasedData.appellative_status_ascribed_name_language as unknown as
+                | Array<{ uri: string }>
+                | null
+                | undefined;
+        const languageId = languageRefs?.[0]?.uri?.split("/").pop();
+        const contentMap =
+            aliasedData.appellative_status_ascribed_name_content as unknown as
+                | Record<string, { value: string }>
+                | null
+                | undefined;
+        const value = languageId
+            ? contentMap?.[languageId]?.value
+            : Object.values(contentMap ?? {})[0]?.value;
+        const typeRefs =
+            aliasedData.appellative_status_ascribed_relation as unknown as
+                | Array<{ uri: string }>
+                | null
+                | undefined;
+        const typeUri = typeRefs?.[0]?.uri;
         if (value && languageId) {
             labels.push({
                 value,
@@ -226,7 +232,8 @@ const label = computed<Label | undefined>(function () {
 const parentConceptLabelMap = computed<Map<string, Label[]>>(function () {
     const map = new Map<string, Label[]>();
     for (const parent of data.value?.parentConcepts ?? []) {
-        const id = parent.details[0]?.resource_id;
+        const id = (parent as unknown as { resourceinstanceid?: string })
+            ?.resourceinstanceid;
 
         if (id) {
             const storeLabels = conceptStore.findConcept(id)?.labels;
@@ -241,6 +248,19 @@ const lifecycleStateLabel = computed(function () {
     return resourceInstanceLifecycleState?.value?.name ?? "--";
 });
 
+const partOfSchemeId = computed(function () {
+    return (
+        data.value?.partOfScheme as
+            | { resourceinstanceid?: string }
+            | null
+            | undefined
+    )?.resourceinstanceid;
+});
+
+function parentConceptId(parent: unknown): string | undefined {
+    return (parent as { resourceinstanceid?: string })?.resourceinstanceid;
+}
+
 function extractConceptHeaderData(resource: ResourceInstanceResult) {
     const aliased_data = resource?.aliased_data;
 
@@ -248,10 +268,19 @@ function extractConceptHeaderData(resource: ResourceInstanceResult) {
     const descriptor = extractDescriptors(resource, selectedLanguage.value);
     const principalUser = resource?.principal_user_display_name ?? undefined;
 
-    const uri = aliased_data?.uri?.aliased_data?.uri_content?.node_value;
+    const uri =
+        (aliased_data?.uri?.aliased_data?.uri_content as unknown as
+            | string
+            | null
+            | undefined) ?? undefined;
     const partOfScheme =
         aliased_data?.part_of_scheme?.aliased_data?.part_of_scheme;
-    const schemeId = partOfScheme?.node_value?.[0]?.resourceId;
+    const schemeId = (
+        partOfScheme as unknown as
+            | { resourceinstanceid?: string }
+            | null
+            | undefined
+    )?.resourceinstanceid;
     const matchingScheme = conceptStore.schemes.find(
         (candidateScheme) => candidateScheme.id === schemeId,
     );
@@ -272,8 +301,12 @@ function extractConceptHeaderData(resource: ResourceInstanceResult) {
     const identifier = (aliased_data?.identifier || [])
         .map(
             (tile: Identifier) =>
-                tile?.aliased_data?.identifier_content?.node_value,
+                tile?.aliased_data?.identifier_content as unknown as
+                    | string
+                    | null
+                    | undefined,
         )
+        .filter(Boolean)
         .join(", ");
 
     data.value = {
@@ -350,13 +383,10 @@ function extractConceptHeaderData(resource: ResourceInstanceResult) {
                         </span>
                         <span class="header-item-value">
                             <RouterLink
-                                v-if="data?.partOfScheme?.node_value"
-                                :to="`/scheme/${data?.partOfScheme?.node_value?.[0]?.resourceId}`"
+                                v-if="data?.partOfScheme"
+                                :to="`/scheme/${partOfSchemeId}`"
                             >
-                                {{
-                                    data?.schemeLabel ||
-                                    data?.partOfScheme?.display_value
-                                }}
+                                {{ data?.schemeLabel }}
                             </RouterLink>
                             <span v-else>--</span>
                         </span>
@@ -395,23 +425,21 @@ function extractConceptHeaderData(resource: ResourceInstanceResult) {
                     </span>
                     <span
                         v-for="parent in data?.parentConcepts"
-                        :key="parent.details[0].resource_id"
+                        :key="parentConceptId(parent) ?? ''"
                         class="header-item-value parent-concept"
                     >
-                        <RouterLink
-                            :to="`/concept/${parent.details[0].resource_id}`"
-                        >
+                        <RouterLink :to="`/concept/${parentConceptId(parent)}`">
                             {{
                                 getItemLabel(
                                     {
                                         labels:
                                             parentConceptLabelMap.get(
-                                                parent.details[0].resource_id,
+                                                parentConceptId(parent) ?? "",
                                             ) ?? [],
                                     },
                                     selectedLanguage.code,
                                     systemLanguage.code,
-                                ).value || parent.details[0].display_value
+                                ).value
                             }}
                         </RouterLink>
                     </span>

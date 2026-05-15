@@ -76,15 +76,18 @@ const metaStringLabel = computed<MetaStringText>(() => ({
     type: $gettext("Related URI"),
     noRecords: $gettext("No matched concepts were found."),
     sortFields: {
-        name: "aliased_data.match_status_ascribed_relation.display_value",
-        type: "aliased_data.match_status_ascribed_comparate.display_value",
+        name: "aliased_data.match_status_ascribed_relation",
+        type: "aliased_data.match_status_ascribed_comparate",
     },
 }));
 
 function matchedConceptURIIsLink(rowData: ConceptMatchStatus): boolean {
-    const uri = rowData.aliased_data.match_status_ascribed_comparate
-        .display_value as string;
-    return uri.startsWith("http");
+    const uri = rowData.aliased_data
+        .match_status_ascribed_comparate as unknown as
+        | string
+        | null
+        | undefined;
+    return Boolean(uri?.startsWith("http"));
 }
 </script>
 
@@ -132,9 +135,9 @@ function matchedConceptURIIsLink(rowData: ConceptMatchStatus): boolean {
                 <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="match_status_ascribed_relation"
-                    :node-value="
-                        rowData.aliased_data.match_status_ascribed_relation
-                            ?.node_value
+                    :value="
+                        rowData.aliased_data.match_status_ascribed_relation ??
+                        null
                     "
                     :mode="VIEW"
                     :should-show-label="false"
@@ -144,42 +147,38 @@ function matchedConceptURIIsLink(rowData: ConceptMatchStatus): boolean {
                 <Button
                     v-if="matchedConceptURIIsLink(rowData)"
                     :label="
-                        rowData.aliased_data.match_status_ascribed_comparate
-                            .display_value
+                        rowData.aliased_data
+                            .match_status_ascribed_comparate as unknown as string
                     "
                     variant="link"
                     as="a"
                     :href="
-                        rowData.aliased_data.match_status_ascribed_comparate
-                            .display_value
+                        rowData.aliased_data
+                            .match_status_ascribed_comparate as unknown as string
                     "
                     target="_blank"
                     rel="noopener"
                 ></Button>
                 <span v-else>
-                    {{
-                        rowData.aliased_data.match_status_ascribed_comparate
-                            .display_value
-                    }}
+                    {{ rowData.aliased_data.match_status_ascribed_comparate }}
                 </span>
             </template>
             <template #drawer="{ rowData }">
                 <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="match_status_data_assignment_actor"
-                    :node-value="
-                        rowData.aliased_data.match_status_data_assignment_actor
-                            ?.node_value
+                    :value="
+                        rowData.aliased_data
+                            .match_status_data_assignment_actor ?? null
                     "
                     :mode="VIEW"
                 />
                 <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="match_status_data_assignment_object_used"
-                    :node-value="
+                    :value="
                         rowData.aliased_data
-                            .match_status_data_assignment_object_used
-                            ?.node_value
+                            .match_status_data_assignment_object_used ?? null
                     "
                     :mode="VIEW"
                 />

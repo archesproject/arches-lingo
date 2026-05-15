@@ -23,7 +23,7 @@ const {
     mode,
     nodeAlias,
     resourceInstanceId,
-    nodeValue,
+    value,
     shouldShowLabel = true,
     isDirty = false,
     scheme = "",
@@ -34,7 +34,7 @@ const {
     mode: WidgetMode;
     nodeAlias: string;
     resourceInstanceId?: string;
-    nodeValue: ResourceInstanceReference[] | null | undefined;
+    value: ResourceInstanceReference[] | null | undefined;
     shouldShowLabel?: boolean;
     scheme?: string;
     schemeSelectable?: boolean | false;
@@ -56,7 +56,7 @@ if (widgetReadyTracker) {
     widgetReadyTracker.register();
 }
 
-const conceptIds = nodeValue?.map((ref) => ref.resourceId);
+const conceptIds = value?.map((ref) => ref.resourceId);
 const searchResult = ref();
 
 watchEffect(async () => {
@@ -118,7 +118,7 @@ async function getConceptHierarchy(conceptIds: string[]) {
         <GenericFormField
             v-if="mode === EDIT"
             v-slot="{ onUpdateValue }"
-            :node-value="nodeValue"
+            :value="value"
             :is-dirty="isDirty"
             :node-alias="nodeAlias"
             @update:is-dirty="emit('update:isDirty', $event)"

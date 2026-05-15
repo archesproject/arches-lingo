@@ -56,10 +56,9 @@ const metaStringLabel = computed<MetaStringText>(() => ({
     type: $gettext("Type"),
     noRecords: $gettext("No concept labels were found."),
     sortFields: {
-        name: "aliased_data.appellative_status_ascribed_name_content.display_value",
-        type: "aliased_data.appellative_status_ascribed_relation.display_value",
-        language:
-            "aliased_data.appellative_status_ascribed_name_language.display_value",
+        name: "aliased_data.appellative_status_ascribed_name_content",
+        type: "aliased_data.appellative_status_ascribed_relation",
+        language: "aliased_data.appellative_status_ascribed_name_language",
     },
 }));
 </script>
@@ -110,10 +109,9 @@ const metaStringLabel = computed<MetaStringText>(() => ({
                 <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="appellative_status_ascribed_name_content"
-                    :node-value="
+                    :value="
                         rowData.aliased_data
-                            .appellative_status_ascribed_name_content
-                            ?.node_value
+                            .appellative_status_ascribed_name_content ?? null
                     "
                     :mode="VIEW"
                     :should-show-label="false"
@@ -123,9 +121,9 @@ const metaStringLabel = computed<MetaStringText>(() => ({
                 <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="appellative_status_ascribed_relation"
-                    :node-value="
+                    :value="
                         rowData.aliased_data
-                            .appellative_status_ascribed_relation?.node_value
+                            .appellative_status_ascribed_relation ?? null
                     "
                     :mode="VIEW"
                     :should-show-label="false"
@@ -135,10 +133,9 @@ const metaStringLabel = computed<MetaStringText>(() => ({
                 <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="appellative_status_ascribed_name_language"
-                    :node-value="
+                    :value="
                         rowData.aliased_data
-                            .appellative_status_ascribed_name_language
-                            ?.node_value
+                            .appellative_status_ascribed_name_language ?? null
                     "
                     :mode="VIEW"
                     :should-show-label="false"
@@ -148,20 +145,19 @@ const metaStringLabel = computed<MetaStringText>(() => ({
                 <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="appellative_status_data_assignment_object_used"
-                    :node-value="
+                    :value="
                         rowData.aliased_data
-                            .appellative_status_data_assignment_object_used
-                            ?.node_value
+                            .appellative_status_data_assignment_object_used ??
+                        null
                     "
                     :mode="VIEW"
                 />
                 <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="appellative_status_data_assignment_actor"
-                    :node-value="
+                    :value="
                         rowData.aliased_data
-                            .appellative_status_data_assignment_actor
-                            ?.node_value
+                            .appellative_status_data_assignment_actor ?? null
                     "
                     :mode="VIEW"
                 />

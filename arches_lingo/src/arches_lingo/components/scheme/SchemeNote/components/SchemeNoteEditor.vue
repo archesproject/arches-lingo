@@ -151,9 +151,9 @@ async function save(e: FormSubmitEvent) {
                     <GenericWidget
                         :graph-slug="props.graphSlug"
                         node-alias="statement_content"
-                        :node-value="
-                            props.tileData?.aliased_data?.statement_content
-                                ?.node_value
+                        :value="
+                            props.tileData?.aliased_data?.statement_content ??
+                            null
                         "
                         :mode="EDIT"
                     />
@@ -162,9 +162,8 @@ async function save(e: FormSubmitEvent) {
                     <GenericWidget
                         :graph-slug="props.graphSlug"
                         node-alias="statement_type"
-                        :node-value="
-                            props.tileData?.aliased_data?.statement_type
-                                ?.node_value
+                        :value="
+                            props.tileData?.aliased_data?.statement_type ?? null
                         "
                         :mode="EDIT"
                     />
@@ -173,9 +172,9 @@ async function save(e: FormSubmitEvent) {
                     <GenericWidget
                         :graph-slug="props.graphSlug"
                         node-alias="statement_language"
-                        :node-value="
-                            props.tileData?.aliased_data?.statement_language
-                                ?.node_value
+                        :value="
+                            props.tileData?.aliased_data?.statement_language ??
+                            null
                         "
                         :mode="EDIT"
                     />
@@ -184,9 +183,9 @@ async function save(e: FormSubmitEvent) {
                     <GenericWidget
                         :graph-slug="props.graphSlug"
                         node-alias="statement_data_assignment_actor"
-                        :node-value="
+                        :value="
                             props.tileData?.aliased_data
-                                ?.statement_data_assignment_actor?.node_value
+                                ?.statement_data_assignment_actor ?? null
                         "
                         :mode="EDIT"
                     />
@@ -195,10 +194,9 @@ async function save(e: FormSubmitEvent) {
                     <GenericWidget
                         :graph-slug="props.graphSlug"
                         node-alias="statement_data_assignment_object_used"
-                        :node-value="
+                        :value="
                             props.tileData?.aliased_data
-                                ?.statement_data_assignment_object_used
-                                ?.node_value
+                                ?.statement_data_assignment_object_used ?? null
                         "
                         :mode="EDIT"
                     />

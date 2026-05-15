@@ -69,9 +69,9 @@ const metaStringLabel = computed<MetaStringText>(() => ({
     type: $gettext("Type"),
     noRecords: $gettext("No concept notes were found."),
     sortFields: {
-        name: "aliased_data.statement_content.display_value",
-        type: "aliased_data.statement_type.display_value",
-        language: "aliased_data.statement_language.display_value",
+        name: "aliased_data.statement_content",
+        type: "aliased_data.statement_type",
+        language: "aliased_data.statement_language",
     },
 }));
 </script>
@@ -120,9 +120,7 @@ const metaStringLabel = computed<MetaStringText>(() => ({
                 <GenericWidget
                     node-alias="statement_content"
                     :graph-slug="props.graphSlug"
-                    :node-value="
-                        rowData.aliased_data.statement_content?.node_value
-                    "
+                    :value="rowData.aliased_data.statement_content ?? null"
                     :mode="VIEW"
                     :should-show-label="false"
                 />
@@ -131,9 +129,7 @@ const metaStringLabel = computed<MetaStringText>(() => ({
                 <GenericWidget
                     node-alias="statement_type"
                     :graph-slug="props.graphSlug"
-                    :node-value="
-                        rowData.aliased_data.statement_type?.node_value
-                    "
+                    :value="rowData.aliased_data.statement_type ?? null"
                     :mode="VIEW"
                     :should-show-label="false"
                 />
@@ -142,9 +138,7 @@ const metaStringLabel = computed<MetaStringText>(() => ({
                 <GenericWidget
                     node-alias="statement_language"
                     :graph-slug="props.graphSlug"
-                    :node-value="
-                        rowData.aliased_data.statement_language?.node_value
-                    "
+                    :value="rowData.aliased_data.statement_language ?? null"
                     :mode="VIEW"
                     :should-show-label="false"
                 />
@@ -153,18 +147,18 @@ const metaStringLabel = computed<MetaStringText>(() => ({
                 <GenericWidget
                     node-alias="statement_data_assignment_object_used"
                     :graph-slug="props.graphSlug"
-                    :node-value="
+                    :value="
                         rowData.aliased_data
-                            .statement_data_assignment_object_used?.node_value
+                            .statement_data_assignment_object_used ?? null
                     "
                     :mode="VIEW"
                 />
                 <GenericWidget
                     node-alias="statement_data_assignment_actor"
                     :graph-slug="props.graphSlug"
-                    :node-value="
-                        rowData.aliased_data.statement_data_assignment_actor
-                            ?.node_value
+                    :value="
+                        rowData.aliased_data.statement_data_assignment_actor ??
+                        null
                     "
                     :mode="VIEW"
                 />

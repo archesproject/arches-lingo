@@ -76,10 +76,9 @@ const metaStringLabel = computed<MetaStringText>(() => ({
     type: $gettext("Related Concept"),
     noRecords: $gettext("No associated concepts were found."),
     sortFields: {
-        name: "aliased_data.relation_status_ascribed_comparate.display_value",
-        type: "aliased_data.relation_status_ascribed_relation.display_value",
-        language:
-            "aliased_data.relation_status_ascribed_comparate.display_value",
+        name: "aliased_data.relation_status_ascribed_comparate",
+        type: "aliased_data.relation_status_ascribed_relation",
+        language: "aliased_data.relation_status_ascribed_comparate",
     },
 }));
 </script>
@@ -128,9 +127,9 @@ const metaStringLabel = computed<MetaStringText>(() => ({
                 <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="relation_status_ascribed_relation"
-                    :node-value="
-                        rowData.aliased_data.relation_status_ascribed_relation
-                            ?.node_value
+                    :value="
+                        rowData.aliased_data
+                            .relation_status_ascribed_relation ?? null
                     "
                     :mode="VIEW"
                     :should-show-label="false"
@@ -140,9 +139,9 @@ const metaStringLabel = computed<MetaStringText>(() => ({
                 <ConceptResourceSelectWidget
                     :graph-slug="props.graphSlug"
                     node-alias="relation_status_ascribed_comparate"
-                    :node-value="
-                        rowData.aliased_data.relation_status_ascribed_comparate
-                            ?.node_value
+                    :value="
+                        rowData.aliased_data
+                            .relation_status_ascribed_comparate ?? null
                     "
                     :mode="VIEW"
                     :should-show-label="false"
@@ -152,18 +151,18 @@ const metaStringLabel = computed<MetaStringText>(() => ({
                 <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="relation_status_data_assignment_actor"
-                    :node-value="
+                    :value="
                         rowData.aliased_data
-                            .relation_status_data_assignment_actor?.node_value
+                            .relation_status_data_assignment_actor ?? null
                     "
                     :mode="VIEW"
                 />
                 <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="relation_status_data_assignment_object_used"
-                    :node-value="
-                        rowData.relation_status_data_assignment_object_used
-                            ?.node_value
+                    :value="
+                        rowData.aliased_data
+                            .relation_status_data_assignment_object_used ?? null
                     "
                     :mode="VIEW"
                 />

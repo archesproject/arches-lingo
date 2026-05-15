@@ -136,9 +136,8 @@ async function save(e: FormSubmitEvent) {
                 <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="statement_content"
-                    :node-value="
-                        props.tileData?.aliased_data.statement_content
-                            ?.node_value
+                    :value="
+                        props.tileData?.aliased_data.statement_content ?? null
                     "
                     :mode="EDIT"
                     class="widget-container column"
@@ -146,18 +145,15 @@ async function save(e: FormSubmitEvent) {
                 <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="statement_type"
-                    :node-value="
-                        props.tileData?.aliased_data.statement_type?.node_value
-                    "
+                    :value="props.tileData?.aliased_data.statement_type ?? null"
                     :mode="EDIT"
                     class="widget-container column"
                 />
                 <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="statement_language"
-                    :node-value="
-                        props.tileData?.aliased_data.statement_language
-                            ?.node_value
+                    :value="
+                        props.tileData?.aliased_data.statement_language ?? null
                     "
                     :mode="EDIT"
                     class="widget-container column"
@@ -166,20 +162,20 @@ async function save(e: FormSubmitEvent) {
                     <GenericWidget
                         :graph-slug="props.graphSlug"
                         node-alias="statement_data_assignment_timespan_begin_of_the_begin"
-                        :node-value="
+                        :value="
                             props.tileData?.aliased_data
-                                .statement_data_assignment_timespan_begin_of_the_begin
-                                ?.node_value
+                                .statement_data_assignment_timespan_begin_of_the_begin ??
+                            null
                         "
                         :mode="EDIT"
                     />
                     <GenericWidget
                         :graph-slug="props.graphSlug"
                         node-alias="statement_data_assignment_timespan_end_of_the_end"
-                        :node-value="
+                        :value="
                             props.tileData?.aliased_data
-                                .statement_data_assignment_timespan_end_of_the_end
-                                ?.node_value
+                                .statement_data_assignment_timespan_end_of_the_end ??
+                            null
                         "
                         :mode="EDIT"
                     />
@@ -187,9 +183,9 @@ async function save(e: FormSubmitEvent) {
                 <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="statement_data_assignment_actor"
-                    :node-value="
+                    :value="
                         props.tileData?.aliased_data
-                            .statement_data_assignment_actor?.node_value
+                            .statement_data_assignment_actor ?? null
                     "
                     :mode="EDIT"
                     class="widget-container column"
@@ -197,9 +193,9 @@ async function save(e: FormSubmitEvent) {
                 <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="statement_data_assignment_object_used"
-                    :node-value="
+                    :value="
                         props.tileData?.aliased_data
-                            .statement_data_assignment_object_used?.node_value
+                            .statement_data_assignment_object_used ?? null
                     "
                     :mode="EDIT"
                     class="widget-container column"
