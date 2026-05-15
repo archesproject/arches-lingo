@@ -40,7 +40,6 @@ import {
 import type { Component, Ref } from "vue";
 import type { FormSubmitEvent } from "@primevue/forms";
 import type { FileReference } from "@/arches_component_lab/datatypes/file-list/types.ts";
-import type { AliasedNodeData } from "@/arches_component_lab/types.ts";
 
 import type {
     ConceptImages,
@@ -194,13 +193,13 @@ async function save(e: FormSubmitEvent) {
         if (!digitalObjectInstanceAliases.content) {
             digitalObjectInstanceAliases.content = {
                 aliased_data: {
-                    content: [...fileJsonObjects] as unknown as AliasedNodeData,
+                    content: [...fileJsonObjects] as unknown as unknown,
                 },
             };
         } else {
             digitalObjectInstanceAliases.content.aliased_data.content = [
                 ...fileJsonObjects,
-            ] as unknown as AliasedNodeData;
+            ] as unknown as unknown;
         }
 
         // this fork was requested because the multipartjson parser is unstable
