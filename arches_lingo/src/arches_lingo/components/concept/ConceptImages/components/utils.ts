@@ -1,4 +1,4 @@
-import { fetchCardXNodeXWidgetData } from "@/arches_component_lab/generics/GenericWidget/api.ts";
+import { useWidgetConfigStore } from "@/arches_component_lab/stores/useWidgetConfigStore.ts";
 import {
     createLingoResource,
     createLingoResourceFromForm,
@@ -94,7 +94,7 @@ export async function createFormDataForFileUpload(
 ): Promise<FormData> {
     const formData = new FormData();
 
-    const cardXNodeXWidgetData = await fetchCardXNodeXWidgetData(
+    const cardXNodeXWidgetData = await useWidgetConfigStore().fetchWidgetConfig(
         DIGITAL_OBJECT_GRAPH_SLUG,
         "content",
     );

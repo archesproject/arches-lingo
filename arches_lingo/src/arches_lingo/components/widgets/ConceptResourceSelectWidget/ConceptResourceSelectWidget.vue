@@ -9,7 +9,7 @@ import GenericFormField from "@/arches_component_lab/generics/GenericWidget/comp
 import ConceptResourceSelectWidgetEditor from "@/arches_lingo/components/widgets/ConceptResourceSelectWidget/components/ConceptResourceSelectWidgetEditor.vue";
 import ConceptResourceSelectWidgetViewer from "@/arches_lingo/components/widgets/ConceptResourceSelectWidget/components/ConceptResourceSelectWidgetViewer.vue";
 
-import { fetchCardXNodeXWidgetData } from "@/arches_component_lab/generics/GenericWidget/api.ts";
+import { useWidgetConfigStore } from "@/arches_component_lab/stores/useWidgetConfigStore.ts";
 import { fetchConceptResources } from "@/arches_lingo/api.ts";
 import { useWidgetReadyTracker } from "@/arches_lingo/composables/useWidgetReadyTracker.ts";
 import { EDIT, VIEW } from "@/arches_component_lab/widgets/constants.ts";
@@ -69,10 +69,11 @@ watchEffect(async () => {
         if (conceptIds) {
             searchResult.value = await getConceptHierarchy(conceptIds);
         }
-        cardXNodeXWidgetData.value = await fetchCardXNodeXWidgetData(
-            graphSlug,
-            nodeAlias,
-        );
+        cardXNodeXWidgetData.value =
+            await useWidgetConfigStore().fetchWidgetConfig(
+                graphSlug,
+                nodeAlias,
+            );
     } catch (error) {
         configurationError.value = error;
     } finally {
