@@ -101,7 +101,7 @@ async function saveConceptIdentifierCounter() {
 <template>
     <div class="header-item">
         <span class="header-item-label">
-            {{ $gettext("Concept counter:") }}
+            {{ $gettext("Counter start:") }}
         </span>
 
         <template v-if="isEditingConceptIdentifierCounter">
