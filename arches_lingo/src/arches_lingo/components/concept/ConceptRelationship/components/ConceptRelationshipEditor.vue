@@ -150,7 +150,7 @@ async function save(e: FormSubmitEvent) {
                 <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="relation_status_ascribed_relation"
-                    :value="
+                    :aliased-node-data="
                         props.tileData?.aliased_data
                             .relation_status_ascribed_relation ?? null
                     "
@@ -160,7 +160,7 @@ async function save(e: FormSubmitEvent) {
                 <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="relation_status_status"
-                    :value="
+                    :aliased-node-data="
                         props.tileData?.aliased_data.relation_status_status ??
                         null
                     "
@@ -171,7 +171,7 @@ async function save(e: FormSubmitEvent) {
                     <GenericWidget
                         :graph-slug="props.graphSlug"
                         node-alias="relation_status_timespan_begin_of_the_begin"
-                        :value="
+                        :aliased-node-data="
                             props.tileData?.aliased_data
                                 .relation_status_timespan_begin_of_the_begin ??
                             null
@@ -181,7 +181,7 @@ async function save(e: FormSubmitEvent) {
                     <GenericWidget
                         :graph-slug="props.graphSlug"
                         node-alias="relation_status_timespan_end_of_the_end"
-                        :value="
+                        :aliased-node-data="
                             props.tileData?.aliased_data
                                 .relation_status_timespan_end_of_the_end ?? null
                         "
@@ -191,7 +191,7 @@ async function save(e: FormSubmitEvent) {
                 <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="relation_status_data_assignment_actor"
-                    :value="
+                    :aliased-node-data="
                         props.tileData?.aliased_data
                             .relation_status_data_assignment_actor ?? null
                     "
@@ -201,7 +201,7 @@ async function save(e: FormSubmitEvent) {
                 <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="relation_status_data_assignment_object_used"
-                    :value="
+                    :aliased-node-data="
                         props.tileData?.aliased_data
                             .relation_status_data_assignment_object_used ?? null
                     "

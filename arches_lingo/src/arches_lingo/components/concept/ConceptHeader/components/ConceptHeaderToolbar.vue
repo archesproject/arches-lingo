@@ -52,6 +52,7 @@ import { useConceptStore } from "@/arches_lingo/stores/useConceptStore.ts";
 import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 
 import type { Ref } from "vue";
+import type { AliasedNodeData } from "@/arches_component_lab/types.ts";
 import type {
     DeleteConceptStrategy,
     ResourceInstanceLifecycleState,
@@ -72,7 +73,7 @@ const props = defineProps<{
     conceptTypeTile:
         | {
               tileid?: string;
-              aliased_data?: Record<string, { node_value?: unknown }>;
+              aliased_data?: Record<string, AliasedNodeData>;
           }
         | undefined;
     isTopConcept: boolean;
@@ -117,15 +118,16 @@ const lifecycleState = computed(function () {
 });
 
 const conceptTypeLabel = computed(function () {
-    const refs = props.conceptTypeTile?.aliased_data?.[
-        CONCEPT_TYPE_NODE_ALIAS
-    ] as Array<{ labels: Array<{ value: string }> }> | null | undefined;
-    return refs?.[0]?.labels?.[0]?.value;
+    const aliasedData =
+        props.conceptTypeTile?.aliased_data?.[CONCEPT_TYPE_NODE_ALIAS];
+    return (aliasedData as { display_value?: string } | undefined)
+        ?.display_value;
 });
 
 const conceptIcon = computed(function () {
     const typeNodeValue =
-        props.conceptTypeTile?.aliased_data?.[CONCEPT_TYPE_NODE_ALIAS];
+        props.conceptTypeTile?.aliased_data?.[CONCEPT_TYPE_NODE_ALIAS]
+            ?.node_value;
     if (isGuideTermType(typeNodeValue)) return GUIDE_TERM_ICON;
     if (isHierarchyNameType(typeNodeValue)) return HIERARCHY_NAME_ICON;
     if (props.isTopConcept) return TOP_CONCEPT_ICON;
@@ -146,11 +148,8 @@ const canDelete = computed(function () {
 });
 
 const schemeId = computed(function () {
-    const partOfScheme =
-        props.concept?.aliased_data?.part_of_scheme?.aliased_data
-            ?.part_of_scheme;
-    return (partOfScheme as { resourceinstanceid?: string } | null | undefined)
-        ?.resourceinstanceid;
+    return props.concept?.aliased_data?.part_of_scheme?.aliased_data
+        ?.part_of_scheme?.node_value?.[0]?.resourceId;
 });
 
 const isSchemeRetired = computed(function () {
@@ -239,15 +238,9 @@ async function onConfirmed(strategy: DeleteConceptStrategy | null) {
     isLoading.value = true;
     try {
         if (dialogMode.value === DELETE) {
-            const partOfScheme =
+            const schemeIdentifier =
                 props.concept.aliased_data?.part_of_scheme?.aliased_data
-                    ?.part_of_scheme;
-            const schemeIdentifier = (
-                partOfScheme as
-                    | { resourceinstanceid?: string }
-                    | null
-                    | undefined
-            )?.resourceinstanceid;
+                    ?.part_of_scheme?.node_value?.[0]?.resourceId;
 
             await deleteConcept(
                 props.concept.resourceinstanceid,
@@ -320,12 +313,9 @@ function openExportDialog() {
 }
 
 function addChild() {
-    const partOfSchemeRef =
+    const schemeId =
         props.concept?.aliased_data?.part_of_scheme?.aliased_data
-            ?.part_of_scheme;
-    const schemeId = (
-        partOfSchemeRef as { resourceinstanceid?: string } | null | undefined
-    )?.resourceinstanceid;
+            ?.part_of_scheme?.node_value?.[0]?.resourceId;
     const parentId = props.resourceInstanceId;
 
     if (!schemeId || !parentId) return;
@@ -395,21 +385,24 @@ function onReinstateRequested() {
                     severity="secondary"
                     class="concept-type-badge"
                 />
-                <GenericWidget
+                <div
                     v-else-if="concept && concept.resourceinstanceid"
-                    :node-alias="CONCEPT_TYPE_NODE_ALIAS"
-                    :graph-slug="graphSlug"
-                    :mode="EDIT"
-                    :value="
-                        conceptTypeTile?.aliased_data?.[
-                            CONCEPT_TYPE_NODE_ALIAS
-                        ] ?? null
-                    "
-                    :should-show-label="false"
                     class="concept-type-widget"
-                    @update:is-loading="isWidgetLoading = $event"
-                    @update:value="onConceptTypeChange"
-                />
+                >
+                    <GenericWidget
+                        :node-alias="CONCEPT_TYPE_NODE_ALIAS"
+                        :graph-slug="graphSlug"
+                        :mode="EDIT"
+                        :aliased-node-data="
+                            conceptTypeTile?.aliased_data?.[
+                                CONCEPT_TYPE_NODE_ALIAS
+                            ] ?? null
+                        "
+                        :should-show-label="false"
+                        @update:is-loading="isWidgetLoading = $event"
+                        @update:value="onConceptTypeChange"
+                    />
+                </div>
             </div>
         </div>
         <div

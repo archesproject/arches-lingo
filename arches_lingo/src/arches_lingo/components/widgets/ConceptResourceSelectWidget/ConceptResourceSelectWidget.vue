@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { watchEffect, ref } from "vue";
+import { computed, watchEffect, ref } from "vue";
 
 import Message from "primevue/message";
 import Skeleton from "primevue/skeleton";
@@ -16,13 +16,17 @@ import { EDIT, VIEW } from "@/arches_component_lab/widgets/constants.ts";
 
 import type { CardXNodeXWidgetData } from "@/arches_component_lab/types.ts";
 import type { WidgetMode } from "@/arches_component_lab/widgets/types.ts";
-import type { ResourceInstanceReference } from "@/arches_component_lab/datatypes/resource-instance-list/types";
+import type {
+    ResourceInstanceListAliasedNodeData,
+    ResourceInstanceReference,
+} from "@/arches_component_lab/datatypes/resource-instance-list/types.ts";
 
 const {
     graphSlug,
     mode,
     nodeAlias,
     resourceInstanceId,
+    aliasedNodeData,
     value,
     shouldShowLabel = true,
     isDirty = false,
@@ -34,7 +38,8 @@ const {
     mode: WidgetMode;
     nodeAlias: string;
     resourceInstanceId?: string;
-    value: ResourceInstanceReference[] | null | undefined;
+    aliasedNodeData?: ResourceInstanceListAliasedNodeData | null;
+    value?: ResourceInstanceReference[] | null;
     shouldShowLabel?: boolean;
     scheme?: string;
     schemeSelectable?: boolean | false;
@@ -45,19 +50,32 @@ const emit = defineEmits([
     "update:isFocused",
     "update:value",
     "update:isLoading",
+    "update:aliasedNodeData",
 ]);
 
 const isLoading = ref(true);
 const cardXNodeXWidgetData = ref<CardXNodeXWidgetData>();
 const configurationError = ref();
+const searchResult = ref();
+
+const resolvedNodeValue = computed<ResourceInstanceReference[] | null>(() => {
+    if (aliasedNodeData !== undefined) {
+        return aliasedNodeData?.node_value ?? null;
+    }
+    return value ?? null;
+});
+
+const detailsFromAliasedData = computed(() => {
+    if (aliasedNodeData?.details?.length) {
+        return aliasedNodeData.details;
+    }
+    return null;
+});
 
 const widgetReadyTracker = useWidgetReadyTracker();
 if (widgetReadyTracker) {
     widgetReadyTracker.register();
 }
-
-const conceptIds = value?.map((ref) => ref.resourceId);
-const searchResult = ref();
 
 watchEffect(async () => {
     if (cardXNodeXWidgetData.value) {
@@ -66,8 +84,13 @@ watchEffect(async () => {
 
     isLoading.value = true;
     try {
-        if (conceptIds) {
-            searchResult.value = await getConceptHierarchy(conceptIds);
+        if (!detailsFromAliasedData.value) {
+            const conceptIds = resolvedNodeValue.value
+                ?.map((resourceRef) => resourceRef.resourceId)
+                .filter(Boolean);
+            if (conceptIds?.length) {
+                searchResult.value = await getConceptHierarchy(conceptIds);
+            }
         }
         cardXNodeXWidgetData.value =
             await useWidgetConfigStore().fetchWidgetConfig(
@@ -83,9 +106,6 @@ watchEffect(async () => {
 });
 
 async function getConceptHierarchy(conceptIds: string[]) {
-    if (conceptIds.length === 0) {
-        return;
-    }
     const parsedResponse = await fetchConceptResources(
         "",
         conceptIds.length,
@@ -138,7 +158,7 @@ async function getConceptHierarchy(conceptIds: string[]) {
         </GenericFormField>
         <ConceptResourceSelectWidgetViewer
             v-else-if="mode === VIEW"
-            :value="searchResult"
+            :value="detailsFromAliasedData ?? searchResult"
         />
     </template>
 </template>

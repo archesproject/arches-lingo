@@ -151,7 +151,7 @@ async function save(e: FormSubmitEvent) {
                     <GenericWidget
                         :graph-slug="props.graphSlug"
                         node-alias="statement_content"
-                        :value="
+                        :aliased-node-data="
                             props.tileData?.aliased_data?.statement_content ??
                             null
                         "
@@ -162,7 +162,7 @@ async function save(e: FormSubmitEvent) {
                     <GenericWidget
                         :graph-slug="props.graphSlug"
                         node-alias="statement_type"
-                        :value="
+                        :aliased-node-data="
                             props.tileData?.aliased_data?.statement_type ?? null
                         "
                         :mode="EDIT"
@@ -172,7 +172,7 @@ async function save(e: FormSubmitEvent) {
                     <GenericWidget
                         :graph-slug="props.graphSlug"
                         node-alias="statement_language"
-                        :value="
+                        :aliased-node-data="
                             props.tileData?.aliased_data?.statement_language ??
                             null
                         "
@@ -183,7 +183,7 @@ async function save(e: FormSubmitEvent) {
                     <GenericWidget
                         :graph-slug="props.graphSlug"
                         node-alias="statement_data_assignment_actor"
-                        :value="
+                        :aliased-node-data="
                             props.tileData?.aliased_data
                                 ?.statement_data_assignment_actor ?? null
                         "
@@ -194,7 +194,7 @@ async function save(e: FormSubmitEvent) {
                     <GenericWidget
                         :graph-slug="props.graphSlug"
                         node-alias="statement_data_assignment_object_used"
-                        :value="
+                        :aliased-node-data="
                             props.tileData?.aliased_data
                                 ?.statement_data_assignment_object_used ?? null
                         "

@@ -67,9 +67,10 @@ const metaStringLabel = computed<MetaStringText>(() => ({
     type: $gettext("Type"),
     noRecords: $gettext("No scheme labels were found."),
     sortFields: {
-        name: "aliased_data.appellative_status_ascribed_name_content",
-        type: "aliased_data.appellative_status_ascribed_relation",
-        language: "aliased_data.appellative_status_ascribed_name_language",
+        name: "aliased_data.appellative_status_ascribed_name_content.display_value",
+        type: "aliased_data.appellative_status_ascribed_relation.display_value",
+        language:
+            "aliased_data.appellative_status_ascribed_name_language.display_value",
     },
 }));
 </script>
@@ -118,7 +119,7 @@ const metaStringLabel = computed<MetaStringText>(() => ({
                 <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="appellative_status_ascribed_name_content"
-                    :value="
+                    :aliased-node-data="
                         rowData.aliased_data
                             .appellative_status_ascribed_name_content ?? null
                     "
@@ -130,7 +131,7 @@ const metaStringLabel = computed<MetaStringText>(() => ({
                 <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="appellative_status_ascribed_relation"
-                    :value="
+                    :aliased-node-data="
                         rowData.aliased_data
                             .appellative_status_ascribed_relation ?? null
                     "
@@ -142,7 +143,7 @@ const metaStringLabel = computed<MetaStringText>(() => ({
                 <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="appellative_status_ascribed_name_language"
-                    :value="
+                    :aliased-node-data="
                         rowData.aliased_data
                             .appellative_status_ascribed_name_language ?? null
                     "
@@ -154,7 +155,7 @@ const metaStringLabel = computed<MetaStringText>(() => ({
                 <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="appellative_status_data_assignment_object_used"
-                    :value="
+                    :aliased-node-data="
                         rowData.aliased_data
                             .appellative_status_data_assignment_object_used ??
                         null
@@ -164,7 +165,7 @@ const metaStringLabel = computed<MetaStringText>(() => ({
                 <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="appellative_status_data_assignment_actor"
-                    :value="
+                    :aliased-node-data="
                         rowData.aliased_data
                             .appellative_status_data_assignment_actor ?? null
                     "

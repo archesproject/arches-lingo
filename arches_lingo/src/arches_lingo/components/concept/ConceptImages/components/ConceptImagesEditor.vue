@@ -39,7 +39,10 @@ import {
 
 import type { Component, Ref } from "vue";
 import type { FormSubmitEvent } from "@primevue/forms";
-import type { FileReference } from "@/arches_component_lab/datatypes/file-list/types.ts";
+import type {
+    FileListAliasedNodeData,
+    FileReference,
+} from "@/arches_component_lab/datatypes/file-list/types.ts";
 
 import type {
     ConceptImages,
@@ -193,13 +196,15 @@ async function save(e: FormSubmitEvent) {
         if (!digitalObjectInstanceAliases.content) {
             digitalObjectInstanceAliases.content = {
                 aliased_data: {
-                    content: [...fileJsonObjects] as unknown as unknown,
+                    content: [
+                        ...fileJsonObjects,
+                    ] as unknown as FileListAliasedNodeData,
                 },
             };
         } else {
             digitalObjectInstanceAliases.content.aliased_data.content = [
                 ...fileJsonObjects,
-            ] as unknown as unknown;
+            ] as unknown as FileListAliasedNodeData;
         }
 
         // this fork was requested because the multipartjson parser is unstable
@@ -334,37 +339,40 @@ function resetForm() {
                 @submit="save"
                 @reset="resetForm"
             >
-                <GenericWidget
-                    node-alias="name_content"
-                    graph-slug="digital_object_system"
-                    :mode="EDIT"
-                    :value="
-                        digitalObjectResource?.aliased_data.name?.aliased_data
-                            .name_content ?? null
-                    "
-                    class="widget-container column"
-                />
-                <GenericWidget
-                    node-alias="statement_content"
-                    graph-slug="digital_object_system"
-                    :mode="EDIT"
-                    :value="
-                        digitalObjectResource?.aliased_data.statement
-                            ?.aliased_data.statement_content ?? null
-                    "
-                    class="widget-container column"
-                />
-                <GenericWidget
-                    node-alias="content"
-                    graph-slug="digital_object_system"
-                    :value="
-                        digitalObjectResource?.aliased_data?.content
-                            ?.aliased_data.content ?? null
-                    "
-                    :mode="EDIT"
-                    :should-show-label="false"
-                    class="widget-container column"
-                />
+                <div class="widget-container column">
+                    <GenericWidget
+                        node-alias="name_content"
+                        graph-slug="digital_object_system"
+                        :mode="EDIT"
+                        :aliased-node-data="
+                            digitalObjectResource?.aliased_data.name
+                                ?.aliased_data.name_content ?? null
+                        "
+                    />
+                </div>
+                <div class="widget-container column">
+                    <GenericWidget
+                        node-alias="statement_content"
+                        graph-slug="digital_object_system"
+                        :mode="EDIT"
+                        :aliased-node-data="
+                            digitalObjectResource?.aliased_data.statement
+                                ?.aliased_data.statement_content ?? null
+                        "
+                    />
+                </div>
+                <div class="widget-container column">
+                    <GenericWidget
+                        node-alias="content"
+                        graph-slug="digital_object_system"
+                        :aliased-node-data="
+                            digitalObjectResource?.aliased_data?.content
+                                ?.aliased_data.content ?? null
+                        "
+                        :mode="EDIT"
+                        :should-show-label="false"
+                    />
+                </div>
             </Form>
         </div>
     </div>

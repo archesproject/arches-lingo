@@ -7,6 +7,7 @@ import {
 } from "@/arches_lingo/api.ts";
 import { DIGITAL_OBJECT_GRAPH_SLUG } from "@/arches_lingo/components/concept/ConceptImages/components/constants.ts";
 import { type Ref, toRaw } from "vue";
+import type { ResourceInstanceListAliasedNodeData } from "@/arches_component_lab/datatypes/resource-instance-list/types.ts";
 import type {
     ConceptInstance,
     DigitalObjectInstance,
@@ -40,50 +41,56 @@ export async function addDigitalObjectToConceptImageCollection(
     conceptDigitalObjectRelationshipNodegroupAlias: string,
     conceptResourceInstanceId?: string,
 ) {
-    if (conceptResourceInstanceId && digitalObjectResource.resourceinstanceid) {
-        const conceptDigitalObjectRelationshipList =
-            (await fetchLingoResourcePartial(
-                conceptGraphSlug,
-                conceptResourceInstanceId,
-                conceptDigitalObjectRelationshipNodegroupAlias,
-            )) as ConceptInstance;
+    if (
+        !conceptResourceInstanceId ||
+        !digitalObjectResource.resourceinstanceid
+    ) {
+        return;
+    }
 
-        if (
-            !conceptDigitalObjectRelationshipList.aliased_data
-                .depicting_digital_asset_internal
-        ) {
-            conceptDigitalObjectRelationshipList.aliased_data.depicting_digital_asset_internal =
-                {
-                    aliased_data: {
-                        depicting_digital_asset_internal: [],
-                    },
-                };
-        }
-
-        const depictingList = conceptDigitalObjectRelationshipList.aliased_data
-            .depicting_digital_asset_internal?.aliased_data
-            ?.depicting_digital_asset_internal as unknown as Array<{
-            resourceId: string;
-        }> | null;
-        if (!depictingList) {
-            conceptDigitalObjectRelationshipList.aliased_data.depicting_digital_asset_internal!.aliased_data.depicting_digital_asset_internal =
-                [] as unknown;
-        }
-        (
-            conceptDigitalObjectRelationshipList.aliased_data
-                .depicting_digital_asset_internal!.aliased_data
-                .depicting_digital_asset_internal as unknown as Array<{
-                resourceId: string;
-            }>
-        ).push({
-            resourceId: digitalObjectResource.resourceinstanceid,
-        });
-        await updateLingoResource(
+    const conceptDigitalObjectRelationshipList =
+        (await fetchLingoResourcePartial(
             conceptGraphSlug,
             conceptResourceInstanceId,
-            conceptDigitalObjectRelationshipList,
-        );
+            conceptDigitalObjectRelationshipNodegroupAlias,
+        )) as ConceptInstance;
+
+    if (
+        !conceptDigitalObjectRelationshipList.aliased_data
+            .depicting_digital_asset_internal
+    ) {
+        conceptDigitalObjectRelationshipList.aliased_data.depicting_digital_asset_internal =
+            {
+                aliased_data: {
+                    depicting_digital_asset_internal: {
+                        display_value: "",
+                        node_value: [],
+                        details: [],
+                    } as ResourceInstanceListAliasedNodeData,
+                },
+            };
     }
+
+    const depictingNodeData =
+        conceptDigitalObjectRelationshipList.aliased_data
+            .depicting_digital_asset_internal.aliased_data
+            .depicting_digital_asset_internal;
+
+    depictingNodeData.node_value = [
+        ...(depictingNodeData.node_value ?? []),
+        {
+            resourceId: digitalObjectResource.resourceinstanceid,
+            ontologyProperty: "",
+            inverseOntologyProperty: "",
+            resourceXresourceId: "",
+        },
+    ];
+
+    await updateLingoResource(
+        conceptGraphSlug,
+        conceptResourceInstanceId,
+        conceptDigitalObjectRelationshipList,
+    );
 }
 
 export async function createFormDataForFileUpload(

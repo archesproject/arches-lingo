@@ -232,8 +232,7 @@ const label = computed<Label | undefined>(function () {
 const parentConceptLabelMap = computed<Map<string, Label[]>>(function () {
     const map = new Map<string, Label[]>();
     for (const parent of data.value?.parentConcepts ?? []) {
-        const id = (parent as unknown as { resourceinstanceid?: string })
-            ?.resourceinstanceid;
+        const id = parentConceptId(parent);
 
         if (id) {
             const storeLabels = conceptStore.findConcept(id)?.labels;
@@ -249,16 +248,12 @@ const lifecycleStateLabel = computed(function () {
 });
 
 const partOfSchemeId = computed(function () {
-    return (
-        data.value?.partOfScheme as
-            | { resourceinstanceid?: string }
-            | null
-            | undefined
-    )?.resourceinstanceid;
+    return data.value?.partOfScheme?.node_value?.[0]?.resourceId;
 });
 
 function parentConceptId(parent: unknown): string | undefined {
-    return (parent as { resourceinstanceid?: string })?.resourceinstanceid;
+    return (parent as { details?: { resource_id?: string }[] })?.details?.[0]
+        ?.resource_id;
 }
 
 function extractConceptHeaderData(resource: ResourceInstanceResult) {
@@ -268,19 +263,10 @@ function extractConceptHeaderData(resource: ResourceInstanceResult) {
     const descriptor = extractDescriptors(resource, selectedLanguage.value);
     const principalUser = resource?.principal_user_display_name ?? undefined;
 
-    const uri =
-        (aliased_data?.uri?.aliased_data?.uri_content as unknown as
-            | string
-            | null
-            | undefined) ?? undefined;
+    const uri = aliased_data?.uri?.aliased_data?.uri_content?.node_value;
     const partOfScheme =
         aliased_data?.part_of_scheme?.aliased_data?.part_of_scheme;
-    const schemeId = (
-        partOfScheme as unknown as
-            | { resourceinstanceid?: string }
-            | null
-            | undefined
-    )?.resourceinstanceid;
+    const schemeId = partOfScheme?.node_value?.[0]?.resourceId;
     const matchingScheme = conceptStore.schemes.find(
         (candidateScheme) => candidateScheme.id === schemeId,
     );
@@ -301,10 +287,7 @@ function extractConceptHeaderData(resource: ResourceInstanceResult) {
     const identifier = (aliased_data?.identifier || [])
         .map(
             (tile: Identifier) =>
-                tile?.aliased_data?.identifier_content as unknown as
-                    | string
-                    | null
-                    | undefined,
+                tile?.aliased_data?.identifier_content?.node_value,
         )
         .filter(Boolean)
         .join(", ");

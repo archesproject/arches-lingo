@@ -134,7 +134,7 @@ async function save(e: FormSubmitEvent) {
                 <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="appellative_status_ascribed_name_content"
-                    :value="
+                    :aliased-node-data="
                         props.tileData?.aliased_data
                             ?.appellative_status_ascribed_name_content ?? null
                     "
@@ -144,7 +144,7 @@ async function save(e: FormSubmitEvent) {
                 <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="appellative_status_ascribed_relation"
-                    :value="
+                    :aliased-node-data="
                         props.tileData?.aliased_data
                             ?.appellative_status_ascribed_relation ?? null
                     "
@@ -154,7 +154,7 @@ async function save(e: FormSubmitEvent) {
                 <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="appellative_status_ascribed_name_language"
-                    :value="
+                    :aliased-node-data="
                         props.tileData?.aliased_data
                             ?.appellative_status_ascribed_name_language ?? null
                     "
@@ -165,7 +165,7 @@ async function save(e: FormSubmitEvent) {
                     <GenericWidget
                         :graph-slug="props.graphSlug"
                         node-alias="appellative_status_timespan_begin_of_the_begin"
-                        :value="
+                        :aliased-node-data="
                             props.tileData?.aliased_data
                                 ?.appellative_status_timespan_begin_of_the_begin ??
                             null
@@ -175,7 +175,7 @@ async function save(e: FormSubmitEvent) {
                     <GenericWidget
                         :graph-slug="props.graphSlug"
                         node-alias="appellative_status_timespan_end_of_the_end"
-                        :value="
+                        :aliased-node-data="
                             props.tileData?.aliased_data
                                 ?.appellative_status_timespan_end_of_the_end ??
                             null
@@ -186,7 +186,7 @@ async function save(e: FormSubmitEvent) {
                 <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="appellative_status_status"
-                    :value="
+                    :aliased-node-data="
                         props.tileData?.aliased_data
                             ?.appellative_status_status ?? null
                     "
@@ -196,7 +196,7 @@ async function save(e: FormSubmitEvent) {
                 <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="appellative_status_data_assignment_actor"
-                    :value="
+                    :aliased-node-data="
                         props.tileData?.aliased_data
                             ?.appellative_status_data_assignment_actor ?? null
                     "
@@ -206,7 +206,7 @@ async function save(e: FormSubmitEvent) {
                 <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="appellative_status_data_assignment_object_used"
-                    :value="
+                    :aliased-node-data="
                         props.tileData?.aliased_data
                             ?.appellative_status_data_assignment_object_used ??
                         null

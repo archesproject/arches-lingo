@@ -152,7 +152,7 @@ async function save(e: FormSubmitEvent) {
                     <GenericWidget
                         node-alias="namespace_name"
                         :graph-slug="props.graphSlug"
-                        :value="
+                        :aliased-node-data="
                             props.tileData?.aliased_data.namespace_name ?? null
                         "
                         :mode="EDIT"

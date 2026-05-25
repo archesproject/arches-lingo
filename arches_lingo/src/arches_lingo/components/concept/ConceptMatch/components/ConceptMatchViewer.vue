@@ -76,8 +76,8 @@ const metaStringLabel = computed<MetaStringText>(() => ({
     type: $gettext("Related URI"),
     noRecords: $gettext("No matched concepts were found."),
     sortFields: {
-        name: "aliased_data.match_status_ascribed_relation",
-        type: "aliased_data.match_status_ascribed_comparate",
+        name: "aliased_data.match_status_ascribed_relation.display_value",
+        type: "aliased_data.match_status_ascribed_comparate.display_value",
     },
 }));
 
@@ -135,7 +135,7 @@ function matchedConceptURIIsLink(rowData: ConceptMatchStatus): boolean {
                 <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="match_status_ascribed_relation"
-                    :value="
+                    :aliased-node-data="
                         rowData.aliased_data.match_status_ascribed_relation ??
                         null
                     "
@@ -167,7 +167,7 @@ function matchedConceptURIIsLink(rowData: ConceptMatchStatus): boolean {
                 <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="match_status_data_assignment_actor"
-                    :value="
+                    :aliased-node-data="
                         rowData.aliased_data
                             .match_status_data_assignment_actor ?? null
                     "
@@ -176,7 +176,7 @@ function matchedConceptURIIsLink(rowData: ConceptMatchStatus): boolean {
                 <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="match_status_data_assignment_object_used"
-                    :value="
+                    :aliased-node-data="
                         rowData.aliased_data
                             .match_status_data_assignment_object_used ?? null
                     "

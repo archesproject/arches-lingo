@@ -87,12 +87,10 @@ const confirm = useConfirm();
 onMounted(async () => {
     if (props.tileData) {
         try {
-            const digitalObjectInstances = (
-                props.tileData.aliased_data
-                    .depicting_digital_asset_internal as unknown as Array<{
-                    resourceinstanceid: string;
-                }> | null
-            )?.map((resource) => resource.resourceinstanceid);
+            const digitalObjectInstances =
+                props.tileData.aliased_data.depicting_digital_asset_internal.node_value
+                    ?.map((ref) => ref.resourceId)
+                    .filter(Boolean);
             if (digitalObjectInstances) {
                 resources.value = await fetchLingoResourcesBatch(
                     "digital_object_system",
@@ -131,23 +129,14 @@ function confirmDelete(removedResourceInstanceId: string) {
                 if (
                     depictingDigitalAssetInternalData?.depicting_digital_asset_internal
                 ) {
-                    const filtered = (
-                        depictingDigitalAssetInternalData.depicting_digital_asset_internal as unknown as Array<{
-                            resourceinstanceid: string;
-                        }>
-                    )
-                        .filter(
-                            (assetReference) =>
-                                assetReference.resourceinstanceid !==
-                                removedResourceInstanceId,
-                        )
-                        .map((r) => ({
-                            resourceId: r.resourceinstanceid,
-                            ontologyProperty: "",
-                            inverseOntologyProperty: "",
-                        }));
-                    depictingDigitalAssetInternalData.depicting_digital_asset_internal =
-                        filtered as unknown;
+                    const currentNodeValue =
+                        depictingDigitalAssetInternalData
+                            .depicting_digital_asset_internal.node_value ?? [];
+                    depictingDigitalAssetInternalData.depicting_digital_asset_internal.node_value =
+                        currentNodeValue.filter(
+                            (ref) =>
+                                ref.resourceId !== removedResourceInstanceId,
+                        );
                     resources.value = resources.value?.filter(
                         (resource) =>
                             resource.resourceinstanceid !==
@@ -271,16 +260,17 @@ function modifyResource(resourceInstanceId?: string) {
                             for="concept-image"
                             class="image-title-label"
                         >
-                            <GenericWidget
-                                node-alias="name_content"
-                                class="image-title"
-                                graph-slug="digital_object_system"
-                                :mode="VIEW"
-                                :value="
-                                    resource.aliased_data.name?.aliased_data
-                                        .name_content ?? null
-                                "
-                            />
+                            <div class="image-title">
+                                <GenericWidget
+                                    node-alias="name_content"
+                                    graph-slug="digital_object_system"
+                                    :mode="VIEW"
+                                    :aliased-node-data="
+                                        resource.aliased_data.name?.aliased_data
+                                            .name_content ?? null
+                                    "
+                                />
+                            </div>
                         </label>
                         <div
                             v-if="isEditor"
@@ -311,7 +301,7 @@ function modifyResource(resourceInstanceId?: string) {
                     <GenericWidget
                         node-alias="content"
                         graph-slug="digital_object_system"
-                        :value="
+                        :aliased-node-data="
                             resource.aliased_data.content?.aliased_data
                                 .content ?? null
                         "
@@ -323,7 +313,7 @@ function modifyResource(resourceInstanceId?: string) {
                             node-alias="statement_content"
                             graph-slug="digital_object_system"
                             :mode="VIEW"
-                            :value="
+                            :aliased-node-data="
                                 resource.aliased_data.statement?.aliased_data
                                     .statement_content ?? null
                             "

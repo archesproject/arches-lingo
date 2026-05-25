@@ -76,9 +76,10 @@ const metaStringLabel = computed<MetaStringText>(() => ({
     type: $gettext("Related Concept"),
     noRecords: $gettext("No associated concepts were found."),
     sortFields: {
-        name: "aliased_data.relation_status_ascribed_comparate",
-        type: "aliased_data.relation_status_ascribed_relation",
-        language: "aliased_data.relation_status_ascribed_comparate",
+        name: "aliased_data.relation_status_ascribed_comparate.display_value",
+        type: "aliased_data.relation_status_ascribed_relation.display_value",
+        language:
+            "aliased_data.relation_status_ascribed_comparate.display_value",
     },
 }));
 </script>
@@ -127,7 +128,7 @@ const metaStringLabel = computed<MetaStringText>(() => ({
                 <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="relation_status_ascribed_relation"
-                    :value="
+                    :aliased-node-data="
                         rowData.aliased_data
                             .relation_status_ascribed_relation ?? null
                     "
@@ -139,7 +140,7 @@ const metaStringLabel = computed<MetaStringText>(() => ({
                 <ConceptResourceSelectWidget
                     :graph-slug="props.graphSlug"
                     node-alias="relation_status_ascribed_comparate"
-                    :value="
+                    :aliased-node-data="
                         rowData.aliased_data
                             .relation_status_ascribed_comparate ?? null
                     "
@@ -151,7 +152,7 @@ const metaStringLabel = computed<MetaStringText>(() => ({
                 <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="relation_status_data_assignment_actor"
-                    :value="
+                    :aliased-node-data="
                         rowData.aliased_data
                             .relation_status_data_assignment_actor ?? null
                     "
@@ -160,7 +161,7 @@ const metaStringLabel = computed<MetaStringText>(() => ({
                 <GenericWidget
                     :graph-slug="props.graphSlug"
                     node-alias="relation_status_data_assignment_object_used"
-                    :value="
+                    :aliased-node-data="
                         rowData.aliased_data
                             .relation_status_data_assignment_object_used ?? null
                     "
