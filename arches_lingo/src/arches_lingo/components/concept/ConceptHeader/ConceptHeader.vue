@@ -32,6 +32,7 @@ import { useConceptStore } from "@/arches_lingo/stores/useConceptStore.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 
 import type { Ref } from "vue";
+import type { ResourceInstanceReference } from "@/arches_component_lab/datatypes/resource-instance-list/types.ts";
 import type {
     AppellativeStatus,
     ConceptClassificationStatusAliases,
@@ -40,6 +41,7 @@ import type {
     Identifier,
     ResourceInstanceLifecycleState,
     ResourceInstanceResult,
+    TileData,
 } from "@/arches_lingo/types.ts";
 import type { Label } from "@/arches_controlled_lists/types.ts";
 
@@ -165,27 +167,18 @@ function extractLabelsFromResource(resource: ResourceInstanceResult): Label[] {
     const labels: Label[] = [];
     for (const tile of tiles) {
         const aliasedData = tile.aliased_data;
-        if (!aliasedData) continue;
-        const languageRefs =
-            aliasedData.appellative_status_ascribed_name_language as unknown as
-                | Array<{ uri: string }>
-                | null
-                | undefined;
-        const languageId = languageRefs?.[0]?.uri?.split("/").pop();
-        const contentMap =
-            aliasedData.appellative_status_ascribed_name_content as unknown as
-                | Record<string, { value: string }>
-                | null
-                | undefined;
+        const languageNode =
+            aliasedData.appellative_status_ascribed_name_language
+                ?.node_value[0];
+        const languageId = languageNode?.data.uri.split("/").pop();
+        const contentNodeValue =
+            aliasedData.appellative_status_ascribed_name_content.node_value;
         const value = languageId
-            ? contentMap?.[languageId]?.value
-            : Object.values(contentMap ?? {})[0]?.value;
-        const typeRefs =
-            aliasedData.appellative_status_ascribed_relation as unknown as
-                | Array<{ uri: string }>
-                | null
-                | undefined;
-        const typeUri = typeRefs?.[0]?.uri;
+            ? contentNodeValue?.[languageId]?.value
+            : Object.values(contentNodeValue ?? {})[0]?.value;
+        const typeNode =
+            aliasedData.appellative_status_ascribed_relation?.node_value[0];
+        const typeUri = typeNode?.data.uri;
         if (value && languageId) {
             labels.push({
                 value,
@@ -233,12 +226,9 @@ const parentConceptLabelMap = computed<Map<string, Label[]>>(function () {
     const map = new Map<string, Label[]>();
     for (const parent of data.value?.parentConcepts ?? []) {
         const id = parentConceptId(parent);
-
-        if (id) {
-            const storeLabels = conceptStore.findConcept(id)?.labels;
-            const ancestorLabels = ancestorLabelsById.value.get(id);
-            map.set(id, storeLabels ?? ancestorLabels ?? []);
-        }
+        const storeLabels = conceptStore.findConcept(id)?.labels;
+        const ancestorLabels = ancestorLabelsById.value.get(id);
+        map.set(id, storeLabels ?? ancestorLabels ?? []);
     }
     return map;
 });
@@ -251,9 +241,8 @@ const partOfSchemeId = computed(function () {
     return data.value?.partOfScheme?.node_value?.[0]?.resourceId;
 });
 
-function parentConceptId(parent: unknown): string | undefined {
-    return (parent as { details?: { resource_id?: string }[] })?.details?.[0]
-        ?.resource_id;
+function parentConceptId(parent: ResourceInstanceReference): string {
+    return parent.resourceId;
 }
 
 function extractConceptHeaderData(resource: ResourceInstanceResult) {
@@ -279,15 +268,15 @@ function extractConceptHeaderData(resource: ResourceInstanceResult) {
         ).value;
     }
 
-    const parentConcepts = (aliased_data?.classification_status || []).flatMap(
-        (tile: ConceptClassificationStatusAliases) =>
-            tile?.aliased_data?.classification_status_ascribed_classification ||
-            [],
+    const parentConcepts = (aliased_data?.classification_status ?? []).flatMap(
+        (tile: TileData<ConceptClassificationStatusAliases>) =>
+            tile.aliased_data.classification_status_ascribed_classification
+                .node_value ?? [],
     );
-    const identifier = (aliased_data?.identifier || [])
+    const identifier = (aliased_data?.identifier ?? [])
         .map(
             (tile: Identifier) =>
-                tile?.aliased_data?.identifier_content?.node_value,
+                tile.aliased_data.identifier_content.node_value,
         )
         .filter(Boolean)
         .join(", ");
@@ -408,7 +397,7 @@ function extractConceptHeaderData(resource: ResourceInstanceResult) {
                     </span>
                     <span
                         v-for="parent in data?.parentConcepts"
-                        :key="parentConceptId(parent) ?? ''"
+                        :key="parentConceptId(parent)"
                         class="header-item-value parent-concept"
                     >
                         <RouterLink :to="`/concept/${parentConceptId(parent)}`">
@@ -417,7 +406,7 @@ function extractConceptHeaderData(resource: ResourceInstanceResult) {
                                     {
                                         labels:
                                             parentConceptLabelMap.get(
-                                                parentConceptId(parent) ?? "",
+                                                parentConceptId(parent),
                                             ) ?? [],
                                     },
                                     selectedLanguage.code,

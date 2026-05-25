@@ -7,7 +7,10 @@ import type { ReferenceSelectTreeNode } from "@/arches_controlled_lists/datatype
 import type { Label } from "@/arches_controlled_lists/types.ts";
 
 import type { StringAliasedNodeData } from "@/arches_component_lab/datatypes/string/types.ts";
-import type { ResourceInstanceListAliasedNodeData } from "@/arches_component_lab/datatypes/resource-instance-list/types.ts";
+import type {
+    ResourceInstanceListAliasedNodeData,
+    ResourceInstanceReference,
+} from "@/arches_component_lab/datatypes/resource-instance-list/types.ts";
 import type { FileListAliasedNodeData } from "@/arches_component_lab/datatypes/file-list/types.ts";
 
 export interface User {
@@ -351,7 +354,7 @@ export interface ConceptHeaderData {
     lifeCycleState: string;
     partOfScheme?: ResourceInstanceListAliasedNodeData;
     schemeLabel?: string;
-    parentConcepts?: ResourceInstanceListAliasedNodeData[];
+    parentConcepts?: ResourceInstanceReference[];
     type?: ReferenceSelectTreeNode[];
     status?: ReferenceSelectTreeNode[];
     identifier?: string;
