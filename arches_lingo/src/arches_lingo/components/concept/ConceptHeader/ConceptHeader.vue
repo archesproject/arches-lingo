@@ -172,7 +172,7 @@ function extractLabelsFromResource(resource: ResourceInstanceResult): Label[] {
         if (!contentNodeValue) continue;
         const typeNode =
             aliasedData.appellative_status_ascribed_relation?.node_value[0];
-        const typeUri = typeNode?.data.uri;
+        const typeUri = typeNode?.data?.uri;
         for (const [languageId, { value }] of Object.entries(
             contentNodeValue,
         )) {
