@@ -167,19 +167,16 @@ function extractLabelsFromResource(resource: ResourceInstanceResult): Label[] {
     const labels: Label[] = [];
     for (const tile of tiles) {
         const aliasedData = tile.aliased_data;
-        const languageNode =
-            aliasedData.appellative_status_ascribed_name_language
-                ?.node_value[0];
-        const languageId = languageNode?.data.uri.split("/").pop();
         const contentNodeValue =
             aliasedData.appellative_status_ascribed_name_content.node_value;
-        const value = languageId
-            ? contentNodeValue?.[languageId]?.value
-            : Object.values(contentNodeValue ?? {})[0]?.value;
+        if (!contentNodeValue) continue;
         const typeNode =
             aliasedData.appellative_status_ascribed_relation?.node_value[0];
         const typeUri = typeNode?.data.uri;
-        if (value && languageId) {
+        for (const [languageId, { value }] of Object.entries(
+            contentNodeValue,
+        )) {
+            if (!value) continue;
             labels.push({
                 value,
                 language_id: languageId,

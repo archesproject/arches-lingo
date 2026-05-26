@@ -52,10 +52,6 @@ import type {
 
 type PossiblyNewFile = FileReference & {
     file?: File;
-    name?: string;
-    lastModified?: number;
-    size?: number;
-    type?: string;
 };
 
 const props = defineProps<{
@@ -114,7 +110,7 @@ async function getDigitalObjectInstance(
         resourceInstanceId?: string;
     }>;
     try {
-        if (typedEvent?.detail?.resourceInstanceId === undefined) {
+        if (typedEvent.detail.resourceInstanceId === undefined) {
             digitalObjectResource.value = undefined;
         } else {
             digitalObjectResource.value = await fetchLingoResource(
@@ -177,17 +173,17 @@ async function save(e: FormSubmitEvent) {
                     | null
                     | undefined
             )?.map((file: PossiblyNewFile) => {
-                if (!file?.file) {
+                if (!file.file) {
                     return file;
                 } else {
                     return {
-                        name: file.name?.replace(/ /g, "_"),
+                        name: file.name.replace(/ /g, "_"),
                         lastModified: file.lastModified,
                         size: file.size,
                         type: file.type,
                         url: null,
                         file_id: null,
-                        content: URL.createObjectURL(file?.file),
+                        content: URL.createObjectURL(file.file),
                         altText: "Replaceable alt text",
                     };
                 }
@@ -270,7 +266,7 @@ async function save(e: FormSubmitEvent) {
             }
         }
 
-        await refreshReportSection!(props.componentName);
+        refreshReportSection!(props.componentName);
 
         nextTick(() => {
             const openConceptImagesEditor = new CustomEvent(
@@ -306,7 +302,7 @@ function resetForm() {
             {
                 detail: {
                     resourceInstanceId:
-                        digitalObjectResource?.value?.resourceinstanceid,
+                        digitalObjectResource.value?.resourceinstanceid,
                 },
             },
         );
@@ -366,7 +362,7 @@ function resetForm() {
                         node-alias="content"
                         graph-slug="digital_object_system"
                         :aliased-node-data="
-                            digitalObjectResource?.aliased_data?.content
+                            digitalObjectResource?.aliased_data.content
                                 ?.aliased_data.content ?? null
                         "
                         :mode="EDIT"
