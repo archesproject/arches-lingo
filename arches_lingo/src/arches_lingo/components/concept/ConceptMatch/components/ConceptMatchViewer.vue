@@ -82,12 +82,11 @@ const metaStringLabel = computed<MetaStringText>(() => ({
 }));
 
 function matchedConceptURIIsLink(rowData: ConceptMatchStatus): boolean {
-    const uri = rowData.aliased_data
-        .match_status_ascribed_comparate as unknown as
-        | string
-        | null
-        | undefined;
-    return Boolean(uri?.startsWith("http"));
+    return Boolean(
+        rowData.aliased_data.match_status_ascribed_comparate?.display_value?.startsWith(
+            "http",
+        ),
+    );
 }
 </script>
 
@@ -147,20 +146,23 @@ function matchedConceptURIIsLink(rowData: ConceptMatchStatus): boolean {
                 <Button
                     v-if="matchedConceptURIIsLink(rowData)"
                     :label="
-                        rowData.aliased_data
-                            .match_status_ascribed_comparate as unknown as string
+                        rowData.aliased_data.match_status_ascribed_comparate
+                            ?.display_value
                     "
                     variant="link"
                     as="a"
                     :href="
-                        rowData.aliased_data
-                            .match_status_ascribed_comparate as unknown as string
+                        rowData.aliased_data.match_status_ascribed_comparate
+                            ?.display_value
                     "
                     target="_blank"
                     rel="noopener"
                 ></Button>
                 <span v-else>
-                    {{ rowData.aliased_data.match_status_ascribed_comparate }}
+                    {{
+                        rowData.aliased_data.match_status_ascribed_comparate
+                            ?.display_value
+                    }}
                 </span>
             </template>
             <template #drawer="{ rowData }">

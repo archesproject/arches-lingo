@@ -148,12 +148,12 @@ async function save(e: FormSubmitEvent) {
         }
 
         // files do not respect json.stringify
-        const files =
+        const fileJsonObjects = (
             (submittedFormData.content as
                 | PossiblyNewFile[]
                 | null
-                | undefined) ?? [];
-        const fileJsonObjects = files.map((file) => {
+                | undefined) ?? []
+        ).map((file) => {
             if (!file.file) {
                 return file;
             }
