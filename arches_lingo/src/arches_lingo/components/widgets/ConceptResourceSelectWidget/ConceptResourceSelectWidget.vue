@@ -58,13 +58,6 @@ const cardXNodeXWidgetData = ref<CardXNodeXWidgetData>();
 const configurationError = ref();
 const searchResult = ref();
 
-const resolvedNodeValue = computed<ResourceInstanceReference[] | null>(() => {
-    if (aliasedNodeData !== undefined) {
-        return aliasedNodeData?.node_value ?? null;
-    }
-    return value ?? null;
-});
-
 const detailsFromAliasedData = computed(() => {
     if (aliasedNodeData?.details?.length) {
         return aliasedNodeData.details;
@@ -85,8 +78,8 @@ watchEffect(async () => {
     isLoading.value = true;
     try {
         if (!detailsFromAliasedData.value) {
-            const conceptIds = resolvedNodeValue.value
-                ?.map((resourceRef) => resourceRef.resourceId)
+            const conceptIds = value
+                ?.map((ref) => ref.resourceId)
                 .filter(Boolean);
             if (conceptIds?.length) {
                 searchResult.value = await getConceptHierarchy(conceptIds);
