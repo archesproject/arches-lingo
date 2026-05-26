@@ -370,29 +370,16 @@ export function getStatementText(
 
     const best = statements.reduce((bestMatch, current) => {
         const currentLang =
-            current.aliased_data.statement_language?.node_value[0]?.data?.uri
-                ?.split("/")
-                .pop()
-                ?.toLowerCase();
+            current.aliased_data?.statement_language?.display_value?.toLowerCase();
         const bestLang =
-            bestMatch.aliased_data.statement_language?.node_value[0]?.data?.uri
-                ?.split("/")
-                .pop()
-                ?.toLowerCase();
-        return rankLanguage(currentLang) > rankLanguage(bestLang)
-            ? current
-            : bestMatch;
+            bestMatch.aliased_data?.statement_language?.display_value?.toLowerCase();
+        if (rankLanguage(currentLang) > rankLanguage(bestLang)) {
+            return current;
+        }
+        return bestMatch;
     });
 
-    const bestLangCode =
-        best.aliased_data.statement_language?.node_value[0]?.data?.uri
-            ?.split("/")
-            .pop();
-    const contentNodeValue = best.aliased_data.statement_content.node_value;
-    if (bestLangCode) {
-        return contentNodeValue?.[bestLangCode]?.value ?? "";
-    }
-    return Object.values(contentNodeValue ?? {})[0]?.value ?? "";
+    return best.aliased_data?.statement_content?.display_value ?? "";
 }
 
 export async function createOrUpdateConcept(
