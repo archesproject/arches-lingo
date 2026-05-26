@@ -23,7 +23,6 @@ import {
 import type { Component, Ref } from "vue";
 import type { FormSubmitEvent } from "@primevue/forms";
 import type { ConceptRelationStatus } from "@/arches_lingo/types.ts";
-import type { ResourceInstanceReference } from "@/arches_component_lab/datatypes/resource-instance-list/types";
 
 const props = defineProps<{
     tileData: ConceptRelationStatus | undefined;
@@ -56,8 +55,10 @@ const formRef = useTemplateRef("form");
 const isSaving = ref(false);
 
 const comparateNodeValue = computed(function () {
-    return (props.tileData?.aliased_data.relation_status_ascribed_comparate ??
-        null) as ResourceInstanceReference[] | null;
+    return (
+        props.tileData?.aliased_data.relation_status_ascribed_comparate
+            ?.node_value ?? null
+    );
 });
 
 watch(

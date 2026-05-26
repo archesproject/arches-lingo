@@ -15,7 +15,6 @@ import { EDIT } from "@/arches_lingo/constants.ts";
 import type { Component, Ref } from "vue";
 import type { FormSubmitEvent } from "@primevue/forms";
 import type { ConceptClassificationStatus } from "@/arches_lingo/types.ts";
-import type { ResourceInstanceReference } from "@/arches_component_lab/datatypes/resource-instance-list/types";
 
 const { $gettext } = useGettext();
 
@@ -49,10 +48,10 @@ const formRef = useTemplateRef("form");
 const isSaving = ref(false);
 
 const classificationNodeValue = computed(function () {
-    return (props.tileData?.aliased_data
-        .classification_status_ascribed_classification ?? null) as
-        | ResourceInstanceReference[]
-        | null;
+    return (
+        props.tileData?.aliased_data
+            .classification_status_ascribed_classification?.node_value ?? null
+    );
 });
 
 watch(
