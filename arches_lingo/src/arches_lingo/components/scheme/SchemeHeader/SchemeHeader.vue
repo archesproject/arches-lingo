@@ -238,10 +238,8 @@ const defaultSchemeURITemplate = computed(() => {
 });
 
 const schemeUri = computed(() => {
-    return scheme.value?.aliased_data?.uri?.aliased_data?.uri_content as
-        | string
-        | null
-        | undefined;
+    return scheme.value?.aliased_data?.uri?.aliased_data?.uri_content
+        ?.node_value?.url as string | null | undefined;
 });
 
 onMounted(async () => {

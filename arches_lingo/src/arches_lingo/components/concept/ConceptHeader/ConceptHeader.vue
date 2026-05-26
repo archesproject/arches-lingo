@@ -249,7 +249,7 @@ function extractConceptHeaderData(resource: ResourceInstanceResult) {
     const descriptor = extractDescriptors(resource, selectedLanguage.value);
     const principalUser = resource?.principal_user_display_name ?? undefined;
 
-    const uri = aliased_data?.uri?.aliased_data?.uri_content?.node_value;
+    const uri = aliased_data?.uri?.aliased_data?.uri_content?.node_value?.url;
     const partOfScheme =
         aliased_data?.part_of_scheme?.aliased_data?.part_of_scheme;
     const schemeId = partOfScheme?.node_value?.[0]?.resourceId;

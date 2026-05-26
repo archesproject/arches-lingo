@@ -369,40 +369,30 @@ export function getStatementText(
     }
 
     const best = statements.reduce((bestMatch, current) => {
-        const currentRefs = current.aliased_data
-            ?.statement_language as unknown as
-            | Array<{ uri: string }>
-            | null
-            | undefined;
-        const currentLang = currentRefs?.[0]?.uri
-            ?.split("/")
-            .pop()
-            ?.toLowerCase();
-        const bestRefs = bestMatch.aliased_data
-            ?.statement_language as unknown as
-            | Array<{ uri: string }>
-            | null
-            | undefined;
-        const bestLang = bestRefs?.[0]?.uri?.split("/").pop()?.toLowerCase();
+        const currentLang =
+            current.aliased_data.statement_language?.node_value[0]?.data?.uri
+                ?.split("/")
+                .pop()
+                ?.toLowerCase();
+        const bestLang =
+            bestMatch.aliased_data.statement_language?.node_value[0]?.data?.uri
+                ?.split("/")
+                .pop()
+                ?.toLowerCase();
         return rankLanguage(currentLang) > rankLanguage(bestLang)
             ? current
             : bestMatch;
     });
 
-    const bestLangRefs = best.aliased_data?.statement_language as unknown as
-        | Array<{ uri: string }>
-        | null
-        | undefined;
-    const bestLangCode = bestLangRefs?.[0]?.uri?.split("/").pop();
-    const contentMap = best.aliased_data?.statement_content as unknown as
-        | Record<string, { value: string }>
-        | null
-        | undefined;
-    return (
-        (bestLangCode
-            ? contentMap?.[bestLangCode]?.value
-            : Object.values(contentMap ?? {})[0]?.value) ?? ""
-    );
+    const bestLangCode =
+        best.aliased_data.statement_language?.node_value[0]?.data?.uri
+            ?.split("/")
+            .pop();
+    const contentNodeValue = best.aliased_data.statement_content.node_value;
+    if (bestLangCode) {
+        return contentNodeValue?.[bestLangCode]?.value ?? "";
+    }
+    return Object.values(contentNodeValue ?? {})[0]?.value ?? "";
 }
 
 export async function createOrUpdateConcept(

@@ -103,12 +103,8 @@ watch(
     (formComponent) => (componentEditorFormRef!.value = formComponent),
 );
 
-async function getDigitalObjectInstance(
-    customEvent: CustomEvent<{ resourceInstanceId?: string }> | Event,
-) {
-    const typedEvent = customEvent as CustomEvent<{
-        resourceInstanceId?: string;
-    }>;
+async function getDigitalObjectInstance(event: Event) {
+    const typedEvent = event as CustomEvent<{ resourceInstanceId?: string }>;
     try {
         if (typedEvent.detail.resourceInstanceId === undefined) {
             digitalObjectResource.value = undefined;
@@ -133,92 +129,61 @@ async function save(e: FormSubmitEvent) {
             Object.entries(e.states).map(([key, state]) => [key, state.value]),
         );
 
-        let digitalObjectInstanceAliases: DigitalObjectInstanceAliases = {};
-
-        if (digitalObjectResource.value) {
-            digitalObjectInstanceAliases =
-                digitalObjectResource.value.aliased_data;
-        }
+        const digitalObjectInstanceAliases: DigitalObjectInstanceAliases =
+            digitalObjectResource.value?.aliased_data ?? {};
 
         if (submittedFormData.name_content) {
-            if (!digitalObjectInstanceAliases.name) {
-                digitalObjectInstanceAliases.name = {
-                    aliased_data: {
-                        name_content: submittedFormData.name_content,
-                    },
-                };
-            } else {
-                digitalObjectInstanceAliases.name.aliased_data.name_content =
-                    submittedFormData.name_content;
-            }
+            digitalObjectInstanceAliases.name = {
+                ...digitalObjectInstanceAliases.name,
+                aliased_data: { name_content: submittedFormData.name_content },
+            };
         }
         if (submittedFormData.statement_content) {
-            if (!digitalObjectInstanceAliases.statement) {
-                digitalObjectInstanceAliases.statement = {
-                    aliased_data: {
-                        statement_content: submittedFormData.statement_content,
-                    },
-                };
-            } else {
-                digitalObjectInstanceAliases.statement.aliased_data.statement_content =
-                    submittedFormData.statement_content;
-            }
+            digitalObjectInstanceAliases.statement = {
+                ...digitalObjectInstanceAliases.statement,
+                aliased_data: {
+                    statement_content: submittedFormData.statement_content,
+                },
+            };
         }
 
         // files do not respect json.stringify
-        const fileJsonObjects =
-            (
-                submittedFormData.content as
-                    | PossiblyNewFile[]
-                    | null
-                    | undefined
-            )?.map((file: PossiblyNewFile) => {
-                if (!file.file) {
-                    return file;
-                } else {
-                    return {
-                        name: file.name.replace(/ /g, "_"),
-                        lastModified: file.lastModified,
-                        size: file.size,
-                        type: file.type,
-                        url: null,
-                        file_id: null,
-                        content: URL.createObjectURL(file.file),
-                        altText: "Replaceable alt text",
-                    };
-                }
-            }) ?? [];
-
-        if (!digitalObjectInstanceAliases.content) {
-            digitalObjectInstanceAliases.content = {
-                aliased_data: {
-                    content: [
-                        ...fileJsonObjects,
-                    ] as unknown as FileListAliasedNodeData,
-                },
+        const files =
+            (submittedFormData.content as
+                | PossiblyNewFile[]
+                | null
+                | undefined) ?? [];
+        const fileJsonObjects = files.map((file) => {
+            if (!file.file) {
+                return file;
+            }
+            return {
+                name: file.name.replace(/ /g, "_"),
+                lastModified: file.lastModified,
+                size: file.size,
+                type: file.type,
+                url: null,
+                file_id: null,
+                content: URL.createObjectURL(file.file),
+                altText: "Replaceable alt text",
             };
-        } else {
-            digitalObjectInstanceAliases.content.aliased_data.content = [
-                ...fileJsonObjects,
-            ] as unknown as FileListAliasedNodeData;
-        }
+        });
+
+        digitalObjectInstanceAliases.content = {
+            ...digitalObjectInstanceAliases.content,
+            aliased_data: {
+                content: fileJsonObjects as unknown as FileListAliasedNodeData,
+            },
+        };
 
         // this fork was requested because the multipartjson parser is unstable
         // if files go one way, if no files go the traditional way
-        if (
-            (submittedFormData.content as unknown[] | null | undefined)?.length
-        ) {
-            if (digitalObjectResource.value) {
-                digitalObjectResource.value.aliased_data = {
-                    ...digitalObjectInstanceAliases,
-                };
-            } else {
-                digitalObjectResource.value = {
-                    aliased_data: {
-                        ...digitalObjectInstanceAliases,
-                    },
-                } as unknown as DigitalObjectInstance;
-            }
+        if (fileJsonObjects.length) {
+            digitalObjectResource.value ??=
+                {} as unknown as DigitalObjectInstance;
+            digitalObjectResource.value.aliased_data = {
+                ...digitalObjectInstanceAliases,
+            };
 
             const formDataForDigitalObject = await createFormDataForFileUpload(
                 digitalObjectResource as Ref<DigitalObjectInstance>,
