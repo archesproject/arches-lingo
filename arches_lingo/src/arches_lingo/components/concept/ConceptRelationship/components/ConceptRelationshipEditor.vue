@@ -144,26 +144,28 @@ async function save(e: FormSubmitEvent) {
                     :scheme="props.scheme"
                     :mode="EDIT"
                 />
-                <GenericWidget
-                    :graph-slug="props.graphSlug"
-                    node-alias="relation_status_ascribed_relation"
-                    :aliased-node-data="
-                        props.tileData?.aliased_data
-                            .relation_status_ascribed_relation ?? null
-                    "
-                    :mode="EDIT"
-                    class="widget-container column"
-                />
-                <GenericWidget
-                    :graph-slug="props.graphSlug"
-                    node-alias="relation_status_status"
-                    :aliased-node-data="
-                        props.tileData?.aliased_data.relation_status_status ??
-                        null
-                    "
-                    :mode="EDIT"
-                    class="widget-container column"
-                />
+                <div class="widget-container column">
+                    <GenericWidget
+                        :graph-slug="props.graphSlug"
+                        node-alias="relation_status_ascribed_relation"
+                        :aliased-node-data="
+                            props.tileData?.aliased_data
+                                .relation_status_ascribed_relation ?? null
+                        "
+                        :mode="EDIT"
+                    />
+                </div>
+                <div class="widget-container column">
+                    <GenericWidget
+                        :graph-slug="props.graphSlug"
+                        node-alias="relation_status_status"
+                        :aliased-node-data="
+                            props.tileData?.aliased_data
+                                .relation_status_status ?? null
+                        "
+                        :mode="EDIT"
+                    />
+                </div>
                 <div class="widget-container">
                     <GenericWidget
                         :graph-slug="props.graphSlug"
@@ -185,26 +187,29 @@ async function save(e: FormSubmitEvent) {
                         :mode="EDIT"
                     />
                 </div>
-                <GenericWidget
-                    :graph-slug="props.graphSlug"
-                    node-alias="relation_status_data_assignment_actor"
-                    :aliased-node-data="
-                        props.tileData?.aliased_data
-                            .relation_status_data_assignment_actor ?? null
-                    "
-                    :mode="EDIT"
-                    class="widget-container column"
-                />
-                <GenericWidget
-                    :graph-slug="props.graphSlug"
-                    node-alias="relation_status_data_assignment_object_used"
-                    :aliased-node-data="
-                        props.tileData?.aliased_data
-                            .relation_status_data_assignment_object_used ?? null
-                    "
-                    :mode="EDIT"
-                    class="widget-container column"
-                />
+                <div class="widget-container column">
+                    <GenericWidget
+                        :graph-slug="props.graphSlug"
+                        node-alias="relation_status_data_assignment_actor"
+                        :aliased-node-data="
+                            props.tileData?.aliased_data
+                                .relation_status_data_assignment_actor ?? null
+                        "
+                        :mode="EDIT"
+                    />
+                </div>
+                <div class="widget-container column">
+                    <GenericWidget
+                        :graph-slug="props.graphSlug"
+                        node-alias="relation_status_data_assignment_object_used"
+                        :aliased-node-data="
+                            props.tileData?.aliased_data
+                                .relation_status_data_assignment_object_used ??
+                            null
+                        "
+                        :mode="EDIT"
+                    />
+                </div>
             </Form>
         </div>
     </div>
