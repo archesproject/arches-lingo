@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from "vue";
 import { storeToRefs } from "pinia";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 import { getParentLabels } from "@/arches_lingo/utils.ts";
@@ -12,6 +13,19 @@ const props = defineProps<{
 }>();
 
 const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
+
+const parentLabels = computed(() =>
+    Object.fromEntries(
+        (props.value ?? []).map((searchResult) => [
+            searchResult.id,
+            getParentLabels(
+                searchResult,
+                selectedLanguage.value.code,
+                systemLanguage.value.code,
+            ),
+        ]),
+    ),
+);
 </script>
 <template>
     <div
@@ -38,22 +52,10 @@ const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
             </RouterLink>
         </span>
         <span
-            v-if="
-                getParentLabels(
-                    searchResult,
-                    selectedLanguage.code,
-                    systemLanguage.code,
-                )
-            "
+            v-if="parentLabels[searchResult.id]"
             class="concept-hierarchy"
         >
-            [{{
-                getParentLabels(
-                    searchResult,
-                    selectedLanguage.code,
-                    systemLanguage.code,
-                )
-            }}]
+            [{{ parentLabels[searchResult.id] }}]
         </span>
     </div>
 </template>
