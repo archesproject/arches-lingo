@@ -52,6 +52,7 @@ import { useConceptStore } from "@/arches_lingo/stores/useConceptStore.ts";
 import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 
 import type { Ref } from "vue";
+import type { AliasedNodeData } from "@/arches_component_lab/types.ts";
 import type {
     DeleteConceptStrategy,
     ResourceInstanceLifecycleState,
@@ -72,7 +73,7 @@ const props = defineProps<{
     conceptTypeTile:
         | {
               tileid?: string;
-              aliased_data?: Record<string, { node_value?: unknown }>;
+              aliased_data?: Record<string, AliasedNodeData>;
           }
         | undefined;
     isTopConcept: boolean;
@@ -239,7 +240,7 @@ async function onConfirmed(strategy: DeleteConceptStrategy | null) {
         if (dialogMode.value === DELETE) {
             const schemeIdentifier =
                 props.concept.aliased_data?.part_of_scheme?.aliased_data
-                    .part_of_scheme?.node_value?.[0]?.resourceId;
+                    ?.part_of_scheme?.node_value?.[0]?.resourceId;
 
             await deleteConcept(
                 props.concept.resourceinstanceid,
@@ -384,19 +385,24 @@ function onReinstateRequested() {
                     severity="secondary"
                     class="concept-type-badge"
                 />
-                <GenericWidget
+                <div
                     v-else-if="concept && concept.resourceinstanceid"
-                    :node-alias="CONCEPT_TYPE_NODE_ALIAS"
-                    :graph-slug="graphSlug"
-                    :mode="EDIT"
-                    :aliased-node-data="
-                        conceptTypeTile?.aliased_data?.[CONCEPT_TYPE_NODE_ALIAS]
-                    "
-                    :should-show-label="false"
                     class="concept-type-widget"
-                    @update:is-loading="isWidgetLoading = $event"
-                    @update:value="onConceptTypeChange"
-                />
+                >
+                    <GenericWidget
+                        :node-alias="CONCEPT_TYPE_NODE_ALIAS"
+                        :graph-slug="graphSlug"
+                        :mode="EDIT"
+                        :aliased-node-data="
+                            conceptTypeTile?.aliased_data?.[
+                                CONCEPT_TYPE_NODE_ALIAS
+                            ] ?? null
+                        "
+                        :should-show-label="false"
+                        @update:is-loading="isWidgetLoading = $event"
+                        @update:value="onConceptTypeChange"
+                    />
+                </div>
             </div>
         </div>
         <div

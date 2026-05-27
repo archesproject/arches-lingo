@@ -125,9 +125,8 @@ async function save(e: FormSubmitEvent) {
             updatedTileId = updatedTile.tileid;
         }
 
+        await refreshReportSection!(props.componentName);
         openEditor!(props.componentName, updatedTileId);
-
-        refreshReportSection!(props.componentName);
     } catch (error) {
         toast.add({
             severity: ERROR,
@@ -170,7 +169,7 @@ async function save(e: FormSubmitEvent) {
                         :graph-slug="props.graphSlug"
                         :aliased-node-data="
                             props.tileData?.aliased_data.right_statement
-                                ?.aliased_data.right_statement_content
+                                ?.aliased_data.right_statement_content ?? null
                         "
                         :mode="EDIT"
                     />
@@ -181,7 +180,7 @@ async function save(e: FormSubmitEvent) {
                         :graph-slug="props.graphSlug"
                         :aliased-node-data="
                             props.tileData?.aliased_data.right_statement
-                                ?.aliased_data.right_statement_type
+                                ?.aliased_data.right_statement_type ?? null
                         "
                         :mode="EDIT"
                     />
@@ -192,7 +191,7 @@ async function save(e: FormSubmitEvent) {
                         :graph-slug="props.graphSlug"
                         :aliased-node-data="
                             props.tileData?.aliased_data.right_statement
-                                ?.aliased_data.right_statement_language
+                                ?.aliased_data.right_statement_language ?? null
                         "
                         :mode="EDIT"
                     />
@@ -202,7 +201,7 @@ async function save(e: FormSubmitEvent) {
                         node-alias="right_holder"
                         :graph-slug="props.graphSlug"
                         :aliased-node-data="
-                            props.tileData?.aliased_data.right_holder
+                            props.tileData?.aliased_data.right_holder ?? null
                         "
                         :mode="EDIT"
                     />
@@ -212,7 +211,7 @@ async function save(e: FormSubmitEvent) {
                         node-alias="right_type"
                         :graph-slug="props.graphSlug"
                         :aliased-node-data="
-                            props.tileData?.aliased_data.right_type
+                            props.tileData?.aliased_data.right_type ?? null
                         "
                         :mode="EDIT"
                     />

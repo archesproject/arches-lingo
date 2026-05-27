@@ -91,9 +91,8 @@ async function save(e: FormSubmitEvent) {
             props.tileId,
         );
 
+        await refreshReportSection!(props.componentName);
         openEditor!(props.componentName, updatedTileId);
-
-        refreshReportSection!(props.componentName);
         refreshSchemeHierarchy!();
     } catch (error) {
         toast.add({
@@ -132,43 +131,49 @@ async function save(e: FormSubmitEvent) {
                 ref="form"
                 @submit="save"
             >
-                <GenericWidget
-                    :graph-slug="props.graphSlug"
-                    node-alias="appellative_status_ascribed_name_content"
-                    :aliased-node-data="
-                        props.tileData?.aliased_data
-                            ?.appellative_status_ascribed_name_content
-                    "
-                    :mode="EDIT"
-                    class="widget-container column"
-                />
-                <GenericWidget
-                    :graph-slug="props.graphSlug"
-                    node-alias="appellative_status_ascribed_relation"
-                    :aliased-node-data="
-                        props.tileData?.aliased_data
-                            ?.appellative_status_ascribed_relation
-                    "
-                    :mode="EDIT"
-                    class="widget-container column"
-                />
-                <GenericWidget
-                    :graph-slug="props.graphSlug"
-                    node-alias="appellative_status_ascribed_name_language"
-                    :aliased-node-data="
-                        props.tileData?.aliased_data
-                            ?.appellative_status_ascribed_name_language
-                    "
-                    :mode="EDIT"
-                    class="widget-container column"
-                />
+                <div class="widget-container column">
+                    <GenericWidget
+                        :graph-slug="props.graphSlug"
+                        node-alias="appellative_status_ascribed_name_content"
+                        :aliased-node-data="
+                            props.tileData?.aliased_data
+                                ?.appellative_status_ascribed_name_content ??
+                            null
+                        "
+                        :mode="EDIT"
+                    />
+                </div>
+                <div class="widget-container column">
+                    <GenericWidget
+                        :graph-slug="props.graphSlug"
+                        node-alias="appellative_status_ascribed_relation"
+                        :aliased-node-data="
+                            props.tileData?.aliased_data
+                                ?.appellative_status_ascribed_relation ?? null
+                        "
+                        :mode="EDIT"
+                    />
+                </div>
+                <div class="widget-container column">
+                    <GenericWidget
+                        :graph-slug="props.graphSlug"
+                        node-alias="appellative_status_ascribed_name_language"
+                        :aliased-node-data="
+                            props.tileData?.aliased_data
+                                ?.appellative_status_ascribed_name_language ??
+                            null
+                        "
+                        :mode="EDIT"
+                    />
+                </div>
                 <div class="widget-container">
                     <GenericWidget
                         :graph-slug="props.graphSlug"
                         node-alias="appellative_status_timespan_begin_of_the_begin"
                         :aliased-node-data="
                             props.tileData?.aliased_data
-                                ?.appellative_status_timespan_begin_of_the_begin
+                                ?.appellative_status_timespan_begin_of_the_begin ??
+                            null
                         "
                         :mode="EDIT"
                     />
@@ -177,40 +182,47 @@ async function save(e: FormSubmitEvent) {
                         node-alias="appellative_status_timespan_end_of_the_end"
                         :aliased-node-data="
                             props.tileData?.aliased_data
-                                ?.appellative_status_timespan_end_of_the_end
+                                ?.appellative_status_timespan_end_of_the_end ??
+                            null
                         "
                         :mode="EDIT"
                     />
                 </div>
-                <GenericWidget
-                    :graph-slug="props.graphSlug"
-                    node-alias="appellative_status_status"
-                    :aliased-node-data="
-                        props.tileData?.aliased_data?.appellative_status_status
-                    "
-                    :mode="EDIT"
-                    class="widget-container column"
-                />
-                <GenericWidget
-                    :graph-slug="props.graphSlug"
-                    node-alias="appellative_status_data_assignment_actor"
-                    :aliased-node-data="
-                        props.tileData?.aliased_data
-                            ?.appellative_status_data_assignment_actor
-                    "
-                    :mode="EDIT"
-                    class="widget-container column"
-                />
-                <GenericWidget
-                    :graph-slug="props.graphSlug"
-                    node-alias="appellative_status_data_assignment_object_used"
-                    :aliased-node-data="
-                        props.tileData?.aliased_data
-                            ?.appellative_status_data_assignment_object_used
-                    "
-                    :mode="EDIT"
-                    class="widget-container column"
-                />
+                <div class="widget-container column">
+                    <GenericWidget
+                        :graph-slug="props.graphSlug"
+                        node-alias="appellative_status_status"
+                        :aliased-node-data="
+                            props.tileData?.aliased_data
+                                ?.appellative_status_status ?? null
+                        "
+                        :mode="EDIT"
+                    />
+                </div>
+                <div class="widget-container column">
+                    <GenericWidget
+                        :graph-slug="props.graphSlug"
+                        node-alias="appellative_status_data_assignment_actor"
+                        :aliased-node-data="
+                            props.tileData?.aliased_data
+                                ?.appellative_status_data_assignment_actor ??
+                            null
+                        "
+                        :mode="EDIT"
+                    />
+                </div>
+                <div class="widget-container column">
+                    <GenericWidget
+                        :graph-slug="props.graphSlug"
+                        node-alias="appellative_status_data_assignment_object_used"
+                        :aliased-node-data="
+                            props.tileData?.aliased_data
+                                ?.appellative_status_data_assignment_object_used ??
+                            null
+                        "
+                        :mode="EDIT"
+                    />
+                </div>
             </Form>
         </div>
     </div>

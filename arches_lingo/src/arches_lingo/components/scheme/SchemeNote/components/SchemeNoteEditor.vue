@@ -109,9 +109,8 @@ async function save(e: FormSubmitEvent) {
             updatedTileId = updatedTile.tileid;
         }
 
+        await refreshReportSection!(props.componentName);
         openEditor!(props.componentName, updatedTileId);
-
-        refreshReportSection!(props.componentName);
     } catch (error) {
         toast.add({
             severity: ERROR,
@@ -153,7 +152,8 @@ async function save(e: FormSubmitEvent) {
                         :graph-slug="props.graphSlug"
                         node-alias="statement_content"
                         :aliased-node-data="
-                            props.tileData?.aliased_data?.statement_content
+                            props.tileData?.aliased_data?.statement_content ??
+                            null
                         "
                         :mode="EDIT"
                     />
@@ -163,7 +163,7 @@ async function save(e: FormSubmitEvent) {
                         :graph-slug="props.graphSlug"
                         node-alias="statement_type"
                         :aliased-node-data="
-                            props.tileData?.aliased_data?.statement_type
+                            props.tileData?.aliased_data?.statement_type ?? null
                         "
                         :mode="EDIT"
                     />
@@ -173,7 +173,8 @@ async function save(e: FormSubmitEvent) {
                         :graph-slug="props.graphSlug"
                         node-alias="statement_language"
                         :aliased-node-data="
-                            props.tileData?.aliased_data?.statement_language
+                            props.tileData?.aliased_data?.statement_language ??
+                            null
                         "
                         :mode="EDIT"
                     />
@@ -184,7 +185,7 @@ async function save(e: FormSubmitEvent) {
                         node-alias="statement_data_assignment_actor"
                         :aliased-node-data="
                             props.tileData?.aliased_data
-                                ?.statement_data_assignment_actor
+                                ?.statement_data_assignment_actor ?? null
                         "
                         :mode="EDIT"
                     />
@@ -195,7 +196,7 @@ async function save(e: FormSubmitEvent) {
                         node-alias="statement_data_assignment_object_used"
                         :aliased-node-data="
                             props.tileData?.aliased_data
-                                ?.statement_data_assignment_object_used
+                                ?.statement_data_assignment_object_used ?? null
                         "
                         :mode="EDIT"
                     />

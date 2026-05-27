@@ -101,13 +101,13 @@ async function save(e: FormSubmitEvent) {
             updatedTileId = updatedConcept.tileid;
         }
 
-        openEditor!(props.componentName, updatedTileId);
         refreshSchemeHierarchy!();
+        await refreshReportSection!(props.componentName);
+        openEditor!(props.componentName, updatedTileId);
     } catch (error) {
         console.error(error);
     } finally {
         isSaving.value = false;
-        refreshReportSection!(props.componentName);
         onSaveSettled?.();
     }
 }
@@ -137,7 +137,8 @@ async function save(e: FormSubmitEvent) {
                     node-alias="classification_status_ascribed_classification"
                     :aliased-node-data="
                         props.tileData?.aliased_data
-                            .classification_status_ascribed_classification
+                            .classification_status_ascribed_classification ??
+                        null
                     "
                     :mode="EDIT"
                     :scheme="props.scheme"

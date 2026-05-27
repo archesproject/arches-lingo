@@ -129,7 +129,8 @@ const metaStringLabel = computed<MetaStringText>(() => ({
                     :graph-slug="props.graphSlug"
                     node-alias="relation_status_ascribed_relation"
                     :aliased-node-data="
-                        rowData.aliased_data.relation_status_ascribed_relation
+                        rowData.aliased_data
+                            .relation_status_ascribed_relation ?? null
                     "
                     :mode="VIEW"
                     :should-show-label="false"
@@ -140,7 +141,8 @@ const metaStringLabel = computed<MetaStringText>(() => ({
                     :graph-slug="props.graphSlug"
                     node-alias="relation_status_ascribed_comparate"
                     :aliased-node-data="
-                        rowData.aliased_data.relation_status_ascribed_comparate
+                        rowData.aliased_data
+                            .relation_status_ascribed_comparate ?? null
                     "
                     :mode="VIEW"
                     :should-show-label="false"
@@ -152,7 +154,7 @@ const metaStringLabel = computed<MetaStringText>(() => ({
                     node-alias="relation_status_data_assignment_actor"
                     :aliased-node-data="
                         rowData.aliased_data
-                            .relation_status_data_assignment_actor
+                            .relation_status_data_assignment_actor ?? null
                     "
                     :mode="VIEW"
                 />
@@ -160,7 +162,8 @@ const metaStringLabel = computed<MetaStringText>(() => ({
                     :graph-slug="props.graphSlug"
                     node-alias="relation_status_data_assignment_object_used"
                     :aliased-node-data="
-                        rowData.relation_status_data_assignment_object_used
+                        rowData.aliased_data
+                            .relation_status_data_assignment_object_used ?? null
                     "
                     :mode="VIEW"
                 />

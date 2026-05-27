@@ -113,7 +113,6 @@ async function getSectionValue() {
             "
             :tile-id="props.tileId"
             :scheme="schemeId"
-            :exclude="false"
         />
     </template>
 </template>

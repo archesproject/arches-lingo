@@ -88,9 +88,9 @@ onMounted(async () => {
     if (props.tileData) {
         try {
             const digitalObjectInstances =
-                props.tileData.aliased_data.depicting_digital_asset_internal?.node_value?.map(
-                    (resource) => resource.resourceId,
-                );
+                props.tileData.aliased_data.depicting_digital_asset_internal.node_value
+                    ?.map((ref) => ref.resourceId)
+                    .filter(Boolean);
             if (digitalObjectInstances) {
                 resources.value = await fetchLingoResourcesBatch(
                     "digital_object_system",
@@ -129,11 +129,13 @@ function confirmDelete(removedResourceInstanceId: string) {
                 if (
                     depictingDigitalAssetInternalData?.depicting_digital_asset_internal
                 ) {
+                    const currentNodeValue =
+                        depictingDigitalAssetInternalData
+                            .depicting_digital_asset_internal.node_value ?? [];
                     depictingDigitalAssetInternalData.depicting_digital_asset_internal.node_value =
-                        depictingDigitalAssetInternalData.depicting_digital_asset_internal.node_value.filter(
-                            (assetReference) =>
-                                assetReference.resourceId !==
-                                removedResourceInstanceId,
+                        currentNodeValue.filter(
+                            (ref) =>
+                                ref.resourceId !== removedResourceInstanceId,
                         );
                     resources.value = resources.value?.filter(
                         (resource) =>
@@ -258,16 +260,17 @@ function modifyResource(resourceInstanceId?: string) {
                             for="concept-image"
                             class="image-title-label"
                         >
-                            <GenericWidget
-                                node-alias="name_content"
-                                class="image-title"
-                                graph-slug="digital_object_system"
-                                :mode="VIEW"
-                                :aliased-node-data="
-                                    resource.aliased_data.name?.aliased_data
-                                        .name_content
-                                "
-                            />
+                            <div class="image-title">
+                                <GenericWidget
+                                    node-alias="name_content"
+                                    graph-slug="digital_object_system"
+                                    :mode="VIEW"
+                                    :aliased-node-data="
+                                        resource.aliased_data.name?.aliased_data
+                                            .name_content ?? null
+                                    "
+                                />
+                            </div>
                         </label>
                         <div
                             v-if="isEditor"
@@ -299,7 +302,8 @@ function modifyResource(resourceInstanceId?: string) {
                         node-alias="content"
                         graph-slug="digital_object_system"
                         :aliased-node-data="
-                            resource.aliased_data.content?.aliased_data.content
+                            resource.aliased_data.content?.aliased_data
+                                .content ?? null
                         "
                         :mode="VIEW"
                         :should-show-label="false"
@@ -311,7 +315,7 @@ function modifyResource(resourceInstanceId?: string) {
                             :mode="VIEW"
                             :aliased-node-data="
                                 resource.aliased_data.statement?.aliased_data
-                                    .statement_content
+                                    .statement_content ?? null
                             "
                         />
                     </div>

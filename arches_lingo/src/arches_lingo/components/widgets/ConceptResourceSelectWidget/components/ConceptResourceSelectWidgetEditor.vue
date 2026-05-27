@@ -14,10 +14,7 @@ import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 
 import type { MultiSelectFilterEvent } from "primevue/multiselect";
 import type { VirtualScrollerLazyEvent } from "primevue/virtualscroller";
-import type {
-    ResourceInstanceListValue,
-    ResourceInstanceReference,
-} from "@/arches_component_lab/datatypes/resource-instance-list/types";
+import type { ResourceInstanceReference } from "@/arches_component_lab/datatypes/resource-instance-list/types";
 import type { SearchResultItem } from "@/arches_lingo/types.ts";
 
 const props = defineProps<{
@@ -30,7 +27,7 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-    (event: "update:value", updatedValue: ResourceInstanceListValue): void;
+    (event: "update:value", updatedValue: ResourceInstanceReference[]): void;
     (event: "update:isEditorMounted", isMounted: boolean): void;
 }>();
 
@@ -166,10 +163,6 @@ function getChipLabel(resourceId: string): string | undefined {
 }
 
 function onUpdateModelValue(updatedValue: string[]) {
-    const options = updatedValue.map((resourceId: string) => {
-        return getOption(resourceId);
-    });
-
     const formattedNodeValues: ResourceInstanceReference[] = updatedValue.map(
         (value) => {
             return {
@@ -181,13 +174,7 @@ function onUpdateModelValue(updatedValue: string[]) {
         },
     );
 
-    const formattedValue = {
-        display_value: options.map((option) => option?.label).join(", "),
-        node_value: formattedNodeValues,
-        details: [],
-    } as ResourceInstanceListValue;
-
-    emit("update:value", formattedValue);
+    emit("update:value", formattedNodeValues);
 }
 </script>
 

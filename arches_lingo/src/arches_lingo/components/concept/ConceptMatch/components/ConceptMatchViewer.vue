@@ -82,9 +82,11 @@ const metaStringLabel = computed<MetaStringText>(() => ({
 }));
 
 function matchedConceptURIIsLink(rowData: ConceptMatchStatus): boolean {
-    const uri = rowData.aliased_data.match_status_ascribed_comparate
-        .display_value as string;
-    return uri.startsWith("http");
+    return Boolean(
+        rowData.aliased_data.match_status_ascribed_comparate?.display_value?.startsWith(
+            "http",
+        ),
+    );
 }
 </script>
 
@@ -133,7 +135,8 @@ function matchedConceptURIIsLink(rowData: ConceptMatchStatus): boolean {
                     :graph-slug="props.graphSlug"
                     node-alias="match_status_ascribed_relation"
                     :aliased-node-data="
-                        rowData.aliased_data.match_status_ascribed_relation
+                        rowData.aliased_data.match_status_ascribed_relation ??
+                        null
                     "
                     :mode="VIEW"
                     :should-show-label="false"
@@ -144,13 +147,13 @@ function matchedConceptURIIsLink(rowData: ConceptMatchStatus): boolean {
                     v-if="matchedConceptURIIsLink(rowData)"
                     :label="
                         rowData.aliased_data.match_status_ascribed_comparate
-                            .display_value
+                            ?.display_value
                     "
                     variant="link"
                     as="a"
                     :href="
                         rowData.aliased_data.match_status_ascribed_comparate
-                            .display_value
+                            ?.display_value
                     "
                     target="_blank"
                     rel="noopener"
@@ -158,7 +161,7 @@ function matchedConceptURIIsLink(rowData: ConceptMatchStatus): boolean {
                 <span v-else>
                     {{
                         rowData.aliased_data.match_status_ascribed_comparate
-                            .display_value
+                            ?.display_value
                     }}
                 </span>
             </template>
@@ -167,7 +170,8 @@ function matchedConceptURIIsLink(rowData: ConceptMatchStatus): boolean {
                     :graph-slug="props.graphSlug"
                     node-alias="match_status_data_assignment_actor"
                     :aliased-node-data="
-                        rowData.aliased_data.match_status_data_assignment_actor
+                        rowData.aliased_data
+                            .match_status_data_assignment_actor ?? null
                     "
                     :mode="VIEW"
                 />
@@ -176,7 +180,7 @@ function matchedConceptURIIsLink(rowData: ConceptMatchStatus): boolean {
                     node-alias="match_status_data_assignment_object_used"
                     :aliased-node-data="
                         rowData.aliased_data
-                            .match_status_data_assignment_object_used
+                            .match_status_data_assignment_object_used ?? null
                     "
                     :mode="VIEW"
                 />

@@ -121,7 +121,7 @@ const metaStringLabel = computed<MetaStringText>(() => ({
                     node-alias="appellative_status_ascribed_name_content"
                     :aliased-node-data="
                         rowData.aliased_data
-                            .appellative_status_ascribed_name_content
+                            .appellative_status_ascribed_name_content ?? null
                     "
                     :mode="VIEW"
                     :should-show-label="false"
@@ -133,7 +133,7 @@ const metaStringLabel = computed<MetaStringText>(() => ({
                     node-alias="appellative_status_ascribed_relation"
                     :aliased-node-data="
                         rowData.aliased_data
-                            .appellative_status_ascribed_relation
+                            .appellative_status_ascribed_relation ?? null
                     "
                     :mode="VIEW"
                     :should-show-label="false"
@@ -145,7 +145,7 @@ const metaStringLabel = computed<MetaStringText>(() => ({
                     node-alias="appellative_status_ascribed_name_language"
                     :aliased-node-data="
                         rowData.aliased_data
-                            .appellative_status_ascribed_name_language
+                            .appellative_status_ascribed_name_language ?? null
                     "
                     :mode="VIEW"
                     :should-show-label="false"
@@ -157,7 +157,8 @@ const metaStringLabel = computed<MetaStringText>(() => ({
                     node-alias="appellative_status_data_assignment_object_used"
                     :aliased-node-data="
                         rowData.aliased_data
-                            .appellative_status_data_assignment_object_used
+                            .appellative_status_data_assignment_object_used ??
+                        null
                     "
                     :mode="VIEW"
                 />
@@ -166,7 +167,7 @@ const metaStringLabel = computed<MetaStringText>(() => ({
                     node-alias="appellative_status_data_assignment_actor"
                     :aliased-node-data="
                         rowData.aliased_data
-                            .appellative_status_data_assignment_actor
+                            .appellative_status_data_assignment_actor ?? null
                     "
                     :mode="VIEW"
                 />

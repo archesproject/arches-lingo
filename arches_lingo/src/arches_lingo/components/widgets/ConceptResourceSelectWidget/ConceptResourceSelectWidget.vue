@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, watchEffect, ref } from "vue";
+import { watchEffect, ref } from "vue";
 
 import Message from "primevue/message";
 import Skeleton from "primevue/skeleton";
@@ -9,17 +9,14 @@ import GenericFormField from "@/arches_component_lab/generics/GenericWidget/comp
 import ConceptResourceSelectWidgetEditor from "@/arches_lingo/components/widgets/ConceptResourceSelectWidget/components/ConceptResourceSelectWidgetEditor.vue";
 import ConceptResourceSelectWidgetViewer from "@/arches_lingo/components/widgets/ConceptResourceSelectWidget/components/ConceptResourceSelectWidgetViewer.vue";
 
-import { fetchCardXNodeXWidgetData } from "@/arches_component_lab/generics/GenericWidget/api.ts";
+import { useWidgetConfigStore } from "@/arches_component_lab/stores/useWidgetConfigStore.ts";
 import { fetchConceptResources } from "@/arches_lingo/api.ts";
 import { useWidgetReadyTracker } from "@/arches_lingo/composables/useWidgetReadyTracker.ts";
 import { EDIT, VIEW } from "@/arches_component_lab/widgets/constants.ts";
 
-import type {
-    AliasedNodeData,
-    CardXNodeXWidgetData,
-} from "@/arches_component_lab/types.ts";
+import type { CardXNodeXWidgetData } from "@/arches_component_lab/types.ts";
 import type { WidgetMode } from "@/arches_component_lab/widgets/types.ts";
-import type { ResourceInstanceListValue } from "@/arches_component_lab/datatypes/resource-instance-list/types";
+import type { ResourceInstanceListAliasedNodeData } from "@/arches_component_lab/datatypes/resource-instance-list/types.ts";
 
 const {
     graphSlug,
@@ -37,7 +34,7 @@ const {
     mode: WidgetMode;
     nodeAlias: string;
     resourceInstanceId?: string;
-    aliasedNodeData: ResourceInstanceListValue | null | undefined;
+    aliasedNodeData?: ResourceInstanceListAliasedNodeData | null;
     shouldShowLabel?: boolean;
     scheme?: string;
     schemeSelectable?: boolean | false;
@@ -59,22 +56,8 @@ if (widgetReadyTracker) {
     widgetReadyTracker.register();
 }
 
-const conceptIds = aliasedNodeData?.details.map(
-    (resource: { display_value: string; resource_id: string }) =>
-        resource.resource_id,
-) as string[] | undefined;
+const conceptIds = aliasedNodeData?.details.map((detail) => detail.resource_id);
 const searchResult = ref();
-
-const widgetValue = computed(() => {
-    if (aliasedNodeData !== undefined) {
-        return aliasedNodeData as AliasedNodeData;
-    } else if (cardXNodeXWidgetData.value?.config?.defaultValue) {
-        return cardXNodeXWidgetData.value.config
-            .defaultValue as AliasedNodeData;
-    } else {
-        return null;
-    }
-});
 
 watchEffect(async () => {
     if (cardXNodeXWidgetData.value) {
@@ -86,10 +69,11 @@ watchEffect(async () => {
         if (conceptIds) {
             searchResult.value = await getConceptHierarchy(conceptIds);
         }
-        cardXNodeXWidgetData.value = await fetchCardXNodeXWidgetData(
-            graphSlug,
-            nodeAlias,
-        );
+        cardXNodeXWidgetData.value =
+            await useWidgetConfigStore().fetchWidgetConfig(
+                graphSlug,
+                nodeAlias,
+            );
     } catch (error) {
         configurationError.value = error;
     } finally {
@@ -135,7 +119,7 @@ async function getConceptHierarchy(conceptIds: string[]) {
         <GenericFormField
             v-if="mode === EDIT"
             v-slot="{ onUpdateValue }"
-            :aliased-node-data="widgetValue!"
+            :value="aliasedNodeData?.node_value ?? null"
             :is-dirty="isDirty"
             :node-alias="nodeAlias"
             @update:is-dirty="emit('update:isDirty', $event)"

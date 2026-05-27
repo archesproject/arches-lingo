@@ -373,9 +373,10 @@ export function getStatementText(
             current.aliased_data?.statement_language?.display_value?.toLowerCase();
         const bestLang =
             bestMatch.aliased_data?.statement_language?.display_value?.toLowerCase();
-        return rankLanguage(currentLang) > rankLanguage(bestLang)
-            ? current
-            : bestMatch;
+        if (rankLanguage(currentLang) > rankLanguage(bestLang)) {
+            return current;
+        }
+        return bestMatch;
     });
 
     return best.aliased_data?.statement_content?.display_value ?? "";

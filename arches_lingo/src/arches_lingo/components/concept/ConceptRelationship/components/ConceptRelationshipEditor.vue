@@ -94,9 +94,8 @@ async function save(e: FormSubmitEvent) {
             props.tileId,
         );
 
+        await refreshReportSection!(props.componentName);
         openEditor!(props.componentName, updatedTileId);
-
-        refreshReportSection!(props.componentName);
     } catch (error) {
         toast.add({
             severity: ERROR,
@@ -140,37 +139,41 @@ async function save(e: FormSubmitEvent) {
                     :resource-instance-id="props.resourceInstanceId"
                     :aliased-node-data="
                         props.tileData?.aliased_data
-                            .relation_status_ascribed_comparate
+                            .relation_status_ascribed_comparate ?? null
                     "
                     :scheme="props.scheme"
                     :mode="EDIT"
                 />
-                <GenericWidget
-                    :graph-slug="props.graphSlug"
-                    node-alias="relation_status_ascribed_relation"
-                    :aliased-node-data="
-                        props.tileData?.aliased_data
-                            .relation_status_ascribed_relation
-                    "
-                    :mode="EDIT"
-                    class="widget-container column"
-                />
-                <GenericWidget
-                    :graph-slug="props.graphSlug"
-                    node-alias="relation_status_status"
-                    :aliased-node-data="
-                        props.tileData?.aliased_data.relation_status_status
-                    "
-                    :mode="EDIT"
-                    class="widget-container column"
-                />
+                <div class="widget-container column">
+                    <GenericWidget
+                        :graph-slug="props.graphSlug"
+                        node-alias="relation_status_ascribed_relation"
+                        :aliased-node-data="
+                            props.tileData?.aliased_data
+                                .relation_status_ascribed_relation ?? null
+                        "
+                        :mode="EDIT"
+                    />
+                </div>
+                <div class="widget-container column">
+                    <GenericWidget
+                        :graph-slug="props.graphSlug"
+                        node-alias="relation_status_status"
+                        :aliased-node-data="
+                            props.tileData?.aliased_data
+                                .relation_status_status ?? null
+                        "
+                        :mode="EDIT"
+                    />
+                </div>
                 <div class="widget-container">
                     <GenericWidget
                         :graph-slug="props.graphSlug"
                         node-alias="relation_status_timespan_begin_of_the_begin"
                         :aliased-node-data="
                             props.tileData?.aliased_data
-                                .relation_status_timespan_begin_of_the_begin
+                                .relation_status_timespan_begin_of_the_begin ??
+                            null
                         "
                         :mode="EDIT"
                     />
@@ -179,31 +182,34 @@ async function save(e: FormSubmitEvent) {
                         node-alias="relation_status_timespan_end_of_the_end"
                         :aliased-node-data="
                             props.tileData?.aliased_data
-                                .relation_status_timespan_end_of_the_end
+                                .relation_status_timespan_end_of_the_end ?? null
                         "
                         :mode="EDIT"
                     />
                 </div>
-                <GenericWidget
-                    :graph-slug="props.graphSlug"
-                    node-alias="relation_status_data_assignment_actor"
-                    :aliased-node-data="
-                        props.tileData?.aliased_data
-                            .relation_status_data_assignment_actor
-                    "
-                    :mode="EDIT"
-                    class="widget-container column"
-                />
-                <GenericWidget
-                    :graph-slug="props.graphSlug"
-                    node-alias="relation_status_data_assignment_object_used"
-                    :aliased-node-data="
-                        props.tileData?.aliased_data
-                            .relation_status_data_assignment_object_used
-                    "
-                    :mode="EDIT"
-                    class="widget-container column"
-                />
+                <div class="widget-container column">
+                    <GenericWidget
+                        :graph-slug="props.graphSlug"
+                        node-alias="relation_status_data_assignment_actor"
+                        :aliased-node-data="
+                            props.tileData?.aliased_data
+                                .relation_status_data_assignment_actor ?? null
+                        "
+                        :mode="EDIT"
+                    />
+                </div>
+                <div class="widget-container column">
+                    <GenericWidget
+                        :graph-slug="props.graphSlug"
+                        node-alias="relation_status_data_assignment_object_used"
+                        :aliased-node-data="
+                            props.tileData?.aliased_data
+                                .relation_status_data_assignment_object_used ??
+                            null
+                        "
+                        :mode="EDIT"
+                    />
+                </div>
             </Form>
         </div>
     </div>

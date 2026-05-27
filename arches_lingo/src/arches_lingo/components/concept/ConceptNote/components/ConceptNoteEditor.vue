@@ -94,9 +94,8 @@ async function save(e: FormSubmitEvent) {
             props.tileId,
         );
 
+        await refreshReportSection!(props.componentName);
         openEditor!(props.componentName, updatedTileId);
-
-        refreshReportSection!(props.componentName);
     } catch (error) {
         toast.add({
             severity: ERROR,
@@ -134,40 +133,46 @@ async function save(e: FormSubmitEvent) {
                 ref="form"
                 @submit="save"
             >
-                <GenericWidget
-                    :graph-slug="props.graphSlug"
-                    node-alias="statement_content"
-                    :aliased-node-data="
-                        props.tileData?.aliased_data.statement_content
-                    "
-                    :mode="EDIT"
-                    class="widget-container column"
-                />
-                <GenericWidget
-                    :graph-slug="props.graphSlug"
-                    node-alias="statement_type"
-                    :aliased-node-data="
-                        props.tileData?.aliased_data.statement_type
-                    "
-                    :mode="EDIT"
-                    class="widget-container column"
-                />
-                <GenericWidget
-                    :graph-slug="props.graphSlug"
-                    node-alias="statement_language"
-                    :aliased-node-data="
-                        props.tileData?.aliased_data.statement_language
-                    "
-                    :mode="EDIT"
-                    class="widget-container column"
-                />
+                <div class="widget-container column">
+                    <GenericWidget
+                        :graph-slug="props.graphSlug"
+                        node-alias="statement_content"
+                        :aliased-node-data="
+                            props.tileData?.aliased_data.statement_content ??
+                            null
+                        "
+                        :mode="EDIT"
+                    />
+                </div>
+                <div class="widget-container column">
+                    <GenericWidget
+                        :graph-slug="props.graphSlug"
+                        node-alias="statement_type"
+                        :aliased-node-data="
+                            props.tileData?.aliased_data.statement_type ?? null
+                        "
+                        :mode="EDIT"
+                    />
+                </div>
+                <div class="widget-container column">
+                    <GenericWidget
+                        :graph-slug="props.graphSlug"
+                        node-alias="statement_language"
+                        :aliased-node-data="
+                            props.tileData?.aliased_data.statement_language ??
+                            null
+                        "
+                        :mode="EDIT"
+                    />
+                </div>
                 <div class="widget-container">
                     <GenericWidget
                         :graph-slug="props.graphSlug"
                         node-alias="statement_data_assignment_timespan_begin_of_the_begin"
                         :aliased-node-data="
                             props.tileData?.aliased_data
-                                .statement_data_assignment_timespan_begin_of_the_begin
+                                .statement_data_assignment_timespan_begin_of_the_begin ??
+                            null
                         "
                         :mode="EDIT"
                     />
@@ -176,31 +181,34 @@ async function save(e: FormSubmitEvent) {
                         node-alias="statement_data_assignment_timespan_end_of_the_end"
                         :aliased-node-data="
                             props.tileData?.aliased_data
-                                .statement_data_assignment_timespan_end_of_the_end
+                                .statement_data_assignment_timespan_end_of_the_end ??
+                            null
                         "
                         :mode="EDIT"
                     />
                 </div>
-                <GenericWidget
-                    :graph-slug="props.graphSlug"
-                    node-alias="statement_data_assignment_actor"
-                    :aliased-node-data="
-                        props.tileData?.aliased_data
-                            .statement_data_assignment_actor
-                    "
-                    :mode="EDIT"
-                    class="widget-container column"
-                />
-                <GenericWidget
-                    :graph-slug="props.graphSlug"
-                    node-alias="statement_data_assignment_object_used"
-                    :aliased-node-data="
-                        props.tileData?.aliased_data
-                            .statement_data_assignment_object_used
-                    "
-                    :mode="EDIT"
-                    class="widget-container column"
-                />
+                <div class="widget-container column">
+                    <GenericWidget
+                        :graph-slug="props.graphSlug"
+                        node-alias="statement_data_assignment_actor"
+                        :aliased-node-data="
+                            props.tileData?.aliased_data
+                                .statement_data_assignment_actor ?? null
+                        "
+                        :mode="EDIT"
+                    />
+                </div>
+                <div class="widget-container column">
+                    <GenericWidget
+                        :graph-slug="props.graphSlug"
+                        node-alias="statement_data_assignment_object_used"
+                        :aliased-node-data="
+                            props.tileData?.aliased_data
+                                .statement_data_assignment_object_used ?? null
+                        "
+                        :mode="EDIT"
+                    />
+                </div>
             </Form>
         </div>
     </div>

@@ -39,7 +39,10 @@ import {
 
 import type { Component, Ref } from "vue";
 import type { FormSubmitEvent } from "@primevue/forms";
-import type { FileListValue } from "@/arches_component_lab/datatypes/file-list/types.ts";
+import type {
+    FileListAliasedNodeData,
+    FileReference,
+} from "@/arches_component_lab/datatypes/file-list/types.ts";
 
 import type {
     ConceptImages,
@@ -47,12 +50,8 @@ import type {
     DigitalObjectInstanceAliases,
 } from "@/arches_lingo/types.ts";
 
-type PossiblyNewFile = FileListValue & {
+type PossiblyNewFile = FileReference & {
     file?: File;
-    name?: string;
-    lastModified?: number;
-    size?: number;
-    type?: string;
 };
 
 const props = defineProps<{
@@ -104,14 +103,10 @@ watch(
     (formComponent) => (componentEditorFormRef!.value = formComponent),
 );
 
-async function getDigitalObjectInstance(
-    customEvent: CustomEvent<{ resourceInstanceId?: string }> | Event,
-) {
-    const typedEvent = customEvent as CustomEvent<{
-        resourceInstanceId?: string;
-    }>;
+async function getDigitalObjectInstance(event: Event) {
+    const typedEvent = event as CustomEvent<{ resourceInstanceId?: string }>;
     try {
-        if (typedEvent?.detail?.resourceInstanceId === undefined) {
+        if (typedEvent.detail.resourceInstanceId === undefined) {
             digitalObjectResource.value = undefined;
         } else {
             digitalObjectResource.value = await fetchLingoResource(
@@ -134,87 +129,61 @@ async function save(e: FormSubmitEvent) {
             Object.entries(e.states).map(([key, state]) => [key, state.value]),
         );
 
-        let digitalObjectInstanceAliases: DigitalObjectInstanceAliases = {};
-
-        if (digitalObjectResource.value) {
-            digitalObjectInstanceAliases =
-                digitalObjectResource.value.aliased_data;
-        }
+        const digitalObjectInstanceAliases: DigitalObjectInstanceAliases =
+            digitalObjectResource.value?.aliased_data ?? {};
 
         if (submittedFormData.name_content) {
-            if (!digitalObjectInstanceAliases.name) {
-                digitalObjectInstanceAliases.name = {
-                    aliased_data: {
-                        name_content: submittedFormData.name_content,
-                    },
-                };
-            } else {
-                digitalObjectInstanceAliases.name.aliased_data.name_content =
-                    submittedFormData.name_content;
-            }
+            digitalObjectInstanceAliases.name = {
+                ...digitalObjectInstanceAliases.name,
+                aliased_data: { name_content: submittedFormData.name_content },
+            };
         }
         if (submittedFormData.statement_content) {
-            if (!digitalObjectInstanceAliases.statement) {
-                digitalObjectInstanceAliases.statement = {
-                    aliased_data: {
-                        statement_content: submittedFormData.statement_content,
-                    },
-                };
-            } else {
-                digitalObjectInstanceAliases.statement.aliased_data.statement_content =
-                    submittedFormData.statement_content;
-            }
+            digitalObjectInstanceAliases.statement = {
+                ...digitalObjectInstanceAliases.statement,
+                aliased_data: {
+                    statement_content: submittedFormData.statement_content,
+                },
+            };
         }
 
         // files do not respect json.stringify
-        const fileJsonObjects =
-            submittedFormData.content.node_value?.map(
-                (file: PossiblyNewFile) => {
-                    if (!file?.file) {
-                        return file;
-                    } else {
-                        return {
-                            name: file.name?.replace(/ /g, "_"),
-                            lastModified: file.lastModified,
-                            size: file.size,
-                            type: file.type,
-                            url: null,
-                            file_id: null,
-                            content: URL.createObjectURL(file?.file),
-                            altText: "Replaceable alt text",
-                        };
-                    }
-                },
-            ) ?? [];
-
-        if (!digitalObjectInstanceAliases.content) {
-            digitalObjectInstanceAliases.content = {
-                aliased_data: {
-                    content: {
-                        node_value: [...fileJsonObjects],
-                    } as unknown as FileListValue[],
-                },
+        const fileJsonObjects = (
+            (submittedFormData.content as
+                | PossiblyNewFile[]
+                | null
+                | undefined) ?? []
+        ).map((file) => {
+            if (!file.file) {
+                return file;
+            }
+            return {
+                name: file.name.replace(/ /g, "_"),
+                lastModified: file.lastModified,
+                size: file.size,
+                type: file.type,
+                url: null,
+                file_id: null,
+                content: URL.createObjectURL(file.file),
+                altText: "Replaceable alt text",
             };
-        } else {
-            digitalObjectInstanceAliases.content.aliased_data.content = {
-                node_value: [...fileJsonObjects],
-            } as unknown as FileListValue[];
-        }
+        });
+
+        digitalObjectInstanceAliases.content = {
+            ...digitalObjectInstanceAliases.content,
+            aliased_data: {
+                content: fileJsonObjects as unknown as FileListAliasedNodeData,
+            },
+        };
 
         // this fork was requested because the multipartjson parser is unstable
         // if files go one way, if no files go the traditional way
-        if (submittedFormData.content.node_value?.length) {
-            if (digitalObjectResource.value) {
-                digitalObjectResource.value.aliased_data = {
-                    ...digitalObjectInstanceAliases,
-                };
-            } else {
-                digitalObjectResource.value = {
-                    aliased_data: {
-                        ...digitalObjectInstanceAliases,
-                    },
-                } as unknown as DigitalObjectInstance;
-            }
+        if (fileJsonObjects.length) {
+            digitalObjectResource.value ??=
+                {} as unknown as DigitalObjectInstance;
+            digitalObjectResource.value.aliased_data = {
+                ...digitalObjectInstanceAliases,
+            };
 
             const formDataForDigitalObject = await createFormDataForFileUpload(
                 digitalObjectResource as Ref<DigitalObjectInstance>,
@@ -262,6 +231,8 @@ async function save(e: FormSubmitEvent) {
             }
         }
 
+        refreshReportSection!(props.componentName);
+
         nextTick(() => {
             const openConceptImagesEditor = new CustomEvent(
                 "openConceptImagesEditor",
@@ -274,8 +245,6 @@ async function save(e: FormSubmitEvent) {
             );
             document.dispatchEvent(openConceptImagesEditor);
         });
-
-        refreshReportSection!(props.componentName);
     } catch (error) {
         toast.add({
             severity: ERROR,
@@ -298,7 +267,7 @@ function resetForm() {
             {
                 detail: {
                     resourceInstanceId:
-                        digitalObjectResource?.value?.resourceinstanceid,
+                        digitalObjectResource.value?.resourceinstanceid,
                 },
             },
         );
@@ -331,37 +300,40 @@ function resetForm() {
                 @submit="save"
                 @reset="resetForm"
             >
-                <GenericWidget
-                    node-alias="name_content"
-                    graph-slug="digital_object_system"
-                    :mode="EDIT"
-                    :aliased-node-data="
-                        digitalObjectResource?.aliased_data.name?.aliased_data
-                            .name_content
-                    "
-                    class="widget-container column"
-                />
-                <GenericWidget
-                    node-alias="statement_content"
-                    graph-slug="digital_object_system"
-                    :mode="EDIT"
-                    :aliased-node-data="
-                        digitalObjectResource?.aliased_data.statement
-                            ?.aliased_data.statement_content
-                    "
-                    class="widget-container column"
-                />
-                <GenericWidget
-                    node-alias="content"
-                    graph-slug="digital_object_system"
-                    :aliased-node-data="
-                        digitalObjectResource?.aliased_data?.content
-                            ?.aliased_data.content
-                    "
-                    :mode="EDIT"
-                    :should-show-label="false"
-                    class="widget-container column"
-                />
+                <div class="widget-container column">
+                    <GenericWidget
+                        node-alias="name_content"
+                        graph-slug="digital_object_system"
+                        :mode="EDIT"
+                        :aliased-node-data="
+                            digitalObjectResource?.aliased_data.name
+                                ?.aliased_data.name_content ?? null
+                        "
+                    />
+                </div>
+                <div class="widget-container column">
+                    <GenericWidget
+                        node-alias="statement_content"
+                        graph-slug="digital_object_system"
+                        :mode="EDIT"
+                        :aliased-node-data="
+                            digitalObjectResource?.aliased_data.statement
+                                ?.aliased_data.statement_content ?? null
+                        "
+                    />
+                </div>
+                <div class="widget-container column">
+                    <GenericWidget
+                        node-alias="content"
+                        graph-slug="digital_object_system"
+                        :aliased-node-data="
+                            digitalObjectResource?.aliased_data.content
+                                ?.aliased_data.content ?? null
+                        "
+                        :mode="EDIT"
+                        :should-show-label="false"
+                    />
+                </div>
             </Form>
         </div>
     </div>
