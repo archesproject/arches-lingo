@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, inject, ref, useTemplateRef, watch } from "vue";
+import { inject, ref, useTemplateRef, watch } from "vue";
 
 import { useRoute, useRouter } from "vue-router";
 import { useGettext } from "vue3-gettext";
@@ -53,13 +53,6 @@ const onSaveSettled = inject<() => void>("onSaveSettled");
 
 const formRef = useTemplateRef("form");
 const isSaving = ref(false);
-
-const comparateNodeValue = computed(function () {
-    return (
-        props.tileData?.aliased_data.relation_status_ascribed_comparate
-            ?.node_value ?? null
-    );
-});
 
 watch(
     () => formRef.value,
@@ -144,7 +137,10 @@ async function save(e: FormSubmitEvent) {
                     :graph-slug="props.graphSlug"
                     node-alias="relation_status_ascribed_comparate"
                     :resource-instance-id="props.resourceInstanceId"
-                    :value="comparateNodeValue"
+                    :aliased-node-data="
+                        props.tileData?.aliased_data
+                            .relation_status_ascribed_comparate ?? null
+                    "
                     :scheme="props.scheme"
                     :mode="EDIT"
                 />

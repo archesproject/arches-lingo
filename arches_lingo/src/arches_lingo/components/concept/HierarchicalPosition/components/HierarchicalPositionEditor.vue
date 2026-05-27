@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, inject, ref, useTemplateRef, watch } from "vue";
+import { inject, ref, useTemplateRef, watch } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import { useRouter } from "vue-router";
@@ -46,13 +46,6 @@ const onSaveSettled = inject<() => void>("onSaveSettled");
 
 const formRef = useTemplateRef("form");
 const isSaving = ref(false);
-
-const classificationNodeValue = computed(function () {
-    return (
-        props.tileData?.aliased_data
-            .classification_status_ascribed_classification?.node_value ?? null
-    );
-});
 
 watch(
     () => formRef.value,
@@ -142,7 +135,11 @@ async function save(e: FormSubmitEvent) {
                 <ConceptResourceSelectWidget
                     :graph-slug="props.graphSlug"
                     node-alias="classification_status_ascribed_classification"
-                    :value="classificationNodeValue"
+                    :aliased-node-data="
+                        props.tileData?.aliased_data
+                            .classification_status_ascribed_classification ??
+                        null
+                    "
                     :mode="EDIT"
                     :scheme="props.scheme"
                 />
