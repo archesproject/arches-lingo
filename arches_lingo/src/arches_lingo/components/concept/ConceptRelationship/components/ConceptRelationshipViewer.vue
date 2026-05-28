@@ -111,8 +111,9 @@ const metaStringLabel = computed<MetaStringText>(() => ({
                 }"
                 :disabled="isCreateDisabled"
                 :label="$gettext('Add Associated Concept')"
-                class="add-button wide"
+                class="add-button"
                 icon="pi pi-plus-circle"
+                size="small"
                 @click="openEditor!(props.componentName)"
             ></Button>
         </div>

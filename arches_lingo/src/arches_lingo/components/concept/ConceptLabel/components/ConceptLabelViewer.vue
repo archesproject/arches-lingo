@@ -95,6 +95,7 @@ const metaStringLabel = computed<MetaStringText>(() => ({
                 :label="$gettext('Add Label')"
                 class="add-button"
                 icon="pi pi-plus-circle"
+                size="small"
                 @click="openEditor!(props.componentName)"
             ></Button>
         </div>
