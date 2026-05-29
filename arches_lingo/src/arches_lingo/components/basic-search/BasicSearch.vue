@@ -266,6 +266,7 @@ function loadAdditionalSearchResults(event: VirtualScrollerLazyEvent) {
 }
 
 async function navigateToReport(event: AutoCompleteOptionSelectEvent) {
+    query.value = "";
     const failure = await router.push({
         name: routeNames.concept,
         params: { id: event.value.id },
