@@ -23,7 +23,8 @@ import {
     createDigitalObject,
 } from "@/arches_lingo/components/concept/ConceptImages/components/utils.ts";
 
-import { targetDigitalObjectResourceInstanceId } from "@/arches_lingo/components/concept/ConceptImages/components/editorState.ts";
+import { useConceptImagesEditorStore } from "@/arches_lingo/stores/useConceptImagesEditorStore.ts";
+import { storeToRefs } from "pinia";
 
 import {
     fetchLingoResource,
@@ -77,6 +78,9 @@ const onSaveSettled = inject<() => void>("onSaveSettled");
 
 const formRef = useTemplateRef("form");
 const isLoading = ref(true);
+const { targetDigitalObjectResourceInstanceId } = storeToRefs(
+    useConceptImagesEditorStore(),
+);
 
 onMounted(() => {
     getDigitalObjectInstance(targetDigitalObjectResourceInstanceId.value);

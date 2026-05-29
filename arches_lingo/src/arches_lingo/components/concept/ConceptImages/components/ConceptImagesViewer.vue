@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import arches from "arches";
 import { inject, ref, onMounted, computed } from "vue";
 import { useGettext } from "vue3-gettext";
 
@@ -14,7 +13,9 @@ import { useConfirm } from "primevue/useconfirm";
 import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
 
 import { DANGER, SECONDARY, VIEW } from "@/arches_lingo/constants.ts";
-import { targetDigitalObjectResourceInstanceId } from "@/arches_lingo/components/concept/ConceptImages/components/editorState.ts";
+import { useConceptImagesEditorStore } from "@/arches_lingo/stores/useConceptImagesEditorStore.ts";
+import { storeToRefs } from "pinia";
+import { getFileUrl } from "@/arches_lingo/components/concept/ConceptImages/components/utils.ts";
 import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 
 import type {
@@ -76,41 +77,15 @@ const createTooltipText = computed(() => {
     );
 });
 const { isEditor } = useUserStore();
+const { targetDigitalObjectResourceInstanceId } = storeToRefs(
+    useConceptImagesEditorStore(),
+);
 
 const configurationError = ref();
 const isLoading = ref(true);
 const resources = ref<DigitalObjectInstance[]>();
 const { $gettext } = useGettext();
 const confirm = useConfirm();
-
-function getFileUrl(originalUrl: string): string {
-    const httpRegex = /^(blob:|https?:\/\/)/;
-    if (
-        !originalUrl ||
-        httpRegex.test(originalUrl) ||
-        originalUrl.startsWith(arches.urls.url_subpath)
-    ) {
-        return originalUrl;
-    }
-    return (arches.urls.url_subpath + originalUrl).replace("//", "/");
-}
-
-function getImageUrl(resource: DigitalObjectInstance): string | undefined {
-    const contentData = resource.aliased_data.content?.aliased_data
-        .content as unknown as FileListValue | undefined;
-    const fileReference = contentData?.node_value?.[0];
-    if (fileReference?.url) {
-        return getFileUrl(fileReference.url);
-    }
-    return undefined;
-}
-
-function getImageAlt(resource: DigitalObjectInstance): string {
-    const contentData = resource.aliased_data.content?.aliased_data
-        .content as unknown as FileListValue | undefined;
-    const fileReference = contentData?.node_value?.[0];
-    return fileReference?.altText || fileReference?.name || "";
-}
 
 onMounted(async () => {
     if (props.tileData) {
@@ -131,6 +106,23 @@ onMounted(async () => {
     }
     isLoading.value = false;
 });
+
+function getImageUrl(resource: DigitalObjectInstance): string | undefined {
+    const contentData = resource.aliased_data.content?.aliased_data
+        .content as unknown as FileListValue | undefined;
+    const fileReference = contentData?.node_value?.[0];
+    if (fileReference?.url) {
+        return getFileUrl(fileReference.url);
+    }
+    return undefined;
+}
+
+function getImageAlt(resource: DigitalObjectInstance): string {
+    const contentData = resource.aliased_data.content?.aliased_data
+        .content as unknown as FileListValue | undefined;
+    const fileReference = contentData?.node_value?.[0];
+    return fileReference?.altText || fileReference?.name || "";
+}
 
 function confirmDelete(removedResourceInstanceId: string) {
     confirm.require({
