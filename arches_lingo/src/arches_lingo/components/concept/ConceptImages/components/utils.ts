@@ -1,3 +1,5 @@
+import arches from "arches";
+
 import { fetchCardXNodeXWidgetData } from "@/arches_component_lab/generics/GenericWidget/api.ts";
 import {
     createLingoResource,
@@ -12,6 +14,18 @@ import type {
     DigitalObjectInstance,
     DigitalObjectInstanceAliases,
 } from "@/arches_lingo/types.ts";
+
+export function getFileUrl(originalUrl: string): string {
+    const httpRegex = /^(blob:|https?:\/\/)/;
+    if (
+        !originalUrl ||
+        httpRegex.test(originalUrl) ||
+        originalUrl.startsWith(arches.urls.url_subpath)
+    ) {
+        return originalUrl;
+    }
+    return (arches.urls.url_subpath + originalUrl).replace("//", "/");
+}
 
 export async function createDigitalObject(
     digitalObjectData: DigitalObjectInstanceAliases | FormData,
@@ -110,7 +124,14 @@ export async function createFormDataForFileUpload(
         );
     }
     for (const file of submittedFormData.content.node_value) {
-        formData.append(`file-list_${digitalObjectContentNodeId}`, file.file);
+        if (file.file instanceof File) {
+            const sanitizedName = file.file.name.replace(/ /g, "_");
+            formData.append(
+                `file-list_${digitalObjectContentNodeId}`,
+                file.file,
+                sanitizedName,
+            );
+        }
     }
     return formData;
 }
