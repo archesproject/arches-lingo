@@ -41,8 +41,7 @@ const componentEditorFormRef = inject<Ref<Component | null>>(
     "componentEditorFormRef",
 );
 
-const openEditor =
-    inject<(componentName: string, tileid?: string) => void>("openEditor");
+const closeEditor = inject<() => void>("closeEditor");
 const refreshReportSection = inject<(componentName: string) => void>(
     "refreshReportSection",
 );
@@ -75,8 +74,6 @@ async function save(e: FormSubmitEvent) {
             ),
         };
 
-        let updatedTileId;
-
         if (!props.resourceInstanceId) {
             const updatedScheme = await createLingoResource(
                 {
@@ -93,27 +90,18 @@ async function save(e: FormSubmitEvent) {
                 name: props.graphSlug,
                 params: { id: updatedScheme.resourceinstanceid },
             });
-
-            updatedTileId =
-                updatedScheme.aliased_data[props.nodegroupAlias][0].tileid;
         } else {
-            const updatedTile = await upsertLingoTile(
-                props.graphSlug,
-                props.nodegroupAlias,
-                {
-                    resourceinstance: props.resourceInstanceId,
-                    aliased_data: { ...updatedTileData },
-                    tileid: props.tileId,
-                },
-            );
-
-            updatedTileId = updatedTile.tileid;
+            await upsertLingoTile(props.graphSlug, props.nodegroupAlias, {
+                resourceinstance: props.resourceInstanceId,
+                aliased_data: { ...updatedTileData },
+                tileid: props.tileId,
+            });
         }
-
-        openEditor!(props.componentName, updatedTileId);
 
         refreshReportSection!(props.componentName);
         refreshSchemeHierarchy!();
+
+        closeEditor!();
     } catch (error) {
         toast.add({
             severity: ERROR,

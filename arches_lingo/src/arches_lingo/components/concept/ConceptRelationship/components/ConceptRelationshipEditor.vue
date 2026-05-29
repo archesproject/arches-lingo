@@ -44,8 +44,7 @@ const componentEditorFormRef = inject<Ref<Component | null>>(
     "componentEditorFormRef",
 );
 
-const openEditor =
-    inject<(componentName: string, tileid?: string) => void>("openEditor");
+const closeEditor = inject<() => void>("closeEditor");
 const refreshReportSection = inject<(componentName: string) => void>(
     "refreshReportSection",
 );
@@ -83,7 +82,7 @@ async function save(e: FormSubmitEvent) {
         const scheme = route.query.scheme as string;
         const parent = route.query.parent as string;
 
-        const updatedTileId = await createOrUpdateConcept(
+        await createOrUpdateConcept(
             updatedTileData,
             props.graphSlug,
             props.nodegroupAlias,
@@ -94,9 +93,9 @@ async function save(e: FormSubmitEvent) {
             props.tileId,
         );
 
-        openEditor!(props.componentName, updatedTileId);
-
         refreshReportSection!(props.componentName);
+
+        closeEditor!();
     } catch (error) {
         toast.add({
             severity: ERROR,
