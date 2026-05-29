@@ -887,6 +887,8 @@ async function selectNodeFromRoute(
 
     removeAllNewNodes();
 
+    if (!routeNodeId) return;
+
     if (routeNodeId === NEW) {
         addNewConceptToTree(
             newRoute.query.scheme as string,
