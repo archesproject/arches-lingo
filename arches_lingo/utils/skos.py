@@ -1,4 +1,5 @@
 import uuid
+import logging
 from collections import defaultdict
 from django.db.models import Q
 from rdflib import Literal, Namespace, RDF, URIRef
@@ -11,9 +12,20 @@ from arches_controlled_lists.utils.skos import SKOSReader
 from arches_controlled_lists.models import List, ListItem, ListItemValue
 
 from arches_lingo.etl_modules.migrate_to_lingo import LingoResourceImporter
+import arches_lingo.const as const
 
 # define the ARCHES namespace
 ARCHES = Namespace(settings.ARCHES_NAMESPACE_FOR_DATA_EXPORT)
+
+logger = logging.getLogger(__name__)
+
+# GVP typed associative relation predicates use this prefix followed by a
+# numeric relation code and descriptive label, e.g.:
+#   http://vocab.getty.edu/ontology#aat2285_practiced-studied_by
+# The arches-lingo controlled list «related properties» stores these URIs as
+# the identifier of each list item so they can be looked up and stored as the
+# relation_status_ascribed_relation reference value during import.
+GVP_TYPED_RELATION_PREFIX = "http://vocab.getty.edu/ontology#aat"
 
 
 class SKOSReader(SKOSReader):
@@ -27,6 +39,30 @@ class SKOSReader(SKOSReader):
         self.concepts = []
         self.relations = defaultdict(list)
         self.prefLabel_valuetype = models.DValueType.objects.get(valuetype="prefLabel")
+        self._gvp_relation_type_lookup = None
+
+    def _get_gvp_relation_type_lookup(self):
+        """Return a {gvp_predicate_uri: list_item_id_str} mapping built from
+        the related_properties controlled list.  The lookup is built lazily on
+        first call and cached; an empty dict is returned when the controlled
+        list is not yet loaded so the import still succeeds without type data."""
+        if self._gvp_relation_type_lookup is not None:
+            return self._gvp_relation_type_lookup
+        try:
+            self._gvp_relation_type_lookup = {
+                item.uri: str(item.id)
+                for item in ListItem.objects.filter(
+                    list_id=const.RELATED_PROPERTIES_LIST_ID,
+                    uri__startswith=GVP_TYPED_RELATION_PREFIX,
+                )
+            }
+        except Exception:
+            logger.warning(
+                "Could not load related_properties controlled list; "
+                "typed GVP relation types will not be set on import."
+            )
+            self._gvp_relation_type_lookup = {}
+        return self._gvp_relation_type_lookup
 
     def extract_concepts_from_skos_for_lingo_import(
         self, graph, overwrite_options="overwrite"
@@ -211,6 +247,41 @@ class SKOSReader(SKOSReader):
                                 relationship
                             )
                             self.relations[resourceinstanceid].append(mock_tile)
+                        elif str(predicate).startswith(GVP_TYPED_RELATION_PREFIX):
+                            # Typed GVP associative relation predicate — carries both
+                            # the comparate (the other concept) and the relation type
+                            # (encoded in the predicate URI local name).  The tile is
+                            # placed on the object concept so that viewing it shows the
+                            # comparate (subject) with its semantic relation type.
+                            related_concept_id = self.generate_uuidv5_from_subject(
+                                baseuuid, object
+                            )
+                            relation_type_id = self._get_gvp_relation_type_lookup().get(
+                                str(predicate)
+                            )
+                            typed_relation_mock_tile = {
+                                "relation_status": {
+                                    "relation_status_ascribed_comparate": {
+                                        "resourceId": str(concept_pk),
+                                        "ontologyProperty": const.RELATION_STATUS_ASCRIBED_COMPARATE_ONTOLOGY_PROPERTY,
+                                        "resourceXresourceId": "",
+                                        "inverseOntologyProperty": "",
+                                    }
+                                }
+                            }
+                            if relation_type_id:
+                                typed_relation_mock_tile["relation_status"][
+                                    "relation_status_ascribed_relation"
+                                ] = relation_type_id
+                            else:
+                                logger.debug(
+                                    "No list item found for GVP relation predicate %s;"
+                                    " relation_status_ascribed_relation will be null.",
+                                    predicate,
+                                )
+                            self.relations[related_concept_id].append(
+                                typed_relation_mock_tile
+                            )
                         elif predicate in [
                             SKOS.broadMatch,
                             SKOS.closeMatch,

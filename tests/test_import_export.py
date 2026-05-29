@@ -128,6 +128,29 @@ class ImportTests(TransactionTestCase):
         # and a skos:relatedMatch
         self.assertEqual(len(junk_sculpture.aliased_data.match_status), 2)
 
+    def _assert_typed_relation_loaded(self):
+        """Assert that a GVP typed associative relation (gvp:aat2285_practiced-studied_by)
+        from the test fixture is imported with its relation type set on the target concept's
+        relation_status tile.
+
+        The fixture has:
+          <Example Concept 2>  gvp:aat2285_practiced-studied_by  <Example Concept 1>
+
+        Per the SKOS reader convention, the tile lives on the *object* concept (Example
+        Concept 1) with ascribed_comparate pointing to the subject (Example Concept 2).
+        """
+        concepts = ResourceTileTree.get_tiles(graph_slug="concept")
+        example_concept_1 = concepts.get(
+            appellative_status_ascribed_name_content__any_contains="Example Concept 1"
+        )
+        relations = example_concept_1.aliased_data.relation_status
+        self.assertEqual(len(relations), 1)
+        relation_data = relations[0].aliased_data
+        comparate = relation_data.relation_status_ascribed_comparate
+        self.assertEqual(comparate.name["en"], "Example Concept 2")
+        # The controlled list item for aat2285 is "practiced/studied by - role"
+        self.assertIn("practiced", str(relation_data.relation_status_ascribed_relation))
+
     def test_lingo_resource_importer(self):
         """
         This test is really three tests in one, but due to trouble with TransactionTestCase
@@ -154,6 +177,7 @@ class ImportTests(TransactionTestCase):
             stdout=stdout,
         )
         self._assert_resources_loaded()
+        self._assert_typed_relation_loaded()
         print("Test import from CLI completed.\n")
 
         # Reverse load to clear out the loaded resources
@@ -194,6 +218,7 @@ class ImportTests(TransactionTestCase):
         write_request0 = importer.write(request=request0)
         self.assertTrue(write_request0["success"])
         self._assert_resources_loaded()
+        self._assert_typed_relation_loaded()
         print("Test import from Lingo UI completed.\n")
 
         # Reverse load to clear out the loaded resources
