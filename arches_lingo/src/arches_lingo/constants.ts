@@ -61,6 +61,8 @@ export const PUBLISHED_LIFECYCLE_STATE_ID =
 export const RETIRED_LIFECYCLE_STATE_ID =
     "9d2e1c0b-7a6b-4b3d-8c1a-0f2d9e6b0a7c";
 
+export const MULTILINE_RENDER_CONTEXT = "multiline";
+
 // URIs
 export const GUIDE_TERM_URI = "http://vocab.getty.edu/page/aat/300386700";
 export const HIERARCHY_NAME_URI =

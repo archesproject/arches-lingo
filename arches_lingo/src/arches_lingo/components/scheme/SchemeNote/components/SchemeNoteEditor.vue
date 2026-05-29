@@ -10,13 +10,13 @@ import { Form } from "@primevue/forms";
 import Skeleton from "primevue/skeleton";
 
 import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
-
 import { createLingoResource, upsertLingoTile } from "@/arches_lingo/api.ts";
 
 import {
     DEFAULT_ERROR_TOAST_LIFE,
     EDIT,
     ERROR,
+    MULTILINE_RENDER_CONTEXT,
 } from "@/arches_lingo/constants.ts";
 
 import type { Component, Ref } from "vue";
@@ -143,6 +143,7 @@ async function save(e: FormSubmitEvent) {
                         :aliased-node-data="
                             props.tileData?.aliased_data?.statement_content
                         "
+                        :render-context="MULTILINE_RENDER_CONTEXT"
                         :mode="EDIT"
                     />
                 </div>
