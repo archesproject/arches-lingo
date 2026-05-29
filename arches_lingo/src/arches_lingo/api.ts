@@ -976,6 +976,19 @@ export const resolveConceptIdentifier = async (
     return parsedResponseBody;
 };
 
+export const resolveConceptURI = async (
+    uri: string,
+): Promise<{ resourceinstanceid: string } | null> => {
+    const url = generateArchesURL("arches_lingo:api-lingo-concept-uri-resolve");
+    const response = await fetch(`${url}?uri=${encodeURIComponent(uri)}`);
+    if (response.status === 404) return null;
+    const parsedResponseBody = await response.json();
+    if (!response.ok) {
+        throw new Error(parsedResponseBody.message || response.statusText);
+    }
+    return parsedResponseBody;
+};
+
 export const fetchSchemeURITemplate = async (
     schemeResourceInstanceId: string,
 ) => {
