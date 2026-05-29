@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { inject, computed } from "vue";
+import { inject, computed, ref, onMounted, watch } from "vue";
+import { RouterLink } from "vue-router";
 import { useGettext } from "vue3-gettext";
 
 import Button from "primevue/button";
@@ -8,7 +9,9 @@ import Tag from "primevue/tag";
 import MetaStringViewer from "@/arches_lingo/components/generic/MetaStringViewer.vue";
 import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
 
+import { resolveConceptURI } from "@/arches_lingo/api.ts";
 import { VIEW } from "@/arches_lingo/constants.ts";
+import { routeNames } from "@/arches_lingo/routes.ts";
 import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 
 import type {
@@ -81,10 +84,52 @@ const metaStringLabel = computed<MetaStringText>(() => ({
     },
 }));
 
-function matchedConceptURIIsLink(rowData: ConceptMatchStatus): boolean {
-    const uri = rowData.aliased_data.match_status_ascribed_comparate
+const resolvedLocalConceptIds = ref<Record<string, string | null>>({});
+
+async function resolveLocalConceptIds() {
+    const uris = [
+        ...new Set(
+            props.tileData
+                .map(
+                    (tile) =>
+                        tile.aliased_data.match_status_ascribed_comparate
+                            .display_value,
+                )
+                .filter((uri) => uri.startsWith("http")),
+        ),
+    ];
+
+    const results = await Promise.all(
+        uris.map(async (uri) => {
+            const result = await resolveConceptURI(uri);
+            return [uri, result?.resourceinstanceid ?? null] as const;
+        }),
+    );
+
+    resolvedLocalConceptIds.value = Object.fromEntries(results);
+}
+
+onMounted(resolveLocalConceptIds);
+watch(() => props.tileData, resolveLocalConceptIds);
+
+function getComparateURI(rowData: ConceptMatchStatus): string {
+    return rowData.aliased_data.match_status_ascribed_comparate
         .display_value as string;
-    return uri.startsWith("http");
+}
+
+function localConceptRoute(
+    rowData: ConceptMatchStatus,
+): { name: string; params: { id: string } } | null {
+    const uri = getComparateURI(rowData);
+    const conceptId = resolvedLocalConceptIds.value[uri];
+    return conceptId
+        ? { name: routeNames.concept, params: { id: conceptId } }
+        : null;
+}
+
+function externalConceptURI(rowData: ConceptMatchStatus): string | null {
+    const uri = getComparateURI(rowData);
+    return uri.startsWith("http") ? uri : null;
 }
 </script>
 
@@ -140,18 +185,25 @@ function matchedConceptURIIsLink(rowData: ConceptMatchStatus): boolean {
                 />
             </template>
             <template #type="{ rowData }">
+                <RouterLink
+                    v-if="localConceptRoute(rowData)"
+                    :to="localConceptRoute(rowData)!"
+                    class="local-concept-link"
+                >
+                    {{
+                        rowData.aliased_data.match_status_ascribed_comparate
+                            .display_value
+                    }}
+                </RouterLink>
                 <Button
-                    v-if="matchedConceptURIIsLink(rowData)"
+                    v-else-if="externalConceptURI(rowData)"
                     :label="
                         rowData.aliased_data.match_status_ascribed_comparate
                             .display_value
                     "
                     variant="link"
                     as="a"
-                    :href="
-                        rowData.aliased_data.match_status_ascribed_comparate
-                            .display_value
-                    "
+                    :href="externalConceptURI(rowData)!"
                     target="_blank"
                     rel="noopener"
                 ></Button>
@@ -196,6 +248,16 @@ function matchedConceptURIIsLink(rowData: ConceptMatchStatus): boolean {
 
     span {
         font-size: var(--p-lingo-font-size-smallnormal);
+    }
+}
+
+.local-concept-link {
+    color: var(--p-primary-500);
+    font-size: var(--p-lingo-font-size-smallnormal);
+    text-decoration: none;
+
+    &:hover {
+        text-decoration: underline;
     }
 }
 </style>
