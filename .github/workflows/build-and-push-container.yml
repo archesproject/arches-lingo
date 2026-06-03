@@ -5,11 +5,11 @@
 #
 # Each GitHub Environment requires the following variables:
 #   ECR_REPOSITORY  - e.g. mysite-repository
-#   AWS_ROLE        - e.g. arn:aws:iam::123456789012:role/my-github-role
-#   AWS_REGION      - e.g. us-west-1
+#   AWS_ROLE    - e.g. arn:aws:iam::123456789012:role/my-github-role
+#   AWS_REGION    - e.g. us-west-1
 #
 # The following must be set as repository-level variables (not environment-scoped):
-#   ARCHES_PROJECT          - e.g. arches-myproject
+#   ARCHES_PROJECT      - e.g. arches-myproject
 #   ARCHES_PROJECT_PACKAGE  - e.g. arches_myproject
 #
 # And a repository secret:
@@ -73,6 +73,7 @@ jobs:
           cp arches-docker/settings_local.py project/docker/settings_local.py
           cp -r arches-docker/conf.d project/docker/
           cp -r arches-docker/nginx project/docker/
+          cp -r arches-docker/scaffold/templates/docker/.internal project/docker/
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v6
@@ -144,9 +145,9 @@ jobs:
       - name: Create and push manifest list
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          IMAGE_TAG: ${{ github.sha }}
+          IMAGE_TAG: ${{ needs.setup.outputs.environment }}-${{ github.sha }}
         run: |
           REPO="${ECR_REGISTRY}/${{ vars.ECR_REPOSITORY }}"
           docker buildx imagetools create \
-            -t "${REPO}:${IMAGE_TAG}" \
-            $(printf "${REPO}@sha256:%s " $(ls /tmp/digests/))
+          -t "${REPO}:${IMAGE_TAG}" \
+          $(printf "${REPO}@sha256:%s " $(ls /tmp/digests/))
