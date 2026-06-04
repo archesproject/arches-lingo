@@ -10,13 +10,13 @@ import { Form } from "@primevue/forms";
 import Skeleton from "primevue/skeleton";
 
 import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
-
 import { createOrUpdateConcept } from "@/arches_lingo/utils.ts";
 
 import {
     DEFAULT_ERROR_TOAST_LIFE,
     EDIT,
     ERROR,
+    MULTILINE_RENDER_CONTEXT,
 } from "@/arches_lingo/constants.ts";
 
 import type { Component, Ref } from "vue";
@@ -43,8 +43,7 @@ const componentEditorFormRef = inject<Ref<Component | null>>(
     "componentEditorFormRef",
 );
 
-const openEditor =
-    inject<(componentName: string, tileid?: string) => void>("openEditor");
+const closeEditor = inject<() => void>("closeEditor");
 
 const refreshReportSection = inject<(componentName: string) => void>(
     "refreshReportSection",
@@ -83,7 +82,7 @@ async function save(e: FormSubmitEvent) {
         const scheme = route.query.scheme as string;
         const parent = route.query.parent as string;
 
-        const updatedTileId = await createOrUpdateConcept(
+        await createOrUpdateConcept(
             updatedTileData,
             props.graphSlug,
             props.nodegroupAlias,
@@ -94,8 +93,9 @@ async function save(e: FormSubmitEvent) {
             props.tileId,
         );
 
-        await refreshReportSection!(props.componentName);
-        openEditor!(props.componentName, updatedTileId);
+        refreshReportSection!(props.componentName);
+
+        closeEditor!();
     } catch (error) {
         toast.add({
             severity: ERROR,
@@ -133,38 +133,34 @@ async function save(e: FormSubmitEvent) {
                 ref="form"
                 @submit="save"
             >
-                <div class="widget-container column">
-                    <GenericWidget
-                        :graph-slug="props.graphSlug"
-                        node-alias="statement_content"
-                        :aliased-node-data="
-                            props.tileData?.aliased_data.statement_content ??
-                            null
-                        "
-                        :mode="EDIT"
-                    />
-                </div>
-                <div class="widget-container column">
-                    <GenericWidget
-                        :graph-slug="props.graphSlug"
-                        node-alias="statement_type"
-                        :aliased-node-data="
-                            props.tileData?.aliased_data.statement_type ?? null
-                        "
-                        :mode="EDIT"
-                    />
-                </div>
-                <div class="widget-container column">
-                    <GenericWidget
-                        :graph-slug="props.graphSlug"
-                        node-alias="statement_language"
-                        :aliased-node-data="
-                            props.tileData?.aliased_data.statement_language ??
-                            null
-                        "
-                        :mode="EDIT"
-                    />
-                </div>
+                <GenericWidget
+                    :graph-slug="props.graphSlug"
+                    node-alias="statement_content"
+                    :aliased-node-data="
+                        props.tileData?.aliased_data.statement_content ?? null
+                    "
+                    :render-context="MULTILINE_RENDER_CONTEXT"
+                    :mode="EDIT"
+                    class="widget-container column"
+                />
+                <GenericWidget
+                    :graph-slug="props.graphSlug"
+                    node-alias="statement_type"
+                    :aliased-node-data="
+                        props.tileData?.aliased_data.statement_type ?? null
+                    "
+                    :mode="EDIT"
+                    class="widget-container column"
+                />
+                <GenericWidget
+                    :graph-slug="props.graphSlug"
+                    node-alias="statement_language"
+                    :aliased-node-data="
+                        props.tileData?.aliased_data.statement_language ?? null
+                    "
+                    :mode="EDIT"
+                    class="widget-container column"
+                />
                 <div class="widget-container">
                     <GenericWidget
                         :graph-slug="props.graphSlug"

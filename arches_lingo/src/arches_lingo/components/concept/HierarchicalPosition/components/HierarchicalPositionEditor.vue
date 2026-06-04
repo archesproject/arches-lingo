@@ -35,12 +35,8 @@ const componentEditorFormRef = inject<Ref<Component | null>>(
     "componentEditorFormRef",
 );
 
-const openEditor =
-    inject<(componentName: string, tileid?: string) => void>("openEditor");
+const closeEditor = inject<() => void>("closeEditor");
 
-const refreshReportSection = inject<(componentName: string) => void>(
-    "refreshReportSection",
-);
 const refreshSchemeHierarchy = inject<() => void>("refreshSchemeHierarchy");
 const onSaveSettled = inject<() => void>("onSaveSettled");
 
@@ -69,8 +65,6 @@ async function save(e: FormSubmitEvent) {
             ),
         };
 
-        let updatedTileId;
-
         if (!props.resourceInstanceId) {
             const updatedConcept = await createLingoResource(
                 {
@@ -85,25 +79,16 @@ async function save(e: FormSubmitEvent) {
                 name: props.graphSlug,
                 params: { id: updatedConcept.resourceinstanceid },
             });
-            updatedTileId =
-                updatedConcept.aliased_data[props.nodegroupAlias][0].tileid;
         } else {
-            const updatedConcept = await upsertLingoTile(
-                props.graphSlug,
-                props.nodegroupAlias,
-                {
-                    resourceinstance: props.resourceInstanceId,
-                    aliased_data: { ...updatedTileData },
-                    tileid: props.tileId,
-                },
-            );
-
-            updatedTileId = updatedConcept.tileid;
+            await upsertLingoTile(props.graphSlug, props.nodegroupAlias, {
+                resourceinstance: props.resourceInstanceId,
+                aliased_data: { ...updatedTileData },
+                tileid: props.tileId,
+            });
         }
 
         refreshSchemeHierarchy!();
-        await refreshReportSection!(props.componentName);
-        openEditor!(props.componentName, updatedTileId);
+        closeEditor!();
     } catch (error) {
         console.error(error);
     } finally {

@@ -17,12 +17,12 @@ import { Form } from "@primevue/forms";
 import Skeleton from "primevue/skeleton";
 
 import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
-
 import { DIGITAL_OBJECT_GRAPH_SLUG } from "@/arches_lingo/components/concept/ConceptImages/components/constants.ts";
 import {
     DEFAULT_ERROR_TOAST_LIFE,
     EDIT,
     ERROR,
+    MULTILINE_RENDER_CONTEXT,
 } from "@/arches_lingo/constants.ts";
 
 import {
@@ -75,6 +75,7 @@ const componentEditorFormRef = inject<Ref<Component | null>>(
 );
 const openEditor =
     inject<(componentName: string, tileid?: string) => void>("openEditor");
+const closeEditor = inject<() => void>("closeEditor");
 const refreshReportSection = inject<(componentName: string) => void>(
     "refreshReportSection",
 );
@@ -245,6 +246,8 @@ async function save(e: FormSubmitEvent) {
             );
             document.dispatchEvent(openConceptImagesEditor);
         });
+
+        closeEditor!();
     } catch (error) {
         toast.add({
             severity: ERROR,
@@ -300,40 +303,38 @@ function resetForm() {
                 @submit="save"
                 @reset="resetForm"
             >
-                <div class="widget-container column">
-                    <GenericWidget
-                        node-alias="name_content"
-                        graph-slug="digital_object_system"
-                        :mode="EDIT"
-                        :aliased-node-data="
-                            digitalObjectResource?.aliased_data.name
-                                ?.aliased_data.name_content ?? null
-                        "
-                    />
-                </div>
-                <div class="widget-container column">
-                    <GenericWidget
-                        node-alias="statement_content"
-                        graph-slug="digital_object_system"
-                        :mode="EDIT"
-                        :aliased-node-data="
-                            digitalObjectResource?.aliased_data.statement
-                                ?.aliased_data.statement_content ?? null
-                        "
-                    />
-                </div>
-                <div class="widget-container column">
-                    <GenericWidget
-                        node-alias="content"
-                        graph-slug="digital_object_system"
-                        :aliased-node-data="
-                            digitalObjectResource?.aliased_data.content
-                                ?.aliased_data.content ?? null
-                        "
-                        :mode="EDIT"
-                        :should-show-label="false"
-                    />
-                </div>
+                <GenericWidget
+                    node-alias="name_content"
+                    graph-slug="digital_object_system"
+                    :mode="EDIT"
+                    :aliased-node-data="
+                        digitalObjectResource?.aliased_data.name?.aliased_data
+                            .name_content ?? null
+                    "
+                    class="widget-container column"
+                />
+                <GenericWidget
+                    node-alias="statement_content"
+                    graph-slug="digital_object_system"
+                    :mode="EDIT"
+                    :aliased-node-data="
+                        digitalObjectResource?.aliased_data.statement
+                            ?.aliased_data.statement_content ?? null
+                    "
+                    :render-context="MULTILINE_RENDER_CONTEXT"
+                    class="widget-container column"
+                />
+                <GenericWidget
+                    node-alias="content"
+                    graph-slug="digital_object_system"
+                    :aliased-node-data="
+                        digitalObjectResource?.aliased_data?.content
+                            ?.aliased_data.content ?? null
+                    "
+                    :mode="EDIT"
+                    :should-show-label="false"
+                    class="widget-container column"
+                />
             </Form>
         </div>
     </div>
