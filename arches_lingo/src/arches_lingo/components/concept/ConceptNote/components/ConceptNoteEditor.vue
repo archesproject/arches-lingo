@@ -133,34 +133,39 @@ async function save(e: FormSubmitEvent) {
                 ref="form"
                 @submit="save"
             >
-                <GenericWidget
-                    :graph-slug="props.graphSlug"
-                    node-alias="statement_content"
-                    :aliased-node-data="
-                        props.tileData?.aliased_data.statement_content ?? null
-                    "
-                    :render-context="MULTILINE_RENDER_CONTEXT"
-                    :mode="EDIT"
-                    class="widget-container column"
-                />
-                <GenericWidget
-                    :graph-slug="props.graphSlug"
-                    node-alias="statement_type"
-                    :aliased-node-data="
-                        props.tileData?.aliased_data.statement_type ?? null
-                    "
-                    :mode="EDIT"
-                    class="widget-container column"
-                />
-                <GenericWidget
-                    :graph-slug="props.graphSlug"
-                    node-alias="statement_language"
-                    :aliased-node-data="
-                        props.tileData?.aliased_data.statement_language ?? null
-                    "
-                    :mode="EDIT"
-                    class="widget-container column"
-                />
+                <div class="widget-container column">
+                    <GenericWidget
+                        :graph-slug="props.graphSlug"
+                        node-alias="statement_content"
+                        :aliased-node-data="
+                            props.tileData?.aliased_data.statement_content ??
+                            null
+                        "
+                        :render-context="MULTILINE_RENDER_CONTEXT"
+                        :mode="EDIT"
+                    />
+                </div>
+                <div class="widget-container column">
+                    <GenericWidget
+                        :graph-slug="props.graphSlug"
+                        node-alias="statement_type"
+                        :aliased-node-data="
+                            props.tileData?.aliased_data.statement_type ?? null
+                        "
+                        :mode="EDIT"
+                    />
+                </div>
+                <div class="widget-container column">
+                    <GenericWidget
+                        :graph-slug="props.graphSlug"
+                        node-alias="statement_language"
+                        :aliased-node-data="
+                            props.tileData?.aliased_data.statement_language ??
+                            null
+                        "
+                        :mode="EDIT"
+                    />
+                </div>
                 <div class="widget-container">
                     <GenericWidget
                         :graph-slug="props.graphSlug"

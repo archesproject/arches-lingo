@@ -303,38 +303,41 @@ function resetForm() {
                 @submit="save"
                 @reset="resetForm"
             >
-                <GenericWidget
-                    node-alias="name_content"
-                    graph-slug="digital_object_system"
-                    :mode="EDIT"
-                    :aliased-node-data="
-                        digitalObjectResource?.aliased_data.name?.aliased_data
-                            .name_content ?? null
-                    "
-                    class="widget-container column"
-                />
-                <GenericWidget
-                    node-alias="statement_content"
-                    graph-slug="digital_object_system"
-                    :mode="EDIT"
-                    :aliased-node-data="
-                        digitalObjectResource?.aliased_data.statement
-                            ?.aliased_data.statement_content ?? null
-                    "
-                    :render-context="MULTILINE_RENDER_CONTEXT"
-                    class="widget-container column"
-                />
-                <GenericWidget
-                    node-alias="content"
-                    graph-slug="digital_object_system"
-                    :aliased-node-data="
-                        digitalObjectResource?.aliased_data?.content
-                            ?.aliased_data.content ?? null
-                    "
-                    :mode="EDIT"
-                    :should-show-label="false"
-                    class="widget-container column"
-                />
+                <div class="widget-container column">
+                    <GenericWidget
+                        node-alias="name_content"
+                        graph-slug="digital_object_system"
+                        :mode="EDIT"
+                        :aliased-node-data="
+                            digitalObjectResource?.aliased_data.name
+                                ?.aliased_data.name_content ?? null
+                        "
+                    />
+                </div>
+                <div class="widget-container column">
+                    <GenericWidget
+                        node-alias="statement_content"
+                        graph-slug="digital_object_system"
+                        :mode="EDIT"
+                        :aliased-node-data="
+                            digitalObjectResource?.aliased_data.statement
+                                ?.aliased_data.statement_content ?? null
+                        "
+                        :render-context="MULTILINE_RENDER_CONTEXT"
+                    />
+                </div>
+                <div class="widget-container column">
+                    <GenericWidget
+                        node-alias="content"
+                        graph-slug="digital_object_system"
+                        :aliased-node-data="
+                            digitalObjectResource?.aliased_data?.content
+                                ?.aliased_data.content ?? null
+                        "
+                        :mode="EDIT"
+                        :should-show-label="false"
+                    />
+                </div>
             </Form>
         </div>
     </div>
