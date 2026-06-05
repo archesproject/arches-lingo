@@ -34,6 +34,20 @@ class SchemeURITemplate(models.Model):
         db_table = "scheme_uri_templates"
 
 
+class SchemeAttribution(models.Model):
+    scheme = models.OneToOneField(
+        "models.ResourceInstance",
+        to_field="resourceinstanceid",
+        db_column="scheme_resource_instance_id",
+        on_delete=models.CASCADE,
+        related_name="scheme_attribution",
+    )
+    attribution = models.TextField(blank=True, default="")
+
+    class Meta:
+        db_table = "scheme_attributions"
+
+
 class SavedSearch(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
