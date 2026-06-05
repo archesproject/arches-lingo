@@ -39,13 +39,15 @@ class SchemeIdentifierView(LingoEditorMixin, APIBase):
         if not identifier:
             return JSONErrorResponse("identifier is required", status=400)
 
-        resource_identifier, _ = ResourceIdentifier.objects.update_or_create(
-            resourceid_id=scheme_resource_instance_id,
-            source="arches-lingo",
-            defaults={
-                "identifier": identifier,
-                "identifier_type": "identifier",
-            },
+        resource_identifier, _identifier_was_created = (
+            ResourceIdentifier.objects.update_or_create(
+                resourceid_id=scheme_resource_instance_id,
+                source="arches-lingo",
+                defaults={
+                    "identifier": identifier,
+                    "identifier_type": "identifier",
+                },
+            )
         )
 
         tile_data = {
