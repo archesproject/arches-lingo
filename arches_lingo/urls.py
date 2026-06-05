@@ -46,7 +46,10 @@ from arches_lingo.views.api.concept_lifecycle import (
     SchemeUnretireConceptsView,
 )
 from arches_lingo.views.api.settings import AppSettingsView
-from arches_lingo.views.api.identifier_resolve import IdentifierResolveView
+from arches_lingo.views.api.identifier_resolve import (
+    ConceptURILookupView,
+    IdentifierResolveView,
+)
 from arches_lingo.views.api.resource_list import (
     ContributorsListView,
     ResourceReferenceCountView,
@@ -117,6 +120,11 @@ urlpatterns = [
         "api/lingo/concepts/missing-translations",
         ConceptMissingTranslationsView.as_view(),
         name="api-lingo-missing-translations",
+    ),
+    path(
+        "api/lingo/concepts/resolve-uri",
+        ConceptURILookupView.as_view(),
+        name="api-lingo-concept-uri-resolve",
     ),
     path("api/concept-tree", ConceptTreeView.as_view(), name="api-concepts"),
     path(
