@@ -11,6 +11,7 @@ from arches.app.utils.response import JSONErrorResponse, JSONResponse
 
 from arches_querysets.models import ResourceTileTree
 from arches_lingo.mixins.permissions import AnonymousAccessMixin, LingoEditorMixin
+from arches_lingo.permissions import is_lingo_admin
 from arches_lingo.utils.concept_builder import ConceptBuilder
 from arches_lingo.utils.concept_lifecycle import (
     DRAFT_STATE_ID,
@@ -18,6 +19,7 @@ from arches_lingo.utils.concept_lifecycle import (
     delete_concept,
     get_narrower_ids,
 )
+from arches_lingo.utils.scheme_lock import is_concept_in_locked_scheme
 from arches_lingo.utils.concepts import (
     resolve_max_edit_distance,
     build_search_queryset,
@@ -255,6 +257,13 @@ class ConceptDeleteView(LingoEditorMixin, View):
                 title=_("Not found"),
                 message=_("Concept not found."),
                 status=HTTPStatus.NOT_FOUND,
+            )
+
+        if is_concept_in_locked_scheme(str(pk)) and not is_lingo_admin(request.user):
+            return JSONErrorResponse(
+                title=_("Scheme is locked."),
+                message=_("This concept's scheme is locked and cannot be edited."),
+                status=HTTPStatus.LOCKED,
             )
 
         if concept.resource_instance_lifecycle_state_id != DRAFT_STATE_ID:

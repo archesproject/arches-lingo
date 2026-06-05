@@ -9,6 +9,7 @@ export const useUserStore = defineStore("user", () => {
     const user = ref<User | null>(null);
 
     const isEditor = computed(() => user.value?.is_lingo_editor ?? false);
+    const isLingoAdmin = computed(() => user.value?.is_lingo_admin ?? false);
     const isAnonymous = computed(() => user.value?.is_anonymous ?? true);
     const isStaff = computed(() => user.value?.is_staff ?? false);
 
@@ -23,6 +24,7 @@ export const useUserStore = defineStore("user", () => {
     return {
         user,
         isEditor,
+        isLingoAdmin,
         isAnonymous,
         isStaff,
         refresh,

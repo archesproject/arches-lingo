@@ -33,7 +33,10 @@ import {
     DEFAULT_ERROR_TOAST_LIFE,
     ERROR,
 } from "@/arches_controlled_lists/constants.ts";
-import { RETIRED_LIFECYCLE_STATE_ID } from "@/arches_lingo/constants.ts";
+import {
+    LOCKED_LIFECYCLE_STATE_ID,
+    RETIRED_LIFECYCLE_STATE_ID,
+} from "@/arches_lingo/constants.ts";
 
 import { useConceptStore } from "@/arches_lingo/stores/useConceptStore.ts";
 import {
@@ -210,6 +213,20 @@ provide(
     "resourceInstanceLifecycleStateIsRetiredById",
     resourceInstanceLifecycleStateIsRetiredById,
 );
+
+const lockedSchemeIds = computed(
+    () =>
+        new Set(
+            schemes.value
+                .filter(
+                    (s) =>
+                        s.resource_instance_lifecycle_state_id ===
+                        LOCKED_LIFECYCLE_STATE_ID,
+                )
+                .map((s) => s.id),
+        ),
+);
+provide("lockedSchemeIds", lockedSchemeIds);
 
 const loadingNodeKeys = reactive(new Set<string>());
 provide("loadingNodeKeys", loadingNodeKeys);

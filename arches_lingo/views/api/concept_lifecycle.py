@@ -13,6 +13,7 @@ from arches_lingo.const import (
     TOP_CONCEPT_OF_NODE_AND_NODEGROUP,
 )
 from arches_lingo.mixins.permissions import LingoEditorMixin
+from arches_lingo.permissions import is_lingo_admin
 from arches_lingo.utils.concept_lifecycle import (
     EDITING_STATE_ID,
     RETIRED_STATE_ID,
@@ -21,6 +22,7 @@ from arches_lingo.utils.concept_lifecycle import (
     retire_concept,
     unretire_concept,
 )
+from arches_lingo.utils.scheme_lock import is_concept_in_locked_scheme, is_scheme_locked
 
 
 class ConceptRetireView(LingoEditorMixin, View):
@@ -32,6 +34,13 @@ class ConceptRetireView(LingoEditorMixin, View):
                 title=_("Not found"),
                 message=_("Concept not found."),
                 status=HTTPStatus.NOT_FOUND,
+            )
+
+        if is_concept_in_locked_scheme(str(pk)) and not is_lingo_admin(request.user):
+            return JSONErrorResponse(
+                title=_("Scheme is locked."),
+                message=_("This concept's scheme is locked and cannot be edited."),
+                status=HTTPStatus.LOCKED,
             )
 
         strategy = request.GET.get("strategy")
@@ -63,6 +72,13 @@ class ConceptUnretireView(LingoEditorMixin, View):
                 status=HTTPStatus.NOT_FOUND,
             )
 
+        if is_concept_in_locked_scheme(str(pk)) and not is_lingo_admin(request.user):
+            return JSONErrorResponse(
+                title=_("Scheme is locked."),
+                message=_("This concept's scheme is locked and cannot be edited."),
+                status=HTTPStatus.LOCKED,
+            )
+
         cascade = request.GET.get("cascade", "").lower() == "true"
 
         with transaction.atomic():
@@ -80,6 +96,13 @@ class SchemeUnretireConceptsView(LingoEditorMixin, View):
                 title=_("Not found"),
                 message=_("Scheme not found."),
                 status=HTTPStatus.NOT_FOUND,
+            )
+
+        if is_scheme_locked(pk) and not is_lingo_admin(request.user):
+            return JSONErrorResponse(
+                title=_("Scheme is locked."),
+                message=_("This scheme is locked and cannot be edited."),
+                status=HTTPStatus.LOCKED,
             )
 
         scheme_id = str(pk)

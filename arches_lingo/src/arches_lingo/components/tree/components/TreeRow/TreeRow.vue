@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, inject } from "vue";
+import type { ComputedRef } from "vue";
 
 import TreeRowLabel from "@/arches_lingo/components/tree/components/TreeRow/components/TreeRowLabel.vue";
 import FocusIcon from "@/arches_lingo/components/tree/components/TreeRow/components/FocusIcon.vue";
@@ -36,6 +37,10 @@ const resourceInstanceLifecycleStateIsRetiredById = inject(
     "resourceInstanceLifecycleStateIsRetiredById",
 ) as Ref<Record<string, boolean>>;
 
+const lockedSchemeIds = inject("lockedSchemeIds") as
+    | ComputedRef<Set<string>>
+    | undefined;
+
 const isRetired = computed(function () {
     return (
         resourceInstanceLifecycleStateIsRetiredById?.value?.[
@@ -44,10 +49,15 @@ const isRetired = computed(function () {
     );
 });
 
+const isNodeInLockedScheme = computed(function () {
+    return lockedSchemeIds?.value?.has(node.data.schemeId) === true;
+});
+
 const shouldShowAddChildButton = computed(function () {
     return (
         node.data.id !== NEW &&
         userStore.isEditor &&
+        !isNodeInLockedScheme.value &&
         resourceInstanceLifecycleStateCanEditById?.value?.[
             node.data.resource_instance_lifecycle_state_id
         ] === true
@@ -76,7 +86,11 @@ const shouldShowAddChildButton = computed(function () {
             :add-child-label="addChildLabel"
         />
         <DeleteIcon
-            v-if="userStore.isEditor && node.data.id === NEW"
+            v-if="
+                userStore.isEditor &&
+                node.data.id === NEW &&
+                !isNodeInLockedScheme
+            "
             :delete-label="deleteLabel"
         />
         <ExportIcon

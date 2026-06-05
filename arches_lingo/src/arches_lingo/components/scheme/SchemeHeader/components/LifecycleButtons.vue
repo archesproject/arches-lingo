@@ -16,6 +16,7 @@ import {
     DEFAULT_ERROR_TOAST_LIFE,
     EDITING_LIFECYCLE_STATE_ID,
     ERROR,
+    LOCKED_LIFECYCLE_STATE_ID,
     RETIRED_LIFECYCLE_STATE_ID,
 } from "@/arches_lingo/constants.ts";
 
@@ -60,9 +61,11 @@ const isCurrentlyRetired = computed(() => {
 });
 
 const nextResourceInstanceLifecycleStates = computed(() => {
-    const states =
+    const states = (
         currentResourceInstanceLifecycleState.value
-            ?.next_resource_instance_lifecycle_states || [];
+            ?.next_resource_instance_lifecycle_states || []
+    ).filter((state) => state.id !== LOCKED_LIFECYCLE_STATE_ID);
+
     if (!props.retireReinstateOnly) return states;
     if (isCurrentlyRetired.value) return states;
     if (

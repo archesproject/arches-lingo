@@ -377,6 +377,34 @@ export const unretireSchemeConcepts = async (
     }
 };
 
+export const lockScheme = async (schemeId: string): Promise<void> => {
+    const url = generateArchesURL("arches_lingo:api-scheme-lock", {
+        pk: schemeId,
+    });
+    const response = await fetch(url, {
+        method: "POST",
+        headers: { "X-CSRFTOKEN": getToken() },
+    });
+    if (!response.ok) {
+        const parsed = await response.json();
+        throw new Error(parsed.message || response.statusText);
+    }
+};
+
+export const unlockScheme = async (schemeId: string): Promise<void> => {
+    const url = generateArchesURL("arches_lingo:api-scheme-unlock", {
+        pk: schemeId,
+    });
+    const response = await fetch(url, {
+        method: "POST",
+        headers: { "X-CSRFTOKEN": getToken() },
+    });
+    if (!response.ok) {
+        const parsed = await response.json();
+        throw new Error(parsed.message || response.statusText);
+    }
+};
+
 export const fetchResourceReferenceCount = async (
     resourceId: string,
 ): Promise<number> => {
