@@ -86,6 +86,9 @@ const metaStringLabel = computed<MetaStringText>(() => ({
 
 const resolvedLocalConceptIds = ref<Record<string, string | null>>({});
 
+onMounted(resolveLocalConceptIds);
+watch(() => props.tileData, resolveLocalConceptIds);
+
 async function resolveLocalConceptIds() {
     const uris = [
         ...new Set(
@@ -108,9 +111,6 @@ async function resolveLocalConceptIds() {
 
     resolvedLocalConceptIds.value = Object.fromEntries(results);
 }
-
-onMounted(resolveLocalConceptIds);
-watch(() => props.tileData, resolveLocalConceptIds);
 
 function getComparateURI(rowData: ConceptMatchStatus): string {
     return rowData.aliased_data.match_status_ascribed_comparate
