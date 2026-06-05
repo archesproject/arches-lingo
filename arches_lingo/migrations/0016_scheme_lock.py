@@ -35,9 +35,6 @@ def create_locked_state_and_admin_group(apps, schema_editor):
     editing_state.next_resource_instance_lifecycle_states.add(locked_state)
     locked_state.previous_resource_instance_lifecycle_states.add(editing_state)
 
-    locked_state.next_resource_instance_lifecycle_states.add(editing_state)
-    editing_state.previous_resource_instance_lifecycle_states.add(locked_state)
-
     Group.objects.get_or_create(name="Lingo Admin")
 
 
@@ -60,8 +57,10 @@ def remove_locked_state_and_admin_group(apps, schema_editor):
         editing_state.next_resource_instance_lifecycle_states.remove(locked_state)
         locked_state.previous_resource_instance_lifecycle_states.remove(editing_state)
 
-        locked_state.next_resource_instance_lifecycle_states.remove(editing_state)
-        editing_state.previous_resource_instance_lifecycle_states.remove(locked_state)
+        ResourceInstance = apps.get_model("models", "ResourceInstance")
+        ResourceInstance.objects.filter(
+            resource_instance_lifecycle_state=locked_state
+        ).update(resource_instance_lifecycle_state=editing_state)
 
         locked_state.delete()
     except ResourceInstanceLifecycleState.DoesNotExist:
