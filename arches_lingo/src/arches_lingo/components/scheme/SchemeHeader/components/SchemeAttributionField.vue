@@ -4,7 +4,7 @@ import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
 
 import Button from "primevue/button";
-import InputText from "primevue/inputtext";
+import Textarea from "primevue/textarea";
 
 import { upsertSchemeAttribution } from "@/arches_lingo/api.ts";
 import { DEFAULT_ERROR_TOAST_LIFE, ERROR } from "@/arches_lingo/constants.ts";
@@ -74,19 +74,12 @@ async function saveAttribution() {
 </script>
 
 <template>
-    <div class="header-item">
+    <div class="header-item attribution-header-item">
         <span class="header-item-label">
             {{ $gettext("Attribution:") }}
         </span>
 
         <template v-if="isEditingAttribution">
-            <div class="attribution-input-wrapper">
-                <InputText
-                    v-model="attributionDraft"
-                    size="small"
-                    :placeholder="$gettext('Attribution text')"
-                />
-            </div>
             <Button
                 icon="pi pi-check"
                 variant="text"
@@ -107,11 +100,23 @@ async function saveAttribution() {
                 :disabled="isSavingAttribution"
                 @click="cancelEditingAttribution"
             />
+            <div class="attribution-input-wrapper">
+                <Textarea
+                    v-model="attributionDraft"
+                    :rows="3"
+                    :placeholder="
+                        $gettext('Enter attribution information here...')
+                    "
+                />
+            </div>
         </template>
 
         <template v-else>
-            <span class="header-item-value">
-                {{ schemeAttribution?.attribution || $gettext("None") }}
+            <span
+                v-if="!schemeAttribution?.attribution"
+                class="header-item-value"
+            >
+                {{ $gettext("None") }}
             </span>
             <Button
                 v-if="canEditResourceInstances"
@@ -122,19 +127,45 @@ async function saveAttribution() {
                 :aria-label="$gettext('Edit attribution')"
                 @click="editAttribution"
             />
+            <div
+                v-if="schemeAttribution?.attribution"
+                class="attribution-value"
+            >
+                {{ schemeAttribution.attribution }}
+            </div>
         </template>
     </div>
 </template>
 
 <style scoped>
-.attribution-input-wrapper {
-    flex: 0 1 auto;
-    min-width: 0;
-    overflow: hidden;
+.attribution-header-item {
+    width: 100%;
+    flex-wrap: wrap;
+    align-items: center;
 }
 
-:deep(input) {
-    field-sizing: content;
-    max-width: 100%;
+.attribution-value {
+    flex-basis: 100%;
+    width: 100%;
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-y: auto;
+    max-height: 6rem;
+    font-size: var(--p-lingo-font-size-smallnormal);
+    color: var(--p-primary-500);
+    background: var(--p-content-background);
+    border: 1px solid var(--p-content-border-color);
+    border-radius: var(--p-border-radius-sm);
+    padding: 0.375rem 0.5rem;
+    box-sizing: border-box;
+}
+
+.attribution-input-wrapper {
+    flex-basis: 100%;
+    min-width: 0;
+}
+
+.attribution-input-wrapper :deep(textarea) {
+    width: 100%;
 }
 </style>
