@@ -1,13 +1,5 @@
 <script setup lang="ts">
-import {
-    inject,
-    nextTick,
-    onMounted,
-    onUnmounted,
-    ref,
-    useTemplateRef,
-    watch,
-} from "vue";
+import { inject, nextTick, onMounted, ref, useTemplateRef, watch } from "vue";
 
 import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
@@ -30,6 +22,9 @@ import {
     addDigitalObjectToConceptImageCollection,
     createDigitalObject,
 } from "@/arches_lingo/components/concept/ConceptImages/components/utils.ts";
+
+import { useConceptImagesEditorStore } from "@/arches_lingo/stores/useConceptImagesEditorStore.ts";
+import { storeToRefs } from "pinia";
 
 import {
     fetchLingoResource,
@@ -84,20 +79,12 @@ const onSaveSettled = inject<() => void>("onSaveSettled");
 
 const formRef = useTemplateRef("form");
 const isLoading = ref(true);
+const { targetDigitalObjectResourceInstanceId } = storeToRefs(
+    useConceptImagesEditorStore(),
+);
 
 onMounted(() => {
-    document.addEventListener(
-        "openConceptImagesEditor",
-        getDigitalObjectInstance,
-    );
-    document.dispatchEvent(new Event("conceptImagesEditor:ready"));
-});
-
-onUnmounted(() => {
-    document.removeEventListener(
-        "openConceptImagesEditor",
-        getDigitalObjectInstance,
-    );
+    getDigitalObjectInstance(targetDigitalObjectResourceInstanceId.value);
 });
 
 watch(
@@ -105,19 +92,14 @@ watch(
     (formComponent) => (componentEditorFormRef!.value = formComponent),
 );
 
-async function getDigitalObjectInstance(
-    customEvent: CustomEvent<{ resourceInstanceId?: string }> | Event,
-) {
-    const typedEvent = customEvent as CustomEvent<{
-        resourceInstanceId?: string;
-    }>;
+async function getDigitalObjectInstance(resourceInstanceId?: string) {
     try {
-        if (typedEvent?.detail?.resourceInstanceId === undefined) {
+        if (resourceInstanceId === undefined) {
             digitalObjectResource.value = undefined;
         } else {
             digitalObjectResource.value = await fetchLingoResource(
                 "digital_object_system",
-                typedEvent.detail.resourceInstanceId,
+                resourceInstanceId,
             );
         }
         digitalObjectLoaded.value = true;
@@ -202,9 +184,11 @@ async function save(e: FormSubmitEvent) {
             } as unknown as FileListValue[];
         }
 
-        // this fork was requested because the multipartjson parser is unstable
         // if files go one way, if no files go the traditional way
-        if (submittedFormData.content.node_value?.length) {
+        const hasNewFiles = submittedFormData.content.node_value?.some(
+            (file: PossiblyNewFile) => file.file instanceof File,
+        );
+        if (hasNewFiles) {
             if (digitalObjectResource.value) {
                 digitalObjectResource.value.aliased_data = {
                     ...digitalObjectInstanceAliases,
@@ -254,7 +238,7 @@ async function save(e: FormSubmitEvent) {
                     digitalObjectInstanceAliases,
                 );
                 digitalObjectResource.value = digitalObject;
-                addDigitalObjectToConceptImageCollection(
+                await addDigitalObjectToConceptImageCollection(
                     digitalObject,
                     props.graphSlug,
                     props.nodegroupAlias,
@@ -264,16 +248,11 @@ async function save(e: FormSubmitEvent) {
         }
 
         nextTick(() => {
-            const openConceptImagesEditor = new CustomEvent(
-                "openConceptImagesEditor",
-                {
-                    detail: {
-                        resourceInstanceId:
-                            digitalObjectResource.value?.resourceinstanceid,
-                    },
-                },
+            targetDigitalObjectResourceInstanceId.value =
+                digitalObjectResource.value?.resourceinstanceid;
+            getDigitalObjectInstance(
+                targetDigitalObjectResourceInstanceId.value,
             );
-            document.dispatchEvent(openConceptImagesEditor);
         });
 
         refreshReportSection!(props.componentName);
@@ -292,20 +271,9 @@ async function save(e: FormSubmitEvent) {
 }
 
 function resetForm() {
+    targetDigitalObjectResourceInstanceId.value =
+        digitalObjectResource?.value?.resourceinstanceid;
     openEditor!(props.componentName);
-
-    nextTick(() => {
-        const openConceptImagesEditor = new CustomEvent(
-            "openConceptImagesEditor",
-            {
-                detail: {
-                    resourceInstanceId:
-                        digitalObjectResource?.value?.resourceinstanceid,
-                },
-            },
-        );
-        document.dispatchEvent(openConceptImagesEditor);
-    });
 }
 </script>
 
