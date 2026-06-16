@@ -80,26 +80,6 @@ async function saveAttribution() {
         </span>
 
         <template v-if="isEditingAttribution">
-            <Button
-                icon="pi pi-check"
-                variant="text"
-                severity="success"
-                size="small"
-                :rounded="true"
-                :aria-label="$gettext('Save attribution')"
-                :loading="isSavingAttribution"
-                @click="saveAttribution"
-            />
-            <Button
-                icon="pi pi-times"
-                variant="text"
-                severity="danger"
-                size="small"
-                :rounded="true"
-                :aria-label="$gettext('Cancel')"
-                :disabled="isSavingAttribution"
-                @click="cancelEditingAttribution"
-            />
             <div class="attribution-input-wrapper">
                 <Textarea
                     v-model="attributionDraft"
@@ -108,6 +88,28 @@ async function saveAttribution() {
                         $gettext('Enter attribution information here...')
                     "
                 />
+                <div class="attribution-edit-controls">
+                    <Button
+                        icon="pi pi-check"
+                        variant="text"
+                        severity="success"
+                        size="small"
+                        :rounded="true"
+                        :aria-label="$gettext('Save attribution')"
+                        :loading="isSavingAttribution"
+                        @click="saveAttribution"
+                    />
+                    <Button
+                        icon="pi pi-times"
+                        variant="text"
+                        severity="danger"
+                        size="small"
+                        :rounded="true"
+                        :aria-label="$gettext('Cancel')"
+                        :disabled="isSavingAttribution"
+                        @click="cancelEditingAttribution"
+                    />
+                </div>
             </div>
         </template>
 
@@ -161,11 +163,18 @@ async function saveAttribution() {
 }
 
 .attribution-input-wrapper {
+    display: flex;
+    flex-direction: row;
     flex-basis: 100%;
     min-width: 0;
 }
 
 .attribution-input-wrapper :deep(textarea) {
     width: 100%;
+}
+
+.attribution-edit-controls {
+    display: flex;
+    flex-direction: column;
 }
 </style>
