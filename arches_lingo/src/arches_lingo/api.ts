@@ -1026,6 +1026,41 @@ export const upsertSchemeURITemplate = async (
     return parsed;
 };
 
+export const fetchSchemeAttribution = async (
+    schemeResourceInstanceId: string,
+) => {
+    const url = generateArchesURL("arches_lingo:api-scheme-attribution", {
+        scheme_resource_instance_id: schemeResourceInstanceId,
+    });
+
+    const response = await fetch(url);
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
+export const upsertSchemeAttribution = async (
+    schemeResourceInstanceId: string,
+    attribution: string,
+) => {
+    const url = generateArchesURL("arches_lingo:api-scheme-attribution", {
+        scheme_resource_instance_id: schemeResourceInstanceId,
+    });
+
+    const response = await fetch(url, {
+        method: "POST",
+        headers: {
+            "X-CSRFTOKEN": getToken(),
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ attribution }),
+    });
+
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
 export const executeAdvancedSearch = async (
     query: AdvancedSearchQuery,
     page: number = 1,
