@@ -1,6 +1,9 @@
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+
+from arches_lingo.const import SCHEMES_GRAPH_ID
 
 from arches_lingo.utils.scheme_uri_template import default_scheme_uri_template_value
 
@@ -19,6 +22,17 @@ class ConceptIdentifierCounter(models.Model):
     class Meta:
         db_table = "concept_identifier_counters"
 
+    def clean(self):
+        super().clean()
+        if self.scheme and str(self.scheme.graph_id) != str(SCHEMES_GRAPH_ID):
+            raise ValidationError(
+                {"scheme": _("The related resource must be an instance of a scheme.")}
+            )
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
+
 
 class SchemeURITemplate(models.Model):
     scheme = models.OneToOneField(
@@ -32,6 +46,42 @@ class SchemeURITemplate(models.Model):
 
     class Meta:
         db_table = "scheme_uri_templates"
+
+    def clean(self):
+        super().clean()
+        if self.scheme and str(self.scheme.graph_id) != str(SCHEMES_GRAPH_ID):
+            raise ValidationError(
+                {"scheme": _("The related resource must be an instance of a scheme.")}
+            )
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
+
+
+class SchemeAttribution(models.Model):
+    scheme = models.OneToOneField(
+        "models.ResourceInstance",
+        to_field="resourceinstanceid",
+        db_column="scheme_resource_instance_id",
+        on_delete=models.CASCADE,
+        related_name="scheme_attribution",
+    )
+    attribution = models.TextField(blank=True, default="")
+
+    class Meta:
+        db_table = "scheme_attributions"
+
+    def clean(self):
+        super().clean()
+        if self.scheme and str(self.scheme.graph_id) != str(SCHEMES_GRAPH_ID):
+            raise ValidationError(
+                {"scheme": _("The related resource must be an instance of a scheme.")}
+            )
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
 
 
 class SavedSearch(models.Model):

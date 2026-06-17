@@ -976,6 +976,19 @@ export const resolveConceptIdentifier = async (
     return parsedResponseBody;
 };
 
+export const resolveConceptURI = async (
+    uri: string,
+): Promise<{ resourceinstanceid: string } | null> => {
+    const url = generateArchesURL("arches_lingo:api-lingo-concept-uri-resolve");
+    const response = await fetch(`${url}?uri=${encodeURIComponent(uri)}`);
+    if (response.status === 404) return null;
+    const parsedResponseBody = await response.json();
+    if (!response.ok) {
+        throw new Error(parsedResponseBody.message || response.statusText);
+    }
+    return parsedResponseBody;
+};
+
 export const fetchSchemeURITemplate = async (
     schemeResourceInstanceId: string,
 ) => {
@@ -1006,6 +1019,41 @@ export const upsertSchemeURITemplate = async (
         body: JSON.stringify({
             url_template: urlTemplate,
         }),
+    });
+
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
+export const fetchSchemeAttribution = async (
+    schemeResourceInstanceId: string,
+) => {
+    const url = generateArchesURL("arches_lingo:api-scheme-attribution", {
+        scheme_resource_instance_id: schemeResourceInstanceId,
+    });
+
+    const response = await fetch(url);
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
+export const upsertSchemeAttribution = async (
+    schemeResourceInstanceId: string,
+    attribution: string,
+) => {
+    const url = generateArchesURL("arches_lingo:api-scheme-attribution", {
+        scheme_resource_instance_id: schemeResourceInstanceId,
+    });
+
+    const response = await fetch(url, {
+        method: "POST",
+        headers: {
+            "X-CSRFTOKEN": getToken(),
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ attribution }),
     });
 
     const parsed = await response.json();
