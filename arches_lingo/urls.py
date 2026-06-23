@@ -40,6 +40,7 @@ from arches_lingo.views.api.scheme_identifier import SchemeIdentifierView
 from arches_lingo.views.api.scheme_uri_template import (
     SchemeURITemplateView,
 )
+from arches_lingo.views.api.scheme_attribution import SchemeAttributionView
 from arches_lingo.views.api.concept_lifecycle import (
     ConceptRetireView,
     ConceptUnretireView,
@@ -158,6 +159,11 @@ urlpatterns = [
         "api/scheme/<uuid:scheme_resource_instance_id>/url-template",
         SchemeURITemplateView.as_view(),
         name="api-scheme-url-template",
+    ),
+    path(
+        "api/scheme/<uuid:scheme_resource_instance_id>/attribution",
+        SchemeAttributionView.as_view(),
+        name="api-scheme-attribution",
     ),
     path(
         "api/lingo/scheme-resource",

@@ -19,6 +19,7 @@ import LifecycleButtons from "@/arches_lingo/components/scheme/SchemeHeader/comp
 import ReinstateDialog from "@/arches_lingo/components/generic/ReinstateDialog.vue";
 import SchemeIdentifierField from "@/arches_lingo/components/scheme/SchemeHeader/components/SchemeIdentifierField.vue";
 import SchemeURITemplateField from "@/arches_lingo/components/scheme/SchemeHeader/components/SchemeURITemplateField.vue";
+import SchemeAttributionField from "@/arches_lingo/components/scheme/SchemeHeader/components/SchemeAttributionField.vue";
 import ConceptIdentifierCounterField from "@/arches_lingo/components/scheme/SchemeHeader/components/ConceptIdentifierCounterField.vue";
 import LifecycleStateBadge from "@/arches_lingo/components/generic/LifecycleStateBadge.vue";
 
@@ -39,6 +40,7 @@ import {
     fetchSchemeResource,
     fetchResourceIdentifiers,
     fetchConceptIdentifierCounter,
+    fetchSchemeAttribution,
     fetchSchemeURITemplate,
     fetchResourceInstanceLifecycleState,
     fetchSchemeLabelCounts,
@@ -75,6 +77,11 @@ type ConceptIdentifierCounter = {
 type SchemeURITemplate = {
     scheme_resource_instance_id: string;
     url_template: string;
+};
+
+type SchemeAttribution = {
+    scheme_resource_instance_id: string;
+    attribution: string;
 };
 
 const props = defineProps<{
@@ -150,6 +157,8 @@ const resourceIdentifierId = ref<number | undefined>();
 const conceptIdentifierCounter = ref<ConceptIdentifierCounter | undefined>();
 
 const schemeURITemplate = ref<SchemeURITemplate | undefined>();
+
+const schemeAttribution = ref<SchemeAttribution | undefined>();
 
 const currentLifecycleState = ref<ResourceInstanceLifecycleState | undefined>();
 
@@ -282,6 +291,7 @@ onMounted(async () => {
             fetchedResourceIdentifiers,
             fetchedConceptIdentifierCounter,
             fetchedSchemeURITemplate,
+            fetchedSchemeAttribution,
             fetchedLifecycleState,
         ] = await Promise.all([
             fetchResourceIdentifiers(resourceInstanceId),
@@ -289,6 +299,7 @@ onMounted(async () => {
                 () => undefined,
             ),
             fetchSchemeURITemplate(resourceInstanceId).catch(() => undefined),
+            fetchSchemeAttribution(resourceInstanceId).catch(() => undefined),
             fetchResourceInstanceLifecycleState(resourceInstanceId),
         ]);
 
@@ -297,6 +308,7 @@ onMounted(async () => {
 
         conceptIdentifierCounter.value = fetchedConceptIdentifierCounter;
         schemeURITemplate.value = fetchedSchemeURITemplate;
+        schemeAttribution.value = fetchedSchemeAttribution;
 
         currentLifecycleState.value =
             fetchedLifecycleState as ResourceInstanceLifecycleState;
@@ -396,6 +408,12 @@ function onSchemeURITemplateUpdate(updatedTemplate: {
     schemeURITemplate: SchemeURITemplate | undefined;
 }) {
     schemeURITemplate.value = updatedTemplate.schemeURITemplate;
+}
+
+function onSchemeAttributionUpdate(updatedAttribution: {
+    schemeAttribution: SchemeAttribution | undefined;
+}) {
+    schemeAttribution.value = updatedAttribution.schemeAttribution;
 }
 
 function onConceptIdentifierCounterUpdate(updatedCounter: {
@@ -725,6 +743,15 @@ async function onReinstateConfirmed(cascade: boolean) {
                             defaultSchemeURITemplate
                         "
                         @update="onSchemeURITemplateUpdate"
+                    />
+                </div>
+
+                <div class="header-row">
+                    <SchemeAttributionField
+                        :resource-instance-id="props.resourceInstanceId"
+                        :can-edit-resource-instances="canEditResourceInstances"
+                        :scheme-attribution="schemeAttribution"
+                        @update="onSchemeAttributionUpdate"
                     />
                 </div>
 
