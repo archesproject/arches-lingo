@@ -72,7 +72,7 @@ def remove_locked_state_and_admin_group(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("arches_lingo", "0015_add_retired_to_editing_lifecycle_transition"),
+        ("arches_lingo", "0016_add_scheme_attribution"),
         ("models", "0001_initial"),
         ("auth", "0001_initial"),
     ]
