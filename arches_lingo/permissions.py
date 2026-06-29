@@ -1,7 +1,7 @@
 from django.conf import settings
 from rest_framework import permissions
 
-from arches_lingo.const import LINGO_EDITOR_GROUP_NAME
+from arches_lingo.const import LINGO_ADMIN_GROUP_NAME, LINGO_EDITOR_GROUP_NAME
 
 
 def anonymous_access_allowed():
@@ -18,9 +18,25 @@ def is_lingo_editor(user):
     return user.groups.filter(name=LINGO_EDITOR_GROUP_NAME).exists()
 
 
+def is_lingo_admin(user):
+    """Check if a user is a member of the Lingo Admin group (or is a superuser)."""
+    if not user.is_authenticated:
+        return False
+    if user.is_superuser:
+        return True
+    return user.groups.filter(name=LINGO_ADMIN_GROUP_NAME).exists()
+
+
 def is_authenticated_user(user):
     """Check if the request is from a real authenticated user (not anonymous)."""
     return user.is_authenticated and user.username != "anonymous"
+
+
+class LingoAdmin(permissions.BasePermission):
+    """DRF permission class requiring membership in the Lingo Admin group."""
+
+    def has_permission(self, request, view):
+        return is_lingo_admin(request.user)
 
 
 class LingoEditor(permissions.BasePermission):

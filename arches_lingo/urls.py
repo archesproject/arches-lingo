@@ -46,6 +46,7 @@ from arches_lingo.views.api.concept_lifecycle import (
     ConceptUnretireView,
     SchemeUnretireConceptsView,
 )
+from arches_lingo.views.api.scheme_lock import SchemeLockView, SchemeUnlockView
 from arches_lingo.views.api.settings import AppSettingsView
 from arches_lingo.views.api.identifier_resolve import (
     ConceptURILookupView,
@@ -263,6 +264,16 @@ urlpatterns = [
         "api/lingo/scheme/<uuid:pk>/unretire-concepts",
         SchemeUnretireConceptsView.as_view(),
         name="api-scheme-unretire-concepts",
+    ),
+    path(
+        "api/lingo/scheme/<uuid:pk>/lock",
+        SchemeLockView.as_view(),
+        name="api-scheme-lock",
+    ),
+    path(
+        "api/lingo/scheme/<uuid:pk>/unlock",
+        SchemeUnlockView.as_view(),
+        name="api-scheme-unlock",
     ),
     path(
         "api/lingo/<slug:graph>",

@@ -60,6 +60,7 @@ export const PUBLISHED_LIFECYCLE_STATE_ID =
     "6b0f1a7b-5b3d-4b2a-8a5b-7c3a1b0f2d9e";
 export const RETIRED_LIFECYCLE_STATE_ID =
     "9d2e1c0b-7a6b-4b3d-8c1a-0f2d9e6b0a7c";
+export const LOCKED_LIFECYCLE_STATE_ID = "c9f7e3d1-2a5b-4c8d-9e6f-3b0a1d2e4f7c";
 
 export const MULTILINE_RENDER_CONTEXT = "multiline";
 

@@ -36,6 +36,7 @@ import {
     GUIDE_TERM_URI,
     HIERARCHY_NAME_ICON,
     HIERARCHY_NAME_URI,
+    LOCKED_LIFECYCLE_STATE_ID,
     NEW_CONCEPT,
     PUBLISHED_LIFECYCLE_STATE_ID,
     RETIRED_LIFECYCLE_STATE_ID,
@@ -137,13 +138,15 @@ const conceptIcon = computed(function () {
 const canEditResourceInstances = computed(function () {
     return (
         isEditor.value === true &&
+        !isSchemeLocked.value &&
         props.resourceInstanceId !== undefined &&
         lifecycleState.value?.can_edit_resource_instances === true
     );
 });
 
 const canDelete = computed(function () {
-    if (!isEditor.value || !props.resourceInstanceId) return false;
+    if (!isEditor.value || isSchemeLocked.value || !props.resourceInstanceId)
+        return false;
     return lifecycleState.value?.can_delete_resource_instances === true;
 });
 
@@ -174,8 +177,24 @@ const isSchemePublished = computed(function () {
     );
 });
 
+const isSchemeLocked = computed(function () {
+    if (!schemeId.value) return false;
+    const scheme = conceptStore.schemes.find(
+        (candidate) => candidate.id === schemeId.value,
+    );
+    return (
+        scheme?.resource_instance_lifecycle_state_id ===
+        LOCKED_LIFECYCLE_STATE_ID
+    );
+});
+
 const showLifecycleButtons = computed(function () {
-    return isEditor.value && !isSchemeRetired.value && !isSchemePublished.value;
+    return (
+        isEditor.value &&
+        !isSchemeLocked.value &&
+        !isSchemeRetired.value &&
+        !isSchemePublished.value
+    );
 });
 
 function isGuideTermType(typeNodeValue: unknown): boolean {

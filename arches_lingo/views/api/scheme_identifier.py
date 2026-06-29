@@ -1,3 +1,7 @@
+from http import HTTPStatus
+
+from django.utils.translation import gettext as _
+
 from arches.app.models.models import ResourceIdentifier
 from arches.app.models.tile import Tile as TileModel
 from arches.app.utils.betterJSONSerializer import JSONDeserializer
@@ -14,23 +18,36 @@ from arches_lingo.const import (
     SCHEME_IDENTIFIER_TYPE_LIST_ITEM_ID,
 )
 from arches_lingo.mixins.permissions import LingoEditorMixin
+from arches_lingo.permissions import is_lingo_admin
+from arches_lingo.utils.scheme_lock import is_scheme_locked
 
 
 class SchemeIdentifierView(LingoEditorMixin, APIBase):
     def post(self, request, scheme_resource_instance_id):
+        if is_scheme_locked(scheme_resource_instance_id) and not is_lingo_admin(
+            request.user
+        ):
+            return JSONErrorResponse(
+                title=_("Scheme is locked."),
+                message=_("This scheme is locked and cannot be edited."),
+                status=HTTPStatus.LOCKED,
+            )
+
         request_json = JSONDeserializer().deserialize(request.body)
         identifier = request_json.get("identifier", "")
 
         if not identifier:
             return JSONErrorResponse("identifier is required", status=400)
 
-        resource_identifier, _ = ResourceIdentifier.objects.update_or_create(
-            resourceid_id=scheme_resource_instance_id,
-            source="arches-lingo",
-            defaults={
-                "identifier": identifier,
-                "identifier_type": "identifier",
-            },
+        resource_identifier, _identifier_was_created = (
+            ResourceIdentifier.objects.update_or_create(
+                resourceid_id=scheme_resource_instance_id,
+                source="arches-lingo",
+                defaults={
+                    "identifier": identifier,
+                    "identifier_type": "identifier",
+                },
+            )
         )
 
         tile_data = {

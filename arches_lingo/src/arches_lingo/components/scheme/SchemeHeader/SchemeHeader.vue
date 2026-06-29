@@ -28,6 +28,7 @@ import {
     DEFAULT_ERROR_TOAST_LIFE,
     DEFAULT_TOAST_LIFE,
     ERROR,
+    LOCKED_LIFECYCLE_STATE_ID,
     NEW_CONCEPT,
     SECONDARY,
     SUCCESS,
@@ -43,6 +44,8 @@ import {
     fetchSchemeURITemplate,
     fetchResourceInstanceLifecycleState,
     fetchSchemeLabelCounts,
+    lockScheme,
+    unlockScheme,
     unretireSchemeConcepts,
 } from "@/arches_lingo/api.ts";
 import { useResourceStore } from "@/arches_lingo/composables/useResourceStore.ts";
@@ -137,6 +140,7 @@ const showMoreLabel = computed(() =>
 
 const isLoading = ref(true);
 const showExportDialog = ref(false);
+const showLockDialog = ref(false);
 const exportDialogKey = ref(0);
 const showReinstateDialog = ref(false);
 const showRetireDialog = ref(false);
@@ -163,8 +167,13 @@ const hasPersistedResourceInstance = computed(() => {
 });
 
 const store = useResourceStore();
-const { isEditor } = useUserStore();
+const { isEditor, isLingoAdmin } = useUserStore();
 const { publicServerAddress } = storeToRefs(useAppSettingsStore());
+
+const isLocked = computed(
+    () => currentLifecycleState.value?.id === LOCKED_LIFECYCLE_STATE_ID,
+);
+const isLockLoading = ref(false);
 
 watch(
     [() => store.resource.value, () => store.error.value],
@@ -221,6 +230,7 @@ watch(
 const canEditResourceInstances = computed(() => {
     return (
         isEditor &&
+        !isLocked.value &&
         hasPersistedResourceInstance.value &&
         Boolean(currentLifecycleState.value?.can_edit_resource_instances)
     );
@@ -229,6 +239,7 @@ const canEditResourceInstances = computed(() => {
 const canDeleteResourceInstances = computed(() => {
     return (
         isEditor &&
+        !isLocked.value &&
         hasPersistedResourceInstance.value &&
         Boolean(currentLifecycleState.value?.can_delete_resource_instances)
     );
@@ -313,6 +324,34 @@ onMounted(async () => {
     }
     // Resource data is loaded via the store watch above
 });
+
+function handleLockToggle() {
+    if (!props.resourceInstanceId) return;
+    showLockDialog.value = true;
+}
+
+async function onLockConfirmed() {
+    if (!props.resourceInstanceId) return;
+    isLockLoading.value = true;
+    showLockDialog.value = false;
+    try {
+        if (isLocked.value) {
+            await unlockScheme(props.resourceInstanceId);
+        } else {
+            await lockScheme(props.resourceInstanceId);
+        }
+        window.location.reload();
+    } catch (error) {
+        toast.add({
+            severity: ERROR,
+            life: DEFAULT_ERROR_TOAST_LIFE,
+            summary: $gettext("Error changing lock"),
+            detail: error instanceof Error ? error.message : undefined,
+        });
+    } finally {
+        isLockLoading.value = false;
+    }
+}
 
 function openExportDialog() {
     exportDialogKey.value++;
@@ -489,6 +528,42 @@ async function onReinstateConfirmed(cascade: boolean) {
 <template>
     <ConfirmDialog group="delete-scheme" />
     <Dialog
+        v-if="showLockDialog"
+        :visible="true"
+        :modal="true"
+        :dismissable-mask="false"
+        :header="isLocked ? $gettext('Unlock scheme') : $gettext('Lock scheme')"
+        @update:visible="showLockDialog = false"
+    >
+        <p v-if="isLocked">
+            {{
+                $gettext(
+                    "Unlocking will return this scheme to Editing state and allow edits by all editors.",
+                )
+            }}
+        </p>
+        <p v-else>
+            {{
+                $gettext(
+                    "Locking will prevent all edits to this scheme and its concepts.",
+                )
+            }}
+        </p>
+        <template #footer>
+            <Button
+                :label="$gettext('Cancel')"
+                :severity="SECONDARY"
+                :outlined="true"
+                @click="showLockDialog = false"
+            />
+            <Button
+                :label="isLocked ? $gettext('Unlock') : $gettext('Lock')"
+                severity="warn"
+                @click="onLockConfirmed"
+            />
+        </template>
+    </Dialog>
+    <Dialog
         v-if="showRetireDialog"
         :visible="true"
         :modal="true"
@@ -597,8 +672,19 @@ async function onReinstateConfirmed(cascade: boolean) {
                         @click="confirmDelete"
                     />
 
+                    <Button
+                        v-if="isLingoAdmin"
+                        :icon="isLocked ? 'pi pi-lock-open' : 'pi pi-lock'"
+                        :label="
+                            isLocked ? $gettext('Unlock') : $gettext('Lock')
+                        "
+                        :loading="isLockLoading"
+                        severity="warn"
+                        @click="handleLockToggle"
+                    />
+
                     <LifecycleButtons
-                        v-if="isEditor"
+                        v-if="isEditor && !isLocked"
                         ref="lifecycleButtonsRef"
                         :resource-instance-id="props.resourceInstanceId"
                         @change="onLifecycleStateChange"

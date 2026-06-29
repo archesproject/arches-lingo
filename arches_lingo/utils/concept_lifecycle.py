@@ -13,6 +13,7 @@ from arches_lingo.const import (
 DRAFT_STATE_ID = uuid.UUID("0e7f8c6d-1f7b-4c2a-9a0c-2b9e0d6c8f11")
 EDITING_STATE_ID = uuid.UUID("b3a6a0d2-2b5c-4c2f-9d6c-0c2a5b7d1e8f")
 RETIRED_STATE_ID = uuid.UUID("9d2e1c0b-7a6b-4b3d-8c1a-0f2d9e6b0a7c")
+LOCKED_STATE_ID = uuid.UUID("c9f7e3d1-2a5b-4c8d-9e6f-3b0a1d2e4f7c")
 
 STRATEGY_REPARENT = "reparent"
 STRATEGY_DELETE_CHILDREN = "delete_children"
