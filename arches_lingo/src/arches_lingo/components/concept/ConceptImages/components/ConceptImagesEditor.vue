@@ -112,9 +112,13 @@ async function save(e: FormSubmitEvent) {
     isLoading.value = true;
 
     try {
-        const submittedFormData = Object.fromEntries(
-            Object.entries(e.states).map(([key, state]) => [key, state.value]),
-        );
+        const submittedFormData = e.values;
+        const contentFiles =
+            (
+                submittedFormData.content as {
+                    node_value: PossiblyNewFile[] | null;
+                }
+            )?.node_value ?? null;
 
         const digitalObjectInstanceAliases: DigitalObjectInstanceAliases =
             digitalObjectResource.value?.aliased_data ?? {};
@@ -135,12 +139,7 @@ async function save(e: FormSubmitEvent) {
         }
 
         // files do not respect json.stringify
-        const fileJsonObjects = (
-            (submittedFormData.content as
-                | PossiblyNewFile[]
-                | null
-                | undefined) ?? []
-        ).map((file) => {
+        const fileJsonObjects = (contentFiles ?? []).map((file) => {
             if (!file.file) {
                 return file;
             }
@@ -163,10 +162,9 @@ async function save(e: FormSubmitEvent) {
             },
         };
 
-        // if files go one way, if no files go the traditional way
-        const hasNewFiles = (
-            (submittedFormData.content as PossiblyNewFile[]) ?? []
-        ).some((file) => file.file instanceof File);
+        const hasNewFiles = (contentFiles ?? []).some(
+            (file) => file.file instanceof File,
+        );
         if (hasNewFiles) {
             if (digitalObjectResource.value) {
                 digitalObjectResource.value.aliased_data = {
@@ -183,7 +181,7 @@ async function save(e: FormSubmitEvent) {
             const formDataForDigitalObject = await createFormDataForFileUpload(
                 digitalObjectResource as Ref<DigitalObjectInstance>,
                 digitalObjectInstanceAliases,
-                submittedFormData,
+                { ...submittedFormData, content: contentFiles },
             );
             if (digitalObjectResource.value?.resourceinstanceid) {
                 await updateLingoResourceFromForm(

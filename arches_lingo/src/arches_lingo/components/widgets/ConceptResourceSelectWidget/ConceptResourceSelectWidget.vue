@@ -118,12 +118,11 @@ async function getConceptHierarchy(conceptIds: string[]) {
         />
         <GenericFormField
             v-if="mode === EDIT"
-            v-slot="{ onUpdateValue }"
-            :value="aliasedNodeData?.node_value ?? null"
+            v-slot="{ onWidgetInitialized, onUpdateAliasedNodeData }"
             :is-dirty="isDirty"
             :node-alias="nodeAlias"
             @update:is-dirty="emit('update:isDirty', $event)"
-            @update:value="emit('update:value', $event)"
+            @update:aliased-node-data="emit('update:value', $event)"
         >
             <ConceptResourceSelectWidgetEditor
                 :value="searchResult"
@@ -132,8 +131,22 @@ async function getConceptHierarchy(conceptIds: string[]) {
                 :graph-slug="graphSlug"
                 :scheme="scheme"
                 :scheme-selectable="schemeSelectable"
-                @update:value="onUpdateValue($event)"
-                @update:is-editor-mounted="emit('update:isLoading', $event)"
+                @initialized="
+                    onWidgetInitialized(
+                        aliasedNodeData ?? {
+                            node_value: null,
+                            display_value: '',
+                            details: [],
+                        },
+                    )
+                "
+                @update:value="
+                    onUpdateAliasedNodeData({
+                        node_value: $event,
+                        display_value: '',
+                        details: [],
+                    })
+                "
             />
         </GenericFormField>
         <ConceptResourceSelectWidgetViewer

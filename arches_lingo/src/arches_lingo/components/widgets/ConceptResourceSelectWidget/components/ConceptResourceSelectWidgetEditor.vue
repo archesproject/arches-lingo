@@ -28,7 +28,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
     (event: "update:value", updatedValue: ResourceInstanceReference[]): void;
-    (event: "update:isEditorMounted", isMounted: boolean): void;
+    (event: "initialized"): void;
 }>();
 
 const { $gettext } = useGettext();
@@ -67,7 +67,7 @@ const initialValueFromTileData = computed(() => {
 });
 
 onMounted(() => {
-    emit("update:isEditorMounted", true);
+    emit("initialized");
 });
 
 function clearOptions() {
