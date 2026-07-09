@@ -58,6 +58,10 @@ if (widgetReadyTracker) {
 
 const conceptIds = aliasedNodeData?.details.map((detail) => detail.resource_id);
 const searchResult = ref();
+const isWidgetInitialized = ref(false);
+const resolvedInitialValue = ref<ResourceInstanceListAliasedNodeData | null>(
+    null,
+);
 
 watchEffect(async () => {
     if (cardXNodeXWidgetData.value) {
@@ -96,6 +100,13 @@ async function getConceptHierarchy(conceptIds: string[]) {
     );
     return parsedResponse.data;
 }
+
+function onWidgetInitialized(
+    aliasedNodeData: ResourceInstanceListAliasedNodeData,
+) {
+    isWidgetInitialized.value = true;
+    resolvedInitialValue.value = aliasedNodeData;
+}
 </script>
 
 <template>
@@ -118,36 +129,42 @@ async function getConceptHierarchy(conceptIds: string[]) {
         />
         <GenericFormField
             v-if="mode === EDIT"
-            v-slot="{ onWidgetInitialized, onUpdateAliasedNodeData }"
+            v-slot="{ onUpdateAliasedNodeData }"
             :is-dirty="isDirty"
+            :initial-value="resolvedInitialValue"
             :node-alias="nodeAlias"
             @update:is-dirty="emit('update:isDirty', $event)"
             @update:aliased-node-data="emit('update:value', $event)"
         >
-            <ConceptResourceSelectWidgetEditor
-                :value="searchResult"
-                :node-alias="nodeAlias"
-                :resource-instance-id="resourceInstanceId"
-                :graph-slug="graphSlug"
-                :scheme="scheme"
-                :scheme-selectable="schemeSelectable"
-                @initialized="
-                    onWidgetInitialized(
-                        aliasedNodeData ?? {
-                            node_value: null,
+            <div
+                v-show="isWidgetInitialized"
+                style="display: contents"
+            >
+                <ConceptResourceSelectWidgetEditor
+                    :value="searchResult"
+                    :node-alias="nodeAlias"
+                    :resource-instance-id="resourceInstanceId"
+                    :graph-slug="graphSlug"
+                    :scheme="scheme"
+                    :scheme-selectable="schemeSelectable"
+                    @initialized="
+                        onWidgetInitialized(
+                            aliasedNodeData ?? {
+                                node_value: null,
+                                display_value: '',
+                                details: [],
+                            },
+                        )
+                    "
+                    @update:value="
+                        onUpdateAliasedNodeData({
+                            node_value: $event,
                             display_value: '',
                             details: [],
-                        },
-                    )
-                "
-                @update:value="
-                    onUpdateAliasedNodeData({
-                        node_value: $event,
-                        display_value: '',
-                        details: [],
-                    })
-                "
-            />
+                        })
+                    "
+                />
+            </div>
         </GenericFormField>
         <ConceptResourceSelectWidgetViewer
             v-else-if="mode === VIEW"
