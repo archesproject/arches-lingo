@@ -317,25 +317,29 @@ class LingoResourceExporter:
         """
         Export scheme and concept resources as Arches TileCSV format using the
         core TileCsvWriter. Each nodegroup card becomes a separate CSV file,
-        all bundled together in the output ZIP.
+        all bundled together in the output ZIP. Scheme and concept graphs share
+        card names (e.g. "Label"), so their CSVs are namespaced under separate
+        "scheme/" and "concept/" folders to avoid filename collisions in the ZIP.
         """
         output_files = []
 
-        if scheme_ids:
+        def collect_csvs(resource_ids, folder):
             writer = TileCsvWriter()
-            for f in writer.write_resources(resourceinstanceids=scheme_ids):
-                content = f["outputfile"].getvalue()
+            for exported_file in writer.write_resources(
+                resourceinstanceids=resource_ids
+            ):
+                content = exported_file["outputfile"].getvalue()
                 if isinstance(content, str):
                     content = content.encode("utf-8")
-                output_files.append({"name": f["name"], "content": content})
+                output_files.append(
+                    {"name": f"{folder}/{exported_file['name']}", "content": content}
+                )
+
+        if scheme_ids:
+            collect_csvs(scheme_ids, "scheme")
 
         if concept_ids:
-            writer = TileCsvWriter()
-            for f in writer.write_resources(resourceinstanceids=concept_ids):
-                content = f["outputfile"].getvalue()
-                if isinstance(content, str):
-                    content = content.encode("utf-8")
-                output_files.append({"name": f["name"], "content": content})
+            collect_csvs(concept_ids, "concept")
 
         return output_files
 
