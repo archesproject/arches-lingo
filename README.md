@@ -21,13 +21,13 @@ For developer install instructions, see the [Developer Setup](#developer-setup-f
 
 1. If you don't already have an Arches project, you'll need to create one by following the instructions in the Arches [documentation](http://archesproject.org/documentation/).
 
-2. When your project is ready, add "arches_querysets", "arches_component_lab", "arches_controlled_lists", "arches_lingo", and "pgtrigger" to INSTALLED_APPS **below** the name of your project:
+2. When your project is ready, add "arches_querysets", "arches_vue_components", "arches_controlled_lists", "arches_lingo", and "pgtrigger" to INSTALLED_APPS **below** the name of your project:
     ```
     INSTALLED_APPS = (
         ...
         "my_project_name",
         "arches_querysets",
-        "arches_component_lab",
+        "arches_vue_components",
         "arches_controlled_lists",
         "arches_lingo",
         "pgtrigger",
@@ -78,11 +78,11 @@ For developer install instructions, see the [Developer Setup](#developer-setup-f
     ```
     When enabled, unauthenticated users can browse schemes, concepts, and search results in a read-only mode. When disabled (the default), all users must log in to access any Lingo content. Authenticated users who are not members of the "Lingo Editor" group will still see a read-only experience regardless of this setting.
 
-5. Next ensure arches, arches-component-lab, and arches_lingo are included as dependencies in package.json
+5. Next ensure arches, arches-vue-components, and arches_lingo are included as dependencies in package.json
     ```
     "dependencies": {
         "arches": "archesproject/arches#dev/8.1.x",
-        "arches-component-lab": "archesproject/arches-component-lab#main",
+        "arches-vue-components": "archesproject/arches-vue-components#dev/2.0.x",
         "arches_lingo": "archesproject/arches-lingo#main"
     }
     ```
