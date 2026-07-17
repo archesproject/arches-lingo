@@ -27,7 +27,7 @@ classifiers = [
 requires-python = ">=3.11"
 dependencies = [
     "arches @ git+https://github.com/archesproject/arches@dev/8.1.x",
-    "arches_vue_components @ git+https://github.com/archesproject/arches-vue-components@dev/1.0.x",
+    "arches_vue_components @ git+https://github.com/archesproject/arches-vue-components@dev/2.0.x",
     "arches_querysets @ git+https://github.com/archesproject/arches-querysets@dev/1.1.x",
     "arches_controlled_lists @ git+https://github.com/archesproject/arches-controlled-lists@dev/1.1.x",
 ]
