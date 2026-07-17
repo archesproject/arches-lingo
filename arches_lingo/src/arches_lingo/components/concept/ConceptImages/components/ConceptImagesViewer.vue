@@ -10,7 +10,7 @@ import Skeleton from "primevue/skeleton";
 import Tag from "primevue/tag";
 import { useConfirm } from "primevue/useconfirm";
 
-import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
+import GenericWidget from "@/arches_vue_components/generics/GenericWidget/GenericWidget.vue";
 
 import { DANGER, SECONDARY, VIEW } from "@/arches_lingo/constants.ts";
 import { useConceptImagesEditorStore } from "@/arches_lingo/stores/useConceptImagesEditorStore.ts";
@@ -23,7 +23,7 @@ import type {
     ConceptInstance,
     DigitalObjectInstance,
 } from "@/arches_lingo/types.ts";
-import type { FileListAliasedNodeData } from "@/arches_component_lab/datatypes/file-list/types.ts";
+import type { FileListAliasedNodeData } from "@/arches_vue_components/datatypes/file-list/types.ts";
 import {
     fetchLingoResourcePartial,
     fetchLingoResourcesBatch,

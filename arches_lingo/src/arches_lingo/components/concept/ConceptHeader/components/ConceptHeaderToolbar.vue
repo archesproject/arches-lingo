@@ -9,7 +9,7 @@ import { storeToRefs } from "pinia";
 import Button from "primevue/button";
 import Tag from "primevue/tag";
 
-import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
+import GenericWidget from "@/arches_vue_components/generics/GenericWidget/GenericWidget.vue";
 
 import DeleteConceptDialog from "@/arches_lingo/components/concept/ConceptHeader/components/DeleteConceptDialog.vue";
 import ExportThesauri from "@/arches_lingo/components/scheme/SchemeHeader/components/ExportThesauri.vue";
@@ -53,7 +53,7 @@ import { useConceptStore } from "@/arches_lingo/stores/useConceptStore.ts";
 import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 
 import type { Ref } from "vue";
-import type { AliasedNodeData } from "@/arches_component_lab/types.ts";
+import type { AliasedNodeData } from "@/arches_vue_components/types.ts";
 import type {
     DeleteConceptStrategy,
     ResourceInstanceLifecycleState,
@@ -215,12 +215,14 @@ function isHierarchyNameType(typeNodeValue: unknown): boolean {
     );
 }
 
-async function onConceptTypeChange(newValue: ReferenceSelectValue) {
+async function onConceptTypeChange(newValue: unknown) {
+    const conceptTypeValue = newValue as ReferenceSelectValue;
+
     try {
         await upsertLingoTile(props.graphSlug, CONCEPT_TYPE_NODE_ALIAS, {
             resourceinstance: props.resourceInstanceId,
             aliased_data: {
-                [CONCEPT_TYPE_NODE_ALIAS]: newValue,
+                [CONCEPT_TYPE_NODE_ALIAS]: conceptTypeValue,
             },
             tileid: props.conceptTypeTile?.tileid,
         });

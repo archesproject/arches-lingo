@@ -9,7 +9,7 @@ import HierarchicalPositionEditor from "@/arches_lingo/components/concept/Hierar
 
 import { EDIT, VIEW } from "@/arches_lingo/constants.ts";
 
-import { fetchTileData } from "@/arches_component_lab/generics/GenericCard/api.ts";
+import { fetchTileData } from "@/arches_vue_components/generics/GenericCard/api.ts";
 import { fetchConceptAncestorPaths } from "@/arches_lingo/api.ts";
 import { useResourceStore } from "@/arches_lingo/composables/useResourceStore.ts";
 

@@ -34,7 +34,7 @@ import { useConceptStore } from "@/arches_lingo/stores/useConceptStore.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 
 import type { Ref } from "vue";
-import type { ResourceInstanceReference } from "@/arches_component_lab/datatypes/resource-instance-list/types.ts";
+import type { ResourceInstanceReference } from "@/arches_vue_components/datatypes/resource-instance-list/types.ts";
 import type {
     AppellativeStatus,
     ConceptClassificationStatusAliases,

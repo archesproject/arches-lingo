@@ -1,5 +1,5 @@
 import type { Component, InjectionKey, Ref } from "vue";
-import type { Language } from "@/arches_component_lab/types.ts";
+import type { Language } from "@/arches_vue_components/types.ts";
 import type { Concept } from "@/arches_lingo/types.ts";
 
 export const ERROR = "error";

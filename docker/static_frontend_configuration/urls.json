@@ -1078,31 +1078,31 @@
             "params": ["workflowid"]
         }
     ],
-    "arches_component_lab:api-card-x-node-x-widget": [
+    "arches_vue_components:api-card-x-node-x-widget": [
         {
             "url": "/api/card-x-node-x-widget-data/{graph_slug}/{node_alias}",
             "params": ["graph_slug", "node_alias"]
         }
     ],
-    "arches_component_lab:api-card-x-node-x-widget-list-from-nodegroup": [
+    "arches_vue_components:api-card-x-node-x-widget-list-from-nodegroup": [
         {
             "url": "/api/card-x-node-x-widget-list-from-nodegroup/{graph_slug}/{nodegroup_alias}",
             "params": ["graph_slug", "nodegroup_alias"]
         }
     ],
-    "arches_component_lab:api-concepts-tree": [
+    "arches_vue_components:api-concepts-tree": [
         {
             "url": "/api/concepts/{graph_slug}/{node_alias}",
             "params": ["graph_slug", "node_alias"]
         }
     ],
-    "arches_component_lab:api-languages-with-request-language": [
+    "arches_vue_components:api-languages-with-request-language": [
         {
             "url": "/api/languages-with-request-language",
             "params": []
         }
     ],
-    "arches_component_lab:api-relatable-resources": [
+    "arches_vue_components:api-relatable-resources": [
         {
             "url": "/api/relatable-resources/{graph}/{node_alias}",
             "params": ["graph", "node_alias"]

@@ -8,8 +8,8 @@
             "@/arches_lingo/*": [
                 "../arches_lingo/src/arches_lingo/*"
             ],
-            "@/arches_component_lab/*": [
-                "../../ENV/lib/python3.12/site-packages/arches_component_lab/src/arches_component_lab/*"
+            "@/arches_vue_components/*": [
+                "../../ENV/lib/python3.12/site-packages/arches_vue_components/src/arches_vue_components/*"
             ],
             "@/arches_controlled_lists/*": [
                 "../../ENV/lib/python3.12/site-packages/arches_controlled_lists/src/arches_controlled_lists/*"

@@ -311,7 +311,7 @@ urlpatterns = [
         name="api-lingo-concept-resolve",
     ),
     path("", include("arches_controlled_lists.urls")),
-    path("", include("arches_component_lab.urls")),
+    path("", include("arches_vue_components.urls")),
 ]
 
 # Ensure Arches core urls are superseded by project-level urls

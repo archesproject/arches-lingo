@@ -1,6 +1,6 @@
 import arches from "arches";
 
-import { useWidgetConfigStore } from "@/arches_component_lab/stores/useWidgetConfigStore.ts";
+import { useWidgetConfigStore } from "@/arches_vue_components/stores/useWidgetConfigStore.ts";
 import {
     createLingoResource,
     createLingoResourceFromForm,
@@ -9,7 +9,7 @@ import {
 } from "@/arches_lingo/api.ts";
 import { DIGITAL_OBJECT_GRAPH_SLUG } from "@/arches_lingo/components/concept/ConceptImages/components/constants.ts";
 import { type Ref, toRaw } from "vue";
-import type { ResourceInstanceListAliasedNodeData } from "@/arches_component_lab/datatypes/resource-instance-list/types.ts";
+import type { ResourceInstanceListAliasedNodeData } from "@/arches_vue_components/datatypes/resource-instance-list/types.ts";
 import type {
     ConceptInstance,
     DigitalObjectInstance,

@@ -4,7 +4,7 @@ import { useGettext } from "vue3-gettext";
 
 import Button from "primevue/button";
 
-import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
+import GenericWidget from "@/arches_vue_components/generics/GenericWidget/GenericWidget.vue";
 
 import { VIEW } from "@/arches_lingo/constants.ts";
 import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";

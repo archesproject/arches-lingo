@@ -4,19 +4,19 @@ import { watchEffect, ref } from "vue";
 import Message from "primevue/message";
 import Skeleton from "primevue/skeleton";
 
-import GenericWidgetLabel from "@/arches_component_lab/generics/GenericWidget/components/GenericWidgetLabel.vue";
-import GenericFormField from "@/arches_component_lab/generics/GenericWidget/components/GenericFormField.vue";
+import GenericWidgetLabel from "@/arches_vue_components/generics/GenericWidget/components/GenericWidgetLabel.vue";
+import GenericFormField from "@/arches_vue_components/generics/GenericWidget/components/GenericFormField.vue";
 import ConceptResourceSelectWidgetEditor from "@/arches_lingo/components/widgets/ConceptResourceSelectWidget/components/ConceptResourceSelectWidgetEditor.vue";
 import ConceptResourceSelectWidgetViewer from "@/arches_lingo/components/widgets/ConceptResourceSelectWidget/components/ConceptResourceSelectWidgetViewer.vue";
 
-import { useWidgetConfigStore } from "@/arches_component_lab/stores/useWidgetConfigStore.ts";
+import { useWidgetConfigStore } from "@/arches_vue_components/stores/useWidgetConfigStore.ts";
 import { fetchConceptResources } from "@/arches_lingo/api.ts";
 import { useWidgetReadyTracker } from "@/arches_lingo/composables/useWidgetReadyTracker.ts";
-import { EDIT, VIEW } from "@/arches_component_lab/widgets/constants.ts";
+import { EDIT, VIEW } from "@/arches_vue_components/widgets/constants.ts";
 
-import type { CardXNodeXWidgetData } from "@/arches_component_lab/types.ts";
-import type { WidgetMode } from "@/arches_component_lab/widgets/types.ts";
-import type { ResourceInstanceListAliasedNodeData } from "@/arches_component_lab/datatypes/resource-instance-list/types.ts";
+import type { CardXNodeXWidgetData } from "@/arches_vue_components/types.ts";
+import type { WidgetMode } from "@/arches_vue_components/widgets/types.ts";
+import type { ResourceInstanceListAliasedNodeData } from "@/arches_vue_components/datatypes/resource-instance-list/types.ts";
 
 const {
     graphSlug,

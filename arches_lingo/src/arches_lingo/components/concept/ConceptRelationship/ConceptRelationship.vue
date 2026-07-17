@@ -9,7 +9,7 @@ import ConceptRelationshipViewer from "@/arches_lingo/components/concept/Concept
 
 import { EDIT, VIEW } from "@/arches_lingo/constants.ts";
 
-import { fetchTileData } from "@/arches_component_lab/generics/GenericCard/api.ts";
+import { fetchTileData } from "@/arches_vue_components/generics/GenericCard/api.ts";
 import { fetchConceptRelationships } from "@/arches_lingo/api.ts";
 
 import type {

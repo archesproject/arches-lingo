@@ -11,11 +11,11 @@ import {
     TOP_CONCEPT_ICON,
     CONCEPT_TYPE_NODE_ALIAS,
 } from "@/arches_lingo/constants.ts";
-import { fetchTileData } from "@/arches_component_lab/generics/GenericCard/api.ts";
+import { fetchTileData } from "@/arches_vue_components/generics/GenericCard/api.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 
 import type { TreeNode } from "primevue/treenode";
-import type { Language } from "@/arches_component_lab/types.ts";
+import type { Language } from "@/arches_vue_components/types.ts";
 import type {
     Concept,
     ConceptType,

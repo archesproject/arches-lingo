@@ -8,7 +8,7 @@ import { Form } from "@primevue/forms";
 
 import Skeleton from "primevue/skeleton";
 
-import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
+import GenericWidget from "@/arches_vue_components/generics/GenericWidget/GenericWidget.vue";
 import { DIGITAL_OBJECT_GRAPH_SLUG } from "@/arches_lingo/components/concept/ConceptImages/components/constants.ts";
 import {
     DEFAULT_ERROR_TOAST_LIFE,
@@ -37,7 +37,7 @@ import type { FormSubmitEvent } from "@primevue/forms";
 import type {
     FileListAliasedNodeData,
     FileReference,
-} from "@/arches_component_lab/datatypes/file-list/types.ts";
+} from "@/arches_vue_components/datatypes/file-list/types.ts";
 
 import type {
     ConceptImages,

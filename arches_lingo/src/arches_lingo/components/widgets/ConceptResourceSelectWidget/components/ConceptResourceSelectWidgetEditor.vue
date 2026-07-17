@@ -14,7 +14,7 @@ import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 
 import type { MultiSelectFilterEvent } from "primevue/multiselect";
 import type { VirtualScrollerLazyEvent } from "primevue/virtualscroller";
-import type { ResourceInstanceReference } from "@/arches_component_lab/datatypes/resource-instance-list/types";
+import type { ResourceInstanceReference } from "@/arches_vue_components/datatypes/resource-instance-list/types";
 import type { SearchResultItem } from "@/arches_lingo/types.ts";
 
 const props = defineProps<{

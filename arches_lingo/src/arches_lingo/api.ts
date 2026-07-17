@@ -2,7 +2,7 @@ import arches from "arches";
 import Cookies from "js-cookie";
 import { generateArchesURL } from "@/arches/utils/generate-arches-url.ts";
 
-import type { Language } from "@/arches_component_lab/types";
+import type { Language } from "@/arches_vue_components/types";
 import type {
     AdvancedSearchQuery,
     AdvancedSearchResponse,

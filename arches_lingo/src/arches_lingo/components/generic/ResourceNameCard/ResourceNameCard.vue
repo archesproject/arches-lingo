@@ -4,17 +4,17 @@ import { inject, reactive, ref, useTemplateRef, watch, watchEffect } from "vue";
 import Message from "primevue/message";
 import Skeleton from "primevue/skeleton";
 
-import GenericCardEditor from "@/arches_component_lab/generics/GenericCard/components/GenericCardEditor.vue";
-import { fetchTileData } from "@/arches_component_lab/generics/GenericCard/api.ts";
-import { useWidgetConfigStore } from "@/arches_component_lab/stores/useWidgetConfigStore.ts";
+import GenericCardEditor from "@/arches_vue_components/generics/GenericCard/components/GenericCardEditor.vue";
+import { fetchTileData } from "@/arches_vue_components/generics/GenericCard/api.ts";
+import { useNodegroupWidgetConfigStore } from "@/arches_vue_components/stores/useNodegroupWidgetConfigStore.ts";
 
-import { EDIT } from "@/arches_component_lab/widgets/constants.ts";
+import { EDIT } from "@/arches_vue_components/widgets/constants.ts";
 
 import type { Ref } from "vue";
 import type {
     AliasedTileData,
     CardXNodeXWidgetData,
-} from "@/arches_component_lab/types.ts";
+} from "@/arches_vue_components/types.ts";
 
 const { graphSlug, nodegroupAlias, resourceInstanceId, tileId } = defineProps<{
     graphSlug: string;
@@ -66,7 +66,7 @@ watchEffect(async () => {
 
     try {
         const cardXNodeXWidgetDataPromise =
-            useWidgetConfigStore().fetchNodegroupWidgetConfigs(
+            useNodegroupWidgetConfigStore().fetchNodegroupWidgetConfigs(
                 graphSlug,
                 nodegroupAlias,
             );
