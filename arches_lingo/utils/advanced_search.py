@@ -19,7 +19,7 @@ QuerySets.
 """
 
 from django.db import connection
-from django.db.models import Q
+from django.db.models import BooleanField, Q
 from django.db.models.expressions import RawSQL
 
 from arches.app.models.models import ResourceInstance, TileModel
@@ -52,6 +52,15 @@ from arches_lingo.const import (
     MATCH_STATUS_COMPARATE_NODE,
     CONCEPT_TYPE_NODEGROUP,
     CONCEPT_TYPE_NODEID,
+    DEPICTING_DIGITAL_ASSET_INTERNAL_NODEGROUP,
+    DEPICTING_DIGITAL_ASSET_INTERNAL_NODE,
+    DEPICTING_DIGITAL_ASSET_EXTERNAL_NODEGROUP,
+    DIGITAL_OBJECT_CONTENT_NODEGROUP,
+    DIGITAL_OBJECT_CONTENT_NODE,
+    DIGITAL_OBJECT_NAME_NODEGROUP,
+    DIGITAL_OBJECT_NAME_CONTENT_NODE,
+    DIGITAL_OBJECT_STATEMENT_NODEGROUP,
+    DIGITAL_OBJECT_STATEMENT_CONTENT_NODE,
 )
 from arches_lingo.models import ConceptSet
 
@@ -72,6 +81,7 @@ VALID_FACETS = {
     "concept_set",
     "attribution_source",
     "attribution_contributor",
+    "related_image",
 }
 
 
@@ -653,6 +663,151 @@ class AdvancedSearchEvaluator:
             .values_list("resourceinstance_id", flat=True)
             .distinct()
         )
+
+    def _concepts_depicting(self, digital_object_ids):
+        """Return concept PKs whose internal depiction references any digital object.
+
+        Matches the ``depicting_digital_asset_internal`` resource-instance-list node
+        against the given digital-object resource IDs via JSONB containment.
+        """
+        containment = Q()
+        matched_any = False
+        for digital_object_id in digital_object_ids:
+            matched_any = True
+            containment |= Q(
+                **{
+                    f"data__{DEPICTING_DIGITAL_ASSET_INTERNAL_NODE}__contains": [
+                        {"resourceId": str(digital_object_id)}
+                    ]
+                }
+            )
+
+        if not matched_any:
+            # No digital objects matched — an empty Q() would otherwise match
+            # every internal-depiction tile, so short-circuit to no concepts.
+            return TileModel.objects.none().values_list(
+                "resourceinstance_id", flat=True
+            )
+
+        return (
+            TileModel.objects.filter(
+                nodegroup_id=DEPICTING_DIGITAL_ASSET_INTERNAL_NODEGROUP,
+            )
+            .filter(containment)
+            .values_list("resourceinstance_id", flat=True)
+            .distinct()
+        )
+
+    def _digital_objects_by_file_name(self, value, match_mode):
+        """Return digital-object resource PKs whose content file name matches value.
+
+        The ``content`` node is a file-list whose tiledata is a JSON array of file
+        objects.  Matching a file name therefore requires unnesting the array and
+        comparing each element's ``name`` — expressed as a RawSQL EXISTS predicate
+        so the database performs the scan rather than Python.
+        """
+        if match_mode == "exists":
+            file_name_matches = RawSQL(
+                """EXISTS (
+                    SELECT 1
+                    FROM jsonb_array_elements(tiledata->%s) AS file_element
+                    WHERE file_element ->> 'name' IS NOT NULL
+                      AND file_element ->> 'name' <> '')""",
+                [DIGITAL_OBJECT_CONTENT_NODE],
+                output_field=BooleanField(),
+            )
+        else:
+            if match_mode == "exact":
+                pattern = value
+            elif match_mode == "starts_with":
+                pattern = f"{value}%"
+            elif match_mode == "ends_with":
+                pattern = f"%{value}"
+            else:  # contains
+                pattern = f"%{value}%"
+
+            file_name_matches = RawSQL(
+                """EXISTS (
+                    SELECT 1
+                    FROM jsonb_array_elements(tiledata->%s) AS file_element
+                    WHERE file_element ->> 'name' ILIKE %s)""",
+                [DIGITAL_OBJECT_CONTENT_NODE, pattern],
+                output_field=BooleanField(),
+            )
+
+        # RawSQL is a boolean *expression*, which .filter() cannot consume
+        # directly; annotate it and filter on the annotation instead.
+        return (
+            TileModel.objects.filter(nodegroup_id=DIGITAL_OBJECT_CONTENT_NODEGROUP)
+            .annotate(file_name_matches=file_name_matches)
+            .filter(file_name_matches=True)
+            .values_list("resourceinstance_id", flat=True)
+            .distinct()
+        )
+
+    def _digital_objects_by_text_node(self, nodegroup_id, node_id, value, match_mode):
+        """Return digital-object resource PKs whose text node matches value."""
+        filters = Q(nodegroup_id=nodegroup_id)
+        filters &= self._text_filter(f"data__{node_id}", value, match_mode)
+        return (
+            TileModel.objects.filter(filters)
+            .values_list("resourceinstance_id", flat=True)
+            .distinct()
+        )
+
+    def _facet_related_image(self, condition):
+        """Find concepts by their related (depicting) images.
+
+        The ``image_attribute`` sub-field selects what is matched:
+
+        * ``has_image`` — concepts with an internal digital-object depiction OR an
+          external image URL.  ``exists`` is implied regardless of match_mode.
+        * ``file_name`` — the file name on the linked digital object's content.
+        * ``title`` — the linked digital object's name.
+        * ``description`` — the linked digital object's statement.
+
+        The last three are two-hop: matching digital-object resources are resolved
+        first, then concepts referencing any of them via
+        ``depicting_digital_asset_internal`` are returned.  These attributes apply
+        only to internal digital objects — external URLs carry no such metadata.
+        """
+        image_attribute = condition.get("image_attribute", "has_image")
+
+        if image_attribute == "has_image":
+            return (
+                TileModel.objects.filter(
+                    Q(nodegroup_id=DEPICTING_DIGITAL_ASSET_INTERNAL_NODEGROUP)
+                    | Q(nodegroup_id=DEPICTING_DIGITAL_ASSET_EXTERNAL_NODEGROUP)
+                )
+                .values_list("resourceinstance_id", flat=True)
+                .distinct()
+            )
+
+        value = condition.get("value", "").strip()
+        match_mode = condition.get("match_mode", "contains")
+        if not value and match_mode != "exists":
+            return self._all_concept_ids()
+
+        if image_attribute == "file_name":
+            digital_object_ids = self._digital_objects_by_file_name(value, match_mode)
+        elif image_attribute == "title":
+            digital_object_ids = self._digital_objects_by_text_node(
+                DIGITAL_OBJECT_NAME_NODEGROUP,
+                DIGITAL_OBJECT_NAME_CONTENT_NODE,
+                value,
+                match_mode,
+            )
+        elif image_attribute == "description":
+            digital_object_ids = self._digital_objects_by_text_node(
+                DIGITAL_OBJECT_STATEMENT_NODEGROUP,
+                DIGITAL_OBJECT_STATEMENT_CONTENT_NODE,
+                value,
+                match_mode,
+            )
+        else:
+            return self._all_concept_ids().none()
+
+        return self._concepts_depicting(digital_object_ids)
 
     def _facet_attribution_contributor(self, condition):
         """Find concepts whose labels or notes are attributed to a specific contributor.

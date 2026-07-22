@@ -132,6 +132,26 @@ IDENTIFIER_CONTENT_NODE = "bf73e6ba-4888-11ee-8a8d-11afefc4bff7"
 MATCH_STATUS_NODEGROUP = "4cfaaa64-0ed7-11ef-9493-0a58a9feac02"
 MATCH_STATUS_COMPARATE_NODE = "4cfaae24-0ed7-11ef-9493-0a58a9feac02"
 
+# depicting_digital_asset (concept -> image relationships)
+# Internal: resource-instance-list pointing to Digital Object resources.
+DEPICTING_DIGITAL_ASSET_INTERNAL_NODEGROUP = "bf73e628-4888-11ee-8a8d-11afefc4bff7"
+DEPICTING_DIGITAL_ASSET_INTERNAL_NODE = "bf73e628-4888-11ee-8a8d-11afefc4bff7"
+# External: url pointing directly at an image outside of Arches.
+DEPICTING_DIGITAL_ASSET_EXTERNAL_NODEGROUP = "bf73e577-4888-11ee-8a8d-11afefc4bff7"
+DEPICTING_DIGITAL_ASSET_EXTERNAL_NODE = "bf73e577-4888-11ee-8a8d-11afefc4bff7"
+
+### Digital Object Model Nodes & Nodegroups ###
+DIGITAL_OBJECT_GRAPH_ID = "ce57ee93-1f08-11ee-9071-214dbb482912"
+# content (file-list holding the uploaded image file(s))
+DIGITAL_OBJECT_CONTENT_NODEGROUP = "f522c448-1778-11ef-b270-0a58a9feac02"
+DIGITAL_OBJECT_CONTENT_NODE = "f522c448-1778-11ef-b270-0a58a9feac02"
+# name (title)
+DIGITAL_OBJECT_NAME_NODEGROUP = "78fc1ff8-11e8-11ef-9493-0a58a9feac02"
+DIGITAL_OBJECT_NAME_CONTENT_NODE = "95522790-08fc-11f0-9797-b33468cba848"
+# statement (description)
+DIGITAL_OBJECT_STATEMENT_NODEGROUP = "8278e3c2-11e8-11ef-9493-0a58a9feac02"
+DIGITAL_OBJECT_STATEMENT_CONTENT_NODE = "4e995163-08fc-11f0-b111-b33468cba848"
+
 
 # status (lifecycle/status)
 STATUS_NODEGROUP = "152321b6-0f5e-11ef-9493-0a58a9feac02"
