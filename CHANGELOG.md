@@ -7,6 +7,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+-   Add progressive hierarchy loading [#707](https://github.com/archesproject/arches-lingo/pull/707)
+-   Add saved sets to the explore panel [#713](https://github.com/archesproject/arches-lingo/pull/713)
+-   Add all results to a set from advanced search [#715](https://github.com/archesproject/arches-lingo/pull/715)
+-   Add router links to the hierarchical position section of the concept page [#719](https://github.com/archesproject/arches-lingo/pull/719)
+-   Add icon for concepts that are hierarchy names [#721](https://github.com/archesproject/arches-lingo/pull/721)
+-   Add sources and contributors facets to advanced search [#722](https://github.com/archesproject/arches-lingo/pull/722)
+-   Add narrower concepts section to reports [#732](https://github.com/archesproject/arches-lingo/pull/732)
+-   Add URI copy button to headers [#743](https://github.com/archesproject/arches-lingo/pull/743)
+-   Add multiline config for notes and image descriptions [#745](https://github.com/archesproject/arches-lingo/pull/745)
+-   Add scheme attribution [#752](https://github.com/archesproject/arches-lingo/pull/752)
+-   Add ability to lock/unlock schemes and related concepts [#753](https://github.com/archesproject/arches-lingo/pull/753)
+-   Add scripts to dump and load fixtures [#755](https://github.com/archesproject/arches-lingo/pull/755)
+-   Add advanced search facet for searching on related images [#756](https://github.com/archesproject/arches-lingo/pull/756)
+
+### Changed
+-   Optimize search performance for large-scale datasets [#704](https://github.com/archesproject/arches-lingo/pull/704)
+-   Improve dashboard performance for large-scale datasets [#705](https://github.com/archesproject/arches-lingo/pull/705)
+-   Improve scheme header display for schemes with many languages [#717](https://github.com/archesproject/arches-lingo/pull/717)
+-   Improve dashboard display for large datasets [#718](https://github.com/archesproject/arches-lingo/pull/718)
+-   Improve performance of concept select dropdowns via per-term search [#720](https://github.com/archesproject/arches-lingo/pull/720)
+-   Improve advanced search with additional enhancements and fixes [#729](https://github.com/archesproject/arches-lingo/pull/729)
+-   Improve explore concept sets [#730](https://github.com/archesproject/arches-lingo/pull/730)
+-   Harden lifecycle retirement [#695](https://github.com/archesproject/arches-lingo/issues/695) [#731](https://github.com/archesproject/arches-lingo/pull/731)
+-   Improve report UX for large datasets [#732](https://github.com/archesproject/arches-lingo/pull/732)
+-   Polish scheme header [#733](https://github.com/archesproject/arches-lingo/pull/733)
+-   Make narrower concepts count tag consistent with other headers [#737](https://github.com/archesproject/arches-lingo/pull/737)
+-   Make top concepts section consistent with other concept lists [#738](https://github.com/archesproject/arches-lingo/pull/738)
+-   Improve image upload and display [#744](https://github.com/archesproject/arches-lingo/pull/744)
+-   Resolve matched concept URIs locally when available [#749](https://github.com/archesproject/arches-lingo/pull/749)
+-   Migrate from arches-component-lab to arches-vue-components [#741](https://github.com/archesproject/arches-lingo/pull/741)
+
+### Fixed
+-   Fix bugs to support AAT data load [#702](https://github.com/archesproject/arches-lingo/pull/702)
+-   Fix import handling for AAT data load [#703](https://github.com/archesproject/arches-lingo/pull/703)
+-   Prevent UUID from displaying in basic search on select [#746](https://github.com/archesproject/arches-lingo/pull/746)
+-   Hide form on save [#747](https://github.com/archesproject/arches-lingo/pull/747)
+-   Guard against unnecessary tree requests [#750](https://github.com/archesproject/arches-lingo/pull/750)
+-   Put exported CSVs into per-model folders to prevent filename clashes [#754](https://github.com/archesproject/arches-lingo/pull/754)
+
 ## [1.0.0] - 2026-03-31
 
 ### Added
