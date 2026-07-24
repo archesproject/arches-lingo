@@ -2,7 +2,7 @@ import uuid
 from collections import defaultdict
 from django.db.models import Q
 from rdflib import Literal, Namespace, RDF, URIRef
-from rdflib.namespace import SKOS, DCTERMS
+from rdflib.namespace import SKOS, DCTERMS, OWL
 from rdflib.graph import Graph
 from arches.app.models import models
 from arches.app.models.system_settings import settings
@@ -14,6 +14,19 @@ from arches_lingo.etl_modules.migrate_to_lingo import LingoResourceImporter
 
 # define the ARCHES namespace
 ARCHES = Namespace(settings.ARCHES_NAMESPACE_FOR_DATA_EXPORT)
+
+
+def subject_uri_for(resource_id, resource_uri_map=None):
+    """Return the canonical RDF subject URI for a resource.
+
+    Prefers the resource's minted public URI (a stable, resolvable identifier);
+    falls back to the UUID-based ARCHES data-export URI when no public URI exists.
+    """
+    if resource_uri_map:
+        public_uri = resource_uri_map.get(str(resource_id))
+        if public_uri:
+            return URIRef(public_uri)
+    return ARCHES[str(resource_id)]
 
 
 class SKOSReader(SKOSReader):
@@ -346,27 +359,33 @@ class SKOSReader(SKOSReader):
 
 
 class SKOSWriter:
-    def write_skos_from_triples(self, schemes_triples, concepts_triples):
+    def write_skos_from_triples(
+        self, schemes_triples, concepts_triples, resource_uri_map=None
+    ):
+        self.resource_uri_map = resource_uri_map or {}
         rdf_graph = Graph()
         rdf_graph.bind("skos", SKOS)
         rdf_graph.bind("dcterms", DCTERMS)
         rdf_graph.bind("arches", ARCHES)
+        rdf_graph.bind("owl", OWL)
 
         self.language_lookup = {
             lang.name: lang.code for lang in models.Language.objects.all()
         }
 
         for scheme_id, triples in schemes_triples.items():
-            rdf_scheme_id = ARCHES[str(scheme_id)]
+            rdf_scheme_id = subject_uri_for(scheme_id, self.resource_uri_map)
             rdf_graph.add((rdf_scheme_id, RDF.type, SKOS.ConceptScheme))
+            self._add_uuid_sameas(rdf_graph, rdf_scheme_id, scheme_id)
             for triple in triples:
                 predicates, object = self.extract_predicate_object(triple)
                 for predicate in predicates:
                     rdf_graph.add((rdf_scheme_id, predicate, object))
 
         for concept_id, triples in concepts_triples.items():
-            rdf_concept_id = ARCHES[str(concept_id)]
+            rdf_concept_id = subject_uri_for(concept_id, self.resource_uri_map)
             rdf_graph.add((rdf_concept_id, RDF.type, SKOS.Concept))
+            self._add_uuid_sameas(rdf_graph, rdf_concept_id, concept_id)
             for triple in triples:
                 predicates, object = self.extract_predicate_object(triple)
                 for predicate in predicates:
@@ -377,6 +396,16 @@ class SKOSWriter:
 
         return rdf_graph
 
+    def _add_uuid_sameas(self, rdf_graph, subject, resource_id):
+        """Link a public-URI subject back to its UUID-based ARCHES URI via owl:sameAs.
+
+        This keeps the UUID form discoverable for consumers that only know the
+        internal identifier. No-op when the subject already is the ARCHES URI.
+        """
+        arches_uri = ARCHES[str(resource_id)]
+        if subject != arches_uri:
+            rdf_graph.add((subject, OWL.sameAs, arches_uri))
+
     def extract_predicate_object(self, triple):
         # Some predicates are multivalue reference datatype fields, so process all predicates
         # as lists for ease of handling
@@ -386,8 +415,13 @@ class SKOSWriter:
         object_language = triple.get("object_language")
         if object_language:
             object = Literal(object, lang=object_language)
+        elif triple.get("object_is_uri") and object:
+            # A matched concept's comparate is a URI reference, not a literal.
+            object = URIRef(str(object))
         if isinstance(object, models.ResourceInstance):
-            object = ARCHES[str(object.resourceinstanceid)]
+            object = subject_uri_for(
+                object.resourceinstanceid, getattr(self, "resource_uri_map", None)
+            )
         if not isinstance(object, Literal) and not isinstance(object, URIRef):
             object = Literal(object)
 

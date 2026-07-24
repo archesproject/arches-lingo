@@ -5,7 +5,6 @@ import uuid
 import zipfile
 from concurrent.futures import ThreadPoolExecutor
 from io import BytesIO
-from collections import defaultdict
 from datetime import datetime
 from slugify import slugify
 
@@ -29,6 +28,11 @@ from arches.app.tasks import notify_completion
 
 from arches_lingo.utils.concept_builder import ConceptBuilder
 from arches_lingo.utils.skos import SKOSWriter
+from arches_lingo.utils.skos_serializer import (
+    build_resource_uri_map,
+    build_triples_for_resource,
+    collect_referenced_resource_ids,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -46,59 +50,6 @@ details = {
     "slug": "export-lingo-resources",
     "helpsortorder": 0,
     "helptemplate": "export-lingo-resources-help",
-}
-
-"""
-Mapping dict consists of nodegroup aliases as top level key. Their values are dicts where
-the key indicates the component of a triple and the value are node aliases which are used
-to extract data from Arches Queryset TileTrees. There is also an option to define a 
-default predicate if a predicate is not found in the tile tree.
-Some predicates are hardcoded SKOS predicates for specific relationships.
-
-nodegroup_alias: {
-    "predicate": "<predicate_node_alias>" | "<skos_predicate_value>",
-    "object": "<object_node_alias>",
-    "object_language": "<object_language_node_alias>" (optional)
-    "default_predicate": "<default_predicate_value>" (optional)
-}
-"""
-TILE_TREE_TO_TRIPLE_MAPPING = {
-    # Scheme and Concept Mappings:
-    "appellative_status": {
-        "predicate": "appellative_status_ascribed_relation",
-        "object": "appellative_status_ascribed_name_content",
-        "object_language": "appellative_status_ascribed_name_language",
-    },
-    "identifier": {
-        "predicate": "identifier_type",
-        "object": "identifier_content",
-    },
-    "statement": {
-        "predicate": "statement_type",
-        "object": "statement_content",
-        "object_language": "statement_language",
-    },
-    # Concept Mappings:
-    "top_concept_of": {
-        "predicate": "hasTopConcept",  # hardcoded SKOS predicate
-        "object": "top_concept_of",
-    },
-    "part_of_scheme": {
-        "predicate": "inScheme",  # hardcoded SKOS predicate
-        "object": "part_of_scheme",
-    },
-    # Hierarchy
-    "classification_status": {
-        "predicate": "classification_status_ascribed_relation",
-        "object": "classification_status_ascribed_classification",
-        "default_predicate": "broader",
-    },
-    # Associated Concepts
-    "relation_status": {
-        "predicate": "relation_status_ascribed_relation",
-        "object": "relation_status_ascribed_comparate",
-        "default_predicate": "related",
-    },
 }
 
 
@@ -201,39 +152,41 @@ class LingoResourceExporter:
         self.schemes = schemes
         self.concepts = concepts
 
-        scheme_triples = defaultdict(list)
-        for scheme in self.schemes:
-            for nodegroup_alias, tile_trees in scheme.aliased_data._items():
-                if tile_trees:
-                    scheme_triples[scheme.resourceinstanceid].extend(
-                        self.extract_triples_from_aliased_tiles(
-                            nodegroup_alias, tile_trees
-                        )
-                    )
-
-        concept_triples = defaultdict(list)
-        for concept in self.concepts:
-            for nodegroup_alias, tile_trees in concept.aliased_data._items():
-                if tile_trees:
-                    concept_triples[concept.resourceinstanceid].extend(
-                        self.extract_triples_from_aliased_tiles(
-                            nodegroup_alias, tile_trees
-                        )
-                    )
+        scheme_triples = {
+            scheme.resourceinstanceid: build_triples_for_resource(scheme)
+            for scheme in self.schemes
+        }
+        concept_triples = {
+            concept.resourceinstanceid: build_triples_for_resource(concept)
+            for concept in self.concepts
+        }
 
         if len(scheme_triples) == 0 and len(concept_triples) == 0:
             error = _("The thesaurus could not be mapped to triples for export.")
             self._handle_error(error)
             return []
 
+        resource_uri_map = self._build_export_uri_map(scheme_triples, concept_triples)
+
         writer = SKOSWriter()
-        rdf_graph = writer.write_skos_from_triples(scheme_triples, concept_triples)
+        rdf_graph = writer.write_skos_from_triples(
+            scheme_triples, concept_triples, resource_uri_map=resource_uri_map
+        )
         serialized = rdf_graph.serialize(format="pretty-xml")
 
         file_name = self._make_filename("xml")
         if isinstance(serialized, str):
             serialized = serialized.encode("utf-8")
         return [{"name": file_name, "content": serialized}]
+
+    def _build_export_uri_map(self, scheme_triples, concept_triples):
+        """Resolve public URIs for every resource in the export and everything it links to."""
+        subject_ids = {str(resource_id) for resource_id in scheme_triples}
+        subject_ids |= {str(resource_id) for resource_id in concept_triples}
+        referenced_ids = set()
+        for triples in (*scheme_triples.values(), *concept_triples.values()):
+            referenced_ids |= collect_referenced_resource_ids(triples)
+        return build_resource_uri_map(subject_ids | referenced_ids)
 
     def _get_resource_ids_for_export(self, resourceid):
         """
@@ -511,39 +464,6 @@ class LingoResourceExporter:
                 concepts.append(concept)
 
         return schemes, concepts
-
-    def extract_triples_from_aliased_tiles(self, nodegroup_alias, tile_trees):
-        triples = []
-        mapping = TILE_TREE_TO_TRIPLE_MAPPING.get(nodegroup_alias)
-        if mapping is None:
-            logger.error(f"No mapping found for nodegroup alias: {nodegroup_alias}")
-            return []
-        if type(tile_trees) is not list:
-            tile_trees = [tile_trees]
-        for tile_tree in tile_trees:
-            triple = defaultdict(str)
-            for triple_component, node_alias in mapping.items():
-                if node_alias in ["inScheme", "hasTopConcept"]:
-                    # Predicate for concept -> scheme relationship are not stored as a node value
-                    # but instead derived from the relationship itself
-                    triple[triple_component] = node_alias
-                elif (
-                    triple_component == "default_predicate"
-                    and triple["predicate"] is None
-                ):
-                    # Fall back on default predicates for relationships if none was found
-                    triple["predicate"] = node_alias
-                elif triple_component != "default_predicate":
-                    try:
-                        predicate = getattr(tile_tree.aliased_data, node_alias)
-                    except AttributeError:
-                        # Expected when we've directly mapped a relationship
-                        # that won't be wrapped as AliasedData as returned from a queryset
-                        # (e.g. top_concept_of and part_of_scheme during partial hierarchy export)
-                        predicate = tile_tree
-                    triple[triple_component] = predicate
-            triples.append(triple)
-        return triples
 
     def _handle_error(self, error):
         self.load_event.status = "failed"
