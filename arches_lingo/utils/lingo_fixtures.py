@@ -50,20 +50,21 @@ from django.core.files.storage import default_storage
 from django.core.management import call_command
 from django.db import connection, transaction
 
-from arches.app.models.models import File, GraphModel
+from arches.app.models.models import (
+    File,
+    GraphModel,
+    ResourceInstance,
+    ResourceIdentifier,
+    ResourceXResource,
+    TileModel,
+)
 
-# Every resource graph shipped with arches-lingo that a concept or scheme tile
-# can reference: the concept/scheme resources themselves, the actor and
-# citation resources used to record attribution, and the digital-object
-# resources used for concept images.
-LINGO_FIXTURE_GRAPH_SLUGS = [
-    "concept",
-    "scheme",
-    "digital_object_system",
-    "person_system",
-    "group",
-    "textual_work",
-]
+from arches_lingo.const import LINGO_FIXTURE_GRAPH_SLUGS
+from arches_lingo.models import (
+    ConceptIdentifierCounter,
+    SchemeAttribution,
+    SchemeURITemplate,
+)
 
 DEFAULT_FIXTURE_STORAGE_KEY = "lingo_fixtures/lingo_concept_scheme_fixture.tar.gz"
 
@@ -75,93 +76,65 @@ _GRAPH_FILTERED_RESOURCE_IDS_SQL = "SELECT resourceinstanceid FROM resource_inst
 
 @dataclass(frozen=True)
 class FixtureTable:
-    name: str
-    columns: tuple[str, ...]
+    model: type
     where_sql: str
     # Bigint identity-column tables need their sequence bumped after a COPY
     # restores explicit id values, or the next ORM-created row will collide.
     identity_column: str | None = None
 
+    @property
+    def name(self):
+        return self.model._meta.db_table
+
+    @property
+    def columns(self):
+        # Derive the column list from the model at runtime rather than
+        # hard-coding it, so it stays in sync with the model definition. Both
+        # dump (COPY TO) and load (COPY FROM) read this same ordering, so the
+        # CSV column order is always internally consistent.
+        return tuple(field.column for field in self.model._meta.concrete_fields)
+
 
 FIXTURE_TABLES: tuple[FixtureTable, ...] = (
     FixtureTable(
-        name="resource_instances",
-        columns=(
-            "resourceinstanceid",
-            "legacyid",
-            "graphid",
-            "createdtime",
-            "descriptors",
-            "name",
-            "graphpublicationid",
-            "principaluser_id",
-            "resource_instance_lifecycle_state_id",
-        ),
+        model=ResourceInstance,
         where_sql="graphid = ANY(%(graph_ids)s)",
     ),
     FixtureTable(
-        name="tiles",
-        columns=(
-            "tileid",
-            "resourceinstanceid",
-            "parenttileid",
-            "tiledata",
-            "nodegroupid",
-            "sortorder",
-            "provisionaledits",
-        ),
+        model=TileModel,
         where_sql=f"resourceinstanceid IN ({_GRAPH_FILTERED_RESOURCE_IDS_SQL})",
     ),
     FixtureTable(
-        name="files",
-        columns=("fileid", "path", "tileid", "thumbnail_data"),
+        model=File,
         where_sql=(
             "tileid IN (SELECT tileid FROM tiles WHERE resourceinstanceid IN "
             f"({_GRAPH_FILTERED_RESOURCE_IDS_SQL}))"
         ),
     ),
     FixtureTable(
-        name="resource_x_resource",
-        columns=(
-            "resourcexid",
-            "notes",
-            "relationshiptype",
-            "resourceinstanceidfrom",
-            "resourceinstanceidto",
-            "modified",
-            "created",
-            "inverserelationshiptype",
-            "tileid",
-            "nodeid",
-            "resourceinstancefrom_graphid",
-            "resourceinstanceto_graphid",
-        ),
+        model=ResourceXResource,
         where_sql=(
             "resourceinstancefrom_graphid = ANY(%(graph_ids)s) "
             "OR resourceinstanceto_graphid = ANY(%(graph_ids)s)"
         ),
     ),
     FixtureTable(
-        name="resource_identifiers",
-        columns=("id", "identifier", "source", "identifier_type", "resourceid_id"),
+        model=ResourceIdentifier,
         where_sql=f"resourceid_id IN ({_GRAPH_FILTERED_RESOURCE_IDS_SQL})",
         identity_column="id",
     ),
     FixtureTable(
-        name="concept_identifier_counters",
-        columns=("id", "scheme_resource_instance_id", "start_number", "next_number"),
+        model=ConceptIdentifierCounter,
         where_sql=f"scheme_resource_instance_id IN ({_GRAPH_FILTERED_RESOURCE_IDS_SQL})",
         identity_column="id",
     ),
     FixtureTable(
-        name="scheme_uri_templates",
-        columns=("id", "scheme_resource_instance_id", "url_template"),
+        model=SchemeURITemplate,
         where_sql=f"scheme_resource_instance_id IN ({_GRAPH_FILTERED_RESOURCE_IDS_SQL})",
         identity_column="id",
     ),
     FixtureTable(
-        name="scheme_attributions",
-        columns=("id", "scheme_resource_instance_id", "attribution"),
+        model=SchemeAttribution,
         where_sql=f"scheme_resource_instance_id IN ({_GRAPH_FILTERED_RESOURCE_IDS_SQL})",
         identity_column="id",
     ),
