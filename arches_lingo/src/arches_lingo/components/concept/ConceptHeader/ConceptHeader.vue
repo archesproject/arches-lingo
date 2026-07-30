@@ -178,12 +178,19 @@ function extractLabelsFromResource(resource: ResourceInstanceResult): Label[] {
     const labels: Label[] = [];
     for (const tile of tiles) {
         const aliasedData = tile.aliased_data;
+
+        if (!aliasedData) continue;
+
         const contentNodeValue =
-            aliasedData.appellative_status_ascribed_name_content.node_value;
+            aliasedData.appellative_status_ascribed_name_content?.node_value;
+
         if (!contentNodeValue) continue;
+
         const typeNode =
             aliasedData.appellative_status_ascribed_relation?.node_value?.[0];
+
         const typeUri = typeNode?.data?.uri;
+
         for (const [languageId, { value }] of Object.entries(
             contentNodeValue,
         )) {
