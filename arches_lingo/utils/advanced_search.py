@@ -178,6 +178,16 @@ class AdvancedSearchEvaluator:
         lookup = self.MATCH_MODE_LOOKUPS.get(match_mode, "icontains")
         return Q(**{f"{field}__{lookup}": value})
 
+    @staticmethod
+    def _escape_like_wildcards(value):
+        """Escape LIKE/ILIKE special characters so user input matches literally.
+
+        The backslash escape character must be doubled first, then the % and _
+        wildcards escaped, so that values such as ``50%`` or ``a_b`` are matched
+        as-is rather than being interpreted as wildcard patterns.
+        """
+        return value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+
     def _facet_label(self, condition):
         """Search by label text, optionally filtered by type and language."""
         filters = Q(nodegroup_id=CONCEPT_NAME_NODEGROUP)
@@ -667,33 +677,38 @@ class AdvancedSearchEvaluator:
     def _concepts_depicting(self, digital_object_ids):
         """Return concept PKs whose internal depiction references any digital object.
 
-        Matches the ``depicting_digital_asset_internal`` resource-instance-list node
-        against the given digital-object resource IDs via JSONB containment.
+        The ``depicting_digital_asset_internal`` node is a resource-instance-list
+        (a JSONB array of ``{"resourceId": ...}`` objects).  Rather than OR-ing one
+        JSONB containment clause per matched digital object — which produces an
+        ever-growing predicate as the number of matches grows — the array is
+        unnested inside a single RawSQL EXISTS and each element's ``resourceId`` is
+        compared against the matched IDs with ``= ANY``, mirroring the approach in
+        ``_digital_objects_by_file_name``.
         """
-        containment = Q()
-        matched_any = False
-        for digital_object_id in digital_object_ids:
-            matched_any = True
-            containment |= Q(
-                **{
-                    f"data__{DEPICTING_DIGITAL_ASSET_INTERNAL_NODE}__contains": [
-                        {"resourceId": str(digital_object_id)}
-                    ]
-                }
-            )
-
-        if not matched_any:
-            # No digital objects matched — an empty Q() would otherwise match
-            # every internal-depiction tile, so short-circuit to no concepts.
+        digital_object_id_strings = [
+            str(digital_object_id) for digital_object_id in digital_object_ids
+        ]
+        if not digital_object_id_strings:
+            # No digital objects matched, so no concept can depict one.
             return TileModel.objects.none().values_list(
                 "resourceinstance_id", flat=True
             )
+
+        depiction_matches = RawSQL(
+            """EXISTS (
+                SELECT 1
+                FROM jsonb_array_elements(tiledata->%s) AS depiction
+                WHERE depiction ->> 'resourceId' = ANY(%s))""",
+            [DEPICTING_DIGITAL_ASSET_INTERNAL_NODE, digital_object_id_strings],
+            output_field=BooleanField(),
+        )
 
         return (
             TileModel.objects.filter(
                 nodegroup_id=DEPICTING_DIGITAL_ASSET_INTERNAL_NODEGROUP,
             )
-            .filter(containment)
+            .annotate(depiction_matches=depiction_matches)
+            .filter(depiction_matches=True)
             .values_list("resourceinstance_id", flat=True)
             .distinct()
         )
@@ -717,14 +732,18 @@ class AdvancedSearchEvaluator:
                 output_field=BooleanField(),
             )
         else:
+            # The ORM match-mode lookups (icontains, istartswith, ...) escape LIKE
+            # wildcards automatically, but this hand-built ILIKE pattern must escape
+            # them itself so that a % or _ in the user's value matches literally.
+            escaped_value = self._escape_like_wildcards(value)
             if match_mode == "exact":
-                pattern = value
+                pattern = escaped_value
             elif match_mode == "starts_with":
-                pattern = f"{value}%"
+                pattern = f"{escaped_value}%"
             elif match_mode == "ends_with":
-                pattern = f"%{value}"
+                pattern = f"%{escaped_value}"
             else:  # contains
-                pattern = f"%{value}%"
+                pattern = f"%{escaped_value}%"
 
             file_name_matches = RawSQL(
                 """EXISTS (

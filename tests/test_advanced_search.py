@@ -1312,6 +1312,51 @@ class RelatedImageFacetTests(TestCase):
         }
         self.assertTrue(all_concepts.issubset(set(result)))
 
+    def _make_concept_depicting_file(self, file_name):
+        """Create a digital object with the given file name and a concept depicting it."""
+        digital_object = ResourceInstance.objects.create(
+            graph_id=DIGITAL_OBJECT_GRAPH_ID, name=f"Digital Object {file_name}"
+        )
+        TileModel.objects.create(
+            resourceinstance=digital_object,
+            nodegroup_id=DIGITAL_OBJECT_CONTENT_NODEGROUP,
+            data={
+                DIGITAL_OBJECT_CONTENT_NODE: [
+                    {"name": file_name, "file_id": str(uuid.uuid4())}
+                ]
+            },
+        )
+        concept = ResourceInstance.objects.create(
+            graph_id=CONCEPTS_GRAPH_ID, name=f"Concept depicting {file_name}"
+        )
+        TileModel.objects.create(
+            resourceinstance=concept,
+            nodegroup_id=DEPICTING_DIGITAL_ASSET_INTERNAL_NODEGROUP,
+            data={
+                DEPICTING_DIGITAL_ASSET_INTERNAL_NODE: [
+                    {"resourceId": str(digital_object.pk)}
+                ]
+            },
+        )
+        return concept
+
+    def test_file_name_wildcard_characters_matched_literally(self):
+        """An underscore in the value must match literally, not as a LIKE wildcard."""
+        literal_underscore = self._make_concept_depicting_file("report_v1.jpg")
+        wildcard_collision = self._make_concept_depicting_file("reportXv1.jpg")
+
+        result = self.evaluator.evaluate(
+            {
+                "facet": "related_image",
+                "image_attribute": "file_name",
+                "value": "report_v1.jpg",
+                "match_mode": "exact",
+            }
+        )
+        ids = set(result)
+        self.assertIn(literal_underscore.pk, ids)
+        self.assertNotIn(wildcard_collision.pk, ids)
+
 
 # ────────────────────────────────────────────────────────────────
 # API view tests  (require graph fixtures + tile data)
