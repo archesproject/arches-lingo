@@ -22,8 +22,7 @@ const shouldShowNotificationsPanel = defineModel(
         default: false,
     },
 );
-const notifications = defineModel("notifications", {
-    type: Array as () => Notification[],
+const notifications = defineModel<Notification[]>("notifications", {
     default: () => [],
 });
 const showUnreadOnly = defineModel("showUnreadOnly", {

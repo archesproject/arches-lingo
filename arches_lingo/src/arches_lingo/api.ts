@@ -724,7 +724,9 @@ export const importThesaurus = async (file: File, overwriteOption: string) => {
             }
             throw new Error(parsed.message);
         } catch (error) {
-            throw new Error((error as Error).message || response.statusText);
+            throw new Error((error as Error).message || response.statusText, {
+                cause: error,
+            });
         }
     }
 };
@@ -756,7 +758,9 @@ export const exportThesaurus = async (
         }
         throw new Error(parsed.message || parsed.data?.message);
     } catch (error) {
-        throw new Error((error as Error).message || response.statusText);
+        throw new Error((error as Error).message || response.statusText, {
+            cause: error,
+        });
     }
 };
 
