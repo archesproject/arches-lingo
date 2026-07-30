@@ -29,6 +29,7 @@
         "@primevue/forms": "4.3.7",
         "arches": "archesproject/arches#dev/8.1.x",
         "arches-vue-components": "archesproject/arches-vue-components#dev/2.0.x",
+        "arches-controlled-lists": "archesproject/arches-controlled-lists#dev/1.2.x",
         "pinia": "3.0.4",
         "vue-router": "4.4.3"
     },
