@@ -37,6 +37,9 @@ const componentEditorFormRef = inject<Ref<Component | null>>(
 
 const closeEditor = inject<() => void>("closeEditor");
 
+const refreshReportSection = inject<(componentName: string) => void>(
+    "refreshReportSection",
+);
 const refreshSchemeHierarchy = inject<() => void>("refreshSchemeHierarchy");
 const onSaveSettled = inject<() => void>("onSaveSettled");
 
@@ -93,6 +96,7 @@ async function save(e: FormSubmitEvent) {
         console.error(error);
     } finally {
         isSaving.value = false;
+        refreshReportSection!(props.componentName);
         onSaveSettled?.();
     }
 }
