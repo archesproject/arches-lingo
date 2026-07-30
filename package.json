@@ -23,7 +23,8 @@
         "vitest": "vitest --run --coverage"
     },
     "devDependencies": {
-        "arches-dev-dependencies": "archesproject/arches-dev-dependencies#dev/8.1.x"
+        "arches-dev-dependencies": "archesproject/arches-dev-dependencies#dev/8.1.x",
+        "globals": "17.8.0"
     },
     "dependencies": {
         "@primevue/forms": "4.3.7",
