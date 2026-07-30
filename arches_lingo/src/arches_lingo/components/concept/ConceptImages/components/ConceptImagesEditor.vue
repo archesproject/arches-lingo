@@ -158,7 +158,9 @@ async function save(e: FormSubmitEvent) {
         digitalObjectInstanceAliases.content = {
             ...digitalObjectInstanceAliases.content,
             aliased_data: {
-                content: fileJsonObjects as unknown as FileListAliasedNodeData,
+                content: {
+                    node_value: fileJsonObjects,
+                } as unknown as FileListAliasedNodeData,
             },
         };
 

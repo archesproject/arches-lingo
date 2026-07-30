@@ -155,7 +155,7 @@ export interface ResourceData<T extends AliasedData = AliasedData> {
 
 interface QuerysetsReferenceSelectFetchedOption {
     display_value: string;
-    node_value: ReferenceSelectTreeNode[];
+    node_value: ReferenceSelectTreeNode[] | null;
     details: unknown[];
 }
 
