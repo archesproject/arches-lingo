@@ -4,6 +4,16 @@ from django.utils.translation import gettext_lazy as _
 LINGO_EDITOR_GROUP_NAME = "Lingo Editor"
 LINGO_ADMIN_GROUP_NAME = "Lingo Admin"
 
+### Fixtures ###
+LINGO_FIXTURE_GRAPH_SLUGS = [
+    "concept",
+    "scheme",
+    "digital_object_system",
+    "person_system",
+    "group",
+    "textual_work",
+]
+
 ### Concepts Model Nodes & Nodegroups ###
 CONCEPTS_GRAPH_ID = "bf73e576-4888-11ee-8a8d-11afefc4bff7"
 
