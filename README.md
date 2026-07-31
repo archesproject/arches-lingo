@@ -30,7 +30,6 @@ For developer install instructions, see the [Developer Setup](#developer-setup-f
         "arches_vue_components",
         "arches_controlled_lists",
         "arches_lingo",
-        "pgtrigger",
     )
     ```
 
@@ -114,6 +113,13 @@ For developer install instructions, see the [Developer Setup](#developer-setup-f
     ```
 
     The `LANGUAGES` setting determines which languages appear in the Lingo language selector. The `django_language` cookie persists the user's language choice across sessions.
+
+    If you are using the language switcher, you will want to remove the following lines from near the bottom of your urls.py file as they will break language switching in Lingo:
+
+    ```python
+    if settings.SHOW_LANGUAGE_SWITCH is True:
+        urlpatterns = i18n_patterns(*urlpatterns)
+    ```
 
 8. Install the arches application package (models and other data)
     ```
