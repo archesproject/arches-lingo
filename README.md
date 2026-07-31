@@ -83,9 +83,6 @@ For developer install instructions, see the [Developer Setup](#developer-setup-f
        "arches": "archesproject/arches#stable/8.1.4",
        "arches-vue-components": "archesproject/arches-vue-components#stable/2.0.2",
        "arches_lingo": "archesproject/arches-lingo#main"
-   },
-   devDependencies": {
-       "globals": ""
    }
    ```
 6. Update urls.py to include the arches_lingo urls
