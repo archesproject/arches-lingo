@@ -24,6 +24,7 @@ import type {
     AdvancedSearchOptions,
     ConceptSetItem,
     FacetType,
+    ImageAttribute,
     MatchMode,
     SchemeOption,
     SearchCondition,
@@ -67,7 +68,17 @@ const facetTypes = computed<{ label: string; value: FacetType }[]>(() => [
     { label: $gettext("Concept Set"), value: "concept_set" },
     { label: $gettext("Source"), value: "attribution_source" },
     { label: $gettext("Contributor"), value: "attribution_contributor" },
+    { label: $gettext("Related Image"), value: "related_image" },
 ]);
+
+const imageAttributes = computed<{ label: string; value: ImageAttribute }[]>(
+    () => [
+        { label: $gettext("Has an image"), value: "has_image" },
+        { label: $gettext("Image file name"), value: "file_name" },
+        { label: $gettext("Image title"), value: "title" },
+        { label: $gettext("Image description"), value: "description" },
+    ],
+);
 
 const matchModes = computed<{ label: string; value: MatchMode }[]>(() => [
     { label: $gettext("Contains"), value: "contains" },
@@ -360,9 +371,26 @@ const currentMatchMode = computed(
 
 const isExistsMode = computed(() => currentMatchMode.value === "exists");
 
+const currentImageAttribute = computed<ImageAttribute>(
+    () => props.condition.image_attribute || "has_image",
+);
+
+// Image title/file name/description are text-searchable; "has_image" is a
+// boolean existence check and takes no value or match mode.
+const isImageTextAttribute = computed(
+    () =>
+        props.condition.facet === "related_image" &&
+        currentImageAttribute.value !== "has_image",
+);
+
+const showImageAttributeDropdown = computed(
+    () => props.condition.facet === "related_image",
+);
+
 const showValueInput = computed(() => {
     if (isExistsMode.value) return false;
     const facet = props.condition.facet;
+    if (isImageTextAttribute.value) return true;
     return ["label", "note", "match_uri", "uri", "identifier"].includes(facet);
 });
 
@@ -445,6 +473,7 @@ const searchContributorsFilterPlaceholder = $gettext("Search contributors...");
 const selectContributorPlaceholder = $gettext("Select contributor...");
 
 const showMatchMode = computed(() => {
+    if (isImageTextAttribute.value) return true;
     return ["label", "note", "match_uri", "uri", "identifier"].includes(
         props.condition.facet,
     );
@@ -472,6 +501,20 @@ function updateMatchMode(mode: MatchMode) {
     const updated = { ...props.condition, match_mode: mode };
     if (mode === "exists") {
         updated.value = "";
+    }
+    emit("update:condition", updated);
+}
+
+function updateImageAttribute(attribute: ImageAttribute) {
+    const updated: SearchCondition = {
+        ...props.condition,
+        image_attribute: attribute,
+        value: "",
+    };
+    if (attribute === "has_image") {
+        delete updated.match_mode;
+    } else {
+        updated.match_mode = "contains";
     }
     emit("update:condition", updated);
 }
@@ -526,6 +569,17 @@ function toggleCascade() {
             :placeholder="$gettext('Select facet')"
             class="facet-type-dropdown"
             @update:model-value="updateFacet"
+        />
+
+        <!-- Image attribute sub-selector (for the related image facet) -->
+        <Select
+            v-if="showImageAttributeDropdown"
+            :model-value="currentImageAttribute"
+            :options="imageAttributes"
+            option-label="label"
+            option-value="value"
+            class="facet-sub-dropdown"
+            @update:model-value="updateImageAttribute"
         />
 
         <!-- Match mode (for text-based facets) -->

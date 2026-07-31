@@ -520,7 +520,14 @@ export type FacetType =
     | "lifecycle_state"
     | "concept_set"
     | "attribution_source"
-    | "attribution_contributor";
+    | "attribution_contributor"
+    | "related_image";
+
+export type ImageAttribute =
+    | "has_image"
+    | "file_name"
+    | "title"
+    | "description";
 
 export interface SearchCondition {
     id: string;
@@ -532,6 +539,7 @@ export interface SearchCondition {
     direction?: "broader" | "narrower";
     cascade?: boolean;
     match_mode?: MatchMode;
+    image_attribute?: ImageAttribute;
     negated?: boolean;
 }
 

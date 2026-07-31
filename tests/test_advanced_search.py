@@ -60,6 +60,17 @@ from arches_lingo.const import (
     IDENTIFIER_CONTENT_NODE,
     MATCH_STATUS_NODEGROUP,
     MATCH_STATUS_COMPARATE_NODE,
+    DEPICTING_DIGITAL_ASSET_INTERNAL_NODEGROUP,
+    DEPICTING_DIGITAL_ASSET_INTERNAL_NODE,
+    DEPICTING_DIGITAL_ASSET_EXTERNAL_NODEGROUP,
+    DEPICTING_DIGITAL_ASSET_EXTERNAL_NODE,
+    DIGITAL_OBJECT_GRAPH_ID,
+    DIGITAL_OBJECT_CONTENT_NODEGROUP,
+    DIGITAL_OBJECT_CONTENT_NODE,
+    DIGITAL_OBJECT_NAME_NODEGROUP,
+    DIGITAL_OBJECT_NAME_CONTENT_NODE,
+    DIGITAL_OBJECT_STATEMENT_NODEGROUP,
+    DIGITAL_OBJECT_STATEMENT_CONTENT_NODE,
 )
 from arches_lingo.models import ConceptSet, ConceptSetMember, SavedSearch
 from arches_lingo.utils.advanced_search import AdvancedSearchEvaluator
@@ -1086,6 +1097,265 @@ class HierarchicalCascadeTests(AdvancedSearchEvaluatorTests):
             self.concept_d.pk,
         }
         self.assertTrue(all_concepts.issubset(set(result)))
+
+
+# ────────────────────────────────────────────────────────────────
+# Related image facet tests — concept -> digital object depictions
+# ────────────────────────────────────────────────────────────────
+
+
+class RelatedImageFacetTests(TestCase):
+    """Tests for the related_image facet (concept -> image relationships).
+
+    Fixtures build three concepts:
+
+    * ``concept_with_internal_image`` depicts a digital object carrying a file,
+      title, and description.
+    * ``concept_with_external_image`` has only an external image URL.
+    * ``concept_without_image`` has no depiction at all.
+    """
+
+    graph_fixtures = ["Scheme.json", "Concept.json", "digital_object_system.json"]
+
+    @classmethod
+    def load_ontology(cls):
+        path = Path(settings.APP_ROOT) / "pkg" / "ontologies" / "takin"
+        management.call_command("load_ontology", source=path, verbosity=0)
+
+    @classmethod
+    def load_graphs(cls):
+        path = Path(settings.APP_ROOT) / "pkg" / "graphs" / "resource_models"
+        for file_path in cls.graph_fixtures:
+            with captured_stdout(), open(path / file_path, "r") as graph_file:
+                archesfile = JSONDeserializer().deserialize(graph_file)
+                ResourceGraphImporter(archesfile["graph"], overwrite_graphs=True)
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.load_ontology()
+        cls.load_graphs()
+        cls.admin = User.objects.get(username="admin")
+
+        cls.digital_object = ResourceInstance.objects.create(
+            graph_id=DIGITAL_OBJECT_GRAPH_ID, name="Bronze Sculpture Photo"
+        )
+        TileModel.objects.create(
+            resourceinstance=cls.digital_object,
+            nodegroup_id=DIGITAL_OBJECT_CONTENT_NODEGROUP,
+            data={
+                DIGITAL_OBJECT_CONTENT_NODE: [
+                    {"name": "sculpture-front.jpg", "file_id": str(uuid.uuid4())}
+                ]
+            },
+        )
+        TileModel.objects.create(
+            resourceinstance=cls.digital_object,
+            nodegroup_id=DIGITAL_OBJECT_NAME_NODEGROUP,
+            data={DIGITAL_OBJECT_NAME_CONTENT_NODE: "Bronze Sculpture"},
+        )
+        TileModel.objects.create(
+            resourceinstance=cls.digital_object,
+            nodegroup_id=DIGITAL_OBJECT_STATEMENT_NODEGROUP,
+            data={
+                DIGITAL_OBJECT_STATEMENT_CONTENT_NODE: (
+                    "A photograph of the front of the sculpture"
+                )
+            },
+        )
+
+        cls.concept_with_internal_image = ResourceInstance.objects.create(
+            graph_id=CONCEPTS_GRAPH_ID, name="Concept With Internal Image"
+        )
+        TileModel.objects.create(
+            resourceinstance=cls.concept_with_internal_image,
+            nodegroup_id=DEPICTING_DIGITAL_ASSET_INTERNAL_NODEGROUP,
+            data={
+                DEPICTING_DIGITAL_ASSET_INTERNAL_NODE: [
+                    {"resourceId": str(cls.digital_object.pk)}
+                ]
+            },
+        )
+
+        cls.concept_with_external_image = ResourceInstance.objects.create(
+            graph_id=CONCEPTS_GRAPH_ID, name="Concept With External Image"
+        )
+        TileModel.objects.create(
+            resourceinstance=cls.concept_with_external_image,
+            nodegroup_id=DEPICTING_DIGITAL_ASSET_EXTERNAL_NODEGROUP,
+            data={
+                DEPICTING_DIGITAL_ASSET_EXTERNAL_NODE: {
+                    "url": "http://example.com/image.jpg",
+                    "url_label": "External image",
+                }
+            },
+        )
+
+        cls.concept_without_image = ResourceInstance.objects.create(
+            graph_id=CONCEPTS_GRAPH_ID, name="Concept Without Image"
+        )
+
+    def setUp(self):
+        self.evaluator = AdvancedSearchEvaluator(user=self.admin)
+
+    def test_has_image_includes_internal_and_external(self):
+        result = self.evaluator.evaluate(
+            {"facet": "related_image", "image_attribute": "has_image"}
+        )
+        ids = set(result)
+        self.assertIn(self.concept_with_internal_image.pk, ids)
+        self.assertIn(self.concept_with_external_image.pk, ids)
+        self.assertNotIn(self.concept_without_image.pk, ids)
+
+    def test_has_image_negated_returns_concepts_without_images(self):
+        result = self.evaluator.evaluate(
+            {
+                "facet": "related_image",
+                "image_attribute": "has_image",
+                "negated": True,
+            }
+        )
+        ids = set(result)
+        self.assertIn(self.concept_without_image.pk, ids)
+        self.assertNotIn(self.concept_with_internal_image.pk, ids)
+        self.assertNotIn(self.concept_with_external_image.pk, ids)
+
+    def test_file_name_contains(self):
+        result = self.evaluator.evaluate(
+            {
+                "facet": "related_image",
+                "image_attribute": "file_name",
+                "value": "sculpture",
+            }
+        )
+        ids = set(result)
+        self.assertIn(self.concept_with_internal_image.pk, ids)
+        self.assertNotIn(self.concept_with_external_image.pk, ids)
+        self.assertNotIn(self.concept_without_image.pk, ids)
+
+    def test_file_name_ends_with_extension(self):
+        result = self.evaluator.evaluate(
+            {
+                "facet": "related_image",
+                "image_attribute": "file_name",
+                "value": ".jpg",
+                "match_mode": "ends_with",
+            }
+        )
+        self.assertIn(self.concept_with_internal_image.pk, set(result))
+
+    def test_file_name_no_match_returns_empty(self):
+        result = self.evaluator.evaluate(
+            {
+                "facet": "related_image",
+                "image_attribute": "file_name",
+                "value": "no_such_file",
+            }
+        )
+        self.assertFalse(list(result))
+
+    def test_file_name_exists(self):
+        result = self.evaluator.evaluate(
+            {
+                "facet": "related_image",
+                "image_attribute": "file_name",
+                "value": "",
+                "match_mode": "exists",
+            }
+        )
+        ids = set(result)
+        self.assertIn(self.concept_with_internal_image.pk, ids)
+        self.assertNotIn(self.concept_with_external_image.pk, ids)
+
+    def test_title_contains(self):
+        result = self.evaluator.evaluate(
+            {
+                "facet": "related_image",
+                "image_attribute": "title",
+                "value": "Bronze",
+            }
+        )
+        ids = set(result)
+        self.assertIn(self.concept_with_internal_image.pk, ids)
+        self.assertNotIn(self.concept_without_image.pk, ids)
+
+    def test_title_exact_no_partial(self):
+        result = self.evaluator.evaluate(
+            {
+                "facet": "related_image",
+                "image_attribute": "title",
+                "value": "Bronze",
+                "match_mode": "exact",
+            }
+        )
+        self.assertFalse(list(result))
+
+    def test_description_contains(self):
+        result = self.evaluator.evaluate(
+            {
+                "facet": "related_image",
+                "image_attribute": "description",
+                "value": "photograph",
+            }
+        )
+        ids = set(result)
+        self.assertIn(self.concept_with_internal_image.pk, ids)
+        self.assertNotIn(self.concept_with_external_image.pk, ids)
+
+    def test_text_attribute_empty_value_returns_all(self):
+        result = self.evaluator.evaluate(
+            {"facet": "related_image", "image_attribute": "title", "value": ""}
+        )
+        all_concepts = {
+            self.concept_with_internal_image.pk,
+            self.concept_with_external_image.pk,
+            self.concept_without_image.pk,
+        }
+        self.assertTrue(all_concepts.issubset(set(result)))
+
+    def _make_concept_depicting_file(self, file_name):
+        """Create a digital object with the given file name and a concept depicting it."""
+        digital_object = ResourceInstance.objects.create(
+            graph_id=DIGITAL_OBJECT_GRAPH_ID, name=f"Digital Object {file_name}"
+        )
+        TileModel.objects.create(
+            resourceinstance=digital_object,
+            nodegroup_id=DIGITAL_OBJECT_CONTENT_NODEGROUP,
+            data={
+                DIGITAL_OBJECT_CONTENT_NODE: [
+                    {"name": file_name, "file_id": str(uuid.uuid4())}
+                ]
+            },
+        )
+        concept = ResourceInstance.objects.create(
+            graph_id=CONCEPTS_GRAPH_ID, name=f"Concept depicting {file_name}"
+        )
+        TileModel.objects.create(
+            resourceinstance=concept,
+            nodegroup_id=DEPICTING_DIGITAL_ASSET_INTERNAL_NODEGROUP,
+            data={
+                DEPICTING_DIGITAL_ASSET_INTERNAL_NODE: [
+                    {"resourceId": str(digital_object.pk)}
+                ]
+            },
+        )
+        return concept
+
+    def test_file_name_wildcard_characters_matched_literally(self):
+        """An underscore in the value must match literally, not as a LIKE wildcard."""
+        literal_underscore = self._make_concept_depicting_file("report_v1.jpg")
+        wildcard_collision = self._make_concept_depicting_file("reportXv1.jpg")
+
+        result = self.evaluator.evaluate(
+            {
+                "facet": "related_image",
+                "image_attribute": "file_name",
+                "value": "report_v1.jpg",
+                "match_mode": "exact",
+            }
+        )
+        ids = set(result)
+        self.assertIn(literal_underscore.pk, ids)
+        self.assertNotIn(wildcard_collision.pk, ids)
 
 
 # ────────────────────────────────────────────────────────────────
