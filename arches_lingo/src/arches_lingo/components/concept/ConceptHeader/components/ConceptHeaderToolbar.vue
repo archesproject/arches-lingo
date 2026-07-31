@@ -9,7 +9,7 @@ import { storeToRefs } from "pinia";
 import Button from "primevue/button";
 import Tag from "primevue/tag";
 
-import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
+import GenericWidget from "@/arches_vue_components/generics/GenericWidget/GenericWidget.vue";
 
 import DeleteConceptDialog from "@/arches_lingo/components/concept/ConceptHeader/components/DeleteConceptDialog.vue";
 import ExportThesauri from "@/arches_lingo/components/scheme/SchemeHeader/components/ExportThesauri.vue";
@@ -53,6 +53,7 @@ import { useConceptStore } from "@/arches_lingo/stores/useConceptStore.ts";
 import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 
 import type { Ref } from "vue";
+import type { AliasedNodeData } from "@/arches_vue_components/types.ts";
 import type {
     DeleteConceptStrategy,
     ResourceInstanceLifecycleState,
@@ -73,7 +74,7 @@ const props = defineProps<{
     conceptTypeTile:
         | {
               tileid?: string;
-              aliased_data?: Record<string, { node_value?: unknown }>;
+              aliased_data?: Record<string, AliasedNodeData>;
           }
         | undefined;
     isTopConcept: boolean;
@@ -214,12 +215,14 @@ function isHierarchyNameType(typeNodeValue: unknown): boolean {
     );
 }
 
-async function onConceptTypeChange(newValue: ReferenceSelectValue) {
+async function onConceptTypeChange(newValue: unknown) {
+    const conceptTypeValue = newValue as ReferenceSelectValue;
+
     try {
         await upsertLingoTile(props.graphSlug, CONCEPT_TYPE_NODE_ALIAS, {
             resourceinstance: props.resourceInstanceId,
             aliased_data: {
-                [CONCEPT_TYPE_NODE_ALIAS]: newValue,
+                [CONCEPT_TYPE_NODE_ALIAS]: conceptTypeValue,
             },
             tileid: props.conceptTypeTile?.tileid,
         });
@@ -258,7 +261,7 @@ async function onConfirmed(strategy: DeleteConceptStrategy | null) {
         if (dialogMode.value === DELETE) {
             const schemeIdentifier =
                 props.concept.aliased_data?.part_of_scheme?.aliased_data
-                    .part_of_scheme?.node_value?.[0]?.resourceId;
+                    ?.part_of_scheme?.node_value?.[0]?.resourceId;
 
             await deleteConcept(
                 props.concept.resourceinstanceid,
@@ -403,19 +406,24 @@ function onReinstateRequested() {
                     severity="secondary"
                     class="concept-type-badge"
                 />
-                <GenericWidget
+                <div
                     v-else-if="concept && concept.resourceinstanceid"
-                    :node-alias="CONCEPT_TYPE_NODE_ALIAS"
-                    :graph-slug="graphSlug"
-                    :mode="EDIT"
-                    :aliased-node-data="
-                        conceptTypeTile?.aliased_data?.[CONCEPT_TYPE_NODE_ALIAS]
-                    "
-                    :should-show-label="false"
                     class="concept-type-widget"
-                    @update:is-loading="isWidgetLoading = $event"
-                    @update:value="onConceptTypeChange"
-                />
+                >
+                    <GenericWidget
+                        :node-alias="CONCEPT_TYPE_NODE_ALIAS"
+                        :graph-slug="graphSlug"
+                        :mode="EDIT"
+                        :aliased-node-data="
+                            conceptTypeTile?.aliased_data?.[
+                                CONCEPT_TYPE_NODE_ALIAS
+                            ] ?? null
+                        "
+                        :should-show-label="false"
+                        @update:is-loading="isWidgetLoading = $event"
+                        @update:value="onConceptTypeChange"
+                    />
+                </div>
             </div>
         </div>
         <div

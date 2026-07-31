@@ -9,7 +9,7 @@ import { Form } from "@primevue/forms";
 
 import Skeleton from "primevue/skeleton";
 
-import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
+import GenericWidget from "@/arches_vue_components/generics/GenericWidget/GenericWidget.vue";
 
 import { createLingoResource, upsertLingoTile } from "@/arches_lingo/api.ts";
 
@@ -140,7 +140,8 @@ async function save(e: FormSubmitEvent) {
                         graph-slug="scheme"
                         node-alias="creation_sources"
                         :aliased-node-data="
-                            props.tileData?.aliased_data.creation_sources
+                            props.tileData?.aliased_data.creation_sources ??
+                            null
                         "
                         :mode="EDIT"
                     />

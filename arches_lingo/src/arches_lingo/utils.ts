@@ -11,11 +11,11 @@ import {
     TOP_CONCEPT_ICON,
     CONCEPT_TYPE_NODE_ALIAS,
 } from "@/arches_lingo/constants.ts";
-import { fetchTileData } from "@/arches_component_lab/generics/GenericCard/api.ts";
+import { fetchTileData } from "@/arches_vue_components/generics/GenericCard/api.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 
 import type { TreeNode } from "primevue/treenode";
-import type { Language } from "@/arches_component_lab/types.ts";
+import type { Language } from "@/arches_vue_components/types.ts";
 import type {
     Concept,
     ConceptType,
@@ -373,9 +373,10 @@ export function getStatementText(
             current.aliased_data?.statement_language?.display_value?.toLowerCase();
         const bestLang =
             bestMatch.aliased_data?.statement_language?.display_value?.toLowerCase();
-        return rankLanguage(currentLang) > rankLanguage(bestLang)
-            ? current
-            : bestMatch;
+        if (rankLanguage(currentLang) > rankLanguage(bestLang)) {
+            return current;
+        }
+        return bestMatch;
     });
 
     return best.aliased_data?.statement_content?.display_value ?? "";

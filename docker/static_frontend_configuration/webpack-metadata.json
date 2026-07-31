@@ -4,13 +4,13 @@
     "APP_ROOT": "/web_root/arches-lingo/arches_lingo",
     "ARCHES_APPLICATIONS": [
         "arches_lingo",
-        "arches_component_lab",
+        "arches_vue_components",
         "arches_controlled_lists",
         "arches_querysets"
     ],
     "ARCHES_APPLICATIONS_PATHS": {
         "arches_lingo": "/web_root/arches-lingo/arches_lingo",
-        "arches_component_lab": "/web_root/ENV/lib/python3.12/site-packages/arches_component_lab",
+        "arches_vue_components": "/web_root/ENV/lib/python3.12/site-packages/arches_vue_components",
         "arches_controlled_lists": "/web_root/ENV/lib/python3.12/site-packages/arches_controlled_lists",
         "arches_querysets": "/web_root/ENV/lib/python3.12/site-packages/arches_querysets"
     },

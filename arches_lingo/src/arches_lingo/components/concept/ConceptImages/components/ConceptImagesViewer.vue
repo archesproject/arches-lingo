@@ -10,7 +10,7 @@ import Skeleton from "primevue/skeleton";
 import Tag from "primevue/tag";
 import { useConfirm } from "primevue/useconfirm";
 
-import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
+import GenericWidget from "@/arches_vue_components/generics/GenericWidget/GenericWidget.vue";
 
 import { DANGER, SECONDARY, VIEW } from "@/arches_lingo/constants.ts";
 import { useConceptImagesEditorStore } from "@/arches_lingo/stores/useConceptImagesEditorStore.ts";
@@ -23,7 +23,7 @@ import type {
     ConceptInstance,
     DigitalObjectInstance,
 } from "@/arches_lingo/types.ts";
-import type { FileListValue } from "@/arches_component_lab/datatypes/file-list/types.ts";
+import type { FileListAliasedNodeData } from "@/arches_vue_components/datatypes/file-list/types.ts";
 import {
     fetchLingoResourcePartial,
     fetchLingoResourcesBatch,
@@ -91,9 +91,9 @@ onMounted(async () => {
     if (props.tileData) {
         try {
             const digitalObjectInstances =
-                props.tileData.aliased_data.depicting_digital_asset_internal?.node_value?.map(
-                    (resource) => resource.resourceId,
-                );
+                props.tileData.aliased_data.depicting_digital_asset_internal.node_value
+                    ?.map((ref) => ref.resourceId)
+                    .filter(Boolean);
             if (digitalObjectInstances) {
                 resources.value = await fetchLingoResourcesBatch(
                     "digital_object_system",
@@ -109,7 +109,7 @@ onMounted(async () => {
 
 function getImageUrl(resource: DigitalObjectInstance): string | undefined {
     const contentData = resource.aliased_data.content?.aliased_data
-        .content as unknown as FileListValue | undefined;
+        .content as unknown as FileListAliasedNodeData | undefined;
     const fileReference = contentData?.node_value?.[0];
     if (fileReference?.url) {
         return getFileUrl(fileReference.url);
@@ -119,7 +119,7 @@ function getImageUrl(resource: DigitalObjectInstance): string | undefined {
 
 function getImageAlt(resource: DigitalObjectInstance): string {
     const contentData = resource.aliased_data.content?.aliased_data
-        .content as unknown as FileListValue | undefined;
+        .content as unknown as FileListAliasedNodeData | undefined;
     const fileReference = contentData?.node_value?.[0];
     return fileReference?.altText || fileReference?.name || "";
 }
@@ -149,11 +149,13 @@ function confirmDelete(removedResourceInstanceId: string) {
                 if (
                     depictingDigitalAssetInternalData?.depicting_digital_asset_internal
                 ) {
+                    const currentNodeValue =
+                        depictingDigitalAssetInternalData
+                            .depicting_digital_asset_internal.node_value ?? [];
                     depictingDigitalAssetInternalData.depicting_digital_asset_internal.node_value =
-                        depictingDigitalAssetInternalData.depicting_digital_asset_internal.node_value.filter(
-                            (assetReference) =>
-                                assetReference.resourceId !==
-                                removedResourceInstanceId,
+                        currentNodeValue.filter(
+                            (ref) =>
+                                ref.resourceId !== removedResourceInstanceId,
                         );
                     resources.value = resources.value?.filter(
                         (resource) =>
@@ -323,7 +325,7 @@ function modifyResource(resourceInstanceId?: string) {
                         <div
                             v-if="
                                 resource.aliased_data.statement?.aliased_data
-                                    .statement_content
+                                    .statement_content ?? null
                             "
                             class="card-description"
                         >

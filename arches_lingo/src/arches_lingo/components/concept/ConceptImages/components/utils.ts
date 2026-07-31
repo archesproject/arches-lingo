@@ -1,6 +1,6 @@
 import arches from "arches";
 
-import { fetchCardXNodeXWidgetData } from "@/arches_component_lab/generics/GenericWidget/api.ts";
+import { useWidgetConfigStore } from "@/arches_vue_components/stores/useWidgetConfigStore.ts";
 import {
     createLingoResource,
     createLingoResourceFromForm,
@@ -9,6 +9,7 @@ import {
 } from "@/arches_lingo/api.ts";
 import { DIGITAL_OBJECT_GRAPH_SLUG } from "@/arches_lingo/components/concept/ConceptImages/components/constants.ts";
 import { type Ref, toRaw } from "vue";
+import type { ResourceInstanceListAliasedNodeData } from "@/arches_vue_components/datatypes/resource-instance-list/types.ts";
 import type {
     ConceptInstance,
     DigitalObjectInstance,
@@ -54,49 +55,56 @@ export async function addDigitalObjectToConceptImageCollection(
     conceptDigitalObjectRelationshipNodegroupAlias: string,
     conceptResourceInstanceId?: string,
 ) {
-    if (conceptResourceInstanceId && digitalObjectResource.resourceinstanceid) {
-        const conceptDigitalObjectRelationshipList =
-            (await fetchLingoResourcePartial(
-                conceptGraphSlug,
-                conceptResourceInstanceId,
-                conceptDigitalObjectRelationshipNodegroupAlias,
-            )) as ConceptInstance;
+    if (
+        !conceptResourceInstanceId ||
+        !digitalObjectResource.resourceinstanceid
+    ) {
+        return;
+    }
 
-        if (
-            !conceptDigitalObjectRelationshipList.aliased_data
-                .depicting_digital_asset_internal
-        ) {
-            conceptDigitalObjectRelationshipList.aliased_data.depicting_digital_asset_internal =
-                {
-                    aliased_data: {
-                        depicting_digital_asset_internal: {
-                            display_value: "",
-                            node_value: [],
-                            details: [],
-                        },
-                    },
-                };
-        }
-
-        if (
-            !conceptDigitalObjectRelationshipList?.aliased_data
-                .depicting_digital_asset_internal?.aliased_data
-                .depicting_digital_asset_internal.node_value
-        ) {
-            conceptDigitalObjectRelationshipList.aliased_data.depicting_digital_asset_internal.aliased_data.depicting_digital_asset_internal.node_value =
-                [];
-        }
-        conceptDigitalObjectRelationshipList.aliased_data.depicting_digital_asset_internal.aliased_data.depicting_digital_asset_internal.node_value.push(
-            {
-                resourceId: digitalObjectResource.resourceinstanceid,
-            },
-        );
-        await updateLingoResource(
+    const conceptDigitalObjectRelationshipList =
+        (await fetchLingoResourcePartial(
             conceptGraphSlug,
             conceptResourceInstanceId,
-            conceptDigitalObjectRelationshipList,
-        );
+            conceptDigitalObjectRelationshipNodegroupAlias,
+        )) as ConceptInstance;
+
+    if (
+        !conceptDigitalObjectRelationshipList.aliased_data
+            .depicting_digital_asset_internal
+    ) {
+        conceptDigitalObjectRelationshipList.aliased_data.depicting_digital_asset_internal =
+            {
+                aliased_data: {
+                    depicting_digital_asset_internal: {
+                        display_value: "",
+                        node_value: [],
+                        details: [],
+                    } as ResourceInstanceListAliasedNodeData,
+                },
+            };
     }
+
+    const depictingNodeData =
+        conceptDigitalObjectRelationshipList.aliased_data
+            .depicting_digital_asset_internal.aliased_data
+            .depicting_digital_asset_internal;
+
+    depictingNodeData.node_value = [
+        ...(depictingNodeData.node_value ?? []),
+        {
+            resourceId: digitalObjectResource.resourceinstanceid,
+            ontologyProperty: "",
+            inverseOntologyProperty: "",
+            resourceXresourceId: "",
+        },
+    ];
+
+    await updateLingoResource(
+        conceptGraphSlug,
+        conceptResourceInstanceId,
+        conceptDigitalObjectRelationshipList,
+    );
 }
 
 export async function createFormDataForFileUpload(
@@ -107,7 +115,7 @@ export async function createFormDataForFileUpload(
 ): Promise<FormData> {
     const formData = new FormData();
 
-    const cardXNodeXWidgetData = await fetchCardXNodeXWidgetData(
+    const cardXNodeXWidgetData = await useWidgetConfigStore().fetchWidgetConfig(
         DIGITAL_OBJECT_GRAPH_SLUG,
         "content",
     );
@@ -123,7 +131,8 @@ export async function createFormDataForFileUpload(
             }),
         );
     }
-    for (const file of submittedFormData.content.node_value) {
+    for (const file of (submittedFormData.content as Array<{ file?: File }>) ??
+        []) {
         if (file.file instanceof File) {
             const sanitizedName = file.file.name.replace(/ /g, "_");
             formData.append(

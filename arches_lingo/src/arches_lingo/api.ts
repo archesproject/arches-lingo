@@ -2,7 +2,7 @@ import arches from "arches";
 import Cookies from "js-cookie";
 import { generateArchesURL } from "@/arches/utils/generate-arches-url.ts";
 
-import type { Language } from "@/arches_component_lab/types";
+import type { Language } from "@/arches_vue_components/types";
 import type {
     AdvancedSearchQuery,
     AdvancedSearchResponse,
@@ -724,7 +724,9 @@ export const importThesaurus = async (file: File, overwriteOption: string) => {
             }
             throw new Error(parsed.message);
         } catch (error) {
-            throw new Error((error as Error).message || response.statusText);
+            throw new Error((error as Error).message || response.statusText, {
+                cause: error,
+            });
         }
     }
 };
@@ -756,7 +758,9 @@ export const exportThesaurus = async (
         }
         throw new Error(parsed.message || parsed.data?.message);
     } catch (error) {
-        throw new Error((error as Error).message || response.statusText);
+        throw new Error((error as Error).message || response.statusText, {
+            cause: error,
+        });
     }
 };
 

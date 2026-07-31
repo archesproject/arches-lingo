@@ -7,7 +7,7 @@ import Button from "primevue/button";
 import Tag from "primevue/tag";
 
 import MetaStringViewer from "@/arches_lingo/components/generic/MetaStringViewer.vue";
-import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
+import GenericWidget from "@/arches_vue_components/generics/GenericWidget/GenericWidget.vue";
 
 import { resolveConceptURI } from "@/arches_lingo/api.ts";
 import { VIEW } from "@/arches_lingo/constants.ts";
@@ -178,7 +178,8 @@ function externalConceptURI(rowData: ConceptMatchStatus): string | null {
                     :graph-slug="props.graphSlug"
                     node-alias="match_status_ascribed_relation"
                     :aliased-node-data="
-                        rowData.aliased_data.match_status_ascribed_relation
+                        rowData.aliased_data.match_status_ascribed_relation ??
+                        null
                     "
                     :mode="VIEW"
                     :should-show-label="false"
@@ -199,7 +200,7 @@ function externalConceptURI(rowData: ConceptMatchStatus): string | null {
                     v-else-if="externalConceptURI(rowData)"
                     :label="
                         rowData.aliased_data.match_status_ascribed_comparate
-                            .display_value
+                            ?.display_value
                     "
                     variant="link"
                     as="a"
@@ -210,7 +211,7 @@ function externalConceptURI(rowData: ConceptMatchStatus): string | null {
                 <span v-else>
                     {{
                         rowData.aliased_data.match_status_ascribed_comparate
-                            .display_value
+                            ?.display_value
                     }}
                 </span>
             </template>
@@ -219,7 +220,8 @@ function externalConceptURI(rowData: ConceptMatchStatus): string | null {
                     :graph-slug="props.graphSlug"
                     node-alias="match_status_data_assignment_actor"
                     :aliased-node-data="
-                        rowData.aliased_data.match_status_data_assignment_actor
+                        rowData.aliased_data
+                            .match_status_data_assignment_actor ?? null
                     "
                     :mode="VIEW"
                 />
@@ -228,7 +230,7 @@ function externalConceptURI(rowData: ConceptMatchStatus): string | null {
                     node-alias="match_status_data_assignment_object_used"
                     :aliased-node-data="
                         rowData.aliased_data
-                            .match_status_data_assignment_object_used
+                            .match_status_data_assignment_object_used ?? null
                     "
                     :mode="VIEW"
                 />

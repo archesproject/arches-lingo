@@ -9,7 +9,7 @@ import HierarchicalPositionEditor from "@/arches_lingo/components/concept/Hierar
 
 import { EDIT, VIEW } from "@/arches_lingo/constants.ts";
 
-import { fetchTileData } from "@/arches_component_lab/generics/GenericCard/api.ts";
+import { fetchTileData } from "@/arches_vue_components/generics/GenericCard/api.ts";
 import { fetchConceptAncestorPaths } from "@/arches_lingo/api.ts";
 import { useResourceStore } from "@/arches_lingo/composables/useResourceStore.ts";
 
@@ -109,11 +109,14 @@ watch(
                 const pathLength = datum.searchResults.length;
                 const parentId = datum.searchResults[pathLength - 2]?.id;
                 if (!parentId) continue;
-                const match = tileData.value?.find((tile) =>
-                    tile.aliased_data.classification_status_ascribed_classification.node_value?.some(
+                const match = tileData.value?.find((tile) => {
+                    const nodeData =
+                        tile.aliased_data
+                            .classification_status_ascribed_classification;
+                    return nodeData?.node_value?.some(
                         (nodeValue) => nodeValue.resourceId === parentId,
-                    ),
-                );
+                    );
+                });
                 if (match) datum.tileid = match.tileid;
             }
         } catch (error) {

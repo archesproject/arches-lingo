@@ -34,6 +34,7 @@ import { useConceptStore } from "@/arches_lingo/stores/useConceptStore.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 
 import type { Ref } from "vue";
+import type { ResourceInstanceReference } from "@/arches_vue_components/datatypes/resource-instance-list/types.ts";
 import type {
     AppellativeStatus,
     ConceptClassificationStatusAliases,
@@ -42,6 +43,7 @@ import type {
     Identifier,
     ResourceInstanceLifecycleState,
     ResourceInstanceResult,
+    TileData,
 } from "@/arches_lingo/types.ts";
 import type { Label } from "@/arches_controlled_lists/types.ts";
 
@@ -176,22 +178,23 @@ function extractLabelsFromResource(resource: ResourceInstanceResult): Label[] {
     const labels: Label[] = [];
     for (const tile of tiles) {
         const aliasedData = tile.aliased_data;
+
         if (!aliasedData) continue;
-        const value =
-            aliasedData.appellative_status_ascribed_name_content?.display_value;
-        const termLanguageNode =
-            aliasedData.appellative_status_ascribed_name_language;
-        const termLanguageNodeValue = termLanguageNode?.node_value;
-        let languageId: string | undefined;
-        if (typeof termLanguageNodeValue === "string") {
-            languageId = termLanguageNodeValue;
-        } else {
-            languageId = termLanguageNode?.display_value;
-        }
-        const typeUri =
-            aliasedData.appellative_status_ascribed_relation?.node_value?.[0]
-                ?.uri;
-        if (value && languageId) {
+
+        const contentNodeValue =
+            aliasedData.appellative_status_ascribed_name_content?.node_value;
+
+        if (!contentNodeValue) continue;
+
+        const typeNode =
+            aliasedData.appellative_status_ascribed_relation?.node_value?.[0];
+
+        const typeUri = typeNode?.data?.uri;
+
+        for (const [languageId, { value }] of Object.entries(
+            contentNodeValue,
+        )) {
+            if (!value) continue;
             labels.push({
                 value,
                 language_id: languageId,
@@ -237,13 +240,10 @@ const label = computed<Label | undefined>(function () {
 const parentConceptLabelMap = computed<Map<string, Label[]>>(function () {
     const map = new Map<string, Label[]>();
     for (const parent of data.value?.parentConcepts ?? []) {
-        const id = parent.details[0]?.resource_id;
-
-        if (id) {
-            const storeLabels = conceptStore.findConcept(id)?.labels;
-            const ancestorLabels = ancestorLabelsById.value.get(id);
-            map.set(id, storeLabels ?? ancestorLabels ?? []);
-        }
+        const id = parentConceptId(parent);
+        const storeLabels = conceptStore.findConcept(id)?.labels;
+        const ancestorLabels = ancestorLabelsById.value.get(id);
+        map.set(id, storeLabels ?? ancestorLabels ?? []);
     }
     return map;
 });
@@ -252,6 +252,14 @@ const lifecycleStateLabel = computed(function () {
     return resourceInstanceLifecycleState?.value?.name ?? "--";
 });
 
+const partOfSchemeId = computed(function () {
+    return data.value?.partOfScheme?.node_value?.[0]?.resourceId;
+});
+
+function parentConceptId(parent: ResourceInstanceReference): string {
+    return parent.resourceId;
+}
+
 function extractConceptHeaderData(resource: ResourceInstanceResult) {
     const aliased_data = resource?.aliased_data;
 
@@ -259,7 +267,9 @@ function extractConceptHeaderData(resource: ResourceInstanceResult) {
     const descriptor = extractDescriptors(resource, selectedLanguage.value);
     const principalUser = resource?.principal_user_display_name ?? undefined;
 
-    const uri = aliased_data?.uri?.aliased_data?.uri_content?.node_value;
+    const uri =
+        aliased_data?.uri?.aliased_data?.uri_content?.display_value ||
+        undefined;
     const partOfScheme =
         aliased_data?.part_of_scheme?.aliased_data?.part_of_scheme;
     const schemeId = partOfScheme?.node_value?.[0]?.resourceId;
@@ -275,16 +285,17 @@ function extractConceptHeaderData(resource: ResourceInstanceResult) {
         ).value;
     }
 
-    const parentConcepts = (aliased_data?.classification_status || []).flatMap(
-        (tile: ConceptClassificationStatusAliases) =>
-            tile?.aliased_data?.classification_status_ascribed_classification ||
-            [],
+    const parentConcepts = (aliased_data?.classification_status ?? []).flatMap(
+        (tile: TileData<ConceptClassificationStatusAliases>) =>
+            tile.aliased_data.classification_status_ascribed_classification
+                .node_value ?? [],
     );
-    const identifier = (aliased_data?.identifier || [])
+    const identifier = (aliased_data?.identifier ?? [])
         .map(
             (tile: Identifier) =>
-                tile?.aliased_data?.identifier_content?.node_value,
+                tile.aliased_data.identifier_content.node_value,
         )
+        .filter(Boolean)
         .join(", ");
 
     data.value = {
@@ -372,13 +383,10 @@ function extractConceptHeaderData(resource: ResourceInstanceResult) {
                         </span>
                         <span class="header-item-value">
                             <RouterLink
-                                v-if="data?.partOfScheme?.node_value"
-                                :to="`/scheme/${data?.partOfScheme?.node_value?.[0]?.resourceId}`"
+                                v-if="data?.partOfScheme"
+                                :to="`/scheme/${partOfSchemeId}`"
                             >
-                                {{
-                                    data?.schemeLabel ||
-                                    data?.partOfScheme?.display_value
-                                }}
+                                {{ data?.schemeLabel }}
                             </RouterLink>
                             <span v-else>--</span>
                         </span>
@@ -417,23 +425,21 @@ function extractConceptHeaderData(resource: ResourceInstanceResult) {
                     </span>
                     <span
                         v-for="parent in data?.parentConcepts"
-                        :key="parent.details[0].resource_id"
+                        :key="parentConceptId(parent)"
                         class="header-item-value parent-concept"
                     >
-                        <RouterLink
-                            :to="`/concept/${parent.details[0].resource_id}`"
-                        >
+                        <RouterLink :to="`/concept/${parentConceptId(parent)}`">
                             {{
                                 getItemLabel(
                                     {
                                         labels:
                                             parentConceptLabelMap.get(
-                                                parent.details[0].resource_id,
+                                                parentConceptId(parent),
                                             ) ?? [],
                                     },
                                     selectedLanguage.code,
                                     systemLanguage.code,
-                                ).value || parent.details[0].display_value
+                                ).value
                             }}
                         </RouterLink>
                     </span>

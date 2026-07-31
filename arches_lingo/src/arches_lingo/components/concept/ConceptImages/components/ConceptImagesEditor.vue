@@ -8,7 +8,7 @@ import { Form } from "@primevue/forms";
 
 import Skeleton from "primevue/skeleton";
 
-import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
+import GenericWidget from "@/arches_vue_components/generics/GenericWidget/GenericWidget.vue";
 import { DIGITAL_OBJECT_GRAPH_SLUG } from "@/arches_lingo/components/concept/ConceptImages/components/constants.ts";
 import {
     DEFAULT_ERROR_TOAST_LIFE,
@@ -34,7 +34,10 @@ import {
 
 import type { Component, Ref } from "vue";
 import type { FormSubmitEvent } from "@primevue/forms";
-import type { FileListValue } from "@/arches_component_lab/datatypes/file-list/types.ts";
+import type {
+    FileListAliasedNodeData,
+    FileReference,
+} from "@/arches_vue_components/datatypes/file-list/types.ts";
 
 import type {
     ConceptImages,
@@ -42,12 +45,8 @@ import type {
     DigitalObjectInstanceAliases,
 } from "@/arches_lingo/types.ts";
 
-type PossiblyNewFile = FileListValue & {
+type PossiblyNewFile = FileReference & {
     file?: File;
-    name?: string;
-    lastModified?: number;
-    size?: number;
-    type?: string;
 };
 
 const props = defineProps<{
@@ -113,80 +112,60 @@ async function save(e: FormSubmitEvent) {
     isLoading.value = true;
 
     try {
-        const submittedFormData = Object.fromEntries(
-            Object.entries(e.states).map(([key, state]) => [key, state.value]),
-        );
+        const submittedFormData = e.values;
+        const contentFiles =
+            (
+                submittedFormData.content as {
+                    node_value: PossiblyNewFile[] | null;
+                }
+            )?.node_value ?? null;
 
-        let digitalObjectInstanceAliases: DigitalObjectInstanceAliases = {};
-
-        if (digitalObjectResource.value) {
-            digitalObjectInstanceAliases =
-                digitalObjectResource.value.aliased_data;
-        }
+        const digitalObjectInstanceAliases: DigitalObjectInstanceAliases =
+            digitalObjectResource.value?.aliased_data ?? {};
 
         if (submittedFormData.name_content) {
-            if (!digitalObjectInstanceAliases.name) {
-                digitalObjectInstanceAliases.name = {
-                    aliased_data: {
-                        name_content: submittedFormData.name_content,
-                    },
-                };
-            } else {
-                digitalObjectInstanceAliases.name.aliased_data.name_content =
-                    submittedFormData.name_content;
-            }
+            digitalObjectInstanceAliases.name = {
+                ...digitalObjectInstanceAliases.name,
+                aliased_data: { name_content: submittedFormData.name_content },
+            };
         }
         if (submittedFormData.statement_content) {
-            if (!digitalObjectInstanceAliases.statement) {
-                digitalObjectInstanceAliases.statement = {
-                    aliased_data: {
-                        statement_content: submittedFormData.statement_content,
-                    },
-                };
-            } else {
-                digitalObjectInstanceAliases.statement.aliased_data.statement_content =
-                    submittedFormData.statement_content;
-            }
+            digitalObjectInstanceAliases.statement = {
+                ...digitalObjectInstanceAliases.statement,
+                aliased_data: {
+                    statement_content: submittedFormData.statement_content,
+                },
+            };
         }
 
         // files do not respect json.stringify
-        const fileJsonObjects =
-            submittedFormData.content.node_value?.map(
-                (file: PossiblyNewFile) => {
-                    if (!file?.file) {
-                        return file;
-                    } else {
-                        return {
-                            name: file.name?.replace(/ /g, "_"),
-                            lastModified: file.lastModified,
-                            size: file.size,
-                            type: file.type,
-                            url: null,
-                            file_id: null,
-                            content: URL.createObjectURL(file?.file),
-                            altText: "Replaceable alt text",
-                        };
-                    }
-                },
-            ) ?? [];
-
-        if (!digitalObjectInstanceAliases.content) {
-            digitalObjectInstanceAliases.content = {
-                aliased_data: {
-                    content: {
-                        node_value: [...fileJsonObjects],
-                    } as unknown as FileListValue[],
-                },
+        const fileJsonObjects = (contentFiles ?? []).map((file) => {
+            if (!file.file) {
+                return file;
+            }
+            return {
+                name: file.name.replace(/ /g, "_"),
+                lastModified: file.lastModified,
+                size: file.size,
+                type: file.type,
+                url: null,
+                file_id: null,
+                content: URL.createObjectURL(file.file),
+                altText: "Replaceable alt text",
             };
-        } else {
-            digitalObjectInstanceAliases.content.aliased_data.content = {
-                node_value: [...fileJsonObjects],
-            } as unknown as FileListValue[];
-        }
+        });
 
-        // if files go one way, if no files go the traditional way
-        const hasNewFiles = submittedFormData.content.node_value?.some(
-            (file: PossiblyNewFile) => file.file instanceof File,
+        digitalObjectInstanceAliases.content = {
+            ...digitalObjectInstanceAliases.content,
+            aliased_data: {
+                content: {
+                    node_value: fileJsonObjects,
+                } as unknown as FileListAliasedNodeData,
+            },
+        };
+
+        const hasNewFiles = (contentFiles ?? []).some(
+            (file) => file.file instanceof File,
         );
         if (hasNewFiles) {
             if (digitalObjectResource.value) {
@@ -204,7 +183,7 @@ async function save(e: FormSubmitEvent) {
             const formDataForDigitalObject = await createFormDataForFileUpload(
                 digitalObjectResource as Ref<DigitalObjectInstance>,
                 digitalObjectInstanceAliases,
-                submittedFormData,
+                { ...submittedFormData, content: contentFiles },
             );
             if (digitalObjectResource.value?.resourceinstanceid) {
                 await updateLingoResourceFromForm(
@@ -247,6 +226,8 @@ async function save(e: FormSubmitEvent) {
             }
         }
 
+        refreshReportSection!(props.componentName);
+
         nextTick(() => {
             targetDigitalObjectResourceInstanceId.value =
                 digitalObjectResource.value?.resourceinstanceid;
@@ -255,7 +236,6 @@ async function save(e: FormSubmitEvent) {
             );
         });
 
-        refreshReportSection!(props.componentName);
         closeEditor!();
     } catch (error) {
         toast.add({
@@ -301,38 +281,41 @@ function resetForm() {
                 @submit="save"
                 @reset="resetForm"
             >
-                <GenericWidget
-                    node-alias="name_content"
-                    graph-slug="digital_object_system"
-                    :mode="EDIT"
-                    :aliased-node-data="
-                        digitalObjectResource?.aliased_data.name?.aliased_data
-                            .name_content
-                    "
-                    class="widget-container column"
-                />
-                <GenericWidget
-                    node-alias="statement_content"
-                    graph-slug="digital_object_system"
-                    :mode="EDIT"
-                    :aliased-node-data="
-                        digitalObjectResource?.aliased_data.statement
-                            ?.aliased_data.statement_content
-                    "
-                    :render-context="MULTILINE_RENDER_CONTEXT"
-                    class="widget-container column"
-                />
-                <GenericWidget
-                    node-alias="content"
-                    graph-slug="digital_object_system"
-                    :aliased-node-data="
-                        digitalObjectResource?.aliased_data?.content
-                            ?.aliased_data.content
-                    "
-                    :mode="EDIT"
-                    :should-show-label="false"
-                    class="widget-container column"
-                />
+                <div class="widget-container column">
+                    <GenericWidget
+                        node-alias="name_content"
+                        graph-slug="digital_object_system"
+                        :mode="EDIT"
+                        :aliased-node-data="
+                            digitalObjectResource?.aliased_data.name
+                                ?.aliased_data.name_content ?? null
+                        "
+                    />
+                </div>
+                <div class="widget-container column">
+                    <GenericWidget
+                        node-alias="statement_content"
+                        graph-slug="digital_object_system"
+                        :mode="EDIT"
+                        :aliased-node-data="
+                            digitalObjectResource?.aliased_data.statement
+                                ?.aliased_data.statement_content ?? null
+                        "
+                        :render-context="MULTILINE_RENDER_CONTEXT"
+                    />
+                </div>
+                <div class="widget-container column">
+                    <GenericWidget
+                        node-alias="content"
+                        graph-slug="digital_object_system"
+                        :aliased-node-data="
+                            digitalObjectResource?.aliased_data?.content
+                                ?.aliased_data.content ?? null
+                        "
+                        :mode="EDIT"
+                        :should-show-label="false"
+                    />
+                </div>
             </Form>
         </div>
     </div>

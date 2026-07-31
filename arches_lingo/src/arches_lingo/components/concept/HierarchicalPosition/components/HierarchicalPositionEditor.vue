@@ -126,7 +126,8 @@ async function save(e: FormSubmitEvent) {
                     node-alias="classification_status_ascribed_classification"
                     :aliased-node-data="
                         props.tileData?.aliased_data
-                            .classification_status_ascribed_classification
+                            .classification_status_ascribed_classification ??
+                        null
                     "
                     :mode="EDIT"
                     :scheme="props.scheme"

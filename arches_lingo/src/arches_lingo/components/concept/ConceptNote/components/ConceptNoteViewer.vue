@@ -6,7 +6,7 @@ import Button from "primevue/button";
 import Tag from "primevue/tag";
 
 import MetaStringViewer from "@/arches_lingo/components/generic/MetaStringViewer.vue";
-import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
+import GenericWidget from "@/arches_vue_components/generics/GenericWidget/GenericWidget.vue";
 
 import { VIEW } from "@/arches_lingo/constants.ts";
 import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
@@ -120,7 +120,9 @@ const metaStringLabel = computed<MetaStringText>(() => ({
                 <GenericWidget
                     node-alias="statement_content"
                     :graph-slug="props.graphSlug"
-                    :aliased-node-data="rowData.aliased_data.statement_content"
+                    :aliased-node-data="
+                        rowData.aliased_data.statement_content ?? null
+                    "
                     :mode="VIEW"
                     :should-show-label="false"
                 />
@@ -129,7 +131,9 @@ const metaStringLabel = computed<MetaStringText>(() => ({
                 <GenericWidget
                     node-alias="statement_type"
                     :graph-slug="props.graphSlug"
-                    :aliased-node-data="rowData.aliased_data.statement_type"
+                    :aliased-node-data="
+                        rowData.aliased_data.statement_type ?? null
+                    "
                     :mode="VIEW"
                     :should-show-label="false"
                 />
@@ -138,7 +142,9 @@ const metaStringLabel = computed<MetaStringText>(() => ({
                 <GenericWidget
                     node-alias="statement_language"
                     :graph-slug="props.graphSlug"
-                    :aliased-node-data="rowData.aliased_data.statement_language"
+                    :aliased-node-data="
+                        rowData.aliased_data.statement_language ?? null
+                    "
                     :mode="VIEW"
                     :should-show-label="false"
                 />
@@ -149,7 +155,7 @@ const metaStringLabel = computed<MetaStringText>(() => ({
                     :graph-slug="props.graphSlug"
                     :aliased-node-data="
                         rowData.aliased_data
-                            .statement_data_assignment_object_used
+                            .statement_data_assignment_object_used ?? null
                     "
                     :mode="VIEW"
                 />
@@ -157,7 +163,8 @@ const metaStringLabel = computed<MetaStringText>(() => ({
                     node-alias="statement_data_assignment_actor"
                     :graph-slug="props.graphSlug"
                     :aliased-node-data="
-                        rowData.aliased_data.statement_data_assignment_actor
+                        rowData.aliased_data.statement_data_assignment_actor ??
+                        null
                     "
                     :mode="VIEW"
                 />

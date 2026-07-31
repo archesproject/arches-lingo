@@ -16,7 +16,7 @@ import { Form } from "@primevue/forms";
 
 import Skeleton from "primevue/skeleton";
 
-import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
+import GenericWidget from "@/arches_vue_components/generics/GenericWidget/GenericWidget.vue";
 
 import { createLingoResource, upsertLingoTile } from "@/arches_lingo/api.ts";
 
@@ -142,7 +142,7 @@ async function save(e: FormSubmitEvent) {
                         node-alias="namespace_name"
                         :graph-slug="props.graphSlug"
                         :aliased-node-data="
-                            props.tileData?.aliased_data.namespace_name
+                            props.tileData?.aliased_data.namespace_name ?? null
                         "
                         :mode="EDIT"
                     />

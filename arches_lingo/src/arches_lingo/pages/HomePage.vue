@@ -7,7 +7,7 @@ import MultiSelect from "primevue/multiselect";
 import Message from "primevue/message";
 import Skeleton from "primevue/skeleton";
 
-import { fetchLanguages } from "@/arches_component_lab/widgets/api.ts";
+import { fetchLanguages } from "@/arches_vue_components/widgets/api.ts";
 import {
     fetchDashboardStats,
     fetchLingoResources,
@@ -20,7 +20,7 @@ import DashboardStatCards from "@/arches_lingo/components/dashboard/DashboardSta
 import MissingTranslationsPanel from "@/arches_lingo/components/dashboard/MissingTranslationsPanel.vue";
 import RecentActivityTable from "@/arches_lingo/components/dashboard/RecentActivityTable.vue";
 
-import type { Language } from "@/arches_component_lab/types.ts";
+import type { Language } from "@/arches_vue_components/types.ts";
 import type {
     DashboardStats,
     MissingTranslationsResponse,

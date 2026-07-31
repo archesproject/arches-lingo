@@ -9,7 +9,7 @@ import { Form } from "@primevue/forms";
 
 import Skeleton from "primevue/skeleton";
 
-import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
+import GenericWidget from "@/arches_vue_components/generics/GenericWidget/GenericWidget.vue";
 import { createLingoResource, upsertLingoTile } from "@/arches_lingo/api.ts";
 
 import {
@@ -141,7 +141,8 @@ async function save(e: FormSubmitEvent) {
                         :graph-slug="props.graphSlug"
                         node-alias="statement_content"
                         :aliased-node-data="
-                            props.tileData?.aliased_data?.statement_content
+                            props.tileData?.aliased_data?.statement_content ??
+                            null
                         "
                         :render-context="MULTILINE_RENDER_CONTEXT"
                         :mode="EDIT"
@@ -152,7 +153,7 @@ async function save(e: FormSubmitEvent) {
                         :graph-slug="props.graphSlug"
                         node-alias="statement_type"
                         :aliased-node-data="
-                            props.tileData?.aliased_data?.statement_type
+                            props.tileData?.aliased_data?.statement_type ?? null
                         "
                         :mode="EDIT"
                     />
@@ -162,7 +163,8 @@ async function save(e: FormSubmitEvent) {
                         :graph-slug="props.graphSlug"
                         node-alias="statement_language"
                         :aliased-node-data="
-                            props.tileData?.aliased_data?.statement_language
+                            props.tileData?.aliased_data?.statement_language ??
+                            null
                         "
                         :mode="EDIT"
                     />
@@ -173,7 +175,7 @@ async function save(e: FormSubmitEvent) {
                         node-alias="statement_data_assignment_actor"
                         :aliased-node-data="
                             props.tileData?.aliased_data
-                                ?.statement_data_assignment_actor
+                                ?.statement_data_assignment_actor ?? null
                         "
                         :mode="EDIT"
                     />
@@ -184,7 +186,7 @@ async function save(e: FormSubmitEvent) {
                         node-alias="statement_data_assignment_object_used"
                         :aliased-node-data="
                             props.tileData?.aliased_data
-                                ?.statement_data_assignment_object_used
+                                ?.statement_data_assignment_object_used ?? null
                         "
                         :mode="EDIT"
                     />

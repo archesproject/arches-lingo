@@ -9,7 +9,7 @@ import { Form } from "@primevue/forms";
 
 import Skeleton from "primevue/skeleton";
 
-import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
+import GenericWidget from "@/arches_vue_components/generics/GenericWidget/GenericWidget.vue";
 
 import { createLingoResource, upsertLingoTile } from "@/arches_lingo/api.ts";
 
@@ -144,7 +144,8 @@ async function save(e: FormSubmitEvent) {
                         node-alias="appellative_status_ascribed_name_content"
                         :aliased-node-data="
                             props.tileData?.aliased_data
-                                .appellative_status_ascribed_name_content
+                                .appellative_status_ascribed_name_content ??
+                            null
                         "
                         :mode="EDIT"
                     />
@@ -155,7 +156,7 @@ async function save(e: FormSubmitEvent) {
                         node-alias="appellative_status_ascribed_relation"
                         :aliased-node-data="
                             props.tileData?.aliased_data
-                                .appellative_status_ascribed_relation
+                                .appellative_status_ascribed_relation ?? null
                         "
                         :mode="EDIT"
                     />
@@ -166,7 +167,8 @@ async function save(e: FormSubmitEvent) {
                         node-alias="appellative_status_ascribed_name_language"
                         :aliased-node-data="
                             props.tileData?.aliased_data
-                                .appellative_status_ascribed_name_language
+                                .appellative_status_ascribed_name_language ??
+                            null
                         "
                         :mode="EDIT"
                     />
@@ -177,7 +179,8 @@ async function save(e: FormSubmitEvent) {
                         node-alias="appellative_status_data_assignment_actor"
                         :aliased-node-data="
                             props.tileData?.aliased_data
-                                ?.appellative_status_data_assignment_actor
+                                ?.appellative_status_data_assignment_actor ??
+                            null
                         "
                         :mode="EDIT"
                     />
@@ -188,7 +191,8 @@ async function save(e: FormSubmitEvent) {
                         node-alias="appellative_status_data_assignment_object_used"
                         :aliased-node-data="
                             props.tileData?.aliased_data
-                                ?.appellative_status_data_assignment_object_used
+                                ?.appellative_status_data_assignment_object_used ??
+                            null
                         "
                         :mode="EDIT"
                     />
