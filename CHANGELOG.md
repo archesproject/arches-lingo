@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   Add ability to lock/unlock schemes and related concepts [#753](https://github.com/archesproject/arches-lingo/pull/753)
 -   Add scripts to dump and load fixtures [#755](https://github.com/archesproject/arches-lingo/pull/755)
 -   Add advanced search facet for searching on related images [#756](https://github.com/archesproject/arches-lingo/pull/756)
+-   Add content-negotiated SKOS dereferencing for scheme and concept URIs [#759](https://github.com/archesproject/arches-lingo/pull/759)
 
 ### Changed
 -   Optimize search performance for large-scale datasets [#704](https://github.com/archesproject/arches-lingo/pull/704)
