@@ -1,5 +1,6 @@
 import json
 import os
+import zipfile
 from io import BytesIO, StringIO
 from pathlib import Path
 from unittest.mock import patch
@@ -385,12 +386,31 @@ class ExportTests(TestCase):
         file_details = self._assert_successful_export(response)
         self.assertTrue(file_details["name"].endswith(".zip"))
 
+        # Scheme and concept graphs share card names (e.g. "Label"), so their
+        # CSVs must be namespaced under separate folders to avoid ZIP entries
+        # with duplicate names that clobber one another on extraction.
+        with zipfile.ZipFile(self.file_path) as exported_zip:
+            entry_names = exported_zip.namelist()
+        self.assertEqual(len(entry_names), len(set(entry_names)))
+        self.assertTrue(any(name.startswith("scheme/") for name in entry_names))
+        self.assertTrue(any(name.startswith("concept/") for name in entry_names))
+        self.assertIn("scheme/Label.csv", entry_names)
+        self.assertIn("concept/Label.csv", entry_names)
+
     def test_export_partial_hierarchy_to_csv(self):
         response = self._run_export(
             self.test_concept.pk, "csv", export_option="partial"
         )
         file_details = self._assert_successful_export(response)
         self.assertTrue(file_details["name"].endswith(".zip"))
+
+        # A partial hierarchy is rooted at a concept, so only concept CSVs are
+        # produced, all namespaced under the "concept/" folder.
+        with zipfile.ZipFile(self.file_path) as exported_zip:
+            entry_names = exported_zip.namelist()
+        self.assertEqual(len(entry_names), len(set(entry_names)))
+        self.assertTrue(entry_names)
+        self.assertTrue(all(name.startswith("concept/") for name in entry_names))
 
     # --- JSON-LD ---
 
