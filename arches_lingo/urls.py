@@ -3,6 +3,7 @@ from django.conf.urls.static import static
 from django.urls import include, path
 
 from arches_lingo.views.root import LingoRootView
+from arches_lingo.views.api.dereference import DereferenceableResourceView
 from arches_lingo.views.api.concepts import (
     ConceptAncestorsView,
     ConceptChildrenView,
@@ -74,18 +75,20 @@ urlpatterns = [
     path("login", LingoRootView.as_view(), name="login"),
     path("advanced-search", LingoRootView.as_view(), name="advanced-search"),
     path("schemes", LingoRootView.as_view(), name="schemes"),
-    path("scheme/<uuid:id>", LingoRootView.as_view(), name="scheme"),
+    # Identity URIs: content-negotiated. Browsers get the SPA; machines requesting
+    # an RDF representation (Accept header or ?format=) get SKOS for the resource.
+    path("scheme/<uuid:id>", DereferenceableResourceView.as_view(), name="scheme"),
     path("scheme/new", LingoRootView.as_view(), name="new-scheme"),
-    path("concept/<uuid:id>", LingoRootView.as_view(), name="concept"),
+    path("concept/<uuid:id>", DereferenceableResourceView.as_view(), name="concept"),
     path("concept/new", LingoRootView.as_view(), name="new-concept"),
     path(
         "schemes/<slug:scheme_identifier>",
-        LingoRootView.as_view(),
+        DereferenceableResourceView.as_view(),
         name="scheme-by-identifier",
     ),
     path(
         "schemes/<slug:scheme_identifier>/concepts/<slug:concept_identifier>",
-        LingoRootView.as_view(),
+        DereferenceableResourceView.as_view(),
         name="concept-by-identifier",
     ),
     path("sources", LingoRootView.as_view(), name="sources"),
