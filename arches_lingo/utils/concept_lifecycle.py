@@ -16,11 +16,11 @@ PUBLISHED_STATE_ID = uuid.UUID("6b0f1a7b-5b3d-4b2a-8a5b-7c3a1b0f2d9e")
 RETIRED_STATE_ID = uuid.UUID("9d2e1c0b-7a6b-4b3d-8c1a-0f2d9e6b0a7c")
 LOCKED_STATE_ID = uuid.UUID("c9f7e3d1-2a5b-4c8d-9e6f-3b0a1d2e4f7c")
 
-# Lifecycle states in which a resource has been published and its URI is a stable,
-# publicly resolvable identifier. Draft and Editing resources are pre-publication and
-# are not dereferenceable to anonymous consumers. Retired concepts remain resolvable so
-# that previously published URIs do not break; they are marked as deprecated in the
-# serialized output.
+# Lifecycle states whose URIs we treat as publicly resolvable to anonymous consumers.
+# Retired resources stay resolvable (marked owl:deprecated in the serialized output) so
+# that previously published URIs do not break. These states do not strictly guarantee
+# prior publication: a resource can be retired or locked directly from draft, in which
+# case it is anonymously resolvable here as well.
 PUBLICLY_DEREFERENCEABLE_STATE_IDS = frozenset(
     {PUBLISHED_STATE_ID, LOCKED_STATE_ID, RETIRED_STATE_ID}
 )

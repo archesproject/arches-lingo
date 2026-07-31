@@ -1,3 +1,4 @@
+import logging
 import uuid
 
 from django.http import Http404, HttpResponse
@@ -19,6 +20,8 @@ from arches_lingo.utils.skos_serializer import (
 )
 from arches_lingo.views.root import LingoRootView
 
+logger = logging.getLogger(__name__)
+
 
 class DereferenceableResourceView(View):
     """Serve a scheme or concept URI as either the HTML app or a SKOS representation.
@@ -36,7 +39,6 @@ class DereferenceableResourceView(View):
         )
 
         if rdf_format is None:
-            # Default (browsers, */*, no Accept): serve the single-page application.
             return LingoRootView.as_view()(request, *args, **kwargs)
 
         if rdf_format is NOT_ACCEPTABLE:
@@ -54,12 +56,20 @@ class DereferenceableResourceView(View):
         if not self._may_dereference(request, lifecycle_state_id):
             raise Http404()
 
-        body, content_type = serialize_resource(
-            resource_id,
-            graph_kind,
-            rdf_format,
-            mark_deprecated=lifecycle_state_id == RETIRED_STATE_ID,
-        )
+        try:
+            body, content_type = serialize_resource(
+                resource_id,
+                graph_kind,
+                rdf_format,
+                mark_deprecated=lifecycle_state_id == RETIRED_STATE_ID,
+            )
+        except Exception:
+            logger.exception("Failed to serialize resource %s as SKOS", resource_id)
+            return HttpResponse(
+                "The requested representation could not be generated for this resource.",
+                status=500,
+                content_type="text/plain",
+            )
         if body is None:
             raise Http404()
 

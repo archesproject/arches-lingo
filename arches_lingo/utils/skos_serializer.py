@@ -98,6 +98,53 @@ TILE_TREE_TO_TRIPLE_MAPPING = {
 }
 
 
+# Registry of the RDF serializations Lingo exposes for dereferenced resources,
+# keyed by the short format token also accepted as a ?format= query value.
+RDF_FORMATS = {
+    "jsonld": {
+        "rdflib": "json-ld",
+        "content_type": "application/ld+json",
+        "accept_types": ["application/ld+json"],
+    },
+    "xml": {
+        "rdflib": "pretty-xml",
+        "content_type": "application/rdf+xml",
+        "accept_types": ["application/rdf+xml"],
+    },
+    "turtle": {
+        "rdflib": "turtle",
+        "content_type": "text/turtle; charset=utf-8",
+        "accept_types": ["text/turtle"],
+    },
+    "nt": {
+        "rdflib": "nt",
+        "content_type": "application/n-triples",
+        "accept_types": ["application/n-triples"],
+    },
+}
+
+# Aliases tolerated in the ?format= query string.
+_FORMAT_ALIASES = {
+    "json-ld": "jsonld",
+    "ttl": "turtle",
+    "rdf": "xml",
+    "rdfxml": "xml",
+    "n-triples": "nt",
+    "ntriples": "nt",
+}
+
+_HTML_TYPES = {"text/html", "application/xhtml+xml"}
+
+# Sentinel returned when a client explicitly demands a format we do not offer.
+NOT_ACCEPTABLE = object()
+
+_ACCEPT_TYPE_TO_FORMAT = {
+    accept_type: rdf_format
+    for rdf_format, spec in RDF_FORMATS.items()
+    for accept_type in spec["accept_types"]
+}
+
+
 def extract_triples_from_aliased_tiles(nodegroup_alias, tile_trees):
     """Build triple dicts for a single nodegroup's tile(s) using the mapping table."""
     triples = []
@@ -121,7 +168,6 @@ def extract_triples_from_aliased_tiles(nodegroup_alias, tile_trees):
             elif (
                 triple_component == "default_predicate" and triple["predicate"] is None
             ):
-                # Fall back on default predicates for relationships if none was found
                 triple["predicate"] = node_alias
             elif triple_component != "default_predicate":
                 try:
@@ -296,55 +342,6 @@ def _serialize_graph_as_jsonld(rdf_graph):
     }
     compacted = jsonld.compact(expanded, context)
     return json.dumps(compacted, indent=2, sort_keys=True).encode("utf-8")
-
-
-# --- Content negotiation -------------------------------------------------------
-
-# Registry of the RDF serializations Lingo exposes for dereferenced resources.
-# Keyed by the short format token also accepted as a ?format= query value.
-RDF_FORMATS = {
-    "jsonld": {
-        "rdflib": "json-ld",
-        "content_type": "application/ld+json",
-        "accept_types": ["application/ld+json"],
-    },
-    "xml": {
-        "rdflib": "pretty-xml",
-        "content_type": "application/rdf+xml",
-        "accept_types": ["application/rdf+xml"],
-    },
-    "turtle": {
-        "rdflib": "turtle",
-        "content_type": "text/turtle; charset=utf-8",
-        "accept_types": ["text/turtle"],
-    },
-    "nt": {
-        "rdflib": "nt",
-        "content_type": "application/n-triples",
-        "accept_types": ["application/n-triples"],
-    },
-}
-
-# Aliases tolerated in the ?format= query string.
-_FORMAT_ALIASES = {
-    "json-ld": "jsonld",
-    "ttl": "turtle",
-    "rdf": "xml",
-    "rdfxml": "xml",
-    "n-triples": "nt",
-    "ntriples": "nt",
-}
-
-_HTML_TYPES = {"text/html", "application/xhtml+xml"}
-
-# Sentinel returned when a client explicitly demands a format we do not offer.
-NOT_ACCEPTABLE = object()
-
-_ACCEPT_TYPE_TO_FORMAT = {
-    accept_type: rdf_format
-    for rdf_format, spec in RDF_FORMATS.items()
-    for accept_type in spec["accept_types"]
-}
 
 
 def _parse_accept_header(accept_header):

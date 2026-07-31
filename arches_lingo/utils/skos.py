@@ -1,5 +1,7 @@
+import logging
 import uuid
 from collections import defaultdict
+from urllib.parse import urlsplit
 from django.db.models import Q
 from rdflib import Literal, Namespace, RDF, URIRef
 from rdflib.namespace import SKOS, DCTERMS, OWL
@@ -11,6 +13,8 @@ from arches_controlled_lists.utils.skos import SKOSReader
 from arches_controlled_lists.models import List, ListItem, ListItemValue
 
 from arches_lingo.etl_modules.migrate_to_lingo import LingoResourceImporter
+
+logger = logging.getLogger(__name__)
 
 # define the ARCHES namespace
 ARCHES = Namespace(settings.ARCHES_NAMESPACE_FOR_DATA_EXPORT)
@@ -379,6 +383,8 @@ class SKOSWriter:
             self._add_uuid_sameas(rdf_graph, rdf_scheme_id, scheme_id)
             for triple in triples:
                 predicates, object = self.extract_predicate_object(triple)
+                if object is None:
+                    continue
                 for predicate in predicates:
                     rdf_graph.add((rdf_scheme_id, predicate, object))
 
@@ -388,6 +394,8 @@ class SKOSWriter:
             self._add_uuid_sameas(rdf_graph, rdf_concept_id, concept_id)
             for triple in triples:
                 predicates, object = self.extract_predicate_object(triple)
+                if object is None:
+                    continue
                 for predicate in predicates:
                     if predicate == SKOS.hasTopConcept:
                         rdf_graph.add((object, SKOS.hasTopConcept, rdf_concept_id))
@@ -415,17 +423,32 @@ class SKOSWriter:
         object_language = triple.get("object_language")
         if object_language:
             object = Literal(object, lang=object_language)
-        elif triple.get("object_is_uri") and object:
-            # A matched concept's comparate is a URI reference, not a literal.
-            object = URIRef(str(object))
+        elif triple.get("object_is_uri"):
+            object = self.uri_reference_or_none(object)
         if isinstance(object, models.ResourceInstance):
             object = subject_uri_for(
                 object.resourceinstanceid, getattr(self, "resource_uri_map", None)
             )
-        if not isinstance(object, Literal) and not isinstance(object, URIRef):
+        if object is not None and not isinstance(object, (Literal, URIRef)):
             object = Literal(object)
 
         return predicates, object
+
+    def uri_reference_or_none(self, object):
+        """Return a URIRef for a match comparate, or None to skip an unusable value.
+
+        Match/mapping comparates hold an external (or locally-resolvable) URI rather
+        than a resource instance. An empty comparate or a value that is not an
+        absolute URI is skipped instead of being emitted as a bogus URI reference.
+        """
+        if not object:
+            return None
+        object_string = str(object).strip()
+        parsed = urlsplit(object_string)
+        if not parsed.scheme or not (parsed.netloc or parsed.path):
+            logger.warning("Skipping non-URI match comparate: %s", object_string)
+            return None
+        return URIRef(object_string)
 
     def transform_predicate_values(self, predicate_references):
         if isinstance(predicate_references, str):
