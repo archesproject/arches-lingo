@@ -4,135 +4,137 @@ Arches Lingo is an Arches application designed to support the creation of thesau
 
 Please see the [project page](http://archesproject.org/) for more information on the Arches project.
 
-
 ## Installation
 
 If you are installing Arches Lingo for the first time, we strongly recommend that you install it as an Arches application into a existing (or new) project. Running Arches Lingo as a standalone project can provide some convenience if you are a developer contributing to the Arches Lingo project but you risk conflicts when upgrading to the next version of Arches Lingo.
 
 Install Arches Lingo using the following command:
+
 ```
 pip install arches-lingo
 ```
 
 For developer install instructions, see the [Developer Setup](#developer-setup-for-contributing-to-the-arches-lingo-project) section below.
 
-
 ## Project Configuration
 
 1. If you don't already have an Arches project, you'll need to create one by following the instructions in the Arches [documentation](http://archesproject.org/documentation/).
-
 2. When your project is ready, add "arches_querysets", "arches_vue_components", "arches_controlled_lists", "arches_lingo", and "pgtrigger" to INSTALLED_APPS **below** the name of your project:
-    ```
-    INSTALLED_APPS = (
-        ...
-        "my_project_name",
-        "arches_querysets",
-        "arches_vue_components",
-        "arches_controlled_lists",
-        "arches_lingo",
-    )
-    ```
 
+   ```
+   INSTALLED_APPS = (
+       ...
+       "my_project_name",
+       "arches_querysets",
+       "arches_vue_components",
+       "arches_controlled_lists",
+       "arches_lingo",
+   )
+   ```
 3. Make sure the following settings are added to your project
-    ```
-    REFERENCES_INDEX_NAME = "references"
-    ELASTICSEARCH_CUSTOM_INDEXES = [
-        {
-            "module": "arches_controlled_lists.search_indexes.reference_index.ReferenceIndex",
-            "name": REFERENCES_INDEX_NAME,
-            "should_update_asynchronously": True,
-        }
-    ]
-    TERM_SEARCH_TYPES = [
-        {
-            "type": "term",
-            "label": _("Term Matches"),
-            "key": "terms",
-            "module": "arches.app.search.search_term.TermSearch",
-        },
-        {
-            "type": "concept",
-            "label": _("Concepts"),
-            "key": "concepts",
-            "module": "arches.app.search.concept_search.ConceptSearch",
-        },
-        {
-            "type": "reference",
-            "label": _("References"),
-            "key": REFERENCES_INDEX_NAME,
-            "module": "arches_controlled_lists.search_indexes.reference_index.ReferenceIndex",
-        },
-    ]
 
-    ES_MAPPING_MODIFIER_CLASSES = [
-        "arches_controlled_lists.search.references_es_mapping_modifier.ReferencesEsMappingModifier"
-    ]
-    ```
+   ```
+   REFERENCES_INDEX_NAME = "references"
+   ELASTICSEARCH_CUSTOM_INDEXES = [
+       {
+           "module": "arches_controlled_lists.search_indexes.reference_index.ReferenceIndex",
+           "name": REFERENCES_INDEX_NAME,
+           "should_update_asynchronously": True,
+       }
+   ]
+   TERM_SEARCH_TYPES = [
+       {
+           "type": "term",
+           "label": _("Term Matches"),
+           "key": "terms",
+           "module": "arches.app.search.search_term.TermSearch",
+       },
+       {
+           "type": "concept",
+           "label": _("Concepts"),
+           "key": "concepts",
+           "module": "arches.app.search.concept_search.ConceptSearch",
+       },
+       {
+           "type": "reference",
+           "label": _("References"),
+           "key": REFERENCES_INDEX_NAME,
+           "module": "arches_controlled_lists.search_indexes.reference_index.ReferenceIndex",
+       },
+   ]
 
-    Note: the `should_update_asynchronously: True` setting requires Celery to be running. See the [Arches documentation](http://archesproject.org/documentation/) for instructions on configuring and running Celery.
+   ES_MAPPING_MODIFIER_CLASSES = [
+       "arches_controlled_lists.search.references_es_mapping_modifier.ReferencesEsMappingModifier"
+   ]
+   ```
 
+   Note: the `should_update_asynchronously: True` setting requires Celery to be running. See the [Arches documentation](http://archesproject.org/documentation/) for instructions on configuring and running Celery.
 4. Optionally, enable anonymous (read-only) access by adding the following setting to your project's `settings.py` or `settings_local.py`:
-    ```
-    LINGO_ALLOW_ANONYMOUS_ACCESS = True
-    ```
-    When enabled, unauthenticated users can browse schemes, concepts, and search results in a read-only mode. When disabled (the default), all users must log in to access any Lingo content. Authenticated users who are not members of the "Lingo Editor" group will still see a read-only experience regardless of this setting.
 
+   ```
+   LINGO_ALLOW_ANONYMOUS_ACCESS = True
+   ```
+
+   When enabled, unauthenticated users can browse schemes, concepts, and search results in a read-only mode. When disabled (the default), all users must log in to access any Lingo content. Authenticated users who are not members of the "Lingo Editor" group will still see a read-only experience regardless of this setting.
 5. Next ensure arches, arches-vue-components, and arches_lingo are included as dependencies in package.json
-    ```
-    "dependencies": {
-        "arches": "archesproject/arches#stable/8.1.3",
-        "arches-vue-components": "archesproject/arches-vue-components#stable/2.0.2",
-        "arches_lingo": "archesproject/arches-lingo#stable/1.1.0"
-    }
-    ```
 
+   ```
+   "dependencies": {
+       "arches": "archesproject/arches#stable/8.1.4",
+       "arches-vue-components": "archesproject/arches-vue-components#stable/2.0.2",
+       "arches_lingo": "archesproject/arches-lingo#main"
+   },
+   devDependencies": {
+       "globals": ""
+   }
+   ```
 6. Update urls.py to include the arches_lingo urls
-    ```
-    urlpatterns = [
-        path("", include("arches_lingo.urls")),
-    ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-    ```
 
+   ```
+   urlpatterns = [
+       path("", include("arches_lingo.urls")),
+   ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+   ```
 7. Configure language support
 
-    Arches Lingo uses cookie-based language switching (via Django's `django_language` cookie) rather than URL-based language prefixes. If you are running Lingo as a standalone project, ensure the following are set in your project settings:
+   Arches Lingo uses cookie-based language switching (via Django's `django_language` cookie) rather than URL-based language prefixes. If you are running Lingo as a standalone project, ensure the following are set in your project settings:
 
-    ```python
-    MIDDLEWARE = [
-        ...
-        "django.middleware.locale.LocaleMiddleware",
-        ...
-    ]
+   ```python
+   MIDDLEWARE = [
+       ...
+       "django.middleware.locale.LocaleMiddleware",
+       ...
+   ]
 
-    LANGUAGES = [
-        ("en", "English"),
-        # Add other languages your deployment supports, e.g.:
-        # ("es", "Spanish"),
-        # ("de", "German"),
-    ]
-    ```
+   LANGUAGES = [
+       ("en", "English"),
+       # Add other languages your deployment supports, e.g.:
+       # ("es", "Spanish"),
+       # ("de", "German"),
+   ]
+   ```
 
-    The `LANGUAGES` setting determines which languages appear in the Lingo language selector. The `django_language` cookie persists the user's language choice across sessions.
+   The `LANGUAGES` setting determines which languages appear in the Lingo language selector. The `django_language` cookie persists the user's language choice across sessions.
 
-    If you are using the language switcher, you will want to remove the following lines from near the bottom of your urls.py file as they will break language switching in Lingo:
+   If you are using the language switcher, you will want to remove the following lines from near the bottom of your urls.py file as they will break language switching in Lingo:
 
-    ```python
-    if settings.SHOW_LANGUAGE_SWITCH is True:
-        urlpatterns = i18n_patterns(*urlpatterns)
-    ```
-
+   ```python
+   if settings.SHOW_LANGUAGE_SWITCH is True:
+       urlpatterns = i18n_patterns(*urlpatterns)
+   ```
 8. Install the arches application package (models and other data)
-    ```
-    python manage.py packages -o load_package -a arches_lingo --yes
-    ```
 
+   ```
+   python manage.py packages -o load_package -a arches_lingo --yes
+   ```
 9. Install and build front-end dependencies. Navigate to your project's app directory (the one with package.json) and run:
-    ```
-    npm install
-    npm run build_development
-    ```
 
+   ```
+   npm install
+   npm run build_development
+   ```
 10. Start your project:
+
     ```
     python manage.py runserver
     ```
@@ -141,74 +143,71 @@ For developer install instructions, see the [Developer Setup](#developer-setup-f
 
 1. Download the arches-lingo repo:
 
-    a.  If using the [Github CLI](https://cli.github.com/): `gh repo clone archesproject/arches-lingo`
-    
-    b.  If not using the Github CLI: `git clone https://github.com/archesproject/arches-lingo.git`
+   a.  If using the [Github CLI](https://cli.github.com/): `gh repo clone archesproject/arches-lingo`
 
+   b.  If not using the Github CLI: `git clone https://github.com/archesproject/arches-lingo.git`
 2. Download the arches package:
 
-    a.  If using the [Github CLI](https://cli.github.com/): `gh repo clone archesproject/arches`
+   a.  If using the [Github CLI](https://cli.github.com/): `gh repo clone archesproject/arches`
 
-    b.  If not using the Github CLI: `git clone https://github.com/archesproject/arches.git`
+   b.  If not using the Github CLI: `git clone https://github.com/archesproject/arches.git`
+3. Create a virtual environment outside of both repositories:
 
-3. Create a virtual environment outside of both repositories: 
-    ```
-    python3 -m venv ENV
-    ```
-
+   ```
+   python3 -m venv ENV
+   ```
 4. Activate the virtual environment in your terminal:
-    ```
-    source ENV/bin/activate
-    ```
 
+   ```
+   source ENV/bin/activate
+   ```
 5. Navigate to the `arches-lingo` directory, and install the project (with development dependencies):
-    ```
-    cd arches-lingo
-    pip install -e . --group dev
-    ```
 
-    Note: `--group dev` requires pip >= 25.0. If you have an older pip, upgrade first with `pip install --upgrade pip`.
+   ```
+   cd arches-lingo
+   pip install -e . --group dev
+   ```
 
+   Note: `--group dev` requires pip >= 25.0. If you have an older pip, upgrade first with `pip install --upgrade pip`.
 6. Also install core arches for local development:
-    ```
-    pip install -e ../arches
-    ```
 
+   ```
+   pip install -e ../arches
+   ```
 7. Create a settings_local.py file with `DEBUG=True`:
-    ```
-    echo "DEBUG = True" > arches_lingo/settings_local.py
-    ```
 
+   ```
+   echo "DEBUG = True" > arches_lingo/settings_local.py
+   ```
 8. Run the Django server:
-    ```
-    python manage.py runserver
-    ```
 
-9.  (From the `arches-lingo` top-level directory) install the frontend dependencies:
-    ```
-    npm install
-    ```
+   ```
+   python manage.py runserver
+   ```
+9. (From the `arches-lingo` top-level directory) install the frontend dependencies:
 
+   ```
+   npm install
+   ```
 10. Once the dependencies have been installed, generate the static asset bundle:
 
     a. If you're planning on editing HTML/CSS/JavaScript files, run `npm start`. This will start a development server that will automatically detect changes to static assets and rebuild the bundle.
 
     b. If you're not planning on editing HTML/CSS/JavaScript files, run `npm run build_development`
-
 11. If you ran `npm start` in the previous step, you will need to open a new terminal window and activate the virtual environment in the new terminal window. If you ran `npm run build_development` then you can skip this step.
-
 12. Install the ontologies, branches, and resource models from the package.
+
     ```
     python manage.py setup_db
     python manage.py packages -o load_package -a arches_lingo --yes -db
     ```
-
 13. Load the test data:
+
     ```
     python manage.py loaddata tests/fixtures/data/FISH_Example_Thesauri.json.xz
     ```
-
 14. In the terminal window that is running the Django server, halt the server and restart it.
+
     ```
     (ctrl+c to halt the server)
     python manage.py runserver
@@ -216,38 +215,36 @@ For developer install instructions, see the [Developer Setup](#developer-setup-f
 
 ## Committing changes
 
-NOTE: Changes are committed to the arches-lingo repository. 
+NOTE: Changes are committed to the arches-lingo repository.
 
 1. Navigate to the repository
-    ```
-    cd arches-lingo
-    ```
 
+   ```
+   cd arches-lingo
+   ```
 2. Cut a new git branch
-    ```
-    git checkout origin/main -b my-descriptive-branch-name
-    ```
 
+   ```
+   git checkout origin/main -b my-descriptive-branch-name
+   ```
 3. If updating models or branches
 
-    1. Manually export the model or branch from the project
-
-    2. Manually move the exported model or branch into one of the subdirectories in the `arches-lingo/arches_lingo/pkg/graphs` directory.
-
+   1. Manually export the model or branch from the project
+   2. Manually move the exported model or branch into one of the subdirectories in the `arches-lingo/arches_lingo/pkg/graphs` directory.
 4. Add your changes to the current git commit
-    ```
-    git status
-    git add -- path/to/file path/to/second/file
-    git commit -m "Descriptive commit message"
-    ```
 
+   ```
+   git status
+   git add -- path/to/file path/to/second/file
+   git commit -m "Descriptive commit message"
+   ```
 5. Update the remote repository with your commits:
-    ```
-    git push origin HEAD
-    ```
 
+   ```
+   git push origin HEAD
+   ```
 6. Navigate to https://github.com/archesproject/arches-lingo/pulls to see and commit the pull request
 
-
 ## References
+
 - [1] Contains information from the J. Paul Getty Trust, Getty Research Institute, the Art & Architecture Thesaurus, which is made available under the ODC Attribution License.
