@@ -80,9 +80,9 @@ For developer install instructions, see the [Developer Setup](#developer-setup-f
 5. Next ensure arches, arches-vue-components, and arches_lingo are included as dependencies in package.json
     ```
     "dependencies": {
-        "arches": "archesproject/arches#dev/8.1.x",
-        "arches-vue-components": "archesproject/arches-vue-components#dev/2.0.x",
-        "arches_lingo": "archesproject/arches-lingo#main"
+        "arches": "archesproject/arches#stable/8.1.3",
+        "arches-vue-components": "archesproject/arches-vue-components#stable/2.0.2",
+        "arches_lingo": "archesproject/arches-lingo#stable/1.1.0"
     }
     ```
 
