@@ -167,7 +167,9 @@ const hasPersistedResourceInstance = computed(() => {
 });
 
 const store = useResourceStore();
-const { isEditor, isLingoAdmin } = useUserStore();
+const userStore = useUserStore();
+const { isEditor, isLingoAdmin } = userStore;
+const { isAnonymous } = storeToRefs(userStore);
 const { publicServerAddress } = storeToRefs(useAppSettingsStore());
 
 const isLocked = computed(
@@ -646,6 +648,7 @@ async function onReinstateConfirmed(cascade: boolean) {
                         <span>{{ $gettext("History") }}</span>
                     </Button>
                     <Button
+                        v-if="!isAnonymous"
                         :aria-label="$gettext('Export')"
                         class="add-button"
                         @click="openExportDialog"
