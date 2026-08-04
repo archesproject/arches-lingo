@@ -94,7 +94,7 @@ const shouldShowAddChildButton = computed(function () {
             :delete-label="deleteLabel"
         />
         <ExportIcon
-            v-if="node.data.id !== NEW && !userStore.isAnonymous"
+            v-if="node.data.id !== NEW && userStore.isEditor"
             :node="node"
             :export-label="exportLabel"
         />

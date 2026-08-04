@@ -92,7 +92,7 @@ const { $gettext } = useGettext();
 const toast = useToast();
 const router = useRouter();
 
-const { isEditor, isAnonymous } = storeToRefs(useUserStore());
+const { isEditor } = storeToRefs(useUserStore());
 const resourceStore = useResourceStore();
 const conceptStore = useConceptStore();
 
@@ -439,7 +439,7 @@ function onReinstateRequested() {
                 <span>{{ $gettext("History") }}</span>
             </Button>
             <Button
-                v-if="!isAnonymous"
+                v-if="isEditor"
                 :aria-label="$gettext('Export')"
                 class="add-button"
                 @click="openExportDialog"
