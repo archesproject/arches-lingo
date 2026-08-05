@@ -491,10 +491,6 @@ function getInitialLifecycleStateIds(): string[] {
 function getSearchableText(treeNode: TreeNode) {
     const nodeData = treeNode.data as unknown as Scheme | Concept;
 
-    if ("top_concepts" in nodeData) {
-        return "";
-    }
-
     const nodeLabelText = (treeNode.label ?? "").toString();
     const labelValuesFromData = (nodeData.labels ?? [])
         .map((labelItem) => (labelItem?.value ?? "").toString())
