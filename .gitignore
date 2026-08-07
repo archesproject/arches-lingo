@@ -10,6 +10,7 @@ arches_lingo/staticfiles
 arches_lingo/media/packages
 arches_lingo/media/build/
 arches_lingo/uploadedfiles/*
+arches_lingo/lingo_fixtures/*
 arches_lingo/settings_local.py
 webpack-stats.json
 .vscode/
