@@ -41,6 +41,7 @@ arches-lingo package defaults, those customizations must be migrated
 separately, or referenced list items will not resolve after restore.
 """
 
+import csv
 import tarfile
 import tempfile
 from dataclasses import dataclass
@@ -89,9 +90,11 @@ class FixtureTable:
     @property
     def columns(self):
         # Derive the column list from the model at runtime rather than
-        # hard-coding it, so it stays in sync with the model definition. Both
-        # dump (COPY TO) and load (COPY FROM) read this same ordering, so the
-        # CSV column order is always internally consistent.
+        # hard-coding it, so it stays in sync with the model definition. The
+        # resulting order is only used when writing an archive; on load the
+        # column order is read back from the CSV header, because model field
+        # declaration order (and therefore this order) can differ between
+        # arches versions.
         return tuple(field.column for field in self.model._meta.concrete_fields)
 
 
@@ -218,7 +221,7 @@ def _copy_table_into_tar(cursor, tar, table, graph_ids):
     column_list_sql = ", ".join(table.columns)
     copy_to_sql = cursor.mogrify(
         f"COPY (SELECT {column_list_sql} FROM {table.name} WHERE {table.where_sql}) "
-        "TO STDOUT WITH (FORMAT csv)",
+        "TO STDOUT WITH (FORMAT csv, HEADER)",
         {"graph_ids": graph_ids},
     )
     with tempfile.NamedTemporaryFile() as table_csv_file:
@@ -231,11 +234,26 @@ def _copy_table_into_tar(cursor, tar, table, graph_ids):
 
 def _copy_table_from_tar(cursor, tar, table):
     table_member = tar.getmember(f"db/{table.name}.csv")
-    column_list_sql = ", ".join(table.columns)
+    table_csv_file = tar.extractfile(table_member)
+
+    # Read the column order out of the archive itself instead of assuming it
+    # matches this installation's model field order: the same table can be
+    # declared with a different field order in a different arches version, and
+    # a mismatch would silently copy values into the wrong columns.
+    header_line = table_csv_file.readline().decode("utf-8")
+    archived_columns = next(csv.reader([header_line]), [])
+    unrecognized_columns = set(archived_columns) - set(table.columns)
+    if unrecognized_columns:
+        raise ValueError(
+            f"The archived {table.name} data has columns that do not exist on "
+            f"this installation: {', '.join(sorted(unrecognized_columns))}. The "
+            "archive was likely created against an incompatible schema version."
+        )
+
+    column_list_sql = ", ".join(archived_columns)
     copy_from_sql = (
         f"COPY {table.name} ({column_list_sql}) FROM STDIN WITH (FORMAT csv)"
     )
-    table_csv_file = tar.extractfile(table_member)
     cursor.copy_expert(copy_from_sql, table_csv_file)
     return cursor.rowcount
 
