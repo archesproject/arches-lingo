@@ -16,9 +16,8 @@ from arches_lingo.utils.data_languages import add_missing_languages
 class Command(BaseCommand):
     help = (
         "Detect the language codes used by resource data that have no row in the "
-        "languages table, and add one for each with the best available name and "
-        "text direction derived from Django's language list and the IANA Language "
-        "Subtag Registry."
+        "languages table, and add one for each with display names and text "
+        "direction derived from the langcodes library."
     )
 
     def add_arguments(self, parser):
@@ -37,17 +36,9 @@ class Command(BaseCommand):
                 "rather than languages the interface is translated into)."
             ),
         )
-        parser.add_argument(
-            "--subtag-registry",
-            help=(
-                "Path to a local copy of the IANA Language Subtag Registry. "
-                "Downloaded from iana.org when not given."
-            ),
-        )
 
     def handle(self, *args, **options):
         resolved_languages = add_missing_languages(
-            subtag_registry_path=options["subtag_registry"],
             scope=options["scope"],
             dry_run=options["dry_run"],
         )

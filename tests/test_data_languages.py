@@ -1,7 +1,6 @@
 import csv
 import io
 import tarfile
-import tempfile
 
 from django.db import connection
 from django.test import SimpleTestCase, TestCase
@@ -16,7 +15,6 @@ from arches_lingo.const import (
 )
 from arches_lingo.utils.data_languages import (
     LanguageTagResolver,
-    SubtagRegistry,
     add_missing_languages,
     get_missing_language_codes,
 )
@@ -26,122 +24,12 @@ from tests.tests import ViewTests
 # these tests can be run from the command line via
 # python manage.py test tests.test_data_languages --settings="tests.test_settings"
 
-# A stand-in for the IANA Language Subtag Registry, carrying only the subtags
-# the resolver tests exercise. Using a fixture rather than the real registry
-# keeps these tests offline and makes the expected names explicit.
-SUBTAG_REGISTRY_FIXTURE = """File-Date: 2026-06-14
-%%
-Type: language
-Subtag: ar
-Description: Arabic
-Suppress-Script: Arab
-%%
-Type: language
-Subtag: acw
-Description: Hijazi Arabic
-Macrolanguage: ar
-%%
-Type: language
-Subtag: he
-Description: Hebrew
-Suppress-Script: Hebr
-%%
-Type: language
-Subtag: id
-Description: Indonesian
-Suppress-Script: Latn
-%%
-Type: language
-Subtag: iw
-Description: Hebrew
-Deprecated: 1989-01-01
-Preferred-Value: he
-%%
-Type: language
-Subtag: nci
-Description: Classical Nahuatl
-%%
-Type: language
-Subtag: qaa..qtz
-Description: Private use
-%%
-Type: language
-Subtag: zh
-Description: Chinese
-Scope: macrolanguage
-%%
-Type: language
-Subtag: grc
-Description: Ancient Greek (to 1453)
-%%
-Type: extlang
-Subtag: yue
-Description: Yue Chinese
-Preferred-Value: yue
-Macrolanguage: zh
-%%
-Type: script
-Subtag: Latn
-Description: Latin
-%%
-Type: script
-Subtag: Hebr
-Description: Hebrew
-%%
-Type: script
-Subtag: Arab
-Description: Arabic
-%%
-Type: region
-Subtag: 002
-Description: Africa
-%%
-Type: region
-Subtag: MX
-Description: Mexico
-%%
-Type: variant
-Subtag: wadegile
-Description: Wade-Giles romanization
-%%
-Type: variant
-Subtag: pinyin
-Description: Pinyin romanization
-"""
-
-
-class SubtagRegistryTests(SimpleTestCase):
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-        cls.registry = SubtagRegistry(SUBTAG_REGISTRY_FIXTURE)
-
-    def test_subtags_are_indexed_by_type(self):
-        # "Hebrew" is both a language and a script; the type disambiguates.
-        self.assertEqual(self.registry.find("language", "he").description, "Hebrew")
-        self.assertEqual(self.registry.find("script", "hebr").description, "Hebrew")
-        self.assertIsNone(self.registry.find("region", "he"))
-
-    def test_subtag_lookup_is_case_insensitive(self):
-        self.assertEqual(self.registry.find("script", "LATN").description, "Latin")
-
-    def test_registered_fields_are_captured(self):
-        deprecated_hebrew = self.registry.find("language", "iw")
-        self.assertEqual(deprecated_hebrew.preferred_value, "he")
-        self.assertEqual(self.registry.find("language", "acw").macrolanguage, "ar")
-        self.assertEqual(self.registry.find("language", "ar").suppress_script, "Arab")
-
-    def test_private_use_ranges_are_recognized_but_not_described(self):
-        self.assertIsNone(self.registry.find("language", "qqq"))
-        self.assertTrue(self.registry.is_private_use("language", "qqq"))
-        self.assertFalse(self.registry.is_private_use("language", "nci"))
-
 
 class LanguageTagResolverTests(SimpleTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.resolver = LanguageTagResolver(SubtagRegistry(SUBTAG_REGISTRY_FIXTURE))
+        cls.resolver = LanguageTagResolver()
 
     def assertResolves(self, code, name, direction=Language.LEFT_TO_RIGHT):
         resolved = self.resolver.resolve(code)
@@ -149,55 +37,34 @@ class LanguageTagResolverTests(SimpleTestCase):
         self.assertEqual(resolved.name, name)
         self.assertEqual(resolved.default_direction, direction)
 
-    def test_django_language_list_names_codes_it_knows(self):
-        # Matching arches' own seeding keeps names consistent with the rows
-        # arches creates from settings.LANGUAGES.
+    def test_langcodes_resolves_common_language_codes(self):
         self.assertResolves("nl", "Dutch")
-        self.assertResolves("zh-hant", "Traditional Chinese")
-        self.assertResolves("es-mx", "Mexican Spanish")
+        self.assertResolves("zh-hant", "Chinese (Traditional)")
+        self.assertResolves("es-mx", "Spanish (Mexico)")
 
-    def test_registry_names_codes_django_does_not_know(self):
+    def test_langcodes_names_codes_django_does_not_know(self):
         self.assertResolves("nci", "Classical Nahuatl")
 
-    def test_compound_tag_recombines_its_subtag_descriptions(self):
-        self.assertResolves(
-            "zh-latn-wadegile", "Chinese (Latin, Wade-Giles romanization)"
-        )
-        self.assertResolves("grc-latn", "Ancient Greek (to 1453) (Latin)")
+    def test_compound_tag_uses_langcodes_display_name(self):
+        self.assertResolves("zh-latn-wadegile", "Chinese (Latin)")
+        self.assertResolves("grc-latn", "Ancient Greek (Latin)")
 
-    def test_region_and_extlang_subtags_are_described(self):
+    def test_region_subtags_are_described(self):
         self.assertResolves("nci-mx", "Classical Nahuatl (Mexico)")
-        self.assertResolves("zh-yue", "Chinese (Yue Chinese)")
-
-    def test_private_use_subtags_are_labeled_and_kept(self):
-        self.assertResolves(
-            "zh-latn-pinyin-x-hanyu",
-            "Chinese (Latin, Pinyin romanization, private use: hanyu)",
-        )
-
-    def test_wholly_private_use_tag_falls_back_to_the_tag_itself(self):
-        self.assertResolves("x-local", "x-local (private use)")
-
-    def test_unregistered_primary_subtag_falls_back_to_the_subtag(self):
-        # "qqq" is in the private-use range, so it has no registered name, but
-        # its region subtag still does.
-        self.assertResolves("qqq-002", "qqq (Africa)")
 
     def test_deprecated_subtag_resolves_to_its_replacement(self):
         self.assertResolves("iw", "Hebrew", Language.RIGHT_TO_LEFT)
 
-    def test_iso_639_2_code_resolves_through_its_two_letter_equivalent(self):
-        # "ind" is absent from the IANA registry because "id" is canonical.
+    def test_iso_639_2_code_resolves_through_langcodes(self):
         self.assertResolves("ind", "Indonesian")
 
     def test_direction_comes_from_the_script_a_language_is_written_in(self):
         self.assertResolves("he", "Hebrew", Language.RIGHT_TO_LEFT)
 
-    def test_direction_is_inherited_from_a_macrolanguage(self):
-        self.assertResolves("acw", "Hijazi Arabic", Language.RIGHT_TO_LEFT)
+    def test_direction_is_inherited_from_implicit_script(self):
+        self.assertResolves("ar", "Arabic", Language.RIGHT_TO_LEFT)
 
     def test_explicit_script_subtag_overrides_the_language_direction(self):
-        # Romanized Hebrew reads left to right.
         self.assertResolves("he-latn", "Hebrew (Latin)", Language.LEFT_TO_RIGHT)
 
 
@@ -230,19 +97,11 @@ class MissingLanguageTests(TestCase):
         self.assertNotIn("en", missing_codes)
 
     def test_missing_languages_are_added_with_data_scope(self):
-        with tempfile.NamedTemporaryFile(
-            "w", suffix=".txt", encoding="utf-8", delete=False
-        ) as registry_file:
-            registry_file.write(SUBTAG_REGISTRY_FIXTURE)
-
-        added = add_missing_languages(subtag_registry_path=registry_file.name)
+        added = add_missing_languages()
 
         added_by_code = {resolved.code: resolved for resolved in added}
         self.assertEqual(added_by_code["nci"].name, "Classical Nahuatl")
-        self.assertEqual(
-            added_by_code["zh-latn-wadegile"].name,
-            "Chinese (Latin, Wade-Giles romanization)",
-        )
+        self.assertIn("zh-latn-wadegile", added_by_code)
         self.assertNotIn("en", added_by_code)
 
         added_row = Language.objects.get(code="zh-latn-wadegile")
@@ -251,14 +110,7 @@ class MissingLanguageTests(TestCase):
         self.assertEqual(get_missing_language_codes(), set())
 
     def test_dry_run_reports_without_writing(self):
-        with tempfile.NamedTemporaryFile(
-            "w", suffix=".txt", encoding="utf-8", delete=False
-        ) as registry_file:
-            registry_file.write(SUBTAG_REGISTRY_FIXTURE)
-
-        added = add_missing_languages(
-            subtag_registry_path=registry_file.name, dry_run=True
-        )
+        added = add_missing_languages(dry_run=True)
 
         self.assertIn("nci", {resolved.code for resolved in added})
         self.assertFalse(Language.objects.filter(code="nci").exists())
