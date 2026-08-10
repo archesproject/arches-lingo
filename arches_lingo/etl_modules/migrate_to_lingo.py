@@ -946,7 +946,7 @@ class LingoResourceImporter(BaseImportModule):
                     """UPDATE load_event SET status = %s WHERE loadid = %s""",
                     ("validated", self.loadid),
                 )
-                save_to_tiles(self.userid, self.loadid)
+                save_to_tiles(self.userid, self.loadid, index=False)
                 cursor.execute(
                     """CALL __arches_update_resource_x_resource_with_graphids();"""
                 )
@@ -967,12 +967,17 @@ class LingoResourceImporter(BaseImportModule):
         if thesaurus_name is None and type(self.load_event.load_details) is list:
             thesaurus_name = self.load_event.load_details[1].get("thesaurus_name")
         user = models.User.objects.get(id=self.userid)
-        if self.load_event.status == "indexed":
+        load_event_status = self.load_event.status
+        if load_event_status == "indexed" or load_event_status == "completed":
             message = (
                 _("{} import completed").format(thesaurus_name)
                 if thesaurus_name
                 else _("Import completed")
             )
+            if load_event_status == "completed":
+                # BDM template only shows `completed` if status == `indexed`
+                self.load_event.status = "indexed"
+                self.load_event.save()
         else:
             message = (
                 _("{} import failed").format(thesaurus_name)
