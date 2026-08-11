@@ -114,8 +114,8 @@ class LingoResourceExporter:
             raise
 
     def run_export_task(self, resourceid, filename=None, format="xml"):
-        if format == "xml":
-            output_files = self._export_as_skos_xml(resourceid)
+        if format in ["xml", "nt"]:
+            output_files = self._export_as_skos(resourceid, format)
         elif format in ["rdf", "csv", "jsonld"]:
             scheme_ids, concept_ids = self._get_resource_ids_for_export(resourceid)
             if not scheme_ids and not concept_ids:
@@ -146,8 +146,9 @@ class LingoResourceExporter:
             f"{slugify(self.scheme_name, separator='_', lowercase=False)}.{extension}"
         )
 
-    def _export_as_skos_xml(self, resourceid):
-        """Export a thesaurus hierarchy as SKOS/RDF XML using the Lingo SKOS writer."""
+    def _export_as_skos(self, resourceid, format="xml"):
+        rdflib_format = "pretty-xml" if format == "xml" else "nt"
+
         schemes, concepts = self.gather_hierarchy_for_export(resourceid)
         self.schemes = schemes
         self.concepts = concepts
@@ -172,9 +173,9 @@ class LingoResourceExporter:
         rdf_graph = writer.write_skos_from_triples(
             scheme_triples, concept_triples, resource_uri_map=resource_uri_map
         )
-        serialized = rdf_graph.serialize(format="pretty-xml")
+        serialized = rdf_graph.serialize(format=rdflib_format)
 
-        file_name = self._make_filename("xml")
+        file_name = self._make_filename(format)
         if isinstance(serialized, str):
             serialized = serialized.encode("utf-8")
         return [{"name": file_name, "content": serialized}]

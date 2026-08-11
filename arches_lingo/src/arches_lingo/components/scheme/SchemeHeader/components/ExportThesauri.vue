@@ -30,6 +30,7 @@ const visible = ref(true);
 const exportFormat = ref("xml");
 const exportformatOptions = ref([
     { label: "SKOS/XML", value: "xml", disabled: false },
+    { label: "N-Triples", value: "nt", disabled: false },
     { label: "RDF/XML", value: "rdf", disabled: false },
     { label: "CSV", value: "csv", disabled: false },
     { label: "JSON-LD", value: "jsonld", disabled: false },
