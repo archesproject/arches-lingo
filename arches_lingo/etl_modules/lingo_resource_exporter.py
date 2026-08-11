@@ -147,18 +147,12 @@ class LingoResourceExporter:
         )
 
     def _export_as_skos(self, resourceid, format="xml"):
-        """Export a thesaurus hierarchy as SKOS in the specified RDF format.
-
-        Args:
-            resourceid: The resource ID to export
-            format: RDF serialization format - "xml", "nt", or "ttl"
-        """
         format_mapping = {
             "xml": "pretty-xml",
             "nt": "nt",
             "ttl": "turtle",
         }
-        rdflib_format = format_mapping.get(format, "pretty-xml")
+        rdflib_format = format_mapping.get(format)
 
         schemes, concepts = self.gather_hierarchy_for_export(resourceid)
         self.schemes = schemes
