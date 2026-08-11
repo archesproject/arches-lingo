@@ -114,7 +114,7 @@ class LingoResourceExporter:
             raise
 
     def run_export_task(self, resourceid, filename=None, format="xml"):
-        if format in ["xml", "nt"]:
+        if format in ["xml", "nt", "ttl"]:
             output_files = self._export_as_skos(resourceid, format)
         elif format in ["rdf", "csv", "jsonld"]:
             scheme_ids, concept_ids = self._get_resource_ids_for_export(resourceid)
@@ -147,7 +147,18 @@ class LingoResourceExporter:
         )
 
     def _export_as_skos(self, resourceid, format="xml"):
-        rdflib_format = "pretty-xml" if format == "xml" else "nt"
+        """Export a thesaurus hierarchy as SKOS in the specified RDF format.
+
+        Args:
+            resourceid: The resource ID to export
+            format: RDF serialization format - "xml", "nt", or "ttl"
+        """
+        format_mapping = {
+            "xml": "pretty-xml",
+            "nt": "nt",
+            "ttl": "turtle",
+        }
+        rdflib_format = format_mapping.get(format, "pretty-xml")
 
         schemes, concepts = self.gather_hierarchy_for_export(resourceid)
         self.schemes = schemes
