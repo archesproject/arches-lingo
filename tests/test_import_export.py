@@ -436,6 +436,32 @@ class ExportTests(TestCase):
         self.assertTrue(file_details["name"].endswith(".zip"))
         self.assertTrue(mock_build.called)
 
+    # --- Turtle ---
+
+    def test_export_full_hierarchy_to_turtle(self):
+        response = self._run_export(self.test_scheme.pk, "ttl")
+        file_details = self._assert_successful_export(response)
+        self.assertTrue(file_details["name"].endswith(".zip"))
+
+        # Verify the ZIP contains a .ttl file with SKOS content
+        with zipfile.ZipFile(self.file_path) as exported_zip:
+            entry_names = exported_zip.namelist()
+            ttl_files = [name for name in entry_names if name.endswith(".ttl")]
+            self.assertEqual(len(ttl_files), 1)
+
+    # --- N-Triples ---
+
+    def test_export_full_hierarchy_to_ntriples(self):
+        response = self._run_export(self.test_scheme.pk, "nt")
+        file_details = self._assert_successful_export(response)
+        self.assertTrue(file_details["name"].endswith(".zip"))
+
+        # Verify the ZIP contains a .nt file with SKOS content
+        with zipfile.ZipFile(self.file_path) as exported_zip:
+            entry_names = exported_zip.namelist()
+            nt_files = [name for name in entry_names if name.endswith(".nt")]
+            self.assertEqual(len(nt_files), 1)
+
     # --- Error handling ---
 
     def test_export_unsupported_format(self):
