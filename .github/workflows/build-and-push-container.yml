@@ -68,11 +68,13 @@ jobs:
 
       - name: Prepare build context
         run: |
-          cp arches-docker/entrypoint.sh project/docker/entrypoint.sh
-          cp arches-docker/supervisor.conf project/docker/supervisor.conf
-          cp arches-docker/settings_local.py project/docker/settings_local.py
-          cp -r arches-docker/conf.d project/docker/
-          cp -r arches-docker/nginx project/docker/
+          mkdir -p project/.runtime
+          cp arches-docker/entrypoint.sh project/.runtime/entrypoint.sh
+          cp arches-docker/supervisor.conf project/.runtime/supervisor.conf
+          cp arches-docker/settings_local.py project/.runtime/settings_local.py
+          cp -r arches-docker/conf.d project/.runtime/
+          cp -r arches-docker/nginx project/.runtime/
+          cp -r arches-docker/scaffold/templates/.runtime/internal project/.runtime/
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v6
@@ -144,7 +146,7 @@ jobs:
       - name: Create and push manifest list
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          IMAGE_TAG: ${{ github.sha }}
+          IMAGE_TAG: ${{ needs.setup.outputs.environment }}-${{ github.sha }}
         run: |
           REPO="${ECR_REGISTRY}/${{ vars.ECR_REPOSITORY }}"
           docker buildx imagetools create \
