@@ -5,7 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.1.2] - Unreleased
+
+### Fixed
+-   Write and read column headers in dumped fixture archives so loading is not affected by model field ordering [#765](https://github.com/archesproject/arches-lingo/pull/765)
+-   Allow Lingo editors to export without membership in additional Arches groups, and hide the export button from anonymous users [#766](https://github.com/archesproject/arches-lingo/pull/766)
+
+## [1.1.1] - 2026-07-31
+
+### Fixed
+-   Fix installation and configuration instructions in the README [#763](https://github.com/archesproject/arches-lingo/pull/763)
+
+## [1.1.0] - 2026-07-31
 
 ### Added
 -   Add progressive hierarchy loading [#707](https://github.com/archesproject/arches-lingo/pull/707)
@@ -145,4 +156,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   Fix revert button displaying in edit log for non-editable resources [#694](https://github.com/archesproject/arches-lingo/pull/694)
 -   Fix translatable strings in script tags not updating on language change [#692](https://github.com/archesproject/arches-lingo/pull/692)
 
+[1.1.1]: https://github.com/archesproject/arches-lingo/releases/tag/1.1.1
+[1.1.0]: https://github.com/archesproject/arches-lingo/releases/tag/1.1.0
 [1.0.0]: https://github.com/archesproject/arches-lingo/releases/tag/1.0.0

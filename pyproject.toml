@@ -31,7 +31,7 @@ dependencies = [
     "arches_querysets>=1.2.0",
     "arches_controlled_lists>=1.2.0",
 ]
-version = "1.1.0"
+version = "1.1.2"
 
 [project.urls]
 Homepage = "https://archesproject.org/"
