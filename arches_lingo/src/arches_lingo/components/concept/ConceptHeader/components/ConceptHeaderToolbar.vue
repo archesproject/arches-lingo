@@ -439,6 +439,7 @@ function onReinstateRequested() {
                 <span>{{ $gettext("History") }}</span>
             </Button>
             <Button
+                v-if="isEditor"
                 :aria-label="$gettext('Export')"
                 class="add-button"
                 @click="openExportDialog"
