@@ -1,16 +1,19 @@
 import json
 import os
+import uuid
 import zipfile
+from http import HTTPStatus
 from io import BytesIO, StringIO
 from pathlib import Path
 from unittest.mock import patch
 
 from django.conf import settings
-from django.contrib.auth.models import User
+from django.contrib.auth.models import Group, User
 from django.core import management
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.http import HttpRequest
 from django.test import TestCase, TransactionTestCase
+from django.urls import reverse
 from rdflib import Graph
 
 from arches.app.models.models import (
@@ -25,6 +28,7 @@ from arches.app.models.models import (
 from arches.app.utils.skos import SKOSReader
 from arches_querysets.models import ResourceTileTree
 
+from arches_lingo.const import LINGO_EDITOR_GROUP_NAME
 from arches_lingo.etl_modules.migrate_to_lingo import LingoResourceImporter
 from arches_lingo.etl_modules.lingo_resource_exporter import LingoResourceExporter
 from tests.tests import ViewTests
@@ -562,3 +566,58 @@ class ExportTests(TestCase):
             recipient=admin_user
         ).count()
         self.assertGreater(notifications_after, notifications_before)
+
+
+class ExportViewTests(TestCase):
+    """Exports must be available to the Lingo Editor group without core Arches groups."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.lingo_editor = User.objects.create_user(
+            username="lingo_editor_exporter", password="x"
+        )
+        cls.lingo_editor.groups.add(Group.objects.get(name=LINGO_EDITOR_GROUP_NAME))
+        cls.non_editor = User.objects.create_user(
+            username="non_editor_exporter", password="x"
+        )
+        cls.export_url = reverse("api-lingo-export")
+        cls.export_payload = {"resourceid": str(uuid.uuid4()), "format": "xml"}
+
+    @patch.object(
+        LingoResourceExporter,
+        "start",
+        return_value={"success": True, "data": {"load_id": "test-load-id"}},
+    )
+    def test_lingo_editor_can_start_export(self, mock_start):
+        self.client.force_login(self.lingo_editor)
+
+        response = self.client.post(self.export_url, self.export_payload)
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertTrue(mock_start.called)
+        self.assertEqual(response.json()["result"], {"load_id": "test-load-id"})
+
+    @patch.object(
+        LingoResourceExporter,
+        "start",
+        return_value={"success": False, "data": {"message": "export failed"}},
+    )
+    def test_failed_export_returns_error_response(self, mock_start):
+        self.client.force_login(self.lingo_editor)
+
+        response = self.client.post(self.export_url, self.export_payload)
+
+        self.assertEqual(response.status_code, HTTPStatus.INTERNAL_SERVER_ERROR)
+        self.assertFalse(response.json()["success"])
+
+    def test_non_editor_cannot_start_export(self):
+        self.client.force_login(self.non_editor)
+
+        response = self.client.post(self.export_url, self.export_payload)
+
+        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+
+    def test_anonymous_user_cannot_start_export(self):
+        response = self.client.post(self.export_url, self.export_payload)
+
+        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
