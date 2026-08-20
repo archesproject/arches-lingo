@@ -9,6 +9,7 @@ import ConfirmDialog from "primevue/confirmdialog";
 import Toast from "primevue/toast";
 
 import SchemeHierarchy from "@/arches_lingo/components/header/PageHeader/components/SchemeHierarchy/SchemeHierarchy.vue";
+import DemoDisclaimerDialog from "@/arches_lingo/components/generic/DemoDisclaimerDialog.vue";
 
 import { useUnsavedChangesGuard } from "@/arches_lingo/composables/useUnsavedChangesGuard.ts";
 import { useConceptStore } from "@/arches_lingo/stores/useConceptStore.ts";
@@ -160,6 +161,7 @@ function refreshSchemeHierarchy() {
     />
     <ConfirmDialog group="unsaved-changes" />
     <ConfirmDialog group="logout" />
+    <DemoDisclaimerDialog />
 </template>
 
 <style scoped>
