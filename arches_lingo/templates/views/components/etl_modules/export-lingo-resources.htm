@@ -26,6 +26,28 @@
                 chosen: {width: '500px'}"
             ></select>
         </div>
+        <div class="etl-module-component-block">
+            <div class="h4">
+                <label for="format-select">{% trans "Export Format" %}</label>
+            </div>
+            <select id="format-select" data-bind="
+                value: format,
+                chosen: {width: '500px'}"
+            >
+                <option value="xml">SKOS/RDF XML</option>
+                <option value="ttl">Turtle</option>
+                <option value="nt">N-Triples</option>
+                <option value="jsonld">JSON-LD</option>
+                <option value="rdf">Arches RDF/XML</option>
+                <option value="csv">TileCSV</option>
+            </select>
+        </div>
+        <div class="etl-module-component-block">
+            <div class="h4">
+                <label for="filename-input">{% trans "Filename (optional)" %}</label>
+            </div>
+            <input id="filename-input" type="text" class="form-control" style="width: 500px;" data-bind="value: filename" placeholder="{% trans 'Leave blank for auto-generated name' %}">
+        </div>
     </div>
     <div class="tabbed-workflow-footer, etl-module-footer">
         <button class="btn btn-success"
