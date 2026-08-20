@@ -74,9 +74,48 @@ from arches_lingo.models import (
     SchemeAttribution,
     SchemeURITemplate,
 )
-from arches_lingo.utils.data_languages import LANGUAGE_CODES_IN_RESOURCE_DATA_SQL
 
 DEFAULT_FIXTURE_STORAGE_KEY = "lingo_fixtures/lingo_concept_scheme_fixture.tar.gz"
+
+# Language codes reach tile data two ways: as the value of a language-datatype
+# node, and as the keys of an i18n string. Both need a `languages` row -- the
+# first so the Language widget can resolve a name to display, the second so the
+# string widget offers the language as a translation to edit. Pass NULL for
+# `graph_ids` to scan every graph, or a uuid[] to scope the scan.
+LANGUAGE_CODES_IN_RESOURCE_DATA_SQL = """
+    SELECT DISTINCT code
+    FROM (
+        SELECT jsonb_extract_path_text(tiles.tiledata, nodes.nodeid::text) AS code
+        FROM tiles
+        JOIN nodes ON nodes.nodegroupid = tiles.nodegroupid
+        WHERE nodes.datatype = 'language'
+          AND (
+            %(graph_ids)s::uuid[] IS NULL
+            OR tiles.resourceinstanceid IN (
+                SELECT resourceinstanceid FROM resource_instances
+                WHERE graphid = ANY(%(graph_ids)s::uuid[])
+            )
+          )
+        UNION
+        SELECT jsonb_object_keys(
+            jsonb_extract_path(tiles.tiledata, nodes.nodeid::text)
+        ) AS code
+        FROM tiles
+        JOIN nodes ON nodes.nodegroupid = tiles.nodegroupid
+        WHERE nodes.datatype = 'string'
+          AND jsonb_typeof(
+            jsonb_extract_path(tiles.tiledata, nodes.nodeid::text)
+          ) = 'object'
+          AND (
+            %(graph_ids)s::uuid[] IS NULL
+            OR tiles.resourceinstanceid IN (
+                SELECT resourceinstanceid FROM resource_instances
+                WHERE graphid = ANY(%(graph_ids)s::uuid[])
+            )
+          )
+    ) collected_codes
+    WHERE code IS NOT NULL AND code <> ''
+"""
 
 # Every table's row set is scoped to the target graphs by filtering (directly
 # or through a join) on this subquery, so a single `graph_ids` array parameter
