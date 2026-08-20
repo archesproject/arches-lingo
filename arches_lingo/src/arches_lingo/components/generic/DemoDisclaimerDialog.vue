@@ -5,13 +5,17 @@ import { useGettext } from "vue3-gettext";
 import Button from "primevue/button";
 import Dialog from "primevue/dialog";
 
+import { useAppSettingsStore } from "@/arches_lingo/stores/useAppSettingsStore.ts";
 import { DEMO_DISCLAIMER_ACKNOWLEDGED_LOCAL_STORAGE_KEY } from "@/arches_lingo/constants.ts";
 
 const { $gettext } = useGettext();
 
+const appSettingsStore = useAppSettingsStore();
+
 const isDemoDisclaimerVisible = ref(
-    localStorage.getItem(DEMO_DISCLAIMER_ACKNOWLEDGED_LOCAL_STORAGE_KEY) !==
-        "true",
+    appSettingsStore.showDemoDisclaimer &&
+        localStorage.getItem(DEMO_DISCLAIMER_ACKNOWLEDGED_LOCAL_STORAGE_KEY) !==
+            "true",
 );
 
 function acknowledgeDemoDisclaimer() {
