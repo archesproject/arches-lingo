@@ -12,6 +12,7 @@ export const useUserStore = defineStore("user", () => {
     const isLingoAdmin = computed(() => user.value?.is_lingo_admin ?? false);
     const isAnonymous = computed(() => user.value?.is_anonymous ?? true);
     const isStaff = computed(() => user.value?.is_staff ?? false);
+    const canExport = computed(() => user.value?.is_lingo_exporter ?? false);
 
     async function refresh() {
         user.value = await fetchUser();
@@ -27,6 +28,7 @@ export const useUserStore = defineStore("user", () => {
         isLingoAdmin,
         isAnonymous,
         isStaff,
+        canExport,
         refresh,
         setUser,
     };
