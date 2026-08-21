@@ -842,9 +842,19 @@ class LingoResourceImporter(BaseImportModule):
             self.thesaurus_name = file_name
             guessed_file_type = filetype.guess(self.file)
 
-            # guessed_file_type will be None if the file is xml
-            if extension != ".xml" or guessed_file_type is not None:
-                message = f"File extension {extension}/{guessed_file_type.extension} not allowed"
+            format_mapping = {
+                ".xml": "xml",
+                ".rdf": "xml",
+                ".ttl": "turtle",
+                ".nt": "nt",
+            }
+            rdf_format = format_mapping.get(extension)
+
+            # guessed_file_type will be None for text-based RDF formats (xml, ttl, nt)
+            if rdf_format is None or (
+                guessed_file_type is not None and extension not in [".ttl", ".nt"]
+            ):
+                message = f"File extension {extension} not supported. Supported formats: .xml, .rdf, .ttl, .nt"
                 return self.return_with_error(message)
 
             self.load_event.load_details = RawSQL(
@@ -861,7 +871,7 @@ class LingoResourceImporter(BaseImportModule):
                     from arches_lingo.utils.skos import SKOSReader
 
                     skos_reader = SKOSReader()
-                    rdf = skos_reader.read_file(self.file)
+                    rdf = skos_reader.read_file(self.file, format=rdf_format)
                     self.schemes, self.concepts = (
                         skos_reader.extract_concepts_from_skos_for_lingo_import(rdf)
                     )
@@ -880,6 +890,7 @@ class LingoResourceImporter(BaseImportModule):
                     self.temp_file_path = os.path.join(temp_dir, self.file.name)
                     default_storage.save(self.temp_file_path, self.file)
                     self.file.close()
+                    self.rdf_format = rdf_format
                     self.run_load_task_async(request, self.loadid)
 
                 message = "Schemes and Concept Migration to Lingo Models Complete"
@@ -919,8 +930,19 @@ class LingoResourceImporter(BaseImportModule):
                 # Prevent circular import
                 from arches_lingo.utils.skos import SKOSReader
 
+                # Determine format from file extension if not already set
+                if not hasattr(self, "rdf_format"):
+                    _, extension = os.path.splitext(self.temp_file_path)
+                    format_mapping = {
+                        ".xml": "xml",
+                        ".rdf": "xml",
+                        ".ttl": "turtle",
+                        ".nt": "nt",
+                    }
+                    self.rdf_format = format_mapping.get(extension, "xml")
+
                 skos_reader = SKOSReader()
-                rdf = skos_reader.read_file(file)
+                rdf = skos_reader.read_file(file, format=self.rdf_format)
                 self.schemes, self.concepts = (
                     skos_reader.extract_concepts_from_skos_for_lingo_import(rdf)
                 )
@@ -990,6 +1012,7 @@ class LingoResourceImporter(BaseImportModule):
                 {
                     "scheme_conceptid": self.scheme_conceptid,
                     "temp_file_path": self.temp_file_path,
+                    "rdf_format": getattr(self, "rdf_format", "xml"),
                     "mode": self.mode,
                 },
             ]
