@@ -11,6 +11,7 @@ from django.core import management
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.http import HttpRequest
 from django.test import TestCase, TransactionTestCase
+from rdflib import Graph
 
 from arches.app.models.models import (
     DRelationType,
@@ -129,17 +130,55 @@ class ImportTests(TransactionTestCase):
         # and a skos:relatedMatch
         self.assertEqual(len(junk_sculpture.aliased_data.match_status), 2)
 
+    @staticmethod
+    def _serialize_to_bytes(graph, rdflib_format):
+        """rdflib returns str or bytes depending on the serializer; normalize to bytes."""
+        serialized = graph.serialize(format=rdflib_format)
+        if isinstance(serialized, str):
+            return serialized.encode("utf-8")
+        return serialized
+
+    def _upload_thesaurus_file(self, content, file_name):
+        """Drive the uploaded-file import path, returning the importer and its response."""
+        load_event = LoadEvent.objects.create(
+            user_id=1, etl_module_id=self.moduleid, status="running"
+        )
+        request = HttpRequest()
+        request.method = "POST"
+        request.user = User.objects.get(username="admin")
+        request.POST["load_id"] = str(load_event.loadid)
+        request.POST["module"] = str(self.moduleid)
+        request.POST["overwrite_option"] = "overwrite"
+        request.POST["action"] = "write"
+        request.FILES = {
+            "file": InMemoryUploadedFile(
+                file=BytesIO(content),
+                field_name="file",
+                name=file_name,
+                content_type="application/octet-stream",
+                size=len(content),
+                charset=None,
+            )
+        }
+
+        importer = LingoResourceImporter(request=request)
+        return importer, load_event, importer.write(request=request)
+
     def test_lingo_resource_importer(self):
         """
-        This test is really three tests in one, but due to trouble with TransactionTestCase
+        This test is really several tests in one, but due to trouble with TransactionTestCase
         & database rollbacks, they have to be run sequentially in one test method, relying
         on the reverse load functionality of the base importer to clean up between tests.
+        A second test method on this class would fail in setUp, because the flush between
+        test methods empties the languages table that the migrations populate.
 
-        There are three import paths being tested here:
+        The cases being tested here:
         1. Management command path, importing from a SKOS RDF file.
         2. HTTP Request path, importing from a SKOS RDF file upload.
         3. Migrate Concepts & Schemes from RDM
         4. Ensure that an import failure sends a notification to the user
+        5. Importing the same thesaurus serialized as Turtle and as N-Triples
+        6. Rejecting uploads that are not a supported RDF serialization
         """
 
         # 1. Test Import from SKOS via management command path
@@ -265,6 +304,48 @@ class ImportTests(TransactionTestCase):
             .notif
         )
         self.assertIn("Import failed", latest_notification.message)
+
+        # 5. Test import of the non-XML SKOS serializations
+        # These are serialized from the RDF/XML fixture so that every format under
+        # test describes the same graph, and none of them can drift from the
+        # resource counts asserted by _assert_resources_loaded.
+        source_graph = Graph()
+        source_graph.parse(source=str(self.fixture_path), format="xml")
+
+        for extension, rdflib_format in ((".ttl", "turtle"), (".nt", "nt")):
+            with self.subTest(extension=extension):
+                importer, load_event, response = self._upload_thesaurus_file(
+                    self._serialize_to_bytes(source_graph, rdflib_format),
+                    f"skos_rdf_import_example{extension}",
+                )
+                self.assertTrue(response["success"], response.get("message"))
+                self._assert_resources_loaded()
+                print(f"Test import of {extension} completed.\n")
+
+                importer.reverse_load(loadid=load_event.loadid)
+                self.assertEqual(
+                    ResourceTileTree.get_tiles(graph_slug="scheme").count(), 0
+                )
+                self.assertEqual(
+                    ResourceTileTree.get_tiles(graph_slug="concept").count(), 0
+                )
+
+        # 6. Test rejection of uploads that are not a supported RDF serialization
+        # An extension outside the allowlist is rejected before any parsing.
+        _, _, response = self._upload_thesaurus_file(
+            self._serialize_to_bytes(source_graph, "turtle"),
+            "skos_rdf_import_example.txt",
+        )
+        self.assertFalse(response["success"])
+        self.assertIn("not supported", str(response["message"]))
+
+        # Binary content is rejected even when it carries an allowed extension.
+        png_bytes = b"\x89PNG\r\n\x1a\n" + b"\x00" * 64
+        _, _, response = self._upload_thesaurus_file(
+            png_bytes, "skos_rdf_import_example.ttl"
+        )
+        self.assertFalse(response["success"])
+        self.assertIn("not a text-based RDF serialization", str(response["message"]))
 
 
 class ExportTests(TestCase):

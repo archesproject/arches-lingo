@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.2.0] - Unreleased
 
+### Added
+-   Add support for exporting Lingo Thesauri (schemes & concepts) to N-Triples and Turtle formats [#778](https://github.com/archesproject/arches-lingo/pull/778)
+-   Add support for importing thesauri from N-Triples and Turtle files [#779](https://github.com/archesproject/arches-lingo/pull/779)
+
 ## [1.1.1] - 2026-07-31
 
 ### Fixed
@@ -29,7 +33,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   Add scripts to dump and load fixtures [#755](https://github.com/archesproject/arches-lingo/pull/755)
 -   Add advanced search facet for searching on related images [#756](https://github.com/archesproject/arches-lingo/pull/756)
 -   Add content-negotiated SKOS dereferencing for scheme and concept URIs [#759](https://github.com/archesproject/arches-lingo/pull/759)
--   Add support for exporting Lingo Thesauri (schemes & concepts) to N-Triples and Turtle formats [#778](https://github.com/archesproject/arches-lingo/pull/778)
 
 ### Changed
 -   Optimize search performance for large-scale datasets [#704](https://github.com/archesproject/arches-lingo/pull/704)
