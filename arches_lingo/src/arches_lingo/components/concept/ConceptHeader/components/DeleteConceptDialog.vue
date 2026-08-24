@@ -18,7 +18,7 @@ import {
 import { useConceptStore } from "@/arches_lingo/stores/useConceptStore.ts";
 import type { Concept, DeleteConceptStrategy } from "@/arches_lingo/types.ts";
 
-const props = defineProps<{
+const { conceptId, conceptName, mode, isLoading } = defineProps<{
     conceptId: string;
     conceptName: string | undefined;
     mode: typeof DELETE | typeof DEPRECATE;
@@ -40,42 +40,49 @@ const selectedStrategy = ref<DeleteConceptStrategy>(STRATEGY_REPARENT);
 onMounted(async () => {
     try {
         await conceptStore.initialize();
-        narrower.value = conceptStore.getNarrower(props.conceptId);
+        narrower.value = await conceptStore.loadChildren(conceptId);
     } finally {
         isFetchingChildren.value = false;
     }
 });
 
 const isDelete = computed(function () {
-    return props.mode === DELETE;
+    return mode === DELETE;
+});
+
+const childrenText = computed(function () {
+    return $gettext(
+        '"%{name}" has %{count} direct child concept(s). How should they be handled?',
+        {
+            name: conceptName ?? "",
+            count: String(narrower.value.length),
+        },
+    );
 });
 
 const dialogHeader = computed(function () {
     if (isDelete.value) {
         return $gettext("Delete Concept");
-    } else {
-        return $gettext("Deprecate Concept");
     }
+    return $gettext("Deprecate Concept");
 });
 
 const confirmationText = computed(function () {
     if (isDelete.value) {
         return $gettext('Are you sure you want to delete "%{name}"?', {
-            name: props.conceptName ?? "",
-        });
-    } else {
-        return $gettext('Are you sure you want to deprecate "%{name}"?', {
-            name: props.conceptName ?? "",
+            name: conceptName ?? "",
         });
     }
+    return $gettext('Are you sure you want to deprecate "%{name}"?', {
+        name: conceptName ?? "",
+    });
 });
 
 const deleteChildrenTitle = computed(function () {
     if (isDelete.value) {
         return $gettext("Delete all children");
-    } else {
-        return $gettext("Deprecate all children");
     }
+    return $gettext("Deprecate all children");
 });
 
 const deleteChildrenDesc = computed(function () {
@@ -83,29 +90,15 @@ const deleteChildrenDesc = computed(function () {
         return $gettext(
             "This concept and all its descendants will be permanently deleted.",
         );
-    } else {
-        return $gettext(
-            "This concept and all its descendants will be deprecated.",
-        );
     }
-});
-
-const childrenText = computed(function () {
-    return $gettext(
-        '"%{name}" has %{count} direct child concept(s). How should they be handled?',
-        {
-            name: props.conceptName ?? "",
-            count: String(narrower.value.length),
-        },
-    );
+    return $gettext("This concept and all its descendants will be deprecated.");
 });
 
 const confirmButtonLabel = computed(function () {
     if (isDelete.value) {
         return $gettext("Delete");
-    } else {
-        return $gettext("Deprecate");
     }
+    return $gettext("Deprecate");
 });
 
 function onConfirm() {
@@ -133,7 +126,11 @@ function onConfirm() {
         >
             <div class="dialog-text">{{ confirmationText }}</div>
             <div class="muted-note">
-                {{ $gettext("This action cannot be undone.") }}
+                {{
+                    isDelete
+                        ? $gettext("This action cannot be undone.")
+                        : $gettext("This concept can be reinstated later.")
+                }}
             </div>
         </div>
 

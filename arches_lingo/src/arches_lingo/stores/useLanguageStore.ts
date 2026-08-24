@@ -7,7 +7,7 @@ import { fetchI18nData, fetchLanguages } from "@/arches_lingo/api.ts";
 import { FALLBACK_LANGUAGE } from "@/arches_lingo/constants.ts";
 import { getAutonym } from "@/arches_lingo/utils.ts";
 
-import type { Language } from "@/arches_component_lab/types";
+import type { Language } from "@/arches_vue_components/types";
 
 export const useLanguageStore = defineStore("language", () => {
     const gettext = useGettext();

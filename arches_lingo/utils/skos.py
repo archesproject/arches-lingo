@@ -1,10 +1,10 @@
+import logging
 import uuid
 from collections import defaultdict
-from django.db import transaction
-from django.db.models import Max, Q
-from django.utils import translation
+from urllib.parse import urlsplit
+from django.db.models import Q
 from rdflib import Literal, Namespace, RDF, URIRef
-from rdflib.namespace import SKOS, DCTERMS
+from rdflib.namespace import SKOS, DCTERMS, OWL
 from rdflib.graph import Graph
 from arches.app.models import models
 from arches.app.models.system_settings import settings
@@ -14,8 +14,23 @@ from arches_controlled_lists.models import List, ListItem, ListItemValue
 
 from arches_lingo.etl_modules.migrate_to_lingo import LingoResourceImporter
 
+logger = logging.getLogger(__name__)
+
 # define the ARCHES namespace
 ARCHES = Namespace(settings.ARCHES_NAMESPACE_FOR_DATA_EXPORT)
+
+
+def subject_uri_for(resource_id, resource_uri_map=None):
+    """Return the canonical RDF subject URI for a resource.
+
+    Prefers the resource's minted public URI (a stable, resolvable identifier);
+    falls back to the UUID-based ARCHES data-export URI when no public URI exists.
+    """
+    if resource_uri_map:
+        public_uri = resource_uri_map.get(str(resource_id))
+        if public_uri:
+            return URIRef(public_uri)
+    return ARCHES[str(resource_id)]
 
 
 class SKOSReader(SKOSReader):
@@ -132,6 +147,7 @@ class SKOSReader(SKOSReader):
                         new_concept["tile_data"].append(
                             top_concept_mock_tiles.get(concept_pk)
                         )
+                        new_concept["is_top_concept"] = True
 
                     mock_tile = (
                         LingoResourceImporter.create_mock_tile_from_relationship(
@@ -157,7 +173,29 @@ class SKOSReader(SKOSReader):
                                 .replace(DCTERMS, "")
                             )
 
-                        if predicate in [
+                        if predicate == SKOS.topConceptOf and not new_concept.get(
+                            "is_top_concept"
+                        ):
+                            # SKOS.topConceptOf is the inverse of SKOS.hasTopConcept.
+                            # Some thesauri (e.g. Getty AAT) only declare this on the
+                            # concept side rather than using hasTopConcept on the scheme.
+                            # Guard against thesauri that declare both hasTopConcept on
+                            # the scheme and topConceptOf on the concept, which would
+                            # cause cardinality issues.
+                            scheme_of_top_concept_pk = (
+                                self.generate_uuidv5_from_subject(baseuuid, object)
+                            )
+                            top_concept_mock_tile = LingoResourceImporter.create_mock_tile_from_relationship(
+                                {
+                                    "resourceId": scheme_of_top_concept_pk,
+                                    "node_alias": "top_concept_of",
+                                    "nodegroup_alias": "top_concept_of",
+                                    "resourceinstanceid": concept_pk,
+                                }
+                            )
+                            new_concept["tile_data"].append(top_concept_mock_tile)
+                            new_concept["is_top_concept"] = True
+                        elif predicate in [
                             SKOS.broader,
                             SKOS.narrower,
                             SKOS.related,
@@ -236,6 +274,46 @@ class SKOSReader(SKOSReader):
 
             return self.schemes, self.concepts
 
+    def language_exists(self, rdf_tag, allowed_languages):
+        """
+        Override the parent implementation to fix two issues with extended BCP-47
+        language tags (e.g. zh-latn-pinyin-x-notone):
+
+        1. Case mismatch: arches core's capitalize_region() uppercases only the
+           second subtag ('zh-latn-...' → 'zh-LATN-...'), but Language records
+           stored from ensure_aat_languages.py use fully lower-case codes.  A
+           case-insensitive pre-check avoids calling get_language_info when the
+           language is already in the database under a differently-cased key.
+
+        2. Unknown BCP-47 tags: Django's get_language_info() raises KeyError for
+           any tag it does not recognise.  When the parent would raise, we create
+           a minimal Language record and return False so the caller refreshes its
+           allowed_languages cache.
+        """
+        if not (
+            hasattr(rdf_tag, "language")
+            and rdf_tag.language is not None
+            and rdf_tag.language.strip() != ""
+        ):
+            return True
+
+        lower_code = rdf_tag.language.lower()
+        if any(code.lower() == lower_code for code in allowed_languages):
+            return True
+
+        try:
+            return super().language_exists(rdf_tag, allowed_languages)
+        except KeyError:
+            from arches.app.utils.i18n import capitalize_region
+
+            newlang = models.Language()
+            newlang.code = capitalize_region(rdf_tag.language)
+            newlang.name = rdf_tag.language
+            newlang.default_direction = "ltr"
+            newlang.isdefault = False
+            newlang.save()
+            return False
+
     def map_predicate_object_to_mock_tile(
         self,
         object: str | dict,
@@ -255,6 +333,21 @@ class SKOSReader(SKOSReader):
             if object_lang and not self.language_exists(object, self.allowed_languages):
                 for lang in models.Language.objects.all():
                     self.allowed_languages[lang.code] = lang
+        elif isinstance(object, Literal) and object.language:
+            # rdflib Literal carries the language tag directly; extract it here
+            # so the mock tile receives the correct language rather than falling
+            # back to self.default_lang (which would assign English to every label).
+            if not self.language_exists(object, self.allowed_languages):
+                for lang in models.Language.objects.all():
+                    self.allowed_languages[lang.code] = lang
+            # Resolve to the key actually present in allowed_languages (the DB-stored
+            # code may differ in case from the rdflib tag, e.g. 'zh-latn-...' vs
+            # 'zh-LATN-...').  Fall back to the raw tag if not matched.
+            lower_code = object.language.lower()
+            object_lang = next(
+                (code for code in self.allowed_languages if code.lower() == lower_code),
+                object.language,
+            )
 
         val = self.unwrapJsonLiteral(object)
         mock_tile = {
@@ -270,29 +363,39 @@ class SKOSReader(SKOSReader):
 
 
 class SKOSWriter:
-    def write_skos_from_triples(self, schemes_triples, concepts_triples):
+    def write_skos_from_triples(
+        self, schemes_triples, concepts_triples, resource_uri_map=None
+    ):
+        self.resource_uri_map = resource_uri_map or {}
         rdf_graph = Graph()
         rdf_graph.bind("skos", SKOS)
         rdf_graph.bind("dcterms", DCTERMS)
         rdf_graph.bind("arches", ARCHES)
+        rdf_graph.bind("owl", OWL)
 
         self.language_lookup = {
             lang.name: lang.code for lang in models.Language.objects.all()
         }
 
         for scheme_id, triples in schemes_triples.items():
-            rdf_scheme_id = ARCHES[str(scheme_id)]
+            rdf_scheme_id = subject_uri_for(scheme_id, self.resource_uri_map)
             rdf_graph.add((rdf_scheme_id, RDF.type, SKOS.ConceptScheme))
+            self._add_uuid_sameas(rdf_graph, rdf_scheme_id, scheme_id)
             for triple in triples:
                 predicates, object = self.extract_predicate_object(triple)
+                if object is None:
+                    continue
                 for predicate in predicates:
                     rdf_graph.add((rdf_scheme_id, predicate, object))
 
         for concept_id, triples in concepts_triples.items():
-            rdf_concept_id = ARCHES[str(concept_id)]
+            rdf_concept_id = subject_uri_for(concept_id, self.resource_uri_map)
             rdf_graph.add((rdf_concept_id, RDF.type, SKOS.Concept))
+            self._add_uuid_sameas(rdf_graph, rdf_concept_id, concept_id)
             for triple in triples:
                 predicates, object = self.extract_predicate_object(triple)
+                if object is None:
+                    continue
                 for predicate in predicates:
                     if predicate == SKOS.hasTopConcept:
                         rdf_graph.add((object, SKOS.hasTopConcept, rdf_concept_id))
@@ -300,6 +403,16 @@ class SKOSWriter:
                         rdf_graph.add((rdf_concept_id, predicate, object))
 
         return rdf_graph
+
+    def _add_uuid_sameas(self, rdf_graph, subject, resource_id):
+        """Link a public-URI subject back to its UUID-based ARCHES URI via owl:sameAs.
+
+        This keeps the UUID form discoverable for consumers that only know the
+        internal identifier. No-op when the subject already is the ARCHES URI.
+        """
+        arches_uri = ARCHES[str(resource_id)]
+        if subject != arches_uri:
+            rdf_graph.add((subject, OWL.sameAs, arches_uri))
 
     def extract_predicate_object(self, triple):
         # Some predicates are multivalue reference datatype fields, so process all predicates
@@ -310,12 +423,32 @@ class SKOSWriter:
         object_language = triple.get("object_language")
         if object_language:
             object = Literal(object, lang=object_language)
+        elif triple.get("object_is_uri"):
+            object = self.uri_reference_or_none(object)
         if isinstance(object, models.ResourceInstance):
-            object = ARCHES[str(object.resourceinstanceid)]
-        if not isinstance(object, Literal) and not isinstance(object, URIRef):
+            object = subject_uri_for(
+                object.resourceinstanceid, getattr(self, "resource_uri_map", None)
+            )
+        if object is not None and not isinstance(object, (Literal, URIRef)):
             object = Literal(object)
 
         return predicates, object
+
+    def uri_reference_or_none(self, object):
+        """Return a URIRef for a match comparate, or None to skip an unusable value.
+
+        Match/mapping comparates hold an external (or locally-resolvable) URI rather
+        than a resource instance. An empty comparate or a value that is not an
+        absolute URI is skipped instead of being emitted as a bogus URI reference.
+        """
+        if not object:
+            return None
+        object_string = str(object).strip()
+        parsed = urlsplit(object_string)
+        if not parsed.scheme or not (parsed.netloc or parsed.path):
+            logger.warning("Skipping non-URI match comparate: %s", object_string)
+            return None
+        return URIRef(object_string)
 
     def transform_predicate_values(self, predicate_references):
         if isinstance(predicate_references, str):

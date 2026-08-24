@@ -48,10 +48,11 @@ function toggleExpand(id: string) {
 }
 
 function navigateToConcept(id: string) {
-    router.push({
+    const route = router.resolve({
         name: routeNames.concept,
         params: { id },
     });
+    window.open(route.href, "_blank");
 }
 
 function onPageChange(event: { page: number }) {

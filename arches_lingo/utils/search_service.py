@@ -41,7 +41,17 @@ def execute_search(query, user, page_number=1, items_per_page=25):
     if paginator.count:
         page_ids = [str(concept_id) for concept_id in page]
         builder = ConceptBuilder(page_ids, include_parents=True)
-        data = [enrich_search_result(builder, concept_id) for concept_id in page_ids]
+        # Pre-fetch URI, identifier, and notes for the whole page in 3 queries
+        # instead of 3-per-result (N×3 queries avoided).
+        uri_map = get_uris_for_concepts(page_ids)
+        identifier_map = get_identifiers_for_concepts(page_ids)
+        notes_map = get_notes_for_concepts(page_ids)
+        data = [
+            enrich_search_result(
+                builder, concept_id, uri_map, identifier_map, notes_map
+            )
+            for concept_id in page_ids
+        ]
 
     return {
         "current_page": page.number,
@@ -52,62 +62,72 @@ def execute_search(query, user, page_number=1, items_per_page=25):
     }
 
 
-def enrich_search_result(builder, concept_id):
+def enrich_search_result(builder, concept_id, uri_map, identifier_map, notes_map):
     """Serialize a concept with extra fields for advanced search results."""
     result = builder.serialize_concept(concept_id, parents=True, children=False)
-    result["uri"] = get_first_uri_for_concept(concept_id)
-    result["identifier"] = get_first_identifier_for_concept(concept_id)
-    result["notes"] = get_notes_for_concept(concept_id)
+    result["uri"] = uri_map.get(concept_id)
+    result["identifier"] = identifier_map.get(concept_id)
+    result["notes"] = notes_map.get(concept_id, [])
     return result
 
 
-def get_first_uri_for_concept(concept_id):
-    """Extract the first URI value from URI tiles for a concept."""
-    tile = TileModel.objects.filter(
-        resourceinstance_id=concept_id,
+def get_uris_for_concepts(concept_ids):
+    """Return ``{concept_id: url_string}`` for a batch of concepts (1 query)."""
+    tiles = TileModel.objects.filter(
+        resourceinstance_id__in=concept_ids,
         nodegroup_id=URI_NODEGROUP,
-    ).first()
-    if not tile:
-        return None
-    uri_data = tile.data.get(URI_CONTENT_NODE)
-    if isinstance(uri_data, dict):
-        return uri_data.get("url")
-    if isinstance(uri_data, str):
-        return uri_data
-    return None
+    ).values("resourceinstance_id", "data")
+
+    result = {}
+    for tile in tiles:
+        concept_id = str(tile["resourceinstance_id"])
+        if concept_id in result:
+            continue
+        uri_data = tile["data"].get(URI_CONTENT_NODE)
+        if isinstance(uri_data, dict):
+            result[concept_id] = uri_data.get("url")
+        elif isinstance(uri_data, str):
+            result[concept_id] = uri_data
+    return result
 
 
-def get_first_identifier_for_concept(concept_id):
-    """Extract the first identifier value from identifier tiles for a concept."""
-    tile = TileModel.objects.filter(
-        resourceinstance_id=concept_id,
+def get_identifiers_for_concepts(concept_ids):
+    """Return ``{concept_id: identifier_string}`` for a batch of concepts (1 query)."""
+    tiles = TileModel.objects.filter(
+        resourceinstance_id__in=concept_ids,
         nodegroup_id=IDENTIFIER_NODEGROUP,
-    ).first()
-    if not tile:
-        return None
-    return tile.data.get(IDENTIFIER_CONTENT_NODE)
+    ).values("resourceinstance_id", "data")
+
+    result = {}
+    for tile in tiles:
+        concept_id = str(tile["resourceinstance_id"])
+        if concept_id in result:
+            continue
+        result[concept_id] = tile["data"].get(IDENTIFIER_CONTENT_NODE)
+    return result
 
 
-def get_notes_for_concept(concept_id, limit=3):
-    """Extract note summaries from statement tiles for a concept."""
-    note_tiles = TileModel.objects.filter(
-        resourceinstance_id=concept_id,
+def get_notes_for_concepts(concept_ids, limit_per_concept=3):
+    """Return ``{concept_id: [note, ...]}`` for a batch of concepts (1 query)."""
+    tiles = TileModel.objects.filter(
+        resourceinstance_id__in=concept_ids,
         nodegroup_id=STATEMENT_NODEGROUP,
-    )[:limit]
+    ).values("resourceinstance_id", "data")
 
-    notes = []
-    for tile in note_tiles:
-        content = tile.data.get(STATEMENT_CONTENT_NODE, "")
-        language = tile.data.get(STATEMENT_LANGUAGE_NODE, "")
-        note_type = extract_note_type_label(tile.data.get(STATEMENT_TYPE_NODE, []))
-        notes.append(
-            {
-                "content": content or "",
-                "language": language or "",
-                "type": note_type,
-            }
+    result: dict = {}
+    counts: dict = {}
+    for tile in tiles:
+        concept_id = str(tile["resourceinstance_id"])
+        if counts.get(concept_id, 0) >= limit_per_concept:
+            continue
+        content = tile["data"].get(STATEMENT_CONTENT_NODE, "")
+        language = tile["data"].get(STATEMENT_LANGUAGE_NODE, "")
+        note_type = extract_note_type_label(tile["data"].get(STATEMENT_TYPE_NODE, []))
+        result.setdefault(concept_id, []).append(
+            {"content": content or "", "language": language or "", "type": note_type}
         )
-    return notes
+        counts[concept_id] = counts.get(concept_id, 0) + 1
+    return result
 
 
 def extract_note_type_label(note_type_data):
@@ -128,16 +148,12 @@ def extract_note_type_label(note_type_data):
 
 def fetch_search_options():
     """Return filter option data for the advanced search UI."""
-    languages = list(
-        Language.objects.filter(isdefault=True)
-        .union(Language.objects.filter(scope="system"))
-        .values("code", "name")
-        .order_by("name")
-    )
-    if not languages:
-        languages = list(Language.objects.all().values("code", "name").order_by("name"))
+    languages = list(Language.objects.all().values("code", "name").order_by("name"))
 
-    scheme_builder = ConceptBuilder()
+    # Use a lightweight builder that only populates scheme labels — avoids
+    # loading all broader/top-concept tiles (which is expensive at AAT scale).
+    scheme_builder = ConceptBuilder(concept_ids=[])
+    scheme_builder.populate_schemes()
     scheme_options = []
     for scheme in scheme_builder.schemes:
         serialized = scheme_builder.serialize_scheme(scheme, children=False)

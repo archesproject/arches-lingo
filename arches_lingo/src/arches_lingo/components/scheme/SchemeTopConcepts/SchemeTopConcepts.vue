@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useGettext } from "vue3-gettext";
 import { RouterLink } from "vue-router";
 import { useToast } from "primevue/usetoast";
@@ -7,6 +7,7 @@ import { storeToRefs } from "pinia";
 
 import Skeleton from "primevue/skeleton";
 import Message from "primevue/message";
+import Tag from "primevue/tag";
 
 import { fetchSchemeTopConcepts } from "@/arches_lingo/api.ts";
 import { getConceptIcon, sortItemsByLabel } from "@/arches_lingo/utils.ts";
@@ -17,6 +18,8 @@ import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 import { DEFAULT_ERROR_TOAST_LIFE, ERROR } from "@/arches_lingo/constants.ts";
 
 import type { Concept, DataComponentMode } from "@/arches_lingo/types.ts";
+
+const SCROLL_THRESHOLD = 8;
 
 const props = defineProps<{
     mode: DataComponentMode;
@@ -42,6 +45,25 @@ const sortedTopConcepts = computed(() =>
         systemLanguage.value.code,
     ),
 );
+
+const isScrollable = computed(
+    () => topConcepts.value.length > SCROLL_THRESHOLD,
+);
+
+const listElement = ref<HTMLElement | null>(null);
+const isListScrolledToBottom = ref(false);
+
+function checkScrollBottom() {
+    if (!listElement.value) return;
+    const { scrollTop, scrollHeight, clientHeight } = listElement.value;
+    isListScrolledToBottom.value = scrollTop + clientHeight >= scrollHeight - 1;
+}
+
+watch(isScrollable, (scrollable) => {
+    if (scrollable) {
+        isListScrolledToBottom.value = false;
+    }
+});
 
 onMounted(async () => {
     if (!props.resourceInstanceId) {
@@ -86,11 +108,26 @@ onMounted(async () => {
         class="viewer-section"
     >
         <div class="section-header">
-            <h2>{{ sectionTitle }}</h2>
+            <div class="section-title">
+                <h2>{{ sectionTitle }}</h2>
+                <Tag
+                    v-if="topConcepts.length"
+                    severity="secondary"
+                    :value="topConcepts.length"
+                />
+            </div>
         </div>
         <div
             v-if="topConcepts.length"
-            class="top-concepts-list"
+            :ref="(el) => (listElement = el as HTMLElement | null)"
+            :class="[
+                'top-concepts-list',
+                {
+                    scrollable: isScrollable,
+                    'fade-bottom': isScrollable && !isListScrolledToBottom,
+                },
+            ]"
+            @scroll="checkScrollBottom"
         >
             <RouterLink
                 v-for="concept in sortedTopConcepts"
@@ -128,6 +165,15 @@ onMounted(async () => {
     flex-direction: column;
     gap: 0.25rem;
     padding-top: 0.5rem;
+}
+
+.top-concepts-list.scrollable {
+    max-height: 32rem;
+    overflow-y: auto;
+}
+
+.top-concepts-list.fade-bottom {
+    mask-image: linear-gradient(to bottom, black 93.75%, transparent 100%);
 }
 
 .top-concept-item {

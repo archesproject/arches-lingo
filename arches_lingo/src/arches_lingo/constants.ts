@@ -1,5 +1,5 @@
 import type { Component, InjectionKey, Ref } from "vue";
-import type { Language } from "@/arches_component_lab/types.ts";
+import type { Language } from "@/arches_vue_components/types.ts";
 import type { Concept } from "@/arches_lingo/types.ts";
 
 export const ERROR = "error";
@@ -49,6 +49,7 @@ export const FALLBACK_LANGUAGE: Language = {
 // Icons
 export const CONCEPT_ICON = "pi pi-tag";
 export const GUIDE_TERM_ICON = "pi pi-angle-double-right";
+export const HIERARCHY_NAME_ICON = "pi pi-sitemap";
 export const SCHEME_ICON = "pi pi-folder";
 export const TOP_CONCEPT_ICON = "pi pi-arrow-circle-up";
 
@@ -59,9 +60,18 @@ export const PUBLISHED_LIFECYCLE_STATE_ID =
     "6b0f1a7b-5b3d-4b2a-8a5b-7c3a1b0f2d9e";
 export const RETIRED_LIFECYCLE_STATE_ID =
     "9d2e1c0b-7a6b-4b3d-8c1a-0f2d9e6b0a7c";
+export const LOCKED_LIFECYCLE_STATE_ID = "c9f7e3d1-2a5b-4c8d-9e6f-3b0a1d2e4f7c";
+
+export const MULTILINE_RENDER_CONTEXT = "multiline";
 
 // URIs
 export const GUIDE_TERM_URI = "http://vocab.getty.edu/page/aat/300386700";
+export const HIERARCHY_NAME_URI =
+    "http://vocab.getty.edu/ontology#HierarchyNode";
+export const SKOS_PREF_LABEL_URI =
+    "http://www.w3.org/2004/02/skos/core#prefLabel";
+export const SKOS_ALT_LABEL_URI =
+    "http://www.w3.org/2004/02/skos/core#altLabel";
 
 // Injection keys
 export const openPanelComponentKey = Symbol() as InjectionKey<

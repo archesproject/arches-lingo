@@ -4,9 +4,10 @@ import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
 
 import MultiSelect from "primevue/multiselect";
+import Message from "primevue/message";
 import Skeleton from "primevue/skeleton";
 
-import { fetchLanguages } from "@/arches_component_lab/widgets/api.ts";
+import { fetchLanguages } from "@/arches_vue_components/widgets/api.ts";
 import {
     fetchDashboardStats,
     fetchLingoResources,
@@ -19,7 +20,7 @@ import DashboardStatCards from "@/arches_lingo/components/dashboard/DashboardSta
 import MissingTranslationsPanel from "@/arches_lingo/components/dashboard/MissingTranslationsPanel.vue";
 import RecentActivityTable from "@/arches_lingo/components/dashboard/RecentActivityTable.vue";
 
-import type { Language } from "@/arches_component_lab/types.ts";
+import type { Language } from "@/arches_vue_components/types.ts";
 import type {
     DashboardStats,
     MissingTranslationsResponse,
@@ -204,14 +205,28 @@ onMounted(async () => {
             </div>
         </div>
 
+        <Message
+            v-if="isStatsLoading"
+            severity="secondary"
+            :closable="false"
+            class="stats-loading-notice"
+        >
+            <i class="pi pi-spin pi-sync stats-loading-spinner" />
+            <span>{{
+                $gettext(
+                    "Gathering the latest statistics, this may take a moment...",
+                )
+            }}</span>
+        </Message>
+
         <DashboardStatCards
             :stats="stats"
             :is-loading="isStatsLoading"
         />
 
         <BreakdownsGrid
-            v-if="!isStatsLoading"
             :stats="stats"
+            :is-loading="isStatsLoading"
         />
 
         <RecentActivityTable
@@ -273,6 +288,14 @@ onMounted(async () => {
 .scheme-select {
     min-width: 14rem;
     border-radius: 0.125rem;
+}
+
+.stats-loading-notice {
+    border-radius: 0.125rem;
+}
+
+.stats-loading-spinner {
+    margin-inline-end: 0.375rem;
 }
 
 @media (max-width: 960px) {

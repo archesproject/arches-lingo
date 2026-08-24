@@ -13,7 +13,7 @@ import { routeNames } from "@/arches_lingo/routes.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 
-import type { Language } from "@/arches_component_lab/types.ts";
+import type { Language } from "@/arches_vue_components/types.ts";
 import type { MissingTranslationsResponse } from "@/arches_lingo/types/dashboard.ts";
 import type { SearchResultItem } from "@/arches_lingo/types.ts";
 

@@ -37,6 +37,8 @@ from arches_lingo.const import (
     CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID,
     CONCEPT_NAME_NODEGROUP,
     CONCEPT_NAME_CONTENT_NODE,
+    CONCEPT_NAME_DATA_ASSIGNMENT_ACTOR_NODE,
+    CONCEPT_NAME_DATA_ASSIGNMENT_OBJ_USED_NODE,
     CONCEPT_NAME_LANGUAGE_NODE,
     CONCEPT_NAME_TYPE_NODE,
     SCHEME_NAME_NODEGROUP,
@@ -48,6 +50,8 @@ from arches_lingo.const import (
     LABEL_LIST_ID,
     STATEMENT_NODEGROUP,
     STATEMENT_CONTENT_NODE,
+    STATEMENT_DATA_ASSIGNMENT_ACTOR_NODE,
+    STATEMENT_DATA_ASSIGNMENT_OBJ_USED_NODE,
     STATEMENT_LANGUAGE_NODE,
     STATEMENT_TYPE_NODE,
     URI_NODEGROUP,
@@ -56,6 +60,17 @@ from arches_lingo.const import (
     IDENTIFIER_CONTENT_NODE,
     MATCH_STATUS_NODEGROUP,
     MATCH_STATUS_COMPARATE_NODE,
+    DEPICTING_DIGITAL_ASSET_INTERNAL_NODEGROUP,
+    DEPICTING_DIGITAL_ASSET_INTERNAL_NODE,
+    DEPICTING_DIGITAL_ASSET_EXTERNAL_NODEGROUP,
+    DEPICTING_DIGITAL_ASSET_EXTERNAL_NODE,
+    DIGITAL_OBJECT_GRAPH_ID,
+    DIGITAL_OBJECT_CONTENT_NODEGROUP,
+    DIGITAL_OBJECT_CONTENT_NODE,
+    DIGITAL_OBJECT_NAME_NODEGROUP,
+    DIGITAL_OBJECT_NAME_CONTENT_NODE,
+    DIGITAL_OBJECT_STATEMENT_NODEGROUP,
+    DIGITAL_OBJECT_STATEMENT_CONTENT_NODE,
 )
 from arches_lingo.models import ConceptSet, ConceptSetMember, SavedSearch
 from arches_lingo.utils.advanced_search import AdvancedSearchEvaluator
@@ -295,6 +310,35 @@ class AdvancedSearchEvaluatorTests(TestCase):
             },
         )
 
+        cls.source_resource_id = str(uuid.uuid4())
+        cls.contributor_resource_id = str(uuid.uuid4())
+
+        TileModel.objects.create(
+            resourceinstance=cls.concept_a,
+            nodegroup_id=CONCEPT_NAME_NODEGROUP,
+            data={
+                CONCEPT_NAME_CONTENT_NODE: "Alpha Attributed Label",
+                CONCEPT_NAME_TYPE_NODE: cls.prefLabel_ref,
+                CONCEPT_NAME_LANGUAGE_NODE: "en",
+                CONCEPT_NAME_DATA_ASSIGNMENT_OBJ_USED_NODE: [
+                    {"resourceId": cls.source_resource_id}
+                ],
+            },
+        )
+
+        TileModel.objects.create(
+            resourceinstance=cls.concept_b,
+            nodegroup_id=CONCEPT_NAME_NODEGROUP,
+            data={
+                CONCEPT_NAME_CONTENT_NODE: "Beta Attributed Label",
+                CONCEPT_NAME_TYPE_NODE: cls.prefLabel_ref,
+                CONCEPT_NAME_LANGUAGE_NODE: "en",
+                CONCEPT_NAME_DATA_ASSIGNMENT_ACTOR_NODE: [
+                    {"resourceId": cls.contributor_resource_id}
+                ],
+            },
+        )
+
     def setUp(self):
         self.evaluator = AdvancedSearchEvaluator(user=self.admin)
 
@@ -306,7 +350,7 @@ class AdvancedSearchEvaluatorTests(TestCase):
 
     def test_invalid_facet_returns_empty(self):
         result = self.evaluator.evaluate({"facet": "nonexistent", "value": "x"})
-        self.assertEqual(result, [])
+        self.assertFalse(list(result))
 
     def test_group_no_conditions_returns_all(self):
         result = self.evaluator.evaluate({"operator": "and", "conditions": []})
@@ -426,7 +470,7 @@ class AdvancedSearchEvaluatorTests(TestCase):
         result = self.evaluator.evaluate(
             {
                 "facet": "relationship_hierarchical",
-                "value": str(self.concept_a.pk),
+                "value": [str(self.concept_a.pk)],
                 "direction": "broader",
             }
         )
@@ -440,7 +484,7 @@ class AdvancedSearchEvaluatorTests(TestCase):
         result = self.evaluator.evaluate(
             {
                 "facet": "relationship_hierarchical",
-                "value": str(self.concept_b.pk),
+                "value": [str(self.concept_b.pk)],
                 "direction": "narrower",
             }
         )
@@ -452,18 +496,46 @@ class AdvancedSearchEvaluatorTests(TestCase):
         result = self.evaluator.evaluate(
             {
                 "facet": "relationship_hierarchical",
-                "value": "",
+                "value": [],
             }
         )
         all_concepts = {self.concept_a.pk, self.concept_b.pk, self.concept_c.pk}
         self.assertTrue(all_concepts.issubset(set(result)))
+
+    def test_facet_relationship_hierarchical_multi_select(self):
+        """Multi-select: broader of both A and B should include B, C (broader of A) and A (broader of B)."""
+        result = self.evaluator.evaluate(
+            {
+                "facet": "relationship_hierarchical",
+                "value": [str(self.concept_a.pk), str(self.concept_b.pk)],
+                "direction": "broader",
+            }
+        )
+        ids = set(result)
+        # B and C are broader of A; nothing is broader of B aside from tiles
+        # referencing A (which is B's broader). So B, C should be in results.
+        self.assertIn(self.concept_b.pk, ids)
+        self.assertIn(self.concept_c.pk, ids)
+
+    def test_facet_relationship_hierarchical_string_value_backward_compat(self):
+        """Single string value still works for backward compatibility."""
+        result = self.evaluator.evaluate(
+            {
+                "facet": "relationship_hierarchical",
+                "value": str(self.concept_a.pk),
+                "direction": "broader",
+            }
+        )
+        ids = set(result)
+        self.assertIn(self.concept_b.pk, ids)
+        self.assertIn(self.concept_c.pk, ids)
 
     def test_facet_relationship_associated_forward(self):
         """A has C as an associated concept."""
         result = self.evaluator.evaluate(
             {
                 "facet": "relationship_associated",
-                "value": str(self.concept_c.pk),
+                "value": [str(self.concept_c.pk)],
             }
         )
         ids = set(result)
@@ -474,7 +546,7 @@ class AdvancedSearchEvaluatorTests(TestCase):
         result = self.evaluator.evaluate(
             {
                 "facet": "relationship_associated",
-                "value": str(self.concept_a.pk),
+                "value": [str(self.concept_a.pk)],
             }
         )
         # reverse handler returns string IDs from tile data JSON
@@ -488,11 +560,22 @@ class AdvancedSearchEvaluatorTests(TestCase):
         result = self.evaluator.evaluate(
             {
                 "facet": "relationship_associated",
-                "value": "",
+                "value": [],
             }
         )
         all_concepts = {self.concept_a.pk, self.concept_b.pk, self.concept_c.pk}
         self.assertTrue(all_concepts.issubset(set(result)))
+
+    def test_facet_relationship_associated_string_value_backward_compat(self):
+        """Single string value still works for backward compatibility."""
+        result = self.evaluator.evaluate(
+            {
+                "facet": "relationship_associated",
+                "value": str(self.concept_c.pk),
+            }
+        )
+        ids = set(result)
+        self.assertIn(self.concept_a.pk, ids)
 
     def test_facet_concept_set(self):
         concept_set = ConceptSet.objects.create(user=self.admin, name="Eval Set")
@@ -515,11 +598,11 @@ class AdvancedSearchEvaluatorTests(TestCase):
 
     def test_facet_concept_set_empty_returns_empty(self):
         result = self.evaluator.evaluate({"facet": "concept_set", "value": ""})
-        self.assertEqual(result, [])
+        self.assertFalse(list(result))
 
     def test_facet_concept_set_nonexistent_returns_empty(self):
         result = self.evaluator.evaluate({"facet": "concept_set", "value": "99999"})
-        self.assertEqual(result, [])
+        self.assertFalse(list(result))
 
     def test_and_group_intersection(self):
         """AND of label=Alpha + note=definition → only concept A."""
@@ -804,6 +887,475 @@ class AdvancedSearchEvaluatorTests(TestCase):
         self.assertNotIn(self.concept_a.pk, ids)
         self.assertIn(self.concept_b.pk, ids)
         self.assertIn(self.concept_c.pk, ids)
+
+    def test_facet_attribution_source_specific_resource(self):
+        """Searching for a specific source finds only concepts attributed to it."""
+        result = self.evaluator.evaluate(
+            {"facet": "attribution_source", "value": self.source_resource_id}
+        )
+        ids = set(result)
+        self.assertIn(self.concept_a.pk, ids)
+        self.assertNotIn(self.concept_b.pk, ids)
+        self.assertNotIn(self.concept_c.pk, ids)
+
+    def test_facet_attribution_source_unknown_resource_returns_empty(self):
+        """Searching for an unknown source resource ID returns no concepts."""
+        result = self.evaluator.evaluate(
+            {"facet": "attribution_source", "value": str(uuid.uuid4())}
+        )
+        self.assertFalse(list(result))
+
+    def test_facet_attribution_source_empty_value_returns_all(self):
+        """No value and no exists mode returns all concepts."""
+        result = self.evaluator.evaluate({"facet": "attribution_source", "value": ""})
+        all_concepts = {self.concept_a.pk, self.concept_b.pk, self.concept_c.pk}
+        self.assertTrue(all_concepts.issubset(set(result)))
+
+    def test_facet_attribution_source_exists_mode(self):
+        """Exists mode returns only concepts that have any source attribution."""
+        result = self.evaluator.evaluate(
+            {"facet": "attribution_source", "value": "", "match_mode": "exists"}
+        )
+        ids = set(result)
+        self.assertIn(self.concept_a.pk, ids)
+        self.assertNotIn(self.concept_b.pk, ids)
+        self.assertNotIn(self.concept_c.pk, ids)
+
+    def test_facet_attribution_contributor_specific_resource(self):
+        """Searching for a specific contributor finds only concepts attributed to it."""
+        result = self.evaluator.evaluate(
+            {
+                "facet": "attribution_contributor",
+                "value": self.contributor_resource_id,
+            }
+        )
+        ids = set(result)
+        self.assertIn(self.concept_b.pk, ids)
+        self.assertNotIn(self.concept_a.pk, ids)
+        self.assertNotIn(self.concept_c.pk, ids)
+
+    def test_facet_attribution_contributor_empty_value_returns_all(self):
+        """No value and no exists mode returns all concepts."""
+        result = self.evaluator.evaluate(
+            {"facet": "attribution_contributor", "value": ""}
+        )
+        all_concepts = {self.concept_a.pk, self.concept_b.pk, self.concept_c.pk}
+        self.assertTrue(all_concepts.issubset(set(result)))
+
+    def test_facet_attribution_contributor_exists_mode(self):
+        """Exists mode returns only concepts that have any contributor attribution."""
+        result = self.evaluator.evaluate(
+            {
+                "facet": "attribution_contributor",
+                "value": "",
+                "match_mode": "exists",
+            }
+        )
+        ids = set(result)
+        self.assertIn(self.concept_b.pk, ids)
+        self.assertNotIn(self.concept_a.pk, ids)
+        self.assertNotIn(self.concept_c.pk, ids)
+
+    def test_facet_attribution_source_negated(self):
+        """Negated source facet excludes concepts attributed to that source."""
+        result = self.evaluator.evaluate(
+            {
+                "facet": "attribution_source",
+                "value": self.source_resource_id,
+                "negated": True,
+            }
+        )
+        ids = set(result)
+        self.assertNotIn(self.concept_a.pk, ids)
+        self.assertIn(self.concept_b.pk, ids)
+        self.assertIn(self.concept_c.pk, ids)
+
+
+# ────────────────────────────────────────────────────────────────
+# Cascade traversal tests — uses a deeper hierarchy: A → B → D
+# ────────────────────────────────────────────────────────────────
+
+
+class HierarchicalCascadeTests(AdvancedSearchEvaluatorTests):
+    """Extend the base fixture with concept D (broader = B) to test cascade."""
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+
+        now = datetime.datetime.now()
+        cls.concept_d = ResourceInstance.objects.create(
+            graph_id=CONCEPTS_GRAPH_ID, name="Delta Concept"
+        )
+        TileModel.objects.create(
+            resourceinstance=cls.concept_d,
+            nodegroup_id=CONCEPT_NAME_NODEGROUP,
+            data={
+                CONCEPT_NAME_CONTENT_NODE: "Delta Concept",
+                CONCEPT_NAME_TYPE_NODE: cls.prefLabel_ref,
+                CONCEPT_NAME_LANGUAGE_NODE: "en",
+            },
+        )
+        hier_rxr = ResourceXResource.objects.create(
+            from_resource=cls.concept_d,
+            from_resource_graph_id=CONCEPTS_GRAPH_ID,
+            to_resource=cls.concept_b,
+            to_resource_graph_id=CONCEPTS_GRAPH_ID,
+            created=now,
+            modified=now,
+        )
+        TileModel.objects.create(
+            resourceinstance=cls.concept_d,
+            nodegroup_id=CLASSIFICATION_STATUS_NODEGROUP,
+            data={
+                CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID: [
+                    {
+                        "resourceId": str(cls.concept_b.pk),
+                        "resourceXresourceId": str(hier_rxr.pk),
+                    }
+                ],
+            },
+        )
+
+    def setUp(self):
+        self.evaluator = AdvancedSearchEvaluator(user=self.admin)
+
+    def test_cascade_broader_direct_only_excludes_grandchild(self):
+        """Without cascade, broader of A returns only B and C — not D (grandchild)."""
+        result = self.evaluator.evaluate(
+            {
+                "facet": "relationship_hierarchical",
+                "value": [str(self.concept_a.pk)],
+                "direction": "broader",
+                "cascade": False,
+            }
+        )
+        ids = set(result)
+        self.assertIn(self.concept_b.pk, ids)
+        self.assertIn(self.concept_c.pk, ids)
+        self.assertNotIn(self.concept_d.pk, ids)
+
+    def test_cascade_broader_includes_all_descendants(self):
+        """With cascade, broader of A returns B, C, and D (grandchild through B)."""
+        result = self.evaluator.evaluate(
+            {
+                "facet": "relationship_hierarchical",
+                "value": [str(self.concept_a.pk)],
+                "direction": "broader",
+                "cascade": True,
+            }
+        )
+        ids = set(result)
+        self.assertIn(self.concept_b.pk, ids)
+        self.assertIn(self.concept_c.pk, ids)
+        self.assertIn(self.concept_d.pk, ids)
+        self.assertNotIn(self.concept_a.pk, ids)
+
+    def test_cascade_narrower_direct_only_excludes_grandparent(self):
+        """Without cascade, narrower of D returns only B — not A (grandparent)."""
+        result = self.evaluator.evaluate(
+            {
+                "facet": "relationship_hierarchical",
+                "value": [str(self.concept_d.pk)],
+                "direction": "narrower",
+                "cascade": False,
+            }
+        )
+        ids = set(str(pk) for pk in result)
+        self.assertIn(str(self.concept_b.pk), ids)
+        self.assertNotIn(str(self.concept_a.pk), ids)
+
+    def test_cascade_narrower_includes_all_ancestors(self):
+        """With cascade, narrower of D returns B and A (all ancestors)."""
+        result = self.evaluator.evaluate(
+            {
+                "facet": "relationship_hierarchical",
+                "value": [str(self.concept_d.pk)],
+                "direction": "narrower",
+                "cascade": True,
+            }
+        )
+        ids = set(str(pk) for pk in result)
+        self.assertIn(str(self.concept_b.pk), ids)
+        self.assertIn(str(self.concept_a.pk), ids)
+        self.assertNotIn(str(self.concept_d.pk), ids)
+
+    def test_cascade_empty_value_returns_all(self):
+        """Empty value with cascade still returns all concepts."""
+        result = self.evaluator.evaluate(
+            {
+                "facet": "relationship_hierarchical",
+                "value": [],
+                "direction": "broader",
+                "cascade": True,
+            }
+        )
+        all_concepts = {
+            self.concept_a.pk,
+            self.concept_b.pk,
+            self.concept_c.pk,
+            self.concept_d.pk,
+        }
+        self.assertTrue(all_concepts.issubset(set(result)))
+
+
+# ────────────────────────────────────────────────────────────────
+# Related image facet tests — concept -> digital object depictions
+# ────────────────────────────────────────────────────────────────
+
+
+class RelatedImageFacetTests(TestCase):
+    """Tests for the related_image facet (concept -> image relationships).
+
+    Fixtures build three concepts:
+
+    * ``concept_with_internal_image`` depicts a digital object carrying a file,
+      title, and description.
+    * ``concept_with_external_image`` has only an external image URL.
+    * ``concept_without_image`` has no depiction at all.
+    """
+
+    graph_fixtures = ["Scheme.json", "Concept.json", "digital_object_system.json"]
+
+    @classmethod
+    def load_ontology(cls):
+        path = Path(settings.APP_ROOT) / "pkg" / "ontologies" / "takin"
+        management.call_command("load_ontology", source=path, verbosity=0)
+
+    @classmethod
+    def load_graphs(cls):
+        path = Path(settings.APP_ROOT) / "pkg" / "graphs" / "resource_models"
+        for file_path in cls.graph_fixtures:
+            with captured_stdout(), open(path / file_path, "r") as graph_file:
+                archesfile = JSONDeserializer().deserialize(graph_file)
+                ResourceGraphImporter(archesfile["graph"], overwrite_graphs=True)
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.load_ontology()
+        cls.load_graphs()
+        cls.admin = User.objects.get(username="admin")
+
+        cls.digital_object = ResourceInstance.objects.create(
+            graph_id=DIGITAL_OBJECT_GRAPH_ID, name="Bronze Sculpture Photo"
+        )
+        TileModel.objects.create(
+            resourceinstance=cls.digital_object,
+            nodegroup_id=DIGITAL_OBJECT_CONTENT_NODEGROUP,
+            data={
+                DIGITAL_OBJECT_CONTENT_NODE: [
+                    {"name": "sculpture-front.jpg", "file_id": str(uuid.uuid4())}
+                ]
+            },
+        )
+        TileModel.objects.create(
+            resourceinstance=cls.digital_object,
+            nodegroup_id=DIGITAL_OBJECT_NAME_NODEGROUP,
+            data={DIGITAL_OBJECT_NAME_CONTENT_NODE: "Bronze Sculpture"},
+        )
+        TileModel.objects.create(
+            resourceinstance=cls.digital_object,
+            nodegroup_id=DIGITAL_OBJECT_STATEMENT_NODEGROUP,
+            data={
+                DIGITAL_OBJECT_STATEMENT_CONTENT_NODE: (
+                    "A photograph of the front of the sculpture"
+                )
+            },
+        )
+
+        cls.concept_with_internal_image = ResourceInstance.objects.create(
+            graph_id=CONCEPTS_GRAPH_ID, name="Concept With Internal Image"
+        )
+        TileModel.objects.create(
+            resourceinstance=cls.concept_with_internal_image,
+            nodegroup_id=DEPICTING_DIGITAL_ASSET_INTERNAL_NODEGROUP,
+            data={
+                DEPICTING_DIGITAL_ASSET_INTERNAL_NODE: [
+                    {"resourceId": str(cls.digital_object.pk)}
+                ]
+            },
+        )
+
+        cls.concept_with_external_image = ResourceInstance.objects.create(
+            graph_id=CONCEPTS_GRAPH_ID, name="Concept With External Image"
+        )
+        TileModel.objects.create(
+            resourceinstance=cls.concept_with_external_image,
+            nodegroup_id=DEPICTING_DIGITAL_ASSET_EXTERNAL_NODEGROUP,
+            data={
+                DEPICTING_DIGITAL_ASSET_EXTERNAL_NODE: {
+                    "url": "http://example.com/image.jpg",
+                    "url_label": "External image",
+                }
+            },
+        )
+
+        cls.concept_without_image = ResourceInstance.objects.create(
+            graph_id=CONCEPTS_GRAPH_ID, name="Concept Without Image"
+        )
+
+    def setUp(self):
+        self.evaluator = AdvancedSearchEvaluator(user=self.admin)
+
+    def test_has_image_includes_internal_and_external(self):
+        result = self.evaluator.evaluate(
+            {"facet": "related_image", "image_attribute": "has_image"}
+        )
+        ids = set(result)
+        self.assertIn(self.concept_with_internal_image.pk, ids)
+        self.assertIn(self.concept_with_external_image.pk, ids)
+        self.assertNotIn(self.concept_without_image.pk, ids)
+
+    def test_has_image_negated_returns_concepts_without_images(self):
+        result = self.evaluator.evaluate(
+            {
+                "facet": "related_image",
+                "image_attribute": "has_image",
+                "negated": True,
+            }
+        )
+        ids = set(result)
+        self.assertIn(self.concept_without_image.pk, ids)
+        self.assertNotIn(self.concept_with_internal_image.pk, ids)
+        self.assertNotIn(self.concept_with_external_image.pk, ids)
+
+    def test_file_name_contains(self):
+        result = self.evaluator.evaluate(
+            {
+                "facet": "related_image",
+                "image_attribute": "file_name",
+                "value": "sculpture",
+            }
+        )
+        ids = set(result)
+        self.assertIn(self.concept_with_internal_image.pk, ids)
+        self.assertNotIn(self.concept_with_external_image.pk, ids)
+        self.assertNotIn(self.concept_without_image.pk, ids)
+
+    def test_file_name_ends_with_extension(self):
+        result = self.evaluator.evaluate(
+            {
+                "facet": "related_image",
+                "image_attribute": "file_name",
+                "value": ".jpg",
+                "match_mode": "ends_with",
+            }
+        )
+        self.assertIn(self.concept_with_internal_image.pk, set(result))
+
+    def test_file_name_no_match_returns_empty(self):
+        result = self.evaluator.evaluate(
+            {
+                "facet": "related_image",
+                "image_attribute": "file_name",
+                "value": "no_such_file",
+            }
+        )
+        self.assertFalse(list(result))
+
+    def test_file_name_exists(self):
+        result = self.evaluator.evaluate(
+            {
+                "facet": "related_image",
+                "image_attribute": "file_name",
+                "value": "",
+                "match_mode": "exists",
+            }
+        )
+        ids = set(result)
+        self.assertIn(self.concept_with_internal_image.pk, ids)
+        self.assertNotIn(self.concept_with_external_image.pk, ids)
+
+    def test_title_contains(self):
+        result = self.evaluator.evaluate(
+            {
+                "facet": "related_image",
+                "image_attribute": "title",
+                "value": "Bronze",
+            }
+        )
+        ids = set(result)
+        self.assertIn(self.concept_with_internal_image.pk, ids)
+        self.assertNotIn(self.concept_without_image.pk, ids)
+
+    def test_title_exact_no_partial(self):
+        result = self.evaluator.evaluate(
+            {
+                "facet": "related_image",
+                "image_attribute": "title",
+                "value": "Bronze",
+                "match_mode": "exact",
+            }
+        )
+        self.assertFalse(list(result))
+
+    def test_description_contains(self):
+        result = self.evaluator.evaluate(
+            {
+                "facet": "related_image",
+                "image_attribute": "description",
+                "value": "photograph",
+            }
+        )
+        ids = set(result)
+        self.assertIn(self.concept_with_internal_image.pk, ids)
+        self.assertNotIn(self.concept_with_external_image.pk, ids)
+
+    def test_text_attribute_empty_value_returns_all(self):
+        result = self.evaluator.evaluate(
+            {"facet": "related_image", "image_attribute": "title", "value": ""}
+        )
+        all_concepts = {
+            self.concept_with_internal_image.pk,
+            self.concept_with_external_image.pk,
+            self.concept_without_image.pk,
+        }
+        self.assertTrue(all_concepts.issubset(set(result)))
+
+    def _make_concept_depicting_file(self, file_name):
+        """Create a digital object with the given file name and a concept depicting it."""
+        digital_object = ResourceInstance.objects.create(
+            graph_id=DIGITAL_OBJECT_GRAPH_ID, name=f"Digital Object {file_name}"
+        )
+        TileModel.objects.create(
+            resourceinstance=digital_object,
+            nodegroup_id=DIGITAL_OBJECT_CONTENT_NODEGROUP,
+            data={
+                DIGITAL_OBJECT_CONTENT_NODE: [
+                    {"name": file_name, "file_id": str(uuid.uuid4())}
+                ]
+            },
+        )
+        concept = ResourceInstance.objects.create(
+            graph_id=CONCEPTS_GRAPH_ID, name=f"Concept depicting {file_name}"
+        )
+        TileModel.objects.create(
+            resourceinstance=concept,
+            nodegroup_id=DEPICTING_DIGITAL_ASSET_INTERNAL_NODEGROUP,
+            data={
+                DEPICTING_DIGITAL_ASSET_INTERNAL_NODE: [
+                    {"resourceId": str(digital_object.pk)}
+                ]
+            },
+        )
+        return concept
+
+    def test_file_name_wildcard_characters_matched_literally(self):
+        """An underscore in the value must match literally, not as a LIKE wildcard."""
+        literal_underscore = self._make_concept_depicting_file("report_v1.jpg")
+        wildcard_collision = self._make_concept_depicting_file("reportXv1.jpg")
+
+        result = self.evaluator.evaluate(
+            {
+                "facet": "related_image",
+                "image_attribute": "file_name",
+                "value": "report_v1.jpg",
+                "match_mode": "exact",
+            }
+        )
+        ids = set(result)
+        self.assertIn(literal_underscore.pk, ids)
+        self.assertNotIn(wildcard_collision.pk, ids)
 
 
 # ────────────────────────────────────────────────────────────────

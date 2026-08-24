@@ -11,21 +11,27 @@ import { storeToRefs } from "pinia";
 
 import Skeleton from "primevue/skeleton";
 import ConfirmDialog from "primevue/confirmdialog";
+import Dialog from "primevue/dialog";
 import Button from "primevue/button";
 
 import ExportThesauri from "@/arches_lingo/components/scheme/SchemeHeader/components/ExportThesauri.vue";
 import LifecycleButtons from "@/arches_lingo/components/scheme/SchemeHeader/components/LifecycleButtons.vue";
+import ReinstateDialog from "@/arches_lingo/components/generic/ReinstateDialog.vue";
 import SchemeIdentifierField from "@/arches_lingo/components/scheme/SchemeHeader/components/SchemeIdentifierField.vue";
 import SchemeURITemplateField from "@/arches_lingo/components/scheme/SchemeHeader/components/SchemeURITemplateField.vue";
+import SchemeAttributionField from "@/arches_lingo/components/scheme/SchemeHeader/components/SchemeAttributionField.vue";
 import ConceptIdentifierCounterField from "@/arches_lingo/components/scheme/SchemeHeader/components/ConceptIdentifierCounterField.vue";
 import LifecycleStateBadge from "@/arches_lingo/components/generic/LifecycleStateBadge.vue";
 
 import {
     DANGER,
     DEFAULT_ERROR_TOAST_LIFE,
+    DEFAULT_TOAST_LIFE,
     ERROR,
+    LOCKED_LIFECYCLE_STATE_ID,
     NEW_CONCEPT,
     SECONDARY,
+    SUCCESS,
 } from "@/arches_lingo/constants.ts";
 import { PREF_LABEL } from "@/arches_controlled_lists/constants.ts";
 
@@ -34,9 +40,13 @@ import {
     fetchSchemeResource,
     fetchResourceIdentifiers,
     fetchConceptIdentifierCounter,
+    fetchSchemeAttribution,
     fetchSchemeURITemplate,
     fetchResourceInstanceLifecycleState,
     fetchSchemeLabelCounts,
+    lockScheme,
+    unlockScheme,
+    unretireSchemeConcepts,
 } from "@/arches_lingo/api.ts";
 import { useResourceStore } from "@/arches_lingo/composables/useResourceStore.ts";
 import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
@@ -69,6 +79,11 @@ type SchemeURITemplate = {
     url_template: string;
 };
 
+type SchemeAttribution = {
+    scheme_resource_instance_id: string;
+    attribution: string;
+};
+
 const props = defineProps<{
     mode: DataComponentMode;
     sectionTitle: string;
@@ -84,7 +99,7 @@ const { openEditLog } = useEditLog(() => props.graphSlug);
 const confirm = useConfirm();
 const router = useRouter();
 const toast = useToast();
-const { $gettext } = useGettext();
+const { $gettext, interpolate } = useGettext();
 const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
 
 const scheme = ref<ResourceInstanceResult>();
@@ -92,9 +107,49 @@ const schemeResource = ref<Labellable>();
 const label = ref<Label>();
 const data = ref<SchemeHeader>();
 const labelCounts = ref<LanguageLabelCount[]>([]);
+const labelCountsLoading = ref(false);
+const showAllLanguages = ref(false);
+
+const LANGUAGE_CHIPS_TRUNCATE_COUNT = 8;
+
+const visibleLabelCounts = computed(() => {
+    if (showAllLanguages.value) return labelCounts.value;
+    return labelCounts.value.slice(0, LANGUAGE_CHIPS_TRUNCATE_COUNT);
+});
+
+const hiddenLanguageCount = computed(
+    () => labelCounts.value.length - LANGUAGE_CHIPS_TRUNCATE_COUNT,
+);
+
+const visibleLabelChips = computed(() =>
+    visibleLabelCounts.value.map((entry) => ({
+        key: entry.code,
+        label: interpolate(
+            $gettext("%{language} (%{code}): %{count}"),
+            { language: entry.language, code: entry.code, count: entry.count },
+            true,
+        ),
+    })),
+);
+
+const showMoreLabel = computed(() =>
+    interpolate($gettext("+%{count} more"), {
+        count: hiddenLanguageCount.value,
+    }),
+);
+
 const isLoading = ref(true);
 const showExportDialog = ref(false);
+const showLockDialog = ref(false);
 const exportDialogKey = ref(0);
+const showReinstateDialog = ref(false);
+const showRetireDialog = ref(false);
+const isReinstateLoading = ref(false);
+const pendingReinstateStateId = ref<string | undefined>();
+const pendingRetireStateId = ref<string | undefined>();
+const lifecycleButtonsRef = ref<InstanceType<typeof LifecycleButtons> | null>(
+    null,
+);
 const identifierValue = ref<string>();
 
 const resourceIdentifierId = ref<number | undefined>();
@@ -103,6 +158,8 @@ const conceptIdentifierCounter = ref<ConceptIdentifierCounter | undefined>();
 
 const schemeURITemplate = ref<SchemeURITemplate | undefined>();
 
+const schemeAttribution = ref<SchemeAttribution | undefined>();
+
 const currentLifecycleState = ref<ResourceInstanceLifecycleState | undefined>();
 
 const hasPersistedResourceInstance = computed(() => {
@@ -110,8 +167,13 @@ const hasPersistedResourceInstance = computed(() => {
 });
 
 const store = useResourceStore();
-const { isEditor } = useUserStore();
+const { isEditor, isLingoAdmin } = useUserStore();
 const { publicServerAddress } = storeToRefs(useAppSettingsStore());
+
+const isLocked = computed(
+    () => currentLifecycleState.value?.id === LOCKED_LIFECYCLE_STATE_ID,
+);
+const isLockLoading = ref(false);
 
 watch(
     [() => store.resource.value, () => store.error.value],
@@ -143,9 +205,14 @@ watch(
 
             extractSchemeHeaderData(resource);
 
-            fetchSchemeLabelCounts(props.resourceInstanceId).then((counts) => {
-                labelCounts.value = counts;
-            });
+            labelCountsLoading.value = true;
+            fetchSchemeLabelCounts(props.resourceInstanceId)
+                .then((counts) => {
+                    labelCounts.value = counts;
+                })
+                .finally(() => {
+                    labelCountsLoading.value = false;
+                });
         } catch (error) {
             toast.add({
                 severity: ERROR,
@@ -163,6 +230,7 @@ watch(
 const canEditResourceInstances = computed(() => {
     return (
         isEditor &&
+        !isLocked.value &&
         hasPersistedResourceInstance.value &&
         Boolean(currentLifecycleState.value?.can_edit_resource_instances)
     );
@@ -171,6 +239,7 @@ const canEditResourceInstances = computed(() => {
 const canDeleteResourceInstances = computed(() => {
     return (
         isEditor &&
+        !isLocked.value &&
         hasPersistedResourceInstance.value &&
         Boolean(currentLifecycleState.value?.can_delete_resource_instances)
     );
@@ -191,9 +260,20 @@ const defaultSchemeURITemplate = computed(() => {
 });
 
 const schemeUri = computed(() => {
-    return scheme.value?.aliased_data?.uri?.aliased_data?.uri_content
-        ?.node_value;
+    return (
+        scheme.value?.aliased_data?.uri?.aliased_data?.uri_content
+            ?.display_value || null
+    );
 });
+
+async function copyUriToClipboard(uri: string) {
+    await navigator.clipboard.writeText(uri);
+    toast.add({
+        severity: SUCCESS,
+        life: DEFAULT_TOAST_LIFE,
+        summary: $gettext("URI copied to clipboard"),
+    });
+}
 
 onMounted(async () => {
     if (!props.resourceInstanceId) {
@@ -213,6 +293,7 @@ onMounted(async () => {
             fetchedResourceIdentifiers,
             fetchedConceptIdentifierCounter,
             fetchedSchemeURITemplate,
+            fetchedSchemeAttribution,
             fetchedLifecycleState,
         ] = await Promise.all([
             fetchResourceIdentifiers(resourceInstanceId),
@@ -220,6 +301,7 @@ onMounted(async () => {
                 () => undefined,
             ),
             fetchSchemeURITemplate(resourceInstanceId).catch(() => undefined),
+            fetchSchemeAttribution(resourceInstanceId).catch(() => undefined),
             fetchResourceInstanceLifecycleState(resourceInstanceId),
         ]);
 
@@ -228,6 +310,7 @@ onMounted(async () => {
 
         conceptIdentifierCounter.value = fetchedConceptIdentifierCounter;
         schemeURITemplate.value = fetchedSchemeURITemplate;
+        schemeAttribution.value = fetchedSchemeAttribution;
 
         currentLifecycleState.value =
             fetchedLifecycleState as ResourceInstanceLifecycleState;
@@ -241,6 +324,34 @@ onMounted(async () => {
     }
     // Resource data is loaded via the store watch above
 });
+
+function handleLockToggle() {
+    if (!props.resourceInstanceId) return;
+    showLockDialog.value = true;
+}
+
+async function onLockConfirmed() {
+    if (!props.resourceInstanceId) return;
+    isLockLoading.value = true;
+    showLockDialog.value = false;
+    try {
+        if (isLocked.value) {
+            await unlockScheme(props.resourceInstanceId);
+        } else {
+            await lockScheme(props.resourceInstanceId);
+        }
+        window.location.reload();
+    } catch (error) {
+        toast.add({
+            severity: ERROR,
+            life: DEFAULT_ERROR_TOAST_LIFE,
+            summary: $gettext("Error changing lock"),
+            detail: error instanceof Error ? error.message : undefined,
+        });
+    } finally {
+        isLockLoading.value = false;
+    }
+}
 
 function openExportDialog() {
     exportDialogKey.value++;
@@ -299,6 +410,12 @@ function onSchemeURITemplateUpdate(updatedTemplate: {
     schemeURITemplate: SchemeURITemplate | undefined;
 }) {
     schemeURITemplate.value = updatedTemplate.schemeURITemplate;
+}
+
+function onSchemeAttributionUpdate(updatedAttribution: {
+    schemeAttribution: SchemeAttribution | undefined;
+}) {
+    schemeAttribution.value = updatedAttribution.schemeAttribution;
 }
 
 function onConceptIdentifierCounterUpdate(updatedCounter: {
@@ -360,10 +477,130 @@ function onLifecycleStateChange(
 
     window.location.reload();
 }
+
+function onRetireRequested(nextStateId: string) {
+    pendingRetireStateId.value = nextStateId;
+    showRetireDialog.value = true;
+}
+
+function onRetireConfirmed() {
+    if (!pendingRetireStateId.value) return;
+    lifecycleButtonsRef.value?.transitionLifecycleState(
+        pendingRetireStateId.value,
+    );
+    showRetireDialog.value = false;
+    pendingRetireStateId.value = undefined;
+}
+
+function onReinstateRequested(nextStateId: string) {
+    pendingReinstateStateId.value = nextStateId;
+    showReinstateDialog.value = true;
+}
+
+async function onReinstateConfirmed(cascade: boolean) {
+    if (!props.resourceInstanceId || !pendingReinstateStateId.value) {
+        return;
+    }
+
+    isReinstateLoading.value = true;
+    try {
+        if (cascade) {
+            await unretireSchemeConcepts(props.resourceInstanceId);
+        }
+        lifecycleButtonsRef.value?.transitionLifecycleState(
+            pendingReinstateStateId.value,
+        );
+    } catch (error) {
+        toast.add({
+            severity: ERROR,
+            life: DEFAULT_ERROR_TOAST_LIFE,
+            summary: $gettext("Error reinstating scheme"),
+            detail: error instanceof Error ? error.message : undefined,
+        });
+    } finally {
+        isReinstateLoading.value = false;
+        showReinstateDialog.value = false;
+        pendingReinstateStateId.value = undefined;
+    }
+}
 </script>
 
 <template>
     <ConfirmDialog group="delete-scheme" />
+    <Dialog
+        v-if="showLockDialog"
+        :visible="true"
+        :modal="true"
+        :dismissable-mask="false"
+        :header="isLocked ? $gettext('Unlock scheme') : $gettext('Lock scheme')"
+        @update:visible="showLockDialog = false"
+    >
+        <p v-if="isLocked">
+            {{
+                $gettext(
+                    "Unlocking will return this scheme to Editing state and allow edits by all editors.",
+                )
+            }}
+        </p>
+        <p v-else>
+            {{
+                $gettext(
+                    "Locking will prevent all edits to this scheme and its concepts.",
+                )
+            }}
+        </p>
+        <template #footer>
+            <Button
+                :label="$gettext('Cancel')"
+                :severity="SECONDARY"
+                :outlined="true"
+                @click="showLockDialog = false"
+            />
+            <Button
+                :label="isLocked ? $gettext('Unlock') : $gettext('Lock')"
+                severity="warn"
+                @click="onLockConfirmed"
+            />
+        </template>
+    </Dialog>
+    <Dialog
+        v-if="showRetireDialog"
+        :visible="true"
+        :modal="true"
+        :dismissable-mask="false"
+        :header="$gettext('Confirmation')"
+        @update:visible="showRetireDialog = false"
+    >
+        <p>
+            {{
+                $gettext(
+                    "Are you sure you want to retire this vocabulary? All concepts within it will also be retired.",
+                )
+            }}
+        </p>
+        <template #footer>
+            <Button
+                :label="$gettext('Cancel')"
+                :severity="SECONDARY"
+                :outlined="true"
+                @click="showRetireDialog = false"
+            />
+            <Button
+                :label="$gettext('Retire')"
+                :severity="DANGER"
+                @click="onRetireConfirmed"
+            />
+        </template>
+    </Dialog>
+    <ReinstateDialog
+        v-if="showReinstateDialog && resourceInstanceId"
+        :resource-id="resourceInstanceId"
+        :resource-name="label?.value"
+        resource-type="scheme"
+        :is-loading="isReinstateLoading"
+        @confirm="onReinstateConfirmed"
+        @cancel="showReinstateDialog = false"
+    />
     <ExportThesauri
         v-if="scheme && showExportDialog"
         :key="exportDialogKey"
@@ -372,7 +609,8 @@ function onLifecycleStateChange(
     />
     <Skeleton
         v-if="isLoading"
-        style="width: 100%; height: 9rem"
+        height="9rem"
+        class="loading-skeleton"
     />
 
     <div
@@ -381,66 +619,78 @@ function onLifecycleStateChange(
     >
         <div class="scheme-header-panel">
             <div class="scheme-header-toolbar">
-                <div class="header-row">
-                    <div class="scheme-title">
-                        <h2>
-                            <span class="scheme-title-text">{{
-                                label?.value
-                            }}</span>
-                            <span
-                                v-if="label?.language_id"
-                                class="scheme-label-lang"
-                            >
-                                ({{ label?.language_id }})
-                            </span>
-                        </h2>
-                    </div>
+                <div class="scheme-title">
+                    <h2>
+                        <span class="scheme-title-text">{{
+                            label?.value
+                        }}</span>
+                        <span
+                            v-if="label?.language_id"
+                            class="scheme-label-lang"
+                        >
+                            ({{ label?.language_id }})
+                        </span>
+                    </h2>
+                </div>
 
-                    <div
-                        v-if="props?.resourceInstanceId !== undefined"
-                        class="header-buttons"
+                <div
+                    v-if="props?.resourceInstanceId !== undefined"
+                    class="header-buttons"
+                >
+                    <Button
+                        :aria-label="$gettext('Edit History')"
+                        class="add-button"
+                        @click="openEditLog"
                     >
-                        <Button
-                            :aria-label="$gettext('Edit History')"
-                            class="add-button"
-                            @click="openEditLog"
-                        >
-                            <span><i class="pi pi-history"></i></span>
-                            <span>{{ $gettext("History") }}</span>
-                        </Button>
-                        <Button
-                            :aria-label="$gettext('Export')"
-                            class="add-button"
-                            @click="openExportDialog"
-                        >
-                            <span><i class="pi pi-cloud-download"></i></span>
-                            <span>{{ $gettext("Export") }}</span>
-                        </Button>
+                        <span><i class="pi pi-history"></i></span>
+                        <span>{{ $gettext("History") }}</span>
+                    </Button>
+                    <Button
+                        :aria-label="$gettext('Export')"
+                        class="add-button"
+                        @click="openExportDialog"
+                    >
+                        <span><i class="pi pi-cloud-download"></i></span>
+                        <span>{{ $gettext("Export") }}</span>
+                    </Button>
 
-                        <Button
-                            v-if="canAddTopConcept"
-                            icon="pi pi-plus-circle"
-                            :label="$gettext('Add Top Concept')"
-                            class="add-button"
-                            @click="addTopConcept"
-                        />
+                    <Button
+                        v-if="canAddTopConcept"
+                        icon="pi pi-plus-circle"
+                        :label="$gettext('Add Top Concept')"
+                        class="add-button"
+                        @click="addTopConcept"
+                    />
 
-                        <Button
-                            v-if="canDeleteResourceInstances"
-                            icon="pi pi-trash"
-                            severity="danger"
-                            class="delete-button"
-                            :label="$gettext('Delete')"
-                            :aria-label="$gettext('Delete Concept')"
-                            @click="confirmDelete"
-                        />
+                    <Button
+                        v-if="canDeleteResourceInstances"
+                        icon="pi pi-trash"
+                        severity="danger"
+                        class="delete-button"
+                        :label="$gettext('Delete')"
+                        :aria-label="$gettext('Delete Concept')"
+                        @click="confirmDelete"
+                    />
 
-                        <LifecycleButtons
-                            v-if="isEditor"
-                            :resource-instance-id="props.resourceInstanceId"
-                            @change="onLifecycleStateChange"
-                        />
-                    </div>
+                    <Button
+                        v-if="isLingoAdmin"
+                        :icon="isLocked ? 'pi pi-lock-open' : 'pi pi-lock'"
+                        :label="
+                            isLocked ? $gettext('Unlock') : $gettext('Lock')
+                        "
+                        :loading="isLockLoading"
+                        severity="warn"
+                        @click="handleLockToggle"
+                    />
+
+                    <LifecycleButtons
+                        v-if="isEditor && !isLocked"
+                        ref="lifecycleButtonsRef"
+                        :resource-instance-id="props.resourceInstanceId"
+                        @change="onLifecycleStateChange"
+                        @retire-requested="onRetireRequested"
+                        @reinstate-requested="onReinstateRequested"
+                    />
                 </div>
             </div>
 
@@ -453,21 +703,31 @@ function onLifecycleStateChange(
                         :can-edit-resource-instances="canEditResourceInstances"
                         @update="onIdentifierUpdate"
                     />
-                    <div>
+                    <div class="header-item">
                         <span class="header-item-label">{{
                             $gettext("URI: ")
                         }}</span>
-                        <Button
+                        <div
                             v-if="schemeUri"
-                            :label="schemeUri"
-                            class="concept-uri"
-                            variant="link"
-                            as="a"
-                            :href="schemeUri"
-                            target="_blank"
-                            rel="noopener"
-                            :disabled="!data?.uri"
-                        ></Button>
+                            class="uri-display"
+                        >
+                            <Button
+                                :label="schemeUri"
+                                class="scheme-uri"
+                                variant="link"
+                                as="a"
+                                :href="schemeUri"
+                                target="_blank"
+                                rel="noopener"
+                            ></Button>
+                            <Button
+                                icon="pi pi-copy"
+                                class="uri-copy-button"
+                                variant="link"
+                                :aria-label="$gettext('Copy URI')"
+                                @click="copyUriToClipboard(schemeUri)"
+                            ></Button>
+                        </div>
                         <span
                             v-else
                             class="header-item-value"
@@ -488,10 +748,16 @@ function onLifecycleStateChange(
                     />
                 </div>
 
-                <div
-                    class="header-row"
-                    style="padding-bottom: 1rem"
-                >
+                <div class="header-row">
+                    <SchemeAttributionField
+                        :resource-instance-id="props.resourceInstanceId"
+                        :can-edit-resource-instances="canEditResourceInstances"
+                        :scheme-attribution="schemeAttribution"
+                        @update="onSchemeAttributionUpdate"
+                    />
+                </div>
+
+                <div class="header-row">
                     <ConceptIdentifierCounterField
                         :resource-instance-id="props.resourceInstanceId"
                         :can-edit-resource-instances="canEditResourceInstances"
@@ -501,15 +767,54 @@ function onLifecycleStateChange(
                 </div>
 
                 <div class="header-row metadata-container">
-                    <div class="language-chip-container">
-                        <span
-                            v-for="entry in labelCounts"
-                            :key="entry.code"
-                            class="scheme-language"
+                    <div class="language-chip-wrapper">
+                        <div class="language-section-header">
+                            <span class="header-item-label">{{
+                                $gettext("Languages:")
+                            }}</span>
+                            <Button
+                                v-if="hiddenLanguageCount > 0"
+                                text
+                                size="small"
+                                class="language-expand-toggle"
+                                :aria-expanded="showAllLanguages"
+                                @click="showAllLanguages = !showAllLanguages"
+                            >
+                                <i
+                                    :class="
+                                        showAllLanguages
+                                            ? 'pi pi-chevron-up'
+                                            : 'pi pi-chevron-down'
+                                    "
+                                ></i>
+                                <span>{{
+                                    showAllLanguages
+                                        ? $gettext("Show less")
+                                        : showMoreLabel
+                                }}</span>
+                            </Button>
+                        </div>
+                        <div
+                            class="language-chip-container"
+                            :class="{
+                                'language-chip-container--expanded':
+                                    showAllLanguages,
+                            }"
                         >
-                            {{ entry.language }} ({{ entry.code }}):
-                            {{ entry.count }}
-                        </span>
+                            <Skeleton
+                                v-if="labelCountsLoading"
+                                width="12rem"
+                                height="2rem"
+                            />
+                            <span
+                                v-for="chip in visibleLabelChips"
+                                v-else
+                                :key="chip.key"
+                                class="scheme-language"
+                            >
+                                {{ chip.label }}
+                            </span>
+                        </div>
                     </div>
 
                     <div class="lifecycle-container">
@@ -548,9 +853,16 @@ function onLifecycleStateChange(
 
 <style scoped>
 .scheme-header {
+    --scheme-header-row-gap: 0.2rem;
+    --scheme-header-field-min-height: 2rem;
+
     background: var(--p-header-background);
     border-bottom: 0.0625rem solid var(--p-header-toolbar-border);
     box-sizing: border-box;
+}
+
+.loading-skeleton {
+    width: 100%;
 }
 
 .scheme-header-panel {
@@ -562,8 +874,13 @@ function onLifecycleStateChange(
     height: auto;
     background: var(--p-header-toolbar-background);
     border-bottom: 0.0625rem solid var(--p-header-toolbar-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    row-gap: 0.5rem;
     padding-inline-start: 1rem;
-    padding-inline-end: 1rem;
+    padding-inline-end: 0.5rem;
     padding-top: 0.375rem;
     padding-bottom: 0.375rem;
     box-sizing: border-box;
@@ -601,11 +918,10 @@ h2 > span {
 }
 
 .header-content {
-    min-height: 5.45rem;
-    padding-top: 0.5rem;
-    padding-inline-start: 1rem;
-    padding-inline-end: 1rem;
+    display: flex;
+    flex-direction: column;
     box-sizing: border-box;
+    padding: 0.5rem 1rem 1rem;
 }
 
 .header-buttons {
@@ -620,6 +936,33 @@ h2 > span {
     font-size: var(--p-lingo-font-size-small);
 }
 
+.uri-display {
+    display: inline-flex;
+    align-items: center;
+    min-width: 0;
+}
+
+.scheme-uri {
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+    font-size: var(--p-lingo-font-size-small);
+    font-weight: var(--p-lingo-font-weight-normal);
+    color: var(--p-primary-500);
+}
+
+.uri-copy-button {
+    flex-shrink: 0;
+    font-size: var(--p-lingo-font-size-small);
+    color: var(--p-primary-500);
+}
+
+:deep(.scheme-uri .p-button-label) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .p-button-link {
     padding: 0;
     margin: 0;
@@ -628,20 +971,20 @@ h2 > span {
 .header-row {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
     flex-wrap: wrap;
     column-gap: 1rem;
-    row-gap: 0.5rem;
-    padding: 0.2rem 0 0 0;
+    row-gap: var(--scheme-header-row-gap);
+    min-height: var(--scheme-header-field-min-height);
     min-width: 0;
 }
 
 .metadata-container {
-    gap: 0.25rem;
+    gap: var(--scheme-header-row-gap) 0.75rem;
     margin-top: 0;
-    padding-bottom: 1rem;
     justify-content: space-between;
     align-items: flex-start;
+    flex-wrap: nowrap;
 }
 
 .language-chip-container {
@@ -652,6 +995,49 @@ h2 > span {
     min-width: 0;
 }
 
+.language-chip-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: var(--scheme-header-row-gap);
+    min-width: 0;
+    flex: 1 1 0;
+}
+
+.language-section-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: var(--scheme-header-field-min-height);
+}
+
+.language-chip-container--expanded {
+    align-items: flex-start;
+    align-content: flex-start;
+}
+
+.language-expand-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.125rem 0.375rem;
+    font-size: var(--p-lingo-font-size-smallnormal);
+    color: var(--p-primary-500);
+    background: none;
+    border: 0;
+    cursor: pointer;
+    font-family: inherit;
+    line-height: 1.4;
+}
+
+.language-expand-toggle:hover {
+    color: var(--p-primary-600);
+    background: var(--p-primary-50);
+}
+
+.language-expand-toggle .pi {
+    font-size: 0.6rem;
+}
+
 .add-language:hover {
     cursor: pointer;
 }
@@ -660,7 +1046,8 @@ h2 > span {
     display: flex;
     flex-direction: column;
     align-items: flex-end;
-    min-width: 0;
+    flex-shrink: 0;
+    gap: var(--scheme-header-row-gap);
 }
 
 .add-language {
@@ -670,39 +1057,30 @@ h2 > span {
     padding: 0 0.5rem;
 }
 
-.header-item {
-    display: inline-flex;
-    align-items: center;
-    min-width: 0;
-}
-
-.header-item-label {
-    font-weight: var(--p-lingo-font-weight-normal);
-    font-size: var(--p-lingo-font-size-smallnormal);
-    color: var(--p-header-item-label);
-    margin-inline-end: 0.25rem;
-}
-
-.header-item-value {
-    font-size: var(--p-lingo-font-size-smallnormal);
-    color: var(--p-primary-500);
-    min-width: 0;
-}
-
+.header-item,
 :deep(.header-item) {
     display: inline-flex;
     align-items: center;
+    min-height: var(--scheme-header-field-min-height);
     min-width: 0;
+    max-width: 100%;
 }
 
+.header-item-label,
 :deep(.header-item-label) {
+    flex-shrink: 0;
     font-weight: var(--p-lingo-font-weight-normal);
     font-size: var(--p-lingo-font-size-smallnormal);
     color: var(--p-header-item-label);
     margin-inline-end: 0.25rem;
+    white-space: nowrap;
 }
 
+.header-item-value,
 :deep(.header-item-value) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     font-size: var(--p-lingo-font-size-smallnormal);
     color: var(--p-primary-500);
     min-width: 0;

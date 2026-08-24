@@ -3,9 +3,10 @@ import { inject, computed } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import Button from "primevue/button";
+import Tag from "primevue/tag";
 
 import MetaStringViewer from "@/arches_lingo/components/generic/MetaStringViewer.vue";
-import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
+import GenericWidget from "@/arches_vue_components/generics/GenericWidget/GenericWidget.vue";
 
 import { VIEW } from "@/arches_lingo/constants.ts";
 import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
@@ -66,7 +67,14 @@ const metaStringLabel = computed<MetaStringText>(() => ({
 <template>
     <div class="viewer-section">
         <div class="section-header">
-            <h2>{{ props.sectionTitle }}</h2>
+            <div class="section-title">
+                <h2>{{ props.sectionTitle }}</h2>
+                <Tag
+                    v-if="props.tileData.length"
+                    :value="String(props.tileData.length)"
+                    severity="secondary"
+                />
+            </div>
 
             <Button
                 v-if="isEditor"
@@ -104,7 +112,7 @@ const metaStringLabel = computed<MetaStringText>(() => ({
                     node-alias="appellative_status_ascribed_name_content"
                     :aliased-node-data="
                         rowData.aliased_data
-                            .appellative_status_ascribed_name_content
+                            .appellative_status_ascribed_name_content ?? null
                     "
                     :mode="VIEW"
                     :should-show-label="false"
@@ -116,7 +124,7 @@ const metaStringLabel = computed<MetaStringText>(() => ({
                     node-alias="appellative_status_ascribed_relation"
                     :aliased-node-data="
                         rowData.aliased_data
-                            .appellative_status_ascribed_relation
+                            .appellative_status_ascribed_relation ?? null
                     "
                     :mode="VIEW"
                     :should-show-label="false"
@@ -128,7 +136,7 @@ const metaStringLabel = computed<MetaStringText>(() => ({
                     node-alias="appellative_status_ascribed_name_language"
                     :aliased-node-data="
                         rowData.aliased_data
-                            .appellative_status_ascribed_name_language
+                            .appellative_status_ascribed_name_language ?? null
                     "
                     :mode="VIEW"
                     :should-show-label="false"
@@ -140,7 +148,8 @@ const metaStringLabel = computed<MetaStringText>(() => ({
                     node-alias="appellative_status_data_assignment_object_used"
                     :aliased-node-data="
                         rowData.aliased_data
-                            .appellative_status_data_assignment_object_used
+                            .appellative_status_data_assignment_object_used ??
+                        null
                     "
                     :mode="VIEW"
                 />
@@ -149,7 +158,7 @@ const metaStringLabel = computed<MetaStringText>(() => ({
                     node-alias="appellative_status_data_assignment_actor"
                     :aliased-node-data="
                         rowData.aliased_data
-                            .appellative_status_data_assignment_actor
+                            .appellative_status_data_assignment_actor ?? null
                     "
                     :mode="VIEW"
                 />

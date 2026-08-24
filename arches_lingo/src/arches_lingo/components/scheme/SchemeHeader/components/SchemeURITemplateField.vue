@@ -90,15 +90,17 @@ async function saveSchemeURITemplate() {
         </span>
 
         <template v-if="isEditingSchemeURITemplate">
-            <InputText
-                v-model="schemeURITemplateDraft"
-                size="small"
-                :placeholder="
-                    $gettext(
-                        'Placeholders: <scheme_identifier>, <concept_identifier>',
-                    )
-                "
-            />
+            <div class="uri-input-wrapper">
+                <InputText
+                    v-model="schemeURITemplateDraft"
+                    size="small"
+                    :placeholder="
+                        $gettext(
+                            'Placeholders: <scheme_identifier>, <concept_identifier>',
+                        )
+                    "
+                />
+            </div>
             <Button
                 icon="pi pi-check"
                 variant="text"
@@ -137,3 +139,16 @@ async function saveSchemeURITemplate() {
         </template>
     </div>
 </template>
+
+<style scoped>
+.uri-input-wrapper {
+    flex: 0 1 auto;
+    min-width: 0;
+    overflow: hidden;
+}
+
+:deep(input) {
+    field-sizing: content;
+    max-width: 100%;
+}
+</style>

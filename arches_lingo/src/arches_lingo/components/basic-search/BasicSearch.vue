@@ -7,7 +7,6 @@ import {
     ref,
     useTemplateRef,
     watch,
-    withDefaults,
 } from "vue";
 import { useGettext } from "vue3-gettext";
 import { useRouter } from "vue-router";
@@ -266,6 +265,7 @@ function loadAdditionalSearchResults(event: VirtualScrollerLazyEvent) {
 }
 
 async function navigateToReport(event: AutoCompleteOptionSelectEvent) {
+    query.value = "";
     const failure = await router.push({
         name: routeNames.concept,
         params: { id: event.value.id },

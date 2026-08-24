@@ -1,13 +1,17 @@
 <script setup lang="ts">
-import { inject, computed } from "vue";
+import { inject, computed, ref, onMounted, watch } from "vue";
+import { RouterLink } from "vue-router";
 import { useGettext } from "vue3-gettext";
 
 import Button from "primevue/button";
+import Tag from "primevue/tag";
 
 import MetaStringViewer from "@/arches_lingo/components/generic/MetaStringViewer.vue";
-import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
+import GenericWidget from "@/arches_vue_components/generics/GenericWidget/GenericWidget.vue";
 
+import { resolveConceptURI } from "@/arches_lingo/api.ts";
 import { VIEW } from "@/arches_lingo/constants.ts";
+import { routeNames } from "@/arches_lingo/routes.ts";
 import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 
 import type {
@@ -80,17 +84,66 @@ const metaStringLabel = computed<MetaStringText>(() => ({
     },
 }));
 
-function matchedConceptURIIsLink(rowData: ConceptMatchStatus): boolean {
-    const uri = rowData.aliased_data.match_status_ascribed_comparate
+const resolvedLocalConceptIds = ref<Record<string, string | null>>({});
+
+onMounted(resolveLocalConceptIds);
+watch(() => props.tileData, resolveLocalConceptIds);
+
+async function resolveLocalConceptIds() {
+    const uris = [
+        ...new Set(
+            props.tileData
+                .map(
+                    (tile) =>
+                        tile.aliased_data.match_status_ascribed_comparate
+                            .display_value,
+                )
+                .filter((uri) => uri.startsWith("http")),
+        ),
+    ];
+
+    const results = await Promise.all(
+        uris.map(async (uri) => {
+            const result = await resolveConceptURI(uri);
+            return [uri, result?.resourceinstanceid ?? null] as const;
+        }),
+    );
+
+    resolvedLocalConceptIds.value = Object.fromEntries(results);
+}
+
+function getComparateURI(rowData: ConceptMatchStatus): string {
+    return rowData.aliased_data.match_status_ascribed_comparate
         .display_value as string;
-    return uri.startsWith("http");
+}
+
+function localConceptRoute(
+    rowData: ConceptMatchStatus,
+): { name: string; params: { id: string } } | null {
+    const uri = getComparateURI(rowData);
+    const conceptId = resolvedLocalConceptIds.value[uri];
+    return conceptId
+        ? { name: routeNames.concept, params: { id: conceptId } }
+        : null;
+}
+
+function externalConceptURI(rowData: ConceptMatchStatus): string | null {
+    const uri = getComparateURI(rowData);
+    return uri.startsWith("http") ? uri : null;
 }
 </script>
 
 <template>
     <div class="viewer-section">
         <div class="section-header">
-            <h2>{{ props.sectionTitle }}</h2>
+            <div class="section-title">
+                <h2>{{ props.sectionTitle }}</h2>
+                <Tag
+                    v-if="props.tileData.length"
+                    :value="String(props.tileData.length)"
+                    severity="secondary"
+                />
+            </div>
 
             <Button
                 v-if="isEditor"
@@ -125,32 +178,40 @@ function matchedConceptURIIsLink(rowData: ConceptMatchStatus): boolean {
                     :graph-slug="props.graphSlug"
                     node-alias="match_status_ascribed_relation"
                     :aliased-node-data="
-                        rowData.aliased_data.match_status_ascribed_relation
+                        rowData.aliased_data.match_status_ascribed_relation ??
+                        null
                     "
                     :mode="VIEW"
                     :should-show-label="false"
                 />
             </template>
             <template #type="{ rowData }">
-                <Button
-                    v-if="matchedConceptURIIsLink(rowData)"
-                    :label="
+                <RouterLink
+                    v-if="localConceptRoute(rowData)"
+                    :to="localConceptRoute(rowData)!"
+                    class="local-concept-link"
+                >
+                    {{
                         rowData.aliased_data.match_status_ascribed_comparate
                             .display_value
+                    }}
+                </RouterLink>
+                <Button
+                    v-else-if="externalConceptURI(rowData)"
+                    :label="
+                        rowData.aliased_data.match_status_ascribed_comparate
+                            ?.display_value
                     "
                     variant="link"
                     as="a"
-                    :href="
-                        rowData.aliased_data.match_status_ascribed_comparate
-                            .display_value
-                    "
+                    :href="externalConceptURI(rowData)!"
                     target="_blank"
                     rel="noopener"
                 ></Button>
                 <span v-else>
                     {{
                         rowData.aliased_data.match_status_ascribed_comparate
-                            .display_value
+                            ?.display_value
                     }}
                 </span>
             </template>
@@ -159,7 +220,8 @@ function matchedConceptURIIsLink(rowData: ConceptMatchStatus): boolean {
                     :graph-slug="props.graphSlug"
                     node-alias="match_status_data_assignment_actor"
                     :aliased-node-data="
-                        rowData.aliased_data.match_status_data_assignment_actor
+                        rowData.aliased_data
+                            .match_status_data_assignment_actor ?? null
                     "
                     :mode="VIEW"
                 />
@@ -168,7 +230,7 @@ function matchedConceptURIIsLink(rowData: ConceptMatchStatus): boolean {
                     node-alias="match_status_data_assignment_object_used"
                     :aliased-node-data="
                         rowData.aliased_data
-                            .match_status_data_assignment_object_used
+                            .match_status_data_assignment_object_used ?? null
                     "
                     :mode="VIEW"
                 />
@@ -188,6 +250,16 @@ function matchedConceptURIIsLink(rowData: ConceptMatchStatus): boolean {
 
     span {
         font-size: var(--p-lingo-font-size-smallnormal);
+    }
+}
+
+.local-concept-link {
+    color: var(--p-primary-500);
+    font-size: var(--p-lingo-font-size-smallnormal);
+    text-decoration: none;
+
+    &:hover {
+        text-decoration: underline;
     }
 }
 </style>

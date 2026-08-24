@@ -3,7 +3,10 @@ from django.conf.urls.static import static
 from django.urls import include, path
 
 from arches_lingo.views.root import LingoRootView
+from arches_lingo.views.api.dereference import DereferenceableResourceView
 from arches_lingo.views.api.concepts import (
+    ConceptAncestorsView,
+    ConceptChildrenView,
     ConceptDeleteView,
     ConceptTreeView,
     ValueSearchView,
@@ -38,9 +41,18 @@ from arches_lingo.views.api.scheme_identifier import SchemeIdentifierView
 from arches_lingo.views.api.scheme_uri_template import (
     SchemeURITemplateView,
 )
-from arches_lingo.views.api.concept_lifecycle import ConceptRetireView
+from arches_lingo.views.api.scheme_attribution import SchemeAttributionView
+from arches_lingo.views.api.concept_lifecycle import (
+    ConceptRetireView,
+    ConceptUnretireView,
+    SchemeUnretireConceptsView,
+)
+from arches_lingo.views.api.scheme_lock import SchemeLockView, SchemeUnlockView
 from arches_lingo.views.api.settings import AppSettingsView
-from arches_lingo.views.api.identifier_resolve import IdentifierResolveView
+from arches_lingo.views.api.identifier_resolve import (
+    ConceptURILookupView,
+    IdentifierResolveView,
+)
 from arches_lingo.views.api.resource_list import (
     ContributorsListView,
     ResourceReferenceCountView,
@@ -63,18 +75,20 @@ urlpatterns = [
     path("login", LingoRootView.as_view(), name="login"),
     path("advanced-search", LingoRootView.as_view(), name="advanced-search"),
     path("schemes", LingoRootView.as_view(), name="schemes"),
-    path("scheme/<uuid:id>", LingoRootView.as_view(), name="scheme"),
+    # Identity URIs: content-negotiated. Browsers get the SPA; machines requesting
+    # an RDF representation (Accept header or ?format=) get SKOS for the resource.
+    path("scheme/<uuid:id>", DereferenceableResourceView.as_view(), name="scheme"),
     path("scheme/new", LingoRootView.as_view(), name="new-scheme"),
-    path("concept/<uuid:id>", LingoRootView.as_view(), name="concept"),
+    path("concept/<uuid:id>", DereferenceableResourceView.as_view(), name="concept"),
     path("concept/new", LingoRootView.as_view(), name="new-concept"),
     path(
         "schemes/<slug:scheme_identifier>",
-        LingoRootView.as_view(),
+        DereferenceableResourceView.as_view(),
         name="scheme-by-identifier",
     ),
     path(
         "schemes/<slug:scheme_identifier>/concepts/<slug:concept_identifier>",
-        LingoRootView.as_view(),
+        DereferenceableResourceView.as_view(),
         name="concept-by-identifier",
     ),
     path("sources", LingoRootView.as_view(), name="sources"),
@@ -112,7 +126,22 @@ urlpatterns = [
         ConceptMissingTranslationsView.as_view(),
         name="api-lingo-missing-translations",
     ),
+    path(
+        "api/lingo/concepts/resolve-uri",
+        ConceptURILookupView.as_view(),
+        name="api-lingo-concept-uri-resolve",
+    ),
     path("api/concept-tree", ConceptTreeView.as_view(), name="api-concepts"),
+    path(
+        "api/concept-tree/children/<uuid:concept_id>",
+        ConceptChildrenView.as_view(),
+        name="api-concept-children",
+    ),
+    path(
+        "api/concept-tree/ancestors/<uuid:concept_id>",
+        ConceptAncestorsView.as_view(),
+        name="api-concept-ancestors",
+    ),
     path(
         "api/lingo/lifecycle-states",
         LifecycleStatesView.as_view(),
@@ -133,6 +162,11 @@ urlpatterns = [
         "api/scheme/<uuid:scheme_resource_instance_id>/url-template",
         SchemeURITemplateView.as_view(),
         name="api-scheme-url-template",
+    ),
+    path(
+        "api/scheme/<uuid:scheme_resource_instance_id>/attribution",
+        SchemeAttributionView.as_view(),
+        name="api-scheme-attribution",
     ),
     path(
         "api/lingo/scheme-resource",
@@ -225,6 +259,26 @@ urlpatterns = [
         name="api-concept-retire",
     ),
     path(
+        "api/lingo/concept/<uuid:pk>/unretire",
+        ConceptUnretireView.as_view(),
+        name="api-concept-unretire",
+    ),
+    path(
+        "api/lingo/scheme/<uuid:pk>/unretire-concepts",
+        SchemeUnretireConceptsView.as_view(),
+        name="api-scheme-unretire-concepts",
+    ),
+    path(
+        "api/lingo/scheme/<uuid:pk>/lock",
+        SchemeLockView.as_view(),
+        name="api-scheme-lock",
+    ),
+    path(
+        "api/lingo/scheme/<uuid:pk>/unlock",
+        SchemeUnlockView.as_view(),
+        name="api-scheme-unlock",
+    ),
+    path(
         "api/lingo/<slug:graph>",
         LingoResourceListCreateView.as_view(),
         name="api-lingo-resources",
@@ -260,7 +314,7 @@ urlpatterns = [
         name="api-lingo-concept-resolve",
     ),
     path("", include("arches_controlled_lists.urls")),
-    path("", include("arches_component_lab.urls")),
+    path("", include("arches_vue_components.urls")),
 ]
 
 # Ensure Arches core urls are superseded by project-level urls

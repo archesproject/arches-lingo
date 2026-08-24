@@ -1,13 +1,5 @@
 <script setup lang="ts">
-import {
-    inject,
-    nextTick,
-    onMounted,
-    onUnmounted,
-    ref,
-    useTemplateRef,
-    watch,
-} from "vue";
+import { inject, nextTick, onMounted, ref, useTemplateRef, watch } from "vue";
 
 import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
@@ -16,13 +8,13 @@ import { Form } from "@primevue/forms";
 
 import Skeleton from "primevue/skeleton";
 
-import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
-
+import GenericWidget from "@/arches_vue_components/generics/GenericWidget/GenericWidget.vue";
 import { DIGITAL_OBJECT_GRAPH_SLUG } from "@/arches_lingo/components/concept/ConceptImages/components/constants.ts";
 import {
     DEFAULT_ERROR_TOAST_LIFE,
     EDIT,
     ERROR,
+    MULTILINE_RENDER_CONTEXT,
 } from "@/arches_lingo/constants.ts";
 
 import {
@@ -30,6 +22,9 @@ import {
     addDigitalObjectToConceptImageCollection,
     createDigitalObject,
 } from "@/arches_lingo/components/concept/ConceptImages/components/utils.ts";
+
+import { useConceptImagesEditorStore } from "@/arches_lingo/stores/useConceptImagesEditorStore.ts";
+import { storeToRefs } from "pinia";
 
 import {
     fetchLingoResource,
@@ -39,7 +34,10 @@ import {
 
 import type { Component, Ref } from "vue";
 import type { FormSubmitEvent } from "@primevue/forms";
-import type { FileListValue } from "@/arches_component_lab/datatypes/file-list/types.ts";
+import type {
+    FileListAliasedNodeData,
+    FileReference,
+} from "@/arches_vue_components/datatypes/file-list/types.ts";
 
 import type {
     ConceptImages,
@@ -47,12 +45,8 @@ import type {
     DigitalObjectInstanceAliases,
 } from "@/arches_lingo/types.ts";
 
-type PossiblyNewFile = FileListValue & {
+type PossiblyNewFile = FileReference & {
     file?: File;
-    name?: string;
-    lastModified?: number;
-    size?: number;
-    type?: string;
 };
 
 const props = defineProps<{
@@ -76,6 +70,7 @@ const componentEditorFormRef = inject<Ref<Component | null>>(
 );
 const openEditor =
     inject<(componentName: string, tileid?: string) => void>("openEditor");
+const closeEditor = inject<() => void>("closeEditor");
 const refreshReportSection = inject<(componentName: string) => void>(
     "refreshReportSection",
 );
@@ -83,20 +78,12 @@ const onSaveSettled = inject<() => void>("onSaveSettled");
 
 const formRef = useTemplateRef("form");
 const isLoading = ref(true);
+const { targetDigitalObjectResourceInstanceId } = storeToRefs(
+    useConceptImagesEditorStore(),
+);
 
 onMounted(() => {
-    document.addEventListener(
-        "openConceptImagesEditor",
-        getDigitalObjectInstance,
-    );
-    document.dispatchEvent(new Event("conceptImagesEditor:ready"));
-});
-
-onUnmounted(() => {
-    document.removeEventListener(
-        "openConceptImagesEditor",
-        getDigitalObjectInstance,
-    );
+    getDigitalObjectInstance(targetDigitalObjectResourceInstanceId.value);
 });
 
 watch(
@@ -104,19 +91,14 @@ watch(
     (formComponent) => (componentEditorFormRef!.value = formComponent),
 );
 
-async function getDigitalObjectInstance(
-    customEvent: CustomEvent<{ resourceInstanceId?: string }> | Event,
-) {
-    const typedEvent = customEvent as CustomEvent<{
-        resourceInstanceId?: string;
-    }>;
+async function getDigitalObjectInstance(resourceInstanceId?: string) {
     try {
-        if (typedEvent?.detail?.resourceInstanceId === undefined) {
+        if (resourceInstanceId === undefined) {
             digitalObjectResource.value = undefined;
         } else {
             digitalObjectResource.value = await fetchLingoResource(
                 "digital_object_system",
-                typedEvent.detail.resourceInstanceId,
+                resourceInstanceId,
             );
         }
         digitalObjectLoaded.value = true;
@@ -130,80 +112,62 @@ async function save(e: FormSubmitEvent) {
     isLoading.value = true;
 
     try {
-        const submittedFormData = Object.fromEntries(
-            Object.entries(e.states).map(([key, state]) => [key, state.value]),
-        );
+        const submittedFormData = e.values;
+        const contentFiles =
+            (
+                submittedFormData.content as {
+                    node_value: PossiblyNewFile[] | null;
+                }
+            )?.node_value ?? null;
 
-        let digitalObjectInstanceAliases: DigitalObjectInstanceAliases = {};
-
-        if (digitalObjectResource.value) {
-            digitalObjectInstanceAliases =
-                digitalObjectResource.value.aliased_data;
-        }
+        const digitalObjectInstanceAliases: DigitalObjectInstanceAliases =
+            digitalObjectResource.value?.aliased_data ?? {};
 
         if (submittedFormData.name_content) {
-            if (!digitalObjectInstanceAliases.name) {
-                digitalObjectInstanceAliases.name = {
-                    aliased_data: {
-                        name_content: submittedFormData.name_content,
-                    },
-                };
-            } else {
-                digitalObjectInstanceAliases.name.aliased_data.name_content =
-                    submittedFormData.name_content;
-            }
+            digitalObjectInstanceAliases.name = {
+                ...digitalObjectInstanceAliases.name,
+                aliased_data: { name_content: submittedFormData.name_content },
+            };
         }
         if (submittedFormData.statement_content) {
-            if (!digitalObjectInstanceAliases.statement) {
-                digitalObjectInstanceAliases.statement = {
-                    aliased_data: {
-                        statement_content: submittedFormData.statement_content,
-                    },
-                };
-            } else {
-                digitalObjectInstanceAliases.statement.aliased_data.statement_content =
-                    submittedFormData.statement_content;
-            }
+            digitalObjectInstanceAliases.statement = {
+                ...digitalObjectInstanceAliases.statement,
+                aliased_data: {
+                    statement_content: submittedFormData.statement_content,
+                },
+            };
         }
 
         // files do not respect json.stringify
-        const fileJsonObjects =
-            submittedFormData.content.node_value?.map(
-                (file: PossiblyNewFile) => {
-                    if (!file?.file) {
-                        return file;
-                    } else {
-                        return {
-                            name: file.name?.replace(/ /g, "_"),
-                            lastModified: file.lastModified,
-                            size: file.size,
-                            type: file.type,
-                            url: null,
-                            file_id: null,
-                            content: URL.createObjectURL(file?.file),
-                            altText: "Replaceable alt text",
-                        };
-                    }
-                },
-            ) ?? [];
-
-        if (!digitalObjectInstanceAliases.content) {
-            digitalObjectInstanceAliases.content = {
-                aliased_data: {
-                    content: {
-                        node_value: [...fileJsonObjects],
-                    } as unknown as FileListValue[],
-                },
+        const fileJsonObjects = (contentFiles ?? []).map((file) => {
+            if (!file.file) {
+                return file;
+            }
+            return {
+                name: file.name.replace(/ /g, "_"),
+                lastModified: file.lastModified,
+                size: file.size,
+                type: file.type,
+                url: null,
+                file_id: null,
+                content: URL.createObjectURL(file.file),
+                altText: "Replaceable alt text",
             };
-        } else {
-            digitalObjectInstanceAliases.content.aliased_data.content = {
-                node_value: [...fileJsonObjects],
-            } as unknown as FileListValue[];
-        }
+        });
 
-        // this fork was requested because the multipartjson parser is unstable
-        // if files go one way, if no files go the traditional way
-        if (submittedFormData.content.node_value?.length) {
+        digitalObjectInstanceAliases.content = {
+            ...digitalObjectInstanceAliases.content,
+            aliased_data: {
+                content: {
+                    node_value: fileJsonObjects,
+                } as unknown as FileListAliasedNodeData,
+            },
+        };
+
+        const hasNewFiles = (contentFiles ?? []).some(
+            (file) => file.file instanceof File,
+        );
+        if (hasNewFiles) {
             if (digitalObjectResource.value) {
                 digitalObjectResource.value.aliased_data = {
                     ...digitalObjectInstanceAliases,
@@ -219,7 +183,7 @@ async function save(e: FormSubmitEvent) {
             const formDataForDigitalObject = await createFormDataForFileUpload(
                 digitalObjectResource as Ref<DigitalObjectInstance>,
                 digitalObjectInstanceAliases,
-                submittedFormData,
+                { ...submittedFormData, content: contentFiles },
             );
             if (digitalObjectResource.value?.resourceinstanceid) {
                 await updateLingoResourceFromForm(
@@ -253,7 +217,7 @@ async function save(e: FormSubmitEvent) {
                     digitalObjectInstanceAliases,
                 );
                 digitalObjectResource.value = digitalObject;
-                addDigitalObjectToConceptImageCollection(
+                await addDigitalObjectToConceptImageCollection(
                     digitalObject,
                     props.graphSlug,
                     props.nodegroupAlias,
@@ -262,20 +226,17 @@ async function save(e: FormSubmitEvent) {
             }
         }
 
+        refreshReportSection!(props.componentName);
+
         nextTick(() => {
-            const openConceptImagesEditor = new CustomEvent(
-                "openConceptImagesEditor",
-                {
-                    detail: {
-                        resourceInstanceId:
-                            digitalObjectResource.value?.resourceinstanceid,
-                    },
-                },
+            targetDigitalObjectResourceInstanceId.value =
+                digitalObjectResource.value?.resourceinstanceid;
+            getDigitalObjectInstance(
+                targetDigitalObjectResourceInstanceId.value,
             );
-            document.dispatchEvent(openConceptImagesEditor);
         });
 
-        refreshReportSection!(props.componentName);
+        closeEditor!();
     } catch (error) {
         toast.add({
             severity: ERROR,
@@ -290,20 +251,9 @@ async function save(e: FormSubmitEvent) {
 }
 
 function resetForm() {
+    targetDigitalObjectResourceInstanceId.value =
+        digitalObjectResource?.value?.resourceinstanceid;
     openEditor!(props.componentName);
-
-    nextTick(() => {
-        const openConceptImagesEditor = new CustomEvent(
-            "openConceptImagesEditor",
-            {
-                detail: {
-                    resourceInstanceId:
-                        digitalObjectResource?.value?.resourceinstanceid,
-                },
-            },
-        );
-        document.dispatchEvent(openConceptImagesEditor);
-    });
 }
 </script>
 
@@ -331,37 +281,41 @@ function resetForm() {
                 @submit="save"
                 @reset="resetForm"
             >
-                <GenericWidget
-                    node-alias="name_content"
-                    graph-slug="digital_object_system"
-                    :mode="EDIT"
-                    :aliased-node-data="
-                        digitalObjectResource?.aliased_data.name?.aliased_data
-                            .name_content
-                    "
-                    class="widget-container column"
-                />
-                <GenericWidget
-                    node-alias="statement_content"
-                    graph-slug="digital_object_system"
-                    :mode="EDIT"
-                    :aliased-node-data="
-                        digitalObjectResource?.aliased_data.statement
-                            ?.aliased_data.statement_content
-                    "
-                    class="widget-container column"
-                />
-                <GenericWidget
-                    node-alias="content"
-                    graph-slug="digital_object_system"
-                    :aliased-node-data="
-                        digitalObjectResource?.aliased_data?.content
-                            ?.aliased_data.content
-                    "
-                    :mode="EDIT"
-                    :should-show-label="false"
-                    class="widget-container column"
-                />
+                <div class="widget-container column">
+                    <GenericWidget
+                        node-alias="name_content"
+                        graph-slug="digital_object_system"
+                        :mode="EDIT"
+                        :aliased-node-data="
+                            digitalObjectResource?.aliased_data.name
+                                ?.aliased_data.name_content ?? null
+                        "
+                    />
+                </div>
+                <div class="widget-container column">
+                    <GenericWidget
+                        node-alias="statement_content"
+                        graph-slug="digital_object_system"
+                        :mode="EDIT"
+                        :aliased-node-data="
+                            digitalObjectResource?.aliased_data.statement
+                                ?.aliased_data.statement_content ?? null
+                        "
+                        :render-context="MULTILINE_RENDER_CONTEXT"
+                    />
+                </div>
+                <div class="widget-container column">
+                    <GenericWidget
+                        node-alias="content"
+                        graph-slug="digital_object_system"
+                        :aliased-node-data="
+                            digitalObjectResource?.aliased_data?.content
+                                ?.aliased_data.content ?? null
+                        "
+                        :mode="EDIT"
+                        :should-show-label="false"
+                    />
+                </div>
             </Form>
         </div>
     </div>

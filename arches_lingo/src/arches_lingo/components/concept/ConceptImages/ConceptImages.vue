@@ -9,7 +9,7 @@ import ConceptImagesViewer from "@/arches_lingo/components/concept/ConceptImages
 
 import { EDIT, VIEW } from "@/arches_lingo/constants.ts";
 
-import { fetchTileData } from "@/arches_component_lab/generics/GenericCard/api.ts";
+import { fetchTileData } from "@/arches_vue_components/generics/GenericCard/api.ts";
 import { useResourceStore } from "@/arches_lingo/composables/useResourceStore.ts";
 
 import type { ConceptImages, DataComponentMode } from "@/arches_lingo/types.ts";
@@ -56,13 +56,18 @@ watch(
 
 onMounted(async () => {
     if (shouldCreateNewTile) {
-        const blankTileData = await fetchTileData(
-            props.graphSlug,
-            props.nodegroupAlias,
-        );
-        tileData.value = blankTileData as unknown as ConceptImages;
-        isLoading.value = false;
-        if (props.mode === EDIT) emit("update:isEditorLoading", false);
+        try {
+            const blankTileData = await fetchTileData(
+                props.graphSlug,
+                props.nodegroupAlias,
+            );
+            tileData.value = blankTileData as unknown as ConceptImages;
+        } catch (error) {
+            configurationError.value = error;
+        } finally {
+            isLoading.value = false;
+            if (props.mode === EDIT) emit("update:isEditorLoading", false);
+        }
     } else if (!props.resourceInstanceId) {
         isLoading.value = false;
         if (props.mode === EDIT) emit("update:isEditorLoading", false);

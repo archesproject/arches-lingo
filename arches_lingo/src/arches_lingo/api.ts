@@ -2,7 +2,7 @@ import arches from "arches";
 import Cookies from "js-cookie";
 import { generateArchesURL } from "@/arches/utils/generate-arches-url.ts";
 
-import type { Language } from "@/arches_component_lab/types";
+import type { Language } from "@/arches_vue_components/types";
 import type {
     AdvancedSearchQuery,
     AdvancedSearchResponse,
@@ -168,6 +168,7 @@ export const fetchSources = async (
     search: string = "",
     limit: number = 25,
     offset: number = 0,
+    resourceIds?: string[],
 ): Promise<PaginatedResourceListResponse> => {
     const params = new URLSearchParams({
         limit: String(limit),
@@ -175,6 +176,9 @@ export const fetchSources = async (
     });
     if (search) {
         params.set("search", search);
+    }
+    if (resourceIds?.length) {
+        resourceIds.forEach((id) => params.append("ids", id));
     }
     const response = await fetch(
         `${generateArchesURL("arches_lingo:api-lingo-sources")}?${params}`,
@@ -188,6 +192,7 @@ export const fetchContributors = async (
     search: string = "",
     limit: number = 25,
     offset: number = 0,
+    resourceIds?: string[],
 ): Promise<PaginatedResourceListResponse> => {
     const params = new URLSearchParams({
         limit: String(limit),
@@ -195,6 +200,9 @@ export const fetchContributors = async (
     });
     if (search) {
         params.set("search", search);
+    }
+    if (resourceIds?.length) {
+        resourceIds.forEach((id) => params.append("ids", id));
     }
     const response = await fetch(
         `${generateArchesURL("arches_lingo:api-lingo-contributors")}?${params}`,
@@ -326,6 +334,68 @@ export const retireConcept = async (
     });
     const fullUrl = strategy ? `${url}?strategy=${strategy}` : url;
     const response = await fetch(fullUrl, {
+        method: "POST",
+        headers: { "X-CSRFTOKEN": getToken() },
+    });
+    if (!response.ok) {
+        const parsed = await response.json();
+        throw new Error(parsed.message || response.statusText);
+    }
+};
+
+export const unretireConcept = async (
+    conceptId: string,
+    cascade: boolean,
+): Promise<void> => {
+    const url = generateArchesURL("arches_lingo:api-concept-unretire", {
+        pk: conceptId,
+    });
+    const fullUrl = cascade ? `${url}?cascade=true` : url;
+    const response = await fetch(fullUrl, {
+        method: "POST",
+        headers: { "X-CSRFTOKEN": getToken() },
+    });
+    if (!response.ok) {
+        const parsed = await response.json();
+        throw new Error(parsed.message || response.statusText);
+    }
+};
+
+export const unretireSchemeConcepts = async (
+    schemeId: string,
+): Promise<void> => {
+    const url = generateArchesURL("arches_lingo:api-scheme-unretire-concepts", {
+        pk: schemeId,
+    });
+    const response = await fetch(url, {
+        method: "POST",
+        headers: { "X-CSRFTOKEN": getToken() },
+    });
+    if (!response.ok) {
+        const parsed = await response.json();
+        throw new Error(parsed.message || response.statusText);
+    }
+};
+
+export const lockScheme = async (schemeId: string): Promise<void> => {
+    const url = generateArchesURL("arches_lingo:api-scheme-lock", {
+        pk: schemeId,
+    });
+    const response = await fetch(url, {
+        method: "POST",
+        headers: { "X-CSRFTOKEN": getToken() },
+    });
+    if (!response.ok) {
+        const parsed = await response.json();
+        throw new Error(parsed.message || response.statusText);
+    }
+};
+
+export const unlockScheme = async (schemeId: string): Promise<void> => {
+    const url = generateArchesURL("arches_lingo:api-scheme-unlock", {
+        pk: schemeId,
+    });
+    const response = await fetch(url, {
         method: "POST",
         headers: { "X-CSRFTOKEN": getToken() },
     });
@@ -585,6 +655,23 @@ export const fetchConcepts = async () => {
     return parsed;
 };
 
+export const fetchConceptChildren = async (conceptId: string) => {
+    const response = await fetch(arches.urls.api_concept_children(conceptId));
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed.children;
+};
+
+export const fetchConceptAncestorPaths = async (conceptId: string) => {
+    const url = generateArchesURL("arches_lingo:api-concept-ancestors", {
+        concept_id: conceptId,
+    });
+    const response = await fetch(url);
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed.paths;
+};
+
 export const fetchLifecycleStates = async (): Promise<LifecycleState[]> => {
     const response = await fetch(
         generateArchesURL("arches_lingo:api-lingo-lifecycle-states"),
@@ -637,7 +724,9 @@ export const importThesaurus = async (file: File, overwriteOption: string) => {
             }
             throw new Error(parsed.message);
         } catch (error) {
-            throw new Error((error as Error).message || response.statusText);
+            throw new Error((error as Error).message || response.statusText, {
+                cause: error,
+            });
         }
     }
 };
@@ -669,7 +758,9 @@ export const exportThesaurus = async (
         }
         throw new Error(parsed.message || parsed.data?.message);
     } catch (error) {
-        throw new Error((error as Error).message || response.statusText);
+        throw new Error((error as Error).message || response.statusText, {
+            cause: error,
+        });
     }
 };
 
@@ -917,6 +1008,19 @@ export const resolveConceptIdentifier = async (
     return parsedResponseBody;
 };
 
+export const resolveConceptURI = async (
+    uri: string,
+): Promise<{ resourceinstanceid: string } | null> => {
+    const url = generateArchesURL("arches_lingo:api-lingo-concept-uri-resolve");
+    const response = await fetch(`${url}?uri=${encodeURIComponent(uri)}`);
+    if (response.status === 404) return null;
+    const parsedResponseBody = await response.json();
+    if (!response.ok) {
+        throw new Error(parsedResponseBody.message || response.statusText);
+    }
+    return parsedResponseBody;
+};
+
 export const fetchSchemeURITemplate = async (
     schemeResourceInstanceId: string,
 ) => {
@@ -947,6 +1051,41 @@ export const upsertSchemeURITemplate = async (
         body: JSON.stringify({
             url_template: urlTemplate,
         }),
+    });
+
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
+export const fetchSchemeAttribution = async (
+    schemeResourceInstanceId: string,
+) => {
+    const url = generateArchesURL("arches_lingo:api-scheme-attribution", {
+        scheme_resource_instance_id: schemeResourceInstanceId,
+    });
+
+    const response = await fetch(url);
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
+export const upsertSchemeAttribution = async (
+    schemeResourceInstanceId: string,
+    attribution: string,
+) => {
+    const url = generateArchesURL("arches_lingo:api-scheme-attribution", {
+        scheme_resource_instance_id: schemeResourceInstanceId,
+    });
+
+    const response = await fetch(url, {
+        method: "POST",
+        headers: {
+            "X-CSRFTOKEN": getToken(),
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ attribution }),
     });
 
     const parsed = await response.json();

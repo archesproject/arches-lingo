@@ -6,15 +6,16 @@ import {
     NEW_CONCEPT,
     CONCEPT_ICON,
     GUIDE_TERM_ICON,
+    HIERARCHY_NAME_ICON,
     SCHEME_ICON,
     TOP_CONCEPT_ICON,
     CONCEPT_TYPE_NODE_ALIAS,
 } from "@/arches_lingo/constants.ts";
-import { fetchTileData } from "@/arches_component_lab/generics/GenericCard/api.ts";
+import { fetchTileData } from "@/arches_vue_components/generics/GenericCard/api.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 
 import type { TreeNode } from "primevue/treenode";
-import type { Language } from "@/arches_component_lab/types.ts";
+import type { Language } from "@/arches_vue_components/types.ts";
 import type {
     Concept,
     ConceptType,
@@ -40,9 +41,15 @@ export function getConceptIcon(
     item:
         | Concept
         | SearchResultItem
-        | { guide_term?: boolean; top_concept?: boolean },
+        | {
+              guide_term?: boolean;
+              hierarchy_name?: boolean;
+              top_concept?: boolean;
+          },
 ): string {
     if (item.guide_term) return GUIDE_TERM_ICON;
+    if ((item as { hierarchy_name?: boolean }).hierarchy_name)
+        return HIERARCHY_NAME_ICON;
     if ((item as { top_concept?: boolean }).top_concept)
         return TOP_CONCEPT_ICON;
     return CONCEPT_ICON;
@@ -114,6 +121,7 @@ export function treeFromSchemes(
     iconLabels: IconLabels,
     focusedOccurrenceKey: string | null,
     sortAscending: boolean = true,
+    hasLoadedChildren: (id: string) => boolean = () => false,
 ): TreeNode[] {
     function buildOccurrenceKey(schemeId: string, pathIds: string[]) {
         return `${schemeId}::${pathIds.join(">")}`;
@@ -130,6 +138,19 @@ export function treeFromSchemes(
                 ? item.id
                 : buildOccurrenceKey(schemeId, pathIds);
 
+        const concept = item as Concept;
+        // leaf=false tells PrimeVue Tree the node has children that haven't
+        // been loaded yet. For schemes and fully-loaded concepts use undefined
+        // (PrimeVue defaults to checking children array length).
+        let leaf: boolean | undefined;
+        if (!("top_concepts" in item)) {
+            if (concept.has_narrower && !hasLoadedChildren(concept.id)) {
+                leaf = false;
+            } else if (!concept.has_narrower && !concept.narrower?.length) {
+                leaf = true;
+            }
+        }
+
         return {
             key,
             label: getItemLabel(
@@ -144,6 +165,7 @@ export function treeFromSchemes(
             },
             icon: getItemIcon(item),
             iconLabel: getIconLabel(item, iconLabels),
+            ...(leaf !== undefined ? { leaf } : {}),
         };
     }
 
@@ -351,9 +373,10 @@ export function getStatementText(
             current.aliased_data?.statement_language?.display_value?.toLowerCase();
         const bestLang =
             bestMatch.aliased_data?.statement_language?.display_value?.toLowerCase();
-        return rankLanguage(currentLang) > rankLanguage(bestLang)
-            ? current
-            : bestMatch;
+        if (rankLanguage(currentLang) > rankLanguage(bestLang)) {
+            return current;
+        }
+        return bestMatch;
     });
 
     return best.aliased_data?.statement_content?.display_value ?? "";

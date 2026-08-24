@@ -11,11 +11,11 @@ import Select from "primevue/select";
 import Textarea from "primevue/textarea";
 
 import {
-    fetchConceptSets,
     createConceptSet,
     deleteConceptSet,
     addToConceptSet,
     removeFromConceptSet,
+    executeAdvancedSearch,
 } from "@/arches_lingo/api.ts";
 import {
     DEFAULT_ERROR_TOAST_LIFE,
@@ -24,18 +24,34 @@ import {
     SUCCESS,
 } from "@/arches_lingo/constants.ts";
 import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
+import { useConceptSetStore } from "@/arches_lingo/stores/useConceptSetStore.ts";
 
-import type { ConceptSetItem } from "@/arches_lingo/types.ts";
+import type {
+    AdvancedSearchQuery,
+    ConceptSetItem,
+} from "@/arches_lingo/types.ts";
 
 const { $gettext } = useGettext();
 const toast = useToast();
-const userStore = useUserStore();
-const { isAnonymous } = storeToRefs(userStore);
+const { isAnonymous } = storeToRefs(useUserStore());
 
-defineProps<{
-    selectedConceptIds: Set<string>;
-    activeConceptSetId: number | null;
-}>();
+const conceptSetStore = useConceptSetStore();
+const { conceptSets } = storeToRefs(conceptSetStore);
+
+const props = withDefaults(
+    defineProps<{
+        selectedConceptIds: Set<string>;
+        activeConceptSetId: number | null;
+        allResultsSelected?: boolean;
+        currentQueryForSet?: AdvancedSearchQuery | null;
+        totalResults?: number;
+    }>(),
+    {
+        allResultsSelected: false,
+        currentQueryForSet: null,
+        totalResults: 0,
+    },
+);
 
 const emit = defineEmits<{
     (event: "load-set", conceptSetId: number): void;
@@ -43,7 +59,6 @@ const emit = defineEmits<{
     (event: "concepts-removed"): void;
 }>();
 
-const conceptSets = ref<ConceptSetItem[]>([]);
 const showCreateDialog = ref(false);
 const showAddToSetDialog = ref(false);
 const newSetName = ref("");
@@ -53,8 +68,7 @@ const isLoading = ref(false);
 
 async function loadConceptSets() {
     try {
-        const result = await fetchConceptSets();
-        conceptSets.value = result.data;
+        await conceptSetStore.loadConceptSets();
         emit("sets-updated", conceptSets.value);
     } catch (error) {
         toast.add({
@@ -117,34 +131,48 @@ async function deleteSet(setItem: ConceptSetItem) {
     }
 }
 
-function handleAddToSet(selectedIds: Set<string>) {
-    if (targetSetId.value === null || selectedIds.size === 0) return;
+async function handleAddToSet(selectedIds: Set<string>) {
+    if (targetSetId.value === null) return;
+    if (!props.allResultsSelected && selectedIds.size === 0) return;
 
     isLoading.value = true;
-    addToConceptSet(targetSetId.value, Array.from(selectedIds))
-        .then((result) => {
-            showAddToSetDialog.value = false;
-            targetSetId.value = null;
-            toast.add({
-                severity: SUCCESS,
-                life: DEFAULT_TOAST_LIFE,
-                summary: $gettext("%{count} concepts added to set.", {
-                    count: String(result.added),
-                }),
-            });
-            loadConceptSets();
-        })
-        .catch((error) => {
-            toast.add({
-                severity: ERROR,
-                life: DEFAULT_ERROR_TOAST_LIFE,
-                summary: $gettext("Failed to add concepts to set."),
-                detail: error instanceof Error ? error.message : undefined,
-            });
-        })
-        .finally(() => {
-            isLoading.value = false;
+    try {
+        let conceptIdsToAdd: string[];
+        if (props.allResultsSelected && props.currentQueryForSet) {
+            const allResults = await executeAdvancedSearch(
+                props.currentQueryForSet,
+                1,
+                props.totalResults,
+            );
+            conceptIdsToAdd = allResults.data.map((item) => item.id);
+        } else {
+            conceptIdsToAdd = Array.from(selectedIds);
+        }
+
+        const result = await addToConceptSet(
+            targetSetId.value,
+            conceptIdsToAdd,
+        );
+        showAddToSetDialog.value = false;
+        targetSetId.value = null;
+        toast.add({
+            severity: SUCCESS,
+            life: DEFAULT_TOAST_LIFE,
+            summary: $gettext("%{count} concepts added to set.", {
+                count: String(result.added),
+            }),
         });
+        loadConceptSets();
+    } catch (error) {
+        toast.add({
+            severity: ERROR,
+            life: DEFAULT_ERROR_TOAST_LIFE,
+            summary: $gettext("Failed to add concepts to set."),
+            detail: error instanceof Error ? error.message : undefined,
+        });
+    } finally {
+        isLoading.value = false;
+    }
 }
 
 function loadSet(setItem: ConceptSetItem) {
@@ -200,7 +228,9 @@ watch(
                 :label="$gettext('Add to Set')"
                 icon="pi pi-plus-circle"
                 size="small"
-                :disabled="selectedConceptIds.size === 0"
+                :disabled="
+                    !props.allResultsSelected && selectedConceptIds.size === 0
+                "
                 @click="showAddToSetDialog = true"
             />
             <Button
@@ -246,7 +276,7 @@ watch(
                         class="pi pi-folder"
                         aria-hidden="true"
                     />
-                    {{ setItem.name }}
+                    <span>{{ setItem.name }}</span>
                 </div>
                 <div class="set-meta">
                     {{
@@ -323,9 +353,13 @@ watch(
         <Dialog
             v-model:visible="showAddToSetDialog"
             :header="
-                $gettext('Add %{count} concepts to set', {
-                    count: String(selectedConceptIds.size),
-                })
+                props.allResultsSelected
+                    ? $gettext('Add all %{count} results to set', {
+                          count: String(props.totalResults),
+                      })
+                    : $gettext('Add %{count} concepts to set', {
+                          count: String(selectedConceptIds.size),
+                      })
             "
             modal
             :style="{ width: '25rem' }"

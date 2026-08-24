@@ -12,6 +12,7 @@ from arches_lingo.const import (
 )
 from arches_lingo.utils.concept_lifecycle import (
     DRAFT_STATE_ID,
+    EDITING_STATE_ID,
     RETIRED_STATE_ID,
     delete_concept,
     get_all_descendant_ids,
@@ -20,6 +21,7 @@ from arches_lingo.utils.concept_lifecycle import (
     orphan_children,
     reparent_children,
     retire_concept,
+    unretire_concept,
 )
 from tests.tests import ViewTests
 
@@ -474,3 +476,128 @@ class ConceptRetireViewTests(ViewTests):
                 )
                 self.assertEqual(response.status_code, 200)
                 self.assertEqual(mock_retire.call_args.args[1], strategy)
+
+
+class UnretireConceptTests(SimpleTestCase):
+    def setUp(self):
+        self.concept = MagicMock()
+        self.concept.pk = uuid.uuid4()
+
+    @patch("arches_lingo.utils.concept_lifecycle.ResourceInstance")
+    def test_cascade_updates_retired_descendants(self, MockResourceInstance):
+        with patch(
+            "arches_lingo.utils.concept_lifecycle.get_all_descendant_ids",
+            return_value={"child-id"},
+        ):
+            unretire_concept(self.concept, cascade=True)
+        MockResourceInstance.objects.filter.return_value.update.assert_called_once_with(
+            resource_instance_lifecycle_state_id=EDITING_STATE_ID
+        )
+
+    @patch("arches_lingo.utils.concept_lifecycle.ResourceInstance")
+    def test_no_cascade_skips_descendants(self, MockResourceInstance):
+        unretire_concept(self.concept, cascade=False)
+        MockResourceInstance.objects.filter.assert_not_called()
+
+    def test_concept_is_marked_editing_after_unretire(self):
+        with patch("arches_lingo.utils.concept_lifecycle.ResourceInstance"):
+            unretire_concept(self.concept, cascade=False)
+        self.assertEqual(
+            self.concept.resource_instance_lifecycle_state_id, EDITING_STATE_ID
+        )
+        self.concept.save.assert_called_once_with(
+            update_fields=["resource_instance_lifecycle_state"]
+        )
+
+
+class ConceptUnretireViewTests(ViewTests):
+    """Tests for POST /api/lingo/concept/<pk>/unretire."""
+
+    def test_unknown_concept_returns_404(self):
+        with self.assertLogs("django.request", level="WARNING"):
+            response = self.client.post(
+                reverse("api-concept-unretire", kwargs={"pk": uuid.uuid4()})
+            )
+        self.assertEqual(response.status_code, 404)
+
+    def test_non_editor_cannot_unretire(self):
+        self.client.force_login(
+            User.objects.create_user(username="rando3", password="x")
+        )
+        response = self.client.post(
+            reverse("api-concept-unretire", kwargs={"pk": self.concepts[0].pk})
+        )
+        self.assertEqual(response.status_code, 403)
+
+    @patch("arches_lingo.views.api.concept_lifecycle.unretire_concept")
+    def test_unretire_concept_returns_200(self, mock_unretire):
+        response = self.client.post(
+            reverse("api-concept-unretire", kwargs={"pk": self.concepts[0].pk})
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(json.loads(response.content)["unretired"])
+
+    @patch("arches_lingo.views.api.concept_lifecycle.unretire_concept")
+    def test_cascade_true_is_passed_to_unretire(self, mock_unretire):
+        self.client.post(
+            reverse("api-concept-unretire", kwargs={"pk": self.concepts[0].pk}),
+            QUERY_STRING="cascade=true",
+        )
+        self.assertEqual(mock_unretire.call_args.args[1], True)
+
+    @patch("arches_lingo.views.api.concept_lifecycle.unretire_concept")
+    def test_cascade_false_by_default(self, mock_unretire):
+        self.client.post(
+            reverse("api-concept-unretire", kwargs={"pk": self.concepts[0].pk}),
+        )
+        self.assertEqual(mock_unretire.call_args.args[1], False)
+
+
+class SchemeUnretireConceptsViewTests(ViewTests):
+    """Tests for POST /api/lingo/scheme/<pk>/unretire-concepts."""
+
+    def test_unknown_scheme_returns_404(self):
+        with self.assertLogs("django.request", level="WARNING"):
+            response = self.client.post(
+                reverse("api-scheme-unretire-concepts", kwargs={"pk": uuid.uuid4()})
+            )
+        self.assertEqual(response.status_code, 404)
+
+    def test_non_editor_cannot_unretire(self):
+        self.client.force_login(
+            User.objects.create_user(username="rando4", password="x")
+        )
+        response = self.client.post(
+            reverse("api-scheme-unretire-concepts", kwargs={"pk": self.scheme.pk})
+        )
+        self.assertEqual(response.status_code, 403)
+
+    def test_retired_concepts_in_scheme_are_unretired(self):
+        retired_concept = self.concepts[0]
+        retired_concept.resource_instance_lifecycle_state_id = RETIRED_STATE_ID
+        retired_concept.save(update_fields=["resource_instance_lifecycle_state"])
+
+        response = self.client.post(
+            reverse("api-scheme-unretire-concepts", kwargs={"pk": self.scheme.pk})
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(json.loads(response.content)["unretired"])
+
+        retired_concept.refresh_from_db()
+        self.assertEqual(
+            retired_concept.resource_instance_lifecycle_state_id, EDITING_STATE_ID
+        )
+
+    def test_non_retired_concepts_are_not_affected(self):
+        active_concept = self.concepts[1]
+        active_concept.resource_instance_lifecycle_state_id = EDITING_STATE_ID
+        active_concept.save(update_fields=["resource_instance_lifecycle_state"])
+
+        self.client.post(
+            reverse("api-scheme-unretire-concepts", kwargs={"pk": self.scheme.pk})
+        )
+
+        active_concept.refresh_from_db()
+        self.assertEqual(
+            active_concept.resource_instance_lifecycle_state_id, EDITING_STATE_ID
+        )

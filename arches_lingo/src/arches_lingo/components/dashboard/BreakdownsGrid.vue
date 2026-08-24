@@ -1,91 +1,174 @@
 <script setup lang="ts">
+import { storeToRefs } from "pinia";
 import { useGettext } from "vue3-gettext";
+
+import Column from "primevue/column";
+import DataTable from "primevue/datatable";
+import Skeleton from "primevue/skeleton";
+import Tag from "primevue/tag";
 
 import type { DashboardStats } from "@/arches_lingo/types/dashboard.ts";
 
+import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
+
 const { $gettext } = useGettext();
+const { selectedLanguage } = storeToRefs(useLanguageStore());
 
 defineProps<{
     stats: DashboardStats | null;
+    isLoading: boolean;
 }>();
 </script>
 
 <template>
-    <div
-        v-if="stats"
-        class="breakdowns-grid-container"
-    >
+    <div class="breakdowns-grid-container">
         <div class="data-section-header">
             <h2>{{ $gettext("Label Metrics") }}</h2>
         </div>
         <div class="breakdowns-grid">
-            <section
-                v-if="
-                    stats.concepts_by_type && stats.concepts_by_type.length > 0
-                "
-                class="dashboard-section"
-            >
-                <div class="section-header">
-                    <h2>{{ $gettext("Concepts by Type") }}</h2>
-                </div>
-                <div class="type-breakdown">
-                    <div
-                        v-for="item in stats.concepts_by_type"
-                        :key="item.uri ?? 'untyped'"
-                        class="type-chip"
-                    >
-                        <span class="type-label">{{ item.label }}</span>
-                        <span class="type-count">{{
-                            item.count.toLocaleString()
-                        }}</span>
+            <template v-if="isLoading">
+                <section class="dashboard-section">
+                    <div class="section-header">
+                        <Skeleton
+                            width="9rem"
+                            height="0.75rem"
+                        />
                     </div>
-                </div>
-            </section>
+                    <div class="type-breakdown">
+                        <Skeleton
+                            v-for="n in 3"
+                            :key="n"
+                            width="9rem"
+                            height="5.5rem"
+                        />
+                    </div>
+                </section>
+                <section class="dashboard-section">
+                    <div class="section-header">
+                        <Skeleton
+                            width="9rem"
+                            height="0.75rem"
+                        />
+                    </div>
+                    <div class="type-breakdown">
+                        <Skeleton
+                            v-for="n in 4"
+                            :key="n"
+                            width="9rem"
+                            height="5.5rem"
+                        />
+                    </div>
+                </section>
+                <section class="dashboard-section language-section">
+                    <div class="section-header">
+                        <Skeleton
+                            width="12rem"
+                            height="1rem"
+                        />
+                    </div>
+                    <Skeleton
+                        v-for="n in 6"
+                        :key="n"
+                        style="margin-bottom: 0.5rem"
+                        height="2.25rem"
+                    />
+                </section>
+            </template>
+            <template v-else-if="stats">
+                <section
+                    v-if="
+                        stats.concepts_by_type &&
+                        stats.concepts_by_type.length > 0
+                    "
+                    class="dashboard-section"
+                >
+                    <div class="section-header">
+                        <h2>{{ $gettext("Concepts by Type") }}</h2>
+                    </div>
+                    <div class="type-breakdown">
+                        <div
+                            v-for="item in stats.concepts_by_type"
+                            :key="item.uri ?? 'untyped'"
+                            class="type-chip"
+                        >
+                            <span class="type-label">{{ item.label }}</span>
+                            <span class="type-count">{{
+                                item.count.toLocaleString(selectedLanguage.code)
+                            }}</span>
+                        </div>
+                    </div>
+                </section>
 
-            <section
-                v-if="stats.labels_by_type && stats.labels_by_type.length > 0"
-                class="dashboard-section"
-            >
-                <div class="section-header">
-                    <h2>{{ $gettext("Labels by Type") }}</h2>
-                </div>
-                <div class="type-breakdown">
-                    <div
-                        v-for="item in stats.labels_by_type"
-                        :key="item.uri"
-                        class="type-chip"
-                    >
-                        <span class="type-label">{{ item.label }}</span>
-                        <span class="type-count">{{
-                            item.count.toLocaleString()
-                        }}</span>
+                <section
+                    v-if="
+                        stats.labels_by_type && stats.labels_by_type.length > 0
+                    "
+                    class="dashboard-section"
+                >
+                    <div class="section-header">
+                        <h2>{{ $gettext("Labels by Type") }}</h2>
                     </div>
-                </div>
-            </section>
+                    <div class="type-breakdown">
+                        <div
+                            v-for="item in stats.labels_by_type"
+                            :key="item.uri"
+                            class="type-chip"
+                        >
+                            <span class="type-label">{{ item.label }}</span>
+                            <span class="type-count">{{
+                                item.count.toLocaleString(selectedLanguage.code)
+                            }}</span>
+                        </div>
+                    </div>
+                </section>
 
-            <section
-                v-if="
-                    stats.labels_by_language &&
-                    stats.labels_by_language.length > 0
-                "
-                class="dashboard-section"
-            >
-                <div class="section-header">
-                    <h2>{{ $gettext("Labels by Language") }}</h2>
-                </div>
-                <div class="type-breakdown">
-                    <div
-                        v-for="item in stats.labels_by_language"
-                        :key="item.code"
-                        class="type-chip"
-                    >
-                        <span class="type-label">{{ item.language }}</span>
-                        <span class="type-count">{{
-                            item.count.toLocaleString()
-                        }}</span>
+                <section
+                    v-if="
+                        stats.labels_by_language &&
+                        stats.labels_by_language.length > 0
+                    "
+                    class="dashboard-section language-section"
+                >
+                    <div class="section-header">
+                        <h2>{{ $gettext("Labels by Language") }}</h2>
                     </div>
-                </div>
-            </section>
+                    <DataTable
+                        :value="stats.labels_by_language"
+                        striped-rows
+                        size="small"
+                        scrollable
+                        scroll-height="20rem"
+                    >
+                        <Column
+                            field="language"
+                            :header="$gettext('Language')"
+                        />
+                        <Column
+                            :header="$gettext('Code')"
+                            style="width: 16rem"
+                        >
+                            <template #body="slotProps">
+                                <Tag
+                                    :value="slotProps.data.code"
+                                    severity="secondary"
+                                />
+                            </template>
+                        </Column>
+                        <Column
+                            :header="$gettext('Labels')"
+                            style="width: 6rem"
+                        >
+                            <template #body="slotProps">
+                                {{
+                                    slotProps.data.count.toLocaleString(
+                                        selectedLanguage.code,
+                                    )
+                                }}
+                            </template>
+                        </Column>
+                    </DataTable>
+                </section>
+            </template>
         </div>
     </div>
 </template>
@@ -169,5 +252,36 @@ defineProps<{
     .breakdowns-grid {
         grid-template-columns: 1fr;
     }
+}
+
+.language-section {
+    grid-column: 1 / -1;
+    gap: 0.75rem;
+}
+
+.language-section .section-header {
+    border-bottom: 0.0625rem solid var(--p-highlight-focus-background);
+    padding-bottom: 0.5rem;
+}
+
+.language-section .section-header h2 {
+    font-size: var(--p-lingo-font-size-medium);
+    color: var(--p-neutral-500);
+}
+
+:deep(.p-datatable-tbody > tr > td) {
+    font-size: var(--p-lingo-font-size-smallnormal);
+    padding: 0.4rem 0.75rem;
+}
+
+:deep(.p-datatable-column-title) {
+    font-weight: var(--p-lingo-font-weight-normal);
+    color: var(--p-neutral-500);
+    font-size: var(--p-lingo-font-size-small);
+}
+
+:deep(.p-tag) {
+    border-radius: 0.125rem;
+    font-size: var(--p-lingo-font-size-xsmall);
 }
 </style>

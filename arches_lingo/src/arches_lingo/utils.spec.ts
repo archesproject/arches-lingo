@@ -10,7 +10,7 @@ import {
 } from "@/arches_lingo/utils.ts";
 import schemesFixture from "./fixtures/test_scheme.json";
 
-import type { Language } from "@/arches_component_lab/types.ts";
+import type { Language } from "@/arches_vue_components/types.ts";
 import type { IconLabels, Scheme } from "@/arches_lingo/types";
 
 const ENGLISH: Language = {

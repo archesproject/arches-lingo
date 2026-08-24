@@ -16,7 +16,7 @@ import { Form } from "@primevue/forms";
 
 import Skeleton from "primevue/skeleton";
 
-import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
+import GenericWidget from "@/arches_vue_components/generics/GenericWidget/GenericWidget.vue";
 
 import { createLingoResource, upsertLingoTile } from "@/arches_lingo/api.ts";
 
@@ -47,8 +47,7 @@ const componentEditorFormRef = inject<Ref<Component | null>>(
     "componentEditorFormRef",
 );
 
-const openEditor =
-    inject<(componentName: string, tileid?: string) => void>("openEditor");
+const closeEditor = inject<() => void>("closeEditor");
 const refreshReportSection = inject<(componentName: string) => void>(
     "refreshReportSection",
 );
@@ -84,8 +83,6 @@ async function save(e: FormSubmitEvent) {
             },
         };
 
-        let updatedTileId;
-
         if (!props.resourceInstanceId) {
             const updatedScheme = await createLingoResource(
                 {
@@ -102,9 +99,6 @@ async function save(e: FormSubmitEvent) {
                 name: props.graphSlug,
                 params: { id: updatedScheme.resourceinstanceid },
             });
-
-            updatedTileId =
-                updatedScheme.aliased_data[props.nodegroupAlias].tileid;
         } else {
             if (props.tileData?.aliased_data.right_statement?.tileid) {
                 (
@@ -112,22 +106,16 @@ async function save(e: FormSubmitEvent) {
                 ).tileid = props.tileData.aliased_data.right_statement.tileid;
             }
 
-            const updatedTile = await upsertLingoTile(
-                props.graphSlug,
-                props.nodegroupAlias,
-                {
-                    resourceinstance: props.resourceInstanceId,
-                    aliased_data: { ...expectedTileShape },
-                    tileid: props.tileId,
-                },
-            );
-
-            updatedTileId = updatedTile.tileid;
+            await upsertLingoTile(props.graphSlug, props.nodegroupAlias, {
+                resourceinstance: props.resourceInstanceId,
+                aliased_data: { ...expectedTileShape },
+                tileid: props.tileId,
+            });
         }
 
-        openEditor!(props.componentName, updatedTileId);
-
         refreshReportSection!(props.componentName);
+
+        closeEditor!();
     } catch (error) {
         toast.add({
             severity: ERROR,
@@ -170,7 +158,7 @@ async function save(e: FormSubmitEvent) {
                         :graph-slug="props.graphSlug"
                         :aliased-node-data="
                             props.tileData?.aliased_data.right_statement
-                                ?.aliased_data.right_statement_content
+                                ?.aliased_data.right_statement_content ?? null
                         "
                         :mode="EDIT"
                     />
@@ -181,7 +169,7 @@ async function save(e: FormSubmitEvent) {
                         :graph-slug="props.graphSlug"
                         :aliased-node-data="
                             props.tileData?.aliased_data.right_statement
-                                ?.aliased_data.right_statement_type
+                                ?.aliased_data.right_statement_type ?? null
                         "
                         :mode="EDIT"
                     />
@@ -192,7 +180,7 @@ async function save(e: FormSubmitEvent) {
                         :graph-slug="props.graphSlug"
                         :aliased-node-data="
                             props.tileData?.aliased_data.right_statement
-                                ?.aliased_data.right_statement_language
+                                ?.aliased_data.right_statement_language ?? null
                         "
                         :mode="EDIT"
                     />
@@ -202,7 +190,7 @@ async function save(e: FormSubmitEvent) {
                         node-alias="right_holder"
                         :graph-slug="props.graphSlug"
                         :aliased-node-data="
-                            props.tileData?.aliased_data.right_holder
+                            props.tileData?.aliased_data.right_holder ?? null
                         "
                         :mode="EDIT"
                     />
@@ -212,7 +200,7 @@ async function save(e: FormSubmitEvent) {
                         node-alias="right_type"
                         :graph-slug="props.graphSlug"
                         :aliased-node-data="
-                            props.tileData?.aliased_data.right_type
+                            props.tileData?.aliased_data.right_type ?? null
                         "
                         :mode="EDIT"
                     />

@@ -9,7 +9,7 @@ import { Form } from "@primevue/forms";
 
 import Skeleton from "primevue/skeleton";
 
-import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
+import GenericWidget from "@/arches_vue_components/generics/GenericWidget/GenericWidget.vue";
 
 import { createLingoResource, upsertLingoTile } from "@/arches_lingo/api.ts";
 
@@ -41,8 +41,7 @@ const componentEditorFormRef = inject<Ref<Component | null>>(
     "componentEditorFormRef",
 );
 
-const openEditor =
-    inject<(componentName: string, tileid?: string) => void>("openEditor");
+const closeEditor = inject<() => void>("closeEditor");
 const refreshReportSection = inject<(componentName: string) => void>(
     "refreshReportSection",
 );
@@ -75,8 +74,6 @@ async function save(e: FormSubmitEvent) {
             ),
         };
 
-        let updatedTileId;
-
         if (!props.resourceInstanceId) {
             const updatedScheme = await createLingoResource(
                 {
@@ -93,27 +90,18 @@ async function save(e: FormSubmitEvent) {
                 name: props.graphSlug,
                 params: { id: updatedScheme.resourceinstanceid },
             });
-
-            updatedTileId =
-                updatedScheme.aliased_data[props.nodegroupAlias][0].tileid;
         } else {
-            const updatedTile = await upsertLingoTile(
-                props.graphSlug,
-                props.nodegroupAlias,
-                {
-                    resourceinstance: props.resourceInstanceId,
-                    aliased_data: { ...updatedTileData },
-                    tileid: props.tileId,
-                },
-            );
-
-            updatedTileId = updatedTile.tileid;
+            await upsertLingoTile(props.graphSlug, props.nodegroupAlias, {
+                resourceinstance: props.resourceInstanceId,
+                aliased_data: { ...updatedTileData },
+                tileid: props.tileId,
+            });
         }
-
-        openEditor!(props.componentName, updatedTileId);
 
         refreshReportSection!(props.componentName);
         refreshSchemeHierarchy!();
+
+        closeEditor!();
     } catch (error) {
         toast.add({
             severity: ERROR,
@@ -156,7 +144,8 @@ async function save(e: FormSubmitEvent) {
                         node-alias="appellative_status_ascribed_name_content"
                         :aliased-node-data="
                             props.tileData?.aliased_data
-                                .appellative_status_ascribed_name_content
+                                .appellative_status_ascribed_name_content ??
+                            null
                         "
                         :mode="EDIT"
                     />
@@ -167,7 +156,7 @@ async function save(e: FormSubmitEvent) {
                         node-alias="appellative_status_ascribed_relation"
                         :aliased-node-data="
                             props.tileData?.aliased_data
-                                .appellative_status_ascribed_relation
+                                .appellative_status_ascribed_relation ?? null
                         "
                         :mode="EDIT"
                     />
@@ -178,7 +167,8 @@ async function save(e: FormSubmitEvent) {
                         node-alias="appellative_status_ascribed_name_language"
                         :aliased-node-data="
                             props.tileData?.aliased_data
-                                .appellative_status_ascribed_name_language
+                                .appellative_status_ascribed_name_language ??
+                            null
                         "
                         :mode="EDIT"
                     />
@@ -189,7 +179,8 @@ async function save(e: FormSubmitEvent) {
                         node-alias="appellative_status_data_assignment_actor"
                         :aliased-node-data="
                             props.tileData?.aliased_data
-                                ?.appellative_status_data_assignment_actor
+                                ?.appellative_status_data_assignment_actor ??
+                            null
                         "
                         :mode="EDIT"
                     />
@@ -200,7 +191,8 @@ async function save(e: FormSubmitEvent) {
                         node-alias="appellative_status_data_assignment_object_used"
                         :aliased-node-data="
                             props.tileData?.aliased_data
-                                ?.appellative_status_data_assignment_object_used
+                                ?.appellative_status_data_assignment_object_used ??
+                            null
                         "
                         :mode="EDIT"
                     />

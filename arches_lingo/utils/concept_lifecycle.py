@@ -11,7 +11,19 @@ from arches_lingo.const import (
 
 
 DRAFT_STATE_ID = uuid.UUID("0e7f8c6d-1f7b-4c2a-9a0c-2b9e0d6c8f11")
+EDITING_STATE_ID = uuid.UUID("b3a6a0d2-2b5c-4c2f-9d6c-0c2a5b7d1e8f")
+PUBLISHED_STATE_ID = uuid.UUID("6b0f1a7b-5b3d-4b2a-8a5b-7c3a1b0f2d9e")
 RETIRED_STATE_ID = uuid.UUID("9d2e1c0b-7a6b-4b3d-8c1a-0f2d9e6b0a7c")
+LOCKED_STATE_ID = uuid.UUID("c9f7e3d1-2a5b-4c8d-9e6f-3b0a1d2e4f7c")
+
+# Lifecycle states whose URIs we treat as publicly resolvable to anonymous consumers.
+# Retired resources stay resolvable (marked owl:deprecated in the serialized output) so
+# that previously published URIs do not break. These states do not strictly guarantee
+# prior publication: a resource can be retired or locked directly from draft, in which
+# case it is anonymously resolvable here as well.
+PUBLICLY_DEREFERENCEABLE_STATE_IDS = frozenset(
+    {PUBLISHED_STATE_ID, LOCKED_STATE_ID, RETIRED_STATE_ID}
+)
 
 STRATEGY_REPARENT = "reparent"
 STRATEGY_DELETE_CHILDREN = "delete_children"
@@ -225,4 +237,16 @@ def retire_concept(concept: ResourceInstance, strategy: str | None):
         orphan_children(concept_id)
 
     concept.resource_instance_lifecycle_state_id = RETIRED_STATE_ID
+    concept.save(update_fields=["resource_instance_lifecycle_state"])
+
+
+def unretire_concept(concept: ResourceInstance, cascade: bool):
+    if cascade:
+        descendant_ids = get_all_descendant_ids(str(concept.pk))
+        ResourceInstance.objects.filter(
+            pk__in=descendant_ids,
+            resource_instance_lifecycle_state_id=RETIRED_STATE_ID,
+        ).update(resource_instance_lifecycle_state_id=EDITING_STATE_ID)
+
+    concept.resource_instance_lifecycle_state_id = EDITING_STATE_ID
     concept.save(update_fields=["resource_instance_lifecycle_state"])

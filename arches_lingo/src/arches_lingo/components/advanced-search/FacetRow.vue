@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { computed, inject, ref, watch } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import Button from "primevue/button";
@@ -9,19 +9,26 @@ import ToggleButton from "primevue/togglebutton";
 
 import { storeToRefs } from "pinia";
 
-import { fetchConceptResources } from "@/arches_lingo/api.ts";
+import {
+    fetchConceptResources,
+    fetchContributors,
+    fetchSources,
+} from "@/arches_lingo/api.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
+import { getParentLabels } from "@/arches_lingo/utils.ts";
 
-import type { Label } from "@/arches_controlled_lists/types.ts";
+import type { VirtualScrollerLazyEvent } from "primevue/virtualscroller";
 
 import type {
     AdvancedSearchOptions,
     ConceptSetItem,
     FacetType,
+    ImageAttribute,
     MatchMode,
     SchemeOption,
     SearchCondition,
+    SearchResultItem,
 } from "@/arches_lingo/types.ts";
 
 const { $gettext } = useGettext();
@@ -59,7 +66,19 @@ const facetTypes = computed<{ label: string; value: FacetType }[]>(() => [
     { label: $gettext("Identifier"), value: "identifier" },
     { label: $gettext("Lifecycle State"), value: "lifecycle_state" },
     { label: $gettext("Concept Set"), value: "concept_set" },
+    { label: $gettext("Source"), value: "attribution_source" },
+    { label: $gettext("Contributor"), value: "attribution_contributor" },
+    { label: $gettext("Related Image"), value: "related_image" },
 ]);
+
+const imageAttributes = computed<{ label: string; value: ImageAttribute }[]>(
+    () => [
+        { label: $gettext("Has an image"), value: "has_image" },
+        { label: $gettext("Image file name"), value: "file_name" },
+        { label: $gettext("Image title"), value: "title" },
+        { label: $gettext("Image description"), value: "description" },
+    ],
+);
 
 const matchModes = computed<{ label: string; value: MatchMode }[]>(() => [
     { label: $gettext("Contains"), value: "contains" },
@@ -94,44 +113,228 @@ const selectConceptTypePlaceholder = computed(() =>
 );
 const removeConditionLabel = computed(() => $gettext("Remove condition"));
 
-const conceptSearchResults = ref<
+const conceptItemSize = 36;
+const conceptOptions = ref<SearchResultItem[]>([]);
+const isLoadingConcepts = ref(false);
+const conceptSearchPage = ref(0);
+const conceptSearchTotalCount = ref(0);
+const preloadedConceptOptions = ref<SearchResultItem[]>([]);
+let conceptFilterDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+let activeConceptRequestId = 0;
+
+const sourceSearchResults = ref<
     { display_value: string; resource_id: string }[]
 >([]);
-const isLoadingConcepts = ref(false);
-let conceptSearchTimeout: ReturnType<typeof setTimeout> | null = null;
+const isLoadingSources = ref(false);
+let sourceSearchTimeout: ReturnType<typeof setTimeout> | null = null;
+
+const contributorSearchResults = ref<
+    { display_value: string; resource_id: string }[]
+>([]);
+const isLoadingContributors = ref(false);
+let contributorSearchTimeout: ReturnType<typeof setTimeout> | null = null;
 
 function onConceptFilter(event: { value: string }) {
-    if (conceptSearchTimeout) {
-        clearTimeout(conceptSearchTimeout);
+    conceptOptions.value = preloadedConceptOptions.value;
+    if (conceptFilterDebounceTimer) {
+        clearTimeout(conceptFilterDebounceTimer);
     }
-    conceptSearchTimeout = setTimeout(async () => {
-        await loadConcepts(event.value);
+    conceptFilterDebounceTimer = setTimeout(() => {
+        loadConceptPage(1, event.value);
+    }, 300);
+}
+
+function mergeSelectedIntoOptions(
+    fetchedOptions: SearchResultItem[],
+): SearchResultItem[] {
+    const fetchedIds = new Set(fetchedOptions.map((o) => o.id));
+    const selectedId =
+        typeof props.condition.value === "string" ? props.condition.value : "";
+    if (!selectedId) return fetchedOptions;
+    const alreadySelected = preloadedConceptOptions.value.find(
+        (o) => o.id === selectedId && !fetchedIds.has(o.id),
+    );
+    return alreadySelected
+        ? [alreadySelected, ...fetchedOptions]
+        : fetchedOptions;
+}
+
+async function loadConceptPage(page: number, filterTerm?: string) {
+    const requestId = ++activeConceptRequestId;
+    try {
+        isLoadingConcepts.value = true;
+        const parsedResponse = await fetchConceptResources(
+            filterTerm || "",
+            conceptItemSize,
+            page,
+        );
+        if (requestId !== activeConceptRequestId) return;
+        parsedResponse.data.forEach((option: SearchResultItem) => {
+            option.label = getItemLabel(
+                option,
+                selectedLanguage.value.code,
+                systemLanguage.value.code,
+            ).value;
+        });
+        if (page === 1) {
+            conceptOptions.value = mergeSelectedIntoOptions(
+                parsedResponse.data,
+            );
+        } else {
+            conceptOptions.value = [
+                ...conceptOptions.value,
+                ...parsedResponse.data,
+            ];
+        }
+        conceptSearchPage.value = parsedResponse.current_page;
+        conceptSearchTotalCount.value = parsedResponse.total_results;
+    } catch {
+        if (requestId === activeConceptRequestId) {
+            conceptOptions.value = preloadedConceptOptions.value;
+        }
+    } finally {
+        if (requestId === activeConceptRequestId) {
+            isLoadingConcepts.value = false;
+        }
+    }
+}
+
+async function onConceptLazyLoad(event?: VirtualScrollerLazyEvent) {
+    if (isLoadingConcepts.value) return;
+    if (
+        conceptSearchTotalCount.value > 0 &&
+        conceptOptions.value.length >= conceptSearchTotalCount.value
+    ) {
+        return;
+    }
+    if (event && event.last < conceptOptions.value.length - 1) return;
+    if (!event && conceptOptions.value.length > 0) return;
+    await loadConceptPage((conceptSearchPage.value || 0) + 1);
+}
+
+async function preloadSelectedConcepts(conceptId: string) {
+    if (!conceptId) {
+        preloadedConceptOptions.value = [];
+        return;
+    }
+    try {
+        const parsedResponse = await fetchConceptResources(
+            "",
+            1,
+            1,
+            undefined,
+            undefined,
+            [conceptId],
+        );
+        parsedResponse.data.forEach((option: SearchResultItem) => {
+            option.label = getItemLabel(
+                option,
+                selectedLanguage.value.code,
+                systemLanguage.value.code,
+            ).value;
+        });
+        preloadedConceptOptions.value = parsedResponse.data;
+        conceptOptions.value = parsedResponse.data;
+    } catch {
+        preloadedConceptOptions.value = [];
+    }
+}
+
+function onConceptSelectionChange(selectedId: string | undefined) {
+    if (selectedId) {
+        const selectedOption = conceptOptions.value.find(
+            (o) => o.id === selectedId,
+        );
+        if (selectedOption) {
+            preloadedConceptOptions.value = [selectedOption];
+        }
+    } else {
+        preloadedConceptOptions.value = [];
+    }
+    updateField("value", selectedId ?? "");
+}
+
+function onSourceFilter(event: { value: string }) {
+    if (sourceSearchTimeout) {
+        clearTimeout(sourceSearchTimeout);
+    }
+    sourceSearchTimeout = setTimeout(async () => {
+        await loadSources(event.value);
     }, 400);
 }
 
-async function loadConcepts(term?: string) {
+async function loadSources(term?: string) {
     try {
-        isLoadingConcepts.value = true;
-        const result = await fetchConceptResources(term || "", 50, 1);
-        conceptSearchResults.value = (result.data || []).map(
-            (item: { id: string; labels: Label[] }) => ({
-                display_value:
-                    getItemLabel(
-                        item,
-                        selectedLanguage.value.code,
-                        systemLanguage.value.code,
-                    ).value || item.id,
-                resource_id: item.id,
+        isLoadingSources.value = true;
+        const result = await fetchSources(term || "", 50, 0);
+        sourceSearchResults.value = (result.results || []).map(
+            (item: { resourceinstanceid: string; display_name: string }) => ({
+                display_value: item.display_name || item.resourceinstanceid,
+                resource_id: item.resourceinstanceid,
             }),
         );
     } catch {
-        conceptSearchResults.value = [];
+        sourceSearchResults.value = [];
     } finally {
-        isLoadingConcepts.value = false;
+        isLoadingSources.value = false;
     }
 }
 
-// Load initial concepts when a relationship facet is selected
+function onContributorFilter(event: { value: string }) {
+    if (contributorSearchTimeout) {
+        clearTimeout(contributorSearchTimeout);
+    }
+    contributorSearchTimeout = setTimeout(async () => {
+        await loadContributors(event.value);
+    }, 400);
+}
+
+async function loadContributors(term?: string) {
+    try {
+        isLoadingContributors.value = true;
+        const result = await fetchContributors(term || "", 50, 0);
+        contributorSearchResults.value = (result.results || []).map(
+            (item: { resourceinstanceid: string; display_name: string }) => ({
+                display_value: item.display_name || item.resourceinstanceid,
+                resource_id: item.resourceinstanceid,
+            }),
+        );
+    } catch {
+        contributorSearchResults.value = [];
+    } finally {
+        isLoadingContributors.value = false;
+    }
+}
+
+async function preloadSelectedSource(resourceId: string) {
+    try {
+        const result = await fetchSources("", 1, 0, [resourceId]);
+        sourceSearchResults.value = (result.results || []).map(
+            (item: { resourceinstanceid: string; display_name: string }) => ({
+                display_value: item.display_name || item.resourceinstanceid,
+                resource_id: item.resourceinstanceid,
+            }),
+        );
+    } catch {
+        sourceSearchResults.value = [];
+    }
+}
+
+async function preloadSelectedContributor(resourceId: string) {
+    try {
+        const result = await fetchContributors("", 1, 0, [resourceId]);
+        contributorSearchResults.value = (result.results || []).map(
+            (item: { resourceinstanceid: string; display_name: string }) => ({
+                display_value: item.display_name || item.resourceinstanceid,
+                resource_id: item.resourceinstanceid,
+            }),
+        );
+    } catch {
+        contributorSearchResults.value = [];
+    }
+}
+
+// Preload selected concepts when a relationship facet is loaded with existing values
 watch(
     () => props.condition.facet,
     (facet) => {
@@ -139,7 +342,24 @@ watch(
             facet === "relationship_hierarchical" ||
             facet === "relationship_associated"
         ) {
-            loadConcepts();
+            const currentValue = props.condition.value;
+            if (typeof currentValue === "string" && currentValue) {
+                preloadSelectedConcepts(currentValue);
+            }
+        }
+    },
+    { immediate: true },
+);
+
+// Preload selected source/contributor when an attribution facet is loaded with an existing value
+watch(
+    () => [props.condition.facet, props.condition.value] as const,
+    ([facet, value]) => {
+        if (typeof value !== "string" || !value) return;
+        if (facet === "attribution_source") {
+            preloadSelectedSource(value);
+        } else if (facet === "attribution_contributor") {
+            preloadSelectedContributor(value);
         }
     },
     { immediate: true },
@@ -151,9 +371,26 @@ const currentMatchMode = computed(
 
 const isExistsMode = computed(() => currentMatchMode.value === "exists");
 
+const currentImageAttribute = computed<ImageAttribute>(
+    () => props.condition.image_attribute || "has_image",
+);
+
+// Image title/file name/description are text-searchable; "has_image" is a
+// boolean existence check and takes no value or match mode.
+const isImageTextAttribute = computed(
+    () =>
+        props.condition.facet === "related_image" &&
+        currentImageAttribute.value !== "has_image",
+);
+
+const showImageAttributeDropdown = computed(
+    () => props.condition.facet === "related_image",
+);
+
 const showValueInput = computed(() => {
     if (isExistsMode.value) return false;
     const facet = props.condition.facet;
+    if (isImageTextAttribute.value) return true;
     return ["label", "note", "match_uri", "uri", "identifier"].includes(facet);
 });
 
@@ -204,13 +441,45 @@ const showDirectionSelect = computed(
     () => props.condition.facet === "relationship_hierarchical",
 );
 
+const showCascadeToggle = computed(
+    () => props.condition.facet === "relationship_hierarchical",
+);
+
+const showSourcePicker = computed(
+    () => props.condition.facet === "attribution_source" && !isExistsMode.value,
+);
+
+const showContributorPicker = computed(
+    () =>
+        props.condition.facet === "attribution_contributor" &&
+        !isExistsMode.value,
+);
+
+const showAttributionMatchMode = computed(() =>
+    ["attribution_source", "attribution_contributor"].includes(
+        props.condition.facet,
+    ),
+);
+
+const attributionMatchModes = computed<{ label: string; value: MatchMode }[]>(
+    () => [{ label: $gettext("Exists (any value)"), value: "exists" }],
+);
+
+const noSourcesFoundMessage = $gettext("No sources found");
+const searchSourcesFilterPlaceholder = $gettext("Search sources...");
+const selectSourcePlaceholder = $gettext("Select source...");
+const noContributorsFoundMessage = $gettext("No contributors found");
+const searchContributorsFilterPlaceholder = $gettext("Search contributors...");
+const selectContributorPlaceholder = $gettext("Select contributor...");
+
 const showMatchMode = computed(() => {
+    if (isImageTextAttribute.value) return true;
     return ["label", "note", "match_uri", "uri", "identifier"].includes(
         props.condition.facet,
     );
 });
 
-function updateField(field: keyof SearchCondition, value: string) {
+function updateField(field: keyof SearchCondition, value: string | string[]) {
     const updated = { ...props.condition, [field]: value };
     emit("update:condition", updated);
 }
@@ -221,6 +490,10 @@ function updateFacet(facet: FacetType) {
         facet,
         value: "",
     };
+    conceptOptions.value = [];
+    preloadedConceptOptions.value = [];
+    conceptSearchPage.value = 0;
+    conceptSearchTotalCount.value = 0;
     emit("update:condition", updated);
 }
 
@@ -232,10 +505,44 @@ function updateMatchMode(mode: MatchMode) {
     emit("update:condition", updated);
 }
 
+function updateImageAttribute(attribute: ImageAttribute) {
+    const updated: SearchCondition = {
+        ...props.condition,
+        image_attribute: attribute,
+        value: "",
+    };
+    if (attribute === "has_image") {
+        delete updated.match_mode;
+    } else {
+        updated.match_mode = "contains";
+    }
+    emit("update:condition", updated);
+}
+
+function updateAttributionMatchMode(val: MatchMode | null) {
+    const updated = { ...props.condition, value: "" };
+    if (val === "exists") {
+        updated.match_mode = "exists";
+    } else {
+        delete updated.match_mode;
+    }
+    emit("update:condition", updated);
+}
+
+const executeSearch = inject<() => void>("executeSearch");
+
 function toggleNegated() {
     const updated = {
         ...props.condition,
         negated: !props.condition.negated,
+    };
+    emit("update:condition", updated);
+}
+
+function toggleCascade() {
+    const updated = {
+        ...props.condition,
+        cascade: !props.condition.cascade,
     };
     emit("update:condition", updated);
 }
@@ -264,6 +571,17 @@ function toggleNegated() {
             @update:model-value="updateFacet"
         />
 
+        <!-- Image attribute sub-selector (for the related image facet) -->
+        <Select
+            v-if="showImageAttributeDropdown"
+            :model-value="currentImageAttribute"
+            :options="imageAttributes"
+            option-label="label"
+            option-value="value"
+            class="facet-sub-dropdown"
+            @update:model-value="updateImageAttribute"
+        />
+
         <!-- Match mode (for text-based facets) -->
         <Select
             v-if="showMatchMode"
@@ -275,38 +593,87 @@ function toggleNegated() {
             @update:model-value="updateMatchMode"
         />
 
+        <Select
+            v-if="showAttributionMatchMode"
+            :model-value="isExistsMode ? 'exists' : null"
+            :options="attributionMatchModes"
+            option-label="label"
+            option-value="value"
+            :placeholder="$gettext('Is attributed to...')"
+            :show-clear="true"
+            class="match-mode-dropdown"
+            @update:model-value="updateAttributionMatchMode"
+        />
+
         <!-- Text input for label, note, URI, identifier, match_uri -->
         <InputText
             v-if="showValueInput"
-            :model-value="condition.value"
+            :model-value="condition.value as string"
             :placeholder="searchTextPlaceholder"
             class="facet-value-input"
             @update:model-value="
                 (val: string | undefined) => updateField('value', val ?? '')
             "
+            @keyup.enter="executeSearch?.()"
         />
 
         <!-- Concept picker for hierarchical and associated relationships -->
         <Select
             v-if="showConceptPicker"
-            :model-value="condition.value"
-            :options="conceptSearchResults"
-            option-label="display_value"
-            option-value="resource_id"
+            option-label="label"
+            option-value="id"
             :filter="true"
-            :filter-fields="['display_value', 'resource_id']"
-            :empty-filter-message="noConceptsFoundMessage"
+            :empty-filter-message="
+                isLoadingConcepts
+                    ? $gettext('Searching...')
+                    : noConceptsFoundMessage
+            "
             :filter-placeholder="searchConceptsFilterPlaceholder"
             :loading="isLoadingConcepts"
+            :model-value="
+                typeof condition.value === 'string' ? condition.value : ''
+            "
+            :options="conceptOptions"
             :placeholder="selectConceptPlaceholder"
             :show-clear="true"
+            :virtual-scroller-options="{
+                itemSize: conceptItemSize,
+                lazy: true,
+                loading: isLoadingConcepts,
+                onLazyLoad: onConceptLazyLoad,
+                resizeDelay: 200,
+            }"
+            :auto-filter-focus="true"
             class="facet-value-input"
+            @before-show="loadConceptPage(1)"
             @filter="onConceptFilter"
-            @before-show="loadConcepts()"
-            @update:model-value="
-                (val: string | null) => updateField('value', val ?? '')
-            "
-        />
+            @update:model-value="onConceptSelectionChange"
+        >
+            <template #option="slotProps">
+                <div>
+                    <span>
+                        {{
+                            getItemLabel(
+                                slotProps.option,
+                                selectedLanguage.code,
+                                systemLanguage.code,
+                            ).value
+                        }}
+                    </span>
+                    <span class="concept-hierarchy">
+                        [
+                        {{
+                            getParentLabels(
+                                slotProps.option,
+                                selectedLanguage.code,
+                                systemLanguage.code,
+                            )
+                        }}
+                        ]
+                    </span>
+                </div>
+            </template>
+        </Select>
 
         <!-- Label type filter (from controlled list) -->
         <Select
@@ -355,7 +722,7 @@ function toggleNegated() {
         <!-- Language facet (standalone) -->
         <Select
             v-if="showLanguageSelect"
-            :model-value="condition.value"
+            :model-value="condition.value as string"
             :options="options.languages"
             option-label="name"
             option-value="code"
@@ -367,7 +734,7 @@ function toggleNegated() {
         <!-- Scheme facet -->
         <Select
             v-if="showSchemeSelect"
-            :model-value="condition.value"
+            :model-value="condition.value as string"
             :options="schemeDisplayOptions"
             option-label="label"
             option-value="id"
@@ -379,7 +746,7 @@ function toggleNegated() {
         <!-- Top concept facet: optionally filter by scheme -->
         <Select
             v-if="showTopConceptSchemeSelect"
-            :model-value="condition.value"
+            :model-value="condition.value as string"
             :options="schemeDisplayOptions"
             option-label="label"
             option-value="id"
@@ -394,7 +761,7 @@ function toggleNegated() {
         <!-- Lifecycle state facet -->
         <Select
             v-if="showLifecycleSelect"
-            :model-value="condition.value"
+            :model-value="condition.value as string"
             :options="options.lifecycle_states"
             option-label="name"
             option-value="id"
@@ -406,7 +773,7 @@ function toggleNegated() {
         <!-- Concept set facet -->
         <Select
             v-if="showConceptSetSelect"
-            :model-value="condition.value"
+            :model-value="condition.value as string"
             :options="conceptSets"
             option-label="name"
             option-value="id"
@@ -417,10 +784,52 @@ function toggleNegated() {
             "
         />
 
+        <Select
+            v-if="showSourcePicker"
+            :model-value="condition.value as string"
+            :options="sourceSearchResults"
+            option-label="display_value"
+            option-value="resource_id"
+            :filter="true"
+            :filter-fields="['display_value', 'resource_id']"
+            :empty-filter-message="noSourcesFoundMessage"
+            :filter-placeholder="searchSourcesFilterPlaceholder"
+            :loading="isLoadingSources"
+            :placeholder="selectSourcePlaceholder"
+            :show-clear="true"
+            class="facet-value-input"
+            @filter="onSourceFilter"
+            @before-show="loadSources()"
+            @update:model-value="
+                (val: string | null) => updateField('value', val ?? '')
+            "
+        />
+
+        <Select
+            v-if="showContributorPicker"
+            :model-value="condition.value as string"
+            :options="contributorSearchResults"
+            option-label="display_value"
+            option-value="resource_id"
+            :filter="true"
+            :filter-fields="['display_value', 'resource_id']"
+            :empty-filter-message="noContributorsFoundMessage"
+            :filter-placeholder="searchContributorsFilterPlaceholder"
+            :loading="isLoadingContributors"
+            :placeholder="selectContributorPlaceholder"
+            :show-clear="true"
+            class="facet-value-input"
+            @filter="onContributorFilter"
+            @before-show="loadContributors()"
+            @update:model-value="
+                (val: string | null) => updateField('value', val ?? '')
+            "
+        />
+
         <!-- Concept type facet (from controlled list) -->
         <Select
             v-if="showConceptTypeDropdown"
-            :model-value="condition.value"
+            :model-value="condition.value as string"
             :options="options.concept_types"
             option-label="label"
             option-value="value"
@@ -441,6 +850,17 @@ function toggleNegated() {
             option-value="value"
             class="facet-sub-dropdown"
             @update:model-value="(val: string) => updateField('direction', val)"
+        />
+
+        <!-- Cascade toggle for hierarchical relationships -->
+        <ToggleButton
+            v-if="showCascadeToggle"
+            :model-value="!!condition.cascade"
+            :on-label="$gettext('Include all')"
+            :off-label="$gettext('Direct only')"
+            class="cascade-toggle"
+            :class="{ 'cascade-active': condition.cascade }"
+            @update:model-value="toggleCascade"
         />
 
         <Button
@@ -509,8 +929,7 @@ function toggleNegated() {
 }
 
 .facet-row :deep(.p-select),
-.facet-row :deep(.p-inputtext),
-.facet-row :deep(.p-multiselect) {
+.facet-row :deep(.p-inputtext) {
     border-radius: 0.125rem;
     font-size: var(--p-lingo-font-size-smallnormal);
 }
@@ -518,5 +937,33 @@ function toggleNegated() {
 .facet-row :deep(.p-button) {
     border-radius: 0.125rem;
     font-size: var(--p-lingo-font-size-small);
+}
+
+.concept-hierarchy {
+    font-size: small;
+    color: var(--p-primary-500);
+}
+
+.cascade-toggle {
+    flex: 0 0 auto;
+}
+
+.cascade-toggle :deep(.p-togglebutton) {
+    font-size: var(--p-lingo-font-size-xsmall);
+    font-weight: var(--p-lingo-font-weight-normal);
+    border-radius: 0.125rem;
+    padding: 0.25rem 0.5rem;
+}
+
+.cascade-active :deep(.p-togglebutton) {
+    background: var(--p-primary-100) !important;
+    color: var(--p-primary-700) !important;
+    border-color: var(--p-primary-300) !important;
+}
+
+:global(.arches-dark) .cascade-active :deep(.p-togglebutton) {
+    background: var(--p-primary-900) !important;
+    color: var(--p-primary-200) !important;
+    border-color: var(--p-primary-700) !important;
 }
 </style>

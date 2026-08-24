@@ -1,7 +1,7 @@
 import { computed, inject, provide, ref } from "vue";
 
 /**
- * String injection key shared with GenericWidget (arches-component-lab).
+ * String injection key shared with GenericWidget (arches-vue-components).
  * GenericWidget injects this key to self-register and report readiness,
  * so a typed Symbol import is not possible across packages.
  */

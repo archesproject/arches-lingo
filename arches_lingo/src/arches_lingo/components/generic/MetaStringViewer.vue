@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, inject, ref } from "vue";
+import { computed, inject, onMounted, onUnmounted, ref } from "vue";
 
 import { useConfirm } from "primevue/useconfirm";
 import { useGettext } from "vue3-gettext";
@@ -56,6 +56,35 @@ const canEditResourceInstances = computed(() => {
 
 const expandedRows = ref([]);
 const isDeletePending = ref(false);
+const tableContainerRef = ref<HTMLElement | null>(null);
+const isScrolledToBottom = ref(true);
+
+let scrollableTableBody: HTMLElement | null = null;
+
+function updateScrollShadow() {
+    if (!scrollableTableBody) return;
+    const { scrollTop, scrollHeight, clientHeight } = scrollableTableBody;
+    isScrolledToBottom.value = scrollTop + clientHeight >= scrollHeight - 1;
+}
+
+onMounted(() => {
+    scrollableTableBody =
+        tableContainerRef.value?.querySelector<HTMLElement>(
+            ".p-datatable-table-container",
+        ) ?? null;
+    if (scrollableTableBody) {
+        scrollableTableBody.addEventListener("scroll", updateScrollShadow, {
+            passive: true,
+        });
+        updateScrollShadow();
+    }
+});
+
+onUnmounted(() => {
+    if (scrollableTableBody) {
+        scrollableTableBody.removeEventListener("scroll", updateScrollShadow);
+    }
+});
 
 function confirmDelete(tileId: string) {
     confirm.require({
@@ -131,11 +160,18 @@ async function deleteSectionValue(tileId: string) {
             </div>
         </template>
     </ConfirmDialog>
-    <div v-if="props.metaStrings?.length">
+    <div
+        v-if="props.metaStrings?.length"
+        ref="tableContainerRef"
+        class="meta-string-table-container"
+        :class="{ 'is-scrolled-to-bottom': isScrolledToBottom }"
+    >
         <DataTable
             v-model:expanded-rows="expandedRows"
             class="meta-string-table"
             striped-rows
+            scrollable
+            scroll-height="38rem"
             table-style="min-width: 100%"
             :value="props.metaStrings"
         >
@@ -304,6 +340,28 @@ async function deleteSectionValue(tileId: string) {
 :deep(.meta-string-table .action-column) {
     text-align: right;
     white-space: nowrap;
+}
+
+.meta-string-table-container {
+    overflow: hidden;
+    position: relative;
+}
+
+.meta-string-table-container::after {
+    content: "";
+    position: absolute;
+    inset-block-end: 0;
+    inset-inline: 0;
+    height: 3rem;
+    pointer-events: none;
+    background: linear-gradient(to bottom, transparent, rgba(0, 0, 0, 0.07));
+    border-radius: 0 0 0.25rem 0.25rem;
+    transition: opacity 0.15s ease;
+    z-index: 1;
+}
+
+.meta-string-table-container.is-scrolled-to-bottom::after {
+    opacity: 0;
 }
 
 .confirm-dialog-content {

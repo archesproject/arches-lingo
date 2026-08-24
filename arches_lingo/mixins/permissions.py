@@ -8,6 +8,7 @@ from arches.app.utils.response import JSONErrorResponse
 from arches_lingo.permissions import (
     anonymous_access_allowed,
     is_authenticated_user,
+    is_lingo_admin,
     is_lingo_editor,
 )
 
@@ -32,6 +33,19 @@ class AuthenticatedUserMixin:
             return JsonResponse(
                 {"message": _("Authentication required.")},
                 status=403,
+            )
+        return super().dispatch(request, *args, **kwargs)
+
+
+class LingoAdminMixin:
+    """Require Lingo admin group membership for all requests."""
+
+    def dispatch(self, request, *args, **kwargs):
+        if not is_lingo_admin(request.user):
+            return JSONErrorResponse(
+                title=_("Permission denied."),
+                message=_("You must be a Lingo admin to perform this action."),
+                status=HTTPStatus.FORBIDDEN,
             )
         return super().dispatch(request, *args, **kwargs)
 

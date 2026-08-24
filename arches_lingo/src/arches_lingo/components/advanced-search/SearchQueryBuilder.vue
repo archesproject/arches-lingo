@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { provide } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import Button from "primevue/button";
@@ -25,6 +26,8 @@ const emit = defineEmits<{
     (e: "search"): void;
     (e: "clear"): void;
 }>();
+
+provide("executeSearch", () => emit("search"));
 </script>
 
 <template>

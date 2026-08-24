@@ -8,6 +8,7 @@
 {{ block.super }}
 <div class="arches-urls"
     api_concepts="{% url 'api-concepts' %}"
+    api_concept_children='(conceptId) => { return "{% url "api-concept-children" "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa" %}".replace("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", conceptId)}'
     api_search="{% url 'api-search' %}"
     api_lingo_concept_resources="{% url 'api-lingo-concept-resources' %}"
     api_lingo_concept_relationships="{% url 'api-lingo-concept-relationships' %}"

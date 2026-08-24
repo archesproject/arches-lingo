@@ -515,12 +515,18 @@ provide(openPanelComponentKey, openPanelComponent);
     color: var(--p-neutral-500);
 }
 
+:deep(.section-header .section-title) {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
 :deep(.section-header .add-button) {
     font-size: var(--p-lingo-font-size-xsmall);
     font-weight: var(--p-lingo-font-weight-normal);
     border-color: var(--p-button-primary-active-border-color);
     border-radius: 0.125rem;
-    min-width: 11rem;
+    min-width: 12rem;
 
     &.wide {
         min-width: 14rem;

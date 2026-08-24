@@ -2,9 +2,25 @@
 
 Evaluates a composable boolean query tree of concept search facets,
 returning matching concept resource instance IDs.
+
+Performance notes
+-----------------
+Every facet handler returns a **QuerySet** (not a materialised Python list).
+Boolean AND/OR combinations are composed using Django subquery expressions so
+that the database performs all set operations rather than Python.  The final
+result is paginated before any rows are fetched.
+
+Cascade (full-hierarchy) traversal uses a PostgreSQL recursive CTE executed
+in a single round-trip rather than a Python BFS loop that would require one
+database query per level of the hierarchy.  The CTE results are materialised
+as a list of UUIDs in Python before being passed back to a QuerySet filter so
+that the rest of the AND/OR composition machinery can continue to use lazy
+QuerySets.
 """
 
-from django.db.models import Q
+from django.db import connection
+from django.db.models import BooleanField, Q
+from django.db.models.expressions import RawSQL
 
 from arches.app.models.models import ResourceInstance, TileModel
 
@@ -12,6 +28,8 @@ from arches_lingo.const import (
     CONCEPTS_GRAPH_ID,
     CONCEPT_NAME_NODEGROUP,
     CONCEPT_NAME_CONTENT_NODE,
+    CONCEPT_NAME_DATA_ASSIGNMENT_ACTOR_NODE,
+    CONCEPT_NAME_DATA_ASSIGNMENT_OBJ_USED_NODE,
     CONCEPT_NAME_LANGUAGE_NODE,
     CONCEPT_NAME_TYPE_NODE,
     CLASSIFICATION_STATUS_NODEGROUP,
@@ -22,6 +40,8 @@ from arches_lingo.const import (
     TOP_CONCEPT_OF_NODE_AND_NODEGROUP,
     STATEMENT_NODEGROUP,
     STATEMENT_CONTENT_NODE,
+    STATEMENT_DATA_ASSIGNMENT_ACTOR_NODE,
+    STATEMENT_DATA_ASSIGNMENT_OBJ_USED_NODE,
     STATEMENT_LANGUAGE_NODE,
     STATEMENT_TYPE_NODE,
     URI_NODEGROUP,
@@ -32,6 +52,15 @@ from arches_lingo.const import (
     MATCH_STATUS_COMPARATE_NODE,
     CONCEPT_TYPE_NODEGROUP,
     CONCEPT_TYPE_NODEID,
+    DEPICTING_DIGITAL_ASSET_INTERNAL_NODEGROUP,
+    DEPICTING_DIGITAL_ASSET_INTERNAL_NODE,
+    DEPICTING_DIGITAL_ASSET_EXTERNAL_NODEGROUP,
+    DIGITAL_OBJECT_CONTENT_NODEGROUP,
+    DIGITAL_OBJECT_CONTENT_NODE,
+    DIGITAL_OBJECT_NAME_NODEGROUP,
+    DIGITAL_OBJECT_NAME_CONTENT_NODE,
+    DIGITAL_OBJECT_STATEMENT_NODEGROUP,
+    DIGITAL_OBJECT_STATEMENT_CONTENT_NODE,
 )
 from arches_lingo.models import ConceptSet
 
@@ -50,20 +79,25 @@ VALID_FACETS = {
     "identifier",
     "lifecycle_state",
     "concept_set",
+    "attribution_source",
+    "attribution_contributor",
+    "related_image",
 }
 
 
 class AdvancedSearchEvaluator:
-    """Evaluates an advanced search query tree and returns concept IDs."""
+    """Evaluates an advanced search query tree and returns concept IDs.
+
+    All facet handlers return a lazy QuerySet of resource-instance PKs so that
+    boolean AND/OR composition and negation are expressed as database
+    subqueries rather than Python set operations on materialised lists.
+    """
 
     def __init__(self, user=None):
         self.user = user
 
     def evaluate(self, query_node):
-        """Evaluate a query node (group or condition) and return concept IDs.
-
-        Returns a QuerySet of resource instance PKs (UUIDs).
-        """
+        """Evaluate a query node (group or condition) and return a QuerySet of PKs."""
         if "operator" in query_node:
             return self._evaluate_group(query_node)
         elif "facet" in query_node:
@@ -77,51 +111,59 @@ class AdvancedSearchEvaluator:
         )
 
     def _evaluate_group(self, group_node):
-        """Evaluate a boolean group with AND/OR operator."""
+        """Evaluate a boolean group with AND/OR operator using DB subqueries."""
         operator = group_node.get("operator", "and").lower()
         conditions = group_node.get("conditions", [])
 
         if not conditions:
             return self._all_concept_ids()
 
-        result_ids = None
+        result_qs = None
         for condition in conditions:
-            child_ids = set(self.evaluate(condition))
-            if result_ids is None:
-                result_ids = child_ids
+            child_qs = self.evaluate(condition)
+            if result_qs is None:
+                result_qs = child_qs
             elif operator == "and":
-                result_ids &= child_ids
+                # Intersect via two ResourceInstance subqueries.  Normalising to
+                # ResourceInstance here is necessary because facet handlers may
+                # return TileModel querysets (selecting resourceinstance_id) or
+                # ResourceInstance querysets — mixing them with a plain
+                # .filter(pk__in=child_qs) would filter by TileModel.pk (tileid)
+                # instead of the FK value, always producing an empty result.
+                result_qs = (
+                    ResourceInstance.objects.filter(graph_id=CONCEPTS_GRAPH_ID)
+                    .filter(pk__in=result_qs)
+                    .filter(pk__in=child_qs)
+                    .values_list("pk", flat=True)
+                )
             else:  # "or"
-                result_ids |= child_ids
+                # Union: combine via Q(pk__in) | Q(pk__in) so the DB resolves it.
+                result_qs = (
+                    ResourceInstance.objects.filter(graph_id=CONCEPTS_GRAPH_ID)
+                    .filter(Q(pk__in=result_qs) | Q(pk__in=child_qs))
+                    .values_list("pk", flat=True)
+                )
 
-        return list(result_ids) if result_ids is not None else []
+        return result_qs if result_qs is not None else self._all_concept_ids()
 
     def _evaluate_condition(self, condition):
-        """Evaluate a single facet condition and return concept IDs."""
+        """Evaluate a single facet condition and return a QuerySet of PKs."""
         facet = condition.get("facet")
 
         if facet not in VALID_FACETS:
-            return []
+            return self._all_concept_ids().none()
 
         handler = getattr(self, f"_facet_{facet}", None)
         if handler is None:
-            return []
+            return self._all_concept_ids().none()
 
-        result_ids = handler(condition)
+        result_qs = handler(condition)
 
-        # Apply negation: return all concepts *except* the matched ones.
         if condition.get("negated"):
-            all_ids = set(self._all_concept_ids())
-            return list(all_ids - set(result_ids))
+            # Exclude matched PKs from the full concept set via subquery.
+            return self._all_concept_ids().exclude(pk__in=result_qs)
 
-        return result_ids
-
-    def _concept_ids_from_tiles(self, nodegroup_id, extra_filters=None):
-        """Get distinct concept resource IDs from tiles in a nodegroup."""
-        tiles = TileModel.objects.filter(nodegroup_id=nodegroup_id)
-        if extra_filters:
-            tiles = tiles.filter(extra_filters)
-        return list(tiles.values_list("resourceinstance_id", flat=True).distinct())
+        return result_qs
 
     MATCH_MODE_LOOKUPS = {
         "contains": "icontains",
@@ -131,14 +173,20 @@ class AdvancedSearchEvaluator:
     }
 
     def _text_filter(self, field, value, match_mode="contains"):
-        """Build a Q filter for a text field using the given match mode.
-
-        ``match_mode`` of ``"exists"`` checks for non-empty/non-null values.
-        """
         if match_mode == "exists":
             return ~Q(**{field: ""}) & ~Q(**{field: None})
         lookup = self.MATCH_MODE_LOOKUPS.get(match_mode, "icontains")
         return Q(**{f"{field}__{lookup}": value})
+
+    @staticmethod
+    def _escape_like_wildcards(value):
+        """Escape LIKE/ILIKE special characters so user input matches literally.
+
+        The backslash escape character must be doubled first, then the % and _
+        wildcards escaped, so that values such as ``50%`` or ``a_b`` are matched
+        as-is rather than being interpreted as wildcard patterns.
+        """
+        return value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
 
     def _facet_label(self, condition):
         """Search by label text, optionally filtered by type and language."""
@@ -153,7 +201,6 @@ class AdvancedSearchEvaluator:
 
         label_type = condition.get("label_type")
         if label_type:
-            # Reference data: list_item_id is nested inside the labels array
             filters &= Q(
                 **{
                     f"data__{CONCEPT_NAME_TYPE_NODE}__contains": [
@@ -164,10 +211,9 @@ class AdvancedSearchEvaluator:
 
         language = condition.get("language")
         if language:
-            # Language datatype stores code string directly
             filters &= Q(**{f"data__{CONCEPT_NAME_LANGUAGE_NODE}": language})
 
-        return list(
+        return (
             TileModel.objects.filter(filters)
             .values_list("resourceinstance_id", flat=True)
             .distinct()
@@ -186,7 +232,6 @@ class AdvancedSearchEvaluator:
 
         note_type = condition.get("note_type")
         if note_type:
-            # Reference data: list_item_id is nested inside the labels array
             filters &= Q(
                 **{
                     f"data__{STATEMENT_TYPE_NODE}__contains": [
@@ -199,7 +244,7 @@ class AdvancedSearchEvaluator:
         if language:
             filters &= Q(**{f"data__{STATEMENT_LANGUAGE_NODE}": language})
 
-        return list(
+        return (
             TileModel.objects.filter(filters)
             .values_list("resourceinstance_id", flat=True)
             .distinct()
@@ -209,35 +254,30 @@ class AdvancedSearchEvaluator:
         """Find concepts that have any label or note in a specific language."""
         language = condition.get("value")
         if not language:
-            return list(self._all_concept_ids())
+            return self._all_concept_ids()
 
-        label_concepts = set(
+        return (
             TileModel.objects.filter(
-                nodegroup_id=CONCEPT_NAME_NODEGROUP,
-                **{f"data__{CONCEPT_NAME_LANGUAGE_NODE}": language},
+                Q(
+                    nodegroup_id=CONCEPT_NAME_NODEGROUP,
+                    **{f"data__{CONCEPT_NAME_LANGUAGE_NODE}": language},
+                )
+                | Q(
+                    nodegroup_id=STATEMENT_NODEGROUP,
+                    **{f"data__{STATEMENT_LANGUAGE_NODE}": language},
+                )
             )
             .values_list("resourceinstance_id", flat=True)
             .distinct()
         )
-
-        note_concepts = set(
-            TileModel.objects.filter(
-                nodegroup_id=STATEMENT_NODEGROUP,
-                **{f"data__{STATEMENT_LANGUAGE_NODE}": language},
-            )
-            .values_list("resourceinstance_id", flat=True)
-            .distinct()
-        )
-
-        return list(label_concepts | note_concepts)
 
     def _facet_concept_type(self, condition):
         """Filter by concept type (reference data list_item_id)."""
         type_id = condition.get("value")
         if not type_id:
-            return list(self._all_concept_ids())
+            return self._all_concept_ids()
 
-        return list(
+        return (
             TileModel.objects.filter(
                 nodegroup_id=CONCEPT_TYPE_NODEGROUP,
                 **{
@@ -250,100 +290,230 @@ class AdvancedSearchEvaluator:
             .distinct()
         )
 
-    def _facet_relationship_hierarchical(self, condition):
-        """Find concepts with a hierarchical relationship to a given concept.
+    def _normalize_target_ids(self, value):
+        """Normalize a value that may be a single ID string or list of IDs."""
+        if isinstance(value, list):
+            return [tid for tid in value if tid]
+        if value:
+            return [value]
+        return []
 
-        direction: "broader" (concept has the target as a broader concept)
-                   "narrower" (concept has the target as a narrower concept)
-        """
-        target_id = condition.get("value")
-        direction = condition.get("direction", "broader")
-
-        if not target_id:
-            return list(self._all_concept_ids())
-
-        if direction == "broader":
-            # Find concepts that have target_id as their broader concept
-            return list(
-                TileModel.objects.filter(
-                    nodegroup_id=CLASSIFICATION_STATUS_NODEGROUP,
-                    **{
-                        f"data__{CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID}__contains": [
-                            {"resourceId": target_id}
-                        ]
-                    },
-                )
-                .values_list("resourceinstance_id", flat=True)
-                .distinct()
-            )
-        else:  # narrower
-            # Find concepts that are the broader concept of target_id
-            # i.e., target_id has this concept as its broader concept
-            narrower_tiles = TileModel.objects.filter(
-                nodegroup_id=CLASSIFICATION_STATUS_NODEGROUP,
-                resourceinstance_id=target_id,
-            )
-            broader_ids = set()
-            for tile in narrower_tiles:
-                classifications = tile.data.get(
-                    CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID, []
-                )
-                if classifications:
-                    for item in classifications:
-                        resource_id = item.get("resourceId")
-                        if resource_id:
-                            broader_ids.add(resource_id)
-            return list(broader_ids)
-
-    def _facet_relationship_associated(self, condition):
-        """Find concepts associated with a given concept."""
-        target_id = condition.get("value")
-        if not target_id:
-            return list(self._all_concept_ids())
-
-        # Concepts that have target_id in their relation_status
-        forward = set(
-            TileModel.objects.filter(
-                nodegroup_id=RELATION_STATUS_NODEGROUP,
+    def _direct_children_of(self, parent_ids):
+        """Return a QuerySet of resource-instance PKs whose broader is one of parent_ids."""
+        q_filter = Q()
+        for parent_id in parent_ids:
+            q_filter |= Q(
                 **{
-                    f"data__{RELATION_STATUS_ASCRIBED_COMPARATE_NODEID}__contains": [
-                        {"resourceId": target_id}
+                    f"data__{CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID}__contains": [
+                        {"resourceId": str(parent_id)}
                     ]
-                },
+                }
             )
+        return (
+            TileModel.objects.filter(nodegroup_id=CLASSIFICATION_STATUS_NODEGROUP)
+            .filter(q_filter)
             .values_list("resourceinstance_id", flat=True)
             .distinct()
         )
 
-        # target_id's relation_status tiles (reverse direction)
-        reverse_tiles = TileModel.objects.filter(
-            nodegroup_id=RELATION_STATUS_NODEGROUP,
-            resourceinstance_id=target_id,
+    def _direct_parents_of(self, child_ids):
+        """Return a QuerySet of resource-instance PKs that are the broader of any child in child_ids."""
+        return (
+            TileModel.objects.filter(
+                nodegroup_id=CLASSIFICATION_STATUS_NODEGROUP,
+                resourceinstance_id__in=child_ids,
+            )
+            .annotate(
+                broader_id=RawSQL(
+                    "(jsonb_array_elements(tiledata->%s) ->> 'resourceId')::uuid",
+                    [CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID],
+                )
+            )
+            .values_list("broader_id", flat=True)
+            .distinct()
         )
-        reverse_ids = set()
-        for tile in reverse_tiles:
-            comparates = tile.data.get(RELATION_STATUS_ASCRIBED_COMPARATE_NODEID, [])
-            if comparates:
-                for item in comparates:
-                    resource_id = item.get("resourceId")
-                    if resource_id:
-                        reverse_ids.add(resource_id)
 
-        return list(forward | reverse_ids)
+    def _cascade_descendants(self, seed_ids):
+        """Return all descendant concept IDs via a single recursive CTE.
+
+        The edge_list CTE extracts every (child, parent) pair from
+        classification tiles exactly once.  The recursive term then joins
+        against that in-memory edge list using simple UUID equality, so the
+        tiles table is never scanned again during recursion.  This avoids the
+        O(depth × table_size) cost of the previous approach where the full
+        tiles table was re-scanned at each recursion level.
+        """
+        seed_id_strings = [str(sid) for sid in seed_ids]
+        node_id = str(CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID)
+        nodegroup_id = str(CLASSIFICATION_STATUS_NODEGROUP)
+        sql = """
+            WITH RECURSIVE
+            edge_list AS MATERIALIZED (
+                SELECT
+                    t.resourceinstanceid::uuid AS child_id,
+                    (elem ->> 'resourceId')::uuid AS parent_id
+                FROM tiles t
+                CROSS JOIN LATERAL jsonb_array_elements(t.tiledata -> %s) AS elem
+                WHERE t.nodegroupid = %s::uuid
+                  AND elem ->> 'resourceId' IS NOT NULL
+            ),
+            descendants(concept_id) AS (
+                SELECT child_id AS concept_id
+                FROM edge_list
+                WHERE parent_id::text = ANY(%s)
+              UNION
+                SELECT e.child_id
+                FROM edge_list e
+                JOIN descendants d ON e.parent_id = d.concept_id
+            )
+            SELECT concept_id FROM descendants
+        """
+        with connection.cursor() as cursor:
+            cursor.execute(sql, [node_id, nodegroup_id, seed_id_strings])
+            return [row[0] for row in cursor.fetchall()]
+
+    def _cascade_ancestors(self, seed_ids):
+        """Return all ancestor concept IDs via a single recursive CTE.
+
+        The edge_list CTE extracts every (child, parent) pair from
+        classification tiles exactly once.  The recursive term then joins
+        against that in-memory edge list using simple UUID equality, so the
+        tiles table is never scanned again during recursion.  This avoids the
+        O(depth × table_size) cost of the previous approach where the full
+        tiles table was re-scanned at each recursion level.
+        """
+        seed_id_strings = [str(sid) for sid in seed_ids]
+        node_id = str(CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID)
+        nodegroup_id = str(CLASSIFICATION_STATUS_NODEGROUP)
+        sql = """
+            WITH RECURSIVE
+            edge_list AS MATERIALIZED (
+                SELECT
+                    t.resourceinstanceid::uuid AS child_id,
+                    (elem ->> 'resourceId')::uuid AS parent_id
+                FROM tiles t
+                CROSS JOIN LATERAL jsonb_array_elements(t.tiledata -> %s) AS elem
+                WHERE t.nodegroupid = %s::uuid
+                  AND elem ->> 'resourceId' IS NOT NULL
+            ),
+            ancestors(concept_id) AS (
+                SELECT parent_id AS concept_id
+                FROM edge_list
+                WHERE child_id::text = ANY(%s)
+              UNION
+                SELECT e.parent_id
+                FROM edge_list e
+                JOIN ancestors a ON e.child_id = a.concept_id
+            )
+            SELECT concept_id FROM ancestors WHERE concept_id IS NOT NULL
+        """
+        with connection.cursor() as cursor:
+            cursor.execute(sql, [node_id, nodegroup_id, seed_id_strings])
+            return [row[0] for row in cursor.fetchall()]
+
+    def _facet_relationship_hierarchical(self, condition):
+        """Find concepts with a hierarchical relationship to given concept(s).
+
+        When cascade is True the search traverses the full hierarchy rather than
+        matching only direct broader/narrower relationships.  Cascade traversal
+        uses a recursive CTE executed in a single database round-trip.
+        """
+        target_ids = self._normalize_target_ids(condition.get("value"))
+        direction = condition.get("direction", "broader")
+        cascade = condition.get("cascade", False)
+
+        if not target_ids:
+            return self._all_concept_ids()
+
+        if direction == "broader":
+            if cascade:
+                descendant_ids = self._cascade_descendants(target_ids)
+                if not descendant_ids:
+                    return ResourceInstance.objects.none().values_list("pk", flat=True)
+                return ResourceInstance.objects.filter(
+                    graph_id=CONCEPTS_GRAPH_ID,
+                    resourceinstanceid__in=descendant_ids,
+                ).values_list("pk", flat=True)
+            else:
+                return self._direct_children_of(target_ids)
+        else:  # narrower
+            if cascade:
+                ancestor_ids = self._cascade_ancestors(target_ids)
+                if not ancestor_ids:
+                    return ResourceInstance.objects.none().values_list("pk", flat=True)
+                return ResourceInstance.objects.filter(
+                    graph_id=CONCEPTS_GRAPH_ID,
+                    resourceinstanceid__in=ancestor_ids,
+                ).values_list("pk", flat=True)
+            else:
+                return ResourceInstance.objects.filter(
+                    graph_id=CONCEPTS_GRAPH_ID,
+                    resourceinstanceid__in=self._direct_parents_of(target_ids),
+                ).values_list("pk", flat=True)
+
+    def _facet_relationship_associated(self, condition):
+        """Find concepts associated with given concept(s)."""
+        target_ids = self._normalize_target_ids(condition.get("value"))
+        if not target_ids:
+            return self._all_concept_ids()
+
+        # Forward: concepts that list any target_id in their relation_status.
+        forward_q = Q()
+        for target_id in target_ids:
+            forward_q |= Q(
+                **{
+                    f"data__{RELATION_STATUS_ASCRIBED_COMPARATE_NODEID}__contains": [
+                        {"resourceId": target_id}
+                    ]
+                }
+            )
+        forward_qs = (
+            TileModel.objects.filter(
+                nodegroup_id=RELATION_STATUS_NODEGROUP,
+            )
+            .filter(forward_q)
+            .values("resourceinstance_id")
+        )
+
+        # Reverse: extract IDs from target_ids' relation_status tiles via DB.
+        reverse_ids_qs = (
+            TileModel.objects.filter(
+                nodegroup_id=RELATION_STATUS_NODEGROUP,
+                resourceinstance_id__in=target_ids,
+            )
+            .annotate(
+                comparate_id=RawSQL(
+                    "(jsonb_array_elements(tiledata->%s) ->> 'resourceId')::uuid",
+                    [RELATION_STATUS_ASCRIBED_COMPARATE_NODEID],
+                )
+            )
+            .values("comparate_id")
+        )
+
+        return (
+            ResourceInstance.objects.filter(
+                graph_id=CONCEPTS_GRAPH_ID,
+            )
+            .filter(
+                Q(resourceinstanceid__in=forward_qs.values("resourceinstance_id"))
+                | Q(resourceinstanceid__in=reverse_ids_qs.values("comparate_id"))
+            )
+            .values_list("pk", flat=True)
+        )
 
     def _facet_match_uri(self, condition):
         """Find concepts with a matching URI in match_status."""
         value = condition.get("value", "").strip()
         match_mode = condition.get("match_mode", "contains")
         if not value and match_mode != "exists":
-            return list(self._all_concept_ids())
+            return self._all_concept_ids()
 
         filters = Q(nodegroup_id=MATCH_STATUS_NODEGROUP)
         filters &= self._text_filter(
             f"data__{MATCH_STATUS_COMPARATE_NODE}", value, match_mode
         )
 
-        return list(
+        return (
             TileModel.objects.filter(filters)
             .values_list("resourceinstance_id", flat=True)
             .distinct()
@@ -363,50 +533,43 @@ class AdvancedSearchEvaluator:
                 }
             )
 
-        return list(tiles.values_list("resourceinstance_id", flat=True).distinct())
+        return tiles.values_list("resourceinstance_id", flat=True).distinct()
 
     def _facet_scheme(self, condition):
         """Find concepts that belong to a specific scheme."""
         scheme_id = condition.get("value")
         if not scheme_id:
-            return list(self._all_concept_ids())
+            return self._all_concept_ids()
 
-        # Direct scheme membership via part_of_scheme
-        direct_members = set(
+        return (
             TileModel.objects.filter(
-                nodegroup_id=CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID,
-                **{
-                    f"data__{CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID}__contains": [
-                        {"resourceId": scheme_id}
-                    ]
-                },
+                Q(
+                    nodegroup_id=CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID,
+                    **{
+                        f"data__{CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID}__contains": [
+                            {"resourceId": scheme_id}
+                        ]
+                    },
+                )
+                | Q(
+                    nodegroup_id=TOP_CONCEPT_OF_NODE_AND_NODEGROUP,
+                    **{
+                        f"data__{TOP_CONCEPT_OF_NODE_AND_NODEGROUP}__contains": [
+                            {"resourceId": scheme_id}
+                        ]
+                    },
+                )
             )
             .values_list("resourceinstance_id", flat=True)
             .distinct()
         )
-
-        # Top concepts of the scheme
-        top_concepts = set(
-            TileModel.objects.filter(
-                nodegroup_id=TOP_CONCEPT_OF_NODE_AND_NODEGROUP,
-                **{
-                    f"data__{TOP_CONCEPT_OF_NODE_AND_NODEGROUP}__contains": [
-                        {"resourceId": scheme_id}
-                    ]
-                },
-            )
-            .values_list("resourceinstance_id", flat=True)
-            .distinct()
-        )
-
-        return list(direct_members | top_concepts)
 
     def _facet_uri(self, condition):
         """Search by concept URI."""
         value = condition.get("value", "").strip()
         match_mode = condition.get("match_mode", "contains")
         if not value and match_mode != "exists":
-            return list(self._all_concept_ids())
+            return self._all_concept_ids()
 
         filters = Q(nodegroup_id=URI_NODEGROUP)
         if match_mode == "exists":
@@ -415,7 +578,7 @@ class AdvancedSearchEvaluator:
             lookup = self.MATCH_MODE_LOOKUPS.get(match_mode, "icontains")
             filters &= Q(**{f"data__{URI_CONTENT_NODE}__{lookup}": value})
 
-        return list(
+        return (
             TileModel.objects.filter(filters)
             .values_list("resourceinstance_id", flat=True)
             .distinct()
@@ -426,14 +589,14 @@ class AdvancedSearchEvaluator:
         value = condition.get("value", "").strip()
         match_mode = condition.get("match_mode", "contains")
         if not value and match_mode != "exists":
-            return list(self._all_concept_ids())
+            return self._all_concept_ids()
 
         filters = Q(nodegroup_id=IDENTIFIER_NODEGROUP)
         filters &= self._text_filter(
             f"data__{IDENTIFIER_CONTENT_NODE}", value, match_mode
         )
 
-        return list(
+        return (
             TileModel.objects.filter(filters)
             .values_list("resourceinstance_id", flat=True)
             .distinct()
@@ -443,24 +606,268 @@ class AdvancedSearchEvaluator:
         """Filter by resource instance lifecycle state."""
         value = condition.get("value")
         if not value:
-            return list(self._all_concept_ids())
+            return self._all_concept_ids()
 
-        return list(
-            ResourceInstance.objects.filter(
-                graph_id=CONCEPTS_GRAPH_ID,
-                resource_instance_lifecycle_state_id=value,
-            ).values_list("pk", flat=True)
-        )
+        return ResourceInstance.objects.filter(
+            graph_id=CONCEPTS_GRAPH_ID,
+            resource_instance_lifecycle_state_id=value,
+        ).values_list("pk", flat=True)
 
     def _facet_concept_set(self, condition):
         """Return concepts from a saved concept set."""
         set_id = condition.get("value")
         if not set_id:
-            return []
+            return self._all_concept_ids().none()
 
         try:
             concept_set = ConceptSet.objects.get(pk=set_id, user=self.user)
         except ConceptSet.DoesNotExist:
-            return []
+            return self._all_concept_ids().none()
 
-        return list(concept_set.members.values_list("concept_id", flat=True))
+        return concept_set.members.values_list("concept_id", flat=True)
+
+    def _facet_attribution_source(self, condition):
+        """Find concepts whose labels or notes are attributed to a specific source.
+
+        A source is a textual work referenced via the data_assignment_object_used node
+        on both appellative_status (label) and statement (note) tiles.  When the
+        match_mode is 'exists', returns all concepts that have any source attributed
+        to at least one label or note.
+        """
+        resource_id = condition.get("value", "").strip()
+        match_mode = condition.get("match_mode", "")
+
+        if match_mode == "exists":
+            filters = Q(
+                nodegroup_id=CONCEPT_NAME_NODEGROUP,
+                **{
+                    f"data__{CONCEPT_NAME_DATA_ASSIGNMENT_OBJ_USED_NODE}__contains": [
+                        {}
+                    ]
+                },
+            ) | Q(
+                nodegroup_id=STATEMENT_NODEGROUP,
+                **{f"data__{STATEMENT_DATA_ASSIGNMENT_OBJ_USED_NODE}__contains": [{}]},
+            )
+        elif resource_id:
+            filters = Q(
+                nodegroup_id=CONCEPT_NAME_NODEGROUP,
+                **{
+                    f"data__{CONCEPT_NAME_DATA_ASSIGNMENT_OBJ_USED_NODE}__contains": [
+                        {"resourceId": resource_id}
+                    ]
+                },
+            ) | Q(
+                nodegroup_id=STATEMENT_NODEGROUP,
+                **{
+                    f"data__{STATEMENT_DATA_ASSIGNMENT_OBJ_USED_NODE}__contains": [
+                        {"resourceId": resource_id}
+                    ]
+                },
+            )
+        else:
+            return self._all_concept_ids()
+
+        return (
+            TileModel.objects.filter(filters)
+            .values_list("resourceinstance_id", flat=True)
+            .distinct()
+        )
+
+    def _concepts_depicting(self, digital_object_ids):
+        """Return concept PKs whose internal depiction references any digital object.
+
+        The ``depicting_digital_asset_internal`` node is a resource-instance-list
+        (a JSONB array of ``{"resourceId": ...}`` objects).  Rather than OR-ing one
+        JSONB containment clause per matched digital object — which produces an
+        ever-growing predicate as the number of matches grows — the array is
+        unnested inside a single RawSQL EXISTS and each element's ``resourceId`` is
+        compared against the matched IDs with ``= ANY``, mirroring the approach in
+        ``_digital_objects_by_file_name``.
+        """
+        digital_object_id_strings = [
+            str(digital_object_id) for digital_object_id in digital_object_ids
+        ]
+        if not digital_object_id_strings:
+            # No digital objects matched, so no concept can depict one.
+            return TileModel.objects.none().values_list(
+                "resourceinstance_id", flat=True
+            )
+
+        depiction_matches = RawSQL(
+            """EXISTS (
+                SELECT 1
+                FROM jsonb_array_elements(tiledata->%s) AS depiction
+                WHERE depiction ->> 'resourceId' = ANY(%s))""",
+            [DEPICTING_DIGITAL_ASSET_INTERNAL_NODE, digital_object_id_strings],
+            output_field=BooleanField(),
+        )
+
+        return (
+            TileModel.objects.filter(
+                nodegroup_id=DEPICTING_DIGITAL_ASSET_INTERNAL_NODEGROUP,
+            )
+            .annotate(depiction_matches=depiction_matches)
+            .filter(depiction_matches=True)
+            .values_list("resourceinstance_id", flat=True)
+            .distinct()
+        )
+
+    def _digital_objects_by_file_name(self, value, match_mode):
+        """Return digital-object resource PKs whose content file name matches value.
+
+        The ``content`` node is a file-list whose tiledata is a JSON array of file
+        objects.  Matching a file name therefore requires unnesting the array and
+        comparing each element's ``name`` — expressed as a RawSQL EXISTS predicate
+        so the database performs the scan rather than Python.
+        """
+        if match_mode == "exists":
+            file_name_matches = RawSQL(
+                """EXISTS (
+                    SELECT 1
+                    FROM jsonb_array_elements(tiledata->%s) AS file_element
+                    WHERE file_element ->> 'name' IS NOT NULL
+                      AND file_element ->> 'name' <> '')""",
+                [DIGITAL_OBJECT_CONTENT_NODE],
+                output_field=BooleanField(),
+            )
+        else:
+            # The ORM match-mode lookups (icontains, istartswith, ...) escape LIKE
+            # wildcards automatically, but this hand-built ILIKE pattern must escape
+            # them itself so that a % or _ in the user's value matches literally.
+            escaped_value = self._escape_like_wildcards(value)
+            if match_mode == "exact":
+                pattern = escaped_value
+            elif match_mode == "starts_with":
+                pattern = f"{escaped_value}%"
+            elif match_mode == "ends_with":
+                pattern = f"%{escaped_value}"
+            else:  # contains
+                pattern = f"%{escaped_value}%"
+
+            file_name_matches = RawSQL(
+                """EXISTS (
+                    SELECT 1
+                    FROM jsonb_array_elements(tiledata->%s) AS file_element
+                    WHERE file_element ->> 'name' ILIKE %s)""",
+                [DIGITAL_OBJECT_CONTENT_NODE, pattern],
+                output_field=BooleanField(),
+            )
+
+        # RawSQL is a boolean *expression*, which .filter() cannot consume
+        # directly; annotate it and filter on the annotation instead.
+        return (
+            TileModel.objects.filter(nodegroup_id=DIGITAL_OBJECT_CONTENT_NODEGROUP)
+            .annotate(file_name_matches=file_name_matches)
+            .filter(file_name_matches=True)
+            .values_list("resourceinstance_id", flat=True)
+            .distinct()
+        )
+
+    def _digital_objects_by_text_node(self, nodegroup_id, node_id, value, match_mode):
+        """Return digital-object resource PKs whose text node matches value."""
+        filters = Q(nodegroup_id=nodegroup_id)
+        filters &= self._text_filter(f"data__{node_id}", value, match_mode)
+        return (
+            TileModel.objects.filter(filters)
+            .values_list("resourceinstance_id", flat=True)
+            .distinct()
+        )
+
+    def _facet_related_image(self, condition):
+        """Find concepts by their related (depicting) images.
+
+        The ``image_attribute`` sub-field selects what is matched:
+
+        * ``has_image`` — concepts with an internal digital-object depiction OR an
+          external image URL.  ``exists`` is implied regardless of match_mode.
+        * ``file_name`` — the file name on the linked digital object's content.
+        * ``title`` — the linked digital object's name.
+        * ``description`` — the linked digital object's statement.
+
+        The last three are two-hop: matching digital-object resources are resolved
+        first, then concepts referencing any of them via
+        ``depicting_digital_asset_internal`` are returned.  These attributes apply
+        only to internal digital objects — external URLs carry no such metadata.
+        """
+        image_attribute = condition.get("image_attribute", "has_image")
+
+        if image_attribute == "has_image":
+            return (
+                TileModel.objects.filter(
+                    Q(nodegroup_id=DEPICTING_DIGITAL_ASSET_INTERNAL_NODEGROUP)
+                    | Q(nodegroup_id=DEPICTING_DIGITAL_ASSET_EXTERNAL_NODEGROUP)
+                )
+                .values_list("resourceinstance_id", flat=True)
+                .distinct()
+            )
+
+        value = condition.get("value", "").strip()
+        match_mode = condition.get("match_mode", "contains")
+        if not value and match_mode != "exists":
+            return self._all_concept_ids()
+
+        if image_attribute == "file_name":
+            digital_object_ids = self._digital_objects_by_file_name(value, match_mode)
+        elif image_attribute == "title":
+            digital_object_ids = self._digital_objects_by_text_node(
+                DIGITAL_OBJECT_NAME_NODEGROUP,
+                DIGITAL_OBJECT_NAME_CONTENT_NODE,
+                value,
+                match_mode,
+            )
+        elif image_attribute == "description":
+            digital_object_ids = self._digital_objects_by_text_node(
+                DIGITAL_OBJECT_STATEMENT_NODEGROUP,
+                DIGITAL_OBJECT_STATEMENT_CONTENT_NODE,
+                value,
+                match_mode,
+            )
+        else:
+            return self._all_concept_ids().none()
+
+        return self._concepts_depicting(digital_object_ids)
+
+    def _facet_attribution_contributor(self, condition):
+        """Find concepts whose labels or notes are attributed to a specific contributor.
+
+        A contributor is a person or organization referenced via the
+        data_assignment_actor node on both appellative_status (label) and statement
+        (note) tiles.  When the match_mode is 'exists', returns all concepts that
+        have any contributor attributed to at least one label or note.
+        """
+        resource_id = condition.get("value", "").strip()
+        match_mode = condition.get("match_mode", "")
+
+        if match_mode == "exists":
+            filters = Q(
+                nodegroup_id=CONCEPT_NAME_NODEGROUP,
+                **{f"data__{CONCEPT_NAME_DATA_ASSIGNMENT_ACTOR_NODE}__contains": [{}]},
+            ) | Q(
+                nodegroup_id=STATEMENT_NODEGROUP,
+                **{f"data__{STATEMENT_DATA_ASSIGNMENT_ACTOR_NODE}__contains": [{}]},
+            )
+        elif resource_id:
+            filters = Q(
+                nodegroup_id=CONCEPT_NAME_NODEGROUP,
+                **{
+                    f"data__{CONCEPT_NAME_DATA_ASSIGNMENT_ACTOR_NODE}__contains": [
+                        {"resourceId": resource_id}
+                    ]
+                },
+            ) | Q(
+                nodegroup_id=STATEMENT_NODEGROUP,
+                **{
+                    f"data__{STATEMENT_DATA_ASSIGNMENT_ACTOR_NODE}__contains": [
+                        {"resourceId": resource_id}
+                    ]
+                },
+            )
+        else:
+            return self._all_concept_ids()
+
+        return (
+            TileModel.objects.filter(filters)
+            .values_list("resourceinstance_id", flat=True)
+            .distinct()
+        )

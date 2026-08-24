@@ -9,13 +9,17 @@ import { storeToRefs } from "pinia";
 import Button from "primevue/button";
 import Tag from "primevue/tag";
 
+import GenericWidget from "@/arches_vue_components/generics/GenericWidget/GenericWidget.vue";
+
 import DeleteConceptDialog from "@/arches_lingo/components/concept/ConceptHeader/components/DeleteConceptDialog.vue";
 import ExportThesauri from "@/arches_lingo/components/scheme/SchemeHeader/components/ExportThesauri.vue";
-import GenericWidget from "@/arches_component_lab/generics/GenericWidget/GenericWidget.vue";
+import LifecycleButtons from "@/arches_lingo/components/scheme/SchemeHeader/components/LifecycleButtons.vue";
+import ReinstateDialog from "@/arches_lingo/components/generic/ReinstateDialog.vue";
 
 import {
     deleteConcept,
     retireConcept,
+    unretireConcept,
     upsertLingoTile,
 } from "@/arches_lingo/api.ts";
 import {
@@ -26,13 +30,16 @@ import {
     DEFAULT_TOAST_LIFE,
     DELETE,
     DEPRECATE,
-    DRAFT_LIFECYCLE_STATE_ID,
     EDIT,
-    EDITING_LIFECYCLE_STATE_ID,
     ERROR,
     GUIDE_TERM_ICON,
     GUIDE_TERM_URI,
+    HIERARCHY_NAME_ICON,
+    HIERARCHY_NAME_URI,
+    LOCKED_LIFECYCLE_STATE_ID,
     NEW_CONCEPT,
+    PUBLISHED_LIFECYCLE_STATE_ID,
+    RETIRED_LIFECYCLE_STATE_ID,
     SUCCESS,
     TOP_CONCEPT_ICON,
 } from "@/arches_lingo/constants.ts";
@@ -42,9 +49,11 @@ import { navigateToSchemeOrConcept } from "@/arches_lingo/utils.ts";
 
 import { useEditLog } from "@/arches_lingo/composables/useEditLog.ts";
 import { useResourceStore } from "@/arches_lingo/composables/useResourceStore.ts";
+import { useConceptStore } from "@/arches_lingo/stores/useConceptStore.ts";
 import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 
 import type { Ref } from "vue";
+import type { AliasedNodeData } from "@/arches_vue_components/types.ts";
 import type {
     DeleteConceptStrategy,
     ResourceInstanceLifecycleState,
@@ -65,7 +74,7 @@ const props = defineProps<{
     conceptTypeTile:
         | {
               tileid?: string;
-              aliased_data?: Record<string, { node_value?: unknown }>;
+              aliased_data?: Record<string, AliasedNodeData>;
           }
         | undefined;
     isTopConcept: boolean;
@@ -85,12 +94,18 @@ const router = useRouter();
 
 const { isEditor } = storeToRefs(useUserStore());
 const resourceStore = useResourceStore();
+const conceptStore = useConceptStore();
 
 const { openEditLog } = useEditLog(() => props.graphSlug);
+
+const lifecycleButtonsRef = ref<InstanceType<typeof LifecycleButtons> | null>(
+    null,
+);
 
 const showExportDialog = ref(false);
 const exportDialogKey = ref(0);
 const showDeleteDialog = ref(false);
+const showReinstateDialog = ref(false);
 const isLoading = ref(false);
 const isWidgetLoading = ref(false);
 const dialogMode = ref<typeof DELETE | typeof DEPRECATE>(DELETE);
@@ -115,6 +130,7 @@ const conceptIcon = computed(function () {
         props.conceptTypeTile?.aliased_data?.[CONCEPT_TYPE_NODE_ALIAS]
             ?.node_value;
     if (isGuideTermType(typeNodeValue)) return GUIDE_TERM_ICON;
+    if (isHierarchyNameType(typeNodeValue)) return HIERARCHY_NAME_ICON;
     if (props.isTopConcept) return TOP_CONCEPT_ICON;
     return CONCEPT_ICON;
 });
@@ -122,19 +138,63 @@ const conceptIcon = computed(function () {
 const canEditResourceInstances = computed(function () {
     return (
         isEditor.value === true &&
+        !isSchemeLocked.value &&
         props.resourceInstanceId !== undefined &&
         lifecycleState.value?.can_edit_resource_instances === true
     );
 });
 
 const canDelete = computed(function () {
-    if (!isEditor.value || !props.resourceInstanceId) return false;
-    return lifecycleState.value?.id === DRAFT_LIFECYCLE_STATE_ID;
+    if (!isEditor.value || isSchemeLocked.value || !props.resourceInstanceId)
+        return false;
+    return lifecycleState.value?.can_delete_resource_instances === true;
 });
 
-const canDeprecate = computed(function () {
-    if (!isEditor.value || !props.resourceInstanceId) return false;
-    return lifecycleState.value?.id === EDITING_LIFECYCLE_STATE_ID;
+const schemeId = computed(function () {
+    return props.concept?.aliased_data?.part_of_scheme?.aliased_data
+        ?.part_of_scheme?.node_value?.[0]?.resourceId;
+});
+
+const isSchemeRetired = computed(function () {
+    if (!schemeId.value) return false;
+    const scheme = conceptStore.schemes.find(
+        (candidate) => candidate.id === schemeId.value,
+    );
+    return (
+        scheme?.resource_instance_lifecycle_state_id ===
+        RETIRED_LIFECYCLE_STATE_ID
+    );
+});
+
+const isSchemePublished = computed(function () {
+    if (!schemeId.value) return false;
+    const scheme = conceptStore.schemes.find(
+        (candidate) => candidate.id === schemeId.value,
+    );
+    return (
+        scheme?.resource_instance_lifecycle_state_id ===
+        PUBLISHED_LIFECYCLE_STATE_ID
+    );
+});
+
+const isSchemeLocked = computed(function () {
+    if (!schemeId.value) return false;
+    const scheme = conceptStore.schemes.find(
+        (candidate) => candidate.id === schemeId.value,
+    );
+    return (
+        scheme?.resource_instance_lifecycle_state_id ===
+        LOCKED_LIFECYCLE_STATE_ID
+    );
+});
+
+const showLifecycleButtons = computed(function () {
+    return (
+        isEditor.value &&
+        !isSchemeLocked.value &&
+        !isSchemeRetired.value &&
+        !isSchemePublished.value
+    );
 });
 
 function isGuideTermType(typeNodeValue: unknown): boolean {
@@ -146,12 +206,23 @@ function isGuideTermType(typeNodeValue: unknown): boolean {
     );
 }
 
-async function onConceptTypeChange(newValue: ReferenceSelectValue) {
+function isHierarchyNameType(typeNodeValue: unknown): boolean {
+    if (!Array.isArray(typeNodeValue) || typeNodeValue.length === 0) {
+        return false;
+    }
+    return typeNodeValue.some(
+        (typeRef: { uri?: string }) => typeRef.uri === HIERARCHY_NAME_URI,
+    );
+}
+
+async function onConceptTypeChange(newValue: unknown) {
+    const conceptTypeValue = newValue as ReferenceSelectValue;
+
     try {
         await upsertLingoTile(props.graphSlug, CONCEPT_TYPE_NODE_ALIAS, {
             resourceinstance: props.resourceInstanceId,
             aliased_data: {
-                [CONCEPT_TYPE_NODE_ALIAS]: newValue,
+                [CONCEPT_TYPE_NODE_ALIAS]: conceptTypeValue,
             },
             tileid: props.conceptTypeTile?.tileid,
         });
@@ -182,54 +253,40 @@ function confirmDelete() {
     showDeleteDialog.value = true;
 }
 
-function confirmDeprecate() {
-    if (!props.concept?.resourceinstanceid) return;
-    dialogMode.value = DEPRECATE;
-    showDeleteDialog.value = true;
-}
-
-async function executeDelete(strategy: DeleteConceptStrategy | undefined) {
-    const schemeIdentifier =
-        props.concept!.aliased_data?.part_of_scheme?.aliased_data.part_of_scheme
-            ?.node_value?.[0]?.resourceId;
-
-    await deleteConcept(props.concept!.resourceinstanceid, strategy);
-
-    refreshSchemeHierarchy!();
-
-    showDeleteDialog.value = false;
-
-    router.push({
-        name: routeNames.scheme,
-        params: { id: schemeIdentifier },
-        query: router.currentRoute.value.query,
-    });
-}
-
-async function executeDeprecate(strategy: DeleteConceptStrategy | undefined) {
-    await retireConcept(props.concept!.resourceinstanceid, strategy);
-
-    refreshSchemeHierarchy!();
-
-    showDeleteDialog.value = false;
-
-    router.push({
-        name: routeNames.concept,
-        params: { id: props.concept!.resourceinstanceid },
-        query: router.currentRoute.value.query,
-    });
-    refreshReportSection!("all");
-}
-
 async function onConfirmed(strategy: DeleteConceptStrategy | null) {
     if (!props.concept) return;
 
     isLoading.value = true;
     try {
         if (dialogMode.value === DELETE) {
-            await executeDelete(strategy ?? undefined);
+            const schemeIdentifier =
+                props.concept.aliased_data?.part_of_scheme?.aliased_data
+                    ?.part_of_scheme?.node_value?.[0]?.resourceId;
+
+            await deleteConcept(
+                props.concept.resourceinstanceid,
+                strategy ?? undefined,
+            );
+
+            refreshSchemeHierarchy!();
+            showDeleteDialog.value = false;
+
+            router.push({
+                name: routeNames.scheme,
+                params: { id: schemeIdentifier },
+                query: router.currentRoute.value.query,
+            });
         } else {
-            await executeDeprecate(strategy ?? undefined);
+            await retireConcept(
+                props.concept.resourceinstanceid,
+                strategy ?? undefined,
+            );
+
+            refreshSchemeHierarchy!();
+            showDeleteDialog.value = false;
+
+            lifecycleButtonsRef.value?.refreshLifecycleState();
+            refreshReportSection!("all");
         }
     } catch (error) {
         let summary;
@@ -242,6 +299,28 @@ async function onConfirmed(strategy: DeleteConceptStrategy | null) {
             severity: ERROR,
             life: DEFAULT_ERROR_TOAST_LIFE,
             summary,
+            detail: error instanceof Error ? error.message : undefined,
+        });
+    } finally {
+        isLoading.value = false;
+    }
+}
+
+async function onReinstateConfirmed(cascade: boolean) {
+    if (!props.concept) return;
+
+    isLoading.value = true;
+    try {
+        await unretireConcept(props.concept.resourceinstanceid, cascade);
+        refreshSchemeHierarchy!();
+        showReinstateDialog.value = false;
+        lifecycleButtonsRef.value?.refreshLifecycleState();
+        refreshReportSection!("all");
+    } catch (error) {
+        toast.add({
+            severity: ERROR,
+            life: DEFAULT_ERROR_TOAST_LIFE,
+            summary: $gettext("Error reinstating concept"),
             detail: error instanceof Error ? error.message : undefined,
         });
     } finally {
@@ -267,6 +346,16 @@ function addChild() {
         parent: parentId,
     });
 }
+
+function onRetireRequested() {
+    if (!props.concept?.resourceinstanceid) return;
+    dialogMode.value = DEPRECATE;
+    showDeleteDialog.value = true;
+}
+
+function onReinstateRequested() {
+    showReinstateDialog.value = true;
+}
 </script>
 
 <template>
@@ -278,6 +367,15 @@ function addChild() {
         :is-loading="isLoading"
         @confirm="onConfirmed"
         @cancel="showDeleteDialog = false"
+    />
+    <ReinstateDialog
+        v-if="concept && showReinstateDialog"
+        :resource-id="concept.resourceinstanceid"
+        :resource-name="label?.value"
+        resource-type="concept"
+        :is-loading="isLoading"
+        @confirm="onReinstateConfirmed"
+        @cancel="showReinstateDialog = false"
     />
     <ExportThesauri
         v-if="concept && showExportDialog"
@@ -308,19 +406,24 @@ function addChild() {
                     severity="secondary"
                     class="concept-type-badge"
                 />
-                <GenericWidget
+                <div
                     v-else-if="concept && concept.resourceinstanceid"
-                    :node-alias="CONCEPT_TYPE_NODE_ALIAS"
-                    :graph-slug="graphSlug"
-                    :mode="EDIT"
-                    :aliased-node-data="
-                        conceptTypeTile?.aliased_data?.[CONCEPT_TYPE_NODE_ALIAS]
-                    "
-                    :should-show-label="false"
                     class="concept-type-widget"
-                    @update:is-loading="isWidgetLoading = $event"
-                    @update:value="onConceptTypeChange"
-                />
+                >
+                    <GenericWidget
+                        :node-alias="CONCEPT_TYPE_NODE_ALIAS"
+                        :graph-slug="graphSlug"
+                        :mode="EDIT"
+                        :aliased-node-data="
+                            conceptTypeTile?.aliased_data?.[
+                                CONCEPT_TYPE_NODE_ALIAS
+                            ] ?? null
+                        "
+                        :should-show-label="false"
+                        @update:is-loading="isWidgetLoading = $event"
+                        @update:value="onConceptTypeChange"
+                    />
+                </div>
             </div>
         </div>
         <div
@@ -359,14 +462,13 @@ function addChild() {
                 :aria-label="$gettext('Delete Concept')"
                 @click="confirmDelete"
             />
-            <Button
-                v-if="canDeprecate"
-                icon="pi pi-ban"
-                :severity="DANGER"
-                class="delete-button"
-                :label="$gettext('Deprecate')"
-                :aria-label="$gettext('Deprecate Concept')"
-                @click="confirmDeprecate"
+            <LifecycleButtons
+                v-if="showLifecycleButtons"
+                ref="lifecycleButtonsRef"
+                :resource-instance-id="resourceInstanceId"
+                :retire-reinstate-only="true"
+                @retire-requested="onRetireRequested"
+                @reinstate-requested="onReinstateRequested"
             />
         </div>
     </div>

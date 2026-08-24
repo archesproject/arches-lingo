@@ -9,7 +9,7 @@ import ConceptNoteViewer from "@/arches_lingo/components/concept/ConceptNote/com
 
 import { EDIT, VIEW } from "@/arches_lingo/constants.ts";
 
-import { fetchTileData } from "@/arches_component_lab/generics/GenericCard/api.ts";
+import { fetchTileData } from "@/arches_vue_components/generics/GenericCard/api.ts";
 import { useResourceStore } from "@/arches_lingo/composables/useResourceStore.ts";
 
 import type {

@@ -12,6 +12,7 @@ import ConceptMatch from "@/arches_lingo/components/concept/ConceptMatch/Concept
 import HierarchicalPosition from "@/arches_lingo/components/concept/HierarchicalPosition/HierarchicalPosition.vue";
 import TopConceptOf from "@/arches_lingo/components/concept/TopConceptOf/TopConceptOf.vue";
 import ConceptImages from "@/arches_lingo/components/concept/ConceptImages/ConceptImages.vue";
+import ConceptNarrowerConcepts from "@/arches_lingo/components/concept/ConceptNarrowerConcepts/ConceptNarrowerConcepts.vue";
 
 const { $gettext } = useGettext();
 
@@ -71,6 +72,13 @@ const componentData = computed(() => [
         sectionTitle: $gettext("Top Concept Of"),
         graphSlug: "concept",
         nodegroupAlias: "top_concept_of",
+    },
+    {
+        component: ConceptNarrowerConcepts,
+        componentName: "ConceptNarrowerConcepts",
+        sectionTitle: $gettext("Narrower Concepts"),
+        graphSlug: "concept",
+        nodegroupAlias: "",
     },
 ]);
 </script>
