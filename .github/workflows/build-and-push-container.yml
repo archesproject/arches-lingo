@@ -75,6 +75,12 @@ jobs:
           cp -r arches-docker/conf.d project/.runtime/
           cp -r arches-docker/nginx project/.runtime/
           cp -r arches-docker/scaffold/templates/.runtime/internal project/.runtime/
+          # build_deps.sh is project-owned and required by the Dockerfile COPY —
+          # create it if this project hasn't scaffolded one yet, but never
+          # overwrite an existing (committed) one.
+          mkdir -p project/.runtime/hooks
+          [ -f project/.runtime/hooks/build_deps.sh ] || cp arches-docker/scaffold/templates/.runtime/hooks/build_deps.sh project/.runtime/hooks/build_deps.sh
+          chmod +x project/.runtime/hooks/build_deps.sh
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v6
