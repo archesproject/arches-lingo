@@ -21,6 +21,7 @@ import SchemeIdentifierField from "@/arches_lingo/components/scheme/SchemeHeader
 import SchemeURITemplateField from "@/arches_lingo/components/scheme/SchemeHeader/components/SchemeURITemplateField.vue";
 import SchemeAttributionField from "@/arches_lingo/components/scheme/SchemeHeader/components/SchemeAttributionField.vue";
 import ConceptIdentifierCounterField from "@/arches_lingo/components/scheme/SchemeHeader/components/ConceptIdentifierCounterField.vue";
+import GetAsMenu from "@/arches_lingo/components/generic/GetAsMenu.vue";
 import LifecycleStateBadge from "@/arches_lingo/components/generic/LifecycleStateBadge.vue";
 
 import {
@@ -727,6 +728,15 @@ async function onReinstateConfirmed(cascade: boolean) {
                                 :aria-label="$gettext('Copy URI')"
                                 @click="copyUriToClipboard(schemeUri)"
                             ></Button>
+                            <GetAsMenu
+                                resource-type="scheme"
+                                :resource-instance-id="
+                                    props.resourceInstanceId!
+                                "
+                                :file-base-name="
+                                    identifierValue || props.resourceInstanceId!
+                                "
+                            />
                         </div>
                         <span
                             v-else

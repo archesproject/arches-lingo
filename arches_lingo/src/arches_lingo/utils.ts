@@ -475,6 +475,15 @@ export function generateConditionId(): string {
     return `cond-${nextConditionId++}`;
 }
 
+export function triggerBlobDownload(blob: Blob, filename: string) {
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    link.click();
+    window.URL.revokeObjectURL(url);
+}
+
 export function filterTreeByLifecycleStates(
     treeNodes: TreeNode[],
     selectedStateIds: Set<string>,

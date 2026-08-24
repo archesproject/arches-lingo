@@ -1,6 +1,6 @@
 import type { Component, InjectionKey, Ref } from "vue";
 import type { Language } from "@/arches_vue_components/types.ts";
-import type { Concept } from "@/arches_lingo/types.ts";
+import type { Concept, RdfExportFormat } from "@/arches_lingo/types.ts";
 
 export const ERROR = "error";
 export const SUCCESS = "success";
@@ -52,6 +52,7 @@ export const GUIDE_TERM_ICON = "pi pi-angle-double-right";
 export const HIERARCHY_NAME_ICON = "pi pi-sitemap";
 export const SCHEME_ICON = "pi pi-folder";
 export const TOP_CONCEPT_ICON = "pi pi-arrow-circle-up";
+export const GET_AS_ICON = "pi pi-download";
 
 export const DRAFT_LIFECYCLE_STATE_ID = "0e7f8c6d-1f7b-4c2a-9a0c-2b9e0d6c8f11";
 export const EDITING_LIFECYCLE_STATE_ID =
@@ -72,6 +73,13 @@ export const SKOS_PREF_LABEL_URI =
     "http://www.w3.org/2004/02/skos/core#prefLabel";
 export const SKOS_ALT_LABEL_URI =
     "http://www.w3.org/2004/02/skos/core#altLabel";
+
+export const RDF_EXPORT_FORMATS: RdfExportFormat[] = [
+    { token: "jsonld", label: "JSON-LD", extension: "jsonld" },
+    { token: "turtle", label: "Turtle", extension: "ttl" },
+    { token: "nt", label: "N-Triples", extension: "nt" },
+    { token: "xml", label: "RDF/XML", extension: "rdf" },
+];
 
 // Injection keys
 export const openPanelComponentKey = Symbol() as InjectionKey<
