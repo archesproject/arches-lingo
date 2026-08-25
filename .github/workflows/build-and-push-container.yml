@@ -11,6 +11,14 @@
 # The following must be set as repository-level variables (not environment-scoped):
 #   ARCHES_PROJECT      - e.g. arches-myproject
 #   ARCHES_PROJECT_PACKAGE  - e.g. arches_myproject
+#   ARCHES_DOCKER_REF   - e.g. v1.0.0
+#
+# ARCHES_DOCKER_REF pins the arches-docker release this project builds against.
+# It must be an immutable ref — a release tag (vX.Y.Z) or a full 40-char commit
+# SHA. Branch names are rejected: floating on a branch means an unrelated push
+# to arches-docker can change or break this build, and that the same project
+# commit no longer produces the same image. To adopt a new arches-docker
+# release, bump this variable deliberately (see arches-docker UPGRADING.md).
 #
 # And a repository secret:
 #   FARGEO_PAT  - GitHub PAT with read access to fargeo/arches-docker
@@ -32,10 +40,33 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       environment: ${{ steps.env.outputs.name }}
+      arches_docker_ref: ${{ steps.infra.outputs.ref }}
     steps:
       - name: Extract environment from branch
         id: env
         run: echo "name=${GITHUB_REF_NAME#deploy/}" >> $GITHUB_OUTPUT
+
+      # Validate the arches-docker pin here, before any build job starts, so a
+      # missing or floating ref fails once and fast rather than once per arch.
+      # An unset variable is especially dangerous to pass through: actions/checkout
+      # treats an empty `ref` as "use the default branch", which would silently
+      # restore the floating-on-main behaviour this pin exists to prevent.
+      - name: Resolve and validate arches-docker ref
+        id: infra
+        env:
+          ARCHES_DOCKER_REF: ${{ vars.ARCHES_DOCKER_REF }}
+        run: |
+          if [ -z "${ARCHES_DOCKER_REF}" ]; then
+            echo "::error::ARCHES_DOCKER_REF repository variable is not set. Pin an immutable arches-docker release tag (e.g. v1.0.0). See arches-docker UPGRADING.md."
+            exit 1
+          fi
+          if [[ ! "${ARCHES_DOCKER_REF}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] \
+             && [[ ! "${ARCHES_DOCKER_REF}" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::ARCHES_DOCKER_REF is '${ARCHES_DOCKER_REF}', which is not an immutable ref. Use a release tag (vX.Y.Z) or a full 40-character commit SHA — not a branch name."
+            exit 1
+          fi
+          echo "Building against arches-docker ${ARCHES_DOCKER_REF}"
+          echo "ref=${ARCHES_DOCKER_REF}" >> $GITHUB_OUTPUT
 
   build:
     name: Build (${{ matrix.slug }})
@@ -62,7 +93,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           repository: fargeo/arches-docker
-          ref: main
+          ref: ${{ needs.setup.outputs.arches_docker_ref }}
           token: ${{ secrets.FARGEO_PAT }}
           path: arches-docker
 
