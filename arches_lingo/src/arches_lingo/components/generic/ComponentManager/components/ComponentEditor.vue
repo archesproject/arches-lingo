@@ -42,12 +42,6 @@ provide("componentEditorFormRef", componentEditorFormRef);
 /**
  * Called by child editors at the end of their save() (in their finally block)
  * to re-sync the global dirty flag with the form's actual dirty state.
- *
- * Saving a new concept navigates to the newly created concept's route, which
- * unmounts this editor instance mid-save. The child editor's save() resumes
- * from its stale closure once that navigation settles, so this guard against
- * isComponentMounted prevents that stale continuation from reviving the dirty
- * flag after onUnmounted has already cleared it for the destroyed instance.
  */
 function onSaveSettled() {
     if (!isComponentMounted.value) return;
