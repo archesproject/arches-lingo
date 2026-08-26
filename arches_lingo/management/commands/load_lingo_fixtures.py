@@ -47,7 +47,10 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS("Restored fixture archive."))
         for table_name, row_count in row_counts.items():
-            self.stdout.write(f"  {table_name}: {row_count}")
+            if row_count is None:
+                self.stdout.write(f"  {table_name}: not present in this archive")
+            else:
+                self.stdout.write(f"  {table_name}: {row_count}")
 
         if options["no_index"]:
             graph_ids = get_lingo_fixture_graph_ids()
