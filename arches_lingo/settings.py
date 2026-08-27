@@ -612,7 +612,7 @@ LINGO_ALLOW_ANONYMOUS_ACCESS = False
 # Shows a one-time acknowledgeable disclaimer modal on first visit, intended
 # for demo deployments that are not meant to be mistaken for a production site.
 SHOW_DEMO_DISCLAIMER = (
-    get_optional_env_variable("ARCHES_LINGO_SHOW_DEMO_DISCLAIMER", "False") == "True"
+    get_optional_env_variable("ARCHES_LINGO_SHOW_DEMO_DISCLAIMER", "True") == "True"
 )
 
 RESOURCE_LIST_PAGE_SIZE = 25

@@ -20,7 +20,7 @@ const disclaimerParagraphs = [
         "The *Getty Art and Architecture Thesaurus® (AAT)* and *General Multilingual Environmental Thesaurus (GEMET)* are locked (as of the dates they were loaded) and are not editable. They are included here only to demonstrate navigating, searching, and matching across vocabularies. The *Forum on Information Standards in Heritage (FISH)* has generously made their thesauri available for trial editing in a demo environment primarily to allow visitors to explore the flexibility and functionality of Lingo, including how vocabularies can be managed, modified, and extended.",
     ),
     $gettext(
-        "Should you make trial edits to the *FISH* vocabularies be aware that the **site is refreshed every week on Sunday**, reverting all edits and additions.",
+        "Should you make trial edits to the *FISH* vocabularies be aware that the **site is refreshed weekly on Sunday**, reverting all edits and additions.",
     ),
     $gettext(
         "To access editing functionality to *FISH*, please request an account by emailing us at [contact@archesproject.org](mailto:contact@archesproject.org?subject=Lingo%20Demo%20Editing%20Access) with the subject \u201cLingo Demo Editing Access.\u201d Questions or comments can be shared on the [Arches Community Forum](https://community.archesproject.org/) using the arches-lingo tag.",

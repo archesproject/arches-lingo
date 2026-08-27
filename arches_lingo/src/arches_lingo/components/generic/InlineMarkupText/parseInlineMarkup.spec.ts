@@ -29,9 +29,9 @@ describe("parseInlineMarkup", () => {
 
     it("keeps punctuation that directly follows a marked-up phrase", () => {
         expect(
-            parseInlineMarkup("**refreshed every week on Sunday**, reverting"),
+            parseInlineMarkup("**refreshed weekly on Sunday**, reverting"),
         ).toEqual([
-            { text: "refreshed every week on Sunday", style: "strong" },
+            { text: "refreshed weekly on Sunday", style: "strong" },
             { text: ", reverting" },
         ]);
     });
