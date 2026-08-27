@@ -609,9 +609,6 @@ ES_MAPPING_MODIFIER_CLASSES = [
 
 LINGO_ALLOW_ANONYMOUS_ACCESS = False
 
-# By setting LINGO_ALLOW_ANONYMOUS_EXPORT to True, the anonymous user is granted
-# export permissions alongside the Lingo Editor, Lingo Admin, and Lingo Exporter
-# groups. Has no effect unless LINGO_ALLOW_ANONYMOUS_ACCESS is also True.
 LINGO_ALLOW_ANONYMOUS_EXPORT = False
 
 RESOURCE_LIST_PAGE_SIZE = 25
