@@ -24,9 +24,11 @@ from arches_controlled_lists.management.commands.packages import (
 
 from arches_lingo.permissions import (
     is_lingo_editor,
+    is_lingo_exporter,
 )
 from arches_lingo.const import (
     LINGO_EDITOR_GROUP_NAME,
+    LINGO_EXPORTER_GROUP_NAME,
     CONCEPTS_GRAPH_ID,
     SCHEMES_GRAPH_ID,
     TOP_CONCEPT_OF_NODE_AND_NODEGROUP,
@@ -807,6 +809,34 @@ class PermissionTests(TestCase):
         )
         editor_group = Group.objects.get(name=LINGO_EDITOR_GROUP_NAME)
         cls.editor_user.groups.add(editor_group)
+        cls.exporter_user = User.objects.create_user(
+            username="exporter", password="testpass"
+        )
+        exporter_group = Group.objects.get(name=LINGO_EXPORTER_GROUP_NAME)
+        cls.exporter_user.groups.add(exporter_group)
+
+    def test_is_lingo_exporter_anonymous_user(self):
+        anonymous = AnonymousUser()
+        self.assertFalse(is_lingo_exporter(anonymous))
+
+    def test_is_lingo_exporter_regular_user(self):
+        self.assertFalse(is_lingo_exporter(self.regular_user))
+
+    def test_is_lingo_exporter_exporter_user(self):
+        self.assertTrue(is_lingo_exporter(self.exporter_user))
+
+    def test_is_lingo_exporter_editor_user(self):
+        self.assertTrue(is_lingo_exporter(self.editor_user))
+
+    def test_is_lingo_exporter_superuser(self):
+        self.assertTrue(is_lingo_exporter(self.admin))
+
+    @override_settings(
+        LINGO_ALLOW_ANONYMOUS_ACCESS=True, LINGO_ALLOW_ANONYMOUS_EXPORT=True
+    )
+    def test_is_lingo_exporter_anonymous_user_when_allowed(self):
+        anonymous = AnonymousUser()
+        self.assertTrue(is_lingo_exporter(anonymous))
 
     def test_is_lingo_editor_anonymous_user(self):
         anonymous = AnonymousUser()
@@ -826,6 +856,7 @@ class PermissionTests(TestCase):
         result = json.loads(response.content)
         self.assertTrue(result["is_anonymous"])
         self.assertFalse(result["is_lingo_editor"])
+        self.assertFalse(result["is_lingo_exporter"])
         self.assertFalse(result["is_staff"])
         self.assertNotIn("allow_anonymous_access", result)
 
@@ -835,8 +866,18 @@ class PermissionTests(TestCase):
         result = json.loads(response.content)
         self.assertFalse(result["is_anonymous"])
         self.assertFalse(result["is_lingo_editor"])
+        self.assertFalse(result["is_lingo_exporter"])
         self.assertFalse(result["is_staff"])
         self.assertEqual(result["username"], "regular")
+
+    def test_lingo_user_view_exporter(self):
+        self.client.force_login(self.exporter_user)
+        response = self.client.get(reverse("api-lingo-user"))
+        result = json.loads(response.content)
+        self.assertFalse(result["is_anonymous"])
+        self.assertFalse(result["is_lingo_editor"])
+        self.assertTrue(result["is_lingo_exporter"])
+        self.assertEqual(result["username"], "exporter")
 
     def test_lingo_user_view_editor(self):
         self.client.force_login(self.editor_user)

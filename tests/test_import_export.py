@@ -12,7 +12,7 @@ from django.contrib.auth.models import Group, User
 from django.core import management
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.http import HttpRequest
-from django.test import TestCase, TransactionTestCase
+from django.test import TestCase, TransactionTestCase, override_settings
 from django.urls import reverse
 from rdflib import Graph
 
@@ -28,7 +28,7 @@ from arches.app.models.models import (
 from arches.app.utils.skos import SKOSReader
 from arches_querysets.models import ResourceTileTree
 
-from arches_lingo.const import LINGO_EDITOR_GROUP_NAME
+from arches_lingo.const import LINGO_EDITOR_GROUP_NAME, LINGO_EXPORTER_GROUP_NAME
 from arches_lingo.etl_modules.migrate_to_lingo import LingoResourceImporter
 from arches_lingo.etl_modules.lingo_resource_exporter import LingoResourceExporter
 from tests.tests import ViewTests
@@ -577,6 +577,10 @@ class ExportViewTests(TestCase):
             username="lingo_editor_exporter", password="x"
         )
         cls.lingo_editor.groups.add(Group.objects.get(name=LINGO_EDITOR_GROUP_NAME))
+        cls.lingo_exporter = User.objects.create_user(
+            username="lingo_exporter", password="x"
+        )
+        cls.lingo_exporter.groups.add(Group.objects.get(name=LINGO_EXPORTER_GROUP_NAME))
         cls.non_editor = User.objects.create_user(
             username="non_editor_exporter", password="x"
         )
@@ -610,6 +614,19 @@ class ExportViewTests(TestCase):
         self.assertEqual(response.status_code, HTTPStatus.INTERNAL_SERVER_ERROR)
         self.assertFalse(response.json()["success"])
 
+    @patch.object(
+        LingoResourceExporter,
+        "start",
+        return_value={"success": True, "data": {"load_id": "test-load-id"}},
+    )
+    def test_lingo_exporter_can_start_export(self, mock_start):
+        self.client.force_login(self.lingo_exporter)
+
+        response = self.client.post(self.export_url, self.export_payload)
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertTrue(mock_start.called)
+
     def test_non_editor_cannot_start_export(self):
         self.client.force_login(self.non_editor)
 
@@ -621,3 +638,17 @@ class ExportViewTests(TestCase):
         response = self.client.post(self.export_url, self.export_payload)
 
         self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+
+    @override_settings(
+        LINGO_ALLOW_ANONYMOUS_ACCESS=True, LINGO_ALLOW_ANONYMOUS_EXPORT=True
+    )
+    @patch.object(
+        LingoResourceExporter,
+        "start",
+        return_value={"success": True, "data": {"load_id": "test-load-id"}},
+    )
+    def test_anonymous_user_can_start_export_when_allowed(self, mock_start):
+        response = self.client.post(self.export_url, self.export_payload)
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertTrue(mock_start.called)

@@ -15,7 +15,7 @@ from arches.app.models import models
 from arches.app.utils.response import JSONErrorResponse, JSONResponse
 
 from arches_lingo.const import LINGO_EDITOR_GROUP_NAME
-from arches_lingo.permissions import is_lingo_admin, is_lingo_editor
+from arches_lingo.permissions import is_lingo_admin, is_lingo_editor, is_lingo_exporter
 
 
 class LingoUserView(View):
@@ -41,6 +41,7 @@ class LingoUserView(View):
                 "phone": phone,
                 "is_lingo_editor": is_lingo_editor(user),
                 "is_lingo_admin": is_lingo_admin(user),
+                "is_lingo_exporter": is_lingo_exporter(user),
                 "is_anonymous": is_anonymous,
                 "is_staff": getattr(user, "is_staff", False),
             }
@@ -65,6 +66,7 @@ class UserProfileAPIView(View):
             "phone": phone,
             "is_lingo_editor": is_lingo_editor(user),
             "is_lingo_admin": is_lingo_admin(user),
+            "is_lingo_exporter": is_lingo_exporter(user),
             "is_anonymous": False,
         }
 
