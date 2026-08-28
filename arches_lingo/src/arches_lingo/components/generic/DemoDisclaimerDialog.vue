@@ -14,33 +14,17 @@ const { isDemoDisclaimerVisible, acknowledgeDemoDisclaimer } =
 
 const disclaimerParagraphs = [
     $gettext(
-        "**This demo site is for evaluation purposes only.** The vocabularies loaded here should **NOT** be treated as an authoritative source.",
+        "This demo site is for evaluation purposes only. The vocabularies loaded here should NOT be treated as an authoritative source.",
     ),
     $gettext(
-        "The *Getty Art and Architecture Thesaurus® (AAT)* and *General Multilingual Environmental Thesaurus (GEMET)* are locked (as of the dates they were loaded) and are not editable. They are included here only to demonstrate navigating, searching, and matching across vocabularies. The *Forum on Information Standards in Heritage (FISH)* has generously made their thesauri available for trial editing in a demo environment primarily to allow visitors to explore the flexibility and functionality of Lingo, including how vocabularies can be managed, modified, and extended.",
+        "The [Getty Art and Architecture Thesaurus® (AAT)](https://lingodemo.archesproject.org/scheme/ea43bfa0-5eda-5666-884d-2885976a28d3?hierarchy=1) and [General Multilingual Environmental Thesaurus (GEMET)](https://lingodemo.archesproject.org/scheme/4dbcfd46-9c99-57b1-86e7-8559ac277b21?hierarchy=1) are locked and included only as reference examples. The [Forum on Information Standards in Heritage (FISH)](https://lingodemo.archesproject.org/scheme/bf892ca3-c994-310a-9088-16ac74113409?hierarchy=1) has generously made their thesauri available for trial editing. For more details, visit the scheme records linked above.",
     ),
     $gettext(
-        "Should you make trial edits to the *FISH* vocabularies be aware that the **site is refreshed weekly on Sunday**, reverting all edits and additions.",
+        "You will automatically be logged in as a demo user with read-only access. To request an account with editing functionality to the FISH thesauri, please email us at [contact@archesproject.org](mailto:contact@archesproject.org). Be aware that the demo site is refreshed weekly on Sundays at 5:00 AM GMT, reverting all edits and additions.",
     ),
     $gettext(
-        "To access editing functionality to *FISH*, please request an account by emailing us at [contact@archesproject.org](mailto:contact@archesproject.org?subject=Lingo%20Demo%20Editing%20Access) with the subject \u201cLingo Demo Editing Access.\u201d Questions or comments can be shared on the [Arches Community Forum](https://community.archesproject.org/) using the arches-lingo tag.",
+        "Questions or comments can be shared on the [Arches Community Forum](https://community.archesproject.org/) using the *arches-lingo* tag.",
     ),
-    $gettext("For official vocabularies, see:"),
-];
-
-const officialVocabularyLinks = [
-    {
-        label: $gettext("FISH Thesauri"),
-        url: "https://heritage-standards.org.uk/fish-vocabularies/",
-    },
-    {
-        label: $gettext("Getty AAT®"),
-        url: "https://www.getty.edu/research/tools/vocabularies/aat/",
-    },
-    {
-        label: $gettext("GEMET"),
-        url: "https://www.eionet.europa.eu/gemet/en/about/",
-    },
 ];
 </script>
 
@@ -61,21 +45,6 @@ const officialVocabularyLinks = [
             >
                 <InlineMarkupText :markup="disclaimerParagraph" />
             </p>
-
-            <ul class="official-vocabulary-list">
-                <li
-                    v-for="officialVocabularyLink of officialVocabularyLinks"
-                    :key="officialVocabularyLink.url"
-                >
-                    <a
-                        :href="officialVocabularyLink.url"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                    >
-                        {{ officialVocabularyLink.label }}
-                    </a>
-                </li>
-            </ul>
         </div>
 
         <template #footer>
@@ -96,15 +65,5 @@ const officialVocabularyLinks = [
 .dialog-text {
     margin: 0 0 0.75rem;
     font-size: var(--p-lingo-font-size-normal);
-}
-
-.official-vocabulary-list {
-    margin: 0;
-    padding-inline-start: 1.5rem;
-    font-size: var(--p-lingo-font-size-normal);
-}
-
-.official-vocabulary-list li {
-    margin-bottom: 0.25rem;
 }
 </style>
