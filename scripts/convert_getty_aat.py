@@ -85,6 +85,9 @@ DEFAULT_LOCAL_ARCHIVE = "explicit.zip"
 # identifier tiles it had previously ("300000000").
 DEFAULT_SCHEME_IDENTIFIER_URI = "http://vocab.getty.edu/aat/300000000"
 
+# Label given to the synthesised scheme when the export declares none of its own.
+DEFAULT_SCHEME_PREF_LABEL = "Getty Art & Architecture Thesaurus (AAT)"
+
 
 # ---------------------------------------------------------------------------
 # RDF / SKOS predicate URI constants
@@ -757,7 +760,12 @@ def _write_predicate_elements(out, predicate_uri, raw_objects):
 
 
 def write_skos_xml(
-    output_path, concepts, schemes, subject_data, scheme_identifier_uri=None
+    output_path,
+    concepts,
+    schemes,
+    subject_data,
+    scheme_identifier_uri=None,
+    scheme_pref_label=DEFAULT_SCHEME_PREF_LABEL,
 ):
     """Write the collected AAT data as SKOS RDF/XML."""
     print(f"Writing output to {output_path} ...", flush=True)
@@ -786,7 +794,7 @@ def write_skos_xml(
             if SKOS_PREF_LABEL not in scheme_data:
                 out.write(
                     '    <skos:prefLabel xml:lang="en">'
-                    "Art &amp; Architecture Thesaurus (AAT)"
+                    f"{escape(scheme_pref_label)}"
                     "</skos:prefLabel>\n"
                 )
             out.write("  </skos:ConceptScheme>\n\n")
@@ -974,6 +982,14 @@ def main():
         ),
     )
     parser.add_argument(
+        "--scheme-pref-label",
+        default=DEFAULT_SCHEME_PREF_LABEL,
+        help=(
+            "English prefLabel for the synthesised scheme "
+            f"(default: {DEFAULT_SCHEME_PREF_LABEL!r})."
+        ),
+    )
+    parser.add_argument(
         "--scheme-identifier",
         default=DEFAULT_SCHEME_IDENTIFIER_URI,
         help=(
@@ -1124,7 +1140,12 @@ def main():
     # Step 7: write SKOS RDF/XML
     print()
     written = write_skos_xml(
-        args.output, concepts, schemes, subject_data, args.scheme_identifier
+        args.output,
+        concepts,
+        schemes,
+        subject_data,
+        args.scheme_identifier,
+        args.scheme_pref_label,
     )
 
     output_abs = os.path.abspath(args.output)

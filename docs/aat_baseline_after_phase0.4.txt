@@ -1,0 +1,133 @@
+SELECT 58736
+CREATE INDEX
+SELECT 58736
+CREATE INDEX
+== 1. AAT concept count ==
+ aat_concepts 
+--------------
+        58736
+
+== 2. Concepts per scheme (non-AAT counts must be unchanged) ==
+              scheme_id               | concepts 
+--------------------------------------+----------
+ ea43bfa0-5eda-5666-884d-2885976a28d3 |    58736
+ 4dbcfd46-9c99-57b1-86e7-8559ac277b21 |     5577
+ 844b63f0-27e3-358d-9362-147379fc3420 |     5009
+ bf892ca3-c994-310a-9088-16ac74113409 |     2079
+ 488e13fb-62d5-3943-a915-dfa4187fe8e8 |     1394
+ 98a8a1d4-aa16-3621-9f91-49f447b739e0 |      735
+ c120c8cd-5dc1-35be-b7e4-b2f030b7ef2a |      670
+ ee403d3c-33e5-37dc-8cdd-da8cd9017af1 |      556
+ cb6b7022-00a8-329a-b42f-816d1567feaf |      357
+ f4975d84-7af2-38f4-bb96-8e0fd5e6a04b |      299
+ 0436a175-74ff-38c5-974c-0472f3ec2730 |      277
+ 614eb906-12d3-35af-9b3a-e33c7707c8db |      232
+ 20340be9-0a82-38dc-88aa-9545a05cd9da |      143
+ 6fed8739-bdef-3186-b645-775efcfaefaa |      134
+ 78b7e400-99dc-386c-a3d4-ba9e012dc3ed |      122
+ 5986bf4b-2407-3b5f-8c66-b0147e85663b |       79
+
+== 3. Tiles per nodegroup on AAT concepts ==
+       nodegroup       | tiles  | concepts 
+-----------------------+--------+----------
+ appellative_status    | 513828 |    58736
+ statement             | 137953 |    47502
+ classification_status |  85009 |    58728
+ URI                   |  58736 |    58736
+ identifier            |  58736 |    58736
+ part_of_scheme        |  58736 |    58736
+ type                  |  58736 |    58736
+ relation_status       |  23498 |    14642
+ top_concept_of        |      8 |        8
+
+== 4. Attribution fill rates (timespans expected 0) ==
+ tile_kind | total  | with_sources | with_contributors | with_timespan 
+-----------+--------+--------------+-------------------+---------------
+ labels    | 513828 |       510147 |            513328 |             0
+ notes     | 137953 |       134859 |            137940 |             0
+
+== 5. Concept type distribution ==
+  concept_type  | count 
+----------------+-------
+ concept        | 56971
+ guide term     |  1719
+ hierarchy name |    38
+ facet          |     8
+
+== 6. Top relation types in use ==
+             relation_type             | count 
+---------------------------------------+-------
+ distinguished from - any              |  4844
+ meaning/usage overlaps with - any     |  3492
+ source for - material                 |   769
+ derived/made from - genus/species     |   743
+ related to - any                      |   612
+ conjuncted with - things              |   588
+ provide context - things              |   553
+ contextualized in - things            |   553
+ produced by - activity/event/process  |   395
+ produces - things                     |   376
+ required for - things                 |   355
+ require - things                      |   355
+ requires - things                     |   324
+ required for - activity/event/process |   324
+ create - things                       |   317
+ created by - role                     |   317
+ practice/study - field/discipline     |   271
+ practiced/studied by - role           |   271
+ performed by - role                   |   270
+ perform - activity/event              |   268
+
+== 7. Coverage gaps: AAT concepts missing URI / identifier / type (must be 0) ==
+ missing_uri | missing_identifier_tile | missing_type | missing_resource_identifier 
+-------------+-------------------------+--------------+-----------------------------
+           0 |                       0 |            0 |                           0
+
+== 8. Cross-scheme concept relations (must be 0) ==
+ cross_scheme_relations 
+------------------------
+                      0
+
+== 9. Attribution resources by graph ==
+          model          | count 
+-------------------------+-------
+ Textual Work (system)   | 80704
+ Concept                 | 76399
+ Digital Object (system) |   241
+ Group (system)          |    80
+ Scheme                  |    16
+ Person (system)         |     1
+ Arches System Settings  |     1
+
+== 10. concept_identifier_counters (AAT scheme must be ABSENT) ==
+ counter_rows | aat_rows 
+--------------+----------
+           15 |        0
+
+== 11. The 8 facets (all must be present, typed facet) ==
+                 uri                  | concept_type 
+--------------------------------------+--------------
+ http://vocab.getty.edu/aat/300264086 | facet
+ http://vocab.getty.edu/aat/300264087 | facet
+ http://vocab.getty.edu/aat/300264088 | facet
+ http://vocab.getty.edu/aat/300264089 | facet
+ http://vocab.getty.edu/aat/300264090 | facet
+ http://vocab.getty.edu/aat/300264091 | facet
+ http://vocab.getty.edu/aat/300264092 | facet
+ http://vocab.getty.edu/aat/300343372 | facet
+
+== 12. Golden stress cases (shape must hold; counts may drift) ==
+                 uri                  | labels | langs | notes | relations 
+--------------------------------------+--------+-------+-------+-----------
+ http://vocab.getty.edu/aat/300005433 |     30 |    14 |     9 |         1
+ http://vocab.getty.edu/aat/300011798 |     22 |    17 |     5 |         3
+ http://vocab.getty.edu/aat/300028051 |     26 |    18 |     6 |         7
+ http://vocab.getty.edu/aat/300042513 |     28 |    15 |     9 |         3
+ http://vocab.getty.edu/aat/300263147 |     54 |     6 |     3 |         0
+ http://vocab.getty.edu/aat/300265752 |     51 |    12 |     4 |         2
+ http://vocab.getty.edu/aat/300311076 |      8 |     7 |     4 |        31
+
+== 13. Controlled-list referential integrity (dangling must be 0) ==
+ ref_node | distinct_items | dangling 
+----------+----------------+----------
+

@@ -55,3 +55,12 @@ Makefile
 .runtime/development/env_file.env
 .runtime/development/env_file.env.sample
 .runtime/restore-tables.sh
+
+# AAT refresh working files (see docs/aat-refresh-plan-2026-08.md)
+*.dump
+getty_aat_skos*.xml
+aat_sources*.json
+aat_uri_to_resourceid.csv
+aat_baseline_after.txt
+explicit.zip
+full.zip
