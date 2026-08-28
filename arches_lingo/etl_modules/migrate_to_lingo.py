@@ -105,6 +105,11 @@ class LingoResourceImporter(BaseImportModule):
             if request
             else kwargs.get("namespace_template", "")
         )
+        # Optional {subject_uri: resourceinstanceid} map keeping resource ids
+        # stable across a re-import; see utils.skos.load_pinned_resource_ids.
+        self.pinned_resource_ids = (
+            {} if request else kwargs.get("pinned_resource_ids", None) or {}
+        )
         self.language_lookup = {
             lang.code: lang.name for lang in models.Language.objects.all()
         }
@@ -1024,7 +1029,9 @@ class LingoResourceImporter(BaseImportModule):
                     rdf = skos_reader.read_file(self.file)
                     self.schemes, self.concepts = (
                         skos_reader.extract_concepts_from_skos_for_lingo_import(
-                            rdf, import_identifiers=self.import_identifiers
+                            rdf,
+                            import_identifiers=self.import_identifiers,
+                            pinned_resource_ids=self.pinned_resource_ids,
                         )
                     )
                     self.run_load_task()
@@ -1085,7 +1092,9 @@ class LingoResourceImporter(BaseImportModule):
                 rdf = skos_reader.read_file(file)
                 self.schemes, self.concepts = (
                     skos_reader.extract_concepts_from_skos_for_lingo_import(
-                        rdf, import_identifiers=self.import_identifiers
+                        rdf,
+                        import_identifiers=self.import_identifiers,
+                        pinned_resource_ids=self.pinned_resource_ids,
                     )
                 )
 

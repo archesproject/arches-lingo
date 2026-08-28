@@ -60,6 +60,7 @@ Required attribution:
 
 import argparse
 import collections
+import itertools
 import os
 import re
 import sys
@@ -73,7 +74,16 @@ from xml.sax.saxutils import escape
 # Download URL
 # ---------------------------------------------------------------------------
 
+# The full export has not been updated since 2025-01-13 and appears to be
+# frozen in place; the explicit export is current. Both layouts are supported.
 GETTY_AAT_FULL_ZIP_URL = "http://aatdownloads.getty.edu/VocabData/full.zip"
+GETTY_AAT_EXPLICIT_ZIP_URL = "http://aatdownloads.getty.edu/VocabData/explicit.zip"
+DEFAULT_LOCAL_ARCHIVE = "explicit.zip"
+
+# The synthesised AAT scheme has no identifier of its own in the export. Its
+# canonical Getty subject number is used so the scheme gets the same URI and
+# identifier tiles it had previously ("300000000").
+DEFAULT_SCHEME_IDENTIFIER_URI = "http://vocab.getty.edu/aat/300000000"
 
 
 # ---------------------------------------------------------------------------
@@ -114,6 +124,53 @@ GVP_BROADER_INSTANTI = GVP_NS + "broaderInstantial"
 # they are collected in subject_data and output using the gvp: namespace.
 GVP_TYPED_RELATION_PREFIX = "http://vocab.getty.edu/ontology#aat"
 
+# --- Explicit-export (explicit.zip) support -------------------------------
+# The "full" export is a single pre-inferred AATOut_Full.nt. The explicit
+# export splits the data across many files and omits all inference, so the
+# shapes below have to be handled directly rather than read off inferred
+# triples.
+
+# Subjects are typed with GVP classes, not rdf:type skos:Concept. All four
+# become SKOS concepts on output; the distinction is carried by the concept
+# type assigned later by the update_aat_concept_types command.
+GVP_CONCEPT = GVP_NS + "Concept"
+GVP_GUIDE_TERM = GVP_NS + "GuideTerm"
+GVP_HIERARCHY = GVP_NS + "Hierarchy"
+GVP_FACET = GVP_NS + "Facet"
+GVP_SUBJECT_TYPES = frozenset([GVP_CONCEPT, GVP_GUIDE_TERM, GVP_HIERARCHY, GVP_FACET])
+
+# Two further hierarchy predicates appear only in the explicit export.
+GVP_BROADER_PREFERRED = GVP_NS + "broaderPreferred"
+GVP_BROADER_NON_PREFERRED = GVP_NS + "broaderNonPreferred"
+
+# Labels are skos-xl Label nodes: <concept> xl:prefLabel <term>, and the text
+# hangs off the term as <term> xl:literalForm "text"@lang.
+SKOSXL_NS = "http://www.w3.org/2008/05/skos-xl#"
+SKOSXL_PREF_LABEL = SKOSXL_NS + "prefLabel"
+SKOSXL_ALT_LABEL = SKOSXL_NS + "altLabel"
+SKOSXL_LITERAL_FORM = SKOSXL_NS + "literalForm"
+
+# The explicit export uses dc:identifier where the full export used
+# dcterms:identifier.
+DC_IDENTIFIER = "http://purl.org/dc/elements/1.1/identifier"
+
+# Retired concepts, typed gvp:ObsoleteSubject in AATOut_ObsoleteSubjects.nt.
+GVP_OBSOLETE_SUBJECT = GVP_NS + "ObsoleteSubject"
+
+# Files from the explicit export that carry data this converter needs, in the
+# order they are streamed. Everything else in the archive (revision history,
+# source/contributor detail, alignments, ordered collections) is either
+# irrelevant here or handled by extract_getty_aat_sources.py.
+EXPLICIT_EXPORT_FILES = (
+    "AATOut_1Subjects.nt",
+    "AATOut_2Terms.nt",
+    "AATOut_ScopeNotes.nt",
+    "AATOut_HierarchicalRels.nt",
+    "AATOut_AssociativeRels.nt",
+    "AATOut_Notations.nt",
+)
+OBSOLETE_SUBJECTS_FILE = "AATOut_ObsoleteSubjects.nt"
+
 # Only predicates in this set are retained; everything else is discarded
 # immediately to keep memory usage low.
 COLLECT_PREDICATES = frozenset(
@@ -133,6 +190,12 @@ COLLECT_PREDICATES = frozenset(
         GVP_BROADER_GENERIC,
         GVP_BROADER_PARTITIV,
         GVP_BROADER_INSTANTI,
+        GVP_BROADER_PREFERRED,
+        GVP_BROADER_NON_PREFERRED,
+        SKOSXL_PREF_LABEL,
+        SKOSXL_ALT_LABEL,
+        SKOSXL_LITERAL_FORM,
+        DC_IDENTIFIER,
     ]
 )
 
@@ -263,6 +326,31 @@ def _parse_uri_object(raw_object):
 # ---------------------------------------------------------------------------
 
 
+def collect_obsolete_subjects(nt_stream):
+    """Return the set of subject URIs typed gvp:ObsoleteSubject.
+
+    These are concepts Getty has retired. They are dropped rather than marked,
+    so they simply do not appear in the converted output.
+    """
+    obsolete = set()
+    for raw_line in nt_stream:
+        line = (
+            raw_line.decode("utf-8", "replace")
+            if isinstance(raw_line, bytes)
+            else raw_line
+        )
+        parsed = _parse_nt_triple(line)
+        if parsed is None:
+            continue
+        subject_uri, predicate_uri, raw_object = parsed
+        if (
+            predicate_uri == RDF_TYPE
+            and _parse_uri_object(raw_object) == GVP_OBSOLETE_SUBJECT
+        ):
+            obsolete.add(subject_uri)
+    return obsolete
+
+
 def collect_aat_data(nt_stream):
     """
     Stream NTriples and collect only what is needed for the SKOS output.
@@ -274,10 +362,13 @@ def collect_aat_data(nt_stream):
                              the AAT full.zip which omits this triple)
       scope_note_literals - {scope_note_uri: [(value, lang), ...]}
       subject_data        - {uri: {predicate_uri: [raw_object, ...]}}
+      xl_label_literals   - {term_uri: [(value, lang), ...]} for the explicit
+                             export, where labels are skos-xl Label nodes
     """
     concepts = set()
     explicit_schemes = set()
     scope_note_literals = collections.defaultdict(list)
+    xl_label_literals = collections.defaultdict(list)
     subject_data = collections.defaultdict(lambda: collections.defaultdict(list))
 
     line_count = 0
@@ -321,7 +412,11 @@ def collect_aat_data(nt_stream):
 
         if predicate_uri == RDF_TYPE:
             obj_uri = _parse_uri_object(raw_object)
-            if obj_uri == SKOS_CONCEPT:
+            # The full export types concepts as skos:Concept; the explicit
+            # export uses the GVP subject classes instead. Guide terms,
+            # hierarchy names and facets are all concepts for our purposes --
+            # they carry labels and participate in the hierarchy.
+            if obj_uri == SKOS_CONCEPT or obj_uri in GVP_SUBJECT_TYPES:
                 concepts.add(subject_uri)
             elif obj_uri == SKOS_CONCEPT_SCHEME:
                 explicit_schemes.add(subject_uri)
@@ -333,6 +428,32 @@ def collect_aat_data(nt_stream):
                 scope_note_literals[subject_uri].append((value, lang))
             continue
 
+        # skos-xl Label node text. Collected against the term URI so the
+        # concept -> term references can be inlined afterwards.
+        if predicate_uri == SKOSXL_LITERAL_FORM:
+            value, lang = _parse_literal(raw_object)
+            if value is not None:
+                xl_label_literals[subject_uri].append((value, lang))
+            continue
+
+        # Record skos-xl label references under the plain SKOS predicate; they
+        # are still term URIs at this point and get resolved to literals by
+        # resolve_xl_labels().
+        if predicate_uri == SKOSXL_PREF_LABEL:
+            predicate_uri = SKOS_PREF_LABEL
+        elif predicate_uri == SKOSXL_ALT_LABEL:
+            predicate_uri = SKOS_ALT_LABEL
+        elif predicate_uri == DC_IDENTIFIER:
+            # The explicit export uses dc:identifier, carrying the bare number
+            # ("300000201"). Normalise to dcterms:identifier AND emit the
+            # concept's own URI as the value: arches-lingo's importer creates a
+            # URI tile only when the identifier value is a URL, deriving the
+            # identifier tile from its last path segment. Emitting the bare
+            # number yields an identifier tile but no URI tile, which the
+            # attribution loader and concept-type command both depend on.
+            predicate_uri = DCTERMS_IDENTIFIER
+            raw_object = f'"{subject_uri}"'
+
         # Map all GVP broader predicates to skos:broader so the output uses a
         # single standard hierarchy predicate.  Duplicates arise because the
         # full NTriples sometimes asserts both skos:broader (as an inferred
@@ -342,6 +463,8 @@ def collect_aat_data(nt_stream):
             GVP_BROADER_GENERIC,
             GVP_BROADER_PARTITIV,
             GVP_BROADER_INSTANTI,
+            GVP_BROADER_PREFERRED,
+            GVP_BROADER_NON_PREFERRED,
         ):
             predicate_uri = SKOS_BROADER
 
@@ -352,7 +475,13 @@ def collect_aat_data(nt_stream):
         f" | {len(scope_note_literals):>6,} scope notes",
         flush=True,
     )
-    return concepts, explicit_schemes, scope_note_literals, subject_data
+    return (
+        concepts,
+        explicit_schemes,
+        scope_note_literals,
+        subject_data,
+        xl_label_literals,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -522,6 +651,49 @@ def synthesize_top_concepts(concepts, schemes, subject_data):
 # ---------------------------------------------------------------------------
 
 
+def _as_nt_literal(value, lang):
+    """Render a python string back into an NTriples literal, since the write
+    step re-parses the raw object strings it is handed."""
+    escaped_value = (
+        value.replace("\\", "\\\\")
+        .replace('"', '\\"')
+        .replace("\n", "\\n")
+        .replace("\r", "\\r")
+    )
+    return f'"{escaped_value}"@{lang}' if lang else f'"{escaped_value}"'
+
+
+def resolve_xl_labels(subject_data, xl_label_literals):
+    """
+    Replace skos-xl label references with inline literal objects.
+
+    The explicit export carries no inferred plain-literal labels: a concept
+    points at a skos-xl Label node (<concept> xl:prefLabel <term>) and the text
+    hangs off that node as xl:literalForm. arches-lingo expects plain
+    skos:prefLabel / skos:altLabel literals, so the term references are inlined
+    here. Objects that are already literals (the full export) are passed
+    through untouched, which keeps both export formats working.
+
+    Modifies subject_data in place and returns the number of labels resolved.
+    """
+    resolved_count = 0
+    for predicates in subject_data.values():
+        for label_predicate in (SKOS_PREF_LABEL, SKOS_ALT_LABEL):
+            if label_predicate not in predicates:
+                continue
+            resolved = []
+            for raw_object in predicates[label_predicate]:
+                term_uri = _parse_uri_object(raw_object)
+                if term_uri is None:
+                    resolved.append(raw_object)  # already a literal
+                    continue
+                for value, lang in xl_label_literals.get(term_uri, ()):
+                    resolved.append(_as_nt_literal(value, lang))
+                    resolved_count += 1
+            predicates[label_predicate] = resolved
+    return resolved_count
+
+
 def resolve_scope_notes(subject_data, scope_note_literals):
     """
     Replace skos:scopeNote URI references with inline literal objects.
@@ -584,7 +756,9 @@ def _write_predicate_elements(out, predicate_uri, raw_objects):
                 out.write(f'    <{element} rdf:resource="{escape(uri)}"/>\n')
 
 
-def write_skos_xml(output_path, concepts, schemes, subject_data):
+def write_skos_xml(
+    output_path, concepts, schemes, subject_data, scheme_identifier_uri=None
+):
     """Write the collected AAT data as SKOS RDF/XML."""
     print(f"Writing output to {output_path} ...", flush=True)
     with open(output_path, "w", encoding="utf-8") as out:
@@ -599,6 +773,11 @@ def write_skos_xml(output_path, concepts, schemes, subject_data):
         # --- ConceptScheme(s) ---
         for scheme_uri in sorted(schemes):
             out.write(f'  <skos:ConceptScheme rdf:about="{escape(scheme_uri)}">\n')
+            if scheme_identifier_uri:
+                out.write(
+                    f"    <dcterms:identifier>{escape(scheme_identifier_uri)}"
+                    f"</dcterms:identifier>\n"
+                )
             scheme_data = subject_data.get(scheme_uri, {})
             for pred_uri, raw_objects in scheme_data.items():
                 if pred_uri in (RDF_TYPE, SKOS_IN_SCHEME):
@@ -781,16 +960,46 @@ def main():
     parser.add_argument(
         "--skip-download",
         action="store_true",
-        help="Skip downloading and use an existing 'full.zip' in the current directory.",
+        help=(
+            "Skip downloading and use an existing archive on disk "
+            f"(default: {DEFAULT_LOCAL_ARCHIVE}; override with --archive)."
+        ),
+    )
+    parser.add_argument(
+        "--archive",
+        default=DEFAULT_LOCAL_ARCHIVE,
+        help=(
+            "Path to an existing Getty archive to read with --skip-download "
+            f"(default: {DEFAULT_LOCAL_ARCHIVE})."
+        ),
+    )
+    parser.add_argument(
+        "--scheme-identifier",
+        default=DEFAULT_SCHEME_IDENTIFIER_URI,
+        help=(
+            "URL-valued dcterms:identifier to give the synthesised scheme "
+            f"(default: {DEFAULT_SCHEME_IDENTIFIER_URI}). Pass an empty string "
+            "to omit it."
+        ),
+    )
+    parser.add_argument(
+        "--url",
+        default=GETTY_AAT_EXPLICIT_ZIP_URL,
+        help=(
+            "Archive URL to download. Defaults to the explicit export, which "
+            "Getty still updates; the full export has been frozen since "
+            "January 2025."
+        ),
     )
     args = parser.parse_args()
 
     # Step 1: obtain the zip
     if args.skip_download:
-        zip_path = "full.zip"
+        zip_path = args.archive
         if not os.path.exists(zip_path):
             print(
-                "Error: --skip-download set but 'full.zip' not found.", file=sys.stderr
+                f"Error: --skip-download set but {zip_path!r} not found.",
+                file=sys.stderr,
             )
             sys.exit(1)
         cleanup_zip = False
@@ -800,7 +1009,7 @@ def main():
         os.close(tmp_fd)
         cleanup_zip = True
         try:
-            download_with_progress(GETTY_AAT_FULL_ZIP_URL, zip_path)
+            download_with_progress(args.url, zip_path)
         except Exception as exc:
             print(f"\nDownload failed: {exc}", file=sys.stderr)
             if os.path.exists(zip_path):
@@ -814,39 +1023,84 @@ def main():
             available = zf.namelist()
             print(f"Files in archive: {', '.join(available)}")
 
-            subjects_filename = next(
+            full_export_filename = next(
                 (n for n in available if "Full" in n and n.endswith(".nt")), None
             )
-            if not subjects_filename:
-                subjects_filename = next(
-                    (n for n in available if "Subject" in n and n.endswith(".nt")), None
-                )
-            if not subjects_filename:
+            if full_export_filename:
+                # "full" export: one pre-inferred file carries everything.
+                source_filenames = [full_export_filename]
+            else:
+                # "explicit" export: data is split across files and carries no
+                # inference, so every file holding data we need is streamed.
+                source_filenames = [n for n in EXPLICIT_EXPORT_FILES if n in available]
+                missing = [n for n in EXPLICIT_EXPORT_FILES if n not in available]
+                if missing:
+                    print(
+                        f"Warning: expected files absent from archive: "
+                        f"{', '.join(missing)}",
+                        file=sys.stderr,
+                    )
+
+            if not source_filenames:
                 print(
-                    f"Error: cannot identify subjects NTriples file. "
+                    f"Error: cannot identify NTriples data files. "
                     f"Available: {available}",
                     file=sys.stderr,
                 )
                 sys.exit(1)
 
-            fi = zf.getinfo(subjects_filename)
+            total_uncompressed = sum(zf.getinfo(n).file_size for n in source_filenames)
             print(
-                f"Processing {subjects_filename}"
-                f" ({fi.compress_size / 1_048_576:.0f} MB compressed,"
-                f" {fi.file_size / 1_048_576:.0f} MB uncompressed)"
+                f"Processing {len(source_filenames)} file(s), "
+                f"{total_uncompressed / 1_048_576:,.0f} MB uncompressed:"
             )
+            for n in source_filenames:
+                print(f"  {n} ({zf.getinfo(n).file_size / 1_048_576:,.0f} MB)")
 
-            # Step 3: stream NTriples
-            print("\nStreaming NTriples data (this will take several minutes) ...")
-            with zf.open(subjects_filename) as nt_stream:
-                concepts, explicit_schemes, scope_note_literals, subject_data = (
-                    collect_aat_data(nt_stream)
+            # Retired concepts are listed in their own file and must not be
+            # emitted. Collected first so they can be dropped up front.
+            obsolete_uris = set()
+            if OBSOLETE_SUBJECTS_FILE in available:
+                with zf.open(OBSOLETE_SUBJECTS_FILE) as obsolete_stream:
+                    obsolete_uris = collect_obsolete_subjects(obsolete_stream)
+                print(
+                    f"\n{len(obsolete_uris):,} obsolete (retired) subjects will be "
+                    f"excluded."
                 )
+
+            # Step 3: stream NTriples across every source file as one sequence.
+            print("\nStreaming NTriples data (this will take several minutes) ...")
+            open_streams = [zf.open(n) for n in source_filenames]
+            try:
+                (
+                    concepts,
+                    explicit_schemes,
+                    scope_note_literals,
+                    subject_data,
+                    xl_label_literals,
+                ) = collect_aat_data(itertools.chain(*open_streams))
+            finally:
+                for stream in open_streams:
+                    stream.close()
 
     finally:
         if cleanup_zip and os.path.exists(zip_path):
             os.unlink(zip_path)
             print("\nTemporary download file removed.")
+
+    # Drop anything Getty has retired before it can reach the output.
+    if obsolete_uris:
+        removed = concepts & obsolete_uris
+        concepts -= obsolete_uris
+        for uri in removed:
+            subject_data.pop(uri, None)
+        print(f"Excluded {len(removed):,} retired concepts.")
+
+    # Step 3b: inline skos-xl label text (no-op for the full export)
+    if xl_label_literals:
+        print(f"Resolving {len(xl_label_literals):,} skos-xl label nodes ...")
+        resolved = resolve_xl_labels(subject_data, xl_label_literals)
+        print(f"  inlined {resolved:,} label literals")
 
     # Step 4: determine scheme(s)
     print()
@@ -869,7 +1123,9 @@ def main():
 
     # Step 7: write SKOS RDF/XML
     print()
-    written = write_skos_xml(args.output, concepts, schemes, subject_data)
+    written = write_skos_xml(
+        args.output, concepts, schemes, subject_data, args.scheme_identifier
+    )
 
     output_abs = os.path.abspath(args.output)
     print(

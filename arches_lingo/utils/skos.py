@@ -1,4 +1,5 @@
 import logging
+import csv
 import uuid
 import logging
 from collections import defaultdict
@@ -45,6 +46,41 @@ def subject_uri_for(resource_id, resource_uri_map=None):
     return ARCHES[str(resource_id)]
 
 
+def load_pinned_resource_ids(csv_path):
+    """Load a {subject_uri: resourceinstanceid} map from a two-column CSV.
+
+    Used to keep resource ids stable across a re-import. The SKOS importer
+    otherwise derives ids with uuid5 from a namespace generated fresh on every
+    run, so re-importing an unchanged concept would still mint a new id and
+    orphan anything pointing at the old one. Supplying the ids a previous load
+    assigned keeps surviving resources on their existing ids; anything absent
+    from the map falls through to the normal uuid5 derivation and gets a new
+    one.
+
+    The CSV must have a header row and its first two columns must be the
+    subject URI and the resource id, in that order.
+    """
+    pinned_ids = {}
+    with open(csv_path, newline="", encoding="utf-8") as csv_file:
+        reader = csv.reader(csv_file)
+        next(reader, None)  # header
+        for row in reader:
+            if len(row) < 2:
+                continue
+            subject_uri, resource_id = row[0].strip(), row[1].strip()
+            if not subject_uri or not resource_id:
+                continue
+            try:
+                pinned_ids[subject_uri] = uuid.UUID(resource_id)
+            except ValueError:
+                logger.warning(
+                    "Ignoring unparseable resource id %r for %s",
+                    resource_id,
+                    subject_uri,
+                )
+    return pinned_ids
+
+
 class SKOSReader(SKOSReader):
     """
     Extends the SKOSReader class from Arches Controlled Lists to import RDF graphs as Lingo resources.
@@ -57,6 +93,19 @@ class SKOSReader(SKOSReader):
         self.relations = defaultdict(list)
         self.prefLabel_valuetype = models.DValueType.objects.get(valuetype="prefLabel")
         self._gvp_relation_type_lookup = None
+
+    def generate_uuidv5_from_subject(self, baseuuid, subject):
+        """Reuse a previously assigned resource id when one is known.
+
+        Falls back to the inherited derivation (which extracts an embedded
+        UUID if the subject URI contains one, else derives a uuid5) for
+        subjects that have no pinned id -- new concepts, and every subject when
+        no map was supplied.
+        """
+        pinned_id = getattr(self, "pinned_resource_ids", {}).get(str(subject))
+        if pinned_id is not None:
+            return pinned_id
+        return super().generate_uuidv5_from_subject(baseuuid, subject)
 
     def _get_gvp_relation_type_lookup(self):
         """Return a {gvp_predicate_uri: list_item_id_str} mapping built from
@@ -82,10 +131,15 @@ class SKOSReader(SKOSReader):
         return self._gvp_relation_type_lookup
 
     def extract_concepts_from_skos_for_lingo_import(
-        self, graph, overwrite_options="overwrite", import_identifiers=False
+        self,
+        graph,
+        overwrite_options="overwrite",
+        import_identifiers=False,
+        pinned_resource_ids=None,
     ):
         baseuuid = uuid.uuid4()
         self.import_identifiers = import_identifiers
+        self.pinned_resource_ids = pinned_resource_ids or {}
         self.allowed_languages = {}
         for lang in models.Language.objects.all():
             self.allowed_languages[lang.code] = lang

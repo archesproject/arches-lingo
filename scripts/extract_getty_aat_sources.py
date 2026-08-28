@@ -67,6 +67,7 @@ concept/scheme tiles.
 
 import argparse
 import collections
+import itertools
 import json
 import os
 import re
@@ -80,7 +81,24 @@ import zipfile
 # Download URL (same as convert_getty_aat.py)
 # ---------------------------------------------------------------------------
 
+# The full export has been frozen since 2025-01-13; the explicit export is the
+# one Getty still updates. Both archive layouts are supported.
 GETTY_AAT_FULL_ZIP_URL = "http://aatdownloads.getty.edu/VocabData/full.zip"
+GETTY_AAT_EXPLICIT_ZIP_URL = "http://aatdownloads.getty.edu/VocabData/explicit.zip"
+DEFAULT_LOCAL_ARCHIVE = "explicit.zip"
+
+# Files in the explicit export carrying attribution data. Terms and scope notes
+# supply the label/note nodes that attribution hangs off; the *Rels files carry
+# the source and contributor links; Sources and Contribs carry their metadata.
+EXPLICIT_EXPORT_FILES = (
+    "AATOut_1Subjects.nt",
+    "AATOut_2Terms.nt",
+    "AATOut_ScopeNotes.nt",
+    "AATOut_SourceRels.nt",
+    "AATOut_ContribRels.nt",
+    "AATOut_Sources.nt",
+    "AATOut_Contribs.nt",
+)
 
 
 # ---------------------------------------------------------------------------
@@ -624,16 +642,29 @@ def main():
     parser.add_argument(
         "--skip-download",
         action="store_true",
-        help="Skip downloading and use an existing 'full.zip' in the current directory.",
+        help=(
+            "Skip downloading and use an existing archive on disk "
+            f"(default: {DEFAULT_LOCAL_ARCHIVE}; override with --archive)."
+        ),
+    )
+    parser.add_argument(
+        "--archive",
+        default=DEFAULT_LOCAL_ARCHIVE,
+        help=f"Existing archive to read with --skip-download (default: {DEFAULT_LOCAL_ARCHIVE}).",
+    )
+    parser.add_argument(
+        "--url",
+        default=GETTY_AAT_EXPLICIT_ZIP_URL,
+        help="Archive URL to download (defaults to the explicit export).",
     )
     args = parser.parse_args()
 
     # Step 1: obtain the zip
     if args.skip_download:
-        zip_path = "full.zip"
+        zip_path = args.archive
         if not os.path.exists(zip_path):
             print(
-                "Error: --skip-download set but 'full.zip' not found.",
+                f"Error: --skip-download set but {zip_path!r} not found.",
                 file=sys.stderr,
             )
             sys.exit(1)
@@ -644,7 +675,7 @@ def main():
         os.close(tmp_fd)
         cleanup_zip = True
         try:
-            download_with_progress(GETTY_AAT_FULL_ZIP_URL, zip_path)
+            download_with_progress(args.url, zip_path)
         except Exception as exc:
             print(f"\nDownload failed: {exc}", file=sys.stderr)
             if os.path.exists(zip_path):
@@ -657,33 +688,45 @@ def main():
             available = zf.namelist()
             print(f"Files in archive: {', '.join(available)}")
 
-            subjects_filename = next(
+            full_export_filename = next(
                 (n for n in available if "Full" in n and n.endswith(".nt")), None
             )
-            if not subjects_filename:
-                subjects_filename = next(
-                    (n for n in available if "Subject" in n and n.endswith(".nt")),
-                    None,
-                )
-            if not subjects_filename:
+            if full_export_filename:
+                source_filenames = [full_export_filename]
+            else:
+                source_filenames = [n for n in EXPLICIT_EXPORT_FILES if n in available]
+                missing = [n for n in EXPLICIT_EXPORT_FILES if n not in available]
+                if missing:
+                    print(
+                        f"Warning: expected files absent from archive: "
+                        f"{', '.join(missing)}",
+                        file=sys.stderr,
+                    )
+
+            if not source_filenames:
                 print(
-                    f"Error: cannot identify subjects NTriples file. "
+                    f"Error: cannot identify NTriples data files. "
                     f"Available: {available}",
                     file=sys.stderr,
                 )
                 sys.exit(1)
 
-            fi = zf.getinfo(subjects_filename)
+            total_uncompressed = sum(zf.getinfo(n).file_size for n in source_filenames)
             print(
-                f"Processing {subjects_filename}"
-                f" ({fi.compress_size / 1_048_576:.0f} MB compressed,"
-                f" {fi.file_size / 1_048_576:.0f} MB uncompressed)"
+                f"Processing {len(source_filenames)} file(s), "
+                f"{total_uncompressed / 1_048_576:,.0f} MB uncompressed:"
             )
+            for n in source_filenames:
+                print(f"  {n} ({zf.getinfo(n).file_size / 1_048_576:,.0f} MB)")
 
-            # Step 2: stream NTriples
+            # Step 2: stream every source file as one continuous sequence.
             print("\nStreaming NTriples data (this will take several minutes) ...")
-            with zf.open(subjects_filename) as nt_stream:
-                collected = collect_source_data(nt_stream)
+            open_streams = [zf.open(n) for n in source_filenames]
+            try:
+                collected = collect_source_data(itertools.chain(*open_streams))
+            finally:
+                for stream in open_streams:
+                    stream.close()
     finally:
         if cleanup_zip and os.path.exists(zip_path):
             os.unlink(zip_path)
