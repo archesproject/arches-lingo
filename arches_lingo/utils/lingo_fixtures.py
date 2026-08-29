@@ -74,6 +74,7 @@ from arches_lingo.models import (
     SchemeAttribution,
     SchemeURITemplate,
 )
+from arches_lingo.utils.data_languages import LANGUAGE_CODES_IN_RESOURCE_DATA_SQL
 
 DEFAULT_FIXTURE_STORAGE_KEY = "lingo_fixtures/lingo_concept_scheme_fixture.tar.gz"
 
