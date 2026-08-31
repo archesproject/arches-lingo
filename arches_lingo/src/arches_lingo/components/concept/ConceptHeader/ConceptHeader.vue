@@ -9,6 +9,7 @@ import Button from "primevue/button";
 import Skeleton from "primevue/skeleton";
 
 import ConceptHeaderToolbar from "@/arches_lingo/components/concept/ConceptHeader/components/ConceptHeaderToolbar.vue";
+import GetAsMenu from "@/arches_lingo/components/generic/GetAsMenu.vue";
 import LifecycleStateBadge from "@/arches_lingo/components/generic/LifecycleStateBadge.vue";
 
 import {
@@ -367,6 +368,14 @@ function extractConceptHeaderData(resource: ResourceInstanceResult) {
                                 :aria-label="$gettext('Copy URI')"
                                 @click="copyUriToClipboard(data.uri)"
                             ></Button>
+                            <GetAsMenu
+                                resource-type="concept"
+                                :resource-instance-id="resourceInstanceId!"
+                                :file-base-name="
+                                    conceptIdentifierValue ||
+                                    resourceInstanceId!
+                                "
+                            />
                         </div>
                         <span
                             v-else

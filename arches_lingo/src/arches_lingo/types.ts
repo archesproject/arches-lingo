@@ -370,6 +370,12 @@ export interface SchemeHeader {
     identifier?: string;
 }
 
+export interface RdfExportFormat {
+    token: string;
+    label: string;
+    extension: string;
+}
+
 export interface LanguageLabelCount {
     language: string;
     code: string;
