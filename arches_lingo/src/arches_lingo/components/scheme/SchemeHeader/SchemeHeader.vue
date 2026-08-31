@@ -647,6 +647,7 @@ async function onReinstateConfirmed(cascade: boolean) {
                         <span>{{ $gettext("History") }}</span>
                     </Button>
                     <Button
+                        v-if="isEditor"
                         :aria-label="$gettext('Export')"
                         class="add-button"
                         @click="openExportDialog"

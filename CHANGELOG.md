@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 -   Add a "Get as..." control to download a single concept or scheme as JSON-LD, Turtle, N-Triples, or RDF/XML [#771](https://github.com/archesproject/arches-lingo/pull/771)
+-   Add support for exporting Lingo Thesauri (schemes & concepts) to N-Triples and Turtle formats [#778](https://github.com/archesproject/arches-lingo/pull/778)
+-   Add support for importing thesauri from N-Triples and Turtle files [#779](https://github.com/archesproject/arches-lingo/pull/779)
+
+## [1.1.2] - Unreleased
+
+### Fixed
+-   Write and read column headers in dumped fixture archives so loading is not affected by model field ordering [#765](https://github.com/archesproject/arches-lingo/pull/765)
+-   Allow Lingo editors to export without membership in additional Arches groups, and hide the export button from anonymous users [#766](https://github.com/archesproject/arches-lingo/pull/766)
 
 ## [1.1.1] - 2026-07-31
 
@@ -32,7 +40,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   Add scripts to dump and load fixtures [#755](https://github.com/archesproject/arches-lingo/pull/755)
 -   Add advanced search facet for searching on related images [#756](https://github.com/archesproject/arches-lingo/pull/756)
 -   Add content-negotiated SKOS dereferencing for scheme and concept URIs [#759](https://github.com/archesproject/arches-lingo/pull/759)
--   Add support for exporting Lingo Thesauri (schemes & concepts) to N-Triples and Turtle formats [#778](https://github.com/archesproject/arches-lingo/pull/778)
 
 ### Changed
 -   Optimize search performance for large-scale datasets [#704](https://github.com/archesproject/arches-lingo/pull/704)

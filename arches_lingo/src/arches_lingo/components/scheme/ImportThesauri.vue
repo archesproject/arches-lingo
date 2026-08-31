@@ -129,9 +129,16 @@ async function submit() {
                     <label for="skos-file-upload">{{
                         $gettext("SKOS File")
                     }}</label>
+                    <p class="help-text">
+                        {{
+                            $gettext(
+                                "Supported formats: RDF/XML (.xml, .rdf), Turtle (.ttl), N-Triples (.nt)",
+                            )
+                        }}
+                    </p>
                     <InputFile
                         v-model="file"
-                        accept=".xml"
+                        accept=".xml,.rdf,.ttl,.nt"
                         mode="basic"
                         :auto="false"
                         :choose-label="$gettext('Choose File')"
@@ -211,6 +218,12 @@ async function submit() {
 
     label {
         margin-bottom: 0.125rem;
+    }
+
+    .help-text {
+        font-size: 0.875rem;
+        color: var(--p-text-muted-color);
+        margin: 0.25rem 0;
     }
 }
 

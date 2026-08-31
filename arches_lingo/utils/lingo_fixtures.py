@@ -9,7 +9,14 @@ gathers rows for the concept/scheme graphs *and* every graph they can
 reference, plus the arches-lingo-specific per-scheme records (identifier
 counters, URI templates, and attribution statements) that live outside the
 tile data, plus the arches-core `ResourceIdentifier` rows those resources
-have accumulated.
+have accumulated, plus the arches-core `Language` rows the data's language
+codes need in order to display.
+
+Languages are the one table here that is merged rather than restored: the
+target install always has language rows of its own, and its own default
+language, so archived rows are inserted only for codes it is missing, and
+never as the default. Only the languages the archived data actually refers to
+are dumped, keeping the archive scoped to what it needs to display correctly.
 
 Performance: rather than Django's `dumpdata`/`loaddata` (which serializes and
 saves every row individually through the ORM), this module streams data
@@ -41,6 +48,7 @@ arches-lingo package defaults, those customizations must be migrated
 separately, or referenced list items will not resolve after restore.
 """
 
+import csv
 import tarfile
 import tempfile
 from dataclasses import dataclass
@@ -53,6 +61,7 @@ from django.db import connection, transaction
 from arches.app.models.models import (
     File,
     GraphModel,
+    Language,
     ResourceInstance,
     ResourceIdentifier,
     ResourceXResource,
@@ -68,6 +77,46 @@ from arches_lingo.models import (
 
 DEFAULT_FIXTURE_STORAGE_KEY = "lingo_fixtures/lingo_concept_scheme_fixture.tar.gz"
 
+# Language codes reach tile data two ways: as the value of a language-datatype
+# node, and as the keys of an i18n string. Both need a `languages` row -- the
+# first so the Language widget can resolve a name to display, the second so the
+# string widget offers the language as a translation to edit. Pass NULL for
+# `graph_ids` to scan every graph, or a uuid[] to scope the scan.
+LANGUAGE_CODES_IN_RESOURCE_DATA_SQL = """
+    SELECT DISTINCT code
+    FROM (
+        SELECT jsonb_extract_path_text(tiles.tiledata, nodes.nodeid::text) AS code
+        FROM tiles
+        JOIN nodes ON nodes.nodegroupid = tiles.nodegroupid
+        WHERE nodes.datatype = 'language'
+          AND (
+            %(graph_ids)s::uuid[] IS NULL
+            OR tiles.resourceinstanceid IN (
+                SELECT resourceinstanceid FROM resource_instances
+                WHERE graphid = ANY(%(graph_ids)s::uuid[])
+            )
+          )
+        UNION
+        SELECT jsonb_object_keys(
+            jsonb_extract_path(tiles.tiledata, nodes.nodeid::text)
+        ) AS code
+        FROM tiles
+        JOIN nodes ON nodes.nodegroupid = tiles.nodegroupid
+        WHERE nodes.datatype = 'string'
+          AND jsonb_typeof(
+            jsonb_extract_path(tiles.tiledata, nodes.nodeid::text)
+          ) = 'object'
+          AND (
+            %(graph_ids)s::uuid[] IS NULL
+            OR tiles.resourceinstanceid IN (
+                SELECT resourceinstanceid FROM resource_instances
+                WHERE graphid = ANY(%(graph_ids)s::uuid[])
+            )
+          )
+    ) collected_codes
+    WHERE code IS NOT NULL AND code <> ''
+"""
+
 # Every table's row set is scoped to the target graphs by filtering (directly
 # or through a join) on this subquery, so a single `graph_ids` array parameter
 # drives every COPY TO statement.
@@ -81,6 +130,22 @@ class FixtureTable:
     # Bigint identity-column tables need their sequence bumped after a COPY
     # restores explicit id values, or the next ORM-created row will collide.
     identity_column: str | None = None
+    # Columns to leave out of the archive entirely. Used for values that belong
+    # to the source install rather than to the data, and so must be left to the
+    # target install to decide.
+    excluded_columns: tuple[str, ...] = ()
+    # When set, rows are merged on load with `ON CONFLICT (<column>) DO NOTHING`
+    # rather than copied straight in, leaving rows the target install already
+    # has untouched.
+    merge_on_conflict_column: str | None = None
+    # SQL literals for columns left out of the archive that still need a value
+    # on insert, as (column, literal) pairs. Needed where the model declares a
+    # default but the database column does not have one, since Django applies
+    # that default and a COPY or INSERT bypassing Django would leave a NULL.
+    merged_column_defaults: tuple[tuple[str, str], ...] = ()
+    # Set for tables added to this fixture format after it was first released,
+    # so that an archive written before they were included still loads.
+    optional_on_load: bool = False
 
     @property
     def name(self):
@@ -89,10 +154,16 @@ class FixtureTable:
     @property
     def columns(self):
         # Derive the column list from the model at runtime rather than
-        # hard-coding it, so it stays in sync with the model definition. Both
-        # dump (COPY TO) and load (COPY FROM) read this same ordering, so the
-        # CSV column order is always internally consistent.
-        return tuple(field.column for field in self.model._meta.concrete_fields)
+        # hard-coding it, so it stays in sync with the model definition. The
+        # resulting order is only used when writing an archive; on load the
+        # column order is read back from the CSV header, because model field
+        # declaration order (and therefore this order) can differ between
+        # arches versions.
+        return tuple(
+            field.column
+            for field in self.model._meta.concrete_fields
+            if field.column not in self.excluded_columns
+        )
 
 
 FIXTURE_TABLES: tuple[FixtureTable, ...] = (
@@ -137,6 +208,19 @@ FIXTURE_TABLES: tuple[FixtureTable, ...] = (
         model=SchemeAttribution,
         where_sql=f"scheme_resource_instance_id IN ({_GRAPH_FILTERED_RESOURCE_IDS_SQL})",
         identity_column="id",
+    ),
+    FixtureTable(
+        model=Language,
+        where_sql=f"code IN ({LANGUAGE_CODES_IN_RESOURCE_DATA_SQL})",
+        # `id` is excluded so the target install assigns its own (nothing else
+        # in this fixture refers to a language by id -- tile data stores the
+        # code), and `isdefault` because which language is default belongs to
+        # the target install, and its partial unique index would reject a second
+        # default anyway.
+        excluded_columns=("id", "isdefault"),
+        merge_on_conflict_column="code",
+        merged_column_defaults=(("isdefault", "false"),),
+        optional_on_load=True,
     ),
 )
 
@@ -187,7 +271,10 @@ def load_lingo_fixtures(storage_key=DEFAULT_FIXTURE_STORAGE_KEY, index=True):
     Django's default file storage at `storage_key`. Loads all table data in a
     single deferred-constraint transaction, restores the uploaded files, bumps
     the identity sequences those tables rely on, and (by default) reindexes
-    the affected resources in Elasticsearch."""
+    the affected resources in Elasticsearch.
+
+    Returns a dict of row counts per table, in which a table the archive does
+    not contain at all maps to None rather than to a count."""
 
     row_counts = {}
 
@@ -218,7 +305,7 @@ def _copy_table_into_tar(cursor, tar, table, graph_ids):
     column_list_sql = ", ".join(table.columns)
     copy_to_sql = cursor.mogrify(
         f"COPY (SELECT {column_list_sql} FROM {table.name} WHERE {table.where_sql}) "
-        "TO STDOUT WITH (FORMAT csv)",
+        "TO STDOUT WITH (FORMAT csv, HEADER)",
         {"graph_ids": graph_ids},
     )
     with tempfile.NamedTemporaryFile() as table_csv_file:
@@ -230,13 +317,70 @@ def _copy_table_into_tar(cursor, tar, table, graph_ids):
 
 
 def _copy_table_from_tar(cursor, tar, table):
-    table_member = tar.getmember(f"db/{table.name}.csv")
-    column_list_sql = ", ".join(table.columns)
+    try:
+        table_member = tar.getmember(f"db/{table.name}.csv")
+    except KeyError:
+        if not table.optional_on_load:
+            raise
+        return None
+    table_csv_file = tar.extractfile(table_member)
+
+    # Read the column order out of the archive itself instead of assuming it
+    # matches this installation's model field order: the same table can be
+    # declared with a different field order in a different arches version, and
+    # a mismatch would silently copy values into the wrong columns.
+    header_line = table_csv_file.readline().decode("utf-8")
+    archived_columns = next(csv.reader([header_line]), [])
+    unrecognized_columns = set(archived_columns) - set(table.columns)
+    if unrecognized_columns:
+        raise ValueError(
+            f"The archived {table.name} data has columns that do not exist on "
+            f"this installation: {', '.join(sorted(unrecognized_columns))}. The "
+            "archive was likely created against an incompatible schema version."
+        )
+
+    column_list_sql = ", ".join(archived_columns)
+    if table.merge_on_conflict_column:
+        return _merge_table_from_csv(cursor, table, table_csv_file, column_list_sql)
+
     copy_from_sql = (
         f"COPY {table.name} ({column_list_sql}) FROM STDIN WITH (FORMAT csv)"
     )
-    table_csv_file = tar.extractfile(table_member)
     cursor.copy_expert(copy_from_sql, table_csv_file)
+    return cursor.rowcount
+
+
+def _merge_table_from_csv(cursor, table, table_csv_file, column_list_sql):
+    """Insert the archived rows, skipping any the target install already has.
+
+    Deferring constraints does not help here: a unique constraint is checked
+    immediately unless it was declared deferrable, which is why this needs an
+    explicit `ON CONFLICT`. COPY cannot do that, so the rows land in a staging
+    table first. The staging table is built from the archived columns only, so a
+    column the archive leaves out keeps the target table's own default.
+    """
+
+    staging_table_name = f"{table.name}_fixture_staging"
+    cursor.execute(
+        f"CREATE TEMP TABLE {staging_table_name} ON COMMIT DROP AS "
+        f"SELECT {column_list_sql} FROM {table.name} WITH NO DATA"
+    )
+    cursor.copy_expert(
+        f"COPY {staging_table_name} ({column_list_sql}) FROM STDIN WITH (FORMAT csv)",
+        table_csv_file,
+    )
+
+    insert_column_sql = ", ".join(
+        [column_list_sql, *(column for column, _ in table.merged_column_defaults)]
+    )
+    select_column_sql = ", ".join(
+        [column_list_sql, *(literal for _, literal in table.merged_column_defaults)]
+    )
+    cursor.execute(
+        f"INSERT INTO {table.name} ({insert_column_sql}) "
+        f"SELECT {select_column_sql} FROM {staging_table_name} "
+        f"ON CONFLICT ({table.merge_on_conflict_column}) DO NOTHING"
+    )
     return cursor.rowcount
 
 
