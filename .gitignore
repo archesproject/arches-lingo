@@ -54,3 +54,4 @@ docker-compose.dev.override.yml.example
 Makefile
 .runtime/development/env_file.env
 .runtime/development/env_file.env.sample
+.runtime/restore-tables.sh
