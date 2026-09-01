@@ -248,7 +248,7 @@ function onPageChange(event: { page: number }) {
 .search-results {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0 0.5rem;
     font-family: var(--p-lingo-font-family);
     flex: 1 1 auto;
     overflow: hidden;
@@ -259,7 +259,7 @@ function onPageChange(event: { page: number }) {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0.5rem 0;
+    padding: 0 0 0.5rem 0;
     border-bottom: 0.0625rem solid var(--p-highlight-focus-background);
     flex-shrink: 0;
 }
@@ -303,12 +303,11 @@ function onPageChange(event: { page: number }) {
     flex: 1 1 auto;
     overflow-y: auto;
     min-height: 0;
-    border: 0.0625rem solid var(--p-highlight-focus-background);
-    border-radius: 0.125rem;
 }
 
 :deep(.p-paginator) {
     flex-shrink: 0;
+    padding-top: 0.5rem;
 }
 
 .result-item {
