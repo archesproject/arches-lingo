@@ -11,6 +11,7 @@ import {
     SEARCH_RESULTS_PER_PAGE,
     SEARCH_RESULT_ITEM_SIZE,
 } from "@/arches_lingo/constants.ts";
+import { useDemoDisclaimer } from "@/arches_lingo/composables/useDemoDisclaimer.ts";
 import { routeNames } from "@/arches_lingo/routes.ts";
 import { useAppSettingsStore } from "@/arches_lingo/stores/useAppSettingsStore.ts";
 import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
@@ -20,6 +21,8 @@ const router = useRouter();
 const userStore = useUserStore();
 
 const appSettingsStore = useAppSettingsStore();
+
+const { isDemoDisclaimerEnabled, openDemoDisclaimer } = useDemoDisclaimer();
 
 const shouldShowSearch = computed(
     () => !userStore.isAnonymous || appSettingsStore.allowAnonymousAccess,
@@ -89,32 +92,39 @@ function navigateTo(route: { name: string }) {
                             )
                         }}
                     </p>
-                    <div
+                    <p
                         v-if="!userStore.isAnonymous"
-                        class="authenticated-cta"
+                        class="welcome-message"
                     >
-                        <p class="welcome-message">
-                            {{
-                                $gettext("Welcome back, %{name}!", {
-                                    name: userDisplayName,
-                                })
-                            }}
-                        </p>
+                        {{
+                            $gettext("Welcome back, %{name}!", {
+                                name: userDisplayName,
+                            })
+                        }}
+                    </p>
+                    <div class="cta-buttons">
                         <Button
+                            v-if="!userStore.isAnonymous"
                             :label="$gettext('Go to Dashboard')"
                             icon="pi pi-arrow-right"
                             icon-pos="right"
-                            class="enter-app-button"
                             @click="router.push({ name: routeNames.dashboard })"
                         />
+                        <Button
+                            v-else
+                            :label="$gettext('Sign In')"
+                            icon="pi pi-sign-in"
+                            @click="router.push({ name: routeNames.login })"
+                        />
+                        <Button
+                            v-if="isDemoDisclaimerEnabled"
+                            :label="$gettext('Demo Site Info')"
+                            icon="pi pi-info-circle"
+                            outlined
+                            class="demo-info-button"
+                            @click="openDemoDisclaimer"
+                        />
                     </div>
-                    <Button
-                        v-else
-                        :label="$gettext('Sign In')"
-                        icon="pi pi-sign-in"
-                        class="sign-in-button"
-                        @click="router.push({ name: routeNames.login })"
-                    />
                 </div>
 
                 <!--
@@ -414,18 +424,6 @@ function navigateTo(route: { name: string }) {
     line-height: 1.5;
 }
 
-.sign-in-button {
-    align-self: flex-start;
-    margin-top: 0.5rem;
-}
-
-.authenticated-cta {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    margin-top: 0.5rem;
-}
-
 .welcome-message {
     margin: 0;
     font-size: var(--p-lingo-font-size-medium);
@@ -433,8 +431,18 @@ function navigateTo(route: { name: string }) {
     color: var(--p-text-color);
 }
 
-.enter-app-button {
+.cta-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
     align-self: flex-start;
+    margin-top: 0.5rem;
+}
+
+.demo-info-button,
+.demo-info-button:hover {
+    border-color: var(--p-primary-500);
 }
 
 /* ── Knowledge graph illustration ──────────────────────────── */
@@ -590,8 +598,9 @@ function navigateTo(route: { name: string }) {
         max-width: unset;
     }
 
-    .sign-in-button {
+    .cta-buttons {
         align-self: center;
+        justify-content: center;
     }
 
     .knowledge-graph {

@@ -9,8 +9,10 @@ import ConfirmDialog from "primevue/confirmdialog";
 import Toast from "primevue/toast";
 
 import SchemeHierarchy from "@/arches_lingo/components/header/PageHeader/components/SchemeHierarchy/SchemeHierarchy.vue";
+import DemoDisclaimerDialog from "@/arches_lingo/components/generic/DemoDisclaimerDialog.vue";
 
 import { useUnsavedChangesGuard } from "@/arches_lingo/composables/useUnsavedChangesGuard.ts";
+import { useAppSettingsStore } from "@/arches_lingo/stores/useAppSettingsStore.ts";
 import { useConceptStore } from "@/arches_lingo/stores/useConceptStore.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 import PageHeader from "@/arches_lingo/components/header/PageHeader/PageHeader.vue";
@@ -18,6 +20,7 @@ import SideNav from "@/arches_lingo/components/sidenav/SideNav.vue";
 
 const PRESERVED_QUERY_PARAMS = ["filter", "sort", "hierarchy", "lifecycle"];
 
+const appSettingsStore = useAppSettingsStore();
 const conceptStore = useConceptStore();
 const languageStore = useLanguageStore();
 
@@ -33,6 +36,7 @@ const shouldShowHierarchy = ref(
 provide("refreshSchemeHierarchy", refreshSchemeHierarchy);
 
 onMounted(function () {
+    appSettingsStore.initialize();
     languageStore.initialize();
     useUnsavedChangesGuard(router);
 
@@ -160,6 +164,7 @@ function refreshSchemeHierarchy() {
     />
     <ConfirmDialog group="unsaved-changes" />
     <ConfirmDialog group="logout" />
+    <DemoDisclaimerDialog />
 </template>
 
 <style scoped>

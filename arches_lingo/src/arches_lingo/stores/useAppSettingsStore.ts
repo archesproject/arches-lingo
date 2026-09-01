@@ -20,6 +20,10 @@ export const useAppSettingsStore = defineStore("appSettings", () => {
 
     const lingoVersion = computed(() => settings.value?.lingo_version ?? "");
 
+    const showDemoDisclaimer = computed(
+        () => settings.value?.show_demo_disclaimer ?? false,
+    );
+
     async function initialize() {
         if (settings.value !== null) return;
         settings.value = await fetchAppSettings();
@@ -31,6 +35,7 @@ export const useAppSettingsStore = defineStore("appSettings", () => {
         publicServerAddress,
         archesVersion,
         lingoVersion,
+        showDemoDisclaimer,
         initialize,
     };
 });

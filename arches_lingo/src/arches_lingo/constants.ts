@@ -64,6 +64,9 @@ export const LOCKED_LIFECYCLE_STATE_ID = "c9f7e3d1-2a5b-4c8d-9e6f-3b0a1d2e4f7c";
 
 export const MULTILINE_RENDER_CONTEXT = "multiline";
 
+export const DEMO_DISCLAIMER_ACKNOWLEDGED_LOCAL_STORAGE_KEY =
+    "arches.lingo.demoDisclaimerAcknowledged";
+
 // URIs
 export const GUIDE_TERM_URI = "http://vocab.getty.edu/page/aat/300386700";
 export const HIERARCHY_NAME_URI =
