@@ -16,7 +16,7 @@ type SchemeAttribution = {
 
 const props = defineProps<{
     resourceInstanceId: string | undefined;
-    canEditResourceInstances: boolean;
+    canEditAttribution: boolean;
     schemeAttribution: SchemeAttribution | undefined;
 }>();
 
@@ -35,6 +35,10 @@ const attributionDraft = ref("");
 const isSavingAttribution = ref(false);
 
 function editAttribution() {
+    if (!props.canEditAttribution) {
+        return;
+    }
+
     attributionDraft.value = props.schemeAttribution?.attribution ?? "";
     isEditingAttribution.value = true;
 }
@@ -45,7 +49,7 @@ function cancelEditingAttribution() {
 }
 
 async function saveAttribution() {
-    if (!props.resourceInstanceId) {
+    if (!props.resourceInstanceId || !props.canEditAttribution) {
         return;
     }
 
@@ -79,7 +83,7 @@ async function saveAttribution() {
             {{ $gettext("Attribution:") }}
         </span>
 
-        <template v-if="isEditingAttribution">
+        <template v-if="isEditingAttribution && canEditAttribution">
             <div class="attribution-input-wrapper">
                 <Textarea
                     v-model="attributionDraft"
@@ -121,7 +125,7 @@ async function saveAttribution() {
                 {{ $gettext("None") }}
             </span>
             <Button
-                v-if="canEditResourceInstances"
+                v-if="canEditAttribution"
                 icon="pi pi-pencil"
                 variant="text"
                 size="small"
