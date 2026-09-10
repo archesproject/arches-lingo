@@ -40,6 +40,15 @@ class Command(PackagesCommand):
             ),
         )
         parser.add_argument(
+            "--bypass-staging",
+            action="store_true",
+            help=(
+                "Write resources and tiles directly instead of routing them "
+                "through load_staging. Values are validated before anything is "
+                "written, but no edit log is produced."
+            ),
+        )
+        parser.add_argument(
             "--skip-indexing",
             action="store_true",
             help=(
@@ -82,6 +91,7 @@ class Command(PackagesCommand):
                 celery_byte_size_limit=options["celery_byte_size_limit"],
                 lifecycle_state_id=options["lifecycle_state_id"],
                 skip_indexing=options["skip_indexing"],
+                bypass_staging=options["bypass_staging"],
             )
 
     def import_lingo_resources(
@@ -94,6 +104,7 @@ class Command(PackagesCommand):
         celery_byte_size_limit=0,
         lifecycle_state_id="",
         skip_indexing=False,
+        bypass_staging=False,
     ):
         file_name = os.path.basename(source)
         with open(source, "rb") as f:
@@ -125,6 +136,7 @@ class Command(PackagesCommand):
             pinned_resource_ids=pinned_resource_ids,
             lifecycle_state_id=lifecycle_state_id,
             skip_indexing=skip_indexing,
+            bypass_staging=bypass_staging,
         )
         start_request = bulk_loader.start(request=None)
         bulk_loader.file = inmemory_file

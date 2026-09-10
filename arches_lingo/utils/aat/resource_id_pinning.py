@@ -37,9 +37,18 @@ def snapshot_resource_ids_by_uri(uri_prefix):
         return {uri: resource_id for uri, resource_id in cursor.fetchall() if uri}
 
 
-def write_resource_id_snapshot(uri_prefix, csv_path):
-    """Write the snapshot to CSV and return the number of rows written."""
+def write_resource_id_snapshot(uri_prefix, csv_path, scheme_resource_id=None):
+    """Write the snapshot to CSV and return the number of rows written.
+
+    `scheme_resource_id` pins the scheme under the URI the converted SKOS uses
+    to identify it, which is the bare vocabulary prefix. The scheme's own URI
+    tile holds a different value -- its Getty subject number -- so without this
+    the scheme is never matched and each reload creates a second one alongside
+    the old.
+    """
     resource_ids_by_uri = snapshot_resource_ids_by_uri(uri_prefix)
+    if scheme_resource_id:
+        resource_ids_by_uri[uri_prefix] = scheme_resource_id
     with open(csv_path, "w", newline="", encoding="utf-8") as csv_file:
         writer = csv.writer(csv_file)
         writer.writerow(["uri", "resourceinstanceid"])

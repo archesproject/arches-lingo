@@ -23,7 +23,10 @@ from arches_lingo.utils.aat.attribution_statement import (
     build_aat_attribution,
     set_scheme_attribution,
 )
-from arches_lingo.utils.aat.languages import ensure_languages
+from arches_lingo.utils.aat.languages import (
+    ensure_languages,
+    repair_colliding_language_names,
+)
 from arches_lingo.utils.aat.resource_id_pinning import write_resource_id_snapshot
 from arches_lingo.utils.aat.scheme_partition import (
     purge_scheme_partition,
@@ -49,6 +52,75 @@ AAT_CELERY_BYTE_SIZE_LIMIT = 2_000_000_000
 SKOS_FILENAME = "getty_aat_skos.xml"
 ATTRIBUTION_FILENAME = "getty_aat_attribution.json"
 RESOURCE_ID_SNAPSHOT_FILENAME = "getty_aat_resource_ids.csv"
+
+
+def remove_orphaned_aat_schemes(keep_scheme_id, log=print):
+    """Delete AAT scheme resources that hold no tiles and no concepts.
+
+    A scheme that was created by a load which then failed, or by an earlier
+    version that did not pin the scheme id, is left behind with nothing
+    attached to it. Without this the vocabulary appears more than once.
+    """
+    with connection.cursor() as cursor:
+        cursor.execute(
+            f"""
+            SELECT scheme.resourceinstanceid
+              FROM resource_instances scheme
+             WHERE scheme.graphid = %(schemes_graph_id)s::uuid
+               AND scheme.resourceinstanceid <> %(keep_scheme_id)s::uuid
+               AND NOT EXISTS (
+                   SELECT 1 FROM tiles WHERE resourceinstanceid = scheme.resourceinstanceid
+               )
+               AND NOT EXISTS (
+                   SELECT 1 FROM tiles part_of_scheme
+                    WHERE part_of_scheme.nodegroupid
+                          = '{const.CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID}'
+                      AND (part_of_scheme.tiledata
+                           -> '{const.CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID}'
+                           -> 0 ->> 'resourceId')::uuid
+                          = scheme.resourceinstanceid
+               )
+            """,
+            {
+                "schemes_graph_id": const.SCHEMES_GRAPH_ID,
+                "keep_scheme_id": str(keep_scheme_id),
+            },
+        )
+        orphaned_scheme_ids = [scheme_id for (scheme_id,) in cursor.fetchall()]
+
+        for scheme_id in orphaned_scheme_ids:
+            # Records keyed to the scheme hold a foreign key to it.
+            cursor.execute(
+                "DELETE FROM concept_identifier_counters "
+                "WHERE scheme_resource_instance_id = %s",
+                [scheme_id],
+            )
+            cursor.execute(
+                "DELETE FROM scheme_uri_templates "
+                "WHERE scheme_resource_instance_id = %s",
+                [scheme_id],
+            )
+            cursor.execute(
+                "DELETE FROM scheme_attributions "
+                "WHERE scheme_resource_instance_id = %s",
+                [scheme_id],
+            )
+            cursor.execute(
+                "DELETE FROM resource_x_resource WHERE resourceinstanceidfrom = %s "
+                "OR resourceinstanceidto = %s",
+                [scheme_id, scheme_id],
+            )
+            cursor.execute(
+                "DELETE FROM resource_identifiers WHERE resourceid_id = %s", [scheme_id]
+            )
+            cursor.execute(
+                "DELETE FROM resource_instances WHERE resourceinstanceid = %s",
+                [scheme_id],
+            )
+
+    if orphaned_scheme_ids:
+        log(f"Removed {len(orphaned_scheme_ids)} orphaned AAT scheme resource(s)")
+    return orphaned_scheme_ids
 
 
 def find_existing_aat_scheme_id():
@@ -123,12 +195,15 @@ def load_aat(
 
     log("[3/6] Ensuring the languages the data uses exist ...")
     ensure_languages(skos_path, log=log)
+    repair_colliding_language_names(log=log)
 
     existing_scheme_id = find_existing_aat_scheme_id()
     pinned_ids_path = ""
     if existing_scheme_id:
         if preserve_resource_ids:
-            snapshot_count = write_resource_id_snapshot(AAT_URI_PREFIX, snapshot_path)
+            snapshot_count = write_resource_id_snapshot(
+                AAT_URI_PREFIX, snapshot_path, scheme_resource_id=existing_scheme_id
+            )
             pinned_ids_path = snapshot_path
             log(f"Snapshotted {snapshot_count:,} existing resource ids")
         if replace_existing:
@@ -149,6 +224,7 @@ def load_aat(
         celery_byte_size_limit=AAT_CELERY_BYTE_SIZE_LIMIT,
         lifecycle_state_id=lifecycle_state_id,
         skip_indexing=skip_indexing,
+        bypass_staging=True,
     )
 
     log("[5/6] Loading source and contributor attribution ...")
@@ -163,6 +239,8 @@ def load_aat(
     call_command("update_aat_concept_types", source=skos_path)
 
     loaded_scheme_id = find_existing_aat_scheme_id()
+    if loaded_scheme_id:
+        remove_orphaned_aat_schemes(loaded_scheme_id, log=log)
     if loaded_scheme_id and extraction_date:
         set_scheme_attribution(loaded_scheme_id, build_aat_attribution(extraction_date))
         log("Recorded the Getty attribution statement on the scheme")

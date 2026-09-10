@@ -40,9 +40,11 @@ from arches.app.models import models
 
 import arches_lingo.const as const
 from arches_lingo.utils.aat.deferred_indexing import save_to_tiles_without_indexing
+from arches_lingo.utils.aat.direct_tile_load import merge_into_tiledata
 from arches_lingo.utils.aat.progress import (
     iterate_with_progress,
     progress_reporting_is_useful,
+    report_elapsed,
 )
 
 logger = logging.getLogger(__name__)
@@ -122,11 +124,16 @@ def _make_staging_value(node_id, value, datatype):
 class Command(BaseCommand):
     help = "Load AAT source/contributor attribution data into Lingo"
 
-    def _save_tiles(self, userid, load_id):
+    def _save_tiles(self, userid, load_id, recalculate_descriptors=True):
         if self.skip_indexing:
-            save_to_tiles_without_indexing(userid, load_id)
+            save_to_tiles_without_indexing(
+                userid, load_id, recalculate_descriptors=recalculate_descriptors
+            )
         else:
             save_to_tiles(userid, load_id)
+
+        # Staged rows have been consumed; nothing in arches removes them.
+        LoadStaging.objects.filter(load_event_id=load_id).delete()
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -155,6 +162,7 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
+        self._node_datatype_cache = {}
         self.skip_indexing = options["skip_indexing"]
         self.show_progress = not options["no_progress"] and (
             progress_reporting_is_useful()
@@ -185,21 +193,24 @@ class Command(BaseCommand):
 
         # Phase 1: Create textual_work resources for sources
         self.stdout.write("\n=== Phase 1: Creating source (textual_work) resources ===")
-        source_resource_map = self._create_source_resources(sources, admin_user)
+        with report_elapsed("phase 1 sources", log=self.stdout.write):
+            source_resource_map = self._create_source_resources(sources, admin_user)
 
         # Phase 2: Create group resources for contributors
         self.stdout.write("\n=== Phase 2: Creating contributor (group) resources ===")
-        contributor_resource_map = self._create_contributor_resources(
-            contributors, admin_user
-        )
+        with report_elapsed("phase 2 contributors", log=self.stdout.write):
+            contributor_resource_map = self._create_contributor_resources(
+                contributors, admin_user
+            )
 
         # Phase 3: Update existing tiles with source/contributor references
         self.stdout.write(
             "\n=== Phase 3: Updating label/note tiles with attribution ==="
         )
-        self._update_attribution_tiles(
-            labels, notes, source_resource_map, contributor_resource_map, admin_user
-        )
+        with report_elapsed("phase 3 attribution", log=self.stdout.write):
+            self._update_attribution_tiles(
+                labels, notes, source_resource_map, contributor_resource_map, admin_user
+            )
 
         self.stdout.write("\nDone!")
 
@@ -466,7 +477,7 @@ class Command(BaseCommand):
         label_tile_lookup = self._build_label_tile_lookup(concept_uri_to_resource)
         note_tile_lookup = self._build_note_tile_lookup(concept_uri_to_resource)
 
-        staging_rows = []
+        tile_additions = []
         updated_labels = 0
         updated_notes = 0
         skipped_labels = 0
@@ -491,7 +502,6 @@ class Command(BaseCommand):
                     continue
 
                 tile_id = tile_info["tileid"]
-                existing_data = tile_info["data"]
                 graph_id = tile_info["graph_id"]
 
                 # Determine which node IDs to use based on the graph
@@ -507,66 +517,31 @@ class Command(BaseCommand):
                     skipped_labels += 1
                     continue
 
-                # Build the update value — include ALL existing data plus new fields
-                tile_value = {}
-                for node_id, node_val in existing_data.items():
-                    tile_value[node_id] = {
-                        "value": node_val,
-                        "valid": True,
-                        "source": "",
-                        "notes": "",
-                        "datatype": self._get_node_datatype(node_id),
-                    }
+                # Only the two attribution nodes change, so only they are sent;
+                # the merge leaves the rest of the tile untouched.
+                tile_addition = {}
 
-                # Add source references
                 source_rids = [
                     source_resource_map[s]
                     for s in label_info.get("sources", [])
                     if s in source_resource_map
                 ]
                 if source_rids:
-                    tile_value[obj_node] = {
-                        "value": _make_ri_list_value(source_rids),
-                        "valid": True,
-                        "source": "",
-                        "notes": "",
-                        "datatype": "resource-instance-list",
-                    }
+                    tile_addition[obj_node] = _make_ri_list_value(source_rids)
 
-                # Add contributor references
                 contrib_rids = [
                     contributor_resource_map[c]
                     for c in label_info.get("contributors", [])
                     if c in contributor_resource_map
                 ]
                 if contrib_rids:
-                    tile_value[actor_node] = {
-                        "value": _make_ri_list_value(contrib_rids),
-                        "valid": True,
-                        "source": "",
-                        "notes": "",
-                        "datatype": "resource-instance-list",
-                    }
+                    tile_addition[actor_node] = _make_ri_list_value(contrib_rids)
 
                 if not source_rids and not contrib_rids:
                     skipped_labels += 1
                     continue
 
-                staging_rows.append(
-                    LoadStaging(
-                        load_event=load_event,
-                        nodegroup=NodeGroup(nodegroup_id),
-                        resourceid=resource_id,
-                        tileid=tile_id,
-                        parenttileid=None,
-                        value=tile_value,
-                        passes_validation=True,
-                        nodegroup_depth=0,
-                        source_description=f"Label attribution: {concept_uri}",
-                        operation="update",
-                        sortorder=0,
-                    )
-                )
+                tile_additions.append((tile_id, tile_addition))
                 updated_labels += 1
 
         # Process note attributions
@@ -588,7 +563,6 @@ class Command(BaseCommand):
                     continue
 
                 tile_id = tile_info["tileid"]
-                existing_data = tile_info["data"]
                 graph_id = tile_info["graph_id"]
 
                 if str(graph_id) == const.CONCEPTS_GRAPH_ID:
@@ -603,15 +577,7 @@ class Command(BaseCommand):
                     skipped_notes += 1
                     continue
 
-                tile_value = {}
-                for node_id, node_val in existing_data.items():
-                    tile_value[node_id] = {
-                        "value": node_val,
-                        "valid": True,
-                        "source": "",
-                        "notes": "",
-                        "datatype": self._get_node_datatype(node_id),
-                    }
+                tile_addition = {}
 
                 source_rids = [
                     source_resource_map[s]
@@ -619,13 +585,7 @@ class Command(BaseCommand):
                     if s in source_resource_map
                 ]
                 if source_rids:
-                    tile_value[obj_node] = {
-                        "value": _make_ri_list_value(source_rids),
-                        "valid": True,
-                        "source": "",
-                        "notes": "",
-                        "datatype": "resource-instance-list",
-                    }
+                    tile_addition[obj_node] = _make_ri_list_value(source_rids)
 
                 contrib_rids = [
                     contributor_resource_map[c]
@@ -633,33 +593,13 @@ class Command(BaseCommand):
                     if c in contributor_resource_map
                 ]
                 if contrib_rids:
-                    tile_value[actor_node] = {
-                        "value": _make_ri_list_value(contrib_rids),
-                        "valid": True,
-                        "source": "",
-                        "notes": "",
-                        "datatype": "resource-instance-list",
-                    }
+                    tile_addition[actor_node] = _make_ri_list_value(contrib_rids)
 
                 if not source_rids and not contrib_rids:
                     skipped_notes += 1
                     continue
 
-                staging_rows.append(
-                    LoadStaging(
-                        load_event=load_event,
-                        nodegroup=NodeGroup(nodegroup_id),
-                        resourceid=resource_id,
-                        tileid=tile_id,
-                        parenttileid=None,
-                        value=tile_value,
-                        passes_validation=True,
-                        nodegroup_depth=0,
-                        source_description=f"Note attribution: {concept_uri}",
-                        operation="update",
-                        sortorder=0,
-                    )
-                )
+                tile_additions.append((tile_id, tile_addition))
                 updated_notes += 1
 
         self.stdout.write(
@@ -667,20 +607,16 @@ class Command(BaseCommand):
             f"  Notes to update:  {updated_notes}, skipped: {skipped_notes}"
         )
 
-        if staging_rows:
-            for batch_start in iterate_with_progress(
-                range(0, len(staging_rows), BATCH_SIZE),
-                len(staging_rows),
-                title=f"  Staging {len(staging_rows):,} tile updates",
-                show_progress=self.show_progress,
-                step=BATCH_SIZE,
-            ):
-                LoadStaging.objects.bulk_create(
-                    staging_rows[batch_start : batch_start + BATCH_SIZE]
-                )
-
-            self.stdout.write(f"  Saving tiles ...")
-            self._save_tiles(user.pk, load_id)
+        if tile_additions:
+            # Attribution only adds nodes to tiles that already exist, and the
+            # primary descriptors are built from the name and statement content,
+            # so nothing here can change a descriptor.
+            merge_into_tiledata(tile_additions, log=self.stdout.write)
+            load_event.status = "completed"
+            load_event.complete = True
+            load_event.successful = True
+            load_event.load_end_time = datetime.now()
+            load_event.save()
             self.stdout.write(f"  Done.")
         else:
             self.stdout.write("  No tiles to update.")
@@ -924,7 +860,6 @@ class Command(BaseCommand):
                 key = self._make_label_key(content, language)
                 lookup[str(resource_id)][key] = {
                     "tileid": tile_id,
-                    "data": data,
                     "graph_id": graph_id,
                 }
 
@@ -1004,7 +939,6 @@ class Command(BaseCommand):
                 key = self._make_note_key(content, language)
                 lookup[str(resource_id)][key] = {
                     "tileid": tile_id,
-                    "data": data,
                     "graph_id": graph_id,
                 }
 
@@ -1037,8 +971,6 @@ class Command(BaseCommand):
 
     def _get_node_datatype(self, node_id):
         """Get the datatype for a node by its ID."""
-        if not hasattr(self, "_node_datatype_cache"):
-            self._node_datatype_cache = {}
         if node_id not in self._node_datatype_cache:
             try:
                 node = Node.objects.get(nodeid=node_id)
@@ -1049,8 +981,6 @@ class Command(BaseCommand):
 
     def _preload_node_datatypes(self, nodegroup_ids):
         """Bulk-load node datatypes for all nodes in the given nodegroups."""
-        if not hasattr(self, "_node_datatype_cache"):
-            self._node_datatype_cache = {}
         nodes = Node.objects.filter(
             nodegroup_id__in=nodegroup_ids,
         ).values_list("nodeid", "datatype")

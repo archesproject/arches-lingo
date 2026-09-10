@@ -59,6 +59,79 @@ LANGUAGE_OVERRIDES = {
 # This supplements Django's bidi detection for codes it may not recognise.
 RTL_CODES = {"ar", "he", "fa", "ur", "yi", "ps", "sd"}
 
+# Subtag glosses used to build a distinct name for a tag the override table and
+# Django between them only know the base language of. Without these, every
+# romanisation of a language would be offered under the base language's name.
+SCRIPT_SUBTAG_NAMES = {
+    "latn": "Latin transliteration",
+    "cyrl": "Cyrillic",
+    "arab": "Arabic script",
+    "hebr": "Hebrew script",
+    "grek": "Greek script",
+    "hang": "Hangul",
+    "hani": "Han characters",
+    "kana": "Katakana",
+    "hira": "Hiragana",
+    "hant": "Traditional",
+    "hans": "Simplified",
+    "deva": "Devanagari",
+    "thai": "Thai script",
+    "cans": "Canadian Aboriginal syllabics",
+}
+
+VARIANT_SUBTAG_NAMES = {
+    "pinyin": "Pinyin",
+    "wadegile": "Wade-Giles",
+    "hanyu": "Hanyu",
+    "notone": "no tones",
+    "tongyong": "Tongyong",
+    "std": "standard",
+    "local": "local",
+}
+
+# A script subtag means the text is written in that script, so direction
+# follows the script rather than the base language.
+LTR_SCRIPT_SUBTAGS = {"latn", "cyrl", "grek", "hang", "hani", "kana", "hira"}
+
+# Base languages Django's table does not carry, so a tag built on them would
+# otherwise be named after the raw subtag.
+BASE_LANGUAGE_NAMES = {
+    "zh": "Chinese",
+    "sa": "Sanskrit",
+    "akk": "Akkadian",
+    "arc": "Aramaic",
+    "ber": "Berber",
+    "pal": "Middle Persian",
+    "pra": "Prakrit",
+    "sux": "Sumerian",
+    "syc": "Syriac",
+    "xcl": "Classical Armenian",
+    "peo": "Old Persian",
+    "egy": "Egyptian",
+    "grc": "Ancient Greek",
+    "ang": "Old English",
+    "aeb": "Tunisian Arabic",
+    "acw": "Hijazi Arabic",
+}
+
+
+def _describe_subtags(subtags):
+    """Gloss the subtags after the base language, for use in a display name."""
+    described = []
+    for subtag in subtags:
+        lowered = subtag.lower()
+        if lowered in SCRIPT_SUBTAG_NAMES:
+            described.append(SCRIPT_SUBTAG_NAMES[lowered])
+        elif lowered in VARIANT_SUBTAG_NAMES:
+            described.append(VARIANT_SUBTAG_NAMES[lowered])
+        elif lowered == "x":
+            continue  # private-use marker, carries no meaning by itself
+        elif len(subtag) == 2 and subtag.isalpha():
+            described.append(subtag.upper())  # region, e.g. es-MX -> MX
+        else:
+            described.append(subtag)
+    return described
+
 
 def collect_language_codes_from_xml(xml_path):
     """
@@ -81,30 +154,97 @@ def resolve_language_metadata(code):
     language tag.  Checks LANGUAGE_OVERRIDES first, then Django's
     get_language_info(), then falls back to sensible defaults.
     """
-    if code in LANGUAGE_OVERRIDES:
-        override = LANGUAGE_OVERRIDES[code]
+    # Tags are matched case-insensitively: BCP 47 case is conventional, not
+    # significant, and AAT writes them as "ar-Latn" where the table is keyed
+    # "ar-latn".
+    override = LANGUAGE_OVERRIDES.get(code.lower())
+    if override:
         return {
             "name": override["name"],
             "default_direction": override["direction"],
         }
 
-    try:
-        info = get_language_info(code)
-        return {
-            "name": info["name"],
-            "default_direction": "rtl" if info["bidi"] else "ltr",
-        }
-    except KeyError:
-        pass
+    subtags = code.split("-")
+    base_tag = subtags[0].lower()
+    trailing_subtags = subtags[1:]
 
-    # Derive direction from the base subtag (e.g. "ar" in "ar-latn" would
-    # normally be RTL but that is handled above; this catches remaining cases).
-    base_tag = code.split("-")[0].lower()
-    direction = "rtl" if base_tag in RTL_CODES else "ltr"
-    return {
-        "name": code,  # use the code itself when name is unknown
-        "default_direction": direction,
-    }
+    # "x" is the private-use singleton, not a language: "x-highgerm" has no
+    # base language to name, so the tag stands on its own.
+    if base_tag == "x":
+        return {"name": code, "default_direction": "ltr"}
+
+    if base_tag in BASE_LANGUAGE_NAMES:
+        base_name = BASE_LANGUAGE_NAMES[base_tag]
+        direction = "rtl" if base_tag in RTL_CODES else "ltr"
+    else:
+        try:
+            base_info = get_language_info(base_tag)
+            base_name = base_info["name"]
+            direction = "rtl" if base_info["bidi"] else "ltr"
+        except KeyError:
+            base_name = base_tag
+            direction = "rtl" if base_tag in RTL_CODES else "ltr"
+
+    if not trailing_subtags:
+        return {"name": base_name, "default_direction": direction}
+
+    # Text written in another script reads in that script's direction.
+    if any(subtag.lower() in LTR_SCRIPT_SUBTAGS for subtag in trailing_subtags):
+        direction = "ltr"
+
+    described = _describe_subtags(trailing_subtags)
+    name = f"{base_name} ({', '.join(described)})" if described else base_name
+    return {"name": name, "default_direction": direction}
+
+
+def repair_colliding_language_names(dry_run=False, log=print):
+    """Give a distinct name to every language code that shares one.
+
+    Rows predating the naming fix can still share a name -- "Korean" for `ko`,
+    `ko-Hang`, `ko-Hani` and `ko-Latn` alike. Only the more specific tags are
+    renamed; a bare language tag keeps whatever name it has, so a name someone
+    set deliberately on a base language is left alone.
+    """
+    all_languages = list(Language.objects.order_by("code"))
+    languages_by_name = {}
+    for language in all_languages:
+        languages_by_name.setdefault(language.name, []).append(language)
+
+    claimed_names = set(languages_by_name)
+    languages_to_rename = []
+
+    # Rows whose name is just the tag are a legacy of the derivation failing;
+    # they read badly in a picker even though they are technically distinct.
+    for language in all_languages:
+        if language.name != language.code:
+            continue
+        candidate = resolve_language_metadata(language.code)["name"]
+        if candidate == language.code or candidate in claimed_names:
+            continue
+        claimed_names.discard(language.name)
+        claimed_names.add(candidate)
+        log(f"  {language.code}: {language.name!r} -> {candidate!r}")
+        language.name = candidate
+        languages_to_rename.append(language)
+
+    for name, languages in languages_by_name.items():
+        if len(languages) < 2:
+            continue
+        # Keep the bare tag on the shared name; re-derive the variants.
+        for language in sorted(languages, key=lambda item: len(item.code))[1:]:
+            candidate = resolve_language_metadata(language.code)["name"]
+            if candidate in claimed_names:
+                candidate = f"{candidate} [{language.code}]"
+            claimed_names.add(candidate)
+            log(f"  {language.code}: {language.name!r} -> {candidate!r}")
+            language.name = candidate
+            languages_to_rename.append(language)
+
+    if languages_to_rename and not dry_run:
+        Language.objects.bulk_update(languages_to_rename, ["name"], batch_size=200)
+
+    log(f"Renamed {len(languages_to_rename)} language(s) to remove name collisions")
+    return languages_to_rename
 
 
 def ensure_languages(xml_path, dry_run=False, log=print):
@@ -114,19 +254,34 @@ def ensure_languages(xml_path, dry_run=False, log=print):
     created (or that would be created, when dry_run is set).
     """
     language_codes = collect_language_codes_from_xml(xml_path)
-    existing_codes = set(Language.objects.values_list("code", flat=True))
+    existing_languages = {
+        code: name for code, name in Language.objects.values_list("code", "name")
+    }
 
-    languages_to_create = [
-        Language(
-            code=code,
-            name=resolve_language_metadata(code)["name"],
-            default_direction=resolve_language_metadata(code)["default_direction"],
-            scope=Language.DATA_SCOPE,
-            isdefault=False,
+    # Names, not codes, are what a language picker shows, so two codes sharing
+    # a name are indistinguishable to the user -- and any lookup that resolves
+    # by name resolves them arbitrarily. Uniqueness is enforced here rather
+    # than left to the correctness of every derived name.
+    claimed_names = set(existing_languages.values())
+
+    languages_to_create = []
+    for code in sorted(language_codes):
+        if code in existing_languages:
+            continue
+        metadata = resolve_language_metadata(code)
+        name = metadata["name"]
+        if name in claimed_names:
+            name = f"{name} [{code}]"
+        claimed_names.add(name)
+        languages_to_create.append(
+            Language(
+                code=code,
+                name=name,
+                default_direction=metadata["default_direction"],
+                scope=Language.DATA_SCOPE,
+                isdefault=False,
+            )
         )
-        for code in language_codes
-        if code not in existing_codes
-    ]
 
     log(
         f"{len(language_codes)} language code(s) in use; "

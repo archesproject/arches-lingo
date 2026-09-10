@@ -22,6 +22,28 @@ from arches.app.etl_modules.save import (
 from arches.app.models.resource import Resource
 from arches.app.utils.index_database import optimize_resource_iteration
 
+__all__ = [
+    "recalculate_descriptors_for_graph",
+    "save_to_tiles_without_indexing",
+]
+
+DESCRIPTOR_BATCH_SIZE = 1000
+
+
+def recalculate_descriptors_for_graph(graph_id, log=print):
+    """Recompute descriptors for every resource on a graph.
+
+    Used by loads that write tiles directly: descriptors are what the interface
+    shows as a resource's name, and nothing else recalculates them once the
+    Arches save path is not involved.
+    """
+    resource_ids = list(
+        Resource.objects.filter(graph_id=graph_id).values_list("pk", flat=True)
+    )
+    _recalculate_descriptors(resource_ids)
+    log(f"  recalculated descriptors for {len(resource_ids):,} resources")
+    return len(resource_ids)
+
 
 def _recalculate_descriptors_for_transaction(cursor, loadid):
     cursor.execute(
@@ -29,14 +51,26 @@ def _recalculate_descriptors_for_transaction(cursor, loadid):
         [loadid],
     )
     resource_ids = [resource_id for (resource_id,) in cursor.fetchall()]
+    _recalculate_descriptors(resource_ids)
+    return len(resource_ids)
 
-    # descriptor_function is not a field on the graph: optimize_resource_iteration
-    # prefetches it there, and the caller moves it onto the resource.
+
+def _recalculate_descriptors(resource_ids):
+    # ResourceInstance.save() reads self.graph.publication, which is a query per
+    # resource unless it comes along with the graph.
+    resources_to_index = Resource.objects.filter(pk__in=resource_ids).select_related(
+        "graph__publication"
+    )
+
     for resource in optimize_resource_iteration(
-        Resource.objects.filter(pk__in=resource_ids), chunk_size=2000
+        resources_to_index, chunk_size=DESCRIPTOR_BATCH_SIZE
     ):
         resource.tiles = resource.prefetched_tiles
+        # descriptor_function is not a field on the graph; optimize_resource_iteration
+        # prefetches it there and the caller moves it onto the resource.
         resource.descriptor_function = resource.graph.descriptor_function
+        # save_descriptors() writes the row itself; there is no hook to compute
+        # without saving, so this stays one UPDATE per resource.
         resource.save_descriptors()
 
     return len(resource_ids)
@@ -66,11 +100,16 @@ def _attribute_edit_log_to_user(cursor, userid, loadid):
     )
 
 
-def save_to_tiles_without_indexing(userid, loadid):
+def save_to_tiles_without_indexing(userid, loadid, recalculate_descriptors=True):
     """Write staged tiles and refresh descriptors, leaving the index alone.
 
     Mirrors arches.app.etl_modules.save.save_to_tiles, minus the call to
     index_resources_by_transaction.
+
+    `recalculate_descriptors` may be turned off when the load cannot have
+    changed any value a descriptor is built from. Recomputing is expensive --
+    several queries and a row update per resource -- so skipping it when the
+    result is guaranteed identical is worth the explicit argument.
     """
     with connection.cursor() as cursor:
         disable_tile_triggers(cursor, loadid)
@@ -79,8 +118,9 @@ def save_to_tiles_without_indexing(userid, loadid):
         if error_saving_tiles:
             return error_saving_tiles
 
-        log_event_details(cursor, loadid, "done|Recalculating descriptors...")
-        _recalculate_descriptors_for_transaction(cursor, loadid)
+        if recalculate_descriptors:
+            log_event_details(cursor, loadid, "done|Recalculating descriptors...")
+            _recalculate_descriptors_for_transaction(cursor, loadid)
 
         log_event_details(cursor, loadid, "done|Updating the edit log...")
         _attribute_edit_log_to_user(cursor, userid, loadid)

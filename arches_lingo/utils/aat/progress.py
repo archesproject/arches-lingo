@@ -7,9 +7,23 @@ bytes consumed, which yields an estimated time the way the core reindex command
 does.
 """
 
+import contextlib
 import sys
+import time
 
 import pyprind
+
+
+@contextlib.contextmanager
+def report_elapsed(label, log=print):
+    """Time a stage and report it, so a slow load can be attributed."""
+    started_at = time.monotonic()
+    try:
+        yield
+    finally:
+        elapsed_seconds = time.monotonic() - started_at
+        log(f"  [{label}] {elapsed_seconds:,.0f}s")
+
 
 PROGRESS_UPDATE_BYTES = 4 * 1024 * 1024
 

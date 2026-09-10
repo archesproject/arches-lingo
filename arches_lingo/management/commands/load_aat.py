@@ -71,12 +71,13 @@ class Command(BaseCommand):
             ),
         )
         parser.add_argument(
-            "--skip-indexing",
+            "--index",
             action="store_true",
             help=(
-                "Do not write the loaded resources to Elasticsearch. "
-                "Descriptors are still recalculated, so names display "
-                "correctly; only search and the concept tree need the index."
+                "Write the loaded resources to Elasticsearch. Off by default: "
+                "indexing is the slowest part of the load and many Lingo "
+                "deployments do not query the index. Descriptors are always "
+                "recalculated, so names display correctly either way."
             ),
         )
         parser.add_argument(
@@ -121,7 +122,7 @@ class Command(BaseCommand):
                 lifecycle_state_id=const.LIFECYCLE_STATE_IDS_BY_NAME[
                     options["lifecycle_state"]
                 ],
-                skip_indexing=options["skip_indexing"],
+                skip_indexing=not options["index"],
                 show_progress=False if options["no_progress"] else None,
                 log=lambda message: self.stdout.write(str(message)),
             )

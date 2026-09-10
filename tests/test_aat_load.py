@@ -21,6 +21,9 @@ from django.test import TestCase
 from arches_lingo.utils.aat.attribution_extraction import (
     extract_attribution_from_archive,
 )
+from arches_lingo.etl_modules.migrate_to_lingo import LingoResourceImporter
+from arches_lingo.utils.aat.languages import resolve_language_metadata
+from arches_lingo.utils.aat.direct_tile_load import build_tiledata
 from arches_lingo.utils.aat.progress import (
     iterate_with_progress,
     stream_lines_with_progress,
@@ -445,3 +448,92 @@ class CommandSmokeTests(TestCase):
                 )
 
         self.assertIn("term_types.xml", str(raised.exception))
+
+
+class LabelLanguageTests(TestCase):
+    """AAT tags many labels with romanised variants (ar-Latn, ko-Hang,
+    zh-Latn-wadegile). The language datatype resolves a value against both code
+    and name and takes the first match, so passing a name that several codes
+    share silently files the label under the wrong one."""
+
+    def test_language_code_is_passed_through_not_the_name(self):
+        mock_tile = LingoResourceImporter.create_mock_tile_from_value(
+            {
+                "value": "kutub",
+                "valuetype_id": "prefLabel",
+                "language_id": "ar-Latn",
+            },
+            lang_lookup={},
+        )
+        self.assertEqual(
+            mock_tile["appellative_status"][
+                "appellative_status_ascribed_name_language"
+            ],
+            "ar-Latn",
+        )
+
+    def test_note_language_code_is_passed_through(self):
+        mock_tile = LingoResourceImporter.create_mock_tile_from_value(
+            {
+                "value": "a scope note",
+                "valuetype_id": "scopeNote",
+                "language_id": "zh-Latn-wadegile",
+            },
+            lang_lookup={},
+        )
+        self.assertEqual(
+            mock_tile["statement"]["statement_language"], "zh-Latn-wadegile"
+        )
+
+
+class LanguageNamingTests(TestCase):
+    """Language pickers show the name, so two codes sharing one are
+    indistinguishable to the user and ambiguous to any lookup by name."""
+
+    def test_script_and_region_variants_get_distinct_names(self):
+        variant_codes = [
+            "ar",
+            "ar-Latn",
+            "ko",
+            "ko-Latn",
+            "ko-Hang",
+            "ko-Hani",
+            "en",
+            "en-GB",
+            "en-US",
+            "zh-Hant",
+            "zh-Latn-wadegile",
+            "zh-Latn-pinyin-x-hanyu",
+        ]
+        names = [resolve_language_metadata(code)["name"] for code in variant_codes]
+        self.assertEqual(len(names), len(set(names)), names)
+
+    def test_tags_are_matched_case_insensitively(self):
+        """AAT writes "ar-Latn"; the override table is keyed "ar-latn"."""
+        self.assertEqual(
+            resolve_language_metadata("ar-Latn")["name"],
+            "Arabic (Latin transliteration)",
+        )
+
+    def test_romanised_text_reads_left_to_right(self):
+        self.assertEqual(resolve_language_metadata("ar")["default_direction"], "rtl")
+        self.assertEqual(
+            resolve_language_metadata("ar-Latn")["default_direction"], "ltr"
+        )
+
+
+class TiledataBuildTests(TestCase):
+    def test_resource_references_get_a_cross_reference_id(self):
+        """resource_x_resource is keyed on resourceXresourceId, so a reference
+        written without one cannot be related back to its tile."""
+        tiledata = build_tiledata(
+            {
+                "node-a": {
+                    "value": [{"resourceId": "r1", "resourceXresourceId": ""}],
+                    "datatype": "resource-instance-list",
+                },
+                "node-b": {"value": "plain", "datatype": "string"},
+            }
+        )
+        self.assertNotEqual(tiledata["node-a"][0]["resourceXresourceId"], "")
+        self.assertEqual(tiledata["node-b"], "plain")
