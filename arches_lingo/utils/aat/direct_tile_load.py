@@ -109,9 +109,12 @@ def load_resources_and_tiles(resource_rows, tile_rows, graph_ids, log=print):
     with connection.cursor() as cursor:
         # Resources are written through a temp table so a rerun that overlaps
         # existing ids does not fail; the staging function likewise skips
-        # resources that already exist.
+        # resources that already exist. ON COMMIT DROP only fires on a real
+        # commit, so a caller holding an outer transaction would otherwise
+        # find the table still there on a second call.
         cursor.execute(
             """
+            DROP TABLE IF EXISTS incoming_resource;
             CREATE TEMP TABLE incoming_resource (
                 resourceinstanceid uuid,
                 graphid uuid,
@@ -250,6 +253,7 @@ def merge_into_tiledata(tile_additions, log=print):
     with connection.cursor() as cursor:
         cursor.execute(
             """
+            DROP TABLE IF EXISTS incoming_tile_addition;
             CREATE TEMP TABLE incoming_tile_addition (
                 tileid uuid PRIMARY KEY,
                 addition jsonb

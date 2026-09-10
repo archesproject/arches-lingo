@@ -3,7 +3,8 @@
 Covers the conversion logic that turns the Getty export into SKOS, since that is
 where the export's shape is interpreted, plus the scoping rule that decides what
 a reload removes. The import itself is arches machinery already covered by
-tests/test_import_export.py.
+tests/test_import_export.py, except for the direct tile-load path that replaces
+it under --bypass-staging, which tests/test_aat_direct_load.py covers.
 """
 
 import datetime
@@ -23,7 +24,6 @@ from arches_lingo.utils.aat.attribution_extraction import (
 )
 from arches_lingo.etl_modules.migrate_to_lingo import LingoResourceImporter
 from arches_lingo.utils.aat.languages import resolve_language_metadata
-from arches_lingo.utils.aat.direct_tile_load import build_tiledata
 from arches_lingo.utils.aat.progress import (
     iterate_with_progress,
     stream_lines_with_progress,
@@ -520,20 +520,3 @@ class LanguageNamingTests(TestCase):
         self.assertEqual(
             resolve_language_metadata("ar-Latn")["default_direction"], "ltr"
         )
-
-
-class TiledataBuildTests(TestCase):
-    def test_resource_references_get_a_cross_reference_id(self):
-        """resource_x_resource is keyed on resourceXresourceId, so a reference
-        written without one cannot be related back to its tile."""
-        tiledata = build_tiledata(
-            {
-                "node-a": {
-                    "value": [{"resourceId": "r1", "resourceXresourceId": ""}],
-                    "datatype": "resource-instance-list",
-                },
-                "node-b": {"value": "plain", "datatype": "string"},
-            }
-        )
-        self.assertNotEqual(tiledata["node-a"][0]["resourceXresourceId"], "")
-        self.assertEqual(tiledata["node-b"], "plain")
