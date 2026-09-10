@@ -1,47 +1,20 @@
-#!/usr/bin/env python3
-"""
-Ensure Language records exist for all xml:lang codes in getty_aat_skos.xml
-=========================================================================
+"""Ensure Language records exist for every xml:lang code in a SKOS XML file.
 
-Scans the converted SKOS XML file for every xml:lang attribute value, then
-inserts a Language row for any code not already present in the database.
-Existing records are left untouched.
-
-Usage
------
-    python scripts/ensure_aat_languages.py [--xml getty_aat_skos.xml]
-
-    Options:
-      --xml / -x    Path to the SKOS XML file (default: getty_aat_skos.xml)
-      --dry-run     Print what would be inserted without writing to the database
+A label whose language has no Language row is silently filed under the default
+language on import, so this runs before the AAT resources are loaded.
 """
 
-import argparse
 import mmap
-import os
 import re
-import sys
 
-# ---------------------------------------------------------------------------
-# Django setup -- must happen before any model imports
-# ---------------------------------------------------------------------------
+from django.utils.translation import get_language_info
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "arches_lingo.settings")
-
-import django  # noqa: E402
-
-django.setup()
-
-from django.utils.translation import get_language_info  # noqa: E402
-from arches.app.models.models import Language  # noqa: E402
+from arches.app.models.models import Language
 
 
-# ---------------------------------------------------------------------------
 # Language metadata overrides for codes that Django does not recognise or
 # for which custom names / directions are preferable (e.g. romanised scripts
 # that are always read left-to-right).
-# ---------------------------------------------------------------------------
 
 LANGUAGE_OVERRIDES = {
     # Extended Chinese script / romanisation tags
@@ -134,78 +107,35 @@ def resolve_language_metadata(code):
     }
 
 
-def ensure_languages(xml_path, dry_run=False):
-    language_codes = collect_language_codes_from_xml(xml_path)
-    print(f"Found {len(language_codes)} unique language code(s) in {xml_path}.\n")
+def ensure_languages(xml_path, dry_run=False, log=print):
+    """Insert a Language row for every xml:lang code the SKOS file uses.
 
+    Codes already present are left untouched. Returns the Language objects
+    created (or that would be created, when dry_run is set).
+    """
+    language_codes = collect_language_codes_from_xml(xml_path)
     existing_codes = set(Language.objects.values_list("code", flat=True))
 
-    languages_to_create = []
-    already_present = []
-
-    for code in language_codes:
-        if code in existing_codes:
-            already_present.append(code)
-            continue
-        metadata = resolve_language_metadata(code)
-        languages_to_create.append(
-            Language(
-                code=code,
-                name=metadata["name"],
-                default_direction=metadata["default_direction"],
-                scope=Language.DATA_SCOPE,
-                isdefault=False,
-            )
+    languages_to_create = [
+        Language(
+            code=code,
+            name=resolve_language_metadata(code)["name"],
+            default_direction=resolve_language_metadata(code)["default_direction"],
+            scope=Language.DATA_SCOPE,
+            isdefault=False,
         )
+        for code in language_codes
+        if code not in existing_codes
+    ]
 
-    print(f"  Already in database : {len(already_present)}")
-    print(f"  Will be inserted    : {len(languages_to_create)}\n")
+    log(
+        f"{len(language_codes)} language code(s) in use; "
+        f"{len(language_codes) - len(languages_to_create)} already present, "
+        f"{len(languages_to_create)} to insert"
+    )
 
-    if languages_to_create:
-        print("Languages to insert:")
-        for language in languages_to_create:
-            print(
-                f"  {language.code:<35}  {language.name:<45}  "
-                f"{language.default_direction}"
-            )
-
-    if not dry_run and languages_to_create:
+    if languages_to_create and not dry_run:
         Language.objects.bulk_create(languages_to_create)
-        print(f"\nInserted {len(languages_to_create)} language record(s).")
-    elif dry_run and languages_to_create:
-        print("\n(Dry run — no records written.)")
-    else:
-        print("Nothing to insert.")
+        log(f"Inserted {len(languages_to_create)} language record(s)")
 
     return languages_to_create
-
-
-def main():
-    parser = argparse.ArgumentParser(
-        description=(
-            "Insert Language records for all xml:lang codes found in a Getty "
-            "AAT SKOS XML file, skipping codes already in the database."
-        )
-    )
-    parser.add_argument(
-        "--xml",
-        "-x",
-        default="getty_aat_skos.xml",
-        help="Path to the SKOS XML file (default: getty_aat_skos.xml)",
-    )
-    parser.add_argument(
-        "--dry-run",
-        action="store_true",
-        help="Print what would be inserted without writing to the database.",
-    )
-    args = parser.parse_args()
-
-    if not os.path.exists(args.xml):
-        print(f"Error: '{args.xml}' not found.", file=sys.stderr)
-        sys.exit(1)
-
-    ensure_languages(args.xml, dry_run=args.dry_run)
-
-
-if __name__ == "__main__":
-    main()

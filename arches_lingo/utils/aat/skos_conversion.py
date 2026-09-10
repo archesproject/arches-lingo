@@ -1,65 +1,27 @@
-#!/usr/bin/env python3
-"""
-Getty AAT to SKOS Converter for arches-lingo
-=============================================
+"""Convert a Getty AAT bulk export into SKOS RDF/XML that Lingo can import.
 
-Downloads the Getty Art & Architecture Thesaurus (AAT) full bulk export and
-converts it to standard SKOS RDF/XML format compatible with arches-lingo's
-import mechanism.
+Getty publishes the AAT using the Getty Vocabulary Program (GVP) ontology, which
+departs from plain SKOS in ways the Lingo importer cannot read directly. This
+module reconciles the two, and supports both archives Getty distributes:
 
-Usage
------
-Step 1 — convert (downloads ~172 MB, processes without full decompression):
+  explicit.zip  Current, and the default. Data is split across many files and
+                carries no inference: subjects are typed with GVP classes rather
+                than skos:Concept, labels exist only as skos-xl Label nodes, and
+                identifiers use dc: rather than dcterms:.
+  full.zip      A single pre-inferred file. Frozen since 2025-01-13, so it is
+                supported for archived copies rather than fresh downloads.
 
-    python scripts/convert_getty_aat.py [--output getty_aat_skos.xml]
+In both, scope notes hang off linked gvp:ScopeNote nodes and are inlined here,
+no ConceptScheme is declared so the scheme is synthesised from skos:inScheme,
+and facets carry skos:topConceptOf rather than the scheme carrying
+skos:hasTopConcept.
 
-    Options:
-      --output / -o    Output file path (default: getty_aat_skos.xml)
-      --skip-download  Reuse an existing full.zip in the current directory
-
-Step 2 — import into arches-lingo:
-
-    python manage.py packages \\
-        -o import_lingo_resources \\
-        -s /path/to/getty_aat_skos.xml \\
-        -ow overwrite
-
-Background
-----------
-The AAT is published using the Getty Vocabulary Program (GVP) ontology, which
-differs from plain SKOS in ways arches-lingo's importer cannot handle directly:
-
-  - Labels via skosxl:Label nodes rather than plain skos:prefLabel literals.
-    The full.zip includes pre-computed skos:prefLabel inference, so those
-    plain literals are already present and need no extra work.
-
-  - Scope notes as linked gvp:ScopeNote nodes (skos:scopeNote -> node ->
-    rdf:value "text"@lang). This script inlines the literal text.
-
-  - The AATOut_Full.nt file does NOT contain a rdf:type skos:ConceptScheme
-    triple for http://vocab.getty.edu/aat/ -- the scheme is synthesised from
-    the skos:inScheme values found on the concepts.
-
-  - Getty facets (top-level hierarchy nodes) use skos:topConceptOf pointing
-    up to the scheme, not skos:hasTopConcept pointing down from the scheme.
-    The script preserves these triples; arches-lingo's SKOS reader handles
-    the inverse property.
-
-  - Output format: SKOS RDF/XML (the format arches-lingo's importer parses).
-
-The AAT contains ~38 000 concepts. Expect the import step to run for 30-90
-minutes on a development machine.
-
-Data licence
-------------
-Getty AAT is released under the Open Data Commons Attribution Licence (ODC-By).
-Required attribution:
-  "This dataset contains information from Art & Architecture Thesaurus (AAT)(r)
-   which is made available under the ODC Attribution License."
+Getty AAT is released under the Open Data Commons Attribution Licence (ODC-By);
+see utils.aat.attribution_statement for the statement recorded on load.
 """
 
-import argparse
 import collections
+import datetime
 import itertools
 import os
 import re
@@ -69,10 +31,11 @@ import urllib.request
 import zipfile
 from xml.sax.saxutils import escape
 
+from arches_lingo.utils.aat.progress import (
+    progress_reporting_is_useful,
+    stream_lines_with_progress,
+)
 
-# ---------------------------------------------------------------------------
-# Download URL
-# ---------------------------------------------------------------------------
 
 # The full export has not been updated since 2025-01-13 and appears to be
 # frozen in place; the explicit export is current. Both layouts are supported.
@@ -88,10 +51,6 @@ DEFAULT_SCHEME_IDENTIFIER_URI = "http://vocab.getty.edu/aat/300000000"
 # Label given to the synthesised scheme when the export declares none of its own.
 DEFAULT_SCHEME_PREF_LABEL = "Getty Art & Architecture Thesaurus (AAT)"
 
-
-# ---------------------------------------------------------------------------
-# RDF / SKOS predicate URI constants
-# ---------------------------------------------------------------------------
 
 RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
 RDF_VALUE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#value"
@@ -127,15 +86,10 @@ GVP_BROADER_INSTANTI = GVP_NS + "broaderInstantial"
 # they are collected in subject_data and output using the gvp: namespace.
 GVP_TYPED_RELATION_PREFIX = "http://vocab.getty.edu/ontology#aat"
 
-# --- Explicit-export (explicit.zip) support -------------------------------
-# The "full" export is a single pre-inferred AATOut_Full.nt. The explicit
-# export splits the data across many files and omits all inference, so the
-# shapes below have to be handled directly rather than read off inferred
-# triples.
+# Explicit-export (explicit.zip) support
 
-# Subjects are typed with GVP classes, not rdf:type skos:Concept. All four
-# become SKOS concepts on output; the distinction is carried by the concept
-# type assigned later by the update_aat_concept_types command.
+# All four become SKOS concepts on output; update_aat_concept_types assigns the
+# distinction afterwards.
 GVP_CONCEPT = GVP_NS + "Concept"
 GVP_GUIDE_TERM = GVP_NS + "GuideTerm"
 GVP_HIERARCHY = GVP_NS + "Hierarchy"
@@ -146,24 +100,19 @@ GVP_SUBJECT_TYPES = frozenset([GVP_CONCEPT, GVP_GUIDE_TERM, GVP_HIERARCHY, GVP_F
 GVP_BROADER_PREFERRED = GVP_NS + "broaderPreferred"
 GVP_BROADER_NON_PREFERRED = GVP_NS + "broaderNonPreferred"
 
-# Labels are skos-xl Label nodes: <concept> xl:prefLabel <term>, and the text
-# hangs off the term as <term> xl:literalForm "text"@lang.
+# <concept> xl:prefLabel <term>, with the text on <term> xl:literalForm.
 SKOSXL_NS = "http://www.w3.org/2008/05/skos-xl#"
 SKOSXL_PREF_LABEL = SKOSXL_NS + "prefLabel"
 SKOSXL_ALT_LABEL = SKOSXL_NS + "altLabel"
 SKOSXL_LITERAL_FORM = SKOSXL_NS + "literalForm"
 
-# The explicit export uses dc:identifier where the full export used
-# dcterms:identifier.
 DC_IDENTIFIER = "http://purl.org/dc/elements/1.1/identifier"
 
 # Retired concepts, typed gvp:ObsoleteSubject in AATOut_ObsoleteSubjects.nt.
 GVP_OBSOLETE_SUBJECT = GVP_NS + "ObsoleteSubject"
 
-# Files from the explicit export that carry data this converter needs, in the
-# order they are streamed. Everything else in the archive (revision history,
-# source/contributor detail, alignments, ordered collections) is either
-# irrelevant here or handled by extract_getty_aat_sources.py.
+# Streamed in this order. The archive's other members are either irrelevant to
+# the SKOS output or handled by attribution_extraction.
 EXPLICIT_EXPORT_FILES = (
     "AATOut_1Subjects.nt",
     "AATOut_2Terms.nt",
@@ -217,11 +166,6 @@ PREDICATE_ELEMENT_MAP = {
 }
 
 
-# ---------------------------------------------------------------------------
-# Download helper
-# ---------------------------------------------------------------------------
-
-
 def download_with_progress(url, destination_path):
     def reporthook(block_num, block_size, total_size):
         downloaded_mb = block_num * block_size / 1_048_576
@@ -238,11 +182,6 @@ def download_with_progress(url, destination_path):
     print(f"Fetching {url}")
     urllib.request.urlretrieve(url, destination_path, reporthook)
     print()
-
-
-# ---------------------------------------------------------------------------
-# NTriples streaming parser (no external dependencies)
-# ---------------------------------------------------------------------------
 
 
 def _parse_nt_triple(line):
@@ -324,11 +263,6 @@ def _parse_uri_object(raw_object):
     return None
 
 
-# ---------------------------------------------------------------------------
-# Single-pass streaming collection
-# ---------------------------------------------------------------------------
-
-
 def collect_obsolete_subjects(nt_stream):
     """Return the set of subject URIs typed gvp:ObsoleteSubject.
 
@@ -372,6 +306,7 @@ def collect_aat_data(nt_stream):
     explicit_schemes = set()
     scope_note_literals = collections.defaultdict(list)
     xl_label_literals = collections.defaultdict(list)
+    preferred_parents = collections.defaultdict(set)
     subject_data = collections.defaultdict(lambda: collections.defaultdict(list))
 
     line_count = 0
@@ -385,12 +320,6 @@ def collect_aat_data(nt_stream):
             line = raw_line
 
         line_count += 1
-        if line_count % 500_000 == 0:
-            print(
-                f"  {line_count:>10,} lines | {len(concepts):>6,} concepts"
-                f" | {len(scope_note_literals):>6,} scope notes",
-                flush=True,
-            )
 
         parsed = _parse_nt_triple(line)
         if parsed is None:
@@ -447,21 +376,15 @@ def collect_aat_data(nt_stream):
         elif predicate_uri == SKOSXL_ALT_LABEL:
             predicate_uri = SKOS_ALT_LABEL
         elif predicate_uri == DC_IDENTIFIER:
-            # The explicit export uses dc:identifier, carrying the bare number
-            # ("300000201"). Normalise to dcterms:identifier AND emit the
-            # concept's own URI as the value: arches-lingo's importer creates a
-            # URI tile only when the identifier value is a URL, deriving the
-            # identifier tile from its last path segment. Emitting the bare
-            # number yields an identifier tile but no URI tile, which the
-            # attribution loader and concept-type command both depend on.
+            # The importer only creates a URI tile when the identifier is a
+            # URL, taking the identifier itself from the last path segment. The
+            # export's bare number would therefore yield no URI tile, which the
+            # attribution loader and concept typing both need.
             predicate_uri = DCTERMS_IDENTIFIER
             raw_object = f'"{subject_uri}"'
 
-        # Map all GVP broader predicates to skos:broader so the output uses a
-        # single standard hierarchy predicate.  Duplicates arise because the
-        # full NTriples sometimes asserts both skos:broader (as an inferred
-        # alias) and gvp:broaderGeneric for the same subject/object pair;
-        # deduplication happens in the write step.
+        # Duplicates arise where the full export asserts both skos:broader and
+        # a GVP equivalent for the same pair; the write step deduplicates.
         if predicate_uri in (
             GVP_BROADER_GENERIC,
             GVP_BROADER_PARTITIV,
@@ -469,27 +392,24 @@ def collect_aat_data(nt_stream):
             GVP_BROADER_PREFERRED,
             GVP_BROADER_NON_PREFERRED,
         ):
+            # Which parent is preferred is the only signal available for
+            # breaking the cycles Getty's data occasionally contains.
+            if predicate_uri == GVP_BROADER_PREFERRED:
+                preferred_parent_uri = _parse_uri_object(raw_object)
+                if preferred_parent_uri:
+                    preferred_parents[subject_uri].add(preferred_parent_uri)
             predicate_uri = SKOS_BROADER
 
         subject_data[subject_uri][predicate_uri].append(raw_object)
 
-    print(
-        f"  {line_count:>10,} lines | {len(concepts):>6,} concepts"
-        f" | {len(scope_note_literals):>6,} scope notes",
-        flush=True,
-    )
     return (
         concepts,
         explicit_schemes,
         scope_note_literals,
         subject_data,
         xl_label_literals,
+        preferred_parents,
     )
-
-
-# ---------------------------------------------------------------------------
-# Scheme synthesis
-# ---------------------------------------------------------------------------
 
 
 def derive_schemes(explicit_schemes, concepts, subject_data):
@@ -527,9 +447,109 @@ def derive_schemes(explicit_schemes, concepts, subject_data):
     return inferred_schemes
 
 
-# ---------------------------------------------------------------------------
-# Top-concept detection
-# ---------------------------------------------------------------------------
+def break_hierarchy_cycles(concepts, subject_data, preferred_parents, log=print):
+    """Remove skos:broader edges that would make the hierarchy cyclic.
+
+    Getty's data contains a small number of concept pairs that each declare the
+    other a parent. A cycle makes any recursive ancestor query non-terminating,
+    so the hierarchy has to be acyclic before it is written.
+
+    GVP marks one parent of each concept as preferred, and those edges form an
+    acyclic backbone; the cycles observed are closed by non-preferred parents,
+    which are supplementary polyhierarchy links. Edges are therefore dropped
+    preferring non-preferred ones, so every concept keeps its primary parent.
+
+    Modifies subject_data in place and returns the edges removed.
+    """
+    parents_by_child = {}
+    for concept_uri in sorted(concepts):
+        parent_uris = []
+        for raw_object in subject_data.get(concept_uri, {}).get(SKOS_BROADER, []):
+            parent_uri = _parse_uri_object(raw_object)
+            if parent_uri and parent_uri in concepts and parent_uri not in parent_uris:
+                parent_uris.append(parent_uri)
+        if parent_uris:
+            parents_by_child[concept_uri] = parent_uris
+
+    removed_edges = []
+    arbitrarily_removed_edges = []
+    UNVISITED, IN_PROGRESS, DONE = 0, 1, 2
+    visit_state = collections.defaultdict(int)
+
+    def drop_edge(child_uri, parent_uri):
+        removed_edges.append((child_uri, parent_uri))
+        parents_by_child[child_uri] = [
+            candidate
+            for candidate in parents_by_child.get(child_uri, [])
+            if candidate != parent_uri
+        ]
+        subject_data[child_uri][SKOS_BROADER] = [
+            raw_object
+            for raw_object in subject_data[child_uri][SKOS_BROADER]
+            if _parse_uri_object(raw_object) != parent_uri
+        ]
+
+    # Iterative depth-first search; an edge reaching a node already on the
+    # current path closes a cycle.
+    for start_uri in list(parents_by_child):
+        if visit_state[start_uri] != UNVISITED:
+            continue
+        stack = [(start_uri, iter(list(parents_by_child.get(start_uri, []))))]
+        visit_state[start_uri] = IN_PROGRESS
+        path = [start_uri]
+        while stack:
+            current_uri, parent_iterator = stack[-1]
+            next_parent = next(parent_iterator, None)
+            if next_parent is None:
+                visit_state[current_uri] = DONE
+                stack.pop()
+                path.pop()
+                continue
+            if visit_state[next_parent] == IN_PROGRESS:
+                cycle = path[path.index(next_parent) :] + [next_parent]
+                supplementary_edge = next(
+                    (
+                        (child, parent)
+                        for child, parent in zip(cycle, cycle[1:])
+                        if parent not in preferred_parents.get(child, ())
+                    ),
+                    None,
+                )
+                # Every edge in the cycle is a preferred parent, so there is no
+                # basis for choosing between them; one is dropped arbitrarily
+                # rather than leaving a hierarchy that cannot be traversed.
+                edge_to_drop = supplementary_edge or (current_uri, next_parent)
+                if supplementary_edge is None:
+                    arbitrarily_removed_edges.append(edge_to_drop)
+                drop_edge(*edge_to_drop)
+                continue
+            if visit_state[next_parent] == UNVISITED:
+                visit_state[next_parent] = IN_PROGRESS
+                path.append(next_parent)
+                stack.append(
+                    (next_parent, iter(list(parents_by_child.get(next_parent, []))))
+                )
+
+    if removed_edges:
+        log(f"Removed {len(removed_edges)} broader edge(s) that formed cycles:")
+        for child_uri, parent_uri in removed_edges:
+            log(f"  {child_uri} -> {parent_uri}")
+
+    if arbitrarily_removed_edges:
+        log("")
+        log("*** WARNING " + "*" * 60)
+        log(
+            f"*** {len(arbitrarily_removed_edges)} cycle(s) consisted entirely of "
+            f"preferred parents."
+        )
+        log("*** An edge was dropped arbitrarily; the hierarchy here may not")
+        log("*** match the source vocabulary's intent. Edges dropped:")
+        for child_uri, parent_uri in arbitrarily_removed_edges:
+            log(f"***   {child_uri} -> {parent_uri}")
+        log("*" * 72)
+        log("")
+
+    return removed_edges
 
 
 def promote_all_broader_targets_transitively(concepts, subject_data):
@@ -649,11 +669,6 @@ def synthesize_top_concepts(concepts, schemes, subject_data):
     return top_concept_count
 
 
-# ---------------------------------------------------------------------------
-# Scope note resolution
-# ---------------------------------------------------------------------------
-
-
 def _as_nt_literal(value, lang):
     """Render a python string back into an NTriples literal, since the write
     step re-parses the raw object strings it is handed."""
@@ -728,11 +743,6 @@ def resolve_scope_notes(subject_data, scope_note_literals):
         predicates[SKOS_SCOPE_NOTE] = resolved
 
 
-# ---------------------------------------------------------------------------
-# SKOS RDF/XML output
-# ---------------------------------------------------------------------------
-
-
 def _write_predicate_elements(out, predicate_uri, raw_objects):
     mapping = PREDICATE_ELEMENT_MAP.get(predicate_uri)
     if not mapping:
@@ -778,7 +788,6 @@ def write_skos_xml(
         out.write('  xmlns:gvp="http://vocab.getty.edu/ontology#"\n')
         out.write(">\n\n")
 
-        # --- ConceptScheme(s) ---
         for scheme_uri in sorted(schemes):
             out.write(f'  <skos:ConceptScheme rdf:about="{escape(scheme_uri)}">\n')
             if scheme_identifier_uri:
@@ -799,7 +808,6 @@ def write_skos_xml(
                 )
             out.write("  </skos:ConceptScheme>\n\n")
 
-        # --- Concepts ---
         written_count = 0
         gvp_ns_len = len("http://vocab.getty.edu/ontology#")
         for concept_uri in sorted(concepts):
@@ -886,12 +894,59 @@ def write_skos_xml(
     return written_count
 
 
-# ---------------------------------------------------------------------------
-# Validation diagnostics
-# ---------------------------------------------------------------------------
+def find_hierarchy_cycles(concepts, subject_data):
+    """Return any concepts still reachable from themselves through skos:broader."""
+    parents_by_child = {}
+    for concept_uri in concepts:
+        parent_uris = [
+            _parse_uri_object(raw_object)
+            for raw_object in subject_data.get(concept_uri, {}).get(SKOS_BROADER, [])
+        ]
+        parents_by_child[concept_uri] = [
+            parent for parent in parent_uris if parent in concepts
+        ]
+
+    cyclic_concepts = []
+    UNVISITED, IN_PROGRESS, DONE = 0, 1, 2
+    visit_state = collections.defaultdict(int)
+    for start_uri in parents_by_child:
+        if visit_state[start_uri] != UNVISITED:
+            continue
+        stack = [(start_uri, iter(parents_by_child.get(start_uri, [])))]
+        visit_state[start_uri] = IN_PROGRESS
+        while stack:
+            current_uri, parent_iterator = stack[-1]
+            next_parent = next(parent_iterator, None)
+            if next_parent is None:
+                visit_state[current_uri] = DONE
+                stack.pop()
+                continue
+            if visit_state[next_parent] == IN_PROGRESS:
+                cyclic_concepts.append(next_parent)
+            elif visit_state[next_parent] == UNVISITED:
+                visit_state[next_parent] = IN_PROGRESS
+                stack.append((next_parent, iter(parents_by_child.get(next_parent, []))))
+    return cyclic_concepts
 
 
-def validate_output(concepts, schemes, subject_data):
+def validate_output(concepts, schemes, subject_data, log=print):
+    remaining_cycles = find_hierarchy_cycles(concepts, subject_data)
+    if remaining_cycles:
+        # Cycles are legal SKOS and a source vocabulary is entitled to contain
+        # them, so this reports rather than aborts. It should not happen:
+        # break_hierarchy_cycles drops an edge from every cycle it finds, so
+        # anything reaching here is a defect in that pass.
+        log("")
+        log("*** WARNING " + "*" * 60)
+        log(f"*** {len(remaining_cycles)} hierarchy cycle(s) survived cycle breaking.")
+        log("*** Recursive queries over this hierarchy may not terminate.")
+        for cyclic_uri in remaining_cycles[:10]:
+            log(f"***   {cyclic_uri}")
+        if len(remaining_cycles) > 10:
+            log(f"***   ... and {len(remaining_cycles) - 10} more")
+        log("*" * 72)
+        log("")
+
     concepts_with_pref_label = sum(
         1 for uri in concepts if SKOS_PREF_LABEL in subject_data.get(uri, {})
     )
@@ -946,227 +1001,164 @@ def validate_output(concepts, schemes, subject_data):
         )
 
 
-# ---------------------------------------------------------------------------
-# Main
-# ---------------------------------------------------------------------------
+def read_archive_extraction_date(archive_path):
+    """Return the date Getty built the export, from its newest data member.
+
+    Getty stamps each member as it is written, so the newest of the members we
+    actually read is the build date. Members are considered selectively because
+    the archive also carries files Getty forwards unchanged from earlier builds
+    (their Wikidata alignment is years older), which would otherwise drag the
+    answer backwards.
+    """
+    considered_filenames = set(EXPLICIT_EXPORT_FILES) | {OBSOLETE_SUBJECTS_FILE}
+    with zipfile.ZipFile(archive_path, "r") as archive:
+        member_dates = [
+            datetime.date(*member.date_time[:3])
+            for member in archive.infolist()
+            if member.filename in considered_filenames
+        ]
+        if not member_dates:
+            member_dates = [
+                datetime.date(*member.date_time[:3]) for member in archive.infolist()
+            ]
+    return max(member_dates) if member_dates else None
 
 
-def main():
-    parser = argparse.ArgumentParser(
-        description=(
-            "Download the Getty AAT full export and convert to SKOS RDF/XML "
-            "for arches-lingo import."
-        ),
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-    )
-    parser.add_argument(
-        "--output",
-        "-o",
-        default="getty_aat_skos.xml",
-        help="Output file path (default: getty_aat_skos.xml)",
-    )
-    parser.add_argument(
-        "--skip-download",
-        action="store_true",
-        help=(
-            "Skip downloading and use an existing archive on disk "
-            f"(default: {DEFAULT_LOCAL_ARCHIVE}; override with --archive)."
-        ),
-    )
-    parser.add_argument(
-        "--archive",
-        default=DEFAULT_LOCAL_ARCHIVE,
-        help=(
-            "Path to an existing Getty archive to read with --skip-download "
-            f"(default: {DEFAULT_LOCAL_ARCHIVE})."
-        ),
-    )
-    parser.add_argument(
-        "--scheme-pref-label",
-        default=DEFAULT_SCHEME_PREF_LABEL,
-        help=(
-            "English prefLabel for the synthesised scheme "
-            f"(default: {DEFAULT_SCHEME_PREF_LABEL!r})."
-        ),
-    )
-    parser.add_argument(
-        "--scheme-identifier",
-        default=DEFAULT_SCHEME_IDENTIFIER_URI,
-        help=(
-            "URL-valued dcterms:identifier to give the synthesised scheme "
-            f"(default: {DEFAULT_SCHEME_IDENTIFIER_URI}). Pass an empty string "
-            "to omit it."
-        ),
-    )
-    parser.add_argument(
-        "--url",
-        default=GETTY_AAT_EXPLICIT_ZIP_URL,
-        help=(
-            "Archive URL to download. Defaults to the explicit export, which "
-            "Getty still updates; the full export has been frozen since "
-            "January 2025."
-        ),
-    )
-    args = parser.parse_args()
+class AATConversionError(Exception):
+    """Raised when a Getty archive cannot be converted."""
 
-    # Step 1: obtain the zip
-    if args.skip_download:
-        zip_path = args.archive
-        if not os.path.exists(zip_path):
-            print(
-                f"Error: --skip-download set but {zip_path!r} not found.",
-                file=sys.stderr,
-            )
-            sys.exit(1)
-        cleanup_zip = False
-        print(f"Using existing {zip_path}")
-    else:
-        tmp_fd, zip_path = tempfile.mkstemp(suffix=".zip", prefix="getty_aat_", dir=".")
-        os.close(tmp_fd)
-        cleanup_zip = True
-        try:
-            download_with_progress(args.url, zip_path)
-        except Exception as exc:
-            print(f"\nDownload failed: {exc}", file=sys.stderr)
-            if os.path.exists(zip_path):
-                os.unlink(zip_path)
-            sys.exit(1)
 
+def download_archive(destination_path, url=GETTY_AAT_EXPLICIT_ZIP_URL, log=print):
+    """Download a Getty AAT archive to destination_path."""
+    log(f"Downloading {url} ...")
     try:
-        # Step 2: identify the subjects NTriples file
-        print(f"\nOpening {zip_path} ...")
-        with zipfile.ZipFile(zip_path, "r") as zf:
-            available = zf.namelist()
-            print(f"Files in archive: {', '.join(available)}")
+        download_with_progress(url, destination_path)
+    except Exception as download_error:
+        if os.path.exists(destination_path):
+            os.unlink(destination_path)
+        raise AATConversionError(
+            f"Download failed: {download_error}"
+        ) from download_error
+    return destination_path
 
-            full_export_filename = next(
-                (n for n in available if "Full" in n and n.endswith(".nt")), None
-            )
-            if full_export_filename:
-                # "full" export: one pre-inferred file carries everything.
-                source_filenames = [full_export_filename]
-            else:
-                # "explicit" export: data is split across files and carries no
-                # inference, so every file holding data we need is streamed.
-                source_filenames = [n for n in EXPLICIT_EXPORT_FILES if n in available]
-                missing = [n for n in EXPLICIT_EXPORT_FILES if n not in available]
-                if missing:
-                    print(
-                        f"Warning: expected files absent from archive: "
-                        f"{', '.join(missing)}",
-                        file=sys.stderr,
-                    )
 
-            if not source_filenames:
-                print(
-                    f"Error: cannot identify NTriples data files. "
-                    f"Available: {available}",
-                    file=sys.stderr,
+def _select_source_filenames(archive, log):
+    """Return the NTriples members to stream, supporting both export layouts."""
+    available_filenames = archive.namelist()
+
+    full_export_filename = next(
+        (
+            name
+            for name in available_filenames
+            if "Full" in name and name.endswith(".nt")
+        ),
+        None,
+    )
+    if full_export_filename:
+        return [full_export_filename]
+
+    source_filenames = [
+        name for name in EXPLICIT_EXPORT_FILES if name in available_filenames
+    ]
+    missing_filenames = [
+        name for name in EXPLICIT_EXPORT_FILES if name not in available_filenames
+    ]
+    if missing_filenames:
+        log(
+            f"Warning: expected files absent from archive: {', '.join(missing_filenames)}"
+        )
+    if not source_filenames:
+        raise AATConversionError(
+            f"Cannot identify NTriples data files in archive. "
+            f"Available: {available_filenames}"
+        )
+    return source_filenames
+
+
+def convert_archive_to_skos(
+    archive_path,
+    output_path,
+    scheme_identifier_uri=DEFAULT_SCHEME_IDENTIFIER_URI,
+    scheme_pref_label=DEFAULT_SCHEME_PREF_LABEL,
+    show_progress=None,
+    log=print,
+):
+    """Convert a Getty AAT archive into SKOS RDF/XML written to output_path.
+
+    Handles both Getty export layouts: the single pre-inferred "full" export and
+    the multi-file "explicit" export, which carries no inference and expresses
+    labels as skos-xl nodes. Concepts Getty has retired are excluded.
+
+    Returns the number of concepts written.
+    """
+    if not os.path.exists(archive_path):
+        raise AATConversionError(f"Archive not found: {archive_path}")
+
+    with zipfile.ZipFile(archive_path, "r") as archive:
+        source_filenames = _select_source_filenames(archive, log)
+        total_uncompressed_bytes = sum(
+            archive.getinfo(name).file_size for name in source_filenames
+        )
+        log(
+            f"Reading {len(source_filenames)} file(s), "
+            f"{total_uncompressed_bytes / 1_048_576:,.0f} MB uncompressed"
+        )
+
+        obsolete_uris = set()
+        if OBSOLETE_SUBJECTS_FILE in archive.namelist():
+            with archive.open(OBSOLETE_SUBJECTS_FILE) as obsolete_stream:
+                obsolete_uris = collect_obsolete_subjects(obsolete_stream)
+            log(f"{len(obsolete_uris):,} retired subjects will be excluded")
+
+        if show_progress is None:
+            show_progress = progress_reporting_is_useful()
+
+        open_streams = [archive.open(name) for name in source_filenames]
+        try:
+            (
+                concepts,
+                explicit_schemes,
+                scope_note_literals,
+                subject_data,
+                xl_label_literals,
+                preferred_parents,
+            ) = collect_aat_data(
+                stream_lines_with_progress(
+                    open_streams,
+                    total_uncompressed_bytes,
+                    title="Reading concepts, labels and hierarchy",
+                    show_progress=show_progress,
                 )
-                sys.exit(1)
-
-            total_uncompressed = sum(zf.getinfo(n).file_size for n in source_filenames)
-            print(
-                f"Processing {len(source_filenames)} file(s), "
-                f"{total_uncompressed / 1_048_576:,.0f} MB uncompressed:"
             )
-            for n in source_filenames:
-                print(f"  {n} ({zf.getinfo(n).file_size / 1_048_576:,.0f} MB)")
+        finally:
+            for stream in open_streams:
+                stream.close()
 
-            # Retired concepts are listed in their own file and must not be
-            # emitted. Collected first so they can be dropped up front.
-            obsolete_uris = set()
-            if OBSOLETE_SUBJECTS_FILE in available:
-                with zf.open(OBSOLETE_SUBJECTS_FILE) as obsolete_stream:
-                    obsolete_uris = collect_obsolete_subjects(obsolete_stream)
-                print(
-                    f"\n{len(obsolete_uris):,} obsolete (retired) subjects will be "
-                    f"excluded."
-                )
-
-            # Step 3: stream NTriples across every source file as one sequence.
-            print("\nStreaming NTriples data (this will take several minutes) ...")
-            open_streams = [zf.open(n) for n in source_filenames]
-            try:
-                (
-                    concepts,
-                    explicit_schemes,
-                    scope_note_literals,
-                    subject_data,
-                    xl_label_literals,
-                ) = collect_aat_data(itertools.chain(*open_streams))
-            finally:
-                for stream in open_streams:
-                    stream.close()
-
-    finally:
-        if cleanup_zip and os.path.exists(zip_path):
-            os.unlink(zip_path)
-            print("\nTemporary download file removed.")
-
-    # Drop anything Getty has retired before it can reach the output.
     if obsolete_uris:
-        removed = concepts & obsolete_uris
+        retired_concepts = concepts & obsolete_uris
         concepts -= obsolete_uris
-        for uri in removed:
-            subject_data.pop(uri, None)
-        print(f"Excluded {len(removed):,} retired concepts.")
+        for retired_uri in retired_concepts:
+            subject_data.pop(retired_uri, None)
+        log(f"Excluded {len(retired_concepts):,} retired concepts")
 
-    # Step 3b: inline skos-xl label text (no-op for the full export)
     if xl_label_literals:
-        print(f"Resolving {len(xl_label_literals):,} skos-xl label nodes ...")
-        resolved = resolve_xl_labels(subject_data, xl_label_literals)
-        print(f"  inlined {resolved:,} label literals")
+        inlined_label_count = resolve_xl_labels(subject_data, xl_label_literals)
+        log(f"Inlined {inlined_label_count:,} skos-xl label literals")
 
-    # Step 4: determine scheme(s)
-    print()
     schemes = derive_schemes(explicit_schemes, concepts, subject_data)
-
-    # Step 5: inline scope note literal text
-    print(f"Resolving {len(scope_note_literals):,} scope note nodes ...")
     resolve_scope_notes(subject_data, scope_note_literals)
-
-    # Step 6: promote all intermediate hierarchy nodes (guide terms, facets,
-    #          collections) so every skos:broader reference resolves within
-    #          the concept set, then synthesise topConceptOf only for the true
-    #          top nodes (the 8 AAT facets).
-    print("Promoting intermediate hierarchy nodes transitively ...")
     promote_all_broader_targets_transitively(concepts, subject_data)
-    print("Synthesising top concepts for any remaining orphans ...")
+    break_hierarchy_cycles(concepts, subject_data, preferred_parents, log=log)
     synthesize_top_concepts(concepts, schemes, subject_data)
+    validate_output(concepts, schemes, subject_data, log=log)
 
-    validate_output(concepts, schemes, subject_data)
-
-    # Step 7: write SKOS RDF/XML
-    print()
-    written = write_skos_xml(
-        args.output,
+    concepts_written = write_skos_xml(
+        output_path,
         concepts,
         schemes,
         subject_data,
-        args.scheme_identifier,
-        args.scheme_pref_label,
+        scheme_identifier_uri,
+        scheme_pref_label,
     )
-
-    output_abs = os.path.abspath(args.output)
-    print(
-        f"\n{'=' * 64}\n"
-        f"Conversion complete!\n"
-        f"Output file : {output_abs}\n"
-        f"Concepts    : {written:,}\n"
-        f"\nTo import into arches-lingo, run from the arches-lingo directory:\n"
-        f"\n  python manage.py packages \\\n"
-        f"      -o import_lingo_resources \\\n"
-        f"      -s {output_abs} \\\n"
-        f"      -ow overwrite\n"
-        f"\nNOTE: Importing {written:,} concepts may take 30-90 minutes.\n"
-        f"      The management command runs synchronously (no Celery needed).\n"
-        f"\nRequired attribution for the Getty AAT data:\n"
-        f'  "This dataset contains information from Art & Architecture\n'
-        f"   Thesaurus (AAT)(r) which is made available under the ODC\n"
-        f'   Attribution License."\n'
-    )
-
-
-if __name__ == "__main__":
-    main()
+    log(f"Wrote {concepts_written:,} concepts to {output_path}")
+    return concepts_written

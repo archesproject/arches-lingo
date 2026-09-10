@@ -31,6 +31,33 @@ class Command(PackagesCommand):
             help="Namespace URL template for the scheme (requires --import-identifiers)",
         )
         parser.add_argument(
+            "--lifecycle-state-id",
+            type=str,
+            default="",
+            help=(
+                "Lifecycle state id to place every imported resource in. "
+                "Defaults to the importer's published/editing behaviour."
+            ),
+        )
+        parser.add_argument(
+            "--skip-indexing",
+            action="store_true",
+            help=(
+                "Save without writing to Elasticsearch. Descriptors are still "
+                "recalculated, so resource names display correctly."
+            ),
+        )
+        parser.add_argument(
+            "--celery-byte-size-limit",
+            type=int,
+            default=0,
+            help=(
+                "Override the file size above which the import is handed to a "
+                "celery worker. Raise it to keep a large import in-process, "
+                "which avoids needing a running worker."
+            ),
+        )
+        parser.add_argument(
             "--pin-resource-ids",
             type=str,
             default="",
@@ -52,6 +79,9 @@ class Command(PackagesCommand):
                 import_identifiers=options["import_identifiers"],
                 namespace_template=options["namespace_template"],
                 pin_resource_ids=options["pin_resource_ids"],
+                celery_byte_size_limit=options["celery_byte_size_limit"],
+                lifecycle_state_id=options["lifecycle_state_id"],
+                skip_indexing=options["skip_indexing"],
             )
 
     def import_lingo_resources(
@@ -61,6 +91,9 @@ class Command(PackagesCommand):
         import_identifiers=False,
         namespace_template="",
         pin_resource_ids="",
+        celery_byte_size_limit=0,
+        lifecycle_state_id="",
+        skip_indexing=False,
     ):
         file_name = os.path.basename(source)
         with open(source, "rb") as f:
@@ -90,14 +123,13 @@ class Command(PackagesCommand):
             import_identifiers=import_identifiers,
             namespace_template=namespace_template,
             pinned_resource_ids=pinned_resource_ids,
+            lifecycle_state_id=lifecycle_state_id,
+            skip_indexing=skip_indexing,
         )
         start_request = bulk_loader.start(request=None)
         bulk_loader.file = inmemory_file
         # Avoid using celery for package import
-        # Keep the package import in-process regardless of file size. Above
-        # this limit the importer defers to a celery worker, which both
-        # requires a running worker and would not carry the pinned-id map.
-        # The converted AAT export is already ~86 MB, so the previous 90 MB
-        # limit left almost no headroom.
-        bulk_loader.config["celeryByteSizeLimit"] = 2_000_000_000  # 2 GB
+        bulk_loader.config["celeryByteSizeLimit"] = (
+            celery_byte_size_limit or 90000000  # 90mb
+        )
         write_request = bulk_loader.write(request=None)

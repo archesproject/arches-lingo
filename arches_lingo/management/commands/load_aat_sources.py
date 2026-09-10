@@ -4,11 +4,8 @@ Management command: load_aat_sources
 
 Loads Getty AAT source and contributor attribution data into Lingo.
 
-Prerequisites:
-  1. The AAT SKOS data has already been imported via the normal Lingo import
-     (``python manage.py packages -o import_lingo_resources -s getty_aat_skos.xml``)
-  2. The extraction script has been run to produce aat_sources.json:
-     ``python scripts/extract_getty_aat_sources.py``
+Run by ``load_aat`` after the import, against the JSON that
+``utils.aat.attribution_extraction`` produces.
 
 What this command does:
   - Phase 1: Creates ``textual_work`` resources for each unique source.
@@ -42,6 +39,11 @@ from arches.app.models.models import (
 from arches.app.models import models
 
 import arches_lingo.const as const
+from arches_lingo.utils.aat.deferred_indexing import save_to_tiles_without_indexing
+from arches_lingo.utils.aat.progress import (
+    iterate_with_progress,
+    progress_reporting_is_useful,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -120,6 +122,12 @@ def _make_staging_value(node_id, value, datatype):
 class Command(BaseCommand):
     help = "Load AAT source/contributor attribution data into Lingo"
 
+    def _save_tiles(self, userid, load_id):
+        if self.skip_indexing:
+            save_to_tiles_without_indexing(userid, load_id)
+        else:
+            save_to_tiles(userid, load_id)
+
     def add_arguments(self, parser):
         parser.add_argument(
             "--source",
@@ -132,8 +140,25 @@ class Command(BaseCommand):
             action="store_true",
             help="Print statistics without loading data",
         )
+        parser.add_argument(
+            "--skip-indexing",
+            action="store_true",
+            help=(
+                "Save without writing to Elasticsearch. Descriptors are still "
+                "recalculated, so resource names display correctly."
+            ),
+        )
+        parser.add_argument(
+            "--no-progress",
+            action="store_true",
+            help="Suppress progress bars. Suppressed automatically when redirected.",
+        )
 
     def handle(self, *args, **options):
+        self.skip_indexing = options["skip_indexing"]
+        self.show_progress = not options["no_progress"] and (
+            progress_reporting_is_useful()
+        )
         source_path = options["source"]
         dry_run = options["dry_run"]
 
@@ -263,16 +288,30 @@ class Command(BaseCommand):
                 if source_resource_map[uri] not in existing_ids
             ]
 
-            # Bulk create in batches
-            for i in range(0, len(resource_instances), BATCH_SIZE):
+            for batch_start in iterate_with_progress(
+                range(0, len(resource_instances), BATCH_SIZE),
+                len(resource_instances),
+                title=f"  Creating {len(resource_instances):,} resources",
+                show_progress=self.show_progress,
+                step=BATCH_SIZE,
+            ):
                 ResourceInstance.objects.bulk_create(
-                    resource_instances[i : i + BATCH_SIZE], ignore_conflicts=True
+                    resource_instances[batch_start : batch_start + BATCH_SIZE],
+                    ignore_conflicts=True,
                 )
-            for i in range(0, len(staging_rows), BATCH_SIZE):
-                LoadStaging.objects.bulk_create(staging_rows[i : i + BATCH_SIZE])
+            for batch_start in iterate_with_progress(
+                range(0, len(staging_rows), BATCH_SIZE),
+                len(staging_rows),
+                title=f"  Staging {len(staging_rows):,} tiles",
+                show_progress=self.show_progress,
+                step=BATCH_SIZE,
+            ):
+                LoadStaging.objects.bulk_create(
+                    staging_rows[batch_start : batch_start + BATCH_SIZE]
+                )
 
             self.stdout.write(f"  Saving tiles ...")
-            save_to_tiles(user.pk, load_id)
+            self._save_tiles(user.pk, load_id)
         else:
             self.stdout.write("  All source resources already exist, skipping.")
             load_event.status = "completed"
@@ -375,7 +414,7 @@ class Command(BaseCommand):
                 LoadStaging.objects.bulk_create(staging_rows[i : i + BATCH_SIZE])
 
             self.stdout.write(f"  Saving tiles ...")
-            save_to_tiles(user.pk, load_id)
+            self._save_tiles(user.pk, load_id)
         else:
             self.stdout.write("  All contributor resources already exist, skipping.")
             load_event.status = "completed"
@@ -629,12 +668,19 @@ class Command(BaseCommand):
         )
 
         if staging_rows:
-            self.stdout.write(f"  Staging {len(staging_rows)} tile updates ...")
-            for i in range(0, len(staging_rows), BATCH_SIZE):
-                LoadStaging.objects.bulk_create(staging_rows[i : i + BATCH_SIZE])
+            for batch_start in iterate_with_progress(
+                range(0, len(staging_rows), BATCH_SIZE),
+                len(staging_rows),
+                title=f"  Staging {len(staging_rows):,} tile updates",
+                show_progress=self.show_progress,
+                step=BATCH_SIZE,
+            ):
+                LoadStaging.objects.bulk_create(
+                    staging_rows[batch_start : batch_start + BATCH_SIZE]
+                )
 
             self.stdout.write(f"  Saving tiles ...")
-            save_to_tiles(user.pk, load_id)
+            self._save_tiles(user.pk, load_id)
             self.stdout.write(f"  Done.")
         else:
             self.stdout.write("  No tiles to update.")
@@ -652,12 +698,10 @@ class Command(BaseCommand):
         URI tiles for matched resources so that future runs can use them.
         """
         # Scheme URI nodegroup/node IDs (different from concept)
-        SCHEME_URI_NODEGROUP = "7fdc87bb-6ef9-4a74-8e84-4bde69557eef"
-        SCHEME_URI_CONTENT_NODE = "1bd0f20b-b945-4231-b872-cba02cc4bc25"
 
         # Query both concept and scheme URI tiles
         uri_tiles = TileModel.objects.filter(
-            nodegroup_id__in=[const.URI_NODEGROUP, SCHEME_URI_NODEGROUP],
+            nodegroup_id__in=[const.URI_NODEGROUP, const.SCHEME_URI_NODEGROUP],
         ).values_list("resourceinstance_id", "nodegroup_id", "data")
 
         lookup = {}
@@ -666,8 +710,8 @@ class Command(BaseCommand):
                 continue
             # Determine which content node to read based on nodegroup
             uri_node = (
-                SCHEME_URI_CONTENT_NODE
-                if str(nodegroup_id) == SCHEME_URI_NODEGROUP
+                const.SCHEME_URI_CONTENT_NODE
+                if str(nodegroup_id) == const.SCHEME_URI_NODEGROUP
                 else const.URI_CONTENT_NODE
             )
             uri_value = data.get(uri_node)
@@ -771,14 +815,12 @@ class Command(BaseCommand):
         )
 
         concept_ng = NodeGroup.objects.get(nodegroupid=const.URI_NODEGROUP)
-        SCHEME_URI_NODEGROUP = "7fdc87bb-6ef9-4a74-8e84-4bde69557eef"
-        SCHEME_URI_CONTENT_NODE = "1bd0f20b-b945-4231-b872-cba02cc4bc25"
-        scheme_ng = NodeGroup.objects.get(nodegroupid=SCHEME_URI_NODEGROUP)
+        scheme_ng = NodeGroup.objects.get(nodegroupid=const.SCHEME_URI_NODEGROUP)
 
         # Check which resources already have URI tiles
         existing = set(
             TileModel.objects.filter(
-                nodegroup_id__in=[const.URI_NODEGROUP, SCHEME_URI_NODEGROUP],
+                nodegroup_id__in=[const.URI_NODEGROUP, const.SCHEME_URI_NODEGROUP],
                 resourceinstance_id__in=concept_uri_to_resource.values(),
             ).values_list("resourceinstance_id", flat=True)
         )
@@ -799,7 +841,7 @@ class Command(BaseCommand):
             graph_id = str(resource_graphs.get(resource_id, ""))
             if graph_id == const.SCHEMES_GRAPH_ID:
                 nodegroup = scheme_ng
-                content_node = SCHEME_URI_CONTENT_NODE
+                content_node = const.SCHEME_URI_CONTENT_NODE
             else:
                 nodegroup = concept_ng
                 content_node = const.URI_CONTENT_NODE

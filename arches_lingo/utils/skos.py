@@ -24,12 +24,9 @@ ARCHES = Namespace(settings.ARCHES_NAMESPACE_FOR_DATA_EXPORT)
 
 logger = logging.getLogger(__name__)
 
-# GVP typed associative relation predicates use this prefix followed by a
-# numeric relation code and descriptive label, e.g.:
-#   http://vocab.getty.edu/ontology#aat2285_practiced-studied_by
-# The arches-lingo controlled list «related properties» stores these URIs as
-# the identifier of each list item so they can be looked up and stored as the
-# relation_status_ascribed_relation reference value during import.
+# e.g. http://vocab.getty.edu/ontology#aat2285_practiced-studied_by. The
+# «related properties» controlled list stores these URIs as its item
+# identifiers, so a predicate resolves to the relation type to record.
 GVP_TYPED_RELATION_PREFIX = "http://vocab.getty.edu/ontology#aat"
 
 
@@ -322,11 +319,8 @@ class SKOSReader(SKOSReader):
                             )
                             self.relations[resourceinstanceid].append(mock_tile)
                         elif str(predicate).startswith(GVP_TYPED_RELATION_PREFIX):
-                            # Typed GVP associative relation predicate — carries both
-                            # the comparate (the other concept) and the relation type
-                            # (encoded in the predicate URI local name).  The tile is
-                            # placed on the object concept so that viewing it shows the
-                            # comparate (subject) with its semantic relation type.
+                            # The tile goes on the object concept, so viewing it
+                            # shows the subject as the comparate.
                             related_concept_id = self.generate_uuidv5_from_subject(
                                 baseuuid, object
                             )

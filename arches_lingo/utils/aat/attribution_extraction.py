@@ -1,71 +1,28 @@
-#!/usr/bin/env python3
-"""
-Getty AAT Source & Contributor Extractor
-=========================================
+"""Extract the AAT's source and contributor attribution from a Getty export.
 
-Streams the Getty AAT NTriples bulk export and extracts source/contributor
-attribution data that is not captured by the SKOS conversion script
-(convert_getty_aat.py).
+The SKOS conversion carries concepts, labels and notes, but not the provenance
+Getty records against each of them, which the licence expects to be preserved.
+This module gathers that separately, keyed by label and scope note so the
+loader can attach it to the tiles the import creates.
 
-For each skos-xl:Label and gvp:ScopeNote in the AAT, this script collects:
-  - dct:source references (the bibliographic sources that support the data)
-  - dct:contributor references (the organizations that contributed the data)
-  - gvp:sourcePreferred / gvp:sourceNonPreferred
-  - gvp:contributorPreferred / gvp:contributorNonPreferred
+Collected per skos-xl Label and gvp:ScopeNote: dct:source and dct:contributor
+references, along with Getty's preferred/non-preferred variants of each. Source
+titles and contributor names are collected too, so the loader can create the
+textual_work and group resources the references point at.
 
-It also collects contributor metadata (foaf:name, foaf:nick) and source
-metadata (dcterms:title, bibo:shortTitle) so that the downstream loader can
-create Lingo resources for sources and contributors.
-
-Usage
------
-    python scripts/extract_getty_aat_sources.py [--output aat_sources.json]
-    python scripts/extract_getty_aat_sources.py --skip-download
-
-The output is a JSON file with this structure:
+The result is written as JSON shaped for load_aat_sources:
 
     {
-      "sources": {
-        "<source-uri>": {
-          "title": "...",
-          "short_title": "..."
-        }
-      },
-      "contributors": {
-        "<contributor-uri>": {
-          "name": "...",
-          "nick": "..."
-        }
-      },
-      "labels": {
-        "<concept-uri>": [
-          {
-            "literal_form": "...",
-            "language": "en",
-            "label_type": "prefLabel|altLabel",
-            "sources": ["<source-uri>", ...],
-            "contributors": ["<contributor-uri>", ...]
-          }
-        ]
-      },
-      "notes": {
-        "<concept-uri>": [
-          {
-            "value": "...",
-            "language": "en",
-            "sources": ["<source-uri>", ...],
-            "contributors": ["<contributor-uri>", ...]
-          }
-        ]
-      }
+      "sources":      {"<source-uri>": {"title", "short_title"}},
+      "contributors": {"<contributor-uri>": {"name", "nick"}},
+      "labels":       {"<concept-uri>": [{"literal_form", "language",
+                                          "label_type", "sources",
+                                          "contributors"}]},
+      "notes":        {"<concept-uri>": [{"value", "language", "sources",
+                                          "contributors"}]},
     }
-
-This file is consumed by the load_aat_sources ETL module to create
-textual_work, person, and group resources and link them to existing
-concept/scheme tiles.
 """
 
-import argparse
 import collections
 import itertools
 import json
@@ -76,13 +33,18 @@ import tempfile
 import urllib.request
 import zipfile
 
+from arches_lingo.utils.aat.progress import (
+    progress_reporting_is_useful,
+    stream_lines_with_progress,
+)
 
-# ---------------------------------------------------------------------------
-# Download URL (same as convert_getty_aat.py)
-# ---------------------------------------------------------------------------
 
 # The full export has been frozen since 2025-01-13; the explicit export is the
 # one Getty still updates. Both archive layouts are supported.
+class AATAttributionError(Exception):
+    """Raised when attribution data cannot be extracted from a Getty archive."""
+
+
 GETTY_AAT_FULL_ZIP_URL = "http://aatdownloads.getty.edu/VocabData/full.zip"
 GETTY_AAT_EXPLICIT_ZIP_URL = "http://aatdownloads.getty.edu/VocabData/explicit.zip"
 DEFAULT_LOCAL_ARCHIVE = "explicit.zip"
@@ -100,10 +62,6 @@ EXPLICIT_EXPORT_FILES = (
     "AATOut_Contribs.nt",
 )
 
-
-# ---------------------------------------------------------------------------
-# RDF / SKOS / GVP predicate URI constants
-# ---------------------------------------------------------------------------
 
 RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
 RDF_VALUE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#value"
@@ -191,11 +149,6 @@ AAT_CONTRIB_PREFIX = "http://vocab.getty.edu/aat/contrib/"
 AAT_SOURCE_PREFIX = "http://vocab.getty.edu/aat/source/"
 
 
-# ---------------------------------------------------------------------------
-# Download helper (same as convert_getty_aat.py)
-# ---------------------------------------------------------------------------
-
-
 def download_with_progress(url, destination_path):
     def reporthook(block_num, block_size, total_size):
         downloaded_mb = block_num * block_size / 1_048_576
@@ -212,11 +165,6 @@ def download_with_progress(url, destination_path):
     print(f"Fetching {url}")
     urllib.request.urlretrieve(url, destination_path, reporthook)
     print()
-
-
-# ---------------------------------------------------------------------------
-# NTriples parser (same as convert_getty_aat.py)
-# ---------------------------------------------------------------------------
 
 
 def _parse_nt_triple(line):
@@ -292,11 +240,6 @@ def _parse_uri_object(raw_object):
     return None
 
 
-# ---------------------------------------------------------------------------
-# Streaming collection
-# ---------------------------------------------------------------------------
-
-
 def collect_source_data(nt_stream):
     """
     Stream NTriples and collect source/contributor attribution data.
@@ -346,13 +289,6 @@ def collect_source_data(nt_stream):
             line = raw_line
 
         line_count += 1
-        if line_count % 500_000 == 0:
-            print(
-                f"  {line_count:>10,} lines | {len(concepts):>6,} concepts"
-                f" | {len(label_uris):>6,} labels"
-                f" | {len(note_uris):>6,} notes",
-                flush=True,
-            )
 
         parsed = _parse_nt_triple(line)
         if parsed is None:
@@ -362,7 +298,6 @@ def collect_source_data(nt_stream):
         if predicate_uri not in COLLECT_PREDICATES:
             continue
 
-        # --- rdf:type ---
         if predicate_uri == RDF_TYPE:
             obj_uri = _parse_uri_object(raw_object)
             if obj_uri == SKOS_CONCEPT:
@@ -373,7 +308,6 @@ def collect_source_data(nt_stream):
                 note_uris.add(subject_uri)
             continue
 
-        # --- Concept -> label links ---
         if predicate_uri == SKOSXL_PREF_LABEL:
             label_uri = _parse_uri_object(raw_object)
             if label_uri:
@@ -386,24 +320,20 @@ def collect_source_data(nt_stream):
                 concept_labels[subject_uri].append((label_uri, "altLabel"))
             continue
 
-        # --- Concept -> note links ---
         if predicate_uri == SKOS_SCOPE_NOTE:
             note_uri = _parse_uri_object(raw_object)
             if note_uri:
                 concept_notes[subject_uri].append(note_uri)
             continue
 
-        # --- Label literal form ---
         if predicate_uri == SKOSXL_LITERAL_FORM:
             label_data[subject_uri]["literal_form"].append(raw_object)
             continue
 
-        # --- Note rdf:value ---
         if predicate_uri == RDF_VALUE:
             note_data[subject_uri]["value"].append(raw_object)
             continue
 
-        # --- Source/contributor on labels and notes ---
         if predicate_uri in SOURCE_PREDICATES:
             obj_uri = _parse_uri_object(raw_object)
             if obj_uri:
@@ -418,7 +348,6 @@ def collect_source_data(nt_stream):
                 note_data[subject_uri]["contributors"].append(obj_uri)
             continue
 
-        # --- Contributor metadata ---
         if predicate_uri == FOAF_NAME:
             value, _ = _parse_literal(raw_object)
             if value:
@@ -431,7 +360,6 @@ def collect_source_data(nt_stream):
                 contributor_nicks[subject_uri] = value
             continue
 
-        # --- Source metadata ---
         if predicate_uri == DCT_TITLE:
             value, _ = _parse_literal(raw_object)
             if value:
@@ -444,17 +372,9 @@ def collect_source_data(nt_stream):
                 source_short_titles[subject_uri] = value
             continue
 
-        # --- Language on notes ---
         if predicate_uri == DCT_LANGUAGE:
             note_data[subject_uri]["language"].append(raw_object)
             continue
-
-    print(
-        f"  {line_count:>10,} lines | {len(concepts):>6,} concepts"
-        f" | {len(label_uris):>6,} labels"
-        f" | {len(note_uris):>6,} notes",
-        flush=True,
-    )
 
     return {
         "concepts": concepts,
@@ -469,11 +389,6 @@ def collect_source_data(nt_stream):
         "source_titles": source_titles,
         "source_short_titles": source_short_titles,
     }
-
-
-# ---------------------------------------------------------------------------
-# Build output
-# ---------------------------------------------------------------------------
 
 
 def _normalize_source_uri(uri):
@@ -621,155 +536,83 @@ def build_output(collected):
     }
 
 
-# ---------------------------------------------------------------------------
-# Main
-# ---------------------------------------------------------------------------
+def extract_attribution_from_archive(
+    archive_path, output_path, show_progress=None, log=print
+):
+    """Extract AAT source and contributor attribution into a JSON file.
 
+    Supports both Getty export layouts. Returns the parsed output structure so
+    callers can report on it without re-reading the file.
+    """
+    if not os.path.exists(archive_path):
+        raise AATAttributionError(f"Archive not found: {archive_path}")
 
-def main():
-    parser = argparse.ArgumentParser(
-        description=(
-            "Extract source/contributor attribution data from the Getty AAT "
-            "NTriples export."
-        ),
-    )
-    parser.add_argument(
-        "--output",
-        "-o",
-        default="aat_sources.json",
-        help="Output JSON file path (default: aat_sources.json)",
-    )
-    parser.add_argument(
-        "--skip-download",
-        action="store_true",
-        help=(
-            "Skip downloading and use an existing archive on disk "
-            f"(default: {DEFAULT_LOCAL_ARCHIVE}; override with --archive)."
-        ),
-    )
-    parser.add_argument(
-        "--archive",
-        default=DEFAULT_LOCAL_ARCHIVE,
-        help=f"Existing archive to read with --skip-download (default: {DEFAULT_LOCAL_ARCHIVE}).",
-    )
-    parser.add_argument(
-        "--url",
-        default=GETTY_AAT_EXPLICIT_ZIP_URL,
-        help="Archive URL to download (defaults to the explicit export).",
-    )
-    args = parser.parse_args()
+    with zipfile.ZipFile(archive_path, "r") as archive:
+        available_filenames = archive.namelist()
 
-    # Step 1: obtain the zip
-    if args.skip_download:
-        zip_path = args.archive
-        if not os.path.exists(zip_path):
-            print(
-                f"Error: --skip-download set but {zip_path!r} not found.",
-                file=sys.stderr,
-            )
-            sys.exit(1)
-        cleanup_zip = False
-        print(f"Using existing {zip_path}")
-    else:
-        tmp_fd, zip_path = tempfile.mkstemp(suffix=".zip", prefix="getty_aat_", dir=".")
-        os.close(tmp_fd)
-        cleanup_zip = True
-        try:
-            download_with_progress(args.url, zip_path)
-        except Exception as exc:
-            print(f"\nDownload failed: {exc}", file=sys.stderr)
-            if os.path.exists(zip_path):
-                os.unlink(zip_path)
-            sys.exit(1)
-
-    try:
-        print(f"\nOpening {zip_path} ...")
-        with zipfile.ZipFile(zip_path, "r") as zf:
-            available = zf.namelist()
-            print(f"Files in archive: {', '.join(available)}")
-
-            full_export_filename = next(
-                (n for n in available if "Full" in n and n.endswith(".nt")), None
-            )
-            if full_export_filename:
-                source_filenames = [full_export_filename]
-            else:
-                source_filenames = [n for n in EXPLICIT_EXPORT_FILES if n in available]
-                missing = [n for n in EXPLICIT_EXPORT_FILES if n not in available]
-                if missing:
-                    print(
-                        f"Warning: expected files absent from archive: "
-                        f"{', '.join(missing)}",
-                        file=sys.stderr,
-                    )
-
-            if not source_filenames:
-                print(
-                    f"Error: cannot identify NTriples data files. "
-                    f"Available: {available}",
-                    file=sys.stderr,
+        full_export_filename = next(
+            (
+                name
+                for name in available_filenames
+                if "Full" in name and name.endswith(".nt")
+            ),
+            None,
+        )
+        if full_export_filename:
+            source_filenames = [full_export_filename]
+        else:
+            source_filenames = [
+                name for name in EXPLICIT_EXPORT_FILES if name in available_filenames
+            ]
+            missing_filenames = [
+                name
+                for name in EXPLICIT_EXPORT_FILES
+                if name not in available_filenames
+            ]
+            if missing_filenames:
+                log(
+                    f"Warning: expected files absent from archive: "
+                    f"{', '.join(missing_filenames)}"
                 )
-                sys.exit(1)
 
-            total_uncompressed = sum(zf.getinfo(n).file_size for n in source_filenames)
-            print(
-                f"Processing {len(source_filenames)} file(s), "
-                f"{total_uncompressed / 1_048_576:,.0f} MB uncompressed:"
+        if not source_filenames:
+            raise AATAttributionError(
+                f"Cannot identify NTriples data files in archive. "
+                f"Available: {available_filenames}"
             )
-            for n in source_filenames:
-                print(f"  {n} ({zf.getinfo(n).file_size / 1_048_576:,.0f} MB)")
 
-            # Step 2: stream every source file as one continuous sequence.
-            print("\nStreaming NTriples data (this will take several minutes) ...")
-            open_streams = [zf.open(n) for n in source_filenames]
-            try:
-                collected = collect_source_data(itertools.chain(*open_streams))
-            finally:
-                for stream in open_streams:
-                    stream.close()
-    finally:
-        if cleanup_zip and os.path.exists(zip_path):
-            os.unlink(zip_path)
-            print("\nTemporary download file removed.")
+        total_uncompressed_bytes = sum(
+            archive.getinfo(name).file_size for name in source_filenames
+        )
+        log(
+            f"Reading {len(source_filenames)} file(s), "
+            f"{total_uncompressed_bytes / 1_048_576:,.0f} MB uncompressed"
+        )
 
-    # Step 3: build output
-    print("\nBuilding output ...")
-    output = build_output(collected)
+        if show_progress is None:
+            show_progress = progress_reporting_is_useful()
 
-    print(f"\nSummary:")
-    print(f"  Unique sources:      {len(output['sources']):>7,}")
-    print(f"  Unique contributors: {len(output['contributors']):>7,}")
-    print(f"  Concepts with label attribution: " f"{len(output['labels']):>7,}")
-    print(f"  Concepts with note attribution:  " f"{len(output['notes']):>7,}")
-    total_labels = sum(len(v) for v in output["labels"].values())
-    total_notes = sum(len(v) for v in output["notes"].values())
-    print(f"  Total label attributions:        {total_labels:>7,}")
-    print(f"  Total note attributions:         {total_notes:>7,}")
+        open_streams = [archive.open(name) for name in source_filenames]
+        try:
+            collected_data = collect_source_data(
+                stream_lines_with_progress(
+                    open_streams,
+                    total_uncompressed_bytes,
+                    title="Reading source and contributor attribution",
+                    show_progress=show_progress,
+                )
+            )
+        finally:
+            for stream in open_streams:
+                stream.close()
 
-    # Check for sources/contributors with missing metadata
-    missing_source_titles = sum(1 for s in output["sources"].values() if not s["title"])
-    missing_contrib_names = sum(
-        1 for c in output["contributors"].values() if not c["name"]
+    attribution = build_output(collected_data)
+
+    with open(output_path, "w", encoding="utf-8") as output_file:
+        json.dump(attribution, output_file)
+
+    log(
+        f"Extracted {len(attribution['sources']):,} sources and "
+        f"{len(attribution['contributors']):,} contributors to {output_path}"
     )
-    if missing_source_titles:
-        print(
-            f"\n  WARNING: {missing_source_titles} source(s) have no title. "
-            f"These may need to be fetched from the Getty SPARQL endpoint."
-        )
-    if missing_contrib_names:
-        print(
-            f"\n  WARNING: {missing_contrib_names} contributor(s) have no name. "
-            f"These may need to be fetched from the Getty SPARQL endpoint."
-        )
-
-    # Step 4: write output
-    print(f"\nWriting {args.output} ...")
-    with open(args.output, "w", encoding="utf-8") as f:
-        json.dump(output, f, ensure_ascii=False, indent=2)
-
-    output_size_mb = os.path.getsize(args.output) / 1_048_576
-    print(f"Done: {args.output} ({output_size_mb:.1f} MB)")
-
-
-if __name__ == "__main__":
-    main()
+    return attribution

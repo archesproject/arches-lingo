@@ -2,7 +2,7 @@
 Management command: update_aat_concept_types
 =============================================
 
-Reads the AAT SKOS XML file produced by ``scripts/convert_getty_aat.py`` and
+Reads the AAT SKOS XML produced by ``utils.aat.skos_conversion`` and
 updates the concept type tiles for resources already loaded into arches-lingo
 to reflect the correct AAT concept type: "concept", "guide term",
 "hierarchy name", or "facet".
@@ -24,15 +24,9 @@ command corrects the remaining three types in-situ without re-importing:
 
 All other concepts retain the default "concept" type and are not touched.
 
-Prerequisites:
-  1. The AAT SKOS data has been imported via the normal lingo import:
-     ``python manage.py packages -o import_lingo_resources -s getty_aat_skos.xml``
-  2. The migration ``0013_add_aat_concept_types`` has been applied so that
-     the "hierarchy name" and "facet" list items exist in the database.
-
-Usage:
-    python manage.py update_aat_concept_types --source getty_aat_skos.xml
-    python manage.py update_aat_concept_types --source getty_aat_skos.xml --dry-run
+Run by ``load_aat`` after the import. The term types controlled list must carry
+the "guide term", "hierarchy name" and "facet" items, which ship in
+``pkg/reference_data/controlled_lists/term_types.xml``.
 """
 
 import json
@@ -147,9 +141,8 @@ def load_non_concept_type_items():
     Return a dict mapping concept type label → ``ListItem`` for all non-concept
     type items in the term types controlled list.
 
-    Raises ``CommandError`` if any expected type is missing from the database,
-    which indicates that the ``0013_add_aat_concept_types`` migration has not
-    yet been applied.
+    Raises ``CommandError`` if any expected type is missing, which means the
+    term types controlled list has not been loaded.
     """
     items_by_label = {}
     for item in ListItem.objects.filter(
@@ -165,8 +158,8 @@ def load_non_concept_type_items():
     if missing:
         raise CommandError(
             f"The following concept type list items are missing from the database: "
-            f"{sorted(missing)}. "
-            f"Run 'python manage.py migrate' to apply migration 0013_add_aat_concept_types."
+            f"{sorted(missing)}. Load "
+            f"pkg/reference_data/controlled_lists/term_types.xml to add them."
         )
     return items_by_label
 

@@ -73,6 +73,10 @@ RELATION_STATUS_DATA_ASSIGNMENT_TYPE_NODEID = "09aa0568-1772-11ef-b270-0a58a9fea
 ### Scheme Model Nodes & Nodegroups ###
 SCHEMES_GRAPH_ID = "56788995-423b-11ee-8a8d-11afefc4bff7"
 
+# uri
+SCHEME_URI_NODEGROUP = "7fdc87bb-6ef9-4a74-8e84-4bde69557eef"
+SCHEME_URI_CONTENT_NODE = "1bd0f20b-b945-4231-b872-cba02cc4bc25"
+
 # appellative_status
 SCHEME_NAME_NODEGROUP = "ef87ac28-11de-11ef-9493-0a58a9feac02"
 # appellative_status_ascribed_name_content
@@ -103,6 +107,19 @@ CONCEPT_TYPE_LIST_ID = "4f9b2c82-59c6-4173-99ea-2a6bfbab6aa2"
 DRAFT_STATE_ID = "0e7f8c6d-1f7b-4c2a-9a0c-2b9e0d6c8f11"
 PUBLISHED_STATE_ID = "6b0f1a7b-5b3d-4b2a-8a5b-7c3a1b0f2d9e"
 EDITING_STATE_ID = "b3a6a0d2-2b5c-4c2f-9d6c-0c2a5b7d1e8f"
+RETIRED_STATE_ID = "9d2e1c0b-7a6b-4b3d-8c1a-0f2d9e6b0a7c"
+LOCKED_STATE_ID = "c9f7e3d1-2a5b-4c8d-9e6f-3b0a1d2e4f7c"
+
+# Lifecycle states an imported vocabulary can be placed in, by the name a user
+# would type. Locked and Retired both disallow editing; Locked is the state for
+# a vocabulary mirrored from an external authority.
+LIFECYCLE_STATE_IDS_BY_NAME = {
+    "draft": DRAFT_STATE_ID,
+    "published": PUBLISHED_STATE_ID,
+    "editing": EDITING_STATE_ID,
+    "retired": RETIRED_STATE_ID,
+    "locked": LOCKED_STATE_ID,
+}
 
 
 ### URIs ###
