@@ -31,8 +31,10 @@ from arches.app.models.models import (
     LoadEvent,
     LoadStaging,
     ETLModule,
+    GraphModel,
     Node,
     NodeGroup,
+    ResourceInstanceLifecycleState,
     TileModel,
     ResourceInstance,
 )
@@ -66,23 +68,6 @@ PERSON_NAME_CONTENT_NODE = "4952a9ee-bb15-11ea-85a6-3af9d3b32b71"
 GROUP_NAME_NODEGROUP = "de76dbdc-11e5-11ef-9493-0a58a9feac02"
 GROUP_NAME_CONTENT_NODE = "de76df10-11e5-11ef-9493-0a58a9feac02"
 
-# --- Concept appellative_status data assignment nodes ---
-CONCEPT_APPSTATUS_DA_ACTOR_NODE = "0acd2982-0eb9-11ef-93db-0a58a9feac02"
-CONCEPT_APPSTATUS_DA_OBJ_USED_NODE = "df980c50-0eb8-11ef-93db-0a58a9feac02"
-
-# --- Concept statement data assignment nodes ---
-CONCEPT_STMT_DA_ACTOR_NODE = "bf73e650-4888-11ee-8a8d-11afefc4bff7"
-CONCEPT_STMT_DA_OBJ_USED_NODE = "bf73e652-4888-11ee-8a8d-11afefc4bff7"
-
-# --- Scheme appellative_status data assignment nodes ---
-SCHEME_APPSTATUS_DA_ACTOR_NODE = "ef87b1d2-11de-11ef-9493-0a58a9feac02"
-SCHEME_APPSTATUS_DA_OBJ_USED_NODE = "ef87b4de-11de-11ef-9493-0a58a9feac02"
-
-# --- Scheme statement data assignment nodes ---
-SCHEME_STMT_NODEGROUP = "7131bc72-11e0-11ef-9493-0a58a9feac02"
-SCHEME_STMT_DA_ACTOR_NODE = "7131c83e-11e0-11ef-9493-0a58a9feac02"
-SCHEME_STMT_DA_OBJ_USED_NODE = "7131c8ca-11e0-11ef-9493-0a58a9feac02"
-
 # AAT URI patterns
 AAT_CONCEPT_PREFIX = "http://vocab.getty.edu/aat/"
 
@@ -95,16 +80,16 @@ _AAT_RESOURCE_NAMESPACE = uuid.UUID("a1b2c3d4-e5f6-7890-abcd-ef1234567890")
 BATCH_SIZE = 2000
 
 
-def _make_ri_list_value(resource_ids):
+def _make_resource_instance_list_value(resource_ids):
     """Build a resource-instance-list value (list of dicts)."""
     return [
         {
-            "resourceId": str(rid),
+            "resourceId": str(resource_id),
             "ontologyProperty": "",
             "inverseOntologyProperty": "",
             "resourceXresourceId": "",
         }
-        for rid in resource_ids
+        for resource_id in resource_ids
     ]
 
 
@@ -357,9 +342,9 @@ class Command(BaseCommand):
         blank_tile = self._get_blank_tile(GROUP_NAME_NODEGROUP)
 
         # Compute deterministic resource IDs, then check which already exist
-        for contrib_uri in contributors:
-            contributor_resource_map[contrib_uri] = uuid.uuid5(
-                _AAT_RESOURCE_NAMESPACE, contrib_uri
+        for contributor_uri in contributors:
+            contributor_resource_map[contributor_uri] = uuid.uuid5(
+                _AAT_RESOURCE_NAMESPACE, contributor_uri
             )
 
         existing_ids = set(
@@ -372,12 +357,12 @@ class Command(BaseCommand):
             f"  {len(existing_ids)} already exist, creating {new_count} new ..."
         )
 
-        for contrib_uri, meta in contributors.items():
-            resource_id = contributor_resource_map[contrib_uri]
+        for contributor_uri, meta in contributors.items():
+            resource_id = contributor_resource_map[contributor_uri]
             if resource_id in existing_ids:
                 continue
 
-            name = meta.get("name") or meta.get("nick") or contrib_uri
+            name = meta.get("name") or meta.get("nick") or contributor_uri
 
             tile_value = dict(blank_tile)
             tile_value[GROUP_NAME_CONTENT_NODE] = {
@@ -398,7 +383,7 @@ class Command(BaseCommand):
                     value=tile_value,
                     passes_validation=True,
                     nodegroup_depth=0,
-                    source_description=f"Contributor: {contrib_uri}",
+                    source_description=f"Contributor: {contributor_uri}",
                     operation="insert",
                     sortorder=0,
                 )
@@ -417,12 +402,15 @@ class Command(BaseCommand):
                 if contributor_resource_map[uri] not in existing_ids
             ]
 
-            for i in range(0, len(resource_instances), BATCH_SIZE):
+            for batch_start in range(0, len(resource_instances), BATCH_SIZE):
                 ResourceInstance.objects.bulk_create(
-                    resource_instances[i : i + BATCH_SIZE], ignore_conflicts=True
+                    resource_instances[batch_start : batch_start + BATCH_SIZE],
+                    ignore_conflicts=True,
                 )
-            for i in range(0, len(staging_rows), BATCH_SIZE):
-                LoadStaging.objects.bulk_create(staging_rows[i : i + BATCH_SIZE])
+            for batch_start in range(0, len(staging_rows), BATCH_SIZE):
+                LoadStaging.objects.bulk_create(
+                    staging_rows[batch_start : batch_start + BATCH_SIZE]
+                )
 
             self.stdout.write(f"  Saving tiles ...")
             self._save_tiles(user.pk, load_id)
@@ -461,7 +449,7 @@ class Command(BaseCommand):
                 const.CONCEPT_NAME_NODEGROUP,
                 const.SCHEME_NAME_NODEGROUP,
                 const.STATEMENT_NODEGROUP,
-                SCHEME_STMT_NODEGROUP,
+                const.SCHEME_STATEMENT_NODEGROUP,
             ]
         )
 
@@ -506,12 +494,12 @@ class Command(BaseCommand):
 
                 # Determine which node IDs to use based on the graph
                 if str(graph_id) == const.CONCEPTS_GRAPH_ID:
-                    actor_node = CONCEPT_APPSTATUS_DA_ACTOR_NODE
-                    obj_node = CONCEPT_APPSTATUS_DA_OBJ_USED_NODE
+                    actor_node = const.CONCEPT_NAME_DATA_ASSIGNMENT_ACTOR_NODE
+                    obj_node = const.CONCEPT_NAME_DATA_ASSIGNMENT_OBJ_USED_NODE
                     nodegroup_id = const.CONCEPT_NAME_NODEGROUP
                 elif str(graph_id) == const.SCHEMES_GRAPH_ID:
-                    actor_node = SCHEME_APPSTATUS_DA_ACTOR_NODE
-                    obj_node = SCHEME_APPSTATUS_DA_OBJ_USED_NODE
+                    actor_node = const.SCHEME_NAME_DATA_ASSIGNMENT_ACTOR_NODE
+                    obj_node = const.SCHEME_NAME_DATA_ASSIGNMENT_OBJ_USED_NODE
                     nodegroup_id = const.SCHEME_NAME_NODEGROUP
                 else:
                     skipped_labels += 1
@@ -521,23 +509,27 @@ class Command(BaseCommand):
                 # the merge leaves the rest of the tile untouched.
                 tile_addition = {}
 
-                source_rids = [
-                    source_resource_map[s]
-                    for s in label_info.get("sources", [])
-                    if s in source_resource_map
+                source_resource_ids = [
+                    source_resource_map[source_uri]
+                    for source_uri in label_info.get("sources", [])
+                    if source_uri in source_resource_map
                 ]
-                if source_rids:
-                    tile_addition[obj_node] = _make_ri_list_value(source_rids)
+                if source_resource_ids:
+                    tile_addition[obj_node] = _make_resource_instance_list_value(
+                        source_resource_ids
+                    )
 
-                contrib_rids = [
-                    contributor_resource_map[c]
-                    for c in label_info.get("contributors", [])
-                    if c in contributor_resource_map
+                contributor_resource_ids = [
+                    contributor_resource_map[contributor_uri]
+                    for contributor_uri in label_info.get("contributors", [])
+                    if contributor_uri in contributor_resource_map
                 ]
-                if contrib_rids:
-                    tile_addition[actor_node] = _make_ri_list_value(contrib_rids)
+                if contributor_resource_ids:
+                    tile_addition[actor_node] = _make_resource_instance_list_value(
+                        contributor_resource_ids
+                    )
 
-                if not source_rids and not contrib_rids:
+                if not source_resource_ids and not contributor_resource_ids:
                     skipped_labels += 1
                     continue
 
@@ -566,36 +558,40 @@ class Command(BaseCommand):
                 graph_id = tile_info["graph_id"]
 
                 if str(graph_id) == const.CONCEPTS_GRAPH_ID:
-                    actor_node = CONCEPT_STMT_DA_ACTOR_NODE
-                    obj_node = CONCEPT_STMT_DA_OBJ_USED_NODE
+                    actor_node = const.STATEMENT_DATA_ASSIGNMENT_ACTOR_NODE
+                    obj_node = const.STATEMENT_DATA_ASSIGNMENT_OBJ_USED_NODE
                     nodegroup_id = const.STATEMENT_NODEGROUP
                 elif str(graph_id) == const.SCHEMES_GRAPH_ID:
-                    actor_node = SCHEME_STMT_DA_ACTOR_NODE
-                    obj_node = SCHEME_STMT_DA_OBJ_USED_NODE
-                    nodegroup_id = SCHEME_STMT_NODEGROUP
+                    actor_node = const.SCHEME_STATEMENT_DATA_ASSIGNMENT_ACTOR_NODE
+                    obj_node = const.SCHEME_STATEMENT_DATA_ASSIGNMENT_OBJ_USED_NODE
+                    nodegroup_id = const.SCHEME_STATEMENT_NODEGROUP
                 else:
                     skipped_notes += 1
                     continue
 
                 tile_addition = {}
 
-                source_rids = [
-                    source_resource_map[s]
-                    for s in note_info.get("sources", [])
-                    if s in source_resource_map
+                source_resource_ids = [
+                    source_resource_map[source_uri]
+                    for source_uri in note_info.get("sources", [])
+                    if source_uri in source_resource_map
                 ]
-                if source_rids:
-                    tile_addition[obj_node] = _make_ri_list_value(source_rids)
+                if source_resource_ids:
+                    tile_addition[obj_node] = _make_resource_instance_list_value(
+                        source_resource_ids
+                    )
 
-                contrib_rids = [
-                    contributor_resource_map[c]
-                    for c in note_info.get("contributors", [])
-                    if c in contributor_resource_map
+                contributor_resource_ids = [
+                    contributor_resource_map[contributor_uri]
+                    for contributor_uri in note_info.get("contributors", [])
+                    if contributor_uri in contributor_resource_map
                 ]
-                if contrib_rids:
-                    tile_addition[actor_node] = _make_ri_list_value(contrib_rids)
+                if contributor_resource_ids:
+                    tile_addition[actor_node] = _make_resource_instance_list_value(
+                        contributor_resource_ids
+                    )
 
-                if not source_rids and not contrib_rids:
+                if not source_resource_ids and not contributor_resource_ids:
                     skipped_notes += 1
                     continue
 
@@ -633,8 +629,6 @@ class Command(BaseCommand):
         the provenance data against label tiles in the database, then creates
         URI tiles for matched resources so that future runs can use them.
         """
-        # Scheme URI nodegroup/node IDs (different from concept)
-
         # Query both concept and scheme URI tiles
         uri_tiles = TileModel.objects.filter(
             nodegroup_id__in=[const.URI_NODEGROUP, const.SCHEME_URI_NODEGROUP],
@@ -677,13 +671,13 @@ class Command(BaseCommand):
 
         if labels:
             for concept_uri, label_list in labels.items():
-                for lbl in label_list:
+                for label_info in label_list:
                     if (
-                        (lbl.get("language") or "").lower().startswith("en")
-                        and lbl.get("label_type") == "prefLabel"
-                        and lbl.get("literal_form")
+                        (label_info.get("language") or "").lower().startswith("en")
+                        and label_info.get("label_type") == "prefLabel"
+                        and label_info.get("literal_form")
                     ):
-                        uri_to_en_label[concept_uri] = lbl["literal_form"]
+                        uri_to_en_label[concept_uri] = label_info["literal_form"]
                         break
 
         # Build a reverse lookup: label text -> set of resource_ids
@@ -708,8 +702,8 @@ class Command(BaseCommand):
         for resource_id, data in label_tiles.iterator():
             if not data:
                 continue
-            for cn in content_nodes:
-                content = data.get(cn)
+            for content_node_id in content_nodes:
+                content = data.get(content_node_id)
                 if isinstance(content, str) and content:
                     label_to_resources[content].add(resource_id)
                     break
@@ -793,8 +787,10 @@ class Command(BaseCommand):
             )
 
         if tiles_to_create:
-            for i in range(0, len(tiles_to_create), BATCH_SIZE):
-                TileModel.objects.bulk_create(tiles_to_create[i : i + BATCH_SIZE])
+            for batch_start in range(0, len(tiles_to_create), BATCH_SIZE):
+                TileModel.objects.bulk_create(
+                    tiles_to_create[batch_start : batch_start + BATCH_SIZE]
+                )
             self.stdout.write(f"  Created {len(tiles_to_create)} URI tiles")
 
     def _build_label_tile_lookup(self, concept_uri_to_resource):
@@ -843,13 +839,13 @@ class Command(BaseCommand):
             # Find content and language values
             content = None
             language = None
-            for cn in content_nodes:
-                if cn in data and data[cn]:
-                    content = data[cn]
+            for content_node_id in content_nodes:
+                if content_node_id in data and data[content_node_id]:
+                    content = data[content_node_id]
                     break
-            for ln in lang_nodes:
-                if ln in data and data[ln]:
-                    lang_val = data[ln]
+            for language_node_id in lang_nodes:
+                if language_node_id in data and data[language_node_id]:
+                    lang_val = data[language_node_id]
                     if isinstance(lang_val, str):
                         language = lang_val
                     elif isinstance(lang_val, dict):
@@ -876,7 +872,7 @@ class Command(BaseCommand):
 
         note_nodegroups = [
             const.STATEMENT_NODEGROUP,
-            SCHEME_STMT_NODEGROUP,
+            const.SCHEME_STATEMENT_NODEGROUP,
         ]
         note_tiles = (
             TileModel.objects.filter(
@@ -922,9 +918,13 @@ class Command(BaseCommand):
                     content = str(content_val) if content_val else None
             # Try scheme statement nodes
             if not content:
-                for cn in scheme_content_nodes:
-                    if cn in data and data[cn]:
-                        content = str(data[cn]) if data[cn] else None
+                for scheme_content_node in scheme_content_nodes:
+                    if scheme_content_node in data and data[scheme_content_node]:
+                        content = (
+                            str(data[scheme_content_node])
+                            if data[scheme_content_node]
+                            else None
+                        )
                         break
 
             if lang_node in data and data[lang_node]:
@@ -948,26 +948,26 @@ class Command(BaseCommand):
     def _get_scheme_statement_content_nodes(self):
         """Get content node IDs for scheme statement nodegroup."""
         nodes = Node.objects.filter(
-            nodegroup_id=SCHEME_STMT_NODEGROUP,
+            nodegroup_id=const.SCHEME_STATEMENT_NODEGROUP,
             alias__contains="content",
         ).values_list("nodeid", flat=True)
-        return [str(n) for n in nodes]
+        return [str(node_id) for node_id in nodes]
 
     @staticmethod
     def _make_label_key(content, language):
         """Create a matching key for a label tile."""
         # Normalize: strip whitespace, lowercase for matching
-        c = (content or "").strip()[:200]
-        l = (language or "").strip().lower()
-        return f"{c}||{l}"
+        normalized_content = (content or "").strip()[:200]
+        normalized_language = (language or "").strip().lower()
+        return f"{normalized_content}||{normalized_language}"
 
     @staticmethod
     def _make_note_key(content, language):
         """Create a matching key for a note tile."""
         # Use first 200 chars to match (notes can be very long)
-        c = (content or "").strip()[:200]
-        l = (language or "").strip().lower()
-        return f"{c}||{l}"
+        normalized_content = (content or "").strip()[:200]
+        normalized_language = (language or "").strip().lower()
+        return f"{normalized_content}||{normalized_language}"
 
     def _get_node_datatype(self, node_id):
         """Get the datatype for a node by its ID."""
@@ -1006,11 +1006,6 @@ class Command(BaseCommand):
 
     def _get_default_lifecycle_state(self, graph_id):
         """Get the default lifecycle state for a graph."""
-        from arches.app.models.models import (
-            GraphModel,
-            ResourceInstanceLifecycleState,
-        )
-
         try:
             graph = GraphModel.objects.get(graphid=graph_id)
             if graph.resource_instance_lifecycle is None:

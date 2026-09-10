@@ -32,6 +32,7 @@ from arches_lingo.utils.aat.scheme_partition import (
     purge_scheme_partition,
     summarize_scheme_partition,
 )
+from arches_lingo.utils.concept_lifecycle import LOCKED_STATE_ID
 from arches_lingo.utils.aat.skos_conversion import (
     DEFAULT_SCHEME_IDENTIFIER_URI,
     DEFAULT_SCHEME_PREF_LABEL,
@@ -152,7 +153,7 @@ def load_aat(
     scheme_pref_label=DEFAULT_SCHEME_PREF_LABEL,
     replace_existing=True,
     preserve_resource_ids=True,
-    lifecycle_state_id=const.LOCKED_STATE_ID,
+    lifecycle_state_id=LOCKED_STATE_ID,
     skip_indexing=False,
     show_progress=None,
     log=print,

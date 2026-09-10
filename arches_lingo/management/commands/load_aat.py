@@ -5,7 +5,6 @@ import tempfile
 
 from django.core.management.base import BaseCommand, CommandError
 
-from arches_lingo import const
 from arches_lingo.utils.aat.pipeline import load_aat
 from arches_lingo.utils.aat.skos_conversion import (
     DEFAULT_SCHEME_IDENTIFIER_URI,
@@ -13,6 +12,7 @@ from arches_lingo.utils.aat.skos_conversion import (
     GETTY_AAT_EXPLICIT_ZIP_URL,
     AATConversionError,
 )
+from arches_lingo.utils.concept_lifecycle import LIFECYCLE_STATE_IDS_BY_NAME
 
 
 class Command(BaseCommand):
@@ -62,7 +62,7 @@ class Command(BaseCommand):
         )
         parser.add_argument(
             "--lifecycle-state",
-            choices=sorted(const.LIFECYCLE_STATE_IDS_BY_NAME),
+            choices=sorted(LIFECYCLE_STATE_IDS_BY_NAME),
             default="locked",
             help=(
                 "Lifecycle state for the loaded scheme and its concepts. "
@@ -119,7 +119,7 @@ class Command(BaseCommand):
                 scheme_pref_label=options["scheme_pref_label"],
                 replace_existing=not options["keep_existing"],
                 preserve_resource_ids=not options["new_resource_ids"],
-                lifecycle_state_id=const.LIFECYCLE_STATE_IDS_BY_NAME[
+                lifecycle_state_id=LIFECYCLE_STATE_IDS_BY_NAME[
                     options["lifecycle_state"]
                 ],
                 skip_indexing=not options["index"],

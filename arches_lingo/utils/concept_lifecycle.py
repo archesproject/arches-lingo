@@ -16,6 +16,17 @@ PUBLISHED_STATE_ID = uuid.UUID("6b0f1a7b-5b3d-4b2a-8a5b-7c3a1b0f2d9e")
 RETIRED_STATE_ID = uuid.UUID("9d2e1c0b-7a6b-4b3d-8c1a-0f2d9e6b0a7c")
 LOCKED_STATE_ID = uuid.UUID("c9f7e3d1-2a5b-4c8d-9e6f-3b0a1d2e4f7c")
 
+# Lifecycle states an imported vocabulary can be placed in, by the name a user
+# would type. Locked and Retired both disallow editing; Locked is the state for
+# a vocabulary mirrored from an external authority.
+LIFECYCLE_STATE_IDS_BY_NAME = {
+    "draft": DRAFT_STATE_ID,
+    "published": PUBLISHED_STATE_ID,
+    "editing": EDITING_STATE_ID,
+    "retired": RETIRED_STATE_ID,
+    "locked": LOCKED_STATE_ID,
+}
+
 # Lifecycle states whose URIs we treat as publicly resolvable to anonymous consumers.
 # Retired resources stay resolvable (marked owl:deprecated in the serialized output) so
 # that previously published URIs do not break. These states do not strictly guarantee

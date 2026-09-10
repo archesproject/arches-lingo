@@ -1,7 +1,6 @@
 import logging
 import csv
 import uuid
-import logging
 from collections import defaultdict
 from urllib.parse import urlsplit
 from django.db.models import Q
@@ -21,8 +20,6 @@ logger = logging.getLogger(__name__)
 
 # define the ARCHES namespace
 ARCHES = Namespace(settings.ARCHES_NAMESPACE_FOR_DATA_EXPORT)
-
-logger = logging.getLogger(__name__)
 
 # e.g. http://vocab.getty.edu/ontology#aat2285_practiced-studied_by. The
 # «related properties» controlled list stores these URIs as its item

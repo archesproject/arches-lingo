@@ -31,6 +31,10 @@ from arches_querysets.models import ResourceTileTree
 import arches_lingo.tasks as tasks
 import arches_lingo.const as const
 from arches_lingo.models import ConceptIdentifierCounter, SchemeURITemplate
+from arches_lingo.utils.concept_lifecycle import (
+    EDITING_STATE_ID,
+    PUBLISHED_STATE_ID,
+)
 from arches_lingo.utils.aat.deferred_indexing import (
     recalculate_descriptors_for_graph,
     save_to_tiles_without_indexing,
@@ -293,13 +297,17 @@ class LingoResourceImporter(BaseImportModule):
             }
         # Values coming from SKOS import are dicts
         elif isinstance(value, dict):
-            language = lang_lookup.get(value["language_id"]) if lang_lookup else None
-            if isinstance(language, models.Language):
-                value["language"] = language.code
-            else:
-                # `language_id` is already the code; the lookup only confirms
-                # that a Language row exists for it.
-                value["language"] = value["language_id"]
+            language_id = value.get("language_id")
+            # Relation-derived values (matched concepts) carry no language_id
+            # and don't need one: they never read value["language"].
+            if language_id is not None:
+                language = lang_lookup.get(language_id) if lang_lookup else None
+                if isinstance(language, models.Language):
+                    value["language"] = language.code
+                else:
+                    # `language_id` is already the code; the lookup only confirms
+                    # that a Language row exists for it.
+                    value["language"] = language_id
         value_type_id = value["valuetype_id"]
         if value_type_id == "title":
             value_type_id = "prefLabel"
@@ -310,28 +318,30 @@ class LingoResourceImporter(BaseImportModule):
             mock_tile["appellative_status_ascribed_relation"] = value_type_id
             return {"appellative_status": mock_tile}
         elif value_type_id == "identifier":
-            val = value["value"]
-            if import_identifiers and URL_REGEX.match(val):
+            identifier_value = value["value"]
+            if import_identifiers and URL_REGEX.match(identifier_value):
                 return [
                     {
                         "uri": {
-                            "uri_content": val,
+                            "uri_content": identifier_value,
                             "uri_type": value_type_id,
                         }
                     },
                     {
                         "identifier": {
-                            "identifier_content": val.rstrip("/").split("/")[-1],
+                            "identifier_content": identifier_value.rstrip("/").split(
+                                "/"
+                            )[-1],
                             "identifier_type": value_type_id,
                         }
                     },
                 ]
             elif import_identifiers:
-                mock_tile["identifier_content"] = val
+                mock_tile["identifier_content"] = identifier_value
                 mock_tile["identifier_type"] = value_type_id
                 return {"identifier": mock_tile}
             elif not isScheme:
-                mock_tile["match_status_ascribed_comparate"] = val
+                mock_tile["match_status_ascribed_comparate"] = identifier_value
                 mock_tile["match_status_ascribed_relation"] = "exactMatch"
                 return {"match_status": mock_tile}
         elif value_type_id in set(
@@ -547,7 +557,7 @@ class LingoResourceImporter(BaseImportModule):
                 config["nodeid"] = nodeid
 
                 value, validation_errors = self._prepared_value(
-                    datatype_instance, datatype, source_value, config, nodeid
+                    datatype_instance, source_value, config, nodeid
                 )
                 valid = True if len(validation_errors) == 0 else False
                 tile_valid = True if valid else False
@@ -578,9 +588,7 @@ class LingoResourceImporter(BaseImportModule):
 
         return tile_value, tile_valid
 
-    def _prepared_value(
-        self, datatype_instance, datatype, source_value, config, nodeid
-    ):
+    def _prepared_value(self, datatype_instance, source_value, config, nodeid):
         """Resolve a source value to its tile representation, caching by value.
 
         Reference-datatype nodes are given a label ("prefLabel", "scopeNote")
@@ -607,9 +615,9 @@ class LingoResourceImporter(BaseImportModule):
         value, validation_errors = cached
         # The cached value is written into a fresh tile envelope each time, and
         # datatypes return mutable structures, so hand back a copy.
-        return copy.deepcopy(value) if isinstance(value, (dict, list)) else value, (
-            validation_errors
-        )
+        if isinstance(value, (dict, list)):
+            value = copy.deepcopy(value)
+        return value, validation_errors
 
     def get_blank_tile_lookup(self, nodegroupid):
         if nodegroupid not in self.blank_tile_lookup.keys():
@@ -1012,7 +1020,7 @@ class LingoResourceImporter(BaseImportModule):
             )
             identifier_count = cursor.rowcount
 
-            lifecycle_state_id = self.lifecycle_state_id or const.PUBLISHED_STATE_ID
+            lifecycle_state_id = self.lifecycle_state_id or PUBLISHED_STATE_ID
             cursor.execute(
                 f"""
                 UPDATE resource_instances
@@ -1126,10 +1134,10 @@ class LingoResourceImporter(BaseImportModule):
             scheme_resource.resource_instance_lifecycle_state = requested_state
         else:
             published_state = models.ResourceInstanceLifecycleState.objects.get(
-                pk=const.PUBLISHED_STATE_ID
+                pk=PUBLISHED_STATE_ID
             )
             editing_state = models.ResourceInstanceLifecycleState.objects.get(
-                pk=const.EDITING_STATE_ID
+                pk=EDITING_STATE_ID
             )
 
             for concept_resource in concepts_with_identifiers:
