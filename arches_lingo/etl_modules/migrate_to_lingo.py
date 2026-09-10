@@ -31,10 +31,7 @@ from arches_querysets.models import ResourceTileTree
 import arches_lingo.tasks as tasks
 import arches_lingo.const as const
 from arches_lingo.models import ConceptIdentifierCounter, SchemeURITemplate
-from arches_lingo.utils.concept_lifecycle import (
-    EDITING_STATE_ID,
-    PUBLISHED_STATE_ID,
-)
+from arches_lingo.utils.concept_lifecycle import PUBLISHED_STATE_ID
 from arches_lingo.utils.aat.deferred_indexing import (
     recalculate_descriptors_for_graph,
     save_to_tiles_without_indexing,
@@ -1071,86 +1068,6 @@ class LingoResourceImporter(BaseImportModule):
         SchemeURITemplate.objects.update_or_create(
             scheme=scheme_resource,
             defaults={"url_template": self.namespace_template},
-        )
-
-    def _collect_concept_identifier_data(self, concepts_in_scheme):
-        concept_resources = {
-            resource.pk: resource
-            for resource in models.ResourceInstance.objects.filter(
-                graph_id=const.CONCEPTS_GRAPH_ID
-            )
-        }
-
-        resource_identifiers = []
-        numeric_identifiers = []
-        concepts_with_identifiers = []
-
-        for concept_tile_tree in concepts_in_scheme:
-            identifier_tiles = concept_tile_tree.aliased_data.identifier
-            if len(identifier_tiles) != 1:
-                continue
-
-            concept_resource = concept_resources.get(
-                concept_tile_tree.resourceinstanceid
-            )
-            if concept_resource is None:
-                continue
-
-            # TODO: evaluate need to handle multiple identifiers
-            identifier_value = identifier_tiles[0].aliased_data.identifier_content
-            resource_identifiers.append(
-                models.ResourceIdentifier(
-                    resourceid=concept_resource,
-                    identifier=identifier_value,
-                    source="arches-lingo",
-                    identifier_type="identifier",
-                )
-            )
-            try:
-                numeric_identifiers.append(int(identifier_value))
-            except (ValueError, TypeError):
-                pass
-
-            concepts_with_identifiers.append(concept_resource)
-
-        return resource_identifiers, numeric_identifiers, concepts_with_identifiers
-
-    def _assign_lifecycle_states(
-        self, scheme_resource, concepts_in_scheme, concepts_with_identifiers
-    ):
-        """Place the imported scheme and its concepts in a lifecycle state.
-
-        When the caller names a state explicitly -- as an import mirroring an
-        external authority does, to lock the result against editing -- every
-        resource goes into it. Otherwise concepts that received an identifier
-        are published, and the scheme is only published once all of them have.
-        """
-        if self.lifecycle_state_id:
-            requested_state = models.ResourceInstanceLifecycleState.objects.get(
-                pk=self.lifecycle_state_id
-            )
-            for concept_resource in concepts_with_identifiers:
-                concept_resource.resource_instance_lifecycle_state = requested_state
-            scheme_resource.resource_instance_lifecycle_state = requested_state
-        else:
-            published_state = models.ResourceInstanceLifecycleState.objects.get(
-                pk=PUBLISHED_STATE_ID
-            )
-            editing_state = models.ResourceInstanceLifecycleState.objects.get(
-                pk=EDITING_STATE_ID
-            )
-
-            for concept_resource in concepts_with_identifiers:
-                concept_resource.resource_instance_lifecycle_state = published_state
-
-            if len(concepts_in_scheme) == len(concepts_with_identifiers):
-                scheme_resource.resource_instance_lifecycle_state = published_state
-            else:
-                scheme_resource.resource_instance_lifecycle_state = editing_state
-
-        models.ResourceInstance.objects.bulk_update(
-            concepts_with_identifiers + [scheme_resource],
-            ["resource_instance_lifecycle_state"],
         )
 
     def start(self, request):

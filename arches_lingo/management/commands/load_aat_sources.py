@@ -93,19 +93,6 @@ def _make_resource_instance_list_value(resource_ids):
     ]
 
 
-def _make_staging_value(node_id, value, datatype):
-    """Build a staging value envelope for a single node."""
-    return {
-        node_id: {
-            "value": value,
-            "valid": True,
-            "source": "",
-            "notes": "",
-            "datatype": datatype,
-        }
-    }
-
-
 class Command(BaseCommand):
     help = "Load AAT source/contributor attribution data into Lingo"
 
@@ -147,7 +134,6 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        self._node_datatype_cache = {}
         self.skip_indexing = options["skip_indexing"]
         self.show_progress = not options["no_progress"] and (
             progress_reporting_is_useful()
@@ -441,16 +427,6 @@ class Command(BaseCommand):
             load_details=json.dumps({"operation": "AAT Attribution Updates"}),
             load_start_time=datetime.now(),
             complete=False,
-        )
-
-        # Pre-populate node datatype cache for all relevant nodegroups
-        self._preload_node_datatypes(
-            [
-                const.CONCEPT_NAME_NODEGROUP,
-                const.SCHEME_NAME_NODEGROUP,
-                const.STATEMENT_NODEGROUP,
-                const.SCHEME_STATEMENT_NODEGROUP,
-            ]
         )
 
         # Build a lookup of concept URI -> resource instance ID
@@ -968,24 +944,6 @@ class Command(BaseCommand):
         normalized_content = (content or "").strip()[:200]
         normalized_language = (language or "").strip().lower()
         return f"{normalized_content}||{normalized_language}"
-
-    def _get_node_datatype(self, node_id):
-        """Get the datatype for a node by its ID."""
-        if node_id not in self._node_datatype_cache:
-            try:
-                node = Node.objects.get(nodeid=node_id)
-                self._node_datatype_cache[node_id] = node.datatype
-            except Node.DoesNotExist:
-                self._node_datatype_cache[node_id] = "string"
-        return self._node_datatype_cache[node_id]
-
-    def _preload_node_datatypes(self, nodegroup_ids):
-        """Bulk-load node datatypes for all nodes in the given nodegroups."""
-        nodes = Node.objects.filter(
-            nodegroup_id__in=nodegroup_ids,
-        ).values_list("nodeid", "datatype")
-        for nodeid, datatype in nodes:
-            self._node_datatype_cache[str(nodeid)] = datatype
 
     def _get_blank_tile(self, nodegroup_id):
         """Build a blank tile value dict for a nodegroup."""
