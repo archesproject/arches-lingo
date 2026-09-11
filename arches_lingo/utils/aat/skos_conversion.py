@@ -306,7 +306,6 @@ def collect_aat_data(nt_stream):
     explicit_schemes = set()
     scope_note_literals = collections.defaultdict(list)
     xl_label_literals = collections.defaultdict(list)
-    preferred_parents = collections.defaultdict(set)
     subject_data = collections.defaultdict(lambda: collections.defaultdict(list))
 
     line_count = 0
@@ -392,12 +391,6 @@ def collect_aat_data(nt_stream):
             GVP_BROADER_PREFERRED,
             GVP_BROADER_NON_PREFERRED,
         ):
-            # Which parent is preferred is the only signal available for
-            # breaking the cycles Getty's data occasionally contains.
-            if predicate_uri == GVP_BROADER_PREFERRED:
-                preferred_parent_uri = _parse_uri_object(raw_object)
-                if preferred_parent_uri:
-                    preferred_parents[subject_uri].add(preferred_parent_uri)
             predicate_uri = SKOS_BROADER
 
         subject_data[subject_uri][predicate_uri].append(raw_object)
@@ -408,7 +401,6 @@ def collect_aat_data(nt_stream):
         scope_note_literals,
         subject_data,
         xl_label_literals,
-        preferred_parents,
     )
 
 
@@ -447,19 +439,13 @@ def derive_schemes(explicit_schemes, concepts, subject_data):
     return inferred_schemes
 
 
-def break_hierarchy_cycles(concepts, subject_data, preferred_parents, log=print):
-    """Remove skos:broader edges that would make the hierarchy cyclic.
+def find_hierarchy_cycles(concepts, subject_data):
+    """Return the skos:broader edges that close a cycle, as (child, parent).
 
     Getty's data contains a small number of concept pairs that each declare the
-    other a parent. A cycle makes any recursive ancestor query non-terminating,
-    so the hierarchy has to be acyclic before it is written.
-
-    GVP marks one parent of each concept as preferred, and those edges form an
-    acyclic backbone; the cycles observed are closed by non-preferred parents,
-    which are supplementary polyhierarchy links. Edges are therefore dropped
-    preferring non-preferred ones, so every concept keeps its primary parent.
-
-    Modifies subject_data in place and returns the edges removed.
+    other a parent. Those assertions are in the source vocabulary and are legal
+    SKOS, so they are loaded as they stand; this only reports them, so a load
+    that introduces a new one is visible in the log.
     """
     parents_by_child = {}
     for concept_uri in sorted(concepts):
@@ -471,85 +457,44 @@ def break_hierarchy_cycles(concepts, subject_data, preferred_parents, log=print)
         if parent_uris:
             parents_by_child[concept_uri] = parent_uris
 
-    removed_edges = []
-    arbitrarily_removed_edges = []
+    cycle_edges = []
     UNVISITED, IN_PROGRESS, DONE = 0, 1, 2
     visit_state = collections.defaultdict(int)
 
-    def drop_edge(child_uri, parent_uri):
-        removed_edges.append((child_uri, parent_uri))
-        parents_by_child[child_uri] = [
-            candidate
-            for candidate in parents_by_child.get(child_uri, [])
-            if candidate != parent_uri
-        ]
-        subject_data[child_uri][SKOS_BROADER] = [
-            raw_object
-            for raw_object in subject_data[child_uri][SKOS_BROADER]
-            if _parse_uri_object(raw_object) != parent_uri
-        ]
-
     # Iterative depth-first search; an edge reaching a node already on the
-    # current path closes a cycle.
-    for start_uri in list(parents_by_child):
+    # current path closes a cycle. The edge is recorded and not followed, so
+    # the walk terminates without the hierarchy having to be acyclic.
+    for start_uri in parents_by_child:
         if visit_state[start_uri] != UNVISITED:
             continue
-        stack = [(start_uri, iter(list(parents_by_child.get(start_uri, []))))]
+        stack = [(start_uri, iter(parents_by_child.get(start_uri, [])))]
         visit_state[start_uri] = IN_PROGRESS
-        path = [start_uri]
         while stack:
             current_uri, parent_iterator = stack[-1]
             next_parent = next(parent_iterator, None)
             if next_parent is None:
                 visit_state[current_uri] = DONE
                 stack.pop()
-                path.pop()
                 continue
             if visit_state[next_parent] == IN_PROGRESS:
-                cycle = path[path.index(next_parent) :] + [next_parent]
-                supplementary_edge = next(
-                    (
-                        (child, parent)
-                        for child, parent in zip(cycle, cycle[1:])
-                        if parent not in preferred_parents.get(child, ())
-                    ),
-                    None,
-                )
-                # Every edge in the cycle is a preferred parent, so there is no
-                # basis for choosing between them; one is dropped arbitrarily
-                # rather than leaving a hierarchy that cannot be traversed.
-                edge_to_drop = supplementary_edge or (current_uri, next_parent)
-                if supplementary_edge is None:
-                    arbitrarily_removed_edges.append(edge_to_drop)
-                drop_edge(*edge_to_drop)
-                continue
-            if visit_state[next_parent] == UNVISITED:
+                cycle_edges.append((current_uri, next_parent))
+            elif visit_state[next_parent] == UNVISITED:
                 visit_state[next_parent] = IN_PROGRESS
-                path.append(next_parent)
-                stack.append(
-                    (next_parent, iter(list(parents_by_child.get(next_parent, []))))
-                )
+                stack.append((next_parent, iter(parents_by_child.get(next_parent, []))))
+    return cycle_edges
 
-    if removed_edges:
-        log(f"Removed {len(removed_edges)} broader edge(s) that formed cycles:")
-        for child_uri, parent_uri in removed_edges:
-            log(f"  {child_uri} -> {parent_uri}")
 
-    if arbitrarily_removed_edges:
-        log("")
-        log("*** WARNING " + "*" * 60)
+def report_hierarchy_cycles(concepts, subject_data, log=print):
+    """Log the cyclic broader edges the export contains, keeping them all."""
+    cycle_edges = find_hierarchy_cycles(concepts, subject_data)
+    if cycle_edges:
         log(
-            f"*** {len(arbitrarily_removed_edges)} cycle(s) consisted entirely of "
-            f"preferred parents."
+            f"{len(cycle_edges)} broader edge(s) close a cycle and are loaded "
+            f"as the source asserts them:"
         )
-        log("*** An edge was dropped arbitrarily; the hierarchy here may not")
-        log("*** match the source vocabulary's intent. Edges dropped:")
-        for child_uri, parent_uri in arbitrarily_removed_edges:
-            log(f"***   {child_uri} -> {parent_uri}")
-        log("*" * 72)
-        log("")
-
-    return removed_edges
+        for child_uri, parent_uri in cycle_edges:
+            log(f"  {child_uri} -> {parent_uri}")
+    return cycle_edges
 
 
 def promote_all_broader_targets_transitively(concepts, subject_data):
@@ -894,59 +839,7 @@ def write_skos_xml(
     return written_count
 
 
-def find_hierarchy_cycles(concepts, subject_data):
-    """Return any concepts still reachable from themselves through skos:broader."""
-    parents_by_child = {}
-    for concept_uri in concepts:
-        parent_uris = [
-            _parse_uri_object(raw_object)
-            for raw_object in subject_data.get(concept_uri, {}).get(SKOS_BROADER, [])
-        ]
-        parents_by_child[concept_uri] = [
-            parent for parent in parent_uris if parent in concepts
-        ]
-
-    cyclic_concepts = []
-    UNVISITED, IN_PROGRESS, DONE = 0, 1, 2
-    visit_state = collections.defaultdict(int)
-    for start_uri in parents_by_child:
-        if visit_state[start_uri] != UNVISITED:
-            continue
-        stack = [(start_uri, iter(parents_by_child.get(start_uri, [])))]
-        visit_state[start_uri] = IN_PROGRESS
-        while stack:
-            current_uri, parent_iterator = stack[-1]
-            next_parent = next(parent_iterator, None)
-            if next_parent is None:
-                visit_state[current_uri] = DONE
-                stack.pop()
-                continue
-            if visit_state[next_parent] == IN_PROGRESS:
-                cyclic_concepts.append(next_parent)
-            elif visit_state[next_parent] == UNVISITED:
-                visit_state[next_parent] = IN_PROGRESS
-                stack.append((next_parent, iter(parents_by_child.get(next_parent, []))))
-    return cyclic_concepts
-
-
 def validate_output(concepts, schemes, subject_data, log=print):
-    remaining_cycles = find_hierarchy_cycles(concepts, subject_data)
-    if remaining_cycles:
-        # Cycles are legal SKOS and a source vocabulary is entitled to contain
-        # them, so this reports rather than aborts. It should not happen:
-        # break_hierarchy_cycles drops an edge from every cycle it finds, so
-        # anything reaching here is a defect in that pass.
-        log("")
-        log("*** WARNING " + "*" * 60)
-        log(f"*** {len(remaining_cycles)} hierarchy cycle(s) survived cycle breaking.")
-        log("*** Recursive queries over this hierarchy may not terminate.")
-        for cyclic_uri in remaining_cycles[:10]:
-            log(f"***   {cyclic_uri}")
-        if len(remaining_cycles) > 10:
-            log(f"***   ... and {len(remaining_cycles) - 10} more")
-        log("*" * 72)
-        log("")
-
     concepts_with_pref_label = sum(
         1 for uri in concepts if SKOS_PREF_LABEL in subject_data.get(uri, {})
     )
@@ -1121,7 +1014,6 @@ def convert_archive_to_skos(
                 scope_note_literals,
                 subject_data,
                 xl_label_literals,
-                preferred_parents,
             ) = collect_aat_data(
                 stream_lines_with_progress(
                     open_streams,
@@ -1148,7 +1040,7 @@ def convert_archive_to_skos(
     schemes = derive_schemes(explicit_schemes, concepts, subject_data)
     resolve_scope_notes(subject_data, scope_note_literals)
     promote_all_broader_targets_transitively(concepts, subject_data)
-    break_hierarchy_cycles(concepts, subject_data, preferred_parents, log=log)
+    report_hierarchy_cycles(concepts, subject_data, log=log)
     synthesize_top_concepts(concepts, schemes, subject_data)
     validate_output(concepts, schemes, subject_data, log=log)
 

@@ -35,10 +35,9 @@ from arches_lingo.utils.aat.attribution_statement import (
 from arches_lingo.utils.aat.skos_conversion import (
     AATConversionError,
     GVP_NS,
-    break_hierarchy_cycles,
+    report_hierarchy_cycles,
     convert_archive_to_skos,
     find_hierarchy_cycles,
-    validate_output,
     read_archive_extraction_date,
     SKOS_BROADER,
 )
@@ -348,8 +347,9 @@ class BatchProgressTests(TestCase):
 
 
 class HierarchyCycleTests(TestCase):
-    """Cycles are legal SKOS, and AAT contains a few, so the load must survive
-    them rather than reject the vocabulary."""
+    """Cycles are legal SKOS and AAT asserts a few, so they are loaded as the
+    source states them; the converter reports them rather than editing them
+    out. Recursive traversal in lingo is guarded against them independently."""
 
     @staticmethod
     def build_mutual_pair():
@@ -364,46 +364,115 @@ class HierarchyCycleTests(TestCase):
         }
         return concepts, subject_data, first, second, outside
 
-    def test_cycle_is_broken_without_dropping_a_preferred_parent(self):
+    def test_both_directions_of_a_mutual_pair_survive_conversion(self):
         concepts, subject_data, first, second, outside = self.build_mutual_pair()
-        # Each concept's preferred parent is the one outside the cycle.
-        preferred_parents = {first: {outside}, second: {first}}
 
-        removed = break_hierarchy_cycles(
-            concepts, subject_data, preferred_parents, log=lambda message: None
-        )
+        report_hierarchy_cycles(concepts, subject_data, log=lambda message: None)
 
-        self.assertEqual(removed, [(first, second)])
-        self.assertEqual(find_hierarchy_cycles(concepts, subject_data), [])
-        # The concept keeps its preferred parent rather than being orphaned.
+        self.assertIn(f"<{second}>", subject_data[first][SKOS_BROADER])
         self.assertIn(f"<{outside}>", subject_data[first][SKOS_BROADER])
+        self.assertIn(f"<{first}>", subject_data[second][SKOS_BROADER])
 
-    def test_all_preferred_cycle_warns_loudly_and_still_breaks(self):
+    def test_the_cyclic_edge_is_named_in_the_log(self):
         concepts, subject_data, first, second, _outside = self.build_mutual_pair()
-        # Nothing to prefer: both directions are the preferred parent.
-        preferred_parents = {first: {second}, second: {first}}
-
         logged = []
-        removed = break_hierarchy_cycles(
-            concepts, subject_data, preferred_parents, log=logged.append
+
+        cycle_edges = report_hierarchy_cycles(concepts, subject_data, log=logged.append)
+
+        self.assertEqual(len(cycle_edges), 1)
+        self.assertEqual(set(cycle_edges[0]), {first, second})
+        self.assertTrue(any("close a cycle" in line for line in logged), logged)
+        self.assertTrue(any(second in line for line in logged), logged)
+
+    def test_detection_terminates_on_a_three_concept_cycle(self):
+        """The walk records a cycle-closing edge without following it, so a
+        cyclic hierarchy no longer has to be made acyclic first."""
+        first, second, third = (
+            f"http://vocab.getty.edu/aat/30000000{index}" for index in (1, 2, 3)
+        )
+        concepts = {first, second, third}
+        subject_data = {
+            first: {SKOS_BROADER: [f"<{second}>"]},
+            second: {SKOS_BROADER: [f"<{third}>"]},
+            third: {SKOS_BROADER: [f"<{first}>"]},
+        }
+
+        self.assertEqual(len(find_hierarchy_cycles(concepts, subject_data)), 1)
+
+    def test_a_mutual_pair_survives_a_full_conversion(self):
+        """The pair AAT actually asserts -- each concept a parent of the other,
+        both also rooted elsewhere -- must reach the output XML intact."""
+        cyclic_members = dict(SAMPLE_ARCHIVE_MEMBERS)
+        for aat_number in ("300000003", "300000004"):
+            cyclic_members["AATOut_1Subjects.nt"] += (
+                f"<http://vocab.getty.edu/aat/{aat_number}> "
+                "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type> "
+                "<http://vocab.getty.edu/ontology#Concept> .\n"
+                f"<http://vocab.getty.edu/aat/{aat_number}> "
+                "<http://www.w3.org/2004/02/skos/core#inScheme> "
+                "<http://vocab.getty.edu/aat/> .\n"
+                f"<http://vocab.getty.edu/aat/{aat_number}> "
+                f'<http://purl.org/dc/elements/1.1/identifier> "{aat_number}" .\n'
+            )
+            cyclic_members["AATOut_2Terms.nt"] += (
+                f"<http://vocab.getty.edu/aat/{aat_number}> "
+                "<http://www.w3.org/2008/05/skos-xl#prefLabel> "
+                f"<http://vocab.getty.edu/aat/term/{aat_number}-en> .\n"
+                f"<http://vocab.getty.edu/aat/term/{aat_number}-en> "
+                "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type> "
+                "<http://www.w3.org/2008/05/skos-xl#Label> .\n"
+                f"<http://vocab.getty.edu/aat/term/{aat_number}-en> "
+                "<http://www.w3.org/2008/05/skos-xl#literalForm> "
+                f'"concept {aat_number}"@en .\n'
+            )
+        cyclic_members["AATOut_HierarchicalRels.nt"] += (
+            # Each is the other's parent, and both hang off the facet as well,
+            # so the cycle is a supplementary link rather than an island.
+            "<http://vocab.getty.edu/aat/300000003> "
+            "<http://vocab.getty.edu/ontology#broaderPreferred> "
+            "<http://vocab.getty.edu/aat/300000002> .\n"
+            "<http://vocab.getty.edu/aat/300000004> "
+            "<http://vocab.getty.edu/ontology#broaderPreferred> "
+            "<http://vocab.getty.edu/aat/300000002> .\n"
+            "<http://vocab.getty.edu/aat/300000003> "
+            "<http://vocab.getty.edu/ontology#broaderGeneric> "
+            "<http://vocab.getty.edu/aat/300000004> .\n"
+            "<http://vocab.getty.edu/aat/300000004> "
+            "<http://vocab.getty.edu/ontology#broaderGeneric> "
+            "<http://vocab.getty.edu/aat/300000003> .\n"
         )
 
-        self.assertEqual(len(removed), 1)
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            archive_path = os.path.join(temporary_directory, "explicit.zip")
+            with zipfile.ZipFile(archive_path, "w") as archive:
+                for member_name, member_content in cyclic_members.items():
+                    archive.writestr(member_name, member_content)
+            skos_path = os.path.join(temporary_directory, "aat.xml")
+            convert_archive_to_skos(archive_path, skos_path, log=lambda message: None)
+            concepts = concept_elements_by_aat_number(skos_path)
+
+        def broader_targets(aat_number):
+            return {
+                child.get("{http://www.w3.org/1999/02/22-rdf-syntax-ns#}resource")
+                for child in concepts[aat_number].findall(
+                    f"{{{SKOS_NAMESPACE}}}broader"
+                )
+            }
+
+        self.assertIn(
+            "http://vocab.getty.edu/aat/300000004", broader_targets("300000003")
+        )
+        self.assertIn(
+            "http://vocab.getty.edu/aat/300000003", broader_targets("300000004")
+        )
+
+    def test_an_acyclic_hierarchy_reports_nothing(self):
+        parent = "http://vocab.getty.edu/aat/300000001"
+        child = "http://vocab.getty.edu/aat/300000002"
+        concepts = {parent, child}
+        subject_data = {child: {SKOS_BROADER: [f"<{parent}>"]}, parent: {}}
+
         self.assertEqual(find_hierarchy_cycles(concepts, subject_data), [])
-        self.assertTrue(
-            any("consisted entirely of preferred parents" in line for line in logged),
-            logged,
-        )
-
-    def test_validation_reports_a_surviving_cycle_without_raising(self):
-        concepts, subject_data, *_ = self.build_mutual_pair()
-        logged = []
-
-        validate_output(concepts, [], subject_data, log=logged.append)
-
-        self.assertTrue(
-            any("survived cycle breaking" in line for line in logged), logged
-        )
 
 
 class CommandSmokeTests(TestCase):
