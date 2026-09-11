@@ -107,3 +107,76 @@ describe("Build scheme hierarchy", () => {
         expect(concept2Node.icon).toEqual(CONCEPT_ICON);
     });
 });
+
+describe("Cyclic hierarchies", () => {
+    // Getty's AAT contains concept pairs that each declare the other a parent,
+    // and the concept store hands out one shared object per concept, so once
+    // both sides have their children loaded `narrower` holds a real cycle.
+    // Without a guard the tree build recurses until the tab dies.
+    function buildMutuallyNestedConcepts() {
+        const first = {
+            id: "aaaaaaaa-0000-0000-0000-000000000001",
+            labels: [
+                {
+                    value: "first",
+                    language_id: "en",
+                    valuetype_id: "prefLabel",
+                },
+            ],
+            narrower: [],
+            has_narrower: true,
+        } as unknown as Scheme["top_concepts"][number];
+
+        const second = {
+            id: "aaaaaaaa-0000-0000-0000-000000000002",
+            labels: [
+                {
+                    value: "second",
+                    language_id: "en",
+                    valuetype_id: "prefLabel",
+                },
+            ],
+            narrower: [],
+            has_narrower: true,
+        } as unknown as Scheme["top_concepts"][number];
+
+        first.narrower = [second];
+        second.narrower = [first];
+        return { first, second };
+    }
+
+    it("Should terminate and not repeat a concept inside its own subtree", () => {
+        const { first } = buildMutuallyNestedConcepts();
+        const scheme = {
+            id: "bbbbbbbb-0000-0000-0000-000000000001",
+            labels: [
+                {
+                    value: "scheme",
+                    language_id: "en",
+                    valuetype_id: "prefLabel",
+                },
+            ],
+            top_concepts: [first],
+        } as unknown as Scheme;
+
+        const nodes = treeFromSchemes(
+            [scheme],
+            ENGLISH,
+            ENGLISH,
+            iconLabels,
+            null,
+            true,
+            () => true,
+        );
+
+        const firstNode = nodes[0].children![0];
+        expect(firstNode.label).toBe("first");
+
+        const secondNode = firstNode.children![0];
+        expect(secondNode.label).toBe("second");
+
+        // The cycle closes here: `second.narrower` points back at `first`, and
+        // that edge must be dropped rather than followed.
+        expect(secondNode.children).toHaveLength(0);
+    });
+});

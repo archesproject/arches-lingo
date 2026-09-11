@@ -185,7 +185,15 @@ export function treeFromSchemes(
             NEW,
         );
 
-        const nodesAndInstructions = sortedChildren.map((child) =>
+        // A concept that appears in its own ancestor path would recurse
+        // forever. Getty's data contains a few pairs that each declare the
+        // other a parent, and the store hands out one shared object per
+        // concept, so such a pair forms a genuine cycle in `narrower`.
+        const nonCyclicChildren = sortedChildren.filter(
+            (child) => !pathIds.includes(child.id),
+        );
+
+        const nodesAndInstructions = nonCyclicChildren.map((child) =>
             processItem(child, child.narrower, schemeId, [
                 ...pathIds,
                 child.id,
