@@ -26,8 +26,23 @@ from arches.app.models.system_settings import settings
 from arches.app.tasks import notify_completion
 import arches.app.utils.task_management as task_management
 
+from arches_querysets.models import ResourceTileTree
+
 import arches_lingo.tasks as tasks
 import arches_lingo.const as const
+from arches_lingo.models import ConceptIdentifierCounter, SchemeURITemplate
+from arches_lingo.utils.concept_lifecycle import PUBLISHED_STATE_ID
+from arches_lingo.utils.aat.deferred_indexing import (
+    recalculate_descriptors_for_graph,
+    save_to_tiles_without_indexing,
+)
+from arches_lingo.utils.aat.direct_tile_load import (
+    TileValidationError,
+    build_tiledata,
+    load_resources_and_tiles,
+    tiledata_for_copy,
+)
+from arches_lingo.utils.aat.progress import report_elapsed
 
 logger = logging.getLogger(__name__)
 
@@ -52,6 +67,10 @@ details = {
 # = ~16 000 rows per INSERT, which PostgreSQL handles comfortably while keeping
 # the connection active throughout the loop.
 STAGING_BATCH_CONCEPT_COUNT = 2000
+
+URL_REGEX = re.compile(
+    r"https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)"
+)
 
 ONTOLOGY_PROPERTY_BY_NODE_ALIAS = {
     "top_concept_of": const.TOP_CONCEPT_OF_ONTOLOGY_PROPERTY,
@@ -88,10 +107,35 @@ class LingoResourceImporter(BaseImportModule):
             if request
             else kwargs.get("scheme_conceptid", None)
         )
+        self.import_identifiers = (
+            request.POST.get("import_identifiers", "").lower() == "true"
+            if request
+            else kwargs.get("import_identifiers", False)
+        )
+        self.namespace_template = (
+            request.POST.get("namespace_template", "")
+            if request
+            else kwargs.get("namespace_template", "")
+        )
+        # See utils.skos.load_pinned_resource_ids.
+        self.pinned_resource_ids = (
+            {} if request else kwargs.get("pinned_resource_ids", None) or {}
+        )
+        # Empty keeps the default published/editing behaviour.
+        self.lifecycle_state_id = (
+            "" if request else kwargs.get("lifecycle_state_id", "") or ""
+        )
+
+        self.skip_indexing = False if request else kwargs.get("skip_indexing", False)
+        # Off for the ETL user interface, which relies on load_staging to
+        # report per-row load errors back to the user.
+        self.bypass_staging = False if request else kwargs.get("bypass_staging", False)
         self.language_lookup = {
             lang.code: lang.name for lang in models.Language.objects.all()
         }
         self.blank_tile_lookup = {}
+        self._prepared_value_cache = {}
+        self.log = print
 
     def get_schemes(self, request):
         schemes = (
@@ -152,9 +196,14 @@ class LingoResourceImporter(BaseImportModule):
                     continue
 
                 mock_tile = self.create_mock_tile_from_value(
-                    value, lang_lookup=self.language_lookup
+                    value,
+                    isScheme=True,
+                    import_identifiers=self.import_identifiers,
+                    lang_lookup=self.language_lookup,
                 )
-                if mock_tile:
+                if isinstance(mock_tile, list):
+                    scheme_to_load["tile_data"].extend(mock_tile)
+                elif mock_tile:
                     scheme_to_load["tile_data"].append(mock_tile)
             schemes.append(scheme_to_load)
         return schemes
@@ -182,9 +231,13 @@ class LingoResourceImporter(BaseImportModule):
                     continue
 
                 mock_tile = self.create_mock_tile_from_value(
-                    value, lang_lookup=self.language_lookup
+                    value,
+                    import_identifiers=self.import_identifiers,
+                    lang_lookup=self.language_lookup,
                 )
-                if mock_tile:
+                if isinstance(mock_tile, list):
+                    concept_to_load["tile_data"].extend(mock_tile)
+                elif mock_tile:
                     concept_to_load["tile_data"].append(mock_tile)
 
             concepts.append(concept_to_load)
@@ -226,22 +279,32 @@ class LingoResourceImporter(BaseImportModule):
         return concepts
 
     @staticmethod
-    def create_mock_tile_from_value(value, isScheme=False, lang_lookup=None):
-        # Values coming directly from RDM models are django model instances
+    def create_mock_tile_from_value(
+        value, isScheme=False, import_identifiers=False, lang_lookup=None
+    ):
+        # The language datatype resolves a value against both code and name and
+        # takes the first match, so a name shared by several codes is ambiguous:
+        # "Arabic" names both `ar` and `ar-Latn`, and AAT uses many such
+        # romanised variants. Codes are unique, so the code is what gets passed.
         if isinstance(value, models.Value):
             value = {
                 "value": value.value,
                 "valuetype_id": value.valuetype_id,
-                "language": value.language.name,
+                "language": value.language.code,
             }
         # Values coming from SKOS import are dicts
         elif isinstance(value, dict):
-            try:
-                value["language"] = lang_lookup[value["language_id"]]
-                if type(value["language"]) is models.Language:
-                    value["language"] = value["language"].name
-            except KeyError:
-                pass
+            language_id = value.get("language_id")
+            # Relation-derived values (matched concepts) carry no language_id
+            # and don't need one: they never read value["language"].
+            if language_id is not None:
+                language = lang_lookup.get(language_id) if lang_lookup else None
+                if isinstance(language, models.Language):
+                    value["language"] = language.code
+                else:
+                    # `language_id` is already the code; the lookup only confirms
+                    # that a Language row exists for it.
+                    value["language"] = language_id
         value_type_id = value["valuetype_id"]
         if value_type_id == "title":
             value_type_id = "prefLabel"
@@ -251,11 +314,33 @@ class LingoResourceImporter(BaseImportModule):
             mock_tile["appellative_status_ascribed_name_language"] = value["language"]
             mock_tile["appellative_status_ascribed_relation"] = value_type_id
             return {"appellative_status": mock_tile}
-        elif value_type_id == "identifier" and not isScheme:
-            # treat identifiers as external exact-matched concepts
-            mock_tile["match_status_ascribed_comparate"] = value["value"]
-            mock_tile["match_status_ascribed_relation"] = "exactMatch"
-            return {"match_status": mock_tile}
+        elif value_type_id == "identifier":
+            identifier_value = value["value"]
+            if import_identifiers and URL_REGEX.match(identifier_value):
+                return [
+                    {
+                        "uri": {
+                            "uri_content": identifier_value,
+                            "uri_type": value_type_id,
+                        }
+                    },
+                    {
+                        "identifier": {
+                            "identifier_content": identifier_value.rstrip("/").split(
+                                "/"
+                            )[-1],
+                            "identifier_type": value_type_id,
+                        }
+                    },
+                ]
+            elif import_identifiers:
+                mock_tile["identifier_content"] = identifier_value
+                mock_tile["identifier_type"] = value_type_id
+                return {"identifier": mock_tile}
+            elif not isScheme:
+                mock_tile["match_status_ascribed_comparate"] = identifier_value
+                mock_tile["match_status_ascribed_relation"] = "exactMatch"
+                return {"match_status": mock_tile}
         elif value_type_id in set(
             [
                 "note",
@@ -300,6 +385,94 @@ class LingoResourceImporter(BaseImportModule):
             }
         }
         return {relationship["nodegroup_alias"]: mock_tile}
+
+    def _initial_lifecycle_state_id(self, graph_id):
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT state.id
+                  FROM resource_instance_lifecycle_states state
+                  JOIN graphs graph
+                    ON graph.resource_instance_lifecycle_id
+                       = state.resource_instance_lifecycle_id
+                 WHERE graph.graphid = %s AND state.is_initial_state
+                 LIMIT 1
+                """,
+                [graph_id],
+            )
+            row = cursor.fetchone()
+        return row[0] if row else None
+
+    def load_directly(self, cursor, resources_to_load, nodegroup_lookup, node_lookup):
+        """Build resources and tiles in memory and write them without staging.
+
+        Produces the rows the staging function would have produced, having
+        first validated every value, so a bad value stops the load before
+        anything is written rather than being recorded afterwards as a load
+        error against data already in the database.
+        """
+        if not resources_to_load:
+            return {"resources": 0, "tiles": 0}
+
+        graph_id = (
+            const.SCHEMES_GRAPH_ID
+            if resources_to_load[0].get("type") == "Scheme"
+            else const.CONCEPTS_GRAPH_ID
+        )
+        lifecycle_state_id = self._initial_lifecycle_state_id(graph_id)
+
+        resource_rows = []
+        tile_rows = []
+        validation_errors = []
+        sortorder_counter = defaultdict(lambda: defaultdict(int))
+
+        for resource_to_load in resources_to_load:
+            resource_id = resource_to_load["resourceinstanceid"]
+            resource_rows.append(
+                (
+                    str(resource_id),
+                    graph_id,
+                    resource_to_load.get("legacyid") or str(resource_id),
+                    str(lifecycle_state_id),
+                )
+            )
+
+            for mock_tile in resource_to_load["tile_data"]:
+                nodegroup_alias = next(iter(mock_tile.keys()), None)
+                nodegroup_id = node_lookup[nodegroup_alias]["nodeid"]
+                tile_value, passes_validation = self.create_tile_value(
+                    cursor, mock_tile, nodegroup_alias, nodegroup_lookup, node_lookup
+                )
+                if not passes_validation:
+                    validation_errors.append(
+                        {
+                            "nodeid": nodegroup_id,
+                            "message": (
+                                f"invalid value on {nodegroup_alias} for "
+                                f"resource {resource_id}"
+                            ),
+                        }
+                    )
+                    continue
+
+                sortorder = sortorder_counter[resource_id][nodegroup_id]
+                sortorder_counter[resource_id][nodegroup_id] += 1
+                tile_rows.append(
+                    (
+                        str(uuid.uuid4()),
+                        str(resource_id),
+                        nodegroup_id,
+                        sortorder,
+                        tiledata_for_copy(build_tiledata(tile_value)),
+                    )
+                )
+
+        if validation_errors:
+            raise TileValidationError(validation_errors)
+
+        return load_resources_and_tiles(
+            resource_rows, tile_rows, [graph_id], log=self.log
+        )
 
     def populate_staging_table(
         self, cursor, concepts_to_load, nodegroup_lookup, node_lookup
@@ -380,8 +553,8 @@ class LingoResourceImporter(BaseImportModule):
                 config["loadid"] = self.loadid
                 config["nodeid"] = nodeid
 
-                value, validation_errors = self.prepare_data_for_loading(
-                    datatype_instance, source_value, config
+                value, validation_errors = self._prepared_value(
+                    datatype_instance, source_value, config, nodeid
                 )
                 valid = True if len(validation_errors) == 0 else False
                 tile_valid = True if valid else False
@@ -412,6 +585,37 @@ class LingoResourceImporter(BaseImportModule):
 
         return tile_value, tile_valid
 
+    def _prepared_value(self, datatype_instance, source_value, config, nodeid):
+        """Resolve a source value to its tile representation, caching by value.
+
+        Reference-datatype nodes are given a label ("prefLabel", "scopeNote")
+        that has to be looked up in a controlled list, costing two queries every
+        time. A vocabulary import repeats a couple of dozen distinct labels
+        across millions of tiles, so the result is cached per node.
+
+        Only scalar sources are cached; anything unhashable (relationship
+        dictionaries) is resolved directly, as before.
+        """
+        if not isinstance(source_value, (str, int, float, bool, type(None))):
+            return self.prepare_data_for_loading(
+                datatype_instance, source_value, config
+            )
+
+        cache_key = (nodeid, source_value)
+        cached = self._prepared_value_cache.get(cache_key)
+        if cached is None:
+            cached = self.prepare_data_for_loading(
+                datatype_instance, source_value, config
+            )
+            self._prepared_value_cache[cache_key] = cached
+
+        value, validation_errors = cached
+        # The cached value is written into a fresh tile envelope each time, and
+        # datatypes return mutable structures, so hand back a copy.
+        if isinstance(value, (dict, list)):
+            value = copy.deepcopy(value)
+        return value, validation_errors
+
     def get_blank_tile_lookup(self, nodegroupid):
         if nodegroupid not in self.blank_tile_lookup.keys():
             blank_tile = {}
@@ -434,7 +638,10 @@ class LingoResourceImporter(BaseImportModule):
                     if default_value != "" and default_value is not None:
                         blank_tile[str(node.nodeid)]["value"] = default_value
             self.blank_tile_lookup[nodegroupid] = blank_tile
-        return copy.deepcopy(self.blank_tile_lookup[nodegroupid])
+        return {
+            node_id: dict(node_template)
+            for node_id, node_template in self.blank_tile_lookup[nodegroupid].items()
+        }
 
     def build_concept_hierarchy(self, cursor, scheme_conceptid):
         cursor.execute(
@@ -763,6 +970,106 @@ class LingoResourceImporter(BaseImportModule):
 
         LoadStaging.objects.bulk_create(part_of_scheme_tiles)
 
+    def _post_import_identifier_setup(self):
+        """Record each concept's identifier and place the scheme in its state.
+
+        Expressed as set-based SQL rather than a pass over resource trees: the
+        only thing needed per concept is the content of its identifier tile,
+        and materialising every concept with all of its tiles to read one value
+        dominated the load.
+        """
+        scheme_resourceid = str(self.schemes[0]["resourceinstanceid"])
+        scheme_resource = models.ResourceInstance.objects.get(pk=scheme_resourceid)
+
+        if self.namespace_template:
+            self._create_namespace_tile(scheme_resource)
+
+        # Concepts carrying exactly one identifier tile, matching the previous
+        # behaviour of skipping any concept with none or several.
+        concepts_with_one_identifier = f"""
+            SELECT identifier_tile.resourceinstanceid AS concept_id,
+                   min(identifier_tile.tiledata ->> '{const.IDENTIFIER_CONTENT_NODE}')
+                       AS identifier
+              FROM tiles identifier_tile
+              JOIN tiles scheme_tile
+                ON scheme_tile.resourceinstanceid = identifier_tile.resourceinstanceid
+               AND scheme_tile.nodegroupid
+                   = '{const.CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID}'
+               AND (scheme_tile.tiledata
+                    -> '{const.CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID}'
+                    -> 0 ->> 'resourceId') = %(scheme_id)s
+             WHERE identifier_tile.nodegroupid = '{const.IDENTIFIER_NODEGROUP}'
+             GROUP BY identifier_tile.resourceinstanceid
+            HAVING count(*) = 1
+        """
+        query_parameters = {"scheme_id": scheme_resourceid}
+
+        with connection.cursor() as cursor:
+            cursor.execute(
+                f"""
+                INSERT INTO resource_identifiers
+                    (resourceid_id, identifier, source, identifier_type)
+                SELECT concept_id, identifier, 'arches-lingo', 'identifier'
+                  FROM ({concepts_with_one_identifier}) identified
+                 WHERE identifier IS NOT NULL
+                """,
+                query_parameters,
+            )
+            identifier_count = cursor.rowcount
+
+            lifecycle_state_id = self.lifecycle_state_id or PUBLISHED_STATE_ID
+            cursor.execute(
+                f"""
+                UPDATE resource_instances
+                   SET resource_instance_lifecycle_state_id = %(state_id)s::uuid
+                 WHERE resourceinstanceid IN (
+                           SELECT concept_id
+                             FROM ({concepts_with_one_identifier}) identified
+                       )
+                    OR resourceinstanceid = %(scheme_id)s::uuid
+                """,
+                {**query_parameters, "state_id": str(lifecycle_state_id)},
+            )
+
+            # Concept identifiers are assigned by the source vocabulary, so the
+            # counter starts above the highest number already in use.
+            cursor.execute(
+                f"""
+                SELECT min(identifier::bigint), max(identifier::bigint)
+                  FROM ({concepts_with_one_identifier}) identified
+                 WHERE identifier ~ '^[0-9]+$'
+                """,
+                query_parameters,
+            )
+            lowest_identifier, highest_identifier = cursor.fetchone()
+
+        ConceptIdentifierCounter.objects.update_or_create(
+            scheme=scheme_resource,
+            defaults={
+                "start_number": lowest_identifier or 1,
+                "next_number": (highest_identifier + 1) if highest_identifier else 1,
+            },
+        )
+        self.log(f"  recorded {identifier_count:,} concept identifiers")
+
+    def _create_namespace_tile(self, scheme_resource):
+        reference_datatype = self.datatype_factory.get_instance("reference")
+        namespace_type_tile_value = reference_datatype.transform_value_for_tile(
+            "namespaces", controlledList=const.IDENTIFIER_TYPES_LIST_ID
+        )
+        models.TileModel(
+            resourceinstance=scheme_resource,
+            data={
+                const.NAMESPACE_NAME_NODE: self.namespace_template,
+                const.NAMESPACE_TYPE_NODE: namespace_type_tile_value,
+            },
+            nodegroup_id=const.NAMESPACE_NODEGROUP,
+        ).save()
+        SchemeURITemplate.objects.update_or_create(
+            scheme=scheme_resource,
+            defaults={"url_template": self.namespace_template},
+        )
+
     def start(self, request):
         load_details = {"operation": "Lingo Thesaurus Import"}
         if not self.loadid:
@@ -863,7 +1170,11 @@ class LingoResourceImporter(BaseImportModule):
                     skos_reader = SKOSReader()
                     rdf = skos_reader.read_file(self.file)
                     self.schemes, self.concepts = (
-                        skos_reader.extract_concepts_from_skos_for_lingo_import(rdf)
+                        skos_reader.extract_concepts_from_skos_for_lingo_import(
+                            rdf,
+                            import_identifiers=self.import_identifiers,
+                            pinned_resource_ids=self.pinned_resource_ids,
+                        )
                     )
                     self.run_load_task()
 
@@ -922,16 +1233,55 @@ class LingoResourceImporter(BaseImportModule):
                 skos_reader = SKOSReader()
                 rdf = skos_reader.read_file(file)
                 self.schemes, self.concepts = (
-                    skos_reader.extract_concepts_from_skos_for_lingo_import(rdf)
+                    skos_reader.extract_concepts_from_skos_for_lingo_import(
+                        rdf,
+                        import_identifiers=self.import_identifiers,
+                        pinned_resource_ids=self.pinned_resource_ids,
+                    )
                 )
 
+            # Writing tiles directly skips the staging round trip, which for a
+            # vocabulary-sized import is the overwhelming majority of the load.
+            # Only offered for the SKOS path: the RDM migration below builds its
+            # relationships as staging rows.
+            if self.bypass_staging and not self.scheme_conceptid:
+                with report_elapsed("write schemes + concepts", log=self.log):
+                    self.load_directly(
+                        cursor,
+                        self.schemes,
+                        schemes_nodegroup_lookup,
+                        schemes_node_lookup,
+                    )
+                    self.load_directly(
+                        cursor,
+                        self.concepts,
+                        concepts_nodegroup_lookup,
+                        concepts_node_lookup,
+                    )
+                with report_elapsed("descriptors", log=self.log):
+                    recalculate_descriptors_for_graph(
+                        const.SCHEMES_GRAPH_ID, log=self.log
+                    )
+                    recalculate_descriptors_for_graph(
+                        const.CONCEPTS_GRAPH_ID, log=self.log
+                    )
+                if self.import_identifiers:
+                    with report_elapsed("identifier setup", log=self.log):
+                        self._post_import_identifier_setup()
+                self._finalize_import()
+                return
+
             # Populate staging table with schemes and concepts
-            self.populate_staging_table(
-                cursor, self.schemes, schemes_nodegroup_lookup, schemes_node_lookup
-            )
-            self.populate_staging_table(
-                cursor, self.concepts, concepts_nodegroup_lookup, concepts_node_lookup
-            )
+            with report_elapsed("stage schemes + concepts", log=self.log):
+                self.populate_staging_table(
+                    cursor, self.schemes, schemes_nodegroup_lookup, schemes_node_lookup
+                )
+                self.populate_staging_table(
+                    cursor,
+                    self.concepts,
+                    concepts_nodegroup_lookup,
+                    concepts_node_lookup,
+                )
 
             # Create relationships
             if self.scheme_conceptid:
@@ -940,26 +1290,58 @@ class LingoResourceImporter(BaseImportModule):
                 )
 
             # Validate and save to tiles
-            validation = self.validate(self.loadid)
+            with report_elapsed("validate staged rows", log=self.log):
+                validation = self.validate(self.loadid)
             if len(validation["data"]) == 0:
                 cursor.execute(
                     """UPDATE load_event SET status = %s WHERE loadid = %s""",
                     ("validated", self.loadid),
                 )
-                save_to_tiles(self.userid, self.loadid)
-                cursor.execute(
-                    """CALL __arches_update_resource_x_resource_with_graphids();"""
-                )
-                cursor.execute("""SELECT __arches_refresh_spatial_views();""")
-                refresh_successful = cursor.fetchone()[0]
-                if not refresh_successful:
-                    raise Exception("Unable to refresh spatial views")
+                with report_elapsed("staging -> tiles", log=self.log):
+                    if self.skip_indexing:
+                        save_to_tiles_without_indexing(self.userid, self.loadid)
+                    else:
+                        save_to_tiles(self.userid, self.loadid)
+                with report_elapsed("resource_x_resource graphids", log=self.log):
+                    cursor.execute(
+                        """CALL __arches_update_resource_x_resource_with_graphids();"""
+                    )
+                # Spatial views only matter to graphs with geometry nodes;
+                # the concept and scheme graphs have none.
+                if self._graphs_have_geometry_nodes(cursor):
+                    cursor.execute("""SELECT __arches_refresh_spatial_views();""")
+                    refresh_successful = cursor.fetchone()[0]
+                    if not refresh_successful:
+                        raise Exception("Unable to refresh spatial views")
+
+                # Staged rows are consumed by now. Nothing in arches removes
+                # them, so a repeated load would otherwise accumulate a copy of
+                # every tile it has ever written.
+                with report_elapsed("purge load_staging", log=self.log):
+                    cursor.execute(
+                        """DELETE FROM load_staging WHERE loadid = %s""", [self.loadid]
+                    )
+                if self.import_identifiers:
+                    self._post_import_identifier_setup()
             else:
                 cursor.execute(
                     """UPDATE load_event SET status = %s, load_end_time = %s WHERE loadid = %s""",
                     ("failed", datetime.now(), self.loadid),
                 )
         self._finalize_import()
+
+    def _graphs_have_geometry_nodes(self, cursor):
+        cursor.execute(
+            """
+            SELECT EXISTS (
+                SELECT 1 FROM nodes
+                 WHERE datatype = 'geojson-feature-collection'
+                   AND graphid IN (%s::uuid, %s::uuid)
+            )
+            """,
+            [const.CONCEPTS_GRAPH_ID, const.SCHEMES_GRAPH_ID],
+        )
+        return cursor.fetchone()[0]
 
     def _finalize_import(self):
         self.load_event = models.LoadEvent.objects.get(loadid=self.loadid)
@@ -991,6 +1373,8 @@ class LingoResourceImporter(BaseImportModule):
                     "scheme_conceptid": self.scheme_conceptid,
                     "temp_file_path": self.temp_file_path,
                     "mode": self.mode,
+                    "import_identifiers": self.import_identifiers,
+                    "namespace_template": self.namespace_template,
                 },
             ]
         )

@@ -1,4 +1,5 @@
 import logging
+import csv
 import uuid
 from collections import defaultdict
 from urllib.parse import urlsplit
@@ -13,11 +14,17 @@ from arches_controlled_lists.utils.skos import SKOSReader
 from arches_controlled_lists.models import List, ListItem, ListItemValue
 
 from arches_lingo.etl_modules.migrate_to_lingo import LingoResourceImporter
+import arches_lingo.const as const
 
 logger = logging.getLogger(__name__)
 
 # define the ARCHES namespace
 ARCHES = Namespace(settings.ARCHES_NAMESPACE_FOR_DATA_EXPORT)
+
+# e.g. http://vocab.getty.edu/ontology#aat2285_practiced-studied_by. The
+# «related properties» controlled list stores these URIs as its item
+# identifiers, so a predicate resolves to the relation type to record.
+GVP_TYPED_RELATION_PREFIX = "http://vocab.getty.edu/ontology#aat"
 
 
 def subject_uri_for(resource_id, resource_uri_map=None):
@@ -33,6 +40,41 @@ def subject_uri_for(resource_id, resource_uri_map=None):
     return ARCHES[str(resource_id)]
 
 
+def load_pinned_resource_ids(csv_path):
+    """Load a {subject_uri: resourceinstanceid} map from a two-column CSV.
+
+    Used to keep resource ids stable across a re-import. The SKOS importer
+    otherwise derives ids with uuid5 from a namespace generated fresh on every
+    run, so re-importing an unchanged concept would still mint a new id and
+    orphan anything pointing at the old one. Supplying the ids a previous load
+    assigned keeps surviving resources on their existing ids; anything absent
+    from the map falls through to the normal uuid5 derivation and gets a new
+    one.
+
+    The CSV must have a header row and its first two columns must be the
+    subject URI and the resource id, in that order.
+    """
+    pinned_ids = {}
+    with open(csv_path, newline="", encoding="utf-8") as csv_file:
+        reader = csv.reader(csv_file)
+        next(reader, None)  # header
+        for row in reader:
+            if len(row) < 2:
+                continue
+            subject_uri, resource_id = row[0].strip(), row[1].strip()
+            if not subject_uri or not resource_id:
+                continue
+            try:
+                pinned_ids[subject_uri] = uuid.UUID(resource_id)
+            except ValueError:
+                logger.warning(
+                    "Ignoring unparseable resource id %r for %s",
+                    resource_id,
+                    subject_uri,
+                )
+    return pinned_ids
+
+
 class SKOSReader(SKOSReader):
     """
     Extends the SKOSReader class from Arches Controlled Lists to import RDF graphs as Lingo resources.
@@ -44,11 +86,54 @@ class SKOSReader(SKOSReader):
         self.concepts = []
         self.relations = defaultdict(list)
         self.prefLabel_valuetype = models.DValueType.objects.get(valuetype="prefLabel")
+        self._gvp_relation_type_lookup = None
+
+    def generate_uuidv5_from_subject(self, baseuuid, subject):
+        """Reuse a previously assigned resource id when one is known.
+
+        Falls back to the inherited derivation (which extracts an embedded
+        UUID if the subject URI contains one, else derives a uuid5) for
+        subjects that have no pinned id -- new concepts, and every subject when
+        no map was supplied.
+        """
+        pinned_id = getattr(self, "pinned_resource_ids", {}).get(str(subject))
+        if pinned_id is not None:
+            return pinned_id
+        return super().generate_uuidv5_from_subject(baseuuid, subject)
+
+    def _get_gvp_relation_type_lookup(self):
+        """Return a {gvp_predicate_uri: list_item_id_str} mapping built from
+        the related_properties controlled list.  The lookup is built lazily on
+        first call and cached; an empty dict is returned when the controlled
+        list is not yet loaded so the import still succeeds without type data."""
+        if self._gvp_relation_type_lookup is not None:
+            return self._gvp_relation_type_lookup
+        try:
+            self._gvp_relation_type_lookup = {
+                item.uri: str(item.id)
+                for item in ListItem.objects.filter(
+                    list_id=const.RELATED_PROPERTIES_LIST_ID,
+                    uri__startswith=GVP_TYPED_RELATION_PREFIX,
+                )
+            }
+        except Exception:
+            logger.warning(
+                "Could not load related_properties controlled list; "
+                "typed GVP relation types will not be set on import."
+            )
+            self._gvp_relation_type_lookup = {}
+        return self._gvp_relation_type_lookup
 
     def extract_concepts_from_skos_for_lingo_import(
-        self, graph, overwrite_options="overwrite"
+        self,
+        graph,
+        overwrite_options="overwrite",
+        import_identifiers=False,
+        pinned_resource_ids=None,
     ):
         baseuuid = uuid.uuid4()
+        self.import_identifiers = import_identifiers
+        self.pinned_resource_ids = pinned_resource_ids or {}
         self.allowed_languages = {}
         for lang in models.Language.objects.all():
             self.allowed_languages[lang.code] = lang
@@ -102,7 +187,9 @@ class SKOSReader(SKOSReader):
                         mock_tile = self.map_predicate_object_to_mock_tile(
                             object, predicate_str, isScheme
                         )
-                        if mock_tile:
+                        if isinstance(mock_tile, list):
+                            new_scheme["tile_data"].extend(mock_tile)
+                        elif mock_tile:
                             new_scheme["tile_data"].append(mock_tile)
 
                     elif predicate == SKOS.hasTopConcept:
@@ -228,6 +315,38 @@ class SKOSReader(SKOSReader):
                                 relationship
                             )
                             self.relations[resourceinstanceid].append(mock_tile)
+                        elif str(predicate).startswith(GVP_TYPED_RELATION_PREFIX):
+                            # The tile goes on the object concept, so viewing it
+                            # shows the subject as the comparate.
+                            related_concept_id = self.generate_uuidv5_from_subject(
+                                baseuuid, object
+                            )
+                            relation_type_id = self._get_gvp_relation_type_lookup().get(
+                                str(predicate)
+                            )
+                            typed_relation_mock_tile = {
+                                "relation_status": {
+                                    "relation_status_ascribed_comparate": {
+                                        "resourceId": str(concept_pk),
+                                        "ontologyProperty": const.RELATION_STATUS_ASCRIBED_COMPARATE_ONTOLOGY_PROPERTY,
+                                        "resourceXresourceId": "",
+                                        "inverseOntologyProperty": "",
+                                    }
+                                }
+                            }
+                            if relation_type_id:
+                                typed_relation_mock_tile["relation_status"][
+                                    "relation_status_ascribed_relation"
+                                ] = relation_type_id
+                            else:
+                                logger.debug(
+                                    "No list item found for GVP relation predicate %s;"
+                                    " relation_status_ascribed_relation will be null.",
+                                    predicate,
+                                )
+                            self.relations[related_concept_id].append(
+                                typed_relation_mock_tile
+                            )
                         elif predicate in [
                             SKOS.broadMatch,
                             SKOS.closeMatch,
@@ -249,13 +368,17 @@ class SKOSReader(SKOSReader):
                                 mock_tile = self.map_predicate_object_to_mock_tile(
                                     matched_URI, predicate_str, isScheme
                                 )
-                                if mock_tile:
+                                if isinstance(mock_tile, list):
+                                    new_concept["tile_data"].extend(mock_tile)
+                                elif mock_tile:
                                     new_concept["tile_data"].append(mock_tile)
                         else:
                             mock_tile = self.map_predicate_object_to_mock_tile(
                                 object, predicate_str, isScheme
                             )
-                            if mock_tile:
+                            if isinstance(mock_tile, list):
+                                new_concept["tile_data"].extend(mock_tile)
+                            elif mock_tile:
                                 new_concept["tile_data"].append(mock_tile)
 
                     type_tile = {
@@ -357,7 +480,10 @@ class SKOSReader(SKOSReader):
             "valuetype_id": predicate,
         }
         mock_tile = LingoResourceImporter.create_mock_tile_from_value(
-            mock_tile, isScheme=isScheme, lang_lookup=self.allowed_languages
+            mock_tile,
+            isScheme=isScheme,
+            import_identifiers=self.import_identifiers,
+            lang_lookup=self.allowed_languages,
         )
         return mock_tile
 
