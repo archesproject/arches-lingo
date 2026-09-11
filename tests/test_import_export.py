@@ -36,6 +36,10 @@ from .test_settings import PROJECT_TEST_ROOT
 
 
 class ImportTests(TransactionTestCase):
+    # Restores the rows arches' migrations provide after another
+    # TransactionTestCase's flush has cleared them; without this, setUp fails
+    # looking up the default language.
+    serialized_rollback = True
 
     @classmethod
     def register_etl_module(cls):
