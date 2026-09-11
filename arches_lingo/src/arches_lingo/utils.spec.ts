@@ -109,10 +109,10 @@ describe("Build scheme hierarchy", () => {
 });
 
 describe("Cyclic hierarchies", () => {
-    // Getty's AAT contains concept pairs that each declare the other a parent,
-    // and the concept store hands out one shared object per concept, so once
-    // both sides have their children loaded `narrower` holds a real cycle.
-    // Without a guard the tree build recurses until the tab dies.
+    // SKOS lets concepts declare each other a parent, and the concept store
+    // hands out one shared object per concept, so once both sides have their
+    // children loaded `narrower` holds a real cycle. Without a guard the tree
+    // build recurses until the tab dies.
     function buildMutuallyNestedConcepts() {
         const first = {
             id: "aaaaaaaa-0000-0000-0000-000000000001",
