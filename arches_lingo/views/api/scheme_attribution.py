@@ -2,11 +2,11 @@ from arches.app.utils.betterJSONSerializer import JSONDeserializer
 from arches.app.utils.response import JSONResponse, JSONErrorResponse
 from arches.app.views.api import APIBase
 
-from arches_lingo.mixins.permissions import LingoEditorWriteMixin
+from arches_lingo.mixins.permissions import LingoAdminWriteMixin
 from arches_lingo.models import SchemeAttribution
 
 
-class SchemeAttributionView(LingoEditorWriteMixin, APIBase):
+class SchemeAttributionView(LingoAdminWriteMixin, APIBase):
     def get(self, request, scheme_resource_instance_id):
         scheme_attribution = SchemeAttribution.objects.filter(
             scheme_id=scheme_resource_instance_id

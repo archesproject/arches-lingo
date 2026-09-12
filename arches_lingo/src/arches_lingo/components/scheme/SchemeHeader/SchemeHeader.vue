@@ -236,6 +236,15 @@ const canEditResourceInstances = computed(() => {
     );
 });
 
+const canEditSchemeAttribution = computed(() => {
+    return (
+        isLingoAdmin &&
+        !isLocked.value &&
+        hasPersistedResourceInstance.value &&
+        Boolean(currentLifecycleState.value?.can_edit_resource_instances)
+    );
+});
+
 const canDeleteResourceInstances = computed(() => {
     return (
         isEditor &&
@@ -752,7 +761,7 @@ async function onReinstateConfirmed(cascade: boolean) {
                 <div class="header-row">
                     <SchemeAttributionField
                         :resource-instance-id="props.resourceInstanceId"
-                        :can-edit-resource-instances="canEditResourceInstances"
+                        :can-edit-attribution="canEditSchemeAttribution"
                         :scheme-attribution="schemeAttribution"
                         @update="onSchemeAttributionUpdate"
                     />
