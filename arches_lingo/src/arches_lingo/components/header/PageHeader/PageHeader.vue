@@ -8,6 +8,7 @@ import Menubar from "primevue/menubar";
 import Popover from "primevue/popover";
 
 import ArchesLingoBadge from "@/arches_lingo/components/header/PageHeader/components/ArchesLingoBadge.vue";
+import DemoDisclaimerButton from "@/arches_lingo/components/header/PageHeader/components/DemoDisclaimerButton.vue";
 import LanguageSelector from "@/arches_lingo/components/header/PageHeader/components/LanguageSelector.vue";
 import NotificationInteraction from "@/arches_lingo/components/header/PageHeader/components/NotificationsInteraction/NotificationInteraction.vue";
 import PageHelp from "@/arches_lingo/components/header/PageHeader/components/PageHelp/PageHelp.vue";
@@ -53,6 +54,7 @@ const overlayPanel = useTemplateRef("overlayPanel");
         </template>
         <template #end>
             <div class="end-items">
+                <DemoDisclaimerButton />
                 <UserInteraction />
                 <LanguageSelector />
                 <NotificationInteraction />
@@ -74,6 +76,9 @@ const overlayPanel = useTemplateRef("overlayPanel");
                 }"
             >
                 <div class="overlay-panel-items">
+                    <div class="overlay-panel-item">
+                        <DemoDisclaimerButton />
+                    </div>
                     <div class="overlay-panel-item">
                         <UserInteraction />
                     </div>

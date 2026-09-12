@@ -20,5 +20,8 @@ class AppSettingsView(View):
                 ),
                 "arches_version": arches.__version__,
                 "lingo_version": arches_lingo.__version__,
+                "show_demo_disclaimer": getattr(
+                    settings, "SHOW_DEMO_DISCLAIMER", False
+                ),
             }
         )

@@ -83,7 +83,7 @@ async function saveAttribution() {
             <div class="attribution-input-wrapper">
                 <Textarea
                     v-model="attributionDraft"
-                    :rows="3"
+                    :rows="4"
                     :placeholder="
                         $gettext('Enter attribution information here...')
                     "
@@ -152,7 +152,7 @@ async function saveAttribution() {
     white-space: pre-wrap;
     word-break: break-word;
     overflow-y: auto;
-    max-height: 6rem;
+    max-height: 9rem;
     font-size: var(--p-lingo-font-size-smallnormal);
     color: var(--p-primary-500);
     background: var(--p-content-background);

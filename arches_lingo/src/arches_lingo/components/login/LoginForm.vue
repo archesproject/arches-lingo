@@ -12,8 +12,6 @@ import { DEFAULT_ERROR_TOAST_LIFE, ERROR } from "@/arches_lingo/constants.ts";
 import { routeNames } from "@/arches_lingo/routes.ts";
 import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 
-import LoginLinks from "@/arches_lingo/components/login/LoginLinks.vue";
-
 const { $gettext } = useGettext();
 const toast = useToast();
 const router = useRouter();
@@ -72,16 +70,7 @@ const submit = async () => {
                 @click="submit"
             />
         </div>
-        <div class="form-footer">
-            <h2 class="form-subtitle">
-                {{
-                    $gettext(
-                        "Create an account or log in using multi-factor authentication",
-                    )
-                }}
-            </h2>
-            <LoginLinks />
-        </div>
+        <p />
     </form>
 </template>
 
