@@ -502,11 +502,11 @@ onMounted(loadSearchOptions);
 }
 
 .advanced-search :deep(.p-panel) {
-    border-radius: 0.125rem;
+    border: none;
 }
 
 .advanced-search :deep(.p-panel-header) {
-    border-radius: 0.125rem 0.125rem 0 0;
+    padding: 0 1.0rem;
 }
 
 .advanced-search :deep(.p-panel-content) {
