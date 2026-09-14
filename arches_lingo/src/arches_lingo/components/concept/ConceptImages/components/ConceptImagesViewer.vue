@@ -2,13 +2,13 @@
 import { inject, ref, onMounted, computed } from "vue";
 import { useGettext } from "vue3-gettext";
 
-import Button from "primevue/button";
-import ConfirmDialog from "primevue/confirmdialog";
-import Image from "primevue/image";
-import Message from "primevue/message";
-import Skeleton from "primevue/skeleton";
-import Tag from "primevue/tag";
-import { useConfirm } from "primevue/useconfirm";
+import Button from "openvue/button";
+import ConfirmDialog from "openvue/confirmdialog";
+import Image from "openvue/image";
+import Message from "openvue/message";
+import Skeleton from "openvue/skeleton";
+import Tag from "openvue/tag";
+import { useConfirm } from "openvue/useconfirm";
 
 import GenericWidget from "@/arches_vue_components/generics/GenericWidget/GenericWidget.vue";
 

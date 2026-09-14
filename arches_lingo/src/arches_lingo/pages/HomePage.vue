@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from "vue";
 import { useGettext } from "vue3-gettext";
-import { useToast } from "primevue/usetoast";
+import { useToast } from "openvue/usetoast";
 
-import MultiSelect from "primevue/multiselect";
-import Message from "primevue/message";
-import Skeleton from "primevue/skeleton";
+import MultiSelect from "openvue/multiselect";
+import Message from "openvue/message";
+import Skeleton from "openvue/skeleton";
 
 import { fetchLanguages } from "@/arches_vue_components/widgets/api.ts";
 import {

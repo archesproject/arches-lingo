@@ -4,15 +4,15 @@ import { storeToRefs } from "pinia";
 import { useGettext } from "vue3-gettext";
 import { useRouter } from "vue-router";
 
-import Button from "primevue/button";
-import Popover from "primevue/popover";
+import Button from "openvue/button";
+import Popover from "openvue/popover";
 
 import UserInteractionMenu from "@/arches_lingo/components/header/PageHeader/components/UserInteraction/components/UserInteractionMenu/UserInteractionMenu.vue";
 
 import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 import { routeNames } from "@/arches_lingo/routes.ts";
 
-import type { PopoverMethods } from "primevue/popover";
+import type { PopoverMethods } from "openvue/popover";
 
 const { $gettext } = useGettext();
 const router = useRouter();

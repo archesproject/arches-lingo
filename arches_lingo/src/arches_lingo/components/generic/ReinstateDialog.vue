@@ -2,9 +2,9 @@
 import { computed, ref } from "vue";
 
 import { useGettext } from "vue3-gettext";
-import Button from "primevue/button";
-import Dialog from "primevue/dialog";
-import RadioButton from "primevue/radiobutton";
+import Button from "openvue/button";
+import Dialog from "openvue/dialog";
+import RadioButton from "openvue/radiobutton";
 
 import { INFO, SECONDARY } from "@/arches_lingo/constants.ts";
 

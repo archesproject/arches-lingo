@@ -1,4 +1,4 @@
-import { definePreset, palette } from "@primeuix/themes";
+import { definePreset, palette } from "@openvue/themes";
 import { ArchesPreset, DEFAULT_THEME } from "@/arches/themes/default.ts";
 import type { archesPreset } from "@/arches_lingo/types.ts";
 
@@ -187,7 +187,7 @@ export const LingoPreset = definePreset(ArchesPreset, {
             },
         },
         inputtext: {
-            // @ts-expect-error: primevue does have border on inputtext
+            // @ts-expect-error: openvue does have border on inputtext
             border: {
                 radius: "0.25rem",
             },

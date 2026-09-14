@@ -4,8 +4,8 @@ import { storeToRefs } from "pinia";
 import { useGettext } from "vue3-gettext";
 import { useRoute, useRouter } from "vue-router";
 
-import Button from "primevue/button";
-import Checkbox from "primevue/checkbox";
+import Button from "openvue/button";
+import Checkbox from "openvue/checkbox";
 
 import LifecycleStateBadge from "@/arches_lingo/components/generic/LifecycleStateBadge.vue";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";

@@ -2,12 +2,12 @@
 import { ref } from "vue";
 import { useGettext } from "vue3-gettext";
 
-import { useToast } from "primevue/usetoast";
-import Button from "primevue/button";
-import Dialog from "primevue/dialog";
-import InputText from "primevue/inputtext";
-import ProgressSpinner from "primevue/progressspinner";
-import RadioButton from "primevue/radiobutton";
+import { useToast } from "openvue/usetoast";
+import Button from "openvue/button";
+import Dialog from "openvue/dialog";
+import InputText from "openvue/inputtext";
+import ProgressSpinner from "openvue/progressspinner";
+import RadioButton from "openvue/radiobutton";
 
 import { exportThesaurus } from "@/arches_lingo/api.ts";
 import {

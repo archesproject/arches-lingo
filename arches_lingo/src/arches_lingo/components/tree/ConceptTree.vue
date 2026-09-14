@@ -10,7 +10,7 @@ import {
     watch,
 } from "vue";
 import type { Ref } from "vue";
-import Button from "primevue/button";
+import Button from "openvue/button";
 
 import {
     useRoute,
@@ -19,13 +19,13 @@ import {
     NavigationFailureType,
 } from "vue-router";
 import { useGettext } from "vue3-gettext";
-import { useToast } from "primevue/usetoast";
+import { useToast } from "openvue/usetoast";
 import { storeToRefs } from "pinia";
-import Skeleton from "primevue/skeleton";
-import InputText from "primevue/inputtext";
-import Message from "primevue/message";
+import Skeleton from "openvue/skeleton";
+import InputText from "openvue/inputtext";
+import Message from "openvue/message";
 
-import Tree from "primevue/tree";
+import Tree from "openvue/tree";
 
 import TreeRow from "@/arches_lingo/components/tree/components/TreeRow/TreeRow.vue";
 
@@ -58,8 +58,8 @@ import type {
     TreePassThroughMethodOptions,
     TreeExpandedKeys,
     TreeSelectionKeys,
-} from "primevue/tree";
-import type { TreeNode } from "primevue/treenode";
+} from "openvue/tree";
+import type { TreeNode } from "openvue/treenode";
 import type {
     IconLabels,
     LifecycleState,

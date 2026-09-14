@@ -3,9 +3,9 @@ import { ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useGettext } from "vue3-gettext";
 
-import { useToast } from "primevue/usetoast";
-import InputText from "primevue/inputtext";
-import Button from "primevue/button";
+import { useToast } from "openvue/usetoast";
+import InputText from "openvue/inputtext";
+import Button from "openvue/button";
 
 import { login } from "@/arches_lingo/api.ts";
 import { DEFAULT_ERROR_TOAST_LIFE, ERROR } from "@/arches_lingo/constants.ts";

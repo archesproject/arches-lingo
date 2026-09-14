@@ -4,15 +4,15 @@ import { useGettext } from "vue3-gettext";
 
 import { useEditLog } from "@/arches_lingo/composables/useEditLog.ts";
 
-import { useConfirm } from "primevue/useconfirm";
+import { useConfirm } from "openvue/useconfirm";
 import { useRouter } from "vue-router";
-import { useToast } from "primevue/usetoast";
+import { useToast } from "openvue/usetoast";
 import { storeToRefs } from "pinia";
 
-import Skeleton from "primevue/skeleton";
-import ConfirmDialog from "primevue/confirmdialog";
-import Dialog from "primevue/dialog";
-import Button from "primevue/button";
+import Skeleton from "openvue/skeleton";
+import ConfirmDialog from "openvue/confirmdialog";
+import Dialog from "openvue/dialog";
+import Button from "openvue/button";
 
 import ExportThesauri from "@/arches_lingo/components/scheme/SchemeHeader/components/ExportThesauri.vue";
 import LifecycleButtons from "@/arches_lingo/components/scheme/SchemeHeader/components/LifecycleButtons.vue";

@@ -2,11 +2,11 @@
 import { computed, inject, onMounted, ref, watch } from "vue";
 
 import { useGettext } from "vue3-gettext";
-import { useToast } from "primevue/usetoast";
+import { useToast } from "openvue/usetoast";
 import { storeToRefs } from "pinia";
 
-import Button from "primevue/button";
-import Skeleton from "primevue/skeleton";
+import Button from "openvue/button";
+import Skeleton from "openvue/skeleton";
 
 import ConceptHeaderToolbar from "@/arches_lingo/components/concept/ConceptHeader/components/ConceptHeaderToolbar.vue";
 import LifecycleStateBadge from "@/arches_lingo/components/generic/LifecycleStateBadge.vue";

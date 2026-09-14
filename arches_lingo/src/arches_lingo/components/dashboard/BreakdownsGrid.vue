@@ -2,10 +2,10 @@
 import { storeToRefs } from "pinia";
 import { useGettext } from "vue3-gettext";
 
-import Column from "primevue/column";
-import DataTable from "primevue/datatable";
-import Skeleton from "primevue/skeleton";
-import Tag from "primevue/tag";
+import Column from "openvue/column";
+import DataTable from "openvue/datatable";
+import Skeleton from "openvue/skeleton";
+import Tag from "openvue/tag";
 
 import type { DashboardStats } from "@/arches_lingo/types/dashboard.ts";
 
