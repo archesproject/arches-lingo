@@ -16,15 +16,14 @@ classifiers = [
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Framework :: Django",
-    "Framework :: Django :: 5.2",
+    "Framework :: Django :: 6.1",
     "Intended Audience :: Developers",
     "Intended Audience :: Information Technology",
 ]
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 dependencies = [
     "arches @ git+https://github.com/archesproject/arches.git@cbyrd/12934-migrate-to-openvue",
     "arches_vue_components @ git+https://github.com/archesproject/arches-vue-components.git@cbyrd/migrate-to-openvue",

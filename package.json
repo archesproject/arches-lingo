@@ -23,7 +23,6 @@
         "vitest": "vitest --run --coverage"
     },
     "devDependencies": {
-        "arches-dev-dependencies": "archesproject/arches-dev-dependencies#dev/8.1.x",
         "globals": "17.8.0"
     },
     "dependencies": {
