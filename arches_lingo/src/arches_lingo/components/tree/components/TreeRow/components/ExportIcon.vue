@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { ref } from "vue";
 
-import Button from "primevue/button";
+import Button from "openvue/button";
 
 import ExportThesauri from "@/arches_lingo/components/scheme/SchemeHeader/components/ExportThesauri.vue";
 import { NEW } from "@/arches_lingo/constants.ts";
 
-import type { TreeNode } from "primevue/treenode";
+import type { TreeNode } from "openvue/treenode";
 
 const { node, exportLabel } = defineProps<{
     node: TreeNode;

@@ -2,11 +2,11 @@
 import { useRouter } from "vue-router";
 import { useGettext } from "vue3-gettext";
 
-import Column from "primevue/column";
-import DataTable from "primevue/datatable";
-import Paginator from "primevue/paginator";
-import Select from "primevue/select";
-import Skeleton from "primevue/skeleton";
+import Column from "openvue/column";
+import DataTable from "openvue/datatable";
+import Paginator from "openvue/paginator";
+import Select from "openvue/select";
+import Skeleton from "openvue/skeleton";
 import { storeToRefs } from "pinia";
 
 import { routeNames } from "@/arches_lingo/routes.ts";

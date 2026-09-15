@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from "vue";
 
-import Message from "primevue/message";
-import Skeleton from "primevue/skeleton";
+import Message from "openvue/message";
+import Skeleton from "openvue/skeleton";
 
 import SchemeLabelEditor from "@/arches_lingo/components/scheme/SchemeLabel/components/SchemeLabelEditor.vue";
 import SchemeLabelViewer from "@/arches_lingo/components/scheme/SchemeLabel/components/SchemeLabelViewer.vue";

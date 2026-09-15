@@ -2,8 +2,8 @@
 import { inject, computed } from "vue";
 import { useGettext } from "vue3-gettext";
 
-import Button from "primevue/button";
-import Tag from "primevue/tag";
+import Button from "openvue/button";
+import Tag from "openvue/tag";
 
 import MetaStringViewer from "@/arches_lingo/components/generic/MetaStringViewer.vue";
 

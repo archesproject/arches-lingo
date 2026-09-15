@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 
-import Tag from "primevue/tag";
+import Tag from "openvue/tag";
 
 import {
     DRAFT_LIFECYCLE_STATE_ID,

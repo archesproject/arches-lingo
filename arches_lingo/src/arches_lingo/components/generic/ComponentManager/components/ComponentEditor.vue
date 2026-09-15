@@ -10,8 +10,8 @@ import {
 
 import { useGettext } from "vue3-gettext";
 
-import Button from "primevue/button";
-import { useConfirm } from "primevue/useconfirm";
+import Button from "openvue/button";
+import { useConfirm } from "openvue/useconfirm";
 
 import { CLOSE, MAXIMIZE, MINIMIZE } from "@/arches_lingo/constants.ts";
 import {
@@ -103,7 +103,7 @@ function attemptFocusFirstField(attemptsRemaining: number) {
             attemptFocusFirstField(attemptsRemaining - 1),
         );
     } else {
-        // @ts-expect-error This is an error in PrimeVue types
+        // @ts-expect-error This is an error in OpenVue types
         toggleSizeButton.value!.$el.focus();
     }
 }

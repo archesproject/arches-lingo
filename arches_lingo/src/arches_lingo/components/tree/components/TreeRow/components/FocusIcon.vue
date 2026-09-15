@@ -2,9 +2,9 @@
 import { computed } from "vue";
 import { useRoute } from "vue-router";
 
-import Button from "primevue/button";
+import Button from "openvue/button";
 
-import type { TreeNode } from "primevue/treenode";
+import type { TreeNode } from "openvue/treenode";
 
 import { NEW } from "@/arches_lingo/constants.ts";
 
