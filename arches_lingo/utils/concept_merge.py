@@ -14,6 +14,7 @@ from collections import defaultdict
 from http import HTTPStatus
 
 from django.db import transaction
+from django.db.models import Q
 from django.utils.translation import gettext as _
 
 from arches.app.models.models import NodeGroup, TileModel
@@ -45,13 +46,22 @@ from arches_lingo.const import (
     URI_NODEGROUP,
 )
 from arches_lingo.models import ConceptMerge
+from arches_lingo.utils.concept_builder import ConceptBuilder
 from arches_lingo.utils.concept_lifecycle import (
     EDITING_STATE_ID,
+    STRATEGY_REPARENT_TO_SURVIVOR,
+    VALID_STRATEGIES,
+    get_narrower_ids,
     get_scheme_id_if_top_concept,
+    retire_concept,
 )
 from arches_lingo.utils.scheme_lock import get_scheme_id_for_concept, is_scheme_locked
 
 SINGLE_CARDINALITY = "1"
+
+# Retiring the absorbed concept is part of the merge, so reparent_to_survivor is
+# offered alongside the strategies the standalone retire endpoint accepts.
+VALID_MERGE_RETIREMENT_STRATEGIES = VALID_STRATEGIES | {STRATEGY_REPARENT_TO_SURVIVOR}
 
 # Nodegroups an editor may never pull across from the absorbed concept.
 # uri is cardinality-1 and ConceptURILookupView resolves by exact tile match, so
@@ -312,6 +322,29 @@ def copy_tiles_to_survivor(
     return copied_tiles
 
 
+def demote_pref_label_tiles(tile_ids, edit_transaction_id):
+    """Retype existing appellative_status tiles from prefLabel to altLabel.
+
+    Needed when the editor picks the absorbed concept's preferred label for a
+    language: the survivor's own preferred label in that language has to step
+    down so that one preferred label per language still holds.
+    """
+    if not tile_ids:
+        return []
+
+    alt_label_tile_value = get_list_item_tile_value(ALT_LABEL_LIST_ITEM_ID)
+
+    demoted_tiles = []
+    for tile in Tile.objects.filter(
+        tileid__in=tile_ids, nodegroup_id=CONCEPT_NAME_NODEGROUP
+    ):
+        tile.data = {**tile.data, CONCEPT_NAME_TYPE_NODE: [alt_label_tile_value]}
+        tile.save(request=None, transaction_id=edit_transaction_id)
+        demoted_tiles.append(tile)
+
+    return demoted_tiles
+
+
 def write_reciprocal_exact_match_tiles(survivor, absorbed, edit_transaction_id):
     """Record a skos:exactMatch on each concept pointing at the other's URI.
 
@@ -359,7 +392,59 @@ def write_reciprocal_exact_match_tiles(survivor, absorbed, edit_transaction_id):
     return written_tiles
 
 
-def validate_merge(survivor, absorbed, selected_tile_ids, user_is_lingo_admin):
+def get_concept_merge_history(concept_id):
+    """Summarise every merge this concept took part in, newest first.
+
+    Direction is expressed from this concept's point of view: "absorbed" means it
+    took another concept's values in, "merged_into" means it was the one folded
+    away and its URI now points at the counterpart.
+    """
+    merges = list(
+        ConceptMerge.objects.filter(
+            Q(survivor_concept_id=concept_id) | Q(absorbed_concept_id=concept_id)
+        )
+    )
+    if not merges:
+        return []
+
+    counterpart_ids = [
+        str(
+            merge.absorbed_concept_id
+            if str(merge.survivor_concept_id) == str(concept_id)
+            else merge.survivor_concept_id
+        )
+        for merge in merges
+    ]
+
+    # Labels rather than the resource descriptor, so the client can pick the best
+    # one for the reader's language the same way every other concept name is chosen.
+    label_builder = ConceptBuilder(list(set(counterpart_ids)))
+    labels_by_concept_id = {
+        counterpart_id: [
+            label_builder.serialize_concept_label(label_tile)
+            for label_tile in label_builder.labels[counterpart_id]
+        ]
+        for counterpart_id in set(counterpart_ids)
+    }
+
+    history = []
+    for merge, counterpart_id in zip(merges, counterpart_ids):
+        is_survivor = str(merge.survivor_concept_id) == str(concept_id)
+        history.append(
+            {
+                "id": merge.pk,
+                "created": merge.created.isoformat(),
+                "direction": "absorbed" if is_survivor else "merged_into",
+                "counterpart_concept_id": counterpart_id,
+                "counterpart_concept_labels": labels_by_concept_id.get(
+                    counterpart_id, []
+                ),
+            }
+        )
+    return history
+
+
+def validate_merge(survivor, absorbed, selections, user_is_lingo_admin):
     """Raise ConceptMergeError if this merge may not proceed."""
     if str(survivor.pk) == str(absorbed.pk):
         raise ConceptMergeError(
@@ -406,7 +491,47 @@ def validate_merge(survivor, absorbed, selected_tile_ids, user_is_lingo_admin):
             status=HTTPStatus.CONFLICT,
         )
 
-    validate_selected_tiles(absorbed, selected_tile_ids)
+    validate_selected_tiles(absorbed, selections.get("tile_selections") or [])
+    validate_survivor_pref_label_demotions(
+        survivor, selections.get("survivor_pref_label_demotions") or []
+    )
+    validate_retirement(absorbed, selections)
+
+
+def validate_retirement(absorbed, selections):
+    if not selections.get("retire_absorbed_concept"):
+        return
+
+    retirement_strategy = selections.get("retirement_strategy")
+    if (
+        get_narrower_ids(str(absorbed.pk))
+        and retirement_strategy not in VALID_MERGE_RETIREMENT_STRATEGIES
+    ):
+        raise ConceptMergeError(
+            _("Strategy required"),
+            _(
+                "The concept being merged away has children. Choose how they "
+                "should be handled before retiring it."
+            ),
+        )
+
+
+def validate_survivor_pref_label_demotions(survivor, tile_ids):
+    demotable_tile_ids = {
+        str(tileid)
+        for tileid in TileModel.objects.filter(
+            resourceinstance_id=survivor.pk,
+            nodegroup_id=CONCEPT_NAME_NODEGROUP,
+        ).values_list("tileid", flat=True)
+    }
+
+    for tile_id in tile_ids:
+        if str(tile_id) not in demotable_tile_ids:
+            raise ConceptMergeError(
+                _("Cannot merge"),
+                _("Tile %(tileid)s is not a label of the surviving concept.")
+                % {"tileid": tile_id},
+            )
 
 
 def validate_selected_tiles(absorbed, selected_tile_ids):
@@ -444,8 +569,17 @@ def merge_concepts(survivor, absorbed, selections, user):
     pref_label_demotion_tile_ids = {
         str(tile_id) for tile_id in selections.get("pref_label_demotions") or []
     }
+    survivor_pref_label_demotion_tile_ids = {
+        str(tile_id)
+        for tile_id in selections.get("survivor_pref_label_demotions") or []
+    }
 
     with transaction.atomic():
+        # Demote first, so a surviving label that lost its language is already an
+        # altLabel by the time the absorbed preferred label is copied across.
+        demote_pref_label_tiles(
+            survivor_pref_label_demotion_tile_ids, edit_transaction_id
+        )
         copy_tiles_to_survivor(
             survivor,
             absorbed,
@@ -456,6 +590,16 @@ def merge_concepts(survivor, absorbed, selections, user):
 
         if selections.get("create_exact_match_tiles", True):
             write_reciprocal_exact_match_tiles(survivor, absorbed, edit_transaction_id)
+
+        # Retiring here rather than in a follow-up request means a failure anywhere
+        # in the merge rolls the retirement back with it, so the two concepts are
+        # never left half-merged.
+        if selections.get("retire_absorbed_concept"):
+            retire_concept(
+                absorbed,
+                selections.get("retirement_strategy"),
+                str(survivor.pk),
+            )
 
         return ConceptMerge.objects.create(
             survivor_concept_id=survivor.pk,

@@ -28,6 +28,10 @@ PUBLICLY_DEREFERENCEABLE_STATE_IDS = frozenset(
 STRATEGY_REPARENT = "reparent"
 STRATEGY_DELETE_CHILDREN = "delete_children"
 STRATEGY_ORPHAN = "orphan"
+# Only reachable from a merge: children move to the surviving concept rather than
+# up to the retiring concept's own parents, which is what an editor expects when
+# one concept has just been folded into another.
+STRATEGY_REPARENT_TO_SURVIVOR = "reparent_to_survivor"
 
 VALID_STRATEGIES = {STRATEGY_REPARENT, STRATEGY_DELETE_CHILDREN, STRATEGY_ORPHAN}
 
@@ -217,10 +221,21 @@ def delete_concept(concept: ResourceInstance, strategy: str | None):
     concept.delete()
 
 
-def retire_concept(concept: ResourceInstance, strategy: str | None):
+def retire_concept(
+    concept: ResourceInstance,
+    strategy: str | None,
+    reparent_target_id: str | None = None,
+):
     concept_id = str(concept.pk)
 
-    if strategy == STRATEGY_DELETE_CHILDREN:
+    if strategy == STRATEGY_REPARENT_TO_SURVIVOR and reparent_target_id:
+        reparent_children(
+            concept_id,
+            {str(reparent_target_id)},
+            get_scheme_id_if_top_concept(concept_id),
+        )
+
+    elif strategy == STRATEGY_DELETE_CHILDREN:
         descendant_ids = get_all_descendant_ids(concept_id)
         ResourceInstance.objects.filter(pk__in=descendant_ids).update(
             resource_instance_lifecycle_state_id=RETIRED_STATE_ID

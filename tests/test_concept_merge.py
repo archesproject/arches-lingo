@@ -1,6 +1,7 @@
 import json
 import uuid
 from http import HTTPStatus
+from unittest.mock import patch
 
 from django.contrib.auth.models import User
 from django.test import SimpleTestCase
@@ -11,6 +12,7 @@ from arches.app.models.models import EditLog, ResourceInstance, TileModel
 
 from arches_lingo.const import (
     ALT_LABEL_URI,
+    PREF_LABEL_URI,
     CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID,
     CLASSIFICATION_STATUS_NODEGROUP,
     CONCEPT_NAME_CONTENT_NODE,
@@ -32,11 +34,18 @@ from arches_lingo.const import (
     URI_NODEGROUP,
 )
 from arches_lingo.models import ConceptMerge
-from arches_lingo.utils.concept_lifecycle import DRAFT_STATE_ID, EDITING_STATE_ID
+from arches_lingo.utils.concept_lifecycle import (
+    DRAFT_STATE_ID,
+    EDITING_STATE_ID,
+    RETIRED_STATE_ID,
+    STRATEGY_REPARENT_TO_SURVIVOR,
+    get_broader_ids,
+)
 from arches_lingo.utils.concept_merge import (
     ConceptMergeError,
     build_tile_identity_key,
     copy_tiles_to_survivor,
+    get_concept_merge_history,
     get_list_item_tile_value,
     merge_concepts,
     normalize_node_value,
@@ -152,6 +161,13 @@ class ConceptMergeTestCase(ViewTests):
         return TileModel.objects.filter(
             resourceinstance=self.survivor, nodegroup_id=nodegroup_id
         )
+
+    def assertMergeRejected(self, survivor, absorbed, status=None, **selections):
+        with self.assertRaises(ConceptMergeError) as raised:
+            validate_merge(survivor, absorbed, selections, False)
+        if status is not None:
+            self.assertEqual(raised.exception.status, status)
+        return raised.exception
 
 
 class CopyTilesToSurvivorTests(ConceptMergeTestCase):
@@ -299,15 +315,6 @@ class WriteReciprocalExactMatchTilesTests(ConceptMergeTestCase):
 
 
 class ValidateMergeTests(ConceptMergeTestCase):
-    def assertMergeRejected(
-        self, survivor, absorbed, selected_tile_ids=(), status=None
-    ):
-        with self.assertRaises(ConceptMergeError) as raised:
-            validate_merge(survivor, absorbed, list(selected_tile_ids), False)
-        if status is not None:
-            self.assertEqual(raised.exception.status, status)
-        return raised.exception
-
     def test_concept_cannot_be_merged_into_itself(self):
         self.assertMergeRejected(self.survivor, self.survivor)
 
@@ -348,7 +355,7 @@ class ValidateMergeTests(ConceptMergeTestCase):
         )
 
         error = self.assertMergeRejected(
-            self.survivor, self.absorbed, [str(uri_tile.tileid)]
+            self.survivor, self.absorbed, tile_selections=[str(uri_tile.tileid)]
         )
         self.assertIn("uri", error.message)
 
@@ -356,12 +363,34 @@ class ValidateMergeTests(ConceptMergeTestCase):
         foreign_tile = self.add_statement_tile(self.concepts[3], "Elsewhere.")
 
         self.assertMergeRejected(
-            self.survivor, self.absorbed, [str(foreign_tile.tileid)]
+            self.survivor, self.absorbed, tile_selections=[str(foreign_tile.tileid)]
+        )
+
+    def test_survivor_label_demotions_must_belong_to_the_survivor(self):
+        absorbed_label = self.add_label_tile(
+            self.absorbed, "Theirs", self.pref_label_value
+        )
+
+        self.assertMergeRejected(
+            self.survivor,
+            self.absorbed,
+            survivor_pref_label_demotions=[str(absorbed_label.tileid)],
         )
 
     def test_valid_merge_passes(self):
         source_tile = self.add_statement_tile(self.absorbed, "Copy me.")
-        validate_merge(self.survivor, self.absorbed, [str(source_tile.tileid)], False)
+        survivor_label = self.add_label_tile(
+            self.survivor, "Mine", self.pref_label_value
+        )
+        validate_merge(
+            self.survivor,
+            self.absorbed,
+            {
+                "tile_selections": [str(source_tile.tileid)],
+                "survivor_pref_label_demotions": [str(survivor_label.tileid)],
+            },
+            False,
+        )
 
 
 class MergeConceptsTests(ConceptMergeTestCase):
@@ -400,6 +429,181 @@ class MergeConceptsTests(ConceptMergeTestCase):
         self.assertFalse(
             TileModel.objects.filter(nodegroup_id=MATCH_STATUS_NODEGROUP).exists()
         )
+
+
+class DemoteSurvivorPrefLabelTests(ConceptMergeTestCase):
+    def test_survivor_pref_label_steps_down_before_the_absorbed_one_arrives(self):
+        survivor_label = self.add_label_tile(
+            self.survivor, "Kept spelling", self.pref_label_value
+        )
+        absorbed_label = self.add_label_tile(
+            self.absorbed, "Preferred spelling", self.pref_label_value
+        )
+
+        merge_concepts(
+            self.survivor,
+            self.absorbed,
+            {
+                "absorbed_concept_id": str(self.absorbed.pk),
+                "tile_selections": [str(absorbed_label.tileid)],
+                "survivor_pref_label_demotions": [str(survivor_label.tileid)],
+                "create_exact_match_tiles": False,
+            },
+            self.admin,
+        )
+
+        survivor_label.refresh_from_db()
+        self.assertEqual(
+            normalize_node_value(survivor_label.data[CONCEPT_NAME_TYPE_NODE]),
+            (ALT_LABEL_URI,),
+        )
+        copied_label = self.survivor_tiles(CONCEPT_NAME_NODEGROUP).get(
+            data__contains={CONCEPT_NAME_CONTENT_NODE: "Preferred spelling"}
+        )
+        self.assertEqual(
+            normalize_node_value(copied_label.data[CONCEPT_NAME_TYPE_NODE]),
+            (PREF_LABEL_URI,),
+        )
+
+
+class ConceptMergeHistoryTests(ConceptMergeTestCase):
+    def test_history_reads_from_both_sides_of_a_merge(self):
+        merge_concepts(
+            self.survivor,
+            self.absorbed,
+            {
+                "absorbed_concept_id": str(self.absorbed.pk),
+                "create_exact_match_tiles": False,
+            },
+            self.admin,
+        )
+
+        survivor_history = get_concept_merge_history(self.survivor.pk)
+        absorbed_history = get_concept_merge_history(self.absorbed.pk)
+
+        self.assertEqual(survivor_history[0]["direction"], "absorbed")
+        self.assertEqual(
+            survivor_history[0]["counterpart_concept_id"], str(self.absorbed.pk)
+        )
+        self.assertEqual(absorbed_history[0]["direction"], "merged_into")
+        self.assertEqual(
+            absorbed_history[0]["counterpart_concept_id"], str(self.survivor.pk)
+        )
+
+    def test_history_carries_labels_rather_than_the_resource_descriptor(self):
+        merge_concepts(
+            self.survivor,
+            self.absorbed,
+            {
+                "absorbed_concept_id": str(self.absorbed.pk),
+                "create_exact_match_tiles": False,
+            },
+            self.admin,
+        )
+
+        [entry] = get_concept_merge_history(self.survivor.pk)
+
+        self.assertTrue(entry["counterpart_concept_labels"])
+        label = entry["counterpart_concept_labels"][0]
+        self.assertEqual(label["value"], "Concept 3")
+        self.assertEqual(label["language_id"], "en")
+        self.assertEqual(label["valuetype_id"], "prefLabel")
+
+    def test_concept_never_merged_has_no_history(self):
+        self.assertEqual(get_concept_merge_history(self.concepts[3].pk), [])
+
+
+class MergeRetirementTests(ConceptMergeTestCase):
+    """Retirement is part of the merge transaction, not a follow-up request."""
+
+    def give_absorbed_a_child(self):
+        child = self.concepts[3]
+        TileModel.objects.filter(
+            resourceinstance=child, nodegroup_id=CLASSIFICATION_STATUS_NODEGROUP
+        ).delete()
+        TileModel.objects.create(
+            resourceinstance=child,
+            nodegroup_id=CLASSIFICATION_STATUS_NODEGROUP,
+            data={
+                CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID: [
+                    {"resourceId": str(self.absorbed.pk)}
+                ]
+            },
+        )
+        return child
+
+    def test_merge_retires_and_hands_children_to_the_survivor(self):
+        child = self.give_absorbed_a_child()
+        source_tile = self.add_statement_tile(self.absorbed, "Carried over.")
+
+        merge_concepts(
+            self.survivor,
+            self.absorbed,
+            {
+                "absorbed_concept_id": str(self.absorbed.pk),
+                "tile_selections": [str(source_tile.tileid)],
+                "create_exact_match_tiles": False,
+                "retire_absorbed_concept": True,
+                "retirement_strategy": STRATEGY_REPARENT_TO_SURVIVOR,
+            },
+            self.admin,
+        )
+
+        self.assertEqual(get_broader_ids(str(child.pk)), {str(self.survivor.pk)})
+        self.absorbed.refresh_from_db()
+        self.assertEqual(
+            self.absorbed.resource_instance_lifecycle_state_id, RETIRED_STATE_ID
+        )
+        self.assertEqual(self.survivor_tiles(STATEMENT_NODEGROUP).count(), 1)
+
+    def test_absorbed_concept_stays_active_when_retirement_is_declined(self):
+        merge_concepts(
+            self.survivor,
+            self.absorbed,
+            {
+                "absorbed_concept_id": str(self.absorbed.pk),
+                "create_exact_match_tiles": False,
+                "retire_absorbed_concept": False,
+            },
+            self.admin,
+        )
+
+        self.absorbed.refresh_from_db()
+        self.assertEqual(
+            self.absorbed.resource_instance_lifecycle_state_id, EDITING_STATE_ID
+        )
+
+    def test_retiring_a_parent_concept_requires_a_strategy(self):
+        self.give_absorbed_a_child()
+
+        self.assertMergeRejected(
+            self.survivor,
+            self.absorbed,
+            retire_absorbed_concept=True,
+        )
+
+    def test_a_failed_retirement_rolls_the_whole_merge_back(self):
+        source_tile = self.add_statement_tile(self.absorbed, "Should not survive.")
+
+        with patch(
+            "arches_lingo.utils.concept_merge.retire_concept",
+            side_effect=RuntimeError("retirement blew up"),
+        ):
+            with self.assertRaises(RuntimeError):
+                merge_concepts(
+                    self.survivor,
+                    self.absorbed,
+                    {
+                        "absorbed_concept_id": str(self.absorbed.pk),
+                        "tile_selections": [str(source_tile.tileid)],
+                        "create_exact_match_tiles": False,
+                        "retire_absorbed_concept": True,
+                    },
+                    self.admin,
+                )
+
+        self.assertEqual(self.survivor_tiles(STATEMENT_NODEGROUP).count(), 0)
+        self.assertFalse(ConceptMerge.objects.exists())
 
 
 class ConceptMergeViewTests(ConceptMergeTestCase):

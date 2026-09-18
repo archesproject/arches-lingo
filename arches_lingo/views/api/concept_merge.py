@@ -8,10 +8,11 @@ from django.views.generic import View
 from arches.app.models.models import ResourceInstance
 from arches.app.utils.response import JSONErrorResponse, JSONResponse
 
-from arches_lingo.mixins.permissions import LingoEditorMixin
+from arches_lingo.mixins.permissions import AnonymousAccessMixin, LingoEditorMixin
 from arches_lingo.permissions import is_lingo_admin
 from arches_lingo.utils.concept_merge import (
     ConceptMergeError,
+    get_concept_merge_history,
     merge_concepts,
     validate_merge,
 )
@@ -51,12 +52,7 @@ class ConceptMergeView(LingoEditorMixin, View):
             )
 
         try:
-            validate_merge(
-                survivor,
-                absorbed,
-                selections.get("tile_selections") or [],
-                is_lingo_admin(request.user),
-            )
+            validate_merge(survivor, absorbed, selections, is_lingo_admin(request.user))
             concept_merge = merge_concepts(survivor, absorbed, selections, request.user)
         except ConceptMergeError as error:
             return JSONErrorResponse(
@@ -72,3 +68,8 @@ class ConceptMergeView(LingoEditorMixin, View):
                 "edit_transaction_id": str(concept_merge.edit_transaction_id),
             }
         )
+
+
+class ConceptMergeHistoryView(AnonymousAccessMixin, View):
+    def get(self, request, pk):
+        return JSONResponse({"merges": get_concept_merge_history(pk)})
