@@ -1,29 +1,34 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref } from "vue";
 
 import { useGettext } from "vue3-gettext";
+import Message from "primevue/message";
 import RadioButton from "primevue/radiobutton";
 import Skeleton from "primevue/skeleton";
 
 import {
+    ERROR,
     STRATEGY_DELETE_CHILDREN,
     STRATEGY_REPARENT,
     STRATEGY_REPARENT_TO_SURVIVOR,
 } from "@/arches_lingo/constants.ts";
 import { useConceptStore } from "@/arches_lingo/stores/useConceptStore.ts";
 
-import type { Concept, DeleteConceptStrategy } from "@/arches_lingo/types.ts";
+import type { Concept, MergeRetirementStrategy } from "@/arches_lingo/types.ts";
 
 const { absorbedConceptId, absorbedLabel, survivorLabel, retirementStrategy } =
     defineProps<{
         absorbedConceptId: string;
         absorbedLabel: string | undefined;
         survivorLabel: string | undefined;
-        retirementStrategy: DeleteConceptStrategy;
+        retirementStrategy: MergeRetirementStrategy;
     }>();
 
 const emit = defineEmits<{
-    (event: "update:retirementStrategy", strategy: DeleteConceptStrategy): void;
+    (
+        event: "update:retirementStrategy",
+        strategy: MergeRetirementStrategy,
+    ): void;
 }>();
 
 const { $gettext } = useGettext();
@@ -31,6 +36,7 @@ const conceptStore = useConceptStore();
 
 const children = ref<Concept[]>([]);
 const isFetchingChildren = ref(true);
+const fetchError = ref<string | null>(null);
 
 const hasChildren = computed(function () {
     return children.value.length > 0;
@@ -49,22 +55,24 @@ const reparentToSurvivorDesc = computed(function () {
     });
 });
 
-// The merge just gave the survivor everything this concept held, so handing it
-// the children too is the expected outcome.
-watch(
-    hasChildren,
-    function (conceptHasChildren) {
-        if (conceptHasChildren && !retirementStrategy) {
-            emit("update:retirementStrategy", STRATEGY_REPARENT_TO_SURVIVOR);
-        }
-    },
-    { immediate: true },
-);
+// Without the children there is no way to know whether a choice is even called
+// for, so the failure is shown rather than presenting an empty section. The merge
+// stays available: the server re-checks for children and applies the default the
+// dialog is already carrying.
+const fetchErrorText = computed(function () {
+    return $gettext(
+        'Could not check whether "%{name}" has child concepts. Any children it has will be attached to the surviving concept.',
+        { name: absorbedLabel ?? "" },
+    );
+});
 
 onMounted(async () => {
     try {
         await conceptStore.initialize();
         children.value = await conceptStore.loadChildren(absorbedConceptId);
+    } catch (error) {
+        fetchError.value =
+            error instanceof Error ? error.message : String(error);
     } finally {
         isFetchingChildren.value = false;
     }
@@ -78,6 +86,14 @@ defineExpose({ hasChildren });
         v-if="isFetchingChildren"
         class="loading-skeleton"
     />
+
+    <Message
+        v-else-if="fetchError"
+        :severity="ERROR"
+        :closable="false"
+    >
+        {{ fetchErrorText }}
+    </Message>
 
     <div
         v-else-if="hasChildren"

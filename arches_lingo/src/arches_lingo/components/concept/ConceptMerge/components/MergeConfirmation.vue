@@ -9,7 +9,7 @@ import { INFO, WARN } from "@/arches_lingo/constants.ts";
 
 import MergeRetirementOptions from "@/arches_lingo/components/concept/ConceptMerge/components/MergeRetirementOptions.vue";
 
-import type { DeleteConceptStrategy } from "@/arches_lingo/types.ts";
+import type { MergeRetirementStrategy } from "@/arches_lingo/types.ts";
 import type { MergeSectionSummary } from "@/arches_lingo/components/concept/ConceptMerge/types.ts";
 
 const { survivorLabel, absorbedLabel, sectionSummaries } = defineProps<{
@@ -19,13 +19,16 @@ const { survivorLabel, absorbedLabel, sectionSummaries } = defineProps<{
     sectionSummaries: MergeSectionSummary[];
     createExactMatchTiles: boolean;
     retireAbsorbedConcept: boolean;
-    retirementStrategy: DeleteConceptStrategy;
+    retirementStrategy: MergeRetirementStrategy;
 }>();
 
 const emit = defineEmits<{
     (event: "update:createExactMatchTiles", value: boolean): void;
     (event: "update:retireAbsorbedConcept", value: boolean): void;
-    (event: "update:retirementStrategy", strategy: DeleteConceptStrategy): void;
+    (
+        event: "update:retirementStrategy",
+        strategy: MergeRetirementStrategy,
+    ): void;
 }>();
 
 const { $gettext } = useGettext();

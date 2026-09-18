@@ -29,6 +29,8 @@ const LABEL_SECTION: MergeSection = {
     ],
 };
 
+const SURVIVOR_ID = "survivor-concept-id";
+
 const TYPE_SECTION: MergeSection = {
     nodegroupAlias: "type",
     cardinality: "1",
@@ -133,6 +135,7 @@ describe("buildSectionComparison", () => {
                 labelTile("absorbed-1", "Cloth"),
                 labelTile("absorbed-2", "Fabric"),
             ],
+            SURVIVOR_ID,
         );
 
         const [duplicate, novel] = comparison.absorbedTileOptions;
@@ -147,6 +150,7 @@ describe("buildSectionComparison", () => {
             TYPE_SECTION,
             [labelTile("survivor-type", "guide term")],
             [labelTile("absorbed-type", "concept")],
+            SURVIVOR_ID,
         );
         expect(comparison.absorbedTileOptions[0].isSelected).toBe(false);
     });
@@ -156,6 +160,7 @@ describe("buildSectionComparison", () => {
             TYPE_SECTION,
             [],
             [labelTile("absorbed-type", "concept")],
+            SURVIVOR_ID,
         );
         expect(comparison.absorbedTileOptions[0].isSelected).toBe(true);
     });
@@ -167,6 +172,7 @@ describe("findPrefLabelConflicts", () => {
             LABEL_SECTION,
             [labelTile("survivor-1", "Cloth")],
             [labelTile("absorbed-1", "Fabric")],
+            SURVIVOR_ID,
         );
 
         const conflicts = findPrefLabelConflicts(
@@ -187,6 +193,7 @@ describe("findPrefLabelConflicts", () => {
             LABEL_SECTION,
             [labelTile("survivor-1", "Cloth")],
             [labelTile("absorbed-1", "Fabric", "en", SKOS_ALT_LABEL_URI)],
+            SURVIVOR_ID,
         );
         expect(
             findPrefLabelConflicts(
@@ -199,6 +206,7 @@ describe("findPrefLabelConflicts", () => {
             LABEL_SECTION,
             [labelTile("survivor-1", "Cloth")],
             [labelTile("absorbed-1", "Fabric")],
+            SURVIVOR_ID,
         );
         deselectedComparison.absorbedTileOptions[0].isSelected = false;
         expect(
@@ -214,6 +222,7 @@ describe("findPrefLabelConflicts", () => {
             LABEL_SECTION,
             [labelTile("survivor-1", "Cloth", "en")],
             [labelTile("absorbed-1", "Tissu", "fr")],
+            SURVIVOR_ID,
         );
         expect(
             findPrefLabelConflicts(
@@ -233,6 +242,7 @@ describe("buildMergePayload", () => {
                 labelTile("absorbed-1", "Fabric"),
                 labelTile("absorbed-2", "Weave"),
             ],
+            SURVIVOR_ID,
         );
         const conflicts = findPrefLabelConflicts(
             comparison.survivorTiles,
@@ -265,6 +275,7 @@ describe("buildMergePayload", () => {
             LABEL_SECTION,
             [labelTile("survivor-1", "Cloth")],
             [labelTile("absorbed-1", "Fabric")],
+            SURVIVOR_ID,
         );
         const conflicts = findPrefLabelConflicts(
             comparison.survivorTiles,
@@ -293,6 +304,7 @@ describe("buildMergePayload", () => {
             LABEL_SECTION,
             [],
             [labelTile("absorbed-1", "Fabric")],
+            SURVIVOR_ID,
         );
 
         const payload = buildMergePayload(
@@ -335,6 +347,42 @@ function broaderTile(tileid: string, ...parentIds: string[]): MergeTile {
     };
 }
 
+describe("buildSectionComparison self references", () => {
+    it("drops a broader tile that names only the survivor", () => {
+        const comparison = buildSectionComparison(
+            BROADER_SECTION,
+            [],
+            [broaderTile("absorbed-broader", SURVIVOR_ID)],
+            SURVIVOR_ID,
+        );
+
+        expect(comparison.absorbedTileOptions).toEqual([]);
+    });
+
+    it("keeps a broader tile that also names another parent", () => {
+        const comparison = buildSectionComparison(
+            BROADER_SECTION,
+            [],
+            [broaderTile("absorbed-broader", SURVIVOR_ID, "other-parent")],
+            SURVIVOR_ID,
+        );
+
+        expect(comparison.absorbedTileOptions).toHaveLength(1);
+        expect(comparison.absorbedTileOptions[0].isSelected).toBe(true);
+    });
+
+    it("keeps a broader tile that has nothing to do with the survivor", () => {
+        const comparison = buildSectionComparison(
+            BROADER_SECTION,
+            [],
+            [broaderTile("absorbed-broader", "other-parent")],
+            SURVIVOR_ID,
+        );
+
+        expect(comparison.absorbedTileOptions).toHaveLength(1);
+    });
+});
+
 describe("getReferencedResourceIds", () => {
     it("pulls resource ids out of a reference node", () => {
         expect(
@@ -358,6 +406,7 @@ describe("collectReferencedConceptIds", () => {
             BROADER_SECTION,
             [broaderTile("survivor-1", "shared-parent")],
             [broaderTile("absorbed-1", "shared-parent", "other-parent")],
+            SURVIVOR_ID,
         );
 
         expect(collectReferencedConceptIds([comparison]).sort()).toEqual([
@@ -371,6 +420,7 @@ describe("collectReferencedConceptIds", () => {
             LABEL_SECTION,
             [labelTile("survivor-1", "Cloth")],
             [labelTile("absorbed-1", "Fabric")],
+            SURVIVOR_ID,
         );
         expect(collectReferencedConceptIds([comparison])).toEqual([]);
     });

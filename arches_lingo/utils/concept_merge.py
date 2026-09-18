@@ -63,12 +63,17 @@ SINGLE_CARDINALITY = "1"
 # offered alongside the strategies the standalone retire endpoint accepts.
 VALID_MERGE_RETIREMENT_STRATEGIES = VALID_STRATEGIES | {STRATEGY_REPARENT_TO_SURVIVOR}
 
-# Nodegroups an editor may never pull across from the absorbed concept.
+# Nodegroups an editor may never pull across from the absorbed concept. This must
+# stay in step with MERGE_SECTIONS on the client, which offers everything else.
 # uri is cardinality-1 and ConceptURILookupView resolves by exact tile match, so
 # two concepts must never carry the same one. identifier is allocated per scheme
 # by ConceptIdentifierCounter and would misrepresent the survivor. part_of_scheme
 # is always identical, since merges are restricted to a single scheme.
-EXCLUDED_NODEGROUP_ALIASES = frozenset({"uri", "identifier", "part_of_scheme"})
+# data_assignment records who asserted the absorbed concept's values and when,
+# which does not transfer to the survivor any more than an identifier does.
+EXCLUDED_NODEGROUP_ALIASES = frozenset(
+    {"uri", "identifier", "part_of_scheme", "data_assignment"}
+)
 
 # Node values that together identify a tile's content, used to skip copying a
 # tile the survivor already holds. Nodegroups absent here are never deduplicated.
@@ -94,6 +99,17 @@ IDENTITY_NODES_BY_NODEGROUP = {
         MATCH_STATUS_COMPARATE_NODE,
         MATCH_STATUS_RELATION_NODE,
     ),
+}
+
+# Resource-instance nodes on a copied tile that may name the survivor itself:
+# the absorbed concept's broader tile when it is a child of the survivor, or a
+# relation recorded between the two. Copied verbatim these leave the survivor
+# pointing at itself, so the reference is dropped on the way across.
+SELF_REFERENCE_NODES_BY_NODEGROUP = {
+    CLASSIFICATION_STATUS_NODEGROUP: (
+        CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID,
+    ),
+    RELATION_STATUS_NODEGROUP: (RELATION_STATUS_ASCRIBED_COMPARATE_NODEID,),
 }
 
 
@@ -167,6 +183,38 @@ def build_copied_tile_data(source_tile, should_demote_pref_label, alt_label_tile
     if should_demote_pref_label:
         tile_data[CONCEPT_NAME_TYPE_NODE] = [alt_label_tile_value]
     return tile_data
+
+
+def strip_self_references(nodegroup_id, tile_data, survivor_id):
+    """Drop references to the survivor from a tile copied off the absorbed concept.
+
+    Returns None when a reference node is left empty, because a tile whose only
+    content was the relationship between the two concepts has nothing left to say
+    once that relationship has been dissolved by the merge.
+    """
+    reference_node_ids = SELF_REFERENCE_NODES_BY_NODEGROUP.get(str(nodegroup_id))
+    if not reference_node_ids:
+        return tile_data
+
+    stripped_tile_data = dict(tile_data)
+    for node_id in reference_node_ids:
+        node_value = stripped_tile_data.get(node_id)
+        if not isinstance(node_value, list):
+            continue
+
+        remaining_references = [
+            entry
+            for entry in node_value
+            if not (
+                isinstance(entry, dict)
+                and str(entry.get("resourceId")) == str(survivor_id)
+            )
+        ]
+        if not remaining_references:
+            return None
+        stripped_tile_data[node_id] = remaining_references
+
+    return stripped_tile_data
 
 
 def create_tile_on_concept(
@@ -286,6 +334,12 @@ def copy_tiles_to_survivor(
             str(selected_tile_id) in pref_label_demotion_tile_ids,
             alt_label_tile_value,
         )
+        tile_data = strip_self_references(
+            source_tile.nodegroup_id, tile_data, survivor.pk
+        )
+        if tile_data is None:
+            continue
+
         identity_key = build_tile_identity_key(source_tile.nodegroup_id, tile_data)
         if identity_key is not None and identity_key in survivor_identity_keys:
             continue
@@ -492,8 +546,15 @@ def validate_merge(survivor, absorbed, selections, user_is_lingo_admin):
         )
 
     validate_selected_tiles(absorbed, selections.get("tile_selections") or [])
-    validate_survivor_pref_label_demotions(
-        survivor, selections.get("survivor_pref_label_demotions") or []
+    validate_pref_label_demotions(
+        survivor,
+        selections.get("survivor_pref_label_demotions") or [],
+        _("Tile %(tileid)s is not a label of the surviving concept."),
+    )
+    validate_pref_label_demotions(
+        absorbed,
+        selections.get("pref_label_demotions") or [],
+        _("Tile %(tileid)s is not a label of the absorbed concept."),
     )
     validate_retirement(absorbed, selections)
 
@@ -516,11 +577,16 @@ def validate_retirement(absorbed, selections):
         )
 
 
-def validate_survivor_pref_label_demotions(survivor, tile_ids):
+def validate_pref_label_demotions(concept, tile_ids, error_message):
+    """Reject any demotion that does not name a label tile of the given concept.
+
+    Both sides of a merge can have a preferred label stepped down, so the same
+    check runs twice with the message that names the side it was called for.
+    """
     demotable_tile_ids = {
         str(tileid)
         for tileid in TileModel.objects.filter(
-            resourceinstance_id=survivor.pk,
+            resourceinstance_id=concept.pk,
             nodegroup_id=CONCEPT_NAME_NODEGROUP,
         ).values_list("tileid", flat=True)
     }
@@ -528,9 +594,7 @@ def validate_survivor_pref_label_demotions(survivor, tile_ids):
     for tile_id in tile_ids:
         if str(tile_id) not in demotable_tile_ids:
             raise ConceptMergeError(
-                _("Cannot merge"),
-                _("Tile %(tileid)s is not a label of the surviving concept.")
-                % {"tileid": tile_id},
+                _("Cannot merge"), error_message % {"tileid": tile_id}
             )
 
 

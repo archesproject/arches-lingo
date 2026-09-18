@@ -90,10 +90,62 @@ export function extractSectionTiles(
     return [sectionData as MergeTile];
 }
 
+export function getReferencedResourceIds(
+    tile: MergeTile,
+    nodeAlias: string,
+): string[] {
+    const nodeValue = getNodeData(tile, nodeAlias)?.node_value;
+    if (!Array.isArray(nodeValue)) {
+        return [];
+    }
+    return nodeValue
+        .map((entry) => (entry as { resourceId?: string })?.resourceId)
+        .filter((resourceId): resourceId is string => Boolean(resourceId));
+}
+
+// Resource-instance nodes on an absorbed tile that can name the survivor itself.
+// Mirrors SELF_REFERENCE_NODES_BY_NODEGROUP in the merge service.
+const SELF_REFERENCE_NODE_ALIASES_BY_SECTION: Record<string, string[]> = {
+    classification_status: ["classification_status_ascribed_classification"],
+    relation_status: ["relation_status_ascribed_comparate"],
+};
+
+/**
+ * True when a tile says nothing beyond the relationship the merge dissolves.
+ *
+ * The absorbed concept's broader tile naming only the survivor, or a relation
+ * recorded solely between the two, would make the survivor its own parent or its
+ * own relative. The server drops these on the way across, so they are not offered
+ * here. A tile that names other concepts as well is still worth taking: the
+ * server keeps those references and strips only the survivor's.
+ */
+export function isSelfReferenceOnly(
+    section: MergeSection,
+    tile: MergeTile,
+    survivorConceptId: string,
+): boolean {
+    const nodeAliases =
+        SELF_REFERENCE_NODE_ALIASES_BY_SECTION[section.nodegroupAlias];
+    if (!nodeAliases) {
+        return false;
+    }
+
+    return nodeAliases.some(function (nodeAlias) {
+        const referencedIds = getReferencedResourceIds(tile, nodeAlias);
+        return (
+            referencedIds.length > 0 &&
+            referencedIds.every(
+                (resourceId) => resourceId === survivorConceptId,
+            )
+        );
+    });
+}
+
 export function buildSectionComparison(
     section: MergeSection,
     survivorTiles: MergeTile[],
     absorbedTiles: MergeTile[],
+    survivorConceptId: string,
 ): SectionComparison {
     const survivorIdentityKeys = new Set(
         survivorTiles
@@ -103,20 +155,25 @@ export function buildSectionComparison(
             ),
     );
 
-    const absorbedTileOptions = absorbedTiles.map((tile) => {
-        const identityKey = buildTileIdentityKey(section, tile);
-        const alreadyOnSurvivor =
-            identityKey !== null && survivorIdentityKeys.has(identityKey);
+    const absorbedTileOptions = absorbedTiles
+        .filter(
+            (tile) => !isSelfReferenceOnly(section, tile, survivorConceptId),
+        )
+        .map((tile) => {
+            const identityKey = buildTileIdentityKey(section, tile);
+            const alreadyOnSurvivor =
+                identityKey !== null && survivorIdentityKeys.has(identityKey);
 
-        // Taking a cardinality-1 value overwrites what the survivor already has,
-        // so it is only selected by default when there is nothing to overwrite.
-        const isSelected =
-            section.cardinality === "n"
-                ? !alreadyOnSurvivor
-                : survivorTiles.length === 0;
+            // Taking a cardinality-1 value overwrites what the survivor already
+            // has, so it is only selected by default when there is nothing to
+            // overwrite.
+            const isSelected =
+                section.cardinality === "n"
+                    ? !alreadyOnSurvivor
+                    : survivorTiles.length === 0;
 
-        return { tile, identityKey, alreadyOnSurvivor, isSelected };
-    });
+            return { tile, identityKey, alreadyOnSurvivor, isSelected };
+        });
 
     return { section, survivorTiles, absorbedTileOptions };
 }
@@ -239,19 +296,6 @@ export function buildMergePayload(
             ? retirement.retirementStrategy
             : null,
     };
-}
-
-export function getReferencedResourceIds(
-    tile: MergeTile,
-    nodeAlias: string,
-): string[] {
-    const nodeValue = getNodeData(tile, nodeAlias)?.node_value;
-    if (!Array.isArray(nodeValue)) {
-        return [];
-    }
-    return nodeValue
-        .map((entry) => (entry as { resourceId?: string })?.resourceId)
-        .filter((resourceId): resourceId is string => Boolean(resourceId));
 }
 
 /**

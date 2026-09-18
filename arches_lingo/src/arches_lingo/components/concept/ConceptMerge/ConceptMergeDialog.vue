@@ -34,7 +34,7 @@ import {
 } from "@/arches_lingo/components/concept/ConceptMerge/constants.ts";
 
 import type {
-    DeleteConceptStrategy,
+    MergeRetirementStrategy,
     ResourceInstanceResult,
     SearchResultItem,
 } from "@/arches_lingo/types.ts";
@@ -83,7 +83,7 @@ const isLoadingAbsorbedConcept = ref(false);
 const fetchError = ref<string | null>(null);
 const createExactMatchTiles = ref(true);
 const retireAbsorbedConcept = ref(true);
-const retirementStrategy = ref<DeleteConceptStrategy>(
+const retirementStrategy = ref<MergeRetirementStrategy>(
     STRATEGY_REPARENT_TO_SURVIVOR,
 );
 const selectionState = ref<MergeSelectionState>();
@@ -115,6 +115,10 @@ const canConfirm = computed(function () {
 async function onConceptSelected(concept: SearchResultItem) {
     selectedConcept.value = concept;
     absorbedConcept.value = undefined;
+    // The comparison step is unmounted while the picker is showing, so it cannot
+    // clear its own state. Left behind, it would keep the confirm step reachable
+    // with the previous concept's tiles still selected.
+    selectionState.value = undefined;
     isLoadingAbsorbedConcept.value = true;
     fetchError.value = null;
     try {
@@ -258,6 +262,9 @@ async function onMergeConfirmed() {
                             />
                             <MergeComparison
                                 v-else-if="absorbedConcept"
+                                :survivor-concept-id="
+                                    survivorConcept.resourceinstanceid
+                                "
                                 :survivor-aliased-data="
                                     survivorConcept.aliased_data
                                 "

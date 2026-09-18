@@ -23,10 +23,12 @@ import type {
     SectionComparison,
 } from "@/arches_lingo/components/concept/ConceptMerge/types.ts";
 
-const { survivorAliasedData, absorbedAliasedData } = defineProps<{
-    survivorAliasedData: Record<string, unknown> | undefined;
-    absorbedAliasedData: Record<string, unknown> | undefined;
-}>();
+const { survivorConceptId, survivorAliasedData, absorbedAliasedData } =
+    defineProps<{
+        survivorConceptId: string;
+        survivorAliasedData: Record<string, unknown> | undefined;
+        absorbedAliasedData: Record<string, unknown> | undefined;
+    }>();
 
 const emit = defineEmits<{
     (event: "update:selectionState", selectionState: MergeSelectionState): void;
@@ -91,6 +93,7 @@ function buildComparisons() {
             section,
             extractSectionTiles(survivorAliasedData, section),
             extractSectionTiles(absorbedAliasedData, section),
+            survivorConceptId,
         ),
     ).filter(
         (comparison) =>
@@ -100,7 +103,7 @@ function buildComparisons() {
 }
 
 watch(
-    () => [survivorAliasedData, absorbedAliasedData],
+    () => [survivorConceptId, survivorAliasedData, absorbedAliasedData],
     () => {
         buildComparisons();
         void loadReferencedConceptLabels();

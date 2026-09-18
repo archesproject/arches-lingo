@@ -1,9 +1,11 @@
 import type { MergeSection } from "@/arches_lingo/components/concept/ConceptMerge/types.ts";
 
 // Every Concept nodegroup an editor may pull across, in the order the comparison
-// view presents them. uri, identifier and part_of_scheme are deliberately absent:
-// the server rejects them, because a shared uri breaks URI resolution, identifiers
-// are allocated per scheme, and part_of_scheme is identical within one scheme.
+// view presents them. uri, identifier, part_of_scheme and data_assignment are
+// deliberately absent, and the server rejects all four: a shared uri breaks URI
+// resolution, identifiers are allocated per scheme, part_of_scheme is identical
+// within one scheme, and data_assignment records who asserted the absorbed
+// concept's values. This list must stay in step with EXCLUDED_NODEGROUP_ALIASES.
 //
 // displayNodeAliases decides what a tile card shows; identityNodeAliases decides
 // when two tiles count as the same value and must mirror the server's

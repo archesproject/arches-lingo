@@ -608,10 +608,12 @@ export interface ConceptSetDetail extends ConceptSetItem {
     members: SearchResultItem[];
 }
 
-export type DeleteConceptStrategy =
-    | "reparent"
-    | "delete_children"
-    | "orphan"
+export type DeleteConceptStrategy = "reparent" | "delete_children" | "orphan";
+
+// Only the merge endpoint accepts handing the children to the surviving concept;
+// the delete and retire endpoints reject it.
+export type MergeRetirementStrategy =
+    | DeleteConceptStrategy
     | "reparent_to_survivor";
 
 export interface MergeRequestPayload {
@@ -621,7 +623,7 @@ export interface MergeRequestPayload {
     survivor_pref_label_demotions: string[];
     create_exact_match_tiles: boolean;
     retire_absorbed_concept: boolean;
-    retirement_strategy: DeleteConceptStrategy | null;
+    retirement_strategy: MergeRetirementStrategy | null;
 }
 
 export interface ConceptMergeResult {

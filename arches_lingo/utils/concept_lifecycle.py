@@ -134,6 +134,10 @@ def reparent_children(concept_id: str, parent_ids: set[str], scheme_id: str | No
             for resource_reference in updated_broader_references
         }
         for parent_id in parent_ids:
+            # reparent_to_survivor reaches the survivor itself whenever it was one
+            # of the retiring concept's children, and nothing may be its own parent.
+            if parent_id == str(classification_tile.resourceinstance_id):
+                continue
             if parent_id not in already_referenced_parent_ids:
                 updated_broader_references.append({"resourceId": parent_id})
 

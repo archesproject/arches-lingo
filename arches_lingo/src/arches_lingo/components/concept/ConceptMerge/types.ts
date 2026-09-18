@@ -1,5 +1,5 @@
 import type { AliasedNodeData } from "@/arches_vue_components/types.ts";
-import type { DeleteConceptStrategy } from "@/arches_lingo/types.ts";
+import type { MergeRetirementStrategy } from "@/arches_lingo/types.ts";
 
 export interface MergeTile {
     tileid?: string;
@@ -45,7 +45,7 @@ export interface PrefLabelConflict {
 export interface MergeRetirementChoice {
     createExactMatchTiles: boolean;
     retireAbsorbedConcept: boolean;
-    retirementStrategy: DeleteConceptStrategy;
+    retirementStrategy: MergeRetirementStrategy;
 }
 
 export interface MergeSectionSummary {

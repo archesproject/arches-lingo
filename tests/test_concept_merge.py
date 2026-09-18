@@ -157,6 +157,20 @@ class ConceptMergeTestCase(ViewTests):
             },
         )
 
+    def make_child_of(self, child, *parents):
+        TileModel.objects.filter(
+            resourceinstance=child, nodegroup_id=CLASSIFICATION_STATUS_NODEGROUP
+        ).delete()
+        return TileModel.objects.create(
+            resourceinstance=child,
+            nodegroup_id=CLASSIFICATION_STATUS_NODEGROUP,
+            data={
+                CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID: [
+                    {"resourceId": str(parent.pk)} for parent in parents
+                ]
+            },
+        )
+
     def survivor_tiles(self, nodegroup_id):
         return TileModel.objects.filter(
             resourceinstance=self.survivor, nodegroup_id=nodegroup_id
@@ -241,6 +255,37 @@ class CopyTilesToSurvivorTests(ConceptMergeTestCase):
             normalize_node_value(copied_tile.data[CONCEPT_NAME_TYPE_NODE]),
             (ALT_LABEL_URI,),
         )
+
+    def test_broader_tile_naming_only_the_survivor_is_not_copied(self):
+        """Merging a child into its parent must not leave the survivor its own parent."""
+        broader_tile = self.make_child_of(self.absorbed, self.survivor)
+
+        copied_tiles = copy_tiles_to_survivor(
+            self.survivor,
+            self.absorbed,
+            [str(broader_tile.tileid)],
+            set(),
+            uuid.uuid4(),
+        )
+
+        self.assertEqual(copied_tiles, [])
+        self.assertNotIn(str(self.survivor.pk), get_broader_ids(str(self.survivor.pk)))
+
+    def test_broader_tile_keeps_its_other_parents_when_the_survivor_is_stripped(self):
+        other_parent = self.concepts[3]
+        broader_tile = self.make_child_of(self.absorbed, self.survivor, other_parent)
+
+        copy_tiles_to_survivor(
+            self.survivor,
+            self.absorbed,
+            [str(broader_tile.tileid)],
+            set(),
+            uuid.uuid4(),
+        )
+
+        survivor_parents = get_broader_ids(str(self.survivor.pk))
+        self.assertIn(str(other_parent.pk), survivor_parents)
+        self.assertNotIn(str(self.survivor.pk), survivor_parents)
 
     def test_child_tiles_follow_their_parent(self):
         parent_tile = self.add_statement_tile(self.absorbed, "Note with assignment.")
@@ -375,6 +420,17 @@ class ValidateMergeTests(ConceptMergeTestCase):
             self.survivor,
             self.absorbed,
             survivor_pref_label_demotions=[str(absorbed_label.tileid)],
+        )
+
+    def test_absorbed_label_demotions_must_belong_to_the_absorbed_concept(self):
+        survivor_label = self.add_label_tile(
+            self.survivor, "Mine", self.pref_label_value
+        )
+
+        self.assertMergeRejected(
+            self.survivor,
+            self.absorbed,
+            pref_label_demotions=[str(survivor_label.tileid)],
         )
 
     def test_valid_merge_passes(self):
@@ -518,18 +574,7 @@ class MergeRetirementTests(ConceptMergeTestCase):
 
     def give_absorbed_a_child(self):
         child = self.concepts[3]
-        TileModel.objects.filter(
-            resourceinstance=child, nodegroup_id=CLASSIFICATION_STATUS_NODEGROUP
-        ).delete()
-        TileModel.objects.create(
-            resourceinstance=child,
-            nodegroup_id=CLASSIFICATION_STATUS_NODEGROUP,
-            data={
-                CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID: [
-                    {"resourceId": str(self.absorbed.pk)}
-                ]
-            },
-        )
+        self.make_child_of(child, self.absorbed)
         return child
 
     def test_merge_retires_and_hands_children_to_the_survivor(self):
@@ -555,6 +600,26 @@ class MergeRetirementTests(ConceptMergeTestCase):
             self.absorbed.resource_instance_lifecycle_state_id, RETIRED_STATE_ID
         )
         self.assertEqual(self.survivor_tiles(STATEMENT_NODEGROUP).count(), 1)
+
+    def test_reparenting_to_the_survivor_never_makes_it_its_own_parent(self):
+        self.make_child_of(self.survivor, self.absorbed)
+        sibling = self.concepts[3]
+        self.make_child_of(sibling, self.absorbed)
+
+        merge_concepts(
+            self.survivor,
+            self.absorbed,
+            {
+                "absorbed_concept_id": str(self.absorbed.pk),
+                "create_exact_match_tiles": False,
+                "retire_absorbed_concept": True,
+                "retirement_strategy": STRATEGY_REPARENT_TO_SURVIVOR,
+            },
+            self.admin,
+        )
+
+        self.assertNotIn(str(self.survivor.pk), get_broader_ids(str(self.survivor.pk)))
+        self.assertEqual(get_broader_ids(str(sibling.pk)), {str(self.survivor.pk)})
 
     def test_absorbed_concept_stays_active_when_retirement_is_declined(self):
         merge_concepts(
