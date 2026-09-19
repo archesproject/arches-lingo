@@ -3,6 +3,7 @@
   xmlns:skos="http://www.w3.org/2004/02/skos/core#"
   xmlns:dcterms="http://purl.org/dc/terms/"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  xmlns:gvp="http://vocab.getty.edu/ontology#"
 >
   <skos:Concept rdf:about="http://localhost:8000/e2a65914-dc80-4bef-a496-ac904d2446bd">
     <skos:prefLabel xml:lang="en">{"id": "f5e4ed31-4fea-41b4-8ea7-36f7f7813c86", "value": "child3"}</skos:prefLabel>
@@ -26,6 +27,7 @@
     <dcterms:identifier xml:lang="en">{"id": "e2434dfd-7778-4cef-8a37-5489291766d9", "value": "http://localhost:8000/e0c3542b-5c1c-4a47-b3e3-423b03328be0"}</dcterms:identifier>
     <skos:prefLabel xml:lang="en">{"id": "beb53e39-8c48-4533-a6ef-b04882540be2", "value": "Example Concept 2"}</skos:prefLabel>
     <skos:inScheme rdf:resource="http://localhost:8000/4a10134e-d594-4102-8edf-2f63e18d3b04"/>
+    <gvp:aat2285_practiced-studied_by rdf:resource="http://localhost:8000/134ebaa5-0f96-4153-8d1b-0ba6c7947292"/>
   </skos:Concept>
   <skos:Concept rdf:about="http://localhost:8000/037daf4d-054a-44d2-9c0a-108b59e39109">
     <skos:inScheme rdf:resource="http://localhost:8000/4a10134e-d594-4102-8edf-2f63e18d3b04"/>

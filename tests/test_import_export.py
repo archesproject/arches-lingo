@@ -36,6 +36,10 @@ from .test_settings import PROJECT_TEST_ROOT
 
 
 class ImportTests(TransactionTestCase):
+    # Restores the rows arches' migrations provide after another
+    # TransactionTestCase's flush has cleared them; without this, setUp fails
+    # looking up the default language.
+    serialized_rollback = True
 
     @classmethod
     def register_etl_module(cls):
@@ -133,6 +137,36 @@ class ImportTests(TransactionTestCase):
         # and a skos:relatedMatch
         self.assertEqual(len(junk_sculpture.aliased_data.match_status), 2)
 
+    def _assert_typed_relation_loaded(self):
+        """Assert that a GVP typed associative relation (gvp:aat2285_practiced-studied_by)
+        from the test fixture is imported with its relation type set on the subject
+        concept's relation_status tile.
+
+        The fixture has:
+          <Example Concept 2>  gvp:aat2285_practiced-studied_by  <Example Concept 1>
+
+        These relations read in one direction, and SKOSWriter exports a
+        relation_status tile with its own concept as the subject, so the tile
+        lives on the subject (Example Concept 2) with ascribed_comparate pointing
+        to the object (Example Concept 1).
+        """
+        concepts = ResourceTileTree.get_tiles(graph_slug="concept")
+        example_concept_2 = concepts.get(
+            appellative_status_ascribed_name_content__any_contains="Example Concept 2"
+        )
+        relations = example_concept_2.aliased_data.relation_status
+        self.assertEqual(len(relations), 1)
+        relation_data = relations[0].aliased_data
+        comparate = relation_data.relation_status_ascribed_comparate
+        self.assertEqual(comparate.name["en"], "Example Concept 1")
+        # The controlled list item for aat2285 is "practiced/studied by - role"
+        self.assertIn("practiced", str(relation_data.relation_status_ascribed_relation))
+
+        example_concept_1 = concepts.get(
+            appellative_status_ascribed_name_content__any_contains="Example Concept 1"
+        )
+        self.assertEqual(len(example_concept_1.aliased_data.relation_status), 0)
+
     def test_lingo_resource_importer(self):
         """
         This test is really three tests in one, but due to trouble with TransactionTestCase
@@ -159,6 +193,7 @@ class ImportTests(TransactionTestCase):
             stdout=stdout,
         )
         self._assert_resources_loaded()
+        self._assert_typed_relation_loaded()
         print("Test import from CLI completed.\n")
 
         # Reverse load to clear out the loaded resources
@@ -199,6 +234,7 @@ class ImportTests(TransactionTestCase):
         write_request0 = importer.write(request=request0)
         self.assertTrue(write_request0["success"])
         self._assert_resources_loaded()
+        self._assert_typed_relation_loaded()
         print("Test import from Lingo UI completed.\n")
 
         # Reverse load to clear out the loaded resources
