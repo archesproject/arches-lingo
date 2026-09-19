@@ -67,38 +67,66 @@ def build_tiledata(tile_value_envelope):
     return tiledata
 
 
-def _copy_rows(cursor, table, columns, rows):
-    """Stream rows into a table with COPY, in batches, returning the count."""
-    written = 0
-    batch = io.StringIO()
-    writer = csv.writer(batch)
-    batched = 0
+class _CopyBuffer:
+    """Accumulate CSV rows for one table and hand them to COPY in batches."""
 
-    def flush():
-        nonlocal batch, writer, batched
-        if not batched:
-            return
-        batch.seek(0)
-        cursor.copy_expert(
-            f"COPY {table} ({', '.join(columns)}) FROM STDIN WITH (FORMAT csv)",
-            batch,
+    def __init__(self, cursor, table, columns):
+        self.cursor = cursor
+        self.copy_statement = (
+            f"COPY {table} ({', '.join(columns)}) FROM STDIN WITH (FORMAT csv)"
         )
-        batch = io.StringIO()
-        writer = csv.writer(batch)
-        batched = 0
+        self._start_batch()
+
+    def _start_batch(self):
+        self.batch = io.StringIO()
+        self.writer = csv.writer(self.batch)
+        self.batched_row_count = 0
+
+    def add(self, row):
+        self.writer.writerow(row)
+        self.batched_row_count += 1
+
+    def flush(self):
+        if not self.batched_row_count:
+            return
+        self.batch.seek(0)
+        self.cursor.copy_expert(self.copy_statement, self.batch)
+        self._start_batch()
+
+
+def _copy_rows(cursor, table, columns, rows, mirror=None):
+    """Stream rows into a table with COPY, in batches, returning the count.
+
+    `mirror` is an optional `(table, columns, project)` triple. Each row is
+    also written to that table as `project(row)`, flushed alongside the rows
+    themselves so neither buffer grows past `COPY_BATCH_ROWS`.
+    """
+    written = 0
+    primary_buffer = _CopyBuffer(cursor, table, columns)
+    mirror_buffer = None
+    project_mirrored_row = None
+    if mirror:
+        mirror_table, mirror_columns, project_mirrored_row = mirror
+        mirror_buffer = _CopyBuffer(cursor, mirror_table, mirror_columns)
 
     for row in rows:
-        writer.writerow(row)
-        batched += 1
+        primary_buffer.add(row)
+        if mirror_buffer is not None:
+            mirror_buffer.add(project_mirrored_row(row))
         written += 1
-        if batched >= COPY_BATCH_ROWS:
-            flush()
-    flush()
+        if written % COPY_BATCH_ROWS == 0:
+            primary_buffer.flush()
+            if mirror_buffer is not None:
+                mirror_buffer.flush()
+
+    primary_buffer.flush()
+    if mirror_buffer is not None:
+        mirror_buffer.flush()
     return written
 
 
 @transaction.atomic
-def load_resources_and_tiles(resource_rows, tile_rows, graph_ids, log=print):
+def load_resources_and_tiles(resource_rows, tile_rows, log=print):
     """Write resources and tiles directly, then derive their relationships.
 
     `resource_rows` is an iterable of
@@ -109,9 +137,11 @@ def load_resources_and_tiles(resource_rows, tile_rows, graph_ids, log=print):
     with connection.cursor() as cursor:
         # Resources are written through a temp table so a rerun that overlaps
         # existing ids does not fail; the staging function likewise skips
-        # resources that already exist. ON COMMIT DROP only fires on a real
-        # commit, so a caller holding an outer transaction would otherwise
-        # find the table still there on a second call.
+        # resources that already exist. Tile ids are collected in a second temp
+        # table so the relationship pass below sees only the tiles this load
+        # wrote. ON COMMIT DROP only fires on a real commit, so a caller holding
+        # an outer transaction would otherwise find the tables still there on a
+        # second call.
         cursor.execute(
             """
             DROP TABLE IF EXISTS incoming_resource;
@@ -120,7 +150,9 @@ def load_resources_and_tiles(resource_rows, tile_rows, graph_ids, log=print):
                 graphid uuid,
                 legacyid text,
                 resource_instance_lifecycle_state_id uuid
-            ) ON COMMIT DROP
+            ) ON COMMIT DROP;
+            DROP TABLE IF EXISTS incoming_tile;
+            CREATE TEMP TABLE incoming_tile (tileid uuid) ON COMMIT DROP
             """
         )
         resource_count = _copy_rows(
@@ -153,11 +185,16 @@ def load_resources_and_tiles(resource_rows, tile_rows, graph_ids, log=print):
             "tiles",
             ("tileid", "resourceinstanceid", "nodegroupid", "sortorder", "tiledata"),
             tile_rows,
+            mirror=("incoming_tile", ("tileid",), lambda tile_row: (tile_row[0],)),
         )
+        cursor.execute("CREATE INDEX ON incoming_tile (tileid)")
+        cursor.execute("ANALYZE incoming_tile")
         log(f"  wrote {tile_count:,} tiles")
 
         # One set-based equivalent of __arches_refresh_tile_resource_relationships
-        # over every tile just written, rather than a call per tile.
+        # over the tiles just written, rather than a call per tile. Tiles that
+        # were already in the graph keep the relationship rows they already
+        # have; re-deriving them would collide on resource_x_resource's key.
         cursor.execute(
             """
             WITH relationship AS (
@@ -166,13 +203,10 @@ def load_resources_and_tiles(resource_rows, tile_rows, graph_ids, log=print):
                        node.nodeid,
                        jsonb_array_elements(tile.tiledata -> node.nodeid::text) AS reference
                   FROM tiles tile
+                  JOIN incoming_tile incoming ON incoming.tileid = tile.tileid
                   JOIN nodes node ON node.nodegroupid = tile.nodegroupid
                  WHERE node.datatype IN ('resource-instance', 'resource-instance-list')
-                   AND tile.tiledata ->> node.nodeid::text IS NOT NULL
-                   AND tile.resourceinstanceid IN (
-                       SELECT resourceinstanceid FROM resource_instances
-                        WHERE graphid = ANY(%(graph_ids)s::uuid[])
-                   )
+                   AND jsonb_typeof(tile.tiledata -> node.nodeid::text) = 'array'
             )
             INSERT INTO resource_x_resource (
                 resourcexid, notes, relationshiptype, resourceinstanceidfrom,
@@ -201,8 +235,7 @@ def load_resources_and_tiles(resource_rows, tile_rows, graph_ids, log=print):
                      ON resource_to.resourceinstanceid
                         = (reference ->> 'resourceId')::uuid
              WHERE reference ->> 'resourceId' IS NOT NULL
-            """,
-            {"graph_ids": list(graph_ids)},
+            """
         )
         log(f"  wrote {cursor.rowcount:,} resource relationships")
 

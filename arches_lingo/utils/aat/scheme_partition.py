@@ -91,6 +91,7 @@ def purge_scheme_partition(scheme_resource_instance_id, log=print):
     with connection.cursor() as cursor:
         cursor.execute(
             f"""
+            DROP TABLE IF EXISTS doomed_resource;
             CREATE TEMP TABLE doomed_resource ON COMMIT DROP AS
             SELECT resourceinstanceid AS id FROM ({_CONCEPTS_IN_SCHEME_SQL}) concepts
             UNION

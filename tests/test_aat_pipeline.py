@@ -46,7 +46,9 @@ from arches_lingo.management.commands.load_aat_sources import (
     TEXTUAL_WORK_NAME_NODEGROUP,
     _make_resource_instance_list_value,
 )
-from arches_lingo.management.commands.update_aat_concept_types import (
+from arches_lingo.management.commands import packages as packages_command
+from arches_lingo.management.commands.packages import Command as PackagesCommand
+from arches_lingo.utils.aat.concept_types import (
     classify_aat_concept,
     parse_aat_concept_types,
 )
@@ -269,6 +271,29 @@ class LoadAatCommandTests(TestCase):
             )
 
 
+class PackagesImportFailureTests(TestCase):
+    """The importer reports a failed load by returning it, so the command has
+    to check: `load_aat` runs three more steps against what it imported."""
+
+    @patch.object(packages_command, "LingoResourceImporter")
+    def test_a_failed_import_raises_rather_than_returning(self, importer_class):
+        importer_class.return_value.write.return_value = {
+            "success": False,
+            "message": "duplicate key value violates unique constraint",
+        }
+        command = PackagesCommand()
+        command.stdout = StringIO()
+
+        with tempfile.NamedTemporaryFile(suffix=".xml") as skos_file:
+            skos_file.write(b"<rdf:RDF></rdf:RDF>")
+            skos_file.flush()
+
+            with self.assertRaises(CommandError) as raised:
+                command.import_lingo_resources(skos_file.name, "overwrite")
+
+        self.assertIn("duplicate key value", str(raised.exception))
+
+
 class LoadAatSourcesHelperTests(TestCase):
     """Unit tests for load_aat_sources.py's smaller building blocks, which the
     dry-run smoke test in test_aat_load.py does not reach."""
@@ -319,13 +344,16 @@ class LoadAatSourcesHelperTests(TestCase):
         self.assertIsNone(state)
 
 
-class PipelineOrchestrationTests(SimpleTestCase):
+class PipelineOrchestrationTests(TestCase):
     """Exercises `load_aat`'s step sequencing and reload branching with every
     step mocked, so the DB-heavy steps stay covered by their own unit tests
     while this covers only the orchestration logic layered over them."""
 
     def _patch_steps(self, existing_scheme_id=None):
         patches = {
+            "check_reference_data_is_loaded": patch.object(
+                pipeline, "check_reference_data_is_loaded"
+            ),
             "download_archive": patch.object(pipeline, "download_archive"),
             "read_archive_extraction_date": patch.object(
                 pipeline, "read_archive_extraction_date", return_value=None
@@ -407,11 +435,42 @@ class PipelineOrchestrationTests(SimpleTestCase):
             archive_path="/tmp/aat-test/explicit.zip",
             replace_existing=False,
             preserve_resource_ids=False,
-            log=lambda m: None,
+            log=lambda message: None,
         )
 
         mocks["write_resource_id_snapshot"].assert_not_called()
         mocks["purge_scheme_partition"].assert_not_called()
+
+    def test_keeping_the_previous_load_while_pinning_its_ids_is_refused(self):
+        """Pinning reuses the ids the loaded concepts hold, so importing
+        alongside them would write a second copy of every tile onto them."""
+        mocks = self._patch_steps(existing_scheme_id="old-scheme-id")
+
+        with self.assertRaises(pipeline.LoadPreconditionError):
+            pipeline.load_aat(
+                "/tmp/aat-test",
+                archive_path="/tmp/aat-test/explicit.zip",
+                replace_existing=False,
+                preserve_resource_ids=True,
+                log=lambda message: None,
+            )
+
+        mocks["convert_archive_to_skos"].assert_not_called()
+        mocks["call_command"].assert_not_called()
+
+    def test_reference_data_is_checked_before_anything_is_downloaded(self):
+        """The load runs for hours and its last step needs list items the
+        package ships, so a database without them fails before step one."""
+        mocks = self._patch_steps(existing_scheme_id=None)
+        mocks["check_reference_data_is_loaded"].side_effect = (
+            pipeline.LoadPreconditionError("term types missing")
+        )
+
+        with self.assertRaises(pipeline.LoadPreconditionError):
+            pipeline.load_aat("/tmp/aat-test", log=lambda message: None)
+
+        mocks["download_archive"].assert_not_called()
+        mocks["ensure_languages"].assert_not_called()
 
     def test_no_archive_path_downloads_first(self):
         mocks = self._patch_steps(existing_scheme_id=None)

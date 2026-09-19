@@ -13,6 +13,7 @@ from unittest.mock import patch
 from django.conf import settings
 from django.db import connection
 from django.test import TestCase
+from django.utils import timezone
 
 from arches.app.models.models import ResourceInstance, ResourceXResource, TileModel
 
@@ -121,7 +122,6 @@ class LoadResourcesAndTilesTests(DirectWriteTestCase):
                     {const.URI_CONTENT_NODE: "http://vocab.getty.edu/aat/300000001"},
                 )
             ],
-            [const.SCHEMES_GRAPH_ID, const.CONCEPTS_GRAPH_ID],
             log=silent,
         )
 
@@ -159,7 +159,6 @@ class LoadResourcesAndTilesTests(DirectWriteTestCase):
                     self.part_of_scheme_reference(scheme_id, cross_reference_id),
                 )
             ],
-            [const.SCHEMES_GRAPH_ID, const.CONCEPTS_GRAPH_ID],
             log=silent,
         )
 
@@ -200,7 +199,6 @@ class LoadResourcesAndTilesTests(DirectWriteTestCase):
                     self.part_of_scheme_reference(scheme_id, ""),
                 )
             ],
-            [const.SCHEMES_GRAPH_ID, const.CONCEPTS_GRAPH_ID],
             log=silent,
         )
 
@@ -216,43 +214,110 @@ class LoadResourcesAndTilesTests(DirectWriteTestCase):
             self.make_resource_row(concept_id, const.CONCEPTS_GRAPH_ID, LOCKED_STATE_ID)
         ]
 
-        load_resources_and_tiles(
-            resource_rows, [], [const.CONCEPTS_GRAPH_ID], log=silent
-        )
-        load_resources_and_tiles(
-            resource_rows, [], [const.CONCEPTS_GRAPH_ID], log=silent
-        )
+        load_resources_and_tiles(resource_rows, [], log=silent)
+        load_resources_and_tiles(resource_rows, [], log=silent)
 
         self.assertEqual(ResourceInstance.objects.filter(pk=concept_id).count(), 1)
 
-    def test_tiles_on_graphs_outside_the_load_are_left_unrelated(self):
-        """The relationship pass reads every tile on the nodegroup, so it is
-        scoped to the graphs this load wrote."""
-        scheme_id = uuid.uuid4()
-        concept_id = uuid.uuid4()
+    def test_tiles_already_in_the_graph_keep_the_relationships_they_have(self):
+        """The relationship pass reads from `tiles`, so without scoping it to
+        the tiles just written it re-derives rows for concepts that were
+        already loaded and collides on resource_x_resource's primary key."""
+        existing_scheme = ResourceInstance.objects.create(
+            graph_id=const.SCHEMES_GRAPH_ID, name="Scheme Made In The UI"
+        )
+        existing_concept = ResourceInstance.objects.create(
+            graph_id=const.CONCEPTS_GRAPH_ID, name="Concept Made In The UI"
+        )
+        existing_cross_reference_id = uuid.uuid4()
+        existing_tile = TileModel.objects.create(
+            resourceinstance=existing_concept,
+            nodegroup_id=const.CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID,
+            data=self.part_of_scheme_reference(
+                existing_scheme.pk, existing_cross_reference_id
+            ),
+        )
+        ResourceXResource.objects.create(
+            resourcexid=existing_cross_reference_id,
+            from_resource=existing_concept,
+            to_resource=existing_scheme,
+            tile=existing_tile,
+            node_id=const.CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID,
+            created=timezone.now(),
+            modified=timezone.now(),
+        )
+
+        loaded_scheme_id = uuid.uuid4()
+        loaded_concept_id = uuid.uuid4()
+        loaded_cross_reference_id = uuid.uuid4()
 
         load_resources_and_tiles(
             [
                 self.make_resource_row(
-                    scheme_id, const.SCHEMES_GRAPH_ID, LOCKED_STATE_ID
+                    loaded_scheme_id, const.SCHEMES_GRAPH_ID, LOCKED_STATE_ID
                 ),
                 self.make_resource_row(
-                    concept_id, const.CONCEPTS_GRAPH_ID, LOCKED_STATE_ID
+                    loaded_concept_id, const.CONCEPTS_GRAPH_ID, LOCKED_STATE_ID
                 ),
             ],
             [
                 self.make_tile_row(
-                    concept_id,
+                    loaded_concept_id,
                     const.CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID,
-                    self.part_of_scheme_reference(scheme_id, uuid.uuid4()),
+                    self.part_of_scheme_reference(
+                        loaded_scheme_id, loaded_cross_reference_id
+                    ),
                 )
             ],
-            [const.SCHEMES_GRAPH_ID],
             log=silent,
         )
 
-        self.assertFalse(
-            ResourceXResource.objects.filter(from_resource_id=concept_id).exists()
+        self.assertEqual(
+            ResourceXResource.objects.filter(
+                from_resource_id=existing_concept.pk
+            ).count(),
+            1,
+        )
+        self.assertEqual(
+            ResourceXResource.objects.get(
+                from_resource_id=loaded_concept_id
+            ).resourcexid,
+            loaded_cross_reference_id,
+        )
+
+    def test_a_second_load_into_a_populated_graph_adds_only_its_own_rows(self):
+        """A resumed or repeated load runs against a graph its earlier run
+        already filled, which is where the relationship pass has to stop at the
+        tiles in front of it."""
+        scheme_id = uuid.uuid4()
+        first_concept_id = uuid.uuid4()
+        second_concept_id = uuid.uuid4()
+
+        def load_concept(concept_id):
+            load_resources_and_tiles(
+                [
+                    self.make_resource_row(
+                        scheme_id, const.SCHEMES_GRAPH_ID, LOCKED_STATE_ID
+                    ),
+                    self.make_resource_row(
+                        concept_id, const.CONCEPTS_GRAPH_ID, LOCKED_STATE_ID
+                    ),
+                ],
+                [
+                    self.make_tile_row(
+                        concept_id,
+                        const.CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID,
+                        self.part_of_scheme_reference(scheme_id, uuid.uuid4()),
+                    )
+                ],
+                log=silent,
+            )
+
+        load_concept(first_concept_id)
+        load_concept(second_concept_id)
+
+        self.assertEqual(
+            ResourceXResource.objects.filter(to_resource_id=scheme_id).count(), 2
         )
 
 

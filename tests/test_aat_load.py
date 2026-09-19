@@ -34,7 +34,6 @@ from arches_lingo.utils.aat.attribution_statement import (
 )
 from arches_lingo.utils.aat.skos_conversion import (
     AATConversionError,
-    GVP_NS,
     report_hierarchy_cycles,
     convert_archive_to_skos,
     find_hierarchy_cycles,

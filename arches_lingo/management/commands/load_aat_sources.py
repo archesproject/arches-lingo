@@ -142,8 +142,8 @@ class Command(BaseCommand):
         dry_run = options["dry_run"]
 
         self.stdout.write(f"Loading source data from {source_path} ...")
-        with open(source_path, "r", encoding="utf-8") as f:
-            data = json.load(f)
+        with open(source_path, "r", encoding="utf-8") as attribution_file:
+            data = json.load(attribution_file)
 
         sources = data["sources"]
         contributors = data["contributors"]

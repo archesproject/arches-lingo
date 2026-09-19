@@ -22,11 +22,9 @@ see utils.aat.attribution_statement for the statement recorded on load.
 
 import collections
 import datetime
-import itertools
 import os
 import re
 import sys
-import tempfile
 import urllib.request
 import zipfile
 from xml.sax.saxutils import escape
@@ -166,7 +164,7 @@ PREDICATE_ELEMENT_MAP = {
 }
 
 
-def download_with_progress(url, destination_path):
+def download_with_progress(url, destination_path, log=print):
     def reporthook(block_num, block_size, total_size):
         downloaded_mb = block_num * block_size / 1_048_576
         if total_size > 0:
@@ -179,9 +177,9 @@ def download_with_progress(url, destination_path):
             sys.stdout.write(f"\r  Downloading: {downloaded_mb:.1f} MB")
         sys.stdout.flush()
 
-    print(f"Fetching {url}")
+    log(f"Fetching {url}")
     urllib.request.urlretrieve(url, destination_path, reporthook)
-    print()
+    log("")
 
 
 def _parse_nt_triple(line):
@@ -404,7 +402,7 @@ def collect_aat_data(nt_stream):
     )
 
 
-def derive_schemes(explicit_schemes, concepts, subject_data):
+def derive_schemes(explicit_schemes, concepts, subject_data, log=print):
     """
     Return the set of scheme URIs to write.
 
@@ -415,10 +413,9 @@ def derive_schemes(explicit_schemes, concepts, subject_data):
     if explicit_schemes:
         return set(explicit_schemes)
 
-    print(
+    log(
         "  No explicit skos:ConceptScheme declarations found.\n"
         "  Synthesising scheme(s) from skos:inScheme values on concepts ...",
-        flush=True,
     )
     inferred_schemes = set()
     for concept_uri in concepts:
@@ -429,13 +426,12 @@ def derive_schemes(explicit_schemes, concepts, subject_data):
 
     if not inferred_schemes:
         inferred_schemes.add("http://vocab.getty.edu/aat/")
-        print(
+        log(
             "  No skos:inScheme values found; using fallback "
             "http://vocab.getty.edu/aat/",
-            flush=True,
         )
     else:
-        print(f"  Synthesised {len(inferred_schemes)} scheme(s).", flush=True)
+        log(f"  Synthesised {len(inferred_schemes)} scheme(s).")
     return inferred_schemes
 
 
@@ -497,7 +493,7 @@ def report_hierarchy_cycles(concepts, subject_data, log=print):
     return cycle_edges
 
 
-def promote_all_broader_targets_transitively(concepts, subject_data):
+def promote_all_broader_targets_transitively(concepts, subject_data, log=print):
     """
     Iteratively promote all URIs that appear as skos:broader targets of
     concepts in the set but are not yet in the set themselves.
@@ -541,10 +537,9 @@ def promote_all_broader_targets_transitively(concepts, subject_data):
         concepts.update(newly_promoted)
         total_promoted += len(newly_promoted)
         round_number += 1
-        print(
+        log(
             f"  Round {round_number}: promoted {len(newly_promoted):,} intermediate nodes"
             f" (running total: {total_promoted:,})",
-            flush=True,
         )
 
     # Strip broader references to URIs that are neither in the concept set
@@ -565,19 +560,17 @@ def promote_all_broader_targets_transitively(concepts, subject_data):
             stripped_count += len(broader_list) - len(filtered)
 
     if stripped_count:
-        print(
+        log(
             f"  Stripped {stripped_count:,} broader references to unresolvable targets.",
-            flush=True,
         )
 
-    print(
+    log(
         f"  Promotion complete: {total_promoted:,} intermediate nodes added to concept set.",
-        flush=True,
     )
     return total_promoted
 
 
-def synthesize_top_concepts(concepts, schemes, subject_data):
+def synthesize_top_concepts(concepts, schemes, subject_data, log=print):
     """
     Add skos:topConceptOf to concepts that have neither a skos:broader pointing
     to another concept within the imported set nor an existing topConceptOf.
@@ -606,10 +599,9 @@ def synthesize_top_concepts(concepts, schemes, subject_data):
             top_concept_count += 1
 
     if top_concept_count:
-        print(
+        log(
             f"  Synthesised topConceptOf for {top_concept_count:,} orphan concept(s) "
             f"with no broader within the concept set.",
-            flush=True,
         )
     return top_concept_count
 
@@ -721,9 +713,10 @@ def write_skos_xml(
     subject_data,
     scheme_identifier_uri=None,
     scheme_pref_label=DEFAULT_SCHEME_PREF_LABEL,
+    log=print,
 ):
     """Write the collected AAT data as SKOS RDF/XML."""
-    print(f"Writing output to {output_path} ...", flush=True)
+    log(f"Writing output to {output_path} ...")
     with open(output_path, "w", encoding="utf-8") as out:
         out.write('<?xml version="1.0" encoding="UTF-8"?>\n')
         out.write("<rdf:RDF\n")
@@ -826,15 +819,14 @@ def write_skos_xml(
 
             written_count += 1
             if written_count % 5_000 == 0:
-                print(f"  Written {written_count:,} concepts ...", flush=True)
+                log(f"  Written {written_count:,} concepts ...")
 
         out.write("</rdf:RDF>\n")
 
     output_size_mb = os.path.getsize(output_path) / 1_048_576
-    print(
+    log(
         f"Done: {written_count:,} concepts written to {output_path}"
         f" ({output_size_mb:.1f} MB)",
-        flush=True,
     )
     return written_count
 
@@ -871,24 +863,24 @@ def validate_output(concepts, schemes, subject_data, log=print):
             for raw in subject_data.get(uri, {}).get(SKOS_BROADER, [])
         )
     )
-    print("\nConversion summary:")
-    print(f"  Schemes:                             {len(schemes):>7,}")
-    print(f"  Total concepts:                      {len(concepts):>7,}")
-    print(f"  Concepts with prefLabel:             {concepts_with_pref_label:>7,}")
-    print(f"  Concepts with broader (any):         {concepts_with_broader:>7,}")
-    print(f"  Concepts with broader (in-set):      {concepts_with_inset_broader:>7,}")
-    print(f"  Concepts with scope note:            {concepts_with_scope_note:>7,}")
-    print(f"  Concepts with typed relations:       {concepts_with_typed_relations:>7,}")
-    print(f"  Top concepts (topConceptOf):         {top_concept_count:>7,}")
+    log("\nConversion summary:")
+    log(f"  Schemes:                             {len(schemes):>7,}")
+    log(f"  Total concepts:                      {len(concepts):>7,}")
+    log(f"  Concepts with prefLabel:             {concepts_with_pref_label:>7,}")
+    log(f"  Concepts with broader (any):         {concepts_with_broader:>7,}")
+    log(f"  Concepts with broader (in-set):      {concepts_with_inset_broader:>7,}")
+    log(f"  Concepts with scope note:            {concepts_with_scope_note:>7,}")
+    log(f"  Concepts with typed relations:       {concepts_with_typed_relations:>7,}")
+    log(f"  Top concepts (topConceptOf):         {top_concept_count:>7,}")
     if not schemes:
-        print("\n  ERROR: No scheme produced -- the output XML will not import.")
+        log("\n  ERROR: No scheme produced -- the output XML will not import.")
     if top_concept_count == 0:
-        print(
+        log(
             "\n  WARNING: No skos:topConceptOf triples found. "
             "The hierarchy view will not work after import."
         )
     if concepts_with_pref_label == 0:
-        print(
+        log(
             "\n  WARNING: No skos:prefLabel literals found. Concepts will "
             "import without labels."
         )
@@ -925,7 +917,7 @@ def download_archive(destination_path, url=GETTY_AAT_EXPLICIT_ZIP_URL, log=print
     """Download a Getty AAT archive to destination_path."""
     log(f"Downloading {url} ...")
     try:
-        download_with_progress(url, destination_path)
+        download_with_progress(url, destination_path, log=log)
     except Exception as download_error:
         if os.path.exists(destination_path):
             os.unlink(destination_path)
@@ -1037,11 +1029,11 @@ def convert_archive_to_skos(
         inlined_label_count = resolve_xl_labels(subject_data, xl_label_literals)
         log(f"Inlined {inlined_label_count:,} skos-xl label literals")
 
-    schemes = derive_schemes(explicit_schemes, concepts, subject_data)
+    schemes = derive_schemes(explicit_schemes, concepts, subject_data, log=log)
     resolve_scope_notes(subject_data, scope_note_literals)
-    promote_all_broader_targets_transitively(concepts, subject_data)
+    promote_all_broader_targets_transitively(concepts, subject_data, log=log)
     report_hierarchy_cycles(concepts, subject_data, log=log)
-    synthesize_top_concepts(concepts, schemes, subject_data)
+    synthesize_top_concepts(concepts, schemes, subject_data, log=log)
     validate_output(concepts, schemes, subject_data, log=log)
 
     concepts_written = write_skos_xml(
@@ -1051,6 +1043,7 @@ def convert_archive_to_skos(
         subject_data,
         scheme_identifier_uri,
         scheme_pref_label,
+        log=log,
     )
     log(f"Wrote {concepts_written:,} concepts to {output_path}")
     return concepts_written

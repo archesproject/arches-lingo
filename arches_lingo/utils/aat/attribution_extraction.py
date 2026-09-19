@@ -24,13 +24,9 @@ The result is written as JSON shaped for load_aat_sources:
 """
 
 import collections
-import itertools
 import json
 import os
 import re
-import sys
-import tempfile
-import urllib.request
 import zipfile
 
 from arches_lingo.utils.aat.progress import (
@@ -147,24 +143,6 @@ CONTRIBUTOR_PREDICATES = frozenset(
 
 AAT_CONTRIB_PREFIX = "http://vocab.getty.edu/aat/contrib/"
 AAT_SOURCE_PREFIX = "http://vocab.getty.edu/aat/source/"
-
-
-def download_with_progress(url, destination_path):
-    def reporthook(block_num, block_size, total_size):
-        downloaded_mb = block_num * block_size / 1_048_576
-        if total_size > 0:
-            pct = min(100.0, block_num * block_size * 100.0 / total_size)
-            sys.stdout.write(
-                f"\r  Downloading: {downloaded_mb:.1f} / "
-                f"{total_size / 1_048_576:.1f} MB  ({pct:.0f}%)"
-            )
-        else:
-            sys.stdout.write(f"\r  Downloading: {downloaded_mb:.1f} MB")
-        sys.stdout.flush()
-
-    print(f"Fetching {url}")
-    urllib.request.urlretrieve(url, destination_path, reporthook)
-    print()
 
 
 def _parse_nt_triple(line):

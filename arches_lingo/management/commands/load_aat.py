@@ -5,7 +5,7 @@ import tempfile
 
 from django.core.management.base import BaseCommand, CommandError
 
-from arches_lingo.utils.aat.pipeline import load_aat
+from arches_lingo.utils.aat.pipeline import LoadPreconditionError, load_aat
 from arches_lingo.utils.aat.skos_conversion import (
     DEFAULT_SCHEME_IDENTIFIER_URI,
     DEFAULT_SCHEME_PREF_LABEL,
@@ -93,7 +93,10 @@ class Command(BaseCommand):
             action="store_true",
             help=(
                 "Import alongside the currently loaded AAT data instead of "
-                "replacing it. Leaves concepts Getty has retired in place."
+                "replacing it. Leaves concepts Getty has retired in place. "
+                "Requires --new-resource-ids, since reusing the ids the loaded "
+                "concepts already hold would write a second copy of every tile "
+                "onto them."
             ),
         )
         parser.add_argument(
@@ -126,8 +129,8 @@ class Command(BaseCommand):
                 show_progress=False if options["no_progress"] else None,
                 log=lambda message: self.stdout.write(str(message)),
             )
-        except AATConversionError as conversion_error:
-            raise CommandError(str(conversion_error)) from conversion_error
+        except (AATConversionError, LoadPreconditionError) as load_error:
+            raise CommandError(str(load_error)) from load_error
 
         self.stdout.write(
             self.style.SUCCESS(

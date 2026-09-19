@@ -11,7 +11,7 @@ from arches.app.models import models
 from arches.app.models.system_settings import settings
 
 from arches_controlled_lists.utils.skos import SKOSReader
-from arches_controlled_lists.models import List, ListItem, ListItemValue
+from arches_controlled_lists.models import List, ListItem
 
 from arches_lingo.etl_modules.migrate_to_lingo import LingoResourceImporter
 import arches_lingo.const as const
@@ -316,8 +316,11 @@ class SKOSReader(SKOSReader):
                             )
                             self.relations[resourceinstanceid].append(mock_tile)
                         elif str(predicate).startswith(GVP_TYPED_RELATION_PREFIX):
-                            # The tile goes on the object concept, so viewing it
-                            # shows the subject as the comparate.
+                            # These relations are directional ("practiced/studied
+                            # by"), and SKOSWriter exports a relation_status tile
+                            # with its own concept as the subject, so the tile
+                            # has to go on the subject concept for a round trip
+                            # to read the same way the source did.
                             related_concept_id = self.generate_uuidv5_from_subject(
                                 baseuuid, object
                             )
@@ -327,7 +330,7 @@ class SKOSReader(SKOSReader):
                             typed_relation_mock_tile = {
                                 "relation_status": {
                                     "relation_status_ascribed_comparate": {
-                                        "resourceId": str(concept_pk),
+                                        "resourceId": str(related_concept_id),
                                         "ontologyProperty": const.RELATION_STATUS_ASCRIBED_COMPARATE_ONTOLOGY_PROPERTY,
                                         "resourceXresourceId": "",
                                         "inverseOntologyProperty": "",
@@ -344,9 +347,7 @@ class SKOSReader(SKOSReader):
                                     " relation_status_ascribed_relation will be null.",
                                     predicate,
                                 )
-                            self.relations[related_concept_id].append(
-                                typed_relation_mock_tile
-                            )
+                            self.relations[concept_pk].append(typed_relation_mock_tile)
                         elif predicate in [
                             SKOS.broadMatch,
                             SKOS.closeMatch,

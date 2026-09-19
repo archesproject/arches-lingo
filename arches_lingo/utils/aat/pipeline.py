@@ -8,12 +8,11 @@ download and conversion.
 """
 
 import os
-import tempfile
 
 from django.core.management import call_command
-from django.db import connection
+from django.db import connection, transaction
 
-from arches.app.models.models import ResourceInstance
+from arches.app.models.models import GraphModel
 
 from arches_lingo import const
 from arches_lingo.utils.aat.attribution_extraction import (
@@ -22,6 +21,10 @@ from arches_lingo.utils.aat.attribution_extraction import (
 from arches_lingo.utils.aat.attribution_statement import (
     build_aat_attribution,
     set_scheme_attribution,
+)
+from arches_lingo.utils.aat.concept_types import (
+    MissingConceptTypeItemsError,
+    load_non_concept_type_items,
 )
 from arches_lingo.utils.aat.languages import (
     ensure_languages,
@@ -145,6 +148,37 @@ def find_existing_aat_scheme_id():
     return row[0] if row else None
 
 
+class LoadPreconditionError(Exception):
+    """Raised when the database or the options given rule the load out."""
+
+
+def check_reference_data_is_loaded():
+    """Fail before any work when the reference data the load needs is absent.
+
+    The load takes hours and its last step refuses to run without the term
+    types the AAT concept types are drawn from. Checking that up front stops a
+    run that would otherwise download the export, insert languages and write
+    every concept before discovering the package was never loaded.
+    """
+    missing_graph_names = [
+        graph_name
+        for graph_name, graph_id in (
+            ("Concept", const.CONCEPTS_GRAPH_ID),
+            ("Scheme", const.SCHEMES_GRAPH_ID),
+        )
+        if not GraphModel.objects.filter(pk=graph_id).exists()
+    ]
+    if missing_graph_names:
+        raise LoadPreconditionError(
+            f"The {' and '.join(missing_graph_names)} resource model(s) are not "
+            "in the database. Load the Lingo package before loading the AAT."
+        )
+    try:
+        load_non_concept_type_items()
+    except MissingConceptTypeItemsError as missing_items_error:
+        raise LoadPreconditionError(str(missing_items_error)) from missing_items_error
+
+
 def load_aat(
     working_directory,
     archive_path=None,
@@ -162,6 +196,18 @@ def load_aat(
 
     Returns a dict of counts describing what was loaded.
     """
+    check_reference_data_is_loaded()
+
+    existing_scheme_id = find_existing_aat_scheme_id()
+    if existing_scheme_id and not replace_existing and preserve_resource_ids:
+        raise LoadPreconditionError(
+            "Keeping the existing AAT data re-imports every concept already "
+            "loaded, and reusing the resource ids those concepts hold would "
+            "write a second copy of every tile onto them. Ask for fresh "
+            "resource ids to load the vocabulary as a separate set of "
+            "resources, or let the load replace what is already there."
+        )
+
     os.makedirs(working_directory, exist_ok=True)
     skos_path = os.path.join(working_directory, SKOS_FILENAME)
     attribution_path = os.path.join(working_directory, ATTRIBUTION_FILENAME)
@@ -198,35 +244,37 @@ def load_aat(
     ensure_languages(skos_path, log=log)
     repair_colliding_language_names(log=log)
 
-    existing_scheme_id = find_existing_aat_scheme_id()
     pinned_ids_path = ""
-    if existing_scheme_id:
-        if preserve_resource_ids:
-            snapshot_count = write_resource_id_snapshot(
-                AAT_URI_PREFIX, snapshot_path, scheme_resource_id=existing_scheme_id
-            )
-            pinned_ids_path = snapshot_path
-            log(f"Snapshotted {snapshot_count:,} existing resource ids")
-        if replace_existing:
+    if existing_scheme_id and preserve_resource_ids:
+        snapshot_count = write_resource_id_snapshot(
+            AAT_URI_PREFIX, snapshot_path, scheme_resource_id=existing_scheme_id
+        )
+        pinned_ids_path = snapshot_path
+        log(f"Snapshotted {snapshot_count:,} existing resource ids")
+
+    log(f"[4/6] Importing {concept_count:,} concepts ...")
+    # Removing the previous load and writing the new one share a transaction so
+    # a failed import leaves the vocabulary as it was rather than deleted.
+    with transaction.atomic():
+        if existing_scheme_id and replace_existing:
             for model_name, count in summarize_scheme_partition(
                 existing_scheme_id
             ).items():
                 log(f"  will remove {count:,} {model_name}")
             purge_scheme_partition(existing_scheme_id, log=log)
 
-    log(f"[4/6] Importing {concept_count:,} concepts ...")
-    call_command(
-        "packages",
-        operation="import_lingo_resources",
-        source=skos_path,
-        overwrite="overwrite",
-        import_identifiers=True,
-        pin_resource_ids=pinned_ids_path,
-        celery_byte_size_limit=AAT_CELERY_BYTE_SIZE_LIMIT,
-        lifecycle_state_id=lifecycle_state_id,
-        skip_indexing=skip_indexing,
-        bypass_staging=True,
-    )
+        call_command(
+            "packages",
+            operation="import_lingo_resources",
+            source=skos_path,
+            overwrite="overwrite",
+            import_identifiers=True,
+            pin_resource_ids=pinned_ids_path,
+            celery_byte_size_limit=AAT_CELERY_BYTE_SIZE_LIMIT,
+            lifecycle_state_id=lifecycle_state_id,
+            skip_indexing=skip_indexing,
+            bypass_staging=True,
+        )
 
     log("[5/6] Loading source and contributor attribution ...")
     call_command(

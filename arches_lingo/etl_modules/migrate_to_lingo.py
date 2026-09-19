@@ -9,7 +9,7 @@ from datetime import datetime
 from collections import defaultdict
 
 from django.core.files.storage import default_storage
-from django.db import connection
+from django.db import connection, transaction
 from django.db.models import FilteredRelation, OuterRef, Prefetch, Q, Subquery
 from django.db.models.expressions import RawSQL
 from django.db.models.functions import Coalesce
@@ -25,8 +25,6 @@ from arches.app.models.concept import Concept
 from arches.app.models.system_settings import settings
 from arches.app.tasks import notify_completion
 import arches.app.utils.task_management as task_management
-
-from arches_querysets.models import ResourceTileTree
 
 import arches_lingo.tasks as tasks
 import arches_lingo.const as const
@@ -45,6 +43,8 @@ from arches_lingo.utils.aat.direct_tile_load import (
 from arches_lingo.utils.aat.progress import report_elapsed
 
 logger = logging.getLogger(__name__)
+
+REFERENCE_DATATYPE = "reference"
 
 details = {
     "etlmoduleid": "11cad3ca-e155-44b1-9910-c50b3def47f6",
@@ -135,7 +135,10 @@ class LingoResourceImporter(BaseImportModule):
         }
         self.blank_tile_lookup = {}
         self._prepared_value_cache = {}
-        self.log = print
+        # Progress and timing messages. A management command replaces this with
+        # its own stdout; the ETL user interface and celery paths have nowhere
+        # to print to, so the log is where the messages belong.
+        self.log = logger.info
 
     def get_schemes(self, request):
         schemes = (
@@ -470,9 +473,7 @@ class LingoResourceImporter(BaseImportModule):
         if validation_errors:
             raise TileValidationError(validation_errors)
 
-        return load_resources_and_tiles(
-            resource_rows, tile_rows, [graph_id], log=self.log
-        )
+        return load_resources_and_tiles(resource_rows, tile_rows, log=self.log)
 
     def populate_staging_table(
         self, cursor, concepts_to_load, nodegroup_lookup, node_lookup
@@ -554,7 +555,7 @@ class LingoResourceImporter(BaseImportModule):
                 config["nodeid"] = nodeid
 
                 value, validation_errors = self._prepared_value(
-                    datatype_instance, source_value, config, nodeid
+                    datatype_instance, datatype, source_value, config, nodeid
                 )
                 valid = True if len(validation_errors) == 0 else False
                 tile_valid = True if valid else False
@@ -585,7 +586,9 @@ class LingoResourceImporter(BaseImportModule):
 
         return tile_value, tile_valid
 
-    def _prepared_value(self, datatype_instance, source_value, config, nodeid):
+    def _prepared_value(
+        self, datatype_instance, datatype, source_value, config, nodeid
+    ):
         """Resolve a source value to its tile representation, caching by value.
 
         Reference-datatype nodes are given a label ("prefLabel", "scopeNote")
@@ -593,10 +596,15 @@ class LingoResourceImporter(BaseImportModule):
         time. A vocabulary import repeats a couple of dozen distinct labels
         across millions of tiles, so the result is cached per node.
 
-        Only scalar sources are cached; anything unhashable (relationship
-        dictionaries) is resolved directly, as before.
+        Only scalar values on reference nodes are cached. Caching every scalar
+        would hold a copy of each label and note text for the length of the
+        import -- hundreds of thousands of entries for a vocabulary the size of
+        the AAT -- to save a lookup that never repeats.
         """
-        if not isinstance(source_value, (str, int, float, bool, type(None))):
+        is_cacheable = datatype == REFERENCE_DATATYPE and isinstance(
+            source_value, (str, int, float, bool, type(None))
+        )
+        if not is_cacheable:
             return self.prepare_data_for_loading(
                 datatype_instance, source_value, config
             )
@@ -688,7 +696,7 @@ class LingoResourceImporter(BaseImportModule):
         self, cursor, loadid, concepts_to_migrate, concept_hierarchy
     ):
         # prefetch default values for hidden nodes
-        reference_datatype = self.datatype_factory.get_instance("reference")
+        reference_datatype = self.datatype_factory.get_instance(REFERENCE_DATATYPE)
         WARRANT_ASSERTION_EVENT = json.dumps(
             reference_datatype.transform_value_for_tile(
                 "warrant assertion event", controlledList=const.EVENT_TYPES_LIST_ID
@@ -1053,7 +1061,7 @@ class LingoResourceImporter(BaseImportModule):
         self.log(f"  recorded {identifier_count:,} concept identifiers")
 
     def _create_namespace_tile(self, scheme_resource):
-        reference_datatype = self.datatype_factory.get_instance("reference")
+        reference_datatype = self.datatype_factory.get_instance(REFERENCE_DATATYPE)
         namespace_type_tile_value = reference_datatype.transform_value_for_tile(
             "namespaces", controlledList=const.IDENTIFIER_TYPES_LIST_ID
         )
@@ -1245,19 +1253,23 @@ class LingoResourceImporter(BaseImportModule):
             # Only offered for the SKOS path: the RDM migration below builds its
             # relationships as staging rows.
             if self.bypass_staging and not self.scheme_conceptid:
+                # Schemes and concepts are written under one transaction so a
+                # failure partway through the concepts does not leave a scheme
+                # behind with nothing in it.
                 with report_elapsed("write schemes + concepts", log=self.log):
-                    self.load_directly(
-                        cursor,
-                        self.schemes,
-                        schemes_nodegroup_lookup,
-                        schemes_node_lookup,
-                    )
-                    self.load_directly(
-                        cursor,
-                        self.concepts,
-                        concepts_nodegroup_lookup,
-                        concepts_node_lookup,
-                    )
+                    with transaction.atomic():
+                        self.load_directly(
+                            cursor,
+                            self.schemes,
+                            schemes_nodegroup_lookup,
+                            schemes_node_lookup,
+                        )
+                        self.load_directly(
+                            cursor,
+                            self.concepts,
+                            concepts_nodegroup_lookup,
+                            concepts_node_lookup,
+                        )
                 with report_elapsed("descriptors", log=self.log):
                     recalculate_descriptors_for_graph(
                         const.SCHEMES_GRAPH_ID, log=self.log

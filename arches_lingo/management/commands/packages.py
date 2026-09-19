@@ -2,6 +2,8 @@ import uuid
 import os
 import io
 from django.core.files.uploadedfile import InMemoryUploadedFile
+from django.core.management.base import CommandError
+
 from arches.app.models import models
 from arches_controlled_lists.management.commands.packages import (
     Command as PackagesCommand,
@@ -107,8 +109,8 @@ class Command(PackagesCommand):
         bypass_staging=False,
     ):
         file_name = os.path.basename(source)
-        with open(source, "rb") as f:
-            file_data = f.read()
+        with open(source, "rb") as source_file:
+            file_data = source_file.read()
         inmemory_file = InMemoryUploadedFile(
             file=io.BytesIO(file_data),
             field_name="file",
@@ -138,10 +140,17 @@ class Command(PackagesCommand):
             skip_indexing=skip_indexing,
             bypass_staging=bypass_staging,
         )
-        start_request = bulk_loader.start(request=None)
+        bulk_loader.log = self.stdout.write
+        bulk_loader.start(request=None)
         bulk_loader.file = inmemory_file
         # Avoid using celery for package import
         bulk_loader.config["celeryByteSizeLimit"] = (
             celery_byte_size_limit or 90000000  # 90mb
         )
-        write_request = bulk_loader.write(request=None)
+        result = bulk_loader.write(request=None)
+
+        # The importer reports a failed load by returning it rather than
+        # raising, so without this a caller running further steps against the
+        # imported data would carry on over a load that wrote nothing.
+        if not result.get("success"):
+            raise CommandError(f"Lingo resource import failed: {result.get('message')}")
