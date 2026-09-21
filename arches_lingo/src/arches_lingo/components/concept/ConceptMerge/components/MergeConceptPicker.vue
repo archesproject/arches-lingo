@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, onBeforeUnmount, ref, watch } from "vue";
 
 import { useGettext } from "vue3-gettext";
 
@@ -36,6 +36,15 @@ const isLoading = ref(false);
 const fetchError = ref<string | null>(null);
 let debounceTimeout: ReturnType<typeof setTimeout> | undefined;
 
+// Responses can arrive out of order -- a broad term takes far longer to come
+// back than the narrower one typed after it -- so only the most recent request
+// is allowed to write anything. FacetRow guards the same endpoint this way.
+let activeRequestId = 0;
+
+const trimmedSearchTerm = computed(function () {
+    return searchTerm.value.trim();
+});
+
 // Only a concept in Editing state can be retired after the merge, so the server
 // rejects anything else. Filtering here keeps unusable candidates out of view.
 const mergeableCandidates = computed(function () {
@@ -51,31 +60,57 @@ const hasFilteredOutCandidates = computed(function () {
 });
 
 async function fetchCandidates() {
+    const requestId = ++activeRequestId;
     isLoading.value = true;
     fetchError.value = null;
     try {
         const parsedResponse = await fetchConceptResources(
-            searchTerm.value,
+            trimmedSearchTerm.value,
             ITEMS_PER_PAGE,
             1,
             schemeId,
             [survivorConceptId],
         );
+        if (requestId !== activeRequestId) {
+            return;
+        }
         candidates.value = parsedResponse.data;
     } catch (error) {
+        if (requestId !== activeRequestId) {
+            return;
+        }
         fetchError.value =
             error instanceof Error ? error.message : String(error);
     } finally {
-        isLoading.value = false;
+        if (requestId === activeRequestId) {
+            isLoading.value = false;
+        }
     }
 }
 
-watch(searchTerm, function () {
+function discardPendingSearch() {
     clearTimeout(debounceTimeout);
+    activeRequestId++;
+}
+
+watch(trimmedSearchTerm, function (term) {
+    discardPendingSearch();
+
+    // An empty box searches for nothing rather than for everything: the
+    // unfiltered query has a whole scheme to sort through, and the arbitrary
+    // page it returns names no concept the editor was looking for. Lingo's own
+    // search clears its results the same way.
+    if (!term) {
+        candidates.value = [];
+        fetchError.value = null;
+        isLoading.value = false;
+        return;
+    }
+
     debounceTimeout = setTimeout(fetchCandidates, SEARCH_DEBOUNCE_MILLISECONDS);
 });
 
-onMounted(fetchCandidates);
+onBeforeUnmount(discardPendingSearch);
 </script>
 
 <template>
@@ -101,7 +136,14 @@ onMounted(fetchCandidates);
         </Message>
 
         <p
-            v-if="isLoading && !mergeableCandidates.length"
+            v-if="!trimmedSearchTerm"
+            class="merge-picker-status"
+        >
+            {{ $gettext("Search for the concept you want to merge away.") }}
+        </p>
+
+        <p
+            v-else-if="isLoading && !mergeableCandidates.length"
             class="merge-picker-status"
         >
             {{ $gettext("Searching…") }}
