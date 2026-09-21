@@ -23,6 +23,7 @@ import { buildMergePayload } from "@/arches_lingo/components/concept/ConceptMerg
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 import {
+    DANGER,
     ERROR,
     SECONDARY,
     STRATEGY_REPARENT_TO_SURVIVOR,
@@ -64,7 +65,33 @@ const DIALOG_SIZE = {
     height: "88vh",
 };
 
+// The chrome Lingo's other dialogs wear: a dark header band carrying the title,
+// a bordered frame, and body padding. See ExportThesauri, which sets the same.
 const dialogPassThrough = {
+    root: {
+        style: {
+            fontFamily: "var(--p-lingo-font-family)",
+            fontSize: "var(--p-lingo-font-size-small)",
+            border: "0.125rem solid var(--p-dialog-color)",
+            borderRadius: "0.25rem",
+        },
+    },
+    header: {
+        style: {
+            background: "var(--p-navigation-header-color)",
+            color: "var(--p-dialog-header-text-color)",
+            borderRadius: "0",
+            paddingBlock: "1.25rem",
+            paddingInline: "1.5rem",
+        },
+    },
+    title: {
+        style: {
+            fontSize: "var(--p-lingo-font-size-large)",
+            fontWeight: "var(--p-lingo-font-weight-normal)",
+            lineHeight: "1.2",
+        },
+    },
     content: {
         style: {
             display: "flex",
@@ -72,6 +99,8 @@ const dialogPassThrough = {
             flex: "1",
             minHeight: "0",
             overflow: "hidden",
+            padding: "1.25rem",
+            paddingTop: "1rem",
         },
     },
 };
@@ -89,6 +118,26 @@ const retirementStrategy = ref<MergeRetirementStrategy>(
 const selectionState = ref<MergeSelectionState>();
 const isMerging = ref(false);
 const mergeError = ref<string | null>(null);
+
+// The footer drives the stepper rather than each panel carrying its own buttons,
+// so the steps it moves between are named in one place.
+const MERGE_STEP_ORDER = [
+    MERGE_STEP_SELECT,
+    MERGE_STEP_COMPARE,
+    MERGE_STEP_CONFIRM,
+];
+
+const previousStep = computed(function () {
+    const stepIndex = MERGE_STEP_ORDER.indexOf(currentStep.value);
+    return MERGE_STEP_ORDER[Math.max(stepIndex - 1, 0)];
+});
+
+const nextStep = computed(function () {
+    const stepIndex = MERGE_STEP_ORDER.indexOf(currentStep.value);
+    return MERGE_STEP_ORDER[
+        Math.min(stepIndex + 1, MERGE_STEP_ORDER.length - 1)
+    ];
+});
 
 const canCompare = computed(function () {
     return Boolean(absorbedConcept.value) && !isLoadingAbsorbedConcept.value;
@@ -201,10 +250,7 @@ async function onMergeConfirmed() {
             </StepList>
 
             <StepPanels>
-                <StepPanel
-                    v-slot="{ activateCallback }"
-                    :value="MERGE_STEP_SELECT"
-                >
+                <StepPanel :value="MERGE_STEP_SELECT">
                     <div class="merge-step">
                         <div class="merge-step-body merge-step-body--fill">
                             <p class="merge-step-intro">
@@ -233,27 +279,10 @@ async function onMergeConfirmed() {
                                 {{ fetchError }}
                             </Message>
                         </div>
-                        <div class="merge-step-actions">
-                            <Button
-                                :label="$gettext('Cancel')"
-                                :severity="SECONDARY"
-                                :outlined="true"
-                                @click="emit('cancel')"
-                            />
-                            <Button
-                                :label="$gettext('Next')"
-                                :disabled="!canCompare"
-                                :loading="isLoadingAbsorbedConcept"
-                                @click="activateCallback(MERGE_STEP_COMPARE)"
-                            />
-                        </div>
                     </div>
                 </StepPanel>
 
-                <StepPanel
-                    v-slot="{ activateCallback }"
-                    :value="MERGE_STEP_COMPARE"
-                >
+                <StepPanel :value="MERGE_STEP_COMPARE">
                     <div class="merge-step">
                         <div class="merge-step-body">
                             <ProgressSpinner
@@ -274,26 +303,10 @@ async function onMergeConfirmed() {
                                 @update:selection-state="onSelectionStateChange"
                             />
                         </div>
-                        <div class="merge-step-actions">
-                            <Button
-                                :label="$gettext('Back')"
-                                :severity="SECONDARY"
-                                :outlined="true"
-                                @click="activateCallback(MERGE_STEP_SELECT)"
-                            />
-                            <Button
-                                :label="$gettext('Next')"
-                                :disabled="!canConfirm"
-                                @click="activateCallback(MERGE_STEP_CONFIRM)"
-                            />
-                        </div>
                     </div>
                 </StepPanel>
 
-                <StepPanel
-                    v-slot="{ activateCallback }"
-                    :value="MERGE_STEP_CONFIRM"
-                >
+                <StepPanel :value="MERGE_STEP_CONFIRM">
                     <div class="merge-step">
                         <div class="merge-step-body">
                             <MergeConfirmation
@@ -330,25 +343,57 @@ async function onMergeConfirmed() {
                                 {{ mergeError }}
                             </Message>
                         </div>
-                        <div class="merge-step-actions">
-                            <Button
-                                :label="$gettext('Back')"
-                                :severity="SECONDARY"
-                                :outlined="true"
-                                :disabled="isMerging"
-                                @click="activateCallback(MERGE_STEP_COMPARE)"
-                            />
-                            <Button
-                                :label="$gettext('Merge')"
-                                :disabled="!canConfirm || isMerging"
-                                :loading="isMerging"
-                                @click="onMergeConfirmed"
-                            />
-                        </div>
                     </div>
                 </StepPanel>
             </StepPanels>
         </Stepper>
+
+        <template #footer>
+            <div class="footer">
+                <Button
+                    v-if="currentStep === MERGE_STEP_SELECT"
+                    icon="pi pi-times"
+                    :label="$gettext('Cancel')"
+                    :severity="DANGER"
+                    class="footer-button"
+                    @click="emit('cancel')"
+                />
+                <Button
+                    v-else
+                    icon="pi pi-arrow-left"
+                    :label="$gettext('Back')"
+                    :severity="SECONDARY"
+                    :outlined="true"
+                    :disabled="isMerging"
+                    class="footer-button"
+                    @click="currentStep = previousStep"
+                />
+
+                <Button
+                    v-if="currentStep === MERGE_STEP_CONFIRM"
+                    icon="pi pi-check"
+                    :label="$gettext('Merge')"
+                    :disabled="!canConfirm || isMerging"
+                    :loading="isMerging"
+                    class="footer-button"
+                    @click="onMergeConfirmed"
+                />
+                <Button
+                    v-else
+                    icon="pi pi-arrow-right"
+                    icon-pos="right"
+                    :label="$gettext('Next')"
+                    :disabled="
+                        currentStep === MERGE_STEP_SELECT
+                            ? !canCompare
+                            : !canConfirm
+                    "
+                    :loading="isLoadingAbsorbedConcept"
+                    class="footer-button"
+                    @click="currentStep = nextStep"
+                />
+            </div>
+        </template>
     </Dialog>
 </template>
 
@@ -367,7 +412,7 @@ async function onMergeConfirmed() {
 .merge-stepper :deep(.p-steplist) {
     flex: none;
     padding: 0 0 1rem 0;
-    border-bottom: 0.0625rem solid var(--p-content-border-color);
+    border-bottom: 0.0625rem solid var(--p-highlight-focus-background);
 }
 
 .merge-stepper :deep(.p-step-header) {
@@ -383,12 +428,13 @@ async function onMergeConfirmed() {
 }
 
 .merge-stepper :deep(.p-step-title) {
-    font-size: var(--p-lingo-font-size-normal);
+    font-size: var(--p-lingo-font-size-smallnormal);
+    font-weight: var(--p-lingo-font-weight-normal);
     white-space: nowrap;
 }
 
 .merge-stepper :deep(.p-step-active) .p-step-title {
-    font-weight: var(--p-lingo-font-weight-bold);
+    font-weight: var(--p-lingo-font-weight-semibold);
 }
 
 .merge-stepper :deep(.p-stepper-separator) {
@@ -431,16 +477,22 @@ async function onMergeConfirmed() {
 
 .merge-step-intro {
     margin: 0 0 0.75rem 0;
-    font-size: var(--p-lingo-font-size-normal);
+    font-size: var(--p-lingo-font-size-smallnormal);
+    color: var(--p-header-item-label);
 }
 
-.merge-step-actions {
+/* The same footer ExportThesauri uses, down to how its buttons are squared off:
+   a class on the button itself, since a :deep() rule reaching into the dialog
+   loses to PrimeVue's own without !important. */
+.footer {
     display: flex;
-    flex: none;
     justify-content: flex-end;
-    gap: 0.5rem;
-    padding-top: 1rem;
-    border-top: 0.0625rem solid var(--p-content-border-color);
+    gap: 0.75rem;
+}
+
+.footer-button {
+    font-size: var(--p-lingo-font-size-small);
+    border-radius: 0.125rem;
 }
 
 .merge-spinner {

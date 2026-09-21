@@ -104,7 +104,7 @@ const { $gettext } = useGettext();
     gap: 0.5rem;
     padding: 0.5rem 0.625rem;
     border: 0.0625rem solid var(--p-content-border-color);
-    border-radius: 0.25rem;
+    border-radius: 0.125rem;
     cursor: pointer;
 }
 

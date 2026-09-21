@@ -154,8 +154,12 @@ onMounted(fetchCandidates);
     gap: 0.75rem;
 }
 
+/* Styled here rather than from the dialog: the class lands on the input itself,
+   which a :deep() rule reaching in from the parent cannot match reliably. */
 .merge-picker-input {
     width: 100%;
+    border-radius: 0.125rem;
+    font-size: var(--p-lingo-font-size-small);
 }
 
 .merge-picker-status {
@@ -167,7 +171,7 @@ onMounted(fetchCandidates);
     margin: 0;
     padding: 1rem;
     border: 0.0625rem solid var(--p-content-border-color);
-    border-radius: 0.25rem;
+    border-radius: 0.125rem;
     font-size: var(--p-lingo-font-size-smallnormal);
     color: var(--p-text-muted-color);
     text-align: center;
@@ -183,7 +187,7 @@ onMounted(fetchCandidates);
     list-style: none;
     overflow-y: auto;
     border: 0.0625rem solid var(--p-content-border-color);
-    border-radius: 0.25rem;
+    border-radius: 0.125rem;
 }
 
 .merge-picker-result {

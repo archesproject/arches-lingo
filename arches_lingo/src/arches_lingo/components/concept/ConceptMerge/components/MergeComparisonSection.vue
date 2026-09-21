@@ -60,16 +60,18 @@ function onSingleValueChoice(useAbsorbedValue: boolean) {
 <template>
     <section class="merge-section">
         <header class="merge-section-header">
-            <h3>{{ sectionTitle }}</h3>
-            <Tag
-                v-if="selectedCount"
-                severity="info"
-                :value="
-                    $gettext('%{count} selected', {
-                        count: String(selectedCount),
-                    })
-                "
-            />
+            <div class="merge-section-title">
+                <h3>{{ sectionTitle }}</h3>
+                <Tag
+                    v-if="selectedCount"
+                    severity="secondary"
+                    :value="
+                        $gettext('%{count} selected', {
+                            count: String(selectedCount),
+                        })
+                    "
+                />
+            </div>
         </header>
 
         <div class="merge-columns">
@@ -165,10 +167,19 @@ function onSingleValueChoice(useAbsorbedValue: boolean) {
     flex-direction: column;
     gap: 0.5rem;
     padding-bottom: 1rem;
-    border-bottom: 0.0625rem solid var(--p-content-border-color);
 }
 
+/* Matches the section headers the concept report uses, so a section reads the
+   same here as it does behind the dialog. See ComponentManager's .section-header. */
 .merge-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 0.0625rem solid var(--p-highlight-focus-background);
+    padding-bottom: 0.5rem;
+}
+
+.merge-section-title {
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -176,8 +187,9 @@ function onSingleValueChoice(useAbsorbedValue: boolean) {
 
 .merge-section-header h3 {
     margin: 0;
-    font-size: var(--p-lingo-font-size-normal);
-    font-weight: var(--p-lingo-font-weight-bold);
+    font-size: var(--p-lingo-font-size-medium);
+    font-weight: var(--p-lingo-font-weight-normal);
+    color: var(--p-neutral-500);
 }
 
 .merge-columns {
@@ -194,16 +206,22 @@ function onSingleValueChoice(useAbsorbedValue: boolean) {
     min-width: 0;
 }
 
+/* These name the two sides the way a table names its columns, so they take the
+   column-title treatment rather than reading as body copy. */
 .merge-column-heading {
     font-size: var(--p-lingo-font-size-smallnormal);
-    color: var(--p-text-muted-color);
+    font-weight: var(--p-lingo-font-weight-normal);
+    color: var(--p-neutral-400);
 }
 
+/* Lingo renders "nothing here yet" copy light and unemphasised rather than
+   italic; see MetaStringViewer's .no-data. */
 .merge-empty {
     margin: 0;
+    padding: 0.5rem 0;
     font-size: var(--p-lingo-font-size-smallnormal);
-    color: var(--p-text-muted-color);
-    font-style: italic;
+    font-weight: var(--p-lingo-font-weight-light);
+    color: var(--p-inputtext-placeholder-color);
 }
 
 @media (max-width: 48rem) {

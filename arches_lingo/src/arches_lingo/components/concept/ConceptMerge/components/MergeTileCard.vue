@@ -106,7 +106,7 @@ const secondaryValues = computed(function () {
     gap: 0.5rem;
     padding: 0.5rem 0.625rem;
     border: 0.0625rem solid var(--p-content-border-color);
-    border-radius: 0.25rem;
+    border-radius: 0.125rem;
     background: var(--p-content-background);
 }
 
@@ -128,14 +128,15 @@ const secondaryValues = computed(function () {
 }
 
 .merge-tile-primary {
-    font-size: var(--p-lingo-font-size-normal);
+    font-size: var(--p-lingo-font-size-smallnormal);
     color: var(--p-text-color);
     overflow-wrap: anywhere;
 }
 
+/* The same size and colour the report's tables give a row's secondary values. */
 .merge-tile-secondary {
     font-size: var(--p-lingo-font-size-smallnormal);
-    color: var(--p-text-muted-color);
+    color: var(--p-inputtext-placeholder-color);
     overflow-wrap: anywhere;
 }
 
