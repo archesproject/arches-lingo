@@ -1,7 +1,9 @@
 import uuid
 
-from arches.app.models.models import ResourceInstance, TileModel
+from arches.app.models.models import EditLog, ResourceInstance, TileModel
+from arches.app.models.resource import Resource
 from arches.app.models.tile import Tile
+from arches.app.utils.index_database import index_resources_using_singleprocessing
 
 from arches_lingo.const import (
     CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID,
@@ -102,11 +104,19 @@ def get_all_descendant_ids(concept_id: str) -> set[str]:
     return descendant_ids
 
 
-def reparent_children(concept_id: str, parent_ids: set[str], scheme_id: str | None):
+def reparent_children(
+    concept_id: str,
+    parent_ids: set[str],
+    scheme_id: str | None,
+    edit_transaction_id=None,
+):
     """Move children of concept_id up to its parents.
 
     If the concept being removed was itself a top concept, children with no
     remaining broader parent are promoted to top concepts of the same scheme.
+
+    Tiles are saved unindexed; the caller indexes everything the transaction
+    touched in one pass. See `index_concepts_in_transaction`.
     """
     child_classification_tiles = TileModel.objects.filter(
         nodegroup_id=CLASSIFICATION_STATUS_NODEGROUP,
@@ -147,7 +157,7 @@ def reparent_children(concept_id: str, parent_ids: set[str], scheme_id: str | No
                 **tile.data,
                 CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID: updated_broader_references,
             }
-            tile.save(request=None)
+            tile.save(request=None, transaction_id=edit_transaction_id, index=False)
         else:
             classification_tile.delete()
 
@@ -158,11 +168,19 @@ def reparent_children(concept_id: str, parent_ids: set[str], scheme_id: str | No
                     data={
                         TOP_CONCEPT_OF_NODE_AND_NODEGROUP: [{"resourceId": scheme_id}]
                     },
-                ).save(request=None)
+                ).save(
+                    request=None,
+                    transaction_id=edit_transaction_id,
+                    index=False,
+                )
 
 
-def orphan_children(concept_id: str):
-    """Remove concept_id as a broader parent from all its children."""
+def orphan_children(concept_id: str, edit_transaction_id=None):
+    """Remove concept_id as a broader parent from all its children.
+
+    Tiles are saved unindexed; the caller indexes everything the transaction
+    touched in one pass. See `index_concepts_in_transaction`.
+    """
     child_classification_tiles = TileModel.objects.filter(
         nodegroup_id=CLASSIFICATION_STATUS_NODEGROUP,
         **{
@@ -192,12 +210,19 @@ def orphan_children(concept_id: str):
                 **tile.data,
                 CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID: updated_broader_references,
             }
-            tile.save(request=None)
+            tile.save(request=None, transaction_id=edit_transaction_id, index=False)
         else:
             classification_tile.delete()
 
 
-def delete_concept(concept: ResourceInstance, strategy: str | None):
+def delete_concept(
+    concept: ResourceInstance, strategy: str | None, edit_transaction_id=None
+):
+    """Delete a concept, rehoming its children according to `strategy`.
+
+    Like `retire_concept`, this writes nothing to the search index; the caller
+    runs `index_concepts_in_transaction(edit_transaction_id)` once afterwards.
+    """
     concept_id = str(concept.pk)
 
     if strategy == STRATEGY_DELETE_CHILDREN:
@@ -217,10 +242,11 @@ def delete_concept(concept: ResourceInstance, strategy: str | None):
             concept_id,
             get_broader_ids(concept_id),
             get_scheme_id_if_top_concept(concept_id),
+            edit_transaction_id,
         )
 
     elif strategy == STRATEGY_ORPHAN:
-        orphan_children(concept_id)
+        orphan_children(concept_id, edit_transaction_id)
 
     concept.delete()
 
@@ -229,7 +255,16 @@ def retire_concept(
     concept: ResourceInstance,
     strategy: str | None,
     reparent_target_id: str | None = None,
+    edit_transaction_id=None,
 ):
+    """Retire a concept, rehoming its children according to `strategy`.
+
+    Nothing here writes to the search index: rehoming touches one tile per
+    child, and indexing inside that loop costs a round trip per child. The
+    caller runs `index_concepts_in_transaction(edit_transaction_id)` once
+    afterwards instead, which is why a merge can hand in its own transaction id
+    and have the whole operation indexed in a single pass.
+    """
     concept_id = str(concept.pk)
 
     if strategy == STRATEGY_REPARENT_TO_SURVIVOR and reparent_target_id:
@@ -237,6 +272,7 @@ def retire_concept(
             concept_id,
             {str(reparent_target_id)},
             get_scheme_id_if_top_concept(concept_id),
+            edit_transaction_id,
         )
 
     elif strategy == STRATEGY_DELETE_CHILDREN:
@@ -250,13 +286,44 @@ def retire_concept(
             concept_id,
             get_broader_ids(concept_id),
             get_scheme_id_if_top_concept(concept_id),
+            edit_transaction_id,
         )
 
     elif strategy == STRATEGY_ORPHAN:
-        orphan_children(concept_id)
+        orphan_children(concept_id, edit_transaction_id)
 
     concept.resource_instance_lifecycle_state_id = RETIRED_STATE_ID
     concept.save(update_fields=["resource_instance_lifecycle_state"])
+
+
+def index_concepts_in_transaction(edit_transaction_id, additional_concept_ids=()):
+    """Index every resource an edit transaction touched, in one bulk pass.
+
+    Tile.save() indexes a whole resource per call, so an operation that writes
+    many tiles pays a round trip per tile. Deferring to a single bulk index at
+    the end costs one pass over the resources actually affected, and skips the
+    intermediate states nobody ever searches for.
+
+    `additional_concept_ids` covers resources whose lifecycle state changed
+    without a tile edit, since those leave no edit-log row to find them by.
+    """
+    resource_ids = set(str(concept_id) for concept_id in additional_concept_ids)
+    if edit_transaction_id:
+        resource_ids.update(
+            str(resource_id)
+            for resource_id in EditLog.objects.filter(transactionid=edit_transaction_id)
+            .values_list("resourceinstanceid", flat=True)
+            .distinct()
+            if resource_id
+        )
+
+    if not resource_ids:
+        return
+
+    index_resources_using_singleprocessing(
+        resources=Resource.objects.filter(pk__in=resource_ids),
+        quiet=True,
+    )
 
 
 def unretire_concept(concept: ResourceInstance, cascade: bool):

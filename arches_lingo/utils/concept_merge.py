@@ -18,6 +18,7 @@ from django.db.models import Q
 from django.utils.translation import gettext as _
 
 from arches.app.models.models import NodeGroup, TileModel
+from arches.app.models.resource import Resource
 from arches.app.models.tile import Tile
 
 from arches_controlled_lists.models import ListItem
@@ -53,6 +54,7 @@ from arches_lingo.utils.concept_lifecycle import (
     VALID_STRATEGIES,
     get_narrower_ids,
     get_scheme_id_if_top_concept,
+    index_concepts_in_transaction,
     retire_concept,
 )
 from arches_lingo.utils.scheme_lock import get_scheme_id_for_concept, is_scheme_locked
@@ -130,6 +132,19 @@ def get_concept_nodegroups_by_id():
             grouping_node__graph_id=CONCEPTS_GRAPH_ID
         ).select_related("grouping_node")
     }
+
+
+def load_concept_resources(*concept_ids):
+    """Return {concept id: Resource} with the graph publication already joined.
+
+    Tile.save() otherwise fetches the resource and its serialized graph for
+    every tile it writes, which for a merge is the same two concepts over and
+    over.
+    """
+    resources = Resource.objects.select_related("graph__publication").filter(
+        pk__in=[str(concept_id) for concept_id in concept_ids]
+    )
+    return {str(resource.pk): resource for resource in resources}
 
 
 def resolve_scheme_id(concept_id):
@@ -218,7 +233,7 @@ def strip_self_references(nodegroup_id, tile_data, survivor_id):
 
 
 def create_tile_on_concept(
-    concept_id, nodegroup_id, tile_data, parent_tile_id, edit_transaction_id
+    concept_id, nodegroup_id, tile_data, parent_tile_id, edit_transaction_id, resource
 ):
     """Save a tile through the Tile proxy so datatypes and graph functions run.
 
@@ -226,6 +241,11 @@ def create_tile_on_concept(
     provisional edits for any user who is not a resource reviewer, which would
     leave the merged values invisible. The merging user is recorded on the
     ConceptMerge instead, and edit log rows are grouped by transaction id.
+
+    `resource` is the concept the tile belongs to, handed in so the whole merge
+    shares one instance rather than refetching it -- and its graph publication
+    -- on every save. Indexing is off for the same reason; see
+    `index_concepts_in_transaction`.
     """
     tile = Tile(
         resourceinstance_id=concept_id,
@@ -233,12 +253,17 @@ def create_tile_on_concept(
         parenttile_id=parent_tile_id,
         data=tile_data,
     )
-    tile.save(request=None, transaction_id=edit_transaction_id)
+    tile.save(
+        request=None,
+        transaction_id=edit_transaction_id,
+        resource=resource,
+        index=False,
+    )
     return tile
 
 
 def overwrite_single_cardinality_tile(
-    concept_id, nodegroup_id, tile_data, edit_transaction_id
+    concept_id, nodegroup_id, tile_data, edit_transaction_id, resource
 ):
     """Replace the survivor's existing tile data in place, keeping its tileid.
 
@@ -252,15 +277,20 @@ def overwrite_single_cardinality_tile(
 
     if existing_tile is None:
         return create_tile_on_concept(
-            concept_id, nodegroup_id, tile_data, None, edit_transaction_id
+            concept_id, nodegroup_id, tile_data, None, edit_transaction_id, resource
         )
 
     for child_tile in Tile.objects.filter(parenttile_id=existing_tile.tileid):
-        child_tile.delete(request=None)
+        child_tile.delete(request=None, index=False)
 
     tile = Tile.objects.get(tileid=existing_tile.tileid)
     tile.data = tile_data
-    tile.save(request=None, transaction_id=edit_transaction_id)
+    tile.save(
+        request=None,
+        transaction_id=edit_transaction_id,
+        resource=resource,
+        index=False,
+    )
     return tile
 
 
@@ -269,6 +299,7 @@ def copy_child_tiles(
     target_parent_tile,
     source_child_tiles_by_parent_id,
     edit_transaction_id,
+    resource,
 ):
     copied_tiles = []
     for source_child_tile in source_child_tiles_by_parent_id.get(
@@ -280,6 +311,7 @@ def copy_child_tiles(
             copy.deepcopy(source_child_tile.data),
             target_parent_tile.tileid,
             edit_transaction_id,
+            resource,
         )
         copied_tiles.append(target_child_tile)
         copied_tiles.extend(
@@ -288,6 +320,7 @@ def copy_child_tiles(
                 target_child_tile,
                 source_child_tiles_by_parent_id,
                 edit_transaction_id,
+                resource,
             )
         )
     return copied_tiles
@@ -308,6 +341,7 @@ def copy_tiles_to_survivor(
     """
     nodegroups_by_id = get_concept_nodegroups_by_id()
     alt_label_tile_value = get_list_item_tile_value(ALT_LABEL_LIST_ITEM_ID)
+    survivor_resource = load_concept_resources(survivor.pk)[str(survivor.pk)]
 
     source_tiles_by_id = {}
     source_child_tiles_by_parent_id = defaultdict(list)
@@ -350,6 +384,7 @@ def copy_tiles_to_survivor(
                 source_tile.nodegroup_id,
                 tile_data,
                 edit_transaction_id,
+                survivor_resource,
             )
         else:
             target_tile = create_tile_on_concept(
@@ -358,6 +393,7 @@ def copy_tiles_to_survivor(
                 tile_data,
                 None,
                 edit_transaction_id,
+                survivor_resource,
             )
 
         if identity_key is not None:
@@ -370,6 +406,7 @@ def copy_tiles_to_survivor(
                 target_tile,
                 source_child_tiles_by_parent_id,
                 edit_transaction_id,
+                survivor_resource,
             )
         )
 
@@ -388,12 +425,22 @@ def demote_pref_label_tiles(tile_ids, edit_transaction_id):
 
     alt_label_tile_value = get_list_item_tile_value(ALT_LABEL_LIST_ITEM_ID)
 
+    tiles_to_demote = list(
+        Tile.objects.filter(tileid__in=tile_ids, nodegroup_id=CONCEPT_NAME_NODEGROUP)
+    )
+    resources_by_concept_id = load_concept_resources(
+        *{tile.resourceinstance_id for tile in tiles_to_demote}
+    )
+
     demoted_tiles = []
-    for tile in Tile.objects.filter(
-        tileid__in=tile_ids, nodegroup_id=CONCEPT_NAME_NODEGROUP
-    ):
+    for tile in tiles_to_demote:
         tile.data = {**tile.data, CONCEPT_NAME_TYPE_NODE: [alt_label_tile_value]}
-        tile.save(request=None, transaction_id=edit_transaction_id)
+        tile.save(
+            request=None,
+            transaction_id=edit_transaction_id,
+            resource=resources_by_concept_id[str(tile.resourceinstance_id)],
+            index=False,
+        )
         demoted_tiles.append(tile)
 
     return demoted_tiles
@@ -412,6 +459,7 @@ def write_reciprocal_exact_match_tiles(survivor, absorbed, edit_transaction_id):
         return []
 
     exact_match_tile_value = get_list_item_tile_value(EXACT_MATCH_LIST_ITEM_ID)
+    resources_by_concept_id = load_concept_resources(survivor.pk, absorbed.pk)
 
     written_tiles = []
     for concept_id, matched_uri in (
@@ -440,6 +488,7 @@ def write_reciprocal_exact_match_tiles(survivor, absorbed, edit_transaction_id):
                 tile_data,
                 None,
                 edit_transaction_id,
+                resources_by_concept_id[str(concept_id)],
             )
         )
 
@@ -663,12 +712,22 @@ def merge_concepts(survivor, absorbed, selections, user):
                 absorbed,
                 selections.get("retirement_strategy"),
                 str(survivor.pk),
+                edit_transaction_id,
             )
 
-        return ConceptMerge.objects.create(
+        concept_merge = ConceptMerge.objects.create(
             survivor_concept_id=survivor.pk,
             absorbed_concept_id=absorbed.pk,
             user=user if user is not None and user.is_authenticated else None,
             edit_transaction_id=edit_transaction_id,
             selections=selections,
         )
+
+    # One bulk pass over everything the merge touched, rather than a round trip
+    # per tile inside the loops above. Running it after the transaction commits
+    # keeps a rolled-back merge out of the index, and means both concepts are
+    # indexed as they finally stand rather than mid-merge.
+    index_concepts_in_transaction(
+        edit_transaction_id, additional_concept_ids=(survivor.pk, absorbed.pk)
+    )
+    return concept_merge
