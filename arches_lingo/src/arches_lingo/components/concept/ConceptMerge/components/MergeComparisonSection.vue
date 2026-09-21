@@ -11,10 +11,14 @@ import MergeTileCard from "@/arches_lingo/components/concept/ConceptMerge/compon
 import type { Label } from "@/arches_controlled_lists/types.ts";
 import type { SectionComparison } from "@/arches_lingo/components/concept/ConceptMerge/types.ts";
 
-const { sectionTitle, comparison } = defineProps<{
+const { sectionTitle, comparison, isBlocked } = defineProps<{
     sectionTitle: string;
     comparison: SectionComparison;
     conceptLabelsById: Map<string, Label[]>;
+    // A scheme-scoped section in a merge across schemes. Shown rather than
+    // hidden, so the editor can see what is being left behind, but nothing in
+    // it can be chosen.
+    isBlocked: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -74,6 +78,17 @@ function onSingleValueChoice(useAbsorbedValue: boolean) {
             </div>
         </header>
 
+        <p
+            v-if="isBlocked"
+            class="merge-section-blocked"
+        >
+            {{
+                $gettext(
+                    "These values belong to the other concept's scheme and cannot be brought across. They stay with that concept.",
+                )
+            }}
+        </p>
+
         <div class="merge-columns">
             <div class="merge-column">
                 <span class="merge-column-heading">
@@ -101,6 +116,7 @@ function onSingleValueChoice(useAbsorbedValue: boolean) {
                         <RadioButton
                             v-if="replacesSurvivorValue"
                             :model-value="isSurvivorValueKept"
+                            :disabled="isBlocked"
                             :input-id="`keep-${comparison.section.nodegroupAlias}`"
                             :name="`single-${comparison.section.nodegroupAlias}`"
                             :value="true"
@@ -137,6 +153,7 @@ function onSingleValueChoice(useAbsorbedValue: boolean) {
                         <RadioButton
                             v-if="replacesSurvivorValue"
                             :model-value="!isSurvivorValueKept"
+                            :disabled="isBlocked"
                             :input-id="`take-${comparison.section.nodegroupAlias}`"
                             :name="`single-${comparison.section.nodegroupAlias}`"
                             :value="true"
@@ -145,6 +162,7 @@ function onSingleValueChoice(useAbsorbedValue: boolean) {
                         <Checkbox
                             v-else
                             :model-value="option.isSelected"
+                            :disabled="isBlocked"
                             :input-id="`tile-${option.tile.tileid}`"
                             :binary="true"
                             @update:model-value="
@@ -177,6 +195,12 @@ function onSingleValueChoice(useAbsorbedValue: boolean) {
     align-items: center;
     border-bottom: 0.0625rem solid var(--p-highlight-focus-background);
     padding-bottom: 0.5rem;
+}
+
+.merge-section-blocked {
+    margin: 0;
+    font-size: var(--p-lingo-font-size-smallnormal);
+    color: var(--p-header-item-label);
 }
 
 .merge-section-title {

@@ -77,6 +77,16 @@ EXCLUDED_NODEGROUP_ALIASES = frozenset(
     {"uri", "identifier", "part_of_scheme", "data_assignment"}
 )
 
+# Nodegroups whose values only mean anything inside one scheme, so they are never
+# copied between concepts in different schemes. Each holds a resource-instance
+# reference: classification_status and relation_status point at Concepts, and
+# top_concept_of points at the Scheme itself. Carrying any of them across would
+# leave the survivor placed in, or related to, a vocabulary it is not part of.
+# This must stay in step with the client's schemeScoped sections.
+SCHEME_SCOPED_NODEGROUP_ALIASES = frozenset(
+    {"classification_status", "top_concept_of", "relation_status"}
+)
+
 # Node values that together identify a tile's content, used to skip copying a
 # tile the survivor already holds. Nodegroups absent here are never deduplicated.
 IDENTITY_NODES_BY_NODEGROUP = {
@@ -446,12 +456,19 @@ def demote_pref_label_tiles(tile_ids, edit_transaction_id):
     return demoted_tiles
 
 
-def write_reciprocal_exact_match_tiles(survivor, absorbed, edit_transaction_id):
+def write_reciprocal_exact_match_tiles(
+    survivor, absorbed, edit_transaction_id, write_to_absorbed=True
+):
     """Record a skos:exactMatch on each concept pointing at the other's URI.
 
     The absorbed concept keeps its own URI and stays dereferenceable once
     retired, so without this the two records have no machine-readable link.
     Concepts without a URI tile are skipped rather than treated as an error.
+
+    `write_to_absorbed` false records the match on the survivor alone, for an
+    absorbed concept the merge is not allowed to edit -- a published or locked
+    concept in another scheme. The half that can be written is the half that
+    matters, since it is the survivor an editor will be reading from.
     """
     survivor_uri = get_concept_uri(survivor.pk)
     absorbed_uri = get_concept_uri(absorbed.pk)
@@ -461,11 +478,12 @@ def write_reciprocal_exact_match_tiles(survivor, absorbed, edit_transaction_id):
     exact_match_tile_value = get_list_item_tile_value(EXACT_MATCH_LIST_ITEM_ID)
     resources_by_concept_id = load_concept_resources(survivor.pk, absorbed.pk)
 
+    matches_to_write = [(survivor.pk, absorbed_uri)]
+    if write_to_absorbed:
+        matches_to_write.append((absorbed.pk, survivor_uri))
+
     written_tiles = []
-    for concept_id, matched_uri in (
-        (survivor.pk, absorbed_uri),
-        (absorbed.pk, survivor_uri),
-    ):
+    for concept_id, matched_uri in matches_to_write:
         tile_data = {
             MATCH_STATUS_RELATION_NODE: [exact_match_tile_value],
             MATCH_STATUS_COMPARATE_NODE: matched_uri,
@@ -547,6 +565,22 @@ def get_concept_merge_history(concept_id):
     return history
 
 
+def concept_is_writable(concept, user_is_lingo_admin):
+    """Whether the merge may add tiles to this concept.
+
+    A concept the merge only reads from needs no such permission, which is what
+    lets a published or locked concept in another scheme be absorbed.
+    """
+    if not concept.resource_instance_lifecycle_state.can_edit_resource_instances:
+        return False
+
+    scheme_id = resolve_scheme_id(concept.pk)
+    if scheme_id and is_scheme_locked(scheme_id) and not user_is_lingo_admin:
+        return False
+
+    return True
+
+
 def validate_merge(survivor, absorbed, selections, user_is_lingo_admin):
     """Raise ConceptMergeError if this merge may not proceed."""
     if str(survivor.pk) == str(absorbed.pk):
@@ -564,12 +598,17 @@ def validate_merge(survivor, absorbed, selections, user_is_lingo_admin):
 
     survivor_scheme_id = resolve_scheme_id(survivor.pk)
     absorbed_scheme_id = resolve_scheme_id(absorbed.pk)
-    if not survivor_scheme_id or survivor_scheme_id != absorbed_scheme_id:
+    if not survivor_scheme_id or not absorbed_scheme_id:
         raise ConceptMergeError(
             _("Cannot merge"),
-            _("Concepts can only be merged within the same scheme."),
+            _("Both concepts must belong to a scheme."),
         )
 
+    is_cross_scheme = survivor_scheme_id != absorbed_scheme_id
+
+    # Only the surviving concept is necessarily written to, so only its scheme
+    # has to be unlocked. The absorbed concept's own scheme is checked when the
+    # merge actually writes to it -- see concept_is_writable.
     if is_scheme_locked(survivor_scheme_id) and not user_is_lingo_admin:
         raise ConceptMergeError(
             _("Scheme is locked."),
@@ -584,17 +623,25 @@ def validate_merge(survivor, absorbed, selections, user_is_lingo_admin):
             status=HTTPStatus.CONFLICT,
         )
 
-    if absorbed.resource_instance_lifecycle_state_id != EDITING_STATE_ID:
+    # Within a scheme the absorbed concept is retired as part of the merge, which
+    # only the Editing state allows. Across schemes it is never retired, so it is
+    # read from and nothing about its state stands in the way.
+    if not is_cross_scheme and (
+        absorbed.resource_instance_lifecycle_state_id != EDITING_STATE_ID
+    ):
         raise ConceptMergeError(
             _("Cannot merge"),
             _(
                 "Only a concept in the Editing state can be merged into another "
-                "concept, because it must be retirable afterwards."
+                "concept in the same scheme, because it must be retirable "
+                "afterwards."
             ),
             status=HTTPStatus.CONFLICT,
         )
 
-    validate_selected_tiles(absorbed, selections.get("tile_selections") or [])
+    validate_selected_tiles(
+        absorbed, selections.get("tile_selections") or [], is_cross_scheme
+    )
     validate_pref_label_demotions(
         survivor,
         selections.get("survivor_pref_label_demotions") or [],
@@ -605,12 +652,24 @@ def validate_merge(survivor, absorbed, selections, user_is_lingo_admin):
         selections.get("pref_label_demotions") or [],
         _("Tile %(tileid)s is not a label of the absorbed concept."),
     )
-    validate_retirement(absorbed, selections)
+    validate_retirement(absorbed, selections, is_cross_scheme)
 
 
-def validate_retirement(absorbed, selections):
+def validate_retirement(absorbed, selections, is_cross_scheme=False):
     if not selections.get("retire_absorbed_concept"):
         return
+
+    # Retiring rehomes the concept's children, and every strategy for doing so
+    # resolves within one scheme: they move to the surviving concept, to the
+    # retiring concept's own parents, or to the top of its scheme.
+    if is_cross_scheme:
+        raise ConceptMergeError(
+            _("Cannot merge"),
+            _(
+                "A concept can only be retired by a merge within its own "
+                "scheme. Merging across schemes leaves it in place."
+            ),
+        )
 
     retirement_strategy = selections.get("retirement_strategy")
     if (
@@ -647,7 +706,7 @@ def validate_pref_label_demotions(concept, tile_ids, error_message):
             )
 
 
-def validate_selected_tiles(absorbed, selected_tile_ids):
+def validate_selected_tiles(absorbed, selected_tile_ids, is_cross_scheme=False):
     nodegroups_by_id = get_concept_nodegroups_by_id()
     selectable_tiles_by_id = {
         str(tile.tileid): tile
@@ -674,8 +733,21 @@ def validate_selected_tiles(absorbed, selected_tile_ids):
                 % {"alias": nodegroup.grouping_node.alias},
             )
 
+        if (
+            is_cross_scheme
+            and nodegroup.grouping_node.alias in SCHEME_SCOPED_NODEGROUP_ALIASES
+        ):
+            raise ConceptMergeError(
+                _("Cannot merge"),
+                _(
+                    "%(alias)s values belong to a single scheme and cannot be "
+                    "copied between concepts in different schemes."
+                )
+                % {"alias": nodegroup.grouping_node.alias},
+            )
 
-def merge_concepts(survivor, absorbed, selections, user):
+
+def merge_concepts(survivor, absorbed, selections, user, user_is_lingo_admin=False):
     """Apply a validated merge and return its audit record."""
     edit_transaction_id = uuid.uuid4()
     selected_tile_ids = selections.get("tile_selections") or []
@@ -702,7 +774,12 @@ def merge_concepts(survivor, absorbed, selections, user):
         )
 
         if selections.get("create_exact_match_tiles", True):
-            write_reciprocal_exact_match_tiles(survivor, absorbed, edit_transaction_id)
+            write_reciprocal_exact_match_tiles(
+                survivor,
+                absorbed,
+                edit_transaction_id,
+                write_to_absorbed=concept_is_writable(absorbed, user_is_lingo_admin),
+            )
 
         # Retiring here rather than in a follow-up request means a failure anywhere
         # in the merge rolls the retirement back with it, so the two concepts are

@@ -12,15 +12,17 @@ import MergeRetirementOptions from "@/arches_lingo/components/concept/ConceptMer
 import type { MergeRetirementStrategy } from "@/arches_lingo/types.ts";
 import type { MergeSectionSummary } from "@/arches_lingo/components/concept/ConceptMerge/types.ts";
 
-const { survivorLabel, absorbedLabel, sectionSummaries } = defineProps<{
-    absorbedConceptId: string;
-    survivorLabel: string | undefined;
-    absorbedLabel: string | undefined;
-    sectionSummaries: MergeSectionSummary[];
-    createExactMatchTiles: boolean;
-    retireAbsorbedConcept: boolean;
-    retirementStrategy: MergeRetirementStrategy;
-}>();
+const { survivorLabel, absorbedLabel, sectionSummaries, isCrossScheme } =
+    defineProps<{
+        absorbedConceptId: string;
+        survivorLabel: string | undefined;
+        absorbedLabel: string | undefined;
+        sectionSummaries: MergeSectionSummary[];
+        createExactMatchTiles: boolean;
+        retireAbsorbedConcept: boolean;
+        retirementStrategy: MergeRetirementStrategy;
+        isCrossScheme: boolean;
+    }>();
 
 const emit = defineEmits<{
     (event: "update:createExactMatchTiles", value: boolean): void;
@@ -102,7 +104,21 @@ const hasSelections = computed(function () {
             </span>
         </label>
 
+        <Message
+            v-if="isCrossScheme"
+            :severity="INFO"
+            :closable="false"
+        >
+            {{
+                $gettext(
+                    'The two concepts are in different schemes, so "%{absorbed}" stays where it is. Retiring it is only offered for a merge within one scheme.',
+                    { absorbed: absorbedLabel ?? "" },
+                )
+            }}
+        </Message>
+
         <label
+            v-if="!isCrossScheme"
             class="merge-confirmation-option"
             for="merge-retire"
         >
@@ -133,7 +149,7 @@ const hasSelections = computed(function () {
         </label>
 
         <MergeRetirementOptions
-            v-if="retireAbsorbedConcept"
+            v-if="!isCrossScheme && retireAbsorbedConcept"
             :absorbed-concept-id="absorbedConceptId"
             :absorbed-label="absorbedLabel"
             :survivor-label="survivorLabel"

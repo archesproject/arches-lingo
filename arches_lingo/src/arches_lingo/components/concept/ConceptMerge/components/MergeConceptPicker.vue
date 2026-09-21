@@ -45,13 +45,22 @@ const trimmedSearchTerm = computed(function () {
     return searchTerm.value.trim();
 });
 
-// Only a concept in Editing state can be retired after the merge, so the server
-// rejects anything else. Filtering here keeps unusable candidates out of view.
+// Every lineage a search result carries begins with its scheme, so a candidate
+// names its own scheme without a second request.
+function schemeIdOf(candidate: SearchResultItem) {
+    return candidate.parents?.[0]?.[0]?.id;
+}
+
+// A merge within the survivor's scheme retires the absorbed concept, which only
+// the Editing state allows. Across schemes the concept is only read from, so any
+// state can be absorbed. The server enforces both; filtering here keeps
+// candidates that would be rejected out of view.
 const mergeableCandidates = computed(function () {
     return candidates.value.filter(
         (candidate) =>
+            schemeIdOf(candidate) !== schemeId ||
             candidate.resource_instance_lifecycle_state_id ===
-            EDITING_LIFECYCLE_STATE_ID,
+                EDITING_LIFECYCLE_STATE_ID,
     );
 });
 
@@ -64,11 +73,13 @@ async function fetchCandidates() {
     isLoading.value = true;
     fetchError.value = null;
     try {
+        // No scheme filter: concepts can be merged across schemes, and each
+        // result names its own scheme first in its hierarchy path.
         const parsedResponse = await fetchConceptResources(
             trimmedSearchTerm.value,
             ITEMS_PER_PAGE,
             1,
-            schemeId,
+            "",
             [survivorConceptId],
         );
         if (requestId !== activeRequestId) {
@@ -156,9 +167,9 @@ onBeforeUnmount(discardPendingSearch);
             {{
                 hasFilteredOutCandidates
                     ? $gettext(
-                          "Every matching concept is outside the Editing state, so none can be merged away.",
+                          "Every match in this scheme is outside the Editing state, so none can be merged away.",
                       )
-                    : $gettext("No matching concepts in this scheme.")
+                    : $gettext("No matching concepts.")
             }}
         </p>
 

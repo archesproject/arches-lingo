@@ -1,7 +1,10 @@
 import { SKOS_PREF_LABEL_URI } from "@/arches_lingo/constants.ts";
 
 import type { AliasedNodeData } from "@/arches_vue_components/types.ts";
-import type { MergeRequestPayload } from "@/arches_lingo/types.ts";
+import type {
+    MergeRequestPayload,
+    ResourceInstanceResult,
+} from "@/arches_lingo/types.ts";
 import type {
     MergeRetirementChoice,
     MergeSection,
@@ -11,6 +14,25 @@ import type {
     PrefLabelConflict,
     SectionComparison,
 } from "@/arches_lingo/components/concept/ConceptMerge/types.ts";
+
+/**
+ * The scheme a concept belongs to, however it is attached.
+ *
+ * A top concept records its scheme on top_concept_of rather than
+ * part_of_scheme, so both are read here -- the same fallback the server's
+ * resolve_scheme_id makes.
+ */
+export function resolveSchemeId(
+    concept: ResourceInstanceResult | undefined,
+): string | undefined {
+    const aliasedData = concept?.aliased_data;
+    return (
+        aliasedData?.part_of_scheme?.aliased_data?.part_of_scheme
+            ?.node_value?.[0]?.resourceId ??
+        aliasedData?.top_concept_of?.aliased_data?.top_concept_of
+            ?.node_value?.[0]?.resourceId
+    );
+}
 
 const LABEL_CONTENT_ALIAS = "appellative_status_ascribed_name_content";
 const LABEL_LANGUAGE_ALIAS = "appellative_status_ascribed_name_language";
@@ -146,6 +168,7 @@ export function buildSectionComparison(
     survivorTiles: MergeTile[],
     absorbedTiles: MergeTile[],
     survivorConceptId: string,
+    isBlocked = false,
 ): SectionComparison {
     const survivorIdentityKeys = new Set(
         survivorTiles
@@ -166,11 +189,13 @@ export function buildSectionComparison(
 
             // Taking a cardinality-1 value overwrites what the survivor already
             // has, so it is only selected by default when there is nothing to
-            // overwrite.
+            // overwrite. A blocked section is never selected, so the counts, the
+            // summary and the payload all agree with the disabled controls.
             const isSelected =
-                section.cardinality === "n"
+                !isBlocked &&
+                (section.cardinality === "n"
                     ? !alreadyOnSurvivor
-                    : survivorTiles.length === 0;
+                    : survivorTiles.length === 0);
 
             return { tile, identityKey, alreadyOnSurvivor, isSelected };
         });
@@ -262,8 +287,16 @@ export function buildMergePayload(
     prefLabelConflicts: PrefLabelConflict[],
     prefLabelWinnerByLanguage: Record<string, string>,
     retirement: MergeRetirementChoice,
+    isCrossScheme = false,
 ): MergeRequestPayload {
+    // Scheme-scoped sections are disabled in the comparison rather than hidden,
+    // so a selection made before the concept was chosen could still be carried
+    // here. The server rejects them either way; dropping them means the editor
+    // sees the merge they were shown rather than an error.
     const tileSelections = sectionComparisons
+        .filter(
+            (comparison) => !isCrossScheme || !comparison.section.schemeScoped,
+        )
         .flatMap((comparison) => comparison.absorbedTileOptions)
         .filter((option) => option.isSelected && option.tile.tileid)
         .map((option) => option.tile.tileid as string);
@@ -291,10 +324,14 @@ export function buildMergePayload(
         pref_label_demotions: prefLabelDemotions,
         survivor_pref_label_demotions: survivorPrefLabelDemotions,
         create_exact_match_tiles: retirement.createExactMatchTiles,
-        retire_absorbed_concept: retirement.retireAbsorbedConcept,
-        retirement_strategy: retirement.retireAbsorbedConcept
-            ? retirement.retirementStrategy
-            : null,
+        // Retiring rehomes the concept's children within its own scheme, so a
+        // merge across schemes leaves it in place.
+        retire_absorbed_concept:
+            !isCrossScheme && retirement.retireAbsorbedConcept,
+        retirement_strategy:
+            !isCrossScheme && retirement.retireAbsorbedConcept
+                ? retirement.retirementStrategy
+                : null,
     };
 }
 

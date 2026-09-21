@@ -19,16 +19,22 @@ import type { Label } from "@/arches_controlled_lists/types.ts";
 import type { SearchResultItem } from "@/arches_lingo/types.ts";
 
 import type {
+    MergeSection,
     MergeSelectionState,
     SectionComparison,
 } from "@/arches_lingo/components/concept/ConceptMerge/types.ts";
 
-const { survivorConceptId, survivorAliasedData, absorbedAliasedData } =
-    defineProps<{
-        survivorConceptId: string;
-        survivorAliasedData: Record<string, unknown> | undefined;
-        absorbedAliasedData: Record<string, unknown> | undefined;
-    }>();
+const {
+    survivorConceptId,
+    survivorAliasedData,
+    absorbedAliasedData,
+    isCrossScheme,
+} = defineProps<{
+    survivorConceptId: string;
+    survivorAliasedData: Record<string, unknown> | undefined;
+    absorbedAliasedData: Record<string, unknown> | undefined;
+    isCrossScheme: boolean;
+}>();
 
 const emit = defineEmits<{
     (event: "update:selectionState", selectionState: MergeSelectionState): void;
@@ -87,6 +93,10 @@ async function loadReferencedConceptLabels() {
 }
 
 // Sections neither concept uses would be empty rows, so they are left out.
+function isSectionBlocked(section: MergeSection) {
+    return Boolean(isCrossScheme && section.schemeScoped);
+}
+
 function buildComparisons() {
     sectionComparisons.value = MERGE_SECTIONS.map((section) =>
         buildSectionComparison(
@@ -94,6 +104,7 @@ function buildComparisons() {
             extractSectionTiles(survivorAliasedData, section),
             extractSectionTiles(absorbedAliasedData, section),
             survivorConceptId,
+            isSectionBlocked(section),
         ),
     ).filter(
         (comparison) =>
@@ -223,6 +234,7 @@ function onPrefLabelWinnerChange(languageCode: string, tileId: string) {
             "
             :comparison="comparison"
             :concept-labels-by-id="conceptLabelsById"
+            :is-blocked="isSectionBlocked(comparison.section)"
             @update:selection="onSelectionChange"
         />
     </div>

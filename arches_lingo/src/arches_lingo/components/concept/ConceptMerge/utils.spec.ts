@@ -270,6 +270,65 @@ describe("buildMergePayload", () => {
         expect(payload.retirement_strategy).toEqual("reparent_to_survivor");
     });
 
+    it("drops scheme-scoped selections and retirement across schemes", () => {
+        const labelComparison = buildSectionComparison(
+            LABEL_SECTION,
+            [],
+            [labelTile("absorbed-1", "Fabric")],
+            SURVIVOR_ID,
+        );
+        const broaderComparison = buildSectionComparison(
+            BROADER_SECTION,
+            [],
+            [broaderTile("absorbed-broader", "some-other-concept")],
+            SURVIVOR_ID,
+            true,
+        );
+
+        const payload = buildMergePayload(
+            "absorbed-concept",
+            [labelComparison, broaderComparison],
+            [],
+            {},
+            {
+                createExactMatchTiles: true,
+                retireAbsorbedConcept: true,
+                retirementStrategy: "reparent_to_survivor",
+            },
+            true,
+        );
+
+        expect(payload.tile_selections).toEqual(["absorbed-1"]);
+        expect(payload.retire_absorbed_concept).toBe(false);
+        expect(payload.retirement_strategy).toBeNull();
+        // The link between the two records is the point of a cross-scheme merge.
+        expect(payload.create_exact_match_tiles).toBe(true);
+    });
+
+    it("keeps scheme-scoped selections and retirement within one scheme", () => {
+        const broaderComparison = buildSectionComparison(
+            BROADER_SECTION,
+            [],
+            [broaderTile("absorbed-broader", "some-other-concept")],
+            SURVIVOR_ID,
+        );
+
+        const payload = buildMergePayload(
+            "absorbed-concept",
+            [broaderComparison],
+            [],
+            {},
+            {
+                createExactMatchTiles: true,
+                retireAbsorbedConcept: true,
+                retirementStrategy: "reparent_to_survivor",
+            },
+        );
+
+        expect(payload.tile_selections).toEqual(["absorbed-broader"]);
+        expect(payload.retire_absorbed_concept).toBe(true);
+    });
+
     it("demotes nothing when the surviving label keeps the language", () => {
         const comparison = buildSectionComparison(
             LABEL_SECTION,
@@ -332,6 +391,7 @@ const BROADER_SECTION: MergeSection = {
     conceptReferenceNodeAliases: [
         "classification_status_ascribed_classification",
     ],
+    schemeScoped: true,
 };
 
 function broaderTile(tileid: string, ...parentIds: string[]): MergeTile {

@@ -19,7 +19,10 @@ import MergeConceptPicker from "@/arches_lingo/components/concept/ConceptMerge/c
 import MergeConfirmation from "@/arches_lingo/components/concept/ConceptMerge/components/MergeConfirmation.vue";
 
 import { fetchLingoResource, mergeConcepts } from "@/arches_lingo/api.ts";
-import { buildMergePayload } from "@/arches_lingo/components/concept/ConceptMerge/utils.ts";
+import {
+    buildMergePayload,
+    resolveSchemeId,
+} from "@/arches_lingo/components/concept/ConceptMerge/utils.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 import {
@@ -139,6 +142,14 @@ const nextStep = computed(function () {
     ];
 });
 
+// Concepts in different schemes can be merged, but the scheme-scoped sections
+// cannot come across and the absorbed concept is never retired, so both steps
+// need to know which kind of merge this is.
+const isCrossScheme = computed(function () {
+    const absorbedSchemeId = resolveSchemeId(absorbedConcept.value);
+    return Boolean(absorbedSchemeId) && absorbedSchemeId !== schemeId;
+});
+
 const canCompare = computed(function () {
     return Boolean(absorbedConcept.value) && !isLoadingAbsorbedConcept.value;
 });
@@ -204,6 +215,7 @@ async function onMergeConfirmed() {
                     retireAbsorbedConcept: retireAbsorbedConcept.value,
                     retirementStrategy: retirementStrategy.value,
                 },
+                isCrossScheme.value,
             ),
         );
         emit("merged");
@@ -300,6 +312,7 @@ async function onMergeConfirmed() {
                                 :absorbed-aliased-data="
                                     absorbedConcept.aliased_data
                                 "
+                                :is-cross-scheme="isCrossScheme"
                                 @update:selection-state="onSelectionStateChange"
                             />
                         </div>
@@ -324,6 +337,7 @@ async function onMergeConfirmed() {
                                 "
                                 :retire-absorbed-concept="retireAbsorbedConcept"
                                 :retirement-strategy="retirementStrategy"
+                                :is-cross-scheme="isCrossScheme"
                                 @update:create-exact-match-tiles="
                                     createExactMatchTiles = $event
                                 "

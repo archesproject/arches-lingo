@@ -10,6 +10,11 @@ import type { MergeSection } from "@/arches_lingo/components/concept/ConceptMerg
 // displayNodeAliases decides what a tile card shows; identityNodeAliases decides
 // when two tiles count as the same value and must mirror the server's
 // IDENTITY_NODES_BY_NODEGROUP. A null identity means the section is never deduped.
+//
+// schemeScoped marks the sections holding a reference that only resolves inside
+// one scheme -- a broader concept, an associated concept, or the scheme itself.
+// They are never brought across from a concept in another scheme, and the server
+// rejects them too; see SCHEME_SCOPED_NODEGROUP_ALIASES.
 export const MERGE_SECTIONS: MergeSection[] = [
     {
         nodegroupAlias: "appellative_status",
@@ -50,12 +55,14 @@ export const MERGE_SECTIONS: MergeSection[] = [
         conceptReferenceNodeAliases: [
             "classification_status_ascribed_classification",
         ],
+        schemeScoped: true,
     },
     {
         nodegroupAlias: "top_concept_of",
         cardinality: "1",
         displayNodeAliases: ["top_concept_of"],
         identityNodeAliases: null,
+        schemeScoped: true,
     },
     {
         nodegroupAlias: "relation_status",
@@ -69,6 +76,7 @@ export const MERGE_SECTIONS: MergeSection[] = [
             "relation_status_ascribed_relation",
         ],
         conceptReferenceNodeAliases: ["relation_status_ascribed_comparate"],
+        schemeScoped: true,
     },
     {
         nodegroupAlias: "match_status",

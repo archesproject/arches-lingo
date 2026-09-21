@@ -37,6 +37,8 @@ from arches_lingo.models import ConceptMerge
 from arches_lingo.utils.concept_lifecycle import (
     DRAFT_STATE_ID,
     EDITING_STATE_ID,
+    LOCKED_STATE_ID,
+    PUBLISHED_STATE_ID,
     RETIRED_STATE_ID,
     STRATEGY_REPARENT_TO_SURVIVOR,
     get_broader_ids,
@@ -170,6 +172,27 @@ class ConceptMergeTestCase(ViewTests):
                 ]
             },
         )
+
+    def make_concept_in_other_scheme(self, lifecycle_state_id=EDITING_STATE_ID):
+        """A concept in a scheme of its own, for the cross-scheme cases."""
+        other_scheme = ResourceInstance.objects.create(
+            graph_id=SCHEMES_GRAPH_ID, name="Other Scheme"
+        )
+        outsider = ResourceInstance.objects.create(
+            graph_id=CONCEPTS_GRAPH_ID,
+            name="Outsider",
+            resource_instance_lifecycle_state_id=lifecycle_state_id,
+        )
+        TileModel.objects.create(
+            resourceinstance=outsider,
+            nodegroup_id=CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID,
+            data={
+                CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID: [
+                    {"resourceId": str(other_scheme.pk)}
+                ]
+            },
+        )
+        return other_scheme, outsider
 
     def survivor_tiles(self, nodegroup_id):
         return TileModel.objects.filter(
@@ -342,6 +365,48 @@ class WriteReciprocalExactMatchTilesTests(ConceptMergeTestCase):
             TileModel.objects.filter(nodegroup_id=MATCH_STATUS_NODEGROUP).exists()
         )
 
+    def test_only_the_survivor_is_marked_when_the_absorbed_is_not_writable(self):
+        """A published or locked concept in another scheme is read from, never
+        written to, so it keeps no record of the match."""
+        self.add_uri_tile(self.survivor, "https://example.org/concepts/survivor")
+        self.add_uri_tile(self.absorbed, "https://example.org/concepts/absorbed")
+
+        write_reciprocal_exact_match_tiles(
+            self.survivor, self.absorbed, uuid.uuid4(), write_to_absorbed=False
+        )
+
+        self.assertEqual(
+            TileModel.objects.get(
+                resourceinstance=self.survivor, nodegroup_id=MATCH_STATUS_NODEGROUP
+            ).data[MATCH_STATUS_COMPARATE_NODE],
+            "https://example.org/concepts/absorbed",
+        )
+        self.assertFalse(
+            TileModel.objects.filter(
+                resourceinstance=self.absorbed, nodegroup_id=MATCH_STATUS_NODEGROUP
+            ).exists()
+        )
+
+    def test_a_published_concept_is_not_written_to_by_a_merge(self):
+        self.add_uri_tile(self.survivor, "https://example.org/concepts/survivor")
+        _, outsider = self.make_concept_in_other_scheme(
+            lifecycle_state_id=PUBLISHED_STATE_ID
+        )
+        self.add_uri_tile(outsider, "https://example.org/concepts/outsider")
+
+        merge_concepts(self.survivor, outsider, {"tile_selections": []}, None)
+
+        self.assertTrue(
+            TileModel.objects.filter(
+                resourceinstance=self.survivor, nodegroup_id=MATCH_STATUS_NODEGROUP
+            ).exists()
+        )
+        self.assertFalse(
+            TileModel.objects.filter(
+                resourceinstance=outsider, nodegroup_id=MATCH_STATUS_NODEGROUP
+            ).exists()
+        )
+
     def test_existing_exact_match_is_not_duplicated(self):
         self.add_uri_tile(self.survivor, "https://example.org/concepts/survivor")
         self.add_uri_tile(self.absorbed, "https://example.org/concepts/absorbed")
@@ -363,26 +428,91 @@ class ValidateMergeTests(ConceptMergeTestCase):
     def test_concept_cannot_be_merged_into_itself(self):
         self.assertMergeRejected(self.survivor, self.survivor)
 
-    def test_concepts_in_different_schemes_are_rejected(self):
-        other_scheme = ResourceInstance.objects.create(
-            graph_id=SCHEMES_GRAPH_ID, name="Other Scheme"
-        )
-        outsider = ResourceInstance.objects.create(
+    def test_concepts_in_different_schemes_are_allowed(self):
+        _, outsider = self.make_concept_in_other_scheme()
+
+        validate_merge(self.survivor, outsider, {}, False)
+
+    def test_a_concept_with_no_scheme_is_rejected(self):
+        schemeless = ResourceInstance.objects.create(
             graph_id=CONCEPTS_GRAPH_ID,
-            name="Outsider",
+            name="Schemeless",
             resource_instance_lifecycle_state_id=EDITING_STATE_ID,
         )
-        TileModel.objects.create(
+
+        self.assertMergeRejected(self.survivor, schemeless)
+
+    def test_a_published_concept_can_be_absorbed_from_another_scheme(self):
+        """Nothing is written to it, so its state is no obstacle."""
+        _, outsider = self.make_concept_in_other_scheme(
+            lifecycle_state_id=PUBLISHED_STATE_ID
+        )
+
+        validate_merge(self.survivor, outsider, {}, False)
+
+    def test_a_locked_concept_can_be_absorbed_from_another_scheme(self):
+        _, outsider = self.make_concept_in_other_scheme(
+            lifecycle_state_id=LOCKED_STATE_ID
+        )
+
+        validate_merge(self.survivor, outsider, {}, False)
+
+    def test_a_concept_in_a_locked_scheme_can_be_absorbed(self):
+        other_scheme, outsider = self.make_concept_in_other_scheme()
+        ResourceInstance.objects.filter(pk=other_scheme.pk).update(
+            resource_instance_lifecycle_state_id=LOCKED_STATE_ID
+        )
+
+        validate_merge(self.survivor, outsider, {}, False)
+
+    def test_a_published_concept_in_the_same_scheme_is_still_rejected(self):
+        """Within a scheme the merge retires it, which its state must allow."""
+        ResourceInstance.objects.filter(pk=self.absorbed.pk).update(
+            resource_instance_lifecycle_state_id=PUBLISHED_STATE_ID
+        )
+        self.absorbed.refresh_from_db()
+
+        self.assertMergeRejected(
+            self.survivor, self.absorbed, status=HTTPStatus.CONFLICT
+        )
+
+    def test_retirement_is_rejected_across_schemes(self):
+        _, outsider = self.make_concept_in_other_scheme()
+
+        self.assertMergeRejected(
+            self.survivor,
+            outsider,
+            retire_absorbed_concept=True,
+            retirement_strategy=STRATEGY_REPARENT_TO_SURVIVOR,
+        )
+
+    def test_scheme_scoped_nodegroups_cannot_be_selected_across_schemes(self):
+        """Hierarchical position, top concept of and associated concepts all
+        name a concept or scheme that means nothing in the survivor's scheme."""
+        _, outsider = self.make_concept_in_other_scheme()
+        broader_tile = TileModel.objects.create(
             resourceinstance=outsider,
-            nodegroup_id=CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID,
+            nodegroup_id=CLASSIFICATION_STATUS_NODEGROUP,
             data={
-                CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID: [
-                    {"resourceId": str(other_scheme.pk)}
+                CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID: [
+                    {"resourceId": str(self.concepts[0].pk)}
                 ]
             },
         )
 
-        self.assertMergeRejected(self.survivor, outsider)
+        self.assertMergeRejected(
+            self.survivor, outsider, tile_selections=[str(broader_tile.pk)]
+        )
+
+    def test_scheme_scoped_nodegroups_can_still_be_selected_within_a_scheme(self):
+        broader_tile = self.make_child_of(self.absorbed, self.concepts[0])
+
+        validate_merge(
+            self.survivor,
+            self.absorbed,
+            {"tile_selections": [str(broader_tile.pk)]},
+            False,
+        )
 
     def test_absorbed_concept_must_be_in_editing_state(self):
         ResourceInstance.objects.filter(pk=self.absorbed.pk).update(

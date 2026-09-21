@@ -12,6 +12,7 @@ from arches_lingo.mixins.permissions import AnonymousAccessMixin, LingoEditorMix
 from arches_lingo.permissions import is_lingo_admin
 from arches_lingo.utils.concept_merge import (
     ConceptMergeError,
+    concept_is_writable,
     get_concept_merge_history,
     merge_concepts,
     validate_merge,
@@ -51,9 +52,17 @@ class ConceptMergeView(LingoEditorMixin, View):
                 status=HTTPStatus.NOT_FOUND,
             )
 
+        user_is_lingo_admin = is_lingo_admin(request.user)
         try:
-            validate_merge(survivor, absorbed, selections, is_lingo_admin(request.user))
-            concept_merge = merge_concepts(survivor, absorbed, selections, request.user)
+            validate_merge(survivor, absorbed, selections, user_is_lingo_admin)
+            absorbed_was_writable = concept_is_writable(absorbed, user_is_lingo_admin)
+            concept_merge = merge_concepts(
+                survivor,
+                absorbed,
+                selections,
+                request.user,
+                user_is_lingo_admin=user_is_lingo_admin,
+            )
         except ConceptMergeError as error:
             return JSONErrorResponse(
                 title=error.title,
@@ -66,6 +75,9 @@ class ConceptMergeView(LingoEditorMixin, View):
                 "merged": True,
                 "concept_merge_id": concept_merge.pk,
                 "edit_transaction_id": str(concept_merge.edit_transaction_id),
+                # The absorbed concept keeps no record of the match when the
+                # merge was not allowed to edit it, so the client can say so.
+                "exact_match_recorded_on_absorbed": absorbed_was_writable,
             }
         )
 
