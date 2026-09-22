@@ -106,11 +106,21 @@ const MERGE_STEP_ORDER = [
     MERGE_STEP_CONFIRM,
 ];
 
-const { survivorConcept, survivorLabel, schemeId, graphSlug } = defineProps<{
+const {
+    survivorConcept,
+    survivorLabel,
+    schemeId,
+    graphSlug,
+    preselectedConcept = undefined,
+} = defineProps<{
     survivorConcept: ResourceInstanceResult;
     survivorLabel: string | undefined;
     schemeId: string;
     graphSlug: string;
+    // Opened from somewhere that already knows which concept is being
+    // merged away -- match review, say -- so the picker is skipped and the
+    // dialog opens on the comparison.
+    preselectedConcept?: SearchResultItem;
 }>();
 
 const emit = defineEmits<{
@@ -121,7 +131,9 @@ const emit = defineEmits<{
 const { $gettext } = useGettext();
 const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
 
-const currentStep = ref(MERGE_STEP_SELECT);
+const currentStep = ref(
+    preselectedConcept ? MERGE_STEP_COMPARE : MERGE_STEP_SELECT,
+);
 const survivorSearchResult = ref<SearchResultItem>();
 const selectedConcept = ref<SearchResultItem>();
 const absorbedConcept = ref<ResourceInstanceResult>();
@@ -245,6 +257,10 @@ async function onConceptSelected(concept: SearchResultItem) {
             isLoadingAbsorbedConcept.value = false;
         }
     }
+}
+
+if (preselectedConcept) {
+    onConceptSelected(preselectedConcept);
 }
 
 function onSelectionStateChange(updatedState: MergeSelectionState) {

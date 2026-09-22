@@ -377,6 +377,16 @@ async function onMerged() {
     });
 }
 
+// The workbench runs the search itself from this concept id, so arriving there
+// already shows its matches.
+function findMatches() {
+    if (!props.concept?.resourceinstanceid) return;
+    router.push({
+        name: routeNames.conceptMatches,
+        query: { concept: props.concept.resourceinstanceid },
+    });
+}
+
 function onMergeCancelled() {
     showMergeDialog.value = false;
 }
@@ -486,6 +496,14 @@ function onMergeCancelled() {
                 :label="$gettext('Add Child')"
                 class="add-button"
                 @click="addChild"
+            />
+            <Button
+                v-if="canMerge"
+                icon="pi pi-clone"
+                class="add-button"
+                :label="$gettext('Find Matches')"
+                :aria-label="$gettext('Find concepts matching this one')"
+                @click="findMatches"
             />
             <Button
                 v-if="canMerge"

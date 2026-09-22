@@ -38,6 +38,13 @@ watchEffect(() => {
             route: { name: routeNames.advancedSearch },
             showIconIfCollapsed: true,
         },
+        {
+            key: "concept_matches",
+            label: $gettext("Find Matches"),
+            icon: "pi pi-clone",
+            route: { name: routeNames.conceptMatches },
+            showIconIfCollapsed: true,
+        },
     ];
 });
 </script>
