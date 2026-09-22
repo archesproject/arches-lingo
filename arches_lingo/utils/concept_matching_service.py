@@ -17,12 +17,18 @@ from django.utils.translation import gettext as _
 
 from arches.app.models.models import ResourceInstance
 
-from arches_lingo.models import ConceptMatchCandidate
+import arches.app.utils.task_management as task_management
+
+from arches_lingo.models import ConceptMatchCandidate, ConceptMatchRun
+from arches_lingo.tasks import detect_concept_matches_task
 from arches_lingo.utils.concept_builder import ConceptBuilder
 from arches_lingo.utils.concept_lifecycle import index_concepts_in_transaction
 from arches_lingo.utils.concept_matching import (
+    ALL_SIGNALS,
+    SIGNAL_TRIGRAM,
     get_scheme_ids_for_concepts,
     mark_pairs_settled,
+    run_detection,
 )
 from arches_lingo.utils.concept_merge import (
     concept_is_writable,
@@ -265,3 +271,67 @@ def link_candidates_with_exact_match(
         "linked_one_way": one_way_count,
         "skipped": dict(skipped_by_reason),
     }
+
+
+def start_detection(scope, signals, same_language_only, similarity_threshold, user):
+    """Begin a run, in the foreground or on a worker depending on the signals.
+
+    The exact signals finish in seconds and are answered inside the request, so
+    the interface can show results immediately. The fuzzy signal compares every
+    label against every other and takes minutes at vocabulary scale, so it is
+    handed to a worker and the caller polls the run it gets back.
+    """
+    unknown_signals = set(signals) - set(ALL_SIGNALS)
+    if unknown_signals:
+        raise ConceptMatchRequestError(
+            _("Invalid request."),
+            _("Unsupported signal(s): %(signals)s")
+            % {"signals": ", ".join(sorted(unknown_signals))},
+        )
+
+    if SIGNAL_TRIGRAM not in signals:
+        return run_detection(
+            scope,
+            signals=tuple(signals),
+            same_language_only=same_language_only,
+            similarity_threshold=similarity_threshold,
+            user=user,
+            log=lambda message: None,
+        )
+
+    if not task_management.check_if_celery_available():
+        raise ConceptMatchRequestError(
+            _("Cannot search for similar labels."),
+            _(
+                "Comparing similar labels needs a background worker, which is "
+                "not running. The exact signals work without one, or a "
+                "vocabulary-wide search can be started with the "
+                "detect_concept_matches command."
+            ),
+            status=HTTPStatus.SERVICE_UNAVAILABLE,
+        )
+
+    # The run is created here rather than in the task so the response carries
+    # something the interface can poll straight away.
+    run = ConceptMatchRun.objects.create(
+        user=user if user is not None and user.is_authenticated else None,
+        status=ConceptMatchRun.STATUS_PENDING,
+        parameters={
+            **scope.as_parameters(),
+            "signals": list(signals),
+            "same_language_only": same_language_only,
+            "similarity_threshold": similarity_threshold,
+        },
+    )
+    detect_concept_matches_task.apply_async(
+        args=[
+            run.pk,
+            scope.as_parameters(),
+            list(signals),
+            {
+                "same_language_only": same_language_only,
+                "similarity_threshold": similarity_threshold,
+            },
+        ]
+    )
+    return run

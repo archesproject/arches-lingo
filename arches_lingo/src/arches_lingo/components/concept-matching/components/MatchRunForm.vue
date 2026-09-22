@@ -7,13 +7,16 @@ import { storeToRefs } from "pinia";
 import Button from "primevue/button";
 import Checkbox from "primevue/checkbox";
 import Select from "primevue/select";
+import Slider from "primevue/slider";
 
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 
 import {
+    DEFAULT_SIMILARITY_THRESHOLD,
     SIGNAL_EXACT_LABEL,
     SIGNAL_SHARED_IDENTIFIER,
+    SIGNAL_TRIGRAM,
 } from "@/arches_lingo/components/concept-matching/constants.ts";
 
 import type { ConceptMatchRunRequest, Scheme } from "@/arches_lingo/types.ts";
@@ -48,16 +51,20 @@ const crossSchemeOnly = ref(false);
 const sameLanguageOnly = ref(true);
 const compareLabels = ref(true);
 const compareUris = ref(true);
+const compareSimilarLabels = ref(false);
+const similarityThreshold = ref(DEFAULT_SIMILARITY_THRESHOLD);
 
 function onRun() {
     const signals = [];
     if (compareUris.value) signals.push(SIGNAL_SHARED_IDENTIFIER);
     if (compareLabels.value) signals.push(SIGNAL_EXACT_LABEL);
+    if (compareSimilarLabels.value) signals.push(SIGNAL_TRIGRAM);
 
     emit("run", {
         source_scheme_id: sourceSchemeId.value,
         cross_scheme_only: crossSchemeOnly.value,
         same_language_only: sameLanguageOnly.value,
+        similarity_threshold: similarityThreshold.value,
         signals,
     });
 }
@@ -80,7 +87,7 @@ function onRun() {
                 option-value="id"
                 :placeholder="$gettext('Every scheme')"
                 :show-clear="true"
-                class="control"
+                class="scheme-select"
             />
         </div>
 
@@ -103,7 +110,58 @@ function onRun() {
                     />
                     <span>{{ $gettext("Concepts sharing a URI") }}</span>
                 </label>
+                <label class="option">
+                    <Checkbox
+                        v-model="compareSimilarLabels"
+                        :binary="true"
+                        input-id="match-similar"
+                    />
+                    <span>{{
+                        $gettext("Labels that are merely similar")
+                    }}</span>
+                </label>
             </div>
+            <p
+                v-if="compareSimilarLabels"
+                class="option-note"
+            >
+                {{
+                    $gettext(
+                        "Comparing similar labels runs in the background and can take several minutes across a whole vocabulary.",
+                    )
+                }}
+            </p>
+        </div>
+
+        <div
+            v-if="compareSimilarLabels"
+            class="field"
+        >
+            <label
+                class="label"
+                for="match-threshold"
+            >
+                {{
+                    $gettext("How similar? (%{threshold})", {
+                        threshold: similarityThreshold.toFixed(2),
+                    })
+                }}
+            </label>
+            <Slider
+                v-model="similarityThreshold"
+                input-id="match-threshold"
+                :min="0.4"
+                :max="0.95"
+                :step="0.05"
+                class="threshold-slider"
+            />
+            <p class="option-note">
+                {{
+                    $gettext(
+                        "Lower finds more pairs and more noise. Below about 0.6 most suggestions are coincidence.",
+                    )
+                }}
+            </p>
         </div>
 
         <div class="field">
@@ -136,7 +194,10 @@ function onRun() {
             icon="pi pi-search"
             :label="$gettext('Find matches')"
             class="run-button"
-            :disabled="isRunning || (!compareLabels && !compareUris)"
+            :disabled="
+                isRunning ||
+                (!compareLabels && !compareUris && !compareSimilarLabels)
+            "
             :loading="isRunning"
             @click="onRun"
         />
@@ -163,10 +224,17 @@ function onRun() {
     color: var(--p-header-item-label);
 }
 
+/* A container for a widget, not the widget itself: putting this on a Select
+   would stack its label above its dropdown icon and collapse the label. */
 .control {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+}
+
+.scheme-select,
+.threshold-slider {
+    width: 100%;
 }
 
 .option {
@@ -175,6 +243,12 @@ function onRun() {
     gap: 0.5rem;
     font-size: var(--p-lingo-font-size-smallnormal);
     cursor: pointer;
+}
+
+.option-note {
+    margin: 0;
+    font-size: var(--p-lingo-font-size-xxsmall);
+    color: var(--p-inputtext-placeholder-color);
 }
 
 .run-button {

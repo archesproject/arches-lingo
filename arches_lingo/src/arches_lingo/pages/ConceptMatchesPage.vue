@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 
 import { useGettext } from "vue3-gettext";
 import { useRoute } from "vue-router";
@@ -27,6 +27,10 @@ import {
     CANDIDATES_PER_PAGE,
     CANDIDATE_STATUS_DISMISSED,
     CANDIDATE_STATUS_PENDING,
+    RUN_POLL_INTERVAL_MS,
+    RUN_STATUS_FAILED,
+    RUN_STATUS_PENDING,
+    RUN_STATUS_RUNNING,
 } from "@/arches_lingo/components/concept-matching/constants.ts";
 import {
     DEFAULT_ERROR_TOAST_LIFE,
@@ -74,6 +78,8 @@ const mergingCandidate = ref<ConceptMatchCandidate | null>(null);
 const mergeSurvivor = ref<ResourceInstanceResult | null>(null);
 const mergeAbsorbedId = ref<string | null>(null);
 const isPreparingMerge = ref(false);
+
+let pollTimer: ReturnType<typeof setInterval> | undefined;
 const loadError = ref<string | null>(null);
 
 const activeRun = computed(function () {
@@ -126,23 +132,73 @@ async function loadCandidates() {
     }
 }
 
+// A fuzzy run is handed to a worker and comes back still pending, so the run is
+// polled until it settles rather than reporting a count of zero straight away.
+function isUnfinished(run: ConceptMatchRun) {
+    return (
+        run.status === RUN_STATUS_PENDING || run.status === RUN_STATUS_RUNNING
+    );
+}
+
+function stopPolling() {
+    if (pollTimer !== undefined) {
+        clearInterval(pollTimer);
+        pollTimer = undefined;
+    }
+}
+
+function pollUntilFinished(runId: number) {
+    stopPolling();
+    pollTimer = setInterval(async () => {
+        const run = (await fetchConceptMatchRuns()).data.find(
+            (candidateRun) => candidateRun.id === runId,
+        );
+        if (!run || isUnfinished(run)) return;
+
+        stopPolling();
+        isRunning.value = false;
+        runs.value = (await fetchConceptMatchRuns()).data;
+        await loadCandidates();
+        reportRunFinished(run);
+    }, RUN_POLL_INTERVAL_MS);
+}
+
+function reportRunFinished(run: ConceptMatchRun) {
+    if (run.status === RUN_STATUS_FAILED) {
+        toast.add({
+            severity: ERROR,
+            life: DEFAULT_ERROR_TOAST_LIFE,
+            summary: $gettext("Match detection failed"),
+            detail: run.error_message || undefined,
+        });
+        return;
+    }
+    toast.add({
+        severity: SUCCESS,
+        life: DEFAULT_TOAST_LIFE,
+        summary: $gettext("Found %{count} candidate pair(s)", {
+            count: String(run.candidate_count),
+        }),
+    });
+}
+
 async function onRun(request: ConceptMatchRunRequest) {
     isRunning.value = true;
     try {
         const run = await createConceptMatchRun(request);
         await loadRuns();
         activeRunId.value = run.id;
-        toast.add({
-            severity: SUCCESS,
-            life: DEFAULT_TOAST_LIFE,
-            summary: $gettext("Found %{count} candidate pair(s)", {
-                count: String(run.candidate_count),
-            }),
-        });
+
+        if (isUnfinished(run)) {
+            pollUntilFinished(run.id);
+            return;
+        }
+        reportRunFinished(run);
     } catch (error) {
         reportError(error, $gettext("Could not detect matches."));
-    } finally {
         isRunning.value = false;
+    } finally {
+        if (!pollTimer) isRunning.value = false;
     }
 }
 
@@ -345,6 +401,8 @@ function onStatusChange(newStatus: string) {
 // selection, so a reviewer can gather pairs across pages before acting.
 watch([activeRunId, candidateStatus, firstResultIndex], loadCandidates);
 watch(activeRunId, () => (selectedIds.value = new Set()));
+
+onBeforeUnmount(stopPolling);
 
 onMounted(async () => {
     try {
