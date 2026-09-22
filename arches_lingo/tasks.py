@@ -91,9 +91,20 @@ def detect_concept_matches_task(run_id, scope_parameters, signals, options):
     from arches_lingo.models import ConceptMatchRun
     from arches_lingo.utils.concept_matching import MatchScope, run_detection
 
-    run = ConceptMatchRun.objects.get(pk=run_id)
     try:
-        run_detection(
+        run = ConceptMatchRun.objects.get(pk=run_id)
+    except ConceptMatchRun.DoesNotExist:
+        # The run was deleted, or the queue outlived the database it was
+        # recorded in. There is nothing left to report against, and retrying
+        # would only fail the same way.
+        logger.warning(
+            "Match run %s no longer exists; abandoning its detection task.",
+            run_id,
+        )
+        return
+
+    try:
+        completed_run = run_detection(
             MatchScope(**scope_parameters),
             signals=tuple(signals),
             same_language_only=options["same_language_only"],
@@ -102,8 +113,13 @@ def detect_concept_matches_task(run_id, scope_parameters, signals, options):
             log=lambda message: logger.info(message),
             run=run,
         )
+        if completed_run is None:
+            # Deleting the run is how it is cancelled, so there is nothing left
+            # to report against and nothing the reviewer is waiting to hear.
+            logger.info("Match run %s was cancelled while it was working.", run_id)
+            return
         message = _("Match detection found {} candidate pair(s)").format(
-            ConceptMatchRun.objects.get(pk=run_id).candidate_count
+            completed_run.candidate_count
         )
     except Exception as exception:
         # run_detection records the failure on the run before re-raising, so the

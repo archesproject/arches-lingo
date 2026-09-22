@@ -10,6 +10,7 @@ import {
     buildSignalList,
     describeMatchReason,
     describeSkippedReasons,
+    formatElapsed,
     isRunUnfinished,
     resolveMergeSides,
 } from "@/arches_lingo/components/concept-matching/utils.ts";
@@ -201,5 +202,32 @@ describe("describeSkippedReasons", () => {
         expect(describeSkippedReasons({ something_new: 1 }, {})).toEqual(
             "1 (something_new)",
         );
+    });
+});
+
+describe("formatElapsed", () => {
+    function translate(message: string, options: Record<string, string>) {
+        return message.replace(
+            /%\{(\w+)\}/g,
+            (_match, key: string) => options[key],
+        );
+    }
+
+    it("reads in seconds below a minute", () => {
+        expect(formatElapsed(45, translate)).toBe("45s");
+    });
+
+    it("reads in minutes and padded seconds above one", () => {
+        expect(formatElapsed(1329, translate)).toBe("22m 09s");
+    });
+
+    it("keeps a whole minute from losing its seconds", () => {
+        expect(formatElapsed(120, translate)).toBe("2m 00s");
+    });
+
+    it("never counts backwards", () => {
+        // A client whose clock disagrees with the server's must not be shown a
+        // negative age -- the elapsed time it is given is the server's own.
+        expect(formatElapsed(-500, translate)).toBe("0s");
     });
 });

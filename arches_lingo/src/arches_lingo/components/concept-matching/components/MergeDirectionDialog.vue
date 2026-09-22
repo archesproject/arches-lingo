@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { computed, ref } from "vue";
 
 import { useGettext } from "vue3-gettext";
 
 import Button from "primevue/button";
 import Dialog from "primevue/dialog";
+import Message from "primevue/message";
 import RadioButton from "primevue/radiobutton";
 
-import { DANGER } from "@/arches_lingo/constants.ts";
+import { DANGER, WARN } from "@/arches_lingo/constants.ts";
 
 import type { MatchedConceptSummary } from "@/arches_lingo/types.ts";
 
@@ -25,12 +26,33 @@ const emit = defineEmits<{
 
 const { $gettext } = useGettext();
 
-// A suggested pair has no direction, but a merge does: one concept keeps its
-// values and the other is folded into it. Nothing sensible can be defaulted
-// here, so the choice is made before the merge dialog opens.
-const survivorId = ref<string>(conceptA.id);
+// A suggested pair has no direction, but a merge does: the values are copied
+// one way, so which concept receives them is chosen before the merge dialog
+// opens.
+//
+// A merge only writes to the concept receiving the values, which is why a
+// published or locked concept can still be the one merged from. It cannot be
+// the one merged into, so it is not offered as one.
+const survivorId = ref<string | null>(
+    [conceptA, conceptB].find((concept) => concept.can_receive_data)?.id ??
+        null,
+);
+
+const canMergeEitherWay = computed(function () {
+    return conceptA.can_receive_data || conceptB.can_receive_data;
+});
+
+function whyUnavailable(reason: string | null) {
+    if (reason === "scheme_locked") {
+        return $gettext("Its scheme is locked, so nothing can be added to it.");
+    }
+    return $gettext(
+        "It is not in a state that accepts new values, so nothing can be added to it.",
+    );
+}
 
 function onConfirm() {
+    if (!survivorId.value) return;
     emit(
         "confirm",
         survivorId.value,
@@ -43,7 +65,7 @@ function onConfirm() {
     <Dialog
         :visible="true"
         :modal="true"
-        :header="$gettext('Which concept should survive?')"
+        :header="$gettext('Which concept should take the other\'s values?')"
         class="direction-dialog"
         :closable="!isLoading"
         :pt="{
@@ -80,28 +102,51 @@ function onConfirm() {
         <p class="direction-intro">
             {{
                 $gettext(
-                    "The surviving concept keeps its values and can take any of the other's. The other is folded into it.",
+                    "The concept you choose keeps everything it has and takes the values you select from the other. Those values are copied, so nothing is removed from the other concept \u2014 retiring it is a separate choice later in the merge, and only offered within a single scheme.",
                 )
             }}
         </p>
+
+        <Message
+            v-if="!canMergeEitherWay"
+            :severity="WARN"
+            :closable="false"
+            class="direction-message"
+        >
+            {{
+                $gettext(
+                    "Neither concept can be added to, so this pair cannot be merged.",
+                )
+            }}
+        </Message>
 
         <div class="direction-options">
             <label
                 v-for="concept in [conceptA, conceptB]"
                 :key="concept.id"
                 class="direction-option"
-                :class="{ selected: survivorId === concept.id }"
+                :class="{
+                    selected: survivorId === concept.id,
+                    unavailable: !concept.can_receive_data,
+                }"
                 :for="`survivor-${concept.id}`"
             >
                 <RadioButton
                     v-model="survivorId"
                     :input-id="`survivor-${concept.id}`"
                     :value="concept.id"
+                    :disabled="!concept.can_receive_data"
                 />
                 <span class="direction-option-body">
                     <span>{{ nameOf(concept) }}</span>
                     <span class="direction-option-scheme">
                         {{ concept.scheme_name }}
+                    </span>
+                    <span
+                        v-if="!concept.can_receive_data"
+                        class="direction-option-unavailable"
+                    >
+                        {{ whyUnavailable(concept.cannot_receive_reason) }}
                     </span>
                 </span>
             </label>
@@ -121,7 +166,7 @@ function onConfirm() {
                     icon="pi pi-arrow-right"
                     icon-pos="right"
                     :label="$gettext('Continue')"
-                    :disabled="isLoading"
+                    :disabled="isLoading || !survivorId"
                     :loading="isLoading"
                     class="direction-button"
                     @click="onConfirm"
@@ -157,6 +202,21 @@ function onConfirm() {
 .direction-option.selected {
     border-color: var(--p-primary-color);
     background-color: var(--p-highlight-background);
+}
+
+.direction-option.unavailable {
+    cursor: not-allowed;
+    opacity: 0.65;
+}
+
+.direction-option-unavailable {
+    font-size: var(--p-lingo-font-size-xxsmall);
+    color: var(--p-inputtext-placeholder-color);
+}
+
+.direction-message {
+    margin-bottom: 0.75rem;
+    font-size: var(--p-lingo-font-size-smallnormal);
 }
 
 .direction-option-body {

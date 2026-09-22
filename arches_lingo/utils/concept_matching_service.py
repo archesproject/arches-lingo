@@ -7,11 +7,14 @@ gathered per page of candidates rather than per candidate, so a page of fifty
 pairs costs the same handful of queries as a page of one.
 """
 
+import datetime
 import uuid
 from collections import defaultdict
 from http import HTTPStatus
 
+from django.conf import settings
 from django.db import transaction
+from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
@@ -22,7 +25,10 @@ import arches.app.utils.task_management as task_management
 from arches_lingo.models import ConceptMatchCandidate, ConceptMatchRun
 from arches_lingo.tasks import detect_concept_matches_task
 from arches_lingo.utils.concept_builder import ConceptBuilder
-from arches_lingo.utils.concept_lifecycle import index_concepts_in_transaction
+from arches_lingo.utils.concept_lifecycle import (
+    LOCKED_STATE_ID,
+    index_concepts_in_transaction,
+)
 from arches_lingo.utils.concept_matching import (
     ALL_SIGNALS,
     SIGNAL_TRIGRAM,
@@ -44,6 +50,12 @@ MAX_ITEMS_PER_PAGE = 200
 # through the queue anyway.
 MAX_LINK_BATCH = 200
 
+# How long a run may go without reporting progress before it is presumed dead.
+# The detection loop stores what it has found every ten seconds, but a single
+# slice of a large vocabulary can run considerably longer than that, so the
+# threshold is well clear of any honest gap between heartbeats.
+STALE_RUN_SECONDS = getattr(settings, "LINGO_MATCH_STALE_SECONDS", 300)
+
 
 class ConceptMatchRequestError(Exception):
     """A request the review interface cannot be given what it asked for."""
@@ -56,11 +68,19 @@ class ConceptMatchRequestError(Exception):
 
 
 def serialize_run(run):
+    # Elapsed time is measured here rather than from the timestamps, because the
+    # client cannot subtract them: with USE_TZ off these are naive timestamps in
+    # the server's own zone, which a browser in another zone reads as its local
+    # time and places in the future. Both ends of this subtraction come from one
+    # clock, so the answer holds whatever zone either side is in.
+    ended_at = run.finished or timezone.now()
     return {
         "id": run.pk,
+        "name": run.name,
         "status": run.status,
         "created": run.created.isoformat(),
         "finished": run.finished.isoformat() if run.finished else None,
+        "elapsed_seconds": max(0, int((ended_at - run.created).total_seconds())),
         "parameters": run.parameters,
         "candidate_count": run.candidate_count,
         "error_message": run.error_message,
@@ -70,8 +90,104 @@ def serialize_run(run):
     }
 
 
-def _build_concept_summaries(concept_ids):
-    """Return {concept id: {labels, scheme}} for naming a page of pairs.
+def worker_is_available():
+    """Whether a background worker would pick up a run queued now.
+
+    A worker running under the solo pool executes tasks in the same process that
+    answers control commands, so while it is working it cannot answer a ping and
+    is indistinguishable from a worker that is not there at all. Refusing on that
+    basis would mean no search could be started while another was running.
+
+    A run that is still reporting progress is the better evidence, and it is the
+    same threshold ``reap_stale_runs`` uses to decide that a run has stopped: a
+    worker whose progress counts as alive there counts as alive here.
+    """
+    if task_management.check_if_celery_available():
+        return True
+
+    cutoff = timezone.now() - datetime.timedelta(seconds=STALE_RUN_SECONDS)
+    return ConceptMatchRun.objects.filter(
+        status=ConceptMatchRun.STATUS_RUNNING, last_progress__gte=cutoff
+    ).exists()
+
+
+def reap_stale_runs():
+    """Fail runs that stopped reporting, returning how many were closed out.
+
+    A worker restarted mid-run cannot fail its own run: celery acknowledges a
+    task when it receives it, so the message dies with the worker and nothing is
+    left to notice. The row would otherwise claim to be running forever, and the
+    interface would poll a run that no process is working on.
+
+    Runs predating the heartbeat fall back to when they were created, which is
+    the most recent moment they are known to have been alive.
+    """
+    cutoff = timezone.now() - datetime.timedelta(seconds=STALE_RUN_SECONDS)
+    return ConceptMatchRun.objects.filter(
+        Q(last_progress__lt=cutoff) | Q(last_progress__isnull=True, created__lt=cutoff),
+        status__in=[ConceptMatchRun.STATUS_PENDING, ConceptMatchRun.STATUS_RUNNING],
+    ).update(
+        status=ConceptMatchRun.STATUS_FAILED,
+        finished=timezone.now(),
+        error_message=_(
+            "This run stopped reporting progress and was presumed interrupted. "
+            "The server may have been restarted while it was working."
+        ),
+    )
+
+
+# Why a concept cannot be merged into. The two have different remedies -- one is
+# the concept's own lifecycle state, the other its scheme's -- so they are
+# reported apart rather than as a bare "no".
+CANNOT_RECEIVE_NOT_EDITABLE = "not_editable"
+CANNOT_RECEIVE_SCHEME_LOCKED = "scheme_locked"
+
+
+def _reasons_concepts_cannot_receive_data(
+    concept_ids, scheme_ids_by_concept_id, user_is_lingo_admin
+):
+    """Why each concept could not be merged into; absent means it could be.
+
+    The same rule as ``concept_is_writable``, asked of a whole page at once: a
+    page of fifty pairs names a hundred concepts, and deciding this one concept
+    at a time would be a hundred round trips.
+    """
+    editable_ids = {
+        str(concept_id)
+        for concept_id in ResourceInstance.objects.filter(
+            pk__in=concept_ids,
+            resource_instance_lifecycle_state__can_edit_resource_instances=True,
+        ).values_list("pk", flat=True)
+    }
+    reasons = {
+        concept_id: CANNOT_RECEIVE_NOT_EDITABLE
+        for concept_id in concept_ids
+        if concept_id not in editable_ids
+    }
+    if user_is_lingo_admin:
+        return reasons
+
+    locked_scheme_ids = {
+        str(scheme_id)
+        for scheme_id in ResourceInstance.objects.filter(
+            pk__in={
+                scheme_id
+                for scheme_id in scheme_ids_by_concept_id.values()
+                if scheme_id
+            },
+            resource_instance_lifecycle_state_id=LOCKED_STATE_ID,
+        ).values_list("pk", flat=True)
+    }
+    for concept_id in concept_ids:
+        if concept_id not in reasons and (
+            scheme_ids_by_concept_id.get(concept_id) in locked_scheme_ids
+        ):
+            reasons[concept_id] = CANNOT_RECEIVE_SCHEME_LOCKED
+    return reasons
+
+
+def _build_concept_summaries(concept_ids, user_is_lingo_admin=False):
+    """Return {concept id: {labels, scheme, whether it can be merged into}}.
 
     Labels rather than the resource descriptor, so the client can pick the best
     one for the reader's language the way every other concept name is chosen.
@@ -81,6 +197,9 @@ def _build_concept_summaries(concept_ids):
 
     builder = ConceptBuilder(list(concept_ids))
     scheme_ids_by_concept_id = get_scheme_ids_for_concepts(concept_ids)
+    cannot_receive_reasons = _reasons_concepts_cannot_receive_data(
+        concept_ids, scheme_ids_by_concept_id, user_is_lingo_admin
+    )
 
     scheme_names_by_id = {
         str(scheme.pk): scheme.name
@@ -100,11 +219,17 @@ def _build_concept_summaries(concept_ids):
             ],
             "scheme_id": scheme_id,
             "scheme_name": scheme_names_by_id.get(scheme_id),
+            # A merge writes to one side only, so this is what decides which way
+            # round a pair may be merged -- the other side is only read from.
+            "can_receive_data": concept_id not in cannot_receive_reasons,
+            "cannot_receive_reason": cannot_receive_reasons.get(concept_id),
         }
     return summaries
 
 
-def serialize_candidate_page(run, status=None, page_number=1, items_per_page=None):
+def serialize_candidate_page(
+    run, status=None, page_number=1, items_per_page=None, user_is_lingo_admin=False
+):
     """Return one page of a run's candidates, with both concepts named."""
     items_per_page = min(
         int(items_per_page or DEFAULT_ITEMS_PER_PAGE), MAX_ITEMS_PER_PAGE
@@ -122,7 +247,7 @@ def serialize_candidate_page(run, status=None, page_number=1, items_per_page=Non
     concept_ids = {str(candidate.concept_a_id) for candidate in page} | {
         str(candidate.concept_b_id) for candidate in page
     }
-    summaries = _build_concept_summaries(concept_ids)
+    summaries = _build_concept_summaries(concept_ids, user_is_lingo_admin)
 
     return {
         "data": [
@@ -174,6 +299,26 @@ def set_candidate_status(run, candidate_ids, status, user):
         reviewed_at=timezone.now(),
     )
     return {"updated": updated_count, "status": status}
+
+
+def dismiss_all_pending(run, user):
+    """Dismiss every pair of this run still awaiting a decision.
+
+    A corpus-wide fuzzy run can suggest tens of thousands of pairs, far more
+    than a reviewer can name one at a time, so clearing the rest of the queue is
+    done by the server rather than by sending back every id.
+    """
+    updated_count = run.candidates.filter(
+        status=ConceptMatchCandidate.STATUS_PENDING
+    ).update(
+        status=ConceptMatchCandidate.STATUS_DISMISSED,
+        reviewed_by=user if user is not None and user.is_authenticated else None,
+        reviewed_at=timezone.now(),
+    )
+    return {
+        "updated": updated_count,
+        "status": ConceptMatchCandidate.STATUS_DISMISSED,
+    }
 
 
 def _link_outcome(concept_a, concept_b, user_is_lingo_admin):
@@ -273,7 +418,9 @@ def link_candidates_with_exact_match(
     }
 
 
-def start_detection(scope, signals, same_language_only, similarity_threshold, user):
+def start_detection(
+    scope, signals, same_language_only, similarity_threshold, user, name=""
+):
     """Begin a run, in the foreground or on a worker depending on the signals.
 
     The exact signals finish in seconds and are answered inside the request, so
@@ -297,16 +444,18 @@ def start_detection(scope, signals, same_language_only, similarity_threshold, us
             similarity_threshold=similarity_threshold,
             user=user,
             log=lambda message: None,
+            name=name,
         )
 
-    if not task_management.check_if_celery_available():
+    if not worker_is_available():
         raise ConceptMatchRequestError(
             _("Cannot search for similar labels."),
             _(
-                "Comparing similar labels needs a background worker, which is "
-                "not running. The exact signals work without one, or a "
-                "vocabulary-wide search can be started with the "
-                "detect_concept_matches command."
+                "No background worker answered. One may be busy finishing "
+                "another search, in which case this will work again in a "
+                "moment. Otherwise no worker is running: the exact signals work "
+                "without one, or a vocabulary-wide search can be started with "
+                "the detect_concept_matches command."
             ),
             status=HTTPStatus.SERVICE_UNAVAILABLE,
         )
@@ -315,6 +464,7 @@ def start_detection(scope, signals, same_language_only, similarity_threshold, us
     # something the interface can poll straight away.
     run = ConceptMatchRun.objects.create(
         user=user if user is not None and user.is_authenticated else None,
+        name=name,
         status=ConceptMatchRun.STATUS_PENDING,
         parameters={
             **scope.as_parameters(),

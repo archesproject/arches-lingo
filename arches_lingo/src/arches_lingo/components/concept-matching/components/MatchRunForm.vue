@@ -6,13 +6,16 @@ import { storeToRefs } from "pinia";
 
 import Button from "primevue/button";
 import Checkbox from "primevue/checkbox";
-import Select from "primevue/select";
+import InputText from "primevue/inputtext";
+import Message from "primevue/message";
+import MultiSelect from "primevue/multiselect";
 import Slider from "primevue/slider";
 
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 
 import { DEFAULT_SIMILARITY_THRESHOLD } from "@/arches_lingo/components/concept-matching/constants.ts";
+import { INFO } from "@/arches_lingo/constants.ts";
 import { buildSignalList } from "@/arches_lingo/components/concept-matching/utils.ts";
 
 import type { ConceptMatchRunRequest, Scheme } from "@/arches_lingo/types.ts";
@@ -42,7 +45,20 @@ const schemeOptions = computed(function () {
     }));
 });
 
-const sourceSchemeId = ref<string | null>(null);
+const selectedSchemeIds = ref<string[]>([]);
+const runName = ref("");
+
+// Comparing similar labels is one index probe per label, so the honest warning
+// depends on how much was scoped: a few schemes are quick, everything is not.
+const expectedDurationText = computed(function () {
+    return selectedSchemeIds.value.length
+        ? $gettext(
+              "Comparing similar labels runs on the server. Across a few schemes this usually takes under a minute.",
+          )
+        : $gettext(
+              "Comparing similar labels runs on the server. Across every scheme this can take several minutes \u2014 narrowing to a few schemes is much quicker.",
+          );
+});
 const crossSchemeOnly = ref(false);
 const sameLanguageOnly = ref(true);
 const compareLabels = ref(true);
@@ -58,7 +74,8 @@ function onRun() {
     });
 
     emit("run", {
-        source_scheme_id: sourceSchemeId.value,
+        name: runName.value.trim(),
+        scheme_ids: selectedSchemeIds.value,
         cross_scheme_only: crossSchemeOnly.value,
         same_language_only: sameLanguageOnly.value,
         similarity_threshold: similarityThreshold.value,
@@ -74,17 +91,41 @@ function onRun() {
                 class="label"
                 for="match-scheme"
             >
-                {{ $gettext("Scheme") }}
+                {{ $gettext("Schemes") }}
             </label>
-            <Select
-                v-model="sourceSchemeId"
+            <MultiSelect
+                v-model="selectedSchemeIds"
                 input-id="match-scheme"
                 :options="schemeOptions"
                 option-label="name"
                 option-value="id"
                 :placeholder="$gettext('Every scheme')"
-                :show-clear="true"
+                :filter="schemeOptions.length > 8"
+                :show-toggle-all="false"
+                display="chip"
                 class="scheme-select"
+            />
+            <p class="option-note">
+                {{
+                    $gettext(
+                        "Both concepts of a pair must be in one of these, so the search never reaches outside them. Leave empty to search everything.",
+                    )
+                }}
+            </p>
+        </div>
+
+        <div class="field">
+            <label
+                class="label"
+                for="match-name"
+            >
+                {{ $gettext("Name (optional)") }}
+            </label>
+            <InputText
+                id="match-name"
+                v-model="runName"
+                :placeholder="$gettext('For finding this run again later')"
+                class="name-input"
             />
         </div>
 
@@ -118,16 +159,14 @@ function onRun() {
                     }}</span>
                 </label>
             </div>
-            <p
+            <Message
                 v-if="compareSimilarLabels"
-                class="option-note"
+                :severity="INFO"
+                :closable="false"
+                class="option-message"
             >
-                {{
-                    $gettext(
-                        "Comparing similar labels runs in the background and can take several minutes across a whole vocabulary.",
-                    )
-                }}
-            </p>
+                {{ expectedDurationText }}
+            </Message>
         </div>
 
         <div
@@ -230,6 +269,7 @@ function onRun() {
 }
 
 .scheme-select,
+.name-input,
 .threshold-slider {
     width: 100%;
 }
@@ -240,6 +280,10 @@ function onRun() {
     gap: 0.5rem;
     font-size: var(--p-lingo-font-size-smallnormal);
     cursor: pointer;
+}
+
+.option-message {
+    font-size: var(--p-lingo-font-size-smallnormal);
 }
 
 .option-note {
@@ -254,7 +298,9 @@ function onRun() {
     border-radius: 0.125rem;
 }
 
-:deep(.p-select) {
+:deep(.p-select),
+:deep(.p-multiselect),
+:deep(.p-inputtext) {
     border-radius: 0.125rem;
 }
 </style>

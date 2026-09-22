@@ -3,19 +3,25 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 
 import { useGettext } from "vue3-gettext";
 import { useRoute } from "vue-router";
+import { useConfirm } from "primevue/useconfirm";
 import { useToast } from "primevue/usetoast";
 
 import Button from "primevue/button";
+import ConfirmDialog from "primevue/confirmdialog";
 import Message from "primevue/message";
 import Select from "primevue/select";
 
 import ConceptMergeDialog from "@/arches_lingo/components/concept/ConceptMerge/ConceptMergeDialog.vue";
 import MatchCandidateList from "@/arches_lingo/components/concept-matching/components/MatchCandidateList.vue";
 import MatchRunForm from "@/arches_lingo/components/concept-matching/components/MatchRunForm.vue";
+import MatchRunProgress from "@/arches_lingo/components/concept-matching/components/MatchRunProgress.vue";
+import MatchRunSummary from "@/arches_lingo/components/concept-matching/components/MatchRunSummary.vue";
 import MergeDirectionDialog from "@/arches_lingo/components/concept-matching/components/MergeDirectionDialog.vue";
 
 import {
     createConceptMatchRun,
+    deleteConceptMatchRun,
+    dismissAllConceptMatchCandidates,
     fetchConceptMatchCandidates,
     fetchConceptMatchRuns,
     fetchLingoResource,
@@ -37,6 +43,7 @@ import {
     resolveMergeSides,
 } from "@/arches_lingo/components/concept-matching/utils.ts";
 import {
+    DANGER,
     DEFAULT_ERROR_TOAST_LIFE,
     DEFAULT_TOAST_LIFE,
     ERROR,
@@ -61,6 +68,7 @@ const CONCEPT_GRAPH_SLUG = "concept";
 
 const { $gettext } = useGettext();
 const toast = useToast();
+const confirm = useConfirm();
 const route = useRoute();
 const conceptStore = useConceptStore();
 const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
@@ -76,6 +84,8 @@ const firstResultIndex = ref(0);
 const totalResults = ref(0);
 const isLoadingCandidates = ref(false);
 const isLinking = ref(false);
+const isDismissingAll = ref(false);
+const isDeletingRun = ref(false);
 
 const mergingCandidate = ref<ConceptMatchCandidate | null>(null);
 const mergeSurvivor = ref<ResourceInstanceResult | null>(null);
@@ -83,10 +93,17 @@ const mergeAbsorbedId = ref<string | null>(null);
 const isPreparingMerge = ref(false);
 
 let pollTimer: ReturnType<typeof setInterval> | undefined;
+let isPollInFlight = false;
 const loadError = ref<string | null>(null);
 
 const activeRun = computed(function () {
     return runs.value.find((run) => run.id === activeRunId.value);
+});
+
+// Cancelling and deleting are the same action on the same button: a run that is
+// still working is stopped and removed, one that has finished is just removed.
+const activeRunIsUnfinished = computed(function () {
+    return Boolean(activeRun.value && isRunUnfinished(activeRun.value));
 });
 
 function reportError(error: unknown, summary: string) {
@@ -109,14 +126,17 @@ async function loadRuns() {
     }
 }
 
-async function loadCandidates() {
+async function loadCandidates({ quiet = false } = {}) {
     if (activeRunId.value === null) {
         candidates.value = [];
         totalResults.value = 0;
         return;
     }
 
-    isLoadingCandidates.value = true;
+    // A poll refreshes the list in place. Showing the loading state every two
+    // seconds would flicker the pairs the reviewer is trying to read, so only a
+    // refresh they asked for announces itself.
+    if (!quiet) isLoadingCandidates.value = true;
     loadError.value = null;
     try {
         const page = await fetchConceptMatchCandidates(
@@ -131,7 +151,7 @@ async function loadCandidates() {
         loadError.value =
             error instanceof Error ? error.message : String(error);
     } finally {
-        isLoadingCandidates.value = false;
+        if (!quiet) isLoadingCandidates.value = false;
     }
 }
 
@@ -147,16 +167,41 @@ function stopPolling() {
 function pollUntilFinished(runId: number) {
     stopPolling();
     pollTimer = setInterval(async () => {
-        const run = (await fetchConceptMatchRuns()).data.find(
-            (candidateRun) => candidateRun.id === runId,
-        );
-        if (!run || isRunUnfinished(run)) return;
+        // Two requests a tick against a run that may hold tens of thousands of
+        // pairs: a tick that is still in flight is skipped rather than queued
+        // behind itself.
+        if (isPollInFlight) return;
+        isPollInFlight = true;
+        try {
+            // The listing is refreshed on every tick rather than only at the
+            // end, so the running count climbs in front of the reviewer instead
+            // of sitting at zero until the search finishes.
+            runs.value = (await fetchConceptMatchRuns()).data;
+            const run = runs.value.find(
+                (candidateRun) => candidateRun.id === runId,
+            );
+            if (!run) {
+                // Cancelled, from here or from somewhere else. There is no
+                // longer anything to wait for.
+                stopPolling();
+                isRunning.value = false;
+                return;
+            }
+            if (isRunUnfinished(run)) {
+                // Pairs are stored as they are found, so the list is refreshed
+                // alongside the count: the reviewer can start reading results
+                // while the rest of the search is still running.
+                await loadCandidates({ quiet: true });
+                return;
+            }
 
-        stopPolling();
-        isRunning.value = false;
-        runs.value = (await fetchConceptMatchRuns()).data;
-        await loadCandidates();
-        reportRunFinished(run);
+            stopPolling();
+            isRunning.value = false;
+            await loadCandidates();
+            reportRunFinished(run);
+        } finally {
+            isPollInFlight = false;
+        }
     }, RUN_POLL_INTERVAL_MS);
 }
 
@@ -225,6 +270,92 @@ async function setStatusForSelection(status: string) {
     } catch (error) {
         reportError(error, $gettext("Could not update the selected pairs."));
     }
+}
+
+function onDismissAllRemaining() {
+    const run = activeRun.value;
+    if (!run || !run.pending_count) return;
+
+    confirm.require({
+        group: "dismiss-all-matches",
+        header: $gettext("Dismiss everything left?"),
+        message: $gettext(
+            "All %{count} pair(s) still awaiting a decision will be dismissed. They stay in the run, and can be restored from the dismissed list.",
+            { count: String(run.pending_count) },
+        ),
+        accept: async () => {
+            isDismissingAll.value = true;
+            try {
+                const result = await dismissAllConceptMatchCandidates(run.id);
+                toast.add({
+                    severity: SUCCESS,
+                    life: DEFAULT_TOAST_LIFE,
+                    summary: $gettext("Dismissed %{count} pair(s)", {
+                        count: String(result.updated),
+                    }),
+                });
+                selectedIds.value = new Set();
+                await Promise.all([loadRuns(), loadCandidates()]);
+            } catch (error) {
+                reportError(
+                    error,
+                    $gettext("Could not dismiss the remaining pairs."),
+                );
+            } finally {
+                isDismissingAll.value = false;
+            }
+        },
+    });
+}
+
+function onDeleteRun() {
+    const run = activeRun.value;
+    if (!run) return;
+    const isUnfinished = activeRunIsUnfinished.value;
+
+    confirm.require({
+        group: "delete-match-run",
+        header: isUnfinished
+            ? $gettext("Cancel this run?")
+            : $gettext("Delete this run?"),
+        message: isUnfinished
+            ? $gettext(
+                  "The search stops, and the run and everything it has found so far are deleted. This cannot be undone.",
+              )
+            : $gettext(
+                  "The run and all %{count} of its pairs are deleted. This cannot be undone.",
+                  { count: String(run.candidate_count) },
+              ),
+        accept: async () => {
+            isDeletingRun.value = true;
+            try {
+                await deleteConceptMatchRun(run.id);
+                stopPolling();
+                isRunning.value = false;
+                selectedIds.value = new Set();
+                // Clearing the selection lets loadRuns fall back to the newest
+                // run that is left, or to nothing when that was the last one.
+                activeRunId.value = null;
+                await loadRuns();
+                toast.add({
+                    severity: SUCCESS,
+                    life: DEFAULT_TOAST_LIFE,
+                    summary: isUnfinished
+                        ? $gettext("Run cancelled")
+                        : $gettext("Run deleted"),
+                });
+            } catch (error) {
+                reportError(
+                    error,
+                    isUnfinished
+                        ? $gettext("Could not cancel the run.")
+                        : $gettext("Could not delete the run."),
+                );
+            } finally {
+                isDeletingRun.value = false;
+            }
+        },
+    });
 }
 
 // A pair can be skipped for a reason the reviewer can act on, so the reasons
@@ -379,7 +510,7 @@ function onStatusChange(newStatus: string) {
 
 // A run or status change starts the review over; a page change keeps the
 // selection, so a reviewer can gather pairs across pages before acting.
-watch([activeRunId, candidateStatus, firstResultIndex], loadCandidates);
+watch([activeRunId, candidateStatus, firstResultIndex], () => loadCandidates());
 watch(activeRunId, () => (selectedIds.value = new Set()));
 
 onBeforeUnmount(stopPolling);
@@ -402,6 +533,13 @@ onMounted(async () => {
 
     await loadRuns();
     await loadCandidates();
+
+    // Coming back to a search that is still going: resume watching it rather
+    // than showing a stale, empty queue.
+    if (activeRun.value && isRunUnfinished(activeRun.value)) {
+        isRunning.value = true;
+        pollUntilFinished(activeRun.value.id);
+    }
 });
 </script>
 
@@ -436,7 +574,11 @@ onMounted(async () => {
                 >
                     <template #value="{ value }">
                         <span v-if="activeRun">
-                            {{
+                            <span
+                                v-if="activeRun.name"
+                                class="run-option-name"
+                                >{{ activeRun.name }} — </span
+                            >{{
                                 $gettext(
                                     "%{pending} of %{total} left to review",
                                     {
@@ -453,7 +595,11 @@ onMounted(async () => {
                         <span v-else>{{ value }}</span>
                     </template>
                     <template #option="{ option }">
-                        {{
+                        <span
+                            v-if="option.name"
+                            class="run-option-name"
+                            >{{ option.name }} — </span
+                        >{{
                             $gettext("%{count} pairs", {
                                 count: String(option.candidate_count),
                             })
@@ -506,8 +652,55 @@ onMounted(async () => {
                         class="action-button"
                         @click="setStatusForSelection(CANDIDATE_STATUS_PENDING)"
                     />
+                    <Button
+                        v-if="
+                            candidateStatus === CANDIDATE_STATUS_PENDING &&
+                            activeRun &&
+                            activeRun.pending_count > 0
+                        "
+                        icon="pi pi-times-circle"
+                        :label="
+                            $gettext('Dismiss all %{count}', {
+                                count: String(activeRun!.pending_count),
+                            })
+                        "
+                        :severity="SECONDARY"
+                        :outlined="true"
+                        :disabled="isDismissingAll"
+                        :loading="isDismissingAll"
+                        class="action-button"
+                        @click="onDismissAllRemaining"
+                    />
+                    <Button
+                        v-if="activeRun"
+                        :icon="
+                            activeRunIsUnfinished ? 'pi pi-ban' : 'pi pi-trash'
+                        "
+                        :label="
+                            activeRunIsUnfinished
+                                ? $gettext('Cancel run')
+                                : $gettext('Delete run')
+                        "
+                        :severity="DANGER"
+                        :outlined="true"
+                        :disabled="isDeletingRun"
+                        :loading="isDeletingRun"
+                        class="action-button"
+                        @click="onDeleteRun"
+                    />
                 </div>
             </div>
+
+            <MatchRunSummary
+                v-if="activeRun"
+                :run="activeRun"
+                :schemes="conceptStore.schemes"
+            />
+
+            <MatchRunProgress
+                v-if="activeRun && isRunUnfinished(activeRun)"
+                :run="activeRun"
+            />
 
             <Message
                 v-if="loadError"
@@ -532,6 +725,9 @@ onMounted(async () => {
                 @merge="onMergeRequested"
             />
         </div>
+
+        <ConfirmDialog group="dismiss-all-matches" />
+        <ConfirmDialog group="delete-match-run" />
 
         <MergeDirectionDialog
             v-if="mergingCandidate && !mergeSurvivor"
@@ -593,6 +789,10 @@ onMounted(async () => {
     flex-direction: column;
     gap: 0.75rem;
     min-width: 0;
+}
+
+.run-option-name {
+    font-weight: var(--p-lingo-font-weight-bold);
 }
 
 .matches-results-header {
