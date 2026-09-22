@@ -34,6 +34,7 @@ from arches_lingo.const import (
 from arches_lingo.models import (
     ConceptMatchCandidate,
     ConceptMatchRun,
+    ConceptMatchRun,
     ConceptMerge,
     ConceptSet,
     ConceptSetMember,
@@ -50,8 +51,16 @@ from arches_lingo.utils.concept_matching_service import (
     serialize_candidate_page,
     serialize_run,
     set_candidate_status,
+    start_detection,
 )
+from unittest.mock import patch
+
 from arches_lingo.utils.concept_matching import (
+    ALL_SIGNALS,
+    DEFAULT_SIMILARITY_THRESHOLD,
+    EXACT_SIGNALS,
+    SIGNAL_TRIGRAM,
+    find_similar_label_pairs,
     SIGNAL_EXACT_LABEL,
     SIGNAL_SHARED_IDENTIFIER,
     ConceptMatchError,
@@ -89,6 +98,17 @@ class ConceptMatchingTestCase(ViewTests):
                 CONCEPT_NAME_LANGUAGE_NODE: language,
             },
         )
+
+    def clear_labels(self, concept):
+        """Drop the fixture's own labels from a concept.
+
+        ViewTests names its concepts "Concept 1" ... "Concept 5", which are
+        highly similar to each other -- fine for the exact signals, but it means
+        a fuzzy test would measure the fixture rather than the code.
+        """
+        TileModel.objects.filter(
+            resourceinstance=concept, nodegroup_id=CONCEPT_NAME_NODEGROUP
+        ).delete()
 
     def add_uri(self, concept, uri):
         return TileModel.objects.create(
@@ -130,7 +150,9 @@ class ConceptMatchingTestCase(ViewTests):
         return other_scheme, outsider
 
     def pairs_of(self, found):
-        return {(concept_a, concept_b) for concept_a, concept_b, _evidence in found}
+        return {
+            (concept_a, concept_b) for concept_a, concept_b, _evidence, _score in found
+        }
 
     def expected_pair(self, first_concept, second_concept):
         return ConceptMatchCandidate.order_concept_ids(
@@ -266,6 +288,123 @@ class ScopeTests(ConceptMatchingTestCase):
         self.assertEqual(len(found), 6)
 
 
+class TrigramSignalTests(ConceptMatchingTestCase):
+    """The fuzzy signal, and the threshold that decides what it calls a match."""
+
+    def start_from_a_clean_corpus(self):
+        """Called per test rather than in setUp: this class inherits ViewTests'
+        own tests, and clearing labels would break the ones that count them."""
+        for concept in self.concepts:
+            self.clear_labels(concept)
+
+    def test_near_duplicate_labels_are_suggested_with_their_similarity(self):
+        self.start_from_a_clean_corpus()
+        self.add_label(self.first_concept, "engatillado en metales")
+        self.add_label(self.second_concept, "engatillados en metales")
+
+        found = list(find_similar_label_pairs(MatchScope(), 0.7))
+
+        self.assertEqual(len(found), 1)
+        concept_a, concept_b, evidence, score = found[0]
+        self.assertEqual(
+            (concept_a, concept_b),
+            self.expected_pair(self.first_concept, self.second_concept),
+        )
+        self.assertGreater(score, 0.7)
+        self.assertLess(score, 1.0)
+        self.assertIn("engatillado en metales", evidence)
+
+    def test_the_threshold_decides_what_counts_as_similar(self):
+        """Postgres defaults this to 0.3, which is far too loose to be useful."""
+        self.start_from_a_clean_corpus()
+        self.add_label(self.first_concept, "trumpets")
+        self.add_label(self.second_concept, "trumpeters")
+
+        self.assertEqual(list(find_similar_label_pairs(MatchScope(), 0.95)), [])
+        self.assertEqual(len(list(find_similar_label_pairs(MatchScope(), 0.4))), 1)
+
+    def test_identical_labels_are_left_to_the_exact_signal(self):
+        self.start_from_a_clean_corpus()
+        self.add_label(self.first_concept, "trumpets")
+        self.add_label(self.second_concept, "trumpets")
+
+        self.assertEqual(list(find_similar_label_pairs(MatchScope(), 0.5)), [])
+
+    def test_an_exact_match_is_never_downgraded_to_a_fuzzy_one(self):
+        """The pair is reported once, by its strongest signal."""
+        self.start_from_a_clean_corpus()
+        self.add_label(self.first_concept, "trumpets")
+        self.add_label(self.first_concept, "trumpeters", language="fr")
+        self.add_label(self.second_concept, "trumpets")
+        self.add_label(self.second_concept, "trumpeter", language="fr")
+
+        candidates = collect_candidates(MatchScope(), signals=ALL_SIGNALS)
+
+        self.assertEqual(len(candidates), 1)
+        signal, _evidence, score = next(iter(candidates.values()))
+        self.assertEqual(signal, SIGNAL_EXACT_LABEL)
+        self.assertEqual(score, 1.0)
+
+    def test_a_fuzzy_run_records_the_similarity_as_the_score(self):
+        self.start_from_a_clean_corpus()
+        self.add_label(self.first_concept, "engatillado en metales")
+        self.add_label(self.second_concept, "engatillados en metales")
+
+        run = run_detection(
+            MatchScope(),
+            signals=(SIGNAL_TRIGRAM,),
+            similarity_threshold=0.7,
+            log=lambda message: None,
+        )
+
+        candidate = run.candidates.get()
+        self.assertEqual(candidate.signal, SIGNAL_TRIGRAM)
+        self.assertGreater(candidate.score, 0.7)
+        self.assertLess(candidate.score, 1.0)
+
+
+class StartDetectionTests(ConceptMatchingTestCase):
+    """Exact signals answer inside the request; the fuzzy one goes to a worker."""
+
+    def test_exact_signals_run_in_the_foreground(self):
+        self.add_label(self.first_concept, "trumpets")
+        self.add_label(self.second_concept, "trumpets")
+
+        run = start_detection(
+            MatchScope(), EXACT_SIGNALS, True, DEFAULT_SIMILARITY_THRESHOLD, None
+        )
+
+        self.assertEqual(run.status, ConceptMatchRun.STATUS_COMPLETE)
+        self.assertEqual(run.candidate_count, 1)
+
+    @patch("arches_lingo.utils.concept_matching_service.detect_concept_matches_task")
+    @patch(
+        "arches_lingo.utils.concept_matching_service.task_management"
+        ".check_if_celery_available",
+        return_value=True,
+    )
+    def test_the_fuzzy_signal_is_handed_to_a_worker(self, _celery_available, mock_task):
+        """Comparing every label against every other takes minutes, which is
+        far too long to hold a request open."""
+        run = start_detection(MatchScope(), (SIGNAL_TRIGRAM,), True, 0.7, None)
+
+        self.assertEqual(run.status, ConceptMatchRun.STATUS_PENDING)
+        mock_task.apply_async.assert_called_once()
+        queued_run_id = mock_task.apply_async.call_args.kwargs["args"][0]
+        self.assertEqual(queued_run_id, run.pk)
+
+    @patch(
+        "arches_lingo.utils.concept_matching_service.task_management"
+        ".check_if_celery_available",
+        return_value=False,
+    )
+    def test_no_worker_is_an_actionable_error(self, _celery_available):
+        with self.assertRaises(ConceptMatchRequestError) as raised:
+            start_detection(MatchScope(), (SIGNAL_TRIGRAM,), True, 0.7, None)
+
+        self.assertIn("detect_concept_matches", raised.exception.message)
+
+
 class DecidedPairTests(ConceptMatchingTestCase):
     def test_a_merged_pair_is_not_suggested_again(self):
         self.add_label(self.first_concept, "trumpets")
@@ -309,7 +448,7 @@ class CollectCandidateTests(ConceptMatchingTestCase):
         candidates = collect_candidates(MatchScope())
 
         self.assertEqual(len(candidates), 1)
-        signal, evidence = next(iter(candidates.values()))
+        signal, evidence, _score = next(iter(candidates.values()))
         self.assertEqual(signal, SIGNAL_SHARED_IDENTIFIER)
         self.assertEqual(evidence, "https://example.org/concepts/shared")
 
@@ -323,7 +462,7 @@ class CollectCandidateTests(ConceptMatchingTestCase):
 
     def test_an_unsupported_signal_is_rejected(self):
         with self.assertRaises(ConceptMatchError):
-            collect_candidates(MatchScope(), signals=("trigram",))
+            collect_candidates(MatchScope(), signals=("phonetic",))
 
 
 class RunDetectionTests(ConceptMatchingTestCase):
@@ -346,11 +485,11 @@ class RunDetectionTests(ConceptMatchingTestCase):
 
     def test_a_failed_run_is_recorded_rather_than_lost(self):
         with self.assertRaises(ConceptMatchError):
-            run_detection(MatchScope(), signals=("trigram",), log=lambda message: None)
+            run_detection(MatchScope(), signals=("phonetic",), log=lambda message: None)
 
         run = ConceptMatchRun.objects.get()
         self.assertEqual(run.status, ConceptMatchRun.STATUS_FAILED)
-        self.assertIn("trigram", run.error_message)
+        self.assertIn("phonetic", run.error_message)
 
 
 class CandidateReviewTests(ConceptMatchingTestCase):

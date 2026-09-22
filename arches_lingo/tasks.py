@@ -75,3 +75,41 @@ def load_lingo_resources_task(loadid, userid, kwargs={}):
             else _("Import failed")
         )
         notify_completion(message, user)
+
+
+@shared_task
+def detect_concept_matches_task(run_id, scope_parameters, signals, options):
+    """Run match detection for a run that has already been handed to the caller.
+
+    Only the fuzzy signal needs this: comparing every label in a vocabulary to
+    every other takes minutes, which is far too long to hold a request open.
+    The run row is the progress report -- it is created before the task is
+    queued, so the interface has something to poll from the moment it asks.
+    """
+    logger = logging.getLogger(__name__)
+
+    from arches_lingo.models import ConceptMatchRun
+    from arches_lingo.utils.concept_matching import MatchScope, run_detection
+
+    run = ConceptMatchRun.objects.get(pk=run_id)
+    try:
+        run_detection(
+            MatchScope(**scope_parameters),
+            signals=tuple(signals),
+            same_language_only=options["same_language_only"],
+            similarity_threshold=options["similarity_threshold"],
+            user=run.user,
+            log=lambda message: logger.info(message),
+            run=run,
+        )
+        message = _("Match detection found {} candidate pair(s)").format(
+            ConceptMatchRun.objects.get(pk=run_id).candidate_count
+        )
+    except Exception as exception:
+        # run_detection records the failure on the run before re-raising, so the
+        # interface already shows why; this is the notification and the traceback.
+        logger.error(exception, exc_info=True)
+        message = _("Match detection failed")
+
+    if run.user:
+        notify_completion(message, run.user)
