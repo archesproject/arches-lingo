@@ -643,9 +643,11 @@ export interface ConceptMergeHistoryEntry {
 
 export interface ConceptMatchRun {
     id: number;
+    name: string;
     status: "pending" | "running" | "complete" | "failed";
     created: string;
     finished: string | null;
+    elapsed_seconds: number;
     parameters: Record<string, unknown>;
     candidate_count: number;
     pending_count: number;
@@ -657,6 +659,8 @@ export interface MatchedConceptSummary {
     labels: Label[];
     scheme_id: string | null;
     scheme_name: string | null;
+    can_receive_data: boolean;
+    cannot_receive_reason: "not_editable" | "scheme_locked" | null;
 }
 
 export interface ConceptMatchCandidate {
@@ -671,8 +675,8 @@ export interface ConceptMatchCandidate {
 }
 
 export interface ConceptMatchRunRequest {
-    source_scheme_id?: string | null;
-    target_scheme_id?: string | null;
+    name?: string;
+    scheme_ids?: string[];
     source_concept_set_id?: number | null;
     source_concept_ids?: string[];
     cross_scheme_only?: boolean;

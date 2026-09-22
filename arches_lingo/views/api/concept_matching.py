@@ -19,7 +19,9 @@ from arches_lingo.utils.concept_matching import (
 )
 from arches_lingo.utils.concept_matching_service import (
     ConceptMatchRequestError,
+    dismiss_all_pending,
     link_candidates_with_exact_match,
+    reap_stale_runs,
     start_detection,
     serialize_candidate_page,
     serialize_run,
@@ -51,6 +53,9 @@ def _get_user_run(user, pk):
 
 class ConceptMatchRunListView(LingoEditorMixin, View):
     def get(self, request):
+        # Nothing else is in a position to notice a run whose worker died, and
+        # this is the request that is about to report those runs as running.
+        reap_stale_runs()
         runs = ConceptMatchRun.objects.filter(user=request.user)
         return JSONResponse({"data": [serialize_run(run) for run in runs]})
 
@@ -60,8 +65,7 @@ class ConceptMatchRunListView(LingoEditorMixin, View):
             return error_response
 
         scope = MatchScope(
-            source_scheme_id=body.get("source_scheme_id") or None,
-            target_scheme_id=body.get("target_scheme_id") or None,
+            scheme_ids=body.get("scheme_ids") or [],
             source_concept_set_id=body.get("source_concept_set_id") or None,
             source_concept_ids=body.get("source_concept_ids") or [],
             cross_scheme_only=bool(body.get("cross_scheme_only")),
@@ -76,6 +80,7 @@ class ConceptMatchRunListView(LingoEditorMixin, View):
                     body.get("similarity_threshold") or DEFAULT_SIMILARITY_THRESHOLD
                 ),
                 user=request.user,
+                name=(body.get("name") or "").strip()[:255],
             )
         except ConceptMatchRequestError as request_error:
             return JSONErrorResponse(
@@ -120,6 +125,7 @@ class ConceptMatchCandidateListView(LingoEditorMixin, View):
                 status=request.GET.get("status") or None,
                 page_number=request.GET.get("page", 1),
                 items_per_page=request.GET.get("items"),
+                user_is_lingo_admin=is_lingo_admin(request.user),
             )
         )
 
@@ -132,6 +138,12 @@ class ConceptMatchCandidateListView(LingoEditorMixin, View):
         body, error_response = _parse_json_body(request)
         if error_response:
             return error_response
+
+        # Clearing the rest of the queue names no ids: there can be tens of
+        # thousands of them, and the reviewer is deciding about what is left
+        # rather than about anything they have picked out.
+        if body.get("all_pending"):
+            return JSONResponse(dismiss_all_pending(run, request.user))
 
         candidate_ids = body.get("candidate_ids") or []
         if not candidate_ids:

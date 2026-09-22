@@ -1435,6 +1435,25 @@ export const updateConceptMatchCandidates = async (
     return parsed;
 };
 
+export const dismissAllConceptMatchCandidates = async (
+    runId: number,
+): Promise<{ updated: number; status: string }> => {
+    const url = generateArchesURL("arches_lingo:api-concept-match-candidates", {
+        pk: runId,
+    });
+    const response = await fetch(url, {
+        method: "PATCH",
+        headers: {
+            "X-CSRFTOKEN": getToken(),
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ all_pending: true }),
+    });
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
 export const linkConceptMatchCandidates = async (
     runId: number,
     candidateIds: number[],

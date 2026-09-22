@@ -5,13 +5,16 @@ each, scoped to what was asked for. These cover that logic rather than the SQL
 that implements it, so the signals stay replaceable.
 """
 
+import datetime
 import json
+import uuid
 from http import HTTPStatus
 from io import StringIO
 
 from django.contrib.auth.models import Group, User
 from django.test import Client
 from django.urls import reverse
+from django.utils import timezone
 from django.core.management import call_command
 from django.core.management.base import CommandError
 
@@ -43,13 +46,17 @@ from arches_lingo.models import (
 from arches_lingo.tasks import detect_concept_matches_task
 from arches_lingo.utils.concept_lifecycle import (
     EDITING_STATE_ID,
+    LOCKED_STATE_ID,
     PUBLISHED_STATE_ID,
 )
 from arches_lingo.utils.concept_merge import get_list_item_tile_value
 from arches_lingo.utils.concept_matching_service import (
     MAX_LINK_BATCH,
+    STALE_RUN_SECONDS,
     ConceptMatchRequestError,
+    dismiss_all_pending,
     link_candidates_with_exact_match,
+    reap_stale_runs,
     serialize_candidate_page,
     serialize_run,
     set_candidate_status,
@@ -277,17 +284,46 @@ class ScopeTests(ConceptMatchingTestCase):
         for pair in found:
             self.assertIn(str(outsider.pk), pair)
 
-    def test_scoping_to_a_scheme_keeps_pairs_touching_it(self):
+    def test_scoping_to_a_scheme_confines_the_run_to_it(self):
+        """A run scoped to a scheme is a search within it.
+
+        Both concepts of a pair must belong to a scheme that was chosen, so a
+        pair reaching outside the scope is not part of it.
+        """
         self.label_three_concepts()
         _, outsider = self.make_concept_in_other_scheme()
         self.add_label(outsider, "trumpets")
-        scope = MatchScope(source_scheme_id=str(self.scheme.pk))
+        scope = MatchScope(scheme_ids=[str(self.scheme.pk)])
 
         found = self.pairs_of(find_exact_label_pairs(scope))
 
-        # Every pair has at least one concept in the original scheme; only the
-        # pair made of two outsiders would be excluded, and there is one outsider.
+        # The three concepts in the scheme pair with each other and nothing
+        # else: every pair reaching the outsider is left out.
+        self.assertEqual(len(found), 3)
+        for pair in found:
+            self.assertNotIn(str(outsider.pk), pair)
+
+    def test_scoping_to_several_schemes_keeps_what_spans_them(self):
+        self.label_three_concepts()
+        other_scheme, outsider = self.make_concept_in_other_scheme()
+        self.add_label(outsider, "trumpets")
+        scope = MatchScope(scheme_ids=[str(self.scheme.pk), str(other_scheme.pk)])
+
+        found = self.pairs_of(find_exact_label_pairs(scope))
+
+        # Both schemes are in scope now, so the outsider's pairs come back too.
         self.assertEqual(len(found), 6)
+
+    def test_a_scheme_outside_the_scope_contributes_nothing(self):
+        self.label_three_concepts()
+        other_scheme, outsider = self.make_concept_in_other_scheme()
+        self.add_label(outsider, "trumpets")
+        scope = MatchScope(scheme_ids=[str(other_scheme.pk)])
+
+        found = self.pairs_of(find_exact_label_pairs(scope))
+
+        # One concept alone in its scheme has nothing in scope to pair with.
+        self.assertEqual(found, set())
 
 
 class TrigramSignalTests(ConceptMatchingTestCase):
@@ -405,6 +441,54 @@ class StartDetectionTests(ConceptMatchingTestCase):
             start_detection(MatchScope(), (SIGNAL_TRIGRAM,), True, 0.7, None)
 
         self.assertIn("detect_concept_matches", raised.exception.message)
+
+    @patch("arches_lingo.utils.concept_matching_service.detect_concept_matches_task")
+    @patch(
+        "arches_lingo.utils.concept_matching_service.task_management"
+        ".check_if_celery_available",
+        return_value=False,
+    )
+    def test_a_worker_busy_with_another_search_still_counts_as_available(
+        self, _celery_available, mock_task
+    ):
+        """A solo-pool worker cannot answer a ping while it is executing a task.
+
+        Taking that silence at face value would mean no search could be started
+        while another was running.
+        """
+        ConceptMatchRun.objects.create(
+            user=None,
+            status=ConceptMatchRun.STATUS_RUNNING,
+            last_progress=timezone.now(),
+            parameters={"signals": [SIGNAL_TRIGRAM]},
+        )
+
+        run = start_detection(MatchScope(), (SIGNAL_TRIGRAM,), True, 0.7, None)
+
+        self.assertEqual(run.status, ConceptMatchRun.STATUS_PENDING)
+        mock_task.apply_async.assert_called_once()
+
+    @patch(
+        "arches_lingo.utils.concept_matching_service.task_management"
+        ".check_if_celery_available",
+        return_value=False,
+    )
+    def test_a_run_that_stopped_reporting_is_not_evidence_of_a_worker(
+        self, _celery_available
+    ):
+        """Otherwise a run stranded by a dead worker would vouch for it forever."""
+        stranded = ConceptMatchRun.objects.create(
+            user=None,
+            status=ConceptMatchRun.STATUS_RUNNING,
+            parameters={"signals": [SIGNAL_TRIGRAM]},
+        )
+        ConceptMatchRun.objects.filter(pk=stranded.pk).update(
+            last_progress=timezone.now()
+            - datetime.timedelta(seconds=STALE_RUN_SECONDS * 2)
+        )
+
+        with self.assertRaises(ConceptMatchRequestError):
+            start_detection(MatchScope(), (SIGNAL_TRIGRAM,), True, 0.7, None)
 
 
 class DecidedPairTests(ConceptMatchingTestCase):
@@ -524,6 +608,60 @@ class CandidateReviewTests(ConceptMatchingTestCase):
         candidate = serialize_candidate_page(run)["data"][0]
 
         self.assertTrue(candidate["is_cross_scheme"])
+
+    def test_a_concept_that_can_be_merged_into_says_so(self):
+        run = self.make_run_with_one_candidate()
+
+        candidate = serialize_candidate_page(run)["data"][0]
+
+        for side in ("concept_a", "concept_b"):
+            self.assertTrue(candidate[side]["can_receive_data"])
+            self.assertIsNone(candidate[side]["cannot_receive_reason"])
+
+    def test_a_published_concept_cannot_be_merged_into(self):
+        """A merge writes to one side only, so the other may still be published.
+
+        The interface needs to know which way round the pair may be merged
+        before it offers the choice.
+        """
+        run = self.make_run_with_one_candidate()
+        ResourceInstance.objects.filter(pk=self.second_concept.pk).update(
+            resource_instance_lifecycle_state_id=PUBLISHED_STATE_ID
+        )
+
+        candidate = serialize_candidate_page(run)["data"][0]
+        by_id = {
+            candidate["concept_a"]["id"]: candidate["concept_a"],
+            candidate["concept_b"]["id"]: candidate["concept_b"],
+        }
+
+        self.assertTrue(by_id[str(self.first_concept.pk)]["can_receive_data"])
+        published = by_id[str(self.second_concept.pk)]
+        self.assertFalse(published["can_receive_data"])
+        self.assertEqual(published["cannot_receive_reason"], "not_editable")
+
+    def test_a_locked_scheme_stops_its_concepts_being_merged_into(self):
+        run = self.make_run_with_one_candidate()
+        ResourceInstance.objects.filter(pk=self.scheme.pk).update(
+            resource_instance_lifecycle_state_id=LOCKED_STATE_ID
+        )
+
+        candidate = serialize_candidate_page(run)["data"][0]
+
+        for side in ("concept_a", "concept_b"):
+            self.assertFalse(candidate[side]["can_receive_data"])
+            self.assertEqual(candidate[side]["cannot_receive_reason"], "scheme_locked")
+
+    def test_a_lingo_admin_is_not_stopped_by_a_locked_scheme(self):
+        run = self.make_run_with_one_candidate()
+        ResourceInstance.objects.filter(pk=self.scheme.pk).update(
+            resource_instance_lifecycle_state_id=LOCKED_STATE_ID
+        )
+
+        candidate = serialize_candidate_page(run, user_is_lingo_admin=True)["data"][0]
+
+        for side in ("concept_a", "concept_b"):
+            self.assertTrue(candidate[side]["can_receive_data"])
 
     def test_candidates_can_be_filtered_by_status(self):
         run = self.make_run_with_one_candidate()
@@ -787,6 +925,32 @@ class ConceptMatchApiTests(ConceptMatchingTestCase):
         listed = self.client.get(reverse("api-concept-match-runs")).json()
         self.assertEqual([run["id"] for run in listed["data"]], [created["id"]])
 
+    def test_a_run_records_the_schemes_and_name_it_was_given(self):
+        """A run is recalled later, so what it was asked for is kept with it."""
+        self.add_label(self.first_concept, "trumpets")
+        self.add_label(self.second_concept, "trumpets")
+
+        created = self.post_json(
+            reverse("api-concept-match-runs"),
+            {
+                "name": "  Brass sweep  ",
+                "scheme_ids": [str(self.scheme.pk)],
+                "cross_scheme_only": False,
+            },
+        ).json()
+
+        self.assertEqual(created["name"], "Brass sweep")
+        self.assertEqual(created["parameters"]["scheme_ids"], [str(self.scheme.pk)])
+
+    def test_a_run_without_a_name_is_allowed(self):
+        self.add_label(self.first_concept, "trumpets")
+        self.add_label(self.second_concept, "trumpets")
+
+        created = self.post_json(reverse("api-concept-match-runs"), {}).json()
+
+        self.assertEqual(created["name"], "")
+        self.assertEqual(created["parameters"]["scheme_ids"], [])
+
     def test_an_unsupported_signal_is_a_bad_request(self):
         response = self.post_json(
             reverse("api-concept-match-runs"), {"signals": ["phonetic"]}
@@ -906,6 +1070,36 @@ class ConceptMatchApiTests(ConceptMatchingTestCase):
         self.assertTrue(response.json()["deleted"])
         self.assertEqual(ConceptMatchRun.objects.count(), 0)
 
+    def test_the_rest_of_the_queue_can_be_cleared_without_naming_it(self):
+        created = self.create_run_with_one_pair()
+        candidates_url = reverse("api-concept-match-candidates", args=[created["id"]])
+
+        response = self.client.patch(
+            candidates_url,
+            data=json.dumps({"all_pending": True}),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(response.json()["updated"], 1)
+        self.assertEqual(
+            response.json()["status"], ConceptMatchCandidate.STATUS_DISMISSED
+        )
+
+    def test_another_users_run_cannot_be_cleared(self):
+        created = self.create_run_with_one_pair()
+        other_user = User.objects.create_user(username="other-editor", password="x")
+        other_user.groups.add(Group.objects.get(name=LINGO_EDITOR_GROUP_NAME))
+        self.client.force_login(other_user)
+
+        response = self.client.patch(
+            reverse("api-concept-match-candidates", args=[created["id"]]),
+            data=json.dumps({"all_pending": True}),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+
     def test_an_editor_is_required(self):
         self.client.force_login(
             User.objects.create_user(username="viewer", password="x")
@@ -974,3 +1168,247 @@ class DetectConceptMatchesCommandTests(ConceptMatchingTestCase):
     def test_an_unknown_user_is_an_actionable_error(self):
         with self.assertRaises(CommandError):
             call_command("detect_concept_matches", user="nobody", stdout=StringIO())
+
+
+class RunReportingTests(ConceptMatchingTestCase):
+    """What a run says about itself while it is working, and after it stops.
+
+    A worker restarted mid-run leaves its run claiming to be running: celery
+    acknowledges a task when it receives it, so the message dies with the worker
+    and nothing survives to record the failure. Runs that stop reporting have to
+    be closed out from the outside.
+    """
+
+    def make_run(self, status, age_seconds, heartbeat_age_seconds=None):
+        run = ConceptMatchRun.objects.create(
+            user=User.objects.get(username="admin"),
+            status=status,
+            parameters={"signals": [SIGNAL_EXACT_LABEL]},
+        )
+        # created is auto_now_add, so it is moved afterwards rather than passed.
+        ConceptMatchRun.objects.filter(pk=run.pk).update(
+            created=timezone.now() - datetime.timedelta(seconds=age_seconds),
+            last_progress=(
+                None
+                if heartbeat_age_seconds is None
+                else timezone.now() - datetime.timedelta(seconds=heartbeat_age_seconds)
+            ),
+        )
+        run.refresh_from_db()
+        return run
+
+    def test_a_run_that_stopped_reporting_is_failed(self):
+        run = self.make_run(
+            ConceptMatchRun.STATUS_RUNNING,
+            age_seconds=STALE_RUN_SECONDS * 3,
+            heartbeat_age_seconds=STALE_RUN_SECONDS * 2,
+        )
+
+        self.assertEqual(reap_stale_runs(), 1)
+
+        run.refresh_from_db()
+        self.assertEqual(run.status, ConceptMatchRun.STATUS_FAILED)
+        self.assertIn("interrupted", run.error_message)
+        self.assertIsNotNone(run.finished)
+
+    def test_a_run_still_reporting_is_left_alone(self):
+        run = self.make_run(
+            ConceptMatchRun.STATUS_RUNNING,
+            age_seconds=STALE_RUN_SECONDS * 10,
+            heartbeat_age_seconds=1,
+        )
+
+        self.assertEqual(reap_stale_runs(), 0)
+
+        run.refresh_from_db()
+        self.assertEqual(run.status, ConceptMatchRun.STATUS_RUNNING)
+
+    def test_a_run_that_never_reported_falls_back_to_when_it_started(self):
+        """A run stranded before its first batch has no heartbeat to judge."""
+        fresh = self.make_run(ConceptMatchRun.STATUS_PENDING, age_seconds=1)
+        stranded = self.make_run(
+            ConceptMatchRun.STATUS_PENDING, age_seconds=STALE_RUN_SECONDS * 2
+        )
+
+        self.assertEqual(reap_stale_runs(), 1)
+
+        fresh.refresh_from_db()
+        stranded.refresh_from_db()
+        self.assertEqual(fresh.status, ConceptMatchRun.STATUS_PENDING)
+        self.assertEqual(stranded.status, ConceptMatchRun.STATUS_FAILED)
+
+    def test_a_finished_run_is_never_reopened(self):
+        run = self.make_run(
+            ConceptMatchRun.STATUS_COMPLETE, age_seconds=STALE_RUN_SECONDS * 10
+        )
+
+        self.assertEqual(reap_stale_runs(), 0)
+
+        run.refresh_from_db()
+        self.assertEqual(run.status, ConceptMatchRun.STATUS_COMPLETE)
+
+    def test_elapsed_time_is_measured_on_the_server(self):
+        """The client cannot subtract these timestamps from its own clock.
+
+        With USE_TZ off they are naive and carry no offset, so a browser in
+        another zone reads them as its own local time.
+        """
+        run = ConceptMatchRun.objects.create(
+            user=User.objects.get(username="admin"),
+            status=ConceptMatchRun.STATUS_RUNNING,
+            parameters={"signals": [SIGNAL_EXACT_LABEL]},
+        )
+        ConceptMatchRun.objects.filter(pk=run.pk).update(
+            created=timezone.now() - datetime.timedelta(seconds=90)
+        )
+        run.refresh_from_db()
+
+        self.assertAlmostEqual(serialize_run(run)["elapsed_seconds"], 90, delta=5)
+
+    def test_a_finished_run_stops_counting(self):
+        run = ConceptMatchRun.objects.create(
+            user=User.objects.get(username="admin"),
+            status=ConceptMatchRun.STATUS_COMPLETE,
+            parameters={"signals": [SIGNAL_EXACT_LABEL]},
+        )
+        ConceptMatchRun.objects.filter(pk=run.pk).update(
+            created=timezone.now() - datetime.timedelta(seconds=300),
+            finished=timezone.now() - datetime.timedelta(seconds=240),
+        )
+        run.refresh_from_db()
+
+        self.assertEqual(serialize_run(run)["elapsed_seconds"], 60)
+
+
+class RunDisposalTests(ConceptMatchingTestCase):
+    """Putting a run down: clearing what is left of it, and deleting it.
+
+    A corpus-wide fuzzy run suggests far more pairs than anyone will review by
+    hand, so a reviewer has to be able to dispose of one as well as work through
+    it.
+    """
+
+    def make_run_with_candidates(self, statuses):
+        run = ConceptMatchRun.objects.create(
+            user=User.objects.get(username="admin"),
+            status=ConceptMatchRun.STATUS_COMPLETE,
+            parameters={"signals": [SIGNAL_EXACT_LABEL]},
+        )
+        for index, status in enumerate(statuses):
+            ConceptMatchCandidate.objects.create(
+                run=run,
+                concept_a_id=uuid.uuid4(),
+                concept_b_id=uuid.uuid4(),
+                score=1.0,
+                signal=SIGNAL_EXACT_LABEL,
+                evidence=f"pair {index}",
+                status=status,
+            )
+        return run
+
+    def test_every_pending_pair_is_dismissed_at_once(self):
+        run = self.make_run_with_candidates([ConceptMatchCandidate.STATUS_PENDING] * 3)
+
+        result = dismiss_all_pending(run, User.objects.get(username="admin"))
+
+        self.assertEqual(result["updated"], 3)
+        self.assertEqual(
+            run.candidates.filter(
+                status=ConceptMatchCandidate.STATUS_DISMISSED
+            ).count(),
+            3,
+        )
+
+    def test_pairs_already_decided_are_left_as_they_are(self):
+        """Dismissing what is left must not undo work already done."""
+        run = self.make_run_with_candidates(
+            [
+                ConceptMatchCandidate.STATUS_PENDING,
+                ConceptMatchCandidate.STATUS_LINKED,
+                ConceptMatchCandidate.STATUS_MERGED,
+            ]
+        )
+
+        result = dismiss_all_pending(run, User.objects.get(username="admin"))
+
+        self.assertEqual(result["updated"], 1)
+        self.assertEqual(
+            run.candidates.filter(status=ConceptMatchCandidate.STATUS_LINKED).count(),
+            1,
+        )
+        self.assertEqual(
+            run.candidates.filter(status=ConceptMatchCandidate.STATUS_MERGED).count(),
+            1,
+        )
+
+    def test_the_reviewer_is_recorded(self):
+        run = self.make_run_with_candidates([ConceptMatchCandidate.STATUS_PENDING])
+        admin = User.objects.get(username="admin")
+
+        dismiss_all_pending(run, admin)
+
+        dismissed = run.candidates.get()
+        self.assertEqual(dismissed.reviewed_by, admin)
+        self.assertIsNotNone(dismissed.reviewed_at)
+
+    def test_another_runs_pairs_are_untouched(self):
+        run = self.make_run_with_candidates([ConceptMatchCandidate.STATUS_PENDING])
+        other_run = self.make_run_with_candidates(
+            [ConceptMatchCandidate.STATUS_PENDING]
+        )
+
+        dismiss_all_pending(run, User.objects.get(username="admin"))
+
+        self.assertEqual(
+            other_run.candidates.get().status, ConceptMatchCandidate.STATUS_PENDING
+        )
+
+    # Deleting the run is how a run in flight is cancelled. Celery cannot be
+    # relied on to stop a task that has already started -- the solo pool runs it
+    # inside the worker process -- so detection watches for its own run record
+    # disappearing and stops when it does.
+    def test_a_run_deleted_while_working_stops_without_failing(self):
+        run = ConceptMatchRun.objects.create(
+            user=User.objects.get(username="admin"),
+            status=ConceptMatchRun.STATUS_RUNNING,
+            parameters={"signals": [SIGNAL_EXACT_LABEL]},
+        )
+
+        def cancel_midway(*args, **kwargs):
+            ConceptMatchRun.objects.filter(pk=run.pk).delete()
+            yield (
+                str(uuid.uuid4()),
+                str(uuid.uuid4()),
+                SIGNAL_EXACT_LABEL,
+                "trumpets",
+                1.0,
+            )
+
+        with patch(
+            "arches_lingo.utils.concept_matching.iter_candidates", cancel_midway
+        ):
+            result = run_detection(MatchScope(), signals=(SIGNAL_EXACT_LABEL,), run=run)
+
+        # Nothing is returned because there is no longer a run to report on, and
+        # no candidate rows are left behind pointing at a run that is gone.
+        self.assertIsNone(result)
+        self.assertFalse(ConceptMatchRun.objects.filter(pk=run.pk).exists())
+        self.assertEqual(ConceptMatchCandidate.objects.filter(run_id=run.pk).count(), 0)
+
+    def test_deleting_a_run_takes_its_candidates_with_it(self):
+        run = ConceptMatchRun.objects.create(
+            user=User.objects.get(username="admin"),
+            status=ConceptMatchRun.STATUS_COMPLETE,
+            parameters={"signals": [SIGNAL_EXACT_LABEL]},
+        )
+        ConceptMatchCandidate.objects.create(
+            run=run,
+            concept_a_id=uuid.uuid4(),
+            concept_b_id=uuid.uuid4(),
+            score=1.0,
+            signal=SIGNAL_EXACT_LABEL,
+        )
+
+        run.delete()
+
+        self.assertEqual(ConceptMatchCandidate.objects.filter(run_id=run.pk).count(), 0)
