@@ -29,9 +29,13 @@ import {
     CANDIDATE_STATUS_PENDING,
     RUN_POLL_INTERVAL_MS,
     RUN_STATUS_FAILED,
-    RUN_STATUS_PENDING,
-    RUN_STATUS_RUNNING,
 } from "@/arches_lingo/components/concept-matching/constants.ts";
+import {
+    buildPreselectedConcept,
+    describeSkippedReasons,
+    isRunUnfinished,
+    resolveMergeSides,
+} from "@/arches_lingo/components/concept-matching/utils.ts";
 import {
     DEFAULT_ERROR_TOAST_LIFE,
     DEFAULT_TOAST_LIFE,
@@ -51,7 +55,6 @@ import type {
     ConceptMatchRunRequest,
     MatchedConceptSummary,
     ResourceInstanceResult,
-    SearchResultItem,
 } from "@/arches_lingo/types.ts";
 
 const CONCEPT_GRAPH_SLUG = "concept";
@@ -134,12 +137,6 @@ async function loadCandidates() {
 
 // A fuzzy run is handed to a worker and comes back still pending, so the run is
 // polled until it settles rather than reporting a count of zero straight away.
-function isUnfinished(run: ConceptMatchRun) {
-    return (
-        run.status === RUN_STATUS_PENDING || run.status === RUN_STATUS_RUNNING
-    );
-}
-
 function stopPolling() {
     if (pollTimer !== undefined) {
         clearInterval(pollTimer);
@@ -153,7 +150,7 @@ function pollUntilFinished(runId: number) {
         const run = (await fetchConceptMatchRuns()).data.find(
             (candidateRun) => candidateRun.id === runId,
         );
-        if (!run || isUnfinished(run)) return;
+        if (!run || isRunUnfinished(run)) return;
 
         stopPolling();
         isRunning.value = false;
@@ -189,7 +186,7 @@ async function onRun(request: ConceptMatchRunRequest) {
         await loadRuns();
         activeRunId.value = run.id;
 
-        if (isUnfinished(run)) {
+        if (isRunUnfinished(run)) {
             pollUntilFinished(run.id);
             return;
         }
@@ -233,14 +230,11 @@ async function setStatusForSelection(status: string) {
 // A pair can be skipped for a reason the reviewer can act on, so the reasons
 // are named rather than reported as a bare count.
 function describeSkipped(skipped: Record<string, number>) {
-    const reasons: Record<string, string> = {
+    return describeSkippedReasons(skipped, {
         missing_uri: $gettext("no URI to point at"),
         not_editable: $gettext("neither concept can be edited"),
         missing_concept: $gettext("concept no longer exists"),
-    };
-    return Object.entries(skipped)
-        .map(([reason, count]) => `${count} (${reasons[reason] ?? reason})`)
-        .join(", ");
+    });
 }
 
 async function onLinkSelection() {
@@ -289,32 +283,18 @@ async function onLinkSelection() {
 }
 
 // Which side of the pair is which, once the reviewer has chosen a survivor.
-const mergeAbsorbedSummary = computed(function () {
+const mergeSides = computed(function () {
     if (!mergingCandidate.value || !mergeAbsorbedId.value) return null;
-    return mergingCandidate.value.concept_a.id === mergeAbsorbedId.value
-        ? mergingCandidate.value.concept_a
-        : mergingCandidate.value.concept_b;
-});
-
-const mergeSurvivorSummary = computed(function () {
-    if (!mergingCandidate.value || !mergeAbsorbedId.value) return null;
-    return mergingCandidate.value.concept_a.id === mergeAbsorbedId.value
-        ? mergingCandidate.value.concept_b
-        : mergingCandidate.value.concept_a;
+    return resolveMergeSides(mergingCandidate.value, mergeAbsorbedId.value);
 });
 
 // The merge dialog takes the absorbed concept in the shape its picker emits.
 // Only the id and labels are read from it: the id to fetch the resource, the
 // labels to name it.
 const preselectedAbsorbedConcept = computed(function () {
-    const absorbed = mergeAbsorbedSummary.value;
-    if (!absorbed) return undefined;
-    return {
-        id: absorbed.id,
-        labels: absorbed.labels,
-        parents: [],
-        polyhierarchical: false,
-    } as SearchResultItem;
+    return mergeSides.value
+        ? buildPreselectedConcept(mergeSides.value.absorbed)
+        : undefined;
 });
 
 function nameOf(concept: MatchedConceptSummary) {
@@ -567,9 +547,9 @@ onMounted(async () => {
             v-if="mergeSurvivor && mergeAbsorbedId && mergingCandidate"
             :survivor-concept="mergeSurvivor"
             :survivor-label="
-                mergeSurvivorSummary ? nameOf(mergeSurvivorSummary) : undefined
+                mergeSides ? nameOf(mergeSides.survivor) : undefined
             "
-            :scheme-id="mergeSurvivorSummary?.scheme_id ?? ''"
+            :scheme-id="mergeSides?.survivor.scheme_id ?? ''"
             :graph-slug="CONCEPT_GRAPH_SLUG"
             :preselected-concept="preselectedAbsorbedConcept"
             @merged="onMergeCompleted"

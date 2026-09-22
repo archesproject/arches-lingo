@@ -13,7 +13,7 @@ import { RouterLink } from "vue-router";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 import { routeNames } from "@/arches_lingo/routes.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
-import { SIGNAL_SHARED_IDENTIFIER } from "@/arches_lingo/components/concept-matching/constants.ts";
+import { describeMatchReason } from "@/arches_lingo/components/concept-matching/utils.ts";
 import { SECONDARY } from "@/arches_lingo/constants.ts";
 
 import type {
@@ -44,9 +44,7 @@ function conceptName(concept: MatchedConceptSummary | null) {
 }
 
 const reason = computed(function () {
-    return candidate.signal === SIGNAL_SHARED_IDENTIFIER
-        ? $gettext("Same URI: %{evidence}", { evidence: candidate.evidence })
-        : $gettext("Same label: %{evidence}", { evidence: candidate.evidence });
+    return describeMatchReason(candidate, $gettext);
 });
 </script>
 

@@ -39,6 +39,7 @@ from arches_lingo.models import (
     ConceptSet,
     ConceptSetMember,
 )
+from arches_lingo.tasks import detect_concept_matches_task
 from arches_lingo.utils.concept_lifecycle import (
     EDITING_STATE_ID,
     PUBLISHED_STATE_ID,
@@ -753,6 +754,205 @@ class PairSettlementTests(ConceptMatchingTestCase):
         self.assertEqual(
             run.candidates.get().status, ConceptMatchCandidate.STATUS_DISMISSED
         )
+
+
+class ConceptMatchApiTests(ConceptMatchingTestCase):
+    """The endpoints the review interface actually calls.
+
+    These cover the decisions the views make -- who may see a run, what counts
+    as a usable request -- rather than re-testing the engine underneath them.
+    """
+
+    def setUp(self):
+        super().setUp()
+        self.client = Client()
+        self.admin = User.objects.get(username="admin")
+        self.client.force_login(self.admin)
+
+    def post_json(self, url, payload):
+        return self.client.post(
+            url, data=json.dumps(payload), content_type="application/json"
+        )
+
+    def create_run_with_one_pair(self):
+        self.add_label(self.first_concept, "trumpets")
+        self.add_label(self.second_concept, "trumpets")
+        return self.post_json(reverse("api-concept-match-runs"), {}).json()
+
+    def test_a_run_is_created_and_listed(self):
+        created = self.create_run_with_one_pair()
+
+        self.assertEqual(created["candidate_count"], 1)
+        listed = self.client.get(reverse("api-concept-match-runs")).json()
+        self.assertEqual([run["id"] for run in listed["data"]], [created["id"]])
+
+    def test_an_unsupported_signal_is_a_bad_request(self):
+        response = self.post_json(
+            reverse("api-concept-match-runs"), {"signals": ["phonetic"]}
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+
+    def test_a_malformed_body_is_a_bad_request(self):
+        response = self.client.post(
+            reverse("api-concept-match-runs"),
+            data="not json",
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+
+    def test_another_users_run_is_not_found(self):
+        """Runs are per-user, so someone else's is invisible rather than
+        forbidden -- its existence is not theirs to know."""
+        created = self.create_run_with_one_pair()
+        other_user = User.objects.create_user(username="someone", password="x")
+        self.client.force_login(other_user)
+
+        response = self.client.get(
+            reverse("api-concept-match-run-detail", args=[created["id"]])
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+
+    def test_candidates_are_paged_and_can_be_dismissed(self):
+        created = self.create_run_with_one_pair()
+        candidates_url = reverse("api-concept-match-candidates", args=[created["id"]])
+
+        page = self.client.get(candidates_url).json()
+        self.assertEqual(page["total_results"], 1)
+
+        dismissed = self.client.patch(
+            candidates_url,
+            data=json.dumps(
+                {
+                    "candidate_ids": [page["data"][0]["id"]],
+                    "status": ConceptMatchCandidate.STATUS_DISMISSED,
+                }
+            ),
+            content_type="application/json",
+        )
+
+        self.assertEqual(dismissed.json()["updated"], 1)
+        self.assertEqual(
+            self.client.get(
+                reverse("api-concept-match-run-detail", args=[created["id"]])
+            ).json()["pending_count"],
+            0,
+        )
+
+    def test_a_status_change_needs_candidates_and_a_settable_status(self):
+        created = self.create_run_with_one_pair()
+        candidates_url = reverse("api-concept-match-candidates", args=[created["id"]])
+        page = self.client.get(candidates_url).json()
+
+        without_ids = self.client.patch(
+            candidates_url,
+            data=json.dumps({"status": ConceptMatchCandidate.STATUS_DISMISSED}),
+            content_type="application/json",
+        )
+        unsettable = self.client.patch(
+            candidates_url,
+            data=json.dumps(
+                {
+                    "candidate_ids": [page["data"][0]["id"]],
+                    "status": ConceptMatchCandidate.STATUS_MERGED,
+                }
+            ),
+            content_type="application/json",
+        )
+
+        self.assertEqual(without_ids.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertEqual(unsettable.status_code, HTTPStatus.BAD_REQUEST)
+
+    def test_selected_pairs_can_be_linked(self):
+        self.add_uri(self.first_concept, "https://example.org/concepts/1")
+        self.add_uri(self.second_concept, "https://example.org/concepts/2")
+        created = self.create_run_with_one_pair()
+        page = self.client.get(
+            reverse("api-concept-match-candidates", args=[created["id"]])
+        ).json()
+
+        linked = self.post_json(
+            reverse("api-concept-match-link", args=[created["id"]]),
+            {"candidate_ids": [page["data"][0]["id"]]},
+        )
+
+        self.assertEqual(linked.json()["linked"], 1)
+        self.assertEqual(
+            TileModel.objects.filter(nodegroup_id=MATCH_STATUS_NODEGROUP).count(), 2
+        )
+
+    def test_linking_needs_candidates(self):
+        created = self.create_run_with_one_pair()
+
+        response = self.post_json(
+            reverse("api-concept-match-link", args=[created["id"]]), {}
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+
+    def test_a_run_can_be_deleted(self):
+        created = self.create_run_with_one_pair()
+
+        response = self.client.delete(
+            reverse("api-concept-match-run-detail", args=[created["id"]])
+        )
+
+        self.assertTrue(response.json()["deleted"])
+        self.assertEqual(ConceptMatchRun.objects.count(), 0)
+
+    def test_an_editor_is_required(self):
+        self.client.force_login(
+            User.objects.create_user(username="viewer", password="x")
+        )
+
+        response = self.client.get(reverse("api-concept-match-runs"))
+
+        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+
+
+class DetectConceptMatchesTaskTests(ConceptMatchingTestCase):
+    """The worker path, which the request hands the fuzzy signal to."""
+
+    def make_pending_run(self, signals):
+        return ConceptMatchRun.objects.create(
+            user=User.objects.get(username="admin"),
+            status=ConceptMatchRun.STATUS_PENDING,
+            parameters={"signals": list(signals)},
+        )
+
+    def test_the_task_fills_in_the_run_it_was_given(self):
+        self.add_label(self.first_concept, "trumpets")
+        self.add_label(self.second_concept, "trumpets")
+        run = self.make_pending_run([SIGNAL_EXACT_LABEL])
+
+        detect_concept_matches_task(
+            run.pk,
+            MatchScope().as_parameters(),
+            [SIGNAL_EXACT_LABEL],
+            {"same_language_only": True, "similarity_threshold": 0.7},
+        )
+
+        run.refresh_from_db()
+        self.assertEqual(run.status, ConceptMatchRun.STATUS_COMPLETE)
+        self.assertEqual(run.candidate_count, 1)
+
+    def test_a_failure_leaves_the_run_saying_why(self):
+        """The task swallows the exception because there is no caller left to
+        catch it; the run is what the reviewer reads."""
+        run = self.make_pending_run(["phonetic"])
+
+        detect_concept_matches_task(
+            run.pk,
+            MatchScope().as_parameters(),
+            ["phonetic"],
+            {"same_language_only": True, "similarity_threshold": 0.7},
+        )
+
+        run.refresh_from_db()
+        self.assertEqual(run.status, ConceptMatchRun.STATUS_FAILED)
+        self.assertIn("phonetic", run.error_message)
 
 
 class DetectConceptMatchesCommandTests(ConceptMatchingTestCase):

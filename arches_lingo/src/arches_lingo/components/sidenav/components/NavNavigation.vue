@@ -4,6 +4,7 @@ import { useGettext } from "vue3-gettext";
 
 import { routeNames } from "@/arches_lingo/routes.ts";
 import SideNavSection from "@/arches_lingo/components/sidenav/components/SideNavSection.vue";
+import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 
 import type { SideNavMenuItem } from "@/arches_lingo/types.ts";
 
@@ -13,10 +14,12 @@ const props = defineProps<{
     item: SideNavMenuItem;
 }>();
 
+const userStore = useUserStore();
+
 const navSection = ref<SideNavMenuItem>(props.item);
 
 watchEffect(() => {
-    navSection.value.items = <SideNavMenuItem[]>[
+    const items = <SideNavMenuItem[]>[
         {
             key: "dashboard",
             label: $gettext("Dashboard"),
@@ -38,14 +41,23 @@ watchEffect(() => {
             route: { name: routeNames.advancedSearch },
             showIconIfCollapsed: true,
         },
-        {
+    ];
+
+    // Everything behind Find Matches -- running a detection, dismissing a
+    // suggestion, linking or merging a pair -- requires a Lingo editor, so the
+    // page is only offered to one. is_lingo_editor is false for anonymous
+    // users, so this covers being logged in as well.
+    if (userStore.isEditor) {
+        items.push({
             key: "concept_matches",
             label: $gettext("Find Matches"),
             icon: "pi pi-clone",
             route: { name: routeNames.conceptMatches },
             showIconIfCollapsed: true,
-        },
-    ];
+        });
+    }
+
+    navSection.value.items = items;
 });
 </script>
 

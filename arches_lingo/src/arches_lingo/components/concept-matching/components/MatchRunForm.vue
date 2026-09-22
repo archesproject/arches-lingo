@@ -12,12 +12,8 @@ import Slider from "primevue/slider";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 
-import {
-    DEFAULT_SIMILARITY_THRESHOLD,
-    SIGNAL_EXACT_LABEL,
-    SIGNAL_SHARED_IDENTIFIER,
-    SIGNAL_TRIGRAM,
-} from "@/arches_lingo/components/concept-matching/constants.ts";
+import { DEFAULT_SIMILARITY_THRESHOLD } from "@/arches_lingo/components/concept-matching/constants.ts";
+import { buildSignalList } from "@/arches_lingo/components/concept-matching/utils.ts";
 
 import type { ConceptMatchRunRequest, Scheme } from "@/arches_lingo/types.ts";
 
@@ -55,10 +51,11 @@ const compareSimilarLabels = ref(false);
 const similarityThreshold = ref(DEFAULT_SIMILARITY_THRESHOLD);
 
 function onRun() {
-    const signals = [];
-    if (compareUris.value) signals.push(SIGNAL_SHARED_IDENTIFIER);
-    if (compareLabels.value) signals.push(SIGNAL_EXACT_LABEL);
-    if (compareSimilarLabels.value) signals.push(SIGNAL_TRIGRAM);
+    const signals = buildSignalList({
+        compareUris: compareUris.value,
+        compareLabels: compareLabels.value,
+        compareSimilarLabels: compareSimilarLabels.value,
+    });
 
     emit("run", {
         source_scheme_id: sourceSchemeId.value,
