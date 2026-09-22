@@ -54,6 +54,15 @@ export const routes = [
         },
     },
     {
+        path: "/concept-matches",
+        name: "concept-matches",
+        component: () => import("@/arches_lingo/pages/ConceptMatchesPage.vue"),
+        meta: {
+            shouldShowNavigation: true,
+            requiresAuthentication: true,
+        },
+    },
+    {
         path: "/concept/:id",
         name: "concept",
         component: () => import("@/arches_lingo/pages/ConceptPage.vue"),
@@ -157,6 +166,7 @@ export const routeNames = {
     landing: "landing",
     search: "search",
     advancedSearch: "advanced-search",
+    conceptMatches: "concept-matches",
     dashboard: "dashboard",
     schemes: "schemes",
     concept: "concept",

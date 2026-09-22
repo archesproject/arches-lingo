@@ -44,11 +44,21 @@ import type {
 } from "@/arches_lingo/types.ts";
 import type { MergeSelectionState } from "@/arches_lingo/components/concept/ConceptMerge/types.ts";
 
-const { survivorConcept, survivorLabel, schemeId, graphSlug } = defineProps<{
+const {
+    survivorConcept,
+    survivorLabel,
+    schemeId,
+    graphSlug,
+    preselectedConcept = undefined,
+} = defineProps<{
     survivorConcept: ResourceInstanceResult;
     survivorLabel: string | undefined;
     schemeId: string;
     graphSlug: string;
+    // Opened from somewhere that already knows which concept is being
+    // merged away -- match review, say -- so the picker is skipped and the
+    // dialog opens on the comparison.
+    preselectedConcept?: SearchResultItem;
 }>();
 
 const emit = defineEmits<{
@@ -108,7 +118,9 @@ const dialogPassThrough = {
     },
 };
 
-const currentStep = ref(MERGE_STEP_SELECT);
+const currentStep = ref(
+    preselectedConcept ? MERGE_STEP_COMPARE : MERGE_STEP_SELECT,
+);
 const selectedConcept = ref<SearchResultItem>();
 const absorbedConcept = ref<ResourceInstanceResult>();
 const isLoadingAbsorbedConcept = ref(false);
@@ -189,6 +201,10 @@ async function onConceptSelected(concept: SearchResultItem) {
     } finally {
         isLoadingAbsorbedConcept.value = false;
     }
+}
+
+if (preselectedConcept) {
+    onConceptSelected(preselectedConcept);
 }
 
 function onSelectionStateChange(updatedState: MergeSelectionState) {
