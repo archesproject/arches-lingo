@@ -9,7 +9,7 @@ import json
 from http import HTTPStatus
 from io import StringIO
 
-from django.contrib.auth.models import User
+from django.contrib.auth.models import Group, User
 from django.test import Client
 from django.urls import reverse
 from django.core.management import call_command
@@ -18,6 +18,7 @@ from django.core.management.base import CommandError
 from arches.app.models.models import ResourceInstance, TileModel
 
 from arches_lingo.const import (
+    LINGO_EDITOR_GROUP_NAME,
     CONCEPT_NAME_CONTENT_NODE,
     CONCEPT_NAME_LANGUAGE_NODE,
     CONCEPT_NAME_NODEGROUP,
@@ -802,12 +803,15 @@ class ConceptMatchApiTests(ConceptMatchingTestCase):
 
         self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
 
-    def test_another_users_run_is_not_found(self):
-        """Runs are per-user, so someone else's is invisible rather than
-        forbidden -- its existence is not theirs to know."""
+    def test_another_editors_run_is_not_found(self):
+        """Runs are per-user, so another editor's is invisible rather than
+        forbidden -- its existence is not theirs to know. The other user has to
+        be an editor for this to test anything: a non-editor is turned away by
+        the permission mixin before the run is ever looked up."""
         created = self.create_run_with_one_pair()
-        other_user = User.objects.create_user(username="someone", password="x")
-        self.client.force_login(other_user)
+        other_editor = User.objects.create_user(username="someone", password="x")
+        other_editor.groups.add(Group.objects.get(name=LINGO_EDITOR_GROUP_NAME))
+        self.client.force_login(other_editor)
 
         response = self.client.get(
             reverse("api-concept-match-run-detail", args=[created["id"]])
