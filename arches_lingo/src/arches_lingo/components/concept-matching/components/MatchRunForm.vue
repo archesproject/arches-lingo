@@ -1,0 +1,189 @@
+<script setup lang="ts">
+import { computed, ref } from "vue";
+
+import { useGettext } from "vue3-gettext";
+import { storeToRefs } from "pinia";
+
+import Button from "primevue/button";
+import Checkbox from "primevue/checkbox";
+import Select from "primevue/select";
+
+import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
+import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
+
+import {
+    SIGNAL_EXACT_LABEL,
+    SIGNAL_SHARED_IDENTIFIER,
+} from "@/arches_lingo/components/concept-matching/constants.ts";
+
+import type { ConceptMatchRunRequest, Scheme } from "@/arches_lingo/types.ts";
+
+const { schemes, isRunning } = defineProps<{
+    schemes: Scheme[];
+    isRunning: boolean;
+}>();
+
+const emit = defineEmits<{
+    (event: "run", request: ConceptMatchRunRequest): void;
+}>();
+
+const { $gettext } = useGettext();
+const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
+
+// Schemes carry labels rather than a name, so they are named the way every
+// other scheme in the interface is.
+const schemeOptions = computed(function () {
+    return schemes.map((scheme) => ({
+        id: scheme.id,
+        name: getItemLabel(
+            scheme,
+            selectedLanguage.value.code,
+            systemLanguage.value.code,
+        ).value,
+    }));
+});
+
+const sourceSchemeId = ref<string | null>(null);
+const crossSchemeOnly = ref(false);
+const sameLanguageOnly = ref(true);
+const compareLabels = ref(true);
+const compareUris = ref(true);
+
+function onRun() {
+    const signals = [];
+    if (compareUris.value) signals.push(SIGNAL_SHARED_IDENTIFIER);
+    if (compareLabels.value) signals.push(SIGNAL_EXACT_LABEL);
+
+    emit("run", {
+        source_scheme_id: sourceSchemeId.value,
+        cross_scheme_only: crossSchemeOnly.value,
+        same_language_only: sameLanguageOnly.value,
+        signals,
+    });
+}
+</script>
+
+<template>
+    <div class="run-form">
+        <div class="field">
+            <label
+                class="label"
+                for="match-scheme"
+            >
+                {{ $gettext("Scheme") }}
+            </label>
+            <Select
+                v-model="sourceSchemeId"
+                input-id="match-scheme"
+                :options="schemeOptions"
+                option-label="name"
+                option-value="id"
+                :placeholder="$gettext('Every scheme')"
+                :show-clear="true"
+                class="control"
+            />
+        </div>
+
+        <div class="field">
+            <span class="label">{{ $gettext("Compare") }}</span>
+            <div class="control">
+                <label class="option">
+                    <Checkbox
+                        v-model="compareLabels"
+                        :binary="true"
+                        input-id="match-labels"
+                    />
+                    <span>{{ $gettext("Labels that match exactly") }}</span>
+                </label>
+                <label class="option">
+                    <Checkbox
+                        v-model="compareUris"
+                        :binary="true"
+                        input-id="match-uris"
+                    />
+                    <span>{{ $gettext("Concepts sharing a URI") }}</span>
+                </label>
+            </div>
+        </div>
+
+        <div class="field">
+            <span class="label">{{ $gettext("Narrow the results") }}</span>
+            <div class="control">
+                <label class="option">
+                    <Checkbox
+                        v-model="crossSchemeOnly"
+                        :binary="true"
+                        input-id="match-cross-scheme"
+                    />
+                    <span>{{
+                        $gettext("Only pairs spanning two schemes")
+                    }}</span>
+                </label>
+                <label class="option">
+                    <Checkbox
+                        v-model="sameLanguageOnly"
+                        :binary="true"
+                        input-id="match-same-language"
+                    />
+                    <span>{{
+                        $gettext("Only labels in the same language")
+                    }}</span>
+                </label>
+            </div>
+        </div>
+
+        <Button
+            icon="pi pi-search"
+            :label="$gettext('Find matches')"
+            class="run-button"
+            :disabled="isRunning || (!compareLabels && !compareUris)"
+            :loading="isRunning"
+            @click="onRun"
+        />
+    </div>
+</template>
+
+<style scoped>
+.run-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.label {
+    display: block;
+    margin: 0;
+    font-weight: var(--p-lingo-font-weight-normal);
+    color: var(--p-header-item-label);
+}
+
+.control {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.option {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: var(--p-lingo-font-size-smallnormal);
+    cursor: pointer;
+}
+
+.run-button {
+    align-self: flex-start;
+    font-size: var(--p-lingo-font-size-small);
+    border-radius: 0.125rem;
+}
+
+:deep(.p-select) {
+    border-radius: 0.125rem;
+}
+</style>

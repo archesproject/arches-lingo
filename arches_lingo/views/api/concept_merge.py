@@ -9,7 +9,9 @@ from arches.app.models.models import ResourceInstance
 from arches.app.utils.response import JSONErrorResponse, JSONResponse
 
 from arches_lingo.mixins.permissions import AnonymousAccessMixin, LingoEditorMixin
+from arches_lingo.models import ConceptMatchCandidate
 from arches_lingo.permissions import is_lingo_admin
+from arches_lingo.utils.concept_matching import mark_pairs_settled
 from arches_lingo.utils.concept_merge import (
     ConceptMergeError,
     concept_is_writable,
@@ -69,6 +71,14 @@ class ConceptMergeView(LingoEditorMixin, View):
                 message=error.message,
                 status=error.status,
             )
+
+        # A merge settles the pair wherever match review has it queued, so a
+        # reviewer is not asked again about concepts that no longer both exist.
+        mark_pairs_settled(
+            [(survivor.pk, absorbed.pk)],
+            ConceptMatchCandidate.STATUS_MERGED,
+            request.user,
+        )
 
         return JSONResponse(
             {

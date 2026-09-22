@@ -61,7 +61,7 @@ from arches_lingo.utils.concept_merge import (
     merge_concepts,
     normalize_node_value,
     validate_merge,
-    write_reciprocal_exact_match_tiles,
+    write_exact_match_tiles,
 )
 from tests.tests import ViewTests
 
@@ -454,7 +454,7 @@ class WriteReciprocalExactMatchTilesTests(ConceptMergeTestCase):
         self.add_uri_tile(self.survivor, "https://example.org/concepts/survivor")
         self.add_uri_tile(self.absorbed, "https://example.org/concepts/absorbed")
 
-        write_reciprocal_exact_match_tiles(self.survivor, self.absorbed, uuid.uuid4())
+        write_exact_match_tiles(self.survivor, self.absorbed, uuid.uuid4())
 
         survivor_match = TileModel.objects.get(
             resourceinstance=self.survivor, nodegroup_id=MATCH_STATUS_NODEGROUP
@@ -474,7 +474,7 @@ class WriteReciprocalExactMatchTilesTests(ConceptMergeTestCase):
     def test_nothing_is_written_when_a_concept_has_no_uri(self):
         self.add_uri_tile(self.survivor, "https://example.org/concepts/survivor")
 
-        written_tiles = write_reciprocal_exact_match_tiles(
+        written_tiles = write_exact_match_tiles(
             self.survivor, self.absorbed, uuid.uuid4()
         )
 
@@ -489,8 +489,8 @@ class WriteReciprocalExactMatchTilesTests(ConceptMergeTestCase):
         self.add_uri_tile(self.survivor, "https://example.org/concepts/survivor")
         self.add_uri_tile(self.absorbed, "https://example.org/concepts/absorbed")
 
-        write_reciprocal_exact_match_tiles(
-            self.survivor, self.absorbed, uuid.uuid4(), write_to_absorbed=False
+        write_exact_match_tiles(
+            self.survivor, self.absorbed, uuid.uuid4(), write_to_second=False
         )
 
         self.assertEqual(
@@ -530,12 +530,8 @@ class WriteReciprocalExactMatchTilesTests(ConceptMergeTestCase):
         self.add_uri_tile(self.absorbed, "https://example.org/concepts/absorbed")
         edit_transaction_id = uuid.uuid4()
 
-        write_reciprocal_exact_match_tiles(
-            self.survivor, self.absorbed, edit_transaction_id
-        )
-        write_reciprocal_exact_match_tiles(
-            self.survivor, self.absorbed, edit_transaction_id
-        )
+        write_exact_match_tiles(self.survivor, self.absorbed, edit_transaction_id)
+        write_exact_match_tiles(self.survivor, self.absorbed, edit_transaction_id)
 
         self.assertEqual(
             TileModel.objects.filter(nodegroup_id=MATCH_STATUS_NODEGROUP).count(), 2

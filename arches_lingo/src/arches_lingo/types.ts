@@ -640,3 +640,48 @@ export interface ConceptMergeHistoryEntry {
     counterpart_concept_id: string;
     counterpart_concept_labels: Label[];
 }
+
+export interface ConceptMatchRun {
+    id: number;
+    status: "pending" | "running" | "complete" | "failed";
+    created: string;
+    finished: string | null;
+    parameters: Record<string, unknown>;
+    candidate_count: number;
+    pending_count: number;
+    error_message: string;
+}
+
+export interface MatchedConceptSummary {
+    id: string;
+    labels: Label[];
+    scheme_id: string | null;
+    scheme_name: string | null;
+}
+
+export interface ConceptMatchCandidate {
+    id: number;
+    score: number;
+    signal: string;
+    evidence: string;
+    status: "pending" | "dismissed" | "linked" | "merged";
+    concept_a: MatchedConceptSummary;
+    concept_b: MatchedConceptSummary;
+    is_cross_scheme: boolean;
+}
+
+export interface ConceptMatchRunRequest {
+    source_scheme_id?: string | null;
+    target_scheme_id?: string | null;
+    source_concept_set_id?: number | null;
+    source_concept_ids?: string[];
+    cross_scheme_only?: boolean;
+    signals?: string[];
+    same_language_only?: boolean;
+}
+
+export interface ConceptMatchLinkResult {
+    linked: number;
+    linked_one_way: number;
+    skipped: Record<string, number>;
+}
