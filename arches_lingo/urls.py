@@ -85,6 +85,7 @@ urlpatterns = [
     path("dashboard", LingoRootView.as_view(), name="dashboard"),
     path("login", LingoRootView.as_view(), name="login"),
     path("advanced-search", LingoRootView.as_view(), name="advanced-search"),
+    path("concept-matches", LingoRootView.as_view(), name="concept-matches"),
     path("schemes", LingoRootView.as_view(), name="schemes"),
     # Identity URIs: content-negotiated. Browsers get the SPA; machines requesting
     # an RDF representation (Accept header or ?format=) get SKOS for the resource.

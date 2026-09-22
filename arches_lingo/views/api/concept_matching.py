@@ -12,14 +12,15 @@ from arches_lingo.mixins.permissions import LingoEditorMixin
 from arches_lingo.permissions import is_lingo_admin
 from arches_lingo.models import ConceptMatchRun
 from arches_lingo.utils.concept_matching import (
+    DEFAULT_SIMILARITY_THRESHOLD,
     EXACT_SIGNALS,
     ConceptMatchError,
     MatchScope,
-    run_detection,
 )
 from arches_lingo.utils.concept_matching_service import (
     ConceptMatchRequestError,
     link_candidates_with_exact_match,
+    start_detection,
     serialize_candidate_page,
     serialize_run,
     set_candidate_status,
@@ -67,12 +68,20 @@ class ConceptMatchRunListView(LingoEditorMixin, View):
         )
 
         try:
-            run = run_detection(
+            run = start_detection(
                 scope,
                 signals=tuple(body.get("signals") or EXACT_SIGNALS),
                 same_language_only=body.get("same_language_only", True),
+                similarity_threshold=float(
+                    body.get("similarity_threshold") or DEFAULT_SIMILARITY_THRESHOLD
+                ),
                 user=request.user,
-                log=lambda message: None,
+            )
+        except ConceptMatchRequestError as request_error:
+            return JSONErrorResponse(
+                title=request_error.title,
+                message=request_error.message,
+                status=request_error.status,
             )
         except ConceptMatchError as detection_error:
             return JSONErrorResponse(

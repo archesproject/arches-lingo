@@ -678,6 +678,7 @@ export interface ConceptMatchRunRequest {
     cross_scheme_only?: boolean;
     signals?: string[];
     same_language_only?: boolean;
+    similarity_threshold?: number;
 }
 
 export interface ConceptMatchLinkResult {

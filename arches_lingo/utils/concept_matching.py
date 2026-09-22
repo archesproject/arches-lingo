@@ -49,7 +49,14 @@ from arches_lingo.models import (
 SIGNAL_SHARED_IDENTIFIER = ConceptMatchCandidate.SIGNAL_SHARED_IDENTIFIER
 SIGNAL_EXACT_LABEL = ConceptMatchCandidate.SIGNAL_EXACT_LABEL
 
+SIGNAL_TRIGRAM = ConceptMatchCandidate.SIGNAL_TRIGRAM
+
 EXACT_SIGNALS = (SIGNAL_SHARED_IDENTIFIER, SIGNAL_EXACT_LABEL)
+ALL_SIGNALS = EXACT_SIGNALS + (SIGNAL_TRIGRAM,)
+
+# Postgres defaults this to 0.3, which is far too loose for a vocabulary of any
+# size; see find_similar_label_pairs.
+DEFAULT_SIMILARITY_THRESHOLD = 0.7
 
 CANDIDATE_BATCH_SIZE = 2_000
 
@@ -144,6 +151,20 @@ _LABEL_SQL = f"""
        AND btrim(coalesce(tiledata ->> '{CONCEPT_NAME_CONTENT_NODE}', '')) <> ''
 """
 
+# The same labels, left exactly as the trigram index stores them. Comparing
+# `lower(btrim(content))` would be a different expression from the one migration
+# 0012 indexed, and the planner would fall back to reading every row instead.
+# pg_trgm lowercases internally when it builds trigrams, so matching on the raw
+# value costs nothing in accuracy.
+_INDEXED_LABEL_SQL = f"""
+    SELECT resourceinstanceid AS concept_id,
+           tiledata ->> '{CONCEPT_NAME_CONTENT_NODE}' AS content,
+           tiledata ->> '{CONCEPT_NAME_LANGUAGE_NODE}' AS language
+      FROM tiles
+     WHERE nodegroupid = '{CONCEPT_NAME_NODEGROUP}'
+       AND btrim(coalesce(tiledata ->> '{CONCEPT_NAME_CONTENT_NODE}', '')) <> ''
+"""
+
 # URIs are globally meaningful, so two concepts carrying the same one are almost
 # certainly the same concept. Bare identifiers are deliberately not compared:
 # they are allocated per scheme by ConceptIdentifierCounter and are short
@@ -228,7 +249,7 @@ def _needs_scheme_lookup(scope):
     )
 
 
-def _pair_query(match_sql, scope, source_concept_ids):
+def _pair_query(match_sql, scope, source_concept_ids, score_sql="1.0"):
     """Wrap a signal's join in the scope narrowing.
 
     `match_sql` yields `side_a_concept_id`, `side_b_concept_id` and `evidence`.
@@ -254,15 +275,17 @@ def _pair_query(match_sql, scope, source_concept_ids):
 
     sql = f"""
         {scheme_cte}
-        SELECT DISTINCT
+        SELECT DISTINCT ON (concept_a, concept_b)
                LEAST(matched.side_a_concept_id::text,
                      matched.side_b_concept_id::text) AS concept_a,
                GREATEST(matched.side_a_concept_id::text,
                         matched.side_b_concept_id::text) AS concept_b,
-               matched.evidence
+               matched.evidence,
+               {score_sql} AS score
           FROM ({match_sql}) matched
           {scheme_joins}
          WHERE true{scope_sql}
+         ORDER BY concept_a, concept_b, score DESC
     """
     return sql, params
 
@@ -270,8 +293,8 @@ def _pair_query(match_sql, scope, source_concept_ids):
 def _run_pair_query(sql, params):
     with connection.cursor() as cursor:
         cursor.execute(sql, params)
-        for concept_a, concept_b, evidence in cursor.fetchall():
-            yield concept_a, concept_b, evidence
+        for concept_a, concept_b, evidence, score in cursor.fetchall():
+            yield concept_a, concept_b, evidence, float(score)
 
 
 def _scoped_side_sql(value_sql, source_concept_ids):
@@ -347,6 +370,55 @@ def find_shared_uri_pairs(scope):
     return _run_pair_query(sql, {**scope_params, **pushdown_params})
 
 
+def find_similar_label_pairs(
+    scope, similarity_threshold=DEFAULT_SIMILARITY_THRESHOLD, same_language_only=True
+):
+    """Concepts whose labels are close without being identical.
+
+    Backed by the `pg_trgm` GIN index on label content that migration 0012
+    installs, using the `%` operator so the index does the filtering rather than
+    a comparison per row.
+
+    The threshold matters more than anything else here. Postgres defaults to
+    0.3, which on a vocabulary the size of the AAT returns around 87 candidates
+    per label -- noise rather than suggestion. At 0.7 it returns about 0.25.
+    See docs/concept-match-detection-plan.md for the measurements.
+    """
+    source_concept_ids = scope.resolve_source_concept_ids()
+    side_a_sql, pairing_clause, pushdown_params = _scoped_side_sql(
+        _INDEXED_LABEL_SQL, source_concept_ids
+    )
+    language_clause = (
+        " AND side_b.language IS NOT DISTINCT FROM side_a.language"
+        if same_language_only
+        else ""
+    )
+
+    match_sql = f"""
+        SELECT side_a.concept_id AS side_a_concept_id,
+               side_b.concept_id AS side_b_concept_id,
+               side_a.content || ' ~ ' || side_b.content AS evidence,
+               similarity(side_a.content, side_b.content) AS pair_score
+          FROM ({side_a_sql}) side_a
+          JOIN ({_INDEXED_LABEL_SQL}) side_b
+            ON side_b.content %% side_a.content
+           AND side_b.content <> side_a.content
+           AND {pairing_clause}
+           {language_clause}
+    """
+    sql, scope_params = _pair_query(
+        match_sql, scope, None, score_sql="matched.pair_score"
+    )
+
+    with connection.cursor() as cursor:
+        # The operator reads its cutoff from the session, so it is set for this
+        # query rather than baked into the SQL.
+        cursor.execute("SELECT set_limit(%s)", [similarity_threshold])
+        cursor.execute(sql, {**scope_params, **pushdown_params})
+        for concept_a, concept_b, evidence, score in cursor.fetchall():
+            yield concept_a, concept_b, evidence, float(score)
+
+
 def find_decided_pairs():
     """Pairs an editor has already settled, in canonical order.
 
@@ -416,13 +488,19 @@ def mark_pairs_settled(pairs, status, user=None):
     )
 
 
-def collect_candidates(scope, signals=EXACT_SIGNALS, same_language_only=True):
+def collect_candidates(
+    scope,
+    signals=EXACT_SIGNALS,
+    same_language_only=True,
+    similarity_threshold=DEFAULT_SIMILARITY_THRESHOLD,
+):
     """Gather every suggested pair, best signal per pair.
 
     Signals can suggest the same pair for different reasons; the strongest one
-    is kept so the pair appears once, described by its best evidence.
+    is kept so the pair appears once, described by its best evidence. A pair
+    found by an exact signal is never downgraded to a fuzzy one.
     """
-    unknown_signals = set(signals) - set(EXACT_SIGNALS)
+    unknown_signals = set(signals) - set(ALL_SIGNALS)
     if unknown_signals:
         raise ConceptMatchError(
             f"Unsupported signal(s): {', '.join(sorted(unknown_signals))}"
@@ -438,16 +516,22 @@ def collect_candidates(scope, signals=EXACT_SIGNALS, same_language_only=True):
             SIGNAL_EXACT_LABEL,
             lambda: find_exact_label_pairs(scope, same_language_only),
         ),
+        (
+            SIGNAL_TRIGRAM,
+            lambda: find_similar_label_pairs(
+                scope, similarity_threshold, same_language_only
+            ),
+        ),
     ]
 
     for signal, produce_pairs in signal_sources:
         if signal not in signals:
             continue
-        for concept_a, concept_b, evidence in produce_pairs():
+        for concept_a, concept_b, evidence, score in produce_pairs():
             pair = (concept_a, concept_b)
             if pair in decided_pairs or pair in candidates_by_pair:
                 continue
-            candidates_by_pair[pair] = (signal, evidence)
+            candidates_by_pair[pair] = (signal, evidence, score)
 
     return candidates_by_pair
 
@@ -456,22 +540,35 @@ def run_detection(
     scope,
     signals=EXACT_SIGNALS,
     same_language_only=True,
+    similarity_threshold=DEFAULT_SIMILARITY_THRESHOLD,
     user=None,
     log=print,
+    run=None,
 ):
-    """Detect matches and store them as a reviewable run."""
-    run = ConceptMatchRun.objects.create(
-        user=user if user is not None and user.is_authenticated else None,
-        status=ConceptMatchRun.STATUS_RUNNING,
-        parameters={
-            **scope.as_parameters(),
-            "signals": list(signals),
-            "same_language_only": same_language_only,
-        },
-    )
+    """Detect matches and store them as a reviewable run.
+
+    `run` is an existing record to fill in, which is how the celery task reports
+    against the run the request already returned to the caller.
+    """
+    if run is None:
+        run = ConceptMatchRun.objects.create(
+            user=user if user is not None and user.is_authenticated else None,
+            status=ConceptMatchRun.STATUS_RUNNING,
+            parameters={
+                **scope.as_parameters(),
+                "signals": list(signals),
+                "same_language_only": same_language_only,
+                "similarity_threshold": similarity_threshold,
+            },
+        )
+    else:
+        run.status = ConceptMatchRun.STATUS_RUNNING
+        run.save(update_fields=["status"])
 
     try:
-        candidates_by_pair = collect_candidates(scope, signals, same_language_only)
+        candidates_by_pair = collect_candidates(
+            scope, signals, same_language_only, similarity_threshold
+        )
         log(f"  found {len(candidates_by_pair):,} candidate pairs")
 
         candidates = [
@@ -479,13 +576,11 @@ def run_detection(
                 run=run,
                 concept_a_id=concept_a,
                 concept_b_id=concept_b,
-                # Both signals implemented here are exact matches on a value,
-                # so the pair is either suggested or it is not.
-                score=1.0,
+                score=score,
                 signal=signal,
                 evidence=evidence or "",
             )
-            for (concept_a, concept_b), (signal, evidence) in (
+            for (concept_a, concept_b), (signal, evidence, score) in (
                 candidates_by_pair.items()
             )
         ]

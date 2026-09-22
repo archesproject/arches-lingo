@@ -8,7 +8,10 @@ import Button from "primevue/button";
 import Checkbox from "primevue/checkbox";
 import Tag from "primevue/tag";
 
+import { RouterLink } from "vue-router";
+
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
+import { routeNames } from "@/arches_lingo/routes.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 import { SIGNAL_SHARED_IDENTIFIER } from "@/arches_lingo/components/concept-matching/constants.ts";
 import { SECONDARY } from "@/arches_lingo/constants.ts";
@@ -64,20 +67,45 @@ const reason = computed(function () {
 
         <div class="candidate-body">
             <div class="candidate-concepts">
-                <span class="candidate-concept">
-                    {{ conceptName(candidate.concept_a) }}
+                <span
+                    v-for="(concept, index) in [
+                        candidate.concept_a,
+                        candidate.concept_b,
+                    ]"
+                    :key="concept?.id ?? index"
+                    class="candidate-concept"
+                >
+                    <i
+                        v-if="index === 1"
+                        class="pi pi-arrows-h candidate-link-icon"
+                        aria-hidden="true"
+                    />
+                    <RouterLink
+                        v-if="concept"
+                        :to="{
+                            name: routeNames.concept,
+                            params: { id: concept.id },
+                        }"
+                        target="_blank"
+                        rel="noopener"
+                        :title="
+                            $gettext('Open %{name} in a new tab', {
+                                name: conceptName(concept),
+                            })
+                        "
+                        :aria-label="
+                            $gettext('Open %{name} in a new tab', {
+                                name: conceptName(concept),
+                            })
+                        "
+                        class="candidate-concept-link"
+                    >
+                        {{ conceptName(concept) }}
+                    </RouterLink>
+                    <span v-else>{{ conceptName(concept) }}</span>
+
                     <span class="candidate-scheme">
-                        {{ candidate.concept_a?.scheme_name }}
-                    </span>
-                </span>
-                <i
-                    class="pi pi-arrows-h candidate-link-icon"
-                    aria-hidden="true"
-                />
-                <span class="candidate-concept">
-                    {{ conceptName(candidate.concept_b) }}
-                    <span class="candidate-scheme">
-                        {{ candidate.concept_b?.scheme_name }}
+                        {{ concept?.scheme_name }}
                     </span>
                 </span>
             </div>
@@ -139,6 +167,19 @@ const reason = computed(function () {
     gap: 0.375rem;
     font-size: var(--p-lingo-font-size-smallnormal);
     overflow-wrap: anywhere;
+}
+
+/* The same treatment links get in the concept report, so a concept name reads
+   as a concept name wherever it appears. */
+.candidate-concept-link {
+    color: var(--p-primary-500);
+    text-decoration: none;
+}
+
+.candidate-concept-link:hover,
+.candidate-concept-link:focus-visible {
+    color: var(--p-primary-700);
+    text-decoration: underline;
 }
 
 .candidate-scheme {
