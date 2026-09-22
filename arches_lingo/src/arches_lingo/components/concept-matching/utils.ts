@@ -117,3 +117,23 @@ export function describeSkippedReasons(
         )
         .join(", ");
 }
+
+/**
+ * How long a run has been going, in minutes and seconds.
+ *
+ * `translate` is the caller's $gettext, for the same reason as above: the
+ * wording stays translatable while the arithmetic stays testable.
+ */
+export function formatElapsed(
+    totalSeconds: number,
+    translate: (message: string, options: Record<string, string>) => string,
+): string {
+    const seconds = Math.max(0, Math.floor(totalSeconds));
+    const minutes = Math.floor(seconds / 60);
+    return minutes
+        ? translate("%{minutes}m %{seconds}s", {
+              minutes: String(minutes),
+              seconds: String(seconds % 60).padStart(2, "0"),
+          })
+        : translate("%{seconds}s", { seconds: String(seconds) });
+}

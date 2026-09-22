@@ -24,19 +24,20 @@ class Command(BaseCommand):
     help = (
         "Find concepts that probably mean the same thing and store them as a "
         "reviewable match run. Compares labels and URIs; scope the run with "
-        "--source-scheme, --target-scheme or --concept-set."
+        "--scheme, --concept-set or --concept."
     )
 
     def add_arguments(self, parser):
         parser.add_argument(
-            "--source-scheme",
-            default="",
-            help="Only keep pairs with a concept in this scheme (resource id).",
-        )
-        parser.add_argument(
-            "--target-scheme",
-            default="",
-            help="Only keep pairs with a concept in this scheme (resource id).",
+            "--scheme",
+            action="append",
+            default=[],
+            dest="schemes",
+            help=(
+                "Confine the run to this scheme (resource id). Repeatable; "
+                "both concepts of a pair must be in one of the schemes given, "
+                "so the run never reaches outside them."
+            ),
         )
         parser.add_argument(
             "--concept-set",
@@ -94,8 +95,7 @@ class Command(BaseCommand):
                 raise CommandError(f"No such user: {options['user']}")
 
         scope = MatchScope(
-            source_scheme_id=options["source_scheme"] or None,
-            target_scheme_id=options["target_scheme"] or None,
+            scheme_ids=options["schemes"],
             source_concept_set_id=options["concept_set"],
             source_concept_ids=options["concepts"],
             cross_scheme_only=options["cross_scheme_only"],
