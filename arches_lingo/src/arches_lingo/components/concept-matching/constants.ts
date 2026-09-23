@@ -17,6 +17,23 @@ export const RUN_POLL_INTERVAL_MS = 2000;
 
 export const CANDIDATE_STATUS_PENDING = "pending";
 export const CANDIDATE_STATUS_DISMISSED = "dismissed";
+export const CANDIDATE_STATUS_LINKED = "linked";
+export const CANDIDATE_STATUS_MERGED = "merged";
+
+// Pending and dismissed are decisions a reviewer can still change. Linked and
+// merged are records of work already done to the concepts themselves, so they
+// are shown but not acted on again from the queue.
+export const REVIEWABLE_CANDIDATE_STATUSES = [
+    CANDIDATE_STATUS_PENDING,
+    CANDIDATE_STATUS_DISMISSED,
+];
+
+export const ALL_CANDIDATE_STATUSES = [
+    CANDIDATE_STATUS_PENDING,
+    CANDIDATE_STATUS_DISMISSED,
+    CANDIDATE_STATUS_LINKED,
+    CANDIDATE_STATUS_MERGED,
+];
 
 export const CANDIDATES_PER_PAGE = 50;
 

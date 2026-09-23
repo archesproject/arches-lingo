@@ -39,6 +39,7 @@ import {
 } from "@/arches_lingo/components/concept-matching/constants.ts";
 import {
     buildPreselectedConcept,
+    candidateStatusFromRoute,
     describeSkippedReasons,
     isRunUnfinished,
     resolveMergeSides,
@@ -94,9 +95,7 @@ function pageNumberInRoute(): number {
 }
 
 function statusInRoute(): string {
-    return route.query.status === CANDIDATE_STATUS_DISMISSED
-        ? CANDIDATE_STATUS_DISMISSED
-        : CANDIDATE_STATUS_PENDING;
+    return candidateStatusFromRoute(route.query.status);
 }
 
 const runs = ref<ConceptMatchRun[]>([]);
@@ -786,7 +785,9 @@ onMounted(async () => {
                             "
                         />
                         <Button
-                            v-else
+                            v-else-if="
+                                candidateStatus === CANDIDATE_STATUS_DISMISSED
+                            "
                             icon="pi pi-undo"
                             :label="
                                 $gettext('Restore %{count}', {
@@ -869,6 +870,7 @@ onMounted(async () => {
                     :items-per-page="CANDIDATES_PER_PAGE"
                     :first-result-index="firstResultIndex"
                     :status="candidateStatus"
+                    :counts-by-status="activeRun?.counts_by_status"
                     @update:selected="onSelectionChange"
                     @select-all-on-page="onSelectAllOnPage"
                     @page="onPageChange"
