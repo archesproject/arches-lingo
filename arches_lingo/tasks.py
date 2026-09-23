@@ -1,6 +1,7 @@
 import logging
 from celery import shared_task
 from django.contrib.auth.models import User
+from django.utils import timezone
 from django.utils.translation import gettext as _
 from arches.app.models import models
 from arches_lingo.etl_modules import migrate_to_lingo
@@ -122,9 +123,19 @@ def detect_concept_matches_task(run_id, scope_parameters, signals, options):
             completed_run.candidate_count
         )
     except Exception as exception:
-        # run_detection records the failure on the run before re-raising, so the
-        # interface already shows why; this is the notification and the traceback.
+        # run_detection records the failure on the run before re-raising, so a
+        # run that got as far as starting already shows why. Anything raised
+        # before that -- a scope this worker's code cannot understand, say --
+        # would otherwise leave the run pending with nothing to explain it,
+        # until it was reaped minutes later as though its worker had died.
         logger.error(exception, exc_info=True)
+        ConceptMatchRun.objects.filter(
+            pk=run_id, status=ConceptMatchRun.STATUS_PENDING
+        ).update(
+            status=ConceptMatchRun.STATUS_FAILED,
+            finished=timezone.now(),
+            error_message=str(exception),
+        )
         message = _("Match detection failed")
 
     if run.user:
