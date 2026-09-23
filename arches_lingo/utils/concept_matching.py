@@ -20,10 +20,13 @@ fuzzy signal will need is defined on the raw `tiledata ->> node_id` expression.
 """
 
 import json
+import logging
+import threading
 import time
+from contextlib import contextmanager
 
 from django.conf import settings
-from django.db import connection, transaction
+from django.db import connection, connections, transaction
 from django.db.models import Q
 from django.utils import timezone
 
@@ -84,6 +87,91 @@ MATCH_SLICE_COUNT = getattr(settings, "LINGO_MATCH_SLICE_COUNT", 16)
 
 # How often a long-running search reports what it has found so far.
 PROGRESS_INTERVAL_SECONDS = 10
+
+# How often a run records that it is still alive while a query holds the thread.
+# Comfortably inside the window after which a silent run is presumed dead.
+HEARTBEAT_INTERVAL_SECONDS = 30
+
+# The concept-to-scheme lookup a scoped run joins against. Named for what it is
+# and who owns it: it is dropped by name, so it must not be something another
+# part of the schema could plausibly be called.
+_SCHEME_SCOPE_TABLE = "lingo_match_concept_scheme"
+
+logger = logging.getLogger(__name__)
+
+
+# Yielded by a signal that has finished a stretch of work without finding
+# anything. It carries no pair: it is only proof that the run is still alive,
+# which nothing else can offer while the generator is inside a query.
+KEEPALIVE = object()
+
+
+def _heartbeating(run, produced):
+    """Iterate `produced`, recording that `run` is alive throughout."""
+    with _heartbeat_while_working(run):
+        yield from produced
+
+
+@contextmanager
+def _heartbeat_while_working(run):
+    """Record that `run` is alive while a query holds this thread.
+
+    Progress is normally recorded as pairs are stored, and between slices when a
+    stretch of work finds none. Neither helps inside a single slice: one `FETCH`
+    can hold the process for minutes, because the `DISTINCT ON` at the top of a
+    slice cannot emit its first row until it has consumed its last. A run that
+    goes quiet for long enough is reaped as though its worker had died, so the
+    reporting is done from a thread of its own -- idle but for one small update
+    every half minute.
+
+    That makes the heartbeat mean what it should: this worker process is alive
+    and working on this run. If the worker dies, the thread dies with it and the
+    run is reaped, which is the behaviour the reaper exists for.
+    """
+    if run is None:
+        yield
+        return
+
+    stop_beating = threading.Event()
+
+    def beat():
+        try:
+            while not stop_beating.wait(HEARTBEAT_INTERVAL_SECONDS):
+                try:
+                    ConceptMatchRun.objects.filter(pk=run.pk).update(
+                        last_progress=timezone.now()
+                    )
+                except Exception:
+                    # Losing a heartbeat is not worth failing a run over; the
+                    # next one will do, and a real stall still gets reaped.
+                    logger.warning(
+                        "Could not record progress for match run %s.",
+                        run.pk,
+                        exc_info=True,
+                    )
+        finally:
+            # This thread has its own connection, and it is the only one that
+            # can close it.
+            connections.close_all()
+
+    heartbeat_thread = threading.Thread(
+        target=beat, name=f"lingo-match-run-{run.pk}", daemon=True
+    )
+    heartbeat_thread.start()
+    try:
+        yield
+    finally:
+        stop_beating.set()
+        heartbeat_thread.join(timeout=HEARTBEAT_INTERVAL_SECONDS)
+
+
+def pairs_only(produced):
+    """Drop the keepalives from a signal's output, leaving just the pairs.
+
+    Only a caller that is reporting progress cares about them; everything that
+    just wants the results reads through this.
+    """
+    return (item for item in produced if item is not KEEPALIVE)
 
 
 class ConceptMatchError(Exception):
@@ -288,19 +376,18 @@ def _pair_query(match_sql, scope, source_concept_ids, score_sql="1.0"):
     """
     scope_sql, params = _scope_clauses(scope, source_concept_ids)
 
-    scheme_cte = ""
     scheme_joins = ""
     if _needs_scheme_lookup(scope):
-        scheme_cte = f"WITH concept_scheme AS ({_CONCEPT_SCHEME_SQL})"
-        scheme_joins = """
-          LEFT JOIN concept_scheme scheme_a
+        # The joined table is the one _prepare_scheme_lookup builds in this
+        # transaction, rather than a CTE; see the note there for why.
+        scheme_joins = f"""
+          LEFT JOIN {_SCHEME_SCOPE_TABLE} scheme_a
                  ON scheme_a.concept_id = matched.side_a_concept_id
-          LEFT JOIN concept_scheme scheme_b
+          LEFT JOIN {_SCHEME_SCOPE_TABLE} scheme_b
                  ON scheme_b.concept_id = matched.side_b_concept_id
         """
 
     sql = f"""
-        {scheme_cte}
         SELECT DISTINCT ON (concept_a, concept_b)
                LEAST(matched.side_a_concept_id::text,
                      matched.side_b_concept_id::text) AS concept_a,
@@ -316,18 +403,63 @@ def _pair_query(match_sql, scope, source_concept_ids, score_sql="1.0"):
     return sql, params
 
 
-def _run_pair_query(sql, params):
+def _prepare_scheme_lookup(scope):
+    """Put the concept-to-scheme lookup in a temp table, inside this transaction.
+
+    As a CTE it is estimated at 200 rows when it holds tens of thousands, and the
+    planner then drives the whole query from it: one slice of a scoped fuzzy run
+    measured over nine minutes against about eighty seconds unscoped, having lost
+    both the trigram index and its six parallel workers. A `CTE Scan` is also
+    parallel-restricted, so referencing one makes the outer plan serial whatever
+    it estimates.
+
+    A temp table can be analysed. With statistics the same query plans like the
+    unscoped one -- 44,790 estimated rows rather than 1, the trigram index back,
+    the workers back -- so a scope costs about what no scope costs instead of
+    several times more.
+    """
+    if not _needs_scheme_lookup(scope):
+        return
+
+    where_clause = ""
+    params = {}
+    if scope.scheme_ids:
+        where_clause = " WHERE cs.scheme_id = ANY(%(scheme_ids)s::uuid[])"
+        params["scheme_ids"] = scope.scheme_ids
+
+    with connection.cursor() as cursor:
+        # ON COMMIT DROP only fires on a real commit, and an atomic block nested
+        # inside another transaction -- every test, and anything that wraps a run
+        # -- is a savepoint that never commits. So the table is dropped by name
+        # rather than trusted to disappear on its own. The name is distinctive
+        # enough that dropping it cannot take anything else with it.
+        cursor.execute(f"DROP TABLE IF EXISTS {_SCHEME_SCOPE_TABLE}")
+        cursor.execute(
+            f"""
+            CREATE TEMP TABLE {_SCHEME_SCOPE_TABLE} ON COMMIT DROP AS
+            SELECT cs.concept_id, cs.scheme_id
+              FROM ({_CONCEPT_SCHEME_SQL}) cs{where_clause}
+            """,
+            params,
+        )
+        cursor.execute(f"CREATE INDEX ON {_SCHEME_SCOPE_TABLE} (concept_id)")
+        cursor.execute(f"ANALYZE {_SCHEME_SCOPE_TABLE}")
+
+
+def _run_pair_query(sql, params, scope):
     """Yield rows as they arrive, rather than buffering the whole result.
 
     psycopg fetches everything on execute() with an ordinary cursor, so a
     corpus-wide run would hold every pair in memory before a single one was
     written. A server-side cursor keeps that bounded by `itersize`.
     """
-    with transaction.atomic(), connection.chunked_cursor() as cursor:
-        cursor.itersize = ROW_FETCH_SIZE
-        cursor.execute(sql, params)
-        for concept_a, concept_b, evidence, score in cursor:
-            yield concept_a, concept_b, evidence, float(score)
+    with transaction.atomic():
+        _prepare_scheme_lookup(scope)
+        with connection.chunked_cursor() as cursor:
+            cursor.itersize = ROW_FETCH_SIZE
+            cursor.execute(sql, params)
+            for concept_a, concept_b, evidence, score in cursor:
+                yield concept_a, concept_b, evidence, float(score)
 
 
 def _scoped_side_sql(value_sql, source_concept_ids, slice_predicate=""):
@@ -341,6 +473,11 @@ def _scoped_side_sql(value_sql, source_concept_ids, slice_predicate=""):
 
     `slice_predicate` narrows the driving side to one slice of a corpus-wide
     search; see `_driving_side_slices`.
+
+    A scheme scope is deliberately *not* applied here. Restricting the driving
+    side to the scoped schemes as well as filtering after the join measured
+    11.34s against 11.13s for the same slice and the same 24 rows: the planner
+    already pushes the scope down, and saying it twice only adds a join.
     """
     if source_concept_ids is None:
         if not slice_predicate:
@@ -422,7 +559,7 @@ def find_exact_label_pairs(scope, same_language_only=True):
            {language_clause}
     """
     sql, scope_params = _pair_query(match_sql, scope, None)
-    return _run_pair_query(sql, {**scope_params, **pushdown_params})
+    return _run_pair_query(sql, {**scope_params, **pushdown_params}, scope)
 
 
 def find_shared_uri_pairs(scope):
@@ -446,7 +583,7 @@ def find_shared_uri_pairs(scope):
            AND {pairing_clause}
     """
     sql, scope_params = _pair_query(match_sql, scope, None)
-    return _run_pair_query(sql, {**scope_params, **pushdown_params})
+    return _run_pair_query(sql, {**scope_params, **pushdown_params}, scope)
 
 
 def find_similar_label_pairs(
@@ -495,11 +632,17 @@ def find_similar_label_pairs(
         # connection.
         with transaction.atomic():
             _apply_trigram_session_tuning(similarity_threshold)
+            _prepare_scheme_lookup(scope)
             with connection.chunked_cursor() as cursor:
                 cursor.itersize = ROW_FETCH_SIZE
                 cursor.execute(sql, {**scope_params, **pushdown_params})
                 for concept_a, concept_b, evidence, score in cursor:
                     yield concept_a, concept_b, evidence, float(score)
+
+        # A slice can compare tens of thousands of labels and match none of
+        # them. Without this the run would look abandoned for as long as that
+        # takes, and be reaped as though its worker had died.
+        yield KEEPALIVE
 
 
 def _apply_trigram_session_tuning(similarity_threshold):
@@ -636,7 +779,11 @@ def iter_candidates(
     for signal, produce_pairs in signal_sources:
         if signal not in signals:
             continue
-        for concept_a, concept_b, evidence, score in produce_pairs():
+        for produced in produce_pairs():
+            if produced is KEEPALIVE:
+                yield KEEPALIVE
+                continue
+            concept_a, concept_b, evidence, score = produced
             if (concept_a, concept_b) in decided_pairs:
                 continue
             yield concept_a, concept_b, signal, evidence, score
@@ -654,8 +801,8 @@ def collect_candidates(
     set. A whole-vocabulary run should go through `iter_candidates`.
     """
     candidates_by_pair = {}
-    for concept_a, concept_b, signal, evidence, score in iter_candidates(
-        scope, signals, same_language_only, similarity_threshold
+    for concept_a, concept_b, signal, evidence, score in pairs_only(
+        iter_candidates(scope, signals, same_language_only, similarity_threshold)
     ):
         candidates_by_pair.setdefault((concept_a, concept_b), (signal, evidence, score))
     return candidates_by_pair
@@ -702,7 +849,12 @@ def _write_candidates(run, candidates, log=print):
         log(f"  {written_count:,} candidate pairs so far")
         batch = []
 
-    for concept_a, concept_b, signal, evidence, score in candidates:
+    for candidate in _heartbeating(run, candidates):
+        if candidate is KEEPALIVE:
+            flush()
+            continue
+
+        concept_a, concept_b, signal, evidence, score = candidate
         batch.append(
             ConceptMatchCandidate(
                 run=run,

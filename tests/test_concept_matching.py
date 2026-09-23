@@ -7,6 +7,7 @@ that implements it, so the signals stay replaceable.
 
 import datetime
 import json
+import threading
 import uuid
 from http import HTTPStatus
 from io import StringIO
@@ -66,6 +67,10 @@ from unittest.mock import patch
 
 from arches_lingo.utils.concept_matching import (
     ALL_SIGNALS,
+    KEEPALIVE,
+    _heartbeat_while_working,
+    _write_candidates,
+    pairs_only,
     DEFAULT_SIMILARITY_THRESHOLD,
     EXACT_SIGNALS,
     SIGNAL_TRIGRAM,
@@ -340,7 +345,7 @@ class TrigramSignalTests(ConceptMatchingTestCase):
         self.add_label(self.first_concept, "engatillado en metales")
         self.add_label(self.second_concept, "engatillados en metales")
 
-        found = list(find_similar_label_pairs(MatchScope(), 0.7))
+        found = list(pairs_only(find_similar_label_pairs(MatchScope(), 0.7)))
 
         self.assertEqual(len(found), 1)
         concept_a, concept_b, evidence, score = found[0]
@@ -358,15 +363,21 @@ class TrigramSignalTests(ConceptMatchingTestCase):
         self.add_label(self.first_concept, "trumpets")
         self.add_label(self.second_concept, "trumpeters")
 
-        self.assertEqual(list(find_similar_label_pairs(MatchScope(), 0.95)), [])
-        self.assertEqual(len(list(find_similar_label_pairs(MatchScope(), 0.4))), 1)
+        self.assertEqual(
+            list(pairs_only(find_similar_label_pairs(MatchScope(), 0.95))), []
+        )
+        self.assertEqual(
+            len(list(pairs_only(find_similar_label_pairs(MatchScope(), 0.4)))), 1
+        )
 
     def test_identical_labels_are_left_to_the_exact_signal(self):
         self.start_from_a_clean_corpus()
         self.add_label(self.first_concept, "trumpets")
         self.add_label(self.second_concept, "trumpets")
 
-        self.assertEqual(list(find_similar_label_pairs(MatchScope(), 0.5)), [])
+        self.assertEqual(
+            list(pairs_only(find_similar_label_pairs(MatchScope(), 0.5))), []
+        )
 
     def test_an_exact_match_is_never_downgraded_to_a_fuzzy_one(self):
         """The pair is reported once, by its strongest signal."""
@@ -1246,6 +1257,52 @@ class RunReportingTests(ConceptMatchingTestCase):
 
         run.refresh_from_db()
         self.assertEqual(run.status, ConceptMatchRun.STATUS_COMPLETE)
+
+    def test_a_stretch_that_finds_nothing_still_reports_being_alive(self):
+        """A signal can compare tens of thousands of labels and match none.
+
+        Progress is otherwise only recorded when pairs are stored, so a run
+        working hard and finding nothing would be reaped as though its worker
+        had died.
+        """
+        run = ConceptMatchRun.objects.create(
+            user=None,
+            status=ConceptMatchRun.STATUS_RUNNING,
+            parameters={"signals": [SIGNAL_TRIGRAM]},
+        )
+        stale_moment = timezone.now() - datetime.timedelta(
+            seconds=STALE_RUN_SECONDS * 2
+        )
+        ConceptMatchRun.objects.filter(pk=run.pk).update(last_progress=stale_moment)
+
+        _write_candidates(run, iter([KEEPALIVE]), log=lambda message: None)
+
+        run.refresh_from_db()
+        self.assertGreater(run.last_progress, stale_moment)
+        # And so the reaper leaves it alone, which is the point of the exercise.
+        self.assertEqual(reap_stale_runs(), 0)
+
+    def test_a_run_reports_from_a_thread_of_its_own(self):
+        """A single slice can hold this thread inside one FETCH for minutes.
+
+        Nothing on it can record progress meanwhile, so the reporting is done
+        from a thread that starts and stops with the work.
+        """
+        run = ConceptMatchRun.objects.create(
+            user=None,
+            status=ConceptMatchRun.STATUS_RUNNING,
+            parameters={"signals": [SIGNAL_TRIGRAM]},
+        )
+        thread_name = f"lingo-match-run-{run.pk}"
+
+        def running_thread_names():
+            return [thread.name for thread in threading.enumerate()]
+
+        self.assertNotIn(thread_name, running_thread_names())
+        with _heartbeat_while_working(run):
+            self.assertIn(thread_name, running_thread_names())
+        # And it is not left behind once the work is done.
+        self.assertNotIn(thread_name, running_thread_names())
 
     def test_elapsed_time_is_measured_on_the_server(self):
         """The client cannot subtract these timestamps from its own clock.
