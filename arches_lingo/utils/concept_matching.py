@@ -403,6 +403,33 @@ def _pair_query(match_sql, scope, source_concept_ids, score_sql="1.0"):
     return sql, params
 
 
+def count_labels_by_scheme():
+    """Return (total labels, {scheme id: labels}) across the corpus.
+
+    What a fuzzy run costs follows how many labels it has to compare, so this is
+    what lets the interface say how long one is likely to take before anyone
+    commits to starting it. Labels belonging to no scheme are counted in the
+    total and in no scheme, which is right on both counts: an unscoped run
+    compares them, and a scoped one does not.
+    """
+    with connection.cursor() as cursor:
+        cursor.execute(
+            f"""
+            SELECT cs.scheme_id, count(*)
+              FROM ({_INDEXED_LABEL_SQL}) labels
+              JOIN ({_CONCEPT_SCHEME_SQL}) cs ON cs.concept_id = labels.concept_id
+             GROUP BY cs.scheme_id
+            """
+        )
+        labels_by_scheme = {
+            str(scheme_id): count for scheme_id, count in cursor.fetchall()
+        }
+        cursor.execute(f"SELECT count(*) FROM ({_INDEXED_LABEL_SQL}) labels")
+        total_labels = cursor.fetchone()[0]
+
+    return total_labels, labels_by_scheme
+
+
 def _prepare_scheme_lookup(scope):
     """Put the concept-to-scheme lookup in a temp table, inside this transaction.
 

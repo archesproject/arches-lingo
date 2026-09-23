@@ -1,4 +1,6 @@
 import {
+    FUZZY_RUN_FIXED_SECONDS,
+    FUZZY_RUN_SECONDS_PER_LABEL,
     RUN_STATUS_PENDING,
     RUN_STATUS_RUNNING,
     SIGNAL_EXACT_LABEL,
@@ -136,4 +138,57 @@ export function formatElapsed(
               seconds: String(seconds % 60).padStart(2, "0"),
           })
         : translate("%{seconds}s", { seconds: String(seconds) });
+}
+
+/**
+ * How many labels a run over these schemes would have to compare.
+ *
+ * No schemes means every label, including those belonging to no scheme, which
+ * is what an unscoped run actually compares.
+ */
+export function labelsInScope(
+    selectedSchemeIds: string[],
+    totalLabels: number,
+    labelsByScheme: Record<string, number>,
+): number {
+    if (!selectedSchemeIds.length) {
+        return totalLabels;
+    }
+    return selectedSchemeIds.reduce(
+        (runningTotal, schemeId) =>
+            runningTotal + (labelsByScheme[schemeId] ?? 0),
+        0,
+    );
+}
+
+export function estimateFuzzyRunSeconds(labelCount: number): number {
+    return FUZZY_RUN_FIXED_SECONDS + labelCount * FUZZY_RUN_SECONDS_PER_LABEL;
+}
+
+/**
+ * The estimate as a span rather than a single figure.
+ *
+ * It is built from a straight line fitted to a handful of measurements, so a
+ * single number would claim a precision it does not have. The span is widened
+ * upwards because a run taking longer than promised is the unpleasant surprise,
+ * and one finishing early is not.
+ */
+export function describeExpectedDuration(
+    labelCount: number,
+    translate: (message: string, options: Record<string, string>) => string,
+): string {
+    const seconds = estimateFuzzyRunSeconds(labelCount);
+    if (seconds < 90) {
+        return translate("under a minute or two", {});
+    }
+
+    const lowMinutes = Math.max(1, Math.floor((seconds * 0.7) / 60));
+    const highMinutes = Math.ceil((seconds * 1.4) / 60);
+    if (highMinutes >= 60) {
+        return translate("well over an hour", {});
+    }
+    return translate("roughly %{low} to %{high} minutes", {
+        low: String(lowMinutes),
+        high: String(highMinutes),
+    });
 }
