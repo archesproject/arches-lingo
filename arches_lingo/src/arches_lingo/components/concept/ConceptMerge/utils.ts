@@ -335,20 +335,14 @@ export function buildMergePayload(
     };
 }
 
-/**
- * Every concept referenced by a comparison's tiles, on either side.
- *
- * Their labels are fetched once so the cards can name them the way the rest of
- * the application does, rather than falling back to a resource descriptor.
- */
-export function collectReferencedConceptIds(
+function collectReferencedResourceIds(
     sectionComparisons: SectionComparison[],
+    getReferenceAliases: (section: MergeSection) => string[] | undefined,
 ): string[] {
-    const conceptIds = new Set<string>();
+    const resourceIds = new Set<string>();
 
     for (const comparison of sectionComparisons) {
-        const referenceAliases =
-            comparison.section.conceptReferenceNodeAliases ?? [];
+        const referenceAliases = getReferenceAliases(comparison.section) ?? [];
         if (!referenceAliases.length) {
             continue;
         }
@@ -363,11 +357,41 @@ export function collectReferencedConceptIds(
                     tile,
                     nodeAlias,
                 )) {
-                    conceptIds.add(resourceId);
+                    resourceIds.add(resourceId);
                 }
             }
         }
     }
 
-    return [...conceptIds];
+    return [...resourceIds];
+}
+
+/**
+ * Every concept referenced by a comparison's tiles, on either side.
+ *
+ * Their labels are fetched once so the cards can name them the way the rest of
+ * the application does, rather than falling back to a resource descriptor.
+ */
+export function collectReferencedConceptIds(
+    sectionComparisons: SectionComparison[],
+): string[] {
+    return collectReferencedResourceIds(
+        sectionComparisons,
+        (section) => section.conceptReferenceNodeAliases,
+    );
+}
+
+/**
+ * Every digital object referenced by a comparison's tiles, on either side.
+ *
+ * An image tile holds only references, so the objects are fetched once for the
+ * cards to show each one's thumbnail, name and description.
+ */
+export function collectReferencedDigitalObjectIds(
+    sectionComparisons: SectionComparison[],
+): string[] {
+    return collectReferencedResourceIds(
+        sectionComparisons,
+        (section) => section.digitalObjectReferenceNodeAliases,
+    );
 }

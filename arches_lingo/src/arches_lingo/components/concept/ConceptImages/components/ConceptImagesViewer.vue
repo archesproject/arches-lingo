@@ -15,7 +15,10 @@ import GenericWidget from "@/arches_vue_components/generics/GenericWidget/Generi
 import { DANGER, SECONDARY, VIEW } from "@/arches_lingo/constants.ts";
 import { useConceptImagesEditorStore } from "@/arches_lingo/stores/useConceptImagesEditorStore.ts";
 import { storeToRefs } from "pinia";
-import { getFileUrl } from "@/arches_lingo/components/concept/ConceptImages/components/utils.ts";
+import {
+    getDigitalObjectImageAlt,
+    getDigitalObjectImageUrl,
+} from "@/arches_lingo/components/concept/ConceptImages/components/utils.ts";
 import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 
 import type {
@@ -23,7 +26,6 @@ import type {
     ConceptInstance,
     DigitalObjectInstance,
 } from "@/arches_lingo/types.ts";
-import type { FileListAliasedNodeData } from "@/arches_vue_components/datatypes/file-list/types.ts";
 import {
     fetchLingoResourcePartial,
     fetchLingoResourcesBatch,
@@ -106,23 +108,6 @@ onMounted(async () => {
     }
     isLoading.value = false;
 });
-
-function getImageUrl(resource: DigitalObjectInstance): string | undefined {
-    const contentData = resource.aliased_data.content?.aliased_data
-        .content as unknown as FileListAliasedNodeData | undefined;
-    const fileReference = contentData?.node_value?.[0];
-    if (fileReference?.url) {
-        return getFileUrl(fileReference.url);
-    }
-    return undefined;
-}
-
-function getImageAlt(resource: DigitalObjectInstance): string {
-    const contentData = resource.aliased_data.content?.aliased_data
-        .content as unknown as FileListAliasedNodeData | undefined;
-    const fileReference = contentData?.node_value?.[0];
-    return fileReference?.altText || fileReference?.name || "";
-}
 
 function confirmDelete(removedResourceInstanceId: string) {
     confirm.require({
@@ -265,9 +250,9 @@ function modifyResource(resourceInstanceId?: string) {
                 >
                     <div class="image-container">
                         <Image
-                            v-if="getImageUrl(resource)"
-                            :src="getImageUrl(resource)"
-                            :alt="getImageAlt(resource)"
+                            v-if="getDigitalObjectImageUrl(resource)"
+                            :src="getDigitalObjectImageUrl(resource)"
+                            :alt="getDigitalObjectImageAlt(resource)"
                             preview
                             class="card-image"
                         />

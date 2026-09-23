@@ -5,6 +5,8 @@ import { useGettext } from "vue3-gettext";
 import { storeToRefs } from "pinia";
 import Tag from "primevue/tag";
 
+import MergeDigitalObjectList from "@/arches_lingo/components/concept/ConceptMerge/components/MergeDigitalObjectList.vue";
+
 import {
     getDisplayValue,
     getReferencedResourceIds,
@@ -13,6 +15,7 @@ import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 
 import type { Label } from "@/arches_controlled_lists/types.ts";
+import type { DigitalObjectInstance } from "@/arches_lingo/types.ts";
 import type { MergeTile } from "@/arches_lingo/components/concept/ConceptMerge/types.ts";
 
 const {
@@ -20,12 +23,16 @@ const {
     displayNodeAliases,
     conceptReferenceNodeAliases,
     conceptLabelsById,
+    digitalObjectReferenceNodeAliases,
+    digitalObjectsById,
     alreadyOnSurvivor,
 } = defineProps<{
     tile: MergeTile;
     displayNodeAliases: string[];
     conceptReferenceNodeAliases: string[];
     conceptLabelsById: Map<string, Label[]>;
+    digitalObjectReferenceNodeAliases: string[];
+    digitalObjectsById: Map<string, DigitalObjectInstance>;
     alreadyOnSurvivor?: boolean;
 }>();
 
@@ -58,13 +65,26 @@ function resolveNodeText(nodeAlias: string) {
         : getDisplayValue(tile, nodeAlias);
 }
 
+const digitalObjectIds = computed(function () {
+    return digitalObjectReferenceNodeAliases.flatMap((nodeAlias) =>
+        getReferencedResourceIds(tile, nodeAlias),
+    );
+});
+
 const displayValues = computed(function () {
     return displayNodeAliases
+        .filter(
+            (nodeAlias) =>
+                !digitalObjectReferenceNodeAliases.includes(nodeAlias),
+        )
         .map(resolveNodeText)
         .filter((displayValue) => displayValue !== "");
 });
 
 const primaryValue = computed(function () {
+    if (digitalObjectIds.value.length) {
+        return displayValues.value[0];
+    }
     return displayValues.value[0] ?? $gettext("(empty)");
 });
 
@@ -82,7 +102,17 @@ const secondaryValues = computed(function () {
             <slot name="control" />
         </div>
         <div class="merge-tile-body">
-            <span class="merge-tile-primary">{{ primaryValue }}</span>
+            <MergeDigitalObjectList
+                v-if="digitalObjectIds.length"
+                :digital-object-ids="digitalObjectIds"
+                :digital-objects-by-id="digitalObjectsById"
+            />
+            <span
+                v-if="primaryValue"
+                class="merge-tile-primary"
+            >
+                {{ primaryValue }}
+            </span>
             <span
                 v-if="secondaryValues.length"
                 class="merge-tile-secondary"

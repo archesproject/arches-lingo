@@ -15,6 +15,10 @@ export interface MergeSection {
     // getItemLabel against fetched labels, not from the tile's display_value,
     // which is the resource descriptor rather than a language-aware label.
     conceptReferenceNodeAliases?: string[];
+    // Display nodes holding references to digital objects. A card shows each
+    // object's thumbnail, name and description, none of which the tile itself
+    // carries.
+    digitalObjectReferenceNodeAliases?: string[];
     // Holds a reference that only means anything inside one scheme, so it is
     // never brought across from a concept in another. Mirrors the server's
     // SCHEME_SCOPED_NODEGROUP_ALIASES.

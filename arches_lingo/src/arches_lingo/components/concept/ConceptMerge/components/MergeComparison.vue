@@ -10,13 +10,21 @@ import { MERGE_SECTIONS } from "@/arches_lingo/components/concept/ConceptMerge/c
 import {
     buildSectionComparison,
     collectReferencedConceptIds,
+    collectReferencedDigitalObjectIds,
     extractSectionTiles,
     findPrefLabelConflicts,
 } from "@/arches_lingo/components/concept/ConceptMerge/utils.ts";
-import { fetchConceptResources } from "@/arches_lingo/api.ts";
+import { DIGITAL_OBJECT_GRAPH_SLUG } from "@/arches_lingo/components/concept/ConceptImages/components/constants.ts";
+import {
+    fetchConceptResources,
+    fetchLingoResourcesBatch,
+} from "@/arches_lingo/api.ts";
 
 import type { Label } from "@/arches_controlled_lists/types.ts";
-import type { SearchResultItem } from "@/arches_lingo/types.ts";
+import type {
+    DigitalObjectInstance,
+    SearchResultItem,
+} from "@/arches_lingo/types.ts";
 
 import type {
     MergeSection,
@@ -62,6 +70,7 @@ const sectionTitlesByAlias = computed<Record<string, string>>(function () {
 const sectionComparisons = ref<SectionComparison[]>([]);
 const prefLabelWinnerByLanguage = ref<Record<string, string>>({});
 const conceptLabelsById = ref<Map<string, Label[]>>(new Map());
+const digitalObjectsById = ref<Map<string, DigitalObjectInstance>>(new Map());
 
 // Referenced concepts are named through getItemLabel, so their labels are fetched
 // once per comparison. A failure leaves the cards on their display values.
@@ -92,6 +101,34 @@ async function loadReferencedConceptLabels() {
     }
 }
 
+// Image tiles hold only references, so the digital objects behind them are
+// fetched once per comparison. A failure leaves the cards on placeholders.
+async function loadReferencedDigitalObjects() {
+    const digitalObjectIds = collectReferencedDigitalObjectIds(
+        sectionComparisons.value,
+    );
+    if (!digitalObjectIds.length) {
+        digitalObjectsById.value = new Map();
+        return;
+    }
+
+    try {
+        const digitalObjects: DigitalObjectInstance[] =
+            await fetchLingoResourcesBatch(
+                DIGITAL_OBJECT_GRAPH_SLUG,
+                digitalObjectIds,
+            );
+        digitalObjectsById.value = new Map(
+            digitalObjects.map((digitalObject) => [
+                digitalObject.resourceinstanceid,
+                digitalObject,
+            ]),
+        );
+    } catch {
+        digitalObjectsById.value = new Map();
+    }
+}
+
 // Sections neither concept uses would be empty rows, so they are left out.
 function isSectionBlocked(section: MergeSection) {
     return Boolean(isCrossScheme && section.schemeScoped);
@@ -118,6 +155,7 @@ watch(
     () => {
         buildComparisons();
         void loadReferencedConceptLabels();
+        void loadReferencedDigitalObjects();
     },
     { immediate: true },
 );
@@ -234,6 +272,7 @@ function onPrefLabelWinnerChange(languageCode: string, tileId: string) {
             "
             :comparison="comparison"
             :concept-labels-by-id="conceptLabelsById"
+            :digital-objects-by-id="digitalObjectsById"
             :is-blocked="isSectionBlocked(comparison.section)"
             @update:selection="onSelectionChange"
         />

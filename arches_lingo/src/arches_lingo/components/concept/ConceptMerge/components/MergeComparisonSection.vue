@@ -9,12 +9,14 @@ import Tag from "primevue/tag";
 import MergeTileCard from "@/arches_lingo/components/concept/ConceptMerge/components/MergeTileCard.vue";
 
 import type { Label } from "@/arches_controlled_lists/types.ts";
+import type { DigitalObjectInstance } from "@/arches_lingo/types.ts";
 import type { SectionComparison } from "@/arches_lingo/components/concept/ConceptMerge/types.ts";
 
 const { sectionTitle, comparison, isBlocked } = defineProps<{
     sectionTitle: string;
     comparison: SectionComparison;
     conceptLabelsById: Map<string, Label[]>;
+    digitalObjectsById: Map<string, DigitalObjectInstance>;
     // A scheme-scoped section in a merge across schemes. Shown rather than
     // hidden, so the editor can see what is being left behind, but nothing in
     // it can be chosen.
@@ -111,6 +113,11 @@ function onSingleValueChoice(useAbsorbedValue: boolean) {
                         comparison.section.conceptReferenceNodeAliases ?? []
                     "
                     :concept-labels-by-id="conceptLabelsById"
+                    :digital-object-reference-node-aliases="
+                        comparison.section.digitalObjectReferenceNodeAliases ??
+                        []
+                    "
+                    :digital-objects-by-id="digitalObjectsById"
                 >
                     <template #control>
                         <RadioButton
@@ -147,6 +154,11 @@ function onSingleValueChoice(useAbsorbedValue: boolean) {
                         comparison.section.conceptReferenceNodeAliases ?? []
                     "
                     :concept-labels-by-id="conceptLabelsById"
+                    :digital-object-reference-node-aliases="
+                        comparison.section.digitalObjectReferenceNodeAliases ??
+                        []
+                    "
+                    :digital-objects-by-id="digitalObjectsById"
                     :already-on-survivor="option.alreadyOnSurvivor"
                 >
                     <template #control>

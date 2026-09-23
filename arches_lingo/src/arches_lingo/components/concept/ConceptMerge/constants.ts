@@ -101,6 +101,7 @@ export const MERGE_SECTIONS: MergeSection[] = [
         cardinality: "1",
         displayNodeAliases: ["depicting_digital_asset_internal"],
         identityNodeAliases: null,
+        digitalObjectReferenceNodeAliases: ["depicting_digital_asset_internal"],
     },
     {
         nodegroupAlias: "depicting_digital_asset_external",

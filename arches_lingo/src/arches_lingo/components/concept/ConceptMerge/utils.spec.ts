@@ -7,6 +7,7 @@ import {
     buildSectionComparison,
     buildTileIdentityKey,
     collectReferencedConceptIds,
+    collectReferencedDigitalObjectIds,
     extractSectionTiles,
     findPrefLabelConflicts,
     getReferencedResourceIds,
@@ -483,5 +484,54 @@ describe("collectReferencedConceptIds", () => {
             SURVIVOR_ID,
         );
         expect(collectReferencedConceptIds([comparison])).toEqual([]);
+    });
+});
+
+const IMAGES_SECTION: MergeSection = {
+    nodegroupAlias: "depicting_digital_asset_internal",
+    cardinality: "1",
+    displayNodeAliases: ["depicting_digital_asset_internal"],
+    identityNodeAliases: null,
+    digitalObjectReferenceNodeAliases: ["depicting_digital_asset_internal"],
+};
+
+function imagesTile(tileid: string, ...digitalObjectIds: string[]): MergeTile {
+    return {
+        tileid,
+        aliased_data: {
+            depicting_digital_asset_internal: {
+                display_value: "",
+                node_value: digitalObjectIds.map((resourceId) => ({
+                    resourceId,
+                })),
+                details: [],
+            },
+        },
+    };
+}
+
+describe("collectReferencedDigitalObjectIds", () => {
+    it("gathers ids from both sides without duplicates", () => {
+        const comparison = buildSectionComparison(
+            IMAGES_SECTION,
+            [imagesTile("survivor-1", "shared-image")],
+            [imagesTile("absorbed-1", "shared-image", "other-image")],
+            SURVIVOR_ID,
+        );
+
+        expect(collectReferencedDigitalObjectIds([comparison]).sort()).toEqual([
+            "other-image",
+            "shared-image",
+        ]);
+    });
+
+    it("ignores concept references", () => {
+        const comparison = buildSectionComparison(
+            BROADER_SECTION,
+            [broaderTile("survivor-1", "parent")],
+            [],
+            SURVIVOR_ID,
+        );
+        expect(collectReferencedDigitalObjectIds([comparison])).toEqual([]);
     });
 });
