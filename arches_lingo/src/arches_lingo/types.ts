@@ -650,6 +650,7 @@ export interface ConceptMatchRun {
     elapsed_seconds: number;
     parameters: Record<string, unknown>;
     candidate_count: number;
+    counts_by_status: Record<string, number>;
     pending_count: number;
     error_message: string;
 }

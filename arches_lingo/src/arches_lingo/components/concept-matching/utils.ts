@@ -1,4 +1,6 @@
 import {
+    ALL_CANDIDATE_STATUSES,
+    CANDIDATE_STATUS_PENDING,
     FUZZY_RUN_FIXED_SECONDS,
     FUZZY_RUN_SECONDS_PER_LABEL,
     RUN_STATUS_PENDING,
@@ -191,4 +193,18 @@ export function describeExpectedDuration(
         low: String(lowMinutes),
         high: String(highMinutes),
     });
+}
+
+/**
+ * Which queue a `status` in the address refers to.
+ *
+ * Anything the interface does not offer falls back to the outstanding pairs,
+ * so a hand-edited or outdated link lands somewhere sensible rather than on an
+ * empty list explained by nothing.
+ */
+export function candidateStatusFromRoute(rawStatus: unknown): string {
+    const status = String(rawStatus ?? "");
+    return ALL_CANDIDATE_STATUSES.includes(status)
+        ? status
+        : CANDIDATE_STATUS_PENDING;
 }
