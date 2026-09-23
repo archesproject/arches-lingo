@@ -22,6 +22,7 @@ from arches_lingo.utils.concept_matching_service import (
     dismiss_all_pending,
     link_candidates_with_exact_match,
     reap_stale_runs,
+    serialize_scope_sizes,
     start_detection,
     serialize_candidate_page,
     serialize_run,
@@ -49,6 +50,13 @@ def _get_user_run(user, pk):
             message=_("Match run not found."),
             status=HTTPStatus.NOT_FOUND,
         )
+
+
+class ConceptMatchScopeSizeView(LingoEditorMixin, View):
+    """How much work a scope implies, so the interface can say so up front."""
+
+    def get(self, request):
+        return JSONResponse(serialize_scope_sizes())
 
 
 class ConceptMatchRunListView(LingoEditorMixin, View):

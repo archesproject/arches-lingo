@@ -962,6 +962,29 @@ class ConceptMatchApiTests(ConceptMatchingTestCase):
         self.assertEqual(created["name"], "")
         self.assertEqual(created["parameters"]["scheme_ids"], [])
 
+    def test_scope_sizes_report_what_a_run_would_have_to_compare(self):
+        """The interface estimates how long a run will take from these."""
+        self.add_label(self.first_concept, "trumpets")
+        self.add_label(self.second_concept, "cornets")
+
+        sizes = self.client.get(reverse("api-concept-match-scope-sizes")).json()
+
+        self.assertGreaterEqual(sizes["total_labels"], 2)
+        self.assertGreaterEqual(sizes["labels_by_scheme"][str(self.scheme.pk)], 2)
+        # A scheme can never account for more labels than exist.
+        self.assertLessEqual(
+            sum(sizes["labels_by_scheme"].values()), sizes["total_labels"]
+        )
+
+    def test_scope_sizes_need_an_editor(self):
+        self.client.force_login(
+            User.objects.create_user(username="sizes-viewer", password="x")
+        )
+
+        response = self.client.get(reverse("api-concept-match-scope-sizes"))
+
+        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+
     def test_an_unsupported_signal_is_a_bad_request(self):
         response = self.post_json(
             reverse("api-concept-match-runs"), {"signals": ["phonetic"]}

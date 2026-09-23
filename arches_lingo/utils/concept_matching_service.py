@@ -14,7 +14,7 @@ from http import HTTPStatus
 
 from django.conf import settings
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Count, Q
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
@@ -32,6 +32,7 @@ from arches_lingo.utils.concept_lifecycle import (
 from arches_lingo.utils.concept_matching import (
     ALL_SIGNALS,
     SIGNAL_TRIGRAM,
+    count_labels_by_scheme,
     get_scheme_ids_for_concepts,
     mark_pairs_settled,
     run_detection,
@@ -74,6 +75,13 @@ def serialize_run(run):
     # time and places in the future. Both ends of this subtraction come from one
     # clock, so the answer holds whatever zone either side is in.
     ended_at = run.finished or timezone.now()
+
+    counts_by_status = {
+        status: 0 for status, _label in ConceptMatchCandidate.STATUS_CHOICES
+    }
+    for row in run.candidates.values("status").annotate(count=Count("status")):
+        counts_by_status[row["status"]] = row["count"]
+
     return {
         "id": run.pk,
         "name": run.name,
@@ -84,9 +92,20 @@ def serialize_run(run):
         "parameters": run.parameters,
         "candidate_count": run.candidate_count,
         "error_message": run.error_message,
-        "pending_count": run.candidates.filter(
-            status=ConceptMatchCandidate.STATUS_PENDING
-        ).count(),
+        # Every status, not just the outstanding one: a reviewer wants to see
+        # what they linked and merged as much as what is left to decide, and
+        # one grouped count costs what counting the pending ones alone did.
+        "counts_by_status": counts_by_status,
+        "pending_count": counts_by_status[ConceptMatchCandidate.STATUS_PENDING],
+    }
+
+
+def serialize_scope_sizes():
+    """How many labels a run would compare, in all and per scheme."""
+    total_labels, labels_by_scheme = count_labels_by_scheme()
+    return {
+        "total_labels": total_labels,
+        "labels_by_scheme": labels_by_scheme,
     }
 
 

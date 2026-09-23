@@ -689,6 +689,11 @@ export interface ConceptMatchCandidate {
     is_cross_scheme: boolean;
 }
 
+export interface ConceptMatchScopeSizes {
+    total_labels: number;
+    labels_by_scheme: Record<string, number>;
+}
+
 export interface ConceptMatchRunRequest {
     name?: string;
     scheme_ids?: string[];
