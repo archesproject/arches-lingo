@@ -2,7 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 
 import { useGettext } from "vue3-gettext";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { useConfirm } from "primevue/useconfirm";
 import { useToast } from "primevue/usetoast";
 
@@ -28,6 +28,7 @@ import {
     linkConceptMatchCandidates,
     updateConceptMatchCandidates,
 } from "@/arches_lingo/api.ts";
+import { routeNames } from "@/arches_lingo/routes.ts";
 import { useConceptStore } from "@/arches_lingo/stores/useConceptStore.ts";
 import {
     CANDIDATES_PER_PAGE,
@@ -70,22 +71,48 @@ const { $gettext } = useGettext();
 const toast = useToast();
 const confirm = useConfirm();
 const route = useRoute();
+const router = useRouter();
 const conceptStore = useConceptStore();
 const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
 
+// What the reviewer is looking at -- which run, which page of it, and whether
+// they are reading the queue or what they dismissed -- is held in the address
+// rather than only in the component, so that going back returns to the queue
+// they were reading rather than to the start of it, and a queue can be sent to
+// someone else.
+function runIdInRoute(): number | null {
+    const raw = Array.isArray(route.params.runId)
+        ? route.params.runId[0]
+        : route.params.runId;
+    const runId = Number(raw);
+    return raw && Number.isInteger(runId) && runId > 0 ? runId : null;
+}
+
+function pageNumberInRoute(): number {
+    const pageNumber = Number(route.query.page);
+    return Number.isInteger(pageNumber) && pageNumber > 0 ? pageNumber : 1;
+}
+
+function statusInRoute(): string {
+    return route.query.status === CANDIDATE_STATUS_DISMISSED
+        ? CANDIDATE_STATUS_DISMISSED
+        : CANDIDATE_STATUS_PENDING;
+}
+
 const runs = ref<ConceptMatchRun[]>([]);
-const activeRunId = ref<number | null>(null);
+const activeRunId = ref<number | null>(runIdInRoute());
 const isRunning = ref(false);
 
 const candidates = ref<ConceptMatchCandidate[]>([]);
 const selectedIds = ref<Set<number>>(new Set());
-const candidateStatus = ref(CANDIDATE_STATUS_PENDING);
-const firstResultIndex = ref(0);
+const candidateStatus = ref(statusInRoute());
+const firstResultIndex = ref((pageNumberInRoute() - 1) * CANDIDATES_PER_PAGE);
 const totalResults = ref(0);
 const isLoadingCandidates = ref(false);
 const isLinking = ref(false);
 const isDismissingAll = ref(false);
 const isDeletingRun = ref(false);
+const showCriteria = ref(true);
 
 const mergingCandidate = ref<ConceptMatchCandidate | null>(null);
 const mergeSurvivor = ref<ResourceInstanceResult | null>(null);
@@ -118,12 +145,26 @@ function reportError(error: unknown, summary: string) {
 async function loadRuns() {
     try {
         runs.value = (await fetchConceptMatchRuns()).data;
-        if (activeRunId.value === null && runs.value.length) {
-            activeRunId.value = runs.value[0].id;
-        }
     } catch (error) {
         reportError(error, $gettext("Could not load previous runs."));
     }
+}
+
+/**
+ * Show the newest run when the address does not name one.
+ *
+ * Replaces rather than pushes: landing on the page and being shown the latest
+ * run is one step, so going back should leave the page rather than undo a
+ * choice the reviewer did not make.
+ */
+async function showNewestRunIfNoneChosen() {
+    if (activeRunId.value !== null || !runs.value.length) {
+        return false;
+    }
+    await router.replace(
+        routeForView({ runId: runs.value[0].id, pageNumber: 1 }),
+    );
+    return true;
 }
 
 async function loadCandidates({ quiet = false } = {}) {
@@ -229,7 +270,13 @@ async function onRun(request: ConceptMatchRunRequest) {
     try {
         const run = await createConceptMatchRun(request);
         await loadRuns();
-        activeRunId.value = run.id;
+        await router.push(
+            routeForView({
+                runId: run.id,
+                pageNumber: 1,
+                status: CANDIDATE_STATUS_PENDING,
+            }),
+        );
 
         if (isRunUnfinished(run)) {
             pollUntilFinished(run.id);
@@ -333,10 +380,14 @@ function onDeleteRun() {
                 stopPolling();
                 isRunning.value = false;
                 selectedIds.value = new Set();
-                // Clearing the selection lets loadRuns fall back to the newest
-                // run that is left, or to nothing when that was the last one.
-                activeRunId.value = null;
                 await loadRuns();
+                await router.replace(
+                    routeForView({
+                        runId: runs.value.length ? runs.value[0].id : null,
+                        pageNumber: 1,
+                        status: CANDIDATE_STATUS_PENDING,
+                    }),
+                );
                 toast.add({
                     severity: SUCCESS,
                     life: DEFAULT_TOAST_LIFE,
@@ -502,16 +553,76 @@ function onSelectAllOnPage(isSelected: boolean) {
     selectedIds.value = updated;
 }
 
-function onStatusChange(newStatus: string) {
-    candidateStatus.value = newStatus;
-    firstResultIndex.value = 0;
-    selectedIds.value = new Set();
+/**
+ * Where to send the browser for a given view of the queue.
+ *
+ * Only what differs from the default is written down, so the ordinary case --
+ * the first page of a run's outstanding pairs -- stays a plain, sendable link.
+ */
+function routeForView({
+    runId = activeRunId.value,
+    pageNumber = Math.floor(firstResultIndex.value / CANDIDATES_PER_PAGE) + 1,
+    status = candidateStatus.value,
+}: {
+    runId?: number | null;
+    pageNumber?: number;
+    status?: string;
+} = {}) {
+    const query: Record<string, string> = {};
+    if (pageNumber > 1) {
+        query.page = String(pageNumber);
+    }
+    if (status !== CANDIDATE_STATUS_PENDING) {
+        query.status = status;
+    }
+    return {
+        name: routeNames.conceptMatches,
+        params: runId === null ? {} : { runId: String(runId) },
+        query,
+    };
 }
 
-// A run or status change starts the review over; a page change keeps the
-// selection, so a reviewer can gather pairs across pages before acting.
-watch([activeRunId, candidateStatus, firstResultIndex], () => loadCandidates());
-watch(activeRunId, () => (selectedIds.value = new Set()));
+function onRunSelected(runId: number | null) {
+    router.push(
+        routeForView({ runId, pageNumber: 1, status: candidateStatus.value }),
+    );
+}
+
+function onPageChange(newFirstResultIndex: number) {
+    router.push(
+        routeForView({
+            pageNumber:
+                Math.floor(newFirstResultIndex / CANDIDATES_PER_PAGE) + 1,
+        }),
+    );
+}
+
+function onStatusChange(newStatus: string) {
+    router.push(routeForView({ pageNumber: 1, status: newStatus }));
+}
+
+// The address is the single source of truth for which queue is shown, so this
+// is the only place the view is loaded: a click and a press of the back button
+// arrive here by the same path.
+watch(
+    () => [route.params.runId, route.query.page, route.query.status],
+    function () {
+        const runIdChanged = activeRunId.value !== runIdInRoute();
+        const statusChanged = candidateStatus.value !== statusInRoute();
+
+        activeRunId.value = runIdInRoute();
+        candidateStatus.value = statusInRoute();
+        firstResultIndex.value =
+            (pageNumberInRoute() - 1) * CANDIDATES_PER_PAGE;
+
+        // A run or status change starts the review over; a page change keeps
+        // the selection, so a reviewer can gather pairs across pages.
+        if (runIdChanged || statusChanged) {
+            selectedIds.value = new Set();
+        }
+        loadCandidates();
+    },
+);
 
 onBeforeUnmount(stopPolling);
 
@@ -532,7 +643,11 @@ onMounted(async () => {
     }
 
     await loadRuns();
-    await loadCandidates();
+    // The address may already name a run -- a link, or a reload. Only fall back
+    // to the newest when it does not.
+    if (!(await showNewestRunIfNoneChosen())) {
+        await loadCandidates();
+    }
 
     // Coming back to a search that is still going: resume watching it rather
     // than showing a stale, empty queue.
@@ -545,185 +660,222 @@ onMounted(async () => {
 
 <template>
     <div class="matches-page">
-        <div class="matches-criteria">
-            <h2>{{ $gettext("Find Matching Concepts") }}</h2>
-            <p class="matches-intro">
-                {{
-                    $gettext(
-                        "Look for concepts that probably mean the same thing, then dismiss the ones that do not.",
-                    )
-                }}
-            </p>
-
-            <MatchRunForm
-                :schemes="conceptStore.schemes"
-                :is-running="isRunning"
-                @run="onRun"
+        <div class="matches-header">
+            <h2 class="matches-header-title">
+                <i
+                    class="pi pi-clone"
+                    aria-hidden="true"
+                />
+                {{ $gettext("Find Matching Concepts") }}
+            </h2>
+            <Button
+                :label="
+                    showCriteria
+                        ? $gettext('Hide Search Options')
+                        : $gettext('Show Search Options')
+                "
+                :icon="
+                    showCriteria ? 'pi pi-angle-double-left' : 'pi pi-sliders-h'
+                "
+                :class="'side-panel-toggle'"
+                size="small"
+                @click="showCriteria = !showCriteria"
             />
         </div>
 
-        <div class="matches-results">
-            <div class="matches-results-header">
-                <Select
-                    v-model="activeRunId"
-                    :options="runs"
-                    option-value="id"
-                    :placeholder="$gettext('No runs yet')"
-                    :disabled="!runs.length"
-                    class="run-select"
-                >
-                    <template #value="{ value }">
-                        <span v-if="activeRun">
-                            <span
-                                v-if="activeRun.name"
-                                class="run-option-name"
-                                >{{ activeRun.name }} — </span
-                            >{{
-                                $gettext(
-                                    "%{pending} of %{total} left to review",
-                                    {
-                                        pending: String(
-                                            activeRun.pending_count,
-                                        ),
-                                        total: String(
-                                            activeRun.candidate_count,
-                                        ),
-                                    },
-                                )
-                            }}
-                        </span>
-                        <span v-else>{{ value }}</span>
-                    </template>
-                    <template #option="{ option }">
-                        <span
-                            v-if="option.name"
-                            class="run-option-name"
-                            >{{ option.name }} — </span
-                        >{{
-                            $gettext("%{count} pairs", {
-                                count: String(option.candidate_count),
-                            })
-                        }}
-                        — {{ new Date(option.created).toLocaleString() }}
-                    </template>
-                </Select>
+        <div
+            class="matches-body"
+            :class="{ 'criteria-hidden': !showCriteria }"
+        >
+            <div
+                v-show="showCriteria"
+                class="matches-criteria"
+            >
+                <p class="matches-intro">
+                    {{
+                        $gettext(
+                            "Look for concepts that probably mean the same thing, then dismiss the ones that do not.",
+                        )
+                    }}
+                </p>
 
-                <div class="matches-actions">
-                    <Button
-                        v-if="candidateStatus === CANDIDATE_STATUS_PENDING"
-                        icon="pi pi-link"
-                        :label="
-                            $gettext('Link %{count}', {
-                                count: String(selectedIds.size),
-                            })
-                        "
-                        :disabled="!selectedIds.size || isLinking"
-                        :loading="isLinking"
-                        class="action-button"
-                        @click="onLinkSelection"
-                    />
-                    <Button
-                        v-if="candidateStatus === CANDIDATE_STATUS_PENDING"
-                        icon="pi pi-times"
-                        :label="
-                            $gettext('Dismiss %{count}', {
-                                count: String(selectedIds.size),
-                            })
-                        "
-                        :severity="SECONDARY"
-                        :outlined="true"
-                        :disabled="!selectedIds.size"
-                        class="action-button"
-                        @click="
-                            setStatusForSelection(CANDIDATE_STATUS_DISMISSED)
-                        "
-                    />
-                    <Button
-                        v-else
-                        icon="pi pi-undo"
-                        :label="
-                            $gettext('Restore %{count}', {
-                                count: String(selectedIds.size),
-                            })
-                        "
-                        :severity="SECONDARY"
-                        :outlined="true"
-                        :disabled="!selectedIds.size"
-                        class="action-button"
-                        @click="setStatusForSelection(CANDIDATE_STATUS_PENDING)"
-                    />
-                    <Button
-                        v-if="
-                            candidateStatus === CANDIDATE_STATUS_PENDING &&
-                            activeRun &&
-                            activeRun.pending_count > 0
-                        "
-                        icon="pi pi-times-circle"
-                        :label="
-                            $gettext('Dismiss all %{count}', {
-                                count: String(activeRun!.pending_count),
-                            })
-                        "
-                        :severity="SECONDARY"
-                        :outlined="true"
-                        :disabled="isDismissingAll"
-                        :loading="isDismissingAll"
-                        class="action-button"
-                        @click="onDismissAllRemaining"
-                    />
-                    <Button
-                        v-if="activeRun"
-                        :icon="
-                            activeRunIsUnfinished ? 'pi pi-ban' : 'pi pi-trash'
-                        "
-                        :label="
-                            activeRunIsUnfinished
-                                ? $gettext('Cancel run')
-                                : $gettext('Delete run')
-                        "
-                        :severity="DANGER"
-                        :outlined="true"
-                        :disabled="isDeletingRun"
-                        :loading="isDeletingRun"
-                        class="action-button"
-                        @click="onDeleteRun"
-                    />
-                </div>
+                <MatchRunForm
+                    :schemes="conceptStore.schemes"
+                    :is-running="isRunning"
+                    @run="onRun"
+                />
             </div>
 
-            <MatchRunSummary
-                v-if="activeRun"
-                :run="activeRun"
-                :schemes="conceptStore.schemes"
-            />
+            <div class="matches-results">
+                <div class="matches-results-header">
+                    <Select
+                        :model-value="activeRunId"
+                        :options="runs"
+                        option-value="id"
+                        :placeholder="$gettext('No runs yet')"
+                        :disabled="!runs.length"
+                        class="run-select"
+                        @update:model-value="onRunSelected"
+                    >
+                        <template #value="{ value }">
+                            <span v-if="activeRun">
+                                <span
+                                    v-if="activeRun.name"
+                                    class="run-option-name"
+                                    >{{ activeRun.name }} — </span
+                                >{{
+                                    $gettext(
+                                        "%{pending} of %{total} left to review",
+                                        {
+                                            pending: String(
+                                                activeRun.pending_count,
+                                            ),
+                                            total: String(
+                                                activeRun.candidate_count,
+                                            ),
+                                        },
+                                    )
+                                }}
+                            </span>
+                            <span v-else>{{ value }}</span>
+                        </template>
+                        <template #option="{ option }">
+                            <span
+                                v-if="option.name"
+                                class="run-option-name"
+                                >{{ option.name }} — </span
+                            >{{
+                                $gettext("%{count} pairs", {
+                                    count: String(option.candidate_count),
+                                })
+                            }}
+                            — {{ new Date(option.created).toLocaleString() }}
+                        </template>
+                    </Select>
 
-            <MatchRunProgress
-                v-if="activeRun && isRunUnfinished(activeRun)"
-                :run="activeRun"
-            />
+                    <div class="matches-actions">
+                        <Button
+                            v-if="candidateStatus === CANDIDATE_STATUS_PENDING"
+                            icon="pi pi-link"
+                            :label="
+                                $gettext('Link %{count}', {
+                                    count: String(selectedIds.size),
+                                })
+                            "
+                            :disabled="!selectedIds.size || isLinking"
+                            :loading="isLinking"
+                            class="action-button"
+                            @click="onLinkSelection"
+                        />
+                        <Button
+                            v-if="candidateStatus === CANDIDATE_STATUS_PENDING"
+                            icon="pi pi-times"
+                            :label="
+                                $gettext('Dismiss %{count}', {
+                                    count: String(selectedIds.size),
+                                })
+                            "
+                            :severity="SECONDARY"
+                            :outlined="true"
+                            :disabled="!selectedIds.size"
+                            class="action-button"
+                            @click="
+                                setStatusForSelection(
+                                    CANDIDATE_STATUS_DISMISSED,
+                                )
+                            "
+                        />
+                        <Button
+                            v-else
+                            icon="pi pi-undo"
+                            :label="
+                                $gettext('Restore %{count}', {
+                                    count: String(selectedIds.size),
+                                })
+                            "
+                            :severity="SECONDARY"
+                            :outlined="true"
+                            :disabled="!selectedIds.size"
+                            class="action-button"
+                            @click="
+                                setStatusForSelection(CANDIDATE_STATUS_PENDING)
+                            "
+                        />
+                        <Button
+                            v-if="
+                                candidateStatus === CANDIDATE_STATUS_PENDING &&
+                                activeRun &&
+                                activeRun.pending_count > 0
+                            "
+                            icon="pi pi-times-circle"
+                            :label="
+                                $gettext('Dismiss all %{count}', {
+                                    count: String(activeRun!.pending_count),
+                                })
+                            "
+                            :severity="SECONDARY"
+                            :outlined="true"
+                            :disabled="isDismissingAll"
+                            :loading="isDismissingAll"
+                            class="action-button"
+                            @click="onDismissAllRemaining"
+                        />
+                        <Button
+                            v-if="activeRun"
+                            :icon="
+                                activeRunIsUnfinished
+                                    ? 'pi pi-ban'
+                                    : 'pi pi-trash'
+                            "
+                            :label="
+                                activeRunIsUnfinished
+                                    ? $gettext('Cancel run')
+                                    : $gettext('Delete run')
+                            "
+                            :severity="DANGER"
+                            :outlined="true"
+                            :disabled="isDeletingRun"
+                            :loading="isDeletingRun"
+                            class="action-button"
+                            @click="onDeleteRun"
+                        />
+                    </div>
+                </div>
 
-            <Message
-                v-if="loadError"
-                :severity="ERROR"
-                :closable="false"
-            >
-                {{ loadError }}
-            </Message>
+                <MatchRunSummary
+                    v-if="activeRun"
+                    :run="activeRun"
+                    :schemes="conceptStore.schemes"
+                />
 
-            <MatchCandidateList
-                :candidates="candidates"
-                :selected-ids="selectedIds"
-                :is-loading="isLoadingCandidates"
-                :total-results="totalResults"
-                :items-per-page="CANDIDATES_PER_PAGE"
-                :first-result-index="firstResultIndex"
-                :status="candidateStatus"
-                @update:selected="onSelectionChange"
-                @select-all-on-page="onSelectAllOnPage"
-                @page="firstResultIndex = $event"
-                @set-status="onStatusChange"
-                @merge="onMergeRequested"
-            />
+                <MatchRunProgress
+                    v-if="activeRun && isRunUnfinished(activeRun)"
+                    :run="activeRun"
+                />
+
+                <Message
+                    v-if="loadError"
+                    :severity="ERROR"
+                    :closable="false"
+                >
+                    {{ loadError }}
+                </Message>
+
+                <MatchCandidateList
+                    :candidates="candidates"
+                    :selected-ids="selectedIds"
+                    :is-loading="isLoadingCandidates"
+                    :total-results="totalResults"
+                    :items-per-page="CANDIDATES_PER_PAGE"
+                    :first-result-index="firstResultIndex"
+                    :status="candidateStatus"
+                    @update:selected="onSelectionChange"
+                    @select-all-on-page="onSelectAllOnPage"
+                    @page="onPageChange"
+                    @set-status="onStatusChange"
+                    @merge="onMergeRequested"
+                />
+            </div>
         </div>
 
         <ConfirmDialog group="dismiss-all-matches" />
@@ -756,26 +908,77 @@ onMounted(async () => {
 
 <style scoped>
 .matches-page {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+    font-family: var(--p-lingo-font-family);
+}
+
+.matches-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    row-gap: 0.5rem;
+    min-height: 3rem;
+    padding: 0.375rem 1rem;
+    background: var(--p-header-toolbar-background);
+    border-bottom: 0.0625rem solid var(--p-header-toolbar-border);
+    flex-shrink: 0;
+    box-sizing: border-box;
+}
+
+.matches-header-title {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    margin: 0;
+    font-size: var(--p-lingo-font-size-large);
+    font-weight: var(--p-lingo-font-weight-normal);
+    color: var(--p-text-color);
+}
+
+.matches-header-title .pi {
+    font-size: var(--p-lingo-font-size-medium);
+}
+
+.side-panel-toggle {
+    font-size: var(--p-lingo-font-size-small) !important;
+    font-weight: var(--p-lingo-font-weight-normal) !important;
+    border-radius: 0.125rem !important;
+    background: var(--p-header-button-background) !important;
+    color: var(--p-header-button-color) !important;
+    border-color: var(--p-header-button-border) !important;
+    border-style: solid !important;
+    border-width: 0.0625rem !important;
+}
+
+.side-panel-toggle:hover {
+    background: var(--p-highlight-background) !important;
+}
+
+.matches-body {
     display: grid;
     grid-template-columns: 22rem 1fr;
     gap: 1.5rem;
     padding: 1.5rem;
-    height: 100%;
+    flex: 1 1 auto;
     min-height: 0;
     overflow-y: auto;
+}
+
+/* Collapsed, the results take the whole width rather than leaving a gap where
+   the criteria were. */
+.matches-body.criteria-hidden {
+    grid-template-columns: 1fr;
 }
 
 .matches-criteria {
     display: flex;
     flex-direction: column;
     gap: 1rem;
-}
-
-.matches-criteria h2 {
-    margin: 0;
-    font-size: var(--p-lingo-font-size-medium);
-    font-weight: var(--p-lingo-font-weight-normal);
-    color: var(--p-neutral-500);
 }
 
 .matches-intro {
