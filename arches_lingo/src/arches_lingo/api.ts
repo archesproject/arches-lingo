@@ -24,6 +24,11 @@ import type {
     ConceptMergeHistoryEntry,
     ConceptMergeResult,
     MergeRequestPayload,
+    ConceptMatchRun,
+    ConceptMatchCandidate,
+    ConceptMatchRunRequest,
+    ConceptMatchScopeSizes,
+    ConceptMatchLinkResult,
 } from "@/arches_lingo/types";
 import type {
     MissingTranslationsResponse,
@@ -1335,6 +1340,148 @@ export const fetchMissingTranslations = async (
     }
     const url = `${generateArchesURL("arches_lingo:api-lingo-missing-translations")}?${params.toString()}`;
     const response = await fetch(url);
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
+export const fetchConceptMatchScopeSizes =
+    async (): Promise<ConceptMatchScopeSizes> => {
+        const url = generateArchesURL(
+            "arches_lingo:api-concept-match-scope-sizes",
+        );
+        const response = await fetch(url);
+        const parsed = await response.json();
+        if (!response.ok)
+            throw new Error(parsed.message || response.statusText);
+        return parsed;
+    };
+
+export const fetchConceptMatchRuns = async (): Promise<{
+    data: ConceptMatchRun[];
+}> => {
+    const url = generateArchesURL("arches_lingo:api-concept-match-runs");
+    const response = await fetch(url);
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
+export const createConceptMatchRun = async (
+    request: ConceptMatchRunRequest,
+): Promise<ConceptMatchRun> => {
+    const url = generateArchesURL("arches_lingo:api-concept-match-runs");
+    const response = await fetch(url, {
+        method: "POST",
+        headers: {
+            "X-CSRFTOKEN": getToken(),
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(request),
+    });
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
+export const deleteConceptMatchRun = async (
+    runId: number,
+): Promise<{ deleted: boolean }> => {
+    const url = generateArchesURL("arches_lingo:api-concept-match-run-detail", {
+        pk: runId,
+    });
+    const response = await fetch(url, {
+        method: "DELETE",
+        headers: { "X-CSRFTOKEN": getToken() },
+    });
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
+export const fetchConceptMatchCandidates = async (
+    runId: number,
+    status: string,
+    page: number,
+    items: number,
+): Promise<{
+    data: ConceptMatchCandidate[];
+    total_results: number;
+    current_page: number;
+    items_per_page: number;
+}> => {
+    const parameters = new URLSearchParams({
+        status,
+        page: String(page),
+        items: String(items),
+    });
+    const url = `${generateArchesURL(
+        "arches_lingo:api-concept-match-candidates",
+        {
+            pk: runId,
+        },
+    )}?${parameters.toString()}`;
+    const response = await fetch(url);
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
+export const updateConceptMatchCandidates = async (
+    runId: number,
+    candidateIds: number[],
+    status: string,
+): Promise<{ updated: number; status: string }> => {
+    const url = generateArchesURL("arches_lingo:api-concept-match-candidates", {
+        pk: runId,
+    });
+    const response = await fetch(url, {
+        method: "PATCH",
+        headers: {
+            "X-CSRFTOKEN": getToken(),
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ candidate_ids: candidateIds, status }),
+    });
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
+export const dismissAllConceptMatchCandidates = async (
+    runId: number,
+): Promise<{ updated: number; status: string }> => {
+    const url = generateArchesURL("arches_lingo:api-concept-match-candidates", {
+        pk: runId,
+    });
+    const response = await fetch(url, {
+        method: "PATCH",
+        headers: {
+            "X-CSRFTOKEN": getToken(),
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ all_pending: true }),
+    });
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
+export const linkConceptMatchCandidates = async (
+    runId: number,
+    candidateIds: number[],
+): Promise<ConceptMatchLinkResult> => {
+    const url = generateArchesURL("arches_lingo:api-concept-match-link", {
+        pk: runId,
+    });
+    const response = await fetch(url, {
+        method: "POST",
+        headers: {
+            "X-CSRFTOKEN": getToken(),
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ candidate_ids: candidateIds }),
+    });
     const parsed = await response.json();
     if (!response.ok) throw new Error(parsed.message || response.statusText);
     return parsed;

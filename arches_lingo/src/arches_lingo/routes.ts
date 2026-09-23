@@ -54,6 +54,18 @@ export const routes = [
         },
     },
     {
+        // The run being reviewed is part of the address, so a reviewer can send
+        // someone a queue, and so back and forward move between the runs and
+        // pages they were reading rather than leaving the page entirely.
+        path: "/concept-matches/:runId?",
+        name: "concept-matches",
+        component: () => import("@/arches_lingo/pages/ConceptMatchesPage.vue"),
+        meta: {
+            shouldShowNavigation: true,
+            requiresAuthentication: true,
+        },
+    },
+    {
         path: "/concept/:id",
         name: "concept",
         component: () => import("@/arches_lingo/pages/ConceptPage.vue"),
@@ -157,6 +169,7 @@ export const routeNames = {
     landing: "landing",
     search: "search",
     advancedSearch: "advanced-search",
+    conceptMatches: "concept-matches",
     dashboard: "dashboard",
     schemes: "schemes",
     concept: "concept",

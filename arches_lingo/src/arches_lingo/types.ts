@@ -640,3 +640,59 @@ export interface ConceptMergeHistoryEntry {
     counterpart_concept_id: string;
     counterpart_concept_labels: Label[];
 }
+
+export interface ConceptMatchRun {
+    id: number;
+    name: string;
+    status: "pending" | "running" | "complete" | "failed";
+    created: string;
+    finished: string | null;
+    elapsed_seconds: number;
+    parameters: Record<string, unknown>;
+    candidate_count: number;
+    counts_by_status: Record<string, number>;
+    pending_count: number;
+    error_message: string;
+}
+
+export interface MatchedConceptSummary {
+    id: string;
+    labels: Label[];
+    scheme_id: string | null;
+    scheme_name: string | null;
+    can_receive_data: boolean;
+    cannot_receive_reason: "not_editable" | "scheme_locked" | null;
+}
+
+export interface ConceptMatchCandidate {
+    id: number;
+    score: number;
+    signal: string;
+    evidence: string;
+    status: "pending" | "dismissed" | "linked" | "merged";
+    concept_a: MatchedConceptSummary;
+    concept_b: MatchedConceptSummary;
+    is_cross_scheme: boolean;
+}
+
+export interface ConceptMatchScopeSizes {
+    total_labels: number;
+    labels_by_scheme: Record<string, number>;
+}
+
+export interface ConceptMatchRunRequest {
+    name?: string;
+    scheme_ids?: string[];
+    source_concept_set_id?: number | null;
+    source_concept_ids?: string[];
+    cross_scheme_only?: boolean;
+    signals?: string[];
+    same_language_only?: boolean;
+    similarity_threshold?: number;
+}
+
+export interface ConceptMatchLinkResult {
+    linked: number;
+    linked_one_way: number;
+    skipped: Record<string, number>;
+}
