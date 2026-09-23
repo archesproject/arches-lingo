@@ -15,14 +15,27 @@ import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 
 import { DEFAULT_SIMILARITY_THRESHOLD } from "@/arches_lingo/components/concept-matching/constants.ts";
-import { INFO } from "@/arches_lingo/constants.ts";
-import { buildSignalList } from "@/arches_lingo/components/concept-matching/utils.ts";
+import { WARN } from "@/arches_lingo/constants.ts";
+import {
+    buildSignalList,
+    describeExpectedDuration,
+    labelsInScope,
+} from "@/arches_lingo/components/concept-matching/utils.ts";
 
-import type { ConceptMatchRunRequest, Scheme } from "@/arches_lingo/types.ts";
+import type {
+    ConceptMatchRunRequest,
+    ConceptMatchScopeSizes,
+    Scheme,
+} from "@/arches_lingo/types.ts";
 
-const { schemes, isRunning } = defineProps<{
+const {
+    schemes,
+    isRunning,
+    scopeSizes = null,
+} = defineProps<{
     schemes: Scheme[];
     isRunning: boolean;
+    scopeSizes?: ConceptMatchScopeSizes | null;
 }>();
 
 const emit = defineEmits<{
@@ -48,16 +61,33 @@ const schemeOptions = computed(function () {
 const selectedSchemeIds = ref<string[]>([]);
 const runName = ref("");
 
-// Comparing similar labels is one index probe per label, so the honest warning
-// depends on how much was scoped: a few schemes are quick, everything is not.
+// Comparing similar labels is one index probe per label, so what it costs
+// follows how much of the vocabulary is in scope. Naming a handful of schemes
+// is not the same as a small search: over a large vocabulary a whole-corpus run
+// has measured in the tens of minutes, and a scope holding most of that
+// vocabulary takes very nearly as long.
 const expectedDurationText = computed(function () {
-    return selectedSchemeIds.value.length
-        ? $gettext(
-              "Comparing similar labels runs on the server. Across a few schemes this usually takes under a minute.",
-          )
-        : $gettext(
-              "Comparing similar labels runs on the server. Across every scheme this can take several minutes \u2014 narrowing to a few schemes is much quicker.",
-          );
+    // Without the sizes there is nothing to count, so the warning says the one
+    // thing true of every corpus rather than guessing at a figure.
+    if (!scopeSizes) {
+        return $gettext(
+            "Comparing similar labels runs on the server. How long it takes follows how many labels are in scope, and over a large vocabulary that is tens of minutes rather than seconds. Results appear as they are found, and the search carries on if you leave this page.",
+        );
+    }
+
+    const labelCount = labelsInScope(
+        selectedSchemeIds.value,
+        scopeSizes.total_labels,
+        scopeSizes.labels_by_scheme,
+    );
+    return $gettext(
+        "Comparing %{labels} labels of %{total} in the vocabulary. This runs on the server and should take %{duration}. Results appear as they are found, and the search carries on if you leave this page.",
+        {
+            labels: labelCount.toLocaleString(),
+            total: scopeSizes.total_labels.toLocaleString(),
+            duration: describeExpectedDuration(labelCount, $gettext),
+        },
+    );
 });
 const crossSchemeOnly = ref(false);
 const sameLanguageOnly = ref(true);
@@ -161,7 +191,7 @@ function onRun() {
             </div>
             <Message
                 v-if="compareSimilarLabels"
-                :severity="INFO"
+                :severity="WARN"
                 :closable="false"
                 class="option-message"
             >

@@ -49,6 +49,7 @@ from arches_lingo.views.api.concept_lifecycle import (
     SchemeUnretireConceptsView,
 )
 from arches_lingo.views.api.concept_matching import (
+    ConceptMatchScopeSizeView,
     ConceptMatchCandidateListView,
     ConceptMatchLinkView,
     ConceptMatchRunDetailView,
@@ -281,6 +282,11 @@ urlpatterns = [
         "api/lingo/concept/<uuid:pk>/retire",
         ConceptRetireView.as_view(),
         name="api-concept-retire",
+    ),
+    path(
+        "api/concept-match-scope-sizes",
+        ConceptMatchScopeSizeView.as_view(),
+        name="api-concept-match-scope-sizes",
     ),
     path(
         "api/concept-match-runs",

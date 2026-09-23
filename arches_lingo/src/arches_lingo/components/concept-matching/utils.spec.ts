@@ -9,8 +9,11 @@ import {
     buildPreselectedConcept,
     buildSignalList,
     describeMatchReason,
+    describeExpectedDuration,
     describeSkippedReasons,
+    estimateFuzzyRunSeconds,
     formatElapsed,
+    labelsInScope,
     isRunUnfinished,
     resolveMergeSides,
 } from "@/arches_lingo/components/concept-matching/utils.ts";
@@ -229,5 +232,72 @@ describe("formatElapsed", () => {
         // A client whose clock disagrees with the server's must not be shown a
         // negative age -- the elapsed time it is given is the server's own.
         expect(formatElapsed(-500, translate)).toBe("0s");
+    });
+});
+
+describe("labelsInScope", () => {
+    const labelsByScheme = { aat: 522611, fish: 8167, tgn: 201112 };
+
+    it("counts every label when no scheme is chosen", () => {
+        // Including labels belonging to no scheme, which an unscoped run compares.
+        expect(labelsInScope([], 740559, labelsByScheme)).toBe(740559);
+    });
+
+    it("adds up only the schemes chosen", () => {
+        expect(labelsInScope(["aat", "fish"], 740559, labelsByScheme)).toBe(
+            530778,
+        );
+    });
+
+    it("ignores a scheme it has no count for", () => {
+        expect(labelsInScope(["aat", "gone"], 740559, labelsByScheme)).toBe(
+            522611,
+        );
+    });
+});
+
+describe("estimateFuzzyRunSeconds", () => {
+    // Every run actually measured. What the interface promises is the span
+    // rather than the figure, so what is checked here is that the span still
+    // contains the real timing: if a change to the constants breaks this, the
+    // warning has started misleading people.
+    it.each([
+        ["one small scheme", 8167, 32],
+        ["a medium scheme", 201112, 272],
+        ["most of the corpus", 530778, 1080],
+        ["the whole corpus", 740559, 1357],
+    ])("brackets what %s measured", (_case, labels, measuredSeconds) => {
+        const estimated = estimateFuzzyRunSeconds(labels);
+        expect(measuredSeconds).toBeGreaterThanOrEqual(estimated * 0.7);
+        expect(measuredSeconds).toBeLessThanOrEqual(estimated * 1.4);
+    });
+});
+
+describe("describeExpectedDuration", () => {
+    function translate(message: string, options: Record<string, string>) {
+        return message.replace(
+            /%\{(\w+)\}/g,
+            (_match, key: string) => options[key],
+        );
+    }
+
+    it("does not put a number on a search that is nearly instant", () => {
+        expect(describeExpectedDuration(1000, translate)).toBe(
+            "under a minute or two",
+        );
+    });
+
+    it("gives a span rather than a figure it cannot justify", () => {
+        // A straight line through a handful of points does not support a
+        // single number, and the span is widened upwards deliberately.
+        expect(describeExpectedDuration(530778, translate)).toBe(
+            "roughly 11 to 23 minutes",
+        );
+    });
+
+    it("stops pretending to be precise once it is very long", () => {
+        expect(describeExpectedDuration(5000000, translate)).toBe(
+            "well over an hour",
+        );
     });
 });
