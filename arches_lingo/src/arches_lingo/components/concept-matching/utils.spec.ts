@@ -8,6 +8,7 @@ import {
 import {
     buildPreselectedConcept,
     buildSignalList,
+    candidateStatusFromRoute,
     describeMatchReason,
     describeExpectedDuration,
     describeSkippedReasons,
@@ -299,5 +300,28 @@ describe("describeExpectedDuration", () => {
         expect(describeExpectedDuration(5000000, translate)).toBe(
             "well over an hour",
         );
+    });
+});
+
+describe("candidateStatusFromRoute", () => {
+    // The filter offers four queues, and every one of them has to survive the
+    // round trip through the address. Only two did once, and the two that did
+    // not silently showed the outstanding pairs instead.
+    it.each([
+        ["pending", "pending"],
+        ["dismissed", "dismissed"],
+        ["linked", "linked"],
+        ["merged", "merged"],
+    ])("keeps %s", (rawStatus, expected) => {
+        expect(candidateStatusFromRoute(rawStatus)).toBe(expected);
+    });
+
+    it.each([
+        ["nothing at all", undefined],
+        ["an empty string", ""],
+        ["a status that does not exist", "abandoned"],
+        ["a repeated parameter", ["linked", "merged"]],
+    ])("falls back to the queue for %s", (_case, rawStatus) => {
+        expect(candidateStatusFromRoute(rawStatus)).toBe("pending");
     });
 });

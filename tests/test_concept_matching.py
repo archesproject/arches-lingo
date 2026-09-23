@@ -674,6 +674,38 @@ class CandidateReviewTests(ConceptMatchingTestCase):
         for side in ("concept_a", "concept_b"):
             self.assertTrue(candidate[side]["can_receive_data"])
 
+    def test_a_run_counts_its_pairs_by_what_was_decided(self):
+        """The filter names every outcome, so every outcome needs a count.
+
+        Including the ones at zero: "Linked (0)" tells a reviewer there is
+        nothing there, where a missing entry tells them nothing at all.
+        """
+        run = self.make_run_with_one_candidate()
+        run.candidates.update(status=ConceptMatchCandidate.STATUS_MERGED)
+
+        serialized = serialize_run(run)
+
+        self.assertEqual(
+            serialized["counts_by_status"],
+            {"pending": 0, "dismissed": 0, "linked": 0, "merged": 1},
+        )
+        self.assertEqual(serialized["pending_count"], 0)
+
+    def test_pairs_that_were_linked_or_merged_can_be_listed(self):
+        """What was done is as worth seeing as what is left to do."""
+        run = self.make_run_with_one_candidate()
+        run.candidates.update(status=ConceptMatchCandidate.STATUS_LINKED)
+
+        linked = serialize_candidate_page(
+            run, status=ConceptMatchCandidate.STATUS_LINKED
+        )
+        pending = serialize_candidate_page(
+            run, status=ConceptMatchCandidate.STATUS_PENDING
+        )
+
+        self.assertEqual(linked["total_results"], 1)
+        self.assertEqual(pending["total_results"], 0)
+
     def test_candidates_can_be_filtered_by_status(self):
         run = self.make_run_with_one_candidate()
         candidate_id = run.candidates.get().pk

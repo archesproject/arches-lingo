@@ -21,9 +21,16 @@ import type {
     MatchedConceptSummary,
 } from "@/arches_lingo/types.ts";
 
-const { candidate, isSelected } = defineProps<{
+const {
+    candidate,
+    isSelected,
+    isReviewable = true,
+} = defineProps<{
     candidate: ConceptMatchCandidate;
     isSelected: boolean;
+    // A pair already linked or merged is a record of what was done, so it is
+    // shown without the controls for deciding about it again.
+    isReviewable?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -54,6 +61,7 @@ const reason = computed(function () {
         :class="{ selected: isSelected }"
     >
         <Checkbox
+            v-if="isReviewable"
             :model-value="isSelected"
             :binary="true"
             :input-id="`candidate-${candidate.id}`"
@@ -118,6 +126,7 @@ const reason = computed(function () {
         />
 
         <Button
+            v-if="isReviewable"
             icon="pi pi-sign-in"
             :label="$gettext('Merge')"
             :severity="SECONDARY"
