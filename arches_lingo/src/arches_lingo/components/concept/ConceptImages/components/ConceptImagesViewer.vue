@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject, ref, onMounted, computed } from "vue";
+import { inject, ref, computed, watch } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import Button from "primevue/button";
@@ -15,7 +15,10 @@ import GenericWidget from "@/arches_vue_components/generics/GenericWidget/Generi
 import { DANGER, SECONDARY, VIEW } from "@/arches_lingo/constants.ts";
 import { useConceptImagesEditorStore } from "@/arches_lingo/stores/useConceptImagesEditorStore.ts";
 import { storeToRefs } from "pinia";
-import { getFileUrl } from "@/arches_lingo/components/concept/ConceptImages/components/utils.ts";
+import {
+    getDigitalObjectImageAlt,
+    getDigitalObjectImageUrl,
+} from "@/arches_lingo/components/concept/ConceptImages/components/utils.ts";
 import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 
 import type {
@@ -23,7 +26,6 @@ import type {
     ConceptInstance,
     DigitalObjectInstance,
 } from "@/arches_lingo/types.ts";
-import type { FileListAliasedNodeData } from "@/arches_vue_components/datatypes/file-list/types.ts";
 import {
     fetchLingoResourcePartial,
     fetchLingoResourcesBatch,
@@ -87,42 +89,31 @@ const resources = ref<DigitalObjectInstance[]>();
 const { $gettext } = useGettext();
 const confirm = useConfirm();
 
-onMounted(async () => {
-    if (props.tileData) {
+// The report refreshes its resource in place after a merge rather than
+// remounting this section, so the images are refetched whenever the tile does.
+watch(
+    () => props.tileData,
+    async (tileData) => {
+        const digitalObjectIds =
+            tileData?.aliased_data.depicting_digital_asset_internal?.node_value
+                ?.map((reference) => reference.resourceId)
+                .filter(Boolean) ?? [];
+
+        configurationError.value = undefined;
         try {
-            const digitalObjectInstances =
-                props.tileData.aliased_data.depicting_digital_asset_internal.node_value
-                    ?.map((ref) => ref.resourceId)
-                    .filter(Boolean);
-            if (digitalObjectInstances) {
-                resources.value = await fetchLingoResourcesBatch(
-                    "digital_object_system",
-                    digitalObjectInstances,
-                );
-            }
+            resources.value = digitalObjectIds.length
+                ? await fetchLingoResourcesBatch(
+                      "digital_object_system",
+                      digitalObjectIds,
+                  )
+                : [];
         } catch (error) {
             configurationError.value = error;
         }
-    }
-    isLoading.value = false;
-});
-
-function getImageUrl(resource: DigitalObjectInstance): string | undefined {
-    const contentData = resource.aliased_data.content?.aliased_data
-        .content as unknown as FileListAliasedNodeData | undefined;
-    const fileReference = contentData?.node_value?.[0];
-    if (fileReference?.url) {
-        return getFileUrl(fileReference.url);
-    }
-    return undefined;
-}
-
-function getImageAlt(resource: DigitalObjectInstance): string {
-    const contentData = resource.aliased_data.content?.aliased_data
-        .content as unknown as FileListAliasedNodeData | undefined;
-    const fileReference = contentData?.node_value?.[0];
-    return fileReference?.altText || fileReference?.name || "";
-}
+        isLoading.value = false;
+    },
+    { immediate: true },
+);
 
 function confirmDelete(removedResourceInstanceId: string) {
     confirm.require({
@@ -265,9 +256,9 @@ function modifyResource(resourceInstanceId?: string) {
                 >
                     <div class="image-container">
                         <Image
-                            v-if="getImageUrl(resource)"
-                            :src="getImageUrl(resource)"
-                            :alt="getImageAlt(resource)"
+                            v-if="getDigitalObjectImageUrl(resource)"
+                            :src="getDigitalObjectImageUrl(resource)"
+                            :alt="getDigitalObjectImageAlt(resource)"
                             preview
                             class="card-image"
                         />

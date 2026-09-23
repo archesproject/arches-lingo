@@ -12,6 +12,7 @@ import Tag from "primevue/tag";
 import { fetchConceptChildren } from "@/arches_lingo/api.ts";
 import { getConceptIcon, sortItemsByLabel } from "@/arches_lingo/utils.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
+import { useResourceStore } from "@/arches_lingo/composables/useResourceStore.ts";
 import { routeNames } from "@/arches_lingo/routes.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 
@@ -32,6 +33,7 @@ const props = defineProps<{
 
 const { $gettext } = useGettext();
 const toast = useToast();
+const resourceStore = useResourceStore();
 const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
 
 const narrowerConcepts = ref<Concept[]>([]);
@@ -65,12 +67,13 @@ watch(isScrollable, (scrollable) => {
     }
 });
 
-onMounted(async () => {
+async function loadNarrowerConcepts() {
     if (!props.resourceInstanceId) {
         isLoading.value = false;
         return;
     }
 
+    fetchError.value = undefined;
     try {
         narrowerConcepts.value = await fetchConceptChildren(
             props.resourceInstanceId,
@@ -87,7 +90,14 @@ onMounted(async () => {
     } finally {
         isLoading.value = false;
     }
-});
+}
+
+onMounted(loadNarrowerConcepts);
+
+// Children are not part of the resource payload, so refreshing the resource does
+// not refresh this section on its own. A merge can hand the surviving concept the
+// children of the concept it absorbed, which is precisely what belongs here.
+watch(() => resourceStore.resource.value, loadNarrowerConcepts);
 </script>
 
 <template>

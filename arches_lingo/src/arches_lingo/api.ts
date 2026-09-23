@@ -21,6 +21,9 @@ import type {
     SchemeInstance,
     TileData,
     User,
+    ConceptMergeHistoryEntry,
+    ConceptMergeResult,
+    MergeRequestPayload,
 } from "@/arches_lingo/types";
 import type {
     MissingTranslationsResponse,
@@ -341,6 +344,41 @@ export const retireConcept = async (
         const parsed = await response.json();
         throw new Error(parsed.message || response.statusText);
     }
+};
+
+export const mergeConcepts = async (
+    survivorConceptId: string,
+    payload: MergeRequestPayload,
+): Promise<ConceptMergeResult> => {
+    const response = await fetch(
+        generateArchesURL("arches_lingo:api-concept-merge", {
+            pk: survivorConceptId,
+        }),
+        {
+            method: "POST",
+            headers: {
+                "X-CSRFTOKEN": getToken(),
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload),
+        },
+    );
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
+export const fetchConceptMergeHistory = async (
+    conceptId: string,
+): Promise<ConceptMergeHistoryEntry[]> => {
+    const response = await fetch(
+        generateArchesURL("arches_lingo:api-concept-merge-history", {
+            pk: conceptId,
+        }),
+    );
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed.merges;
 };
 
 export const unretireConcept = async (

@@ -48,6 +48,10 @@ from arches_lingo.views.api.concept_lifecycle import (
     ConceptUnretireView,
     SchemeUnretireConceptsView,
 )
+from arches_lingo.views.api.concept_merge import (
+    ConceptMergeHistoryView,
+    ConceptMergeView,
+)
 from arches_lingo.views.api.scheme_lock import SchemeLockView, SchemeUnlockView
 from arches_lingo.views.api.settings import AppSettingsView
 from arches_lingo.views.api.identifier_resolve import (
@@ -263,6 +267,16 @@ urlpatterns = [
         "api/lingo/concept/<uuid:pk>/retire",
         ConceptRetireView.as_view(),
         name="api-concept-retire",
+    ),
+    path(
+        "api/lingo/concept/<uuid:pk>/merge",
+        ConceptMergeView.as_view(),
+        name="api-concept-merge",
+    ),
+    path(
+        "api/lingo/concept/<uuid:pk>/merge-history",
+        ConceptMergeHistoryView.as_view(),
+        name="api-concept-merge-history",
     ),
     path(
         "api/lingo/concept/<uuid:pk>/unretire",

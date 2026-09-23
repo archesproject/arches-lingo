@@ -9,6 +9,7 @@ import {
 } from "@/arches_lingo/api.ts";
 import { DIGITAL_OBJECT_GRAPH_SLUG } from "@/arches_lingo/components/concept/ConceptImages/components/constants.ts";
 import { type Ref, toRaw } from "vue";
+import type { FileListAliasedNodeData } from "@/arches_vue_components/datatypes/file-list/types.ts";
 import type { ResourceInstanceListAliasedNodeData } from "@/arches_vue_components/datatypes/resource-instance-list/types.ts";
 import type {
     ConceptInstance,
@@ -26,6 +27,26 @@ export function getFileUrl(originalUrl: string): string {
         return originalUrl;
     }
     return (arches.urls.url_subpath + originalUrl).replace("//", "/");
+}
+
+function getDigitalObjectFileReference(resource: DigitalObjectInstance) {
+    const contentData = resource.aliased_data.content?.aliased_data
+        .content as unknown as FileListAliasedNodeData | undefined;
+    return contentData?.node_value?.[0];
+}
+
+export function getDigitalObjectImageUrl(
+    resource: DigitalObjectInstance,
+): string | undefined {
+    const fileReference = getDigitalObjectFileReference(resource);
+    return fileReference?.url ? getFileUrl(fileReference.url) : undefined;
+}
+
+export function getDigitalObjectImageAlt(
+    resource: DigitalObjectInstance,
+): string {
+    const fileReference = getDigitalObjectFileReference(resource);
+    return fileReference?.altText || fileReference?.name || "";
 }
 
 export async function createDigitalObject(
