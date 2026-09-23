@@ -619,6 +619,7 @@ export type MergeRetirementStrategy =
 export interface MergeRequestPayload {
     absorbed_concept_id: string;
     tile_selections: string[];
+    digital_object_selections: string[];
     pref_label_demotions: string[];
     survivor_pref_label_demotions: string[];
     create_exact_match_tiles: boolean;

@@ -1,6 +1,10 @@
 <script setup lang="ts">
+import { computed } from "vue";
+
 import { useGettext } from "vue3-gettext";
 import Image from "primevue/image";
+
+import MergeCard from "@/arches_lingo/components/concept/ConceptMerge/components/MergeCard.vue";
 
 import {
     getDigitalObjectImageAlt,
@@ -9,50 +13,48 @@ import {
 
 import type { DigitalObjectInstance } from "@/arches_lingo/types.ts";
 
-const { digitalObjectIds, digitalObjectsById } = defineProps<{
-    digitalObjectIds: string[];
-    digitalObjectsById: Map<string, DigitalObjectInstance>;
+const { digitalObject, alreadyOnSurvivor } = defineProps<{
+    // Undefined until the digital objects arrive, or if fetching them failed.
+    digitalObject: DigitalObjectInstance | undefined;
+    alreadyOnSurvivor?: boolean;
 }>();
 
 const { $gettext } = useGettext();
 
-function getImageUrl(digitalObjectId: string) {
-    const digitalObject = digitalObjectsById.get(digitalObjectId);
+const imageUrl = computed(function () {
     return digitalObject ? getDigitalObjectImageUrl(digitalObject) : undefined;
-}
+});
 
-function getImageAlt(digitalObjectId: string) {
-    const digitalObject = digitalObjectsById.get(digitalObjectId);
+const imageAlt = computed(function () {
     return digitalObject ? getDigitalObjectImageAlt(digitalObject) : "";
-}
+});
 
-function getImageName(digitalObjectId: string) {
+const imageName = computed(function () {
     return (
-        digitalObjectsById.get(digitalObjectId)?.aliased_data.name?.aliased_data
-            .name_content?.display_value || $gettext("Untitled")
+        digitalObject?.aliased_data.name?.aliased_data.name_content
+            ?.display_value || $gettext("Untitled")
     );
-}
+});
 
-function getImageDescription(digitalObjectId: string) {
+const imageDescription = computed(function () {
     return (
-        digitalObjectsById.get(digitalObjectId)?.aliased_data.statement
-            ?.aliased_data.statement_content?.display_value ?? ""
+        digitalObject?.aliased_data.statement?.aliased_data.statement_content
+            ?.display_value ?? ""
     );
-}
+});
 </script>
 
 <template>
-    <ul class="merge-digital-objects">
-        <li
-            v-for="digitalObjectId in digitalObjectIds"
-            :key="digitalObjectId"
-            class="merge-digital-object"
-        >
+    <MergeCard :already-on-survivor="alreadyOnSurvivor">
+        <template #control>
+            <slot name="control" />
+        </template>
+        <div class="merge-digital-object">
             <div class="merge-digital-object-thumbnail">
                 <Image
-                    v-if="getImageUrl(digitalObjectId)"
-                    :src="getImageUrl(digitalObjectId)"
-                    :alt="getImageAlt(digitalObjectId)"
+                    v-if="imageUrl"
+                    :src="imageUrl"
+                    :alt="imageAlt"
                     preview
                 />
                 <i
@@ -62,30 +64,19 @@ function getImageDescription(digitalObjectId: string) {
                 />
             </div>
             <div class="merge-digital-object-text">
-                <span class="merge-digital-object-name">
-                    {{ getImageName(digitalObjectId) }}
-                </span>
+                <span class="merge-digital-object-name">{{ imageName }}</span>
                 <span
-                    v-if="getImageDescription(digitalObjectId)"
+                    v-if="imageDescription"
                     class="merge-digital-object-description"
                 >
-                    {{ getImageDescription(digitalObjectId) }}
+                    {{ imageDescription }}
                 </span>
             </div>
-        </li>
-    </ul>
+        </div>
+    </MergeCard>
 </template>
 
 <style scoped>
-.merge-digital-objects {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-}
-
 .merge-digital-object {
     display: flex;
     align-items: flex-start;
@@ -129,7 +120,7 @@ function getImageDescription(digitalObjectId: string) {
     overflow-wrap: anywhere;
 }
 
-/* The same size and colour the tile card gives its secondary values. */
+/* The same size and colour a tile card gives its secondary values. */
 .merge-digital-object-description {
     font-size: var(--p-lingo-font-size-smallnormal);
     color: var(--p-inputtext-placeholder-color);

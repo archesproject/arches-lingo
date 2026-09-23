@@ -8,7 +8,12 @@ from django.test import SimpleTestCase
 from django.urls import reverse
 
 from arches.app.datatypes.datatypes import DataTypeFactory
-from arches.app.models.models import EditLog, ResourceInstance, TileModel
+from arches.app.models.models import (
+    EditLog,
+    ResourceInstance,
+    ResourceXResource,
+    TileModel,
+)
 
 from arches_lingo.const import (
     ALT_LABEL_URI,
@@ -23,6 +28,9 @@ from arches_lingo.const import (
     CONCEPT_TYPE_NODEID,
     CONCEPTS_GRAPH_ID,
     CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID,
+    DEPICTING_DIGITAL_ASSET_INTERNAL_NODE,
+    DEPICTING_DIGITAL_ASSET_INTERNAL_NODEGROUP,
+    DIGITAL_OBJECT_GRAPH_ID,
     LABEL_LIST_ID,
     MATCH_STATUS_COMPARATE_NODE,
     MATCH_STATUS_NODEGROUP,
@@ -45,6 +53,7 @@ from arches_lingo.utils.concept_lifecycle import (
 )
 from arches_lingo.utils.concept_merge import (
     ConceptMergeError,
+    append_digital_objects_to_survivor,
     build_tile_identity_key,
     copy_tiles_to_survivor,
     get_concept_merge_history,
@@ -328,6 +337,115 @@ class CopyTilesToSurvivorTests(ConceptMergeTestCase):
         self.assertEqual(copied_child.resourceinstance_id, self.survivor.pk)
         self.assertEqual(
             copied_child.data[STATEMENT_CHILD_CONTENT_NODE], "Assignment detail."
+        )
+
+
+class MergeImagesTests(ConceptMergeTestCase):
+    graph_fixtures = ["Scheme.json", "Concept.json", "digital_object_system.json"]
+
+    def setUp(self):
+        super().setUp()
+        self.shared_image, self.survivor_image, self.first_image, self.second_image = (
+            ResourceInstance.objects.create(
+                graph_id=DIGITAL_OBJECT_GRAPH_ID, name=f"Image {number}"
+            )
+            for number in range(4)
+        )
+
+    def add_image_tile(self, concept, *digital_objects):
+        return TileModel.objects.create(
+            resourceinstance=concept,
+            nodegroup_id=DEPICTING_DIGITAL_ASSET_INTERNAL_NODEGROUP,
+            data={
+                DEPICTING_DIGITAL_ASSET_INTERNAL_NODE: [
+                    {"resourceId": str(digital_object.pk)}
+                    for digital_object in digital_objects
+                ]
+            },
+        )
+
+    def survivor_image_ids(self):
+        image_tile = self.survivor_tiles(
+            DEPICTING_DIGITAL_ASSET_INTERNAL_NODEGROUP
+        ).get()
+        return [
+            reference["resourceId"]
+            for reference in image_tile.data[DEPICTING_DIGITAL_ASSET_INTERNAL_NODE]
+        ]
+
+    def test_selected_images_are_added_to_the_survivors_own(self):
+        survivor_image_tile = self.add_image_tile(
+            self.survivor, self.survivor_image, self.shared_image
+        )
+        self.add_image_tile(
+            self.absorbed, self.shared_image, self.first_image, self.second_image
+        )
+
+        append_digital_objects_to_survivor(
+            self.survivor,
+            self.absorbed,
+            [str(self.shared_image.pk), str(self.first_image.pk)],
+            uuid.uuid4(),
+        )
+
+        self.assertEqual(
+            self.survivor_image_ids(),
+            [
+                str(self.survivor_image.pk),
+                str(self.shared_image.pk),
+                str(self.first_image.pk),
+            ],
+        )
+        self.assertTrue(
+            ResourceXResource.objects.filter(
+                tile_id=survivor_image_tile.tileid,
+                to_resource_id=self.first_image.pk,
+            ).exists()
+        )
+
+    def test_image_tile_is_created_when_the_survivor_has_none(self):
+        self.add_image_tile(self.absorbed, self.first_image, self.second_image)
+
+        append_digital_objects_to_survivor(
+            self.survivor, self.absorbed, [str(self.second_image.pk)], uuid.uuid4()
+        )
+
+        self.assertEqual(self.survivor_image_ids(), [str(self.second_image.pk)])
+
+    def test_nothing_is_written_when_every_selected_image_is_already_held(self):
+        survivor_image_tile = self.add_image_tile(self.survivor, self.shared_image)
+        self.add_image_tile(self.absorbed, self.shared_image)
+
+        written_tile = append_digital_objects_to_survivor(
+            self.survivor, self.absorbed, [str(self.shared_image.pk)], uuid.uuid4()
+        )
+
+        self.assertIsNone(written_tile)
+        self.assertFalse(
+            EditLog.objects.filter(tileinstanceid=survivor_image_tile.tileid).exists()
+        )
+
+    def test_only_images_of_the_absorbed_concept_can_be_selected(self):
+        self.add_image_tile(self.absorbed, self.first_image)
+
+        self.assertMergeRejected(
+            self.survivor,
+            self.absorbed,
+            digital_object_selections=[str(self.second_image.pk)],
+        )
+        validate_merge(
+            self.survivor,
+            self.absorbed,
+            {"digital_object_selections": [str(self.first_image.pk)]},
+            False,
+        )
+
+    def test_the_image_tile_cannot_be_selected_whole(self):
+        """Taking the tile would replace the survivor's images rather than add to them."""
+        image_tile = self.add_image_tile(self.absorbed, self.first_image)
+
+        self.assertMergeRejected(
+            self.survivor, self.absorbed, tile_selections=[str(image_tile.tileid)]
         )
 
 

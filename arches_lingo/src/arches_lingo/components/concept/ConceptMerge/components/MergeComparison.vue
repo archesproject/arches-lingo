@@ -11,6 +11,7 @@ import {
     buildSectionComparison,
     collectReferencedConceptIds,
     collectReferencedDigitalObjectIds,
+    countSelectedValues,
     extractSectionTiles,
     findPrefLabelConflicts,
 } from "@/arches_lingo/components/concept/ConceptMerge/utils.ts";
@@ -146,7 +147,9 @@ function buildComparisons() {
     ).filter(
         (comparison) =>
             comparison.survivorTiles.length > 0 ||
-            comparison.absorbedTileOptions.length > 0,
+            comparison.absorbedTileOptions.length > 0 ||
+            comparison.survivorDigitalObjectIds.length > 0 ||
+            comparison.absorbedDigitalObjectOptions.length > 0,
     );
 }
 
@@ -202,9 +205,10 @@ watch(
 );
 
 const selectedTileCount = computed(function () {
-    return sectionComparisons.value
-        .flatMap((comparison) => comparison.absorbedTileOptions)
-        .filter((option) => option.isSelected).length;
+    return sectionComparisons.value.reduce(
+        (total, comparison) => total + countSelectedValues(comparison),
+        0,
+    );
 });
 
 const sectionSummaries = computed(function () {
@@ -212,9 +216,7 @@ const sectionSummaries = computed(function () {
         .map((comparison) => ({
             sectionTitle:
                 sectionTitlesByAlias.value[comparison.section.nodegroupAlias],
-            selectedCount: comparison.absorbedTileOptions.filter(
-                (option) => option.isSelected,
-            ).length,
+            selectedCount: countSelectedValues(comparison),
         }))
         .filter((summary) => summary.selectedCount > 0);
 });
@@ -248,6 +250,19 @@ function onSelectionChange(tileId: string, isSelected: boolean) {
     }
 }
 
+function onDigitalObjectSelectionChange(
+    digitalObjectId: string,
+    isSelected: boolean,
+) {
+    for (const comparison of sectionComparisons.value) {
+        for (const option of comparison.absorbedDigitalObjectOptions) {
+            if (option.digitalObjectId === digitalObjectId) {
+                option.isSelected = isSelected;
+            }
+        }
+    }
+}
+
 function onPrefLabelWinnerChange(languageCode: string, tileId: string) {
     prefLabelWinnerByLanguage.value = {
         ...prefLabelWinnerByLanguage.value,
@@ -275,6 +290,7 @@ function onPrefLabelWinnerChange(languageCode: string, tileId: string) {
             :digital-objects-by-id="digitalObjectsById"
             :is-blocked="isSectionBlocked(comparison.section)"
             @update:selection="onSelectionChange"
+            @update:digital-object-selection="onDigitalObjectSelectionChange"
         />
     </div>
 </template>

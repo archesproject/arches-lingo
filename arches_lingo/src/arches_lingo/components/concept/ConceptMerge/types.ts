@@ -15,9 +15,10 @@ export interface MergeSection {
     // getItemLabel against fetched labels, not from the tile's display_value,
     // which is the resource descriptor rather than a language-aware label.
     conceptReferenceNodeAliases?: string[];
-    // Display nodes holding references to digital objects. A card shows each
-    // object's thumbnail, name and description, none of which the tile itself
-    // carries.
+    // Nodes holding the concept's images as a list of digital objects on one
+    // tile. Each image is offered on its own and added to the survivor's list,
+    // rather than the tile replacing the survivor's images wholesale. Mirrors
+    // the server's REFERENCE_LIST_NODEGROUP_IDS.
     digitalObjectReferenceNodeAliases?: string[];
     // Holds a reference that only means anything inside one scheme, so it is
     // never brought across from a concept in another. Mirrors the server's
@@ -32,10 +33,18 @@ export interface MergeTileOption {
     isSelected: boolean;
 }
 
+export interface MergeDigitalObjectOption {
+    digitalObjectId: string;
+    alreadyOnSurvivor: boolean;
+    isSelected: boolean;
+}
+
 export interface SectionComparison {
     section: MergeSection;
     survivorTiles: MergeTile[];
     absorbedTileOptions: MergeTileOption[];
+    survivorDigitalObjectIds: string[];
+    absorbedDigitalObjectOptions: MergeDigitalObjectOption[];
 }
 
 export interface PrefLabelCandidate {

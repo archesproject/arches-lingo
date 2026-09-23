@@ -6,7 +6,10 @@ import Checkbox from "primevue/checkbox";
 import RadioButton from "primevue/radiobutton";
 import Tag from "primevue/tag";
 
+import MergeDigitalObjectCard from "@/arches_lingo/components/concept/ConceptMerge/components/MergeDigitalObjectCard.vue";
 import MergeTileCard from "@/arches_lingo/components/concept/ConceptMerge/components/MergeTileCard.vue";
+
+import { countSelectedValues } from "@/arches_lingo/components/concept/ConceptMerge/utils.ts";
 
 import type { Label } from "@/arches_controlled_lists/types.ts";
 import type { DigitalObjectInstance } from "@/arches_lingo/types.ts";
@@ -25,6 +28,11 @@ const { sectionTitle, comparison, isBlocked } = defineProps<{
 
 const emit = defineEmits<{
     (event: "update:selection", tileId: string, isSelected: boolean): void;
+    (
+        event: "update:digitalObjectSelection",
+        digitalObjectId: string,
+        isSelected: boolean,
+    ): void;
 }>();
 
 const { $gettext } = useGettext();
@@ -48,8 +56,21 @@ const isSurvivorValueKept = computed(function () {
 });
 
 const selectedCount = computed(function () {
-    return comparison.absorbedTileOptions.filter((option) => option.isSelected)
-        .length;
+    return countSelectedValues(comparison);
+});
+
+const isSurvivorColumnEmpty = computed(function () {
+    return (
+        !comparison.survivorTiles.length &&
+        !comparison.survivorDigitalObjectIds.length
+    );
+});
+
+const isAbsorbedColumnEmpty = computed(function () {
+    return (
+        !comparison.absorbedTileOptions.length &&
+        !comparison.absorbedDigitalObjectOptions.length
+    );
 });
 
 function onCheckboxChange(tileId: string | undefined, isSelected: boolean) {
@@ -97,11 +118,16 @@ function onSingleValueChoice(useAbsorbedValue: boolean) {
                     {{ $gettext("Kept on this concept") }}
                 </span>
                 <p
-                    v-if="!comparison.survivorTiles.length"
+                    v-if="isSurvivorColumnEmpty"
                     class="merge-empty"
                 >
                     {{ $gettext("Nothing recorded") }}
                 </p>
+                <MergeDigitalObjectCard
+                    v-for="digitalObjectId in comparison.survivorDigitalObjectIds"
+                    :key="digitalObjectId"
+                    :digital-object="digitalObjectsById.get(digitalObjectId)"
+                />
                 <MergeTileCard
                     v-for="(survivorTile, index) in comparison.survivorTiles"
                     :key="survivorTile.tileid ?? index"
@@ -113,11 +139,6 @@ function onSingleValueChoice(useAbsorbedValue: boolean) {
                         comparison.section.conceptReferenceNodeAliases ?? []
                     "
                     :concept-labels-by-id="conceptLabelsById"
-                    :digital-object-reference-node-aliases="
-                        comparison.section.digitalObjectReferenceNodeAliases ??
-                        []
-                    "
-                    :digital-objects-by-id="digitalObjectsById"
                 >
                     <template #control>
                         <RadioButton
@@ -138,11 +159,35 @@ function onSingleValueChoice(useAbsorbedValue: boolean) {
                     {{ $gettext("Bring across from the other concept") }}
                 </span>
                 <p
-                    v-if="!comparison.absorbedTileOptions.length"
+                    v-if="isAbsorbedColumnEmpty"
                     class="merge-empty"
                 >
                     {{ $gettext("Nothing recorded") }}
                 </p>
+                <MergeDigitalObjectCard
+                    v-for="option in comparison.absorbedDigitalObjectOptions"
+                    :key="option.digitalObjectId"
+                    :digital-object="
+                        digitalObjectsById.get(option.digitalObjectId)
+                    "
+                    :already-on-survivor="option.alreadyOnSurvivor"
+                >
+                    <template #control>
+                        <Checkbox
+                            :model-value="option.isSelected"
+                            :disabled="isBlocked"
+                            :input-id="`digital-object-${option.digitalObjectId}`"
+                            :binary="true"
+                            @update:model-value="
+                                emit(
+                                    'update:digitalObjectSelection',
+                                    option.digitalObjectId,
+                                    $event as boolean,
+                                )
+                            "
+                        />
+                    </template>
+                </MergeDigitalObjectCard>
                 <MergeTileCard
                     v-for="(option, index) in comparison.absorbedTileOptions"
                     :key="option.tile.tileid ?? index"
@@ -154,11 +199,6 @@ function onSingleValueChoice(useAbsorbedValue: boolean) {
                         comparison.section.conceptReferenceNodeAliases ?? []
                     "
                     :concept-labels-by-id="conceptLabelsById"
-                    :digital-object-reference-node-aliases="
-                        comparison.section.digitalObjectReferenceNodeAliases ??
-                        []
-                    "
-                    :digital-objects-by-id="digitalObjectsById"
                     :already-on-survivor="option.alreadyOnSurvivor"
                 >
                     <template #control>

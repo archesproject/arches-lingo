@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject, ref, onMounted, computed } from "vue";
+import { inject, ref, computed, watch } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import Button from "primevue/button";
@@ -89,25 +89,31 @@ const resources = ref<DigitalObjectInstance[]>();
 const { $gettext } = useGettext();
 const confirm = useConfirm();
 
-onMounted(async () => {
-    if (props.tileData) {
+// The report refreshes its resource in place after a merge rather than
+// remounting this section, so the images are refetched whenever the tile does.
+watch(
+    () => props.tileData,
+    async (tileData) => {
+        const digitalObjectIds =
+            tileData?.aliased_data.depicting_digital_asset_internal?.node_value
+                ?.map((reference) => reference.resourceId)
+                .filter(Boolean) ?? [];
+
+        configurationError.value = undefined;
         try {
-            const digitalObjectInstances =
-                props.tileData.aliased_data.depicting_digital_asset_internal.node_value
-                    ?.map((ref) => ref.resourceId)
-                    .filter(Boolean);
-            if (digitalObjectInstances) {
-                resources.value = await fetchLingoResourcesBatch(
-                    "digital_object_system",
-                    digitalObjectInstances,
-                );
-            }
+            resources.value = digitalObjectIds.length
+                ? await fetchLingoResourcesBatch(
+                      "digital_object_system",
+                      digitalObjectIds,
+                  )
+                : [];
         } catch (error) {
             configurationError.value = error;
         }
-    }
-    isLoading.value = false;
-});
+        isLoading.value = false;
+    },
+    { immediate: true },
+);
 
 function confirmDelete(removedResourceInstanceId: string) {
     confirm.require({

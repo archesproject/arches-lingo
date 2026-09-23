@@ -6,6 +6,7 @@ import {
     buildMergePayload,
     buildSectionComparison,
     buildTileIdentityKey,
+    countSelectedValues,
     collectReferencedConceptIds,
     collectReferencedDigitalObjectIds,
     extractSectionTiles,
@@ -533,5 +534,74 @@ describe("collectReferencedDigitalObjectIds", () => {
             SURVIVOR_ID,
         );
         expect(collectReferencedDigitalObjectIds([comparison])).toEqual([]);
+    });
+});
+
+describe("buildSectionComparison for images", () => {
+    it("offers each absorbed image on its own rather than the whole tile", () => {
+        const comparison = buildSectionComparison(
+            IMAGES_SECTION,
+            [imagesTile("survivor-1", "shared-image")],
+            [imagesTile("absorbed-1", "shared-image", "other-image")],
+            SURVIVOR_ID,
+        );
+
+        expect(comparison.survivorTiles).toEqual([]);
+        expect(comparison.absorbedTileOptions).toEqual([]);
+        expect(comparison.survivorDigitalObjectIds).toEqual(["shared-image"]);
+        expect(comparison.absorbedDigitalObjectOptions).toEqual([
+            {
+                digitalObjectId: "shared-image",
+                alreadyOnSurvivor: true,
+                isSelected: false,
+            },
+            {
+                digitalObjectId: "other-image",
+                alreadyOnSurvivor: false,
+                isSelected: true,
+            },
+        ]);
+        expect(countSelectedValues(comparison)).toBe(1);
+    });
+
+    it("selects nothing in a blocked section", () => {
+        const comparison = buildSectionComparison(
+            IMAGES_SECTION,
+            [],
+            [imagesTile("absorbed-1", "other-image")],
+            SURVIVOR_ID,
+            true,
+        );
+        expect(countSelectedValues(comparison)).toBe(0);
+    });
+
+    it("sends selected images separately from selected tiles", () => {
+        const imageComparison = buildSectionComparison(
+            IMAGES_SECTION,
+            [imagesTile("survivor-1", "shared-image")],
+            [imagesTile("absorbed-1", "shared-image", "other-image")],
+            SURVIVOR_ID,
+        );
+        const labelComparison = buildSectionComparison(
+            LABEL_SECTION,
+            [],
+            [labelTile("absorbed-label", "Fabric")],
+            SURVIVOR_ID,
+        );
+
+        const payload = buildMergePayload(
+            "absorbed-concept",
+            [imageComparison, labelComparison],
+            [],
+            {},
+            {
+                createExactMatchTiles: true,
+                retireAbsorbedConcept: false,
+                retirementStrategy: "reparent_to_survivor",
+            },
+        );
+
+        expect(payload.tile_selections).toEqual(["absorbed-label"]);
+        expect(payload.digital_object_selections).toEqual(["other-image"]);
     });
 });

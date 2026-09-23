@@ -32,6 +32,8 @@ from arches_lingo.const import (
     CONCEPT_NAME_NODEGROUP,
     CONCEPT_NAME_TYPE_NODE,
     CONCEPTS_GRAPH_ID,
+    DEPICTING_DIGITAL_ASSET_INTERNAL_NODE,
+    DEPICTING_DIGITAL_ASSET_INTERNAL_NODEGROUP,
     EXACT_MATCH_LIST_ITEM_ID,
     MATCH_STATUS_COMPARATE_NODE,
     MATCH_STATUS_NODEGROUP,
@@ -86,6 +88,12 @@ EXCLUDED_NODEGROUP_ALIASES = frozenset(
 SCHEME_SCOPED_NODEGROUP_ALIASES = frozenset(
     {"classification_status", "top_concept_of", "relation_status"}
 )
+
+# Nodegroups holding a list of references on a single tile, merged one reference
+# at a time rather than as a whole tile. A concept keeps all of its images on one
+# depicting_digital_asset_internal tile, so copying that tile would replace the
+# survivor's images instead of adding to them.
+REFERENCE_LIST_NODEGROUP_IDS = frozenset({DEPICTING_DIGITAL_ASSET_INTERNAL_NODEGROUP})
 
 # Node values that together identify a tile's content, used to skip copying a
 # tile the survivor already holds. Nodegroups absent here are never deduplicated.
@@ -423,6 +431,77 @@ def copy_tiles_to_survivor(
     return copied_tiles
 
 
+def get_depicted_digital_object_references(concept_id):
+    image_tile = TileModel.objects.filter(
+        resourceinstance_id=concept_id,
+        nodegroup_id=DEPICTING_DIGITAL_ASSET_INTERNAL_NODEGROUP,
+    ).first()
+    if image_tile is None:
+        return []
+    return image_tile.data.get(DEPICTING_DIGITAL_ASSET_INTERNAL_NODE) or []
+
+
+def append_digital_objects_to_survivor(
+    survivor, absorbed, selected_digital_object_ids, edit_transaction_id
+):
+    """Add the selected absorbed images to the survivor's own list of images.
+
+    References the survivor already holds are skipped. Each copied reference is
+    saved afresh, so the datatype issues it a new resourceXresourceId and
+    records the survivor's own relationship to the digital object.
+    """
+    selected_digital_object_ids = {
+        str(digital_object_id) for digital_object_id in selected_digital_object_ids
+    }
+    if not selected_digital_object_ids:
+        return None
+
+    survivor_image_tile = Tile.objects.filter(
+        resourceinstance_id=survivor.pk,
+        nodegroup_id=DEPICTING_DIGITAL_ASSET_INTERNAL_NODEGROUP,
+    ).first()
+    survivor_references = (
+        survivor_image_tile.data.get(DEPICTING_DIGITAL_ASSET_INTERNAL_NODE) or []
+        if survivor_image_tile
+        else []
+    )
+    survivor_digital_object_ids = {
+        str(reference.get("resourceId")) for reference in survivor_references
+    }
+
+    references_to_add = [
+        copy.deepcopy(reference)
+        for reference in get_depicted_digital_object_references(absorbed.pk)
+        if str(reference.get("resourceId")) in selected_digital_object_ids
+        and str(reference.get("resourceId")) not in survivor_digital_object_ids
+    ]
+    if not references_to_add:
+        return None
+
+    survivor_resource = load_concept_resources(survivor.pk)[str(survivor.pk)]
+    if survivor_image_tile is None:
+        return create_tile_on_concept(
+            survivor.pk,
+            DEPICTING_DIGITAL_ASSET_INTERNAL_NODEGROUP,
+            {DEPICTING_DIGITAL_ASSET_INTERNAL_NODE: references_to_add},
+            None,
+            edit_transaction_id,
+            survivor_resource,
+        )
+
+    survivor_image_tile.data = {
+        **survivor_image_tile.data,
+        DEPICTING_DIGITAL_ASSET_INTERNAL_NODE: survivor_references + references_to_add,
+    }
+    survivor_image_tile.save(
+        request=None,
+        transaction_id=edit_transaction_id,
+        resource=survivor_resource,
+        index=False,
+    )
+    return survivor_image_tile
+
+
 def demote_pref_label_tiles(tile_ids, edit_transaction_id):
     """Retype existing appellative_status tiles from prefLabel to altLabel.
 
@@ -642,6 +721,9 @@ def validate_merge(survivor, absorbed, selections, user_is_lingo_admin):
     validate_selected_tiles(
         absorbed, selections.get("tile_selections") or [], is_cross_scheme
     )
+    validate_selected_digital_objects(
+        absorbed, selections.get("digital_object_selections") or []
+    )
     validate_pref_label_demotions(
         survivor,
         selections.get("survivor_pref_label_demotions") or [],
@@ -706,6 +788,21 @@ def validate_pref_label_demotions(concept, tile_ids, error_message):
             )
 
 
+def validate_selected_digital_objects(absorbed, selected_digital_object_ids):
+    depicted_digital_object_ids = {
+        str(reference.get("resourceId"))
+        for reference in get_depicted_digital_object_references(absorbed.pk)
+    }
+
+    for digital_object_id in selected_digital_object_ids:
+        if str(digital_object_id) not in depicted_digital_object_ids:
+            raise ConceptMergeError(
+                _("Cannot merge"),
+                _("%(resourceid)s is not an image of the absorbed concept.")
+                % {"resourceid": digital_object_id},
+            )
+
+
 def validate_selected_tiles(absorbed, selected_tile_ids, is_cross_scheme=False):
     nodegroups_by_id = get_concept_nodegroups_by_id()
     selectable_tiles_by_id = {
@@ -723,6 +820,15 @@ def validate_selected_tiles(absorbed, selected_tile_ids, is_cross_scheme=False):
                 _("Cannot merge"),
                 _("Tile %(tileid)s is not a top-level tile of the absorbed concept.")
                 % {"tileid": selected_tile_id},
+            )
+
+        if str(source_tile.nodegroup_id) in REFERENCE_LIST_NODEGROUP_IDS:
+            raise ConceptMergeError(
+                _("Cannot merge"),
+                _(
+                    "Images are merged one at a time. Select them with "
+                    "digital_object_selections rather than by tile."
+                ),
             )
 
         nodegroup = nodegroups_by_id[str(source_tile.nodegroup_id)]
@@ -770,6 +876,12 @@ def merge_concepts(survivor, absorbed, selections, user, user_is_lingo_admin=Fal
             absorbed,
             selected_tile_ids,
             pref_label_demotion_tile_ids,
+            edit_transaction_id,
+        )
+        append_digital_objects_to_survivor(
+            survivor,
+            absorbed,
+            selections.get("digital_object_selections") or [],
             edit_transaction_id,
         )
 

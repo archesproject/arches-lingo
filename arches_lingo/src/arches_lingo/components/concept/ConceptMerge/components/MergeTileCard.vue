@@ -3,9 +3,8 @@ import { computed } from "vue";
 
 import { useGettext } from "vue3-gettext";
 import { storeToRefs } from "pinia";
-import Tag from "primevue/tag";
 
-import MergeDigitalObjectList from "@/arches_lingo/components/concept/ConceptMerge/components/MergeDigitalObjectList.vue";
+import MergeCard from "@/arches_lingo/components/concept/ConceptMerge/components/MergeCard.vue";
 
 import {
     getDisplayValue,
@@ -15,7 +14,6 @@ import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 
 import type { Label } from "@/arches_controlled_lists/types.ts";
-import type { DigitalObjectInstance } from "@/arches_lingo/types.ts";
 import type { MergeTile } from "@/arches_lingo/components/concept/ConceptMerge/types.ts";
 
 const {
@@ -23,16 +21,12 @@ const {
     displayNodeAliases,
     conceptReferenceNodeAliases,
     conceptLabelsById,
-    digitalObjectReferenceNodeAliases,
-    digitalObjectsById,
     alreadyOnSurvivor,
 } = defineProps<{
     tile: MergeTile;
     displayNodeAliases: string[];
     conceptReferenceNodeAliases: string[];
     conceptLabelsById: Map<string, Label[]>;
-    digitalObjectReferenceNodeAliases: string[];
-    digitalObjectsById: Map<string, DigitalObjectInstance>;
     alreadyOnSurvivor?: boolean;
 }>();
 
@@ -65,26 +59,13 @@ function resolveNodeText(nodeAlias: string) {
         : getDisplayValue(tile, nodeAlias);
 }
 
-const digitalObjectIds = computed(function () {
-    return digitalObjectReferenceNodeAliases.flatMap((nodeAlias) =>
-        getReferencedResourceIds(tile, nodeAlias),
-    );
-});
-
 const displayValues = computed(function () {
     return displayNodeAliases
-        .filter(
-            (nodeAlias) =>
-                !digitalObjectReferenceNodeAliases.includes(nodeAlias),
-        )
         .map(resolveNodeText)
         .filter((displayValue) => displayValue !== "");
 });
 
 const primaryValue = computed(function () {
-    if (digitalObjectIds.value.length) {
-        return displayValues.value[0];
-    }
     return displayValues.value[0] ?? $gettext("(empty)");
 });
 
@@ -94,69 +75,21 @@ const secondaryValues = computed(function () {
 </script>
 
 <template>
-    <div
-        class="merge-tile-card"
-        :class="{ muted: alreadyOnSurvivor }"
-    >
-        <div class="merge-tile-control">
+    <MergeCard :already-on-survivor="alreadyOnSurvivor">
+        <template #control>
             <slot name="control" />
-        </div>
-        <div class="merge-tile-body">
-            <MergeDigitalObjectList
-                v-if="digitalObjectIds.length"
-                :digital-object-ids="digitalObjectIds"
-                :digital-objects-by-id="digitalObjectsById"
-            />
-            <span
-                v-if="primaryValue"
-                class="merge-tile-primary"
-            >
-                {{ primaryValue }}
-            </span>
-            <span
-                v-if="secondaryValues.length"
-                class="merge-tile-secondary"
-            >
-                {{ secondaryValues.join(" · ") }}
-            </span>
-            <Tag
-                v-if="alreadyOnSurvivor"
-                class="merge-tile-tag"
-                severity="secondary"
-                :value="$gettext('Already present')"
-            />
-        </div>
-    </div>
+        </template>
+        <span class="merge-tile-primary">{{ primaryValue }}</span>
+        <span
+            v-if="secondaryValues.length"
+            class="merge-tile-secondary"
+        >
+            {{ secondaryValues.join(" · ") }}
+        </span>
+    </MergeCard>
 </template>
 
 <style scoped>
-.merge-tile-card {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.5rem;
-    padding: 0.5rem 0.625rem;
-    border: 0.0625rem solid var(--p-content-border-color);
-    border-radius: 0.125rem;
-    background: var(--p-content-background);
-}
-
-.merge-tile-card.muted {
-    opacity: 0.6;
-}
-
-.merge-tile-control {
-    display: flex;
-    align-items: center;
-    min-height: 1.5rem;
-}
-
-.merge-tile-body {
-    display: flex;
-    flex-direction: column;
-    gap: 0.125rem;
-    min-width: 0;
-}
-
 .merge-tile-primary {
     font-size: var(--p-lingo-font-size-smallnormal);
     color: var(--p-text-color);
@@ -168,11 +101,5 @@ const secondaryValues = computed(function () {
     font-size: var(--p-lingo-font-size-smallnormal);
     color: var(--p-inputtext-placeholder-color);
     overflow-wrap: anywhere;
-}
-
-.merge-tile-tag {
-    align-self: flex-start;
-    margin-top: 0.25rem;
-    font-size: var(--p-lingo-font-size-xxsmall);
 }
 </style>

@@ -163,6 +163,59 @@ export function isSelfReferenceOnly(
     });
 }
 
+function getReferencedDigitalObjectIds(
+    section: MergeSection,
+    tiles: MergeTile[],
+): string[] {
+    const nodeAliases = section.digitalObjectReferenceNodeAliases ?? [];
+    const digitalObjectIds = tiles.flatMap((tile) =>
+        nodeAliases.flatMap((nodeAlias) =>
+            getReferencedResourceIds(tile, nodeAlias),
+        ),
+    );
+    return [...new Set(digitalObjectIds)];
+}
+
+/**
+ * Compare an image section by its digital objects rather than its tile.
+ *
+ * Every image a concept has sits on one tile, so the tile lists are left empty
+ * and each image is offered on its own, to be added to the survivor's images
+ * rather than replacing them.
+ */
+function buildDigitalObjectSectionComparison(
+    section: MergeSection,
+    survivorTiles: MergeTile[],
+    absorbedTiles: MergeTile[],
+    isBlocked: boolean,
+): SectionComparison {
+    const survivorDigitalObjectIds = getReferencedDigitalObjectIds(
+        section,
+        survivorTiles,
+    );
+
+    const absorbedDigitalObjectOptions = getReferencedDigitalObjectIds(
+        section,
+        absorbedTiles,
+    ).map((digitalObjectId) => {
+        const alreadyOnSurvivor =
+            survivorDigitalObjectIds.includes(digitalObjectId);
+        return {
+            digitalObjectId,
+            alreadyOnSurvivor,
+            isSelected: !isBlocked && !alreadyOnSurvivor,
+        };
+    });
+
+    return {
+        section,
+        survivorTiles: [],
+        absorbedTileOptions: [],
+        survivorDigitalObjectIds,
+        absorbedDigitalObjectOptions,
+    };
+}
+
 export function buildSectionComparison(
     section: MergeSection,
     survivorTiles: MergeTile[],
@@ -170,6 +223,15 @@ export function buildSectionComparison(
     survivorConceptId: string,
     isBlocked = false,
 ): SectionComparison {
+    if (section.digitalObjectReferenceNodeAliases) {
+        return buildDigitalObjectSectionComparison(
+            section,
+            survivorTiles,
+            absorbedTiles,
+            isBlocked,
+        );
+    }
+
     const survivorIdentityKeys = new Set(
         survivorTiles
             .map((tile) => buildTileIdentityKey(section, tile))
@@ -200,7 +262,20 @@ export function buildSectionComparison(
             return { tile, identityKey, alreadyOnSurvivor, isSelected };
         });
 
-    return { section, survivorTiles, absorbedTileOptions };
+    return {
+        section,
+        survivorTiles,
+        absorbedTileOptions,
+        survivorDigitalObjectIds: [],
+        absorbedDigitalObjectOptions: [],
+    };
+}
+
+export function countSelectedValues(comparison: SectionComparison): number {
+    return [
+        ...comparison.absorbedTileOptions,
+        ...comparison.absorbedDigitalObjectOptions,
+    ].filter((option) => option.isSelected).length;
 }
 
 function isPrefLabel(tile: MergeTile): boolean {
@@ -293,13 +368,17 @@ export function buildMergePayload(
     // so a selection made before the concept was chosen could still be carried
     // here. The server rejects them either way; dropping them means the editor
     // sees the merge they were shown rather than an error.
-    const tileSelections = sectionComparisons
-        .filter(
-            (comparison) => !isCrossScheme || !comparison.section.schemeScoped,
-        )
+    const selectableComparisons = sectionComparisons.filter(
+        (comparison) => !isCrossScheme || !comparison.section.schemeScoped,
+    );
+    const tileSelections = selectableComparisons
         .flatMap((comparison) => comparison.absorbedTileOptions)
         .filter((option) => option.isSelected && option.tile.tileid)
         .map((option) => option.tile.tileid as string);
+    const digitalObjectSelections = selectableComparisons
+        .flatMap((comparison) => comparison.absorbedDigitalObjectOptions)
+        .filter((option) => option.isSelected)
+        .map((option) => option.digitalObjectId);
 
     const prefLabelDemotions: string[] = [];
     const survivorPrefLabelDemotions: string[] = [];
@@ -321,6 +400,7 @@ export function buildMergePayload(
     return {
         absorbed_concept_id: absorbedConceptId,
         tile_selections: tileSelections,
+        digital_object_selections: digitalObjectSelections,
         pref_label_demotions: prefLabelDemotions,
         survivor_pref_label_demotions: survivorPrefLabelDemotions,
         create_exact_match_tiles: retirement.createExactMatchTiles,
@@ -335,14 +415,20 @@ export function buildMergePayload(
     };
 }
 
-function collectReferencedResourceIds(
+/**
+ * Every concept referenced by a comparison's tiles, on either side.
+ *
+ * Their labels are fetched once so the cards can name them the way the rest of
+ * the application does, rather than falling back to a resource descriptor.
+ */
+export function collectReferencedConceptIds(
     sectionComparisons: SectionComparison[],
-    getReferenceAliases: (section: MergeSection) => string[] | undefined,
 ): string[] {
-    const resourceIds = new Set<string>();
+    const conceptIds = new Set<string>();
 
     for (const comparison of sectionComparisons) {
-        const referenceAliases = getReferenceAliases(comparison.section) ?? [];
+        const referenceAliases =
+            comparison.section.conceptReferenceNodeAliases ?? [];
         if (!referenceAliases.length) {
             continue;
         }
@@ -357,32 +443,17 @@ function collectReferencedResourceIds(
                     tile,
                     nodeAlias,
                 )) {
-                    resourceIds.add(resourceId);
+                    conceptIds.add(resourceId);
                 }
             }
         }
     }
 
-    return [...resourceIds];
+    return [...conceptIds];
 }
 
 /**
- * Every concept referenced by a comparison's tiles, on either side.
- *
- * Their labels are fetched once so the cards can name them the way the rest of
- * the application does, rather than falling back to a resource descriptor.
- */
-export function collectReferencedConceptIds(
-    sectionComparisons: SectionComparison[],
-): string[] {
-    return collectReferencedResourceIds(
-        sectionComparisons,
-        (section) => section.conceptReferenceNodeAliases,
-    );
-}
-
-/**
- * Every digital object referenced by a comparison's tiles, on either side.
+ * Every digital object on either side of a comparison.
  *
  * An image tile holds only references, so the objects are fetched once for the
  * cards to show each one's thumbnail, name and description.
@@ -390,8 +461,11 @@ export function collectReferencedConceptIds(
 export function collectReferencedDigitalObjectIds(
     sectionComparisons: SectionComparison[],
 ): string[] {
-    return collectReferencedResourceIds(
-        sectionComparisons,
-        (section) => section.digitalObjectReferenceNodeAliases,
-    );
+    const digitalObjectIds = sectionComparisons.flatMap((comparison) => [
+        ...comparison.survivorDigitalObjectIds,
+        ...comparison.absorbedDigitalObjectOptions.map(
+            (option) => option.digitalObjectId,
+        ),
+    ]);
+    return [...new Set(digitalObjectIds)];
 }
