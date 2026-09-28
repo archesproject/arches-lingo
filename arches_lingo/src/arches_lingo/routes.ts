@@ -54,9 +54,6 @@ export const routes = [
         },
     },
     {
-        // The run being reviewed is part of the address, so a reviewer can send
-        // someone a queue, and so back and forward move between the runs and
-        // pages they were reading rather than leaving the page entirely.
         path: "/concept-matches/:runId?",
         name: "concept-matches",
         component: () => import("@/arches_lingo/pages/ConceptMatchesPage.vue"),

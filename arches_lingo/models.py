@@ -182,12 +182,7 @@ class ConceptMerge(models.Model):
 
 
 class ConceptMatchRun(models.Model):
-    """One pass of match detection, and the parameters that produced it.
-
-    A run is kept after it finishes so its candidates stay reviewable: deciding
-    what to do about a few thousand suggested pairs is work that outlives the
-    query that found them.
-    """
+    """One pass of match detection, kept so its candidates stay reviewable."""
 
     STATUS_PENDING = "pending"
     STATUS_RUNNING = "running"
@@ -207,16 +202,11 @@ class ConceptMatchRun(models.Model):
         on_delete=models.SET_NULL,
         related_name="lingo_concept_match_runs",
     )
-    # What the reviewer called this run. Runs are told apart by their parameters
-    # and their age, which is workable for two and not for twenty.
     name = models.CharField(max_length=255, blank=True, default="")
     created = models.DateTimeField(auto_now_add=True)
     finished = models.DateTimeField(null=True, blank=True)
-    # Stamped as each query's pairs are stored, and by a heartbeat between
-    # times. A worker that is
-    # restarted mid-run cannot mark its own run failed -- celery acks a task on
-    # receipt, so the message dies with the worker -- and without a heartbeat
-    # the row would claim to be running forever.
+    # Celery acks a task on receipt, so a worker restarted mid-run cannot fail
+    # its own run; a stale heartbeat here is how the run gets reaped instead.
     last_progress = models.DateTimeField(null=True, blank=True)
     status = models.CharField(
         max_length=16, choices=STATUS_CHOICES, default=STATUS_PENDING
@@ -239,12 +229,7 @@ class ConceptMatchRun(models.Model):
 
 
 class ConceptMatchCandidate(models.Model):
-    """One suggested pair of concepts, and what an editor decided about it.
-
-    The two concepts are stored in a fixed order -- lowest id first -- so that a
-    pair cannot be recorded twice under opposite names. Callers should use
-    ``order_concept_ids`` rather than assigning the fields directly.
-    """
+    """A suggested pair, stored lowest id first (see ``order_concept_ids``)."""
 
     SIGNAL_SHARED_IDENTIFIER = "shared_identifier"
     SIGNAL_EXACT_LABEL = "exact_label"
@@ -275,8 +260,6 @@ class ConceptMatchCandidate(models.Model):
         help_text=_("1.0 for an exact signal, the similarity for a fuzzy one.")
     )
     signal = models.CharField(max_length=32, choices=SIGNAL_CHOICES)
-    # What the pair was matched on -- the shared identifier, or the label text --
-    # so a reviewer can see why it was suggested without refetching both concepts.
     evidence = models.TextField(blank=True, default="")
     status = models.CharField(
         max_length=16, choices=STATUS_CHOICES, default=STATUS_PENDING, db_index=True

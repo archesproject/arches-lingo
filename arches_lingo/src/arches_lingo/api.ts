@@ -9,6 +9,13 @@ import type {
     AdvancedSearchOptions,
     AppSettings,
     ConceptInstance,
+    ConceptMatchCandidatePage,
+    ConceptMatchCandidateStatus,
+    ConceptMatchLinkResult,
+    ConceptMatchRun,
+    ConceptMatchRunRequest,
+    ConceptMatchScopeSizes,
+    ConceptMatchStatusChange,
     ConceptSetDetail,
     DeleteConceptStrategy,
     ConceptSetItem,
@@ -24,12 +31,6 @@ import type {
     ConceptMergeHistoryEntry,
     ConceptMergeResult,
     MergeRequestPayload,
-    ConceptMatchRun,
-    ConceptMatchCandidate,
-    ConceptMatchRunRequest,
-    ConceptMatchScopeSizes,
-    ConceptMatchLinkResult,
-    ConceptMatchStatusChange,
 } from "@/arches_lingo/types";
 import type {
     MissingTranslationsResponse,
@@ -1417,19 +1418,14 @@ export const deleteConceptMatchRun = async (
 
 export const fetchConceptMatchCandidates = async (
     runId: number,
-    status: string,
-    page: number,
-    items: number,
-): Promise<{
-    data: ConceptMatchCandidate[];
-    total_results: number;
-    current_page: number;
-    items_per_page: number;
-}> => {
+    status: ConceptMatchCandidateStatus,
+    pageNumber: number,
+    itemsPerPage: number,
+): Promise<ConceptMatchCandidatePage> => {
     const parameters = new URLSearchParams({
         status,
-        page: String(page),
-        items: String(items),
+        page: String(pageNumber),
+        items: String(itemsPerPage),
     });
     const url = `${generateArchesURL(
         "arches_lingo:api-concept-match-candidates",
@@ -1446,7 +1442,7 @@ export const fetchConceptMatchCandidates = async (
 export const updateConceptMatchCandidates = async (
     runId: number,
     candidateIds: number[],
-    status: string,
+    status: ConceptMatchCandidateStatus,
 ): Promise<ConceptMatchStatusChange> => {
     const url = generateArchesURL("arches_lingo:api-concept-match-candidates", {
         pk: runId,
@@ -1466,7 +1462,7 @@ export const updateConceptMatchCandidates = async (
 
 export const updateAllConceptMatchCandidates = async (
     runId: number,
-    status: string,
+    status: ConceptMatchCandidateStatus,
 ): Promise<ConceptMatchStatusChange> => {
     const url = generateArchesURL("arches_lingo:api-concept-match-candidates", {
         pk: runId,

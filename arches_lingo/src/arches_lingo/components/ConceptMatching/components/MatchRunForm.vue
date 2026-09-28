@@ -3,7 +3,6 @@ import { computed, ref, watch } from "vue";
 
 import { storeToRefs } from "pinia";
 import { useGettext } from "vue3-gettext";
-import { useToast } from "primevue/usetoast";
 
 import Button from "primevue/button";
 import Checkbox from "primevue/checkbox";
@@ -12,21 +11,23 @@ import Message from "primevue/message";
 import MultiSelect from "primevue/multiselect";
 import Slider from "primevue/slider";
 
-import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 import { fetchConceptMatchScopeSizes } from "@/arches_lingo/api.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
-
-import { DEFAULT_SIMILARITY_THRESHOLD } from "@/arches_lingo/components/concept-matching/constants.ts";
+import { useErrorToast } from "@/arches_lingo/components/ConceptMatching/composables/useErrorToast.ts";
+import { useLocalizedLabel } from "@/arches_lingo/components/ConceptMatching/composables/useLocalizedLabel.ts";
 import {
-    DEFAULT_ERROR_TOAST_LIFE,
-    ERROR,
-    WARN,
-} from "@/arches_lingo/constants.ts";
+    DEFAULT_SIMILARITY_THRESHOLD,
+    MAX_SELECTABLE_SIMILARITY,
+    MIN_SELECTABLE_SIMILARITY,
+    SCHEME_FILTER_MINIMUM_OPTIONS,
+    SIMILARITY_STEP,
+} from "@/arches_lingo/components/ConceptMatching/constants.ts";
 import {
     buildSignalList,
     estimateDurationSpan,
     labelsInScope,
-} from "@/arches_lingo/components/concept-matching/utils.ts";
+} from "@/arches_lingo/components/ConceptMatching/utils.ts";
+import { WARN } from "@/arches_lingo/constants.ts";
 
 import type {
     ConceptMatchRunRequest,
@@ -34,44 +35,54 @@ import type {
     Scheme,
 } from "@/arches_lingo/types.ts";
 
+const RUN_REQUESTED_EVENT = "run-requested" as const;
+
 const { schemes, isStartingRun } = defineProps<{
     schemes: Scheme[];
     isStartingRun: boolean;
 }>();
 
 const emit = defineEmits<{
-    (event: "run", request: ConceptMatchRunRequest): void;
+    (event: typeof RUN_REQUESTED_EVENT, request: ConceptMatchRunRequest): void;
 }>();
 
 const { $gettext } = useGettext();
-const toast = useToast();
-const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
-
-// Schemes carry labels rather than a name, so they are named the way every
-// other scheme in the interface is.
-const schemeOptions = computed(function () {
-    return schemes.map((scheme) => ({
-        id: scheme.id,
-        name: getItemLabel(
-            scheme,
-            selectedLanguage.value.code,
-            systemLanguage.value.code,
-        ).value,
-    }));
-});
+const { selectedLanguage } = storeToRefs(useLanguageStore());
+const { reportError } = useErrorToast();
+const { labelOf } = useLocalizedLabel();
 
 const selectedSchemeIds = ref<string[]>([]);
 const runName = ref("");
 const scopeSizes = ref<ConceptMatchScopeSizes | null>(null);
+const crossSchemeOnly = ref(false);
+const sameLanguageOnly = ref(true);
+const compareLabels = ref(true);
+const compareUris = ref(true);
+const compareSimilarLabels = ref(false);
+const similarityThreshold = ref(DEFAULT_SIMILARITY_THRESHOLD);
 
-// Comparing similar labels is one index probe per label, so what it costs
-// follows how much of the vocabulary is in scope. Naming a handful of schemes
-// is not the same as a small search: over a large vocabulary a whole-corpus run
-// has measured in the tens of minutes, and a scope holding most of that
-// vocabulary takes very nearly as long.
+let hasRequestedScopeSizes = false;
+
+const schemeOptions = computed(() =>
+    schemes.map((scheme) => ({ id: scheme.id, name: labelOf(scheme) })),
+);
+
+const hasAnySignal = computed(
+    () =>
+        compareLabels.value || compareUris.value || compareSimilarLabels.value,
+);
+
+const canStartRun = computed(() => !isStartingRun && hasAnySignal.value);
+
+const thresholdLabel = computed(() =>
+    $gettext("How similar? (%{threshold})", {
+        threshold: similarityThreshold.value.toFixed(2),
+    }),
+);
+
+// What a similar-label search costs follows how many labels are in scope; a
+// scope holding most of a large vocabulary takes nearly as long as all of it.
 const expectedDurationText = computed(function () {
-    // Without the sizes there is nothing to count, so the warning says the one
-    // thing true of every corpus rather than guessing at a figure.
     if (!scopeSizes.value) {
         return $gettext(
             "Comparing similar labels runs on the server. How long it takes follows how many labels are in scope, and over a large vocabulary that is tens of minutes rather than seconds. Results appear as they are found, and the search carries on if you leave this page.",
@@ -95,7 +106,23 @@ const expectedDurationText = computed(function () {
     );
 });
 
-function describeExpectedDuration(labelCount: number) {
+// Counting every label takes a moment on a large vocabulary and only matters to
+// a similar-label search, so it is asked for the first time one is chosen.
+watch(compareSimilarLabels, async function (isComparingSimilarLabels) {
+    if (!isComparingSimilarLabels || hasRequestedScopeSizes) return;
+    hasRequestedScopeSizes = true;
+    try {
+        scopeSizes.value = await fetchConceptMatchScopeSizes();
+    } catch (error) {
+        hasRequestedScopeSizes = false;
+        reportError(
+            error,
+            $gettext("Could not estimate how long the search will take."),
+        );
+    }
+});
+
+function describeExpectedDuration(labelCount: number): string {
     const expectedDuration = estimateDurationSpan(labelCount);
     if (expectedDuration.kind === "brief") {
         return $gettext("under a minute or two");
@@ -108,48 +135,19 @@ function describeExpectedDuration(labelCount: number) {
         high: String(expectedDuration.highMinutes),
     });
 }
-const crossSchemeOnly = ref(false);
-const sameLanguageOnly = ref(true);
-const compareLabels = ref(true);
-const compareUris = ref(true);
-const compareSimilarLabels = ref(false);
-const similarityThreshold = ref(DEFAULT_SIMILARITY_THRESHOLD);
 
-// Counting every label takes a moment on a large vocabulary and only matters to
-// a similar-label search, so it is asked for the first time one is chosen.
-let hasRequestedScopeSizes = false;
-watch(compareSimilarLabels, async function (isComparingSimilarLabels) {
-    if (!isComparingSimilarLabels || hasRequestedScopeSizes) return;
-    hasRequestedScopeSizes = true;
-    try {
-        scopeSizes.value = await fetchConceptMatchScopeSizes();
-    } catch (error) {
-        hasRequestedScopeSizes = false;
-        toast.add({
-            severity: ERROR,
-            life: DEFAULT_ERROR_TOAST_LIFE,
-            summary: $gettext(
-                "Could not estimate how long the search will take.",
-            ),
-            detail: error instanceof Error ? error.message : undefined,
-        });
-    }
-});
-
-function onRun() {
-    const signals = buildSignalList({
-        compareUris: compareUris.value,
-        compareLabels: compareLabels.value,
-        compareSimilarLabels: compareSimilarLabels.value,
-    });
-
-    emit("run", {
+function requestRun(): void {
+    emit(RUN_REQUESTED_EVENT, {
         name: runName.value.trim(),
         scheme_ids: selectedSchemeIds.value,
         cross_scheme_only: crossSchemeOnly.value,
         same_language_only: sameLanguageOnly.value,
         similarity_threshold: similarityThreshold.value,
-        signals,
+        signals: buildSignalList({
+            compareUris: compareUris.value,
+            compareLabels: compareLabels.value,
+            compareSimilarLabels: compareSimilarLabels.value,
+        }),
     });
 }
 </script>
@@ -165,15 +163,15 @@ function onRun() {
             </label>
             <MultiSelect
                 v-model="selectedSchemeIds"
+                class="scheme-select"
                 input-id="match-scheme"
-                :options="schemeOptions"
                 option-label="name"
                 option-value="id"
-                :placeholder="$gettext('Every scheme')"
-                :filter="schemeOptions.length > 8"
-                :show-toggle-all="false"
                 display="chip"
-                class="scheme-select"
+                :options="schemeOptions"
+                :placeholder="$gettext('Every scheme')"
+                :filter="schemeOptions.length > SCHEME_FILTER_MINIMUM_OPTIONS"
+                :show-toggle-all="false"
             />
             <p class="option-note">
                 {{
@@ -194,8 +192,8 @@ function onRun() {
             <InputText
                 id="match-name"
                 v-model="runName"
-                :placeholder="$gettext('For finding this run again later')"
                 class="name-input"
+                :placeholder="$gettext('For finding this run again later')"
             />
         </div>
 
@@ -205,24 +203,24 @@ function onRun() {
                 <label class="option">
                     <Checkbox
                         v-model="compareLabels"
-                        :binary="true"
                         input-id="match-labels"
+                        :binary="true"
                     />
                     <span>{{ $gettext("Labels that match exactly") }}</span>
                 </label>
                 <label class="option">
                     <Checkbox
                         v-model="compareUris"
-                        :binary="true"
                         input-id="match-uris"
+                        :binary="true"
                     />
                     <span>{{ $gettext("Concepts sharing a URI") }}</span>
                 </label>
                 <label class="option">
                     <Checkbox
                         v-model="compareSimilarLabels"
-                        :binary="true"
                         input-id="match-similar"
+                        :binary="true"
                     />
                     <span>{{
                         $gettext("Labels that are merely similar")
@@ -231,9 +229,9 @@ function onRun() {
             </div>
             <Message
                 v-if="compareSimilarLabels"
+                class="option-message"
                 :severity="WARN"
                 :closable="false"
-                class="option-message"
             >
                 {{ expectedDurationText }}
             </Message>
@@ -247,19 +245,15 @@ function onRun() {
                 id="match-threshold-label"
                 class="label"
             >
-                {{
-                    $gettext("How similar? (%{threshold})", {
-                        threshold: similarityThreshold.toFixed(2),
-                    })
-                }}
+                {{ thresholdLabel }}
             </label>
             <Slider
                 v-model="similarityThreshold"
-                aria-labelledby="match-threshold-label"
-                :min="0.4"
-                :max="0.95"
-                :step="0.05"
                 class="threshold-slider"
+                aria-labelledby="match-threshold-label"
+                :min="MIN_SELECTABLE_SIMILARITY"
+                :max="MAX_SELECTABLE_SIMILARITY"
+                :step="SIMILARITY_STEP"
             />
             <p class="option-note">
                 {{
@@ -276,8 +270,8 @@ function onRun() {
                 <label class="option">
                     <Checkbox
                         v-model="crossSchemeOnly"
-                        :binary="true"
                         input-id="match-cross-scheme"
+                        :binary="true"
                     />
                     <span>{{
                         $gettext("Only pairs spanning two schemes")
@@ -286,8 +280,8 @@ function onRun() {
                 <label class="option">
                     <Checkbox
                         v-model="sameLanguageOnly"
-                        :binary="true"
                         input-id="match-same-language"
+                        :binary="true"
                     />
                     <span>{{
                         $gettext("Only labels in the same language")
@@ -297,15 +291,12 @@ function onRun() {
         </fieldset>
 
         <Button
+            class="run-button"
             icon="pi pi-search"
             :label="$gettext('Find matches')"
-            class="run-button"
-            :disabled="
-                isStartingRun ||
-                (!compareLabels && !compareUris && !compareSimilarLabels)
-            "
+            :disabled="!canStartRun"
             :loading="isStartingRun"
-            @click="onRun"
+            @click="requestRun"
         />
     </div>
 </template>
@@ -317,7 +308,7 @@ function onRun() {
     gap: 1.5rem;
 }
 
-.field {
+.run-form .field {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
@@ -327,33 +318,34 @@ function onRun() {
     border: 0;
 }
 
-legend.label {
-    padding: 0;
-    margin-block-end: 0.5rem;
-}
-
-.label {
+.field .label {
     display: block;
     margin: 0;
     font-weight: var(--p-lingo-font-weight-normal);
     color: var(--p-header-item-label);
 }
 
-/* A container for a widget, not the widget itself: putting this on a Select
-   would stack its label above its dropdown icon and collapse the label. */
-.control {
+/* A legend sits outside the fieldset's flex flow, so it takes no gap. */
+.field legend.label {
+    padding: 0;
+    margin-block-end: 0.5rem;
+}
+
+/* A container for a widget, not the widget itself: on a Select this would
+   stack its label above its dropdown icon and collapse the label. */
+.field .control {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
 }
 
-.scheme-select,
-.name-input,
-.threshold-slider {
+.field .scheme-select,
+.field .name-input,
+.field .threshold-slider {
     width: 100%;
 }
 
-.option {
+.control .option {
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -361,17 +353,17 @@ legend.label {
     cursor: pointer;
 }
 
-.option-message {
+.field .option-message {
     font-size: var(--p-lingo-font-size-smallnormal);
 }
 
-.option-note {
+.field .option-note {
     margin: 0;
     font-size: var(--p-lingo-font-size-xxsmall);
-    color: var(--p-inputtext-placeholder-color);
+    color: var(--p-text-muted-color);
 }
 
-.run-button {
+.run-form .run-button {
     align-self: flex-start;
     font-size: var(--p-lingo-font-size-small);
     border-radius: 0.125rem;

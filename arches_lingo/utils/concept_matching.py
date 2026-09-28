@@ -1,19 +1,8 @@
-"""Find concepts that probably mean the same thing.
+"""Suggest pairs of concepts that probably mean the same thing.
 
-Detection produces *pairs*: two concepts and the reason they were suggested. A
-pair is a suggestion, not a decision, so the candidates it writes carry a review
-state and the pairs an editor has already settled -- by linking them with an
-exactMatch, or by merging one into the other -- are never suggested again.
-
-Signals are independent and can be run in any combination:
-
-  * `shared_identifier` -- the concepts carry the same URI
-  * `exact_label` -- a label on one matches a label on the other exactly
-  * `trigram` -- a label on one is similar to a label on the other (`pg_trgm`)
-
-Everything is expressed as SQL over `tiles` rather than through the ORM: the
-label corpus runs to hundreds of thousands of rows, and the trigram index the
-fuzzy signal will need is defined on the raw `tiledata ->> node_id` expression.
+Pairs already settled by an exactMatch or a merge are never suggested again.
+Written as SQL over `tiles` rather than the ORM because the trigram index is
+defined on the raw `tiledata ->> node_id` expression.
 """
 
 import json
@@ -59,42 +48,27 @@ SIGNAL_TRIGRAM = ConceptMatchCandidate.SIGNAL_TRIGRAM
 EXACT_SIGNALS = (SIGNAL_SHARED_IDENTIFIER, SIGNAL_EXACT_LABEL)
 ALL_SIGNALS = EXACT_SIGNALS + (SIGNAL_TRIGRAM,)
 
-# Postgres defaults this to 0.3, which is far too loose for a vocabulary of any
-# size; see find_similar_label_pairs.
+# Postgres's own default of 0.3 is far too loose for a vocabulary of any size.
 DEFAULT_SIMILARITY_THRESHOLD = 0.7
-# Below Postgres's own default nearly every label pairs with every other.
 MIN_SIMILARITY_THRESHOLD = 0.3
 MAX_SIMILARITY_THRESHOLD = 1.0
 
-# Comparing a vocabulary against itself is one index probe per label, each one
-# CPU-bound on intersecting trigram posting lists and independent of the rest.
-# Postgres allows two workers per gather by default, which leaves most of a
-# server idle; measured 1.9x faster at eight on the AAT. Capped in practice by
-# the server's own max_parallel_workers, so raising that is the deployment knob.
+# Each label is an independent, CPU-bound index probe, so the fuzzy signal scales
+# well past Postgres's default of two workers. Capped by max_parallel_workers.
 TRIGRAM_PARALLEL_WORKERS = getattr(settings, "LINGO_MATCH_PARALLEL_WORKERS", 8)
 
-# Worth about 9% on the same measurement: enough of the bitmap stays exact to
-# save some rechecks, but this is a distant second to parallelism.
 TRIGRAM_WORK_MEM = getattr(settings, "LINGO_MATCH_WORK_MEM", "64MB")
 
-# How many rows a server-side cursor pulls at a time when pairs are read back
-# rather than stored. Bounds how much of a result set is ever in memory at once.
 ROW_FETCH_SIZE = 2_000
 
-# How many independent queries a corpus-wide fuzzy search is split into. Each
-# slice commits its pairs as it finishes, so more slices means results and
-# progress arrive more often, at the cost of re-scanning the driving side once
-# per slice -- cheap next to the index probes it drives.
+# Each slice commits as it finishes, so more slices means more frequent progress
+# at the cost of re-scanning the driving side once per slice.
 MATCH_SLICE_COUNT = getattr(settings, "LINGO_MATCH_SLICE_COUNT", 16)
 
-# How often a run records that it is still alive while a query holds the thread.
-# Comfortably inside the window after which a silent run is presumed dead.
+# Must stay well inside STALE_RUN_SECONDS, after which a silent run is reaped.
 HEARTBEAT_INTERVAL_SECONDS = 30
 
-# The concept-to-scheme lookup a scoped run joins against, and the pairs one
-# query found before they are stored. Named for what they are and who owns them:
-# they are dropped by name, so they must not be something another part of the
-# schema could plausibly be called.
+# Temp tables dropped by name, so the names must be distinctive.
 _SCHEME_SCOPE_TABLE = "lingo_match_concept_scheme"
 _FOUND_PAIRS_TABLE = "lingo_match_found_pairs"
 
@@ -103,14 +77,10 @@ logger = logging.getLogger(__name__)
 
 @contextmanager
 def _heartbeat_while_working(run):
-    """Record that `run` is alive while a query holds this thread.
+    """Keep `run` from being reaped while a single long query holds this thread.
 
-    Progress is recorded as each query's pairs are stored, but one query over a
-    large vocabulary can hold the process for minutes, and a run that goes quiet
-    for long enough is reaped as though its worker had died. So the reporting is
-    done from a thread of its own -- idle but for one small update every half
-    minute. If the worker dies, the thread dies with it and the run is reaped,
-    which is the behaviour the reaper exists for.
+    A separate thread because one query can run for minutes; if the worker
+    dies the thread dies with it, and the run is reaped as it should be.
     """
     if run is None:
         yield
@@ -126,16 +96,14 @@ def _heartbeat_while_working(run):
                         last_progress=timezone.now()
                     )
                 except Exception:
-                    # Losing a heartbeat is not worth failing a run over; the
-                    # next one will do, and a real stall still gets reaped.
+                    # A missed heartbeat is not worth failing the run over.
                     logger.warning(
                         "Could not record progress for match run %s.",
                         run.pk,
                         exc_info=True,
                     )
         finally:
-            # This thread has its own connection, and it is the only one that
-            # can close it.
+            # Only this thread can close its own connection.
             connections.close_all()
 
     heartbeat_thread = threading.Thread(
@@ -154,23 +122,15 @@ class ConceptMatchError(Exception):
 
 
 class ConceptMatchRunCancelled(Exception):
-    """The run was deleted while its detection was still working.
+    """The run was deleted while detection was working.
 
-    Deleting the row is how a run is cancelled: celery cannot be relied on to
-    terminate a task that is already executing -- the solo pool runs it in the
-    same process as the worker -- so the run record is the control channel, and
-    detection checks that it is still there before each query it stores.
+    Deleting the row is how a run is cancelled, since celery cannot reliably
+    terminate a task already executing under the solo pool.
     """
 
 
 class MatchScope:
-    """Which concepts a run compares.
-
-    `scheme_ids` confines the run to those schemes: both concepts of a pair must
-    belong to one of them, so a run scoped this way never returns a concept from
-    a scheme that was not chosen. Leaving everything unset compares every concept
-    with every other, which is what a whole-corpus duplicate sweep is.
-    """
+    """Which concepts a run compares; leaving everything unset compares all."""
 
     def __init__(
         self,
@@ -195,11 +155,7 @@ class MatchScope:
         }
 
     def resolve_source_concept_ids(self):
-        """Explicit source ids, or None when the source is not an id list.
-
-        A concept set is resolved to its members here so the rest of the engine
-        only ever deals with one kind of narrowing.
-        """
+        """Source ids, with a concept set resolved to its members; else None."""
         if self.source_concept_ids:
             return self.source_concept_ids
 
@@ -212,8 +168,7 @@ class MatchScope:
         return None
 
 
-# A concept's scheme comes from part_of_scheme, or from top_concept_of when it
-# sits at the top of one. Both are read so scoping a run to a scheme does not
+# Reads top_concept_of as well as part_of_scheme so scoping to a scheme does not
 # silently omit its facets.
 _CONCEPT_SCHEME_SQL = f"""
     SELECT DISTINCT ON (concept_id) concept_id, scheme_id
@@ -236,8 +191,6 @@ _CONCEPT_SCHEME_SQL = f"""
      ORDER BY concept_id, priority
 """
 
-# Labels, normalized for comparison. Case and surrounding whitespace are not a
-# meaningful difference between two concept names.
 _LABEL_SQL = f"""
     SELECT resourceinstanceid AS concept_id,
            lower(btrim(tiledata ->> '{CONCEPT_NAME_CONTENT_NODE}')) AS content,
@@ -247,11 +200,8 @@ _LABEL_SQL = f"""
        AND btrim(coalesce(tiledata ->> '{CONCEPT_NAME_CONTENT_NODE}', '')) <> ''
 """
 
-# The same labels, left exactly as the trigram index stores them. Comparing
-# `lower(btrim(content))` would be a different expression from the one migration
-# 0012 indexed, and the planner would fall back to reading every row instead.
-# pg_trgm lowercases internally when it builds trigrams, so matching on the raw
-# value costs nothing in accuracy.
+# Left un-normalized to match the expression migration 0012 indexed; pg_trgm
+# lowercases internally, so nothing is lost.
 _INDEXED_LABEL_SQL = f"""
     SELECT resourceinstanceid AS concept_id,
            tiledata ->> '{CONCEPT_NAME_CONTENT_NODE}' AS content,
@@ -261,10 +211,8 @@ _INDEXED_LABEL_SQL = f"""
        AND btrim(coalesce(tiledata ->> '{CONCEPT_NAME_CONTENT_NODE}', '')) <> ''
 """
 
-# URIs are globally meaningful, so two concepts carrying the same one are almost
-# certainly the same concept. Bare identifiers are deliberately not compared:
-# they are allocated per scheme by ConceptIdentifierCounter and are short
-# numbers, so equality between schemes says nothing.
+# Bare identifiers are deliberately not compared: ConceptIdentifierCounter
+# allocates them per scheme, so equality across schemes means nothing.
 _URI_SQL = f"""
     SELECT resourceinstanceid AS concept_id,
            lower(btrim(tiledata ->> '{URI_CONTENT_NODE}')) AS uri
@@ -275,11 +223,7 @@ _URI_SQL = f"""
 
 
 def get_scheme_ids_for_concepts(concept_ids):
-    """Return {concept id: scheme id} for the concepts given.
-
-    Public because reviewing a pair needs the same answer detection does: a pair
-    reads very differently depending on whether it spans two vocabularies.
-    """
+    """Return {concept id: scheme id} for the concepts given."""
     if not concept_ids:
         return {}
 
@@ -301,13 +245,8 @@ def get_scheme_ids_for_concepts(concept_ids):
 def _scope_clauses(scope, source_concept_ids):
     """Return (sql, params) narrowing which pairs a run keeps.
 
-    A pair has no inherent direction -- it is stored lowest id first, not source
-    first -- so every narrowing asks whether *either* side qualifies rather than
-    pinning one side to the source.
-
-    `source_concept_ids` is None when the signal has already restricted one side
-    to them, which it does whenever it can: filtering a whole self-join after the
-    fact costs the same as not scoping at all.
+    Pairs are stored lowest id first, not source first, so the source narrowing
+    accepts either side. Pass None once a signal has already pinned one side.
     """
     clauses = []
     params = {}
@@ -320,8 +259,6 @@ def _scope_clauses(scope, source_concept_ids):
         params["source_concept_ids"] = source_concept_ids
 
     if scope.scheme_ids:
-        # Both sides, not either: a run scoped to a set of schemes is a search
-        # within them, so a pair reaching outside the set is not part of it.
         clauses.append(
             " AND scheme_a.scheme_id = ANY(%(scheme_ids)s::uuid[])"
             " AND scheme_b.scheme_id = ANY(%(scheme_ids)s::uuid[])"
@@ -339,22 +276,12 @@ def _needs_scheme_lookup(scope):
 
 
 def _pair_query(match_sql, scope, source_concept_ids, score_sql="1.0"):
-    """Wrap a signal's join in the scope narrowing.
-
-    `match_sql` yields `side_a_concept_id`, `side_b_concept_id` and `evidence`.
-    The pair is re-ordered lowest id first here so the same two concepts are
-    never recorded under opposite names, whichever way the signal found them.
-
-    Which scheme each concept belongs to is only worked out when a narrowing
-    actually asks: the lookup spans every concept in the database, and most runs
-    never consult it.
-    """
+    """Wrap a signal's join in the scope narrowing, ordering each pair."""
     scope_sql, params = _scope_clauses(scope, source_concept_ids)
 
     scheme_joins = ""
     if _needs_scheme_lookup(scope):
-        # The joined table is the one _prepare_scheme_lookup builds in this
-        # transaction, rather than a CTE; see the note there for why.
+        # A temp table rather than a CTE; see _prepare_scheme_lookup.
         scheme_joins = f"""
           LEFT JOIN {_SCHEME_SCOPE_TABLE} scheme_a
                  ON scheme_a.concept_id = matched.side_a_concept_id
@@ -379,14 +306,7 @@ def _pair_query(match_sql, scope, source_concept_ids, score_sql="1.0"):
 
 
 def count_labels_by_scheme():
-    """Return (total labels, {scheme id: labels}) across the corpus.
-
-    What a fuzzy run costs follows how many labels it has to compare, so this is
-    what lets the interface say how long one is likely to take before anyone
-    commits to starting it. Labels belonging to no scheme are counted in the
-    total and in no scheme, which is right on both counts: an unscoped run
-    compares them, and a scoped one does not.
-    """
+    """Return (total labels, {scheme id: labels}), for estimating run cost."""
     with connection.cursor() as cursor:
         cursor.execute(
             f"""
@@ -406,19 +326,10 @@ def count_labels_by_scheme():
 
 
 def _prepare_scheme_lookup(scope):
-    """Put the concept-to-scheme lookup in a temp table, inside this transaction.
+    """Build the concept-to-scheme lookup as an analysed temp table.
 
-    As a CTE it is estimated at 200 rows when it holds tens of thousands, and the
-    planner then drives the whole query from it: one slice of a scoped fuzzy run
-    measured over nine minutes against about eighty seconds unscoped, having lost
-    both the trigram index and its six parallel workers. A `CTE Scan` is also
-    parallel-restricted, so referencing one makes the outer plan serial whatever
-    it estimates.
-
-    A temp table can be analysed. With statistics the same query plans like the
-    unscoped one -- 44,790 estimated rows rather than 1, the trigram index back,
-    the workers back -- so a scope costs about what no scope costs instead of
-    several times more.
+    As a CTE it is badly underestimated and parallel-restricted, so the planner
+    loses both the trigram index and its workers; with statistics it does not.
     """
     if not _needs_scheme_lookup(scope):
         return
@@ -430,11 +341,8 @@ def _prepare_scheme_lookup(scope):
         params["scheme_ids"] = scope.scheme_ids
 
     with connection.cursor() as cursor:
-        # ON COMMIT DROP only fires on a real commit, and an atomic block nested
-        # inside another transaction -- every test, and anything that wraps a run
-        # -- is a savepoint that never commits. So the table is dropped by name
-        # rather than trusted to disappear on its own. The name is distinctive
-        # enough that dropping it cannot take anything else with it.
+        # ON COMMIT DROP never fires for an atomic block nested in an outer
+        # transaction (a savepoint), so drop by name rather than trust it.
         cursor.execute(f"DROP TABLE IF EXISTS {_SCHEME_SCOPE_TABLE}")
         cursor.execute(
             f"""
@@ -449,13 +357,7 @@ def _prepare_scheme_lookup(scope):
 
 
 def _run_pair_query(sql, params, scope, similarity_threshold=None):
-    """Yield rows as they arrive, rather than buffering the whole result.
-
-    For reading pairs back from a narrow scope; a run stores them with
-    `_store_pairs` instead. psycopg fetches everything on execute() with an
-    ordinary cursor, so this reads through a server-side one bounded by
-    `itersize`.
-    """
+    """Stream rows through a server-side cursor; psycopg's default buffers all."""
     with transaction.atomic():
         if similarity_threshold is not None:
             _apply_trigram_session_tuning(similarity_threshold)
@@ -470,19 +372,9 @@ def _run_pair_query(sql, params, scope, similarity_threshold=None):
 def _scoped_side_sql(value_sql, source_concept_ids, slice_predicate=""):
     """Return (sql, pairing_clause, params) for one side of a signal's self-join.
 
-    With no source ids every pair is computed once, by keeping only the half of
-    the join where the second id sorts higher. With source ids one side is
-    pinned to them instead -- turning a scan of the whole corpus into a lookup
-    of a handful of rows -- and the outer DISTINCT collapses the pair, which is
-    then found from both directions.
-
-    `slice_predicate` narrows the driving side to one slice of a corpus-wide
-    search; see `_driving_side_slices`.
-
-    A scheme scope is deliberately *not* applied here. Restricting the driving
-    side to the scoped schemes as well as filtering after the join measured
-    11.34s against 11.13s for the same slice and the same 24 rows: the planner
-    already pushes the scope down, and saying it twice only adds a join.
+    With source ids one side is pinned to them and the outer DISTINCT collapses
+    pairs found from both directions. A scheme scope is not applied here: the
+    planner already pushes it down, and repeating it only adds a join.
     """
     if source_concept_ids is None:
         if not slice_predicate:
@@ -511,24 +403,15 @@ def _scoped_side_sql(value_sql, source_concept_ids, slice_predicate=""):
 def _driving_side_slices(source_concept_ids):
     """Split a corpus-wide fuzzy search into queries that each commit as they end.
 
-    Every pair is found from its lower-id side, since the join only keeps
-    `side_b > side_a`, so slicing on that side keeps each pair whole inside one
-    slice and leaves the deduplication correct.
-
-    Only the fuzzy signal is sliced. The exact signals join by equality, which
-    Postgres answers with a hash join in seconds; slicing rebuilds that hash
-    once per slice and measured 8x slower on the same data. The fuzzy signal
-    probes an index per driving row instead, so the driving side is all that is
-    re-scanned.
-
-    A scoped search is already narrow enough to answer in one go.
+    Slicing on the lower-id side keeps each pair inside one slice. Only the
+    fuzzy signal is sliced: the exact signals are hash joins, which slicing
+    would rebuild once per slice.
     """
     if source_concept_ids is not None:
         return [""]
     return [
-        # Masked rather than abs(): abs() of the one negative int4 with no
-        # positive counterpart is an error. %% not %: parameters are always
-        # passed, so psycopg would otherwise read the modulo as a placeholder.
+        # Masked rather than abs(), which errors on the minimum int4. %% because
+        # parameters are always passed, so psycopg would read % as a placeholder.
         f" AND (hashtext(scoped_side.concept_id::text) & 2147483647)"
         f" %% {MATCH_SLICE_COUNT} = {slice_index}"
         for slice_index in range(MATCH_SLICE_COUNT)
@@ -621,11 +504,7 @@ def find_exact_label_pairs(scope, same_language_only=True):
 
 
 def find_shared_uri_pairs(scope):
-    """Concepts carrying the same URI.
-
-    A URI is globally meaningful, so two concepts sharing one are almost
-    certainly the same concept.
-    """
+    """Concepts carrying the same URI."""
     [(sql, params)] = _shared_uri_pair_queries(scope)
     return _run_pair_query(sql, params, scope)
 
@@ -633,16 +512,7 @@ def find_shared_uri_pairs(scope):
 def find_similar_label_pairs(
     scope, similarity_threshold=DEFAULT_SIMILARITY_THRESHOLD, same_language_only=True
 ):
-    """Concepts whose labels are close without being identical.
-
-    Backed by the `pg_trgm` GIN index on label content that migration 0012
-    installs, using the `%` operator so the index does the filtering rather than
-    a comparison per row.
-
-    The threshold matters more than anything else here. Postgres defaults to
-    0.3, which on a vocabulary the size of the AAT returns around 87 candidates
-    per label -- noise rather than suggestion. At 0.7 it returns about 0.25.
-    """
+    """Concepts whose labels are close without being identical (`pg_trgm`)."""
     for sql, params in _similar_label_pair_queries(scope, same_language_only):
         yield from _run_pair_query(
             sql, params, scope, similarity_threshold=similarity_threshold
@@ -650,11 +520,7 @@ def find_similar_label_pairs(
 
 
 def _apply_trigram_session_tuning(similarity_threshold):
-    """Tune the session for one fuzzy query, for the life of the transaction.
-
-    SET LOCAL rather than SET: these revert when the transaction ends, so
-    nothing leaks onto a connection Django may reuse.
-    """
+    """SET LOCAL, not SET, so nothing leaks onto a connection Django reuses."""
     with connection.cursor() as cursor:
         cursor.execute(
             "SET LOCAL pg_trgm.similarity_threshold = %s", [similarity_threshold]
@@ -662,21 +528,18 @@ def _apply_trigram_session_tuning(similarity_threshold):
         cursor.execute(
             f"SET LOCAL max_parallel_workers_per_gather = {TRIGRAM_PARALLEL_WORKERS}"
         )
-        # The planner's default setup cost assumes parallelism rarely pays. Here
-        # it always does -- every row drives an independent index probe -- so the
-        # estimate is removed rather than argued with.
+        # Every row drives an independent index probe, so parallelism always
+        # pays here, whatever the planner's default costs assume.
         cursor.execute("SET LOCAL parallel_setup_cost = 0")
         cursor.execute("SET LOCAL parallel_tuple_cost = 0")
         cursor.execute(f"SET LOCAL work_mem = '{TRIGRAM_WORK_MEM}'")
 
 
 def _decided_pairs_sql():
-    """Return (sql, params) for every pair already settled, in canonical order.
+    """Return (sql, params) for pairs settled by a merge or an exactMatch.
 
-    A merge settles a pair, and so does an exactMatch -- which names the other
-    concept by URI rather than by id, so it is resolved back through the URI
-    tiles. Other match relations (close, broad, narrow, related) leave the pair
-    open: the two may still be duplicates.
+    Other match relations (close, broad, ...) leave a pair open, since the two
+    may still be duplicates.
     """
     exact_match_uri = ListItem.objects.get(
         pk=EXACT_MATCH_LIST_ITEM_ID
@@ -706,16 +569,11 @@ def _decided_pairs_sql():
 
 
 def _store_pairs(run, signal, sql, params, scope, similarity_threshold):
-    """Run one pair query and store the pairs it finds, returning how many.
+    """Run one pair query and store its new pairs, returning how many.
 
-    The query is materialized with CREATE TABLE AS rather than read through a
-    cursor, because Postgres never gives a declared cursor a parallel plan and
-    the fuzzy signal is only affordable with its workers. The pairs then go
-    straight into the candidate table without passing through Python, and the
-    transaction commits here, so each query's results are visible as it ends.
-
-    A pair already stored -- by a stronger signal, which runs first -- is left
-    as it is, so the first reason a pair was found for is the one it keeps.
+    CREATE TEMP TABLE AS rather than a cursor, because Postgres never plans a
+    declared cursor in parallel. A pair a stronger signal already stored keeps
+    that signal.
     """
     decided_sql, decided_params = _decided_pairs_sql()
     with transaction.atomic():
@@ -723,8 +581,7 @@ def _store_pairs(run, signal, sql, params, scope, similarity_threshold):
             _apply_trigram_session_tuning(similarity_threshold)
         _prepare_scheme_lookup(scope)
         with connection.cursor() as cursor:
-            # ON COMMIT DROP never fires inside an outer transaction; see
-            # _prepare_scheme_lookup.
+            # See _prepare_scheme_lookup for why ON COMMIT DROP is not enough.
             cursor.execute(f"DROP TABLE IF EXISTS {_FOUND_PAIRS_TABLE}")
             cursor.execute(
                 f"CREATE TEMP TABLE {_FOUND_PAIRS_TABLE} ON COMMIT DROP AS {sql}",
@@ -758,11 +615,7 @@ def _store_pairs(run, signal, sql, params, scope, similarity_threshold):
 
 
 def find_decided_pairs():
-    """Pairs an editor has already settled, in canonical order.
-
-    A settled pair is not a suggestion -- it is a decision. Suggesting it again
-    would put answered work back in the queue.
-    """
+    """Pairs an editor has already settled, in canonical order."""
     decided_sql, decided_params = _decided_pairs_sql()
     with connection.cursor() as cursor:
         cursor.execute(decided_sql, decided_params)
@@ -770,15 +623,7 @@ def find_decided_pairs():
 
 
 def mark_pairs_settled(pairs, status, user=None):
-    """Record that these pairs have been decided, wherever they are queued.
-
-    A pair can be suggested by more than one run, and settling it in one place
-    settles it everywhere -- otherwise a reviewer working through an older run
-    is asked again about concepts that have already been linked or merged.
-
-    Only pending candidates are touched, so a decision already recorded is not
-    overwritten by a later one.
-    """
+    """Settle these pairs in every run where they are still pending."""
     canonical_pairs = {
         ConceptMatchCandidate.order_concept_ids(first_id, second_id)
         for first_id, second_id in pairs
@@ -802,9 +647,7 @@ def mark_pairs_settled(pairs, status, user=None):
 def restore_dismissed(run, user=None, candidate_ids=None):
     """Return dismissed pairs to the queue, returning (restored, left dismissed).
 
-    Settling a pair only touches the runs where it is still pending, so a pair
-    dismissed here and linked or merged since is still dismissed in this run.
-    Restoring it would ask again about something already decided, so it stays.
+    A pair linked or merged since it was dismissed stays dismissed.
     """
     decided_sql, decided_params = _decided_pairs_sql()
     params = {
@@ -870,11 +713,7 @@ def iter_candidates(
     same_language_only=True,
     similarity_threshold=DEFAULT_SIMILARITY_THRESHOLD,
 ):
-    """Yield every suggested pair, strongest signal first, without storing any.
-
-    Signals can suggest the same pair for different reasons; they run strongest
-    first, so the first mention of a pair is its best one.
-    """
+    """Yield every suggested pair, strongest signal first, without storing any."""
     validate_detection_options(signals, similarity_threshold)
 
     decided_pairs = find_decided_pairs()
@@ -909,8 +748,7 @@ def collect_candidates(
 ):
     """`iter_candidates` as a {pair: (signal, evidence, score)} mapping.
 
-    Only for scopes small enough to hold at once -- a single concept, a concept
-    set. A whole-vocabulary run should be stored with `run_detection`.
+    Only for small scopes; store a whole-vocabulary run with `run_detection`.
     """
     candidates_by_pair = {}
     for concept_a, concept_b, signal, evidence, score in iter_candidates(
@@ -923,12 +761,6 @@ def collect_candidates(
 def _store_candidates(
     run, scope, signals, same_language_only, similarity_threshold, log
 ):
-    """Store every signal's pairs, strongest first, returning how many landed.
-
-    Each query commits on its own, so `candidate_count` climbs while the run is
-    still going. Checking that the run still exists before each one is how a
-    deleted run stops.
-    """
     stored_count = 0
     for signal in ALL_SIGNALS:
         if signal not in signals:
@@ -956,11 +788,7 @@ def run_detection(
     run=None,
     name="",
 ):
-    """Detect matches and store them as a reviewable run.
-
-    `run` is an existing record to fill in, which is how the celery task reports
-    against the run the request already returned to the caller.
-    """
+    """Detect matches and store them as a reviewable run, or fill in `run`."""
     validate_detection_options(signals, similarity_threshold)
 
     if run is None:
@@ -1000,8 +828,8 @@ def run_detection(
         log("  the run was deleted while it was working; stopping")
         return None
     except Exception as detection_error:
-        # Deleting a run while a query is storing its pairs fails that query's
-        # commit on the foreign key, which is a cancellation, not a failure.
+        # A run deleted mid-query fails the commit on the foreign key; that is
+        # a cancellation, not a failure.
         if not ConceptMatchRun.objects.filter(pk=run.pk).exists():
             log("  the run was deleted while it was working; stopping")
             return None

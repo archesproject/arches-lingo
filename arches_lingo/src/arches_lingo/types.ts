@@ -641,16 +641,43 @@ export interface ConceptMergeHistoryEntry {
     counterpart_concept_labels: Label[];
 }
 
+export type ConceptMatchRunStatus =
+    | "pending"
+    | "running"
+    | "complete"
+    | "failed";
+
+export type ConceptMatchCandidateStatus =
+    | "pending"
+    | "dismissed"
+    | "linked"
+    | "merged";
+
+export type ConceptMatchSignal =
+    | "shared_identifier"
+    | "exact_label"
+    | "trigram";
+
+export interface ConceptMatchRunParameters {
+    scheme_ids: string[];
+    source_concept_set_id: number | null;
+    source_concept_ids: string[];
+    cross_scheme_only: boolean;
+    signals: ConceptMatchSignal[];
+    same_language_only: boolean;
+    similarity_threshold: number;
+}
+
 export interface ConceptMatchRun {
     id: number;
     name: string;
-    status: "pending" | "running" | "complete" | "failed";
+    status: ConceptMatchRunStatus;
     created: string;
     finished: string | null;
     elapsed_seconds: number;
-    parameters: Record<string, unknown>;
+    parameters: ConceptMatchRunParameters;
     candidate_count: number;
-    counts_by_status: Record<string, number>;
+    counts_by_status: Record<ConceptMatchCandidateStatus, number>;
     pending_count: number;
     error_message: string;
     created_by: string | null;
@@ -670,17 +697,24 @@ export interface MatchedConceptSummary {
 export interface ConceptMatchCandidate {
     id: number;
     score: number;
-    signal: string;
+    signal: ConceptMatchSignal;
     evidence: string;
-    status: "pending" | "dismissed" | "linked" | "merged";
+    status: ConceptMatchCandidateStatus;
     concept_a: MatchedConceptSummary | null;
     concept_b: MatchedConceptSummary | null;
     is_cross_scheme: boolean;
 }
 
+export interface ConceptMatchCandidatePage {
+    data: ConceptMatchCandidate[];
+    total_results: number;
+    current_page: number;
+    items_per_page: number;
+}
+
 export interface ConceptMatchStatusChange {
     updated: number;
-    status: string;
+    status: ConceptMatchCandidateStatus;
     skipped: Record<string, number>;
 }
 
@@ -694,7 +728,7 @@ export interface ConceptMatchRunRequest {
     scheme_ids?: string[];
     source_concept_ids?: string[];
     cross_scheme_only?: boolean;
-    signals?: string[];
+    signals?: ConceptMatchSignal[];
     same_language_only?: boolean;
     similarity_threshold?: number;
 }

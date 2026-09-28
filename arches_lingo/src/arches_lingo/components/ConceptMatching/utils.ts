@@ -1,25 +1,29 @@
 import {
     ALL_CANDIDATE_STATUSES,
+    BRIEF_RUN_SECONDS,
     CANDIDATE_STATUS_PENDING,
+    DURATION_SPAN_HIGH_FACTOR,
+    DURATION_SPAN_LOW_FACTOR,
     FUZZY_RUN_FIXED_SECONDS,
     FUZZY_RUN_SECONDS_PER_LABEL,
+    LONG_RUN_MINUTES,
     RUN_STATUS_PENDING,
     RUN_STATUS_RUNNING,
     SIGNAL_EXACT_LABEL,
     SIGNAL_SHARED_IDENTIFIER,
     SIGNAL_TRIGRAM,
-} from "@/arches_lingo/components/concept-matching/constants.ts";
+} from "@/arches_lingo/components/ConceptMatching/constants.ts";
 
 import type {
-    ConceptMatchCandidate,
+    ConceptMatchCandidateStatus,
     ConceptMatchRun,
+    ConceptMatchSignal,
     MatchedConceptSummary,
     SearchResultItem,
 } from "@/arches_lingo/types.ts";
+import type { ExpectedDuration } from "@/arches_lingo/components/ConceptMatching/types.ts";
 
 /**
- * Which signals to ask for, from what the reviewer ticked.
- *
  * Ordered strongest first to match the server, which keeps the best reason when
  * more than one signal suggests the same pair.
  */
@@ -27,20 +31,14 @@ export function buildSignalList(options: {
     compareUris: boolean;
     compareLabels: boolean;
     compareSimilarLabels: boolean;
-}): string[] {
-    const signals: string[] = [];
+}): ConceptMatchSignal[] {
+    const signals: ConceptMatchSignal[] = [];
     if (options.compareUris) signals.push(SIGNAL_SHARED_IDENTIFIER);
     if (options.compareLabels) signals.push(SIGNAL_EXACT_LABEL);
     if (options.compareSimilarLabels) signals.push(SIGNAL_TRIGRAM);
     return signals;
 }
 
-/**
- * Whether a run still has work to do.
- *
- * A run is handed to a worker and comes back before it has found
- * anything, so "no candidates yet" is not the same as "no candidates".
- */
 export function isRunUnfinished(run: ConceptMatchRun): boolean {
     return (
         run.status === RUN_STATUS_PENDING || run.status === RUN_STATUS_RUNNING
@@ -48,19 +46,14 @@ export function isRunUnfinished(run: ConceptMatchRun): boolean {
 }
 
 /**
- * The two sides of a pair, once the reviewer has chosen which one survives.
- *
  * A candidate stores its concepts lowest id first rather than in any meaningful
  * order, so neither side can be assumed to be the survivor.
  */
 export function resolveMergeSides(
-    candidate: ConceptMatchCandidate,
+    conceptA: MatchedConceptSummary,
+    conceptB: MatchedConceptSummary,
     absorbedConceptId: string,
-): { survivor: MatchedConceptSummary; absorbed: MatchedConceptSummary } | null {
-    const { concept_a: conceptA, concept_b: conceptB } = candidate;
-    if (!conceptA || !conceptB) {
-        return null;
-    }
+): { survivor: MatchedConceptSummary; absorbed: MatchedConceptSummary } {
     const absorbedIsFirst = conceptA.id === absorbedConceptId;
     return {
         survivor: absorbedIsFirst ? conceptB : conceptA,
@@ -69,10 +62,8 @@ export function resolveMergeSides(
 }
 
 /**
- * The absorbed concept in the shape the merge dialog's picker emits.
- *
- * Only the id and labels are read from it -- the id to fetch the resource, the
- * labels to name it -- so the rest is filled in to satisfy the type.
+ * The absorbed concept in the shape the merge dialog's picker emits. Only the
+ * id and labels are read from it, so the rest only satisfies the type.
  */
 export function buildPreselectedConcept(
     concept: MatchedConceptSummary,
@@ -85,10 +76,6 @@ export function buildPreselectedConcept(
     };
 }
 
-/**
- * The pairs a link request could not act on, named so the reviewer can tell
- * whether it is worth doing anything about.
- */
 export function describeSkippedReasons(
     skipped: Record<string, number>,
     describeReason: (reason: string, count: number) => string,
@@ -113,10 +100,8 @@ export function splitElapsedSeconds(totalSeconds: number): {
 }
 
 /**
- * How many labels a run over these schemes would have to compare.
- *
  * No schemes means every label, including those belonging to no scheme, which
- * is what an unscoped run actually compares.
+ * is what an unscoped run compares.
  */
 export function labelsInScope(
     selectedSchemeIds: string[],
@@ -137,43 +122,33 @@ export function estimateFuzzyRunSeconds(labelCount: number): number {
     return FUZZY_RUN_FIXED_SECONDS + labelCount * FUZZY_RUN_SECONDS_PER_LABEL;
 }
 
-/**
- * The estimate as a span rather than a single figure.
- *
- * It is built from a straight line fitted to a handful of measurements, so a
- * single number would claim a precision it does not have. The span is widened
- * upwards because a run taking longer than promised is the unpleasant surprise,
- * and one finishing early is not.
- */
-export type ExpectedDuration =
-    | { kind: "brief" }
-    | { kind: "overAnHour" }
-    | { kind: "minutes"; lowMinutes: number; highMinutes: number };
-
 export function estimateDurationSpan(labelCount: number): ExpectedDuration {
     const seconds = estimateFuzzyRunSeconds(labelCount);
-    if (seconds < 90) {
+    if (seconds < BRIEF_RUN_SECONDS) {
         return { kind: "brief" };
     }
 
-    const lowMinutes = Math.max(1, Math.floor((seconds * 0.7) / 60));
-    const highMinutes = Math.ceil((seconds * 1.4) / 60);
-    if (highMinutes >= 60) {
+    const lowMinutes = Math.max(
+        1,
+        Math.floor((seconds * DURATION_SPAN_LOW_FACTOR) / 60),
+    );
+    const highMinutes = Math.ceil((seconds * DURATION_SPAN_HIGH_FACTOR) / 60);
+    if (highMinutes >= LONG_RUN_MINUTES) {
         return { kind: "overAnHour" };
     }
     return { kind: "minutes", lowMinutes, highMinutes };
 }
 
 /**
- * Which queue a `status` in the address refers to.
- *
  * Anything the interface does not offer falls back to the outstanding pairs,
- * so a hand-edited or outdated link lands somewhere sensible rather than on an
- * empty list explained by nothing.
+ * so a hand-edited or outdated link still lands somewhere sensible.
  */
-export function candidateStatusFromRoute(rawStatus: unknown): string {
-    const status = String(rawStatus ?? "");
-    return ALL_CANDIDATE_STATUSES.includes(status)
-        ? status
-        : CANDIDATE_STATUS_PENDING;
+export function candidateStatusFromRoute(
+    rawStatus: unknown,
+): ConceptMatchCandidateStatus {
+    return (
+        ALL_CANDIDATE_STATUSES.find(
+            (candidateStatus) => candidateStatus === rawStatus,
+        ) ?? CANDIDATE_STATUS_PENDING
+    );
 }
