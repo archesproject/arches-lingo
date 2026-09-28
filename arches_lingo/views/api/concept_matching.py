@@ -11,7 +11,6 @@ from arches.app.utils.response import JSONErrorResponse, JSONResponse
 
 from arches_lingo.mixins.permissions import LingoEditorMixin
 from arches_lingo.permissions import is_lingo_admin
-from arches_lingo.models import ConceptMatchRun
 from arches_lingo.utils.concept_matching import ConceptMatchError
 from arches_lingo.utils.concept_matching_service import (
     ConceptMatchRequestError,
@@ -19,6 +18,7 @@ from arches_lingo.utils.concept_matching_service import (
     dismiss_all_pending,
     get_run,
     link_candidates_with_exact_match,
+    list_runs,
     parse_candidate_ids,
     parse_detection_request,
     reap_stale_runs,
@@ -75,15 +75,8 @@ class ConceptMatchRunListView(LingoEditorMixin, View):
         # Nothing else is in a position to notice a run whose worker died, and
         # this is the request that is about to report those runs as running.
         reap_stale_runs()
-        user_is_lingo_admin = is_lingo_admin(request.user)
-        runs = ConceptMatchRun.objects.select_related("user")
         return JSONResponse(
-            {
-                "data": [
-                    serialize_run(run, request.user, user_is_lingo_admin)
-                    for run in runs
-                ]
-            }
+            {"data": list_runs(request.user, is_lingo_admin(request.user))}
         )
 
     @_responds_with_request_errors
@@ -99,6 +92,8 @@ class ConceptMatchRunListView(LingoEditorMixin, View):
 class ConceptMatchRunDetailView(LingoEditorMixin, View):
     @_responds_with_request_errors
     def get(self, request, pk):
+        # This is what the interface polls while a run works.
+        reap_stale_runs(run_ids=[pk])
         return JSONResponse(
             serialize_run(get_run(pk), request.user, is_lingo_admin(request.user))
         )

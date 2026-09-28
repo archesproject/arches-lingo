@@ -23,6 +23,7 @@ import {
     deleteConceptMatchRun,
     dismissAllConceptMatchCandidates,
     fetchConceptMatchCandidates,
+    fetchConceptMatchRun,
     fetchConceptMatchRuns,
     fetchLingoResource,
     linkConceptMatchCandidates,
@@ -233,17 +234,18 @@ function pollUntilFinished(runId: number) {
             // The listing is refreshed on every tick rather than only at the
             // end, so the running count climbs in front of the reviewer instead
             // of sitting at zero until the search finishes.
-            runs.value = (await fetchConceptMatchRuns()).data;
+            const run = await fetchConceptMatchRun(runId);
             if (runId !== activeRunId.value) return;
-            const run = runs.value.find(
-                (candidateRun) => candidateRun.id === runId,
-            );
             if (!run) {
                 // Cancelled, from here or from somewhere else. There is no
                 // longer anything to wait for.
                 stopPolling();
+                await loadRuns();
                 return;
             }
+            runs.value = runs.value.map((listedRun) =>
+                listedRun.id === runId ? run : listedRun,
+            );
             if (isRunUnfinished(run)) {
                 // Pairs are stored as they are found, so the list is refreshed
                 // alongside the count: the reviewer can start reading results
@@ -777,7 +779,12 @@ onMounted(async () => {
                                     count: String(option.candidate_count),
                                 })
                             }}
-                            — {{ new Date(option.created).toLocaleString() }}
+                            —
+                            {{
+                                new Date(option.created).toLocaleString(
+                                    selectedLanguage.code,
+                                )
+                            }}
                             —
                             {{ option.created_by ?? $gettext("Command line") }}
                         </template>
@@ -915,7 +922,11 @@ onMounted(async () => {
         <ConfirmDialog group="delete-match-run" />
 
         <MergeDirectionDialog
-            v-if="mergingCandidate && !mergeSurvivor"
+            v-if="
+                mergingCandidate?.concept_a &&
+                mergingCandidate.concept_b &&
+                !mergeSurvivor
+            "
             :concept-a="mergingCandidate.concept_a"
             :concept-b="mergingCandidate.concept_b"
             :name-of="nameOf"

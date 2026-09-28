@@ -13,7 +13,7 @@ from collections import defaultdict
 from http import HTTPStatus
 
 from django.conf import settings
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from django.db.models import Count, Q
 from django.utils import timezone
 from django.utils.translation import gettext as _
@@ -32,12 +32,10 @@ from arches_lingo.utils.concept_lifecycle import (
 from arches_lingo.utils.concept_matching import (
     DEFAULT_SIMILARITY_THRESHOLD,
     EXACT_SIGNALS,
-    SIGNAL_TRIGRAM,
     MatchScope,
     count_labels_by_scheme,
     get_scheme_ids_for_concepts,
     mark_pairs_settled,
-    run_detection,
     validate_detection_options,
 )
 from arches_lingo.utils.concept_merge.tiles import (
@@ -59,6 +57,16 @@ MAX_LINK_BATCH = 200
 # slice of a large vocabulary can run considerably longer than that, so the
 # threshold is well clear of any honest gap between heartbeats.
 STALE_RUN_SECONDS = getattr(settings, "LINGO_MATCH_STALE_SECONDS", 300)
+
+# A long fuzzy run occupies a solo-pool worker for its whole length. Pointing
+# this at a queue with a worker of its own keeps imports and exports moving
+# meanwhile; left unset, runs share the default queue.
+MATCH_TASK_QUEUE = getattr(settings, "LINGO_MATCH_TASK_QUEUE", None)
+
+# A run's own slice can commit pairs between the delete clearing them and the
+# delete committing, which fails the delete on the foreign key. Trying again
+# collects those pairs too.
+DELETE_RUN_ATTEMPTS = 3
 
 
 class ConceptMatchRequestError(Exception):
@@ -101,7 +109,13 @@ def delete_run(run, user, user_is_lingo_admin):
             _("Only the editor who started a run, or a Lingo admin, can delete it."),
             status=HTTPStatus.FORBIDDEN,
         )
-    run.delete()
+    for attempt in range(1, DELETE_RUN_ATTEMPTS + 1):
+        try:
+            run.delete()
+            return
+        except IntegrityError:
+            if attempt == DELETE_RUN_ATTEMPTS:
+                raise
 
 
 def _describe_creator(user):
@@ -110,26 +124,59 @@ def _describe_creator(user):
     return user.get_full_name() or user.username
 
 
-def serialize_run(run, user=None, user_is_lingo_admin=False):
-    # Elapsed time is measured here rather than from the timestamps, because the
-    # client cannot subtract them: with USE_TZ off these are naive timestamps in
-    # the server's own zone, which a browser in another zone reads as its local
-    # time and places in the future. Both ends of this subtraction come from one
-    # clock, so the answer holds whatever zone either side is in.
+def _serialize_timestamp(value):
+    """An ISO timestamp with its offset, which the browser can place correctly.
+
+    With USE_TZ off the stored value is naive, in the server's zone; without
+    the offset a browser elsewhere reads it as its own local time.
+    """
+    if value is None:
+        return None
+    if timezone.is_naive(value):
+        value = timezone.make_aware(value)
+    return value.isoformat()
+
+
+def _counts_by_status_for_runs(run_ids):
+    counts_by_run_id = {
+        run_id: {status: 0 for status, _label in ConceptMatchCandidate.STATUS_CHOICES}
+        for run_id in run_ids
+    }
+    for row in (
+        ConceptMatchCandidate.objects.filter(run_id__in=run_ids)
+        .values("run_id", "status")
+        .annotate(count=Count("pk"))
+    ):
+        counts_by_run_id[row["run_id"]][row["status"]] = row["count"]
+    return counts_by_run_id
+
+
+def list_runs(user, user_is_lingo_admin):
+    runs = list(ConceptMatchRun.objects.select_related("user"))
+    counts_by_run_id = _counts_by_status_for_runs([run.pk for run in runs])
+    return [
+        serialize_run(
+            run, user, user_is_lingo_admin, counts_by_status=counts_by_run_id[run.pk]
+        )
+        for run in runs
+    ]
+
+
+def serialize_run(run, user=None, user_is_lingo_admin=False, counts_by_status=None):
+    # Elapsed time is measured here rather than from the timestamps, because
+    # both ends of this subtraction then come from one clock, whatever zone
+    # either side is in.
     ended_at = run.finished or timezone.now()
 
-    counts_by_status = {
-        status: 0 for status, _label in ConceptMatchCandidate.STATUS_CHOICES
-    }
-    for row in run.candidates.values("status").annotate(count=Count("status")):
-        counts_by_status[row["status"]] = row["count"]
+    if counts_by_status is None:
+        counts_by_status = _counts_by_status_for_runs([run.pk])[run.pk]
 
     return {
         "id": run.pk,
         "name": run.name,
         "status": run.status,
-        "created": run.created.isoformat(),
-        "finished": run.finished.isoformat() if run.finished else None,
+        "created": _serialize_timestamp(run.created),
+        "finished": _serialize_timestamp(run.finished),
         "elapsed_seconds": max(0, int((ended_at - run.created).total_seconds())),
         "parameters": run.parameters,
         "candidate_count": run.candidate_count,
@@ -175,7 +222,7 @@ def worker_is_available():
     ).exists()
 
 
-def reap_stale_runs():
+def reap_stale_runs(run_ids=None):
     """Fail runs that stopped reporting, returning how many were closed out.
 
     A worker restarted mid-run cannot fail its own run: celery acknowledges a
@@ -184,13 +231,17 @@ def reap_stale_runs():
     interface would poll a run that no process is working on.
 
     Runs predating the heartbeat fall back to when they were created, which is
-    the most recent moment they are known to have been alive.
+    the most recent moment they are known to have been alive. `run_ids` limits
+    the check to those runs, for a request that only reports on one.
     """
     cutoff = timezone.now() - datetime.timedelta(seconds=STALE_RUN_SECONDS)
-    return ConceptMatchRun.objects.filter(
+    stale_runs = ConceptMatchRun.objects.filter(
         Q(last_progress__lt=cutoff) | Q(last_progress__isnull=True, created__lt=cutoff),
         status__in=[ConceptMatchRun.STATUS_PENDING, ConceptMatchRun.STATUS_RUNNING],
-    ).update(
+    )
+    if run_ids is not None:
+        stale_runs = stale_runs.filter(pk__in=run_ids)
+    return stale_runs.update(
         status=ConceptMatchRun.STATUS_FAILED,
         finished=timezone.now(),
         error_message=_(
@@ -256,6 +307,18 @@ def _build_concept_summaries(concept_ids, user_is_lingo_admin=False):
     Labels rather than the resource descriptor, so the client can pick the best
     one for the reader's language the way every other concept name is chosen.
     """
+    if not concept_ids:
+        return {}
+
+    existing_concept_ids = {
+        str(concept_id)
+        for concept_id in ResourceInstance.objects.filter(
+            pk__in=concept_ids
+        ).values_list("pk", flat=True)
+    }
+    # A pair outlives the concepts it names: a deleted concept is reported as
+    # missing rather than as a nameless one.
+    concept_ids = existing_concept_ids
     if not concept_ids:
         return {}
 
@@ -590,35 +653,21 @@ def parse_detection_request(body):
 def start_detection(
     scope, signals, same_language_only, similarity_threshold, user, name=""
 ):
-    """Begin a run, in the foreground or on a worker depending on the signals.
+    """Queue a run on a worker, returning the pending run to poll.
 
-    The exact signals finish in seconds and are answered inside the request, so
-    the interface can show results immediately. The fuzzy signal compares every
-    label against every other and takes minutes at vocabulary scale, so it is
-    handed to a worker and the caller polls the run it gets back.
+    Every run goes to the worker: even an exact-label run over a whole
+    vocabulary can produce more pairs than a request should wait for.
     """
     validate_detection_options(signals, similarity_threshold)
 
-    if SIGNAL_TRIGRAM not in signals:
-        return run_detection(
-            scope,
-            signals=tuple(signals),
-            same_language_only=same_language_only,
-            similarity_threshold=similarity_threshold,
-            user=user,
-            log=lambda message: None,
-            name=name,
-        )
-
     if not worker_is_available():
         raise ConceptMatchRequestError(
-            _("Cannot search for similar labels."),
+            _("Cannot search for matches."),
             _(
                 "No background worker answered. One may be busy finishing "
                 "another search, in which case this will work again in a "
-                "moment. Otherwise no worker is running: the exact signals work "
-                "without one, or a similar-label search can be run from the "
-                "command line with detect_concept_matches --signal trigram."
+                "moment. Otherwise no worker is running: start one, or run the "
+                "search from the command line with detect_concept_matches."
             ),
             status=HTTPStatus.SERVICE_UNAVAILABLE,
         )
@@ -645,6 +694,7 @@ def start_detection(
                 "same_language_only": same_language_only,
                 "similarity_threshold": similarity_threshold,
             },
-        ]
+        ],
+        **({"queue": MATCH_TASK_QUEUE} if MATCH_TASK_QUEUE else {}),
     )
     return run

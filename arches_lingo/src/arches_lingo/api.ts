@@ -1383,6 +1383,21 @@ export const fetchConceptMatchRuns = async (): Promise<{
     return parsed;
 };
 
+// Null rather than an error when the run is gone: deleting is how a run is
+// cancelled, so a poller has to be able to tell that apart from a failure.
+export const fetchConceptMatchRun = async (
+    runId: number,
+): Promise<ConceptMatchRun | null> => {
+    const url = generateArchesURL("arches_lingo:api-concept-match-run-detail", {
+        pk: runId,
+    });
+    const response = await fetch(url);
+    if (response.status === 404) return null;
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
 export const createConceptMatchRun = async (
     request: ConceptMatchRunRequest,
 ): Promise<ConceptMatchRun> => {

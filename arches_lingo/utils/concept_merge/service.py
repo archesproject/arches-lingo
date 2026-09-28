@@ -2,12 +2,13 @@ import uuid
 
 from django.db import transaction
 
-from arches_lingo.models import ConceptMerge
+from arches_lingo.models import ConceptMatchCandidate, ConceptMerge
 from arches_lingo.utils.concept_lifecycle import (
     delete_concept,
     index_concepts_in_transaction,
     retire_concept,
 )
+from arches_lingo.utils.concept_matching import mark_pairs_settled
 from arches_lingo.utils.concept_merge.history import get_labels_by_concept_id
 from arches_lingo.utils.concept_merge.tiles import (
     append_digital_objects_to_survivor,
@@ -103,6 +104,11 @@ def merge_concepts(survivor, absorbed, selections, user, user_is_lingo_admin=Fal
             user=user if user is not None and user.is_authenticated else None,
             edit_transaction_id=edit_transaction_id,
             selections=selections,
+        )
+
+        # Wherever match review has the pair queued, it is no longer a question.
+        mark_pairs_settled(
+            [(survivor_id, absorbed_id)], ConceptMatchCandidate.STATUS_MERGED, user
         )
 
     # Indexed once the transaction commits, so a rolled-back merge stays out of

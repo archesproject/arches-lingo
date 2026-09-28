@@ -92,7 +92,9 @@ const narrowingText = computed(function () {
     return narrowings.length ? narrowings.join(", ") : $gettext("None");
 });
 
-const startedText = computed(() => new Date(run.created).toLocaleString());
+const startedText = computed(() =>
+    new Date(run.created).toLocaleString(selectedLanguage.value.code),
+);
 
 const startedByText = computed(
     () => run.created_by ?? $gettext("Command line"),
