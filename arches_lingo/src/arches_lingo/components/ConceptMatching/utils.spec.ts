@@ -4,7 +4,7 @@ import {
     SIGNAL_EXACT_LABEL,
     SIGNAL_SHARED_IDENTIFIER,
     SIGNAL_TRIGRAM,
-} from "@/arches_lingo/components/concept-matching/constants.ts";
+} from "@/arches_lingo/components/ConceptMatching/constants.ts";
 import {
     buildPreselectedConcept,
     buildSignalList,
@@ -16,10 +16,9 @@ import {
     isRunUnfinished,
     resolveMergeSides,
     splitElapsedSeconds,
-} from "@/arches_lingo/components/concept-matching/utils.ts";
+} from "@/arches_lingo/components/ConceptMatching/utils.ts";
 
 import type {
-    ConceptMatchCandidate,
     ConceptMatchRun,
     MatchedConceptSummary,
 } from "@/arches_lingo/types.ts";
@@ -37,22 +36,6 @@ function conceptSummary(id: string, value: string): MatchedConceptSummary {
         scheme_id: "scheme-1",
         scheme_name: "Test Scheme",
     } as MatchedConceptSummary;
-}
-
-function candidate(
-    overrides: Partial<ConceptMatchCandidate> = {},
-): ConceptMatchCandidate {
-    return {
-        id: 1,
-        score: 1.0,
-        signal: SIGNAL_EXACT_LABEL,
-        evidence: "trumpets",
-        status: "pending",
-        concept_a: conceptSummary("aaa", "Trumpets"),
-        concept_b: conceptSummary("bbb", "Trumpet"),
-        is_cross_scheme: false,
-        ...overrides,
-    } as ConceptMatchCandidate;
 }
 
 function run(overrides: Partial<ConceptMatchRun> = {}): ConceptMatchRun {
@@ -118,24 +101,21 @@ describe("isRunUnfinished", () => {
 });
 
 describe("resolveMergeSides", () => {
-    it("has no sides once a concept has been deleted", () => {
-        expect(resolveMergeSides(candidate({ concept_b: null }), "aaa")).toBe(
-            null,
-        );
-    });
+    const conceptA = conceptSummary("aaa", "Trumpets");
+    const conceptB = conceptSummary("bbb", "Trumpet");
 
     it("reads the survivor from whichever side was not absorbed", () => {
-        const pair = candidate();
+        const sides = resolveMergeSides(conceptA, conceptB, "bbb");
 
-        expect(resolveMergeSides(pair, "bbb")?.survivor.id).toEqual("aaa");
-        expect(resolveMergeSides(pair, "bbb")?.absorbed.id).toEqual("bbb");
+        expect(sides.survivor.id).toEqual("aaa");
+        expect(sides.absorbed.id).toEqual("bbb");
     });
 
     it("works whichever way round the pair is stored", () => {
-        const pair = candidate();
+        const sides = resolveMergeSides(conceptA, conceptB, "aaa");
 
-        expect(resolveMergeSides(pair, "aaa")?.survivor.id).toEqual("bbb");
-        expect(resolveMergeSides(pair, "aaa")?.absorbed.id).toEqual("aaa");
+        expect(sides.survivor.id).toEqual("bbb");
+        expect(sides.absorbed.id).toEqual("aaa");
     });
 });
 

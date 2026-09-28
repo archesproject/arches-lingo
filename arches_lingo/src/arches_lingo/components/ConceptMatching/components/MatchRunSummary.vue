@@ -1,19 +1,22 @@
 <script setup lang="ts">
 import { computed } from "vue";
 
-import { useGettext } from "vue3-gettext";
 import { storeToRefs } from "pinia";
+import { useGettext } from "vue3-gettext";
 
-import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
-
+import { useLocalizedLabel } from "@/arches_lingo/components/ConceptMatching/composables/useLocalizedLabel.ts";
 import {
     SIGNAL_EXACT_LABEL,
     SIGNAL_SHARED_IDENTIFIER,
     SIGNAL_TRIGRAM,
-} from "@/arches_lingo/components/concept-matching/constants.ts";
+} from "@/arches_lingo/components/ConceptMatching/constants.ts";
 
-import type { ConceptMatchRun, Scheme } from "@/arches_lingo/types.ts";
+import type {
+    ConceptMatchRun,
+    ConceptMatchSignal,
+    Scheme,
+} from "@/arches_lingo/types.ts";
 
 const { run, schemes } = defineProps<{
     run: ConceptMatchRun;
@@ -21,75 +24,53 @@ const { run, schemes } = defineProps<{
 }>();
 
 const { $gettext } = useGettext();
-const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
-
-function parameter<ValueType>(key: string): ValueType | undefined {
-    return run.parameters[key] as ValueType | undefined;
-}
-
-// Runs recorded before a scope could name more than one scheme stored a single
-// id under its own key, so those are still read rather than shown as unscoped.
-const scopedSchemeIds = computed(function () {
-    const schemeIds = parameter<string[]>("scheme_ids");
-    if (schemeIds?.length) {
-        return schemeIds;
-    }
-    const legacySchemeId = parameter<string | null>("source_scheme_id");
-    return legacySchemeId ? [legacySchemeId] : [];
-});
+const { selectedLanguage } = storeToRefs(useLanguageStore());
+const { labelOf } = useLocalizedLabel();
 
 const scopeText = computed(function () {
-    if (!scopedSchemeIds.value.length) {
+    const schemeIds = run.parameters.scheme_ids;
+    if (!schemeIds.length) {
         return $gettext("Every scheme");
     }
     const namesById = new Map(
-        schemes.map((scheme) => [
-            scheme.id,
-            getItemLabel(
-                scheme,
-                selectedLanguage.value.code,
-                systemLanguage.value.code,
-            ).value,
-        ]),
+        schemes.map((scheme) => [scheme.id, labelOf(scheme)]),
     );
-    return scopedSchemeIds.value
-        .map(
+    return formatList(
+        schemeIds.map(
             (schemeId) =>
                 namesById.get(schemeId) ?? $gettext("a scheme since removed"),
-        )
-        .join(", ");
+        ),
+    );
 });
-
-const signalLabelsBySignal = computed<Record<string, string>>(() => ({
-    [SIGNAL_EXACT_LABEL]: $gettext("Labels that match exactly"),
-    [SIGNAL_SHARED_IDENTIFIER]: $gettext("Concepts sharing a URI"),
-    [SIGNAL_TRIGRAM]: $gettext("Labels that are merely similar"),
-}));
 
 const signalsText = computed(function () {
-    const signals = parameter<string[]>("signals") ?? [];
-    return signals
-        .map((signal) => signalLabelsBySignal.value[signal] ?? signal)
-        .join(", ");
+    const signalLabels: Record<ConceptMatchSignal, string> = {
+        [SIGNAL_EXACT_LABEL]: $gettext("Labels that match exactly"),
+        [SIGNAL_SHARED_IDENTIFIER]: $gettext("Concepts sharing a URI"),
+        [SIGNAL_TRIGRAM]: $gettext("Labels that are merely similar"),
+    };
+    return formatList(
+        run.parameters.signals.map((signal) => signalLabels[signal]),
+    );
 });
 
-const usedTrigram = computed(function () {
-    return (parameter<string[]>("signals") ?? []).includes(SIGNAL_TRIGRAM);
-});
+const usedTrigram = computed(() =>
+    run.parameters.signals.includes(SIGNAL_TRIGRAM),
+);
 
-const similarityText = computed(function () {
-    return Number(parameter<number>("similarity_threshold") ?? 0).toFixed(2);
-});
+const similarityText = computed(() =>
+    run.parameters.similarity_threshold.toFixed(2),
+);
 
 const narrowingText = computed(function () {
     const narrowings = [];
-    if (parameter<boolean>("cross_scheme_only")) {
+    if (run.parameters.cross_scheme_only) {
         narrowings.push($gettext("only pairs spanning two schemes"));
     }
-    if (parameter<boolean>("same_language_only")) {
+    if (run.parameters.same_language_only) {
         narrowings.push($gettext("only labels in the same language"));
     }
-    return narrowings.length ? narrowings.join(", ") : $gettext("None");
+    return narrowings.length ? formatList(narrowings) : $gettext("None");
 });
 
 const startedText = computed(() =>
@@ -99,6 +80,12 @@ const startedText = computed(() =>
 const startedByText = computed(
     () => run.created_by ?? $gettext("Command line"),
 );
+
+function formatList(items: string[]): string {
+    return new Intl.ListFormat(selectedLanguage.value.code, {
+        type: "conjunction",
+    }).format(items);
+}
 </script>
 
 <template>
@@ -159,14 +146,14 @@ const startedByText = computed(
     font-size: var(--p-lingo-font-size-xxsmall);
 }
 
-.run-summary-entry {
+.run-summary .run-summary-entry {
     display: flex;
     gap: 0.375rem;
     min-width: 0;
 }
 
 .run-summary-entry dt {
-    color: var(--p-inputtext-placeholder-color);
+    color: var(--p-text-muted-color);
     white-space: nowrap;
 }
 
@@ -175,7 +162,7 @@ const startedByText = computed(
     color: var(--p-header-item-label);
 }
 
-.run-summary-name dd {
+.run-summary .run-summary-name dd {
     font-weight: var(--p-lingo-font-weight-bold);
 }
 </style>

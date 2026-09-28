@@ -1,5 +1,3 @@
-"""HTTP layer for match detection. Everything of substance is in the utils."""
-
 import json
 from functools import wraps
 from http import HTTPStatus
@@ -64,16 +62,13 @@ def _responds_with_request_errors(handler):
 
 
 class ConceptMatchScopeSizeView(LingoEditorMixin, View):
-    """How much work a scope implies, so the interface can say so up front."""
-
     def get(self, request):
         return JSONResponse(serialize_scope_sizes())
 
 
 class ConceptMatchRunListView(LingoEditorMixin, View):
     def get(self, request):
-        # Nothing else is in a position to notice a run whose worker died, and
-        # this is the request that is about to report those runs as running.
+        # Nothing else notices a run whose worker died.
         reap_stale_runs()
         return JSONResponse(
             {"data": list_runs(request.user, is_lingo_admin(request.user))}
@@ -92,7 +87,6 @@ class ConceptMatchRunListView(LingoEditorMixin, View):
 class ConceptMatchRunDetailView(LingoEditorMixin, View):
     @_responds_with_request_errors
     def get(self, request, pk):
-        # This is what the interface polls while a run works.
         reap_stale_runs(run_ids=[pk])
         return JSONResponse(
             serialize_run(get_run(pk), request.user, is_lingo_admin(request.user))
@@ -119,12 +113,9 @@ class ConceptMatchCandidateListView(LingoEditorMixin, View):
 
     @_responds_with_request_errors
     def patch(self, request, pk):
-        """Record a review decision against one or more of the run's candidates."""
         run = get_run(pk)
         body = _parse_json_body(request)
 
-        # Clearing or restoring a whole queue names no ids: there can be tens
-        # of thousands of them.
         if body.get("all"):
             return JSONResponse(
                 set_status_for_all(run, body.get("status"), request.user)
@@ -138,8 +129,6 @@ class ConceptMatchCandidateListView(LingoEditorMixin, View):
 
 
 class ConceptMatchLinkView(LingoEditorMixin, View):
-    """Record an exactMatch between the concepts of each selected candidate."""
-
     @_responds_with_request_errors
     def post(self, request, pk):
         run = get_run(pk)

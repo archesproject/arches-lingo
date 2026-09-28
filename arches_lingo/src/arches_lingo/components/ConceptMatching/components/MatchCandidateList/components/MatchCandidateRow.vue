@@ -2,27 +2,28 @@
 import { computed } from "vue";
 
 import { useGettext } from "vue3-gettext";
-import { storeToRefs } from "pinia";
+import { RouterLink } from "vue-router";
 
 import Button from "primevue/button";
 import Checkbox from "primevue/checkbox";
 import Tag from "primevue/tag";
 
-import { RouterLink } from "vue-router";
-
-import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 import { routeNames } from "@/arches_lingo/routes.ts";
-import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
+import { useLocalizedLabel } from "@/arches_lingo/components/ConceptMatching/composables/useLocalizedLabel.ts";
 import {
     SIGNAL_SHARED_IDENTIFIER,
     SIGNAL_TRIGRAM,
-} from "@/arches_lingo/components/concept-matching/constants.ts";
+} from "@/arches_lingo/components/ConceptMatching/constants.ts";
 import { SECONDARY } from "@/arches_lingo/constants.ts";
 
 import type {
     ConceptMatchCandidate,
     MatchedConceptSummary,
 } from "@/arches_lingo/types.ts";
+import type { CandidateSelectionChange } from "@/arches_lingo/components/ConceptMatching/types.ts";
+
+const SELECTION_CHANGED_EVENT = "selection-changed" as const;
+const MERGE_REQUESTED_EVENT = "merge-requested" as const;
 
 const {
     candidate,
@@ -31,30 +32,37 @@ const {
 } = defineProps<{
     candidate: ConceptMatchCandidate;
     isSelected: boolean;
-    // A pair already linked or merged is a record of what was done, so it is
-    // shown without the controls for deciding about it again.
     isReviewable?: boolean;
 }>();
 
 const emit = defineEmits<{
-    (event: "update:selected", candidateId: number, isSelected: boolean): void;
-    (event: "merge", candidateId: number): void;
+    (
+        event: typeof SELECTION_CHANGED_EVENT,
+        payload: CandidateSelectionChange,
+    ): void;
+    (
+        event: typeof MERGE_REQUESTED_EVENT,
+        payload: { candidateId: number },
+    ): void;
 }>();
 
 const { $gettext } = useGettext();
-const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
-
-function conceptName(concept: MatchedConceptSummary | null) {
-    if (!concept) return $gettext("Unknown concept");
-    return getItemLabel(
-        concept,
-        selectedLanguage.value.code,
-        systemLanguage.value.code,
-    ).value;
-}
+const { labelOf } = useLocalizedLabel();
 
 const bothConceptsExist = computed(
     () => candidate.concept_a !== null && candidate.concept_b !== null,
+);
+
+const pairedConcepts = computed(() => [
+    candidate.concept_a,
+    candidate.concept_b,
+]);
+
+const selectionLabel = computed(() =>
+    $gettext("Select %{first} and %{second}", {
+        first: conceptName(candidate.concept_a),
+        second: conceptName(candidate.concept_b),
+    }),
 );
 
 const reason = computed(function () {
@@ -73,6 +81,23 @@ const reason = computed(function () {
         evidence: candidate.evidence,
     });
 });
+
+function conceptName(concept: MatchedConceptSummary | null): string {
+    return concept ? labelOf(concept) : $gettext("Unknown concept");
+}
+
+function openInNewTabLabel(concept: MatchedConceptSummary): string {
+    return $gettext("Open %{name} in a new tab", {
+        name: conceptName(concept),
+    });
+}
+
+function onSelectionChange(isChecked: boolean): void {
+    emit(SELECTION_CHANGED_EVENT, {
+        candidateId: candidate.id,
+        isSelected: isChecked,
+    });
+}
 </script>
 
 <template>
@@ -85,24 +110,14 @@ const reason = computed(function () {
             :model-value="isSelected"
             :binary="true"
             :input-id="`candidate-${candidate.id}`"
-            :aria-label="
-                $gettext('Select %{first} and %{second}', {
-                    first: conceptName(candidate.concept_a),
-                    second: conceptName(candidate.concept_b),
-                })
-            "
-            @update:model-value="
-                emit('update:selected', candidate.id, $event as boolean)
-            "
+            :aria-label="selectionLabel"
+            @update:model-value="onSelectionChange"
         />
 
         <div class="candidate-body">
             <div class="candidate-concepts">
                 <span
-                    v-for="(concept, index) in [
-                        candidate.concept_a,
-                        candidate.concept_b,
-                    ]"
+                    v-for="(concept, index) in pairedConcepts"
                     :key="concept?.id ?? index"
                     class="candidate-concept"
                 >
@@ -113,23 +128,15 @@ const reason = computed(function () {
                     />
                     <RouterLink
                         v-if="concept"
+                        class="candidate-concept-link"
+                        target="_blank"
+                        rel="noopener"
                         :to="{
                             name: routeNames.concept,
                             params: { id: concept.id },
                         }"
-                        target="_blank"
-                        rel="noopener"
-                        :title="
-                            $gettext('Open %{name} in a new tab', {
-                                name: conceptName(concept),
-                            })
-                        "
-                        :aria-label="
-                            $gettext('Open %{name} in a new tab', {
-                                name: conceptName(concept),
-                            })
-                        "
-                        class="candidate-concept-link"
+                        :title="openInNewTabLabel(concept)"
+                        :aria-label="openInNewTabLabel(concept)"
                     >
                         {{ conceptName(concept) }}
                     </RouterLink>
@@ -146,18 +153,18 @@ const reason = computed(function () {
 
         <Tag
             v-if="candidate.is_cross_scheme"
-            severity="secondary"
+            :severity="SECONDARY"
             :value="$gettext('Across schemes')"
         />
 
         <Button
             v-if="isReviewable && bothConceptsExist"
+            class="candidate-merge-button"
             icon="pi pi-sign-in"
             :label="$gettext('Merge')"
             :severity="SECONDARY"
             :outlined="true"
-            class="candidate-merge-button"
-            @click="emit('merge', candidate.id)"
+            @click="emit(MERGE_REQUESTED_EVENT, { candidateId: candidate.id })"
         />
     </div>
 </template>
@@ -178,7 +185,7 @@ const reason = computed(function () {
     background-color: var(--p-highlight-background);
 }
 
-.candidate-body {
+.candidate-row .candidate-body {
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
@@ -186,14 +193,14 @@ const reason = computed(function () {
     flex: 1;
 }
 
-.candidate-concepts {
+.candidate-body .candidate-concepts {
     display: flex;
     align-items: baseline;
     flex-wrap: wrap;
     gap: 0.5rem;
 }
 
-.candidate-concept {
+.candidate-concepts .candidate-concept {
     display: flex;
     align-items: baseline;
     gap: 0.375rem;
@@ -201,37 +208,35 @@ const reason = computed(function () {
     overflow-wrap: anywhere;
 }
 
-/* The same treatment links get in the concept report, so a concept name reads
-   as a concept name wherever it appears. */
-.candidate-concept-link {
-    color: var(--p-primary-500);
+.candidate-concept .candidate-concept-link {
+    color: var(--p-primary-color);
     text-decoration: none;
 }
 
-.candidate-concept-link:hover,
-.candidate-concept-link:focus-visible {
-    color: var(--p-primary-700);
+.candidate-concept .candidate-concept-link:hover,
+.candidate-concept .candidate-concept-link:focus-visible {
+    color: var(--p-primary-hover-color);
     text-decoration: underline;
 }
 
-.candidate-scheme {
+.candidate-concept .candidate-scheme {
     font-size: var(--p-lingo-font-size-xxsmall);
-    color: var(--p-neutral-400);
+    color: var(--p-text-muted-color);
 }
 
-.candidate-link-icon {
-    color: var(--p-neutral-400);
+.candidate-concept .candidate-link-icon {
+    color: var(--p-text-muted-color);
 }
 
-.candidate-merge-button {
+.candidate-body .candidate-reason {
+    font-size: var(--p-lingo-font-size-smallnormal);
+    color: var(--p-text-muted-color);
+    overflow-wrap: anywhere;
+}
+
+.candidate-row .candidate-merge-button {
     font-size: var(--p-lingo-font-size-small);
     border-radius: 0.125rem;
     white-space: nowrap;
-}
-
-.candidate-reason {
-    font-size: var(--p-lingo-font-size-smallnormal);
-    color: var(--p-inputtext-placeholder-color);
-    overflow-wrap: anywhere;
 }
 </style>

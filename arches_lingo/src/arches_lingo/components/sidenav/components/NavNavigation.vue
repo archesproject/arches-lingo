@@ -43,10 +43,7 @@ watchEffect(() => {
         },
     ];
 
-    // Everything behind Find Matches -- running a detection, dismissing a
-    // suggestion, linking or merging a pair -- requires a Lingo editor, so the
-    // page is only offered to one. is_lingo_editor is false for anonymous
-    // users, so this covers being logged in as well.
+    // is_lingo_editor is false for anonymous users, so this also covers login.
     if (userStore.isEditor) {
         items.push({
             key: "concept_matches",

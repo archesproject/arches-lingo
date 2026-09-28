@@ -377,8 +377,6 @@ async function onMerged() {
     });
 }
 
-// The workbench runs the search itself from this concept id, so arriving there
-// already shows its matches.
 function findMatches() {
     if (!props.concept?.resourceinstanceid) return;
     router.push({

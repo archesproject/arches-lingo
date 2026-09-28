@@ -39,6 +39,7 @@ import {
     STRATEGY_REPARENT_TO_SURVIVOR,
 } from "@/arches_lingo/constants.ts";
 import {
+    MERGE_DIALOG_FRAME_PASS_THROUGH,
     MERGE_STEP_COMPARE,
     MERGE_STEP_CONFIRM,
     MERGE_STEP_SELECT,
@@ -63,30 +64,7 @@ const DIALOG_SIZE = {
 
 // The chrome Lingo's other dialogs wear; see ExportThesauri.
 const DIALOG_PASS_THROUGH = {
-    root: {
-        style: {
-            fontFamily: "var(--p-lingo-font-family)",
-            fontSize: "var(--p-lingo-font-size-small)",
-            border: "0.125rem solid var(--p-dialog-color)",
-            borderRadius: "0.25rem",
-        },
-    },
-    header: {
-        style: {
-            background: "var(--p-navigation-header-color)",
-            color: "var(--p-dialog-header-text-color)",
-            borderRadius: "0",
-            paddingBlock: "1.25rem",
-            paddingInline: "1.5rem",
-        },
-    },
-    title: {
-        style: {
-            fontSize: "var(--p-lingo-font-size-large)",
-            fontWeight: "var(--p-lingo-font-weight-normal)",
-            lineHeight: "1.2",
-        },
-    },
+    ...MERGE_DIALOG_FRAME_PASS_THROUGH,
     content: {
         style: {
             display: "flex",
@@ -95,7 +73,7 @@ const DIALOG_PASS_THROUGH = {
             minHeight: "0",
             overflow: "hidden",
             padding: "1.25rem",
-            paddingTop: "1rem",
+            paddingBlockStart: "1rem",
         },
     },
 };

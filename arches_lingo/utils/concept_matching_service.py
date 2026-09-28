@@ -1,11 +1,4 @@
-"""Turn stored match runs and candidates into what the review interface needs.
-
-Detection stores pairs of concept ids. Reviewing them needs names, and the
-scheme each concept sits in -- a pair is read very differently depending on
-whether it spans two vocabularies or duplicates something inside one. Both are
-gathered per page of candidates rather than per candidate, so a page of fifty
-pairs costs the same handful of queries as a page of one.
-"""
+"""Review-side operations on match runs and their candidates."""
 
 import datetime
 import uuid
@@ -49,34 +42,25 @@ from arches_lingo.utils.concept_merge.validation import concept_is_writable
 DEFAULT_ITEMS_PER_PAGE = 50
 MAX_ITEMS_PER_PAGE = 200
 
-# Linking writes up to two tiles per pair through the full tile save path, so a
-# request is capped at a size that stays comfortably inside one. Reviewers page
-# through the queue anyway.
+# Linking writes up to two tiles per pair through the full tile save path.
 MAX_LINK_BATCH = 200
 
-# How long a run may go without reporting progress before it is presumed dead.
-# A heartbeat is recorded every half minute while a query runs, so the threshold
-# is well clear of any honest gap between them.
+# Well clear of HEARTBEAT_INTERVAL_SECONDS.
 STALE_RUN_SECONDS = getattr(settings, "LINGO_MATCH_STALE_SECONDS", 300)
 
-# A long fuzzy run occupies a solo-pool worker for its whole length. Pointing
-# this at a queue with a worker of its own keeps imports and exports moving
-# meanwhile; left unset, runs share the default queue.
+# A queue with its own worker keeps a long fuzzy run from blocking imports and
+# exports on a solo-pool worker.
 MATCH_TASK_QUEUE = getattr(settings, "LINGO_MATCH_TASK_QUEUE", None)
 
-# A run's own slice can commit pairs between the delete clearing them and the
-# delete committing, which fails the delete on the foreign key. Trying again
-# collects those pairs too.
+# A running slice can commit pairs between the delete clearing them and the
+# delete committing, failing it on the foreign key; retrying collects them.
 DELETE_RUN_ATTEMPTS = 3
 
-# Counting every label takes seconds on a large vocabulary, and the counts only
-# feed a rough estimate of how long a run will take.
 SCOPE_SIZES_CACHE_KEY = "lingo_match_scope_sizes"
 SCOPE_SIZES_CACHE_SECONDS = 600
 
 
 class ConceptMatchRequestError(Exception):
-    """A request the review interface cannot be given what it asked for."""
 
     def __init__(self, title, message, status=HTTPStatus.BAD_REQUEST):
         super().__init__(message)
@@ -99,12 +83,7 @@ def _was_started_by(run, user):
 
 
 def user_can_delete_run(run, user, user_is_lingo_admin):
-    """Deleting is also how a run is cancelled, so it stays with its creator.
-
-    Every editor can review any run; only its creator or a Lingo admin can
-    remove it. A run started from the command line has no creator, so it is
-    left to the admins.
-    """
+    """Deleting also cancels a run, so it is limited to its creator or an admin."""
     return user_is_lingo_admin or _was_started_by(run, user)
 
 
@@ -131,11 +110,7 @@ def _describe_creator(user):
 
 
 def _serialize_timestamp(value):
-    """An ISO timestamp with its offset, which the browser can place correctly.
-
-    With USE_TZ off the stored value is naive, in the server's zone; without
-    the offset a browser elsewhere reads it as its own local time.
-    """
+    """With USE_TZ off the value is naive; add the offset for the browser."""
     if value is None:
         return None
     if timezone.is_naive(value):
@@ -169,9 +144,7 @@ def list_runs(user, user_is_lingo_admin):
 
 
 def serialize_run(run, user=None, user_is_lingo_admin=False, counts_by_status=None):
-    # Elapsed time is measured here rather than from the timestamps, because
-    # both ends of this subtraction then come from one clock, whatever zone
-    # either side is in.
+    # Computed server-side so both ends come from one clock.
     ended_at = run.finished or timezone.now()
 
     if counts_by_status is None:
@@ -190,16 +163,12 @@ def serialize_run(run, user=None, user_is_lingo_admin=False, counts_by_status=No
         "created_by": _describe_creator(run.user),
         "started_by_viewer": _was_started_by(run, user),
         "can_delete": user_can_delete_run(run, user, user_is_lingo_admin),
-        # Every status, not just the outstanding one: a reviewer wants to see
-        # what they linked and merged as much as what is left to decide, and
-        # one grouped count costs what counting the pending ones alone did.
         "counts_by_status": counts_by_status,
         "pending_count": counts_by_status[ConceptMatchCandidate.STATUS_PENDING],
     }
 
 
 def serialize_scope_sizes():
-    """How many labels a run would compare, in all and per scheme."""
     total_labels, labels_by_scheme = cache.get_or_set(
         SCOPE_SIZES_CACHE_KEY, count_labels_by_scheme, SCOPE_SIZES_CACHE_SECONDS
     )
@@ -212,14 +181,8 @@ def serialize_scope_sizes():
 def worker_is_available():
     """Whether a background worker would pick up a run queued now.
 
-    A worker running under the solo pool executes tasks in the same process that
-    answers control commands, so while it is working it cannot answer a ping and
-    is indistinguishable from a worker that is not there at all. Refusing on that
-    basis would mean no search could be started while another was running.
-
-    A run that is still reporting progress is the better evidence, and it is the
-    same threshold ``reap_stale_runs`` uses to decide that a run has stopped: a
-    worker whose progress counts as alive there counts as alive here.
+    A busy solo-pool worker cannot answer a ping, so a run still reporting
+    progress also counts as evidence of a live worker.
     """
     if task_management.check_if_celery_available():
         return True
@@ -233,14 +196,8 @@ def worker_is_available():
 def reap_stale_runs(run_ids=None):
     """Fail runs that stopped reporting, returning how many were closed out.
 
-    A worker restarted mid-run cannot fail its own run: celery acknowledges a
-    task when it receives it, so the message dies with the worker and nothing is
-    left to notice. The row would otherwise claim to be running forever, and the
-    interface would poll a run that no process is working on.
-
-    Runs predating the heartbeat fall back to when they were created, which is
-    the most recent moment they are known to have been alive. `run_ids` limits
-    the check to those runs, for a request that only reports on one.
+    Celery acks a task on receipt, so a worker restarted mid-run cannot fail
+    its own run. Runs with no heartbeat yet fall back to their creation time.
     """
     cutoff = timezone.now() - datetime.timedelta(seconds=STALE_RUN_SECONDS)
     stale_runs = ConceptMatchRun.objects.filter(
@@ -259,9 +216,8 @@ def reap_stale_runs(run_ids=None):
     )
 
 
-# Why a concept cannot be merged into. The two have different remedies -- one is
-# the concept's own lifecycle state, the other its scheme's -- so they are
-# reported apart rather than as a bare "no".
+# Reported apart because the remedies differ: the concept's lifecycle state,
+# or its scheme's.
 CANNOT_RECEIVE_NOT_EDITABLE = "not_editable"
 CANNOT_RECEIVE_SCHEME_LOCKED = "scheme_locked"
 
@@ -269,12 +225,7 @@ CANNOT_RECEIVE_SCHEME_LOCKED = "scheme_locked"
 def _reasons_concepts_cannot_receive_data(
     concept_ids, scheme_ids_by_concept_id, user_is_lingo_admin
 ):
-    """Why each concept could not be merged into; absent means it could be.
-
-    The same rule as ``concept_is_writable``, asked of a whole page at once: a
-    page of fifty pairs names a hundred concepts, and deciding this one concept
-    at a time would be a hundred round trips.
-    """
+    """``concept_is_writable`` for a whole page at once; absent means writable."""
     editable_ids = {
         str(concept_id)
         for concept_id in ResourceInstance.objects.filter(
@@ -312,8 +263,7 @@ def _reasons_concepts_cannot_receive_data(
 def _build_concept_summaries(concept_ids, user_is_lingo_admin=False):
     """Return {concept id: {labels, scheme, whether it can be merged into}}.
 
-    Labels rather than the resource descriptor, so the client can pick the best
-    one for the reader's language the way every other concept name is chosen.
+    Labels rather than the descriptor, so the client picks one by language.
     """
     if not concept_ids:
         return {}
@@ -324,8 +274,7 @@ def _build_concept_summaries(concept_ids, user_is_lingo_admin=False):
             pk__in=concept_ids
         ).values_list("pk", flat=True)
     }
-    # A pair outlives the concepts it names: a deleted concept is reported as
-    # missing rather than as a nameless one.
+    # Deleted concepts are reported as missing rather than nameless.
     concept_ids = existing_concept_ids
     if not concept_ids:
         return {}
@@ -354,8 +303,6 @@ def _build_concept_summaries(concept_ids, user_is_lingo_admin=False):
             ],
             "scheme_id": scheme_id,
             "scheme_name": scheme_names_by_id.get(scheme_id),
-            # A merge writes to one side only, so this is what decides which way
-            # round a pair may be merged -- the other side is only read from.
             "can_receive_data": concept_id not in cannot_receive_reasons,
             "cannot_receive_reason": cannot_receive_reasons.get(concept_id),
         }
@@ -381,7 +328,6 @@ def _parse_positive_integer(value, default, parameter_name):
 def serialize_candidate_page(
     run, status=None, page_number=1, items_per_page=None, user_is_lingo_admin=False
 ):
-    """Return one page of a run's candidates, with both concepts named."""
     items_per_page = min(
         _parse_positive_integer(items_per_page, DEFAULT_ITEMS_PER_PAGE, "items"),
         MAX_ITEMS_PER_PAGE,
@@ -440,11 +386,7 @@ REVIEWABLE_STATUSES = (
 
 
 def _require_reviewable_status(status):
-    """Only dismissing and restoring are decisions a reviewer makes by hand.
-
-    Linking and merging are consequences of doing the work, recorded by the
-    code that does it, and are never undone from here.
-    """
+    """Linked and merged are recorded by the code that does that work."""
     if status not in REVIEWABLE_STATUSES:
         raise ConceptMatchRequestError(
             _("Invalid request."),
@@ -471,7 +413,6 @@ def _status_change_result(status, updated_count, already_decided_count=0):
 
 
 def set_candidate_status(run, candidate_ids, status, user):
-    """Dismiss pending candidates of this run, or restore dismissed ones."""
     _require_reviewable_status(status)
     if status == ConceptMatchCandidate.STATUS_DISMISSED:
         return _status_change_result(
@@ -484,12 +425,6 @@ def set_candidate_status(run, candidate_ids, status, user):
 
 
 def set_status_for_all(run, status, user):
-    """Dismiss everything still pending, or restore everything dismissed.
-
-    A corpus-wide fuzzy run can suggest tens of thousands of pairs, far more
-    than a reviewer can name one at a time, so the server does it rather than
-    being sent every id.
-    """
     _require_reviewable_status(status)
     if status == ConceptMatchCandidate.STATUS_DISMISSED:
         return _status_change_result(status, _dismiss(run.candidates.all(), user))
@@ -498,10 +433,9 @@ def set_status_for_all(run, status, user):
 
 
 def _link_outcome(concept_a, concept_b, user_is_lingo_admin):
-    """Decide what can be written for one pair, and why not when it cannot."""
+    """Return (write_to_first, write_to_second, skip_reason) for one pair."""
     if not get_concept_uri(concept_a.pk) or not get_concept_uri(concept_b.pk):
-        # An exactMatch names the other concept by URI, so a concept without
-        # one cannot be pointed at or point anywhere.
+        # An exactMatch names the other concept by URI.
         return None, None, "missing_uri"
 
     write_to_first = concept_is_writable(concept_a, user_is_lingo_admin)
@@ -515,16 +449,7 @@ def _link_outcome(concept_a, concept_b, user_is_lingo_admin):
 def link_candidates_with_exact_match(
     run, candidate_ids, user, user_is_lingo_admin=False
 ):
-    """Record a skos:exactMatch between the concepts of each candidate.
-
-    Linking says the two concepts mean the same thing while leaving both in
-    place, which is the right outcome for a pair spanning two vocabularies:
-    neither scheme loses a concept, and each record points at the other.
-
-    A pair is skipped rather than failed when it cannot be written -- one of the
-    concepts has no URI, or neither side may be edited -- so one awkward pair in
-    a selection of fifty does not cost the other forty-nine.
-    """
+    """Record a skos:exactMatch for each candidate, skipping unwritable pairs."""
     if len(candidate_ids) > MAX_LINK_BATCH:
         raise ConceptMatchRequestError(
             _("Too many pairs."),
@@ -565,7 +490,6 @@ def link_candidates_with_exact_match(
             concept_a = concepts_by_id.get(str(candidate.concept_a_id))
             concept_b = concepts_by_id.get(str(candidate.concept_b_id))
             if concept_a is None or concept_b is None:
-                # The concept was deleted after the run that suggested it.
                 skipped_by_reason["missing_concept"] += 1
                 continue
 
@@ -589,12 +513,8 @@ def link_candidates_with_exact_match(
             linked_pairs.append((candidate.concept_a_id, candidate.concept_b_id))
 
         if linked_pairs:
-            # Settled wherever the pair is queued, not only in the run being
-            # reviewed: the same two concepts can be suggested by several runs.
             mark_pairs_settled(linked_pairs, ConceptMatchCandidate.STATUS_LINKED, user)
 
-    # One bulk pass once every tile is written, rather than a round trip per
-    # tile inside the loop above.
     if linked_candidate_ids:
         index_concepts_in_transaction(edit_transaction_id)
 
@@ -634,7 +554,6 @@ def _parse_uuid_list(values, parameter_name):
 
 
 def parse_detection_request(body):
-    """Turn a request body into the arguments `start_detection` takes."""
     same_language_only = body.get("same_language_only", True)
     if not isinstance(same_language_only, bool):
         raise ConceptMatchRequestError(
@@ -676,11 +595,7 @@ def parse_detection_request(body):
 def start_detection(
     scope, signals, same_language_only, similarity_threshold, user, name=""
 ):
-    """Queue a run on a worker, returning the pending run to poll.
-
-    Every run goes to the worker: even an exact-label run over a whole
-    vocabulary can produce more pairs than a request should wait for.
-    """
+    """Queue a run on a worker, returning the pending run to poll."""
     validate_detection_options(signals, similarity_threshold)
 
     if not worker_is_available():
@@ -695,8 +610,6 @@ def start_detection(
             status=HTTPStatus.SERVICE_UNAVAILABLE,
         )
 
-    # The run is created here rather than in the task so the response carries
-    # something the interface can poll straight away.
     run = ConceptMatchRun.objects.create(
         user=user if user is not None and user.is_authenticated else None,
         name=name,
