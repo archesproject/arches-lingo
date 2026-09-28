@@ -242,21 +242,14 @@ def get_scheme_ids_for_concepts(concept_ids):
         }
 
 
-def _scope_clauses(scope, source_concept_ids):
-    """Return (sql, params) narrowing which pairs a run keeps.
+def _scope_clauses(scope):
+    """Return (sql, params) narrowing which pairs a run keeps by scheme.
 
-    Pairs are stored lowest id first, not source first, so the source narrowing
-    accepts either side. Pass None once a signal has already pinned one side.
+    Source concepts are not narrowed here: each signal pins one side of its join
+    to them instead (see _scoped_side_sql).
     """
     clauses = []
     params = {}
-
-    if source_concept_ids is not None:
-        clauses.append(
-            " AND (matched.side_a_concept_id = ANY(%(source_concept_ids)s::uuid[])"
-            " OR matched.side_b_concept_id = ANY(%(source_concept_ids)s::uuid[]))"
-        )
-        params["source_concept_ids"] = source_concept_ids
 
     if scope.scheme_ids:
         clauses.append(
@@ -275,9 +268,9 @@ def _needs_scheme_lookup(scope):
     return bool(scope.scheme_ids or scope.cross_scheme_only)
 
 
-def _pair_query(match_sql, scope, source_concept_ids, score_sql="1.0"):
+def _pair_query(match_sql, scope, score_sql="1.0"):
     """Wrap a signal's join in the scope narrowing, ordering each pair."""
-    scope_sql, params = _scope_clauses(scope, source_concept_ids)
+    scope_sql, params = _scope_clauses(scope)
 
     scheme_joins = ""
     if _needs_scheme_lookup(scope):
@@ -441,7 +434,7 @@ def _exact_label_pair_queries(scope, same_language_only):
            AND {pairing_clause}
            {_language_clause(same_language_only)}
     """
-    sql, scope_params = _pair_query(match_sql, scope, None)
+    sql, scope_params = _pair_query(match_sql, scope)
     return [(sql, {**scope_params, **pushdown_params})]
 
 
@@ -459,7 +452,7 @@ def _shared_uri_pair_queries(scope):
             ON side_b.uri = side_a.uri
            AND {pairing_clause}
     """
-    sql, scope_params = _pair_query(match_sql, scope, None)
+    sql, scope_params = _pair_query(match_sql, scope)
     return [(sql, {**scope_params, **pushdown_params})]
 
 
@@ -483,7 +476,7 @@ def _similar_label_pair_queries(scope, same_language_only):
                {_language_clause(same_language_only)}
         """
         sql, scope_params = _pair_query(
-            match_sql, scope, None, score_sql="matched.pair_score"
+            match_sql, scope, score_sql="matched.pair_score"
         )
         queries.append((sql, {**scope_params, **pushdown_params}))
     return queries

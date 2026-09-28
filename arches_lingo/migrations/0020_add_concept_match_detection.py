@@ -25,8 +25,10 @@ class Migration(migrations.Migration):
                         verbose_name="ID",
                     ),
                 ),
+                ("name", models.CharField(blank=True, default="", max_length=255)),
                 ("created", models.DateTimeField(auto_now_add=True)),
                 ("finished", models.DateTimeField(blank=True, null=True)),
+                ("last_progress", models.DateTimeField(blank=True, null=True)),
                 (
                     "status",
                     models.CharField(
