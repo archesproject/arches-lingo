@@ -50,9 +50,11 @@ const emit = defineEmits<{
 
 const { $gettext } = useGettext();
 
-const allOnPageSelected = () =>
-    candidates.length > 0 &&
-    candidates.every((candidate) => selectedIds.has(candidate.id));
+const allOnPageSelected = computed(
+    () =>
+        candidates.length > 0 &&
+        candidates.every((candidate) => selectedIds.has(candidate.id)),
+);
 
 // Linked and merged pairs are a record of what was done, not a queue: there is
 // nothing left to decide about them, so they are read rather than worked on.
@@ -107,7 +109,7 @@ const emptyText = computed(function () {
             <Button
                 v-if="isReviewable"
                 :label="
-                    allOnPageSelected()
+                    allOnPageSelected
                         ? $gettext('Clear selection')
                         : $gettext('Select all on page')
                 "
@@ -115,7 +117,7 @@ const emptyText = computed(function () {
                 :outlined="true"
                 :disabled="!candidates.length"
                 class="toolbar-button"
-                @click="emit('selectAllOnPage', !allOnPageSelected())"
+                @click="emit('selectAllOnPage', !allOnPageSelected)"
             />
 
             <SelectButton
@@ -124,6 +126,7 @@ const emptyText = computed(function () {
                 option-label="label"
                 option-value="value"
                 :allow-empty="false"
+                :aria-label="$gettext('Show pairs')"
                 class="status-filter"
                 @update:model-value="emit('setStatus', $event)"
             />
@@ -131,6 +134,7 @@ const emptyText = computed(function () {
 
         <ProgressSpinner
             v-if="isLoading"
+            :aria-label="$gettext('Loading pairs')"
             class="candidate-spinner"
         />
 

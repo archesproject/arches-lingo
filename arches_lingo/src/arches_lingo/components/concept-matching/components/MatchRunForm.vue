@@ -173,8 +173,8 @@ function onRun() {
             />
         </div>
 
-        <div class="field">
-            <span class="label">{{ $gettext("Compare") }}</span>
+        <fieldset class="field">
+            <legend class="label">{{ $gettext("Compare") }}</legend>
             <div class="control">
                 <label class="option">
                     <Checkbox
@@ -211,15 +211,15 @@ function onRun() {
             >
                 {{ expectedDurationText }}
             </Message>
-        </div>
+        </fieldset>
 
         <div
             v-if="compareSimilarLabels"
             class="field"
         >
             <label
+                id="match-threshold-label"
                 class="label"
-                for="match-threshold"
             >
                 {{
                     $gettext("How similar? (%{threshold})", {
@@ -229,7 +229,7 @@ function onRun() {
             </label>
             <Slider
                 v-model="similarityThreshold"
-                input-id="match-threshold"
+                aria-labelledby="match-threshold-label"
                 :min="0.4"
                 :max="0.95"
                 :step="0.05"
@@ -244,8 +244,8 @@ function onRun() {
             </p>
         </div>
 
-        <div class="field">
-            <span class="label">{{ $gettext("Narrow the results") }}</span>
+        <fieldset class="field">
+            <legend class="label">{{ $gettext("Narrow the results") }}</legend>
             <div class="control">
                 <label class="option">
                     <Checkbox
@@ -268,7 +268,7 @@ function onRun() {
                     }}</span>
                 </label>
             </div>
-        </div>
+        </fieldset>
 
         <Button
             icon="pi pi-search"
@@ -295,6 +295,15 @@ function onRun() {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+legend.label {
+    padding: 0;
+    margin-block-end: 0.5rem;
 }
 
 .label {

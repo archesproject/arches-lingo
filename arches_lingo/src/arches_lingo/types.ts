@@ -678,6 +678,12 @@ export interface ConceptMatchCandidate {
     is_cross_scheme: boolean;
 }
 
+export interface ConceptMatchStatusChange {
+    updated: number;
+    status: string;
+    skipped: Record<string, number>;
+}
+
 export interface ConceptMatchScopeSizes {
     total_labels: number;
     labels_by_scheme: Record<string, number>;

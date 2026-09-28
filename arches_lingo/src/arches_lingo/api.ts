@@ -29,6 +29,7 @@ import type {
     ConceptMatchRunRequest,
     ConceptMatchScopeSizes,
     ConceptMatchLinkResult,
+    ConceptMatchStatusChange,
 } from "@/arches_lingo/types";
 import type {
     MissingTranslationsResponse,
@@ -1446,7 +1447,7 @@ export const updateConceptMatchCandidates = async (
     runId: number,
     candidateIds: number[],
     status: string,
-): Promise<{ updated: number; status: string }> => {
+): Promise<ConceptMatchStatusChange> => {
     const url = generateArchesURL("arches_lingo:api-concept-match-candidates", {
         pk: runId,
     });
@@ -1463,9 +1464,10 @@ export const updateConceptMatchCandidates = async (
     return parsed;
 };
 
-export const dismissAllConceptMatchCandidates = async (
+export const updateAllConceptMatchCandidates = async (
     runId: number,
-): Promise<{ updated: number; status: string }> => {
+    status: string,
+): Promise<ConceptMatchStatusChange> => {
     const url = generateArchesURL("arches_lingo:api-concept-match-candidates", {
         pk: runId,
     });
@@ -1475,7 +1477,7 @@ export const dismissAllConceptMatchCandidates = async (
             "X-CSRFTOKEN": getToken(),
             "Content-Type": "application/json",
         },
-        body: JSON.stringify({ all_pending: true }),
+        body: JSON.stringify({ all: true, status }),
     });
     const parsed = await response.json();
     if (!response.ok) throw new Error(parsed.message || response.statusText);

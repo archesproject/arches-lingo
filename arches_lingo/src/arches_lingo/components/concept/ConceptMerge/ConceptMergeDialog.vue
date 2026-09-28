@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 
 import { useGettext } from "vue3-gettext";
 import { storeToRefs } from "pinia";
@@ -136,30 +136,38 @@ const mergeError = ref<string | null>(null);
 
 // The footer drives the stepper rather than each panel carrying its own buttons,
 // so the steps it moves between are named in one place.
-const MERGE_STEP_ORDER = [
-    MERGE_STEP_SELECT,
-    MERGE_STEP_COMPARE,
-    MERGE_STEP_CONFIRM,
-];
+// A preselected concept is the merge the caller asked for, so there is no
+// picker to step back to: choosing a different concept would merge a pair
+// other than the one being reviewed.
+const mergeStepOrder = computed(() =>
+    preselectedConcept
+        ? [MERGE_STEP_COMPARE, MERGE_STEP_CONFIRM]
+        : [MERGE_STEP_SELECT, MERGE_STEP_COMPARE, MERGE_STEP_CONFIRM],
+);
+
+const isOnFirstStep = computed(
+    () => currentStep.value === mergeStepOrder.value[0],
+);
 
 const previousStep = computed(function () {
-    const stepIndex = MERGE_STEP_ORDER.indexOf(currentStep.value);
-    return MERGE_STEP_ORDER[Math.max(stepIndex - 1, 0)];
+    const stepIndex = mergeStepOrder.value.indexOf(currentStep.value);
+    return mergeStepOrder.value[Math.max(stepIndex - 1, 0)];
 });
 
 const nextStep = computed(function () {
-    const stepIndex = MERGE_STEP_ORDER.indexOf(currentStep.value);
-    return MERGE_STEP_ORDER[
-        Math.min(stepIndex + 1, MERGE_STEP_ORDER.length - 1)
+    const stepIndex = mergeStepOrder.value.indexOf(currentStep.value);
+    return mergeStepOrder.value[
+        Math.min(stepIndex + 1, mergeStepOrder.value.length - 1)
     ];
 });
 
 // Concepts in different schemes can be merged, but the scheme-scoped sections
 // cannot come across and the absorbed concept is never retired, so both steps
-// need to know which kind of merge this is.
+// need to know which kind of merge this is. A concept with no scheme gets the
+// cautious, cross-scheme handling.
 const isCrossScheme = computed(function () {
     const absorbedSchemeId = resolveSchemeId(absorbedConcept.value);
-    return Boolean(absorbedSchemeId) && absorbedSchemeId !== schemeId;
+    return !schemeId || !absorbedSchemeId || absorbedSchemeId !== schemeId;
 });
 
 const canCompare = computed(function () {
@@ -203,9 +211,13 @@ async function onConceptSelected(concept: SearchResultItem) {
     }
 }
 
-if (preselectedConcept) {
-    onConceptSelected(preselectedConcept);
-}
+watch(
+    () => preselectedConcept,
+    function (concept) {
+        if (concept) onConceptSelected(concept);
+    },
+    { immediate: true },
+);
 
 function onSelectionStateChange(updatedState: MergeSelectionState) {
     selectionState.value = updatedState;
@@ -260,7 +272,10 @@ async function onMergeConfirmed() {
             class="merge-stepper"
         >
             <StepList>
-                <Step :value="MERGE_STEP_SELECT">
+                <Step
+                    v-if="!preselectedConcept"
+                    :value="MERGE_STEP_SELECT"
+                >
                     {{ $gettext("Choose concept") }}
                 </Step>
                 <Step
@@ -278,7 +293,10 @@ async function onMergeConfirmed() {
             </StepList>
 
             <StepPanels>
-                <StepPanel :value="MERGE_STEP_SELECT">
+                <StepPanel
+                    v-if="!preselectedConcept"
+                    :value="MERGE_STEP_SELECT"
+                >
                     <div class="merge-step">
                         <div class="merge-step-body merge-step-body--fill">
                             <p class="merge-step-intro">
@@ -381,7 +399,7 @@ async function onMergeConfirmed() {
         <template #footer>
             <div class="footer">
                 <Button
-                    v-if="currentStep === MERGE_STEP_SELECT"
+                    v-if="isOnFirstStep"
                     icon="pi pi-times"
                     :label="$gettext('Cancel')"
                     :severity="DANGER"

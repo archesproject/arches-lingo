@@ -153,22 +153,14 @@ describe("buildPreselectedConcept", () => {
 });
 
 describe("describeSkippedReasons", () => {
-    it("names each reason so a reviewer can act on it", () => {
+    it("lists each reason in the reader's language", () => {
         expect(
             describeSkippedReasons(
                 { missing_uri: 2, not_editable: 1 },
-                {
-                    missing_uri: "no URI to point at",
-                    not_editable: "neither concept can be edited",
-                },
+                (reason, count) => `${count} ${reason}`,
+                "en",
             ),
-        ).toEqual("2 (no URI to point at), 1 (neither concept can be edited)");
-    });
-
-    it("falls back to the raw reason when it has no wording yet", () => {
-        expect(describeSkippedReasons({ something_new: 1 }, {})).toEqual(
-            "1 (something_new)",
-        );
+        ).toEqual("2 missing_uri and 1 not_editable");
     });
 });
 

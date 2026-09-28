@@ -498,11 +498,10 @@ function onMergeCancelled() {
                 @click="addChild"
             />
             <Button
-                v-if="canMerge"
+                v-if="isEditor && concept?.resourceinstanceid"
                 icon="pi pi-clone"
                 class="add-button"
                 :label="$gettext('Find Matches')"
-                :aria-label="$gettext('Find concepts matching this one')"
                 @click="findMatches"
             />
             <Button

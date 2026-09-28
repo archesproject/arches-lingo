@@ -134,6 +134,7 @@ function onConfirm() {
                 <RadioButton
                     v-model="survivorId"
                     :input-id="`survivor-${concept.id}`"
+                    name="merge-survivor"
                     :value="concept.id"
                     :disabled="!concept.can_receive_data"
                 />

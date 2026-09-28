@@ -85,7 +85,12 @@ const reason = computed(function () {
             :model-value="isSelected"
             :binary="true"
             :input-id="`candidate-${candidate.id}`"
-            :aria-label="$gettext('Select this pair')"
+            :aria-label="
+                $gettext('Select %{first} and %{second}', {
+                    first: conceptName(candidate.concept_a),
+                    second: conceptName(candidate.concept_b),
+                })
+            "
             @update:model-value="
                 emit('update:selected', candidate.id, $event as boolean)
             "

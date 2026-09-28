@@ -36,6 +36,7 @@ from arches_lingo.utils.concept_matching import (
     count_labels_by_scheme,
     get_scheme_ids_for_concepts,
     mark_pairs_settled,
+    restore_dismissed,
     validate_detection_options,
 )
 from arches_lingo.utils.concept_merge import (
@@ -425,53 +426,68 @@ def _is_cross_scheme(candidate, summaries):
     return bool(scheme_a and scheme_b and scheme_a != scheme_b)
 
 
-def set_candidate_status(run, candidate_ids, status, user):
-    """Record a review decision against candidates of this run.
+REVIEWABLE_STATUSES = (
+    ConceptMatchCandidate.STATUS_PENDING,
+    ConceptMatchCandidate.STATUS_DISMISSED,
+)
 
-    Only the decisions a reviewer makes by hand are settable here, and only
-    between each other: a pending pair can be dismissed and a dismissed one
-    restored. Linking and merging are consequences of doing the work, recorded
-    by the code that does it, and are never undone from here.
+
+def _require_reviewable_status(status):
+    """Only dismissing and restoring are decisions a reviewer makes by hand.
+
+    Linking and merging are consequences of doing the work, recorded by the
+    code that does it, and are never undone from here.
     """
-    status_changed_from = {
-        ConceptMatchCandidate.STATUS_DISMISSED: ConceptMatchCandidate.STATUS_PENDING,
-        ConceptMatchCandidate.STATUS_PENDING: ConceptMatchCandidate.STATUS_DISMISSED,
-    }
-    if status not in status_changed_from:
+    if status not in REVIEWABLE_STATUSES:
         raise ConceptMatchRequestError(
             _("Invalid request."),
             _("A candidate can only be dismissed or returned to the queue."),
         )
 
-    candidates = run.candidates.filter(
-        pk__in=candidate_ids, status=status_changed_from[status]
-    )
-    updated_count = candidates.update(
-        status=status,
-        reviewed_by=user if user is not None and user.is_authenticated else None,
-        reviewed_at=timezone.now(),
-    )
-    return {"updated": updated_count, "status": status}
 
-
-def dismiss_all_pending(run, user):
-    """Dismiss every pair of this run still awaiting a decision.
-
-    A corpus-wide fuzzy run can suggest tens of thousands of pairs, far more
-    than a reviewer can name one at a time, so clearing the rest of the queue is
-    done by the server rather than by sending back every id.
-    """
-    updated_count = run.candidates.filter(
-        status=ConceptMatchCandidate.STATUS_PENDING
-    ).update(
+def _dismiss(candidates, user):
+    return candidates.filter(status=ConceptMatchCandidate.STATUS_PENDING).update(
         status=ConceptMatchCandidate.STATUS_DISMISSED,
         reviewed_by=user if user is not None and user.is_authenticated else None,
         reviewed_at=timezone.now(),
     )
+
+
+def _status_change_result(status, updated_count, already_decided_count=0):
     return {
         "updated": updated_count,
-        "status": ConceptMatchCandidate.STATUS_DISMISSED,
+        "status": status,
+        "skipped": (
+            {"already_decided": already_decided_count} if already_decided_count else {}
+        ),
     }
+
+
+def set_candidate_status(run, candidate_ids, status, user):
+    """Dismiss pending candidates of this run, or restore dismissed ones."""
+    _require_reviewable_status(status)
+    if status == ConceptMatchCandidate.STATUS_DISMISSED:
+        return _status_change_result(
+            status, _dismiss(run.candidates.filter(pk__in=candidate_ids), user)
+        )
+    restored_count, left_dismissed_count = restore_dismissed(
+        run, user, candidate_ids=candidate_ids
+    )
+    return _status_change_result(status, restored_count, left_dismissed_count)
+
+
+def set_status_for_all(run, status, user):
+    """Dismiss everything still pending, or restore everything dismissed.
+
+    A corpus-wide fuzzy run can suggest tens of thousands of pairs, far more
+    than a reviewer can name one at a time, so the server does it rather than
+    being sent every id.
+    """
+    _require_reviewable_status(status)
+    if status == ConceptMatchCandidate.STATUS_DISMISSED:
+        return _status_change_result(status, _dismiss(run.candidates.all(), user))
+    restored_count, left_dismissed_count = restore_dismissed(run, user)
+    return _status_change_result(status, restored_count, left_dismissed_count)
 
 
 def _link_outcome(concept_a, concept_b, user_is_lingo_admin):
