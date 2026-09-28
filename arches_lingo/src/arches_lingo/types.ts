@@ -668,6 +668,9 @@ export interface ConceptMatchRun {
     counts_by_status: Record<string, number>;
     pending_count: number;
     error_message: string;
+    created_by: string | null;
+    started_by_viewer: boolean;
+    can_delete: boolean;
 }
 
 export interface MatchedConceptSummary {

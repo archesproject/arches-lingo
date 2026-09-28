@@ -30,12 +30,15 @@ from arches_lingo.utils.concept_lifecycle import (
     index_concepts_in_transaction,
 )
 from arches_lingo.utils.concept_matching import (
-    ALL_SIGNALS,
+    DEFAULT_SIMILARITY_THRESHOLD,
+    EXACT_SIGNALS,
     SIGNAL_TRIGRAM,
+    MatchScope,
     count_labels_by_scheme,
     get_scheme_ids_for_concepts,
     mark_pairs_settled,
     run_detection,
+    validate_detection_options,
 )
 from arches_lingo.utils.concept_merge.tiles import (
     get_concept_uri,
@@ -68,7 +71,46 @@ class ConceptMatchRequestError(Exception):
         self.status = status
 
 
-def serialize_run(run):
+def get_run(run_id):
+    try:
+        return ConceptMatchRun.objects.select_related("user").get(pk=run_id)
+    except ConceptMatchRun.DoesNotExist:
+        raise ConceptMatchRequestError(
+            _("Not found."), _("Match run not found."), status=HTTPStatus.NOT_FOUND
+        )
+
+
+def _was_started_by(run, user):
+    return run.user_id is not None and run.user_id == getattr(user, "pk", None)
+
+
+def user_can_delete_run(run, user, user_is_lingo_admin):
+    """Deleting is also how a run is cancelled, so it stays with its creator.
+
+    Every editor can review any run; only its creator or a Lingo admin can
+    remove it. A run started from the command line has no creator, so it is
+    left to the admins.
+    """
+    return user_is_lingo_admin or _was_started_by(run, user)
+
+
+def delete_run(run, user, user_is_lingo_admin):
+    if not user_can_delete_run(run, user, user_is_lingo_admin):
+        raise ConceptMatchRequestError(
+            _("Cannot delete this run."),
+            _("Only the editor who started a run, or a Lingo admin, can delete it."),
+            status=HTTPStatus.FORBIDDEN,
+        )
+    run.delete()
+
+
+def _describe_creator(user):
+    if user is None:
+        return None
+    return user.get_full_name() or user.username
+
+
+def serialize_run(run, user=None, user_is_lingo_admin=False):
     # Elapsed time is measured here rather than from the timestamps, because the
     # client cannot subtract them: with USE_TZ off these are naive timestamps in
     # the server's own zone, which a browser in another zone reads as its local
@@ -92,6 +134,9 @@ def serialize_run(run):
         "parameters": run.parameters,
         "candidate_count": run.candidate_count,
         "error_message": run.error_message,
+        "created_by": _describe_creator(run.user),
+        "started_by_viewer": _was_started_by(run, user),
+        "can_delete": user_can_delete_run(run, user, user_is_lingo_admin),
         # Every status, not just the outstanding one: a reviewer wants to see
         # what they linked and merged as much as what is left to decide, and
         # one grouped count costs what counting the pending ones alone did.
@@ -246,14 +291,37 @@ def _build_concept_summaries(concept_ids, user_is_lingo_admin=False):
     return summaries
 
 
+def _parse_positive_integer(value, default, parameter_name):
+    if value in (None, ""):
+        return default
+    try:
+        parsed_value = int(value)
+    except (TypeError, ValueError):
+        parsed_value = 0
+    if parsed_value < 1:
+        raise ConceptMatchRequestError(
+            _("Invalid request."),
+            _("%(parameter)s must be a positive whole number.")
+            % {"parameter": parameter_name},
+        )
+    return parsed_value
+
+
 def serialize_candidate_page(
     run, status=None, page_number=1, items_per_page=None, user_is_lingo_admin=False
 ):
     """Return one page of a run's candidates, with both concepts named."""
     items_per_page = min(
-        int(items_per_page or DEFAULT_ITEMS_PER_PAGE), MAX_ITEMS_PER_PAGE
+        _parse_positive_integer(items_per_page, DEFAULT_ITEMS_PER_PAGE, "items"),
+        MAX_ITEMS_PER_PAGE,
     )
-    page_number = max(int(page_number or 1), 1)
+    page_number = _parse_positive_integer(page_number, 1, "page")
+    known_statuses = {value for value, _label in ConceptMatchCandidate.STATUS_CHOICES}
+    if status and status not in known_statuses:
+        raise ConceptMatchRequestError(
+            _("Invalid request."),
+            _("Unknown candidate status: %(status)s") % {"status": status},
+        )
 
     candidates = run.candidates.all()
     if status:
@@ -297,21 +365,24 @@ def _is_cross_scheme(candidate, summaries):
 def set_candidate_status(run, candidate_ids, status, user):
     """Record a review decision against candidates of this run.
 
-    Only the decisions a reviewer makes by hand are settable here: linking and
-    merging are consequences of doing the work, and are recorded by the code
-    that does it.
+    Only the decisions a reviewer makes by hand are settable here, and only
+    between each other: a pending pair can be dismissed and a dismissed one
+    restored. Linking and merging are consequences of doing the work, recorded
+    by the code that does it, and are never undone from here.
     """
-    reviewable_statuses = {
-        ConceptMatchCandidate.STATUS_PENDING,
-        ConceptMatchCandidate.STATUS_DISMISSED,
+    status_changed_from = {
+        ConceptMatchCandidate.STATUS_DISMISSED: ConceptMatchCandidate.STATUS_PENDING,
+        ConceptMatchCandidate.STATUS_PENDING: ConceptMatchCandidate.STATUS_DISMISSED,
     }
-    if status not in reviewable_statuses:
+    if status not in status_changed_from:
         raise ConceptMatchRequestError(
             _("Invalid request."),
             _("A candidate can only be dismissed or returned to the queue."),
         )
 
-    candidates = run.candidates.filter(pk__in=candidate_ids)
+    candidates = run.candidates.filter(
+        pk__in=candidate_ids, status=status_changed_from[status]
+    )
     updated_count = candidates.update(
         status=status,
         reviewed_by=user if user is not None and user.is_authenticated else None,
@@ -375,7 +446,11 @@ def link_candidates_with_exact_match(
             % {"limit": MAX_LINK_BATCH},
         )
 
-    candidates = list(run.candidates.filter(pk__in=candidate_ids))
+    candidates = list(
+        run.candidates.filter(
+            pk__in=candidate_ids, status=ConceptMatchCandidate.STATUS_PENDING
+        )
+    )
     concept_ids = {str(candidate.concept_a_id) for candidate in candidates} | {
         str(candidate.concept_b_id) for candidate in candidates
     }
@@ -391,6 +466,13 @@ def link_candidates_with_exact_match(
     linked_pairs = []
     one_way_count = 0
     skipped_by_reason = defaultdict(int)
+    already_decided_count = (
+        run.candidates.filter(pk__in=candidate_ids)
+        .exclude(status=ConceptMatchCandidate.STATUS_PENDING)
+        .count()
+    )
+    if already_decided_count:
+        skipped_by_reason["already_decided"] = already_decided_count
 
     with transaction.atomic():
         for candidate in candidates:
@@ -437,6 +519,74 @@ def link_candidates_with_exact_match(
     }
 
 
+def parse_candidate_ids(body):
+    candidate_ids = body.get("candidate_ids")
+    if (
+        not isinstance(candidate_ids, list)
+        or not candidate_ids
+        or not all(
+            isinstance(candidate_id, int) and not isinstance(candidate_id, bool)
+            for candidate_id in candidate_ids
+        )
+    ):
+        raise ConceptMatchRequestError(
+            _("Invalid request."), _("candidate_ids must be a list of ids.")
+        )
+    return candidate_ids
+
+
+def _parse_uuid_list(values, parameter_name):
+    try:
+        if not isinstance(values, list):
+            raise ValueError
+        return [str(uuid.UUID(str(value))) for value in values]
+    except ValueError:
+        raise ConceptMatchRequestError(
+            _("Invalid request."),
+            _("%(parameter)s must be a list of ids.") % {"parameter": parameter_name},
+        )
+
+
+def parse_detection_request(body):
+    """Turn a request body into the arguments `start_detection` takes."""
+    same_language_only = body.get("same_language_only", True)
+    if not isinstance(same_language_only, bool):
+        raise ConceptMatchRequestError(
+            _("Invalid request."), _("same_language_only must be true or false.")
+        )
+
+    similarity_threshold = body.get("similarity_threshold")
+    if similarity_threshold is None:
+        similarity_threshold = DEFAULT_SIMILARITY_THRESHOLD
+    elif isinstance(similarity_threshold, bool) or not isinstance(
+        similarity_threshold, (int, float)
+    ):
+        raise ConceptMatchRequestError(
+            _("Invalid request."), _("similarity_threshold must be a number.")
+        )
+
+    source_concept_set_id = body.get("source_concept_set_id")
+    if source_concept_set_id is not None and not isinstance(source_concept_set_id, int):
+        raise ConceptMatchRequestError(
+            _("Invalid request."), _("source_concept_set_id must be a number.")
+        )
+
+    return {
+        "scope": MatchScope(
+            scheme_ids=_parse_uuid_list(body.get("scheme_ids") or [], "scheme_ids"),
+            source_concept_set_id=source_concept_set_id,
+            source_concept_ids=_parse_uuid_list(
+                body.get("source_concept_ids") or [], "source_concept_ids"
+            ),
+            cross_scheme_only=bool(body.get("cross_scheme_only")),
+        ),
+        "signals": tuple(body.get("signals") or EXACT_SIGNALS),
+        "same_language_only": same_language_only,
+        "similarity_threshold": float(similarity_threshold),
+        "name": str(body.get("name") or "").strip()[:255],
+    }
+
+
 def start_detection(
     scope, signals, same_language_only, similarity_threshold, user, name=""
 ):
@@ -447,13 +597,7 @@ def start_detection(
     label against every other and takes minutes at vocabulary scale, so it is
     handed to a worker and the caller polls the run it gets back.
     """
-    unknown_signals = set(signals) - set(ALL_SIGNALS)
-    if unknown_signals:
-        raise ConceptMatchRequestError(
-            _("Invalid request."),
-            _("Unsupported signal(s): %(signals)s")
-            % {"signals": ", ".join(sorted(unknown_signals))},
-        )
+    validate_detection_options(signals, similarity_threshold)
 
     if SIGNAL_TRIGRAM not in signals:
         return run_detection(
@@ -473,8 +617,8 @@ def start_detection(
                 "No background worker answered. One may be busy finishing "
                 "another search, in which case this will work again in a "
                 "moment. Otherwise no worker is running: the exact signals work "
-                "without one, or a vocabulary-wide search can be started with "
-                "the detect_concept_matches command."
+                "without one, or a similar-label search can be run from the "
+                "command line with detect_concept_matches --signal trigram."
             ),
             status=HTTPStatus.SERVICE_UNAVAILABLE,
         )

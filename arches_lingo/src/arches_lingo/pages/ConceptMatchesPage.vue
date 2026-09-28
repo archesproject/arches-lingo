@@ -100,7 +100,7 @@ function statusInRoute(): string {
 
 const runs = ref<ConceptMatchRun[]>([]);
 const activeRunId = ref<number | null>(runIdInRoute());
-const isRunning = ref(false);
+const isCreatingRun = ref(false);
 
 const candidates = ref<ConceptMatchCandidate[]>([]);
 const selectedIds = ref<Set<number>>(new Set());
@@ -149,6 +149,12 @@ async function loadRuns() {
     }
 }
 
+// Every editor sees every run, so the default is the viewer's own newest.
+function newestRunId() {
+    const newestOwnRun = runs.value.find((run) => run.started_by_viewer);
+    return (newestOwnRun ?? runs.value[0])?.id ?? null;
+}
+
 /**
  * Show the newest run when the address does not name one.
  *
@@ -157,12 +163,11 @@ async function loadRuns() {
  * choice the reviewer did not make.
  */
 async function showNewestRunIfNoneChosen() {
-    if (activeRunId.value !== null || !runs.value.length) {
+    const runId = newestRunId();
+    if (activeRunId.value !== null || runId === null) {
         return false;
     }
-    await router.replace(
-        routeForView({ runId: runs.value[0].id, pageNumber: 1 }),
-    );
+    await router.replace(routeForView({ runId, pageNumber: 1 }));
     return true;
 }
 
@@ -178,13 +183,25 @@ async function loadCandidates({ quiet = false } = {}) {
     // refresh they asked for announces itself.
     if (!quiet) isLoadingCandidates.value = true;
     loadError.value = null;
+    const pageNumber =
+        Math.floor(firstResultIndex.value / CANDIDATES_PER_PAGE) + 1;
     try {
         const page = await fetchConceptMatchCandidates(
             activeRunId.value,
             candidateStatus.value,
-            Math.floor(firstResultIndex.value / CANDIDATES_PER_PAGE) + 1,
+            pageNumber,
             CANDIDATES_PER_PAGE,
         );
+        // Deciding the last pairs on the last page, or a stale link, leaves the
+        // address past the end of the queue.
+        const lastPageNumber = Math.max(
+            1,
+            Math.ceil(page.total_results / CANDIDATES_PER_PAGE),
+        );
+        if (!page.data.length && pageNumber > lastPageNumber) {
+            await router.replace(routeForView({ pageNumber: lastPageNumber }));
+            return;
+        }
         candidates.value = page.data;
         totalResults.value = page.total_results;
     } catch (error) {
@@ -217,6 +234,7 @@ function pollUntilFinished(runId: number) {
             // end, so the running count climbs in front of the reviewer instead
             // of sitting at zero until the search finishes.
             runs.value = (await fetchConceptMatchRuns()).data;
+            if (runId !== activeRunId.value) return;
             const run = runs.value.find(
                 (candidateRun) => candidateRun.id === runId,
             );
@@ -224,7 +242,6 @@ function pollUntilFinished(runId: number) {
                 // Cancelled, from here or from somewhere else. There is no
                 // longer anything to wait for.
                 stopPolling();
-                isRunning.value = false;
                 return;
             }
             if (isRunUnfinished(run)) {
@@ -236,7 +253,6 @@ function pollUntilFinished(runId: number) {
             }
 
             stopPolling();
-            isRunning.value = false;
             await loadCandidates();
             reportRunFinished(run);
         } finally {
@@ -264,29 +280,28 @@ function reportRunFinished(run: ConceptMatchRun) {
     });
 }
 
-async function onRun(request: ConceptMatchRunRequest) {
-    isRunning.value = true;
+async function onRun(
+    request: ConceptMatchRunRequest,
+    { replaceRoute = false } = {},
+) {
+    isCreatingRun.value = true;
     try {
         const run = await createConceptMatchRun(request);
         await loadRuns();
-        await router.push(
-            routeForView({
-                runId: run.id,
-                pageNumber: 1,
-                status: CANDIDATE_STATUS_PENDING,
-            }),
-        );
+        const runView = routeForView({
+            runId: run.id,
+            pageNumber: 1,
+            status: CANDIDATE_STATUS_PENDING,
+        });
+        await (replaceRoute ? router.replace(runView) : router.push(runView));
 
-        if (isRunUnfinished(run)) {
-            pollUntilFinished(run.id);
-            return;
+        if (!isRunUnfinished(run)) {
+            reportRunFinished(run);
         }
-        reportRunFinished(run);
     } catch (error) {
         reportError(error, $gettext("Could not detect matches."));
-        isRunning.value = false;
     } finally {
-        if (!pollTimer) isRunning.value = false;
+        isCreatingRun.value = false;
     }
 }
 
@@ -376,13 +391,11 @@ function onDeleteRun() {
             isDeletingRun.value = true;
             try {
                 await deleteConceptMatchRun(run.id);
-                stopPolling();
-                isRunning.value = false;
                 selectedIds.value = new Set();
                 await loadRuns();
                 await router.replace(
                     routeForView({
-                        runId: runs.value.length ? runs.value[0].id : null,
+                        runId: newestRunId(),
                         pageNumber: 1,
                         status: CANDIDATE_STATUS_PENDING,
                     }),
@@ -415,6 +428,7 @@ function describeSkipped(skipped: Record<string, number>) {
         missing_uri: $gettext("no URI to point at"),
         not_editable: $gettext("neither concept can be edited"),
         missing_concept: $gettext("concept no longer exists"),
+        already_decided: $gettext("already dismissed, linked or merged"),
     });
 }
 
@@ -520,7 +534,13 @@ function closeMerge() {
 }
 
 async function onMergeCompleted() {
+    const mergedCandidateId = mergingCandidate.value?.id;
     closeMerge();
+    if (mergedCandidateId !== undefined) {
+        const updated = new Set(selectedIds.value);
+        updated.delete(mergedCandidateId);
+        selectedIds.value = updated;
+    }
     toast.add({
         severity: SUCCESS,
         life: DEFAULT_TOAST_LIFE,
@@ -605,7 +625,7 @@ function onStatusChange(newStatus: string) {
 // arrive here by the same path.
 watch(
     () => [route.params.runId, route.query.page, route.query.status],
-    function () {
+    async function () {
         const runIdChanged = activeRunId.value !== runIdInRoute();
         const statusChanged = candidateStatus.value !== statusInRoute();
 
@@ -619,7 +639,20 @@ watch(
         if (runIdChanged || statusChanged) {
             selectedIds.value = new Set();
         }
+        if (await showNewestRunIfNoneChosen()) return;
         loadCandidates();
+    },
+);
+
+// Whichever run is on screen is the one watched, however it got there.
+watch(
+    () => (activeRunIsUnfinished.value ? activeRunId.value : null),
+    function (unfinishedRunId) {
+        if (unfinishedRunId === null) {
+            stopPolling();
+            return;
+        }
+        pollUntilFinished(unfinishedRunId);
     },
 );
 
@@ -633,11 +666,14 @@ onMounted(async () => {
     }
 
     // Arriving from a concept's own page: look for that concept's matches
-    // straight away rather than making the reviewer re-enter what they just
-    // came from. A run this narrow takes well under a second.
+    // straight away. The request replaces its own history entry, so going back
+    // or reloading never starts the same search twice.
     const conceptId = route.query.concept;
     if (typeof conceptId === "string" && conceptId) {
-        await onRun({ source_concept_ids: [conceptId] });
+        await onRun(
+            { source_concept_ids: [conceptId] },
+            { replaceRoute: true },
+        );
         return;
     }
 
@@ -646,13 +682,6 @@ onMounted(async () => {
     // to the newest when it does not.
     if (!(await showNewestRunIfNoneChosen())) {
         await loadCandidates();
-    }
-
-    // Coming back to a search that is still going: resume watching it rather
-    // than showing a stale, empty queue.
-    if (activeRun.value && isRunUnfinished(activeRun.value)) {
-        isRunning.value = true;
-        pollUntilFinished(activeRun.value.id);
     }
 });
 </script>
@@ -700,7 +729,7 @@ onMounted(async () => {
 
                 <MatchRunForm
                     :schemes="conceptStore.schemes"
-                    :is-running="isRunning"
+                    :is-starting-run="isCreatingRun"
                     @run="onRun"
                 />
             </div>
@@ -749,6 +778,8 @@ onMounted(async () => {
                                 })
                             }}
                             — {{ new Date(option.created).toLocaleString() }}
+                            —
+                            {{ option.created_by ?? $gettext("Command line") }}
                         </template>
                     </Select>
 
@@ -822,7 +853,7 @@ onMounted(async () => {
                             @click="onDismissAllRemaining"
                         />
                         <Button
-                            v-if="activeRun"
+                            v-if="activeRun?.can_delete"
                             :icon="
                                 activeRunIsUnfinished
                                     ? 'pi pi-ban'

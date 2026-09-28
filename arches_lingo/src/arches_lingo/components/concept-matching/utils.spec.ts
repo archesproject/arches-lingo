@@ -9,14 +9,13 @@ import {
     buildPreselectedConcept,
     buildSignalList,
     candidateStatusFromRoute,
-    describeMatchReason,
-    describeExpectedDuration,
     describeSkippedReasons,
+    estimateDurationSpan,
     estimateFuzzyRunSeconds,
-    formatElapsed,
     labelsInScope,
     isRunUnfinished,
     resolveMergeSides,
+    splitElapsedSeconds,
 } from "@/arches_lingo/components/concept-matching/utils.ts";
 
 import type {
@@ -68,15 +67,6 @@ function run(overrides: Partial<ConceptMatchRun> = {}): ConceptMatchRun {
         error_message: "",
         ...overrides,
     } as ConceptMatchRun;
-}
-
-// The translate stub renders the template so the branch's wording is asserted
-// rather than just which branch was taken.
-function translate(message: string, options: Record<string, string>) {
-    return message.replace(
-        /%\{(\w+)\}/g,
-        (_match, key: string) => options[key] ?? "",
-    );
 }
 
 describe("buildSignalList", () => {
@@ -156,39 +146,6 @@ describe("buildPreselectedConcept", () => {
     });
 });
 
-describe("describeMatchReason", () => {
-    it("names the shared URI", () => {
-        expect(
-            describeMatchReason(
-                candidate({
-                    signal: SIGNAL_SHARED_IDENTIFIER,
-                    evidence: "https://example.org/1",
-                }),
-                translate,
-            ),
-        ).toEqual("Same URI: https://example.org/1");
-    });
-
-    it("reports the similarity for a fuzzy match", () => {
-        expect(
-            describeMatchReason(
-                candidate({
-                    signal: SIGNAL_TRIGRAM,
-                    score: 0.8712,
-                    evidence: "trumpets ~ trumpeters",
-                }),
-                translate,
-            ),
-        ).toEqual("Similar labels (0.87): trumpets ~ trumpeters");
-    });
-
-    it("names the shared label otherwise", () => {
-        expect(describeMatchReason(candidate(), translate)).toEqual(
-            "Same label: trumpets",
-        );
-    });
-});
-
 describe("describeSkippedReasons", () => {
     it("names each reason so a reviewer can act on it", () => {
         expect(
@@ -209,30 +166,15 @@ describe("describeSkippedReasons", () => {
     });
 });
 
-describe("formatElapsed", () => {
-    function translate(message: string, options: Record<string, string>) {
-        return message.replace(
-            /%\{(\w+)\}/g,
-            (_match, key: string) => options[key],
-        );
-    }
-
-    it("reads in seconds below a minute", () => {
-        expect(formatElapsed(45, translate)).toBe("45s");
-    });
-
-    it("reads in minutes and padded seconds above one", () => {
-        expect(formatElapsed(1329, translate)).toBe("22m 09s");
-    });
-
-    it("keeps a whole minute from losing its seconds", () => {
-        expect(formatElapsed(120, translate)).toBe("2m 00s");
+describe("splitElapsedSeconds", () => {
+    it("splits minutes from the remaining seconds", () => {
+        expect(splitElapsedSeconds(1329)).toEqual({ minutes: 22, seconds: 9 });
     });
 
     it("never counts backwards", () => {
         // A client whose clock disagrees with the server's must not be shown a
         // negative age -- the elapsed time it is given is the server's own.
-        expect(formatElapsed(-500, translate)).toBe("0s");
+        expect(splitElapsedSeconds(-500)).toEqual({ minutes: 0, seconds: 0 });
     });
 });
 
@@ -274,32 +216,21 @@ describe("estimateFuzzyRunSeconds", () => {
     });
 });
 
-describe("describeExpectedDuration", () => {
-    function translate(message: string, options: Record<string, string>) {
-        return message.replace(
-            /%\{(\w+)\}/g,
-            (_match, key: string) => options[key],
-        );
-    }
-
+describe("estimateDurationSpan", () => {
     it("does not put a number on a search that is nearly instant", () => {
-        expect(describeExpectedDuration(1000, translate)).toBe(
-            "under a minute or two",
-        );
+        expect(estimateDurationSpan(1000)).toEqual({ kind: "brief" });
     });
 
     it("gives a span rather than a figure it cannot justify", () => {
-        // A straight line through a handful of points does not support a
-        // single number, and the span is widened upwards deliberately.
-        expect(describeExpectedDuration(530778, translate)).toBe(
-            "roughly 11 to 23 minutes",
-        );
+        expect(estimateDurationSpan(530778)).toEqual({
+            kind: "minutes",
+            lowMinutes: 11,
+            highMinutes: 23,
+        });
     });
 
     it("stops pretending to be precise once it is very long", () => {
-        expect(describeExpectedDuration(5000000, translate)).toBe(
-            "well over an hour",
-        );
+        expect(estimateDurationSpan(5000000)).toEqual({ kind: "overAnHour" });
     });
 });
 

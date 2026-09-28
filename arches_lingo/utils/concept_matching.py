@@ -36,10 +36,12 @@ from arches_lingo.const import (
     CONCEPT_NAME_NODEGROUP,
     CONCEPTS_GRAPH_ID,
     CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID,
+    EXACT_MATCH_LIST_ITEM_ID,
     IDENTIFIER_CONTENT_NODE,
     IDENTIFIER_NODEGROUP,
     MATCH_STATUS_COMPARATE_NODE,
     MATCH_STATUS_NODEGROUP,
+    MATCH_STATUS_RELATION_NODE,
     TOP_CONCEPT_OF_NODE_AND_NODEGROUP,
     URI_CONTENT_NODE,
     URI_NODEGROUP,
@@ -50,6 +52,7 @@ from arches_lingo.models import (
     ConceptMerge,
     ConceptSetMember,
 )
+from arches_lingo.utils.concept_merge import get_list_item_tile_value
 
 SIGNAL_SHARED_IDENTIFIER = ConceptMatchCandidate.SIGNAL_SHARED_IDENTIFIER
 SIGNAL_EXACT_LABEL = ConceptMatchCandidate.SIGNAL_EXACT_LABEL
@@ -62,6 +65,9 @@ ALL_SIGNALS = EXACT_SIGNALS + (SIGNAL_TRIGRAM,)
 # Postgres defaults this to 0.3, which is far too loose for a vocabulary of any
 # size; see find_similar_label_pairs.
 DEFAULT_SIMILARITY_THRESHOLD = 0.7
+# Below Postgres's own default nearly every label pairs with every other.
+MIN_SIMILARITY_THRESHOLD = 0.3
+MAX_SIMILARITY_THRESHOLD = 1.0
 
 # Comparing a vocabulary against itself is one index probe per label, each one
 # CPU-bound on intersecting trigram posting lists and independent of the rest.
@@ -698,7 +704,8 @@ def find_decided_pairs():
 
     A pair already linked by an exactMatch tile, or already recorded in
     ConceptMerge, is not a suggestion -- it is a decision. Suggesting it again
-    would put answered work back in the queue.
+    would put answered work back in the queue. Other match relations (close,
+    broad, narrow, related) leave the pair open: the two may still be duplicates.
     """
     decided = set()
 
@@ -706,6 +713,10 @@ def find_decided_pairs():
         "survivor_concept_id", "absorbed_concept_id"
     ):
         decided.add(ConceptMatchCandidate.order_concept_ids(survivor_id, absorbed_id))
+
+    exact_match_relation = [
+        {"uri": get_list_item_tile_value(EXACT_MATCH_LIST_ITEM_ID)["uri"]}
+    ]
 
     # An exactMatch names the other concept by URI rather than by id, so the
     # link is resolved back through the URI tiles.
@@ -719,8 +730,11 @@ def find_decided_pairs():
                AND lower(btrim(uri_tile.tiledata ->> '{URI_CONTENT_NODE}'))
                    = lower(btrim(match_tile.tiledata ->> '{MATCH_STATUS_COMPARATE_NODE}'))
              WHERE match_tile.nodegroupid = '{MATCH_STATUS_NODEGROUP}'
+               AND match_tile.tiledata -> '{MATCH_STATUS_RELATION_NODE}'
+                   @> %(exact_match_relation)s::jsonb
                AND match_tile.resourceinstanceid <> uri_tile.resourceinstanceid
-            """
+            """,
+            {"exact_match_relation": json.dumps(exact_match_relation)},
         )
         for matching_concept_id, matched_concept_id in cursor.fetchall():
             decided.add(
@@ -762,6 +776,21 @@ def mark_pairs_settled(pairs, status, user=None):
     )
 
 
+def validate_detection_options(signals, similarity_threshold):
+    unknown_signals = set(signals) - set(ALL_SIGNALS)
+    if unknown_signals:
+        raise ConceptMatchError(
+            f"Unsupported signal(s): {', '.join(sorted(unknown_signals))}"
+        )
+    if not (
+        MIN_SIMILARITY_THRESHOLD <= similarity_threshold <= MAX_SIMILARITY_THRESHOLD
+    ):
+        raise ConceptMatchError(
+            f"The similarity threshold must be between {MIN_SIMILARITY_THRESHOLD}"
+            f" and {MAX_SIMILARITY_THRESHOLD}."
+        )
+
+
 def iter_candidates(
     scope,
     signals=EXACT_SIGNALS,
@@ -779,11 +808,7 @@ def iter_candidates(
     vocabulary produces millions of them, and a dict of those, each carrying its
     evidence text, is far too much to hold before writing any.
     """
-    unknown_signals = set(signals) - set(ALL_SIGNALS)
-    if unknown_signals:
-        raise ConceptMatchError(
-            f"Unsupported signal(s): {', '.join(sorted(unknown_signals))}"
-        )
+    validate_detection_options(signals, similarity_threshold)
 
     # Bounded by how much has already been decided, not by how much is found.
     decided_pairs = find_decided_pairs()
@@ -920,6 +945,8 @@ def run_detection(
     `run` is an existing record to fill in, which is how the celery task reports
     against the run the request already returned to the caller.
     """
+    validate_detection_options(signals, similarity_threshold)
+
     if run is None:
         run = ConceptMatchRun.objects.create(
             user=user if user is not None and user.is_authenticated else None,

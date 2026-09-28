@@ -6,7 +6,7 @@ import { useGettext } from "vue3-gettext";
 import ProgressBar from "primevue/progressbar";
 
 import { RUN_STATUS_PENDING } from "@/arches_lingo/components/concept-matching/constants.ts";
-import { formatElapsed } from "@/arches_lingo/components/concept-matching/utils.ts";
+import { splitElapsedSeconds } from "@/arches_lingo/components/concept-matching/utils.ts";
 
 import type { ConceptMatchRun } from "@/arches_lingo/types.ts";
 
@@ -45,7 +45,15 @@ const elapsed = computed(function () {
         0,
         Math.floor((now.value - polledAt.value) / 1000),
     );
-    return formatElapsed(elapsedAtLastPoll.value + secondsSincePoll, $gettext);
+    const { minutes, seconds } = splitElapsedSeconds(
+        elapsedAtLastPoll.value + secondsSincePoll,
+    );
+    return minutes
+        ? $gettext("%{minutes}m %{seconds}s", {
+              minutes: String(minutes),
+              seconds: String(seconds).padStart(2, "0"),
+          })
+        : $gettext("%{seconds}s", { seconds: String(seconds) });
 });
 
 const statusText = computed(function () {

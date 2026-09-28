@@ -93,6 +93,10 @@ const narrowingText = computed(function () {
 });
 
 const startedText = computed(() => new Date(run.created).toLocaleString());
+
+const startedByText = computed(
+    () => run.created_by ?? $gettext("Command line"),
+);
 </script>
 
 <template>
@@ -131,6 +135,11 @@ const startedText = computed(() => new Date(run.created).toLocaleString());
         <div class="run-summary-entry">
             <dt>{{ $gettext("Started") }}</dt>
             <dd>{{ startedText }}</dd>
+        </div>
+
+        <div class="run-summary-entry">
+            <dt>{{ $gettext("Started by") }}</dt>
+            <dd>{{ startedByText }}</dd>
         </div>
     </dl>
 </template>
