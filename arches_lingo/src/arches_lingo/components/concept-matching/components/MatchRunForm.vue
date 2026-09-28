@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 
-import { useGettext } from "vue3-gettext";
 import { storeToRefs } from "pinia";
+import { useGettext } from "vue3-gettext";
+import { useToast } from "primevue/usetoast";
 
 import Button from "primevue/button";
 import Checkbox from "primevue/checkbox";
@@ -12,10 +13,15 @@ import MultiSelect from "primevue/multiselect";
 import Slider from "primevue/slider";
 
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
+import { fetchConceptMatchScopeSizes } from "@/arches_lingo/api.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 
 import { DEFAULT_SIMILARITY_THRESHOLD } from "@/arches_lingo/components/concept-matching/constants.ts";
-import { WARN } from "@/arches_lingo/constants.ts";
+import {
+    DEFAULT_ERROR_TOAST_LIFE,
+    ERROR,
+    WARN,
+} from "@/arches_lingo/constants.ts";
 import {
     buildSignalList,
     estimateDurationSpan,
@@ -28,14 +34,9 @@ import type {
     Scheme,
 } from "@/arches_lingo/types.ts";
 
-const {
-    schemes,
-    isStartingRun,
-    scopeSizes = null,
-} = defineProps<{
+const { schemes, isStartingRun } = defineProps<{
     schemes: Scheme[];
     isStartingRun: boolean;
-    scopeSizes?: ConceptMatchScopeSizes | null;
 }>();
 
 const emit = defineEmits<{
@@ -43,6 +44,7 @@ const emit = defineEmits<{
 }>();
 
 const { $gettext } = useGettext();
+const toast = useToast();
 const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
 
 // Schemes carry labels rather than a name, so they are named the way every
@@ -60,6 +62,7 @@ const schemeOptions = computed(function () {
 
 const selectedSchemeIds = ref<string[]>([]);
 const runName = ref("");
+const scopeSizes = ref<ConceptMatchScopeSizes | null>(null);
 
 // Comparing similar labels is one index probe per label, so what it costs
 // follows how much of the vocabulary is in scope. Naming a handful of schemes
@@ -69,7 +72,7 @@ const runName = ref("");
 const expectedDurationText = computed(function () {
     // Without the sizes there is nothing to count, so the warning says the one
     // thing true of every corpus rather than guessing at a figure.
-    if (!scopeSizes) {
+    if (!scopeSizes.value) {
         return $gettext(
             "Comparing similar labels runs on the server. How long it takes follows how many labels are in scope, and over a large vocabulary that is tens of minutes rather than seconds. Results appear as they are found, and the search carries on if you leave this page.",
         );
@@ -77,14 +80,16 @@ const expectedDurationText = computed(function () {
 
     const labelCount = labelsInScope(
         selectedSchemeIds.value,
-        scopeSizes.total_labels,
-        scopeSizes.labels_by_scheme,
+        scopeSizes.value.total_labels,
+        scopeSizes.value.labels_by_scheme,
     );
     return $gettext(
         "Comparing %{labels} labels of %{total} in the vocabulary. This runs on the server and should take %{duration}. Results appear as they are found, and the search carries on if you leave this page.",
         {
-            labels: labelCount.toLocaleString(),
-            total: scopeSizes.total_labels.toLocaleString(),
+            labels: labelCount.toLocaleString(selectedLanguage.value.code),
+            total: scopeSizes.value.total_labels.toLocaleString(
+                selectedLanguage.value.code,
+            ),
             duration: describeExpectedDuration(labelCount),
         },
     );
@@ -109,6 +114,27 @@ const compareLabels = ref(true);
 const compareUris = ref(true);
 const compareSimilarLabels = ref(false);
 const similarityThreshold = ref(DEFAULT_SIMILARITY_THRESHOLD);
+
+// Counting every label takes a moment on a large vocabulary and only matters to
+// a similar-label search, so it is asked for the first time one is chosen.
+let hasRequestedScopeSizes = false;
+watch(compareSimilarLabels, async function (isComparingSimilarLabels) {
+    if (!isComparingSimilarLabels || hasRequestedScopeSizes) return;
+    hasRequestedScopeSizes = true;
+    try {
+        scopeSizes.value = await fetchConceptMatchScopeSizes();
+    } catch (error) {
+        hasRequestedScopeSizes = false;
+        toast.add({
+            severity: ERROR,
+            life: DEFAULT_ERROR_TOAST_LIFE,
+            summary: $gettext(
+                "Could not estimate how long the search will take.",
+            ),
+            detail: error instanceof Error ? error.message : undefined,
+        });
+    }
+});
 
 function onRun() {
     const signals = buildSignalList({

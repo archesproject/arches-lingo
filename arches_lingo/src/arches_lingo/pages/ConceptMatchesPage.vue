@@ -245,8 +245,8 @@ async function loadCandidates({ quiet = false } = {}) {
     }
 }
 
-// A fuzzy run is handed to a worker and comes back still pending, so the run is
-// polled until it settles rather than reporting a count of zero straight away.
+// A run is handed to a worker and comes back still pending, so it is polled
+// until it settles rather than reporting a count of zero straight away.
 function stopPolling() {
     if (pollTimer !== undefined) {
         clearInterval(pollTimer);

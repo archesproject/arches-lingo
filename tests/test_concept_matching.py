@@ -13,6 +13,7 @@ from http import HTTPStatus
 from io import StringIO
 
 from django.contrib.auth.models import Group, User
+from django.core.cache import cache
 from django.db import IntegrityError
 from django.test import Client
 from django.urls import reverse
@@ -55,6 +56,7 @@ from arches_lingo.utils.concept_lifecycle import (
 from arches_lingo.utils.concept_merge.tiles import get_list_item_tile_value
 from arches_lingo.utils.concept_matching_service import (
     MAX_LINK_BATCH,
+    SCOPE_SIZES_CACHE_KEY,
     STALE_RUN_SECONDS,
     ConceptMatchRequestError,
     delete_run,
@@ -1120,6 +1122,7 @@ class ConceptMatchApiTests(ConceptMatchingTestCase):
         """The interface estimates how long a run will take from these."""
         self.add_label(self.first_concept, "trumpets")
         self.add_label(self.second_concept, "cornets")
+        cache.delete(SCOPE_SIZES_CACHE_KEY)
 
         sizes = self.client.get(reverse("api-concept-match-scope-sizes")).json()
 
@@ -1485,7 +1488,7 @@ class RunReportingTests(ConceptMatchingTestCase):
         self.assertEqual(run.status, ConceptMatchRun.STATUS_RUNNING)
 
     def test_a_run_that_never_reported_falls_back_to_when_it_started(self):
-        """A run stranded before its first batch has no heartbeat to judge."""
+        """A run stranded before its first query has no heartbeat to judge."""
         fresh = self.make_run(ConceptMatchRun.STATUS_PENDING, age_seconds=1)
         stranded = self.make_run(
             ConceptMatchRun.STATUS_PENDING, age_seconds=STALE_RUN_SECONDS * 2

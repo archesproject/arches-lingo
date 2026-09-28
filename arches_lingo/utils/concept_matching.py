@@ -159,7 +159,7 @@ class ConceptMatchRunCancelled(Exception):
     Deleting the row is how a run is cancelled: celery cannot be relied on to
     terminate a task that is already executing -- the solo pool runs it in the
     same process as the worker -- so the run record is the control channel, and
-    detection checks that it is still there each time it stores a batch.
+    detection checks that it is still there before each query it stores.
     """
 
 

@@ -82,8 +82,8 @@ def load_lingo_resources_task(loadid, userid, kwargs={}):
 def detect_concept_matches_task(run_id, scope_parameters, signals, options):
     """Run match detection for a run that has already been handed to the caller.
 
-    Only the fuzzy signal needs this: comparing every label in a vocabulary to
-    every other takes minutes, which is far too long to hold a request open.
+    Every run goes through here: even an exact-label run over a whole
+    vocabulary can take longer than a request should be held open for.
     The run row is the progress report -- it is created before the task is
     queued, so the interface has something to poll from the moment it asks.
     """

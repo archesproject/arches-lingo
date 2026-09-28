@@ -59,7 +59,7 @@ const elapsed = computed(function () {
 const statusText = computed(function () {
     return run.status === RUN_STATUS_PENDING
         ? $gettext("Waiting for a worker to pick this up\u2026")
-        : $gettext("Comparing labels\u2026");
+        : $gettext("Searching for matches\u2026");
 });
 </script>
 

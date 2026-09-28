@@ -707,7 +707,6 @@ export interface ConceptMatchScopeSizes {
 export interface ConceptMatchRunRequest {
     name?: string;
     scheme_ids?: string[];
-    source_concept_set_id?: number | null;
     source_concept_ids?: string[];
     cross_scheme_only?: boolean;
     signals?: string[];
