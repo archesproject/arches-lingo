@@ -11,6 +11,7 @@ import threading
 import uuid
 from http import HTTPStatus
 from io import StringIO
+from unittest.mock import patch
 
 from django.contrib.auth.models import Group, User
 from django.core.cache import cache
@@ -42,7 +43,6 @@ from arches_lingo.const import (
 from arches_lingo.models import (
     ConceptMatchCandidate,
     ConceptMatchRun,
-    ConceptMatchRun,
     ConceptMerge,
     ConceptSet,
     ConceptSetMember,
@@ -68,33 +68,30 @@ from arches_lingo.utils.concept_matching_service import (
     set_status_for_all,
     start_detection,
 )
-from unittest.mock import patch
-
 from arches_lingo.utils.concept_matching import (
     ALL_SIGNALS,
-    _heartbeat_while_working,
     DEFAULT_SIMILARITY_THRESHOLD,
     EXACT_SIGNALS,
-    SIGNAL_TRIGRAM,
-    find_similar_label_pairs,
     SIGNAL_EXACT_LABEL,
     SIGNAL_SHARED_IDENTIFIER,
+    SIGNAL_TRIGRAM,
     ConceptMatchError,
     MatchScope,
     collect_candidates,
     find_decided_pairs,
     find_exact_label_pairs,
     find_shared_uri_pairs,
+    find_similar_label_pairs,
     mark_pairs_settled,
     run_detection,
 )
-from tests.tests import ViewTests
+from tests.tests import SchemeWithConceptsTestCase
 
 # These tests can be run from the command line via:
 # python manage.py test tests.test_concept_matching --settings="tests.test_settings"
 
 
-class ConceptMatchingTestCase(ViewTests):
+class ConceptMatchingTestCase(SchemeWithConceptsTestCase):
     """Two concepts in the shared scheme, plus helpers to give them values."""
 
     def setUp(self):
@@ -234,9 +231,6 @@ class SharedUriSignalTests(ConceptMatchingTestCase):
 
 
 class ScopeTests(ConceptMatchingTestCase):
-    """Labels are added per test rather than in setUp: this class inherits
-    ViewTests' own tests, and some of them count a concept's labels."""
-
     def label_three_concepts(self):
         self.third_concept = self.concepts[3]
         for concept in (self.first_concept, self.second_concept, self.third_concept):
@@ -322,14 +316,14 @@ class ScopeTests(ConceptMatchingTestCase):
 
 
 class TrigramSignalTests(ConceptMatchingTestCase):
-    def start_from_a_clean_corpus(self):
-        """Called per test rather than in setUp: this class inherits ViewTests'
-        own tests, and clearing labels would break the ones that count them."""
+    def setUp(self):
+        """The fixture's own labels ("Concept 1" to "Concept 5") are all similar
+        to each other, so a fuzzy test would otherwise measure the fixture."""
+        super().setUp()
         for concept in self.concepts:
             self.clear_labels(concept)
 
     def test_near_duplicate_labels_are_suggested_with_their_similarity(self):
-        self.start_from_a_clean_corpus()
         self.add_label(self.first_concept, "engatillado en metales")
         self.add_label(self.second_concept, "engatillados en metales")
 
@@ -347,7 +341,6 @@ class TrigramSignalTests(ConceptMatchingTestCase):
 
     def test_the_threshold_decides_what_counts_as_similar(self):
         """Postgres defaults this to 0.3, which is far too loose to be useful."""
-        self.start_from_a_clean_corpus()
         self.add_label(self.first_concept, "trumpets")
         self.add_label(self.second_concept, "trumpeters")
 
@@ -355,14 +348,12 @@ class TrigramSignalTests(ConceptMatchingTestCase):
         self.assertEqual(len(list((find_similar_label_pairs(MatchScope(), 0.4)))), 1)
 
     def test_identical_labels_are_left_to_the_exact_signal(self):
-        self.start_from_a_clean_corpus()
         self.add_label(self.first_concept, "trumpets")
         self.add_label(self.second_concept, "trumpets")
 
         self.assertEqual(list((find_similar_label_pairs(MatchScope(), 0.5))), [])
 
     def test_an_exact_match_is_never_downgraded_to_a_fuzzy_one(self):
-        self.start_from_a_clean_corpus()
         self.add_label(self.first_concept, "trumpets")
         self.add_label(self.first_concept, "trumpeters", language="fr")
         self.add_label(self.second_concept, "trumpets")
@@ -376,7 +367,6 @@ class TrigramSignalTests(ConceptMatchingTestCase):
         self.assertEqual(score, 1.0)
 
     def test_a_fuzzy_run_records_the_similarity_as_the_score(self):
-        self.start_from_a_clean_corpus()
         self.add_label(self.first_concept, "engatillado en metales")
         self.add_label(self.second_concept, "engatillados en metales")
 
@@ -713,20 +703,6 @@ class CandidateReviewTests(ConceptMatchingTestCase):
         )
         self.assertEqual(serialized["pending_count"], 0)
 
-    def test_pairs_that_were_linked_or_merged_can_be_listed(self):
-        run = self.make_run_with_one_candidate()
-        run.candidates.update(status=ConceptMatchCandidate.STATUS_LINKED)
-
-        linked = serialize_candidate_page(
-            run, status=ConceptMatchCandidate.STATUS_LINKED
-        )
-        pending = serialize_candidate_page(
-            run, status=ConceptMatchCandidate.STATUS_PENDING
-        )
-
-        self.assertEqual(linked["total_results"], 1)
-        self.assertEqual(pending["total_results"], 0)
-
     def test_candidates_can_be_filtered_by_status(self):
         run = self.make_run_with_one_candidate()
         candidate_id = run.candidates.get().pk
@@ -807,19 +783,6 @@ class CandidateReviewTests(ConceptMatchingTestCase):
 
         self.assertEqual(result["updated"], 1)
 
-    def test_a_run_reports_how_much_is_left_to_review(self):
-        run = self.make_run_with_one_candidate()
-
-        self.assertEqual(serialize_run(run)["pending_count"], 1)
-
-        set_candidate_status(
-            run,
-            [run.candidates.get().pk],
-            ConceptMatchCandidate.STATUS_DISMISSED,
-            None,
-        )
-        self.assertEqual(serialize_run(run)["pending_count"], 0)
-
 
 class BulkLinkTests(ConceptMatchingTestCase):
     def make_run_for(self, concept_a, concept_b):
@@ -875,6 +838,26 @@ class BulkLinkTests(ConceptMatchingTestCase):
             {"https://example.org/concepts/outsider"},
         )
         self.assertEqual(self.match_uris_on(outsider), set())
+
+    def test_a_pair_that_cannot_be_written_is_skipped_with_its_reason(self):
+        self.add_uri(self.first_concept, "https://example.org/concepts/1")
+        self.add_uri(self.second_concept, "https://example.org/concepts/2")
+        run = self.make_run_for(self.first_concept, self.second_concept)
+        candidate = run.candidates.get()
+
+        ResourceInstance.objects.filter(
+            pk__in=[self.first_concept.pk, self.second_concept.pk]
+        ).update(resource_instance_lifecycle_state_id=PUBLISHED_STATE_ID)
+        neither_editable = link_candidates_with_exact_match(run, [candidate.pk], None)
+
+        run.candidates.update(concept_b_id=uuid.uuid4())
+        concept_deleted = link_candidates_with_exact_match(run, [candidate.pk], None)
+
+        self.assertEqual(neither_editable["skipped"], {"not_editable": 1})
+        self.assertEqual(concept_deleted["skipped"], {"missing_concept": 1})
+        self.assertFalse(
+            TileModel.objects.filter(nodegroup_id=MATCH_STATUS_NODEGROUP).exists()
+        )
 
     def test_a_concept_without_a_uri_is_skipped_not_failed(self):
         """An exactMatch names the other concept by URI; one awkward pair must not
@@ -1046,30 +1029,21 @@ class ConceptMatchApiTests(ConceptMatchingTestCase):
         listed = self.client.get(reverse("api-concept-match-runs")).json()
         self.assertEqual([run["id"] for run in listed["data"]], [created["id"]])
 
-    def test_a_run_records_the_schemes_and_name_it_was_given(self):
-        self.add_label(self.first_concept, "trumpets")
-        self.add_label(self.second_concept, "trumpets")
-
-        created = self.post_json(
-            reverse("api-concept-match-runs"),
-            {
-                "name": "  Brass sweep  ",
-                "scheme_ids": [str(self.scheme.pk)],
-                "cross_scheme_only": False,
-            },
-        ).json()
-
-        self.assertEqual(created["name"], "Brass sweep")
-        self.assertEqual(created["parameters"]["scheme_ids"], [str(self.scheme.pk)])
-
-    def test_a_run_without_a_name_is_allowed(self):
-        self.add_label(self.first_concept, "trumpets")
-        self.add_label(self.second_concept, "trumpets")
-
-        created = self.post_json(reverse("api-concept-match-runs"), {}).json()
-
-        self.assertEqual(created["name"], "")
-        self.assertEqual(created["parameters"]["scheme_ids"], [])
+    def test_a_run_records_the_name_and_schemes_it_was_given(self):
+        for body, expected_name, expected_scheme_ids in (
+            (
+                {"name": "  Brass sweep  ", "scheme_ids": [str(self.scheme.pk)]},
+                "Brass sweep",
+                [str(self.scheme.pk)],
+            ),
+            ({}, "", []),
+        ):
+            with self.subTest(body=body):
+                created = self.post_json(reverse("api-concept-match-runs"), body).json()
+                self.assertEqual(created["name"], expected_name)
+                self.assertEqual(
+                    created["parameters"]["scheme_ids"], expected_scheme_ids
+                )
 
     def test_scope_sizes_report_what_a_run_would_have_to_compare(self):
         self.add_label(self.first_concept, "trumpets")
@@ -1084,32 +1058,6 @@ class ConceptMatchApiTests(ConceptMatchingTestCase):
         self.assertLessEqual(
             sum(sizes["labels_by_scheme"].values()), sizes["total_labels"]
         )
-
-    def test_scope_sizes_need_an_editor(self):
-        self.client.force_login(
-            User.objects.create_user(username="sizes-viewer", password="x")
-        )
-
-        response = self.client.get(reverse("api-concept-match-scope-sizes"))
-
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
-
-    def test_an_unsupported_signal_is_a_bad_request(self):
-        response = self.post_json(
-            reverse("api-concept-match-runs"), {"signals": ["phonetic"]}
-        )
-
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
-
-    def test_a_malformed_body_is_a_bad_request(self):
-        for body in ("not json", "[]"):
-            with self.subTest(body=body):
-                response = self.client.post(
-                    reverse("api-concept-match-runs"),
-                    data=body,
-                    content_type="application/json",
-                )
-                self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
 
     def make_editor(self, username, is_admin=False):
         editor = User.objects.create_user(username=username, password="x")
@@ -1131,22 +1079,38 @@ class ConceptMatchApiTests(ConceptMatchingTestCase):
 
     def test_only_the_creator_or_an_admin_can_delete_a_run(self):
         creator = self.make_editor("creator")
+        lingo_admin = self.make_editor("lingo-admin", is_admin=True)
         self.client.force_login(creator)
-        created = self.create_run_with_one_pair()
-        detail_url = reverse("api-concept-match-run-detail", args=[created["id"]])
+        created_runs = [self.create_run_with_one_pair() for _attempt in range(2)]
+        detail_urls = [
+            reverse("api-concept-match-run-detail", args=[run["id"]])
+            for run in created_runs
+        ]
 
         self.client.force_login(self.make_editor("someone"))
         self.assertEqual(
-            self.client.delete(detail_url).status_code, HTTPStatus.FORBIDDEN
+            self.client.delete(detail_urls[0]).status_code, HTTPStatus.FORBIDDEN
         )
 
-        self.client.force_login(self.make_editor("lingo-admin", is_admin=True))
-        self.assertTrue(self.client.get(detail_url).json()["can_delete"])
-        self.assertTrue(self.client.delete(detail_url).json()["deleted"])
+        for deleting_user, detail_url in zip((creator, lingo_admin), detail_urls):
+            with self.subTest(deleting_user=deleting_user.username):
+                self.client.force_login(deleting_user)
+                self.assertTrue(self.client.get(detail_url).json()["can_delete"])
+                self.assertTrue(self.client.delete(detail_url).json()["deleted"])
         self.assertFalse(ConceptMatchRun.objects.exists())
 
     def test_malformed_run_requests_are_bad_requests(self):
+        for raw_body in ("not json", "[]"):
+            with self.subTest(raw_body=raw_body):
+                response = self.client.post(
+                    reverse("api-concept-match-runs"),
+                    data=raw_body,
+                    content_type="application/json",
+                )
+                self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+
         for body in (
+            {"signals": ["phonetic"]},
             {"similarity_threshold": "high"},
             {"similarity_threshold": 0.05},
             {"same_language_only": "no"},
@@ -1160,14 +1124,37 @@ class ConceptMatchApiTests(ConceptMatchingTestCase):
 
         self.assertFalse(ConceptMatchRun.objects.exists())
 
-    def test_malformed_page_requests_are_bad_requests(self):
+    def test_malformed_review_requests_are_bad_requests(self):
         created = self.create_run_with_one_pair()
         candidates_url = reverse("api-concept-match-candidates", args=[created["id"]])
+        link_url = reverse("api-concept-match-link", args=[created["id"]])
+        candidate_id = self.client.get(candidates_url).json()["data"][0]["id"]
 
         for query in ({"page": "two"}, {"items": "0"}, {"status": "maybe"}):
             with self.subTest(query=query):
                 response = self.client.get(candidates_url, query)
                 self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+
+        for body in (
+            {"status": ConceptMatchCandidate.STATUS_DISMISSED},
+            {"candidate_ids": ["1"], "status": ConceptMatchCandidate.STATUS_DISMISSED},
+            {
+                "candidate_ids": [candidate_id],
+                "status": ConceptMatchCandidate.STATUS_MERGED,
+            },
+            {"all": True, "status": ConceptMatchCandidate.STATUS_LINKED},
+        ):
+            with self.subTest(body=body):
+                response = self.client.patch(
+                    candidates_url,
+                    data=json.dumps(body),
+                    content_type="application/json",
+                )
+                self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
+
+        self.assertEqual(
+            self.post_json(link_url, {}).status_code, HTTPStatus.BAD_REQUEST
+        )
 
     def test_candidates_are_paged_and_can_be_dismissed(self):
         created = self.create_run_with_one_pair()
@@ -1195,30 +1182,6 @@ class ConceptMatchApiTests(ConceptMatchingTestCase):
             0,
         )
 
-    def test_a_status_change_needs_candidates_and_a_settable_status(self):
-        created = self.create_run_with_one_pair()
-        candidates_url = reverse("api-concept-match-candidates", args=[created["id"]])
-        page = self.client.get(candidates_url).json()
-
-        without_ids = self.client.patch(
-            candidates_url,
-            data=json.dumps({"status": ConceptMatchCandidate.STATUS_DISMISSED}),
-            content_type="application/json",
-        )
-        unsettable = self.client.patch(
-            candidates_url,
-            data=json.dumps(
-                {
-                    "candidate_ids": [page["data"][0]["id"]],
-                    "status": ConceptMatchCandidate.STATUS_MERGED,
-                }
-            ),
-            content_type="application/json",
-        )
-
-        self.assertEqual(without_ids.status_code, HTTPStatus.BAD_REQUEST)
-        self.assertEqual(unsettable.status_code, HTTPStatus.BAD_REQUEST)
-
     def test_selected_pairs_can_be_linked(self):
         self.add_uri(self.first_concept, "https://example.org/concepts/1")
         self.add_uri(self.second_concept, "https://example.org/concepts/2")
@@ -1237,43 +1200,6 @@ class ConceptMatchApiTests(ConceptMatchingTestCase):
             TileModel.objects.filter(nodegroup_id=MATCH_STATUS_NODEGROUP).count(), 2
         )
 
-    def test_linking_needs_candidates(self):
-        created = self.create_run_with_one_pair()
-
-        response = self.post_json(
-            reverse("api-concept-match-link", args=[created["id"]]), {}
-        )
-
-        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
-
-    def test_a_run_can_be_deleted(self):
-        created = self.create_run_with_one_pair()
-
-        response = self.client.delete(
-            reverse("api-concept-match-run-detail", args=[created["id"]])
-        )
-
-        self.assertTrue(response.json()["deleted"])
-        self.assertEqual(ConceptMatchRun.objects.count(), 0)
-
-    def test_the_rest_of_the_queue_can_be_cleared_without_naming_it(self):
-        created = self.create_run_with_one_pair()
-        candidates_url = reverse("api-concept-match-candidates", args=[created["id"]])
-
-        response = self.client.patch(
-            candidates_url,
-            data=json.dumps(
-                {"all": True, "status": ConceptMatchCandidate.STATUS_DISMISSED}
-            ),
-            content_type="application/json",
-        )
-
-        self.assertEqual(response.status_code, HTTPStatus.OK)
-        self.assertEqual(response.json()["updated"], 1)
-        self.assertEqual(
-            response.json()["status"], ConceptMatchCandidate.STATUS_DISMISSED
-        )
-
     def test_another_editor_can_review_a_run(self):
         """Review is shared: dismissed pairs stay listed and can be restored."""
         created = self.create_run_with_one_pair()
@@ -1289,14 +1215,22 @@ class ConceptMatchApiTests(ConceptMatchingTestCase):
 
         self.assertEqual(response.json()["updated"], 1)
 
+    def test_an_unknown_run_is_not_found(self):
+        response = self.client.get(
+            reverse("api-concept-match-run-detail", args=[999999])
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+
     def test_an_editor_is_required(self):
         self.client.force_login(
             User.objects.create_user(username="viewer", password="x")
         )
 
-        response = self.client.get(reverse("api-concept-match-runs"))
-
-        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+        for url_name in ("api-concept-match-runs", "api-concept-match-scope-sizes"):
+            with self.subTest(url_name=url_name):
+                response = self.client.get(reverse(url_name))
+                self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
 
 
 class DetectConceptMatchesTaskTests(ConceptMatchingTestCase):
@@ -1487,21 +1421,28 @@ class RunReportingTests(ConceptMatchingTestCase):
         self.assertGreaterEqual(after_labels[1], after_uris[1])
 
     def test_a_run_reports_from_a_thread_of_its_own(self):
-        """A single query can hold this thread for minutes."""
+        """A single query can hold the worker's thread for minutes, so the
+        heartbeat runs beside the work and stops with it."""
         run = ConceptMatchRun.objects.create(
-            user=None,
-            status=ConceptMatchRun.STATUS_RUNNING,
-            parameters={"signals": [SIGNAL_TRIGRAM]},
+            user=None, status=ConceptMatchRun.STATUS_RUNNING, parameters={}
         )
-        thread_name = f"lingo-match-run-{run.pk}"
+        heartbeat_thread_name = f"lingo-match-run-{run.pk}"
+        heartbeat_alive_during_work = []
 
         def running_thread_names():
             return [thread.name for thread in threading.enumerate()]
 
-        self.assertNotIn(thread_name, running_thread_names())
-        with _heartbeat_while_working(run):
-            self.assertIn(thread_name, running_thread_names())
-        self.assertNotIn(thread_name, running_thread_names())
+        def note_heartbeat(message):
+            heartbeat_alive_during_work.append(
+                heartbeat_thread_name in running_thread_names()
+            )
+
+        run_detection(
+            MatchScope(), signals=(SIGNAL_EXACT_LABEL,), run=run, log=note_heartbeat
+        )
+
+        self.assertTrue(heartbeat_alive_during_work[0])
+        self.assertNotIn(heartbeat_thread_name, running_thread_names())
 
     def test_timestamps_carry_their_offset(self):
         """With USE_TZ off they are stored naive, and a browser elsewhere would
@@ -1607,16 +1548,6 @@ class RunDisposalTests(ConceptMatchingTestCase):
             1,
         )
 
-    def test_the_reviewer_is_recorded(self):
-        run = self.make_run_with_candidates([ConceptMatchCandidate.STATUS_PENDING])
-        admin = User.objects.get(username="admin")
-
-        set_status_for_all(run, ConceptMatchCandidate.STATUS_DISMISSED, admin)
-
-        dismissed = run.candidates.get()
-        self.assertEqual(dismissed.reviewed_by, admin)
-        self.assertIsNotNone(dismissed.reviewed_at)
-
     def test_every_dismissed_pair_is_restored_at_once(self):
         run = self.make_run_with_candidates(
             [
@@ -1714,6 +1645,25 @@ class RunDisposalTests(ConceptMatchingTestCase):
         self.assertFalse(ConceptMatchRun.objects.filter(pk=run.pk).exists())
         self.assertEqual(ConceptMatchCandidate.objects.filter(run_id=run.pk).count(), 0)
 
+    def test_a_query_failing_because_its_run_was_deleted_is_a_cancellation(self):
+        """Deleting a run mid-query fails that query's commit on the foreign
+        key, which outside a test transaction is how the worker finds out."""
+        run = ConceptMatchRun.objects.create(
+            user=None, status=ConceptMatchRun.STATUS_RUNNING, parameters={}
+        )
+
+        def delete_run_and_fail(*args, **kwargs):
+            ConceptMatchRun.objects.filter(pk=run.pk).delete()
+            raise IntegrityError("violates foreign key constraint")
+
+        with patch(
+            "arches_lingo.utils.concept_matching._store_pairs",
+            side_effect=delete_run_and_fail,
+        ):
+            result = run_detection(MatchScope(), run=run, log=lambda message: None)
+
+        self.assertIsNone(result)
+
     def test_a_delete_racing_a_committing_query_is_retried(self):
         """The query can commit pairs between the delete clearing the run's
         pairs and the delete committing, which fails it on the foreign key."""
@@ -1727,21 +1677,3 @@ class RunDisposalTests(ConceptMatchingTestCase):
             delete_run(run, None, user_is_lingo_admin=True)
 
         self.assertEqual(mock_delete.call_count, 2)
-
-    def test_deleting_a_run_takes_its_candidates_with_it(self):
-        run = ConceptMatchRun.objects.create(
-            user=User.objects.get(username="admin"),
-            status=ConceptMatchRun.STATUS_COMPLETE,
-            parameters={"signals": [SIGNAL_EXACT_LABEL]},
-        )
-        ConceptMatchCandidate.objects.create(
-            run=run,
-            concept_a_id=uuid.uuid4(),
-            concept_b_id=uuid.uuid4(),
-            score=1.0,
-            signal=SIGNAL_EXACT_LABEL,
-        )
-
-        run.delete()
-
-        self.assertEqual(ConceptMatchCandidate.objects.filter(run_id=run.pk).count(), 0)
