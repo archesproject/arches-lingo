@@ -5,7 +5,8 @@ Run match detection over a scope and store the result as a reviewable run.
 Matching a whole vocabulary is slow enough that it is worth starting from the
 command line rather than a request, and this is also the escape hatch when no
 celery worker is available. The run it writes is the same one the interface
-reads, so a run started here can be reviewed in the browser.
+reads, so any editor can review it in the browser; without --user it has no
+creator, and only a Lingo admin can delete it.
 """
 
 from django.contrib.auth.models import User
@@ -13,7 +14,11 @@ from django.core.management.base import BaseCommand, CommandError
 
 from arches_lingo.models import ConceptMatchCandidate
 from arches_lingo.utils.concept_matching import (
+    ALL_SIGNALS,
+    DEFAULT_SIMILARITY_THRESHOLD,
     EXACT_SIGNALS,
+    MAX_SIMILARITY_THRESHOLD,
+    MIN_SIMILARITY_THRESHOLD,
     ConceptMatchError,
     MatchScope,
     run_detection,
@@ -23,8 +28,8 @@ from arches_lingo.utils.concept_matching import (
 class Command(BaseCommand):
     help = (
         "Find concepts that probably mean the same thing and store them as a "
-        "reviewable match run. Compares labels and URIs; scope the run with "
-        "--scheme, --concept-set or --concept."
+        "reviewable match run. Compares URIs and labels, exactly or by "
+        "similarity; scope the run with --scheme, --concept-set or --concept."
     )
 
     def add_arguments(self, parser):
@@ -63,12 +68,23 @@ class Command(BaseCommand):
         parser.add_argument(
             "--signal",
             action="append",
-            choices=sorted(EXACT_SIGNALS),
+            choices=sorted(ALL_SIGNALS),
             default=[],
             dest="signals",
             help=(
-                "Signal to run. Repeatable; defaults to every signal. "
-                "shared_identifier compares URIs, exact_label compares labels."
+                "Signal to run. Repeatable; defaults to the exact signals. "
+                "shared_identifier compares URIs, exact_label compares labels, "
+                "trigram finds similar labels."
+            ),
+        )
+        parser.add_argument(
+            "--similarity-threshold",
+            type=float,
+            default=DEFAULT_SIMILARITY_THRESHOLD,
+            help=(
+                "How similar two labels must be for the trigram signal, from "
+                f"{MIN_SIMILARITY_THRESHOLD} to {MAX_SIMILARITY_THRESHOLD}. "
+                f"Defaults to {DEFAULT_SIMILARITY_THRESHOLD}."
             ),
         )
         parser.add_argument(
@@ -107,6 +123,7 @@ class Command(BaseCommand):
                 scope,
                 signals=tuple(options["signals"]) or EXACT_SIGNALS,
                 same_language_only=not options["any_language"],
+                similarity_threshold=options["similarity_threshold"],
                 user=run_owner,
                 log=lambda message: self.stdout.write(str(message)),
             )

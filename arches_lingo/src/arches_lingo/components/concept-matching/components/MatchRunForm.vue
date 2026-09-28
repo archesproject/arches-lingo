@@ -18,7 +18,7 @@ import { DEFAULT_SIMILARITY_THRESHOLD } from "@/arches_lingo/components/concept-
 import { WARN } from "@/arches_lingo/constants.ts";
 import {
     buildSignalList,
-    describeExpectedDuration,
+    estimateDurationSpan,
     labelsInScope,
 } from "@/arches_lingo/components/concept-matching/utils.ts";
 
@@ -30,11 +30,11 @@ import type {
 
 const {
     schemes,
-    isRunning,
+    isStartingRun,
     scopeSizes = null,
 } = defineProps<{
     schemes: Scheme[];
-    isRunning: boolean;
+    isStartingRun: boolean;
     scopeSizes?: ConceptMatchScopeSizes | null;
 }>();
 
@@ -85,10 +85,24 @@ const expectedDurationText = computed(function () {
         {
             labels: labelCount.toLocaleString(),
             total: scopeSizes.total_labels.toLocaleString(),
-            duration: describeExpectedDuration(labelCount, $gettext),
+            duration: describeExpectedDuration(labelCount),
         },
     );
 });
+
+function describeExpectedDuration(labelCount: number) {
+    const expectedDuration = estimateDurationSpan(labelCount);
+    if (expectedDuration.kind === "brief") {
+        return $gettext("under a minute or two");
+    }
+    if (expectedDuration.kind === "overAnHour") {
+        return $gettext("well over an hour");
+    }
+    return $gettext("roughly %{low} to %{high} minutes", {
+        low: String(expectedDuration.lowMinutes),
+        high: String(expectedDuration.highMinutes),
+    });
+}
 const crossSchemeOnly = ref(false);
 const sameLanguageOnly = ref(true);
 const compareLabels = ref(true);
@@ -261,10 +275,10 @@ function onRun() {
             :label="$gettext('Find matches')"
             class="run-button"
             :disabled="
-                isRunning ||
+                isStartingRun ||
                 (!compareLabels && !compareUris && !compareSimilarLabels)
             "
-            :loading="isRunning"
+            :loading="isStartingRun"
             @click="onRun"
         />
     </div>

@@ -82,32 +82,6 @@ export function buildPreselectedConcept(
 }
 
 /**
- * Why a pair was suggested, in words.
- *
- * `translate` is the caller's $gettext, so the wording stays translatable while
- * the branching stays testable.
- */
-export function describeMatchReason(
-    candidate: ConceptMatchCandidate,
-    translate: (message: string, options: Record<string, string>) => string,
-): string {
-    if (candidate.signal === SIGNAL_SHARED_IDENTIFIER) {
-        return translate("Same URI: %{evidence}", {
-            evidence: candidate.evidence,
-        });
-    }
-    if (candidate.signal === SIGNAL_TRIGRAM) {
-        return translate("Similar labels (%{score}): %{evidence}", {
-            score: candidate.score.toFixed(2),
-            evidence: candidate.evidence,
-        });
-    }
-    return translate("Same label: %{evidence}", {
-        evidence: candidate.evidence,
-    });
-}
-
-/**
  * The pairs a link request could not act on, named so the reviewer can tell
  * whether it is worth doing anything about.
  */
@@ -122,24 +96,15 @@ export function describeSkippedReasons(
         .join(", ");
 }
 
-/**
- * How long a run has been going, in minutes and seconds.
- *
- * `translate` is the caller's $gettext, for the same reason as above: the
- * wording stays translatable while the arithmetic stays testable.
- */
-export function formatElapsed(
-    totalSeconds: number,
-    translate: (message: string, options: Record<string, string>) => string,
-): string {
-    const seconds = Math.max(0, Math.floor(totalSeconds));
-    const minutes = Math.floor(seconds / 60);
-    return minutes
-        ? translate("%{minutes}m %{seconds}s", {
-              minutes: String(minutes),
-              seconds: String(seconds % 60).padStart(2, "0"),
-          })
-        : translate("%{seconds}s", { seconds: String(seconds) });
+export function splitElapsedSeconds(totalSeconds: number): {
+    minutes: number;
+    seconds: number;
+} {
+    const wholeSeconds = Math.max(0, Math.floor(totalSeconds));
+    return {
+        minutes: Math.floor(wholeSeconds / 60),
+        seconds: wholeSeconds % 60,
+    };
 }
 
 /**
@@ -175,24 +140,23 @@ export function estimateFuzzyRunSeconds(labelCount: number): number {
  * upwards because a run taking longer than promised is the unpleasant surprise,
  * and one finishing early is not.
  */
-export function describeExpectedDuration(
-    labelCount: number,
-    translate: (message: string, options: Record<string, string>) => string,
-): string {
+export type ExpectedDuration =
+    | { kind: "brief" }
+    | { kind: "overAnHour" }
+    | { kind: "minutes"; lowMinutes: number; highMinutes: number };
+
+export function estimateDurationSpan(labelCount: number): ExpectedDuration {
     const seconds = estimateFuzzyRunSeconds(labelCount);
     if (seconds < 90) {
-        return translate("under a minute or two", {});
+        return { kind: "brief" };
     }
 
     const lowMinutes = Math.max(1, Math.floor((seconds * 0.7) / 60));
     const highMinutes = Math.ceil((seconds * 1.4) / 60);
     if (highMinutes >= 60) {
-        return translate("well over an hour", {});
+        return { kind: "overAnHour" };
     }
-    return translate("roughly %{low} to %{high} minutes", {
-        low: String(lowMinutes),
-        high: String(highMinutes),
-    });
+    return { kind: "minutes", lowMinutes, highMinutes };
 }
 
 /**

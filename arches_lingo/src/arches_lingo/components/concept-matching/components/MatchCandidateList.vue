@@ -154,14 +154,15 @@ const emptyText = computed(function () {
                 "
                 @merge="emit('merge', $event)"
             />
-
-            <Paginator
-                :rows="itemsPerPage"
-                :total-records="totalResults"
-                :first="firstResultIndex"
-                @page="emit('page', $event.first)"
-            />
         </template>
+
+        <Paginator
+            v-if="totalResults > 0"
+            :rows="itemsPerPage"
+            :total-records="totalResults"
+            :first="firstResultIndex"
+            @page="emit('page', $event.first)"
+        />
     </div>
 </template>
 
