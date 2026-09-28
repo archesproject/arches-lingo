@@ -58,12 +58,12 @@ from arches_lingo.utils.concept_matching_service import (
     STALE_RUN_SECONDS,
     ConceptMatchRequestError,
     delete_run,
-    dismiss_all_pending,
     link_candidates_with_exact_match,
     reap_stale_runs,
     serialize_candidate_page,
     serialize_run,
     set_candidate_status,
+    set_status_for_all,
     start_detection,
 )
 from unittest.mock import patch
@@ -1307,7 +1307,9 @@ class ConceptMatchApiTests(ConceptMatchingTestCase):
 
         response = self.client.patch(
             candidates_url,
-            data=json.dumps({"all_pending": True}),
+            data=json.dumps(
+                {"all": True, "status": ConceptMatchCandidate.STATUS_DISMISSED}
+            ),
             content_type="application/json",
         )
 
@@ -1324,7 +1326,9 @@ class ConceptMatchApiTests(ConceptMatchingTestCase):
 
         response = self.client.patch(
             reverse("api-concept-match-candidates", args=[created["id"]]),
-            data=json.dumps({"all_pending": True}),
+            data=json.dumps(
+                {"all": True, "status": ConceptMatchCandidate.STATUS_DISMISSED}
+            ),
             content_type="application/json",
         )
 
@@ -1629,7 +1633,11 @@ class RunDisposalTests(ConceptMatchingTestCase):
     def test_every_pending_pair_is_dismissed_at_once(self):
         run = self.make_run_with_candidates([ConceptMatchCandidate.STATUS_PENDING] * 3)
 
-        result = dismiss_all_pending(run, User.objects.get(username="admin"))
+        result = set_status_for_all(
+            run,
+            ConceptMatchCandidate.STATUS_DISMISSED,
+            User.objects.get(username="admin"),
+        )
 
         self.assertEqual(result["updated"], 3)
         self.assertEqual(
@@ -1649,7 +1657,11 @@ class RunDisposalTests(ConceptMatchingTestCase):
             ]
         )
 
-        result = dismiss_all_pending(run, User.objects.get(username="admin"))
+        result = set_status_for_all(
+            run,
+            ConceptMatchCandidate.STATUS_DISMISSED,
+            User.objects.get(username="admin"),
+        )
 
         self.assertEqual(result["updated"], 1)
         self.assertEqual(
@@ -1665,11 +1677,68 @@ class RunDisposalTests(ConceptMatchingTestCase):
         run = self.make_run_with_candidates([ConceptMatchCandidate.STATUS_PENDING])
         admin = User.objects.get(username="admin")
 
-        dismiss_all_pending(run, admin)
+        set_status_for_all(run, ConceptMatchCandidate.STATUS_DISMISSED, admin)
 
         dismissed = run.candidates.get()
         self.assertEqual(dismissed.reviewed_by, admin)
         self.assertIsNotNone(dismissed.reviewed_at)
+
+    def test_every_dismissed_pair_is_restored_at_once(self):
+        run = self.make_run_with_candidates(
+            [
+                ConceptMatchCandidate.STATUS_DISMISSED,
+                ConceptMatchCandidate.STATUS_DISMISSED,
+                ConceptMatchCandidate.STATUS_LINKED,
+            ]
+        )
+
+        result = set_status_for_all(
+            run,
+            ConceptMatchCandidate.STATUS_PENDING,
+            User.objects.get(username="admin"),
+        )
+
+        self.assertEqual(result["updated"], 2)
+        self.assertEqual(result["skipped"], {})
+        self.assertEqual(
+            run.candidates.filter(status=ConceptMatchCandidate.STATUS_LINKED).count(),
+            1,
+        )
+
+    def test_a_pair_decided_since_it_was_dismissed_stays_dismissed(self):
+        """Settling a pair only touches runs where it is still pending, so a
+        restore is the one place that has to check."""
+        concept_a_id, concept_b_id = self.expected_pair(
+            self.first_concept, self.second_concept
+        )
+        run = self.make_run_with_candidates([])
+        candidate = ConceptMatchCandidate.objects.create(
+            run=run,
+            concept_a_id=concept_a_id,
+            concept_b_id=concept_b_id,
+            score=1.0,
+            signal=SIGNAL_EXACT_LABEL,
+            status=ConceptMatchCandidate.STATUS_DISMISSED,
+        )
+        ConceptMerge.objects.create(
+            survivor_concept_id=self.first_concept.pk,
+            absorbed_concept_id=self.second_concept.pk,
+        )
+
+        for restore in (
+            lambda: set_status_for_all(run, ConceptMatchCandidate.STATUS_PENDING, None),
+            lambda: set_candidate_status(
+                run, [candidate.pk], ConceptMatchCandidate.STATUS_PENDING, None
+            ),
+        ):
+            with self.subTest(restore=restore):
+                result = restore()
+                self.assertEqual(result["updated"], 0)
+                self.assertEqual(result["skipped"], {"already_decided": 1})
+                candidate.refresh_from_db()
+                self.assertEqual(
+                    candidate.status, ConceptMatchCandidate.STATUS_DISMISSED
+                )
 
     def test_another_runs_pairs_are_untouched(self):
         run = self.make_run_with_candidates([ConceptMatchCandidate.STATUS_PENDING])
@@ -1677,7 +1746,11 @@ class RunDisposalTests(ConceptMatchingTestCase):
             [ConceptMatchCandidate.STATUS_PENDING]
         )
 
-        dismiss_all_pending(run, User.objects.get(username="admin"))
+        set_status_for_all(
+            run,
+            ConceptMatchCandidate.STATUS_DISMISSED,
+            User.objects.get(username="admin"),
+        )
 
         self.assertEqual(
             other_run.candidates.get().status, ConceptMatchCandidate.STATUS_PENDING

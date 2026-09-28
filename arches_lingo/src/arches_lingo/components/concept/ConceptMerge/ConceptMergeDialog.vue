@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 
 import { useGettext } from "vue3-gettext";
 import { storeToRefs } from "pinia";
@@ -106,6 +106,11 @@ const MERGE_STEP_ORDER = [
     MERGE_STEP_CONFIRM,
 ];
 
+// A preselected concept is the merge the caller asked for, so there is no
+// picker to step back to: choosing a different concept would merge a pair
+// other than the one being reviewed.
+const PRESELECTED_MERGE_STEP_ORDER = [MERGE_STEP_COMPARE, MERGE_STEP_CONFIRM];
+
 const {
     survivorConcept,
     survivorLabel,
@@ -149,15 +154,26 @@ const selectionState = ref<MergeSelectionState>();
 const isMerging = ref(false);
 const mergeError = ref<string | null>(null);
 
+const mergeStepOrder = computed(function () {
+    if (preselectedConcept) {
+        return PRESELECTED_MERGE_STEP_ORDER;
+    }
+    return MERGE_STEP_ORDER;
+});
+
+const isOnFirstStep = computed(function () {
+    return currentStep.value === mergeStepOrder.value[0];
+});
+
 const previousStep = computed(function () {
-    const stepIndex = MERGE_STEP_ORDER.indexOf(currentStep.value);
-    return MERGE_STEP_ORDER[Math.max(stepIndex - 1, 0)];
+    const stepIndex = mergeStepOrder.value.indexOf(currentStep.value);
+    return mergeStepOrder.value[Math.max(stepIndex - 1, 0)];
 });
 
 const nextStep = computed(function () {
-    const stepIndex = MERGE_STEP_ORDER.indexOf(currentStep.value);
-    return MERGE_STEP_ORDER[
-        Math.min(stepIndex + 1, MERGE_STEP_ORDER.length - 1)
+    const stepIndex = mergeStepOrder.value.indexOf(currentStep.value);
+    return mergeStepOrder.value[
+        Math.min(stepIndex + 1, mergeStepOrder.value.length - 1)
     ];
 });
 
@@ -203,6 +219,16 @@ const absorbedLabel = computed(function () {
         systemLanguage.value.code,
     ).value;
 });
+
+watch(
+    () => preselectedConcept,
+    function (concept) {
+        if (concept) {
+            onConceptSelected(concept);
+        }
+    },
+    { immediate: true },
+);
 
 onMounted(loadSurvivorPath);
 
@@ -257,10 +283,6 @@ async function onConceptSelected(concept: SearchResultItem) {
             isLoadingAbsorbedConcept.value = false;
         }
     }
-}
-
-if (preselectedConcept) {
-    onConceptSelected(preselectedConcept);
 }
 
 function onSelectionStateChange(updatedState: MergeSelectionState) {
@@ -323,7 +345,10 @@ async function onMergeConfirmed() {
             class="merge-stepper"
         >
             <StepList>
-                <Step :value="MERGE_STEP_SELECT">
+                <Step
+                    v-if="!preselectedConcept"
+                    :value="MERGE_STEP_SELECT"
+                >
                     {{ $gettext("Choose concept") }}
                 </Step>
                 <Step
@@ -349,7 +374,10 @@ async function onMergeConfirmed() {
             />
 
             <StepPanels>
-                <StepPanel :value="MERGE_STEP_SELECT">
+                <StepPanel
+                    v-if="!preselectedConcept"
+                    :value="MERGE_STEP_SELECT"
+                >
                     <div class="merge-step">
                         <div class="merge-step-body merge-step-body--fill">
                             <p class="merge-step-intro">
@@ -448,7 +476,7 @@ async function onMergeConfirmed() {
         <template #footer>
             <div class="footer">
                 <Button
-                    v-if="currentStep === MERGE_STEP_SELECT"
+                    v-if="isOnFirstStep"
                     icon="pi pi-times"
                     :label="$gettext('Cancel')"
                     :severity="DANGER"

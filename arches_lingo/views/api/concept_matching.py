@@ -15,7 +15,6 @@ from arches_lingo.utils.concept_matching import ConceptMatchError
 from arches_lingo.utils.concept_matching_service import (
     ConceptMatchRequestError,
     delete_run,
-    dismiss_all_pending,
     get_run,
     link_candidates_with_exact_match,
     list_runs,
@@ -27,6 +26,7 @@ from arches_lingo.utils.concept_matching_service import (
     serialize_candidate_page,
     serialize_run,
     set_candidate_status,
+    set_status_for_all,
 )
 
 
@@ -123,10 +123,12 @@ class ConceptMatchCandidateListView(LingoEditorMixin, View):
         run = get_run(pk)
         body = _parse_json_body(request)
 
-        # Clearing the rest of the queue names no ids: there can be tens of
-        # thousands of them.
-        if body.get("all_pending"):
-            return JSONResponse(dismiss_all_pending(run, request.user))
+        # Clearing or restoring a whole queue names no ids: there can be tens
+        # of thousands of them.
+        if body.get("all"):
+            return JSONResponse(
+                set_status_for_all(run, body.get("status"), request.user)
+            )
 
         return JSONResponse(
             set_candidate_status(

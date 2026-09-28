@@ -13,6 +13,7 @@ export const RUN_STATUS_RUNNING = "running";
 export const RUN_STATUS_FAILED = "failed";
 
 // A fuzzy run is handed to a worker, so its progress is polled.
+export const RUN_POLL_FAILURE_LIMIT = 3;
 export const RUN_POLL_INTERVAL_MS = 2000;
 
 export const CANDIDATE_STATUS_PENDING = "pending";

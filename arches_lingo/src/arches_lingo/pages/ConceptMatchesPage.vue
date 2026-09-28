@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { computed, onBeforeUnmount, ref, watch } from "vue";
 
+import { storeToRefs } from "pinia";
 import { useGettext } from "vue3-gettext";
 import { useRoute, useRouter } from "vue-router";
 import { useConfirm } from "primevue/useconfirm";
@@ -18,23 +19,27 @@ import MatchRunProgress from "@/arches_lingo/components/concept-matching/compone
 import MatchRunSummary from "@/arches_lingo/components/concept-matching/components/MatchRunSummary.vue";
 import MergeDirectionDialog from "@/arches_lingo/components/concept-matching/components/MergeDirectionDialog.vue";
 
+import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 import {
     createConceptMatchRun,
     deleteConceptMatchRun,
-    dismissAllConceptMatchCandidates,
     fetchConceptMatchCandidates,
     fetchConceptMatchRun,
     fetchConceptMatchRuns,
     fetchLingoResource,
     linkConceptMatchCandidates,
+    updateAllConceptMatchCandidates,
     updateConceptMatchCandidates,
 } from "@/arches_lingo/api.ts";
 import { routeNames } from "@/arches_lingo/routes.ts";
 import { useConceptStore } from "@/arches_lingo/stores/useConceptStore.ts";
+import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
+import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 import {
     CANDIDATES_PER_PAGE,
     CANDIDATE_STATUS_DISMISSED,
     CANDIDATE_STATUS_PENDING,
+    RUN_POLL_FAILURE_LIMIT,
     RUN_POLL_INTERVAL_MS,
     RUN_STATUS_FAILED,
 } from "@/arches_lingo/components/concept-matching/constants.ts";
@@ -50,32 +55,31 @@ import {
     DEFAULT_ERROR_TOAST_LIFE,
     DEFAULT_TOAST_LIFE,
     ERROR,
+    INFO,
     SECONDARY,
     SUCCESS,
     WARN,
 } from "@/arches_lingo/constants.ts";
 
-import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
-import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
-import { storeToRefs } from "pinia";
-
 import type {
     ConceptMatchCandidate,
     ConceptMatchRun,
     ConceptMatchRunRequest,
+    ConceptMatchStatusChange,
     MatchedConceptSummary,
     ResourceInstanceResult,
 } from "@/arches_lingo/types.ts";
 
 const CONCEPT_GRAPH_SLUG = "concept";
 
-const { $gettext } = useGettext();
+const { $gettext, $ngettext } = useGettext();
 const toast = useToast();
 const confirm = useConfirm();
 const route = useRoute();
 const router = useRouter();
 const conceptStore = useConceptStore();
 const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
+const { user, isEditor } = storeToRefs(useUserStore());
 
 // What the reviewer is looking at -- which run, which page of it, and whether
 // they are reading the queue or what they dismissed -- is held in the address
@@ -110,8 +114,12 @@ const firstResultIndex = ref((pageNumberInRoute() - 1) * CANDIDATES_PER_PAGE);
 const totalResults = ref(0);
 const isLoadingCandidates = ref(false);
 const isLinking = ref(false);
-const isDismissingAll = ref(false);
+const isUpdatingSelection = ref(false);
+const isChangingAll = ref(false);
 const isDeletingRun = ref(false);
+// While pairs are selected, a refresh would move rows under the reviewer; new
+// results wait until they ask for them.
+const hasUnshownResults = ref(false);
 const showCriteria = ref(true);
 
 const mergingCandidate = ref<ConceptMatchCandidate | null>(null);
@@ -121,6 +129,11 @@ const isPreparingMerge = ref(false);
 
 let pollTimer: ReturnType<typeof setInterval> | undefined;
 let isPollInFlight = false;
+let consecutivePollFailures = 0;
+// Only the newest response for each is shown, whatever order they arrive in.
+let latestRunsRequest = 0;
+let latestCandidatesRequest = 0;
+let loadingCandidatesRequest = 0;
 const loadError = ref<string | null>(null);
 
 const activeRun = computed(function () {
@@ -143,8 +156,12 @@ function reportError(error: unknown, summary: string) {
 }
 
 async function loadRuns() {
+    const requestNumber = ++latestRunsRequest;
     try {
-        runs.value = (await fetchConceptMatchRuns()).data;
+        const listedRuns = (await fetchConceptMatchRuns()).data;
+        if (requestNumber === latestRunsRequest) {
+            runs.value = listedRuns;
+        }
     } catch (error) {
         reportError(error, $gettext("Could not load previous runs."));
     }
@@ -179,10 +196,20 @@ async function loadCandidates({ quiet = false } = {}) {
         return;
     }
 
+    if (quiet && selectedIds.value.size) {
+        hasUnshownResults.value = true;
+        return;
+    }
+
+    const requestNumber = ++latestCandidatesRequest;
     // A poll refreshes the list in place. Showing the loading state every two
     // seconds would flicker the pairs the reviewer is trying to read, so only a
     // refresh they asked for announces itself.
-    if (!quiet) isLoadingCandidates.value = true;
+    if (!quiet) {
+        isLoadingCandidates.value = true;
+        loadingCandidatesRequest = requestNumber;
+        hasUnshownResults.value = false;
+    }
     loadError.value = null;
     const pageNumber =
         Math.floor(firstResultIndex.value / CANDIDATES_PER_PAGE) + 1;
@@ -193,6 +220,7 @@ async function loadCandidates({ quiet = false } = {}) {
             pageNumber,
             CANDIDATES_PER_PAGE,
         );
+        if (requestNumber !== latestCandidatesRequest) return;
         // Deciding the last pairs on the last page, or a stale link, leaves the
         // address past the end of the queue.
         const lastPageNumber = Math.max(
@@ -206,10 +234,14 @@ async function loadCandidates({ quiet = false } = {}) {
         candidates.value = page.data;
         totalResults.value = page.total_results;
     } catch (error) {
-        loadError.value =
-            error instanceof Error ? error.message : String(error);
+        if (requestNumber === latestCandidatesRequest) {
+            loadError.value =
+                error instanceof Error ? error.message : String(error);
+        }
     } finally {
-        if (!quiet) isLoadingCandidates.value = false;
+        if (loadingCandidatesRequest === requestNumber) {
+            isLoadingCandidates.value = false;
+        }
     }
 }
 
@@ -224,6 +256,7 @@ function stopPolling() {
 
 function pollUntilFinished(runId: number) {
     stopPolling();
+    consecutivePollFailures = 0;
     pollTimer = setInterval(async () => {
         // Two requests a tick against a run that may hold tens of thousands of
         // pairs: a tick that is still in flight is skipped rather than queued
@@ -235,6 +268,7 @@ function pollUntilFinished(runId: number) {
             // end, so the running count climbs in front of the reviewer instead
             // of sitting at zero until the search finishes.
             const run = await fetchConceptMatchRun(runId);
+            consecutivePollFailures = 0;
             if (runId !== activeRunId.value) return;
             if (!run) {
                 // Cancelled, from here or from somewhere else. There is no
@@ -255,8 +289,23 @@ function pollUntilFinished(runId: number) {
             }
 
             stopPolling();
-            await loadCandidates();
+            if (selectedIds.value.size) {
+                hasUnshownResults.value = true;
+            } else {
+                await loadCandidates();
+            }
             reportRunFinished(run);
+        } catch (error) {
+            consecutivePollFailures += 1;
+            if (consecutivePollFailures >= RUN_POLL_FAILURE_LIMIT) {
+                stopPolling();
+                reportError(
+                    error,
+                    $gettext(
+                        "Lost touch with the running search. Reload the page to check on it.",
+                    ),
+                );
+            }
         } finally {
             isPollInFlight = false;
         }
@@ -276,9 +325,12 @@ function reportRunFinished(run: ConceptMatchRun) {
     toast.add({
         severity: SUCCESS,
         life: DEFAULT_TOAST_LIFE,
-        summary: $gettext("Found %{count} candidate pair(s)", {
-            count: String(run.candidate_count),
-        }),
+        summary: $ngettext(
+            "Found %{count} candidate pair",
+            "Found %{count} candidate pairs",
+            run.candidate_count,
+            { count: String(run.candidate_count) },
+        ),
     });
 }
 
@@ -307,65 +359,120 @@ async function onRun(
     }
 }
 
+// A pair can be skipped for a reason the reviewer can act on, so the reasons
+// are named rather than reported as a bare count.
+function describeSkipped(skipped: Record<string, number>) {
+    const reasonLabels: Record<string, string> = {
+        missing_uri: $gettext("no URI to point at"),
+        not_editable: $gettext("neither concept can be edited"),
+        missing_concept: $gettext("concept no longer exists"),
+        already_decided: $gettext("already dismissed, linked or merged"),
+    };
+    return describeSkippedReasons(
+        skipped,
+        (reason, count) =>
+            $gettext("%{count} (%{reason})", {
+                count: String(count),
+                reason: reasonLabels[reason] ?? reason,
+            }),
+        selectedLanguage.value.code,
+    );
+}
+
+function describeSkippedDetail(skipped: Record<string, number>) {
+    if (!Object.keys(skipped).length) return undefined;
+    return $gettext("Skipped: %{reasons}.", {
+        reasons: describeSkipped(skipped),
+    });
+}
+
+function reportStatusChange(result: ConceptMatchStatusChange) {
+    toast.add({
+        severity: result.updated ? SUCCESS : WARN,
+        life: DEFAULT_TOAST_LIFE,
+        summary:
+            result.status === CANDIDATE_STATUS_DISMISSED
+                ? $ngettext(
+                      "Dismissed %{count} pair",
+                      "Dismissed %{count} pairs",
+                      result.updated,
+                      { count: String(result.updated) },
+                  )
+                : $ngettext(
+                      "Returned %{count} pair to the queue",
+                      "Returned %{count} pairs to the queue",
+                      result.updated,
+                      { count: String(result.updated) },
+                  ),
+        detail: describeSkippedDetail(result.skipped),
+    });
+}
+
 async function setStatusForSelection(status: string) {
     if (activeRunId.value === null || !selectedIds.value.size) return;
 
+    isUpdatingSelection.value = true;
     try {
-        const result = await updateConceptMatchCandidates(
-            activeRunId.value,
-            Array.from(selectedIds.value),
-            status,
+        reportStatusChange(
+            await updateConceptMatchCandidates(
+                activeRunId.value,
+                Array.from(selectedIds.value),
+                status,
+            ),
         );
-        toast.add({
-            severity: SUCCESS,
-            life: DEFAULT_TOAST_LIFE,
-            summary:
-                status === CANDIDATE_STATUS_DISMISSED
-                    ? $gettext("Dismissed %{count} pair(s)", {
-                          count: String(result.updated),
-                      })
-                    : $gettext("Returned %{count} pair(s) to the queue", {
-                          count: String(result.updated),
-                      }),
-        });
         selectedIds.value = new Set();
         await Promise.all([loadRuns(), loadCandidates()]);
     } catch (error) {
         reportError(error, $gettext("Could not update the selected pairs."));
+    } finally {
+        isUpdatingSelection.value = false;
     }
 }
 
-function onDismissAllRemaining() {
+function confirmStatusChangeForAll(status: string) {
     const run = activeRun.value;
-    if (!run || !run.pending_count) return;
+    if (!run) return;
+    const isDismissing = status === CANDIDATE_STATUS_DISMISSED;
+    const affectedCount = isDismissing
+        ? run.pending_count
+        : run.counts_by_status[CANDIDATE_STATUS_DISMISSED] ?? 0;
+    if (!affectedCount) return;
 
     confirm.require({
-        group: "dismiss-all-matches",
-        header: $gettext("Dismiss everything left?"),
-        message: $gettext(
-            "All %{count} pair(s) still awaiting a decision will be dismissed. They stay in the run, and can be restored from the dismissed list.",
-            { count: String(run.pending_count) },
-        ),
+        group: "change-all-matches",
+        header: isDismissing
+            ? $gettext("Dismiss everything left?")
+            : $gettext("Restore everything dismissed?"),
+        message: isDismissing
+            ? $ngettext(
+                  "The %{count} pair still awaiting a decision will be dismissed. It stays in the run, and can be restored from the dismissed list.",
+                  "All %{count} pairs still awaiting a decision will be dismissed. They stay in the run, and can be restored from the dismissed list.",
+                  affectedCount,
+                  { count: String(affectedCount) },
+              )
+            : $ngettext(
+                  "The %{count} dismissed pair will be returned to the queue, unless it has been linked or merged since.",
+                  "All %{count} dismissed pairs will be returned to the queue, except any linked or merged since.",
+                  affectedCount,
+                  { count: String(affectedCount) },
+              ),
         accept: async () => {
-            isDismissingAll.value = true;
+            isChangingAll.value = true;
             try {
-                const result = await dismissAllConceptMatchCandidates(run.id);
-                toast.add({
-                    severity: SUCCESS,
-                    life: DEFAULT_TOAST_LIFE,
-                    summary: $gettext("Dismissed %{count} pair(s)", {
-                        count: String(result.updated),
-                    }),
-                });
+                reportStatusChange(
+                    await updateAllConceptMatchCandidates(run.id, status),
+                );
                 selectedIds.value = new Set();
                 await Promise.all([loadRuns(), loadCandidates()]);
             } catch (error) {
                 reportError(
                     error,
-                    $gettext("Could not dismiss the remaining pairs."),
+                    isDismissing
+                        ? $gettext("Could not dismiss the remaining pairs.")
+                        : $gettext("Could not restore the dismissed pairs."),
                 );
             } finally {
-                isDismissingAll.value = false;
+                isChangingAll.value = false;
             }
         },
     });
@@ -385,8 +492,10 @@ function onDeleteRun() {
             ? $gettext(
                   "The search stops, and the run and everything it has found so far are deleted. This cannot be undone.",
               )
-            : $gettext(
+            : $ngettext(
+                  "The run and its %{count} pair are deleted. This cannot be undone.",
                   "The run and all %{count} of its pairs are deleted. This cannot be undone.",
+                  run.candidate_count,
                   { count: String(run.candidate_count) },
               ),
         accept: async () => {
@@ -423,17 +532,6 @@ function onDeleteRun() {
     });
 }
 
-// A pair can be skipped for a reason the reviewer can act on, so the reasons
-// are named rather than reported as a bare count.
-function describeSkipped(skipped: Record<string, number>) {
-    return describeSkippedReasons(skipped, {
-        missing_uri: $gettext("no URI to point at"),
-        not_editable: $gettext("neither concept can be edited"),
-        missing_concept: $gettext("concept no longer exists"),
-        already_decided: $gettext("already dismissed, linked or merged"),
-    });
-}
-
 async function onLinkSelection() {
     if (activeRunId.value === null || !selectedIds.value.size) return;
 
@@ -444,30 +542,32 @@ async function onLinkSelection() {
             Array.from(selectedIds.value),
         );
 
-        const detail = [];
-        if (result.linked_one_way) {
-            detail.push(
-                $gettext(
-                    "%{count} recorded on one side only, because the other concept cannot be edited.",
-                    { count: String(result.linked_one_way) },
-                ),
-            );
-        }
-        if (Object.keys(result.skipped).length) {
-            detail.push(
-                $gettext("Skipped: %{reasons}.", {
-                    reasons: describeSkipped(result.skipped),
-                }),
-            );
-        }
+        const oneWayDetail = result.linked_one_way
+            ? $ngettext(
+                  "%{count} recorded on one side only, because the other concept cannot be edited.",
+                  "%{count} recorded on one side only, because the other concepts cannot be edited.",
+                  result.linked_one_way,
+                  { count: String(result.linked_one_way) },
+              )
+            : undefined;
+        const skippedDetail = describeSkippedDetail(result.skipped);
 
         toast.add({
             severity: result.linked ? SUCCESS : WARN,
             life: DEFAULT_TOAST_LIFE,
-            summary: $gettext("Linked %{count} pair(s)", {
-                count: String(result.linked),
-            }),
-            detail: detail.join(" ") || undefined,
+            summary: $ngettext(
+                "Linked %{count} pair",
+                "Linked %{count} pairs",
+                result.linked,
+                { count: String(result.linked) },
+            ),
+            detail:
+                oneWayDetail && skippedDetail
+                    ? $gettext("%{oneWay} %{skipped}", {
+                          oneWay: oneWayDetail,
+                          skipped: skippedDetail,
+                      })
+                    : oneWayDetail ?? skippedDetail,
         });
 
         selectedIds.value = new Set();
@@ -574,6 +674,47 @@ function onSelectAllOnPage(isSelected: boolean) {
     selectedIds.value = updated;
 }
 
+function describeRunOption(run: ConceptMatchRun) {
+    const details = {
+        name: run.name,
+        count: String(run.candidate_count),
+        started: new Date(run.created).toLocaleString(
+            selectedLanguage.value.code,
+        ),
+        creator: run.created_by ?? $gettext("Command line"),
+    };
+    return run.name
+        ? $ngettext(
+              "%{name} — %{count} pair — %{started} — %{creator}",
+              "%{name} — %{count} pairs — %{started} — %{creator}",
+              run.candidate_count,
+              details,
+          )
+        : $ngettext(
+              "%{count} pair — %{started} — %{creator}",
+              "%{count} pairs — %{started} — %{creator}",
+              run.candidate_count,
+              details,
+          );
+}
+
+const activeRunDescription = computed(function () {
+    const run = activeRun.value;
+    if (!run) return "";
+    const counts = {
+        name: run.name,
+        pending: String(run.pending_count),
+        total: String(run.candidate_count),
+    };
+    return run.name
+        ? $gettext("%{name} — %{pending} of %{total} left to review", counts)
+        : $gettext("%{pending} of %{total} left to review", counts);
+});
+
+const dismissedCount = computed(
+    () => activeRun.value?.counts_by_status[CANDIDATE_STATUS_DISMISSED] ?? 0,
+);
+
 /**
  * Where to send the browser for a given view of the queue.
  *
@@ -660,7 +801,22 @@ watch(
 
 onBeforeUnmount(stopPolling);
 
-onMounted(async () => {
+let hasInitialized = false;
+
+// The user arrives asynchronously; nothing is fetched until they are known to be
+// an editor, since every request would otherwise be refused.
+watch(
+    isEditor,
+    function (userIsEditor) {
+        if (userIsEditor && !hasInitialized) {
+            hasInitialized = true;
+            initialize();
+        }
+    },
+    { immediate: true },
+);
+
+async function initialize() {
     try {
         await conceptStore.initialize();
     } catch (error) {
@@ -685,7 +841,7 @@ onMounted(async () => {
     if (!(await showNewestRunIfNoneChosen())) {
         await loadCandidates();
     }
-});
+}
 </script>
 
 <template>
@@ -713,7 +869,21 @@ onMounted(async () => {
             />
         </div>
 
+        <Message
+            v-if="user && !isEditor"
+            :severity="WARN"
+            :closable="false"
+            class="matches-access-message"
+        >
+            {{
+                $gettext(
+                    "Finding matching concepts is available to Lingo editors.",
+                )
+            }}
+        </Message>
+
         <div
+            v-if="isEditor"
             class="matches-body"
             :class="{ 'criteria-hidden': !showCriteria }"
         >
@@ -742,51 +912,17 @@ onMounted(async () => {
                         :model-value="activeRunId"
                         :options="runs"
                         option-value="id"
+                        :option-label="describeRunOption"
                         :placeholder="$gettext('No runs yet')"
                         :disabled="!runs.length"
+                        :aria-label="$gettext('Match run')"
                         class="run-select"
                         @update:model-value="onRunSelected"
                     >
-                        <template #value="{ value }">
-                            <span v-if="activeRun">
-                                <span
-                                    v-if="activeRun.name"
-                                    class="run-option-name"
-                                    >{{ activeRun.name }} — </span
-                                >{{
-                                    $gettext(
-                                        "%{pending} of %{total} left to review",
-                                        {
-                                            pending: String(
-                                                activeRun.pending_count,
-                                            ),
-                                            total: String(
-                                                activeRun.candidate_count,
-                                            ),
-                                        },
-                                    )
-                                }}
-                            </span>
-                            <span v-else>{{ value }}</span>
-                        </template>
-                        <template #option="{ option }">
-                            <span
-                                v-if="option.name"
-                                class="run-option-name"
-                                >{{ option.name }} — </span
-                            >{{
-                                $gettext("%{count} pairs", {
-                                    count: String(option.candidate_count),
-                                })
-                            }}
-                            —
-                            {{
-                                new Date(option.created).toLocaleString(
-                                    selectedLanguage.code,
-                                )
-                            }}
-                            —
-                            {{ option.created_by ?? $gettext("Command line") }}
+                        <template #value="{ placeholder }">
+                            <span>{{
+                                activeRunDescription || placeholder
+                            }}</span>
                         </template>
                     </Select>
 
@@ -814,7 +950,8 @@ onMounted(async () => {
                             "
                             :severity="SECONDARY"
                             :outlined="true"
-                            :disabled="!selectedIds.size"
+                            :disabled="!selectedIds.size || isUpdatingSelection"
+                            :loading="isUpdatingSelection"
                             class="action-button"
                             @click="
                                 setStatusForSelection(
@@ -834,10 +971,34 @@ onMounted(async () => {
                             "
                             :severity="SECONDARY"
                             :outlined="true"
-                            :disabled="!selectedIds.size"
+                            :disabled="!selectedIds.size || isUpdatingSelection"
+                            :loading="isUpdatingSelection"
                             class="action-button"
                             @click="
                                 setStatusForSelection(CANDIDATE_STATUS_PENDING)
+                            "
+                        />
+                        <Button
+                            v-if="
+                                candidateStatus ===
+                                    CANDIDATE_STATUS_DISMISSED &&
+                                dismissedCount > 0
+                            "
+                            icon="pi pi-replay"
+                            :label="
+                                $gettext('Restore all %{count}', {
+                                    count: String(dismissedCount),
+                                })
+                            "
+                            :severity="SECONDARY"
+                            :outlined="true"
+                            :disabled="isChangingAll"
+                            :loading="isChangingAll"
+                            class="action-button"
+                            @click="
+                                confirmStatusChangeForAll(
+                                    CANDIDATE_STATUS_PENDING,
+                                )
                             "
                         />
                         <Button
@@ -854,10 +1015,14 @@ onMounted(async () => {
                             "
                             :severity="SECONDARY"
                             :outlined="true"
-                            :disabled="isDismissingAll"
-                            :loading="isDismissingAll"
+                            :disabled="isChangingAll"
+                            :loading="isChangingAll"
                             class="action-button"
-                            @click="onDismissAllRemaining"
+                            @click="
+                                confirmStatusChangeForAll(
+                                    CANDIDATE_STATUS_DISMISSED,
+                                )
+                            "
                         />
                         <Button
                             v-if="activeRun?.can_delete"
@@ -900,7 +1065,40 @@ onMounted(async () => {
                     {{ loadError }}
                 </Message>
 
+                <Message
+                    v-if="hasUnshownResults"
+                    :severity="INFO"
+                    :closable="false"
+                >
+                    <span class="unshown-results">
+                        {{
+                            $gettext(
+                                "More pairs have been found. They appear once you refresh, so the list does not move while pairs are selected.",
+                            )
+                        }}
+                        <Button
+                            :label="$gettext('Show new results')"
+                            size="small"
+                            :severity="SECONDARY"
+                            :outlined="true"
+                            @click="loadCandidates()"
+                        />
+                    </span>
+                </Message>
+
+                <p
+                    v-if="!activeRun && !runs.length"
+                    class="matches-empty"
+                >
+                    {{
+                        $gettext(
+                            "No searches yet. Choose what to compare, then select Find matches.",
+                        )
+                    }}
+                </p>
+
                 <MatchCandidateList
+                    v-else-if="activeRun"
                     :candidates="candidates"
                     :selected-ids="selectedIds"
                     :is-loading="isLoadingCandidates"
@@ -918,7 +1116,7 @@ onMounted(async () => {
             </div>
         </div>
 
-        <ConfirmDialog group="dismiss-all-matches" />
+        <ConfirmDialog group="change-all-matches" />
         <ConfirmDialog group="delete-match-run" />
 
         <MergeDirectionDialog
@@ -1038,10 +1236,6 @@ onMounted(async () => {
     min-width: 0;
 }
 
-.run-option-name {
-    font-weight: var(--p-lingo-font-weight-bold);
-}
-
 .matches-results-header {
     display: flex;
     justify-content: space-between;
@@ -1060,8 +1254,24 @@ onMounted(async () => {
     border-radius: 0.125rem;
 }
 
+.matches-empty {
+    margin: 0;
+    color: var(--p-text-muted-color);
+}
+
+.unshown-results {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.matches-access-message {
+    margin: 1.5rem;
+}
+
 @media (max-width: 64rem) {
-    .matches-page {
+    .matches-body {
         grid-template-columns: 1fr;
     }
 }

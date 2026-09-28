@@ -91,13 +91,14 @@ export function buildPreselectedConcept(
  */
 export function describeSkippedReasons(
     skipped: Record<string, number>,
-    reasonLabels: Record<string, string>,
+    describeReason: (reason: string, count: number) => string,
+    languageCode: string,
 ): string {
-    return Object.entries(skipped)
-        .map(
-            ([reason, count]) => `${count} (${reasonLabels[reason] ?? reason})`,
-        )
-        .join(", ");
+    return new Intl.ListFormat(languageCode, { type: "conjunction" }).format(
+        Object.entries(skipped).map(([reason, count]) =>
+            describeReason(reason, count),
+        ),
+    );
 }
 
 export function splitElapsedSeconds(totalSeconds: number): {

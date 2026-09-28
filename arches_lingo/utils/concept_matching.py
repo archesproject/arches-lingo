@@ -799,6 +799,56 @@ def mark_pairs_settled(pairs, status, user=None):
     )
 
 
+def restore_dismissed(run, user=None, candidate_ids=None):
+    """Return dismissed pairs to the queue, returning (restored, left dismissed).
+
+    Settling a pair only touches the runs where it is still pending, so a pair
+    dismissed here and linked or merged since is still dismissed in this run.
+    Restoring it would ask again about something already decided, so it stays.
+    """
+    decided_sql, decided_params = _decided_pairs_sql()
+    params = {
+        **decided_params,
+        "run_id": run.pk,
+        "pending_status": ConceptMatchCandidate.STATUS_PENDING,
+        "dismissed_status": ConceptMatchCandidate.STATUS_DISMISSED,
+        "reviewed_by_id": (
+            user.pk if user is not None and user.is_authenticated else None
+        ),
+        "reviewed_at": timezone.now(),
+    }
+    candidate_clause = ""
+    dismissed_candidates = ConceptMatchCandidate.objects.filter(
+        run=run, status=ConceptMatchCandidate.STATUS_DISMISSED
+    )
+    if candidate_ids is not None:
+        candidate_clause = " AND candidate.id = ANY(%(candidate_ids)s)"
+        params["candidate_ids"] = list(candidate_ids)
+        dismissed_candidates = dismissed_candidates.filter(pk__in=candidate_ids)
+
+    with connection.cursor() as cursor:
+        cursor.execute(
+            f"""
+            UPDATE {ConceptMatchCandidate._meta.db_table} candidate
+               SET status = %(pending_status)s,
+                   reviewed_by_id = %(reviewed_by_id)s,
+                   reviewed_at = %(reviewed_at)s
+             WHERE candidate.run_id = %(run_id)s
+               AND candidate.status = %(dismissed_status)s{candidate_clause}
+               AND NOT EXISTS (
+                   SELECT 1
+                     FROM ({decided_sql}) decided
+                    WHERE decided.concept_a = candidate.concept_a_id::text
+                      AND decided.concept_b = candidate.concept_b_id::text
+               )
+            """,
+            params,
+        )
+        restored_count = cursor.rowcount
+
+    return restored_count, dismissed_candidates.count()
+
+
 def validate_detection_options(signals, similarity_threshold):
     unknown_signals = set(signals) - set(ALL_SIGNALS)
     if unknown_signals:

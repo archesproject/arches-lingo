@@ -66,22 +66,24 @@ const statusText = computed(function () {
 <template>
     <div class="run-progress">
         <ProgressBar
-            :mode="'indeterminate'"
+            mode="indeterminate"
+            :aria-label="statusText"
             class="run-progress-bar"
         />
 
         <div class="run-progress-detail">
-            <span>{{ statusText }}</span>
-            <span class="run-progress-numbers">
+            <!-- Announced as it changes; the clock beside it ticks every second
+                 and would drown it out if it were announced too. -->
+            <span aria-live="polite">
+                {{ statusText }}
                 {{
-                    $gettext(
-                        "%{count} found so far \u00b7 %{elapsed} elapsed",
-                        {
-                            count: String(run.candidate_count),
-                            elapsed: elapsed,
-                        },
-                    )
+                    $gettext("%{count} found so far", {
+                        count: String(run.candidate_count),
+                    })
                 }}
+            </span>
+            <span class="run-progress-numbers">
+                {{ $gettext("%{elapsed} elapsed", { elapsed: elapsed }) }}
             </span>
         </div>
 
