@@ -673,8 +673,8 @@ export interface ConceptMatchCandidate {
     signal: string;
     evidence: string;
     status: "pending" | "dismissed" | "linked" | "merged";
-    concept_a: MatchedConceptSummary;
-    concept_b: MatchedConceptSummary;
+    concept_a: MatchedConceptSummary | null;
+    concept_b: MatchedConceptSummary | null;
     is_cross_scheme: boolean;
 }
 

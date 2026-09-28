@@ -48,7 +48,7 @@ from arches_lingo.const import (
     URI_CONTENT_NODE,
     URI_NODEGROUP,
 )
-from arches_lingo.models import ConceptMerge
+from arches_lingo.models import ConceptMatchCandidate, ConceptMerge
 from arches_lingo.utils.concept_builder import ConceptBuilder
 from arches_lingo.utils.concept_lifecycle import (
     EDITING_STATE_ID,
@@ -59,6 +59,7 @@ from arches_lingo.utils.concept_lifecycle import (
     index_concepts_in_transaction,
     retire_concept,
 )
+from arches_lingo.utils.concept_matching import mark_pairs_settled
 from arches_lingo.utils.scheme_lock import get_scheme_id_for_concept, is_scheme_locked
 
 SINGLE_CARDINALITY = "1"
@@ -921,6 +922,11 @@ def merge_concepts(survivor, absorbed, selections, user, user_is_lingo_admin=Fal
             user=user if user is not None and user.is_authenticated else None,
             edit_transaction_id=edit_transaction_id,
             selections=selections,
+        )
+
+        # Wherever match review has the pair queued, it is no longer a question.
+        mark_pairs_settled(
+            [(survivor.pk, absorbed.pk)], ConceptMatchCandidate.STATUS_MERGED, user
         )
 
     # One bulk pass over everything the merge touched, rather than a round trip

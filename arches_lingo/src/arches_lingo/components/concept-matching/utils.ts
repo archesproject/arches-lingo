@@ -56,11 +56,15 @@ export function isRunUnfinished(run: ConceptMatchRun): boolean {
 export function resolveMergeSides(
     candidate: ConceptMatchCandidate,
     absorbedConceptId: string,
-): { survivor: MatchedConceptSummary; absorbed: MatchedConceptSummary } {
-    const absorbedIsFirst = candidate.concept_a.id === absorbedConceptId;
+): { survivor: MatchedConceptSummary; absorbed: MatchedConceptSummary } | null {
+    const { concept_a: conceptA, concept_b: conceptB } = candidate;
+    if (!conceptA || !conceptB) {
+        return null;
+    }
+    const absorbedIsFirst = conceptA.id === absorbedConceptId;
     return {
-        survivor: absorbedIsFirst ? candidate.concept_b : candidate.concept_a,
-        absorbed: absorbedIsFirst ? candidate.concept_a : candidate.concept_b,
+        survivor: absorbedIsFirst ? conceptB : conceptA,
+        absorbed: absorbedIsFirst ? conceptA : conceptB,
     };
 }
 

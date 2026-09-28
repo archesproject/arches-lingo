@@ -118,18 +118,24 @@ describe("isRunUnfinished", () => {
 });
 
 describe("resolveMergeSides", () => {
+    it("has no sides once a concept has been deleted", () => {
+        expect(resolveMergeSides(candidate({ concept_b: null }), "aaa")).toBe(
+            null,
+        );
+    });
+
     it("reads the survivor from whichever side was not absorbed", () => {
         const pair = candidate();
 
-        expect(resolveMergeSides(pair, "bbb").survivor.id).toEqual("aaa");
-        expect(resolveMergeSides(pair, "bbb").absorbed.id).toEqual("bbb");
+        expect(resolveMergeSides(pair, "bbb")?.survivor.id).toEqual("aaa");
+        expect(resolveMergeSides(pair, "bbb")?.absorbed.id).toEqual("bbb");
     });
 
     it("works whichever way round the pair is stored", () => {
         const pair = candidate();
 
-        expect(resolveMergeSides(pair, "aaa").survivor.id).toEqual("bbb");
-        expect(resolveMergeSides(pair, "aaa").absorbed.id).toEqual("aaa");
+        expect(resolveMergeSides(pair, "aaa")?.survivor.id).toEqual("bbb");
+        expect(resolveMergeSides(pair, "aaa")?.absorbed.id).toEqual("aaa");
     });
 });
 

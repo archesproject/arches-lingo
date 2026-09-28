@@ -71,6 +71,12 @@ For developer install instructions, see the [Developer Setup](#developer-setup-f
 
     Note: the `should_update_asynchronously: True` setting requires Celery to be running. See the [Arches documentation](http://archesproject.org/documentation/) for instructions on configuring and running Celery.
 
+    Finding matching concepts also requires Celery: every match search runs on a worker. A search over a whole vocabulary can occupy a worker for tens of minutes, so on a production server consider giving it a queue of its own, so that imports and exports are not held up behind it:
+    ```
+    LINGO_MATCH_TASK_QUEUE = "lingo_matching"
+    ```
+    and start a worker for that queue alongside your usual one, e.g. `celery -A <project> worker -Q lingo_matching`. Left unset, match searches use the default queue. Without a worker, a search can still be run from the command line with `python manage.py detect_concept_matches`.
+
 4. Optionally, enable anonymous (read-only) access by adding the following setting to your project's `settings.py` or `settings_local.py`:
     ```
     LINGO_ALLOW_ANONYMOUS_ACCESS = True

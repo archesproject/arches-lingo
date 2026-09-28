@@ -13,6 +13,7 @@ from http import HTTPStatus
 from io import StringIO
 
 from django.contrib.auth.models import Group, User
+from django.db import IntegrityError
 from django.test import Client
 from django.urls import reverse
 from django.utils import timezone
@@ -56,6 +57,7 @@ from arches_lingo.utils.concept_matching_service import (
     MAX_LINK_BATCH,
     STALE_RUN_SECONDS,
     ConceptMatchRequestError,
+    delete_run,
     dismiss_all_pending,
     link_candidates_with_exact_match,
     reap_stale_runs,
@@ -68,10 +70,7 @@ from unittest.mock import patch
 
 from arches_lingo.utils.concept_matching import (
     ALL_SIGNALS,
-    KEEPALIVE,
     _heartbeat_while_working,
-    _write_candidates,
-    pairs_only,
     DEFAULT_SIMILARITY_THRESHOLD,
     EXACT_SIGNALS,
     SIGNAL_TRIGRAM,
@@ -346,7 +345,7 @@ class TrigramSignalTests(ConceptMatchingTestCase):
         self.add_label(self.first_concept, "engatillado en metales")
         self.add_label(self.second_concept, "engatillados en metales")
 
-        found = list(pairs_only(find_similar_label_pairs(MatchScope(), 0.7)))
+        found = list((find_similar_label_pairs(MatchScope(), 0.7)))
 
         self.assertEqual(len(found), 1)
         concept_a, concept_b, evidence, score = found[0]
@@ -364,21 +363,15 @@ class TrigramSignalTests(ConceptMatchingTestCase):
         self.add_label(self.first_concept, "trumpets")
         self.add_label(self.second_concept, "trumpeters")
 
-        self.assertEqual(
-            list(pairs_only(find_similar_label_pairs(MatchScope(), 0.95))), []
-        )
-        self.assertEqual(
-            len(list(pairs_only(find_similar_label_pairs(MatchScope(), 0.4)))), 1
-        )
+        self.assertEqual(list((find_similar_label_pairs(MatchScope(), 0.95))), [])
+        self.assertEqual(len(list((find_similar_label_pairs(MatchScope(), 0.4)))), 1)
 
     def test_identical_labels_are_left_to_the_exact_signal(self):
         self.start_from_a_clean_corpus()
         self.add_label(self.first_concept, "trumpets")
         self.add_label(self.second_concept, "trumpets")
 
-        self.assertEqual(
-            list(pairs_only(find_similar_label_pairs(MatchScope(), 0.5))), []
-        )
+        self.assertEqual(list((find_similar_label_pairs(MatchScope(), 0.5))), [])
 
     def test_an_exact_match_is_never_downgraded_to_a_fuzzy_one(self):
         """The pair is reported once, by its strongest signal."""
@@ -414,18 +407,7 @@ class TrigramSignalTests(ConceptMatchingTestCase):
 
 
 class StartDetectionTests(ConceptMatchingTestCase):
-    """Exact signals answer inside the request; the fuzzy one goes to a worker."""
-
-    def test_exact_signals_run_in_the_foreground(self):
-        self.add_label(self.first_concept, "trumpets")
-        self.add_label(self.second_concept, "trumpets")
-
-        run = start_detection(
-            MatchScope(), EXACT_SIGNALS, True, DEFAULT_SIMILARITY_THRESHOLD, None
-        )
-
-        self.assertEqual(run.status, ConceptMatchRun.STATUS_COMPLETE)
-        self.assertEqual(run.candidate_count, 1)
+    """Every run is handed to a worker and polled."""
 
     @patch("arches_lingo.utils.concept_matching_service.detect_concept_matches_task")
     @patch(
@@ -433,15 +415,37 @@ class StartDetectionTests(ConceptMatchingTestCase):
         ".check_if_celery_available",
         return_value=True,
     )
-    def test_the_fuzzy_signal_is_handed_to_a_worker(self, _celery_available, mock_task):
-        """Comparing every label against every other takes minutes, which is
-        far too long to hold a request open."""
-        run = start_detection(MatchScope(), (SIGNAL_TRIGRAM,), True, 0.7, None)
+    def test_every_run_is_handed_to_a_worker(self, _celery_available, mock_task):
+        """Even an exact-label run over a whole vocabulary can produce more
+        pairs than a request should wait for."""
+        run = start_detection(
+            MatchScope(), EXACT_SIGNALS, True, DEFAULT_SIMILARITY_THRESHOLD, None
+        )
 
         self.assertEqual(run.status, ConceptMatchRun.STATUS_PENDING)
         mock_task.apply_async.assert_called_once()
         queued_run_id = mock_task.apply_async.call_args.kwargs["args"][0]
         self.assertEqual(queued_run_id, run.pk)
+        self.assertNotIn("queue", mock_task.apply_async.call_args.kwargs)
+
+    @patch(
+        "arches_lingo.utils.concept_matching_service.MATCH_TASK_QUEUE",
+        "lingo_matching",
+    )
+    @patch("arches_lingo.utils.concept_matching_service.detect_concept_matches_task")
+    @patch(
+        "arches_lingo.utils.concept_matching_service.task_management"
+        ".check_if_celery_available",
+        return_value=True,
+    )
+    def test_a_configured_queue_is_used(self, _celery_available, mock_task):
+        start_detection(
+            MatchScope(), EXACT_SIGNALS, True, DEFAULT_SIMILARITY_THRESHOLD, None
+        )
+
+        self.assertEqual(
+            mock_task.apply_async.call_args.kwargs["queue"], "lingo_matching"
+        )
 
     @patch(
         "arches_lingo.utils.concept_matching_service.task_management"
@@ -602,7 +606,7 @@ class RunDetectionTests(ConceptMatchingTestCase):
 
     def test_a_failed_run_is_recorded_rather_than_lost(self):
         with patch(
-            "arches_lingo.utils.concept_matching.find_exact_label_pairs",
+            "arches_lingo.utils.concept_matching._store_pairs",
             side_effect=RuntimeError("label query failed"),
         ):
             with self.assertRaises(RuntimeError):
@@ -650,6 +654,15 @@ class CandidateReviewTests(ConceptMatchingTestCase):
             self.assertTrue(candidate[side]["labels"])
             self.assertEqual(candidate[side]["scheme_id"], str(self.scheme.pk))
         self.assertFalse(candidate["is_cross_scheme"])
+
+    def test_a_concept_deleted_since_the_run_is_reported_missing(self):
+        run = self.make_run_with_one_candidate()
+        run.candidates.update(concept_b_id=uuid.uuid4())
+
+        [row] = serialize_candidate_page(run)["data"]
+
+        self.assertIsNotNone(row["concept_a"])
+        self.assertIsNone(row["concept_b"])
 
     def test_a_pair_spanning_two_schemes_is_marked_as_such(self):
         _, outsider = self.make_concept_in_other_scheme()
@@ -1040,6 +1053,21 @@ class ConceptMatchApiTests(ConceptMatchingTestCase):
         self.client = Client()
         self.admin = User.objects.get(username="admin")
         self.client.force_login(self.admin)
+        # A worker that answers, and runs what it is given straight away.
+        for patcher in (
+            patch(
+                "arches_lingo.utils.concept_matching_service.task_management"
+                ".check_if_celery_available",
+                return_value=True,
+            ),
+            patch(
+                "arches_lingo.utils.concept_matching_service"
+                ".detect_concept_matches_task.apply_async",
+                side_effect=lambda args, **options: detect_concept_matches_task(*args),
+            ),
+        ):
+            patcher.start()
+            self.addCleanup(patcher.stop)
 
     def post_json(self, url, payload):
         return self.client.post(
@@ -1049,11 +1077,15 @@ class ConceptMatchApiTests(ConceptMatchingTestCase):
     def create_run_with_one_pair(self):
         self.add_label(self.first_concept, "trumpets")
         self.add_label(self.second_concept, "trumpets")
-        return self.post_json(reverse("api-concept-match-runs"), {}).json()
+        created = self.post_json(reverse("api-concept-match-runs"), {}).json()
+        return self.client.get(
+            reverse("api-concept-match-run-detail", args=[created["id"]])
+        ).json()
 
     def test_a_run_is_created_and_listed(self):
         created = self.create_run_with_one_pair()
 
+        self.assertEqual(created["status"], ConceptMatchRun.STATUS_COMPLETE)
         self.assertEqual(created["candidate_count"], 1)
         listed = self.client.get(reverse("api-concept-match-runs")).json()
         self.assertEqual([run["id"] for run in listed["data"]], [created["id"]])
@@ -1472,32 +1504,39 @@ class RunReportingTests(ConceptMatchingTestCase):
         run.refresh_from_db()
         self.assertEqual(run.status, ConceptMatchRun.STATUS_COMPLETE)
 
-    def test_a_stretch_that_finds_nothing_still_reports_being_alive(self):
-        """A signal can compare tens of thousands of labels and match none.
-
-        Progress is otherwise only recorded when pairs are stored, so a run
-        working hard and finding nothing would be reaped as though its worker
-        had died.
-        """
+    def test_progress_is_recorded_as_each_query_is_stored(self):
+        """Including a query that finds nothing, so a run working hard and
+        matching nothing is not reaped as though its worker had died."""
+        self.add_label(self.first_concept, "trumpets")
+        self.add_label(self.second_concept, "trumpets")
         run = ConceptMatchRun.objects.create(
             user=None,
             status=ConceptMatchRun.STATUS_RUNNING,
-            parameters={"signals": [SIGNAL_TRIGRAM]},
+            parameters={"signals": [SIGNAL_EXACT_LABEL]},
         )
-        stale_moment = timezone.now() - datetime.timedelta(
-            seconds=STALE_RUN_SECONDS * 2
+        recorded_progress = []
+
+        def record_progress(message):
+            recorded_progress.append(
+                ConceptMatchRun.objects.values_list(
+                    "candidate_count", "last_progress"
+                ).get(pk=run.pk)
+            )
+
+        run_detection(
+            MatchScope(),
+            signals=(SIGNAL_SHARED_IDENTIFIER, SIGNAL_EXACT_LABEL),
+            run=run,
+            log=record_progress,
         )
-        ConceptMatchRun.objects.filter(pk=run.pk).update(last_progress=stale_moment)
 
-        _write_candidates(run, iter([KEEPALIVE]), log=lambda message: None)
-
-        run.refresh_from_db()
-        self.assertGreater(run.last_progress, stale_moment)
-        # And so the reaper leaves it alone, which is the point of the exercise.
-        self.assertEqual(reap_stale_runs(), 0)
+        after_uris, after_labels = recorded_progress[:2]
+        self.assertEqual(after_uris[0], 0)
+        self.assertEqual(after_labels[0], 1)
+        self.assertGreaterEqual(after_labels[1], after_uris[1])
 
     def test_a_run_reports_from_a_thread_of_its_own(self):
-        """A single slice can hold this thread inside one FETCH for minutes.
+        """A single query can hold this thread for minutes.
 
         Nothing on it can record progress meanwhile, so the reporting is done
         from a thread that starts and stops with the work.
@@ -1518,12 +1557,22 @@ class RunReportingTests(ConceptMatchingTestCase):
         # And it is not left behind once the work is done.
         self.assertNotIn(thread_name, running_thread_names())
 
-    def test_elapsed_time_is_measured_on_the_server(self):
-        """The client cannot subtract these timestamps from its own clock.
+    def test_timestamps_carry_their_offset(self):
+        """With USE_TZ off they are stored naive, and a browser elsewhere would
+        otherwise read them as its own local time."""
+        run = ConceptMatchRun.objects.create(
+            user=None,
+            status=ConceptMatchRun.STATUS_COMPLETE,
+            finished=timezone.now(),
+            parameters={},
+        )
 
-        With USE_TZ off they are naive and carry no offset, so a browser in
-        another zone reads them as its own local time.
-        """
+        serialized = serialize_run(run)
+
+        for timestamp in (serialized["created"], serialized["finished"]):
+            self.assertIsNotNone(datetime.datetime.fromisoformat(timestamp).tzinfo)
+
+    def test_elapsed_time_is_measured_on_the_server(self):
         run = ConceptMatchRun.objects.create(
             user=User.objects.get(username="admin"),
             status=ConceptMatchRun.STATUS_RUNNING,
@@ -1645,26 +1694,38 @@ class RunDisposalTests(ConceptMatchingTestCase):
             parameters={"signals": [SIGNAL_EXACT_LABEL]},
         )
 
-        def cancel_midway(*args, **kwargs):
-            ConceptMatchRun.objects.filter(pk=run.pk).delete()
-            yield (
-                str(uuid.uuid4()),
-                str(uuid.uuid4()),
-                SIGNAL_EXACT_LABEL,
-                "trumpets",
-                1.0,
-            )
+        self.add_label(self.first_concept, "trumpets")
+        self.add_label(self.second_concept, "trumpets")
 
-        with patch(
-            "arches_lingo.utils.concept_matching.iter_candidates", cancel_midway
-        ):
-            result = run_detection(MatchScope(), signals=(SIGNAL_EXACT_LABEL,), run=run)
+        def delete_after_the_first_query(message):
+            ConceptMatchRun.objects.filter(pk=run.pk).delete()
+
+        result = run_detection(
+            MatchScope(),
+            signals=(SIGNAL_SHARED_IDENTIFIER, SIGNAL_EXACT_LABEL),
+            run=run,
+            log=delete_after_the_first_query,
+        )
 
         # Nothing is returned because there is no longer a run to report on, and
         # no candidate rows are left behind pointing at a run that is gone.
         self.assertIsNone(result)
         self.assertFalse(ConceptMatchRun.objects.filter(pk=run.pk).exists())
         self.assertEqual(ConceptMatchCandidate.objects.filter(run_id=run.pk).count(), 0)
+
+    def test_a_delete_racing_a_committing_query_is_retried(self):
+        """The query can commit pairs between the delete clearing the run's
+        pairs and the delete committing, which fails it on the foreign key."""
+        run = ConceptMatchRun.objects.create(
+            user=None, status=ConceptMatchRun.STATUS_RUNNING, parameters={}
+        )
+
+        with patch.object(
+            ConceptMatchRun, "delete", side_effect=[IntegrityError, None]
+        ) as mock_delete:
+            delete_run(run, None, user_is_lingo_admin=True)
+
+        self.assertEqual(mock_delete.call_count, 2)
 
     def test_deleting_a_run_takes_its_candidates_with_it(self):
         run = ConceptMatchRun.objects.create(

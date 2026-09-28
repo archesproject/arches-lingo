@@ -53,6 +53,10 @@ function conceptName(concept: MatchedConceptSummary | null) {
     ).value;
 }
 
+const bothConceptsExist = computed(
+    () => candidate.concept_a !== null && candidate.concept_b !== null,
+);
+
 const reason = computed(function () {
     if (candidate.signal === SIGNAL_SHARED_IDENTIFIER) {
         return $gettext("Same URI: %{evidence}", {
@@ -142,7 +146,7 @@ const reason = computed(function () {
         />
 
         <Button
-            v-if="isReviewable"
+            v-if="isReviewable && bothConceptsExist"
             icon="pi pi-sign-in"
             :label="$gettext('Merge')"
             :severity="SECONDARY"

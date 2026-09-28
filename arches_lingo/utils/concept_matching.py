@@ -5,14 +5,11 @@ pair is a suggestion, not a decision, so the candidates it writes carry a review
 state and the pairs an editor has already settled -- by linking them with an
 exactMatch, or by merging one into the other -- are never suggested again.
 
-Signals are independent and can be run in any combination. Two are implemented
-here, both exact and both cheap enough to run inside a request:
+Signals are independent and can be run in any combination:
 
-  * `shared_identifier` -- the concepts carry the same identifier or URI
+  * `shared_identifier` -- the concepts carry the same URI
   * `exact_label` -- a label on one matches a label on the other exactly
-
-The fuzzy signal that `pg_trgm` supports is deliberately absent; see
-docs/concept-match-detection-plan.md for why it waits.
+  * `trigram` -- a label on one is similar to a label on the other (`pg_trgm`)
 
 Everything is expressed as SQL over `tiles` rather than through the ORM: the
 label corpus runs to hundreds of thousands of rows, and the trigram index the
@@ -22,13 +19,14 @@ fuzzy signal will need is defined on the raw `tiledata ->> node_id` expression.
 import json
 import logging
 import threading
-import time
 from contextlib import contextmanager
 
 from django.conf import settings
 from django.db import connection, connections, transaction
 from django.db.models import Q
 from django.utils import timezone
+
+from arches_controlled_lists.models import ListItem
 
 from arches_lingo.const import (
     CONCEPT_NAME_CONTENT_NODE,
@@ -52,7 +50,6 @@ from arches_lingo.models import (
     ConceptMerge,
     ConceptSetMember,
 )
-from arches_lingo.utils.concept_merge import get_list_item_tile_value
 
 SIGNAL_SHARED_IDENTIFIER = ConceptMatchCandidate.SIGNAL_SHARED_IDENTIFIER
 SIGNAL_EXACT_LABEL = ConceptMatchCandidate.SIGNAL_EXACT_LABEL
@@ -80,59 +77,40 @@ TRIGRAM_PARALLEL_WORKERS = getattr(settings, "LINGO_MATCH_PARALLEL_WORKERS", 8)
 # save some rechecks, but this is a distant second to parallelism.
 TRIGRAM_WORK_MEM = getattr(settings, "LINGO_MATCH_WORK_MEM", "64MB")
 
-CANDIDATE_BATCH_SIZE = 2_000
-
-# How many rows a server-side cursor pulls at a time. Bounds how much of a
-# result set is ever in memory at once.
+# How many rows a server-side cursor pulls at a time when pairs are read back
+# rather than stored. Bounds how much of a result set is ever in memory at once.
 ROW_FETCH_SIZE = 2_000
 
-# How many independent queries a corpus-wide search is split into. More slices
-# means results and progress arrive more often, at the cost of re-scanning the
-# driving side once per slice -- cheap next to the index probes it drives.
+# How many independent queries a corpus-wide fuzzy search is split into. Each
+# slice commits its pairs as it finishes, so more slices means results and
+# progress arrive more often, at the cost of re-scanning the driving side once
+# per slice -- cheap next to the index probes it drives.
 MATCH_SLICE_COUNT = getattr(settings, "LINGO_MATCH_SLICE_COUNT", 16)
-
-# How often a long-running search reports what it has found so far.
-PROGRESS_INTERVAL_SECONDS = 10
 
 # How often a run records that it is still alive while a query holds the thread.
 # Comfortably inside the window after which a silent run is presumed dead.
 HEARTBEAT_INTERVAL_SECONDS = 30
 
-# The concept-to-scheme lookup a scoped run joins against. Named for what it is
-# and who owns it: it is dropped by name, so it must not be something another
-# part of the schema could plausibly be called.
+# The concept-to-scheme lookup a scoped run joins against, and the pairs one
+# query found before they are stored. Named for what they are and who owns them:
+# they are dropped by name, so they must not be something another part of the
+# schema could plausibly be called.
 _SCHEME_SCOPE_TABLE = "lingo_match_concept_scheme"
+_FOUND_PAIRS_TABLE = "lingo_match_found_pairs"
 
 logger = logging.getLogger(__name__)
-
-
-# Yielded by a signal that has finished a stretch of work without finding
-# anything. It carries no pair: it is only proof that the run is still alive,
-# which nothing else can offer while the generator is inside a query.
-KEEPALIVE = object()
-
-
-def _heartbeating(run, produced):
-    """Iterate `produced`, recording that `run` is alive throughout."""
-    with _heartbeat_while_working(run):
-        yield from produced
 
 
 @contextmanager
 def _heartbeat_while_working(run):
     """Record that `run` is alive while a query holds this thread.
 
-    Progress is normally recorded as pairs are stored, and between slices when a
-    stretch of work finds none. Neither helps inside a single slice: one `FETCH`
-    can hold the process for minutes, because the `DISTINCT ON` at the top of a
-    slice cannot emit its first row until it has consumed its last. A run that
-    goes quiet for long enough is reaped as though its worker had died, so the
-    reporting is done from a thread of its own -- idle but for one small update
-    every half minute.
-
-    That makes the heartbeat mean what it should: this worker process is alive
-    and working on this run. If the worker dies, the thread dies with it and the
-    run is reaped, which is the behaviour the reaper exists for.
+    Progress is recorded as each query's pairs are stored, but one query over a
+    large vocabulary can hold the process for minutes, and a run that goes quiet
+    for long enough is reaped as though its worker had died. So the reporting is
+    done from a thread of its own -- idle but for one small update every half
+    minute. If the worker dies, the thread dies with it and the run is reaped,
+    which is the behaviour the reaper exists for.
     """
     if run is None:
         yield
@@ -169,15 +147,6 @@ def _heartbeat_while_working(run):
     finally:
         stop_beating.set()
         heartbeat_thread.join(timeout=HEARTBEAT_INTERVAL_SECONDS)
-
-
-def pairs_only(produced):
-    """Drop the keepalives from a signal's output, leaving just the pairs.
-
-    Only a caller that is reporting progress cares about them; everything that
-    just wants the results reads through this.
-    """
-    return (item for item in produced if item is not KEEPALIVE)
 
 
 class ConceptMatchError(Exception):
@@ -479,14 +448,17 @@ def _prepare_scheme_lookup(scope):
         cursor.execute(f"ANALYZE {_SCHEME_SCOPE_TABLE}")
 
 
-def _run_pair_query(sql, params, scope):
+def _run_pair_query(sql, params, scope, similarity_threshold=None):
     """Yield rows as they arrive, rather than buffering the whole result.
 
-    psycopg fetches everything on execute() with an ordinary cursor, so a
-    corpus-wide run would hold every pair in memory before a single one was
-    written. A server-side cursor keeps that bounded by `itersize`.
+    For reading pairs back from a narrow scope; a run stores them with
+    `_store_pairs` instead. psycopg fetches everything on execute() with an
+    ordinary cursor, so this reads through a server-side one bounded by
+    `itersize`.
     """
     with transaction.atomic():
+        if similarity_threshold is not None:
+            _apply_trigram_session_tuning(similarity_threshold)
         _prepare_scheme_lookup(scope)
         with connection.chunked_cursor() as cursor:
             cursor.itersize = ROW_FETCH_SIZE
@@ -537,47 +509,42 @@ def _scoped_side_sql(value_sql, source_concept_ids, slice_predicate=""):
 
 
 def _driving_side_slices(source_concept_ids):
-    """Split a corpus-wide search into queries that each return as they finish.
+    """Split a corpus-wide fuzzy search into queries that each commit as they end.
 
-    The outer query sorts in order to deduplicate, and a sort cannot emit its
-    first row until it has consumed its last. One query over a whole vocabulary
-    therefore stays silent for its entire run no matter how the rows are
-    fetched -- which is why a 22-minute search reported nothing and then wrote
-    every pair in under a tenth of a second.
-
-    Slicing the driving side into independent queries gives back results, and
-    progress, as each slice lands. Every pair is found from its lower-id side,
-    since the join only keeps `side_b > side_a`, so slicing on that side keeps
-    each pair whole inside one slice and leaves the deduplication correct.
+    Every pair is found from its lower-id side, since the join only keeps
+    `side_b > side_a`, so slicing on that side keeps each pair whole inside one
+    slice and leaves the deduplication correct.
 
     Only the fuzzy signal is sliced. The exact signals join by equality, which
     Postgres answers with a hash join in seconds; slicing rebuilds that hash
     once per slice and measured 8x slower on the same data. The fuzzy signal
     probes an index per driving row instead, so the driving side is all that is
-    re-scanned and progress is nearly free.
+    re-scanned.
 
     A scoped search is already narrow enough to answer in one go.
     """
     if source_concept_ids is not None:
         return [""]
     return [
-        # %% not %: parameters are always passed, so psycopg would otherwise
-        # read the modulo as a placeholder.
-        f" AND abs(hashtext(scoped_side.concept_id::text)) %% {MATCH_SLICE_COUNT}"
-        f" = {slice_index}"
+        # Masked rather than abs(): abs() of the one negative int4 with no
+        # positive counterpart is an error. %% not %: parameters are always
+        # passed, so psycopg would otherwise read the modulo as a placeholder.
+        f" AND (hashtext(scoped_side.concept_id::text) & 2147483647)"
+        f" %% {MATCH_SLICE_COUNT} = {slice_index}"
         for slice_index in range(MATCH_SLICE_COUNT)
     ]
 
 
-def find_exact_label_pairs(scope, same_language_only=True):
-    """Concepts sharing a label, ignoring case and surrounding whitespace."""
-    source_concept_ids = scope.resolve_source_concept_ids()
-    language_clause = (
+def _language_clause(same_language_only):
+    return (
         " AND side_b.language IS NOT DISTINCT FROM side_a.language"
         if same_language_only
         else ""
     )
 
+
+def _exact_label_pair_queries(scope, same_language_only):
+    source_concept_ids = scope.resolve_source_concept_ids()
     side_a_sql, pairing_clause, pushdown_params = _scoped_side_sql(
         _LABEL_SQL, source_concept_ids
     )
@@ -589,20 +556,14 @@ def find_exact_label_pairs(scope, same_language_only=True):
           JOIN ({_LABEL_SQL}) side_b
             ON side_b.content = side_a.content
            AND {pairing_clause}
-           {language_clause}
+           {_language_clause(same_language_only)}
     """
     sql, scope_params = _pair_query(match_sql, scope, None)
-    return _run_pair_query(sql, {**scope_params, **pushdown_params}, scope)
+    return [(sql, {**scope_params, **pushdown_params})]
 
 
-def find_shared_uri_pairs(scope):
-    """Concepts carrying the same URI.
-
-    A URI is globally meaningful, so two concepts sharing one are almost
-    certainly the same concept.
-    """
+def _shared_uri_pair_queries(scope):
     source_concept_ids = scope.resolve_source_concept_ids()
-
     side_a_sql, pairing_clause, pushdown_params = _scoped_side_sql(
         _URI_SQL, source_concept_ids
     )
@@ -616,30 +577,12 @@ def find_shared_uri_pairs(scope):
            AND {pairing_clause}
     """
     sql, scope_params = _pair_query(match_sql, scope, None)
-    return _run_pair_query(sql, {**scope_params, **pushdown_params}, scope)
+    return [(sql, {**scope_params, **pushdown_params})]
 
 
-def find_similar_label_pairs(
-    scope, similarity_threshold=DEFAULT_SIMILARITY_THRESHOLD, same_language_only=True
-):
-    """Concepts whose labels are close without being identical.
-
-    Backed by the `pg_trgm` GIN index on label content that migration 0012
-    installs, using the `%` operator so the index does the filtering rather than
-    a comparison per row.
-
-    The threshold matters more than anything else here. Postgres defaults to
-    0.3, which on a vocabulary the size of the AAT returns around 87 candidates
-    per label -- noise rather than suggestion. At 0.7 it returns about 0.25.
-    See docs/concept-match-detection-plan.md for the measurements.
-    """
+def _similar_label_pair_queries(scope, same_language_only):
     source_concept_ids = scope.resolve_source_concept_ids()
-    language_clause = (
-        " AND side_b.language IS NOT DISTINCT FROM side_a.language"
-        if same_language_only
-        else ""
-    )
-
+    queries = []
     for slice_predicate in _driving_side_slices(source_concept_ids):
         side_a_sql, pairing_clause, pushdown_params = _scoped_side_sql(
             _INDEXED_LABEL_SQL, source_concept_ids, slice_predicate
@@ -654,28 +597,56 @@ def find_similar_label_pairs(
                 ON side_b.content %% side_a.content
                AND side_b.content <> side_a.content
                AND {pairing_clause}
-               {language_clause}
+               {_language_clause(same_language_only)}
         """
         sql, scope_params = _pair_query(
             match_sql, scope, None, score_sql="matched.pair_score"
         )
+        queries.append((sql, {**scope_params, **pushdown_params}))
+    return queries
 
-        # SET LOCAL rather than SET: these are tuned for this one query and
-        # revert when the transaction ends, so nothing leaks onto a reused
-        # connection.
-        with transaction.atomic():
-            _apply_trigram_session_tuning(similarity_threshold)
-            _prepare_scheme_lookup(scope)
-            with connection.chunked_cursor() as cursor:
-                cursor.itersize = ROW_FETCH_SIZE
-                cursor.execute(sql, {**scope_params, **pushdown_params})
-                for concept_a, concept_b, evidence, score in cursor:
-                    yield concept_a, concept_b, evidence, float(score)
 
-        # A slice can compare tens of thousands of labels and match none of
-        # them. Without this the run would look abandoned for as long as that
-        # takes, and be reaped as though its worker had died.
-        yield KEEPALIVE
+def _signal_queries(signal, scope, same_language_only):
+    if signal == SIGNAL_SHARED_IDENTIFIER:
+        return _shared_uri_pair_queries(scope)
+    if signal == SIGNAL_EXACT_LABEL:
+        return _exact_label_pair_queries(scope, same_language_only)
+    return _similar_label_pair_queries(scope, same_language_only)
+
+
+def find_exact_label_pairs(scope, same_language_only=True):
+    """Concepts sharing a label, ignoring case and surrounding whitespace."""
+    [(sql, params)] = _exact_label_pair_queries(scope, same_language_only)
+    return _run_pair_query(sql, params, scope)
+
+
+def find_shared_uri_pairs(scope):
+    """Concepts carrying the same URI.
+
+    A URI is globally meaningful, so two concepts sharing one are almost
+    certainly the same concept.
+    """
+    [(sql, params)] = _shared_uri_pair_queries(scope)
+    return _run_pair_query(sql, params, scope)
+
+
+def find_similar_label_pairs(
+    scope, similarity_threshold=DEFAULT_SIMILARITY_THRESHOLD, same_language_only=True
+):
+    """Concepts whose labels are close without being identical.
+
+    Backed by the `pg_trgm` GIN index on label content that migration 0012
+    installs, using the `%` operator so the index does the filtering rather than
+    a comparison per row.
+
+    The threshold matters more than anything else here. Postgres defaults to
+    0.3, which on a vocabulary the size of the AAT returns around 87 candidates
+    per label -- noise rather than suggestion. At 0.7 it returns about 0.25.
+    """
+    for sql, params in _similar_label_pair_queries(scope, same_language_only):
+        yield from _run_pair_query(
+            sql, params, scope, similarity_threshold=similarity_threshold
+        )
 
 
 def _apply_trigram_session_tuning(similarity_threshold):
@@ -699,51 +670,103 @@ def _apply_trigram_session_tuning(similarity_threshold):
         cursor.execute(f"SET LOCAL work_mem = '{TRIGRAM_WORK_MEM}'")
 
 
+def _decided_pairs_sql():
+    """Return (sql, params) for every pair already settled, in canonical order.
+
+    A merge settles a pair, and so does an exactMatch -- which names the other
+    concept by URI rather than by id, so it is resolved back through the URI
+    tiles. Other match relations (close, broad, narrow, related) leave the pair
+    open: the two may still be duplicates.
+    """
+    exact_match_uri = ListItem.objects.get(
+        pk=EXACT_MATCH_LIST_ITEM_ID
+    ).build_tile_value()["uri"]
+    sql = f"""
+        SELECT LEAST(survivor_concept_id::text, absorbed_concept_id::text)
+                   AS concept_a,
+               GREATEST(survivor_concept_id::text, absorbed_concept_id::text)
+                   AS concept_b
+          FROM {ConceptMerge._meta.db_table}
+        UNION
+        SELECT LEAST(match_tile.resourceinstanceid::text,
+                     uri_tile.resourceinstanceid::text),
+               GREATEST(match_tile.resourceinstanceid::text,
+                        uri_tile.resourceinstanceid::text)
+          FROM tiles match_tile
+          JOIN tiles uri_tile
+            ON uri_tile.nodegroupid = '{URI_NODEGROUP}'
+           AND lower(btrim(uri_tile.tiledata ->> '{URI_CONTENT_NODE}'))
+               = lower(btrim(match_tile.tiledata ->> '{MATCH_STATUS_COMPARATE_NODE}'))
+         WHERE match_tile.nodegroupid = '{MATCH_STATUS_NODEGROUP}'
+           AND match_tile.tiledata -> '{MATCH_STATUS_RELATION_NODE}'
+               @> %(exact_match_relation)s::jsonb
+           AND match_tile.resourceinstanceid <> uri_tile.resourceinstanceid
+    """
+    return sql, {"exact_match_relation": json.dumps([{"uri": exact_match_uri}])}
+
+
+def _store_pairs(run, signal, sql, params, scope, similarity_threshold):
+    """Run one pair query and store the pairs it finds, returning how many.
+
+    The query is materialized with CREATE TABLE AS rather than read through a
+    cursor, because Postgres never gives a declared cursor a parallel plan and
+    the fuzzy signal is only affordable with its workers. The pairs then go
+    straight into the candidate table without passing through Python, and the
+    transaction commits here, so each query's results are visible as it ends.
+
+    A pair already stored -- by a stronger signal, which runs first -- is left
+    as it is, so the first reason a pair was found for is the one it keeps.
+    """
+    decided_sql, decided_params = _decided_pairs_sql()
+    with transaction.atomic():
+        if signal == SIGNAL_TRIGRAM:
+            _apply_trigram_session_tuning(similarity_threshold)
+        _prepare_scheme_lookup(scope)
+        with connection.cursor() as cursor:
+            # ON COMMIT DROP never fires inside an outer transaction; see
+            # _prepare_scheme_lookup.
+            cursor.execute(f"DROP TABLE IF EXISTS {_FOUND_PAIRS_TABLE}")
+            cursor.execute(
+                f"CREATE TEMP TABLE {_FOUND_PAIRS_TABLE} ON COMMIT DROP AS {sql}",
+                params,
+            )
+            cursor.execute(
+                f"""
+                INSERT INTO {ConceptMatchCandidate._meta.db_table}
+                       (run_id, concept_a_id, concept_b_id, score, signal,
+                        evidence, status)
+                SELECT %(run_id)s, found.concept_a::uuid, found.concept_b::uuid,
+                       found.score, %(signal)s, coalesce(found.evidence, ''),
+                       %(pending_status)s
+                  FROM {_FOUND_PAIRS_TABLE} found
+                 WHERE NOT EXISTS (
+                       SELECT 1
+                         FROM ({decided_sql}) decided
+                        WHERE decided.concept_a = found.concept_a
+                          AND decided.concept_b = found.concept_b
+                 )
+                ON CONFLICT (run_id, concept_a_id, concept_b_id) DO NOTHING
+                """,
+                {
+                    **decided_params,
+                    "run_id": run.pk,
+                    "signal": signal,
+                    "pending_status": ConceptMatchCandidate.STATUS_PENDING,
+                },
+            )
+            return cursor.rowcount
+
+
 def find_decided_pairs():
     """Pairs an editor has already settled, in canonical order.
 
-    A pair already linked by an exactMatch tile, or already recorded in
-    ConceptMerge, is not a suggestion -- it is a decision. Suggesting it again
-    would put answered work back in the queue. Other match relations (close,
-    broad, narrow, related) leave the pair open: the two may still be duplicates.
+    A settled pair is not a suggestion -- it is a decision. Suggesting it again
+    would put answered work back in the queue.
     """
-    decided = set()
-
-    for survivor_id, absorbed_id in ConceptMerge.objects.values_list(
-        "survivor_concept_id", "absorbed_concept_id"
-    ):
-        decided.add(ConceptMatchCandidate.order_concept_ids(survivor_id, absorbed_id))
-
-    exact_match_relation = [
-        {"uri": get_list_item_tile_value(EXACT_MATCH_LIST_ITEM_ID)["uri"]}
-    ]
-
-    # An exactMatch names the other concept by URI rather than by id, so the
-    # link is resolved back through the URI tiles.
+    decided_sql, decided_params = _decided_pairs_sql()
     with connection.cursor() as cursor:
-        cursor.execute(
-            f"""
-            SELECT match_tile.resourceinstanceid, uri_tile.resourceinstanceid
-              FROM tiles match_tile
-              JOIN tiles uri_tile
-                ON uri_tile.nodegroupid = '{URI_NODEGROUP}'
-               AND lower(btrim(uri_tile.tiledata ->> '{URI_CONTENT_NODE}'))
-                   = lower(btrim(match_tile.tiledata ->> '{MATCH_STATUS_COMPARATE_NODE}'))
-             WHERE match_tile.nodegroupid = '{MATCH_STATUS_NODEGROUP}'
-               AND match_tile.tiledata -> '{MATCH_STATUS_RELATION_NODE}'
-                   @> %(exact_match_relation)s::jsonb
-               AND match_tile.resourceinstanceid <> uri_tile.resourceinstanceid
-            """,
-            {"exact_match_relation": json.dumps(exact_match_relation)},
-        )
-        for matching_concept_id, matched_concept_id in cursor.fetchall():
-            decided.add(
-                ConceptMatchCandidate.order_concept_ids(
-                    matching_concept_id, matched_concept_id
-                )
-            )
-
-    return decided
+        cursor.execute(decided_sql, decided_params)
+        return {(concept_a, concept_b) for concept_a, concept_b in cursor.fetchall()}
 
 
 def mark_pairs_settled(pairs, status, user=None):
@@ -797,23 +820,14 @@ def iter_candidates(
     same_language_only=True,
     similarity_threshold=DEFAULT_SIMILARITY_THRESHOLD,
 ):
-    """Yield every suggested pair, strongest signal first.
+    """Yield every suggested pair, strongest signal first, without storing any.
 
-    Signals can suggest the same pair for different reasons. Rather than hold
-    every pair in memory to work out which reason wins, the signals are run
-    strongest first and the writer drops a pair it has already stored -- so the
-    first mention of a pair is its best one.
-
-    Pairs are yielded rather than collected because a low threshold over a large
-    vocabulary produces millions of them, and a dict of those, each carrying its
-    evidence text, is far too much to hold before writing any.
+    Signals can suggest the same pair for different reasons; they run strongest
+    first, so the first mention of a pair is its best one.
     """
     validate_detection_options(signals, similarity_threshold)
 
-    # Bounded by how much has already been decided, not by how much is found.
     decided_pairs = find_decided_pairs()
-
-    # Ordered strongest first, so a pair found twice keeps the better reason.
     signal_sources = [
         (SIGNAL_SHARED_IDENTIFIER, lambda: find_shared_uri_pairs(scope)),
         (
@@ -831,11 +845,7 @@ def iter_candidates(
     for signal, produce_pairs in signal_sources:
         if signal not in signals:
             continue
-        for produced in produce_pairs():
-            if produced is KEEPALIVE:
-                yield KEEPALIVE
-                continue
-            concept_a, concept_b, evidence, score = produced
+        for concept_a, concept_b, evidence, score in produce_pairs():
             if (concept_a, concept_b) in decided_pairs:
                 continue
             yield concept_a, concept_b, signal, evidence, score
@@ -850,84 +860,40 @@ def collect_candidates(
     """`iter_candidates` as a {pair: (signal, evidence, score)} mapping.
 
     Only for scopes small enough to hold at once -- a single concept, a concept
-    set. A whole-vocabulary run should go through `iter_candidates`.
+    set. A whole-vocabulary run should be stored with `run_detection`.
     """
     candidates_by_pair = {}
-    for concept_a, concept_b, signal, evidence, score in pairs_only(
-        iter_candidates(scope, signals, same_language_only, similarity_threshold)
+    for concept_a, concept_b, signal, evidence, score in iter_candidates(
+        scope, signals, same_language_only, similarity_threshold
     ):
         candidates_by_pair.setdefault((concept_a, concept_b), (signal, evidence, score))
     return candidates_by_pair
 
 
-def _write_candidates(run, candidates, log=print):
-    """Store candidates in batches as they are found, returning how many landed.
+def _store_candidates(
+    run, scope, signals, same_language_only, similarity_threshold, log
+):
+    """Store every signal's pairs, strongest first, returning how many landed.
 
-    Each batch is committed on its own rather than the whole run at once: a
-    corpus-wide search runs for minutes, and holding every row for a single
-    commit at the end is what made memory scale with the size of the result.
-
-    Committing as it goes also means `candidate_count` climbs while the run is
-    still going, which is what the interface reports as progress.
-
-    `ignore_conflicts` does the deduplication. Signals run strongest first, so a
-    pair already stored under a better reason is the one that survives -- the
-    unique constraint on (run, concept_a, concept_b) settles it in the database
-    rather than in a dictionary.
+    Each query commits on its own, so `candidate_count` climbs while the run is
+    still going. Checking that the run still exists before each one is how a
+    deleted run stops.
     """
-    written_count = 0
-    batch = []
-    last_flush_at = time.monotonic()
-
-    def flush():
-        nonlocal written_count, batch, last_flush_at
-        last_flush_at = time.monotonic()
-        if not ConceptMatchRun.objects.filter(pk=run.pk).exists():
-            raise ConceptMatchRunCancelled
-        if not batch:
-            # Still a sign of life, and the only one a run gets while it is
-            # working through a stretch of labels that pair with nothing.
-            ConceptMatchRun.objects.filter(pk=run.pk).update(
-                last_progress=timezone.now()
-            )
-            return
-        ConceptMatchCandidate.objects.bulk_create(batch, ignore_conflicts=True)
-        # bulk_create with ignore_conflicts cannot report how many rows it
-        # skipped, so the run's own rows are counted rather than the attempts.
-        written_count = run.candidates.count()
-        run.candidate_count = written_count
-        run.last_progress = timezone.now()
-        run.save(update_fields=["candidate_count", "last_progress"])
-        log(f"  {written_count:,} candidate pairs so far")
-        batch = []
-
-    for candidate in _heartbeating(run, candidates):
-        if candidate is KEEPALIVE:
-            flush()
+    stored_count = 0
+    for signal in ALL_SIGNALS:
+        if signal not in signals:
             continue
-
-        concept_a, concept_b, signal, evidence, score = candidate
-        batch.append(
-            ConceptMatchCandidate(
-                run=run,
-                concept_a_id=concept_a,
-                concept_b_id=concept_b,
-                score=score,
-                signal=signal,
-                evidence=evidence or "",
+        for sql, params in _signal_queries(signal, scope, same_language_only):
+            if not ConceptMatchRun.objects.filter(pk=run.pk).exists():
+                raise ConceptMatchRunCancelled
+            stored_count += _store_pairs(
+                run, signal, sql, params, scope, similarity_threshold
             )
-        )
-        # Flushed on size or on time: a slice of a large vocabulary can run for
-        # a while and turn up only a handful of pairs, and waiting for a full
-        # batch would leave the run looking stalled.
-        if (
-            len(batch) >= CANDIDATE_BATCH_SIZE
-            or time.monotonic() - last_flush_at >= PROGRESS_INTERVAL_SECONDS
-        ):
-            flush()
-
-    flush()
-    return run.candidates.count()
+            ConceptMatchRun.objects.filter(pk=run.pk).update(
+                candidate_count=stored_count, last_progress=timezone.now()
+            )
+            log(f"  {stored_count:,} candidate pairs so far")
+    return stored_count
 
 
 def run_detection(
@@ -966,11 +932,10 @@ def run_detection(
         run.save(update_fields=["status", "last_progress"])
 
     try:
-        written_count = _write_candidates(
-            run,
-            iter_candidates(scope, signals, same_language_only, similarity_threshold),
-            log=log,
-        )
+        with _heartbeat_while_working(run):
+            written_count = _store_candidates(
+                run, scope, signals, same_language_only, similarity_threshold, log
+            )
 
         run.candidate_count = written_count
         run.status = ConceptMatchRun.STATUS_COMPLETE
@@ -985,6 +950,11 @@ def run_detection(
         log("  the run was deleted while it was working; stopping")
         return None
     except Exception as detection_error:
+        # Deleting a run while a query is storing its pairs fails that query's
+        # commit on the foreign key, which is a cancellation, not a failure.
+        if not ConceptMatchRun.objects.filter(pk=run.pk).exists():
+            log("  the run was deleted while it was working; stopping")
+            return None
         run.status = ConceptMatchRun.STATUS_FAILED
         run.error_message = str(detection_error)
         run.finished = timezone.now()
