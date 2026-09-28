@@ -72,7 +72,8 @@ VALID_MERGE_RETIREMENT_STRATEGIES = VALID_STRATEGIES | {STRATEGY_REPARENT_TO_SUR
 # uri is cardinality-1 and ConceptURILookupView resolves by exact tile match, so
 # two concepts must never carry the same one. identifier is allocated per scheme
 # by ConceptIdentifierCounter and would misrepresent the survivor. part_of_scheme
-# is always identical, since merges are restricted to a single scheme.
+# is identical within a scheme, and across schemes copying it would move the
+# survivor into the absorbed concept's scheme.
 # data_assignment records who asserted the absorbed concept's values and when,
 # which does not transfer to the survivor any more than an identifier does.
 EXCLUDED_NODEGROUP_ALIASES = frozenset(
