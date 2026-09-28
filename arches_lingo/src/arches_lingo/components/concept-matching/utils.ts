@@ -38,7 +38,7 @@ export function buildSignalList(options: {
 /**
  * Whether a run still has work to do.
  *
- * A fuzzy run is handed to a worker and comes back before it has found
+ * A run is handed to a worker and comes back before it has found
  * anything, so "no candidates yet" is not the same as "no candidates".
  */
 export function isRunUnfinished(run: ConceptMatchRun): boolean {

@@ -212,7 +212,8 @@ class ConceptMatchRun(models.Model):
     name = models.CharField(max_length=255, blank=True, default="")
     created = models.DateTimeField(auto_now_add=True)
     finished = models.DateTimeField(null=True, blank=True)
-    # Stamped each time the run stores a batch of pairs. A worker that is
+    # Stamped as each query's pairs are stored, and by a heartbeat between
+    # times. A worker that is
     # restarted mid-run cannot mark its own run failed -- celery acks a task on
     # receipt, so the message dies with the worker -- and without a heartbeat
     # the row would claim to be running forever.

@@ -13,6 +13,7 @@ from collections import defaultdict
 from http import HTTPStatus
 
 from django.conf import settings
+from django.core.cache import cache
 from django.db import IntegrityError, transaction
 from django.db.models import Count, Q
 from django.utils import timezone
@@ -54,9 +55,8 @@ MAX_ITEMS_PER_PAGE = 200
 MAX_LINK_BATCH = 200
 
 # How long a run may go without reporting progress before it is presumed dead.
-# The detection loop stores what it has found every ten seconds, but a single
-# slice of a large vocabulary can run considerably longer than that, so the
-# threshold is well clear of any honest gap between heartbeats.
+# A heartbeat is recorded every half minute while a query runs, so the threshold
+# is well clear of any honest gap between them.
 STALE_RUN_SECONDS = getattr(settings, "LINGO_MATCH_STALE_SECONDS", 300)
 
 # A long fuzzy run occupies a solo-pool worker for its whole length. Pointing
@@ -68,6 +68,11 @@ MATCH_TASK_QUEUE = getattr(settings, "LINGO_MATCH_TASK_QUEUE", None)
 # delete committing, which fails the delete on the foreign key. Trying again
 # collects those pairs too.
 DELETE_RUN_ATTEMPTS = 3
+
+# Counting every label takes seconds on a large vocabulary, and the counts only
+# feed a rough estimate of how long a run will take.
+SCOPE_SIZES_CACHE_KEY = "lingo_match_scope_sizes"
+SCOPE_SIZES_CACHE_SECONDS = 600
 
 
 class ConceptMatchRequestError(Exception):
@@ -195,7 +200,9 @@ def serialize_run(run, user=None, user_is_lingo_admin=False, counts_by_status=No
 
 def serialize_scope_sizes():
     """How many labels a run would compare, in all and per scheme."""
-    total_labels, labels_by_scheme = count_labels_by_scheme()
+    total_labels, labels_by_scheme = cache.get_or_set(
+        SCOPE_SIZES_CACHE_KEY, count_labels_by_scheme, SCOPE_SIZES_CACHE_SECONDS
+    )
     return {
         "total_labels": total_labels,
         "labels_by_scheme": labels_by_scheme,
