@@ -14,41 +14,53 @@ from django.db import connection
 from arches_lingo import const
 
 _URIS_AND_RESOURCE_IDS_SQL = f"""
-    SELECT tiledata ->> '{const.URI_CONTENT_NODE}' AS uri, resourceinstanceid
-      FROM tiles
-     WHERE nodegroupid = '{const.URI_NODEGROUP}'
-       AND tiledata ->> '{const.URI_CONTENT_NODE}' LIKE %(uri_prefix)s
-    UNION ALL
-    SELECT tiledata ->> '{const.SCHEME_URI_CONTENT_NODE}' AS uri, resourceinstanceid
-      FROM tiles
-     WHERE nodegroupid = '{const.SCHEME_URI_NODEGROUP}'
-       AND tiledata ->> '{const.SCHEME_URI_CONTENT_NODE}' LIKE %(uri_prefix)s
+    SELECT uri_tile.tiledata ->> '{const.URI_CONTENT_NODE}' AS uri,
+           uri_tile.resourceinstanceid
+      FROM tiles uri_tile
+      JOIN tiles part_of_scheme
+        ON part_of_scheme.resourceinstanceid = uri_tile.resourceinstanceid
+       AND part_of_scheme.nodegroupid = '{const.CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID}'
+     WHERE uri_tile.nodegroupid = '{const.URI_NODEGROUP}'
+       AND uri_tile.tiledata ->> '{const.URI_CONTENT_NODE}' LIKE %(uri_prefix)s
+       AND part_of_scheme.tiledata
+           -> '{const.CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID}' -> 0 ->> 'resourceId'
+           = %(scheme_id)s
 """
 
 
-def snapshot_resource_ids_by_uri(uri_prefix):
-    """Return {uri: resourceinstanceid} for resources whose URI tile matches.
+def snapshot_resource_ids_by_uri(uri_prefix, scheme_resource_id):
+    """Return {uri: resourceinstanceid} for the scheme's concepts whose URI matches.
 
-    Covers both concept and scheme URI tiles, so a reload reuses the existing
-    scheme resource rather than creating a second one alongside it.
+    Only concepts in the scheme are considered, so a URI tile copied onto a
+    concept elsewhere cannot pin an id the purge leaves in place.
     """
     with connection.cursor() as cursor:
-        cursor.execute(_URIS_AND_RESOURCE_IDS_SQL, {"uri_prefix": f"{uri_prefix}%"})
+        cursor.execute(
+            _URIS_AND_RESOURCE_IDS_SQL,
+            {"uri_prefix": f"{uri_prefix}%", "scheme_id": str(scheme_resource_id)},
+        )
         return {uri: resource_id for uri, resource_id in cursor.fetchall() if uri}
 
 
-def write_resource_id_snapshot(uri_prefix, csv_path, scheme_resource_id=None):
+def write_resource_id_snapshot(
+    uri_prefix, csv_path, scheme_resource_id, include_concepts=True
+):
     """Write the snapshot to CSV and return the number of rows written.
 
-    `scheme_resource_id` pins the scheme under the URI the converted SKOS uses
-    to identify it, which is the bare vocabulary prefix. The scheme's own URI
-    tile holds a different value -- its Getty subject number -- so without this
-    the scheme is never matched and each reload creates a second one alongside
-    the old.
+    The scheme is pinned under the URI the converted SKOS uses to identify it,
+    which is the bare vocabulary prefix. The scheme's own URI tile holds a
+    different value -- its Getty subject number -- so without this the scheme
+    is never matched and each reload creates a second one alongside the old.
+
+    `include_concepts` off pins the scheme alone, for a reload that gives every
+    concept a fresh id but should still replace the scheme in place.
     """
-    resource_ids_by_uri = snapshot_resource_ids_by_uri(uri_prefix)
-    if scheme_resource_id:
-        resource_ids_by_uri[uri_prefix] = scheme_resource_id
+    resource_ids_by_uri = (
+        snapshot_resource_ids_by_uri(uri_prefix, scheme_resource_id)
+        if include_concepts
+        else {}
+    )
+    resource_ids_by_uri[uri_prefix] = scheme_resource_id
     with open(csv_path, "w", newline="", encoding="utf-8") as csv_file:
         writer = csv.writer(csv_file)
         writer.writerow(["uri", "resourceinstanceid"])

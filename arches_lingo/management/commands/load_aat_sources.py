@@ -39,6 +39,7 @@ from arches.app.models.models import (
     ResourceInstance,
 )
 from arches.app.models import models
+from arches.app.models.system_settings import settings
 
 import arches_lingo.const as const
 from arches_lingo.utils.aat.deferred_indexing import save_to_tiles_without_indexing
@@ -456,7 +457,7 @@ class Command(BaseCommand):
 
             tiles = label_tile_lookup.get(str(resource_id), {})
             for label_info in label_list:
-                tile_key = self._make_label_key(
+                tile_key = self._make_tile_match_key(
                     label_info["literal_form"],
                     label_info["language"],
                 )
@@ -521,7 +522,7 @@ class Command(BaseCommand):
 
             tiles = note_tile_lookup.get(str(resource_id), {})
             for note_info in note_list:
-                tile_key = self._make_note_key(
+                tile_key = self._make_tile_match_key(
                     note_info["value"],
                     note_info["language"],
                 )
@@ -829,7 +830,7 @@ class Command(BaseCommand):
                     break
 
             if content:
-                key = self._make_label_key(content, language)
+                key = self._make_tile_match_key(content, language)
                 lookup[str(resource_id)][key] = {
                     "tileid": tile_id,
                     "graph_id": graph_id,
@@ -912,7 +913,7 @@ class Command(BaseCommand):
 
             if content:
                 # Truncate content for the key to handle minor differences
-                key = self._make_note_key(content, language)
+                key = self._make_tile_match_key(content, language)
                 lookup[str(resource_id)][key] = {
                     "tileid": tile_id,
                     "graph_id": graph_id,
@@ -930,19 +931,17 @@ class Command(BaseCommand):
         return [str(node_id) for node_id in nodes]
 
     @staticmethod
-    def _make_label_key(content, language):
-        """Create a matching key for a label tile."""
-        # Normalize: strip whitespace, lowercase for matching
-        normalized_content = (content or "").strip()[:200]
-        normalized_language = (language or "").strip().lower()
-        return f"{normalized_content}||{normalized_language}"
+    def _make_tile_match_key(content, language):
+        """Key a label or note tile by its content and language.
 
-    @staticmethod
-    def _make_note_key(content, language):
-        """Create a matching key for a note tile."""
-        # Use first 200 chars to match (notes can be very long)
+        Content is truncated because notes can be very long. A value with no
+        language falls back to the importer's default, which is the language
+        the importer stored it under.
+        """
         normalized_content = (content or "").strip()[:200]
-        normalized_language = (language or "").strip().lower()
+        normalized_language = (
+            (language or "").strip() or settings.LANGUAGE_CODE
+        ).lower()
         return f"{normalized_content}||{normalized_language}"
 
     def _get_blank_tile(self, nodegroup_id):

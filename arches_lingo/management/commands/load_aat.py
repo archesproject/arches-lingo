@@ -89,17 +89,6 @@ class Command(BaseCommand):
             ),
         )
         parser.add_argument(
-            "--keep-existing",
-            action="store_true",
-            help=(
-                "Import alongside the currently loaded AAT data instead of "
-                "replacing it. Leaves concepts Getty has retired in place. "
-                "Requires --new-resource-ids, since reusing the ids the loaded "
-                "concepts already hold would write a second copy of every tile "
-                "onto them."
-            ),
-        )
-        parser.add_argument(
             "--new-resource-ids",
             action="store_true",
             help=(
@@ -120,7 +109,6 @@ class Command(BaseCommand):
                 archive_url=options["url"],
                 scheme_identifier_uri=options["scheme_identifier"],
                 scheme_pref_label=options["scheme_pref_label"],
-                replace_existing=not options["keep_existing"],
                 preserve_resource_ids=not options["new_resource_ids"],
                 lifecycle_state_id=LIFECYCLE_STATE_IDS_BY_NAME[
                     options["lifecycle_state"]

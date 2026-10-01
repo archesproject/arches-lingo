@@ -58,98 +58,37 @@ ATTRIBUTION_FILENAME = "getty_aat_attribution.json"
 RESOURCE_ID_SNAPSHOT_FILENAME = "getty_aat_resource_ids.csv"
 
 
-def remove_orphaned_aat_schemes(keep_scheme_id, log=print):
-    """Delete AAT scheme resources that hold no tiles and no concepts.
-
-    A scheme that was created by a load which then failed, or by an earlier
-    version that did not pin the scheme id, is left behind with nothing
-    attached to it. Without this the vocabulary appears more than once.
-    """
-    with connection.cursor() as cursor:
-        cursor.execute(
-            f"""
-            SELECT scheme.resourceinstanceid
-              FROM resource_instances scheme
-             WHERE scheme.graphid = %(schemes_graph_id)s::uuid
-               AND scheme.resourceinstanceid <> %(keep_scheme_id)s::uuid
-               AND NOT EXISTS (
-                   SELECT 1 FROM tiles WHERE resourceinstanceid = scheme.resourceinstanceid
-               )
-               AND NOT EXISTS (
-                   SELECT 1 FROM tiles part_of_scheme
-                    WHERE part_of_scheme.nodegroupid
-                          = '{const.CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID}'
-                      AND (part_of_scheme.tiledata
-                           -> '{const.CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID}'
-                           -> 0 ->> 'resourceId')::uuid
-                          = scheme.resourceinstanceid
-               )
-            """,
-            {
-                "schemes_graph_id": const.SCHEMES_GRAPH_ID,
-                "keep_scheme_id": str(keep_scheme_id),
-            },
-        )
-        orphaned_scheme_ids = [scheme_id for (scheme_id,) in cursor.fetchall()]
-
-        for scheme_id in orphaned_scheme_ids:
-            # Records keyed to the scheme hold a foreign key to it.
-            cursor.execute(
-                "DELETE FROM concept_identifier_counters "
-                "WHERE scheme_resource_instance_id = %s",
-                [scheme_id],
-            )
-            cursor.execute(
-                "DELETE FROM scheme_uri_templates "
-                "WHERE scheme_resource_instance_id = %s",
-                [scheme_id],
-            )
-            cursor.execute(
-                "DELETE FROM scheme_attributions "
-                "WHERE scheme_resource_instance_id = %s",
-                [scheme_id],
-            )
-            cursor.execute(
-                "DELETE FROM resource_x_resource WHERE resourceinstanceidfrom = %s "
-                "OR resourceinstanceidto = %s",
-                [scheme_id, scheme_id],
-            )
-            cursor.execute(
-                "DELETE FROM resource_identifiers WHERE resourceid_id = %s", [scheme_id]
-            )
-            cursor.execute(
-                "DELETE FROM resource_instances WHERE resourceinstanceid = %s",
-                [scheme_id],
-            )
-
-    if orphaned_scheme_ids:
-        log(f"Removed {len(orphaned_scheme_ids)} orphaned AAT scheme resource(s)")
-    return orphaned_scheme_ids
-
-
-def find_existing_aat_scheme_id():
-    """Return the resource id of an already-loaded AAT scheme, or None.
-
-    Identified by the Getty URI on its URI tile rather than by label, so a
-    renamed scheme is still recognised.
-    """
-    with connection.cursor() as cursor:
-        cursor.execute(
-            f"""
-            SELECT resourceinstanceid
-              FROM tiles
-             WHERE nodegroupid = '{const.SCHEME_URI_NODEGROUP}'
-               AND tiledata ->> '{const.SCHEME_URI_CONTENT_NODE}' LIKE %(uri_prefix)s
-             LIMIT 1
-            """,
-            {"uri_prefix": f"{AAT_URI_PREFIX}%"},
-        )
-        row = cursor.fetchone()
-    return row[0] if row else None
-
-
 class LoadPreconditionError(Exception):
     """Raised when the database or the options given rule the load out."""
+
+
+def find_existing_aat_scheme_id(scheme_identifier_uri):
+    """Return the resource id of an already-loaded AAT scheme, or None.
+
+    Identified by the identifier URI the load gave the scheme rather than by
+    label, so a renamed scheme is still recognised.
+
+    Raises LoadPreconditionError when more than one scheme carries the URI,
+    rather than picking one to purge.
+    """
+    with connection.cursor() as cursor:
+        cursor.execute(
+            f"""
+            SELECT DISTINCT resourceinstanceid
+              FROM tiles
+             WHERE nodegroupid = '{const.SCHEME_URI_NODEGROUP}'
+               AND tiledata ->> '{const.SCHEME_URI_CONTENT_NODE}' = %(scheme_uri)s
+            """,
+            {"scheme_uri": scheme_identifier_uri},
+        )
+        scheme_ids = [scheme_id for (scheme_id,) in cursor.fetchall()]
+    if len(scheme_ids) > 1:
+        raise LoadPreconditionError(
+            f"{len(scheme_ids)} schemes are identified by {scheme_identifier_uri} "
+            f"({', '.join(str(scheme_id) for scheme_id in scheme_ids)}). Remove "
+            "all but one before reloading, so the load knows which to replace."
+        )
+    return scheme_ids[0] if scheme_ids else None
 
 
 def check_reference_data_is_loaded():
@@ -185,7 +124,6 @@ def load_aat(
     archive_url=GETTY_AAT_EXPLICIT_ZIP_URL,
     scheme_identifier_uri=DEFAULT_SCHEME_IDENTIFIER_URI,
     scheme_pref_label=DEFAULT_SCHEME_PREF_LABEL,
-    replace_existing=True,
     preserve_resource_ids=True,
     lifecycle_state_id=LOCKED_STATE_ID,
     skip_indexing=False,
@@ -198,15 +136,7 @@ def load_aat(
     """
     check_reference_data_is_loaded()
 
-    existing_scheme_id = find_existing_aat_scheme_id()
-    if existing_scheme_id and not replace_existing and preserve_resource_ids:
-        raise LoadPreconditionError(
-            "Keeping the existing AAT data re-imports every concept already "
-            "loaded, and reusing the resource ids those concepts hold would "
-            "write a second copy of every tile onto them. Ask for fresh "
-            "resource ids to load the vocabulary as a separate set of "
-            "resources, or let the load replace what is already there."
-        )
+    existing_scheme_id = find_existing_aat_scheme_id(scheme_identifier_uri)
 
     os.makedirs(working_directory, exist_ok=True)
     skos_path = os.path.join(working_directory, SKOS_FILENAME)
@@ -245,9 +175,12 @@ def load_aat(
     repair_colliding_language_names(log=log)
 
     pinned_ids_path = ""
-    if existing_scheme_id and preserve_resource_ids:
+    if existing_scheme_id:
         snapshot_count = write_resource_id_snapshot(
-            AAT_URI_PREFIX, snapshot_path, scheme_resource_id=existing_scheme_id
+            AAT_URI_PREFIX,
+            snapshot_path,
+            existing_scheme_id,
+            include_concepts=preserve_resource_ids,
         )
         pinned_ids_path = snapshot_path
         log(f"Snapshotted {snapshot_count:,} existing resource ids")
@@ -256,7 +189,7 @@ def load_aat(
     # Removing the previous load and writing the new one share a transaction so
     # a failed import leaves the vocabulary as it was rather than deleted.
     with transaction.atomic():
-        if existing_scheme_id and replace_existing:
+        if existing_scheme_id:
             for model_name, count in summarize_scheme_partition(
                 existing_scheme_id
             ).items():
@@ -287,9 +220,7 @@ def load_aat(
     log("[6/6] Assigning concept types ...")
     call_command("update_aat_concept_types", source=skos_path)
 
-    loaded_scheme_id = find_existing_aat_scheme_id()
-    if loaded_scheme_id:
-        remove_orphaned_aat_schemes(loaded_scheme_id, log=log)
+    loaded_scheme_id = find_existing_aat_scheme_id(scheme_identifier_uri)
     if loaded_scheme_id and extraction_date:
         set_scheme_attribution(loaded_scheme_id, build_aat_attribution(extraction_date))
         log("Recorded the Getty attribution statement on the scheme")

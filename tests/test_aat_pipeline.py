@@ -58,7 +58,9 @@ from arches_lingo.utils.aat.attribution_statement import (
     build_aat_attribution,
     set_scheme_attribution,
 )
-from arches_lingo.utils.aat.deferred_indexing import recalculate_descriptors_for_graph
+from arches_lingo.utils.aat.deferred_indexing import (
+    recalculate_descriptors_for_resources,
+)
 from arches_lingo.utils.aat.progress import (
     iterate_with_progress,
     stream_lines_with_progress,
@@ -75,7 +77,10 @@ from arches_lingo.utils.aat.scheme_partition import (
     purge_scheme_partition,
     summarize_scheme_partition,
 )
-from arches_lingo.utils.aat.skos_conversion import AATConversionError
+from arches_lingo.utils.aat.skos_conversion import (
+    DEFAULT_SCHEME_IDENTIFIER_URI,
+    AATConversionError,
+)
 from arches_lingo.utils.concept_lifecycle import EDITING_STATE_ID
 
 from tests.tests import ViewTests
@@ -190,27 +195,36 @@ class ResourceIdPinningAndPartitionTests(TestCase):
         ).save()
         self.top_concept = top_concept
 
-    def test_snapshot_matches_only_the_given_prefix(self):
+    def test_snapshot_considers_only_the_schemes_own_concepts(self):
+        """A URI tile copied onto a concept elsewhere must not pin an id the
+        purge would leave in place."""
+        aat_uri = "http://vocab.getty.edu/aat/300000001"
         TileModel(
             resourceinstance=self.top_concept,
             nodegroup_id=const.URI_NODEGROUP,
-            data={const.URI_CONTENT_NODE: "http://vocab.getty.edu/aat/300000001"},
+            data={const.URI_CONTENT_NODE: aat_uri},
+        ).save()
+        concept_elsewhere = ResourceInstance.objects.create(
+            graph_id=const.CONCEPTS_GRAPH_ID, name="Concept Elsewhere"
+        )
+        TileModel(
+            resourceinstance=concept_elsewhere,
+            nodegroup_id=const.URI_NODEGROUP,
+            data={const.URI_CONTENT_NODE: aat_uri},
         ).save()
 
-        snapshot = snapshot_resource_ids_by_uri("http://vocab.getty.edu/aat/")
-
-        self.assertEqual(
-            snapshot["http://vocab.getty.edu/aat/300000001"], self.top_concept.pk
+        snapshot = snapshot_resource_ids_by_uri(
+            "http://vocab.getty.edu/aat/", self.scheme.pk
         )
+
+        self.assertEqual(snapshot, {aat_uri: self.top_concept.pk})
 
     def test_write_resource_id_snapshot_pins_the_scheme_uri(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             csv_path = os.path.join(temp_dir, "snapshot.csv")
 
             row_count = write_resource_id_snapshot(
-                "http://vocab.getty.edu/aat/",
-                csv_path,
-                scheme_resource_id=self.scheme.pk,
+                "http://vocab.getty.edu/aat/", csv_path, self.scheme.pk
             )
 
             with open(csv_path, encoding="utf-8") as csv_file:
@@ -231,6 +245,22 @@ class ResourceIdPinningAndPartitionTests(TestCase):
         )
         self.assertTrue(ResourceInstance.objects.filter(pk=self.scheme.pk).exists())
 
+    def test_purge_keeps_relationships_pointing_in_from_other_schemes(self):
+        """The reload restores the pinned ids those relationships point to, but
+        rebuilds relationships only for the tiles it writes."""
+        concept_elsewhere = ResourceInstance.objects.create(
+            graph_id=const.CONCEPTS_GRAPH_ID, name="Concept Elsewhere"
+        )
+        inbound_relationship = ResourceXResource.objects.create(
+            from_resource=concept_elsewhere, to_resource=self.top_concept
+        )
+
+        purge_scheme_partition(self.scheme.pk, log=lambda message: None)
+
+        self.assertTrue(
+            ResourceXResource.objects.filter(pk=inbound_relationship.pk).exists()
+        )
+
 
 class LoadAatCommandTests(TestCase):
     """The command is a thin argument-mapping layer over `pipeline.load_aat`."""
@@ -246,7 +276,6 @@ class LoadAatCommandTests(TestCase):
         call_command(
             "load_aat",
             working_directory="/tmp/aat-test",
-            keep_existing=True,
             new_resource_ids=True,
             lifecycle_state="editing",
             index=True,
@@ -255,7 +284,6 @@ class LoadAatCommandTests(TestCase):
         )
 
         _, call_kwargs = mock_load_aat.call_args
-        self.assertEqual(call_kwargs["replace_existing"], False)
         self.assertEqual(call_kwargs["preserve_resource_ids"], False)
         self.assertEqual(call_kwargs["skip_indexing"], False)
         self.assertEqual(call_kwargs["show_progress"], False)
@@ -312,19 +340,28 @@ class LoadAatSourcesHelperTests(TestCase):
         self.assertEqual(value[0]["resourceId"], resource_id)
         self.assertEqual(value[0]["ontologyProperty"], "")
 
-    def test_label_key_normalizes_case_and_whitespace(self):
+    def test_tile_match_key_normalizes_case_and_whitespace(self):
         command = LoadAatSourcesCommand()
 
-        key = command._make_label_key("  Trumpets  ", "EN")
+        key = command._make_tile_match_key("  Trumpets  ", "EN")
 
         self.assertEqual(key, "Trumpets||en")
 
-    def test_note_key_truncates_long_content(self):
+    def test_tile_match_key_truncates_long_content(self):
         command = LoadAatSourcesCommand()
 
-        key = command._make_note_key("x" * 300, "en")
+        key = command._make_tile_match_key("x" * 300, "en")
 
         self.assertEqual(key, f"{'x' * 200}||en")
+
+    def test_tile_match_key_falls_back_to_the_importer_default_language(self):
+        """The importer stores a term with no xml:lang under the default
+        language, so attribution for that term must be keyed the same way."""
+        command = LoadAatSourcesCommand()
+
+        key = command._make_tile_match_key("Issn", None)
+
+        self.assertEqual(key, f"Issn||{settings.LANGUAGE_CODE.lower()}")
 
     def test_blank_tile_has_an_entry_per_node_in_the_nodegroup(self):
         command = LoadAatSourcesCommand()
@@ -381,9 +418,6 @@ class PipelineOrchestrationTests(TestCase):
             ),
             "purge_scheme_partition": patch.object(pipeline, "purge_scheme_partition"),
             "call_command": patch.object(pipeline, "call_command"),
-            "remove_orphaned_aat_schemes": patch.object(
-                pipeline, "remove_orphaned_aat_schemes"
-            ),
             "set_scheme_attribution": patch.object(pipeline, "set_scheme_attribution"),
         }
         mocks = {name: entered.start() for name, entered in patches.items()}
@@ -402,10 +436,6 @@ class PipelineOrchestrationTests(TestCase):
 
         mocks["write_resource_id_snapshot"].assert_not_called()
         mocks["purge_scheme_partition"].assert_not_called()
-        mocks["remove_orphaned_aat_schemes"].assert_called_once()
-        self.assertEqual(
-            mocks["remove_orphaned_aat_schemes"].call_args.args[0], "new-scheme-id"
-        )
         self.assertEqual(mocks["call_command"].call_count, 3)
         self.assertEqual(result["concepts"], 3)
         self.assertEqual(result["scheme_id"], "new-scheme-id")
@@ -416,47 +446,36 @@ class PipelineOrchestrationTests(TestCase):
         pipeline.load_aat(
             "/tmp/aat-test",
             archive_path="/tmp/aat-test/explicit.zip",
-            replace_existing=True,
             preserve_resource_ids=True,
             log=lambda m: None,
         )
 
         mocks["write_resource_id_snapshot"].assert_called_once()
+        self.assertTrue(
+            mocks["write_resource_id_snapshot"].call_args.kwargs["include_concepts"]
+        )
         mocks["purge_scheme_partition"].assert_called_once()
         self.assertEqual(
             mocks["purge_scheme_partition"].call_args.args[0], "old-scheme-id"
         )
 
-    def test_reload_without_replace_or_pin_leaves_the_previous_scheme_alone(self):
+    def test_reload_with_fresh_ids_still_replaces_the_scheme_in_place(self):
+        """Pinning the scheme alone means fresh concept ids cannot leave the
+        previous scheme behind, emptied, alongside a new one."""
         mocks = self._patch_steps(existing_scheme_id="old-scheme-id")
 
         pipeline.load_aat(
             "/tmp/aat-test",
             archive_path="/tmp/aat-test/explicit.zip",
-            replace_existing=False,
             preserve_resource_ids=False,
             log=lambda message: None,
         )
 
-        mocks["write_resource_id_snapshot"].assert_not_called()
-        mocks["purge_scheme_partition"].assert_not_called()
-
-    def test_keeping_the_previous_load_while_pinning_its_ids_is_refused(self):
-        """Pinning reuses the ids the loaded concepts hold, so importing
-        alongside them would write a second copy of every tile onto them."""
-        mocks = self._patch_steps(existing_scheme_id="old-scheme-id")
-
-        with self.assertRaises(pipeline.LoadPreconditionError):
-            pipeline.load_aat(
-                "/tmp/aat-test",
-                archive_path="/tmp/aat-test/explicit.zip",
-                replace_existing=False,
-                preserve_resource_ids=True,
-                log=lambda message: None,
-            )
-
-        mocks["convert_archive_to_skos"].assert_not_called()
-        mocks["call_command"].assert_not_called()
+        mocks["write_resource_id_snapshot"].assert_called_once()
+        self.assertFalse(
+            mocks["write_resource_id_snapshot"].call_args.kwargs["include_concepts"]
+        )
+        mocks["purge_scheme_partition"].assert_called_once()
 
     def test_reference_data_is_checked_before_anything_is_downloaded(self):
         """The load runs for hours and its last step needs list items the
@@ -890,8 +909,8 @@ class SchemeAttributionTests(TestCase):
 
 
 class SchemeDiscoveryTests(TestCase):
-    """`load_aat` finds the scheme a previous run left behind by its Getty URI,
-    and clears out schemes a failed run abandoned."""
+    """`load_aat` finds the scheme a previous run left behind by the identifier
+    it was given."""
 
     @classmethod
     def setUpTestData(cls):
@@ -911,57 +930,32 @@ class SchemeDiscoveryTests(TestCase):
             )
         return scheme
 
-    def test_the_scheme_is_found_by_its_uri_not_its_label(self):
+    def test_the_scheme_is_found_by_its_identifier_not_its_label(self):
         """The label is configurable, so a renamed scheme still has to match."""
-        self.make_scheme("Some Other Vocabulary", "http://example.org/other/")
+        self.make_scheme("Another Getty Scheme", "http://vocab.getty.edu/aat/1")
         aat_scheme = self.make_scheme(
-            "Renamed By A Curator", "http://vocab.getty.edu/aat/"
+            "Renamed By A Curator", DEFAULT_SCHEME_IDENTIFIER_URI
         )
 
-        self.assertEqual(pipeline.find_existing_aat_scheme_id(), aat_scheme.pk)
+        self.assertEqual(
+            pipeline.find_existing_aat_scheme_id(DEFAULT_SCHEME_IDENTIFIER_URI),
+            aat_scheme.pk,
+        )
 
     def test_no_loaded_aat_scheme_is_not_an_error(self):
         self.make_scheme("Some Other Vocabulary", "http://example.org/other/")
 
-        self.assertIsNone(pipeline.find_existing_aat_scheme_id())
-
-    def test_an_abandoned_empty_scheme_is_removed(self):
-        kept_scheme = self.make_scheme("Kept", "http://vocab.getty.edu/aat/")
-        abandoned_scheme = self.make_scheme("Abandoned By A Failed Run")
-
-        removed = pipeline.remove_orphaned_aat_schemes(
-            kept_scheme.pk, log=lambda message: None
+        self.assertIsNone(
+            pipeline.find_existing_aat_scheme_id(DEFAULT_SCHEME_IDENTIFIER_URI)
         )
 
-        self.assertEqual(removed, [abandoned_scheme.pk])
-        self.assertFalse(
-            ResourceInstance.objects.filter(pk=abandoned_scheme.pk).exists()
-        )
-        self.assertTrue(ResourceInstance.objects.filter(pk=kept_scheme.pk).exists())
+    def test_more_than_one_matching_scheme_is_refused(self):
+        """Picking one arbitrarily would purge whichever the database returned."""
+        self.make_scheme("First", DEFAULT_SCHEME_IDENTIFIER_URI)
+        self.make_scheme("Second", DEFAULT_SCHEME_IDENTIFIER_URI)
 
-    def test_a_scheme_holding_concepts_is_left_alone(self):
-        """Emptiness is the test, so a second populated scheme must survive."""
-        kept_scheme = self.make_scheme("Kept", "http://vocab.getty.edu/aat/")
-        other_scheme = self.make_scheme("Another Vocabulary")
-        concept = ResourceInstance.objects.create(
-            graph_id=const.CONCEPTS_GRAPH_ID, name="A Concept"
-        )
-        TileModel.objects.create(
-            resourceinstance=concept,
-            nodegroup_id=const.CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID,
-            data={
-                const.CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID: [
-                    {"resourceId": str(other_scheme.pk)}
-                ]
-            },
-        )
-
-        removed = pipeline.remove_orphaned_aat_schemes(
-            kept_scheme.pk, log=lambda message: None
-        )
-
-        self.assertEqual(removed, [])
-        self.assertTrue(ResourceInstance.objects.filter(pk=other_scheme.pk).exists())
+        with self.assertRaises(pipeline.LoadPreconditionError):
+            pipeline.find_existing_aat_scheme_id(DEFAULT_SCHEME_IDENTIFIER_URI)
 
 
 class DescriptorRecalculationTests(TestCase):
@@ -985,8 +979,8 @@ class DescriptorRecalculationTests(TestCase):
             },
         )
 
-        recalculated = recalculate_descriptors_for_graph(
-            const.CONCEPTS_GRAPH_ID, log=lambda message: None
+        recalculated = recalculate_descriptors_for_resources(
+            [concept.pk], log=lambda message: None
         )
 
         concept.refresh_from_db()

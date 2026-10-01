@@ -263,17 +263,24 @@ def merge_into_tiledata(tile_additions, log=print):
     """
     # Several entries can resolve to the same tile -- two labels sharing a
     # literal form and language, for instance -- so additions are combined per
-    # tile rather than sent as competing rows.
+    # tile rather than sent as competing rows, and references to the same node
+    # are pooled rather than the later entry's replacing the earlier's.
     additions_by_tile = {}
     for tile_id, node_values in tile_additions:
         addition = additions_by_tile.setdefault(str(tile_id), {})
         for node_id, node_value in node_values.items():
-            if isinstance(node_value, list):
-                node_value = [
-                    {**reference, "resourceXresourceId": str(uuid.uuid4())}
-                    for reference in node_value
-                ]
-            addition[node_id] = node_value
+            if not isinstance(node_value, list):
+                addition[node_id] = node_value
+                continue
+            pooled_references = addition.setdefault(node_id, [])
+            referenced_resource_ids = {
+                reference["resourceId"] for reference in pooled_references
+            }
+            pooled_references.extend(
+                {**reference, "resourceXresourceId": str(uuid.uuid4())}
+                for reference in node_value
+                if reference["resourceId"] not in referenced_resource_ids
+            )
 
     prepared_rows = [
         (tile_id, json.dumps(addition))

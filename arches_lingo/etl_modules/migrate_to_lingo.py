@@ -31,7 +31,7 @@ import arches_lingo.const as const
 from arches_lingo.models import ConceptIdentifierCounter, SchemeURITemplate
 from arches_lingo.utils.concept_lifecycle import PUBLISHED_STATE_ID
 from arches_lingo.utils.aat.deferred_indexing import (
-    recalculate_descriptors_for_graph,
+    recalculate_descriptors_for_resources,
     save_to_tiles_without_indexing,
 )
 from arches_lingo.utils.aat.direct_tile_load import (
@@ -1271,15 +1271,22 @@ class LingoResourceImporter(BaseImportModule):
                             concepts_node_lookup,
                         )
                 with report_elapsed("descriptors", log=self.log):
-                    recalculate_descriptors_for_graph(
-                        const.SCHEMES_GRAPH_ID, log=self.log
-                    )
-                    recalculate_descriptors_for_graph(
-                        const.CONCEPTS_GRAPH_ID, log=self.log
+                    recalculate_descriptors_for_resources(
+                        [
+                            resource["resourceinstanceid"]
+                            for resource in self.schemes + self.concepts
+                        ],
+                        log=self.log,
                     )
                 if self.import_identifiers:
                     with report_elapsed("identifier setup", log=self.log):
                         self._post_import_identifier_setup()
+                cursor.execute(
+                    "UPDATE load_event SET status = %s, indexed_time = now(), "
+                    "load_end_time = now(), complete = true, successful = true "
+                    "WHERE loadid = %s",
+                    ("indexed", self.loadid),
+                )
                 self._finalize_import()
                 return
 

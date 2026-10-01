@@ -119,13 +119,14 @@ def purge_scheme_partition(scheme_resource_instance_id, log=print):
                 f"unexpected model are in scope for scheme {scheme_id}"
             )
 
+        # Rows pointing into the scheme from elsewhere are kept: the tiles that
+        # hold them still reference these ids, which a pinned reload restores,
+        # and the reload only rebuilds relationships for the tiles it writes.
         cursor.execute(
             """
             DELETE FROM resource_x_resource
              WHERE resourceinstanceidfrom IN (SELECT id FROM doomed_resource)
-                OR resourceinstanceidto IN (SELECT id FROM doomed_resource)
                 OR resourceinstanceidfrom = %(scheme_id)s::uuid
-                OR resourceinstanceidto = %(scheme_id)s::uuid
             """,
             {"scheme_id": scheme_id},
         )

@@ -22,26 +22,28 @@ from arches.app.etl_modules.save import (
 from arches.app.models.resource import Resource
 from arches.app.utils.index_database import optimize_resource_iteration
 
+from arches_lingo.utils.aat.progress import (
+    iterate_with_progress,
+    progress_reporting_is_useful,
+)
+
 __all__ = [
-    "recalculate_descriptors_for_graph",
+    "recalculate_descriptors_for_resources",
     "save_to_tiles_without_indexing",
 ]
 
 DESCRIPTOR_BATCH_SIZE = 1000
 
 
-def recalculate_descriptors_for_graph(graph_id, log=print):
-    """Recompute descriptors for every resource on a graph.
+def recalculate_descriptors_for_resources(resource_ids, log=print):
+    """Recompute descriptors for the given resources.
 
     Used by loads that write tiles directly: descriptors are what the interface
     shows as a resource's name, and nothing else recalculates them once the
     Arches save path is not involved.
     """
-    resource_ids = list(
-        Resource.objects.filter(graph_id=graph_id).values_list("pk", flat=True)
-    )
-    _recalculate_descriptors(resource_ids)
-    log(f"  recalculated descriptors for {len(resource_ids):,} resources")
+    log(f"  recalculating descriptors for {len(resource_ids):,} resources ...")
+    _recalculate_descriptors(resource_ids, show_progress=progress_reporting_is_useful())
     return len(resource_ids)
 
 
@@ -55,15 +57,20 @@ def _recalculate_descriptors_for_transaction(cursor, loadid):
     return len(resource_ids)
 
 
-def _recalculate_descriptors(resource_ids):
+def _recalculate_descriptors(resource_ids, show_progress=False):
     # ResourceInstance.save() reads self.graph.publication, which is a query per
     # resource unless it comes along with the graph.
     resources_to_index = Resource.objects.filter(pk__in=resource_ids).select_related(
         "graph__publication"
     )
 
-    for resource in optimize_resource_iteration(
-        resources_to_index, chunk_size=DESCRIPTOR_BATCH_SIZE
+    for resource in iterate_with_progress(
+        optimize_resource_iteration(
+            resources_to_index, chunk_size=DESCRIPTOR_BATCH_SIZE
+        ),
+        total=len(resource_ids),
+        title="Recalculating descriptors",
+        show_progress=show_progress,
     ):
         resource.tiles = resource.prefetched_tiles
         # descriptor_function is not a field on the graph; optimize_resource_iteration

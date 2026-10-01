@@ -15,7 +15,13 @@ from django.db import connection
 from django.test import TestCase
 from django.utils import timezone
 
-from arches.app.models.models import ResourceInstance, ResourceXResource, TileModel
+from arches.app.models.models import (
+    ETLModule,
+    LoadEvent,
+    ResourceInstance,
+    ResourceXResource,
+    TileModel,
+)
 
 from arches_lingo import const
 from arches_lingo.etl_modules.migrate_to_lingo import LingoResourceImporter
@@ -405,8 +411,8 @@ class MergeIntoTiledataTests(DirectWriteTestCase):
 
     def test_several_additions_for_one_tile_are_combined_into_a_single_row(self):
         """Two attribution entries can resolve to the same tile when they share
-        a literal form and language; sending both as rows violates the temp
-        table's primary key."""
+        a literal form and language; their references are pooled rather than
+        the later entry's replacing the earlier's."""
         other_scheme = ResourceInstance.objects.create(
             graph_id=const.SCHEMES_GRAPH_ID, name="Second Source"
         )
@@ -418,15 +424,19 @@ class MergeIntoTiledataTests(DirectWriteTestCase):
                     {
                         const.CONCEPT_NAME_DATA_ASSIGNMENT_OBJ_USED_NODE: self.source_reference(
                             self.scheme.pk
-                        )
+                        ),
+                        const.CONCEPT_NAME_DATA_ASSIGNMENT_ACTOR_NODE: self.source_reference(
+                            other_scheme.pk
+                        ),
                     },
                 ),
                 (
                     self.label_tile.pk,
                     {
-                        const.CONCEPT_NAME_DATA_ASSIGNMENT_ACTOR_NODE: self.source_reference(
+                        const.CONCEPT_NAME_DATA_ASSIGNMENT_OBJ_USED_NODE: self.source_reference(
                             other_scheme.pk
                         )
+                        + self.source_reference(self.scheme.pk)
                     },
                 ),
             ],
@@ -435,8 +445,14 @@ class MergeIntoTiledataTests(DirectWriteTestCase):
 
         self.assertEqual(merged, 1)
         self.label_tile.refresh_from_db()
-        self.assertIn(
-            const.CONCEPT_NAME_DATA_ASSIGNMENT_OBJ_USED_NODE, self.label_tile.data
+        self.assertEqual(
+            [
+                reference["resourceId"]
+                for reference in self.label_tile.data[
+                    const.CONCEPT_NAME_DATA_ASSIGNMENT_OBJ_USED_NODE
+                ]
+            ],
+            [str(self.scheme.pk), str(other_scheme.pk)],
         )
         self.assertIn(
             const.CONCEPT_NAME_DATA_ASSIGNMENT_ACTOR_NODE, self.label_tile.data
@@ -593,3 +609,30 @@ class LoadDirectlyTests(DirectWriteTestCase):
             )
 
         self.assertEqual(counts, {"resources": 0, "tiles": 0})
+
+    @patch("arches_lingo.etl_modules.migrate_to_lingo.notify_completion")
+    def test_a_bypassed_load_is_recorded_as_complete(self, mock_notify_completion):
+        """The completion notice reads the load event, so a load that skips
+        staging has to mark it finished itself or is reported as failed."""
+        load_event = LoadEvent.objects.create(
+            user_id=1,
+            etl_module=ETLModule.objects.get(slug="migrate-to-lingo"),
+            status="running",
+        )
+        importer = LingoResourceImporter(
+            loadid=str(load_event.loadid), userid=1, bypass_staging=True
+        )
+        importer.log = silent
+        importer.thesaurus_name = "trumpets"
+        importer.schemes = []
+        importer.concepts = [self.make_concept(uuid.uuid4(), "trumpets")]
+
+        importer.run_load_task()
+
+        load_event.refresh_from_db()
+        self.assertEqual(load_event.status, "indexed")
+        self.assertTrue(load_event.complete)
+        self.assertTrue(load_event.successful)
+        self.assertEqual(
+            mock_notify_completion.call_args.args[0], "trumpets import completed"
+        )
