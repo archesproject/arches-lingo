@@ -30,6 +30,8 @@ from arches.app.models.models import (
     ResourceXResource,
     TileModel,
 )
+from arches.app.search.mappings import RESOURCES_INDEX
+from arches.app.search.search_engine_factory import SearchEngineInstance
 from arches.app.utils.betterJSONSerializer import JSONDeserializer
 from arches.app.utils.data_management.resource_graphs.importer import (
     import_graph as ResourceGraphImporter,
@@ -59,7 +61,9 @@ from arches_lingo.utils.aat.attribution_statement import (
     set_scheme_attribution,
 )
 from arches_lingo.utils.aat.deferred_indexing import (
+    index_resources,
     recalculate_descriptors_for_resources,
+    remove_resources_from_index,
 )
 from arches_lingo.utils.aat.progress import (
     iterate_with_progress,
@@ -74,6 +78,7 @@ from arches_lingo.utils.aat.resource_id_pinning import (
     write_resource_id_snapshot,
 )
 from arches_lingo.utils.aat.scheme_partition import (
+    list_scheme_partition_resource_ids,
     purge_scheme_partition,
     summarize_scheme_partition,
 )
@@ -232,6 +237,12 @@ class ResourceIdPinningAndPartitionTests(TestCase):
 
         self.assertEqual(row_count, 1)
         self.assertIn(f"http://vocab.getty.edu/aat/,{self.scheme.pk}", contents)
+
+    def test_partition_ids_include_the_scheme_and_its_concepts(self):
+        self.assertEqual(
+            list_scheme_partition_resource_ids(self.scheme.pk),
+            {self.scheme.pk, self.top_concept.pk},
+        )
 
     def test_summarize_reports_the_concept_alone(self):
         summary = summarize_scheme_partition(self.scheme.pk)
@@ -419,6 +430,15 @@ class PipelineOrchestrationTests(TestCase):
             "purge_scheme_partition": patch.object(pipeline, "purge_scheme_partition"),
             "call_command": patch.object(pipeline, "call_command"),
             "set_scheme_attribution": patch.object(pipeline, "set_scheme_attribution"),
+            "list_scheme_partition_resource_ids": patch.object(
+                pipeline,
+                "list_scheme_partition_resource_ids",
+                side_effect=[{"old-scheme-id", "retired-concept"}, {"old-scheme-id"}],
+            ),
+            "index_resources": patch.object(pipeline, "index_resources"),
+            "remove_resources_from_index": patch.object(
+                pipeline, "remove_resources_from_index"
+            ),
         }
         mocks = {name: entered.start() for name, entered in patches.items()}
         for entered in patches.values():
@@ -458,6 +478,41 @@ class PipelineOrchestrationTests(TestCase):
         self.assertEqual(
             mocks["purge_scheme_partition"].call_args.args[0], "old-scheme-id"
         )
+
+    def test_indexing_waits_for_the_end_state_and_drops_purged_resources(self):
+        """Attribution and concept types change the concept tiles after the
+        import, so indexing during the import would write stale documents."""
+        mocks = self._patch_steps(existing_scheme_id="old-scheme-id")
+
+        pipeline.load_aat(
+            "/tmp/aat-test",
+            archive_path="/tmp/aat-test/explicit.zip",
+            skip_indexing=False,
+            log=lambda message: None,
+        )
+
+        for step_call in mocks["call_command"].call_args_list[:2]:
+            self.assertTrue(step_call.kwargs["skip_indexing"])
+        mocks["remove_resources_from_index"].assert_called_once()
+        self.assertEqual(
+            mocks["remove_resources_from_index"].call_args.args[0],
+            {"retired-concept"},
+        )
+        self.assertEqual(mocks["index_resources"].call_args.args[0], ["old-scheme-id"])
+
+    def test_skipping_indexing_writes_nothing_to_the_index(self):
+        mocks = self._patch_steps(existing_scheme_id="old-scheme-id")
+
+        pipeline.load_aat(
+            "/tmp/aat-test",
+            archive_path="/tmp/aat-test/explicit.zip",
+            skip_indexing=True,
+            log=lambda message: None,
+        )
+
+        mocks["list_scheme_partition_resource_ids"].assert_not_called()
+        mocks["index_resources"].assert_not_called()
+        mocks["remove_resources_from_index"].assert_not_called()
 
     def test_reload_with_fresh_ids_still_replaces_the_scheme_in_place(self):
         """Pinning the scheme alone means fresh concept ids cannot leave the
@@ -986,6 +1041,44 @@ class DescriptorRecalculationTests(TestCase):
         concept.refresh_from_db()
         self.assertEqual(recalculated, 1)
         self.assertEqual(concept.descriptors["en"]["name"], "trumpets")
+
+
+class IndexingTests(TestCase):
+    """A purge removes rows with SQL, so their documents have to be removed
+    from the index separately."""
+
+    @classmethod
+    def setUpTestData(cls):
+        ViewTests.load_controlled_lists()
+        ViewTests.load_ontology()
+        ViewTests.load_graphs()
+
+    def indexed_document(self, resource_id):
+        SearchEngineInstance.refresh(index=RESOURCES_INDEX)
+        return SearchEngineInstance.search(
+            index=RESOURCES_INDEX, id=[str(resource_id)]
+        )["docs"][0]
+
+    def test_an_indexed_resource_can_be_removed_from_the_index(self):
+        concept = ResourceInstance.objects.create(graph_id=const.CONCEPTS_GRAPH_ID)
+        TileModel.objects.create(
+            resourceinstance=concept,
+            nodegroup_id=const.CONCEPT_NAME_NODEGROUP,
+            data={
+                const.CONCEPT_NAME_CONTENT_NODE: "trumpets",
+                const.CONCEPT_NAME_LANGUAGE_NODE: "en",
+            },
+        )
+
+        index_resources(
+            [concept.pk], recalculate_descriptors=True, log=lambda message: None
+        )
+        self.assertTrue(self.indexed_document(concept.pk)["found"])
+        concept.refresh_from_db()
+        self.assertEqual(concept.descriptors["en"]["name"], "trumpets")
+
+        remove_resources_from_index([concept.pk], log=lambda message: None)
+        self.assertFalse(self.indexed_document(concept.pk)["found"])
 
 
 class ProgressReportingTests(SimpleTestCase):

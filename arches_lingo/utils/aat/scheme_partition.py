@@ -6,6 +6,8 @@ resources that carry source and contributor attribution, and those are reachable
 only from the concepts that cite them.
 """
 
+import uuid
+
 from django.db import connection, transaction
 
 from arches_lingo import const
@@ -47,6 +49,32 @@ _SCHEME_ONLY_ATTRIBUTION_SQL = f"""
       AND graph.name ->> 'en' = ANY(%(attribution_graph_names)s)
 """
 
+_SCHEME_PARTITION_SQL = f"""
+    SELECT resourceinstanceid AS id FROM ({_CONCEPTS_IN_SCHEME_SQL}) concepts
+    UNION
+    SELECT target_id AS id FROM ({_SCHEME_ONLY_ATTRIBUTION_SQL}) attribution
+"""
+
+
+def _partition_query_parameters(scheme_resource_instance_id):
+    return {
+        "scheme_id": str(scheme_resource_instance_id),
+        "attribution_graph_names": list(ATTRIBUTION_GRAPH_NAMES),
+    }
+
+
+def list_scheme_partition_resource_ids(scheme_resource_instance_id):
+    """Return the ids of the scheme, its concepts and the attribution resources
+    only they cite."""
+    with connection.cursor() as cursor:
+        cursor.execute(
+            _SCHEME_PARTITION_SQL,
+            _partition_query_parameters(scheme_resource_instance_id),
+        )
+        partition_resource_ids = {resource_id for (resource_id,) in cursor.fetchall()}
+    partition_resource_ids.add(uuid.UUID(str(scheme_resource_instance_id)))
+    return partition_resource_ids
+
 
 def summarize_scheme_partition(scheme_resource_instance_id):
     """Return {model name: resource count} for everything purge would remove."""
@@ -54,19 +82,12 @@ def summarize_scheme_partition(scheme_resource_instance_id):
         cursor.execute(
             f"""
             SELECT graph.name ->> 'en' AS model_name, count(*)
-            FROM (
-                SELECT resourceinstanceid AS id FROM ({_CONCEPTS_IN_SCHEME_SQL}) concepts
-                UNION
-                SELECT target_id AS id FROM ({_SCHEME_ONLY_ATTRIBUTION_SQL}) attribution
-            ) doomed
+            FROM ({_SCHEME_PARTITION_SQL}) doomed
             JOIN resource_instances resource ON resource.resourceinstanceid = doomed.id
             JOIN graphs graph ON graph.graphid = resource.graphid
             GROUP BY 1 ORDER BY 2 DESC
             """,
-            {
-                "scheme_id": str(scheme_resource_instance_id),
-                "attribution_graph_names": list(ATTRIBUTION_GRAPH_NAMES),
-            },
+            _partition_query_parameters(scheme_resource_instance_id),
         )
         return {model_name: count for model_name, count in cursor.fetchall()}
 
@@ -83,21 +104,15 @@ def purge_scheme_partition(scheme_resource_instance_id, log=print):
     reaches a resource model it should never touch.
     """
     scheme_id = str(scheme_resource_instance_id)
-    query_parameters = {
-        "scheme_id": scheme_id,
-        "attribution_graph_names": list(ATTRIBUTION_GRAPH_NAMES),
-    }
 
     with connection.cursor() as cursor:
         cursor.execute(
             f"""
             DROP TABLE IF EXISTS doomed_resource;
             CREATE TEMP TABLE doomed_resource ON COMMIT DROP AS
-            SELECT resourceinstanceid AS id FROM ({_CONCEPTS_IN_SCHEME_SQL}) concepts
-            UNION
-            SELECT target_id AS id FROM ({_SCHEME_ONLY_ATTRIBUTION_SQL}) attribution
+            {_SCHEME_PARTITION_SQL}
             """,
-            query_parameters,
+            _partition_query_parameters(scheme_resource_instance_id),
         )
         cursor.execute("CREATE INDEX ON doomed_resource (id)")
 

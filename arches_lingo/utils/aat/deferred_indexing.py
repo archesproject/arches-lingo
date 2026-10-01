@@ -1,8 +1,9 @@
-"""Save an ETL load without writing to Elasticsearch.
+"""Control when a load writes to Elasticsearch.
 
 Arches' bulk loader always indexes at the end of a load, and indexing is the
 slowest part of importing a large vocabulary. Many Lingo deployments do not
-query Elasticsearch at all, so this offers the same save without it.
+query Elasticsearch at all, so this offers the same save without it, and lets
+a load that writes tiles directly index exactly the resources it wrote.
 
 Descriptors are still recalculated. They are what the interface displays as a
 resource's name, they live in the database rather than the index, and arches
@@ -20,7 +21,13 @@ from arches.app.etl_modules.save import (
     reenable_tile_triggers,
 )
 from arches.app.models.resource import Resource
-from arches.app.utils.index_database import optimize_resource_iteration
+from arches.app.search.elasticsearch_dsl_builder import Bool, Query, Terms
+from arches.app.search.mappings import RESOURCES_INDEX, TERMS_INDEX
+from arches.app.search.search_engine_factory import SearchEngineInstance
+from arches.app.utils.index_database import (
+    index_resources_using_singleprocessing,
+    optimize_resource_iteration,
+)
 
 from arches_lingo.utils.aat.progress import (
     iterate_with_progress,
@@ -28,11 +35,14 @@ from arches_lingo.utils.aat.progress import (
 )
 
 __all__ = [
+    "index_resources",
     "recalculate_descriptors_for_resources",
+    "remove_resources_from_index",
     "save_to_tiles_without_indexing",
 ]
 
 DESCRIPTOR_BATCH_SIZE = 1000
+INDEX_REMOVAL_BATCH_SIZE = 1000
 
 
 def recalculate_descriptors_for_resources(resource_ids, log=print):
@@ -44,6 +54,42 @@ def recalculate_descriptors_for_resources(resource_ids, log=print):
     """
     log(f"  recalculating descriptors for {len(resource_ids):,} resources ...")
     _recalculate_descriptors(resource_ids, show_progress=progress_reporting_is_useful())
+    return len(resource_ids)
+
+
+def index_resources(resource_ids, recalculate_descriptors=False, log=print):
+    """Write the given resources to Elasticsearch.
+
+    `recalculate_descriptors` refreshes descriptors in the same pass, which is
+    cheaper than recalculating them and then indexing separately.
+    """
+    log(f"  indexing {len(resource_ids):,} resources ...")
+    index_resources_using_singleprocessing(
+        Resource.objects.filter(pk__in=resource_ids),
+        quiet=not progress_reporting_is_useful(),
+        title="Indexing",
+        recalculate_descriptors=recalculate_descriptors,
+    )
+    return len(resource_ids)
+
+
+def remove_resources_from_index(resource_ids, log=print):
+    """Delete the resource and term documents of resources no longer in the db.
+
+    A purge removes rows with SQL, which leaves their documents behind, so a
+    reloaded vocabulary would otherwise keep returning retired concepts.
+    """
+    resource_ids = [str(resource_id) for resource_id in resource_ids]
+    for batch_start in range(0, len(resource_ids), INDEX_REMOVAL_BATCH_SIZE):
+        batch = resource_ids[batch_start : batch_start + INDEX_REMOVAL_BATCH_SIZE]
+        for index_name in (TERMS_INDEX, RESOURCES_INDEX):
+            query = Query(SearchEngineInstance)
+            bool_query = Bool()
+            bool_query.filter(Terms(field="resourceinstanceid", terms=batch))
+            query.add_query(bool_query)
+            query.delete(index=index_name)
+    if resource_ids:
+        log(f"  removed {len(resource_ids):,} purged resources from the index")
     return len(resource_ids)
 
 

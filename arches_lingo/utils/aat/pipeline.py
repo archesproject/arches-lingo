@@ -26,12 +26,17 @@ from arches_lingo.utils.aat.concept_types import (
     MissingConceptTypeItemsError,
     load_non_concept_type_items,
 )
+from arches_lingo.utils.aat.deferred_indexing import (
+    index_resources,
+    remove_resources_from_index,
+)
 from arches_lingo.utils.aat.languages import (
     ensure_languages,
     repair_colliding_language_names,
 )
 from arches_lingo.utils.aat.resource_id_pinning import write_resource_id_snapshot
 from arches_lingo.utils.aat.scheme_partition import (
+    list_scheme_partition_resource_ids,
     purge_scheme_partition,
     summarize_scheme_partition,
 )
@@ -137,6 +142,7 @@ def load_aat(
     check_reference_data_is_loaded()
 
     existing_scheme_id = find_existing_aat_scheme_id(scheme_identifier_uri)
+    step_count = 6 if skip_indexing else 7
 
     os.makedirs(working_directory, exist_ok=True)
     skos_path = os.path.join(working_directory, SKOS_FILENAME)
@@ -155,7 +161,7 @@ def load_aat(
     if extraction_date:
         log(f"Getty export was built on {extraction_date.isoformat()}")
 
-    log("[1/6] Converting the Getty export to SKOS ...")
+    log(f"[1/{step_count}] Converting the Getty export to SKOS ...")
     concept_count = convert_archive_to_skos(
         archive_path,
         skos_path,
@@ -165,12 +171,12 @@ def load_aat(
         log=log,
     )
 
-    log("[2/6] Extracting source and contributor attribution ...")
+    log(f"[2/{step_count}] Extracting source and contributor attribution ...")
     extract_attribution_from_archive(
         archive_path, attribution_path, show_progress=show_progress, log=log
     )
 
-    log("[3/6] Ensuring the languages the data uses exist ...")
+    log(f"[3/{step_count}] Ensuring the languages the data uses exist ...")
     ensure_languages(skos_path, log=log)
     repair_colliding_language_names(log=log)
 
@@ -185,11 +191,16 @@ def load_aat(
         pinned_ids_path = snapshot_path
         log(f"Snapshotted {snapshot_count:,} existing resource ids")
 
-    log(f"[4/6] Importing {concept_count:,} concepts ...")
+    log(f"[4/{step_count}] Importing {concept_count:,} concepts ...")
     # Removing the previous load and writing the new one share a transaction so
     # a failed import leaves the vocabulary as it was rather than deleted.
+    previous_resource_ids = set()
     with transaction.atomic():
         if existing_scheme_id:
+            if not skip_indexing:
+                previous_resource_ids = list_scheme_partition_resource_ids(
+                    existing_scheme_id
+                )
             for model_name, count in summarize_scheme_partition(
                 existing_scheme_id
             ).items():
@@ -205,25 +216,39 @@ def load_aat(
             pin_resource_ids=pinned_ids_path,
             celery_byte_size_limit=AAT_CELERY_BYTE_SIZE_LIMIT,
             lifecycle_state_id=lifecycle_state_id,
-            skip_indexing=skip_indexing,
+            skip_indexing=True,
             bypass_staging=True,
         )
 
-    log("[5/6] Loading source and contributor attribution ...")
+    log(f"[5/{step_count}] Loading source and contributor attribution ...")
     call_command(
         "load_aat_sources",
         source=attribution_path,
-        skip_indexing=skip_indexing,
+        skip_indexing=True,
         no_progress=show_progress is False,
     )
 
-    log("[6/6] Assigning concept types ...")
+    log(f"[6/{step_count}] Assigning concept types ...")
     call_command("update_aat_concept_types", source=skos_path)
 
     loaded_scheme_id = find_existing_aat_scheme_id(scheme_identifier_uri)
     if loaded_scheme_id and extraction_date:
         set_scheme_attribution(loaded_scheme_id, build_aat_attribution(extraction_date))
         log("Recorded the Getty attribution statement on the scheme")
+
+    # Indexing waits until the attribution and concept type steps have changed
+    # the concept tiles, so each document is written once, from the end state.
+    if not skip_indexing:
+        log(f"[7/{step_count}] Indexing the loaded resources ...")
+        loaded_resource_ids = (
+            list_scheme_partition_resource_ids(loaded_scheme_id)
+            if loaded_scheme_id
+            else set()
+        )
+        remove_resources_from_index(
+            previous_resource_ids - loaded_resource_ids, log=log
+        )
+        index_resources(list(loaded_resource_ids), log=log)
 
     if downloaded_archive_path and os.path.exists(downloaded_archive_path):
         os.unlink(downloaded_archive_path)

@@ -610,29 +610,53 @@ class LoadDirectlyTests(DirectWriteTestCase):
 
         self.assertEqual(counts, {"resources": 0, "tiles": 0})
 
-    @patch("arches_lingo.etl_modules.migrate_to_lingo.notify_completion")
-    def test_a_bypassed_load_is_recorded_as_complete(self, mock_notify_completion):
-        """The completion notice reads the load event, so a load that skips
-        staging has to mark it finished itself or is reported as failed."""
+    def run_bypassed_load(self, resource_id, skip_indexing):
         load_event = LoadEvent.objects.create(
             user_id=1,
             etl_module=ETLModule.objects.get(slug="migrate-to-lingo"),
             status="running",
         )
         importer = LingoResourceImporter(
-            loadid=str(load_event.loadid), userid=1, bypass_staging=True
+            loadid=str(load_event.loadid),
+            userid=1,
+            bypass_staging=True,
+            skip_indexing=skip_indexing,
         )
         importer.log = silent
         importer.thesaurus_name = "trumpets"
         importer.schemes = []
-        importer.concepts = [self.make_concept(uuid.uuid4(), "trumpets")]
-
+        importer.concepts = [self.make_concept(resource_id, "trumpets")]
         importer.run_load_task()
-
         load_event.refresh_from_db()
+        return load_event
+
+    @patch("arches_lingo.etl_modules.migrate_to_lingo.index_resources")
+    @patch("arches_lingo.etl_modules.migrate_to_lingo.notify_completion")
+    def test_a_bypassed_load_is_recorded_as_complete(
+        self, mock_notify_completion, mock_index_resources
+    ):
+        """The completion notice reads the load event, so a load that skips
+        staging has to mark it finished itself or is reported as failed."""
+        load_event = self.run_bypassed_load(uuid.uuid4(), skip_indexing=True)
+
         self.assertEqual(load_event.status, "indexed")
         self.assertTrue(load_event.complete)
         self.assertTrue(load_event.successful)
         self.assertEqual(
             mock_notify_completion.call_args.args[0], "trumpets import completed"
+        )
+        mock_index_resources.assert_not_called()
+
+    @patch("arches_lingo.etl_modules.migrate_to_lingo.index_resources")
+    @patch("arches_lingo.etl_modules.migrate_to_lingo.notify_completion")
+    def test_a_bypassed_load_indexes_what_it_wrote_unless_told_not_to(
+        self, mock_notify_completion, mock_index_resources
+    ):
+        resource_id = uuid.uuid4()
+
+        self.run_bypassed_load(resource_id, skip_indexing=False)
+
+        self.assertEqual(mock_index_resources.call_args.args[0], [resource_id])
+        self.assertTrue(
+            mock_index_resources.call_args.kwargs["recalculate_descriptors"]
         )
