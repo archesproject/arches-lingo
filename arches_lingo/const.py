@@ -73,6 +73,10 @@ RELATION_STATUS_DATA_ASSIGNMENT_TYPE_NODEID = "09aa0568-1772-11ef-b270-0a58a9fea
 ### Scheme Model Nodes & Nodegroups ###
 SCHEMES_GRAPH_ID = "56788995-423b-11ee-8a8d-11afefc4bff7"
 
+# uri
+SCHEME_URI_NODEGROUP = "7fdc87bb-6ef9-4a74-8e84-4bde69557eef"
+SCHEME_URI_CONTENT_NODE = "1bd0f20b-b945-4231-b872-cba02cc4bc25"
+
 # appellative_status
 SCHEME_NAME_NODEGROUP = "ef87ac28-11de-11ef-9493-0a58a9feac02"
 # appellative_status_ascribed_name_content
@@ -81,6 +85,8 @@ SCHEME_NAME_CONTENT_NODE = "ef87b132-11de-11ef-9493-0a58a9feac02"
 SCHEME_NAME_LANGUAGE_NODE = "ef87b43e-11de-11ef-9493-0a58a9feac02"
 # appellative_status_ascribed_relation
 SCHEME_NAME_TYPE_NODE = "ef87b588-11de-11ef-9493-0a58a9feac02"
+SCHEME_NAME_DATA_ASSIGNMENT_ACTOR_NODE = "ef87b1d2-11de-11ef-9493-0a58a9feac02"
+SCHEME_NAME_DATA_ASSIGNMENT_OBJ_USED_NODE = "ef87b4de-11de-11ef-9493-0a58a9feac02"
 
 # identifier
 SCHEME_IDENTIFIER_NODEGROUP = "8e34b47f-423c-11ee-8a8d-11afefc4bff7"
@@ -89,16 +95,25 @@ SCHEME_IDENTIFIER_LABEL_NODE = "8e34b485-423c-11ee-8a8d-11afefc4bff7"
 SCHEME_IDENTIFIER_TYPE_NODE = "ab983648-0f65-11ef-9493-0a58a9feac02"
 SCHEME_IDENTIFIER_TYPE_LIST_ITEM_ID = "9baf3cd5-33d4-4fbc-b1d1-a2d218732f1e"
 
+# statement (notes)
+SCHEME_STATEMENT_NODEGROUP = "7131bc72-11e0-11ef-9493-0a58a9feac02"
+SCHEME_STATEMENT_DATA_ASSIGNMENT_ACTOR_NODE = "7131c83e-11e0-11ef-9493-0a58a9feac02"
+SCHEME_STATEMENT_DATA_ASSIGNMENT_OBJ_USED_NODE = "7131c8ca-11e0-11ef-9493-0a58a9feac02"
+
 
 ### Lists and List Items ###
-LABEL_LIST_ID = "deb847fc-f4c3-4e82-be19-04641579f129"
 EVENT_TYPES_LIST_ID = "6eaa2c6f-af83-464c-9200-051c4cfe7e8e"
+IDENTIFIER_TYPES_LIST_ID = "a8da34eb-575b-498c-ada7-161ee745fd16"
+LABEL_LIST_ID = "deb847fc-f4c3-4e82-be19-04641579f129"
 METATYPES_LIST_ID = "ef69e772-de53-45fe-98d4-bf3e7b10eb57"
+RELATED_PROPERTIES_LIST_ID = "ed3f8d46-c372-4c99-a326-8f726076fb97"
+CONCEPT_TYPE_LIST_ID = "4f9b2c82-59c6-4173-99ea-2a6bfbab6aa2"
 
 
 ### URIs ###
 GUIDE_TERM_URI = "http://vocab.getty.edu/page/aat/300386700"
 HIERARCHY_NAME_URI = "http://vocab.getty.edu/ontology#HierarchyNode"
+FACET_URI = "http://vocab.getty.edu/ontology#Facet"
 
 ### Ontology Properties
 TOP_CONCEPT_OF_ONTOLOGY_PROPERTY = "http://www.w3.org/2004/02/skos/core#topConceptOf"

@@ -8,20 +8,1051 @@
   <skos:Concept rdf:about="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d">
     <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</arches:sortorder>
     <skos:prefLabel xml:lang="en">related</skos:prefLabel>
-    <skos:narrower>
-      <skos:Concept rdf:about="http://localhost:8000/68792506-7b45-4008-9a12-15d63ea18f29">
-        <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</arches:sortorder>
-        <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
-        <dcterms:identifier>http://www.w3.org/2004/02/skos/core#relatedMatch</dcterms:identifier>
-        <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
-        <skos:prefLabel xml:lang="en">relatedMatch</skos:prefLabel>
-      </skos:Concept>
-    </skos:narrower>
     <dcterms:identifier>http://www.w3.org/2004/02/skos/core#related</dcterms:identifier>
     <skos:inScheme>
       <skos:ConceptScheme rdf:about="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97">
         <dcterms:title>related properties</dcterms:title>
       </skos:ConceptScheme>
     </skos:inScheme>
+    <skos:narrower rdf:resource="http://localhost:8000/68792506-7b45-4008-9a12-15d63ea18f29"/>
+    <skos:narrower rdf:resource="http://localhost:8000/fe4b6d04-69cc-5e5c-bd02-953904856051"/>
+    <skos:narrower rdf:resource="http://localhost:8000/a2e5a1b7-0031-531e-ab90-48524e02c0aa"/>
+    <skos:narrower rdf:resource="http://localhost:8000/3a7007f4-d4dd-59e2-b083-fb91c00abd61"/>
+    <skos:narrower rdf:resource="http://localhost:8000/e2f41f15-a532-5044-994c-8d5b086dc4a0"/>
+    <skos:narrower rdf:resource="http://localhost:8000/2720a742-34c6-51d4-abf2-8e46ac219141"/>
+    <skos:narrower rdf:resource="http://localhost:8000/f58b4d0e-2408-54e9-b726-5426ec21c8d9"/>
+    <skos:narrower rdf:resource="http://localhost:8000/29cd561b-1dd8-5549-9c16-bad5ce783346"/>
+    <skos:narrower rdf:resource="http://localhost:8000/39835a46-3fb9-56b6-bde7-4151f4813e88"/>
+    <skos:narrower rdf:resource="http://localhost:8000/5d2fefe8-b43d-5b83-9faf-7063b678a85a"/>
+    <skos:narrower rdf:resource="http://localhost:8000/115f63c2-1ee9-5f13-93c3-a5e5f29bd179"/>
+    <skos:narrower rdf:resource="http://localhost:8000/e891c50d-b513-5fba-8658-329e1afa1e54"/>
+    <skos:narrower rdf:resource="http://localhost:8000/7ddc357d-28bd-57b4-b325-d6169280ac5f"/>
+    <skos:narrower rdf:resource="http://localhost:8000/7eeb8c5b-67f7-51c4-a22f-7ea5bbe5313b"/>
+    <skos:narrower rdf:resource="http://localhost:8000/cba15977-790b-541d-9b8b-c05b0a526755"/>
+    <skos:narrower rdf:resource="http://localhost:8000/7846fca2-40c8-5c5f-b88c-9db1316195a2"/>
+    <skos:narrower rdf:resource="http://localhost:8000/7e7f00f3-c487-5339-831e-82cdb81a8437"/>
+    <skos:narrower rdf:resource="http://localhost:8000/63543a30-719a-5c11-b262-65dee6206838"/>
+    <skos:narrower rdf:resource="http://localhost:8000/2a7c6145-bea1-5cdc-8f38-bdefc36397da"/>
+    <skos:narrower rdf:resource="http://localhost:8000/01c8e069-6967-5417-87a8-7bc07fc9d48b"/>
+    <skos:narrower rdf:resource="http://localhost:8000/1db1545d-bd8b-59b2-ba60-92d1bab7eb25"/>
+    <skos:narrower rdf:resource="http://localhost:8000/b055a164-ac7f-56e1-804f-f30a6f00dae1"/>
+    <skos:narrower rdf:resource="http://localhost:8000/38b0743c-ff4a-52f3-bfe4-697126541f56"/>
+    <skos:narrower rdf:resource="http://localhost:8000/d7dbc0e9-8e24-5dab-88b2-a5a912aa5c55"/>
+    <skos:narrower rdf:resource="http://localhost:8000/dab67170-2b35-5069-893e-dc75eb1a7bae"/>
+    <skos:narrower rdf:resource="http://localhost:8000/e0e03787-cb75-519a-9bb1-55381dff2698"/>
+    <skos:narrower rdf:resource="http://localhost:8000/28363432-a35f-57cb-8357-8189abf486c4"/>
+    <skos:narrower rdf:resource="http://localhost:8000/78145384-81df-5a1b-be99-98ec9a99f560"/>
+    <skos:narrower rdf:resource="http://localhost:8000/bfd1d61d-f08f-5ace-bc23-a77cf942b638"/>
+    <skos:narrower rdf:resource="http://localhost:8000/87dca8e8-e070-5371-92a6-641d85189721"/>
+    <skos:narrower rdf:resource="http://localhost:8000/47c2a798-2615-5313-a89e-e1a7d6afa609"/>
+    <skos:narrower rdf:resource="http://localhost:8000/d4649b81-9b92-5380-9fa1-9d15eb024f2d"/>
+    <skos:narrower rdf:resource="http://localhost:8000/3d9c5c4a-1c3c-51f6-856f-855fe4eb9386"/>
+    <skos:narrower rdf:resource="http://localhost:8000/07e2f5e5-0769-5049-832b-bf2c4e6c1002"/>
+    <skos:narrower rdf:resource="http://localhost:8000/9f71027d-7f33-5263-91f9-72202e3c439c"/>
+    <skos:narrower rdf:resource="http://localhost:8000/2a772a7e-d93c-5594-ba2b-b4ead3a9ea52"/>
+    <skos:narrower rdf:resource="http://localhost:8000/69bef1fa-4b43-53cd-88b3-ae263b05b2bc"/>
+    <skos:narrower rdf:resource="http://localhost:8000/6245a6a4-66b0-5b1c-8fca-29c14a599daf"/>
+    <skos:narrower rdf:resource="http://localhost:8000/89052a88-5722-5def-b3e1-cbdc3e9d5cf5"/>
+    <skos:narrower rdf:resource="http://localhost:8000/f4421b8a-ccc1-5b5b-b71b-2eafc8893c7c"/>
+    <skos:narrower rdf:resource="http://localhost:8000/2ffbe38a-17d5-5730-9547-8d5836fc574a"/>
+    <skos:narrower rdf:resource="http://localhost:8000/dad48525-df2f-58eb-93d3-7b6bea4d7328"/>
+    <skos:narrower rdf:resource="http://localhost:8000/b6317448-611b-5d31-85e5-b87425d83d52"/>
+    <skos:narrower rdf:resource="http://localhost:8000/85b1e9a4-d010-53d1-ae7c-30c1fdfe4f1c"/>
+    <skos:narrower rdf:resource="http://localhost:8000/bcf2e0d4-3033-5b12-811d-a2031ecbc868"/>
+    <skos:narrower rdf:resource="http://localhost:8000/d7cda280-04b7-5ec5-afc6-0067db77a2c6"/>
+    <skos:narrower rdf:resource="http://localhost:8000/7a6861b8-c58d-5669-bd2c-1a64e166fb4e"/>
+    <skos:narrower rdf:resource="http://localhost:8000/5d8edecc-b8e7-5ce9-ab8a-d15fbb15d176"/>
+    <skos:narrower rdf:resource="http://localhost:8000/ec40c564-c1d7-5f65-98aa-407bbcbd3c65"/>
+    <skos:narrower rdf:resource="http://localhost:8000/014a28b8-3247-582a-96a6-622fa1de5c04"/>
+    <skos:narrower rdf:resource="http://localhost:8000/0877c575-3a84-5bf9-9a23-c69b60b1b921"/>
+    <skos:narrower rdf:resource="http://localhost:8000/56d97ed7-8bf4-5bce-ba58-cca017356986"/>
+    <skos:narrower rdf:resource="http://localhost:8000/8bb01101-5cde-571c-bf2f-5b3af7fa144f"/>
+    <skos:narrower rdf:resource="http://localhost:8000/773fb857-331c-5cff-9f5b-a0551b7a1ece"/>
+    <skos:narrower rdf:resource="http://localhost:8000/87e5d068-75ba-5c1c-b03c-83d25283857f"/>
+    <skos:narrower rdf:resource="http://localhost:8000/323c0f07-08c6-5715-bb6e-84097b139f3d"/>
+    <skos:narrower rdf:resource="http://localhost:8000/312d3a25-a7f2-52f7-ba55-d1c11650c156"/>
+    <skos:narrower rdf:resource="http://localhost:8000/628cf58e-93ad-5788-afd9-179a9f19baf1"/>
+    <skos:narrower rdf:resource="http://localhost:8000/3637341d-f74b-59db-ae8c-b0883d2828d8"/>
+    <skos:narrower rdf:resource="http://localhost:8000/38b85879-f40c-5630-9c11-742d4fb73e17"/>
+    <skos:narrower rdf:resource="http://localhost:8000/a3c0a27a-5106-5bae-8cea-1aebc74b2352"/>
+    <skos:narrower rdf:resource="http://localhost:8000/fa0570f0-5872-5b71-a3eb-0ff1c82ec8b2"/>
+    <skos:narrower rdf:resource="http://localhost:8000/004ee6a2-911a-57ea-ac51-1967d79e0f24"/>
+    <skos:narrower rdf:resource="http://localhost:8000/4899a08f-b97a-5d76-abc6-1fd1a433fbeb"/>
+    <skos:narrower rdf:resource="http://localhost:8000/3b4dc13f-0bbe-5041-9216-f4efab3fd4e4"/>
+    <skos:narrower rdf:resource="http://localhost:8000/88e5c9a3-d14f-5d2b-aa5b-0cda147f3b25"/>
+    <skos:narrower rdf:resource="http://localhost:8000/6d8e6da2-62e6-5562-8d8c-865ed778dcce"/>
+    <skos:narrower rdf:resource="http://localhost:8000/46018a9f-409f-5242-b820-65225ae019f1"/>
+    <skos:narrower rdf:resource="http://localhost:8000/92cb35d0-7e88-5b72-86b0-0d7d1d336703"/>
+    <skos:narrower rdf:resource="http://localhost:8000/ebbe4de6-08f5-50bc-befb-d1a6f04f63b0"/>
+    <skos:narrower rdf:resource="http://localhost:8000/492132a1-8ae5-59f6-a790-c16b3a18ee3c"/>
+    <skos:narrower rdf:resource="http://localhost:8000/18299195-b619-5843-92f2-d10f52b4ab7c"/>
+    <skos:narrower rdf:resource="http://localhost:8000/33663cba-0124-5050-bec8-5f799d658ecd"/>
+    <skos:narrower rdf:resource="http://localhost:8000/e4327a8a-2cbb-5580-85d8-ba5cbd2a7505"/>
+    <skos:narrower rdf:resource="http://localhost:8000/f6dac304-6ff7-5181-9ad1-f6c30a90e680"/>
+    <skos:narrower rdf:resource="http://localhost:8000/16fe5eb8-8455-5d66-8509-0411a586b1db"/>
+    <skos:narrower rdf:resource="http://localhost:8000/f7abc183-a457-56e1-bf99-82a7d1d871cd"/>
+    <skos:narrower rdf:resource="http://localhost:8000/628a1d7c-ff0e-5bda-b87d-a7c1b0a2bbac"/>
+    <skos:narrower rdf:resource="http://localhost:8000/99e29112-ef8f-510c-9c80-72e6fd5f8f12"/>
+    <skos:narrower rdf:resource="http://localhost:8000/bdbc7a29-640a-5c6c-a5fc-65992df534e8"/>
+    <skos:narrower rdf:resource="http://localhost:8000/48cba120-d897-5224-b878-b4ce1849dd7a"/>
+    <skos:narrower rdf:resource="http://localhost:8000/e61590ca-3922-5d22-9da3-dc7b66d81806"/>
+    <skos:narrower rdf:resource="http://localhost:8000/fce8b5dd-af26-587d-b82b-b5940d3e8c8e"/>
+    <skos:narrower rdf:resource="http://localhost:8000/2744623f-8c19-575b-b147-2a20afc892f8"/>
+    <skos:narrower rdf:resource="http://localhost:8000/4cd07afb-f79d-5ae5-9acd-8b8d6d21db38"/>
+    <skos:narrower rdf:resource="http://localhost:8000/b752ff40-d488-5051-a63d-10a387d29cbf"/>
+    <skos:narrower rdf:resource="http://localhost:8000/f00b7390-d184-5b8c-9f6c-28ad1b91a55f"/>
+    <skos:narrower rdf:resource="http://localhost:8000/3c93dae0-5246-5431-a6e4-e62b8f8daffa"/>
+    <skos:narrower rdf:resource="http://localhost:8000/57eecfaf-4281-5c49-88e8-8369327d9635"/>
+    <skos:narrower rdf:resource="http://localhost:8000/06be7ace-1bdf-5482-938b-40cd01c47100"/>
+    <skos:narrower rdf:resource="http://localhost:8000/ff8887f5-5812-571a-927d-dbfa73dc28ef"/>
+    <skos:narrower rdf:resource="http://localhost:8000/c99d3df8-3120-5e5b-ba7c-fc1ec718e4e7"/>
+    <skos:narrower rdf:resource="http://localhost:8000/b9a1d5c8-38e3-5322-b5a8-6ff48f7fbd93"/>
+    <skos:narrower rdf:resource="http://localhost:8000/60b2e8bf-da6c-593c-80a6-3d70a385752e"/>
+    <skos:narrower rdf:resource="http://localhost:8000/48814256-2165-5137-8a63-feeb87ed2e8f"/>
+    <skos:narrower rdf:resource="http://localhost:8000/0e1b57e0-d341-514c-a01f-ae6d9d010476"/>
+    <skos:narrower rdf:resource="http://localhost:8000/30317abd-278b-568c-9ac6-da65ec448e92"/>
+    <skos:narrower rdf:resource="http://localhost:8000/97fdb7f0-52c3-59d4-b7f3-d904d1a2c77c"/>
+    <skos:narrower rdf:resource="http://localhost:8000/0bf2ec14-7360-5ebc-853a-e7a6493cf2c0"/>
+    <skos:narrower rdf:resource="http://localhost:8000/7f2460b4-e619-5834-846d-7dfc2d42a744"/>
+    <skos:narrower rdf:resource="http://localhost:8000/c8a26c42-a9a0-5960-9456-9651f93a4ace"/>
+    <skos:narrower rdf:resource="http://localhost:8000/96f63a41-9373-514e-b91b-8b69a197cb57"/>
+    <skos:narrower rdf:resource="http://localhost:8000/9f6b0adf-edc2-5178-bdb1-5761c51d799d"/>
+    <skos:narrower rdf:resource="http://localhost:8000/965497dd-f160-5768-b4c8-df22890aba1e"/>
+    <skos:narrower rdf:resource="http://localhost:8000/ad3cb8be-655f-5fca-b742-b855349d0ce6"/>
+    <skos:narrower rdf:resource="http://localhost:8000/763f7088-9cc7-564d-98c6-604450244952"/>
+    <skos:narrower rdf:resource="http://localhost:8000/bd3df498-b137-5b46-ac26-e879ab69c8ef"/>
+    <skos:narrower rdf:resource="http://localhost:8000/9c372b31-5d55-5700-a582-03736a7681b8"/>
+    <skos:narrower rdf:resource="http://localhost:8000/2938b01a-8dee-5efb-a839-0e347990802c"/>
+    <skos:narrower rdf:resource="http://localhost:8000/27fc9b78-7535-50ae-b741-2e85e7ac60fe"/>
+    <skos:narrower rdf:resource="http://localhost:8000/0e43c2f4-6660-5ad4-976e-819dce718bfb"/>
+    <skos:narrower rdf:resource="http://localhost:8000/6b756779-5211-5583-b635-6793c3eb5754"/>
+    <skos:narrower rdf:resource="http://localhost:8000/dc34bfc1-e81c-5f7c-9dd6-7b6db0ae22d7"/>
+    <skos:narrower rdf:resource="http://localhost:8000/3e2a33c8-4e5c-5b13-99d1-957004816038"/>
+    <skos:narrower rdf:resource="http://localhost:8000/207d28ab-2aaa-592a-9ef7-0619afa30fd4"/>
+    <skos:narrower rdf:resource="http://localhost:8000/e4d2690b-fe17-5a3a-a61b-64a34a86a463"/>
+    <skos:narrower rdf:resource="http://localhost:8000/833336d3-ebfc-50de-9854-6c1f8f0bc585"/>
+    <skos:narrower rdf:resource="http://localhost:8000/cc774c6f-150d-583b-9c48-f5131135362a"/>
+    <skos:narrower rdf:resource="http://localhost:8000/f371e816-c315-57e2-9637-ea75d5757a58"/>
+    <skos:narrower rdf:resource="http://localhost:8000/abfbdb59-87ba-583a-a8c2-9f67d072fd00"/>
+    <skos:narrower rdf:resource="http://localhost:8000/58be504a-f154-5f61-bb89-094a57a42962"/>
+    <skos:narrower rdf:resource="http://localhost:8000/439489f6-b1d5-56a0-a09d-d3ec19372417"/>
+    <skos:narrower rdf:resource="http://localhost:8000/d871c29b-69bf-5f9a-bb84-4052093767f8"/>
+    <skos:narrower rdf:resource="http://localhost:8000/23347cf8-257c-510f-84b7-9091dd4012bd"/>
+    <skos:narrower rdf:resource="http://localhost:8000/a3abbff4-301a-5871-80de-f77a17ea8ef7"/>
+    <skos:narrower rdf:resource="http://localhost:8000/09bb7e3c-a87a-5298-a99c-89311311885b"/>
+    <skos:narrower rdf:resource="http://localhost:8000/69508c38-a4a5-5df3-aa3a-538cee727f8b"/>
+    <skos:narrower rdf:resource="http://localhost:8000/c3ea926b-df1e-5d7e-adee-52690397934b"/>
+    <skos:narrower rdf:resource="http://localhost:8000/90e8083f-bd84-5016-881a-a0f5b7b8d088"/>
+    <skos:narrower rdf:resource="http://localhost:8000/294acdd1-cb8b-5d63-b4cb-1d821204669c"/>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/68792506-7b45-4008-9a12-15d63ea18f29">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <dcterms:identifier>http://www.w3.org/2004/02/skos/core#relatedMatch</dcterms:identifier>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <skos:prefLabel xml:lang="en">relatedMatch</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/fe4b6d04-69cc-5e5c-bd02-953904856051">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2000_related_to</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">related to - any</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/a2e5a1b7-0031-531e-ab90-48524e02c0aa">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">3</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2001_formerly_referred_to</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">formerly referred to - any</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/3a7007f4-d4dd-59e2-b083-fb91c00abd61">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2100_distinguished_from</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">distinguished from - any</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/e2f41f15-a532-5044-994c-8d5b086dc4a0">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">5</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2110_meaning-usage_overlaps_with</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">meaning/usage overlaps with - any</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/2720a742-34c6-51d4-abf2-8e46ac219141">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">6</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2203_associated_with</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">associated with - activity/event</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/f58b4d0e-2408-54e9-b726-5426ec21c8d9">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">7</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2205_causes-is_required</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">causes/is required - activity/event</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/29cd561b-1dd8-5549-9c16-bad5ce783346">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">8</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2206_caused_by-requires</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">caused by/requires - activity/event</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/39835a46-3fb9-56b6-bde7-4151f4813e88">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">9</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2208_locus-setting_for</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">locus/setting for - things</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/5d2fefe8-b43d-5b83-9faf-7063b678a85a">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">10</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2209_used-located_in</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">used/located in - locus/setting</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/115f63c2-1ee9-5f13-93c3-a5e5f29bd179">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">11</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2211_produce</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">produce - things</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/e891c50d-b513-5fba-8658-329e1afa1e54">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">12</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2212_produced_by</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">produced by - things</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/7ddc357d-28bd-57b4-b325-d6169280ac5f">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">13</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2215_required_for</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">required for - things</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/7eeb8c5b-67f7-51c4-a22f-7ea5bbe5313b">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">14</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2216_require</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">require - things</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/cba15977-790b-541d-9b8b-c05b0a526755">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">15</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2218_used-function_as</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">used/function as - things</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/7846fca2-40c8-5c5f-b88c-9db1316195a2">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">16</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2219_have_form</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">have form - things</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/7e7f00f3-c487-5339-831e-82cdb81a8437">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">17</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2221_act_upon</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">act upon - genus/species</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/63543a30-719a-5c11-b262-65dee6206838">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">18</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2222_are_acted_upon</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">are acted upon - role</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/2a7c6145-bea1-5cdc-8f38-bdefc36397da">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">19</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2281_have_counterpart</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">have counterpart - role</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/01c8e069-6967-5417-87a8-7bc07fc9d48b">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">20</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2285_practiced-studied_by</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">practiced/studied by - role</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/1db1545d-bd8b-59b2-ba60-92d1bab7eb25">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">21</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2286_practice-study</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">practice/study - field/discipline</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/b055a164-ac7f-56e1-804f-f30a6f00dae1">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">22</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2291_locus-setting_for</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">locus/setting for - role</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/38b0743c-ff4a-52f3-bfe4-697126541f56">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">23</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2292_work-live_in</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">work/live in - locus/setting</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/d7dbc0e9-8e24-5dab-88b2-a5a912aa5c55">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">24</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2294_locus-setting_for</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">locus/setting for - locus/setting</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/dab67170-2b35-5069-893e-dc75eb1a7bae">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">25</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2295_located_in</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">located in - locus/setting</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/e0e03787-cb75-519a-9bb1-55381dff2698">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">26</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2311_performed_by</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">performed by - role</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/28363432-a35f-57cb-8357-8189abf486c4">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">27</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2312_perform</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">perform - activity/event</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/78145384-81df-5a1b-be99-98ec9a99f560">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">28</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2315_used_by</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">used by - role</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/bfd1d61d-f08f-5ace-bc23-a77cf942b638">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">29</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2316_use</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">use - material</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/87dca8e8-e070-5371-92a6-641d85189721">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">30</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2318_involved_in</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">involved in - activity/event</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/47c2a798-2615-5313-a89e-e1a7d6afa609">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">31</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2319_involves</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">involves - role</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/d4649b81-9b92-5380-9fa1-9d15eb024f2d">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">32</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2321_used_by</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">used by - role</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/3d9c5c4a-1c3c-51f6-856f-855fe4eb9386">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">33</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2322_use</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">use - things</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/07e2f5e5-0769-5049-832b-bf2c4e6c1002">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">34</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2325_created_by</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">created by - role</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/9f71027d-7f33-5263-91f9-72202e3c439c">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">35</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2326_create</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">create - things</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/2a772a7e-d93c-5594-ba2b-b4ead3a9ea52">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">36</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2328_involved_with</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">involved with - things</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/69bef1fa-4b43-53cd-88b3-ae263b05b2bc">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">37</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2329_involves</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">involves - role</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/6245a6a4-66b0-5b1c-8fca-29c14a599daf">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">38</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2332_affiliated_with</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">affiliated with - role</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/89052a88-5722-5def-b3e1-cbdc3e9d5cf5">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">39</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2333_have_affiliates</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">have affiliates - role</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/f4421b8a-ccc1-5b5b-b71b-2eafc8893c7c">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">40</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2335_associated_with</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">associated with - style/period/culture</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/2ffbe38a-17d5-5730-9547-8d5836fc574a">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">41</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2336_has_associates</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">has associates - role</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/dad48525-df2f-58eb-93d3-7b6bea4d7328">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">42</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2397_focus_of</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">focus of - field/discipline</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/b6317448-611b-5d31-85e5-b87425d83d52">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">43</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2398_focuses_on</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">focuses on - any</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/85b1e9a4-d010-53d1-ae7c-30c1fdfe4f1c">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">44</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2408_locus-setting_for</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">locus/setting for - field/discipline</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/bcf2e0d4-3033-5b12-811d-a2031ecbc868">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">45</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2409_takes_place_in</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">takes place in - locus/setting</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/d7cda280-04b7-5ec5-afc6-0067db77a2c6">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">46</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2411_involved_in</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">involved in - field/discipline</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/7a6861b8-c58d-5669-bd2c-1a64e166fb4e">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">47</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2412_involves</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">involves - activity/event</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/5d8edecc-b8e7-5ce9-ab8a-d15fbb15d176">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">48</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2415_required_for</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">required for - activity/event</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/ec40c564-c1d7-5f65-98aa-407bbcbd3c65">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">49</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2416_requires</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">requires - material</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/014a28b8-3247-582a-96a6-622fa1de5c04">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">50</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2418_uses</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">uses - things</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/0877c575-3a84-5bf9-9a23-c69b60b1b921">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">51</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2419_used_for</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">used for - field/discipline</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/56d97ed7-8bf4-5bce-ba58-cca017356986">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">52</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2421_locus-setting_for</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">locus/setting for - activity/event</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/8bb01101-5cde-571c-bf2f-5b3af7fa144f">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">53</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2422_takes_place_in</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">takes place in - locus/setting</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/773fb857-331c-5cff-9f5b-a0551b7a1ece">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">54</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2424_produced_by</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">produced by - activity/event/process</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/87e5d068-75ba-5c1c-b03c-83d25283857f">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">55</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2425_produces</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">produces - material</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/323c0f07-08c6-5715-bb6e-84097b139f3d">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">56</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2427_produced_by</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">produced by - activity/event/process</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/312d3a25-a7f2-52f7-ba55-d1c11650c156">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">57</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2428_produces</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">produces - things</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/628cf58e-93ad-5788-afd9-179a9f19baf1">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">58</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2431_required_for</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">required for - activity/event/process</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/3637341d-f74b-59db-ae8c-b0883d2828d8">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">59</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2432_requires</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">requires - things</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/38b85879-f40c-5630-9c11-742d4fb73e17">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">60</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2434_contextualized_in</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">contextualized in - activity/event/process</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/a3c0a27a-5106-5bae-8cea-1aebc74b2352">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">61</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2435_context_for</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">context for - things</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/fa0570f0-5872-5b71-a3eb-0ff1c82ec8b2">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">62</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2501_made_of-require</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">made of/require - material</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/004ee6a2-911a-57ea-ac51-1967d79e0f24">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">63</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2502_material_for</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">material for - things</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/4899a08f-b97a-5d76-abc6-1fd1a433fbeb">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">64</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2504_used-located_in</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">used/located in - locus/setting</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/3b4dc13f-0bbe-5041-9216-f4efab3fd4e4">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">65</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2505_locus-setting_for</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">locus/setting for - material</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/88e5c9a3-d14f-5d2b-aa5b-0cda147f3b25">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">66</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2507_produce-process</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">produce/process - material</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/6d8e6da2-62e6-5562-8d8c-865ed778dcce">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">67</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2508_produced-processed_by</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">produced/processed by - things</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/46018a9f-409f-5242-b820-65225ae019f1">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">68</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2551_reflect-produced_by</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">reflect/produced by - style/period/culture</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/92cb35d0-7e88-5b72-86b0-0d7d1d336703">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">69</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2552_reflected_in-produces</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">reflected in/produces - things</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/ebbe4de6-08f5-50bc-befb-d1a6f04f63b0">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">70</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2554_reflects</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">reflects - style/period/culture</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/492132a1-8ae5-59f6-a790-c16b3a18ee3c">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">71</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2555_reflected_in</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">reflected in - activity/event</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/18299195-b619-5843-92f2-d10f52b4ab7c">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">72</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2557_reflects</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">reflects - style/period/culture</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/33663cba-0124-5050-bec8-5f799d658ecd">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">73</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2558_reflected_in</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">reflected in - field/discipline</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/e4327a8a-2cbb-5580-85d8-ba5cbd2a7505">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">74</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2562_locus-setting_for</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">locus/setting for - style/period/culture</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/f6dac304-6ff7-5181-9ad1-f6c30a90e680">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">75</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2563_located_in</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">located in - locus/setting</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/16fe5eb8-8455-5d66-8509-0411a586b1db">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">76</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2601_possessed_by-existing_in</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">possessed by/existing in - role</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/f7abc183-a457-56e1-bf99-82a7d1d871cd">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">77</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2602_possess-exist_in</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">possess/exist in - attributes /associated concepts</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/628a1d7c-ff0e-5bda-b87d-a7c1b0a2bbac">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">78</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2604_possessed_by-existing_in</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">possessed by/existing in - things</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/99e29112-ef8f-510c-9c80-72e6fd5f8f12">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">79</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2605_possess-exist_in</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">possess/exist in - attributes /associated concepts</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/bdbc7a29-640a-5c6c-a5fc-65992df534e8">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">80</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2607_caused_by-requires</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">caused by/requires - activity/event</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/48cba120-d897-5224-b878-b4ce1849dd7a">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">81</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2608_causes-required_for</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">causes/required for - attributes /associated concepts</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/e61590ca-3922-5d22-9da3-dc7b66d81806">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">82</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2612_possessed_by-existing_in</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">possessed by/existing in - material</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/fce8b5dd-af26-587d-b82b-b5940d3e8c8e">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">83</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2613_possess-exist_in</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">possess/exist in - attributes /associated concepts</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/2744623f-8c19-575b-b147-2a20afc892f8">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">84</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2801_conjuncted_with</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">conjuncted with - things</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/4cd07afb-f79d-5ae5-9acd-8b8d6d21db38">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">85</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2802_exemplified_by</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">exemplified by - brand name</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/b752ff40-d488-5051-a63d-10a387d29cbf">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">86</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2803_example_of</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">example of - material</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/f00b7390-d184-5b8c-9f6c-28ad1b91a55f">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">87</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2805_contextualized_in</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">contextualized in - things</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/3c93dae0-5246-5431-a6e4-e62b8f8daffa">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">88</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2806_provide_context</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">provide context - things</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/57eecfaf-4281-5c49-88e8-8369327d9635">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">89</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2807_derived_from_common_source</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">derived from common source - material</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/06be7ace-1bdf-5482-938b-40cd01c47100">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">90</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2809_coexisted_with</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">coexisted with - style/period/culture</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/ff8887f5-5812-571a-927d-dbfa73dc28ef">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">91</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2811_preceded</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">preceded - style/period/culture</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/c99d3df8-3120-5e5b-ba7c-fc1ec718e4e7">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">92</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2812_followed</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">followed - style/period/culture</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/b9a1d5c8-38e3-5322-b5a8-6ff48f7fbd93">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">93</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2814_constituent_of</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">constituent of - material</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/60b2e8bf-da6c-593c-80a6-3d70a385752e">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">94</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2815_composed_of</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">composed of - material</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/48814256-2165-5137-8a63-feeb87ed2e8f">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">95</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2817_derived-made_from</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">derived/made from - material</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/0e1b57e0-d341-514c-a01f-ae6d9d010476">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">96</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2818_source_for</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">source for - material</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/30317abd-278b-568c-9ac6-da65ec448e92">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">97</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2821_based_on</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">based on - any</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/97fdb7f0-52c3-59d4-b7f3-d904d1a2c77c">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">98</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2822_basis_of</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">basis of - any</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/0bf2ec14-7360-5ebc-853a-e7a6493cf2c0">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">99</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2824_has_parallels_with</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">has parallels with - style/period/culture</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/7f2460b4-e619-5834-846d-7dfc2d42a744">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">100</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2826_used_with</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">used with - material</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/c8a26c42-a9a0-5960-9456-9651f93a4ace">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">101</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2828_use-require</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">use/require - material</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/96f63a41-9373-514e-b91b-8b69a197cb57">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">102</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2829_used-required_for</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">used/required for - things</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/9f6b0adf-edc2-5178-bdb1-5761c51d799d">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">103</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2831_associated_with</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">associated with - genus/species</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/965497dd-f160-5768-b4c8-df22890aba1e">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">104</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2833_ancestor_of</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">ancestor of - genus/species</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/ad3cb8be-655f-5fca-b742-b855349d0ce6">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">105</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2834_decendant_of</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">decendant of - genus/species</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/763f7088-9cc7-564d-98c6-604450244952">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">106</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2836_derived-made_from</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">derived/made from - genus/species</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/bd3df498-b137-5b46-ac26-e879ab69c8ef">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">107</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2837_source_for</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">source for - things</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/9c372b31-5d55-5700-a582-03736a7681b8">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">108</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2841_derived-made_from</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">derived/made from - genus/species</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/2938b01a-8dee-5efb-a839-0e347990802c">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">109</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2842_source_for</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">source for - material</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/27fc9b78-7535-50ae-b741-2e85e7ac60fe">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">110</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2845_used-located_in</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">used/located in - locus/setting</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/0e43c2f4-6660-5ad4-976e-819dce718bfb">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">111</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2846_locus-setting_for</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">locus/setting for - genus/species</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/6b756779-5211-5583-b635-6793c3eb5754">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">112</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2848_involved_in</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">involved in - activity/event</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/dc34bfc1-e81c-5f7c-9dd6-7b6db0ae22d7">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">113</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2849_involves</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">involves - genus/species</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/3e2a33c8-4e5c-5b13-99d1-957004816038">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">114</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2852_involved_with</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">involved with - things</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/207d28ab-2aaa-592a-9ef7-0619afa30fd4">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">115</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2853_involve</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">involve - genus/species</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/e4d2690b-fe17-5a3a-a61b-64a34a86a463">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">116</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2875_characteristic_of</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">characteristic of - style/period/culture</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/833336d3-ebfc-50de-9854-6c1f8f0bc585">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">117</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2876_characterized_by</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">characterized by - language</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/cc774c6f-150d-583b-9c48-f5131135362a">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">118</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2878_preceded-source_for</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">preceded/source for - language</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/f371e816-c315-57e2-9637-ea75d5757a58">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">119</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2879_followed-developed_from</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">followed/developed from - language</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/abfbdb59-87ba-583a-a8c2-9f67d072fd00">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">120</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2881_reflected_in</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">reflected in - things</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/58be504a-f154-5f61-bb89-094a57a42962">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">121</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2882_reflect</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">reflect - language</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/439489f6-b1d5-56a0-a09d-d3ec19372417">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">122</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2884_involved_with</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">involved with - any</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/d871c29b-69bf-5f9a-bb84-4052093767f8">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">123</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2885_involves</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">involves - attributes /associated concepts</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/23347cf8-257c-510f-84b7-9091dd4012bd">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">124</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2886_used-function_as</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">used/function as - material</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/a3abbff4-301a-5871-80de-f77a17ea8ef7">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">125</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2887_exemplified_by</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">exemplified by - material</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/09bb7e3c-a87a-5298-a99c-89311311885b">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">126</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2891_exemplified_by</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">exemplified by - brand name</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/69508c38-a4a5-5df3-aa3a-538cee727f8b">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">127</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2892_example_of</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">example of - things</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/c3ea926b-df1e-5d7e-adee-52690397934b">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">128</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2894_exemplified_by</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">exemplified by - brand name</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/90e8083f-bd84-5016-881a-a0f5b7b8d088">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">129</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2895_example_of</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">example of - activity/event</skos:prefLabel>
+  </skos:Concept>
+  <skos:Concept rdf:about="http://localhost:8000/294acdd1-cb8b-5d63-b4cb-1d821204669c">
+    <arches:sortorder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">130</arches:sortorder>
+    <skos:inScheme rdf:resource="http://localhost:8000/ed3f8d46-c372-4c99-a326-8f726076fb97"/>
+    <skos:broader rdf:resource="http://localhost:8000/31916ec0-f408-473d-9184-667a4d097b9d"/>
+    <dcterms:identifier>http://vocab.getty.edu/ontology#aat2900_miscellaneous_relationship</dcterms:identifier>
+    <skos:prefLabel xml:lang="en">miscellaneous relationship - any</skos:prefLabel>
   </skos:Concept>
 </rdf:RDF>
