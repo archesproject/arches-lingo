@@ -9,6 +9,7 @@ import Button from "primevue/button";
 import Skeleton from "primevue/skeleton";
 
 import ConceptHeaderToolbar from "@/arches_lingo/components/concept/ConceptHeader/components/ConceptHeaderToolbar.vue";
+import ConceptMergeHistory from "@/arches_lingo/components/concept/ConceptHeader/components/ConceptMergeHistory.vue";
 import LifecycleStateBadge from "@/arches_lingo/components/generic/LifecycleStateBadge.vue";
 
 import {
@@ -452,6 +453,10 @@ function extractConceptHeaderData(resource: ResourceInstanceResult) {
                         {{ data?.principalUser || $gettext("Anonymous") }}
                     </span>
                 </div>
+                <ConceptMergeHistory
+                    v-if="resourceInstanceId"
+                    :resource-instance-id="resourceInstanceId"
+                />
             </div>
         </div>
     </div>

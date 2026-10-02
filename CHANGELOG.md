@@ -8,23 +8,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.2.0] - Unreleased
 
 ### Added
+
 -   Add support for exporting Lingo Thesauri (schemes & concepts) to N-Triples and Turtle formats [#778](https://github.com/archesproject/arches-lingo/pull/778)
 -   Add support for importing thesauri from N-Triples and Turtle files [#779](https://github.com/archesproject/arches-lingo/pull/779)
+-   Add concept merge workflow, with merge history on the concept header [#801](https://github.com/archesproject/arches-lingo/pull/801)
+
+### Changed
+
+-   Index concepts in a single pass after retiring or deleting a concept, rather than once per rehomed child [#801](https://github.com/archesproject/arches-lingo/pull/801)
 
 ## [1.1.2] - Unreleased
 
 ### Fixed
+
 -   Write and read column headers in dumped fixture archives so loading is not affected by model field ordering [#765](https://github.com/archesproject/arches-lingo/pull/765)
 -   Allow Lingo editors to export without membership in additional Arches groups, and hide the export button from anonymous users [#766](https://github.com/archesproject/arches-lingo/pull/766)
 
 ## [1.1.1] - 2026-07-31
 
 ### Fixed
+
 -   Fix installation and configuration instructions in the README [#763](https://github.com/archesproject/arches-lingo/pull/763)
 
 ## [1.1.0] - 2026-07-31
 
 ### Added
+
 -   Add progressive hierarchy loading [#707](https://github.com/archesproject/arches-lingo/pull/707)
 -   Add saved sets to the explore panel [#713](https://github.com/archesproject/arches-lingo/pull/713)
 -   Add all results to a set from advanced search [#715](https://github.com/archesproject/arches-lingo/pull/715)
@@ -41,6 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   Add content-negotiated SKOS dereferencing for scheme and concept URIs [#759](https://github.com/archesproject/arches-lingo/pull/759)
 
 ### Changed
+
 -   Optimize search performance for large-scale datasets [#704](https://github.com/archesproject/arches-lingo/pull/704)
 -   Improve dashboard performance for large-scale datasets [#705](https://github.com/archesproject/arches-lingo/pull/705)
 -   Improve scheme header display for schemes with many languages [#717](https://github.com/archesproject/arches-lingo/pull/717)
@@ -58,6 +68,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   Migrate from arches-component-lab to arches-vue-components [#741](https://github.com/archesproject/arches-lingo/pull/741)
 
 ### Fixed
+
 -   Fix bugs to support AAT data load [#702](https://github.com/archesproject/arches-lingo/pull/702)
 -   Fix import handling for AAT data load [#703](https://github.com/archesproject/arches-lingo/pull/703)
 -   Prevent UUID from displaying in basic search on select [#746](https://github.com/archesproject/arches-lingo/pull/746)
@@ -68,6 +79,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.0] - 2026-03-31
 
 ### Added
+
 -   Add login interface [#13](https://github.com/archesproject/arches-lingo/issues/13)
 -   Add front-end router [#11](https://github.com/archesproject/arches-lingo/issues/11)
 -   Add dark mode toggle [#91](https://github.com/archesproject/arches-lingo/issues/91)
@@ -119,6 +131,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   Surface node-level validation errors to user [#691](https://github.com/archesproject/arches-lingo/pull/691)
 
 ### Changed
+
 -   Upgrade Lingo to Arches 8.1 [#453](https://github.com/archesproject/arches-lingo/pull/453)
 -   Improve JSON-LD export performance
 -   Use label type URIs for label-type comparison instead of label strings [#649](https://github.com/archesproject/arches-lingo/pull/649)
@@ -143,6 +156,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   Polish concept page frontend interactions and editor loading states [#688](https://github.com/archesproject/arches-lingo/pull/688)
 
 ### Fixed
+
 -   Merge language finder implementations [#92](https://github.com/archesproject/arches-lingo/issues/92)
 -   Fix reference list nodes [#584](https://github.com/archesproject/arches-lingo/pull/584)
 -   Fix celery broker URLs [#643](https://github.com/archesproject/arches-lingo/pull/643)

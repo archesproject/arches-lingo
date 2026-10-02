@@ -1,3 +1,4 @@
+import uuid
 from http import HTTPStatus
 
 from django.conf import settings
@@ -18,6 +19,7 @@ from arches_lingo.utils.concept_lifecycle import (
     VALID_STRATEGIES,
     delete_concept,
     get_narrower_ids,
+    index_concepts_in_transaction,
 )
 from arches_lingo.utils.scheme_lock import is_concept_in_locked_scheme
 from arches_lingo.utils.concepts import (
@@ -285,9 +287,12 @@ class ConceptDeleteView(LingoEditorMixin, View):
                 status=HTTPStatus.BAD_REQUEST,
             )
 
+        edit_transaction_id = uuid.uuid4()
         try:
             with transaction.atomic():
-                delete_concept(concept, strategy)
+                delete_concept(
+                    concept, strategy, edit_transaction_id=edit_transaction_id
+                )
         except ValueError as error:
             return JSONErrorResponse(
                 title=_("Cannot delete"),
@@ -295,6 +300,7 @@ class ConceptDeleteView(LingoEditorMixin, View):
                 status=HTTPStatus.BAD_REQUEST,
             )
 
+        index_concepts_in_transaction(edit_transaction_id)
         return JSONResponse({"deleted": True})
 
 

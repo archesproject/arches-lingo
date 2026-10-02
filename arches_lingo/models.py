@@ -145,3 +145,37 @@ class ConceptSetMember(models.Model):
 
     def __str__(self):
         return f"{self.concept_set.name}: {self.concept_id}"
+
+
+class ConceptMerge(models.Model):
+    """Audit record of one concept being merged into another.
+
+    ``selections`` stores the exact request payload that produced the merge, and
+    ``edit_transaction_id`` groups every edit log entry the merge wrote, so the
+    full effect of a merge can be reconstructed after the fact.
+    """
+
+    survivor_concept_id = models.UUIDField(db_index=True)
+    absorbed_concept_id = models.UUIDField(db_index=True)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="lingo_concept_merges",
+    )
+    created = models.DateTimeField(auto_now_add=True)
+    edit_transaction_id = models.UUIDField(null=True, blank=True, db_index=True)
+    selections = models.JSONField(
+        default=dict,
+        help_text=_("The merge request payload: chosen tiles and merge options."),
+    )
+
+    class Meta:
+        app_label = "arches_lingo"
+        ordering = ["-created"]
+        verbose_name = _("concept merge")
+        verbose_name_plural = _("concept merges")
+
+    def __str__(self):
+        return f"{self.absorbed_concept_id} merged into {self.survivor_concept_id}"
