@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 
 import { useGettext } from "vue3-gettext";
 import { storeToRefs } from "pinia";
@@ -32,6 +32,7 @@ import {
     STRATEGY_REPARENT_TO_SURVIVOR,
 } from "@/arches_lingo/constants.ts";
 import {
+    MERGE_DIALOG_FRAME_PASS_THROUGH,
     MERGE_STEP_COMPARE,
     MERGE_STEP_CONFIRM,
     MERGE_STEP_SELECT,
@@ -44,11 +45,21 @@ import type {
 } from "@/arches_lingo/types.ts";
 import type { MergeSelectionState } from "@/arches_lingo/components/concept/ConceptMerge/types.ts";
 
-const { survivorConcept, survivorLabel, schemeId, graphSlug } = defineProps<{
+const {
+    survivorConcept,
+    survivorLabel,
+    schemeId,
+    graphSlug,
+    preselectedConcept = undefined,
+} = defineProps<{
     survivorConcept: ResourceInstanceResult;
     survivorLabel: string | undefined;
     schemeId: string;
     graphSlug: string;
+    // Opened from somewhere that already knows which concept is being
+    // merged away -- match review, say -- so the picker is skipped and the
+    // dialog opens on the comparison.
+    preselectedConcept?: SearchResultItem;
 }>();
 
 const emit = defineEmits<{
@@ -71,30 +82,7 @@ const DIALOG_SIZE = {
 // The chrome Lingo's other dialogs wear: a dark header band carrying the title,
 // a bordered frame, and body padding. See ExportThesauri, which sets the same.
 const dialogPassThrough = {
-    root: {
-        style: {
-            fontFamily: "var(--p-lingo-font-family)",
-            fontSize: "var(--p-lingo-font-size-small)",
-            border: "0.125rem solid var(--p-dialog-color)",
-            borderRadius: "0.25rem",
-        },
-    },
-    header: {
-        style: {
-            background: "var(--p-navigation-header-color)",
-            color: "var(--p-dialog-header-text-color)",
-            borderRadius: "0",
-            paddingBlock: "1.25rem",
-            paddingInline: "1.5rem",
-        },
-    },
-    title: {
-        style: {
-            fontSize: "var(--p-lingo-font-size-large)",
-            fontWeight: "var(--p-lingo-font-weight-normal)",
-            lineHeight: "1.2",
-        },
-    },
+    ...MERGE_DIALOG_FRAME_PASS_THROUGH,
     content: {
         style: {
             display: "flex",
@@ -103,12 +91,14 @@ const dialogPassThrough = {
             minHeight: "0",
             overflow: "hidden",
             padding: "1.25rem",
-            paddingTop: "1rem",
+            paddingBlockStart: "1rem",
         },
     },
 };
 
-const currentStep = ref(MERGE_STEP_SELECT);
+const currentStep = ref(
+    preselectedConcept ? MERGE_STEP_COMPARE : MERGE_STEP_SELECT,
+);
 const selectedConcept = ref<SearchResultItem>();
 const absorbedConcept = ref<ResourceInstanceResult>();
 const isLoadingAbsorbedConcept = ref(false);
@@ -124,30 +114,38 @@ const mergeError = ref<string | null>(null);
 
 // The footer drives the stepper rather than each panel carrying its own buttons,
 // so the steps it moves between are named in one place.
-const MERGE_STEP_ORDER = [
-    MERGE_STEP_SELECT,
-    MERGE_STEP_COMPARE,
-    MERGE_STEP_CONFIRM,
-];
+// A preselected concept is the merge the caller asked for, so there is no
+// picker to step back to: choosing a different concept would merge a pair
+// other than the one being reviewed.
+const mergeStepOrder = computed(() =>
+    preselectedConcept
+        ? [MERGE_STEP_COMPARE, MERGE_STEP_CONFIRM]
+        : [MERGE_STEP_SELECT, MERGE_STEP_COMPARE, MERGE_STEP_CONFIRM],
+);
+
+const isOnFirstStep = computed(
+    () => currentStep.value === mergeStepOrder.value[0],
+);
 
 const previousStep = computed(function () {
-    const stepIndex = MERGE_STEP_ORDER.indexOf(currentStep.value);
-    return MERGE_STEP_ORDER[Math.max(stepIndex - 1, 0)];
+    const stepIndex = mergeStepOrder.value.indexOf(currentStep.value);
+    return mergeStepOrder.value[Math.max(stepIndex - 1, 0)];
 });
 
 const nextStep = computed(function () {
-    const stepIndex = MERGE_STEP_ORDER.indexOf(currentStep.value);
-    return MERGE_STEP_ORDER[
-        Math.min(stepIndex + 1, MERGE_STEP_ORDER.length - 1)
+    const stepIndex = mergeStepOrder.value.indexOf(currentStep.value);
+    return mergeStepOrder.value[
+        Math.min(stepIndex + 1, mergeStepOrder.value.length - 1)
     ];
 });
 
 // Concepts in different schemes can be merged, but the scheme-scoped sections
 // cannot come across and the absorbed concept is never retired, so both steps
-// need to know which kind of merge this is.
+// need to know which kind of merge this is. A concept with no scheme gets the
+// cautious, cross-scheme handling.
 const isCrossScheme = computed(function () {
     const absorbedSchemeId = resolveSchemeId(absorbedConcept.value);
-    return Boolean(absorbedSchemeId) && absorbedSchemeId !== schemeId;
+    return !schemeId || !absorbedSchemeId || absorbedSchemeId !== schemeId;
 });
 
 const canCompare = computed(function () {
@@ -205,6 +203,14 @@ async function onConceptSelected(concept: SearchResultItem) {
     }
 }
 
+watch(
+    () => preselectedConcept,
+    function (concept) {
+        if (concept) onConceptSelected(concept);
+    },
+    { immediate: true },
+);
+
 function onSelectionStateChange(updatedState: MergeSelectionState) {
     selectionState.value = updatedState;
 }
@@ -258,7 +264,10 @@ async function onMergeConfirmed() {
             class="merge-stepper"
         >
             <StepList>
-                <Step :value="MERGE_STEP_SELECT">
+                <Step
+                    v-if="!preselectedConcept"
+                    :value="MERGE_STEP_SELECT"
+                >
                     {{ $gettext("Choose concept") }}
                 </Step>
                 <Step
@@ -276,7 +285,10 @@ async function onMergeConfirmed() {
             </StepList>
 
             <StepPanels>
-                <StepPanel :value="MERGE_STEP_SELECT">
+                <StepPanel
+                    v-if="!preselectedConcept"
+                    :value="MERGE_STEP_SELECT"
+                >
                     <div class="merge-step">
                         <div class="merge-step-body merge-step-body--fill">
                             <p class="merge-step-intro">
@@ -382,7 +394,7 @@ async function onMergeConfirmed() {
         <template #footer>
             <div class="footer">
                 <Button
-                    v-if="currentStep === MERGE_STEP_SELECT"
+                    v-if="isOnFirstStep"
                     icon="pi pi-times"
                     :label="$gettext('Cancel')"
                     :severity="DANGER"

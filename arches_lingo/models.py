@@ -179,3 +179,122 @@ class ConceptMerge(models.Model):
 
     def __str__(self):
         return f"{self.absorbed_concept_id} merged into {self.survivor_concept_id}"
+
+
+class ConceptMatchRun(models.Model):
+    """One pass of match detection, kept so its candidates stay reviewable."""
+
+    STATUS_PENDING = "pending"
+    STATUS_RUNNING = "running"
+    STATUS_COMPLETE = "complete"
+    STATUS_FAILED = "failed"
+    STATUS_CHOICES = [
+        (STATUS_PENDING, _("Pending")),
+        (STATUS_RUNNING, _("Running")),
+        (STATUS_COMPLETE, _("Complete")),
+        (STATUS_FAILED, _("Failed")),
+    ]
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="lingo_concept_match_runs",
+    )
+    name = models.CharField(max_length=255, blank=True, default="")
+    created = models.DateTimeField(auto_now_add=True)
+    finished = models.DateTimeField(null=True, blank=True)
+    # Celery acks a task on receipt, so a worker restarted mid-run cannot fail
+    # its own run; a stale heartbeat here is how the run gets reaped instead.
+    last_progress = models.DateTimeField(null=True, blank=True)
+    status = models.CharField(
+        max_length=16, choices=STATUS_CHOICES, default=STATUS_PENDING
+    )
+    parameters = models.JSONField(
+        default=dict,
+        help_text=_("Scope, signals and thresholds this run was started with."),
+    )
+    candidate_count = models.PositiveIntegerField(default=0)
+    error_message = models.TextField(blank=True, default="")
+
+    class Meta:
+        app_label = "arches_lingo"
+        ordering = ["-created"]
+        verbose_name = _("concept match run")
+        verbose_name_plural = _("concept match runs")
+
+    def __str__(self):
+        return f"Match run {self.pk} ({self.status})"
+
+
+class ConceptMatchCandidate(models.Model):
+    """A suggested pair, stored lowest id first (see ``order_concept_ids``)."""
+
+    SIGNAL_SHARED_IDENTIFIER = "shared_identifier"
+    SIGNAL_EXACT_LABEL = "exact_label"
+    SIGNAL_TRIGRAM = "trigram"
+    SIGNAL_CHOICES = [
+        (SIGNAL_SHARED_IDENTIFIER, _("Shared identifier")),
+        (SIGNAL_EXACT_LABEL, _("Exact label")),
+        (SIGNAL_TRIGRAM, _("Similar label")),
+    ]
+
+    STATUS_PENDING = "pending"
+    STATUS_DISMISSED = "dismissed"
+    STATUS_LINKED = "linked"
+    STATUS_MERGED = "merged"
+    STATUS_CHOICES = [
+        (STATUS_PENDING, _("Pending")),
+        (STATUS_DISMISSED, _("Dismissed")),
+        (STATUS_LINKED, _("Linked")),
+        (STATUS_MERGED, _("Merged")),
+    ]
+
+    run = models.ForeignKey(
+        ConceptMatchRun, on_delete=models.CASCADE, related_name="candidates"
+    )
+    concept_a_id = models.UUIDField(db_index=True)
+    concept_b_id = models.UUIDField(db_index=True)
+    score = models.FloatField(
+        help_text=_("1.0 for an exact signal, the similarity for a fuzzy one.")
+    )
+    signal = models.CharField(max_length=32, choices=SIGNAL_CHOICES)
+    evidence = models.TextField(blank=True, default="")
+    status = models.CharField(
+        max_length=16, choices=STATUS_CHOICES, default=STATUS_PENDING, db_index=True
+    )
+    reviewed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="lingo_reviewed_match_candidates",
+    )
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        app_label = "arches_lingo"
+        ordering = ["-score", "pk"]
+        verbose_name = _("concept match candidate")
+        verbose_name_plural = _("concept match candidates")
+        constraints = [
+            models.UniqueConstraint(
+                fields=["run", "concept_a_id", "concept_b_id"],
+                name="unique_candidate_pair_per_run",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=["run", "status", "-score"],
+                name="lingo_candidate_queue_idx",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.concept_a_id} ~ {self.concept_b_id} ({self.score:.2f})"
+
+    @staticmethod
+    def order_concept_ids(first_concept_id, second_concept_id):
+        """Return the pair in the order the unique constraint expects."""
+        return tuple(sorted([str(first_concept_id), str(second_concept_id)]))

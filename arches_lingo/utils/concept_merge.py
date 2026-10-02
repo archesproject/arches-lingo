@@ -48,7 +48,7 @@ from arches_lingo.const import (
     URI_CONTENT_NODE,
     URI_NODEGROUP,
 )
-from arches_lingo.models import ConceptMerge
+from arches_lingo.models import ConceptMatchCandidate, ConceptMerge
 from arches_lingo.utils.concept_builder import ConceptBuilder
 from arches_lingo.utils.concept_lifecycle import (
     EDITING_STATE_ID,
@@ -61,6 +61,7 @@ from arches_lingo.utils.concept_lifecycle import (
     index_concepts_in_transaction,
     retire_concept,
 )
+from arches_lingo.utils.concept_matching import mark_pairs_settled
 from arches_lingo.utils.scheme_lock import get_scheme_id_for_concept, is_scheme_locked
 
 SINGLE_CARDINALITY = "1"
@@ -567,31 +568,41 @@ def demote_pref_label_tiles(tile_ids, edit_transaction_id):
     return demoted_tiles
 
 
-def write_reciprocal_exact_match_tiles(
-    survivor, absorbed, edit_transaction_id, write_to_absorbed=True
+def write_exact_match_tiles(
+    first_concept,
+    second_concept,
+    edit_transaction_id,
+    write_to_first=True,
+    write_to_second=True,
 ):
     """Record a skos:exactMatch on each concept pointing at the other's URI.
 
-    The absorbed concept keeps its own URI and stays dereferenceable once
-    retired, so without this the two records have no machine-readable link.
-    Concepts without a URI tile are skipped rather than treated as an error.
+    A merge uses this so the absorbed concept, which keeps its own URI and stays
+    dereferenceable once retired, is still linked to the survivor; match review
+    uses it to link two concepts that are staying as they are. Neither direction
+    is privileged, which is why the two sides are named rather than numbered.
 
-    `write_to_absorbed` false records the match on the survivor alone, for an
-    absorbed concept the merge is not allowed to edit -- a published or locked
-    concept in another scheme. The half that can be written is the half that
-    matters, since it is the survivor an editor will be reading from.
+    Concepts without a URI tile are skipped rather than treated as an error --
+    there is nothing to point at. Either side can also be held back with
+    `write_to_first` / `write_to_second`, for a concept the caller is not allowed
+    to edit: a published or locked one. The half that can be written is still
+    worth writing, since it is what an editor reads from.
     """
-    survivor_uri = get_concept_uri(survivor.pk)
-    absorbed_uri = get_concept_uri(absorbed.pk)
-    if not survivor_uri or not absorbed_uri:
+    first_uri = get_concept_uri(first_concept.pk)
+    second_uri = get_concept_uri(second_concept.pk)
+    if not first_uri or not second_uri:
         return []
 
     exact_match_tile_value = get_list_item_tile_value(EXACT_MATCH_LIST_ITEM_ID)
-    resources_by_concept_id = load_concept_resources(survivor.pk, absorbed.pk)
+    resources_by_concept_id = load_concept_resources(
+        first_concept.pk, second_concept.pk
+    )
 
-    matches_to_write = [(survivor.pk, absorbed_uri)]
-    if write_to_absorbed:
-        matches_to_write.append((absorbed.pk, survivor_uri))
+    matches_to_write = []
+    if write_to_first:
+        matches_to_write.append((first_concept.pk, second_uri))
+    if write_to_second:
+        matches_to_write.append((second_concept.pk, first_uri))
 
     written_tiles = []
     for concept_id, matched_uri in matches_to_write:
@@ -931,11 +942,11 @@ def merge_concepts(survivor, absorbed, selections, user, user_is_lingo_admin=Fal
         )
 
         if selections.get("create_exact_match_tiles", True):
-            write_reciprocal_exact_match_tiles(
+            write_exact_match_tiles(
                 survivor,
                 absorbed,
                 edit_transaction_id,
-                write_to_absorbed=concept_is_writable(absorbed, user_is_lingo_admin),
+                write_to_second=concept_is_writable(absorbed, user_is_lingo_admin),
             )
 
         # Retiring here rather than in a follow-up request means a failure anywhere
@@ -955,6 +966,11 @@ def merge_concepts(survivor, absorbed, selections, user, user_is_lingo_admin=Fal
             user=user if user is not None and user.is_authenticated else None,
             edit_transaction_id=edit_transaction_id,
             selections=selections,
+        )
+
+        # Wherever match review has the pair queued, it is no longer a question.
+        mark_pairs_settled(
+            [(survivor.pk, absorbed.pk)], ConceptMatchCandidate.STATUS_MERGED, user
         )
 
     # One bulk pass over everything the merge touched, rather than a round trip

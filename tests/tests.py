@@ -52,7 +52,11 @@ from arches_lingo.utils.concept_builder import ConceptBuilder
 # python manage.py test tests.tests --settings="tests.test_settings"
 
 
-class ViewTests(TestCase):
+class SchemeWithConceptsTestCase(TestCase):
+    """A scheme with five concepts, each narrower than the last, and an admin
+    logged in. Subclass this rather than ViewTests to reuse the data without
+    re-running ViewTests' own tests."""
+
     graph_fixtures = ["Scheme.json", "Concept.json"]
 
     @classmethod
@@ -252,6 +256,8 @@ class ViewTests(TestCase):
     def setUp(self):
         self.client.force_login(self.admin)
 
+
+class ViewTests(SchemeWithConceptsTestCase):
     def test_get_concept_trees(self):
         with self.assertNumQueries(9):
             # 1: session
