@@ -314,6 +314,7 @@ describe("buildMergePayload", () => {
             [broaderTile("absorbed-broader", "some-other-concept")],
             SURVIVOR_ID,
         );
+        broaderComparison.absorbedTileOptions[0].isSelected = true;
 
         const payload = buildMergePayload(
             "absorbed-concept",
@@ -394,6 +395,7 @@ const BROADER_SECTION: MergeSection = {
         "classification_status_ascribed_classification",
     ],
     schemeScoped: true,
+    isHierarchical: true,
 };
 
 function broaderTile(tileid: string, ...parentIds: string[]): MergeTile {
@@ -430,10 +432,9 @@ describe("buildSectionComparison self references", () => {
         );
 
         expect(comparison.absorbedTileOptions).toHaveLength(1);
-        expect(comparison.absorbedTileOptions[0].isSelected).toBe(true);
     });
 
-    it("keeps a broader tile that has nothing to do with the survivor", () => {
+    it("offers a broader tile without selecting it", () => {
         const comparison = buildSectionComparison(
             BROADER_SECTION,
             [],
@@ -442,6 +443,7 @@ describe("buildSectionComparison self references", () => {
         );
 
         expect(comparison.absorbedTileOptions).toHaveLength(1);
+        expect(comparison.absorbedTileOptions[0].isSelected).toBe(false);
     });
 });
 

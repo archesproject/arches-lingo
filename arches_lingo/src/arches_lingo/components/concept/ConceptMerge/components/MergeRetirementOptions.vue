@@ -6,23 +6,35 @@ import Message from "primevue/message";
 import RadioButton from "primevue/radiobutton";
 import Skeleton from "primevue/skeleton";
 
+import { fetchConceptAncestorPaths } from "@/arches_lingo/api.ts";
 import {
     ERROR,
+    INFO,
     STRATEGY_DELETE_CHILDREN,
     STRATEGY_REPARENT,
     STRATEGY_REPARENT_TO_SURVIVOR,
 } from "@/arches_lingo/constants.ts";
 import { useConceptStore } from "@/arches_lingo/stores/useConceptStore.ts";
 
-import type { Concept, MergeRetirementStrategy } from "@/arches_lingo/types.ts";
+import type {
+    Concept,
+    MergeRetirementStrategy,
+    SearchResultHierarchy,
+} from "@/arches_lingo/types.ts";
 
-const { absorbedConceptId, absorbedLabel, survivorLabel, retirementStrategy } =
-    defineProps<{
-        absorbedConceptId: string;
-        absorbedLabel: string | undefined;
-        survivorLabel: string | undefined;
-        retirementStrategy: MergeRetirementStrategy;
-    }>();
+const {
+    absorbedConceptId,
+    survivorConceptId,
+    absorbedLabel,
+    survivorLabel,
+    retirementStrategy,
+} = defineProps<{
+    absorbedConceptId: string;
+    survivorConceptId: string;
+    absorbedLabel: string | undefined;
+    survivorLabel: string | undefined;
+    retirementStrategy: MergeRetirementStrategy;
+}>();
 
 const emit = defineEmits<{
     (
@@ -35,6 +47,7 @@ const { $gettext } = useGettext();
 const conceptStore = useConceptStore();
 
 const children = ref<Concept[]>([]);
+const isSurvivorBeneathAbsorbed = ref(false);
 const isFetchingChildren = ref(true);
 const fetchError = ref<string | null>(null);
 
@@ -55,21 +68,56 @@ const reparentToSurvivorDesc = computed(function () {
     });
 });
 
+const survivorBeneathAbsorbedText = computed(function () {
+    return $gettext(
+        '"%{survivor}" sits beneath "%{absorbed}", so the children can only be attached to their existing parents.',
+        { survivor: survivorLabel ?? "", absorbed: absorbedLabel ?? "" },
+    );
+});
+
 // Without the children there is no way to know whether a choice is even called
 // for, so the failure is shown rather than presenting an empty section. The merge
-// stays available: the server re-checks for children and applies the default the
-// dialog is already carrying.
+// stays available: the server re-checks the hierarchy and applies the default the
+// dialog is already carrying, or refuses it if that would break the hierarchy.
 const fetchErrorText = computed(function () {
     return $gettext(
-        'Could not check whether "%{name}" has child concepts. Any children it has will be attached to the surviving concept.',
+        'Could not check the child concepts of "%{name}". Any children it has will be attached to the surviving concept where the hierarchy allows it.',
         { name: absorbedLabel ?? "" },
     );
 });
 
+function isConceptOnAnyPath(
+    conceptId: string,
+    ancestorPaths: SearchResultHierarchy[],
+) {
+    return ancestorPaths.some((ancestorPath) =>
+        ancestorPath.searchResults.some(
+            (pathNode) => pathNode.id === conceptId,
+        ),
+    );
+}
+
+// Handing the children to a survivor that sits beneath the absorbed concept would
+// put its own ancestors under it, and retiring every descendant would retire the
+// survivor, so only reparenting to the existing parents is left on offer.
 onMounted(async () => {
     try {
         await conceptStore.initialize();
-        children.value = await conceptStore.loadChildren(absorbedConceptId);
+        const [fetchedChildren, survivorAncestorPaths] = await Promise.all([
+            conceptStore.loadChildren(absorbedConceptId),
+            fetchConceptAncestorPaths(survivorConceptId),
+        ]);
+        children.value = fetchedChildren;
+        isSurvivorBeneathAbsorbed.value = isConceptOnAnyPath(
+            absorbedConceptId,
+            survivorAncestorPaths,
+        );
+        if (
+            isSurvivorBeneathAbsorbed.value &&
+            retirementStrategy !== STRATEGY_REPARENT
+        ) {
+            emit("update:retirementStrategy", STRATEGY_REPARENT);
+        }
     } catch (error) {
         fetchError.value =
             error instanceof Error ? error.message : String(error);
@@ -101,7 +149,16 @@ defineExpose({ hasChildren });
     >
         <p class="retirement-text">{{ childrenText }}</p>
 
+        <Message
+            v-if="isSurvivorBeneathAbsorbed"
+            :severity="INFO"
+            :closable="false"
+        >
+            {{ survivorBeneathAbsorbedText }}
+        </Message>
+
         <label
+            v-if="!isSurvivorBeneathAbsorbed"
             class="retirement-option"
             :class="{
                 selected: retirementStrategy === STRATEGY_REPARENT_TO_SURVIVOR,
@@ -159,6 +216,7 @@ defineExpose({ hasChildren });
         </label>
 
         <label
+            v-if="!isSurvivorBeneathAbsorbed"
             class="retirement-option"
             :class="{
                 selected: retirementStrategy === STRATEGY_DELETE_CHILDREN,

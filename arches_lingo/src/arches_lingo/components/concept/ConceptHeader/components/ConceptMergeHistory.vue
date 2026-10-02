@@ -5,6 +5,8 @@ import { useGettext } from "vue3-gettext";
 import { useRouter } from "vue-router";
 import { storeToRefs } from "pinia";
 
+import Button from "primevue/button";
+
 import { fetchConceptMergeHistory } from "@/arches_lingo/api.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 import { routeNames } from "@/arches_lingo/routes.ts";
@@ -71,13 +73,12 @@ watch(() => resourceStore.resource.value, loadMergeHistory);
             :key="entry.id"
         >
             <i class="pi pi-sign-in"></i>
-            <button
-                type="button"
+            <Button
+                :label="entryText(entry)"
+                variant="link"
                 class="concept-merge-link"
                 @click="openCounterpart(entry)"
-            >
-                {{ entryText(entry) }}
-            </button>
+            />
         </li>
     </ul>
 </template>
@@ -102,11 +103,7 @@ watch(() => resourceStore.resource.value, loadMergeHistory);
 
 .concept-merge-link {
     padding: 0;
-    border: none;
-    background: none;
-    color: var(--p-primary-color);
     font-size: inherit;
-    cursor: pointer;
     text-decoration: underline;
 }
 </style>

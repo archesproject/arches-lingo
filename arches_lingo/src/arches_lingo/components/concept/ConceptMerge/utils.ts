@@ -253,8 +253,11 @@ export function buildSectionComparison(
             // has, so it is only selected by default when there is nothing to
             // overwrite. A blocked section is never selected, so the counts, the
             // summary and the payload all agree with the disabled controls.
+            // Hierarchy sections would move the survivor, so they wait for the
+            // editor to opt in.
             const isSelected =
                 !isBlocked &&
+                !section.isHierarchical &&
                 (section.cardinality === "n"
                     ? !alreadyOnSurvivor
                     : survivorTiles.length === 0);

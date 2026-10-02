@@ -52,8 +52,10 @@ from arches_lingo.models import ConceptMerge
 from arches_lingo.utils.concept_builder import ConceptBuilder
 from arches_lingo.utils.concept_lifecycle import (
     EDITING_STATE_ID,
+    STRATEGY_DELETE_CHILDREN,
     STRATEGY_REPARENT_TO_SURVIVOR,
     VALID_STRATEGIES,
+    get_all_descendant_ids,
     get_narrower_ids,
     get_scheme_id_if_top_concept,
     index_concepts_in_transaction,
@@ -66,6 +68,13 @@ SINGLE_CARDINALITY = "1"
 # Retiring the absorbed concept is part of the merge, so reparent_to_survivor is
 # offered alongside the strategies the standalone retire endpoint accepts.
 VALID_MERGE_RETIREMENT_STRATEGIES = VALID_STRATEGIES | {STRATEGY_REPARENT_TO_SURVIVOR}
+
+# Retirement strategies that break the hierarchy when the survivor sits beneath the
+# absorbed concept: handing the children to the survivor would place the survivor's
+# own ancestors under it, and retiring every descendant would retire the survivor.
+STRATEGIES_UNAVAILABLE_BELOW_ABSORBED = frozenset(
+    {STRATEGY_REPARENT_TO_SURVIVOR, STRATEGY_DELETE_CHILDREN}
+)
 
 # Nodegroups an editor may never pull across from the absorbed concept. This must
 # stay in step with MERGE_SECTIONS on the client, which offers everything else.
@@ -125,7 +134,9 @@ IDENTITY_NODES_BY_NODEGROUP = {
 # Resource-instance nodes on a copied tile that may name the survivor itself:
 # the absorbed concept's broader tile when it is a child of the survivor, or a
 # relation recorded between the two. Copied verbatim these leave the survivor
-# pointing at itself, so the reference is dropped on the way across.
+# pointing at itself, so the reference is dropped on the way across. A broader
+# reference to anything beneath the survivor is dropped too, since taking it
+# would make the survivor its own ancestor.
 SELF_REFERENCE_NODES_BY_NODEGROUP = {
     CLASSIFICATION_STATUS_NODEGROUP: (
         CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID,
@@ -219,8 +230,13 @@ def build_copied_tile_data(source_tile, should_demote_pref_label, alt_label_tile
     return tile_data
 
 
-def strip_self_references(nodegroup_id, tile_data, survivor_id):
+def strip_self_references(
+    nodegroup_id, tile_data, survivor_id, survivor_descendant_ids=frozenset()
+):
     """Drop references to the survivor from a tile copied off the absorbed concept.
+
+    Broader references to the survivor's descendants are dropped as well, so the
+    merge cannot close a loop in the hierarchy.
 
     Returns None when a reference node is left empty, because a tile whose only
     content was the relationship between the two concepts has nothing left to say
@@ -229,6 +245,10 @@ def strip_self_references(nodegroup_id, tile_data, survivor_id):
     reference_node_ids = SELF_REFERENCE_NODES_BY_NODEGROUP.get(str(nodegroup_id))
     if not reference_node_ids:
         return tile_data
+
+    concept_ids_to_strip = {str(survivor_id)}
+    if str(nodegroup_id) == CLASSIFICATION_STATUS_NODEGROUP:
+        concept_ids_to_strip |= set(survivor_descendant_ids)
 
     stripped_tile_data = dict(tile_data)
     for node_id in reference_node_ids:
@@ -241,7 +261,7 @@ def strip_self_references(nodegroup_id, tile_data, survivor_id):
             for entry in node_value
             if not (
                 isinstance(entry, dict)
-                and str(entry.get("resourceId")) == str(survivor_id)
+                and str(entry.get("resourceId")) in concept_ids_to_strip
             )
         ]
         if not remaining_references:
@@ -377,6 +397,17 @@ def copy_tiles_to_survivor(
     }
     survivor_identity_keys.discard(None)
 
+    is_copying_broader_concepts = any(
+        str(source_tiles_by_id[str(selected_tile_id)].nodegroup_id)
+        == CLASSIFICATION_STATUS_NODEGROUP
+        for selected_tile_id in selected_tile_ids
+    )
+    survivor_descendant_ids = (
+        get_all_descendant_ids(str(survivor.pk))
+        if is_copying_broader_concepts
+        else set()
+    )
+
     copied_tiles = []
     for selected_tile_id in selected_tile_ids:
         source_tile = source_tiles_by_id[str(selected_tile_id)]
@@ -388,7 +419,7 @@ def copy_tiles_to_survivor(
             alt_label_tile_value,
         )
         tile_data = strip_self_references(
-            source_tile.nodegroup_id, tile_data, survivor.pk
+            source_tile.nodegroup_id, tile_data, survivor.pk, survivor_descendant_ids
         )
         if tile_data is None:
             continue
@@ -735,10 +766,10 @@ def validate_merge(survivor, absorbed, selections, user_is_lingo_admin):
         selections.get("pref_label_demotions") or [],
         _("Tile %(tileid)s is not a label of the absorbed concept."),
     )
-    validate_retirement(absorbed, selections, is_cross_scheme)
+    validate_retirement(survivor, absorbed, selections, is_cross_scheme)
 
 
-def validate_retirement(absorbed, selections, is_cross_scheme=False):
+def validate_retirement(survivor, absorbed, selections, is_cross_scheme=False):
     if not selections.get("retire_absorbed_concept"):
         return
 
@@ -764,6 +795,19 @@ def validate_retirement(absorbed, selections, is_cross_scheme=False):
             _(
                 "The concept being merged away has children. Choose how they "
                 "should be handled before retiring it."
+            ),
+        )
+
+    if retirement_strategy in STRATEGIES_UNAVAILABLE_BELOW_ABSORBED and str(
+        survivor.pk
+    ) in get_all_descendant_ids(str(absorbed.pk)):
+        raise ConceptMergeError(
+            _("Cannot merge"),
+            _(
+                "The surviving concept sits beneath the concept being merged "
+                "away, so its children cannot be attached to the surviving "
+                "concept or retired with it. Attach them to their existing "
+                "parents instead."
             ),
         )
 

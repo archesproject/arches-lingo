@@ -24,6 +24,9 @@ export interface MergeSection {
     // never brought across from a concept in another. Mirrors the server's
     // SCHEME_SCOPED_NODEGROUP_ALIASES.
     schemeScoped?: boolean;
+    // Places the concept in the hierarchy, so it is offered but never selected
+    // by default: a merge should not quietly move the survivor.
+    isHierarchical?: boolean;
 }
 
 export interface MergeTileOption {

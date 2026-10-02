@@ -181,13 +181,27 @@ async function onConceptSelected(concept: SearchResultItem) {
     selectionState.value = undefined;
     isLoadingAbsorbedConcept.value = true;
     fetchError.value = null;
+
+    // Picking again before the first fetch returns leaves both in flight, and
+    // only the response for the concept still selected may land.
+    function isStillSelected() {
+        return selectedConcept.value?.id === concept.id;
+    }
+
     try {
-        absorbedConcept.value = await fetchLingoResource(graphSlug, concept.id);
+        const fetchedConcept = await fetchLingoResource(graphSlug, concept.id);
+        if (isStillSelected()) {
+            absorbedConcept.value = fetchedConcept;
+        }
     } catch (error) {
-        fetchError.value =
-            error instanceof Error ? error.message : String(error);
+        if (isStillSelected()) {
+            fetchError.value =
+                error instanceof Error ? error.message : String(error);
+        }
     } finally {
-        isLoadingAbsorbedConcept.value = false;
+        if (isStillSelected()) {
+            isLoadingAbsorbedConcept.value = false;
+        }
     }
 }
 
@@ -326,6 +340,9 @@ async function onMergeConfirmed() {
                                 v-if="absorbedConcept"
                                 :absorbed-concept-id="
                                     absorbedConcept.resourceinstanceid
+                                "
+                                :survivor-concept-id="
+                                    survivorConcept.resourceinstanceid
                                 "
                                 :survivor-label="survivorLabel"
                                 :absorbed-label="absorbedLabel"

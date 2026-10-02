@@ -15,6 +15,10 @@ import type { MergeSection } from "@/arches_lingo/components/concept/ConceptMerg
 // one scheme -- a broader concept, an associated concept, or the scheme itself.
 // They are never brought across from a concept in another scheme, and the server
 // rejects them too; see SCHEME_SCOPED_NODEGROUP_ALIASES.
+//
+// isHierarchical marks the sections that place a concept in the hierarchy. They
+// are offered but left unselected, so the survivor stays where it is unless the
+// editor chooses to move it.
 export const MERGE_SECTIONS: MergeSection[] = [
     {
         nodegroupAlias: "appellative_status",
@@ -56,6 +60,7 @@ export const MERGE_SECTIONS: MergeSection[] = [
             "classification_status_ascribed_classification",
         ],
         schemeScoped: true,
+        isHierarchical: true,
     },
     {
         nodegroupAlias: "top_concept_of",
@@ -63,6 +68,7 @@ export const MERGE_SECTIONS: MergeSection[] = [
         displayNodeAliases: ["top_concept_of"],
         identityNodeAliases: null,
         schemeScoped: true,
+        isHierarchical: true,
     },
     {
         nodegroupAlias: "relation_status",

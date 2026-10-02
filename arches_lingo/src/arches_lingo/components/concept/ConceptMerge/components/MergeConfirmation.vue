@@ -15,6 +15,7 @@ import type { MergeSectionSummary } from "@/arches_lingo/components/concept/Conc
 const { survivorLabel, absorbedLabel, sectionSummaries, isCrossScheme } =
     defineProps<{
         absorbedConceptId: string;
+        survivorConceptId: string;
         survivorLabel: string | undefined;
         absorbedLabel: string | undefined;
         sectionSummaries: MergeSectionSummary[];
@@ -151,6 +152,7 @@ const hasSelections = computed(function () {
         <MergeRetirementOptions
             v-if="!isCrossScheme && retireAbsorbedConcept"
             :absorbed-concept-id="absorbedConceptId"
+            :survivor-concept-id="survivorConceptId"
             :absorbed-label="absorbedLabel"
             :survivor-label="survivorLabel"
             :retirement-strategy="retirementStrategy"

@@ -48,6 +48,8 @@ from arches_lingo.utils.concept_lifecycle import (
     LOCKED_STATE_ID,
     PUBLISHED_STATE_ID,
     RETIRED_STATE_ID,
+    STRATEGY_DELETE_CHILDREN,
+    STRATEGY_REPARENT,
     STRATEGY_REPARENT_TO_SURVIVOR,
     get_broader_ids,
 )
@@ -304,7 +306,9 @@ class CopyTilesToSurvivorTests(ConceptMergeTestCase):
         self.assertNotIn(str(self.survivor.pk), get_broader_ids(str(self.survivor.pk)))
 
     def test_broader_tile_keeps_its_other_parents_when_the_survivor_is_stripped(self):
-        other_parent = self.concepts[3]
+        other_parent = ResourceInstance.objects.create(
+            graph_id=CONCEPTS_GRAPH_ID, name="Other parent"
+        )
         broader_tile = self.make_child_of(self.absorbed, self.survivor, other_parent)
 
         copy_tiles_to_survivor(
@@ -318,6 +322,23 @@ class CopyTilesToSurvivorTests(ConceptMergeTestCase):
         survivor_parents = get_broader_ids(str(self.survivor.pk))
         self.assertIn(str(other_parent.pk), survivor_parents)
         self.assertNotIn(str(self.survivor.pk), survivor_parents)
+
+    def test_broader_tile_naming_a_descendant_of_the_survivor_is_not_copied(self):
+        """A duplicate filed beneath the survivor's own child must not close a loop."""
+        survivor_child = self.concepts[3]
+        self.make_child_of(survivor_child, self.survivor)
+        broader_tile = self.make_child_of(self.absorbed, survivor_child)
+
+        copied_tiles = copy_tiles_to_survivor(
+            self.survivor,
+            self.absorbed,
+            [str(broader_tile.tileid)],
+            set(),
+            uuid.uuid4(),
+        )
+
+        self.assertEqual(copied_tiles, [])
+        self.assertNotIn(str(survivor_child.pk), get_broader_ids(str(self.survivor.pk)))
 
     def test_child_tiles_follow_their_parent(self):
         parent_tile = self.add_statement_tile(self.absorbed, "Note with assignment.")
@@ -849,25 +870,33 @@ class MergeRetirementTests(ConceptMergeTestCase):
         )
         self.assertEqual(self.survivor_tiles(STATEMENT_NODEGROUP).count(), 1)
 
-    def test_reparenting_to_the_survivor_never_makes_it_its_own_parent(self):
-        self.make_child_of(self.survivor, self.absorbed)
-        sibling = self.concepts[3]
-        self.make_child_of(sibling, self.absorbed)
-
-        merge_concepts(
-            self.survivor,
-            self.absorbed,
-            {
-                "absorbed_concept_id": str(self.absorbed.pk),
-                "create_exact_match_tiles": False,
-                "retire_absorbed_concept": True,
-                "retirement_strategy": STRATEGY_REPARENT_TO_SURVIVOR,
-            },
-            self.admin,
+    def test_survivor_beneath_the_absorbed_concept_limits_the_strategies(self):
+        """Merging a grandparent into its grandchild, as in Furniture > Seating > Chairs."""
+        grandparent = self.survivor
+        grandchild = self.concepts[3]
+        ResourceInstance.objects.filter(pk=grandchild.pk).update(
+            resource_instance_lifecycle_state_id=EDITING_STATE_ID
         )
+        grandchild.refresh_from_db()
 
-        self.assertNotIn(str(self.survivor.pk), get_broader_ids(str(self.survivor.pk)))
-        self.assertEqual(get_broader_ids(str(sibling.pk)), {str(self.survivor.pk)})
+        for strategy in (STRATEGY_REPARENT_TO_SURVIVOR, STRATEGY_DELETE_CHILDREN):
+            with self.subTest(strategy=strategy):
+                self.assertMergeRejected(
+                    grandchild,
+                    grandparent,
+                    retire_absorbed_concept=True,
+                    retirement_strategy=strategy,
+                )
+
+        validate_merge(
+            grandchild,
+            grandparent,
+            {
+                "retire_absorbed_concept": True,
+                "retirement_strategy": STRATEGY_REPARENT,
+            },
+            False,
+        )
 
     def test_absorbed_concept_stays_active_when_retirement_is_declined(self):
         merge_concepts(
