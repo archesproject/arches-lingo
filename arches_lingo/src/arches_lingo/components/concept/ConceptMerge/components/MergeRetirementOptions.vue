@@ -28,12 +28,14 @@ const {
     absorbedLabel,
     survivorLabel,
     retirementStrategy,
+    isDeletion,
 } = defineProps<{
     absorbedConceptId: string;
     survivorConceptId: string;
     absorbedLabel: string | undefined;
     survivorLabel: string | undefined;
     retirementStrategy: MergeRetirementStrategy;
+    isDeletion: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -56,9 +58,46 @@ const hasChildren = computed(function () {
 });
 
 const childrenText = computed(function () {
+    const values = {
+        name: absorbedLabel ?? "",
+        count: String(children.value.length),
+    };
+    if (isDeletion) {
+        return $gettext(
+            '"%{name}" has %{count} direct child concept(s). How should they be handled when it is deleted?',
+            values,
+        );
+    }
     return $gettext(
         '"%{name}" has %{count} direct child concept(s). How should they be handled when it is retired?',
-        { name: absorbedLabel ?? "", count: String(children.value.length) },
+        values,
+    );
+});
+
+const removeChildrenTitle = computed(function () {
+    if (isDeletion) {
+        return $gettext("Delete all children");
+    }
+    return $gettext("Retire all children");
+});
+
+const removeChildrenDescription = computed(function () {
+    if (isDeletion) {
+        return $gettext(
+            "This concept and all its descendants will be deleted. Only possible while every descendant is still a draft.",
+        );
+    }
+    return $gettext("This concept and all its descendants will be retired.");
+});
+
+const reparentToParentsDescription = computed(function () {
+    if (isDeletion) {
+        return $gettext(
+            "Child concepts move up to the parents of the concept being deleted. For polyhierarchical concepts, all parents receive the children.",
+        );
+    }
+    return $gettext(
+        "Child concepts move up to the parents of the concept being retired. For polyhierarchical concepts, all parents receive the children.",
     );
 });
 
@@ -202,11 +241,7 @@ function isConceptOnAnyPath(
                     {{ $gettext("Attach children to their existing parents") }}
                 </span>
                 <span class="retirement-desc">
-                    {{
-                        $gettext(
-                            "Child concepts move up to the parents of the concept being retired. For polyhierarchical concepts, all parents receive the children.",
-                        )
-                    }}
+                    {{ reparentToParentsDescription }}
                 </span>
             </span>
         </label>
@@ -230,14 +265,10 @@ function isConceptOnAnyPath(
             />
             <span class="retirement-label">
                 <span class="retirement-title">
-                    {{ $gettext("Retire all children") }}
+                    {{ removeChildrenTitle }}
                 </span>
                 <span class="retirement-desc">
-                    {{
-                        $gettext(
-                            "This concept and all its descendants will be retired.",
-                        )
-                    }}
+                    {{ removeChildrenDescription }}
                 </span>
             </span>
         </label>

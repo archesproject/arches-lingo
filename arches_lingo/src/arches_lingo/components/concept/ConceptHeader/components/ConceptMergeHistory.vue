@@ -40,6 +40,11 @@ function entryText(entry: ConceptMergeHistoryEntry) {
             systemLanguage.value.code,
         ).value || $gettext("a deleted concept");
 
+    if (!entry.counterpart_concept_exists) {
+        return $gettext("Merged from %{name} (deleted)", {
+            name: counterpartName,
+        });
+    }
     if (entry.direction === "absorbed" && entry.is_cross_scheme) {
         return $gettext("Values copied from %{name}", {
             name: counterpartName,
@@ -79,11 +84,13 @@ async function loadMergeHistory() {
         >
             <i class="pi pi-sign-in"></i>
             <Button
+                v-if="entry.counterpart_concept_exists"
                 :label="entryText(entry)"
                 variant="link"
                 class="concept-merge-link"
                 @click="openCounterpart(entry)"
             />
+            <span v-else>{{ entryText(entry) }}</span>
         </li>
     </ul>
 </template>

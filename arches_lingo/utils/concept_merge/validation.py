@@ -6,6 +6,7 @@ from arches.app.models.models import TileModel
 
 from arches_lingo.const import CONCEPT_NAME_NODEGROUP, CONCEPTS_GRAPH_ID
 from arches_lingo.utils.concept_lifecycle import (
+    DRAFT_STATE_ID,
     EDITING_STATE_ID,
     LOCKED_STATE_ID,
     STRATEGY_DELETE_CHILDREN,
@@ -14,6 +15,7 @@ from arches_lingo.utils.concept_lifecycle import (
     get_all_descendant_ids,
     get_narrower_ids,
     get_scheme_id_if_top_concept,
+    has_non_draft_descendants,
 )
 from arches_lingo.utils.concept_merge.rules import ConceptMergeGraph
 from arches_lingo.utils.concept_merge.tiles import (
@@ -75,8 +77,13 @@ def concept_is_writable(concept, user_is_lingo_admin):
     return True
 
 
-def is_retirable_by_merge(concept, user_is_lingo_admin):
-    if concept.resource_instance_lifecycle_state_id == EDITING_STATE_ID:
+def is_removable_by_merge(concept, user_is_lingo_admin):
+    """Within a scheme the absorbed concept is retired or, as a draft, deleted
+    by the merge, so its state has to allow one of the two."""
+    if concept.resource_instance_lifecycle_state_id in (
+        EDITING_STATE_ID,
+        DRAFT_STATE_ID,
+    ):
         return True
     return (
         user_is_lingo_admin
@@ -126,16 +133,15 @@ def validate_merge(survivor, absorbed, selections, user_is_lingo_admin):
             status=HTTPStatus.CONFLICT,
         )
 
-    # Within a scheme the absorbed concept is retired as part of the merge, so
-    # its state has to allow that. Across schemes it is never retired, so it is
-    # only read from and nothing about its state stands in the way.
-    if not is_cross_scheme and not is_retirable_by_merge(absorbed, user_is_lingo_admin):
+    # Across schemes the absorbed concept is only read from, so nothing about its
+    # state stands in the way.
+    if not is_cross_scheme and not is_removable_by_merge(absorbed, user_is_lingo_admin):
         raise ConceptMergeError(
             _("Cannot merge"),
             _(
-                "Only a concept in the Editing state can be merged into another "
-                "concept in the same scheme, because it must be retirable "
-                "afterwards."
+                "Only a concept in the Editing or Draft state can be merged into "
+                "another concept in the same scheme, because it must be retirable "
+                "or deletable afterwards."
             ),
             status=HTTPStatus.CONFLICT,
         )
@@ -156,22 +162,49 @@ def validate_merge(survivor, absorbed, selections, user_is_lingo_admin):
         selections.get("pref_label_demotions") or [],
         _("Tile %(tileid)s is not a label of the absorbed concept."),
     )
-    validate_retirement(survivor, absorbed, selections, is_cross_scheme)
+    validate_absorbed_removal(survivor, absorbed, selections, is_cross_scheme)
 
 
-def validate_retirement(survivor, absorbed, selections, is_cross_scheme=False):
-    if not selections.get("retire_absorbed_concept"):
+def validate_absorbed_removal(survivor, absorbed, selections, is_cross_scheme=False):
+    """Check retiring or deleting the absorbed concept as part of the merge.
+
+    A draft has never been published, so it is deleted rather than retired;
+    anything else is retired rather than deleted.
+    """
+    should_retire = bool(selections.get("retire_absorbed_concept"))
+    should_delete = bool(selections.get("delete_absorbed_concept"))
+    if not should_retire and not should_delete:
         return
 
-    # Retiring rehomes the concept's children, and every strategy for doing so
-    # resolves within one scheme.
+    if should_retire and should_delete:
+        raise ConceptMergeError(
+            _("Cannot merge"),
+            _("The absorbed concept can be retired or deleted, not both."),
+        )
+
+    # Either way the concept's children are rehomed, and every strategy for
+    # doing so resolves within one scheme.
     if is_cross_scheme:
         raise ConceptMergeError(
             _("Cannot merge"),
             _(
-                "A concept can only be retired by a merge within its own "
-                "scheme. Merging across schemes leaves it in place."
+                "A concept can only be retired or deleted by a merge within its "
+                "own scheme. Merging across schemes leaves it in place."
             ),
+        )
+
+    is_draft = absorbed.resource_instance_lifecycle_state_id == DRAFT_STATE_ID
+    if should_delete and not is_draft:
+        raise ConceptMergeError(
+            _("Cannot merge"),
+            _("Only a draft concept can be deleted by a merge. Retire it instead."),
+            status=HTTPStatus.CONFLICT,
+        )
+    if should_retire and is_draft:
+        raise ConceptMergeError(
+            _("Cannot merge"),
+            _("A draft concept is deleted by a merge rather than retired."),
+            status=HTTPStatus.CONFLICT,
         )
 
     retirement_strategy = selections.get("retirement_strategy")
@@ -183,7 +216,7 @@ def validate_retirement(survivor, absorbed, selections, is_cross_scheme=False):
             _("Strategy required"),
             _(
                 "The concept being merged away has children. Choose how they "
-                "should be handled before retiring it."
+                "should be handled before removing it."
             ),
         )
 
@@ -195,9 +228,23 @@ def validate_retirement(survivor, absorbed, selections, is_cross_scheme=False):
             _(
                 "The surviving concept sits beneath the concept being merged "
                 "away, so its children cannot be attached to the surviving "
-                "concept or retired with it. Attach them to their existing "
+                "concept or removed with it. Attach them to their existing "
                 "parents instead."
             ),
+        )
+
+    if (
+        should_delete
+        and retirement_strategy == STRATEGY_DELETE_CHILDREN
+        and has_non_draft_descendants(str(absorbed.pk))
+    ):
+        raise ConceptMergeError(
+            _("Cannot merge"),
+            _(
+                "One or more child concepts have been published, so they cannot "
+                "be deleted along with the draft."
+            ),
+            status=HTTPStatus.CONFLICT,
         )
 
 

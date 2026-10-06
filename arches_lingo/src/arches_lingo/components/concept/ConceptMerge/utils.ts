@@ -7,6 +7,7 @@ import {
 import type { AliasedNodeData } from "@/arches_vue_components/types.ts";
 import type {
     MergeRequestPayload,
+    MergeRetirementStrategy,
     MergeTileState,
     SearchResultItem,
 } from "@/arches_lingo/types.ts";
@@ -281,6 +282,7 @@ export function buildMergePayload(
     prefLabelWinnerByLanguage: Record<string, string>,
     retirement: MergeRetirementChoice,
     isCrossScheme = false,
+    isAbsorbedDraft = false,
 ): MergeRequestPayload {
     const selectableComparisons = sectionComparisons.filter(
         (comparison) => !comparison.isBlocked,
@@ -311,8 +313,13 @@ export function buildMergePayload(
         }
     }
 
-    // A merge across schemes never retires the absorbed concept.
-    const shouldRetire = !isCrossScheme && retirement.retireAbsorbedConcept;
+    // A merge across schemes never removes the absorbed concept. Within a scheme
+    // a draft is deleted rather than retired, and has no URI to match against.
+    const shouldRemove = !isCrossScheme && retirement.removeAbsorbedConcept;
+    let retirementStrategy: MergeRetirementStrategy | null = null;
+    if (shouldRemove) {
+        retirementStrategy = retirement.retirementStrategy;
+    }
 
     return {
         absorbed_concept_id: absorbedConceptId,
@@ -320,11 +327,11 @@ export function buildMergePayload(
         digital_object_selections: digitalObjectSelections,
         pref_label_demotions: prefLabelDemotions,
         survivor_pref_label_demotions: survivorPrefLabelDemotions,
-        create_exact_match_tiles: retirement.createExactMatchTiles,
-        retire_absorbed_concept: shouldRetire,
-        retirement_strategy: shouldRetire
-            ? retirement.retirementStrategy
-            : null,
+        create_exact_match_tiles:
+            retirement.createExactMatchTiles && !isAbsorbedDraft,
+        retire_absorbed_concept: shouldRemove && !isAbsorbedDraft,
+        delete_absorbed_concept: shouldRemove && isAbsorbedDraft,
+        retirement_strategy: retirementStrategy,
     };
 }
 

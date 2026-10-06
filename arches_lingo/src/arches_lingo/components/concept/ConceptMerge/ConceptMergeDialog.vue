@@ -33,6 +33,7 @@ import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 import {
     DANGER,
+    DRAFT_LIFECYCLE_STATE_ID,
     ERROR,
     SECONDARY,
     STRATEGY_REPARENT_TO_SURVIVOR,
@@ -128,7 +129,7 @@ const mergePreview = ref<ConceptMergePreview>();
 const isLoadingAbsorbedConcept = ref(false);
 const fetchError = ref<string | null>(null);
 const createExactMatchTiles = ref(true);
-const retireAbsorbedConcept = ref(true);
+const removeAbsorbedConcept = ref(true);
 const retirementStrategy = ref<MergeRetirementStrategy>(
     STRATEGY_REPARENT_TO_SURVIVOR,
 );
@@ -150,6 +151,13 @@ const nextStep = computed(function () {
 
 const isCrossScheme = computed(function () {
     return mergePreview.value?.is_cross_scheme ?? false;
+});
+
+const isAbsorbedDraft = computed(function () {
+    return (
+        selectedConcept.value?.resource_instance_lifecycle_state_id ===
+        DRAFT_LIFECYCLE_STATE_ID
+    );
 });
 
 const canCompare = computed(function () {
@@ -266,10 +274,11 @@ async function onMergeConfirmed() {
                 selectionState.value.prefLabelWinnerByLanguage,
                 {
                     createExactMatchTiles: createExactMatchTiles.value,
-                    retireAbsorbedConcept: retireAbsorbedConcept.value,
+                    removeAbsorbedConcept: removeAbsorbedConcept.value,
                     retirementStrategy: retirementStrategy.value,
                 },
                 isCrossScheme.value,
+                isAbsorbedDraft.value,
             ),
         );
         emit("merged");
@@ -330,7 +339,7 @@ async function onMergeConfirmed() {
                             <p class="merge-step-intro">
                                 {{
                                     $gettext(
-                                        'Choose the concept to merge into "%{name}". "%{name}" stays, the values you pick are copied onto it, and within the same scheme the other concept can be retired afterwards.',
+                                        'Choose the concept to merge into "%{name}". "%{name}" stays, the values you pick are copied onto it, and within the same scheme the other concept can be retired (or, if it is a draft, deleted) afterwards.',
                                         { name: survivorLabel ?? "" },
                                     )
                                 }}
@@ -388,8 +397,8 @@ async function onMergeConfirmed() {
                                 v-model:create-exact-match-tiles="
                                     createExactMatchTiles
                                 "
-                                v-model:retire-absorbed-concept="
-                                    retireAbsorbedConcept
+                                v-model:remove-absorbed-concept="
+                                    removeAbsorbedConcept
                                 "
                                 v-model:retirement-strategy="retirementStrategy"
                                 :absorbed-concept-id="
@@ -404,6 +413,7 @@ async function onMergeConfirmed() {
                                     selectionState?.sectionSummaries ?? []
                                 "
                                 :is-cross-scheme="isCrossScheme"
+                                :is-absorbed-draft="isAbsorbedDraft"
                             />
 
                             <Message
@@ -530,10 +540,14 @@ async function onMergeConfirmed() {
     min-height: 0;
 }
 
+/* PrimeVue draws a Message's border as an outline outside its box, which this
+   scrolling container would otherwise clip. */
 .merge-step-body {
     flex: 1;
     min-height: 0;
     overflow-y: auto;
+    padding-block: var(--p-message-border-width);
+    padding-inline-start: var(--p-message-border-width);
     padding-inline-end: 0.5rem;
 }
 

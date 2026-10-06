@@ -211,8 +211,19 @@ def orphan_children(concept_id: str, edit_transaction_id=None):
             classification_tile.delete()
 
 
+def has_non_draft_descendants(concept_id: str) -> bool:
+    return (
+        ResourceInstance.objects.filter(pk__in=get_all_descendant_ids(concept_id))
+        .exclude(resource_instance_lifecycle_state_id=DRAFT_STATE_ID)
+        .exists()
+    )
+
+
 def delete_concept(
-    concept: ResourceInstance, strategy: str | None, edit_transaction_id=None
+    concept: ResourceInstance,
+    strategy: str | None,
+    reparent_target_id: str | None = None,
+    edit_transaction_id=None,
 ):
     """Delete a concept, rehoming its children according to `strategy`.
 
@@ -221,17 +232,22 @@ def delete_concept(
     """
     concept_id = str(concept.pk)
 
-    if strategy == STRATEGY_DELETE_CHILDREN:
-        descendant_ids = get_all_descendant_ids(concept_id)
-        if (
-            ResourceInstance.objects.filter(pk__in=descendant_ids)
-            .exclude(resource_instance_lifecycle_state_id=DRAFT_STATE_ID)
-            .exists()
-        ):
+    if strategy == STRATEGY_REPARENT_TO_SURVIVOR and reparent_target_id:
+        reparent_children(
+            concept_id,
+            {str(reparent_target_id)},
+            get_scheme_id_if_top_concept(concept_id),
+            edit_transaction_id,
+        )
+
+    elif strategy == STRATEGY_DELETE_CHILDREN:
+        if has_non_draft_descendants(concept_id):
             raise ValueError(
                 "One or more descendant concepts have been published and cannot be deleted."
             )
-        ResourceInstance.objects.filter(pk__in=descendant_ids).delete()
+        ResourceInstance.objects.filter(
+            pk__in=get_all_descendant_ids(concept_id)
+        ).delete()
 
     elif strategy == STRATEGY_REPARENT:
         reparent_children(

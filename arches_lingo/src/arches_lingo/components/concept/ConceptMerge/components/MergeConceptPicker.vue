@@ -11,12 +11,20 @@ import Message from "primevue/message";
 import SearchResult from "@/arches_lingo/components/basic-search/SearchResult.vue";
 
 import { fetchConceptResources } from "@/arches_lingo/api.ts";
-import { EDITING_LIFECYCLE_STATE_ID, ERROR } from "@/arches_lingo/constants.ts";
+import {
+    DRAFT_LIFECYCLE_STATE_ID,
+    EDITING_LIFECYCLE_STATE_ID,
+    ERROR,
+} from "@/arches_lingo/constants.ts";
 
 import type { SearchResultItem } from "@/arches_lingo/types.ts";
 
 const ITEMS_PER_PAGE = 25;
 const SEARCH_DEBOUNCE_MILLISECONDS = 300;
+const REMOVABLE_LIFECYCLE_STATE_IDS = [
+    EDITING_LIFECYCLE_STATE_ID,
+    DRAFT_LIFECYCLE_STATE_ID,
+];
 
 const { schemeId, survivorConceptId, selectedConceptId } = defineProps<{
     schemeId: string;
@@ -73,14 +81,15 @@ function getCandidateSchemeId(candidate: SearchResultItem) {
     return candidate.parents?.[0]?.[0]?.id;
 }
 
-// A merge within the survivor's scheme retires the absorbed concept, which only
-// the Editing state allows. Across schemes the concept is only read from, so any
-// state can be absorbed. The server enforces both.
+// A merge within the survivor's scheme retires the absorbed concept, or deletes it
+// if it is a draft, so only those two states qualify. Across schemes the concept
+// is only read from, so any state can be absorbed. The server enforces both.
 function isMergeable(candidate: SearchResultItem) {
     return (
         getCandidateSchemeId(candidate) !== schemeId ||
-        candidate.resource_instance_lifecycle_state_id ===
-            EDITING_LIFECYCLE_STATE_ID
+        REMOVABLE_LIFECYCLE_STATE_IDS.includes(
+            candidate.resource_instance_lifecycle_state_id ?? "",
+        )
     );
 }
 
@@ -190,7 +199,7 @@ function discardPendingSearch() {
                     >
                         {{
                             $gettext(
-                                "Only a concept in the Editing state can be merged within this scheme, because it is retired afterwards.",
+                                "Only a concept in the Editing or Draft state can be merged within this scheme, because it is retired or deleted afterwards.",
                             )
                         }}
                     </span>

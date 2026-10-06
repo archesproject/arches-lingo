@@ -158,6 +158,9 @@ class ConceptMerge(models.Model):
     survivor_concept_id = models.UUIDField(db_index=True)
     absorbed_concept_id = models.UUIDField(db_index=True)
     is_cross_scheme = models.BooleanField(default=False)
+    # The absorbed concept's labels as they stood at the merge, so the survivor's
+    # history can still name a draft the merge deleted.
+    absorbed_concept_labels = models.JSONField(default=list, blank=True)
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         null=True,

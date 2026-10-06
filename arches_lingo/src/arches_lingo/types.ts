@@ -624,6 +624,7 @@ export interface MergeRequestPayload {
     survivor_pref_label_demotions: string[];
     create_exact_match_tiles: boolean;
     retire_absorbed_concept: boolean;
+    delete_absorbed_concept: boolean;
     retirement_strategy: MergeRetirementStrategy | null;
 }
 
@@ -652,4 +653,5 @@ export interface ConceptMergeHistoryEntry {
     is_cross_scheme: boolean;
     counterpart_concept_id: string;
     counterpart_concept_labels: Label[];
+    counterpart_concept_exists: boolean;
 }

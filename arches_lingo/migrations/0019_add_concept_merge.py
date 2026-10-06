@@ -28,6 +28,10 @@ class Migration(migrations.Migration):
                 ("survivor_concept_id", models.UUIDField(db_index=True)),
                 ("absorbed_concept_id", models.UUIDField(db_index=True)),
                 ("is_cross_scheme", models.BooleanField(default=False)),
+                (
+                    "absorbed_concept_labels",
+                    models.JSONField(blank=True, default=list),
+                ),
                 ("created", models.DateTimeField(auto_now_add=True)),
                 (
                     "edit_transaction_id",

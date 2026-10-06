@@ -12,22 +12,29 @@ import { INFO, WARN } from "@/arches_lingo/constants.ts";
 import type { MergeRetirementStrategy } from "@/arches_lingo/types.ts";
 import type { MergeSectionSummary } from "@/arches_lingo/components/concept/ConceptMerge/types.ts";
 
-const { survivorLabel, absorbedLabel, sectionSummaries, isCrossScheme } =
-    defineProps<{
-        absorbedConceptId: string;
-        survivorConceptId: string;
-        survivorLabel: string | undefined;
-        absorbedLabel: string | undefined;
-        sectionSummaries: MergeSectionSummary[];
-        createExactMatchTiles: boolean;
-        retireAbsorbedConcept: boolean;
-        retirementStrategy: MergeRetirementStrategy;
-        isCrossScheme: boolean;
-    }>();
+const {
+    survivorLabel,
+    absorbedLabel,
+    sectionSummaries,
+    isCrossScheme,
+    isAbsorbedDraft,
+    removeAbsorbedConcept,
+} = defineProps<{
+    absorbedConceptId: string;
+    survivorConceptId: string;
+    survivorLabel: string | undefined;
+    absorbedLabel: string | undefined;
+    sectionSummaries: MergeSectionSummary[];
+    createExactMatchTiles: boolean;
+    removeAbsorbedConcept: boolean;
+    retirementStrategy: MergeRetirementStrategy;
+    isCrossScheme: boolean;
+    isAbsorbedDraft: boolean;
+}>();
 
 const emit = defineEmits<{
     (event: "update:createExactMatchTiles", value: boolean): void;
-    (event: "update:retireAbsorbedConcept", value: boolean): void;
+    (event: "update:removeAbsorbedConcept", value: boolean): void;
     (
         event: "update:retirementStrategy",
         strategy: MergeRetirementStrategy,
@@ -52,6 +59,37 @@ const summaryText = computed(function () {
 
 const hasSelections = computed(function () {
     return sectionSummaries.length > 0;
+});
+
+const irreversibilityWarning = computed(function () {
+    if (isAbsorbedDraft && removeAbsorbedConcept) {
+        return $gettext(
+            'Merges cannot be undone. Copied values become new values on the surviving concept, and "%{absorbed}" is permanently deleted.',
+            { absorbed: absorbedLabel ?? "" },
+        );
+    }
+    return $gettext(
+        "Merges cannot be undone. Copied values become new values on the surviving concept.",
+    );
+});
+
+const removalTitle = computed(function () {
+    const names = { absorbed: absorbedLabel ?? "" };
+    if (isAbsorbedDraft) {
+        return $gettext('Delete "%{absorbed}" afterwards', names);
+    }
+    return $gettext('Retire "%{absorbed}" afterwards', names);
+});
+
+const removalDescription = computed(function () {
+    if (isAbsorbedDraft) {
+        return $gettext(
+            "It is a draft that has never been published, so it is permanently deleted along with its values. Deletion happens as part of the merge, so either both land or neither does.",
+        );
+    }
+    return $gettext(
+        "Retirement happens as part of the merge, so either both land or neither does.",
+    );
 });
 </script>
 
@@ -86,7 +124,21 @@ const hasSelections = computed(function () {
             </li>
         </ul>
 
+        <Message
+            v-if="isAbsorbedDraft"
+            :severity="INFO"
+            :closable="false"
+        >
+            {{
+                $gettext(
+                    '"%{absorbed}" is a draft and has no URI yet, so no exactMatch is recorded.',
+                    { absorbed: absorbedLabel ?? "" },
+                )
+            }}
+        </Message>
+
         <label
+            v-else
             class="merge-confirmation-option"
             for="merge-exact-match"
         >
@@ -119,7 +171,7 @@ const hasSelections = computed(function () {
         >
             {{
                 $gettext(
-                    'The two concepts are in different schemes, so "%{absorbed}" stays where it is and is left unchanged. Retiring it is only offered for a merge within one scheme.',
+                    'The two concepts are in different schemes, so "%{absorbed}" stays where it is and is left unchanged. Retiring or deleting it is only offered for a merge within one scheme.',
                     { absorbed: absorbedLabel ?? "" },
                 )
             }}
@@ -128,41 +180,32 @@ const hasSelections = computed(function () {
         <label
             v-if="!isCrossScheme"
             class="merge-confirmation-option"
-            for="merge-retire"
+            for="merge-remove"
         >
             <Checkbox
-                :model-value="retireAbsorbedConcept"
-                input-id="merge-retire"
+                :model-value="removeAbsorbedConcept"
+                input-id="merge-remove"
                 :binary="true"
                 @update:model-value="
-                    emit('update:retireAbsorbedConcept', $event as boolean)
+                    emit('update:removeAbsorbedConcept', $event as boolean)
                 "
             />
             <span class="merge-confirmation-option-body">
-                <span>
-                    {{
-                        $gettext('Retire "%{absorbed}" afterwards', {
-                            absorbed: absorbedLabel ?? "",
-                        })
-                    }}
-                </span>
+                <span>{{ removalTitle }}</span>
                 <span class="merge-confirmation-option-desc">
-                    {{
-                        $gettext(
-                            "Retirement happens as part of the merge, so either both land or neither does.",
-                        )
-                    }}
+                    {{ removalDescription }}
                 </span>
             </span>
         </label>
 
         <MergeRetirementOptions
-            v-if="!isCrossScheme && retireAbsorbedConcept"
+            v-if="!isCrossScheme && removeAbsorbedConcept"
             :absorbed-concept-id="absorbedConceptId"
             :survivor-concept-id="survivorConceptId"
             :absorbed-label="absorbedLabel"
             :survivor-label="survivorLabel"
             :retirement-strategy="retirementStrategy"
+            :is-deletion="isAbsorbedDraft"
             @update:retirement-strategy="
                 emit('update:retirementStrategy', $event)
             "
@@ -172,11 +215,7 @@ const hasSelections = computed(function () {
             :severity="WARN"
             :closable="false"
         >
-            {{
-                $gettext(
-                    "Merges cannot be undone. Copied values become new values on the surviving concept.",
-                )
-            }}
+            {{ irreversibilityWarning }}
         </Message>
     </div>
 </template>

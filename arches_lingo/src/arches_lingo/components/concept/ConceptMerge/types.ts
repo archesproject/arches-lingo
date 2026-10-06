@@ -55,7 +55,7 @@ export interface PrefLabelConflict {
 
 export interface MergeRetirementChoice {
     createExactMatchTiles: boolean;
-    retireAbsorbedConcept: boolean;
+    removeAbsorbedConcept: boolean;
     retirementStrategy: MergeRetirementStrategy;
 }
 

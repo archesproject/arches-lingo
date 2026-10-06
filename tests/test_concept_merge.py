@@ -692,9 +692,9 @@ class ValidateMergeTests(ConceptMergeTestCase):
             False,
         )
 
-    def test_absorbed_concept_must_be_in_editing_state(self):
+    def test_absorbed_concept_must_be_editing_or_draft(self):
         ResourceInstance.objects.filter(pk=self.absorbed.pk).update(
-            resource_instance_lifecycle_state_id=DRAFT_STATE_ID
+            resource_instance_lifecycle_state_id=RETIRED_STATE_ID
         )
         self.absorbed.refresh_from_db()
 
@@ -962,6 +962,98 @@ class MergePreviewTests(ConceptMergeTestCase):
         self.assertTrue(preview["is_cross_scheme"])
         self.assertIn("classification_status", preview["blocked_nodegroup_aliases"])
         self.assertEqual(preview["tile_states"][str(broader_tile.tileid)], TILE_BLOCKED)
+
+
+class MergeDraftDeletionTests(ConceptMergeTestCase):
+    """A draft has never been published, so a merge deletes it rather than retiring it."""
+
+    def setUp(self):
+        super().setUp()
+        ResourceInstance.objects.filter(pk=self.absorbed.pk).update(
+            resource_instance_lifecycle_state_id=DRAFT_STATE_ID
+        )
+        self.absorbed.refresh_from_db()
+
+    def test_a_draft_can_be_merged_and_deleted(self):
+        validate_merge(
+            self.survivor,
+            self.absorbed,
+            {
+                "delete_absorbed_concept": True,
+                "retirement_strategy": STRATEGY_REPARENT_TO_SURVIVOR,
+            },
+            False,
+        )
+
+    def test_a_draft_cannot_be_retired_by_a_merge(self):
+        self.assertMergeRejected(
+            self.survivor,
+            self.absorbed,
+            status=HTTPStatus.CONFLICT,
+            retire_absorbed_concept=True,
+        )
+
+    def test_only_a_draft_can_be_deleted_by_a_merge(self):
+        ResourceInstance.objects.filter(pk=self.absorbed.pk).update(
+            resource_instance_lifecycle_state_id=EDITING_STATE_ID
+        )
+        self.absorbed.refresh_from_db()
+
+        self.assertMergeRejected(
+            self.survivor,
+            self.absorbed,
+            status=HTTPStatus.CONFLICT,
+            delete_absorbed_concept=True,
+        )
+
+    def test_retiring_and_deleting_together_is_rejected(self):
+        self.assertMergeRejected(
+            self.survivor,
+            self.absorbed,
+            retire_absorbed_concept=True,
+            delete_absorbed_concept=True,
+        )
+
+    def test_published_children_cannot_be_deleted_with_the_draft(self):
+        child = self.concepts[3]
+        self.make_child_of(child, self.absorbed)
+        ResourceInstance.objects.filter(pk=child.pk).update(
+            resource_instance_lifecycle_state_id=PUBLISHED_STATE_ID
+        )
+
+        self.assertMergeRejected(
+            self.survivor,
+            self.absorbed,
+            status=HTTPStatus.CONFLICT,
+            delete_absorbed_concept=True,
+            retirement_strategy=STRATEGY_DELETE_CHILDREN,
+        )
+
+    def test_merge_deletes_the_draft_and_keeps_its_name_in_the_history(self):
+        child = self.concepts[3]
+        self.make_child_of(child, self.absorbed)
+        source_tile = self.add_statement_tile(self.absorbed, "Carried over.")
+
+        concept_merge = merge_concepts(
+            self.survivor,
+            self.absorbed,
+            {
+                "absorbed_concept_id": str(self.absorbed.pk),
+                "tile_selections": [str(source_tile.tileid)],
+                "delete_absorbed_concept": True,
+                "retirement_strategy": STRATEGY_REPARENT_TO_SURVIVOR,
+            },
+            self.admin,
+        )
+
+        self.assertFalse(ResourceInstance.objects.filter(pk=self.absorbed.pk).exists())
+        self.assertEqual(get_broader_ids(str(child.pk)), {str(self.survivor.pk)})
+        self.assertEqual(self.survivor_tiles(STATEMENT_NODEGROUP).count(), 1)
+        self.assertEqual(concept_merge.absorbed_concept_labels[0]["value"], "Concept 3")
+
+        [entry] = get_concept_merge_history(self.survivor.pk)
+        self.assertFalse(entry["counterpart_concept_exists"])
+        self.assertEqual(entry["counterpart_concept_labels"][0]["value"], "Concept 3")
 
 
 class MergeRetirementTests(ConceptMergeTestCase):

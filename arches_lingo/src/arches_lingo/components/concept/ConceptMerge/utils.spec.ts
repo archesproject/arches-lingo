@@ -207,7 +207,7 @@ describe("buildMergePayload", () => {
             { en: "absorbed-1" },
             {
                 createExactMatchTiles: true,
-                retireAbsorbedConcept: true,
+                removeAbsorbedConcept: true,
                 retirementStrategy: "reparent_to_survivor",
             },
         );
@@ -243,7 +243,7 @@ describe("buildMergePayload", () => {
             {},
             {
                 createExactMatchTiles: true,
-                retireAbsorbedConcept: true,
+                removeAbsorbedConcept: true,
                 retirementStrategy: "reparent_to_survivor",
             },
             true,
@@ -272,7 +272,7 @@ describe("buildMergePayload", () => {
             {},
             {
                 createExactMatchTiles: true,
-                retireAbsorbedConcept: true,
+                removeAbsorbedConcept: true,
                 retirementStrategy: "reparent_to_survivor",
             },
         );
@@ -300,7 +300,7 @@ describe("buildMergePayload", () => {
             { en: "survivor-1" },
             {
                 createExactMatchTiles: false,
-                retireAbsorbedConcept: false,
+                removeAbsorbedConcept: false,
                 retirementStrategy: "reparent_to_survivor",
             },
         );
@@ -308,6 +308,27 @@ describe("buildMergePayload", () => {
         expect(payload.survivor_pref_label_demotions).toEqual([]);
         expect(payload.pref_label_demotions).toEqual(["absorbed-1"]);
         expect(payload.create_exact_match_tiles).toBe(false);
+    });
+
+    it("deletes a draft instead of retiring it, with no exactMatch", () => {
+        const payload = buildMergePayload(
+            "absorbed-concept",
+            [],
+            [],
+            {},
+            {
+                createExactMatchTiles: true,
+                removeAbsorbedConcept: true,
+                retirementStrategy: "reparent_to_survivor",
+            },
+            false,
+            true,
+        );
+
+        expect(payload.delete_absorbed_concept).toBe(true);
+        expect(payload.retire_absorbed_concept).toBe(false);
+        expect(payload.create_exact_match_tiles).toBe(false);
+        expect(payload.retirement_strategy).toEqual("reparent_to_survivor");
     });
 
     it("sends no retirement strategy when the concept is not being retired", () => {
@@ -325,7 +346,7 @@ describe("buildMergePayload", () => {
             {},
             {
                 createExactMatchTiles: true,
-                retireAbsorbedConcept: false,
+                removeAbsorbedConcept: false,
                 retirementStrategy: "reparent_to_survivor",
             },
         );
@@ -569,7 +590,7 @@ describe("buildSectionComparison for images", () => {
             {},
             {
                 createExactMatchTiles: true,
-                retireAbsorbedConcept: false,
+                removeAbsorbedConcept: false,
                 retirementStrategy: "reparent_to_survivor",
             },
         );
