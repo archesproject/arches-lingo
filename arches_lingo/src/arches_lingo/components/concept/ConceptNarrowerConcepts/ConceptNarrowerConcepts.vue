@@ -12,6 +12,7 @@ import Tag from "primevue/tag";
 import { fetchConceptChildren } from "@/arches_lingo/api.ts";
 import { getConceptIcon, sortItemsByLabel } from "@/arches_lingo/utils.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
+import { useResourceStore } from "@/arches_lingo/composables/useResourceStore.ts";
 import { routeNames } from "@/arches_lingo/routes.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 
@@ -32,6 +33,7 @@ const props = defineProps<{
 
 const { $gettext } = useGettext();
 const toast = useToast();
+const resourceStore = useResourceStore();
 const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
 
 const narrowerConcepts = ref<Concept[]>([]);
@@ -65,12 +67,19 @@ watch(isScrollable, (scrollable) => {
     }
 });
 
-onMounted(async () => {
+// Children are not part of the resource payload, so refreshing the resource after
+// a merge does not refresh this section on its own.
+watch(() => resourceStore.resource.value, loadNarrowerConcepts);
+
+onMounted(loadNarrowerConcepts);
+
+async function loadNarrowerConcepts() {
     if (!props.resourceInstanceId) {
         isLoading.value = false;
         return;
     }
 
+    fetchError.value = undefined;
     try {
         narrowerConcepts.value = await fetchConceptChildren(
             props.resourceInstanceId,
@@ -87,7 +96,7 @@ onMounted(async () => {
     } finally {
         isLoading.value = false;
     }
-});
+}
 </script>
 
 <template>
