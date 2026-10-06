@@ -14,18 +14,17 @@ export function useCandidatePage({
     activeRunId,
     candidateStatus,
     pageNumber,
-    onPastLastPage,
 }: {
-    activeRunId: Ref<number | null>;
+    activeRunId: number | null;
     candidateStatus: Ref<ConceptMatchCandidateStatus>;
     pageNumber: Ref<number>;
-    onPastLastPage: (lastPageNumber: number) => void;
 }): {
     candidates: Ref<ConceptMatchCandidate[]>;
     totalResults: Ref<number>;
     isLoadingCandidates: Ref<boolean>;
     loadError: Ref<string | null>;
     hasUnshownResults: Ref<boolean>;
+    lastPageWhenPastEnd: Ref<number | null>;
     selectedIds: Ref<Set<number>>;
     loadCandidates: (options?: { quiet?: boolean }) => Promise<void>;
     changeSelection: (change: CandidateSelectionChange) => void;
@@ -39,6 +38,9 @@ export function useCandidatePage({
     // While pairs are selected, a refresh would move rows under the reviewer,
     // so new results wait until they ask for them.
     const hasUnshownResults = ref(false);
+    // Set when the page asked for no longer exists -- the queue shrank under a
+    // bookmark, say -- so the caller can move to the last one that does.
+    const lastPageWhenPastEnd = ref<number | null>(null);
     const selectedIds = ref<Set<number>>(new Set());
 
     // Only the newest response is shown, whatever order responses arrive in.
@@ -46,7 +48,7 @@ export function useCandidatePage({
     let loadingRequest = 0;
 
     async function loadCandidates({ quiet = false } = {}): Promise<void> {
-        if (activeRunId.value === null) {
+        if (activeRunId === null) {
             candidates.value = [];
             totalResults.value = 0;
             return;
@@ -68,7 +70,7 @@ export function useCandidatePage({
         const requestedPageNumber = pageNumber.value;
         try {
             const page = await fetchConceptMatchCandidates(
-                activeRunId.value,
+                activeRunId,
                 candidateStatus.value,
                 requestedPageNumber,
                 CANDIDATES_PER_PAGE,
@@ -80,9 +82,10 @@ export function useCandidatePage({
                 Math.ceil(page.total_results / CANDIDATES_PER_PAGE),
             );
             if (!page.data.length && requestedPageNumber > lastPageNumber) {
-                onPastLastPage(lastPageNumber);
+                lastPageWhenPastEnd.value = lastPageNumber;
                 return;
             }
+            lastPageWhenPastEnd.value = null;
             candidates.value = page.data;
             totalResults.value = page.total_results;
         } catch (error) {
@@ -132,6 +135,7 @@ export function useCandidatePage({
         isLoadingCandidates,
         loadError,
         hasUnshownResults,
+        lastPageWhenPastEnd,
         selectedIds,
         loadCandidates,
         changeSelection,

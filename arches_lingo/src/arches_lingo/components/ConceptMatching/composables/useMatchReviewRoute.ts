@@ -1,4 +1,4 @@
-import { ref, watch } from "vue";
+import { computed } from "vue";
 
 import { useRoute, useRouter } from "vue-router";
 
@@ -6,7 +6,7 @@ import { routeNames } from "@/arches_lingo/routes.ts";
 import { CANDIDATE_STATUS_PENDING } from "@/arches_lingo/components/ConceptMatching/constants.ts";
 import { candidateStatusFromRoute } from "@/arches_lingo/components/ConceptMatching/utils.ts";
 
-import type { Ref } from "vue";
+import type { ComputedRef } from "vue";
 import type { RouteLocationRaw } from "vue-router";
 import type { ConceptMatchCandidateStatus } from "@/arches_lingo/types.ts";
 
@@ -16,22 +16,18 @@ interface MatchReviewView {
     status?: ConceptMatchCandidateStatus;
 }
 
-export interface MatchReviewViewChange {
-    runChanged: boolean;
-    statusChanged: boolean;
-}
-
 /**
  * Which run, page and queue are shown lives in the address, so back and forward
  * move between them and a queue can be sent to someone else. The address is
  * the one source of truth: a click and the back button arrive by the same path.
+ *
+ * The run is part of the path, which the app keys its RouterView on, so showing
+ * another run mounts a new page; only the page and queue change underneath one.
  */
-export function useMatchReviewRoute(
-    onViewChanged: (change: MatchReviewViewChange) => void,
-): {
-    activeRunId: Ref<number | null>;
-    candidateStatus: Ref<ConceptMatchCandidateStatus>;
-    pageNumber: Ref<number>;
+export function useMatchReviewRoute(): {
+    activeRunId: number | null;
+    candidateStatus: ComputedRef<ConceptMatchCandidateStatus>;
+    pageNumber: ComputedRef<number>;
     conceptIdToSearchFrom: () => string | null;
     showView: (
         view: MatchReviewView,
@@ -41,27 +37,11 @@ export function useMatchReviewRoute(
     const route = useRoute();
     const router = useRouter();
 
-    const activeRunId = ref(runIdInRoute());
-    const candidateStatus = ref(candidateStatusFromRoute(route.query.status));
-    const pageNumber = ref(pageNumberInRoute());
-
-    watch(
-        () => [route.params.runId, route.query.page, route.query.status],
-        function () {
-            const change = {
-                runChanged: activeRunId.value !== runIdInRoute(),
-                statusChanged:
-                    candidateStatus.value !==
-                    candidateStatusFromRoute(route.query.status),
-            };
-            activeRunId.value = runIdInRoute();
-            candidateStatus.value = candidateStatusFromRoute(
-                route.query.status,
-            );
-            pageNumber.value = pageNumberInRoute();
-            onViewChanged(change);
-        },
+    const activeRunId = runIdInRoute();
+    const candidateStatus = computed(() =>
+        candidateStatusFromRoute(route.query.status),
     );
+    const pageNumber = computed(pageNumberInRoute);
 
     function runIdInRoute(): number | null {
         const rawRunId = Array.isArray(route.params.runId)
@@ -86,7 +66,7 @@ export function useMatchReviewRoute(
     // Only what differs from the default is written down, so the ordinary case
     // -- the first page of a run's outstanding pairs -- stays a plain link.
     function routeForView({
-        runId = activeRunId.value,
+        runId = activeRunId,
         pageNumber: viewPageNumber = pageNumber.value,
         status = candidateStatus.value,
     }: MatchReviewView): RouteLocationRaw {

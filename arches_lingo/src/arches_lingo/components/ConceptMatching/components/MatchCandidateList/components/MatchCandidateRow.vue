@@ -22,9 +22,6 @@ import type {
 } from "@/arches_lingo/types.ts";
 import type { CandidateSelectionChange } from "@/arches_lingo/components/ConceptMatching/types.ts";
 
-const SELECTION_CHANGED_EVENT = "selection-changed" as const;
-const MERGE_REQUESTED_EVENT = "merge-requested" as const;
-
 const {
     candidate,
     isSelected,
@@ -36,14 +33,8 @@ const {
 }>();
 
 const emit = defineEmits<{
-    (
-        event: typeof SELECTION_CHANGED_EVENT,
-        payload: CandidateSelectionChange,
-    ): void;
-    (
-        event: typeof MERGE_REQUESTED_EVENT,
-        payload: { candidateId: number },
-    ): void;
+    (event: "selection-changed", payload: CandidateSelectionChange): void;
+    (event: "merge-requested", payload: { candidateId: number }): void;
 }>();
 
 const { $gettext } = useGettext();
@@ -93,7 +84,7 @@ function openInNewTabLabel(concept: MatchedConceptSummary): string {
 }
 
 function onSelectionChange(isChecked: boolean): void {
-    emit(SELECTION_CHANGED_EVENT, {
+    emit("selection-changed", {
         candidateId: candidate.id,
         isSelected: isChecked,
     });
@@ -164,7 +155,7 @@ function onSelectionChange(isChecked: boolean): void {
             :label="$gettext('Merge')"
             :severity="SECONDARY"
             :outlined="true"
-            @click="emit(MERGE_REQUESTED_EVENT, { candidateId: candidate.id })"
+            @click="emit('merge-requested', { candidateId: candidate.id })"
         />
     </div>
 </template>

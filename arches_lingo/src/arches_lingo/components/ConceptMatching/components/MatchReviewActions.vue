@@ -36,9 +36,11 @@ import type {
     ConceptMatchStatusChange,
 } from "@/arches_lingo/types.ts";
 
-const REVIEW_CHANGED_EVENT = "review-changed" as const;
-const RUN_DELETED_EVENT = "run-deleted" as const;
 const CHANGE_ALL_CONFIRM_GROUP = "change-all-matches";
+const ACTION_LINK = "link";
+const ACTION_UPDATE_SELECTION = "update-selection";
+const ACTION_CHANGE_ALL = "change-all";
+const ACTION_DELETE_RUN = "delete-run";
 const DELETE_RUN_CONFIRM_GROUP = "delete-match-run";
 
 const {
@@ -61,9 +63,15 @@ const {
     canDeleteRun: boolean;
 }>();
 
+type ReviewAction =
+    | typeof ACTION_LINK
+    | typeof ACTION_UPDATE_SELECTION
+    | typeof ACTION_CHANGE_ALL
+    | typeof ACTION_DELETE_RUN;
+
 const emit = defineEmits<{
-    (event: typeof REVIEW_CHANGED_EVENT): void;
-    (event: typeof RUN_DELETED_EVENT, payload: { wasCancelled: boolean }): void;
+    (event: "review-changed"): void;
+    (event: "run-deleted", payload: { wasCancelled: boolean }): void;
 }>();
 
 const { $gettext, $ngettext } = useGettext();
@@ -72,10 +80,10 @@ const confirm = useConfirm();
 const { selectedLanguage } = storeToRefs(useLanguageStore());
 const { reportError } = useErrorToast();
 
-const isLinking = ref(false);
-const isUpdatingSelection = ref(false);
-const isChangingAll = ref(false);
-const isDeletingRun = ref(false);
+// One request at a time: each changes what the others would act on.
+const actionInFlight = ref<ReviewAction | null>(null);
+
+const isActionInFlight = computed(() => actionInFlight.value !== null);
 
 const isReviewingPending = computed(
     () => candidateStatus === CANDIDATE_STATUS_PENDING,
@@ -85,7 +93,7 @@ const isReviewingDismissed = computed(
 );
 const selectedCount = computed(() => selectedCandidateIds.length);
 const canActOnSelection = computed(
-    () => selectedCount.value > 0 && !isUpdatingSelection.value,
+    () => selectedCount.value > 0 && !isActionInFlight.value,
 );
 const canDismissAll = computed(
     () => isReviewingPending.value && pendingCount > 0,
@@ -169,38 +177,52 @@ function reportLinkResult(result: ConceptMatchLinkResult): void {
     });
 }
 
-async function linkSelection(): Promise<void> {
-    isLinking.value = true;
+async function runExclusively(
+    action: ReviewAction,
+    request: () => Promise<void>,
+): Promise<void> {
+    if (isActionInFlight.value) return;
+    actionInFlight.value = action;
     try {
-        reportLinkResult(
-            await linkConceptMatchCandidates(runId, selectedCandidateIds),
-        );
-        emit(REVIEW_CHANGED_EVENT);
-    } catch (error) {
-        reportError(error, $gettext("Could not link the selected pairs."));
+        await request();
     } finally {
-        isLinking.value = false;
+        actionInFlight.value = null;
     }
+}
+
+async function linkSelection(): Promise<void> {
+    await runExclusively(ACTION_LINK, async function () {
+        try {
+            reportLinkResult(
+                await linkConceptMatchCandidates(runId, selectedCandidateIds),
+            );
+            emit("review-changed");
+        } catch (error) {
+            reportError(error, $gettext("Could not link the selected pairs."));
+        }
+    });
 }
 
 async function setStatusForSelection(
     status: ConceptMatchCandidateStatus,
 ): Promise<void> {
-    isUpdatingSelection.value = true;
-    try {
-        reportStatusChange(
-            await updateConceptMatchCandidates(
-                runId,
-                selectedCandidateIds,
-                status,
-            ),
-        );
-        emit(REVIEW_CHANGED_EVENT);
-    } catch (error) {
-        reportError(error, $gettext("Could not update the selected pairs."));
-    } finally {
-        isUpdatingSelection.value = false;
-    }
+    await runExclusively(ACTION_UPDATE_SELECTION, async function () {
+        try {
+            reportStatusChange(
+                await updateConceptMatchCandidates(
+                    runId,
+                    selectedCandidateIds,
+                    status,
+                ),
+            );
+            emit("review-changed");
+        } catch (error) {
+            reportError(
+                error,
+                $gettext("Could not update the selected pairs."),
+            );
+        }
+    });
 }
 
 function confirmStatusChangeForAll(status: ConceptMatchCandidateStatus): void {
@@ -232,22 +254,21 @@ function confirmStatusChangeForAll(status: ConceptMatchCandidateStatus): void {
 async function changeStatusForAll(
     status: ConceptMatchCandidateStatus,
 ): Promise<void> {
-    isChangingAll.value = true;
-    try {
-        reportStatusChange(
-            await updateAllConceptMatchCandidates(runId, status),
-        );
-        emit(REVIEW_CHANGED_EVENT);
-    } catch (error) {
-        reportError(
-            error,
-            status === CANDIDATE_STATUS_DISMISSED
-                ? $gettext("Could not dismiss the remaining pairs.")
-                : $gettext("Could not restore the dismissed pairs."),
-        );
-    } finally {
-        isChangingAll.value = false;
-    }
+    await runExclusively(ACTION_CHANGE_ALL, async function () {
+        try {
+            reportStatusChange(
+                await updateAllConceptMatchCandidates(runId, status),
+            );
+            emit("review-changed");
+        } catch (error) {
+            reportError(
+                error,
+                status === CANDIDATE_STATUS_DISMISSED
+                    ? $gettext("Could not dismiss the remaining pairs.")
+                    : $gettext("Could not restore the dismissed pairs."),
+            );
+        }
+    });
 }
 
 // Deleting is also how a run still working is cancelled.
@@ -273,27 +294,26 @@ function confirmDeleteRun(): void {
 }
 
 async function deleteRun(wasCancelled: boolean): Promise<void> {
-    isDeletingRun.value = true;
-    try {
-        await deleteConceptMatchRun(runId);
-        toast.add({
-            severity: SUCCESS,
-            life: DEFAULT_TOAST_LIFE,
-            summary: wasCancelled
-                ? $gettext("Run cancelled")
-                : $gettext("Run deleted"),
-        });
-        emit(RUN_DELETED_EVENT, { wasCancelled });
-    } catch (error) {
-        reportError(
-            error,
-            wasCancelled
-                ? $gettext("Could not cancel the run.")
-                : $gettext("Could not delete the run."),
-        );
-    } finally {
-        isDeletingRun.value = false;
-    }
+    await runExclusively(ACTION_DELETE_RUN, async function () {
+        try {
+            await deleteConceptMatchRun(runId);
+            toast.add({
+                severity: SUCCESS,
+                life: DEFAULT_TOAST_LIFE,
+                summary: wasCancelled
+                    ? $gettext("Run cancelled")
+                    : $gettext("Run deleted"),
+            });
+            emit("run-deleted", { wasCancelled });
+        } catch (error) {
+            reportError(
+                error,
+                wasCancelled
+                    ? $gettext("Could not cancel the run.")
+                    : $gettext("Could not delete the run."),
+            );
+        }
+    });
 }
 </script>
 
@@ -306,8 +326,8 @@ async function deleteRun(wasCancelled: boolean): Promise<void> {
                 :label="
                     $gettext('Link %{count}', { count: String(selectedCount) })
                 "
-                :disabled="!selectedCount || isLinking"
-                :loading="isLinking"
+                :disabled="!canActOnSelection"
+                :loading="actionInFlight === ACTION_LINK"
                 @click="linkSelection"
             />
             <Button
@@ -321,7 +341,7 @@ async function deleteRun(wasCancelled: boolean): Promise<void> {
                 :severity="SECONDARY"
                 :outlined="true"
                 :disabled="!canActOnSelection"
-                :loading="isUpdatingSelection"
+                :loading="actionInFlight === ACTION_UPDATE_SELECTION"
                 @click="setStatusForSelection(CANDIDATE_STATUS_DISMISSED)"
             />
         </template>
@@ -336,7 +356,7 @@ async function deleteRun(wasCancelled: boolean): Promise<void> {
             :severity="SECONDARY"
             :outlined="true"
             :disabled="!canActOnSelection"
-            :loading="isUpdatingSelection"
+            :loading="actionInFlight === ACTION_UPDATE_SELECTION"
             @click="setStatusForSelection(CANDIDATE_STATUS_PENDING)"
         />
 
@@ -351,8 +371,8 @@ async function deleteRun(wasCancelled: boolean): Promise<void> {
             "
             :severity="SECONDARY"
             :outlined="true"
-            :disabled="isChangingAll"
-            :loading="isChangingAll"
+            :disabled="isActionInFlight"
+            :loading="actionInFlight === ACTION_CHANGE_ALL"
             @click="confirmStatusChangeForAll(CANDIDATE_STATUS_DISMISSED)"
         />
 
@@ -367,8 +387,8 @@ async function deleteRun(wasCancelled: boolean): Promise<void> {
             "
             :severity="SECONDARY"
             :outlined="true"
-            :disabled="isChangingAll"
-            :loading="isChangingAll"
+            :disabled="isActionInFlight"
+            :loading="actionInFlight === ACTION_CHANGE_ALL"
             @click="confirmStatusChangeForAll(CANDIDATE_STATUS_PENDING)"
         />
 
@@ -383,8 +403,8 @@ async function deleteRun(wasCancelled: boolean): Promise<void> {
             "
             :severity="DANGER"
             :outlined="true"
-            :disabled="isDeletingRun"
-            :loading="isDeletingRun"
+            :disabled="isActionInFlight"
+            :loading="actionInFlight === ACTION_DELETE_RUN"
             @click="confirmDeleteRun"
         />
 

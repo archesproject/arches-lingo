@@ -2,7 +2,7 @@ import { defineComponent, h } from "vue";
 
 import { flushPromises, mount } from "@vue/test-utils";
 import { createMemoryHistory, createRouter } from "vue-router";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { useMatchReviewRoute } from "@/arches_lingo/components/ConceptMatching/composables/useMatchReviewRoute.ts";
 
@@ -20,18 +20,17 @@ async function mountAt(path: string) {
     await router.push(path);
     await router.isReady();
 
-    const onViewChanged = vi.fn();
     let exposed!: ReturnType<typeof useMatchReviewRoute>;
     mount(
         defineComponent({
             setup() {
-                exposed = useMatchReviewRoute(onViewChanged);
+                exposed = useMatchReviewRoute();
                 return () => h("div");
             },
         }),
         { global: { plugins: [router] } },
     );
-    return { router, route: exposed, onViewChanged };
+    return { router, route: exposed };
 }
 
 describe("useMatchReviewRoute", () => {
@@ -40,7 +39,7 @@ describe("useMatchReviewRoute", () => {
             "/concept-matches/12?page=3&status=dismissed",
         );
 
-        expect(route.activeRunId.value).toBe(12);
+        expect(route.activeRunId).toBe(12);
         expect(route.pageNumber.value).toBe(3);
         expect(route.candidateStatus.value).toBe("dismissed");
     });
@@ -59,22 +58,17 @@ describe("useMatchReviewRoute", () => {
         expect(router.currentRoute.value.fullPath).toBe("/concept-matches/12");
     });
 
-    it("reports whether the run or queue changed", async () => {
-        const { route, onViewChanged } = await mountAt("/concept-matches/12");
+    it("follows the page and queue as the address changes", async () => {
+        const { router, route } = await mountAt("/concept-matches/12");
 
-        await route.showView({ pageNumber: 2 });
+        await route.showView({ pageNumber: 2, status: "dismissed" });
         await flushPromises();
-        expect(onViewChanged).toHaveBeenLastCalledWith({
-            runChanged: false,
-            statusChanged: false,
-        });
 
-        await route.showView({ runId: 13, pageNumber: 1 });
-        await flushPromises();
-        expect(onViewChanged).toHaveBeenLastCalledWith({
-            runChanged: true,
-            statusChanged: false,
-        });
+        expect(router.currentRoute.value.fullPath).toBe(
+            "/concept-matches/12?page=2&status=dismissed",
+        );
+        expect(route.pageNumber.value).toBe(2);
+        expect(route.candidateStatus.value).toBe("dismissed");
     });
 
     it("hands over the concept a search was started from", async () => {

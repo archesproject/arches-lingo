@@ -21,11 +21,8 @@ from arches_lingo.const import (
     CONCEPT_NAME_CONTENT_NODE,
     CONCEPT_NAME_LANGUAGE_NODE,
     CONCEPT_NAME_NODEGROUP,
-    CONCEPTS_GRAPH_ID,
     CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID,
     EXACT_MATCH_LIST_ITEM_ID,
-    IDENTIFIER_CONTENT_NODE,
-    IDENTIFIER_NODEGROUP,
     MATCH_STATUS_COMPARATE_NODE,
     MATCH_STATUS_NODEGROUP,
     MATCH_STATUS_RELATION_NODE,
@@ -39,6 +36,7 @@ from arches_lingo.models import (
     ConceptMerge,
     ConceptSetMember,
 )
+from arches_lingo.utils.concept_lifecycle import RETIRED_STATE_ID
 
 SIGNAL_SHARED_IDENTIFIER = ConceptMatchCandidate.SIGNAL_SHARED_IDENTIFIER
 SIGNAL_EXACT_LABEL = ConceptMatchCandidate.SIGNAL_EXACT_LABEL
@@ -58,8 +56,6 @@ MAX_SIMILARITY_THRESHOLD = 1.0
 TRIGRAM_PARALLEL_WORKERS = getattr(settings, "LINGO_MATCH_PARALLEL_WORKERS", 8)
 
 TRIGRAM_WORK_MEM = getattr(settings, "LINGO_MATCH_WORK_MEM", "64MB")
-
-ROW_FETCH_SIZE = 2_000
 
 # Each slice commits as it finishes, so more slices means more frequent progress
 # at the cost of re-scanning the driving side once per slice.
@@ -269,8 +265,14 @@ def _needs_scheme_lookup(scope):
 
 
 def _pair_query(match_sql, scope, score_sql="1.0"):
-    """Wrap a signal's join in the scope narrowing, ordering each pair."""
+    """Wrap a signal's join in the scope narrowing, ordering each pair.
+
+    Retired concepts are left out here, on the pairs found, rather than in each
+    side's label query, so the trigram index probe stays as migration 0012
+    planned it.
+    """
     scope_sql, params = _scope_clauses(scope)
+    params["retired_state_id"] = str(RETIRED_STATE_ID)
 
     scheme_joins = ""
     if _needs_scheme_lookup(scope):
@@ -292,30 +294,18 @@ def _pair_query(match_sql, scope, score_sql="1.0"):
                {score_sql} AS score
           FROM ({match_sql}) matched
           {scheme_joins}
-         WHERE true{scope_sql}
+         WHERE NOT EXISTS (
+                   SELECT 1
+                     FROM resource_instances retired
+                    WHERE retired.resourceinstanceid IN (
+                              matched.side_a_concept_id, matched.side_b_concept_id
+                          )
+                      AND retired.resource_instance_lifecycle_state_id
+                          = %(retired_state_id)s::uuid
+               ){scope_sql}
          ORDER BY concept_a, concept_b, score DESC
     """
     return sql, params
-
-
-def count_labels_by_scheme():
-    """Return (total labels, {scheme id: labels}), for estimating run cost."""
-    with connection.cursor() as cursor:
-        cursor.execute(
-            f"""
-            SELECT cs.scheme_id, count(*)
-              FROM ({_INDEXED_LABEL_SQL}) labels
-              JOIN ({_CONCEPT_SCHEME_SQL}) cs ON cs.concept_id = labels.concept_id
-             GROUP BY cs.scheme_id
-            """
-        )
-        labels_by_scheme = {
-            str(scheme_id): count for scheme_id, count in cursor.fetchall()
-        }
-        cursor.execute(f"SELECT count(*) FROM ({_INDEXED_LABEL_SQL}) labels")
-        total_labels = cursor.fetchone()[0]
-
-    return total_labels, labels_by_scheme
 
 
 def _prepare_scheme_lookup(scope):
@@ -347,19 +337,6 @@ def _prepare_scheme_lookup(scope):
         )
         cursor.execute(f"CREATE INDEX ON {_SCHEME_SCOPE_TABLE} (concept_id)")
         cursor.execute(f"ANALYZE {_SCHEME_SCOPE_TABLE}")
-
-
-def _run_pair_query(sql, params, scope, similarity_threshold=None):
-    """Stream rows through a server-side cursor; psycopg's default buffers all."""
-    with transaction.atomic():
-        if similarity_threshold is not None:
-            _apply_trigram_session_tuning(similarity_threshold)
-        _prepare_scheme_lookup(scope)
-        with connection.chunked_cursor() as cursor:
-            cursor.itersize = ROW_FETCH_SIZE
-            cursor.execute(sql, params)
-            for concept_a, concept_b, evidence, score in cursor:
-                yield concept_a, concept_b, evidence, float(score)
 
 
 def _scoped_side_sql(value_sql, source_concept_ids, slice_predicate=""):
@@ -490,28 +467,6 @@ def _signal_queries(signal, scope, same_language_only):
     return _similar_label_pair_queries(scope, same_language_only)
 
 
-def find_exact_label_pairs(scope, same_language_only=True):
-    """Concepts sharing a label, ignoring case and surrounding whitespace."""
-    [(sql, params)] = _exact_label_pair_queries(scope, same_language_only)
-    return _run_pair_query(sql, params, scope)
-
-
-def find_shared_uri_pairs(scope):
-    """Concepts carrying the same URI."""
-    [(sql, params)] = _shared_uri_pair_queries(scope)
-    return _run_pair_query(sql, params, scope)
-
-
-def find_similar_label_pairs(
-    scope, similarity_threshold=DEFAULT_SIMILARITY_THRESHOLD, same_language_only=True
-):
-    """Concepts whose labels are close without being identical (`pg_trgm`)."""
-    for sql, params in _similar_label_pair_queries(scope, same_language_only):
-        yield from _run_pair_query(
-            sql, params, scope, similarity_threshold=similarity_threshold
-        )
-
-
 def _apply_trigram_session_tuning(similarity_threshold):
     """SET LOCAL, not SET, so nothing leaks onto a connection Django reuses."""
     with connection.cursor() as cursor:
@@ -607,16 +562,12 @@ def _store_pairs(run, signal, sql, params, scope, similarity_threshold):
             return cursor.rowcount
 
 
-def find_decided_pairs():
-    """Pairs an editor has already settled, in canonical order."""
-    decided_sql, decided_params = _decided_pairs_sql()
-    with connection.cursor() as cursor:
-        cursor.execute(decided_sql, decided_params)
-        return {(concept_a, concept_b) for concept_a, concept_b in cursor.fetchall()}
-
-
 def mark_pairs_settled(pairs, status, user=None):
-    """Settle these pairs in every run where they are still pending."""
+    """Settle these pairs in every run, whatever was decided about them before.
+
+    Linking or merging is done to the concepts themselves, so it outranks an
+    earlier dismissal; only a merge outranks a link.
+    """
     canonical_pairs = {
         ConceptMatchCandidate.order_concept_ids(first_id, second_id)
         for first_id, second_id in pairs
@@ -628,13 +579,51 @@ def mark_pairs_settled(pairs, status, user=None):
     for concept_a, concept_b in canonical_pairs:
         matching_pairs |= Q(concept_a_id=concept_a, concept_b_id=concept_b)
 
-    return ConceptMatchCandidate.objects.filter(
-        matching_pairs, status=ConceptMatchCandidate.STATUS_PENDING
-    ).update(
-        status=status,
-        reviewed_by=user if user is not None and user.is_authenticated else None,
-        reviewed_at=timezone.now(),
+    return (
+        ConceptMatchCandidate.objects.filter(matching_pairs)
+        .exclude(status__in={status, ConceptMatchCandidate.STATUS_MERGED})
+        .update(
+            status=status,
+            reviewed_by=user if user is not None and user.is_authenticated else None,
+            reviewed_at=timezone.now(),
+        )
     )
+
+
+def hand_pending_pairs_to_survivor(absorbed_concept_id, survivor_concept_id):
+    """Re-point the absorbed concept's outstanding pairs at the survivor.
+
+    Once a merge retires or deletes the absorbed concept, a pair with it can no
+    longer be merged or linked both ways; the question it raised is now one
+    about the survivor. A pair the run already holds for the survivor is
+    dropped rather than asked twice.
+    """
+    absorbed_concept_id = str(absorbed_concept_id)
+    survivor_concept_id = str(survivor_concept_id)
+    pending_with_absorbed = ConceptMatchCandidate.objects.filter(
+        Q(concept_a_id=absorbed_concept_id) | Q(concept_b_id=absorbed_concept_id),
+        status=ConceptMatchCandidate.STATUS_PENDING,
+    )
+    for candidate in pending_with_absorbed:
+        other_concept_id = (
+            str(candidate.concept_b_id)
+            if str(candidate.concept_a_id) == absorbed_concept_id
+            else str(candidate.concept_a_id)
+        )
+        concept_a_id, concept_b_id = ConceptMatchCandidate.order_concept_ids(
+            survivor_concept_id, other_concept_id
+        )
+        already_in_run = ConceptMatchCandidate.objects.filter(
+            run_id=candidate.run_id,
+            concept_a_id=concept_a_id,
+            concept_b_id=concept_b_id,
+        ).exists()
+        if already_in_run:
+            candidate.delete()
+            continue
+        candidate.concept_a_id = concept_a_id
+        candidate.concept_b_id = concept_b_id
+        candidate.save(update_fields=["concept_a_id", "concept_b_id"])
 
 
 def restore_dismissed(run, user=None, candidate_ids=None):
@@ -698,57 +687,6 @@ def validate_detection_options(signals, similarity_threshold):
             f"The similarity threshold must be between {MIN_SIMILARITY_THRESHOLD}"
             f" and {MAX_SIMILARITY_THRESHOLD}."
         )
-
-
-def iter_candidates(
-    scope,
-    signals=EXACT_SIGNALS,
-    same_language_only=True,
-    similarity_threshold=DEFAULT_SIMILARITY_THRESHOLD,
-):
-    """Yield every suggested pair, strongest signal first, without storing any."""
-    validate_detection_options(signals, similarity_threshold)
-
-    decided_pairs = find_decided_pairs()
-    signal_sources = [
-        (SIGNAL_SHARED_IDENTIFIER, lambda: find_shared_uri_pairs(scope)),
-        (
-            SIGNAL_EXACT_LABEL,
-            lambda: find_exact_label_pairs(scope, same_language_only),
-        ),
-        (
-            SIGNAL_TRIGRAM,
-            lambda: find_similar_label_pairs(
-                scope, similarity_threshold, same_language_only
-            ),
-        ),
-    ]
-
-    for signal, produce_pairs in signal_sources:
-        if signal not in signals:
-            continue
-        for concept_a, concept_b, evidence, score in produce_pairs():
-            if (concept_a, concept_b) in decided_pairs:
-                continue
-            yield concept_a, concept_b, signal, evidence, score
-
-
-def collect_candidates(
-    scope,
-    signals=EXACT_SIGNALS,
-    same_language_only=True,
-    similarity_threshold=DEFAULT_SIMILARITY_THRESHOLD,
-):
-    """`iter_candidates` as a {pair: (signal, evidence, score)} mapping.
-
-    Only for small scopes; store a whole-vocabulary run with `run_detection`.
-    """
-    candidates_by_pair = {}
-    for concept_a, concept_b, signal, evidence, score in iter_candidates(
-        scope, signals, same_language_only, similarity_threshold
-    ):
-        candidates_by_pair.setdefault((concept_a, concept_b), (signal, evidence, score))
-    return candidates_by_pair
 
 
 def _store_candidates(

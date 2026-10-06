@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { computed, inject, onMounted, ref, watch } from "vue";
 
 import { storeToRefs } from "pinia";
 import { useGettext } from "vue3-gettext";
@@ -33,12 +33,12 @@ import type {
     ConceptMatchCandidateStatus,
     ConceptMatchRunRequest,
 } from "@/arches_lingo/types.ts";
-import type { MatchReviewViewChange } from "@/arches_lingo/components/ConceptMatching/composables/useMatchReviewRoute.ts";
 
 const { $gettext } = useGettext();
 const conceptStore = useConceptStore();
 const { user, isEditor } = storeToRefs(useUserStore());
 const { reportError } = useErrorToast();
+const refreshSchemeHierarchy = inject<() => void>("refreshSchemeHierarchy");
 
 const {
     activeRunId,
@@ -46,7 +46,7 @@ const {
     pageNumber,
     conceptIdToSearchFrom,
     showView,
-} = useMatchReviewRoute(onViewChanged);
+} = useMatchReviewRoute();
 
 const {
     candidates,
@@ -54,6 +54,7 @@ const {
     isLoadingCandidates,
     loadError,
     hasUnshownResults,
+    lastPageWhenPastEnd,
     selectedIds,
     loadCandidates,
     changeSelection,
@@ -63,8 +64,6 @@ const {
     activeRunId,
     candidateStatus,
     pageNumber,
-    onPastLastPage: (lastPageNumber) =>
-        showView({ pageNumber: lastPageNumber }, { replace: true }),
 });
 
 const {
@@ -75,16 +74,10 @@ const {
     loadRuns,
     newestRunId,
     createRun,
-} = useConceptMatchRuns({
-    activeRunId,
-    onRunProgress: () => loadCandidates({ quiet: true }),
-    onRunFinished,
-});
+} = useConceptMatchRuns({ activeRunId });
 
 const showCriteria = ref(true);
 const mergingCandidate = ref<ConceptMatchCandidate | null>(null);
-
-let hasInitialized = false;
 
 const selectedCandidateIds = computed(() => Array.from(selectedIds.value));
 
@@ -94,18 +87,46 @@ const dismissedCount = computed(
 
 const showNoRunsPrompt = computed(() => !activeRun.value && !runs.value.length);
 
-// The user arrives asynchronously, and every request would be refused for a
-// non-editor, so nothing is fetched until they are known to be one.
+// The app mounts only once the user is known, and every request would be
+// refused for a non-editor.
+onMounted(function () {
+    if (isEditor.value) {
+        initialize();
+    }
+});
+
+// A page change keeps the selection, so pairs can be gathered across pages.
+watch(candidateStatus, clearSelection);
+
+watch([candidateStatus, pageNumber], () => loadCandidates());
+
+watch(lastPageWhenPastEnd, function (lastPageNumber) {
+    if (lastPageNumber !== null) {
+        showView({ pageNumber: lastPageNumber }, { replace: true });
+    }
+});
+
+// While the run works, each poll that finds more pairs refreshes the list in
+// place; the first count is the one the initial load already shows.
 watch(
-    isEditor,
-    function (userIsEditor) {
-        if (userIsEditor && !hasInitialized) {
-            hasInitialized = true;
-            initialize();
+    () => activeRun.value?.candidate_count,
+    function (_candidateCount, previousCandidateCount) {
+        if (
+            previousCandidateCount !== undefined &&
+            activeRunIsUnfinished.value
+        ) {
+            loadCandidates({ quiet: true });
         }
     },
-    { immediate: true },
 );
+
+// A run deleted mid-search also stops being unfinished, but has no pairs left
+// to show.
+watch(activeRunIsUnfinished, function (isUnfinished, wasUnfinished) {
+    if (wasUnfinished && !isUnfinished && activeRun.value) {
+        showFinishedResults();
+    }
+});
 
 async function initialize(): Promise<void> {
     try {
@@ -114,33 +135,24 @@ async function initialize(): Promise<void> {
         reportError(error, $gettext("Could not load schemes."));
     }
 
+    await loadRuns();
+
     // Arriving from a concept's own page searches for that concept's matches
     // straight away, replacing the history entry so a reload never repeats it.
     const conceptId = conceptIdToSearchFrom();
-    if (conceptId) {
-        await startRun({ source_concept_ids: [conceptId] }, { replace: true });
+    if (
+        conceptId &&
+        (await startRun({ source_concept_ids: [conceptId] }, { replace: true }))
+    ) {
         return;
     }
 
-    await loadRuns();
     if (!(await showNewestRunIfNoneChosen())) {
         await loadCandidates();
     }
 }
 
-async function onViewChanged({
-    runChanged,
-    statusChanged,
-}: MatchReviewViewChange): Promise<void> {
-    // A page change keeps the selection, so pairs can be gathered across pages.
-    if (runChanged || statusChanged) {
-        clearSelection();
-    }
-    if (await showNewestRunIfNoneChosen()) return;
-    await loadCandidates();
-}
-
-function onRunFinished(): void {
+function showFinishedResults(): void {
     if (selectedIds.value.size) {
         hasUnshownResults.value = true;
         return;
@@ -152,7 +164,7 @@ function onRunFinished(): void {
 // so going back leaves the page rather than undoing a choice nobody made.
 async function showNewestRunIfNoneChosen(): Promise<boolean> {
     const runId = newestRunId();
-    if (activeRunId.value !== null || runId === null) {
+    if (activeRunId !== null || runId === null) {
         return false;
     }
     await showView({ runId, pageNumber: 1 }, { replace: true });
@@ -162,14 +174,16 @@ async function showNewestRunIfNoneChosen(): Promise<boolean> {
 async function startRun(
     request: ConceptMatchRunRequest,
     { replace = false }: { replace?: boolean } = {},
-): Promise<void> {
+): Promise<boolean> {
     const run = await createRun(request);
-    if (run) {
-        await showView(
-            { runId: run.id, pageNumber: 1, status: CANDIDATE_STATUS_PENDING },
-            { replace },
-        );
+    if (!run) {
+        return false;
     }
+    await showView(
+        { runId: run.id, pageNumber: 1, status: CANDIDATE_STATUS_PENDING },
+        { replace },
+    );
+    return true;
 }
 
 function onRunRequested(request: ConceptMatchRunRequest): void {
@@ -229,6 +243,8 @@ async function onMergeCompleted(): Promise<void> {
         });
     }
     closeMerge();
+    // A merge can retire a concept and move its children.
+    refreshSchemeHierarchy!();
     await Promise.all([loadRuns(), loadCandidates()]);
 }
 

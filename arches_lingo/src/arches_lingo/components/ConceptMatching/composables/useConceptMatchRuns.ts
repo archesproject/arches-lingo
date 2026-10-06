@@ -34,12 +34,8 @@ import type {
  */
 export function useConceptMatchRuns({
     activeRunId,
-    onRunProgress,
-    onRunFinished,
 }: {
-    activeRunId: Ref<number | null>;
-    onRunProgress: () => void;
-    onRunFinished: () => void;
+    activeRunId: number | null;
 }): {
     runs: Ref<ConceptMatchRun[]>;
     activeRun: ComputedRef<ConceptMatchRun | undefined>;
@@ -64,23 +60,20 @@ export function useConceptMatchRuns({
     let latestRunsRequest = 0;
 
     const activeRun = computed(() =>
-        runs.value.find((run) => run.id === activeRunId.value),
+        runs.value.find((run) => run.id === activeRunId),
     );
 
     const activeRunIsUnfinished = computed(() =>
         Boolean(activeRun.value && isRunUnfinished(activeRun.value)),
     );
 
-    watch(
-        () => (activeRunIsUnfinished.value ? activeRunId.value : null),
-        function (unfinishedRunId) {
-            if (unfinishedRunId === null) {
-                stopPolling();
-                return;
-            }
-            pollUntilFinished(unfinishedRunId);
-        },
-    );
+    watch(activeRunIsUnfinished, function (isUnfinished) {
+        if (isUnfinished && activeRunId !== null) {
+            pollUntilFinished(activeRunId);
+            return;
+        }
+        stopPolling();
+    });
 
     onBeforeUnmount(stopPolling);
 
@@ -141,7 +134,6 @@ export function useConceptMatchRuns({
         try {
             const run = await fetchConceptMatchRun(runId);
             consecutivePollFailures = 0;
-            if (runId !== activeRunId.value) return;
             if (!run) {
                 // Cancelled, from here or from somewhere else.
                 stopPolling();
@@ -151,12 +143,8 @@ export function useConceptMatchRuns({
             runs.value = runs.value.map((listedRun) =>
                 listedRun.id === runId ? run : listedRun,
             );
-            if (isRunUnfinished(run)) {
-                onRunProgress();
-                return;
-            }
+            if (isRunUnfinished(run)) return;
             stopPolling();
-            onRunFinished();
             reportRunFinished(run);
         } catch (error) {
             consecutivePollFailures += 1;

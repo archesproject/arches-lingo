@@ -41,14 +41,11 @@ function deferred<ValueType>(): {
 }
 
 function setUpPage(pageNumber = 1) {
-    const onPastLastPage = vi.fn();
-    const candidatePageState = useCandidatePage({
-        activeRunId: ref<number | null>(7),
+    return useCandidatePage({
+        activeRunId: 7,
         candidateStatus: ref<ConceptMatchCandidateStatus>("pending"),
         pageNumber: ref(pageNumber),
-        onPastLastPage,
     });
-    return { ...candidatePageState, onPastLastPage };
 }
 
 describe("useCandidatePage", () => {
@@ -87,13 +84,13 @@ describe("useCandidatePage", () => {
         expect(hasUnshownResults.value).toBe(false);
     });
 
-    it("sends the reviewer back from a page past the end", async () => {
+    it("names the last page when asked for one past the end", async () => {
         mockedFetch.mockResolvedValueOnce(candidatePage([], 60));
-        const { onPastLastPage, loadCandidates } = setUpPage(4);
+        const { lastPageWhenPastEnd, loadCandidates } = setUpPage(4);
 
         await loadCandidates();
 
-        expect(onPastLastPage).toHaveBeenCalledWith(2);
+        expect(lastPageWhenPastEnd.value).toBe(2);
     });
 
     it("keeps an error for the newest request", async () => {

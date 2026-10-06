@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { computed, ref } from "vue";
 
-import { storeToRefs } from "pinia";
 import { useGettext } from "vue3-gettext";
 
 import Button from "primevue/button";
@@ -11,9 +10,6 @@ import Message from "primevue/message";
 import MultiSelect from "primevue/multiselect";
 import Slider from "primevue/slider";
 
-import { fetchConceptMatchScopeSizes } from "@/arches_lingo/api.ts";
-import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
-import { useErrorToast } from "@/arches_lingo/components/ConceptMatching/composables/useErrorToast.ts";
 import { useLocalizedLabel } from "@/arches_lingo/components/ConceptMatching/composables/useLocalizedLabel.ts";
 import {
     DEFAULT_SIMILARITY_THRESHOLD,
@@ -22,20 +18,10 @@ import {
     SCHEME_FILTER_MINIMUM_OPTIONS,
     SIMILARITY_STEP,
 } from "@/arches_lingo/components/ConceptMatching/constants.ts";
-import {
-    buildSignalList,
-    estimateDurationSpan,
-    labelsInScope,
-} from "@/arches_lingo/components/ConceptMatching/utils.ts";
+import { buildSignalList } from "@/arches_lingo/components/ConceptMatching/utils.ts";
 import { WARN } from "@/arches_lingo/constants.ts";
 
-import type {
-    ConceptMatchRunRequest,
-    ConceptMatchScopeSizes,
-    Scheme,
-} from "@/arches_lingo/types.ts";
-
-const RUN_REQUESTED_EVENT = "run-requested" as const;
+import type { ConceptMatchRunRequest, Scheme } from "@/arches_lingo/types.ts";
 
 const { schemes, isStartingRun } = defineProps<{
     schemes: Scheme[];
@@ -43,25 +29,20 @@ const { schemes, isStartingRun } = defineProps<{
 }>();
 
 const emit = defineEmits<{
-    (event: typeof RUN_REQUESTED_EVENT, request: ConceptMatchRunRequest): void;
+    (event: "run-requested", request: ConceptMatchRunRequest): void;
 }>();
 
 const { $gettext } = useGettext();
-const { selectedLanguage } = storeToRefs(useLanguageStore());
-const { reportError } = useErrorToast();
 const { labelOf } = useLocalizedLabel();
 
 const selectedSchemeIds = ref<string[]>([]);
 const runName = ref("");
-const scopeSizes = ref<ConceptMatchScopeSizes | null>(null);
 const crossSchemeOnly = ref(false);
 const sameLanguageOnly = ref(true);
 const compareLabels = ref(true);
 const compareUris = ref(true);
 const compareSimilarLabels = ref(false);
 const similarityThreshold = ref(DEFAULT_SIMILARITY_THRESHOLD);
-
-let hasRequestedScopeSizes = false;
 
 const schemeOptions = computed(() =>
     schemes.map((scheme) => ({ id: scheme.id, name: labelOf(scheme) })),
@@ -80,64 +61,8 @@ const thresholdLabel = computed(() =>
     }),
 );
 
-// What a similar-label search costs follows how many labels are in scope; a
-// scope holding most of a large vocabulary takes nearly as long as all of it.
-const expectedDurationText = computed(function () {
-    if (!scopeSizes.value) {
-        return $gettext(
-            "Comparing similar labels runs on the server. How long it takes follows how many labels are in scope, and over a large vocabulary that is tens of minutes rather than seconds. Results appear as they are found, and the search carries on if you leave this page.",
-        );
-    }
-
-    const labelCount = labelsInScope(
-        selectedSchemeIds.value,
-        scopeSizes.value.total_labels,
-        scopeSizes.value.labels_by_scheme,
-    );
-    return $gettext(
-        "Comparing %{labels} labels of %{total} in the vocabulary. This runs on the server and should take %{duration}. Results appear as they are found, and the search carries on if you leave this page.",
-        {
-            labels: labelCount.toLocaleString(selectedLanguage.value.code),
-            total: scopeSizes.value.total_labels.toLocaleString(
-                selectedLanguage.value.code,
-            ),
-            duration: describeExpectedDuration(labelCount),
-        },
-    );
-});
-
-// Counting every label takes a moment on a large vocabulary and only matters to
-// a similar-label search, so it is asked for the first time one is chosen.
-watch(compareSimilarLabels, async function (isComparingSimilarLabels) {
-    if (!isComparingSimilarLabels || hasRequestedScopeSizes) return;
-    hasRequestedScopeSizes = true;
-    try {
-        scopeSizes.value = await fetchConceptMatchScopeSizes();
-    } catch (error) {
-        hasRequestedScopeSizes = false;
-        reportError(
-            error,
-            $gettext("Could not estimate how long the search will take."),
-        );
-    }
-});
-
-function describeExpectedDuration(labelCount: number): string {
-    const expectedDuration = estimateDurationSpan(labelCount);
-    if (expectedDuration.kind === "brief") {
-        return $gettext("under a minute or two");
-    }
-    if (expectedDuration.kind === "overAnHour") {
-        return $gettext("well over an hour");
-    }
-    return $gettext("roughly %{low} to %{high} minutes", {
-        low: String(expectedDuration.lowMinutes),
-        high: String(expectedDuration.highMinutes),
-    });
-}
-
 function requestRun(): void {
-    emit(RUN_REQUESTED_EVENT, {
+    emit("run-requested", {
         name: runName.value.trim(),
         scheme_ids: selectedSchemeIds.value,
         cross_scheme_only: crossSchemeOnly.value,
@@ -233,7 +158,11 @@ function requestRun(): void {
                 :severity="WARN"
                 :closable="false"
             >
-                {{ expectedDurationText }}
+                {{
+                    $gettext(
+                        "Comparing similar labels runs on the server. How long it takes follows how many labels are in scope, and over a large vocabulary that is tens of minutes rather than seconds. Results appear as they are found, and the search carries on if you leave this page.",
+                    )
+                }}
             </Message>
         </fieldset>
 

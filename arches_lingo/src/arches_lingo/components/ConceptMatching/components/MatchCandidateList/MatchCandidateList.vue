@@ -25,12 +25,6 @@ import type {
 } from "@/arches_lingo/types.ts";
 import type { CandidateSelectionChange } from "@/arches_lingo/components/ConceptMatching/types.ts";
 
-const SELECTION_CHANGED_EVENT = "selection-changed" as const;
-const SELECT_ALL_ON_PAGE_EVENT = "select-all-on-page" as const;
-const PAGE_CHANGED_EVENT = "page-changed" as const;
-const STATUS_CHANGED_EVENT = "status-changed" as const;
-const MERGE_REQUESTED_EVENT = "merge-requested" as const;
-
 const {
     candidates,
     selectedIds,
@@ -52,23 +46,14 @@ const {
 }>();
 
 const emit = defineEmits<{
+    (event: "selection-changed", payload: CandidateSelectionChange): void;
+    (event: "select-all-on-page", payload: { isSelected: boolean }): void;
+    (event: "page-changed", payload: { pageNumber: number }): void;
     (
-        event: typeof SELECTION_CHANGED_EVENT,
-        payload: CandidateSelectionChange,
-    ): void;
-    (
-        event: typeof SELECT_ALL_ON_PAGE_EVENT,
-        payload: { isSelected: boolean },
-    ): void;
-    (event: typeof PAGE_CHANGED_EVENT, payload: { pageNumber: number }): void;
-    (
-        event: typeof STATUS_CHANGED_EVENT,
+        event: "status-changed",
         payload: { status: ConceptMatchCandidateStatus },
     ): void;
-    (
-        event: typeof MERGE_REQUESTED_EVENT,
-        payload: { candidateId: number },
-    ): void;
+    (event: "merge-requested", payload: { candidateId: number }): void;
 }>();
 
 const { $gettext } = useGettext();
@@ -126,15 +111,15 @@ const emptyText = computed(function () {
 });
 
 function toggleSelectAllOnPage(): void {
-    emit(SELECT_ALL_ON_PAGE_EVENT, { isSelected: !allOnPageSelected.value });
+    emit("select-all-on-page", { isSelected: !allOnPageSelected.value });
 }
 
 function onStatusChosen(chosenStatus: ConceptMatchCandidateStatus): void {
-    emit(STATUS_CHANGED_EVENT, { status: chosenStatus });
+    emit("status-changed", { status: chosenStatus });
 }
 
 function onPageChosen(pageState: PageState): void {
-    emit(PAGE_CHANGED_EVENT, { pageNumber: pageState.page + 1 });
+    emit("page-changed", { pageNumber: pageState.page + 1 });
 }
 </script>
 
@@ -187,8 +172,8 @@ function onPageChosen(pageState: PageState): void {
                 :candidate="candidate"
                 :is-selected="selectedIds.has(candidate.id)"
                 :is-reviewable="isReviewable"
-                @selection-changed="emit(SELECTION_CHANGED_EVENT, $event)"
-                @merge-requested="emit(MERGE_REQUESTED_EVENT, $event)"
+                @selection-changed="emit('selection-changed', $event)"
+                @merge-requested="emit('merge-requested', $event)"
             />
         </template>
 

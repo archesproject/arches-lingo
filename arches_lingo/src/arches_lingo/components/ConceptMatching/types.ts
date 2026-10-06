@@ -1,7 +1,4 @@
-export type ExpectedDuration =
-    | { kind: "brief" }
-    | { kind: "overAnHour" }
-    | { kind: "minutes"; lowMinutes: number; highMinutes: number };
+import type { MatchedConceptSummary } from "@/arches_lingo/types.ts";
 
 export interface CandidateSelectionChange {
     candidateId: number;
@@ -9,6 +6,6 @@ export interface CandidateSelectionChange {
 }
 
 export interface MergeDirection {
-    survivorId: string;
-    absorbedId: string;
+    survivor: MatchedConceptSummary;
+    absorbed: MatchedConceptSummary;
 }

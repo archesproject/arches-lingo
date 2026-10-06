@@ -1,4 +1,4 @@
-import { defineComponent, h, ref } from "vue";
+import { defineComponent, h } from "vue";
 
 import { flushPromises, mount } from "@vue/test-utils";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -48,22 +48,16 @@ function matchRun(overrides: Partial<ConceptMatchRun> = {}): ConceptMatchRun {
 }
 
 function mountRuns(activeRunId: number | null) {
-    const onRunProgress = vi.fn();
-    const onRunFinished = vi.fn();
     let exposed!: ReturnType<typeof useConceptMatchRuns>;
     const wrapper = mount(
         defineComponent({
             setup() {
-                exposed = useConceptMatchRuns({
-                    activeRunId: ref(activeRunId),
-                    onRunProgress,
-                    onRunFinished,
-                });
+                exposed = useConceptMatchRuns({ activeRunId });
                 return () => h("div");
             },
         }),
     );
-    return { wrapper, runs: exposed, onRunProgress, onRunFinished };
+    return { wrapper, runs: exposed };
 }
 
 async function advanceOnePoll(): Promise<void> {
@@ -90,17 +84,18 @@ describe("useConceptMatchRuns", () => {
             .mockResolvedValueOnce(
                 matchRun({ status: "complete", candidate_count: 5 }),
             );
-        const { runs, onRunProgress, onRunFinished } = mountRuns(1);
+        const { runs } = mountRuns(1);
         await runs.loadRuns();
         await flushPromises();
 
         await advanceOnePoll();
-        expect(onRunProgress).toHaveBeenCalledTimes(1);
         expect(runs.activeRun.value?.candidate_count).toBe(3);
+        expect(runs.activeRunIsUnfinished.value).toBe(true);
 
         await advanceOnePoll();
-        expect(onRunFinished).toHaveBeenCalledTimes(1);
+        expect(runs.activeRun.value?.candidate_count).toBe(5);
         expect(runs.activeRunIsUnfinished.value).toBe(false);
+        expect(toastAdd).toHaveBeenCalledTimes(1);
 
         await advanceOnePoll();
         expect(mockedFetchRun).toHaveBeenCalledTimes(2);

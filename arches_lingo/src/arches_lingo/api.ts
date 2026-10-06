@@ -14,7 +14,6 @@ import type {
     ConceptMatchLinkResult,
     ConceptMatchRun,
     ConceptMatchRunRequest,
-    ConceptMatchScopeSizes,
     ConceptMatchStatusChange,
     ConceptSetDetail,
     DeleteConceptStrategy,
@@ -1362,18 +1361,6 @@ export const fetchMissingTranslations = async (
     if (!response.ok) throw new Error(parsed.message || response.statusText);
     return parsed;
 };
-
-export const fetchConceptMatchScopeSizes =
-    async (): Promise<ConceptMatchScopeSizes> => {
-        const url = generateArchesURL(
-            "arches_lingo:api-concept-match-scope-sizes",
-        );
-        const response = await fetch(url);
-        const parsed = await response.json();
-        if (!response.ok)
-            throw new Error(parsed.message || response.statusText);
-        return parsed;
-    };
 
 export const fetchConceptMatchRuns = async (): Promise<{
     data: ConceptMatchRun[];

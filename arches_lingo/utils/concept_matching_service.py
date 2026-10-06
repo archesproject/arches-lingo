@@ -6,7 +6,6 @@ from collections import defaultdict
 from http import HTTPStatus
 
 from django.conf import settings
-from django.core.cache import cache
 from django.db import IntegrityError, transaction
 from django.db.models import Count, Q
 from django.utils import timezone
@@ -27,7 +26,6 @@ from arches_lingo.utils.concept_matching import (
     DEFAULT_SIMILARITY_THRESHOLD,
     EXACT_SIGNALS,
     MatchScope,
-    count_labels_by_scheme,
     get_scheme_ids_for_concepts,
     mark_pairs_settled,
     restore_dismissed,
@@ -55,9 +53,6 @@ MATCH_TASK_QUEUE = getattr(settings, "LINGO_MATCH_TASK_QUEUE", None)
 # A running slice can commit pairs between the delete clearing them and the
 # delete committing, failing it on the foreign key; retrying collects them.
 DELETE_RUN_ATTEMPTS = 3
-
-SCOPE_SIZES_CACHE_KEY = "lingo_match_scope_sizes"
-SCOPE_SIZES_CACHE_SECONDS = 600
 
 
 class ConceptMatchRequestError(Exception):
@@ -165,16 +160,6 @@ def serialize_run(run, user=None, user_is_lingo_admin=False, counts_by_status=No
         "can_delete": user_can_delete_run(run, user, user_is_lingo_admin),
         "counts_by_status": counts_by_status,
         "pending_count": counts_by_status[ConceptMatchCandidate.STATUS_PENDING],
-    }
-
-
-def serialize_scope_sizes():
-    total_labels, labels_by_scheme = cache.get_or_set(
-        SCOPE_SIZES_CACHE_KEY, count_labels_by_scheme, SCOPE_SIZES_CACHE_SECONDS
-    )
-    return {
-        "total_labels": total_labels,
-        "labels_by_scheme": labels_by_scheme,
     }
 
 

@@ -130,6 +130,11 @@ class Command(BaseCommand):
         except ConceptMatchError as detection_error:
             raise CommandError(str(detection_error)) from detection_error
 
+        # Deleting a run from the interface is how it is cancelled.
+        if run is None:
+            self.stdout.write(self.style.WARNING("The run was cancelled."))
+            return
+
         counts_by_signal = {}
         for signal, _label in ConceptMatchCandidate.SIGNAL_CHOICES:
             signal_count = run.candidates.filter(signal=signal).count()

@@ -10,15 +10,13 @@ import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 
 import type { ConceptMatchRun } from "@/arches_lingo/types.ts";
 
-const RUN_SELECTED_EVENT = "run-selected" as const;
-
 const { runs, activeRunId } = defineProps<{
     runs: ConceptMatchRun[];
     activeRunId: number | null;
 }>();
 
 const emit = defineEmits<{
-    (event: typeof RUN_SELECTED_EVENT, payload: { runId: number | null }): void;
+    (event: "run-selected", payload: { runId: number | null }): void;
 }>();
 
 const { $gettext, $ngettext } = useGettext();
@@ -62,7 +60,7 @@ function describeRunOption(run: ConceptMatchRun): string {
 }
 
 function onRunChosen(runId: number | null): void {
-    emit(RUN_SELECTED_EVENT, { runId });
+    emit("run-selected", { runId });
 }
 </script>
 

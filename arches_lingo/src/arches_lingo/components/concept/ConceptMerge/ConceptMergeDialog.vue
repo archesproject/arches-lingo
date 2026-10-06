@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref } from "vue";
 
 import { useGettext } from "vue3-gettext";
 import { storeToRefs } from "pinia";
@@ -94,7 +94,7 @@ const {
     survivorLabel,
     schemeId,
     graphSlug,
-    preselectedConcept = undefined,
+    preselectedConceptId = undefined,
 } = defineProps<{
     survivorConcept: ResourceInstanceResult;
     survivorLabel: string | undefined;
@@ -103,7 +103,7 @@ const {
     // Opened from somewhere that already knows which concept is being
     // merged away -- match review, say -- so the picker is skipped and the
     // dialog opens on the comparison.
-    preselectedConcept?: SearchResultItem;
+    preselectedConceptId?: string;
 }>();
 
 const emit = defineEmits<{
@@ -115,7 +115,7 @@ const { $gettext } = useGettext();
 const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
 
 const currentStep = ref(
-    preselectedConcept ? MERGE_STEP_COMPARE : MERGE_STEP_SELECT,
+    preselectedConceptId ? MERGE_STEP_COMPARE : MERGE_STEP_SELECT,
 );
 const survivorSearchResult = ref<SearchResultItem>();
 const selectedConcept = ref<SearchResultItem>();
@@ -133,7 +133,7 @@ const isMerging = ref(false);
 const mergeError = ref<string | null>(null);
 
 const mergeStepOrder = computed(function () {
-    if (preselectedConcept) {
+    if (preselectedConceptId) {
         return PRESELECTED_MERGE_STEP_ORDER;
     }
     return MERGE_STEP_ORDER;
@@ -198,17 +198,12 @@ const absorbedLabel = computed(function () {
     ).value;
 });
 
-watch(
-    () => preselectedConcept,
-    function (concept) {
-        if (concept) {
-            onConceptSelected(concept);
-        }
-    },
-    { immediate: true },
-);
-
-onMounted(loadSurvivorPath);
+onMounted(function () {
+    loadSurvivorPath();
+    if (preselectedConceptId) {
+        loadPreselectedConcept(preselectedConceptId);
+    }
+});
 
 // Without its lineage the header falls back to the survivor's own label.
 async function loadSurvivorPath() {
@@ -220,6 +215,29 @@ async function loadSurvivorPath() {
         );
     } catch {
         survivorSearchResult.value = undefined;
+    }
+}
+
+// Looked up the same way as the survivor, so both sides of the pair show their
+// place in the hierarchy and lifecycle state.
+async function loadPreselectedConcept(conceptId: string) {
+    isLoadingAbsorbedConcept.value = true;
+    try {
+        const ancestorPaths: SearchResultHierarchy[] =
+            await fetchConceptAncestorPaths(conceptId);
+        const searchResult = buildSearchResultFromAncestorPath(
+            ancestorPaths[0]?.searchResults ?? [],
+        );
+        if (!searchResult) {
+            throw new Error(
+                $gettext("The concept to merge could not be found."),
+            );
+        }
+        await onConceptSelected(searchResult);
+    } catch (error) {
+        fetchError.value =
+            error instanceof Error ? error.message : String(error);
+        isLoadingAbsorbedConcept.value = false;
     }
 }
 
@@ -324,7 +342,7 @@ async function onMergeConfirmed() {
         >
             <StepList>
                 <Step
-                    v-if="!preselectedConcept"
+                    v-if="!preselectedConceptId"
                     :value="MERGE_STEP_SELECT"
                 >
                     {{ $gettext("Choose concept") }}
@@ -353,7 +371,7 @@ async function onMergeConfirmed() {
 
             <StepPanels>
                 <StepPanel
-                    v-if="!preselectedConcept"
+                    v-if="!preselectedConceptId"
                     :value="MERGE_STEP_SELECT"
                 >
                     <div class="merge-step">
@@ -394,6 +412,13 @@ async function onMergeConfirmed() {
                                 v-if="isLoadingAbsorbedConcept"
                                 class="merge-spinner"
                             />
+                            <Message
+                                v-else-if="fetchError"
+                                :severity="ERROR"
+                                :closable="false"
+                            >
+                                {{ fetchError }}
+                            </Message>
                             <MergeComparison
                                 v-else-if="absorbedConcept && mergePreview"
                                 :survivor-aliased-data="

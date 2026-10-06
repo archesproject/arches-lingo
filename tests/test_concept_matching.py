@@ -14,7 +14,6 @@ from io import StringIO
 from unittest.mock import patch
 
 from django.contrib.auth.models import Group, User
-from django.core.cache import cache
 from django.db import IntegrityError
 from django.test import Client
 from django.urls import reverse
@@ -52,11 +51,13 @@ from arches_lingo.utils.concept_lifecycle import (
     EDITING_STATE_ID,
     LOCKED_STATE_ID,
     PUBLISHED_STATE_ID,
+    RETIRED_STATE_ID,
+    STRATEGY_REPARENT_TO_SURVIVOR,
 )
+from arches_lingo.utils.concept_merge.service import merge_concepts
 from arches_lingo.utils.concept_merge.tiles import get_list_item_tile_value
 from arches_lingo.utils.concept_matching_service import (
     MAX_LINK_BATCH,
-    SCOPE_SIZES_CACHE_KEY,
     STALE_RUN_SECONDS,
     ConceptMatchRequestError,
     delete_run,
@@ -77,11 +78,6 @@ from arches_lingo.utils.concept_matching import (
     SIGNAL_TRIGRAM,
     ConceptMatchError,
     MatchScope,
-    collect_candidates,
-    find_decided_pairs,
-    find_exact_label_pairs,
-    find_shared_uri_pairs,
-    find_similar_label_pairs,
     mark_pairs_settled,
     run_detection,
 )
@@ -158,10 +154,32 @@ class ConceptMatchingTestCase(SchemeWithConceptsTestCase):
         )
         return other_scheme, outsider
 
-    def pairs_of(self, found):
+    def detect(self, scope=None, signals=EXACT_SIGNALS, **options):
+        """Store a run and return {pair: (signal, evidence, score)} from it."""
+        run = run_detection(
+            scope or MatchScope(), signals=signals, log=lambda message: None, **options
+        )
         return {
-            (concept_a, concept_b) for concept_a, concept_b, _evidence, _score in found
+            (str(candidate.concept_a_id), str(candidate.concept_b_id)): (
+                candidate.signal,
+                candidate.evidence,
+                candidate.score,
+            )
+            for candidate in run.candidates.all()
         }
+
+    def detect_exact_labels(self, scope=None, same_language_only=True):
+        return self.detect(
+            scope, signals=(SIGNAL_EXACT_LABEL,), same_language_only=same_language_only
+        )
+
+    def detect_shared_uris(self, scope=None):
+        return self.detect(scope, signals=(SIGNAL_SHARED_IDENTIFIER,))
+
+    def detect_similar_labels(self, similarity_threshold):
+        return self.detect(
+            signals=(SIGNAL_TRIGRAM,), similarity_threshold=similarity_threshold
+        )
 
     def expected_pair(self, first_concept, second_concept):
         return ConceptMatchCandidate.order_concept_ids(
@@ -175,39 +193,37 @@ class ExactLabelSignalTests(ConceptMatchingTestCase):
         self.add_label(self.first_concept, "trumpets")
         self.add_label(self.second_concept, "trumpets")
 
-        found = list(find_exact_label_pairs(MatchScope()))
+        found = self.detect_exact_labels()
 
-        self.assertEqual(len(found), 1)
         self.assertEqual(
-            found[0][:2],
-            self.expected_pair(self.first_concept, self.second_concept),
+            list(found), [self.expected_pair(self.first_concept, self.second_concept)]
         )
 
     def test_case_and_surrounding_whitespace_are_not_a_difference(self):
         self.add_label(self.first_concept, "Trumpets")
         self.add_label(self.second_concept, "  trumpets ")
 
-        self.assertEqual(len(list(find_exact_label_pairs(MatchScope()))), 1)
+        self.assertEqual(len(self.detect_exact_labels()), 1)
 
     def test_a_concept_is_never_paired_with_itself(self):
         self.add_label(self.first_concept, "trumpets")
         self.add_label(self.first_concept, "trumpets", language="fr")
 
-        self.assertEqual(list(find_exact_label_pairs(MatchScope(), False)), [])
+        self.assertEqual(self.detect_exact_labels(same_language_only=False), {})
 
     def test_languages_differ_by_default(self):
         """The same spelling in two languages is more often a coincidence."""
         self.add_label(self.first_concept, "chien", language="fr")
         self.add_label(self.second_concept, "chien", language="en")
 
-        self.assertEqual(list(find_exact_label_pairs(MatchScope())), [])
-        self.assertEqual(len(list(find_exact_label_pairs(MatchScope(), False))), 1)
+        self.assertEqual(self.detect_exact_labels(), {})
+        self.assertEqual(len(self.detect_exact_labels(same_language_only=False)), 1)
 
     def test_blank_labels_are_not_a_match(self):
         self.add_label(self.first_concept, "   ")
         self.add_label(self.second_concept, "")
 
-        self.assertEqual(list(find_exact_label_pairs(MatchScope())), [])
+        self.assertEqual(self.detect_exact_labels(), {})
 
 
 class SharedUriSignalTests(ConceptMatchingTestCase):
@@ -215,19 +231,17 @@ class SharedUriSignalTests(ConceptMatchingTestCase):
         self.add_uri(self.first_concept, "https://example.org/concepts/1")
         self.add_uri(self.second_concept, "https://example.org/concepts/1")
 
-        found = list(find_shared_uri_pairs(MatchScope()))
+        found = self.detect_shared_uris()
 
-        self.assertEqual(len(found), 1)
         self.assertEqual(
-            found[0][:2],
-            self.expected_pair(self.first_concept, self.second_concept),
+            list(found), [self.expected_pair(self.first_concept, self.second_concept)]
         )
 
     def test_different_uris_are_not_a_match(self):
         self.add_uri(self.first_concept, "https://example.org/concepts/1")
         self.add_uri(self.second_concept, "https://example.org/concepts/2")
 
-        self.assertEqual(list(find_shared_uri_pairs(MatchScope())), [])
+        self.assertEqual(self.detect_shared_uris(), {})
 
 
 class ScopeTests(ConceptMatchingTestCase):
@@ -238,14 +252,14 @@ class ScopeTests(ConceptMatchingTestCase):
 
     def test_an_unscoped_run_pairs_every_combination(self):
         self.label_three_concepts()
-        self.assertEqual(len(list(find_exact_label_pairs(MatchScope()))), 3)
+        self.assertEqual(len(self.detect_exact_labels()), 3)
 
     def test_scoping_to_a_concept_keeps_only_its_pairs(self):
         """Either side may be the scoped concept; a stored pair has no direction."""
         self.label_three_concepts()
         scope = MatchScope(source_concept_ids=[str(self.first_concept.pk)])
 
-        found = self.pairs_of(find_exact_label_pairs(scope))
+        found = self.detect_exact_labels(scope)
 
         self.assertEqual(len(found), 2)
         for pair in found:
@@ -261,7 +275,7 @@ class ScopeTests(ConceptMatchingTestCase):
         )
         scope = MatchScope(source_concept_set_id=concept_set.pk)
 
-        found = self.pairs_of(find_exact_label_pairs(scope))
+        found = self.detect_exact_labels(scope)
 
         self.assertEqual(len(found), 2)
 
@@ -270,9 +284,7 @@ class ScopeTests(ConceptMatchingTestCase):
         _, outsider = self.make_concept_in_other_scheme()
         self.add_label(outsider, "trumpets")
 
-        found = self.pairs_of(
-            find_exact_label_pairs(MatchScope(cross_scheme_only=True))
-        )
+        found = self.detect_exact_labels(MatchScope(cross_scheme_only=True))
 
         self.assertEqual(len(found), 3)
         for pair in found:
@@ -284,7 +296,7 @@ class ScopeTests(ConceptMatchingTestCase):
         self.add_label(outsider, "trumpets")
         scope = MatchScope(scheme_ids=[str(self.scheme.pk)])
 
-        found = self.pairs_of(find_exact_label_pairs(scope))
+        found = self.detect_exact_labels(scope)
 
         # The three concepts in the scheme pair with each other and nothing
         # else: every pair reaching the outsider is left out.
@@ -298,7 +310,7 @@ class ScopeTests(ConceptMatchingTestCase):
         self.add_label(outsider, "trumpets")
         scope = MatchScope(scheme_ids=[str(self.scheme.pk), str(other_scheme.pk)])
 
-        found = self.pairs_of(find_exact_label_pairs(scope))
+        found = self.detect_exact_labels(scope)
 
         # Both schemes are in scope now, so the outsider's pairs come back too.
         self.assertEqual(len(found), 6)
@@ -309,10 +321,10 @@ class ScopeTests(ConceptMatchingTestCase):
         self.add_label(outsider, "trumpets")
         scope = MatchScope(scheme_ids=[str(other_scheme.pk)])
 
-        found = self.pairs_of(find_exact_label_pairs(scope))
+        found = self.detect_exact_labels(scope)
 
         # One concept alone in its scheme has nothing in scope to pair with.
-        self.assertEqual(found, set())
+        self.assertEqual(found, {})
 
 
 class TrigramSignalTests(ConceptMatchingTestCase):
@@ -327,14 +339,14 @@ class TrigramSignalTests(ConceptMatchingTestCase):
         self.add_label(self.first_concept, "engatillado en metales")
         self.add_label(self.second_concept, "engatillados en metales")
 
-        found = list((find_similar_label_pairs(MatchScope(), 0.7)))
+        found = self.detect_similar_labels(0.7)
 
-        self.assertEqual(len(found), 1)
-        concept_a, concept_b, evidence, score = found[0]
         self.assertEqual(
-            (concept_a, concept_b),
-            self.expected_pair(self.first_concept, self.second_concept),
+            list(found), [self.expected_pair(self.first_concept, self.second_concept)]
         )
+        _signal, evidence, score = found[
+            self.expected_pair(self.first_concept, self.second_concept)
+        ]
         self.assertGreater(score, 0.7)
         self.assertLess(score, 1.0)
         self.assertIn("engatillado en metales", evidence)
@@ -344,14 +356,14 @@ class TrigramSignalTests(ConceptMatchingTestCase):
         self.add_label(self.first_concept, "trumpets")
         self.add_label(self.second_concept, "trumpeters")
 
-        self.assertEqual(list((find_similar_label_pairs(MatchScope(), 0.95))), [])
-        self.assertEqual(len(list((find_similar_label_pairs(MatchScope(), 0.4)))), 1)
+        self.assertEqual(self.detect_similar_labels(0.95), {})
+        self.assertEqual(len(self.detect_similar_labels(0.4)), 1)
 
     def test_identical_labels_are_left_to_the_exact_signal(self):
         self.add_label(self.first_concept, "trumpets")
         self.add_label(self.second_concept, "trumpets")
 
-        self.assertEqual(list((find_similar_label_pairs(MatchScope(), 0.5))), [])
+        self.assertEqual(self.detect_similar_labels(0.5), {})
 
     def test_an_exact_match_is_never_downgraded_to_a_fuzzy_one(self):
         self.add_label(self.first_concept, "trumpets")
@@ -359,7 +371,7 @@ class TrigramSignalTests(ConceptMatchingTestCase):
         self.add_label(self.second_concept, "trumpets")
         self.add_label(self.second_concept, "trumpeter", language="fr")
 
-        candidates = collect_candidates(MatchScope(), signals=ALL_SIGNALS)
+        candidates = self.detect(signals=ALL_SIGNALS)
 
         self.assertEqual(len(candidates), 1)
         signal, _evidence, score = next(iter(candidates.values()))
@@ -485,11 +497,7 @@ class DecidedPairTests(ConceptMatchingTestCase):
             absorbed_concept_id=self.second_concept.pk,
         )
 
-        self.assertIn(
-            self.expected_pair(self.first_concept, self.second_concept),
-            find_decided_pairs(),
-        )
-        self.assertEqual(collect_candidates(MatchScope()), {})
+        self.assertEqual(self.detect(), {})
 
     def test_an_exact_match_tile_settles_the_pair(self):
         """The tile names the other concept by URI, so the link is resolved
@@ -499,7 +507,7 @@ class DecidedPairTests(ConceptMatchingTestCase):
         self.add_uri(self.second_concept, "https://example.org/concepts/2")
         self.add_exact_match(self.first_concept, "https://example.org/concepts/2")
 
-        self.assertEqual(collect_candidates(MatchScope()), {})
+        self.assertEqual(self.detect(), {})
 
     def test_a_match_other_than_exact_leaves_the_pair_open(self):
         """A close or related match does not rule out the two being duplicates."""
@@ -517,24 +525,33 @@ class DecidedPairTests(ConceptMatchingTestCase):
             },
         )
 
-        self.assertEqual(len(collect_candidates(MatchScope())), 1)
+        self.assertEqual(len(self.detect()), 1)
+
+    def test_a_retired_concept_is_not_suggested(self):
+        self.add_label(self.first_concept, "trumpets")
+        self.add_label(self.second_concept, "trumpets")
+        ResourceInstance.objects.filter(pk=self.second_concept.pk).update(
+            resource_instance_lifecycle_state_id=RETIRED_STATE_ID
+        )
+
+        self.assertEqual(self.detect(), {})
 
     def test_an_unrelated_match_tile_settles_nothing(self):
         self.add_label(self.first_concept, "trumpets")
         self.add_label(self.second_concept, "trumpets")
         self.add_exact_match(self.first_concept, "https://example.org/elsewhere")
 
-        self.assertEqual(len(collect_candidates(MatchScope())), 1)
+        self.assertEqual(len(self.detect()), 1)
 
 
-class CollectCandidateTests(ConceptMatchingTestCase):
+class SignalPrecedenceTests(ConceptMatchingTestCase):
     def test_a_pair_found_by_two_signals_keeps_the_stronger_reason(self):
         self.add_label(self.first_concept, "trumpets")
         self.add_label(self.second_concept, "trumpets")
         self.add_uri(self.first_concept, "https://example.org/concepts/shared")
         self.add_uri(self.second_concept, "https://example.org/concepts/shared")
 
-        candidates = collect_candidates(MatchScope())
+        candidates = self.detect()
 
         self.assertEqual(len(candidates), 1)
         signal, evidence, _score = next(iter(candidates.values()))
@@ -545,13 +562,11 @@ class CollectCandidateTests(ConceptMatchingTestCase):
         self.add_label(self.first_concept, "trumpets")
         self.add_label(self.second_concept, "trumpets")
 
-        self.assertEqual(
-            collect_candidates(MatchScope(), signals=(SIGNAL_SHARED_IDENTIFIER,)), {}
-        )
+        self.assertEqual(self.detect_shared_uris(), {})
 
     def test_an_unsupported_signal_is_rejected(self):
         with self.assertRaises(ConceptMatchError):
-            collect_candidates(MatchScope(), signals=("phonetic",))
+            self.detect(signals=("phonetic",))
 
 
 class RunDetectionTests(ConceptMatchingTestCase):
@@ -963,7 +978,9 @@ class PairSettlementTests(ConceptMatchingTestCase):
             ConceptMatchCandidate.STATUS_LINKED,
         )
 
-    def test_a_decision_already_recorded_is_not_overwritten(self):
+    def test_a_merge_outranks_a_dismissal_and_nothing_outranks_a_merge(self):
+        """Merging from the dismissed list must not leave the pair looking
+        actionable there."""
         self.add_label(self.first_concept, "trumpets")
         self.add_label(self.second_concept, "trumpets")
         run = run_detection(MatchScope(), log=lambda message: None)
@@ -973,14 +990,59 @@ class PairSettlementTests(ConceptMatchingTestCase):
             ConceptMatchCandidate.STATUS_DISMISSED,
             None,
         )
+        pair = [(self.first_concept.pk, self.second_concept.pk)]
 
-        mark_pairs_settled(
-            [(self.first_concept.pk, self.second_concept.pk)],
-            ConceptMatchCandidate.STATUS_MERGED,
-        )
+        mark_pairs_settled(pair, ConceptMatchCandidate.STATUS_MERGED)
+        mark_pairs_settled(pair, ConceptMatchCandidate.STATUS_LINKED)
 
         self.assertEqual(
-            run.candidates.get().status, ConceptMatchCandidate.STATUS_DISMISSED
+            run.candidates.get().status, ConceptMatchCandidate.STATUS_MERGED
+        )
+
+    def test_retiring_the_absorbed_concept_hands_its_pairs_to_the_survivor(self):
+        """Three of a kind: once A is merged into B and retired, A ~ C can no
+        longer be merged, but B ~ C is the same question."""
+        third_concept = self.concepts[3]
+        ResourceInstance.objects.filter(pk=third_concept.pk).update(
+            resource_instance_lifecycle_state_id=EDITING_STATE_ID
+        )
+        fourth_concept = self.concepts[4]
+        for concept in (self.first_concept, self.second_concept, third_concept):
+            self.add_label(concept, "chairs")
+        self.add_label(fourth_concept, "stools")
+        self.add_label(self.first_concept, "stools")
+        run = run_detection(MatchScope(), log=lambda message: None)
+        survivor, absorbed = self.second_concept, self.first_concept
+
+        merge_concepts(
+            survivor,
+            absorbed,
+            {
+                "absorbed_concept_id": str(absorbed.pk),
+                "tile_selections": [],
+                "create_exact_match_tiles": False,
+                "retire_absorbed_concept": True,
+                "retirement_strategy": STRATEGY_REPARENT_TO_SURVIVOR,
+            },
+            User.objects.get(username="admin"),
+        )
+
+        pending_pairs = set(
+            run.candidates.filter(
+                status=ConceptMatchCandidate.STATUS_PENDING
+            ).values_list("concept_a_id", "concept_b_id")
+        )
+        pending_pairs = {
+            ConceptMatchCandidate.order_concept_ids(*pair) for pair in pending_pairs
+        }
+        # A ~ C was already asked as B ~ C, so it is dropped; A ~ D had no
+        # counterpart, so it becomes B ~ D.
+        self.assertEqual(
+            pending_pairs,
+            {
+                self.expected_pair(survivor, third_concept),
+                self.expected_pair(survivor, fourth_concept),
+            },
         )
 
 
@@ -1044,20 +1106,6 @@ class ConceptMatchApiTests(ConceptMatchingTestCase):
                 self.assertEqual(
                     created["parameters"]["scheme_ids"], expected_scheme_ids
                 )
-
-    def test_scope_sizes_report_what_a_run_would_have_to_compare(self):
-        self.add_label(self.first_concept, "trumpets")
-        self.add_label(self.second_concept, "cornets")
-        cache.delete(SCOPE_SIZES_CACHE_KEY)
-
-        sizes = self.client.get(reverse("api-concept-match-scope-sizes")).json()
-
-        self.assertGreaterEqual(sizes["total_labels"], 2)
-        self.assertGreaterEqual(sizes["labels_by_scheme"][str(self.scheme.pk)], 2)
-        # A scheme can never account for more labels than exist.
-        self.assertLessEqual(
-            sum(sizes["labels_by_scheme"].values()), sizes["total_labels"]
-        )
 
     def make_editor(self, username, is_admin=False):
         editor = User.objects.create_user(username=username, password="x")
@@ -1227,10 +1275,9 @@ class ConceptMatchApiTests(ConceptMatchingTestCase):
             User.objects.create_user(username="viewer", password="x")
         )
 
-        for url_name in ("api-concept-match-runs", "api-concept-match-scope-sizes"):
-            with self.subTest(url_name=url_name):
-                response = self.client.get(reverse(url_name))
-                self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+        response = self.client.get(reverse("api-concept-match-runs"))
+
+        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
 
 
 class DetectConceptMatchesTaskTests(ConceptMatchingTestCase):
@@ -1312,6 +1359,17 @@ class DetectConceptMatchesCommandTests(ConceptMatchingTestCase):
                 stdout=StringIO(),
             )
         self.assertFalse(ConceptMatchRun.objects.exists())
+
+    def test_a_run_cancelled_from_the_interface_ends_the_command_quietly(self):
+        stdout = StringIO()
+
+        with patch(
+            "arches_lingo.management.commands.detect_concept_matches.run_detection",
+            return_value=None,
+        ):
+            call_command("detect_concept_matches", stdout=stdout)
+
+        self.assertIn("cancelled", stdout.getvalue())
 
     def test_an_unknown_user_is_an_actionable_error(self):
         with self.assertRaises(CommandError):

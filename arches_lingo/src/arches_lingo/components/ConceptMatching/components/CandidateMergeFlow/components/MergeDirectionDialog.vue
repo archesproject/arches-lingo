@@ -15,9 +15,6 @@ import { DANGER, WARN } from "@/arches_lingo/constants.ts";
 import type { MatchedConceptSummary } from "@/arches_lingo/types.ts";
 import type { MergeDirection } from "@/arches_lingo/components/ConceptMatching/types.ts";
 
-const DIRECTION_CHOSEN_EVENT = "direction-chosen" as const;
-const CANCEL_EVENT = "cancel" as const;
-
 const DIALOG_PASS_THROUGH = {
     ...MERGE_DIALOG_FRAME_PASS_THROUGH,
     root: {
@@ -39,8 +36,8 @@ const { conceptA, conceptB, isLoading } = defineProps<{
 }>();
 
 const emit = defineEmits<{
-    (event: typeof DIRECTION_CHOSEN_EVENT, payload: MergeDirection): void;
-    (event: typeof CANCEL_EVENT): void;
+    (event: "direction-chosen", payload: MergeDirection): void;
+    (event: "cancel"): void;
 }>();
 
 const { $gettext } = useGettext();
@@ -72,15 +69,15 @@ function whyUnavailable(
 
 function onContinue(): void {
     if (!survivorId.value) return;
-    emit(DIRECTION_CHOSEN_EVENT, {
-        survivorId: survivorId.value,
-        absorbedId:
-            survivorId.value === conceptA.id ? conceptB.id : conceptA.id,
+    const survivorIsFirst = survivorId.value === conceptA.id;
+    emit("direction-chosen", {
+        survivor: survivorIsFirst ? conceptA : conceptB,
+        absorbed: survivorIsFirst ? conceptB : conceptA,
     });
 }
 
 function onVisibilityChange(): void {
-    if (!isLoading) emit(CANCEL_EVENT);
+    if (!isLoading) emit("cancel");
 }
 </script>
 
@@ -158,7 +155,7 @@ function onVisibilityChange(): void {
                     :label="$gettext('Cancel')"
                     :severity="DANGER"
                     :disabled="isLoading"
-                    @click="emit(CANCEL_EVENT)"
+                    @click="emit('cancel')"
                 />
                 <Button
                     class="direction-button"

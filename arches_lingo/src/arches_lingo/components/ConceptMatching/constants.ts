@@ -38,14 +38,3 @@ export const ALL_CANDIDATE_STATUSES: readonly ConceptMatchCandidateStatus[] = [
 export const CANDIDATES_PER_PAGE = 50;
 
 export const SCHEME_FILTER_MINIMUM_OPTIONS = 8;
-
-// A fixed cost plus a cost per label, fitted to runs measured on a
-// 740,559-label corpus. The fit is loose, so it is only ever shown as a span
-// (widened upwards) rather than a single figure, and it depends on the
-// server's hardware rather than on the data.
-export const FUZZY_RUN_FIXED_SECONDS = 17;
-export const FUZZY_RUN_SECONDS_PER_LABEL = 0.0018;
-export const DURATION_SPAN_LOW_FACTOR = 0.7;
-export const DURATION_SPAN_HIGH_FACTOR = 1.4;
-export const BRIEF_RUN_SECONDS = 90;
-export const LONG_RUN_MINUTES = 60;

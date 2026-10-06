@@ -19,7 +19,6 @@ from arches_lingo.utils.concept_matching_service import (
     parse_candidate_ids,
     parse_detection_request,
     reap_stale_runs,
-    serialize_scope_sizes,
     start_detection,
     serialize_candidate_page,
     serialize_run,
@@ -59,11 +58,6 @@ def _responds_with_request_errors(handler):
             )
 
     return handle
-
-
-class ConceptMatchScopeSizeView(LingoEditorMixin, View):
-    def get(self, request):
-        return JSONResponse(serialize_scope_sizes())
 
 
 class ConceptMatchRunListView(LingoEditorMixin, View):

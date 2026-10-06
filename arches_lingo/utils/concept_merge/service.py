@@ -8,7 +8,10 @@ from arches_lingo.utils.concept_lifecycle import (
     index_concepts_in_transaction,
     retire_concept,
 )
-from arches_lingo.utils.concept_matching import mark_pairs_settled
+from arches_lingo.utils.concept_matching import (
+    hand_pending_pairs_to_survivor,
+    mark_pairs_settled,
+)
 from arches_lingo.utils.concept_merge.history import get_labels_by_concept_id
 from arches_lingo.utils.concept_merge.tiles import (
     append_digital_objects_to_survivor,
@@ -46,6 +49,7 @@ def merge_concepts(survivor, absorbed, selections, user, user_is_lingo_admin=Fal
     }
     is_cross_scheme = resolve_scheme_id(survivor.pk) != resolve_scheme_id(absorbed.pk)
     should_delete_absorbed = bool(selections.get("delete_absorbed_concept"))
+    should_retire_absorbed = bool(selections.get("retire_absorbed_concept"))
     absorbed_concept_labels = get_labels_by_concept_id([absorbed.pk])[str(absorbed.pk)]
 
     with transaction.atomic():
@@ -81,7 +85,7 @@ def merge_concepts(survivor, absorbed, selections, user, user_is_lingo_admin=Fal
 
         # Removing inside the same transaction means a failure anywhere in the
         # merge rolls the retirement or deletion back with it.
-        if selections.get("retire_absorbed_concept"):
+        if should_retire_absorbed:
             retire_concept(
                 absorbed,
                 selections.get("retirement_strategy"),
@@ -110,6 +114,8 @@ def merge_concepts(survivor, absorbed, selections, user, user_is_lingo_admin=Fal
         mark_pairs_settled(
             [(survivor_id, absorbed_id)], ConceptMatchCandidate.STATUS_MERGED, user
         )
+        if should_retire_absorbed or should_delete_absorbed:
+            hand_pending_pairs_to_survivor(absorbed_id, survivor_id)
 
     # Indexed once the transaction commits, so a rolled-back merge stays out of
     # the index and both concepts are indexed as they finally stand.
