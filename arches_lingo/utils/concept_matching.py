@@ -11,7 +11,6 @@ from contextlib import contextmanager
 
 from django.conf import settings
 from django.db import connection, connections, transaction
-from django.db.models import Q
 from django.utils import timezone
 
 from arches_controlled_lists.models import ListItem
@@ -465,7 +464,7 @@ def _apply_trigram_session_tuning(similarity_threshold):
         cursor.execute(f"SET LOCAL work_mem = '{TRIGRAM_WORK_MEM}'")
 
 
-def _decided_pairs_sql():
+def decided_pairs_sql():
     """Return (sql, params) for pairs settled by a merge or an exactMatch.
 
     Other match relations (close, broad, ...) leave a pair open, since the two
@@ -505,7 +504,7 @@ def _store_pairs(run, signal, sql, params, scope, similarity_threshold):
     declared cursor in parallel. A pair a stronger signal already stored keeps
     that signal.
     """
-    decided_sql, decided_params = _decided_pairs_sql()
+    decided_sql, decided_params = decided_pairs_sql()
     with transaction.atomic():
         if signal == SIGNAL_TRIGRAM:
             _apply_trigram_session_tuning(similarity_threshold)
@@ -521,10 +520,9 @@ def _store_pairs(run, signal, sql, params, scope, similarity_threshold):
                 f"""
                 INSERT INTO {ConceptMatchCandidate._meta.db_table}
                        (run_id, concept_a_id, concept_b_id, score, signal,
-                        evidence, status)
+                        evidence)
                 SELECT %(run_id)s, found.concept_a::uuid, found.concept_b::uuid,
-                       found.score, %(signal)s, coalesce(found.evidence, ''),
-                       %(pending_status)s
+                       found.score, %(signal)s, coalesce(found.evidence, '')
                   FROM {_FOUND_PAIRS_TABLE} found
                  WHERE NOT EXISTS (
                        SELECT 1
@@ -538,114 +536,9 @@ def _store_pairs(run, signal, sql, params, scope, similarity_threshold):
                     **decided_params,
                     "run_id": run.pk,
                     "signal": signal,
-                    "pending_status": ConceptMatchCandidate.STATUS_PENDING,
                 },
             )
             return cursor.rowcount
-
-
-def mark_pairs_settled(pairs, status, user=None):
-    """Settle these pairs in every run; a link outranks a dismissal, and only a
-    merge outranks a link."""
-    canonical_pairs = {
-        ConceptMatchCandidate.order_concept_ids(first_id, second_id)
-        for first_id, second_id in pairs
-    }
-    if not canonical_pairs:
-        return 0
-
-    matching_pairs = Q()
-    for concept_a, concept_b in canonical_pairs:
-        matching_pairs |= Q(concept_a_id=concept_a, concept_b_id=concept_b)
-
-    return (
-        ConceptMatchCandidate.objects.filter(matching_pairs)
-        .exclude(status__in={status, ConceptMatchCandidate.STATUS_MERGED})
-        .update(
-            status=status,
-            reviewed_by=user if user is not None and user.is_authenticated else None,
-            reviewed_at=timezone.now(),
-        )
-    )
-
-
-def hand_pending_pairs_to_survivor(absorbed_concept_id, survivor_concept_id):
-    """Re-point a retired or deleted concept's pending pairs at its survivor,
-    dropping any the run already holds for the survivor."""
-    absorbed_concept_id = str(absorbed_concept_id)
-    survivor_concept_id = str(survivor_concept_id)
-    pending_with_absorbed = ConceptMatchCandidate.objects.filter(
-        Q(concept_a_id=absorbed_concept_id) | Q(concept_b_id=absorbed_concept_id),
-        status=ConceptMatchCandidate.STATUS_PENDING,
-    )
-    for candidate in pending_with_absorbed:
-        other_concept_id = (
-            str(candidate.concept_b_id)
-            if str(candidate.concept_a_id) == absorbed_concept_id
-            else str(candidate.concept_a_id)
-        )
-        concept_a_id, concept_b_id = ConceptMatchCandidate.order_concept_ids(
-            survivor_concept_id, other_concept_id
-        )
-        already_in_run = ConceptMatchCandidate.objects.filter(
-            run_id=candidate.run_id,
-            concept_a_id=concept_a_id,
-            concept_b_id=concept_b_id,
-        ).exists()
-        if already_in_run:
-            candidate.delete()
-            continue
-        candidate.concept_a_id = concept_a_id
-        candidate.concept_b_id = concept_b_id
-        candidate.save(update_fields=["concept_a_id", "concept_b_id"])
-
-
-def restore_dismissed(run, user=None, candidate_ids=None):
-    """Return dismissed pairs to the queue, returning (restored, left dismissed).
-
-    A pair linked or merged since it was dismissed stays dismissed.
-    """
-    decided_sql, decided_params = _decided_pairs_sql()
-    params = {
-        **decided_params,
-        "run_id": run.pk,
-        "pending_status": ConceptMatchCandidate.STATUS_PENDING,
-        "dismissed_status": ConceptMatchCandidate.STATUS_DISMISSED,
-        "reviewed_by_id": (
-            user.pk if user is not None and user.is_authenticated else None
-        ),
-        "reviewed_at": timezone.now(),
-    }
-    candidate_clause = ""
-    dismissed_candidates = ConceptMatchCandidate.objects.filter(
-        run=run, status=ConceptMatchCandidate.STATUS_DISMISSED
-    )
-    if candidate_ids is not None:
-        candidate_clause = " AND candidate.id = ANY(%(candidate_ids)s)"
-        params["candidate_ids"] = list(candidate_ids)
-        dismissed_candidates = dismissed_candidates.filter(pk__in=candidate_ids)
-
-    with connection.cursor() as cursor:
-        cursor.execute(
-            f"""
-            UPDATE {ConceptMatchCandidate._meta.db_table} candidate
-               SET status = %(pending_status)s,
-                   reviewed_by_id = %(reviewed_by_id)s,
-                   reviewed_at = %(reviewed_at)s
-             WHERE candidate.run_id = %(run_id)s
-               AND candidate.status = %(dismissed_status)s{candidate_clause}
-               AND NOT EXISTS (
-                   SELECT 1
-                     FROM ({decided_sql}) decided
-                    WHERE decided.concept_a = candidate.concept_a_id::text
-                      AND decided.concept_b = candidate.concept_b_id::text
-               )
-            """,
-            params,
-        )
-        restored_count = cursor.rowcount
-
-    return restored_count, dismissed_candidates.count()
 
 
 def validate_detection_options(signals, similarity_threshold):

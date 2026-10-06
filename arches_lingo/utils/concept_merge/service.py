@@ -8,7 +8,7 @@ from arches_lingo.utils.concept_lifecycle import (
     index_concepts_in_transaction,
     retire_concept,
 )
-from arches_lingo.utils.concept_matching import (
+from arches_lingo.utils.concept_pair_decisions import (
     hand_pending_pairs_to_survivor,
     mark_pairs_settled,
 )

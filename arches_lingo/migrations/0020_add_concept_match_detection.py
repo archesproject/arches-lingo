@@ -101,31 +101,6 @@ class Migration(migrations.Migration):
                 ),
                 ("evidence", models.TextField(blank=True, default="")),
                 (
-                    "status",
-                    models.CharField(
-                        choices=[
-                            ("pending", "Pending"),
-                            ("dismissed", "Dismissed"),
-                            ("linked", "Linked"),
-                            ("merged", "Merged"),
-                        ],
-                        db_index=True,
-                        default="pending",
-                        max_length=16,
-                    ),
-                ),
-                ("reviewed_at", models.DateTimeField(blank=True, null=True)),
-                (
-                    "reviewed_by",
-                    models.ForeignKey(
-                        blank=True,
-                        null=True,
-                        on_delete=django.db.models.deletion.SET_NULL,
-                        related_name="lingo_reviewed_match_candidates",
-                        to=settings.AUTH_USER_MODEL,
-                    ),
-                ),
-                (
                     "run",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
@@ -140,14 +115,61 @@ class Migration(migrations.Migration):
                 "ordering": ["-score", "pk"],
                 "indexes": [
                     models.Index(
-                        fields=["run", "status", "-score"],
-                        name="lingo_candidate_queue_idx",
+                        fields=["run", "-score"], name="lingo_candidate_queue_idx"
                     )
                 ],
                 "constraints": [
                     models.UniqueConstraint(
                         fields=("run", "concept_a_id", "concept_b_id"),
                         name="unique_candidate_pair_per_run",
+                    )
+                ],
+            },
+        ),
+        migrations.CreateModel(
+            name="ConceptPairDecision",
+            fields=[
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("concept_a_id", models.UUIDField()),
+                ("concept_b_id", models.UUIDField()),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("dismissed", "Dismissed"),
+                            ("linked", "Linked"),
+                            ("merged", "Merged"),
+                        ],
+                        max_length=16,
+                    ),
+                ),
+                ("decided_at", models.DateTimeField(auto_now=True)),
+                (
+                    "decided_by",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="lingo_concept_pair_decisions",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+            ],
+            options={
+                "verbose_name": "concept pair decision",
+                "verbose_name_plural": "concept pair decisions",
+                "constraints": [
+                    models.UniqueConstraint(
+                        fields=("concept_a_id", "concept_b_id"),
+                        name="unique_concept_pair_decision",
                     )
                 ],
             },

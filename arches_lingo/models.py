@@ -233,7 +233,10 @@ class ConceptMatchRun(models.Model):
 
 
 class ConceptMatchCandidate(models.Model):
-    """A suggested pair, stored lowest id first (see ``order_concept_ids``)."""
+    """A pair one run found, stored lowest id first (see ``order_concept_ids``).
+
+    Its review status is its pair's ``ConceptPairDecision``, or pending.
+    """
 
     SIGNAL_SHARED_IDENTIFIER = "shared_identifier"
     SIGNAL_EXACT_LABEL = "exact_label"
@@ -265,17 +268,6 @@ class ConceptMatchCandidate(models.Model):
     )
     signal = models.CharField(max_length=32, choices=SIGNAL_CHOICES)
     evidence = models.TextField(blank=True, default="")
-    status = models.CharField(
-        max_length=16, choices=STATUS_CHOICES, default=STATUS_PENDING, db_index=True
-    )
-    reviewed_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        related_name="lingo_reviewed_match_candidates",
-    )
-    reviewed_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         app_label = "arches_lingo"
@@ -290,7 +282,7 @@ class ConceptMatchCandidate(models.Model):
         ]
         indexes = [
             models.Index(
-                fields=["run", "status", "-score"],
+                fields=["run", "-score"],
                 name="lingo_candidate_queue_idx",
             ),
         ]
@@ -302,3 +294,39 @@ class ConceptMatchCandidate(models.Model):
     def order_concept_ids(first_concept_id, second_concept_id):
         """Return the pair in the order the unique constraint expects."""
         return tuple(sorted([str(first_concept_id), str(second_concept_id)]))
+
+
+class ConceptPairDecision(models.Model):
+    """What an editor decided about a pair, wherever it was found."""
+
+    STATUS_CHOICES = [
+        (ConceptMatchCandidate.STATUS_DISMISSED, _("Dismissed")),
+        (ConceptMatchCandidate.STATUS_LINKED, _("Linked")),
+        (ConceptMatchCandidate.STATUS_MERGED, _("Merged")),
+    ]
+
+    concept_a_id = models.UUIDField()
+    concept_b_id = models.UUIDField()
+    status = models.CharField(max_length=16, choices=STATUS_CHOICES)
+    decided_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="lingo_concept_pair_decisions",
+    )
+    decided_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        app_label = "arches_lingo"
+        verbose_name = _("concept pair decision")
+        verbose_name_plural = _("concept pair decisions")
+        constraints = [
+            models.UniqueConstraint(
+                fields=["concept_a_id", "concept_b_id"],
+                name="unique_concept_pair_decision",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.concept_a_id} ~ {self.concept_b_id}: {self.status}"

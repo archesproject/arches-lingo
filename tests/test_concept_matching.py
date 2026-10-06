@@ -38,6 +38,7 @@ from arches_lingo.models import (
     ConceptMatchCandidate,
     ConceptMatchRun,
     ConceptMerge,
+    ConceptPairDecision,
     ConceptSet,
     ConceptSetMember,
 )
@@ -50,6 +51,11 @@ from arches_lingo.utils.concept_lifecycle import (
     STRATEGY_REPARENT_TO_SURVIVOR,
 )
 from arches_lingo.utils.concept_merge.service import merge_concepts
+from arches_lingo.utils.concept_pair_decisions import (
+    filter_by_review_status,
+    mark_pairs_settled,
+    with_review_status,
+)
 from arches_lingo.utils.concept_merge.tiles import get_list_item_tile_value
 from arches_lingo.utils.concept_matching_service import (
     MAX_LINK_BATCH,
@@ -73,7 +79,6 @@ from arches_lingo.utils.concept_matching import (
     SIGNAL_TRIGRAM,
     ConceptMatchError,
     MatchScope,
-    mark_pairs_settled,
     run_detection,
 )
 from tests.tests import SchemeWithConceptsTestCase
@@ -174,6 +179,24 @@ class ConceptMatchingTestCase(SchemeWithConceptsTestCase):
         return self.detect(
             signals=(SIGNAL_TRIGRAM,), similarity_threshold=similarity_threshold
         )
+
+    def status_of(self, candidate):
+        return (
+            with_review_status(ConceptMatchCandidate.objects.filter(pk=candidate.pk))
+            .get()
+            .review_status
+        )
+
+    def decide(self, candidates, status):
+        for candidate in candidates:
+            ConceptPairDecision.objects.update_or_create(
+                concept_a_id=candidate.concept_a_id,
+                concept_b_id=candidate.concept_b_id,
+                defaults={"status": status},
+            )
+
+    def count_with_status(self, run, status):
+        return filter_by_review_status(run.candidates.all(), status).count()
 
     def expected_pair(self, first_concept, second_concept):
         return ConceptMatchCandidate.order_concept_ids(
@@ -564,7 +587,9 @@ class RunDetectionTests(ConceptMatchingTestCase):
         self.assertEqual(candidate.signal, SIGNAL_EXACT_LABEL)
         self.assertEqual(candidate.score, 1.0)
         self.assertEqual(candidate.evidence, "trumpets")
-        self.assertEqual(candidate.status, ConceptMatchCandidate.STATUS_PENDING)
+        self.assertEqual(
+            self.status_of(candidate), ConceptMatchCandidate.STATUS_PENDING
+        )
 
     def test_a_failed_run_is_recorded_rather_than_lost(self):
         with patch(
@@ -685,7 +710,7 @@ class CandidateReviewTests(ConceptMatchingTestCase):
 
     def test_a_run_counts_its_pairs_by_what_was_decided(self):
         run = self.make_run_with_one_candidate()
-        run.candidates.update(status=ConceptMatchCandidate.STATUS_MERGED)
+        self.decide(run.candidates.all(), ConceptMatchCandidate.STATUS_MERGED)
 
         serialized = serialize_run(run)
 
@@ -726,10 +751,11 @@ class CandidateReviewTests(ConceptMatchingTestCase):
             admin,
         )
 
-        candidate = run.candidates.get()
-        self.assertEqual(candidate.status, ConceptMatchCandidate.STATUS_DISMISSED)
-        self.assertEqual(candidate.reviewed_by, admin)
-        self.assertIsNotNone(candidate.reviewed_at)
+        decision = ConceptPairDecision.objects.get()
+        self.assertEqual(decision.status, ConceptMatchCandidate.STATUS_DISMISSED)
+        self.assertEqual(decision.decided_by, admin)
+        self.assertIsNotNone(decision.decided_at)
+        self.assertTrue(str(decision).endswith(ConceptMatchCandidate.STATUS_DISMISSED))
 
     def test_linked_and_merged_are_not_settable_by_hand(self):
         run = self.make_run_with_one_candidate()
@@ -749,7 +775,7 @@ class CandidateReviewTests(ConceptMatchingTestCase):
             ConceptMatchCandidate.STATUS_LINKED,
             ConceptMatchCandidate.STATUS_MERGED,
         ):
-            run.candidates.update(status=decided_status)
+            self.decide(run.candidates.all(), decided_status)
             for requested_status in (
                 ConceptMatchCandidate.STATUS_DISMISSED,
                 ConceptMatchCandidate.STATUS_PENDING,
@@ -759,8 +785,7 @@ class CandidateReviewTests(ConceptMatchingTestCase):
                         run, [candidate.pk], requested_status, None
                     )
                     self.assertEqual(result["updated"], 0)
-                    candidate.refresh_from_db()
-                    self.assertEqual(candidate.status, decided_status)
+                    self.assertEqual(self.status_of(candidate), decided_status)
 
     def test_a_dismissed_pair_can_be_restored(self):
         run = self.make_run_with_one_candidate()
@@ -808,7 +833,7 @@ class BulkLinkTests(ConceptMatchingTestCase):
             {"https://example.org/concepts/1"},
         )
         self.assertEqual(
-            run.candidates.get().status, ConceptMatchCandidate.STATUS_LINKED
+            self.status_of(run.candidates.get()), ConceptMatchCandidate.STATUS_LINKED
         )
 
     def test_a_published_concept_is_linked_one_way(self):
@@ -859,7 +884,7 @@ class BulkLinkTests(ConceptMatchingTestCase):
         self.assertEqual(result["linked"], 0)
         self.assertEqual(result["skipped"], {"missing_uri": 1})
         self.assertEqual(
-            run.candidates.get().status, ConceptMatchCandidate.STATUS_PENDING
+            self.status_of(run.candidates.get()), ConceptMatchCandidate.STATUS_PENDING
         )
 
     def test_linking_twice_does_not_duplicate_the_tile(self):
@@ -881,7 +906,7 @@ class BulkLinkTests(ConceptMatchingTestCase):
         self.add_uri(self.first_concept, "https://example.org/concepts/1")
         self.add_uri(self.second_concept, "https://example.org/concepts/2")
         run = self.make_run_for(self.first_concept, self.second_concept)
-        run.candidates.update(status=ConceptMatchCandidate.STATUS_DISMISSED)
+        self.decide(run.candidates.all(), ConceptMatchCandidate.STATUS_DISMISSED)
 
         result = link_candidates_with_exact_match(run, [run.candidates.get().pk], None)
 
@@ -932,7 +957,8 @@ class PairSettlementTests(ConceptMatchingTestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
         for run in (first_run, second_run):
             self.assertEqual(
-                run.candidates.get().status, ConceptMatchCandidate.STATUS_MERGED
+                self.status_of(run.candidates.get()),
+                ConceptMatchCandidate.STATUS_MERGED,
             )
 
     def test_linking_settles_the_pair_in_a_run_it_was_not_reviewed_in(self):
@@ -948,11 +974,11 @@ class PairSettlementTests(ConceptMatchingTestCase):
         )
 
         self.assertEqual(
-            other_run.candidates.get().status,
+            self.status_of(other_run.candidates.get()),
             ConceptMatchCandidate.STATUS_LINKED,
         )
 
-    def test_a_merge_outranks_a_dismissal_and_nothing_outranks_a_merge(self):
+    def test_a_decision_only_ever_moves_up_from_dismissed_to_linked_to_merged(self):
         self.add_label(self.first_concept, "trumpets")
         self.add_label(self.second_concept, "trumpets")
         run = run_detection(MatchScope(), log=lambda message: None)
@@ -964,11 +990,91 @@ class PairSettlementTests(ConceptMatchingTestCase):
         )
         pair = [(self.first_concept.pk, self.second_concept.pk)]
 
-        mark_pairs_settled(pair, ConceptMatchCandidate.STATUS_MERGED)
-        mark_pairs_settled(pair, ConceptMatchCandidate.STATUS_LINKED)
+        for settled_status, expected_status in (
+            (ConceptMatchCandidate.STATUS_LINKED, ConceptMatchCandidate.STATUS_LINKED),
+            (ConceptMatchCandidate.STATUS_MERGED, ConceptMatchCandidate.STATUS_MERGED),
+            (ConceptMatchCandidate.STATUS_LINKED, ConceptMatchCandidate.STATUS_MERGED),
+        ):
+            mark_pairs_settled(pair, settled_status)
+            self.assertEqual(self.status_of(run.candidates.get()), expected_status)
+
+    def test_a_dismissal_holds_in_every_run_including_later_ones(self):
+        self.add_label(self.first_concept, "trumpets")
+        self.add_label(self.second_concept, "trumpets")
+        earlier_run = run_detection(MatchScope(), log=lambda message: None)
+        dismissed_in_run = run_detection(MatchScope(), log=lambda message: None)
+
+        set_candidate_status(
+            dismissed_in_run,
+            [dismissed_in_run.candidates.get().pk],
+            ConceptMatchCandidate.STATUS_DISMISSED,
+            None,
+        )
+        later_run = run_detection(MatchScope(), log=lambda message: None)
+
+        for run in (earlier_run, later_run):
+            self.assertEqual(
+                self.status_of(run.candidates.get()),
+                ConceptMatchCandidate.STATUS_DISMISSED,
+            )
+
+    def test_deleting_a_run_keeps_its_decisions(self):
+        self.add_label(self.first_concept, "trumpets")
+        self.add_label(self.second_concept, "trumpets")
+        run = run_detection(MatchScope(), log=lambda message: None)
+        set_candidate_status(
+            run,
+            [run.candidates.get().pk],
+            ConceptMatchCandidate.STATUS_DISMISSED,
+            None,
+        )
+
+        delete_run(run, None, user_is_lingo_admin=True)
+        later_run = run_detection(MatchScope(), log=lambda message: None)
 
         self.assertEqual(
-            run.candidates.get().status, ConceptMatchCandidate.STATUS_MERGED
+            self.status_of(later_run.candidates.get()),
+            ConceptMatchCandidate.STATUS_DISMISSED,
+        )
+
+    def test_a_merge_never_carries_a_dismissal_over_to_the_survivor(self):
+        third_concept = self.concepts[3]
+        self.add_label(self.first_concept, "stools")
+        self.add_label(third_concept, "stools")
+        run = run_detection(MatchScope(), log=lambda message: None)
+        set_candidate_status(
+            run,
+            [run.candidates.get().pk],
+            ConceptMatchCandidate.STATUS_DISMISSED,
+            None,
+        )
+        survivor, absorbed = self.second_concept, self.first_concept
+
+        merge_concepts(
+            survivor,
+            absorbed,
+            {
+                "absorbed_concept_id": str(absorbed.pk),
+                "tile_selections": [],
+                "create_exact_match_tiles": False,
+                "retire_absorbed_concept": True,
+                "retirement_strategy": STRATEGY_REPARENT_TO_SURVIVOR,
+            },
+            User.objects.get(username="admin"),
+        )
+
+        absorbed_pair = self.expected_pair(absorbed, third_concept)
+        survivor_pair = self.expected_pair(survivor, third_concept)
+        self.assertEqual(
+            ConceptPairDecision.objects.get(
+                concept_a_id=absorbed_pair[0], concept_b_id=absorbed_pair[1]
+            ).status,
+            ConceptMatchCandidate.STATUS_DISMISSED,
+        )
+        self.assertFalse(
+            ConceptPairDecision.objects.filter(
+                concept_a_id=survivor_pair[0], concept_b_id=survivor_pair[1]
+            ).exists()
         )
 
     def test_retiring_the_absorbed_concept_hands_its_pairs_to_the_survivor(self):
@@ -998,8 +1104,8 @@ class PairSettlementTests(ConceptMatchingTestCase):
         )
 
         pending_pairs = set(
-            run.candidates.filter(
-                status=ConceptMatchCandidate.STATUS_PENDING
+            filter_by_review_status(
+                run.candidates.all(), ConceptMatchCandidate.STATUS_PENDING
             ).values_list("concept_a_id", "concept_b_id")
         )
         pending_pairs = {
@@ -1510,15 +1616,16 @@ class RunDisposalTests(ConceptMatchingTestCase):
             parameters={"signals": [SIGNAL_EXACT_LABEL]},
         )
         for index, status in enumerate(statuses):
-            ConceptMatchCandidate.objects.create(
+            candidate = ConceptMatchCandidate.objects.create(
                 run=run,
                 concept_a_id=uuid.uuid4(),
                 concept_b_id=uuid.uuid4(),
                 score=1.0,
                 signal=SIGNAL_EXACT_LABEL,
                 evidence=f"pair {index}",
-                status=status,
             )
+            if status != ConceptMatchCandidate.STATUS_PENDING:
+                self.decide([candidate], status)
         return run
 
     def test_every_pending_pair_is_dismissed_at_once(self):
@@ -1532,9 +1639,7 @@ class RunDisposalTests(ConceptMatchingTestCase):
 
         self.assertEqual(result["updated"], 3)
         self.assertEqual(
-            run.candidates.filter(
-                status=ConceptMatchCandidate.STATUS_DISMISSED
-            ).count(),
+            self.count_with_status(run, ConceptMatchCandidate.STATUS_DISMISSED),
             3,
         )
 
@@ -1555,11 +1660,11 @@ class RunDisposalTests(ConceptMatchingTestCase):
 
         self.assertEqual(result["updated"], 1)
         self.assertEqual(
-            run.candidates.filter(status=ConceptMatchCandidate.STATUS_LINKED).count(),
+            self.count_with_status(run, ConceptMatchCandidate.STATUS_LINKED),
             1,
         )
         self.assertEqual(
-            run.candidates.filter(status=ConceptMatchCandidate.STATUS_MERGED).count(),
+            self.count_with_status(run, ConceptMatchCandidate.STATUS_MERGED),
             1,
         )
 
@@ -1581,7 +1686,7 @@ class RunDisposalTests(ConceptMatchingTestCase):
         self.assertEqual(result["updated"], 2)
         self.assertEqual(result["skipped"], {})
         self.assertEqual(
-            run.candidates.filter(status=ConceptMatchCandidate.STATUS_LINKED).count(),
+            self.count_with_status(run, ConceptMatchCandidate.STATUS_LINKED),
             1,
         )
 
@@ -1596,8 +1701,8 @@ class RunDisposalTests(ConceptMatchingTestCase):
             concept_b_id=concept_b_id,
             score=1.0,
             signal=SIGNAL_EXACT_LABEL,
-            status=ConceptMatchCandidate.STATUS_DISMISSED,
         )
+        self.decide([candidate], ConceptMatchCandidate.STATUS_DISMISSED)
         ConceptMerge.objects.create(
             survivor_concept_id=self.first_concept.pk,
             absorbed_concept_id=self.second_concept.pk,
@@ -1613,9 +1718,8 @@ class RunDisposalTests(ConceptMatchingTestCase):
                 result = restore()
                 self.assertEqual(result["updated"], 0)
                 self.assertEqual(result["skipped"], {"already_decided": 1})
-                candidate.refresh_from_db()
                 self.assertEqual(
-                    candidate.status, ConceptMatchCandidate.STATUS_DISMISSED
+                    self.status_of(candidate), ConceptMatchCandidate.STATUS_DISMISSED
                 )
 
     def test_another_runs_pairs_are_untouched(self):
@@ -1631,7 +1735,8 @@ class RunDisposalTests(ConceptMatchingTestCase):
         )
 
         self.assertEqual(
-            other_run.candidates.get().status, ConceptMatchCandidate.STATUS_PENDING
+            self.status_of(other_run.candidates.get()),
+            ConceptMatchCandidate.STATUS_PENDING,
         )
 
     def test_a_run_deleted_while_working_stops_without_failing(self):

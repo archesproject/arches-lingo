@@ -7,7 +7,7 @@ from http import HTTPStatus
 
 from django.conf import settings
 from django.db import IntegrityError, transaction
-from django.db.models import Count, Q
+from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
@@ -27,9 +27,15 @@ from arches_lingo.utils.concept_matching import (
     EXACT_SIGNALS,
     MatchScope,
     get_scheme_ids_for_concepts,
+    validate_detection_options,
+)
+from arches_lingo.utils.concept_pair_decisions import (
+    count_by_review_status,
+    dismiss,
+    filter_by_review_status,
     mark_pairs_settled,
     restore_dismissed,
-    validate_detection_options,
+    with_review_status,
 )
 from arches_lingo.utils.concept_merge.tiles import (
     get_concept_uri,
@@ -112,23 +118,9 @@ def _serialize_timestamp(value):
     return value.isoformat()
 
 
-def _counts_by_status_for_runs(run_ids):
-    counts_by_run_id = {
-        run_id: {status: 0 for status, _label in ConceptMatchCandidate.STATUS_CHOICES}
-        for run_id in run_ids
-    }
-    for row in (
-        ConceptMatchCandidate.objects.filter(run_id__in=run_ids)
-        .values("run_id", "status")
-        .annotate(count=Count("pk"))
-    ):
-        counts_by_run_id[row["run_id"]][row["status"]] = row["count"]
-    return counts_by_run_id
-
-
 def list_runs(user, user_is_lingo_admin):
     runs = list(ConceptMatchRun.objects.select_related("user"))
-    counts_by_run_id = _counts_by_status_for_runs([run.pk for run in runs])
+    counts_by_run_id = count_by_review_status([run.pk for run in runs])
     return [
         serialize_run(
             run, user, user_is_lingo_admin, counts_by_status=counts_by_run_id[run.pk]
@@ -142,7 +134,7 @@ def serialize_run(run, user=None, user_is_lingo_admin=False, counts_by_status=No
     ended_at = run.finished or timezone.now()
 
     if counts_by_status is None:
-        counts_by_status = _counts_by_status_for_runs([run.pk])[run.pk]
+        counts_by_status = count_by_review_status([run.pk])[run.pk]
 
     return {
         "id": run.pk,
@@ -316,11 +308,11 @@ def serialize_candidate_page(
 
     candidates = run.candidates.all()
     if status:
-        candidates = candidates.filter(status=status)
+        candidates = filter_by_review_status(candidates, status)
 
     total_count = candidates.count()
     offset = (page_number - 1) * items_per_page
-    page = list(candidates[offset : offset + items_per_page])
+    page = list(with_review_status(candidates)[offset : offset + items_per_page])
 
     concept_ids = {str(candidate.concept_a_id) for candidate in page} | {
         str(candidate.concept_b_id) for candidate in page
@@ -334,7 +326,7 @@ def serialize_candidate_page(
                 "score": candidate.score,
                 "signal": candidate.signal,
                 "evidence": candidate.evidence,
-                "status": candidate.status,
+                "status": candidate.review_status,
                 "concept_a": summaries.get(str(candidate.concept_a_id)),
                 "concept_b": summaries.get(str(candidate.concept_b_id)),
                 "is_cross_scheme": _is_cross_scheme(candidate, summaries),
@@ -368,14 +360,6 @@ def _require_reviewable_status(status):
         )
 
 
-def _dismiss(candidates, user):
-    return candidates.filter(status=ConceptMatchCandidate.STATUS_PENDING).update(
-        status=ConceptMatchCandidate.STATUS_DISMISSED,
-        reviewed_by=user if user is not None and user.is_authenticated else None,
-        reviewed_at=timezone.now(),
-    )
-
-
 def _status_change_result(status, updated_count, already_decided_count=0):
     return {
         "updated": updated_count,
@@ -390,10 +374,10 @@ def set_candidate_status(run, candidate_ids, status, user):
     _require_reviewable_status(status)
     if status == ConceptMatchCandidate.STATUS_DISMISSED:
         return _status_change_result(
-            status, _dismiss(run.candidates.filter(pk__in=candidate_ids), user)
+            status, dismiss(run, user, candidate_ids=candidate_ids)
         )
     restored_count, left_dismissed_count = restore_dismissed(
-        run, user, candidate_ids=candidate_ids
+        run, candidate_ids=candidate_ids
     )
     return _status_change_result(status, restored_count, left_dismissed_count)
 
@@ -401,8 +385,8 @@ def set_candidate_status(run, candidate_ids, status, user):
 def set_status_for_all(run, status, user):
     _require_reviewable_status(status)
     if status == ConceptMatchCandidate.STATUS_DISMISSED:
-        return _status_change_result(status, _dismiss(run.candidates.all(), user))
-    restored_count, left_dismissed_count = restore_dismissed(run, user)
+        return _status_change_result(status, dismiss(run, user))
+    restored_count, left_dismissed_count = restore_dismissed(run)
     return _status_change_result(status, restored_count, left_dismissed_count)
 
 
@@ -430,9 +414,10 @@ def link_candidates_with_exact_match(
             % {"limit": MAX_LINK_BATCH},
         )
 
+    selected_candidates = run.candidates.filter(pk__in=candidate_ids)
     candidates = list(
-        run.candidates.filter(
-            pk__in=candidate_ids, status=ConceptMatchCandidate.STATUS_PENDING
+        filter_by_review_status(
+            selected_candidates, ConceptMatchCandidate.STATUS_PENDING
         )
     )
     concept_ids = {str(candidate.concept_a_id) for candidate in candidates} | {
@@ -450,11 +435,7 @@ def link_candidates_with_exact_match(
     linked_pairs = []
     one_way_count = 0
     skipped_by_reason = defaultdict(int)
-    already_decided_count = (
-        run.candidates.filter(pk__in=candidate_ids)
-        .exclude(status=ConceptMatchCandidate.STATUS_PENDING)
-        .count()
-    )
+    already_decided_count = selected_candidates.count() - len(candidates)
     if already_decided_count:
         skipped_by_reason["already_decided"] = already_decided_count
 

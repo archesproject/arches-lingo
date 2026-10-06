@@ -100,11 +100,11 @@ const statusOptions = computed(() => [
 const emptyText = computed(function () {
     switch (status) {
         case CANDIDATE_STATUS_DISMISSED:
-            return $gettext("Nothing has been dismissed in this run.");
+            return $gettext("None of this run's pairs have been dismissed.");
         case CANDIDATE_STATUS_LINKED:
-            return $gettext("Nothing has been linked from this run.");
+            return $gettext("None of this run's pairs have been linked.");
         case CANDIDATE_STATUS_MERGED:
-            return $gettext("Nothing has been merged from this run.");
+            return $gettext("None of this run's pairs have been merged.");
         default:
             return $gettext("Nothing left to review in this run.");
     }

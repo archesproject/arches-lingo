@@ -236,8 +236,8 @@ function confirmStatusChangeForAll(status: ConceptMatchCandidateStatus): void {
             : $gettext("Restore everything dismissed?"),
         message: isDismissing
             ? $ngettext(
-                  "The %{count} pair still awaiting a decision will be dismissed. It stays in the run, and can be restored from the dismissed list.",
-                  "All %{count} pairs still awaiting a decision will be dismissed. They stay in the run, and can be restored from the dismissed list.",
+                  "The %{count} pair still awaiting a decision will be dismissed, in this run and in every other search that finds it. It can be restored from the dismissed list.",
+                  "All %{count} pairs still awaiting a decision will be dismissed, in this run and in every other search that finds them. They can be restored from the dismissed list.",
                   affectedCount,
                   { count: String(affectedCount) },
               )
@@ -283,8 +283,8 @@ function confirmDeleteRun(): void {
                   "The search stops, and the run and everything it has found so far are deleted. This cannot be undone.",
               )
             : $ngettext(
-                  "The run and its %{count} pair are deleted. This cannot be undone.",
-                  "The run and all %{count} of its pairs are deleted. This cannot be undone.",
+                  "The run and its %{count} pair are deleted. Pairs already dismissed, linked or merged stay that way. This cannot be undone.",
+                  "The run and all %{count} of its pairs are deleted. Pairs already dismissed, linked or merged stay that way. This cannot be undone.",
                   candidateCount,
                   { count: String(candidateCount) },
               ),
