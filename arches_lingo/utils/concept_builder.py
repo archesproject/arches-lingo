@@ -474,7 +474,14 @@ class ConceptBuilder:
             if self.is_hierarchy_name_tile(tile["data"]):
                 self.hierarchy_name_concepts.add(concept_id)
 
-    def serialize_concept(self, conceptid: str, *, parents=False, children=True):
+    def serialize_concept(
+        self,
+        conceptid: str,
+        *,
+        parents=False,
+        children=True,
+        ancestor_concept_ids: tuple[str, ...] = (),
+    ):
         concept_lifecycle_state_id = (
             self.resource_instance_lifecycle_state_ids_by_resource_instance_id.get(
                 conceptid
@@ -494,9 +501,15 @@ class ConceptBuilder:
             "top_concept": bool(self.schemes_by_top_concept.get(conceptid)),
         }
         if children:
+            # SKOS lets concepts declare each other a parent, so `narrower` can
+            # lead back to a concept already on the path here. Following that
+            # edge would recurse forever, so the subtree stops at the point the
+            # cycle closes. find_paths_to_root already logs the cycle itself.
+            path_to_here = (*ancestor_concept_ids, conceptid)
             data["narrower"] = [
-                self.serialize_concept(child_id)
+                self.serialize_concept(child_id, ancestor_concept_ids=path_to_here)
                 for child_id in sorted(self.narrower_concepts[conceptid])
+                if child_id not in path_to_here
             ]
         if parents:
             paths = self.find_paths_to_root([conceptid], conceptid)

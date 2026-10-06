@@ -698,7 +698,7 @@ class ViewTests(TestCase):
 
 
 class ConceptBuilderCycleTests(TestCase):
-    """Unit tests for cycle detection in ConceptBuilder.find_paths_to_root."""
+    """Unit tests for cycle handling in ConceptBuilder's hierarchy walks."""
 
     def _make_builder(self):
         """Return a ConceptBuilder with no DB-loaded data for direct manipulation."""
@@ -760,6 +760,60 @@ class ConceptBuilderCycleTests(TestCase):
         self.assertEqual(len(paths), 1)
         self.assertEqual(paths[0], [scheme_s, concept_b, concept_a])
         self.assertTrue(any("Cycle detected" in msg for msg in logged.output))
+
+    def test_serializing_children_stops_where_a_cycle_closes(self):
+        """A→B→A in `narrower` would recurse until the interpreter gives up."""
+        builder = self._make_builder()
+        concept_a = str(uuid.uuid4())
+        concept_b = str(uuid.uuid4())
+
+        builder.narrower_concepts[concept_a].add(concept_b)
+        builder.narrower_concepts[concept_b].add(concept_a)
+
+        serialized = builder.serialize_concept(concept_a)
+
+        self.assertEqual(serialized["narrower"][0]["id"], concept_b)
+        # B's only child is A, already on the path, so the subtree ends here.
+        self.assertEqual(serialized["narrower"][0]["narrower"], [])
+
+    def test_a_concept_reachable_by_two_paths_is_still_serialized_on_both(self):
+        """The guard tracks the path to the node, not every node already seen,
+        so polyhierarchy is unaffected."""
+        builder = self._make_builder()
+        parent = str(uuid.uuid4())
+        first_child = str(uuid.uuid4())
+        second_child = str(uuid.uuid4())
+        shared_grandchild = str(uuid.uuid4())
+
+        builder.narrower_concepts[parent].update({first_child, second_child})
+        builder.narrower_concepts[first_child].add(shared_grandchild)
+        builder.narrower_concepts[second_child].add(shared_grandchild)
+
+        serialized = builder.serialize_concept(parent)
+
+        grandchild_ids = [
+            grandchild["id"]
+            for child in serialized["narrower"]
+            for grandchild in child["narrower"]
+        ]
+        self.assertEqual(grandchild_ids, [shared_grandchild, shared_grandchild])
+
+    def test_serializing_children_terminates_on_a_three_concept_cycle(self):
+        builder = self._make_builder()
+        concept_a = str(uuid.uuid4())
+        concept_b = str(uuid.uuid4())
+        concept_c = str(uuid.uuid4())
+
+        builder.narrower_concepts[concept_a].add(concept_b)
+        builder.narrower_concepts[concept_b].add(concept_c)
+        builder.narrower_concepts[concept_c].add(concept_a)
+
+        serialized = builder.serialize_concept(concept_a)
+
+        self.assertEqual(
+            serialized["narrower"][0]["narrower"][0]["narrower"],
+            [],
+        )
 
 
 class IsGuideTermTileTests(TestCase):
