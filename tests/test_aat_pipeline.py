@@ -374,6 +374,50 @@ class LoadAatSourcesHelperTests(TestCase):
 
         self.assertEqual(key, f"Issn||{settings.LANGUAGE_CODE.lower()}")
 
+    def test_tile_match_key_treats_windows_line_endings_as_newlines(self):
+        """Attribution text keeps Getty's CRLF; the SKOS import stores LF."""
+        command = LoadAatSourcesCommand()
+
+        self.assertEqual(
+            command._make_tile_match_key("first\r\nsecond", "en"),
+            command._make_tile_match_key("first\nsecond", "en"),
+        )
+
+    def test_same_text_labels_each_receive_their_own_attribution(self):
+        """A concept can carry a preferred and an alternative term with the same
+        text and language; each must be matched to its own tile."""
+        concept = ResourceInstance.objects.create(
+            graph_id=const.CONCEPTS_GRAPH_ID, name="Bells"
+        )
+        tile_ids_by_label_type = {
+            label_type: TileModel.objects.create(
+                resourceinstance=concept,
+                nodegroup_id=const.CONCEPT_NAME_NODEGROUP,
+                data={
+                    const.CONCEPT_NAME_CONTENT_NODE: "bells",
+                    const.CONCEPT_NAME_LANGUAGE_NODE: "en",
+                    const.CONCEPT_NAME_TYPE_NODE: [
+                        {"uri": f"http://www.w3.org/2004/02/skos/core#{label_type}"}
+                    ],
+                },
+            ).pk
+            for label_type in ("prefLabel", "altLabel")
+        }
+        command = LoadAatSourcesCommand()
+        command.stdout = StringIO()
+        candidate_tiles = command._build_label_tile_lookup(
+            {"http://vocab.getty.edu/aat/300000002": concept.pk}
+        )[str(concept.pk)][command._make_tile_match_key("bells", "en")]
+
+        claimed_tile_ids_by_label_type = {
+            label_type: command._claim_matching_tile(candidate_tiles, label_type)[
+                "tileid"
+            ]
+            for label_type in ("altLabel", "prefLabel")
+        }
+
+        self.assertEqual(claimed_tile_ids_by_label_type, tile_ids_by_label_type)
+
     def test_blank_tile_has_an_entry_per_node_in_the_nodegroup(self):
         command = LoadAatSourcesCommand()
 
@@ -1011,6 +1055,45 @@ class SchemeDiscoveryTests(TestCase):
 
         with self.assertRaises(pipeline.LoadPreconditionError):
             pipeline.find_existing_aat_scheme_id(DEFAULT_SCHEME_IDENTIFIER_URI)
+
+
+class ReferenceDataPreconditionTests(TestCase):
+    """`load_aat` refuses to start without the controlled list items it needs."""
+
+    @classmethod
+    def setUpTestData(cls):
+        ViewTests.load_controlled_lists()
+        ViewTests.load_ontology()
+        ViewTests.load_graphs()
+
+    def remove_one_gvp_relation_type(self):
+        ListItem.objects.filter(
+            list_id=const.RELATED_PROPERTIES_LIST_ID,
+            uri__startswith="http://vocab.getty.edu/ontology#aat",
+            children__isnull=True,
+        ).first().delete()
+
+    def test_the_shipped_reference_data_passes(self):
+        pipeline.check_reference_data_is_loaded()
+
+    def test_a_stale_related_properties_list_is_refused(self):
+        """The importer would otherwise load every typed relation untyped."""
+        self.remove_one_gvp_relation_type()
+
+        with self.assertRaises(pipeline.LoadPreconditionError) as raised:
+            pipeline.check_reference_data_is_loaded()
+
+        self.assertIn("related_properties.xml", str(raised.exception))
+
+    def test_every_missing_list_is_named_in_one_error(self):
+        self.remove_one_gvp_relation_type()
+        ListItem.objects.filter(list_id=const.CONCEPT_TYPE_LIST_ID).delete()
+
+        with self.assertRaises(pipeline.LoadPreconditionError) as raised:
+            pipeline.check_reference_data_is_loaded()
+
+        self.assertIn("term_types.xml", str(raised.exception))
+        self.assertIn("related_properties.xml", str(raised.exception))
 
 
 class DescriptorRecalculationTests(TestCase):

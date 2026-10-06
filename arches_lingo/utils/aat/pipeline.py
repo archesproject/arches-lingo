@@ -8,12 +8,15 @@ download and conversion.
 """
 
 import os
+from xml.etree import ElementTree
 
 from django.core.management import call_command
 from django.db import connection, transaction
 
 from arches.app.models.models import GraphModel
+from arches_controlled_lists.models import ListItem
 
+import arches_lingo
 from arches_lingo import const
 from arches_lingo.utils.aat.attribution_extraction import (
     extract_attribution_from_archive,
@@ -41,6 +44,7 @@ from arches_lingo.utils.aat.scheme_partition import (
     summarize_scheme_partition,
 )
 from arches_lingo.utils.concept_lifecycle import LOCKED_STATE_ID
+from arches_lingo.utils.skos import GVP_TYPED_RELATION_PREFIX
 from arches_lingo.utils.aat.skos_conversion import (
     DEFAULT_SCHEME_IDENTIFIER_URI,
     DEFAULT_SCHEME_PREF_LABEL,
@@ -61,6 +65,15 @@ AAT_CELERY_BYTE_SIZE_LIMIT = 2_000_000_000
 SKOS_FILENAME = "getty_aat_skos.xml"
 ATTRIBUTION_FILENAME = "getty_aat_attribution.json"
 RESOURCE_ID_SNAPSHOT_FILENAME = "getty_aat_resource_ids.csv"
+
+RELATED_PROPERTIES_LIST_PATH = os.path.join(
+    os.path.dirname(arches_lingo.__file__),
+    "pkg",
+    "reference_data",
+    "controlled_lists",
+    "related_properties.xml",
+)
+DCTERMS_IDENTIFIER_TAG = "{http://purl.org/dc/terms/}identifier"
 
 
 class LoadPreconditionError(Exception):
@@ -102,7 +115,9 @@ def check_reference_data_is_loaded():
     The load takes hours and its last step refuses to run without the term
     types the AAT concept types are drawn from. Checking that up front stops a
     run that would otherwise download the export, insert languages and write
-    every concept before discovering the package was never loaded.
+    every concept before discovering the package was never loaded. The relation
+    types are checked too, since without them the import succeeds but every
+    typed relation comes in untyped.
     """
     missing_graph_names = [
         graph_name
@@ -117,10 +132,45 @@ def check_reference_data_is_loaded():
             f"The {' and '.join(missing_graph_names)} resource model(s) are not "
             "in the database. Load the Lingo package before loading the AAT."
         )
+
+    # Both lists are reported together so following the message once is enough.
+    problems = []
     try:
         load_non_concept_type_items()
     except MissingConceptTypeItemsError as missing_items_error:
-        raise LoadPreconditionError(str(missing_items_error)) from missing_items_error
+        problems.append(str(missing_items_error))
+    missing_relation_type_count = len(find_missing_gvp_relation_types())
+    if missing_relation_type_count:
+        problems.append(
+            f"{missing_relation_type_count} Getty relation types are missing "
+            "from the related properties list, so typed relations would load "
+            f"untyped. Load {RELATED_PROPERTIES_LIST_PATH} to add them."
+        )
+    if problems:
+        raise LoadPreconditionError(" ".join(problems))
+
+
+def find_missing_gvp_relation_types():
+    """Return the Getty relation type URIs Lingo ships but the database lacks.
+
+    The importer leaves a relation untyped rather than failing when its
+    predicate has no list item, so a stale list would otherwise go unnoticed.
+    """
+    shipped_relation_type_uris = {
+        identifier.text.strip()
+        for identifier in ElementTree.parse(RELATED_PROPERTIES_LIST_PATH).iter(
+            DCTERMS_IDENTIFIER_TAG
+        )
+        if identifier.text
+        and identifier.text.strip().startswith(GVP_TYPED_RELATION_PREFIX)
+    }
+    loaded_relation_type_uris = set(
+        ListItem.objects.filter(
+            list_id=const.RELATED_PROPERTIES_LIST_ID,
+            uri__in=shipped_relation_type_uris,
+        ).values_list("uri", flat=True)
+    )
+    return shipped_relation_type_uris - loaded_relation_type_uris
 
 
 def load_aat(

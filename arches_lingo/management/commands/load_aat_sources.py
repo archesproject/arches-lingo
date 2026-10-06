@@ -461,7 +461,9 @@ class Command(BaseCommand):
                     label_info["literal_form"],
                     label_info["language"],
                 )
-                tile_info = tiles.get(tile_key)
+                tile_info = self._claim_matching_tile(
+                    tiles.get(tile_key), label_info.get("label_type")
+                )
                 if not tile_info:
                     skipped_labels += 1
                     continue
@@ -526,7 +528,7 @@ class Command(BaseCommand):
                     note_info["value"],
                     note_info["language"],
                 )
-                tile_info = tiles.get(tile_key)
+                tile_info = self._claim_matching_tile(tiles.get(tile_key))
                 if not tile_info:
                     skipped_notes += 1
                     continue
@@ -772,7 +774,9 @@ class Command(BaseCommand):
 
     def _build_label_tile_lookup(self, concept_uri_to_resource):
         """
-        Build {resource_id_str: {label_key: {tileid, data, graph_id}}} for label tiles.
+        Build {resource_id_str: {label_key: [{tileid, graph_id, label_type}]}}
+        for label tiles. A concept can hold two terms with the same text and
+        language, so each key keeps every tile that shares it.
         """
         resource_ids = set(concept_uri_to_resource.values())
         if not resource_ids:
@@ -801,12 +805,13 @@ class Command(BaseCommand):
             )
         )
 
-        lookup = defaultdict(dict)
+        lookup = defaultdict(lambda: defaultdict(list))
         content_nodes = [
             const.CONCEPT_NAME_CONTENT_NODE,
             const.SCHEME_NAME_CONTENT_NODE,
         ]
         lang_nodes = [const.CONCEPT_NAME_LANGUAGE_NODE, const.SCHEME_NAME_LANGUAGE_NODE]
+        type_nodes = [const.CONCEPT_NAME_TYPE_NODE, const.SCHEME_NAME_TYPE_NODE]
 
         for tile_id, resource_id, graph_id, data in label_tiles.iterator():
             if not data:
@@ -831,17 +836,21 @@ class Command(BaseCommand):
 
             if content:
                 key = self._make_tile_match_key(content, language)
-                lookup[str(resource_id)][key] = {
-                    "tileid": tile_id,
-                    "graph_id": graph_id,
-                }
+                lookup[str(resource_id)][key].append(
+                    {
+                        "tileid": tile_id,
+                        "graph_id": graph_id,
+                        "label_type": self._read_label_type(data, type_nodes),
+                        "claimed": False,
+                    }
+                )
 
         self.stdout.write(f"  Found label tiles for {len(lookup)} resources")
         return lookup
 
     def _build_note_tile_lookup(self, concept_uri_to_resource):
         """
-        Build {resource_id_str: {note_key: {tileid, data, graph_id}}} for note tiles.
+        Build {resource_id_str: {note_key: [{tileid, graph_id}]}} for note tiles.
         """
         resource_ids = set(concept_uri_to_resource.values())
         if not resource_ids:
@@ -868,7 +877,7 @@ class Command(BaseCommand):
             )
         )
 
-        lookup = defaultdict(dict)
+        lookup = defaultdict(lambda: defaultdict(list))
         content_node = const.STATEMENT_CONTENT_NODE
         lang_node = const.STATEMENT_LANGUAGE_NODE
         # Scheme statement nodes may differ — check both
@@ -914,10 +923,14 @@ class Command(BaseCommand):
             if content:
                 # Truncate content for the key to handle minor differences
                 key = self._make_tile_match_key(content, language)
-                lookup[str(resource_id)][key] = {
-                    "tileid": tile_id,
-                    "graph_id": graph_id,
-                }
+                lookup[str(resource_id)][key].append(
+                    {
+                        "tileid": tile_id,
+                        "graph_id": graph_id,
+                        "label_type": None,
+                        "claimed": False,
+                    }
+                )
 
         self.stdout.write(f"  Found note tiles for {len(lookup)} resources")
         return lookup
@@ -931,6 +944,36 @@ class Command(BaseCommand):
         return [str(node_id) for node_id in nodes]
 
     @staticmethod
+    def _read_label_type(data, type_nodes):
+        """Return a label tile's SKOS label type, e.g. "prefLabel"."""
+        for type_node_id in type_nodes:
+            for reference in data.get(type_node_id) or []:
+                if isinstance(reference, dict) and reference.get("uri"):
+                    return reference["uri"].rsplit("#", 1)[-1]
+        return None
+
+    @staticmethod
+    def _claim_matching_tile(candidate_tiles, label_type=None):
+        """Pick the tile an attribution entry belongs to among those sharing its key.
+
+        Each tile is handed out once, preferring one of the same label type, so
+        two same-text terms keep their own sources. A tile is reused only when
+        the entries outnumber the tiles.
+        """
+        if not candidate_tiles:
+            return None
+        chosen_tile = min(
+            candidate_tiles,
+            key=lambda candidate: (
+                candidate["claimed"],
+                candidate["label_type"] != label_type,
+                str(candidate["tileid"]),
+            ),
+        )
+        chosen_tile["claimed"] = True
+        return chosen_tile
+
+    @staticmethod
     def _make_tile_match_key(content, language):
         """Key a label or note tile by its content and language.
 
@@ -938,7 +981,7 @@ class Command(BaseCommand):
         language falls back to the importer's default, which is the language
         the importer stored it under.
         """
-        normalized_content = (content or "").strip()[:200]
+        normalized_content = (content or "").replace("\r\n", "\n").strip()[:200]
         normalized_language = (
             (language or "").strip() or settings.LANGUAGE_CODE
         ).lower()
