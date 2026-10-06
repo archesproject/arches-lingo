@@ -100,13 +100,14 @@ watch(
                 .filter(Boolean) ?? [];
 
         configurationError.value = undefined;
+        resources.value = [];
         try {
-            resources.value = digitalObjectIds.length
-                ? await fetchLingoResourcesBatch(
-                      "digital_object_system",
-                      digitalObjectIds,
-                  )
-                : [];
+            if (digitalObjectIds.length) {
+                resources.value = await fetchLingoResourcesBatch(
+                    "digital_object_system",
+                    digitalObjectIds,
+                );
+            }
         } catch (error) {
             configurationError.value = error;
         }

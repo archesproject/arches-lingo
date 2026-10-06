@@ -5,9 +5,9 @@ import { useGettext } from "vue3-gettext";
 import Checkbox from "primevue/checkbox";
 import Message from "primevue/message";
 
-import { INFO, WARN } from "@/arches_lingo/constants.ts";
-
 import MergeRetirementOptions from "@/arches_lingo/components/concept/ConceptMerge/components/MergeRetirementOptions.vue";
+
+import { INFO, WARN } from "@/arches_lingo/constants.ts";
 
 import type { MergeRetirementStrategy } from "@/arches_lingo/types.ts";
 import type { MergeSectionSummary } from "@/arches_lingo/components/concept/ConceptMerge/types.ts";
@@ -37,10 +37,17 @@ const emit = defineEmits<{
 const { $gettext } = useGettext();
 
 const summaryText = computed(function () {
-    return $gettext('Merging "%{absorbed}" into "%{survivor}".', {
+    const names = {
         absorbed: absorbedLabel ?? "",
         survivor: survivorLabel ?? "",
-    });
+    };
+    if (isCrossScheme) {
+        return $gettext(
+            'Copying values from "%{absorbed}" into "%{survivor}".',
+            names,
+        );
+    }
+    return $gettext('Merging "%{absorbed}" into "%{survivor}".', names);
 });
 
 const hasSelections = computed(function () {
@@ -112,7 +119,7 @@ const hasSelections = computed(function () {
         >
             {{
                 $gettext(
-                    'The two concepts are in different schemes, so "%{absorbed}" stays where it is. Retiring it is only offered for a merge within one scheme.',
+                    'The two concepts are in different schemes, so "%{absorbed}" stays where it is and is left unchanged. Retiring it is only offered for a merge within one scheme.',
                     { absorbed: absorbedLabel ?? "" },
                 )
             }}

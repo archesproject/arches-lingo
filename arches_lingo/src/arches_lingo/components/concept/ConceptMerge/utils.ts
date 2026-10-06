@@ -1,9 +1,14 @@
 import { SKOS_PREF_LABEL_URI } from "@/arches_lingo/constants.ts";
+import {
+    TILE_STATE_ALREADY_ON_SURVIVOR,
+    TILE_STATE_DROPPED,
+} from "@/arches_lingo/components/concept/ConceptMerge/constants.ts";
 
 import type { AliasedNodeData } from "@/arches_vue_components/types.ts";
 import type {
     MergeRequestPayload,
-    ResourceInstanceResult,
+    MergeTileState,
+    SearchResultItem,
 } from "@/arches_lingo/types.ts";
 import type {
     MergeRetirementChoice,
@@ -14,25 +19,6 @@ import type {
     PrefLabelConflict,
     SectionComparison,
 } from "@/arches_lingo/components/concept/ConceptMerge/types.ts";
-
-/**
- * The scheme a concept belongs to, however it is attached.
- *
- * A top concept records its scheme on top_concept_of rather than
- * part_of_scheme, so both are read here -- the same fallback the server's
- * resolve_scheme_id makes.
- */
-export function resolveSchemeId(
-    concept: ResourceInstanceResult | undefined,
-): string | undefined {
-    const aliasedData = concept?.aliased_data;
-    return (
-        aliasedData?.part_of_scheme?.aliased_data?.part_of_scheme
-            ?.node_value?.[0]?.resourceId ??
-        aliasedData?.top_concept_of?.aliased_data?.top_concept_of
-            ?.node_value?.[0]?.resourceId
-    );
-}
 
 const LABEL_CONTENT_ALIAS = "appellative_status_ascribed_name_content";
 const LABEL_LANGUAGE_ALIAS = "appellative_status_ascribed_name_language";
@@ -47,49 +33,6 @@ export function getNodeData(
 
 export function getDisplayValue(tile: MergeTile, nodeAlias: string): string {
     return getNodeData(tile, nodeAlias)?.display_value ?? "";
-}
-
-/**
- * Reduce a node value to a comparable string.
- *
- * Resource-instance and reference values carry per-tile bookkeeping alongside
- * the value itself, so only the identifying part of each entry is kept. This
- * mirrors normalize_node_value in the merge service, so the client and the
- * server agree on when two tiles hold the same value.
- */
-export function normalizeNodeValue(nodeValue: unknown): string {
-    if (Array.isArray(nodeValue)) {
-        return nodeValue
-            .map((entry) => {
-                if (entry && typeof entry === "object") {
-                    const reference = entry as {
-                        resourceId?: string;
-                        uri?: string;
-                    };
-                    return reference.resourceId ?? reference.uri ?? "";
-                }
-                return String(entry);
-            })
-            .join("|");
-    }
-    if (nodeValue === null || nodeValue === undefined) {
-        return "";
-    }
-    return String(nodeValue);
-}
-
-export function buildTileIdentityKey(
-    section: MergeSection,
-    tile: MergeTile,
-): string | null {
-    if (!section.identityNodeAliases) {
-        return null;
-    }
-    return section.identityNodeAliases
-        .map((nodeAlias) =>
-            normalizeNodeValue(getNodeData(tile, nodeAlias)?.node_value),
-        )
-        .join("::");
 }
 
 /**
@@ -123,44 +66,6 @@ export function getReferencedResourceIds(
     return nodeValue
         .map((entry) => (entry as { resourceId?: string })?.resourceId)
         .filter((resourceId): resourceId is string => Boolean(resourceId));
-}
-
-// Resource-instance nodes on an absorbed tile that can name the survivor itself.
-// Mirrors SELF_REFERENCE_NODES_BY_NODEGROUP in the merge service.
-const SELF_REFERENCE_NODE_ALIASES_BY_SECTION: Record<string, string[]> = {
-    classification_status: ["classification_status_ascribed_classification"],
-    relation_status: ["relation_status_ascribed_comparate"],
-};
-
-/**
- * True when a tile says nothing beyond the relationship the merge dissolves.
- *
- * The absorbed concept's broader tile naming only the survivor, or a relation
- * recorded solely between the two, would make the survivor its own parent or its
- * own relative. The server drops these on the way across, so they are not offered
- * here. A tile that names other concepts as well is still worth taking: the
- * server keeps those references and strips only the survivor's.
- */
-export function isSelfReferenceOnly(
-    section: MergeSection,
-    tile: MergeTile,
-    survivorConceptId: string,
-): boolean {
-    const nodeAliases =
-        SELF_REFERENCE_NODE_ALIASES_BY_SECTION[section.nodegroupAlias];
-    if (!nodeAliases) {
-        return false;
-    }
-
-    return nodeAliases.some(function (nodeAlias) {
-        const referencedIds = getReferencedResourceIds(tile, nodeAlias);
-        return (
-            referencedIds.length > 0 &&
-            referencedIds.every(
-                (resourceId) => resourceId === survivorConceptId,
-            )
-        );
-    });
 }
 
 function getReferencedDigitalObjectIds(
@@ -209,6 +114,7 @@ function buildDigitalObjectSectionComparison(
 
     return {
         section,
+        isBlocked,
         survivorTiles: [],
         absorbedTileOptions: [],
         survivorDigitalObjectIds,
@@ -216,11 +122,34 @@ function buildDigitalObjectSectionComparison(
     };
 }
 
+// Taking a single value overwrites what the survivor already has, so it is only
+// selected when there is nothing to overwrite. Hierarchy sections would move the
+// survivor, so they wait for the editor to opt in.
+function isSelectedByDefault(
+    section: MergeSection,
+    survivorTiles: MergeTile[],
+    alreadyOnSurvivor: boolean,
+    isBlocked: boolean,
+): boolean {
+    if (isBlocked || alreadyOnSurvivor || section.isHierarchical) {
+        return false;
+    }
+    if (section.cardinality === "n") {
+        return true;
+    }
+    return survivorTiles.length === 0;
+}
+
+/**
+ * Pair one section's tiles from both concepts, using the server's preview to
+ * know which absorbed tiles the survivor already holds and which the merge
+ * would drop because they only name the survivor or something beneath it.
+ */
 export function buildSectionComparison(
     section: MergeSection,
     survivorTiles: MergeTile[],
     absorbedTiles: MergeTile[],
-    survivorConceptId: string,
+    tileStates: Record<string, MergeTileState>,
     isBlocked = false,
 ): SectionComparison {
     if (section.digitalObjectReferenceNodeAliases) {
@@ -232,41 +161,27 @@ export function buildSectionComparison(
         );
     }
 
-    const survivorIdentityKeys = new Set(
-        survivorTiles
-            .map((tile) => buildTileIdentityKey(section, tile))
-            .filter(
-                (identityKey): identityKey is string => identityKey !== null,
-            ),
-    );
-
     const absorbedTileOptions = absorbedTiles
-        .filter(
-            (tile) => !isSelfReferenceOnly(section, tile, survivorConceptId),
-        )
-        .map((tile) => {
-            const identityKey = buildTileIdentityKey(section, tile);
+        .filter((tile) => tileStates[tile.tileid ?? ""] !== TILE_STATE_DROPPED)
+        .map(function (tile) {
             const alreadyOnSurvivor =
-                identityKey !== null && survivorIdentityKeys.has(identityKey);
-
-            // Taking a cardinality-1 value overwrites what the survivor already
-            // has, so it is only selected by default when there is nothing to
-            // overwrite. A blocked section is never selected, so the counts, the
-            // summary and the payload all agree with the disabled controls.
-            // Hierarchy sections would move the survivor, so they wait for the
-            // editor to opt in.
-            const isSelected =
-                !isBlocked &&
-                !section.isHierarchical &&
-                (section.cardinality === "n"
-                    ? !alreadyOnSurvivor
-                    : survivorTiles.length === 0);
-
-            return { tile, identityKey, alreadyOnSurvivor, isSelected };
+                tileStates[tile.tileid ?? ""] ===
+                TILE_STATE_ALREADY_ON_SURVIVOR;
+            return {
+                tile,
+                alreadyOnSurvivor,
+                isSelected: isSelectedByDefault(
+                    section,
+                    survivorTiles,
+                    alreadyOnSurvivor,
+                    isBlocked,
+                ),
+            };
         });
 
     return {
         section,
+        isBlocked,
         survivorTiles,
         absorbedTileOptions,
         survivorDigitalObjectIds: [],
@@ -330,7 +245,7 @@ export function findPrefLabelConflicts(
             return;
         }
         const languageNodeData = getNodeData(tile, LABEL_LANGUAGE_ALIAS);
-        const languageCode = normalizeNodeValue(languageNodeData?.node_value);
+        const languageCode = String(languageNodeData?.node_value ?? "");
         if (!languageCode) {
             return;
         }
@@ -367,12 +282,8 @@ export function buildMergePayload(
     retirement: MergeRetirementChoice,
     isCrossScheme = false,
 ): MergeRequestPayload {
-    // Scheme-scoped sections are disabled in the comparison rather than hidden,
-    // so a selection made before the concept was chosen could still be carried
-    // here. The server rejects them either way; dropping them means the editor
-    // sees the merge they were shown rather than an error.
     const selectableComparisons = sectionComparisons.filter(
-        (comparison) => !isCrossScheme || !comparison.section.schemeScoped,
+        (comparison) => !comparison.isBlocked,
     );
     const tileSelections = selectableComparisons
         .flatMap((comparison) => comparison.absorbedTileOptions)
@@ -400,6 +311,9 @@ export function buildMergePayload(
         }
     }
 
+    // A merge across schemes never retires the absorbed concept.
+    const shouldRetire = !isCrossScheme && retirement.retireAbsorbedConcept;
+
     return {
         absorbed_concept_id: absorbedConceptId,
         tile_selections: tileSelections,
@@ -407,14 +321,10 @@ export function buildMergePayload(
         pref_label_demotions: prefLabelDemotions,
         survivor_pref_label_demotions: survivorPrefLabelDemotions,
         create_exact_match_tiles: retirement.createExactMatchTiles,
-        // Retiring rehomes the concept's children within its own scheme, so a
-        // merge across schemes leaves it in place.
-        retire_absorbed_concept:
-            !isCrossScheme && retirement.retireAbsorbedConcept,
-        retirement_strategy:
-            !isCrossScheme && retirement.retireAbsorbedConcept
-                ? retirement.retirementStrategy
-                : null,
+        retire_absorbed_concept: shouldRetire,
+        retirement_strategy: shouldRetire
+            ? retirement.retirementStrategy
+            : null,
     };
 }
 
@@ -471,4 +381,18 @@ export function collectReferencedDigitalObjectIds(
         ),
     ]);
     return [...new Set(digitalObjectIds)];
+}
+
+/**
+ * Shape an ancestor path (scheme first, the concept itself last) the way a
+ * search result carries its concept, so it renders like one.
+ */
+export function buildSearchResultFromAncestorPath(
+    ancestorPath: SearchResultItem[],
+): SearchResultItem | undefined {
+    const concept = ancestorPath.at(-1);
+    if (!concept) {
+        return undefined;
+    }
+    return { ...concept, parents: [ancestorPath.slice(0, -1)] };
 }

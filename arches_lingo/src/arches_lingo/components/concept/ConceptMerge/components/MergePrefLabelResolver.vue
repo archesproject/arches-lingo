@@ -5,18 +5,31 @@ import RadioButton from "primevue/radiobutton";
 
 import { WARN } from "@/arches_lingo/constants.ts";
 
-import type { PrefLabelConflict } from "@/arches_lingo/components/concept/ConceptMerge/types.ts";
+import type {
+    PrefLabelCandidate,
+    PrefLabelConflict,
+} from "@/arches_lingo/components/concept/ConceptMerge/types.ts";
 
-const { conflicts, winnerByLanguage } = defineProps<{
-    conflicts: PrefLabelConflict[];
-    winnerByLanguage: Record<string, string>;
-}>();
+const { conflicts, winnerByLanguage, survivorLabel, absorbedLabel } =
+    defineProps<{
+        conflicts: PrefLabelConflict[];
+        winnerByLanguage: Record<string, string>;
+        survivorLabel: string | undefined;
+        absorbedLabel: string | undefined;
+    }>();
 
 const emit = defineEmits<{
     (event: "update:winner", languageCode: string, tileId: string): void;
 }>();
 
 const { $gettext } = useGettext();
+
+function candidateSourceText(candidate: PrefLabelCandidate) {
+    if (candidate.isFromSurvivor) {
+        return $gettext('on "%{name}"', { name: survivorLabel ?? "" });
+    }
+    return $gettext('from "%{name}"', { name: absorbedLabel ?? "" });
+}
 </script>
 
 <template>
@@ -69,11 +82,7 @@ const { $gettext } = useGettext();
                 />
                 <span class="pref-label-content">{{ candidate.content }}</span>
                 <span class="pref-label-source">
-                    {{
-                        candidate.isFromSurvivor
-                            ? $gettext("on this concept")
-                            : $gettext("from the other concept")
-                    }}
+                    {{ candidateSourceText(candidate) }}
                 </span>
             </label>
         </div>

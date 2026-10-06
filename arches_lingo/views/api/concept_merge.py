@@ -10,13 +10,31 @@ from arches.app.utils.response import JSONErrorResponse, JSONResponse
 
 from arches_lingo.mixins.permissions import AnonymousAccessMixin, LingoEditorMixin
 from arches_lingo.permissions import is_lingo_admin
-from arches_lingo.utils.concept_merge import (
+from arches_lingo.utils.concept_merge.history import get_concept_merge_history
+from arches_lingo.utils.concept_merge.preview import build_merge_preview
+from arches_lingo.utils.concept_merge.service import merge_concepts
+from arches_lingo.utils.concept_merge.validation import (
     ConceptMergeError,
     concept_is_writable,
-    get_concept_merge_history,
-    merge_concepts,
     validate_merge,
 )
+
+
+def load_concepts(*concept_ids):
+    return [
+        ResourceInstance.objects.select_related(
+            "resource_instance_lifecycle_state"
+        ).get(pk=concept_id)
+        for concept_id in concept_ids
+    ]
+
+
+def concept_not_found_response():
+    return JSONErrorResponse(
+        title=_("Not found"),
+        message=_("Concept not found."),
+        status=HTTPStatus.NOT_FOUND,
+    )
 
 
 class ConceptMergeView(LingoEditorMixin, View):
@@ -39,18 +57,9 @@ class ConceptMergeView(LingoEditorMixin, View):
             )
 
         try:
-            survivor = ResourceInstance.objects.select_related(
-                "resource_instance_lifecycle_state"
-            ).get(pk=pk)
-            absorbed = ResourceInstance.objects.select_related(
-                "resource_instance_lifecycle_state"
-            ).get(pk=absorbed_concept_id)
+            survivor, absorbed = load_concepts(pk, absorbed_concept_id)
         except (ResourceInstance.DoesNotExist, ValueError, ValidationError):
-            return JSONErrorResponse(
-                title=_("Not found"),
-                message=_("Concept not found."),
-                status=HTTPStatus.NOT_FOUND,
-            )
+            return concept_not_found_response()
 
         user_is_lingo_admin = is_lingo_admin(request.user)
         try:
@@ -75,11 +84,19 @@ class ConceptMergeView(LingoEditorMixin, View):
                 "merged": True,
                 "concept_merge_id": concept_merge.pk,
                 "edit_transaction_id": str(concept_merge.edit_transaction_id),
-                # The absorbed concept keeps no record of the match when the
-                # merge was not allowed to edit it, so the client can say so.
                 "exact_match_recorded_on_absorbed": absorbed_was_writable,
             }
         )
+
+
+class ConceptMergePreviewView(LingoEditorMixin, View):
+    def get(self, request, pk, absorbed_pk):
+        try:
+            survivor, absorbed = load_concepts(pk, absorbed_pk)
+        except ResourceInstance.DoesNotExist:
+            return concept_not_found_response()
+
+        return JSONResponse(build_merge_preview(survivor, absorbed))
 
 
 class ConceptMergeHistoryView(AnonymousAccessMixin, View):

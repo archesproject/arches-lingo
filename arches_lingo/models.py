@@ -157,6 +157,7 @@ class ConceptMerge(models.Model):
 
     survivor_concept_id = models.UUIDField(db_index=True)
     absorbed_concept_id = models.UUIDField(db_index=True)
+    is_cross_scheme = models.BooleanField(default=False)
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         null=True,

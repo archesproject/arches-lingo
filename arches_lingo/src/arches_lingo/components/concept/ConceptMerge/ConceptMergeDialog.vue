@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 
 import { useGettext } from "vue3-gettext";
 import { storeToRefs } from "pinia";
@@ -15,13 +15,19 @@ import StepPanels from "primevue/steppanels";
 import Stepper from "primevue/stepper";
 
 import MergeComparison from "@/arches_lingo/components/concept/ConceptMerge/components/MergeComparison.vue";
+import MergeConceptPair from "@/arches_lingo/components/concept/ConceptMerge/components/MergeConceptPair.vue";
 import MergeConceptPicker from "@/arches_lingo/components/concept/ConceptMerge/components/MergeConceptPicker.vue";
 import MergeConfirmation from "@/arches_lingo/components/concept/ConceptMerge/components/MergeConfirmation.vue";
 
-import { fetchLingoResource, mergeConcepts } from "@/arches_lingo/api.ts";
 import {
+    fetchConceptAncestorPaths,
+    fetchConceptMergePreview,
+    fetchLingoResource,
+    mergeConcepts,
+} from "@/arches_lingo/api.ts";
+import {
+    buildSearchResultFromAncestorPath,
     buildMergePayload,
-    resolveSchemeId,
 } from "@/arches_lingo/components/concept/ConceptMerge/utils.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
@@ -38,39 +44,24 @@ import {
 } from "@/arches_lingo/components/concept/ConceptMerge/constants.ts";
 
 import type {
+    ConceptMergePreview,
     MergeRetirementStrategy,
     ResourceInstanceResult,
+    SearchResultHierarchy,
     SearchResultItem,
 } from "@/arches_lingo/types.ts";
 import type { MergeSelectionState } from "@/arches_lingo/components/concept/ConceptMerge/types.ts";
 
-const { survivorConcept, survivorLabel, schemeId, graphSlug } = defineProps<{
-    survivorConcept: ResourceInstanceResult;
-    survivorLabel: string | undefined;
-    schemeId: string;
-    graphSlug: string;
-}>();
-
-const emit = defineEmits<{
-    cancel: [];
-    merged: [];
-}>();
-
-const { $gettext } = useGettext();
-const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
-
-// A fixed frame: the dialog keeps one size on every step and for every set of
-// search results, and the step body scrolls inside it. It is sized for the compare
-// step, which is the widest and longest of the three.
+// One fixed frame for every step, sized for the compare step, which is the
+// widest and longest of the three. The step body scrolls inside it.
 const DIALOG_SIZE = {
     width: "84rem",
     maxWidth: "94vw",
     height: "88vh",
 };
 
-// The chrome Lingo's other dialogs wear: a dark header band carrying the title,
-// a bordered frame, and body padding. See ExportThesauri, which sets the same.
-const dialogPassThrough = {
+// The chrome Lingo's other dialogs wear; see ExportThesauri.
+const DIALOG_PASS_THROUGH = {
     root: {
         style: {
             fontFamily: "var(--p-lingo-font-family)",
@@ -108,9 +99,32 @@ const dialogPassThrough = {
     },
 };
 
+const MERGE_STEP_ORDER = [
+    MERGE_STEP_SELECT,
+    MERGE_STEP_COMPARE,
+    MERGE_STEP_CONFIRM,
+];
+
+const { survivorConcept, survivorLabel, schemeId, graphSlug } = defineProps<{
+    survivorConcept: ResourceInstanceResult;
+    survivorLabel: string | undefined;
+    schemeId: string;
+    graphSlug: string;
+}>();
+
+const emit = defineEmits<{
+    cancel: [];
+    merged: [];
+}>();
+
+const { $gettext } = useGettext();
+const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
+
 const currentStep = ref(MERGE_STEP_SELECT);
+const survivorSearchResult = ref<SearchResultItem>();
 const selectedConcept = ref<SearchResultItem>();
 const absorbedConcept = ref<ResourceInstanceResult>();
+const mergePreview = ref<ConceptMergePreview>();
 const isLoadingAbsorbedConcept = ref(false);
 const fetchError = ref<string | null>(null);
 const createExactMatchTiles = ref(true);
@@ -121,14 +135,6 @@ const retirementStrategy = ref<MergeRetirementStrategy>(
 const selectionState = ref<MergeSelectionState>();
 const isMerging = ref(false);
 const mergeError = ref<string | null>(null);
-
-// The footer drives the stepper rather than each panel carrying its own buttons,
-// so the steps it moves between are named in one place.
-const MERGE_STEP_ORDER = [
-    MERGE_STEP_SELECT,
-    MERGE_STEP_COMPARE,
-    MERGE_STEP_CONFIRM,
-];
 
 const previousStep = computed(function () {
     const stepIndex = MERGE_STEP_ORDER.indexOf(currentStep.value);
@@ -142,16 +148,29 @@ const nextStep = computed(function () {
     ];
 });
 
-// Concepts in different schemes can be merged, but the scheme-scoped sections
-// cannot come across and the absorbed concept is never retired, so both steps
-// need to know which kind of merge this is.
 const isCrossScheme = computed(function () {
-    const absorbedSchemeId = resolveSchemeId(absorbedConcept.value);
-    return Boolean(absorbedSchemeId) && absorbedSchemeId !== schemeId;
+    return mergePreview.value?.is_cross_scheme ?? false;
 });
 
 const canCompare = computed(function () {
-    return Boolean(absorbedConcept.value) && !isLoadingAbsorbedConcept.value;
+    return (
+        Boolean(absorbedConcept.value && mergePreview.value) &&
+        !isLoadingAbsorbedConcept.value
+    );
+});
+
+const canConfirm = computed(function () {
+    return Boolean(
+        selectionState.value &&
+            !selectionState.value.hasUnresolvedPrefLabelConflicts,
+    );
+});
+
+const isNextDisabled = computed(function () {
+    if (currentStep.value === MERGE_STEP_SELECT) {
+        return !canCompare.value;
+    }
+    return !canConfirm.value;
 });
 
 const absorbedLabel = computed(function () {
@@ -165,19 +184,27 @@ const absorbedLabel = computed(function () {
     ).value;
 });
 
-const canConfirm = computed(function () {
-    return Boolean(
-        selectionState.value &&
-            !selectionState.value.hasUnresolvedPrefLabelConflicts,
-    );
-});
+onMounted(loadSurvivorPath);
+
+// Without its lineage the header falls back to the survivor's own label.
+async function loadSurvivorPath() {
+    try {
+        const ancestorPaths: SearchResultHierarchy[] =
+            await fetchConceptAncestorPaths(survivorConcept.resourceinstanceid);
+        survivorSearchResult.value = buildSearchResultFromAncestorPath(
+            ancestorPaths[0]?.searchResults ?? [],
+        );
+    } catch {
+        survivorSearchResult.value = undefined;
+    }
+}
 
 async function onConceptSelected(concept: SearchResultItem) {
     selectedConcept.value = concept;
     absorbedConcept.value = undefined;
+    mergePreview.value = undefined;
     // The comparison step is unmounted while the picker is showing, so it cannot
-    // clear its own state. Left behind, it would keep the confirm step reachable
-    // with the previous concept's tiles still selected.
+    // clear its own state for the previous concept.
     selectionState.value = undefined;
     isLoadingAbsorbedConcept.value = true;
     fetchError.value = null;
@@ -189,9 +216,16 @@ async function onConceptSelected(concept: SearchResultItem) {
     }
 
     try {
-        const fetchedConcept = await fetchLingoResource(graphSlug, concept.id);
+        const [fetchedConcept, fetchedPreview] = await Promise.all([
+            fetchLingoResource(graphSlug, concept.id),
+            fetchConceptMergePreview(
+                survivorConcept.resourceinstanceid,
+                concept.id,
+            ),
+        ]);
         if (isStillSelected()) {
             absorbedConcept.value = fetchedConcept;
+            mergePreview.value = fetchedPreview;
         }
     } catch (error) {
         if (isStillSelected()) {
@@ -207,6 +241,12 @@ async function onConceptSelected(concept: SearchResultItem) {
 
 function onSelectionStateChange(updatedState: MergeSelectionState) {
     selectionState.value = updatedState;
+}
+
+function onVisibleChange() {
+    if (!isMerging.value) {
+        emit("cancel");
+    }
 }
 
 async function onMergeConfirmed() {
@@ -250,8 +290,8 @@ async function onMergeConfirmed() {
         class="concept-merge-dialog"
         :closable="!isMerging"
         :style="DIALOG_SIZE"
-        :pt="dialogPassThrough"
-        @update:visible="!isMerging && emit('cancel')"
+        :pt="DIALOG_PASS_THROUGH"
+        @update:visible="onVisibleChange"
     >
         <Stepper
             v-model:value="currentStep"
@@ -275,6 +315,14 @@ async function onMergeConfirmed() {
                 </Step>
             </StepList>
 
+            <MergeConceptPair
+                class="merge-concept-pair-summary"
+                :survivor-concept="survivorSearchResult"
+                :survivor-label="survivorLabel"
+                :absorbed-concept="selectedConcept"
+                :is-cross-scheme="isCrossScheme"
+            />
+
             <StepPanels>
                 <StepPanel :value="MERGE_STEP_SELECT">
                     <div class="merge-step">
@@ -282,7 +330,7 @@ async function onMergeConfirmed() {
                             <p class="merge-step-intro">
                                 {{
                                     $gettext(
-                                        'Choose the concept to merge into "%{name}". Its values are copied across, and it can be retired afterwards.',
+                                        'Choose the concept to merge into "%{name}". "%{name}" stays, the values you pick are copied onto it, and within the same scheme the other concept can be retired afterwards.',
                                         { name: survivorLabel ?? "" },
                                     )
                                 }}
@@ -316,17 +364,16 @@ async function onMergeConfirmed() {
                                 class="merge-spinner"
                             />
                             <MergeComparison
-                                v-else-if="absorbedConcept"
-                                :survivor-concept-id="
-                                    survivorConcept.resourceinstanceid
-                                "
+                                v-else-if="absorbedConcept && mergePreview"
                                 :survivor-aliased-data="
                                     survivorConcept.aliased_data
                                 "
                                 :absorbed-aliased-data="
                                     absorbedConcept.aliased_data
                                 "
-                                :is-cross-scheme="isCrossScheme"
+                                :survivor-label="survivorLabel"
+                                :absorbed-label="absorbedLabel"
+                                :merge-preview="mergePreview"
                                 @update:selection-state="onSelectionStateChange"
                             />
                         </div>
@@ -338,6 +385,13 @@ async function onMergeConfirmed() {
                         <div class="merge-step-body">
                             <MergeConfirmation
                                 v-if="absorbedConcept"
+                                v-model:create-exact-match-tiles="
+                                    createExactMatchTiles
+                                "
+                                v-model:retire-absorbed-concept="
+                                    retireAbsorbedConcept
+                                "
+                                v-model:retirement-strategy="retirementStrategy"
                                 :absorbed-concept-id="
                                     absorbedConcept.resourceinstanceid
                                 "
@@ -349,21 +403,7 @@ async function onMergeConfirmed() {
                                 :section-summaries="
                                     selectionState?.sectionSummaries ?? []
                                 "
-                                :create-exact-match-tiles="
-                                    createExactMatchTiles
-                                "
-                                :retire-absorbed-concept="retireAbsorbedConcept"
-                                :retirement-strategy="retirementStrategy"
                                 :is-cross-scheme="isCrossScheme"
-                                @update:create-exact-match-tiles="
-                                    createExactMatchTiles = $event
-                                "
-                                @update:retire-absorbed-concept="
-                                    retireAbsorbedConcept = $event
-                                "
-                                @update:retirement-strategy="
-                                    retirementStrategy = $event
-                                "
                             />
 
                             <Message
@@ -414,11 +454,7 @@ async function onMergeConfirmed() {
                     icon="pi pi-arrow-right"
                     icon-pos="right"
                     :label="$gettext('Next')"
-                    :disabled="
-                        currentStep === MERGE_STEP_SELECT
-                            ? !canCompare
-                            : !canConfirm
-                    "
+                    :disabled="isNextDisabled"
                     :loading="isLoadingAbsorbedConcept"
                     class="footer-button"
                     @click="currentStep = nextStep"
@@ -429,6 +465,12 @@ async function onMergeConfirmed() {
 </template>
 
 <style scoped>
+.merge-concept-pair-summary {
+    flex: none;
+    padding-bottom: 1rem;
+    border-bottom: 0.0625rem solid var(--p-highlight-focus-background);
+}
+
 .merge-stepper {
     display: flex;
     flex-direction: column;
@@ -437,9 +479,6 @@ async function onMergeConfirmed() {
     gap: 1rem;
 }
 
-/* The default markers sit on a full-width rule with very long separators, which
-   reads as decoration rather than progress at this dialog width. Tightening the
-   markers and closing the list with a divider keeps the three steps legible. */
 .merge-stepper :deep(.p-steplist) {
     flex: none;
     padding: 0 0 1rem 0;
@@ -498,7 +537,6 @@ async function onMergeConfirmed() {
     padding-inline-end: 0.5rem;
 }
 
-/* The picker manages its own scrolling, so this step does not add a second one. */
 .merge-step-body--fill {
     display: flex;
     flex-direction: column;
@@ -512,8 +550,7 @@ async function onMergeConfirmed() {
     color: var(--p-header-item-label);
 }
 
-/* The same footer ExportThesauri uses, down to how its buttons are squared off:
-   a class on the button itself, since a :deep() rule reaching into the dialog
+/* A class on the button itself, since a :deep() rule reaching into the dialog
    loses to PrimeVue's own without !important. */
 .footer {
     display: flex;

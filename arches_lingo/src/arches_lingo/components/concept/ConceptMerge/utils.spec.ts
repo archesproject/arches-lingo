@@ -3,18 +3,18 @@ import {
     SKOS_PREF_LABEL_URI,
 } from "@/arches_lingo/constants.ts";
 import {
+    buildSearchResultFromAncestorPath,
     buildMergePayload,
     buildSectionComparison,
-    buildTileIdentityKey,
     countSelectedValues,
     collectReferencedConceptIds,
     collectReferencedDigitalObjectIds,
     extractSectionTiles,
     findPrefLabelConflicts,
     getReferencedResourceIds,
-    normalizeNodeValue,
 } from "@/arches_lingo/components/concept/ConceptMerge/utils.ts";
 
+import type { MergeTileState, SearchResultItem } from "@/arches_lingo/types.ts";
 import type {
     MergeSection,
     MergeTile,
@@ -24,20 +24,14 @@ const LABEL_SECTION: MergeSection = {
     nodegroupAlias: "appellative_status",
     cardinality: "n",
     displayNodeAliases: ["appellative_status_ascribed_name_content"],
-    identityNodeAliases: [
-        "appellative_status_ascribed_name_content",
-        "appellative_status_ascribed_name_language",
-        "appellative_status_ascribed_relation",
-    ],
 };
 
-const SURVIVOR_ID = "survivor-concept-id";
+const NO_TILE_STATES: Record<string, MergeTileState> = {};
 
 const TYPE_SECTION: MergeSection = {
     nodegroupAlias: "type",
     cardinality: "1",
     displayNodeAliases: ["type"],
-    identityNodeAliases: null,
 };
 
 function labelTile(
@@ -68,51 +62,6 @@ function labelTile(
     };
 }
 
-describe("normalizeNodeValue", () => {
-    it("reduces resource-instance entries to their resource ids", () => {
-        expect(
-            normalizeNodeValue([
-                { resourceId: "abc", resourceXresourceId: "ignored" },
-                { resourceId: "def", resourceXresourceId: "also-ignored" },
-            ]),
-        ).toEqual("abc|def");
-    });
-
-    it("reduces reference entries to their uris", () => {
-        expect(
-            normalizeNodeValue([{ uri: SKOS_ALT_LABEL_URI, labels: [] }]),
-        ).toEqual(SKOS_ALT_LABEL_URI);
-    });
-
-    it("passes scalars through and treats absent values as empty", () => {
-        expect(normalizeNodeValue("Tapestry")).toEqual("Tapestry");
-        expect(normalizeNodeValue(null)).toEqual("");
-        expect(normalizeNodeValue(undefined)).toEqual("");
-    });
-});
-
-describe("buildTileIdentityKey", () => {
-    it("returns null for a section that is never deduplicated", () => {
-        expect(
-            buildTileIdentityKey(TYPE_SECTION, labelTile("a", "x")),
-        ).toBeNull();
-    });
-
-    it("matches tiles holding the same value under different tileids", () => {
-        expect(
-            buildTileIdentityKey(LABEL_SECTION, labelTile("a", "Cloth")),
-        ).toEqual(buildTileIdentityKey(LABEL_SECTION, labelTile("b", "Cloth")));
-    });
-
-    it("separates tiles differing only by language", () => {
-        const distinctKeys = new Set([
-            buildTileIdentityKey(LABEL_SECTION, labelTile("a", "Cloth", "en")),
-            buildTileIdentityKey(LABEL_SECTION, labelTile("b", "Cloth", "fr")),
-        ]);
-        expect(distinctKeys.size).toBe(2);
-    });
-});
-
 describe("extractSectionTiles", () => {
     it("normalises a cardinality-one nodegroup to a list", () => {
         const tile = labelTile("a", "x");
@@ -137,7 +86,7 @@ describe("buildSectionComparison", () => {
                 labelTile("absorbed-1", "Cloth"),
                 labelTile("absorbed-2", "Fabric"),
             ],
-            SURVIVOR_ID,
+            { "absorbed-1": "already_on_survivor" },
         );
 
         const [duplicate, novel] = comparison.absorbedTileOptions;
@@ -152,7 +101,7 @@ describe("buildSectionComparison", () => {
             TYPE_SECTION,
             [labelTile("survivor-type", "guide term")],
             [labelTile("absorbed-type", "concept")],
-            SURVIVOR_ID,
+            NO_TILE_STATES,
         );
         expect(comparison.absorbedTileOptions[0].isSelected).toBe(false);
     });
@@ -162,7 +111,7 @@ describe("buildSectionComparison", () => {
             TYPE_SECTION,
             [],
             [labelTile("absorbed-type", "concept")],
-            SURVIVOR_ID,
+            NO_TILE_STATES,
         );
         expect(comparison.absorbedTileOptions[0].isSelected).toBe(true);
     });
@@ -174,7 +123,7 @@ describe("findPrefLabelConflicts", () => {
             LABEL_SECTION,
             [labelTile("survivor-1", "Cloth")],
             [labelTile("absorbed-1", "Fabric")],
-            SURVIVOR_ID,
+            NO_TILE_STATES,
         );
 
         const conflicts = findPrefLabelConflicts(
@@ -195,7 +144,7 @@ describe("findPrefLabelConflicts", () => {
             LABEL_SECTION,
             [labelTile("survivor-1", "Cloth")],
             [labelTile("absorbed-1", "Fabric", "en", SKOS_ALT_LABEL_URI)],
-            SURVIVOR_ID,
+            NO_TILE_STATES,
         );
         expect(
             findPrefLabelConflicts(
@@ -208,7 +157,7 @@ describe("findPrefLabelConflicts", () => {
             LABEL_SECTION,
             [labelTile("survivor-1", "Cloth")],
             [labelTile("absorbed-1", "Fabric")],
-            SURVIVOR_ID,
+            NO_TILE_STATES,
         );
         deselectedComparison.absorbedTileOptions[0].isSelected = false;
         expect(
@@ -224,7 +173,7 @@ describe("findPrefLabelConflicts", () => {
             LABEL_SECTION,
             [labelTile("survivor-1", "Cloth", "en")],
             [labelTile("absorbed-1", "Tissu", "fr")],
-            SURVIVOR_ID,
+            NO_TILE_STATES,
         );
         expect(
             findPrefLabelConflicts(
@@ -244,7 +193,7 @@ describe("buildMergePayload", () => {
                 labelTile("absorbed-1", "Fabric"),
                 labelTile("absorbed-2", "Weave"),
             ],
-            SURVIVOR_ID,
+            NO_TILE_STATES,
         );
         const conflicts = findPrefLabelConflicts(
             comparison.survivorTiles,
@@ -277,13 +226,13 @@ describe("buildMergePayload", () => {
             LABEL_SECTION,
             [],
             [labelTile("absorbed-1", "Fabric")],
-            SURVIVOR_ID,
+            NO_TILE_STATES,
         );
         const broaderComparison = buildSectionComparison(
             BROADER_SECTION,
             [],
             [broaderTile("absorbed-broader", "some-other-concept")],
-            SURVIVOR_ID,
+            NO_TILE_STATES,
             true,
         );
 
@@ -312,7 +261,7 @@ describe("buildMergePayload", () => {
             BROADER_SECTION,
             [],
             [broaderTile("absorbed-broader", "some-other-concept")],
-            SURVIVOR_ID,
+            NO_TILE_STATES,
         );
         broaderComparison.absorbedTileOptions[0].isSelected = true;
 
@@ -337,7 +286,7 @@ describe("buildMergePayload", () => {
             LABEL_SECTION,
             [labelTile("survivor-1", "Cloth")],
             [labelTile("absorbed-1", "Fabric")],
-            SURVIVOR_ID,
+            NO_TILE_STATES,
         );
         const conflicts = findPrefLabelConflicts(
             comparison.survivorTiles,
@@ -366,7 +315,7 @@ describe("buildMergePayload", () => {
             LABEL_SECTION,
             [],
             [labelTile("absorbed-1", "Fabric")],
-            SURVIVOR_ID,
+            NO_TILE_STATES,
         );
 
         const payload = buildMergePayload(
@@ -390,11 +339,9 @@ const BROADER_SECTION: MergeSection = {
     nodegroupAlias: "classification_status",
     cardinality: "n",
     displayNodeAliases: ["classification_status_ascribed_classification"],
-    identityNodeAliases: ["classification_status_ascribed_classification"],
     conceptReferenceNodeAliases: [
         "classification_status_ascribed_classification",
     ],
-    schemeScoped: true,
     isHierarchical: true,
 };
 
@@ -411,27 +358,21 @@ function broaderTile(tileid: string, ...parentIds: string[]): MergeTile {
     };
 }
 
-describe("buildSectionComparison self references", () => {
-    it("drops a broader tile that names only the survivor", () => {
+describe("buildSectionComparison with the server's tile states", () => {
+    it("leaves out a tile the merge would drop", () => {
         const comparison = buildSectionComparison(
             BROADER_SECTION,
             [],
-            [broaderTile("absorbed-broader", SURVIVOR_ID)],
-            SURVIVOR_ID,
+            [
+                broaderTile("dropped-broader", "survivor-descendant"),
+                broaderTile("kept-broader", "other-parent"),
+            ],
+            { "dropped-broader": "dropped", "kept-broader": "selectable" },
         );
 
-        expect(comparison.absorbedTileOptions).toEqual([]);
-    });
-
-    it("keeps a broader tile that also names another parent", () => {
-        const comparison = buildSectionComparison(
-            BROADER_SECTION,
-            [],
-            [broaderTile("absorbed-broader", SURVIVOR_ID, "other-parent")],
-            SURVIVOR_ID,
-        );
-
-        expect(comparison.absorbedTileOptions).toHaveLength(1);
+        expect(
+            comparison.absorbedTileOptions.map((option) => option.tile.tileid),
+        ).toEqual(["kept-broader"]);
     });
 
     it("offers a broader tile without selecting it", () => {
@@ -439,11 +380,42 @@ describe("buildSectionComparison self references", () => {
             BROADER_SECTION,
             [],
             [broaderTile("absorbed-broader", "other-parent")],
-            SURVIVOR_ID,
+            NO_TILE_STATES,
         );
 
         expect(comparison.absorbedTileOptions).toHaveLength(1);
         expect(comparison.absorbedTileOptions[0].isSelected).toBe(false);
+    });
+
+    it("leaves a single value the survivor already holds unselected", () => {
+        const comparison = buildSectionComparison(
+            TYPE_SECTION,
+            [],
+            [labelTile("absorbed-type", "concept")],
+            { "absorbed-type": "already_on_survivor" },
+        );
+
+        expect(comparison.absorbedTileOptions[0].alreadyOnSurvivor).toBe(true);
+        expect(comparison.absorbedTileOptions[0].isSelected).toBe(false);
+    });
+});
+
+describe("buildSearchResultFromAncestorPath", () => {
+    it("puts the concept first with everything above it as its lineage", () => {
+        const ancestorPath = ["scheme", "parent", "concept"].map(
+            (id) => ({ id, labels: [] }) as unknown as SearchResultItem,
+        );
+
+        const searchResult = buildSearchResultFromAncestorPath(ancestorPath);
+
+        expect(searchResult?.id).toEqual("concept");
+        expect(searchResult?.parents[0].map((pathItem) => pathItem.id)).toEqual(
+            ["scheme", "parent"],
+        );
+    });
+
+    it("returns nothing for an empty path", () => {
+        expect(buildSearchResultFromAncestorPath([])).toBeUndefined();
     });
 });
 
@@ -470,7 +442,7 @@ describe("collectReferencedConceptIds", () => {
             BROADER_SECTION,
             [broaderTile("survivor-1", "shared-parent")],
             [broaderTile("absorbed-1", "shared-parent", "other-parent")],
-            SURVIVOR_ID,
+            NO_TILE_STATES,
         );
 
         expect(collectReferencedConceptIds([comparison]).sort()).toEqual([
@@ -484,7 +456,7 @@ describe("collectReferencedConceptIds", () => {
             LABEL_SECTION,
             [labelTile("survivor-1", "Cloth")],
             [labelTile("absorbed-1", "Fabric")],
-            SURVIVOR_ID,
+            NO_TILE_STATES,
         );
         expect(collectReferencedConceptIds([comparison])).toEqual([]);
     });
@@ -494,7 +466,6 @@ const IMAGES_SECTION: MergeSection = {
     nodegroupAlias: "depicting_digital_asset_internal",
     cardinality: "1",
     displayNodeAliases: ["depicting_digital_asset_internal"],
-    identityNodeAliases: null,
     digitalObjectReferenceNodeAliases: ["depicting_digital_asset_internal"],
 };
 
@@ -519,7 +490,7 @@ describe("collectReferencedDigitalObjectIds", () => {
             IMAGES_SECTION,
             [imagesTile("survivor-1", "shared-image")],
             [imagesTile("absorbed-1", "shared-image", "other-image")],
-            SURVIVOR_ID,
+            NO_TILE_STATES,
         );
 
         expect(collectReferencedDigitalObjectIds([comparison]).sort()).toEqual([
@@ -533,7 +504,7 @@ describe("collectReferencedDigitalObjectIds", () => {
             BROADER_SECTION,
             [broaderTile("survivor-1", "parent")],
             [],
-            SURVIVOR_ID,
+            NO_TILE_STATES,
         );
         expect(collectReferencedDigitalObjectIds([comparison])).toEqual([]);
     });
@@ -545,7 +516,7 @@ describe("buildSectionComparison for images", () => {
             IMAGES_SECTION,
             [imagesTile("survivor-1", "shared-image")],
             [imagesTile("absorbed-1", "shared-image", "other-image")],
-            SURVIVOR_ID,
+            NO_TILE_STATES,
         );
 
         expect(comparison.survivorTiles).toEqual([]);
@@ -571,7 +542,7 @@ describe("buildSectionComparison for images", () => {
             IMAGES_SECTION,
             [],
             [imagesTile("absorbed-1", "other-image")],
-            SURVIVOR_ID,
+            NO_TILE_STATES,
             true,
         );
         expect(countSelectedValues(comparison)).toBe(0);
@@ -582,13 +553,13 @@ describe("buildSectionComparison for images", () => {
             IMAGES_SECTION,
             [imagesTile("survivor-1", "shared-image")],
             [imagesTile("absorbed-1", "shared-image", "other-image")],
-            SURVIVOR_ID,
+            NO_TILE_STATES,
         );
         const labelComparison = buildSectionComparison(
             LABEL_SECTION,
             [],
             [labelTile("absorbed-label", "Fabric")],
-            SURVIVOR_ID,
+            NO_TILE_STATES,
         );
 
         const payload = buildMergePayload(

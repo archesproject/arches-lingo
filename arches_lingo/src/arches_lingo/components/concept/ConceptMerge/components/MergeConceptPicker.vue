@@ -15,6 +15,9 @@ import { EDITING_LIFECYCLE_STATE_ID, ERROR } from "@/arches_lingo/constants.ts";
 
 import type { SearchResultItem } from "@/arches_lingo/types.ts";
 
+const ITEMS_PER_PAGE = 25;
+const SEARCH_DEBOUNCE_MILLISECONDS = 300;
+
 const { schemeId, survivorConceptId, selectedConceptId } = defineProps<{
     schemeId: string;
     survivorConceptId: string;
@@ -27,54 +30,71 @@ const emit = defineEmits<{
 
 const { $gettext } = useGettext();
 
-const ITEMS_PER_PAGE = 25;
-const SEARCH_DEBOUNCE_MILLISECONDS = 300;
-
 const searchTerm = ref("");
 const candidates = ref<SearchResultItem[]>([]);
 const isLoading = ref(false);
 const fetchError = ref<string | null>(null);
 let debounceTimeout: ReturnType<typeof setTimeout> | undefined;
 
-// Responses can arrive out of order -- a broad term takes far longer to come
-// back than the narrower one typed after it -- so only the most recent request
-// is allowed to write anything. FacetRow guards the same endpoint this way.
+// Responses can arrive out of order, so only the most recent request may write
+// anything. FacetRow guards the same endpoint this way.
 let activeRequestId = 0;
 
 const trimmedSearchTerm = computed(function () {
     return searchTerm.value.trim();
 });
 
-// Every lineage a search result carries begins with its scheme, so a candidate
-// names its own scheme without a second request.
-function schemeIdOf(candidate: SearchResultItem) {
+const searchIconClass = computed(function () {
+    if (isLoading.value) {
+        return "pi pi-spinner pi-spin";
+    }
+    return "pi pi-search";
+});
+
+watch(trimmedSearchTerm, function (term) {
+    discardPendingSearch();
+
+    // An empty box searches for nothing rather than for everything, the same way
+    // Lingo's own search clears its results.
+    if (!term) {
+        candidates.value = [];
+        fetchError.value = null;
+        isLoading.value = false;
+        return;
+    }
+
+    debounceTimeout = setTimeout(fetchCandidates, SEARCH_DEBOUNCE_MILLISECONDS);
+});
+
+onBeforeUnmount(discardPendingSearch);
+
+// Every lineage a search result carries begins with its scheme.
+function getCandidateSchemeId(candidate: SearchResultItem) {
     return candidate.parents?.[0]?.[0]?.id;
 }
 
 // A merge within the survivor's scheme retires the absorbed concept, which only
 // the Editing state allows. Across schemes the concept is only read from, so any
-// state can be absorbed. The server enforces both; filtering here keeps
-// candidates that would be rejected out of view.
-const mergeableCandidates = computed(function () {
-    return candidates.value.filter(
-        (candidate) =>
-            schemeIdOf(candidate) !== schemeId ||
-            candidate.resource_instance_lifecycle_state_id ===
-                EDITING_LIFECYCLE_STATE_ID,
+// state can be absorbed. The server enforces both.
+function isMergeable(candidate: SearchResultItem) {
+    return (
+        getCandidateSchemeId(candidate) !== schemeId ||
+        candidate.resource_instance_lifecycle_state_id ===
+            EDITING_LIFECYCLE_STATE_ID
     );
-});
+}
 
-const hasFilteredOutCandidates = computed(function () {
-    return candidates.value.length > mergeableCandidates.value.length;
-});
+function onCandidateClick(candidate: SearchResultItem) {
+    if (isMergeable(candidate)) {
+        emit("select", candidate);
+    }
+}
 
 async function fetchCandidates() {
     const requestId = ++activeRequestId;
     isLoading.value = true;
     fetchError.value = null;
     try {
-        // No scheme filter: concepts can be merged across schemes, and each
-        // result names its own scheme first in its hierarchy path.
         const parsedResponse = await fetchConceptResources(
             trimmedSearchTerm.value,
             ITEMS_PER_PAGE,
@@ -103,37 +123,16 @@ function discardPendingSearch() {
     clearTimeout(debounceTimeout);
     activeRequestId++;
 }
-
-watch(trimmedSearchTerm, function (term) {
-    discardPendingSearch();
-
-    // An empty box searches for nothing rather than for everything: the
-    // unfiltered query has a whole scheme to sort through, and the arbitrary
-    // page it returns names no concept the editor was looking for. Lingo's own
-    // search clears its results the same way.
-    if (!term) {
-        candidates.value = [];
-        fetchError.value = null;
-        isLoading.value = false;
-        return;
-    }
-
-    debounceTimeout = setTimeout(fetchCandidates, SEARCH_DEBOUNCE_MILLISECONDS);
-});
-
-onBeforeUnmount(discardPendingSearch);
 </script>
 
 <template>
     <div class="merge-picker">
         <IconField>
-            <InputIcon
-                :class="isLoading ? 'pi pi-spinner pi-spin' : 'pi pi-search'"
-            />
+            <InputIcon :class="searchIconClass" />
             <InputText
                 v-model="searchTerm"
                 class="merge-picker-input"
-                :placeholder="$gettext('Search concepts in this scheme')"
+                :placeholder="$gettext('Search concepts')"
                 :aria-label="$gettext('Search concepts to merge')"
             />
         </IconField>
@@ -154,42 +153,47 @@ onBeforeUnmount(discardPendingSearch);
         </p>
 
         <p
-            v-else-if="isLoading && !mergeableCandidates.length"
+            v-else-if="isLoading && !candidates.length"
             class="merge-picker-status"
         >
             {{ $gettext("Searching…") }}
         </p>
 
         <p
-            v-else-if="!fetchError && !mergeableCandidates.length"
+            v-else-if="!fetchError && !candidates.length"
             class="merge-picker-status"
         >
-            {{
-                hasFilteredOutCandidates
-                    ? $gettext(
-                          "Every match in this scheme is outside the Editing state, so none can be merged away.",
-                      )
-                    : $gettext("No matching concepts.")
-            }}
+            {{ $gettext("No matching concepts.") }}
         </p>
 
         <ul
-            v-else-if="mergeableCandidates.length"
+            v-else-if="candidates.length"
             class="merge-picker-results"
         >
             <li
-                v-for="(candidate, index) in mergeableCandidates"
+                v-for="(candidate, index) in candidates"
                 :key="candidate.id"
             >
                 <button
                     type="button"
                     class="merge-picker-result"
                     :class="{ selected: candidate.id === selectedConceptId }"
-                    @click="emit('select', candidate)"
+                    :disabled="!isMergeable(candidate)"
+                    @click="onCandidateClick(candidate)"
                 >
                     <SearchResult
                         :search-result="{ index, option: candidate }"
                     />
+                    <span
+                        v-if="!isMergeable(candidate)"
+                        class="merge-picker-result-reason"
+                    >
+                        {{
+                            $gettext(
+                                "Only a concept in the Editing state can be merged within this scheme, because it is retired afterwards.",
+                            )
+                        }}
+                    </span>
                 </button>
             </li>
         </ul>
@@ -197,8 +201,6 @@ onBeforeUnmount(discardPendingSearch);
 </template>
 
 <style scoped>
-/* The picker fills its step and scrolls its own list, so neither the number of
-   results nor the length of a label changes the size of anything above it. */
 .merge-picker {
     display: flex;
     flex-direction: column;
@@ -207,8 +209,6 @@ onBeforeUnmount(discardPendingSearch);
     gap: 0.75rem;
 }
 
-/* Styled here rather than from the dialog: the class lands on the input itself,
-   which a :deep() rule reaching in from the parent cannot match reliably. */
 .merge-picker-input {
     width: 100%;
     border-radius: 0.125rem;
@@ -253,12 +253,27 @@ onBeforeUnmount(discardPendingSearch);
     cursor: pointer;
 }
 
+.merge-picker-result:disabled {
+    cursor: not-allowed;
+}
+
+.merge-picker-result:disabled :deep(.search-result) {
+    opacity: 0.6;
+}
+
+.merge-picker-result-reason {
+    display: block;
+    padding: 0 1rem 0.5rem;
+    font-size: var(--p-lingo-font-size-xsmall);
+    color: var(--p-text-muted-color);
+}
+
 .merge-picker-result.selected :deep(.search-result) {
     background-color: var(--p-highlight-background);
     box-shadow: inset 0.1875rem 0 0 var(--p-primary-color);
 }
 
-.merge-picker-result:hover :deep(.search-result) {
+.merge-picker-result:not(:disabled):hover :deep(.search-result) {
     background-color: var(--p-search-result-focus-background);
 }
 </style>

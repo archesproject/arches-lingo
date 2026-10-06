@@ -33,6 +33,20 @@ const {
 const { $gettext } = useGettext();
 const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
 
+const displayValues = computed(function () {
+    return displayNodeAliases
+        .map(resolveNodeText)
+        .filter((displayValue) => displayValue !== "");
+});
+
+const primaryValue = computed(function () {
+    return displayValues.value[0] ?? $gettext("(empty)");
+});
+
+const secondaryValues = computed(function () {
+    return displayValues.value.slice(1);
+});
+
 // A referenced concept is named the way it is everywhere else in Lingo. Until its
 // labels arrive the tile's own display value stands in, so the card is never blank.
 function resolveNodeText(nodeAlias: string) {
@@ -54,24 +68,11 @@ function resolveNodeText(nodeAlias: string) {
         })
         .filter(Boolean);
 
-    return referencedNames.length
-        ? referencedNames.join(", ")
-        : getDisplayValue(tile, nodeAlias);
+    if (!referencedNames.length) {
+        return getDisplayValue(tile, nodeAlias);
+    }
+    return referencedNames.join(", ");
 }
-
-const displayValues = computed(function () {
-    return displayNodeAliases
-        .map(resolveNodeText)
-        .filter((displayValue) => displayValue !== "");
-});
-
-const primaryValue = computed(function () {
-    return displayValues.value[0] ?? $gettext("(empty)");
-});
-
-const secondaryValues = computed(function () {
-    return displayValues.value.slice(1);
-});
 </script>
 
 <template>

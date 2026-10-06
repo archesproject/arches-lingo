@@ -22,6 +22,7 @@ import type {
     TileData,
     User,
     ConceptMergeHistoryEntry,
+    ConceptMergePreview,
     ConceptMergeResult,
     MergeRequestPayload,
 } from "@/arches_lingo/types";
@@ -362,6 +363,21 @@ export const mergeConcepts = async (
             },
             body: JSON.stringify(payload),
         },
+    );
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
+export const fetchConceptMergePreview = async (
+    survivorConceptId: string,
+    absorbedConceptId: string,
+): Promise<ConceptMergePreview> => {
+    const response = await fetch(
+        generateArchesURL("arches_lingo:api-concept-merge-preview", {
+            pk: survivorConceptId,
+            absorbed_pk: absorbedConceptId,
+        }),
     );
     const parsed = await response.json();
     if (!response.ok) throw new Error(parsed.message || response.statusText);

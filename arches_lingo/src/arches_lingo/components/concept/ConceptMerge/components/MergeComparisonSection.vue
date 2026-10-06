@@ -15,15 +15,13 @@ import type { Label } from "@/arches_controlled_lists/types.ts";
 import type { DigitalObjectInstance } from "@/arches_lingo/types.ts";
 import type { SectionComparison } from "@/arches_lingo/components/concept/ConceptMerge/types.ts";
 
-const { sectionTitle, comparison, isBlocked } = defineProps<{
+const { sectionTitle, comparison, survivorLabel, absorbedLabel } = defineProps<{
     sectionTitle: string;
     comparison: SectionComparison;
+    survivorLabel: string | undefined;
+    absorbedLabel: string | undefined;
     conceptLabelsById: Map<string, Label[]>;
     digitalObjectsById: Map<string, DigitalObjectInstance>;
-    // A scheme-scoped section in a merge across schemes. Shown rather than
-    // hidden, so the editor can see what is being left behind, but nothing in
-    // it can be chosen.
-    isBlocked: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -37,26 +35,36 @@ const emit = defineEmits<{
 
 const { $gettext } = useGettext();
 
-const isSingleValueSection = computed(function () {
-    return comparison.section.cardinality === "1";
+const singleValueOption = computed(function () {
+    return comparison.absorbedTileOptions[0];
 });
 
-// A single-value section replaces rather than appends, so it is presented as a
-// choice between the two sides instead of a per-tile checkbox.
+// A single value replaces rather than appends, so it is a choice between the two
+// sides -- unless both already hold the same value, when there is nothing to choose.
 const replacesSurvivorValue = computed(function () {
-    return isSingleValueSection.value && comparison.survivorTiles.length > 0;
-});
-
-const singleValueTileId = computed(function () {
-    return comparison.absorbedTileOptions[0]?.tile.tileid ?? "";
+    return (
+        comparison.section.cardinality === "1" &&
+        comparison.survivorTiles.length > 0 &&
+        !singleValueOption.value?.alreadyOnSurvivor
+    );
 });
 
 const isSurvivorValueKept = computed(function () {
-    return !comparison.absorbedTileOptions[0]?.isSelected;
+    return !singleValueOption.value?.isSelected;
 });
 
 const selectedCount = computed(function () {
     return countSelectedValues(comparison);
+});
+
+const survivorColumnHeading = computed(function () {
+    return $gettext('Already on "%{name}"', { name: survivorLabel ?? "" });
+});
+
+const absorbedColumnHeading = computed(function () {
+    return $gettext('Bring across from "%{name}"', {
+        name: absorbedLabel ?? "",
+    });
 });
 
 const isSurvivorColumnEmpty = computed(function () {
@@ -80,7 +88,7 @@ function onCheckboxChange(tileId: string | undefined, isSelected: boolean) {
 }
 
 function onSingleValueChoice(useAbsorbedValue: boolean) {
-    onCheckboxChange(singleValueTileId.value, useAbsorbedValue);
+    onCheckboxChange(singleValueOption.value?.tile.tileid, useAbsorbedValue);
 }
 </script>
 
@@ -102,7 +110,7 @@ function onSingleValueChoice(useAbsorbedValue: boolean) {
         </header>
 
         <p
-            v-if="isBlocked"
+            v-if="comparison.isBlocked"
             class="merge-section-blocked"
         >
             {{
@@ -115,7 +123,7 @@ function onSingleValueChoice(useAbsorbedValue: boolean) {
         <div class="merge-columns">
             <div class="merge-column">
                 <span class="merge-column-heading">
-                    {{ $gettext("Kept on this concept") }}
+                    {{ survivorColumnHeading }}
                 </span>
                 <p
                     v-if="isSurvivorColumnEmpty"
@@ -144,7 +152,7 @@ function onSingleValueChoice(useAbsorbedValue: boolean) {
                         <RadioButton
                             v-if="replacesSurvivorValue"
                             :model-value="isSurvivorValueKept"
-                            :disabled="isBlocked"
+                            :disabled="comparison.isBlocked"
                             :input-id="`keep-${comparison.section.nodegroupAlias}`"
                             :name="`single-${comparison.section.nodegroupAlias}`"
                             :value="true"
@@ -156,7 +164,7 @@ function onSingleValueChoice(useAbsorbedValue: boolean) {
 
             <div class="merge-column">
                 <span class="merge-column-heading">
-                    {{ $gettext("Bring across from the other concept") }}
+                    {{ absorbedColumnHeading }}
                 </span>
                 <p
                     v-if="isAbsorbedColumnEmpty"
@@ -175,7 +183,9 @@ function onSingleValueChoice(useAbsorbedValue: boolean) {
                     <template #control>
                         <Checkbox
                             :model-value="option.isSelected"
-                            :disabled="isBlocked"
+                            :disabled="
+                                comparison.isBlocked || option.alreadyOnSurvivor
+                            "
                             :input-id="`digital-object-${option.digitalObjectId}`"
                             :binary="true"
                             @update:model-value="
@@ -205,7 +215,7 @@ function onSingleValueChoice(useAbsorbedValue: boolean) {
                         <RadioButton
                             v-if="replacesSurvivorValue"
                             :model-value="!isSurvivorValueKept"
-                            :disabled="isBlocked"
+                            :disabled="comparison.isBlocked"
                             :input-id="`take-${comparison.section.nodegroupAlias}`"
                             :name="`single-${comparison.section.nodegroupAlias}`"
                             :value="true"
@@ -214,7 +224,9 @@ function onSingleValueChoice(useAbsorbedValue: boolean) {
                         <Checkbox
                             v-else
                             :model-value="option.isSelected"
-                            :disabled="isBlocked"
+                            :disabled="
+                                comparison.isBlocked || option.alreadyOnSurvivor
+                            "
                             :input-id="`tile-${option.tile.tileid}`"
                             :binary="true"
                             @update:model-value="
@@ -239,8 +251,6 @@ function onSingleValueChoice(useAbsorbedValue: boolean) {
     padding-bottom: 1rem;
 }
 
-/* Matches the section headers the concept report uses, so a section reads the
-   same here as it does behind the dialog. See ComponentManager's .section-header. */
 .merge-section-header {
     display: flex;
     justify-content: space-between;
@@ -282,16 +292,12 @@ function onSingleValueChoice(useAbsorbedValue: boolean) {
     min-width: 0;
 }
 
-/* These name the two sides the way a table names its columns, so they take the
-   column-title treatment rather than reading as body copy. */
 .merge-column-heading {
     font-size: var(--p-lingo-font-size-smallnormal);
     font-weight: var(--p-lingo-font-weight-normal);
     color: var(--p-neutral-400);
 }
 
-/* Lingo renders "nothing here yet" copy light and unemphasised rather than
-   italic; see MetaStringViewer's .no-data. */
 .merge-empty {
     margin: 0;
     padding: 0.5rem 0;

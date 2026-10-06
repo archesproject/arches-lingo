@@ -492,7 +492,7 @@ function onMergeCancelled() {
                 icon="pi pi-sign-in"
                 class="add-button"
                 :label="$gettext('Merge')"
-                :aria-label="$gettext('Merge Concepts')"
+                :aria-label="$gettext('Merge another concept into this one')"
                 @click="showMergeDialog = true"
             />
             <Button

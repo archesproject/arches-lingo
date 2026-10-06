@@ -10,28 +10,18 @@ export interface MergeSection {
     nodegroupAlias: string;
     cardinality: "1" | "n";
     displayNodeAliases: string[];
-    identityNodeAliases: string[] | null;
     // Display nodes holding references to other concepts. Their names come from
     // getItemLabel against fetched labels, not from the tile's display_value,
     // which is the resource descriptor rather than a language-aware label.
     conceptReferenceNodeAliases?: string[];
-    // Nodes holding the concept's images as a list of digital objects on one
-    // tile. Each image is offered on its own and added to the survivor's list,
-    // rather than the tile replacing the survivor's images wholesale. Mirrors
-    // the server's REFERENCE_LIST_NODEGROUP_IDS.
+    // Images are offered one at a time and added to the survivor's own list,
+    // rather than the tile replacing the survivor's images wholesale.
     digitalObjectReferenceNodeAliases?: string[];
-    // Holds a reference that only means anything inside one scheme, so it is
-    // never brought across from a concept in another. Mirrors the server's
-    // SCHEME_SCOPED_NODEGROUP_ALIASES.
-    schemeScoped?: boolean;
-    // Places the concept in the hierarchy, so it is offered but never selected
-    // by default: a merge should not quietly move the survivor.
     isHierarchical?: boolean;
 }
 
 export interface MergeTileOption {
     tile: MergeTile;
-    identityKey: string | null;
     alreadyOnSurvivor: boolean;
     isSelected: boolean;
 }
@@ -44,6 +34,7 @@ export interface MergeDigitalObjectOption {
 
 export interface SectionComparison {
     section: MergeSection;
+    isBlocked: boolean;
     survivorTiles: MergeTile[];
     absorbedTileOptions: MergeTileOption[];
     survivorDigitalObjectIds: string[];

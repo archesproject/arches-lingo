@@ -23,26 +23,30 @@ import {
 
 import type { Label } from "@/arches_controlled_lists/types.ts";
 import type {
+    ConceptMergePreview,
     DigitalObjectInstance,
     SearchResultItem,
 } from "@/arches_lingo/types.ts";
-
 import type {
-    MergeSection,
     MergeSelectionState,
+    PrefLabelCandidate,
     SectionComparison,
 } from "@/arches_lingo/components/concept/ConceptMerge/types.ts";
 
+const LABEL_SECTION_ALIAS = "appellative_status";
+
 const {
-    survivorConceptId,
     survivorAliasedData,
     absorbedAliasedData,
-    isCrossScheme,
+    survivorLabel,
+    absorbedLabel,
+    mergePreview,
 } = defineProps<{
-    survivorConceptId: string;
     survivorAliasedData: Record<string, unknown> | undefined;
     absorbedAliasedData: Record<string, unknown> | undefined;
-    isCrossScheme: boolean;
+    survivorLabel: string | undefined;
+    absorbedLabel: string | undefined;
+    mergePreview: ConceptMergePreview;
 }>();
 
 const emit = defineEmits<{
@@ -50,6 +54,11 @@ const emit = defineEmits<{
 }>();
 
 const { $gettext } = useGettext();
+
+const sectionComparisons = ref<SectionComparison[]>([]);
+const prefLabelWinnerByLanguage = ref<Record<string, string>>({});
+const conceptLabelsById = ref<Map<string, Label[]>>(new Map());
+const digitalObjectsById = ref<Map<string, DigitalObjectInstance>>(new Map());
 
 const sectionTitlesByAlias = computed<Record<string, string>>(function () {
     return {
@@ -68,105 +77,10 @@ const sectionTitlesByAlias = computed<Record<string, string>>(function () {
     };
 });
 
-const sectionComparisons = ref<SectionComparison[]>([]);
-const prefLabelWinnerByLanguage = ref<Record<string, string>>({});
-const conceptLabelsById = ref<Map<string, Label[]>>(new Map());
-const digitalObjectsById = ref<Map<string, DigitalObjectInstance>>(new Map());
-
-// Referenced concepts are named through getItemLabel, so their labels are fetched
-// once per comparison. A failure leaves the cards on their display values.
-async function loadReferencedConceptLabels() {
-    const conceptIds = collectReferencedConceptIds(sectionComparisons.value);
-    if (!conceptIds.length) {
-        conceptLabelsById.value = new Map();
-        return;
-    }
-
-    try {
-        const parsedResponse = await fetchConceptResources(
-            "",
-            conceptIds.length,
-            1,
-            undefined,
-            undefined,
-            conceptIds,
-        );
-        conceptLabelsById.value = new Map(
-            parsedResponse.data.map((concept: SearchResultItem) => [
-                concept.id,
-                concept.labels,
-            ]),
-        );
-    } catch {
-        conceptLabelsById.value = new Map();
-    }
-}
-
-// Image tiles hold only references, so the digital objects behind them are
-// fetched once per comparison. A failure leaves the cards on placeholders.
-async function loadReferencedDigitalObjects() {
-    const digitalObjectIds = collectReferencedDigitalObjectIds(
-        sectionComparisons.value,
-    );
-    if (!digitalObjectIds.length) {
-        digitalObjectsById.value = new Map();
-        return;
-    }
-
-    try {
-        const digitalObjects: DigitalObjectInstance[] =
-            await fetchLingoResourcesBatch(
-                DIGITAL_OBJECT_GRAPH_SLUG,
-                digitalObjectIds,
-            );
-        digitalObjectsById.value = new Map(
-            digitalObjects.map((digitalObject) => [
-                digitalObject.resourceinstanceid,
-                digitalObject,
-            ]),
-        );
-    } catch {
-        digitalObjectsById.value = new Map();
-    }
-}
-
-// Sections neither concept uses would be empty rows, so they are left out.
-function isSectionBlocked(section: MergeSection) {
-    return Boolean(isCrossScheme && section.schemeScoped);
-}
-
-function buildComparisons() {
-    sectionComparisons.value = MERGE_SECTIONS.map((section) =>
-        buildSectionComparison(
-            section,
-            extractSectionTiles(survivorAliasedData, section),
-            extractSectionTiles(absorbedAliasedData, section),
-            survivorConceptId,
-            isSectionBlocked(section),
-        ),
-    ).filter(
-        (comparison) =>
-            comparison.survivorTiles.length > 0 ||
-            comparison.absorbedTileOptions.length > 0 ||
-            comparison.survivorDigitalObjectIds.length > 0 ||
-            comparison.absorbedDigitalObjectOptions.length > 0,
-    );
-}
-
-watch(
-    () => [survivorConceptId, survivorAliasedData, absorbedAliasedData],
-    () => {
-        buildComparisons();
-        void loadReferencedConceptLabels();
-        void loadReferencedDigitalObjects();
-    },
-    { immediate: true },
-);
-
 const labelComparison = computed(function () {
     return sectionComparisons.value.find(
         (comparison) =>
-            comparison.section.nodegroupAlias === "appellative_status",
+            comparison.section.nodegroupAlias === LABEL_SECTION_ALIAS,
     );
 });
 
@@ -179,30 +93,6 @@ const prefLabelConflicts = computed(function () {
         labelComparison.value.absorbedTileOptions,
     );
 });
-
-// A conflict defaults to the label already on the surviving concept, so the
-// editor only has to intervene when they want the incoming label to win.
-watch(
-    prefLabelConflicts,
-    function (conflicts) {
-        const winners: Record<string, string> = {};
-        for (const conflict of conflicts) {
-            const existingWinner =
-                prefLabelWinnerByLanguage.value[conflict.languageCode];
-            const isStillACandidate = conflict.candidates.some(
-                (candidate) => candidate.tileId === existingWinner,
-            );
-            const survivorCandidate = conflict.candidates.find(
-                (candidate) => candidate.isFromSurvivor,
-            );
-            winners[conflict.languageCode] = isStillACandidate
-                ? existingWinner
-                : (survivorCandidate ?? conflict.candidates[0]).tileId;
-        }
-        prefLabelWinnerByLanguage.value = winners;
-    },
-    { immediate: true },
-);
 
 const selectedTileCount = computed(function () {
     return sectionComparisons.value.reduce(
@@ -235,10 +125,129 @@ const selectionState = computed<MergeSelectionState>(function () {
     };
 });
 
+watch(
+    () => [survivorAliasedData, absorbedAliasedData, mergePreview],
+    function () {
+        buildComparisons();
+        void loadReferencedConceptLabels();
+        void loadReferencedDigitalObjects();
+    },
+    { immediate: true },
+);
+
+// A conflict defaults to the label already on the surviving concept, so the
+// editor only has to intervene when they want the incoming label to win.
+watch(
+    prefLabelConflicts,
+    function (conflicts) {
+        const winners: Record<string, string> = {};
+        for (const conflict of conflicts) {
+            winners[conflict.languageCode] = chooseDefaultWinner(
+                conflict.languageCode,
+                conflict.candidates,
+            );
+        }
+        prefLabelWinnerByLanguage.value = winners;
+    },
+    { immediate: true },
+);
+
 watch(selectionState, (state) => emit("update:selectionState", state), {
     immediate: true,
     deep: true,
 });
+
+function chooseDefaultWinner(
+    languageCode: string,
+    candidates: PrefLabelCandidate[],
+) {
+    const existingWinner = prefLabelWinnerByLanguage.value[languageCode];
+    if (candidates.some((candidate) => candidate.tileId === existingWinner)) {
+        return existingWinner;
+    }
+    const survivorCandidate = candidates.find(
+        (candidate) => candidate.isFromSurvivor,
+    );
+    return (survivorCandidate ?? candidates[0]).tileId;
+}
+
+function isSectionBlocked(nodegroupAlias: string) {
+    return mergePreview.blocked_nodegroup_aliases.includes(nodegroupAlias);
+}
+
+// Sections neither concept uses would be empty rows, so they are left out.
+function buildComparisons() {
+    sectionComparisons.value = MERGE_SECTIONS.map((section) =>
+        buildSectionComparison(
+            section,
+            extractSectionTiles(survivorAliasedData, section),
+            extractSectionTiles(absorbedAliasedData, section),
+            mergePreview.tile_states,
+            isSectionBlocked(section.nodegroupAlias),
+        ),
+    ).filter(
+        (comparison) =>
+            comparison.survivorTiles.length > 0 ||
+            comparison.absorbedTileOptions.length > 0 ||
+            comparison.survivorDigitalObjectIds.length > 0 ||
+            comparison.absorbedDigitalObjectOptions.length > 0,
+    );
+}
+
+// A failure leaves the cards on their display values.
+async function loadReferencedConceptLabels() {
+    const conceptIds = collectReferencedConceptIds(sectionComparisons.value);
+    if (!conceptIds.length) {
+        conceptLabelsById.value = new Map();
+        return;
+    }
+
+    try {
+        const parsedResponse = await fetchConceptResources(
+            "",
+            conceptIds.length,
+            1,
+            undefined,
+            undefined,
+            conceptIds,
+        );
+        conceptLabelsById.value = new Map(
+            parsedResponse.data.map((concept: SearchResultItem) => [
+                concept.id,
+                concept.labels,
+            ]),
+        );
+    } catch {
+        conceptLabelsById.value = new Map();
+    }
+}
+
+// A failure leaves the cards on placeholders.
+async function loadReferencedDigitalObjects() {
+    const digitalObjectIds = collectReferencedDigitalObjectIds(
+        sectionComparisons.value,
+    );
+    if (!digitalObjectIds.length) {
+        digitalObjectsById.value = new Map();
+        return;
+    }
+
+    try {
+        const digitalObjects: DigitalObjectInstance[] =
+            await fetchLingoResourcesBatch(
+                DIGITAL_OBJECT_GRAPH_SLUG,
+                digitalObjectIds,
+            );
+        digitalObjectsById.value = new Map(
+            digitalObjects.map((digitalObject) => [
+                digitalObject.resourceinstanceid,
+                digitalObject,
+            ]),
+        );
+    } catch {
+        digitalObjectsById.value = new Map();
+    }
+}
 
 function onSelectionChange(tileId: string, isSelected: boolean) {
     for (const comparison of sectionComparisons.value) {
@@ -276,6 +285,8 @@ function onPrefLabelWinnerChange(languageCode: string, tileId: string) {
         <MergePrefLabelResolver
             :conflicts="prefLabelConflicts"
             :winner-by-language="prefLabelWinnerByLanguage"
+            :survivor-label="survivorLabel"
+            :absorbed-label="absorbedLabel"
             @update:winner="onPrefLabelWinnerChange"
         />
 
@@ -286,9 +297,10 @@ function onPrefLabelWinnerChange(languageCode: string, tileId: string) {
                 sectionTitlesByAlias[comparison.section.nodegroupAlias]
             "
             :comparison="comparison"
+            :survivor-label="survivorLabel"
+            :absorbed-label="absorbedLabel"
             :concept-labels-by-id="conceptLabelsById"
             :digital-objects-by-id="digitalObjectsById"
-            :is-blocked="isSectionBlocked(comparison.section)"
             @update:selection="onSelectionChange"
             @update:digital-object-selection="onDigitalObjectSelectionChange"
         />

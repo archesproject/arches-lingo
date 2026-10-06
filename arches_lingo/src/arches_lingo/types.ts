@@ -633,10 +633,23 @@ export interface ConceptMergeResult {
     edit_transaction_id: string;
 }
 
+export type MergeTileState =
+    | "selectable"
+    | "already_on_survivor"
+    | "dropped"
+    | "blocked";
+
+export interface ConceptMergePreview {
+    is_cross_scheme: boolean;
+    tile_states: Record<string, MergeTileState>;
+    blocked_nodegroup_aliases: string[];
+}
+
 export interface ConceptMergeHistoryEntry {
     id: number;
     created: string;
     direction: "absorbed" | "merged_into";
+    is_cross_scheme: boolean;
     counterpart_concept_id: string;
     counterpart_concept_labels: Label[];
 }

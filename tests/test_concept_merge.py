@@ -53,17 +53,29 @@ from arches_lingo.utils.concept_lifecycle import (
     STRATEGY_REPARENT_TO_SURVIVOR,
     get_broader_ids,
 )
-from arches_lingo.utils.concept_merge import (
-    ConceptMergeError,
-    append_digital_objects_to_survivor,
-    build_tile_identity_key,
-    copy_tiles_to_survivor,
-    get_concept_merge_history,
-    get_list_item_tile_value,
-    merge_concepts,
+from arches_lingo.utils.concept_merge.history import get_concept_merge_history
+from arches_lingo.utils.concept_merge.preview import (
+    TILE_BLOCKED,
+    build_merge_preview,
+)
+from arches_lingo.utils.concept_merge.rules import (
+    ConceptMergeGraph,
     normalize_node_value,
-    validate_merge,
+)
+from arches_lingo.utils.concept_merge.service import merge_concepts
+from arches_lingo.utils.concept_merge.tiles import (
+    TILE_ALREADY_ON_SURVIVOR,
+    TILE_DROPPED,
+    TILE_SELECTABLE,
+    append_digital_objects_to_survivor,
+    copy_tiles_to_survivor,
+    get_list_item_tile_value,
     write_reciprocal_exact_match_tiles,
+)
+from arches_lingo.utils.concept_merge.validation import (
+    ConceptMergeError,
+    concept_is_writable,
+    validate_merge,
 )
 from tests.tests import ViewTests
 
@@ -95,13 +107,40 @@ class NormalizeNodeValueTests(SimpleTestCase):
         self.assertEqual(normalize_node_value("Tapestry"), "Tapestry")
         self.assertIsNone(normalize_node_value(None))
 
+    def test_localized_strings_become_hashable(self):
+        localized_value = {"en": {"value": "Tapestry", "direction": "ltr"}}
+        self.assertEqual(
+            normalize_node_value(localized_value),
+            normalize_node_value(dict(reversed(localized_value.items()))),
+        )
+        hash(normalize_node_value(localized_value))
 
-class BuildTileIdentityKeyTests(SimpleTestCase):
-    def test_unmapped_nodegroup_has_no_identity(self):
-        self.assertIsNone(build_tile_identity_key(CONCEPT_TYPE_NODEGROUP, {}))
+
+class BuildTileIdentityKeyTests(ViewTests):
+    def setUp(self):
+        super().setUp()
+        self.merge_graph = ConceptMergeGraph()
+
+    def test_nodegroup_without_a_rule_has_no_identity(self):
+        self.assertIsNone(
+            self.merge_graph.build_tile_identity_key(
+                URI_NODEGROUP, {URI_CONTENT_NODE: "https://example.org/a"}
+            )
+        )
+
+    def test_nodegroup_without_identity_nodes_compares_every_node(self):
+        guide_term_key = self.merge_graph.build_tile_identity_key(
+            CONCEPT_TYPE_NODEGROUP,
+            {CONCEPT_TYPE_NODEID: [{"uri": "https://example.org/guide-term"}]},
+        )
+        concept_key = self.merge_graph.build_tile_identity_key(
+            CONCEPT_TYPE_NODEGROUP,
+            {CONCEPT_TYPE_NODEID: [{"uri": "https://example.org/concept"}]},
+        )
+        self.assertNotEqual(guide_term_key, concept_key)
 
     def test_equivalent_tiles_share_a_key_despite_bookkeeping(self):
-        first_key = build_tile_identity_key(
+        first_key = self.merge_graph.build_tile_identity_key(
             CLASSIFICATION_STATUS_NODEGROUP,
             {
                 CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID: [
@@ -109,7 +148,7 @@ class BuildTileIdentityKeyTests(SimpleTestCase):
                 ]
             },
         )
-        second_key = build_tile_identity_key(
+        second_key = self.merge_graph.build_tile_identity_key(
             CLASSIFICATION_STATUS_NODEGROUP,
             {
                 CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID: [
@@ -702,6 +741,26 @@ class ValidateMergeTests(ConceptMergeTestCase):
             pref_label_demotions=[str(survivor_label.tileid)],
         )
 
+    def lock_scheme_and_its_concepts(self, scheme, *concepts):
+        ResourceInstance.objects.filter(
+            pk__in=[scheme.pk, *(concept.pk for concept in concepts)]
+        ).update(resource_instance_lifecycle_state_id=LOCKED_STATE_ID)
+        for concept in concepts:
+            concept.refresh_from_db()
+
+    def test_a_locked_scheme_rejects_an_editor_but_not_an_admin(self):
+        self.lock_scheme_and_its_concepts(self.scheme, self.survivor, self.absorbed)
+
+        self.assertMergeRejected(self.survivor, self.absorbed, status=HTTPStatus.LOCKED)
+        validate_merge(self.survivor, self.absorbed, {}, True)
+
+    def test_an_admin_can_write_to_a_concept_in_a_locked_scheme(self):
+        other_scheme, outsider = self.make_concept_in_other_scheme()
+        self.lock_scheme_and_its_concepts(other_scheme, outsider)
+
+        self.assertFalse(concept_is_writable(outsider, False))
+        self.assertTrue(concept_is_writable(outsider, True))
+
     def test_valid_merge_passes(self):
         source_tile = self.add_statement_tile(self.absorbed, "Copy me.")
         survivor_label = self.add_label_tile(
@@ -834,8 +893,75 @@ class ConceptMergeHistoryTests(ConceptMergeTestCase):
         self.assertEqual(label["language_id"], "en")
         self.assertEqual(label["valuetype_id"], "prefLabel")
 
+    def test_a_merge_across_schemes_is_only_recorded_on_the_survivor(self):
+        _, outsider = self.make_concept_in_other_scheme()
+
+        concept_merge = merge_concepts(
+            self.survivor,
+            outsider,
+            {
+                "absorbed_concept_id": str(outsider.pk),
+                "create_exact_match_tiles": False,
+            },
+            self.admin,
+        )
+
+        self.assertTrue(concept_merge.is_cross_scheme)
+        [survivor_entry] = get_concept_merge_history(self.survivor.pk)
+        self.assertTrue(survivor_entry["is_cross_scheme"])
+        self.assertEqual(get_concept_merge_history(outsider.pk), [])
+
     def test_concept_never_merged_has_no_history(self):
         self.assertEqual(get_concept_merge_history(self.concepts[3].pk), [])
+
+
+class MergePreviewTests(ConceptMergeTestCase):
+    def test_tiles_are_described_the_way_the_merge_will_treat_them(self):
+        self.add_statement_tile(self.survivor, "Shared note.")
+        duplicate_tile = self.add_statement_tile(self.absorbed, "Shared note.")
+        new_tile = self.add_statement_tile(self.absorbed, "Only on absorbed.")
+        survivor_child = self.concepts[3]
+        self.make_child_of(survivor_child, self.survivor)
+        broader_to_descendant = self.make_child_of(self.absorbed, survivor_child)
+        uri_tile = self.add_uri_tile(self.absorbed, "https://example.org/absorbed")
+
+        preview = build_merge_preview(self.survivor, self.absorbed)
+
+        self.assertFalse(preview["is_cross_scheme"])
+        self.assertEqual(preview["blocked_nodegroup_aliases"], [])
+        tile_states = preview["tile_states"]
+        self.assertEqual(
+            tile_states[str(duplicate_tile.tileid)], TILE_ALREADY_ON_SURVIVOR
+        )
+        self.assertEqual(tile_states[str(new_tile.tileid)], TILE_SELECTABLE)
+        self.assertEqual(tile_states[str(broader_to_descendant.tileid)], TILE_DROPPED)
+        self.assertNotIn(str(uri_tile.tileid), preview["tile_states"])
+
+    def test_matching_single_value_tiles_count_as_already_present(self):
+        concept_type = {CONCEPT_TYPE_NODEID: [{"uri": "https://example.org/concept"}]}
+        for concept in (self.survivor, self.absorbed):
+            concept_type_tile = TileModel.objects.create(
+                resourceinstance=concept,
+                nodegroup_id=CONCEPT_TYPE_NODEGROUP,
+                data=concept_type,
+            )
+
+        preview = build_merge_preview(self.survivor, self.absorbed)
+
+        self.assertEqual(
+            preview["tile_states"][str(concept_type_tile.tileid)],
+            TILE_ALREADY_ON_SURVIVOR,
+        )
+
+    def test_scheme_scoped_tiles_are_blocked_across_schemes(self):
+        _, outsider = self.make_concept_in_other_scheme()
+        broader_tile = self.make_child_of(outsider, self.concepts[0])
+
+        preview = build_merge_preview(self.survivor, outsider)
+
+        self.assertTrue(preview["is_cross_scheme"])
+        self.assertIn("classification_status", preview["blocked_nodegroup_aliases"])
+        self.assertEqual(preview["tile_states"][str(broader_tile.tileid)], TILE_BLOCKED)
 
 
 class MergeRetirementTests(ConceptMergeTestCase):
@@ -928,7 +1054,7 @@ class MergeRetirementTests(ConceptMergeTestCase):
         source_tile = self.add_statement_tile(self.absorbed, "Should not survive.")
 
         with patch(
-            "arches_lingo.utils.concept_merge.retire_concept",
+            "arches_lingo.utils.concept_merge.service.retire_concept",
             side_effect=RuntimeError("retirement blew up"),
         ):
             with self.assertRaises(RuntimeError):
@@ -978,6 +1104,32 @@ class ConceptMergeViewTests(ConceptMergeTestCase):
             self.survivor.pk, {"absorbed_concept_id": str(self.absorbed.pk)}
         )
         self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+
+    def test_preview_returns_404_for_an_unknown_concept(self):
+        with self.assertLogs("django.request", level="WARNING"):
+            response = self.client.get(
+                reverse(
+                    "api-concept-merge-preview",
+                    kwargs={"pk": self.survivor.pk, "absorbed_pk": uuid.uuid4()},
+                )
+            )
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+
+    def test_preview_describes_the_absorbed_tiles(self):
+        source_tile = self.add_statement_tile(self.absorbed, "Previewed.")
+
+        response = self.client.get(
+            reverse(
+                "api-concept-merge-preview",
+                kwargs={"pk": self.survivor.pk, "absorbed_pk": self.absorbed.pk},
+            )
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(
+            json.loads(response.content)["tile_states"][str(source_tile.tileid)],
+            TILE_SELECTABLE,
+        )
 
     def test_successful_merge_returns_the_audit_record(self):
         source_tile = self.add_statement_tile(self.absorbed, "Via the API.")

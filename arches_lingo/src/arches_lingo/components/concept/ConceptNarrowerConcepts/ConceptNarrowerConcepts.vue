@@ -67,6 +67,12 @@ watch(isScrollable, (scrollable) => {
     }
 });
 
+// Children are not part of the resource payload, so refreshing the resource after
+// a merge does not refresh this section on its own.
+watch(() => resourceStore.resource.value, loadNarrowerConcepts);
+
+onMounted(loadNarrowerConcepts);
+
 async function loadNarrowerConcepts() {
     if (!props.resourceInstanceId) {
         isLoading.value = false;
@@ -91,13 +97,6 @@ async function loadNarrowerConcepts() {
         isLoading.value = false;
     }
 }
-
-onMounted(loadNarrowerConcepts);
-
-// Children are not part of the resource payload, so refreshing the resource does
-// not refresh this section on its own. A merge can hand the surviving concept the
-// children of the concept it absorbed, which is precisely what belongs here.
-watch(() => resourceStore.resource.value, loadNarrowerConcepts);
 </script>
 
 <template>

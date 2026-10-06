@@ -26,6 +26,12 @@ const resourceStore = useResourceStore();
 
 const merges = ref<ConceptMergeHistoryEntry[]>([]);
 
+// A merge performed from this page adds an entry, so the history has to follow
+// the resource rather than only loading once.
+watch(() => resourceStore.resource.value, loadMergeHistory);
+
+onMounted(loadMergeHistory);
+
 function entryText(entry: ConceptMergeHistoryEntry) {
     const counterpartName =
         getItemLabel(
@@ -34,6 +40,11 @@ function entryText(entry: ConceptMergeHistoryEntry) {
             systemLanguage.value.code,
         ).value || $gettext("a deleted concept");
 
+    if (entry.direction === "absorbed" && entry.is_cross_scheme) {
+        return $gettext("Values copied from %{name}", {
+            name: counterpartName,
+        });
+    }
     if (entry.direction === "absorbed") {
         return $gettext("Merged from %{name}", { name: counterpartName });
     }
@@ -55,12 +66,6 @@ async function loadMergeHistory() {
         merges.value = [];
     }
 }
-
-onMounted(loadMergeHistory);
-
-// A merge performed from this page adds an entry, so the history has to follow
-// the resource rather than only loading once.
-watch(() => resourceStore.resource.value, loadMergeHistory);
 </script>
 
 <template>

@@ -75,27 +75,14 @@ const survivorBeneathAbsorbedText = computed(function () {
     );
 });
 
-// Without the children there is no way to know whether a choice is even called
-// for, so the failure is shown rather than presenting an empty section. The merge
-// stays available: the server re-checks the hierarchy and applies the default the
-// dialog is already carrying, or refuses it if that would break the hierarchy.
+// The merge stays available: the server re-checks the hierarchy and applies the
+// default strategy, or refuses it if that would break the hierarchy.
 const fetchErrorText = computed(function () {
     return $gettext(
         'Could not check the child concepts of "%{name}". Any children it has will be attached to the surviving concept where the hierarchy allows it.',
         { name: absorbedLabel ?? "" },
     );
 });
-
-function isConceptOnAnyPath(
-    conceptId: string,
-    ancestorPaths: SearchResultHierarchy[],
-) {
-    return ancestorPaths.some((ancestorPath) =>
-        ancestorPath.searchResults.some(
-            (pathNode) => pathNode.id === conceptId,
-        ),
-    );
-}
 
 // Handing the children to a survivor that sits beneath the absorbed concept would
 // put its own ancestors under it, and retiring every descendant would retire the
@@ -126,7 +113,16 @@ onMounted(async () => {
     }
 });
 
-defineExpose({ hasChildren });
+function isConceptOnAnyPath(
+    conceptId: string,
+    ancestorPaths: SearchResultHierarchy[],
+) {
+    return ancestorPaths.some((ancestorPath) =>
+        ancestorPath.searchResults.some(
+            (pathNode) => pathNode.id === conceptId,
+        ),
+    );
+}
 </script>
 
 <template>

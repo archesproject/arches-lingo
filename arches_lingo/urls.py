@@ -50,6 +50,7 @@ from arches_lingo.views.api.concept_lifecycle import (
 )
 from arches_lingo.views.api.concept_merge import (
     ConceptMergeHistoryView,
+    ConceptMergePreviewView,
     ConceptMergeView,
 )
 from arches_lingo.views.api.scheme_lock import SchemeLockView, SchemeUnlockView
@@ -272,6 +273,11 @@ urlpatterns = [
         "api/lingo/concept/<uuid:pk>/merge",
         ConceptMergeView.as_view(),
         name="api-concept-merge",
+    ),
+    path(
+        "api/lingo/concept/<uuid:pk>/merge-preview/<uuid:absorbed_pk>",
+        ConceptMergePreviewView.as_view(),
+        name="api-concept-merge-preview",
     ),
     path(
         "api/lingo/concept/<uuid:pk>/merge-history",
