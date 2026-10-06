@@ -40,7 +40,6 @@ from arches_lingo.utils.concept_merge.validation import concept_is_writable
 DEFAULT_ITEMS_PER_PAGE = 50
 MAX_ITEMS_PER_PAGE = 200
 
-# Linking writes up to two tiles per pair through the full tile save path.
 MAX_LINK_BATCH = 200
 
 # Well clear of HEARTBEAT_INTERVAL_SECONDS.
@@ -179,11 +178,7 @@ def worker_is_available():
 
 
 def reap_stale_runs(run_ids=None):
-    """Fail runs that stopped reporting, returning how many were closed out.
-
-    Celery acks a task on receipt, so a worker restarted mid-run cannot fail
-    its own run. Runs with no heartbeat yet fall back to their creation time.
-    """
+    """Fail runs that stopped reporting (see ConceptMatchRun.last_progress)."""
     cutoff = timezone.now() - datetime.timedelta(seconds=STALE_RUN_SECONDS)
     stale_runs = ConceptMatchRun.objects.filter(
         Q(last_progress__lt=cutoff) | Q(last_progress__isnull=True, created__lt=cutoff),
@@ -201,8 +196,6 @@ def reap_stale_runs(run_ids=None):
     )
 
 
-# Reported apart because the remedies differ: the concept's lifecycle state,
-# or its scheme's.
 CANNOT_RECEIVE_NOT_EDITABLE = "not_editable"
 CANNOT_RECEIVE_SCHEME_LOCKED = "scheme_locked"
 
@@ -246,10 +239,7 @@ def _reasons_concepts_cannot_receive_data(
 
 
 def _build_concept_summaries(concept_ids, user_is_lingo_admin=False):
-    """Return {concept id: {labels, scheme, whether it can be merged into}}.
-
-    Labels rather than the descriptor, so the client picks one by language.
-    """
+    """Return {concept id: {labels, scheme, whether it can be merged into}}."""
     if not concept_ids:
         return {}
 
@@ -259,7 +249,6 @@ def _build_concept_summaries(concept_ids, user_is_lingo_admin=False):
             pk__in=concept_ids
         ).values_list("pk", flat=True)
     }
-    # Deleted concepts are reported as missing rather than nameless.
     concept_ids = existing_concept_ids
     if not concept_ids:
         return {}
@@ -420,7 +409,6 @@ def set_status_for_all(run, status, user):
 def _link_outcome(concept_a, concept_b, user_is_lingo_admin):
     """Return (write_to_first, write_to_second, skip_reason) for one pair."""
     if not get_concept_uri(concept_a.pk) or not get_concept_uri(concept_b.pk):
-        # An exactMatch names the other concept by URI.
         return None, None, "missing_uri"
 
     write_to_first = concept_is_writable(concept_a, user_is_lingo_admin)

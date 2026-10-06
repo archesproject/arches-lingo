@@ -1,8 +1,7 @@
 """Suggest pairs of concepts that probably mean the same thing.
 
-Pairs already settled by an exactMatch or a merge are never suggested again.
-Written as SQL over `tiles` rather than the ORM because the trigram index is
-defined on the raw `tiledata ->> node_id` expression.
+Raw SQL over `tiles` because the trigram index is defined on the raw
+`tiledata ->> node_id` expression.
 """
 
 import json
@@ -51,20 +50,17 @@ DEFAULT_SIMILARITY_THRESHOLD = 0.7
 MIN_SIMILARITY_THRESHOLD = 0.3
 MAX_SIMILARITY_THRESHOLD = 1.0
 
-# Each label is an independent, CPU-bound index probe, so the fuzzy signal scales
-# well past Postgres's default of two workers. Capped by max_parallel_workers.
+# Each label is an independent index probe, so parallelism always pays here.
 TRIGRAM_PARALLEL_WORKERS = getattr(settings, "LINGO_MATCH_PARALLEL_WORKERS", 8)
 
 TRIGRAM_WORK_MEM = getattr(settings, "LINGO_MATCH_WORK_MEM", "64MB")
 
-# Each slice commits as it finishes, so more slices means more frequent progress
-# at the cost of re-scanning the driving side once per slice.
+# More slices means more frequent progress, at the cost of re-scanning per slice.
 MATCH_SLICE_COUNT = getattr(settings, "LINGO_MATCH_SLICE_COUNT", 16)
 
 # Must stay well inside STALE_RUN_SECONDS, after which a silent run is reaped.
 HEARTBEAT_INTERVAL_SECONDS = 30
 
-# Temp tables dropped by name, so the names must be distinctive.
 _SCHEME_SCOPE_TABLE = "lingo_match_concept_scheme"
 _FOUND_PAIRS_TABLE = "lingo_match_found_pairs"
 
@@ -73,11 +69,7 @@ logger = logging.getLogger(__name__)
 
 @contextmanager
 def _heartbeat_while_working(run):
-    """Keep `run` from being reaped while a single long query holds this thread.
-
-    A separate thread because one query can run for minutes; if the worker
-    dies the thread dies with it, and the run is reaped as it should be.
-    """
+    """Keep `run` from being reaped while a single long query holds this thread."""
     if run is None:
         yield
         return
@@ -219,7 +211,6 @@ _URI_SQL = f"""
 
 
 def get_scheme_ids_for_concepts(concept_ids):
-    """Return {concept id: scheme id} for the concepts given."""
     if not concept_ids:
         return {}
 
@@ -239,11 +230,8 @@ def get_scheme_ids_for_concepts(concept_ids):
 
 
 def _scope_clauses(scope):
-    """Return (sql, params) narrowing which pairs a run keeps by scheme.
-
-    Source concepts are not narrowed here: each signal pins one side of its join
-    to them instead (see _scoped_side_sql).
-    """
+    """Return (sql, params) narrowing pairs by scheme; see _scoped_side_sql for
+    source concepts."""
     clauses = []
     params = {}
 
@@ -267,16 +255,14 @@ def _needs_scheme_lookup(scope):
 def _pair_query(match_sql, scope, score_sql="1.0"):
     """Wrap a signal's join in the scope narrowing, ordering each pair.
 
-    Retired concepts are left out here, on the pairs found, rather than in each
-    side's label query, so the trigram index probe stays as migration 0012
-    planned it.
+    Retired concepts are filtered here, not per side, to keep the trigram index
+    probe intact.
     """
     scope_sql, params = _scope_clauses(scope)
     params["retired_state_id"] = str(RETIRED_STATE_ID)
 
     scheme_joins = ""
     if _needs_scheme_lookup(scope):
-        # A temp table rather than a CTE; see _prepare_scheme_lookup.
         scheme_joins = f"""
           LEFT JOIN {_SCHEME_SCOPE_TABLE} scheme_a
                  ON scheme_a.concept_id = matched.side_a_concept_id
@@ -342,9 +328,8 @@ def _prepare_scheme_lookup(scope):
 def _scoped_side_sql(value_sql, source_concept_ids, slice_predicate=""):
     """Return (sql, pairing_clause, params) for one side of a signal's self-join.
 
-    With source ids one side is pinned to them and the outer DISTINCT collapses
-    pairs found from both directions. A scheme scope is not applied here: the
-    planner already pushes it down, and repeating it only adds a join.
+    With source ids, one side is pinned to them and the outer DISTINCT collapses
+    pairs found from both directions.
     """
     if source_concept_ids is None:
         if not slice_predicate:
@@ -373,9 +358,8 @@ def _scoped_side_sql(value_sql, source_concept_ids, slice_predicate=""):
 def _driving_side_slices(source_concept_ids):
     """Split a corpus-wide fuzzy search into queries that each commit as they end.
 
-    Slicing on the lower-id side keeps each pair inside one slice. Only the
-    fuzzy signal is sliced: the exact signals are hash joins, which slicing
-    would rebuild once per slice.
+    Only the fuzzy signal is sliced; the exact signals are hash joins, which
+    slicing would rebuild once per slice.
     """
     if source_concept_ids is not None:
         return [""]
@@ -476,8 +460,6 @@ def _apply_trigram_session_tuning(similarity_threshold):
         cursor.execute(
             f"SET LOCAL max_parallel_workers_per_gather = {TRIGRAM_PARALLEL_WORKERS}"
         )
-        # Every row drives an independent index probe, so parallelism always
-        # pays here, whatever the planner's default costs assume.
         cursor.execute("SET LOCAL parallel_setup_cost = 0")
         cursor.execute("SET LOCAL parallel_tuple_cost = 0")
         cursor.execute(f"SET LOCAL work_mem = '{TRIGRAM_WORK_MEM}'")
@@ -563,11 +545,8 @@ def _store_pairs(run, signal, sql, params, scope, similarity_threshold):
 
 
 def mark_pairs_settled(pairs, status, user=None):
-    """Settle these pairs in every run, whatever was decided about them before.
-
-    Linking or merging is done to the concepts themselves, so it outranks an
-    earlier dismissal; only a merge outranks a link.
-    """
+    """Settle these pairs in every run; a link outranks a dismissal, and only a
+    merge outranks a link."""
     canonical_pairs = {
         ConceptMatchCandidate.order_concept_ids(first_id, second_id)
         for first_id, second_id in pairs
@@ -591,13 +570,8 @@ def mark_pairs_settled(pairs, status, user=None):
 
 
 def hand_pending_pairs_to_survivor(absorbed_concept_id, survivor_concept_id):
-    """Re-point the absorbed concept's outstanding pairs at the survivor.
-
-    Once a merge retires or deletes the absorbed concept, a pair with it can no
-    longer be merged or linked both ways; the question it raised is now one
-    about the survivor. A pair the run already holds for the survivor is
-    dropped rather than asked twice.
-    """
+    """Re-point a retired or deleted concept's pending pairs at its survivor,
+    dropping any the run already holds for the survivor."""
     absorbed_concept_id = str(absorbed_concept_id)
     survivor_concept_id = str(survivor_concept_id)
     pending_with_absorbed = ConceptMatchCandidate.objects.filter(

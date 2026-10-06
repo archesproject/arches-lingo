@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 
 import { useGettext } from "vue3-gettext";
 import { storeToRefs } from "pinia";
@@ -84,9 +84,6 @@ const MERGE_STEP_ORDER = [
     MERGE_STEP_CONFIRM,
 ];
 
-// A preselected concept is the merge the caller asked for, so there is no
-// picker to step back to: choosing a different concept would merge a pair
-// other than the one being reviewed.
 const PRESELECTED_MERGE_STEP_ORDER = [MERGE_STEP_COMPARE, MERGE_STEP_CONFIRM];
 
 const {
@@ -100,9 +97,7 @@ const {
     survivorLabel: string | undefined;
     schemeId: string;
     graphSlug: string;
-    // Opened from somewhere that already knows which concept is being
-    // merged away -- match review, say -- so the picker is skipped and the
-    // dialog opens on the comparison.
+    // Skips the picker, e.g. when match review already knows the pair.
     preselectedConceptId?: string;
 }>();
 
@@ -198,12 +193,17 @@ const absorbedLabel = computed(function () {
     ).value;
 });
 
-onMounted(function () {
-    loadSurvivorPath();
-    if (preselectedConceptId) {
-        loadPreselectedConcept(preselectedConceptId);
-    }
-});
+watch(
+    () => preselectedConceptId,
+    function (conceptId) {
+        if (conceptId) {
+            loadPreselectedConcept(conceptId);
+        }
+    },
+    { immediate: true },
+);
+
+onMounted(loadSurvivorPath);
 
 // Without its lineage the header falls back to the survivor's own label.
 async function loadSurvivorPath() {
@@ -218,9 +218,7 @@ async function loadSurvivorPath() {
     }
 }
 
-// Looked up the same way as the survivor, so both sides of the pair show their
-// place in the hierarchy and lifecycle state.
-async function loadPreselectedConcept(conceptId: string) {
+async function loadPreselectedConcept(conceptId: string): Promise<void> {
     isLoadingAbsorbedConcept.value = true;
     try {
         const ancestorPaths: SearchResultHierarchy[] =
@@ -417,7 +415,7 @@ async function onMergeConfirmed() {
                                 :severity="ERROR"
                                 :closable="false"
                             >
-                                {{ fetchError }}
+                                <span>{{ fetchError }}</span>
                             </Message>
                             <MergeComparison
                                 v-else-if="absorbedConcept && mergePreview"

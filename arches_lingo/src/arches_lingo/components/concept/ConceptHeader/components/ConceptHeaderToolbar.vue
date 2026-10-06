@@ -377,7 +377,7 @@ async function onMerged() {
     });
 }
 
-function findMatches() {
+function findMatches(): void {
     if (!props.concept?.resourceinstanceid) return;
     router.push({
         name: routeNames.conceptMatches,

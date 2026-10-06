@@ -35,9 +35,6 @@ const toast = useToast();
 const { reportError } = useErrorToast();
 const { labelOf } = useLocalizedLabel();
 
-// A pair has no direction, but a merge does, so which concept survives is
-// chosen first; only then is the survivor fetched in the shape the merge
-// dialog expects.
 const survivorResource = ref<ResourceInstanceResult | null>(null);
 const mergeDirection = ref<MergeDirection | null>(null);
 const isPreparingMerge = ref(false);

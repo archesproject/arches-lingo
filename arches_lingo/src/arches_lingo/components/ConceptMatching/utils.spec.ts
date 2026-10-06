@@ -95,16 +95,11 @@ describe("splitElapsedSeconds", () => {
     });
 
     it("never counts backwards", () => {
-        // A client whose clock disagrees with the server's must not be shown a
-        // negative age -- the elapsed time it is given is the server's own.
         expect(splitElapsedSeconds(-500)).toEqual({ minutes: 0, seconds: 0 });
     });
 });
 
 describe("candidateStatusFromRoute", () => {
-    // The filter offers four queues, and every one of them has to survive the
-    // round trip through the address. Only two did once, and the two that did
-    // not silently showed the outstanding pairs instead.
     it.each([
         ["pending", "pending"],
         ["dismissed", "dismissed"],

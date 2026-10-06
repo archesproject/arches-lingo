@@ -184,14 +184,14 @@ function onSelectionChange(isChecked: boolean): void {
     flex: 1;
 }
 
-.candidate-body .candidate-concepts {
+.candidate-row .candidate-body .candidate-concepts {
     display: flex;
     align-items: baseline;
     flex-wrap: wrap;
     gap: 0.5rem;
 }
 
-.candidate-concepts .candidate-concept {
+.candidate-row .candidate-concepts .candidate-concept {
     display: flex;
     align-items: baseline;
     gap: 0.375rem;
@@ -199,27 +199,27 @@ function onSelectionChange(isChecked: boolean): void {
     overflow-wrap: anywhere;
 }
 
-.candidate-concept .candidate-concept-link {
+.candidate-row .candidate-concept .candidate-concept-link {
     color: var(--p-primary-color);
     text-decoration: none;
 }
 
-.candidate-concept .candidate-concept-link:hover,
-.candidate-concept .candidate-concept-link:focus-visible {
+.candidate-row .candidate-concept .candidate-concept-link:hover,
+.candidate-row .candidate-concept .candidate-concept-link:focus-visible {
     color: var(--p-primary-hover-color);
     text-decoration: underline;
 }
 
-.candidate-concept .candidate-scheme {
+.candidate-row .candidate-concept .candidate-scheme {
     font-size: var(--p-lingo-font-size-xxsmall);
     color: var(--p-text-muted-color);
 }
 
-.candidate-concept .candidate-link-icon {
+.candidate-row .candidate-concept .candidate-link-icon {
     color: var(--p-text-muted-color);
 }
 
-.candidate-body .candidate-reason {
+.candidate-row .candidate-body .candidate-reason {
     font-size: var(--p-lingo-font-size-smallnormal);
     color: var(--p-text-muted-color);
     overflow-wrap: anywhere;

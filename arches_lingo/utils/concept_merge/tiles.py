@@ -384,15 +384,8 @@ def write_exact_match_tiles(
 ):
     """Record a skos:exactMatch on each concept pointing at the other's URI.
 
-    A merge uses this so the absorbed concept, which keeps its own URI and stays
-    dereferenceable once retired, is still linked to the survivor; match review
-    uses it to link two concepts that are staying as they are.
-
-    Concepts without a URI tile are skipped rather than treated as an error --
-    there is nothing to point at. Either side can also be held back with
-    `write_to_first` / `write_to_second`, for a concept the caller is not allowed
-    to edit: a published or locked one. The half that can be written is still
-    worth writing, since it is what an editor reads from.
+    Concepts without a URI tile are skipped. `write_to_first` / `write_to_second`
+    hold back a side the caller may not edit, such as a published concept.
     """
     first_uri = get_concept_uri(first_concept.pk)
     second_uri = get_concept_uri(second_concept.pk)

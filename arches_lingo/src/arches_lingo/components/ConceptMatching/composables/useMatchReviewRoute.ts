@@ -16,14 +16,8 @@ interface MatchReviewView {
     status?: ConceptMatchCandidateStatus;
 }
 
-/**
- * Which run, page and queue are shown lives in the address, so back and forward
- * move between them and a queue can be sent to someone else. The address is
- * the one source of truth: a click and the back button arrive by the same path.
- *
- * The run is part of the path, which the app keys its RouterView on, so showing
- * another run mounts a new page; only the page and queue change underneath one.
- */
+// The run is part of the path, which the app keys its RouterView on, so it is
+// fixed for the life of the page; only the page and queue change underneath it.
 export function useMatchReviewRoute(): {
     activeRunId: number | null;
     candidateStatus: ComputedRef<ConceptMatchCandidateStatus>;
@@ -63,8 +57,6 @@ export function useMatchReviewRoute(): {
         return typeof conceptId === "string" && conceptId ? conceptId : null;
     }
 
-    // Only what differs from the default is written down, so the ordinary case
-    // -- the first page of a run's outstanding pairs -- stays a plain link.
     function routeForView({
         runId = activeRunId,
         pageNumber: viewPageNumber = pageNumber.value,

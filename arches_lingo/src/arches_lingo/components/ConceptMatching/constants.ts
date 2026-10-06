@@ -23,8 +23,6 @@ export const CANDIDATE_STATUS_DISMISSED = "dismissed" as const;
 export const CANDIDATE_STATUS_LINKED = "linked" as const;
 export const CANDIDATE_STATUS_MERGED = "merged" as const;
 
-// Linked and merged are records of work done to the concepts themselves, so
-// they are shown but not decided again from the queue.
 export const REVIEWABLE_CANDIDATE_STATUSES: readonly ConceptMatchCandidateStatus[] =
     [CANDIDATE_STATUS_PENDING, CANDIDATE_STATUS_DISMISSED];
 
@@ -34,6 +32,8 @@ export const ALL_CANDIDATE_STATUSES: readonly ConceptMatchCandidateStatus[] = [
     CANDIDATE_STATUS_LINKED,
     CANDIDATE_STATUS_MERGED,
 ];
+
+export const CANNOT_RECEIVE_SCHEME_LOCKED = "scheme_locked" as const;
 
 export const CANDIDATES_PER_PAGE = 50;
 

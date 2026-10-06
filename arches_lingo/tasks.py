@@ -88,7 +88,6 @@ def detect_concept_matches_task(run_id, scope_parameters, signals, options):
     try:
         run = ConceptMatchRun.objects.get(pk=run_id)
     except ConceptMatchRun.DoesNotExist:
-        # Deleted before the task started; retrying would fail the same way.
         logger.warning(
             "Match run %s no longer exists; abandoning its detection task.",
             run_id,
@@ -112,8 +111,7 @@ def detect_concept_matches_task(run_id, scope_parameters, signals, options):
             completed_run.candidate_count
         )
     except Exception as exception:
-        # run_detection records its own failures; this covers anything raised
-        # before it starts, which would otherwise leave the run pending.
+        # run_detection records its own failures; this covers anything earlier.
         logger.error(exception, exc_info=True)
         ConceptMatchRun.objects.filter(
             pk=run_id, status=ConceptMatchRun.STATUS_PENDING

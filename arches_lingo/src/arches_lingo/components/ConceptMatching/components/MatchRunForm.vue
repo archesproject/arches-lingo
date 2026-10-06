@@ -158,11 +158,11 @@ function requestRun(): void {
                 :severity="WARN"
                 :closable="false"
             >
-                {{
+                <span>{{
                     $gettext(
                         "Comparing similar labels runs on the server. How long it takes follows how many labels are in scope, and over a large vocabulary that is tens of minutes rather than seconds. Results appear as they are found, and the search carries on if you leave this page.",
                     )
-                }}
+                }}</span>
             </Message>
         </fieldset>
 
@@ -247,7 +247,7 @@ function requestRun(): void {
     border: 0;
 }
 
-.field .label {
+.run-form .field .label {
     display: block;
     margin: 0;
     font-weight: var(--p-lingo-font-weight-normal);
@@ -255,26 +255,24 @@ function requestRun(): void {
 }
 
 /* A legend sits outside the fieldset's flex flow, so it takes no gap. */
-.field legend.label {
+.run-form .field legend.label {
     padding: 0;
     margin-block-end: 0.5rem;
 }
 
-/* A container for a widget, not the widget itself: on a Select this would
-   stack its label above its dropdown icon and collapse the label. */
-.field .control {
+.run-form .field .control {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
 }
 
-.field .scheme-select,
-.field .name-input,
-.field .threshold-slider {
+.run-form .field .scheme-select,
+.run-form .field .name-input,
+.run-form .field .threshold-slider {
     width: 100%;
 }
 
-.control .option {
+.run-form .control .option {
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -282,11 +280,11 @@ function requestRun(): void {
     cursor: pointer;
 }
 
-.field .option-message {
+.run-form .field .option-message {
     font-size: var(--p-lingo-font-size-smallnormal);
 }
 
-.field .option-note {
+.run-form .field .option-note {
     margin: 0;
     font-size: var(--p-lingo-font-size-xxsmall);
     color: var(--p-text-muted-color);
@@ -298,9 +296,9 @@ function requestRun(): void {
     border-radius: 0.125rem;
 }
 
-:deep(.p-select),
-:deep(.p-multiselect),
-:deep(.p-inputtext) {
+.run-form :deep(.p-select),
+.run-form :deep(.p-multiselect),
+.run-form :deep(.p-inputtext) {
     border-radius: 0.125rem;
 }
 </style>

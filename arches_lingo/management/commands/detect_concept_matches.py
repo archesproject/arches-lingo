@@ -1,12 +1,5 @@
-"""Management command: detect_concept_matches
-
-Run match detection over a scope and store the result as a reviewable run.
-
-Matching a whole vocabulary is slow enough that it is worth starting from the
-command line rather than a request, and this is also the escape hatch when no
-celery worker is available. The run it writes is the same one the interface
-reads, so any editor can review it in the browser; without --user it has no
-creator, and only a Lingo admin can delete it.
+"""Run match detection from the command line, for large scopes or when no
+celery worker is available. Without --user, only a Lingo admin can delete the run.
 """
 
 from django.contrib.auth.models import User
@@ -130,7 +123,6 @@ class Command(BaseCommand):
         except ConceptMatchError as detection_error:
             raise CommandError(str(detection_error)) from detection_error
 
-        # Deleting a run from the interface is how it is cancelled.
         if run is None:
             self.stdout.write(self.style.WARNING("The run was cancelled."))
             return

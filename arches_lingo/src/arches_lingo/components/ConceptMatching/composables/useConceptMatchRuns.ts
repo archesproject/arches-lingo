@@ -28,10 +28,6 @@ import type {
     ConceptMatchRunRequest,
 } from "@/arches_lingo/types.ts";
 
-/**
- * The runs every editor can see, and the one on screen, which is polled while
- * it is unfinished however the reviewer got to it.
- */
 export function useConceptMatchRuns({
     activeRunId,
 }: {
@@ -89,7 +85,6 @@ export function useConceptMatchRuns({
         }
     }
 
-    // Every editor sees every run, so the default is the viewer's own newest.
     function newestRunId(): number | null {
         const newestOwnRun = runs.value.find((run) => run.started_by_viewer);
         return (newestOwnRun ?? runs.value[0])?.id ?? null;
@@ -128,14 +123,12 @@ export function useConceptMatchRuns({
     }
 
     async function pollOnce(runId: number): Promise<void> {
-        // A tick still in flight is skipped rather than queued behind itself.
         if (isPollInFlight) return;
         isPollInFlight = true;
         try {
             const run = await fetchConceptMatchRun(runId);
             consecutivePollFailures = 0;
             if (!run) {
-                // Cancelled, from here or from somewhere else.
                 stopPolling();
                 await loadRuns();
                 return;

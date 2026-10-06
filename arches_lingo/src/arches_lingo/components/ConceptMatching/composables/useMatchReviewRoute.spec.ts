@@ -6,7 +6,12 @@ import { describe, expect, it } from "vitest";
 
 import { useMatchReviewRoute } from "@/arches_lingo/components/ConceptMatching/composables/useMatchReviewRoute.ts";
 
-async function mountAt(path: string) {
+import type { Router } from "vue-router";
+
+async function mountAt(path: string): Promise<{
+    router: Router;
+    route: ReturnType<typeof useMatchReviewRoute>;
+}> {
     const router = createRouter({
         history: createMemoryHistory(),
         routes: [

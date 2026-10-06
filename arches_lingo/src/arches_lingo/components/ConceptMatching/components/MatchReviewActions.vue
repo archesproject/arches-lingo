@@ -37,11 +37,18 @@ import type {
 } from "@/arches_lingo/types.ts";
 
 const CHANGE_ALL_CONFIRM_GROUP = "change-all-matches";
-const ACTION_LINK = "link";
-const ACTION_UPDATE_SELECTION = "update-selection";
-const ACTION_CHANGE_ALL = "change-all";
-const ACTION_DELETE_RUN = "delete-run";
 const DELETE_RUN_CONFIRM_GROUP = "delete-match-run";
+
+const ACTION_LINK = "link" as const;
+const ACTION_UPDATE_SELECTION = "update-selection" as const;
+const ACTION_CHANGE_ALL = "change-all" as const;
+const ACTION_DELETE_RUN = "delete-run" as const;
+
+type ReviewAction =
+    | typeof ACTION_LINK
+    | typeof ACTION_UPDATE_SELECTION
+    | typeof ACTION_CHANGE_ALL
+    | typeof ACTION_DELETE_RUN;
 
 const {
     runId,
@@ -63,12 +70,6 @@ const {
     canDeleteRun: boolean;
 }>();
 
-type ReviewAction =
-    | typeof ACTION_LINK
-    | typeof ACTION_UPDATE_SELECTION
-    | typeof ACTION_CHANGE_ALL
-    | typeof ACTION_DELETE_RUN;
-
 const emit = defineEmits<{
     (event: "review-changed"): void;
     (event: "run-deleted", payload: { wasCancelled: boolean }): void;
@@ -80,7 +81,6 @@ const confirm = useConfirm();
 const { selectedLanguage } = storeToRefs(useLanguageStore());
 const { reportError } = useErrorToast();
 
-// One request at a time: each changes what the others would act on.
 const actionInFlight = ref<ReviewAction | null>(null);
 
 const isActionInFlight = computed(() => actionInFlight.value !== null);
@@ -271,7 +271,6 @@ async function changeStatusForAll(
     });
 }
 
-// Deleting is also how a run still working is cancelled.
 function confirmDeleteRun(): void {
     const wasCancelled = isRunUnfinished;
     confirm.require({

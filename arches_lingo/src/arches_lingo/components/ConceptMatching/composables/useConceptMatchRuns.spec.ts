@@ -13,6 +13,7 @@ import {
     RUN_POLL_INTERVAL_MS,
 } from "@/arches_lingo/components/ConceptMatching/constants.ts";
 
+import type { VueWrapper } from "@vue/test-utils";
 import type { ConceptMatchRun } from "@/arches_lingo/types.ts";
 
 const toastAdd = vi.fn();
@@ -47,7 +48,10 @@ function matchRun(overrides: Partial<ConceptMatchRun> = {}): ConceptMatchRun {
     } as ConceptMatchRun;
 }
 
-function mountRuns(activeRunId: number | null) {
+function mountRuns(activeRunId: number | null): {
+    wrapper: VueWrapper;
+    runs: ReturnType<typeof useConceptMatchRuns>;
+} {
     let exposed!: ReturnType<typeof useConceptMatchRuns>;
     const wrapper = mount(
         defineComponent({

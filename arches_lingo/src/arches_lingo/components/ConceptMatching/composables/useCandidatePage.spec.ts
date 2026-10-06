@@ -40,7 +40,7 @@ function deferred<ValueType>(): {
     return { promise, resolve };
 }
 
-function setUpPage(pageNumber = 1) {
+function setUpPage(pageNumber = 1): ReturnType<typeof useCandidatePage> {
     return useCandidatePage({
         activeRunId: 7,
         candidateStatus: ref<ConceptMatchCandidateStatus>("pending"),

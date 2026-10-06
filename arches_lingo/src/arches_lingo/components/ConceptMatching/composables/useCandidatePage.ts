@@ -35,11 +35,7 @@ export function useCandidatePage({
     const totalResults = ref(0);
     const isLoadingCandidates = ref(false);
     const loadError = ref<string | null>(null);
-    // While pairs are selected, a refresh would move rows under the reviewer,
-    // so new results wait until they ask for them.
     const hasUnshownResults = ref(false);
-    // Set when the page asked for no longer exists -- the queue shrank under a
-    // bookmark, say -- so the caller can move to the last one that does.
     const lastPageWhenPastEnd = ref<number | null>(null);
     const selectedIds = ref<Set<number>>(new Set());
 
@@ -59,8 +55,6 @@ export function useCandidatePage({
         }
 
         const requestNumber = ++latestRequest;
-        // A poll refreshes in place; only a refresh the reviewer asked for
-        // shows the loading state.
         if (!quiet) {
             isLoadingCandidates.value = true;
             loadingRequest = requestNumber;

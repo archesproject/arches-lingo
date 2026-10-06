@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, inject, onMounted, ref, watch } from "vue";
+import { computed, inject, ref, watch } from "vue";
 
 import { storeToRefs } from "pinia";
 import { useGettext } from "vue3-gettext";
@@ -34,11 +34,12 @@ import type {
     ConceptMatchRunRequest,
 } from "@/arches_lingo/types.ts";
 
+const refreshSchemeHierarchy = inject<() => void>("refreshSchemeHierarchy");
+
 const { $gettext } = useGettext();
 const conceptStore = useConceptStore();
 const { user, isEditor } = storeToRefs(useUserStore());
 const { reportError } = useErrorToast();
-const refreshSchemeHierarchy = inject<() => void>("refreshSchemeHierarchy");
 
 const {
     activeRunId,
@@ -87,13 +88,15 @@ const dismissedCount = computed(
 
 const showNoRunsPrompt = computed(() => !activeRun.value && !runs.value.length);
 
-// The app mounts only once the user is known, and every request would be
-// refused for a non-editor.
-onMounted(function () {
-    if (isEditor.value) {
-        initialize();
-    }
-});
+watch(
+    isEditor,
+    function (userIsEditor) {
+        if (userIsEditor) {
+            initialize();
+        }
+    },
+    { immediate: true },
+);
 
 // A page change keeps the selection, so pairs can be gathered across pages.
 watch(candidateStatus, clearSelection);
@@ -106,8 +109,7 @@ watch(lastPageWhenPastEnd, function (lastPageNumber) {
     }
 });
 
-// While the run works, each poll that finds more pairs refreshes the list in
-// place; the first count is the one the initial load already shows.
+// The first count is the one the initial load already shows.
 watch(
     () => activeRun.value?.candidate_count,
     function (_candidateCount, previousCandidateCount) {
@@ -120,8 +122,7 @@ watch(
     },
 );
 
-// A run deleted mid-search also stops being unfinished, but has no pairs left
-// to show.
+// A deleted run also stops being unfinished.
 watch(activeRunIsUnfinished, function (isUnfinished, wasUnfinished) {
     if (wasUnfinished && !isUnfinished && activeRun.value) {
         showFinishedResults();
@@ -137,8 +138,7 @@ async function initialize(): Promise<void> {
 
     await loadRuns();
 
-    // Arriving from a concept's own page searches for that concept's matches
-    // straight away, replacing the history entry so a reload never repeats it.
+    // Replacing the history entry keeps a reload from starting another run.
     const conceptId = conceptIdToSearchFrom();
     if (
         conceptId &&
@@ -160,8 +160,6 @@ function showFinishedResults(): void {
     loadCandidates();
 }
 
-// Replaces rather than pushes: being shown the latest run is part of arriving,
-// so going back leaves the page rather than undoing a choice nobody made.
 async function showNewestRunIfNoneChosen(): Promise<boolean> {
     const runId = newestRunId();
     if (activeRunId !== null || runId === null) {
@@ -234,7 +232,6 @@ function onMergeRequested({ candidateId }: { candidateId: number }): void {
         null;
 }
 
-// The server settles the pair, so the queue is reloaded rather than patched.
 async function onMergeCompleted(): Promise<void> {
     if (mergingCandidate.value) {
         changeSelection({
@@ -243,7 +240,6 @@ async function onMergeCompleted(): Promise<void> {
         });
     }
     closeMerge();
-    // A merge can retire a concept and move its children.
     refreshSchemeHierarchy!();
     await Promise.all([loadRuns(), loadCandidates()]);
 }
@@ -272,11 +268,11 @@ function closeMerge(): void {
             :severity="WARN"
             :closable="false"
         >
-            {{
+            <span>{{
                 $gettext(
                     "Finding matching concepts is available to Lingo editors.",
                 )
-            }}
+            }}</span>
         </Message>
 
         <div
@@ -344,7 +340,7 @@ function closeMerge(): void {
                     :severity="ERROR"
                     :closable="false"
                 >
-                    {{ loadError }}
+                    <span>{{ loadError }}</span>
                 </Message>
 
                 <Message
@@ -432,32 +428,30 @@ function closeMerge(): void {
     overflow-y: auto;
 }
 
-/* Collapsed, the results take the whole width rather than leaving a gap where
-   the criteria were. */
 .concept-matching .matches-body.criteria-hidden {
     grid-template-columns: 1fr;
 }
 
-.matches-body .matches-criteria {
+.concept-matching .matches-body .matches-criteria {
     display: flex;
     flex-direction: column;
     gap: 1rem;
 }
 
-.matches-criteria .intro {
+.concept-matching .matches-criteria .intro {
     margin: 0;
     font-size: var(--p-lingo-font-size-smallnormal);
     color: var(--p-header-item-label);
 }
 
-.matches-body .matches-results {
+.concept-matching .matches-body .matches-results {
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
     min-width: 0;
 }
 
-.matches-results .results-header {
+.concept-matching .matches-results .results-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -465,14 +459,14 @@ function closeMerge(): void {
     gap: 1rem;
 }
 
-.matches-results .unshown-results {
+.concept-matching .matches-results .unshown-results {
     display: flex;
     align-items: center;
     gap: 0.75rem;
     flex-wrap: wrap;
 }
 
-.matches-results .no-runs {
+.concept-matching .matches-results .no-runs {
     margin: 0;
     color: var(--p-text-muted-color);
 }

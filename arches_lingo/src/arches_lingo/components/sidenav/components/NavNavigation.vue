@@ -43,7 +43,6 @@ watchEffect(() => {
         },
     ];
 
-    // is_lingo_editor is false for anonymous users, so this also covers login.
     if (userStore.isEditor) {
         items.push({
             key: "concept_matches",

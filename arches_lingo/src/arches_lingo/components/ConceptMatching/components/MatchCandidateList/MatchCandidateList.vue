@@ -202,7 +202,7 @@ function onPageChosen(pageState: PageState): void {
     border-block-end: 0.0625rem solid var(--p-content-border-color);
 }
 
-.candidate-list-toolbar .toolbar-button {
+.candidate-list .candidate-list-toolbar .toolbar-button {
     font-size: var(--p-lingo-font-size-small);
     border-radius: 0.125rem;
 }

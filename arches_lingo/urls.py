@@ -87,8 +87,7 @@ urlpatterns = [
     path("login", LingoRootView.as_view(), name="login"),
     path("advanced-search", LingoRootView.as_view(), name="advanced-search"),
     path("concept-matches", LingoRootView.as_view(), name="concept-matches"),
-    # The client routes on the run id; this is what lets someone open or reload
-    # a link to one rather than being handed a 404 by Django first.
+    # Lets a link to a run be opened or reloaded directly.
     path(
         "concept-matches/<int:run_id>",
         LingoRootView.as_view(),

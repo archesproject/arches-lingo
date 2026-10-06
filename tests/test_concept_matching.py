@@ -1,9 +1,4 @@
-"""Tests for concept match detection.
-
-The engine's job is to suggest pairs an editor has not already settled, once
-each, scoped to what was asked for. These cover that logic rather than the SQL
-that implements it, so the signals stay replaceable.
-"""
+"""Tests for concept match detection and review."""
 
 import datetime
 import json
@@ -88,7 +83,6 @@ from tests.tests import SchemeWithConceptsTestCase
 
 
 class ConceptMatchingTestCase(SchemeWithConceptsTestCase):
-    """Two concepts in the shared scheme, plus helpers to give them values."""
 
     def setUp(self):
         super().setUp()
@@ -109,8 +103,8 @@ class ConceptMatchingTestCase(SchemeWithConceptsTestCase):
         )
 
     def clear_labels(self, concept):
-        """The fixture's "Concept 1" ... "Concept 5" labels are too similar to
-        each other: a fuzzy test would measure the fixture, not the code."""
+        """The fixture's "Concept 1" ... "Concept 5" labels are too similar for
+        fuzzy tests."""
         TileModel.objects.filter(
             resourceinstance=concept, nodegroup_id=CONCEPT_NAME_NODEGROUP
         ).delete()
@@ -189,7 +183,6 @@ class ConceptMatchingTestCase(SchemeWithConceptsTestCase):
 
 class ExactLabelSignalTests(ConceptMatchingTestCase):
     def test_concepts_sharing_a_label_are_suggested_once(self):
-        """Stored lowest id first, so the pair cannot appear under opposite names."""
         self.add_label(self.first_concept, "trumpets")
         self.add_label(self.second_concept, "trumpets")
 
@@ -212,7 +205,6 @@ class ExactLabelSignalTests(ConceptMatchingTestCase):
         self.assertEqual(self.detect_exact_labels(same_language_only=False), {})
 
     def test_languages_differ_by_default(self):
-        """The same spelling in two languages is more often a coincidence."""
         self.add_label(self.first_concept, "chien", language="fr")
         self.add_label(self.second_concept, "chien", language="en")
 
@@ -255,7 +247,6 @@ class ScopeTests(ConceptMatchingTestCase):
         self.assertEqual(len(self.detect_exact_labels()), 3)
 
     def test_scoping_to_a_concept_keeps_only_its_pairs(self):
-        """Either side may be the scoped concept; a stored pair has no direction."""
         self.label_three_concepts()
         scope = MatchScope(source_concept_ids=[str(self.first_concept.pk)])
 
@@ -298,8 +289,6 @@ class ScopeTests(ConceptMatchingTestCase):
 
         found = self.detect_exact_labels(scope)
 
-        # The three concepts in the scheme pair with each other and nothing
-        # else: every pair reaching the outsider is left out.
         self.assertEqual(len(found), 3)
         for pair in found:
             self.assertNotIn(str(outsider.pk), pair)
@@ -312,7 +301,6 @@ class ScopeTests(ConceptMatchingTestCase):
 
         found = self.detect_exact_labels(scope)
 
-        # Both schemes are in scope now, so the outsider's pairs come back too.
         self.assertEqual(len(found), 6)
 
     def test_a_scheme_outside_the_scope_contributes_nothing(self):
@@ -323,14 +311,11 @@ class ScopeTests(ConceptMatchingTestCase):
 
         found = self.detect_exact_labels(scope)
 
-        # One concept alone in its scheme has nothing in scope to pair with.
         self.assertEqual(found, {})
 
 
 class TrigramSignalTests(ConceptMatchingTestCase):
     def setUp(self):
-        """The fixture's own labels ("Concept 1" to "Concept 5") are all similar
-        to each other, so a fuzzy test would otherwise measure the fixture."""
         super().setUp()
         for concept in self.concepts:
             self.clear_labels(concept)
@@ -352,7 +337,6 @@ class TrigramSignalTests(ConceptMatchingTestCase):
         self.assertIn("engatillado en metales", evidence)
 
     def test_the_threshold_decides_what_counts_as_similar(self):
-        """Postgres defaults this to 0.3, which is far too loose to be useful."""
         self.add_label(self.first_concept, "trumpets")
         self.add_label(self.second_concept, "trumpeters")
 
@@ -452,7 +436,6 @@ class StartDetectionTests(ConceptMatchingTestCase):
     def test_a_worker_busy_with_another_search_still_counts_as_available(
         self, _celery_available, mock_task
     ):
-        """A solo-pool worker cannot answer a ping while it is executing a task."""
         ConceptMatchRun.objects.create(
             user=None,
             status=ConceptMatchRun.STATUS_RUNNING,
@@ -473,7 +456,6 @@ class StartDetectionTests(ConceptMatchingTestCase):
     def test_a_run_that_stopped_reporting_is_not_evidence_of_a_worker(
         self, _celery_available
     ):
-        """Otherwise a run stranded by a dead worker would vouch for it forever."""
         stranded = ConceptMatchRun.objects.create(
             user=None,
             status=ConceptMatchRun.STATUS_RUNNING,
@@ -500,8 +482,6 @@ class DecidedPairTests(ConceptMatchingTestCase):
         self.assertEqual(self.detect(), {})
 
     def test_an_exact_match_tile_settles_the_pair(self):
-        """The tile names the other concept by URI, so the link is resolved
-        back through the URI tiles."""
         self.add_label(self.first_concept, "trumpets")
         self.add_label(self.second_concept, "trumpets")
         self.add_uri(self.second_concept, "https://example.org/concepts/2")
@@ -510,7 +490,6 @@ class DecidedPairTests(ConceptMatchingTestCase):
         self.assertEqual(self.detect(), {})
 
     def test_a_match_other_than_exact_leaves_the_pair_open(self):
-        """A close or related match does not rule out the two being duplicates."""
         self.add_label(self.first_concept, "trumpets")
         self.add_label(self.second_concept, "trumpets")
         self.add_uri(self.second_concept, "https://example.org/concepts/2")
@@ -665,7 +644,6 @@ class CandidateReviewTests(ConceptMatchingTestCase):
             self.assertIsNone(candidate[side]["cannot_receive_reason"])
 
     def test_a_published_concept_cannot_be_merged_into(self):
-        """A merge writes to one side only, so the other may still be published."""
         run = self.make_run_with_one_candidate()
         ResourceInstance.objects.filter(pk=self.second_concept.pk).update(
             resource_instance_lifecycle_state_id=PUBLISHED_STATE_ID
@@ -706,7 +684,6 @@ class CandidateReviewTests(ConceptMatchingTestCase):
             self.assertTrue(candidate[side]["can_receive_data"])
 
     def test_a_run_counts_its_pairs_by_what_was_decided(self):
-        """Including zero counts, so "Linked (0)" can be shown rather than nothing."""
         run = self.make_run_with_one_candidate()
         run.candidates.update(status=ConceptMatchCandidate.STATUS_MERGED)
 
@@ -835,7 +812,6 @@ class BulkLinkTests(ConceptMatchingTestCase):
         )
 
     def test_a_published_concept_is_linked_one_way(self):
-        """It cannot be written to, but the half that can is still worth having."""
         self.add_uri(self.first_concept, "https://example.org/concepts/1")
         _, outsider = self.make_concept_in_other_scheme()
         self.add_uri(outsider, "https://example.org/concepts/outsider")
@@ -875,8 +851,6 @@ class BulkLinkTests(ConceptMatchingTestCase):
         )
 
     def test_a_concept_without_a_uri_is_skipped_not_failed(self):
-        """An exactMatch names the other concept by URI; one awkward pair must not
-        cost the rest."""
         self.add_uri(self.first_concept, "https://example.org/concepts/1")
         run = self.make_run_for(self.first_concept, self.second_concept)
 
@@ -979,8 +953,6 @@ class PairSettlementTests(ConceptMatchingTestCase):
         )
 
     def test_a_merge_outranks_a_dismissal_and_nothing_outranks_a_merge(self):
-        """Merging from the dismissed list must not leave the pair looking
-        actionable there."""
         self.add_label(self.first_concept, "trumpets")
         self.add_label(self.second_concept, "trumpets")
         run = run_detection(MatchScope(), log=lambda message: None)
@@ -1000,8 +972,6 @@ class PairSettlementTests(ConceptMatchingTestCase):
         )
 
     def test_retiring_the_absorbed_concept_hands_its_pairs_to_the_survivor(self):
-        """Three of a kind: once A is merged into B and retired, A ~ C can no
-        longer be merged, but B ~ C is the same question."""
         third_concept = self.concepts[3]
         ResourceInstance.objects.filter(pk=third_concept.pk).update(
             resource_instance_lifecycle_state_id=EDITING_STATE_ID
@@ -1047,14 +1017,12 @@ class PairSettlementTests(ConceptMatchingTestCase):
 
 
 class ConceptMatchApiTests(ConceptMatchingTestCase):
-    """Covers the decisions the views make rather than re-testing the engine."""
 
     def setUp(self):
         super().setUp()
         self.client = Client()
         self.admin = User.objects.get(username="admin")
         self.client.force_login(self.admin)
-        # A worker that answers, and runs what it is given straight away.
         for patcher in (
             patch(
                 "arches_lingo.utils.concept_matching_service.task_management"
@@ -1249,7 +1217,6 @@ class ConceptMatchApiTests(ConceptMatchingTestCase):
         )
 
     def test_another_editor_can_review_a_run(self):
-        """Review is shared: dismissed pairs stay listed and can be restored."""
         created = self.create_run_with_one_pair()
         self.client.force_login(self.make_editor("other-editor"))
 
@@ -1305,8 +1272,6 @@ class DetectConceptMatchesTaskTests(ConceptMatchingTestCase):
         self.assertEqual(run.candidate_count, 1)
 
     def test_a_failure_leaves_the_run_saying_why(self):
-        """The task swallows the exception because there is no caller left to
-        catch it; the run is what the reviewer reads."""
         run = self.make_pending_run(["phonetic"])
 
         detect_concept_matches_task(
@@ -1377,8 +1342,6 @@ class DetectConceptMatchesCommandTests(ConceptMatchingTestCase):
 
 
 class RunReportingTests(ConceptMatchingTestCase):
-    """Celery acks a task on receipt, so a run whose worker restarts has to be
-    closed out from the outside."""
 
     def make_run(self, status, age_seconds, heartbeat_age_seconds=None):
         run = ConceptMatchRun.objects.create(
@@ -1448,8 +1411,6 @@ class RunReportingTests(ConceptMatchingTestCase):
         self.assertEqual(run.status, ConceptMatchRun.STATUS_COMPLETE)
 
     def test_progress_is_recorded_as_each_query_is_stored(self):
-        """Including a query that finds nothing, so a run working hard and
-        matching nothing is not reaped as though its worker had died."""
         self.add_label(self.first_concept, "trumpets")
         self.add_label(self.second_concept, "trumpets")
         run = ConceptMatchRun.objects.create(
@@ -1479,8 +1440,6 @@ class RunReportingTests(ConceptMatchingTestCase):
         self.assertGreaterEqual(after_labels[1], after_uris[1])
 
     def test_a_run_reports_from_a_thread_of_its_own(self):
-        """A single query can hold the worker's thread for minutes, so the
-        heartbeat runs beside the work and stops with it."""
         run = ConceptMatchRun.objects.create(
             user=None, status=ConceptMatchRun.STATUS_RUNNING, parameters={}
         )
@@ -1503,8 +1462,6 @@ class RunReportingTests(ConceptMatchingTestCase):
         self.assertNotIn(heartbeat_thread_name, running_thread_names())
 
     def test_timestamps_carry_their_offset(self):
-        """With USE_TZ off they are stored naive, and a browser elsewhere would
-        otherwise read them as its own local time."""
         run = ConceptMatchRun.objects.create(
             user=None,
             status=ConceptMatchRun.STATUS_COMPLETE,
@@ -1629,8 +1586,6 @@ class RunDisposalTests(ConceptMatchingTestCase):
         )
 
     def test_a_pair_decided_since_it_was_dismissed_stays_dismissed(self):
-        """Settling a pair only touches runs where it is still pending, so a
-        restore is the one place that has to check."""
         concept_a_id, concept_b_id = self.expected_pair(
             self.first_concept, self.second_concept
         )
@@ -1704,8 +1659,6 @@ class RunDisposalTests(ConceptMatchingTestCase):
         self.assertEqual(ConceptMatchCandidate.objects.filter(run_id=run.pk).count(), 0)
 
     def test_a_query_failing_because_its_run_was_deleted_is_a_cancellation(self):
-        """Deleting a run mid-query fails that query's commit on the foreign
-        key, which outside a test transaction is how the worker finds out."""
         run = ConceptMatchRun.objects.create(
             user=None, status=ConceptMatchRun.STATUS_RUNNING, parameters={}
         )
@@ -1723,8 +1676,6 @@ class RunDisposalTests(ConceptMatchingTestCase):
         self.assertIsNone(result)
 
     def test_a_delete_racing_a_committing_query_is_retried(self):
-        """The query can commit pairs between the delete clearing the run's
-        pairs and the delete committing, which fails it on the foreign key."""
         run = ConceptMatchRun.objects.create(
             user=None, status=ConceptMatchRun.STATUS_RUNNING, parameters={}
         )

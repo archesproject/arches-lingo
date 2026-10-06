@@ -1372,8 +1372,7 @@ export const fetchConceptMatchRuns = async (): Promise<{
     return parsed;
 };
 
-// Null rather than an error when the run is gone: deleting is how a run is
-// cancelled, so a poller has to be able to tell that apart from a failure.
+// Null when the run is gone, since deleting is how a run is cancelled.
 export const fetchConceptMatchRun = async (
     runId: number,
 ): Promise<ConceptMatchRun | null> => {

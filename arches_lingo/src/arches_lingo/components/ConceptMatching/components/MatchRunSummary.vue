@@ -63,7 +63,7 @@ const similarityText = computed(() =>
 );
 
 const narrowingText = computed(function () {
-    const narrowings = [];
+    const narrowings: string[] = [];
     if (run.parameters.cross_scheme_only) {
         narrowings.push($gettext("only pairs spanning two schemes"));
     }
@@ -152,12 +152,12 @@ function formatList(items: string[]): string {
     min-width: 0;
 }
 
-.run-summary-entry dt {
+.run-summary .run-summary-entry dt {
     color: var(--p-text-muted-color);
     white-space: nowrap;
 }
 
-.run-summary-entry dd {
+.run-summary .run-summary-entry dd {
     margin: 0;
     color: var(--p-header-item-label);
 }

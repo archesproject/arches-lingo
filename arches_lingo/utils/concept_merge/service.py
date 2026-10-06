@@ -110,7 +110,6 @@ def merge_concepts(survivor, absorbed, selections, user, user_is_lingo_admin=Fal
             selections=selections,
         )
 
-        # Wherever match review has the pair queued, it is no longer a question.
         mark_pairs_settled(
             [(survivor_id, absorbed_id)], ConceptMatchCandidate.STATUS_MERGED, user
         )

@@ -14,10 +14,7 @@ import type {
     ConceptMatchSignal,
 } from "@/arches_lingo/types.ts";
 
-/**
- * Ordered strongest first to match the server, which keeps the best reason when
- * more than one signal suggests the same pair.
- */
+// Strongest first, the order the server keeps a pair's best reason in.
 export function buildSignalList(options: {
     compareUris: boolean;
     compareLabels: boolean;
@@ -59,10 +56,6 @@ export function splitElapsedSeconds(totalSeconds: number): {
     };
 }
 
-/**
- * Anything the interface does not offer falls back to the outstanding pairs,
- * so a hand-edited or outdated link still lands somewhere sensible.
- */
 export function candidateStatusFromRoute(
     rawStatus: unknown,
 ): ConceptMatchCandidateStatus {

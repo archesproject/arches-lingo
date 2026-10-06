@@ -21,8 +21,6 @@ const { status, candidateCount, elapsedSeconds } = defineProps<{
 
 const { $gettext } = useGettext();
 
-// The server says how long the run has been going; only the time since the
-// last poll is measured here, where both readings come from the same clock.
 const elapsedAtLastPoll = ref(elapsedSeconds);
 const polledAt = ref(Date.now());
 const now = ref(Date.now());
@@ -84,9 +82,11 @@ onBeforeUnmount(() => clearInterval(clockTimer));
         />
 
         <div class="run-progress-detail">
-            <!-- The clock beside this ticks every second and would drown it out
-                 if it were announced too. -->
-            <span aria-live="polite">
+            <!-- The elapsed clock stays out of the live region: it ticks every second. -->
+            <span
+                class="run-progress-status"
+                aria-live="polite"
+            >
                 <span>{{ statusText }}</span>
                 <span>{{ foundText }}</span>
             </span>
@@ -125,12 +125,12 @@ onBeforeUnmount(() => clearInterval(clockTimer));
     font-size: var(--p-lingo-font-size-smallnormal);
 }
 
-.run-progress-detail > span {
+.run-progress .run-progress-detail .run-progress-status {
     display: flex;
     gap: 0.5rem;
 }
 
-.run-progress-detail .run-progress-numbers {
+.run-progress .run-progress-detail .run-progress-numbers {
     color: var(--p-text-muted-color);
     white-space: nowrap;
 }

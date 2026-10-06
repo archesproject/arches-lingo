@@ -103,7 +103,6 @@ export const MERGE_STEP_CONFIRM = 3;
 export const TILE_STATE_ALREADY_ON_SURVIVOR = "already_on_survivor";
 export const TILE_STATE_DROPPED = "dropped";
 
-// The frame every merge dialog shares; each adds its own size and content.
 export const MERGE_DIALOG_FRAME_PASS_THROUGH = {
     root: {
         style: {

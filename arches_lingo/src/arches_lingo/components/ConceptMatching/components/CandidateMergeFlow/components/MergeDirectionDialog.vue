@@ -9,6 +9,7 @@ import Message from "primevue/message";
 import RadioButton from "primevue/radiobutton";
 
 import { MERGE_DIALOG_FRAME_PASS_THROUGH } from "@/arches_lingo/components/concept/ConceptMerge/constants.ts";
+import { CANNOT_RECEIVE_SCHEME_LOCKED } from "@/arches_lingo/components/ConceptMatching/constants.ts";
 import { useLocalizedLabel } from "@/arches_lingo/components/ConceptMatching/composables/useLocalizedLabel.ts";
 import { DANGER, WARN } from "@/arches_lingo/constants.ts";
 
@@ -43,12 +44,13 @@ const emit = defineEmits<{
 const { $gettext } = useGettext();
 const { labelOf } = useLocalizedLabel();
 
-// A merge only writes to the concept receiving the values, so a published or
-// locked concept can still be merged from, but is not offered as a survivor.
+// A merge writes only to the survivor, so a published or locked concept can still be absorbed.
 const survivorId = ref<string | null>(
     [conceptA, conceptB].find((concept) => concept.can_receive_data)?.id ??
         null,
 );
+
+const pairedConcepts = computed(() => [conceptA, conceptB]);
 
 const canMergeEitherWay = computed(
     () => conceptA.can_receive_data || conceptB.can_receive_data,
@@ -59,7 +61,7 @@ const canContinue = computed(() => !isLoading && survivorId.value !== null);
 function whyUnavailable(
     reason: MatchedConceptSummary["cannot_receive_reason"],
 ): string {
-    if (reason === "scheme_locked") {
+    if (reason === CANNOT_RECEIVE_SCHEME_LOCKED) {
         return $gettext("Its scheme is locked, so nothing can be added to it.");
     }
     return $gettext(
@@ -106,16 +108,16 @@ function onVisibilityChange(): void {
                 :severity="WARN"
                 :closable="false"
             >
-                {{
+                <span>{{
                     $gettext(
                         "Neither concept can be added to, so this pair cannot be merged.",
                     )
-                }}
+                }}</span>
             </Message>
 
             <div class="direction-options">
                 <label
-                    v-for="concept in [conceptA, conceptB]"
+                    v-for="concept in pairedConcepts"
                     :key="concept.id"
                     class="direction-option"
                     :class="{
@@ -194,7 +196,7 @@ function onVisibilityChange(): void {
     gap: 0.5rem;
 }
 
-.direction-options .direction-option {
+.direction-body .direction-options .direction-option {
     display: flex;
     align-items: flex-start;
     gap: 0.75rem;
@@ -204,25 +206,25 @@ function onVisibilityChange(): void {
     cursor: pointer;
 }
 
-.direction-options .direction-option.selected {
+.direction-body .direction-options .direction-option.selected {
     border-color: var(--p-primary-color);
     background-color: var(--p-highlight-background);
 }
 
-.direction-options .direction-option.unavailable {
+.direction-body .direction-options .direction-option.unavailable {
     cursor: not-allowed;
     opacity: 0.65;
 }
 
-.direction-option .direction-option-body {
+.direction-body .direction-option .direction-option-body {
     display: flex;
     flex-direction: column;
     gap: 0.125rem;
     min-width: 0;
 }
 
-.direction-option-body .direction-option-scheme,
-.direction-option-body .direction-option-unavailable {
+.direction-body .direction-option-body .direction-option-scheme,
+.direction-body .direction-option-body .direction-option-unavailable {
     font-size: var(--p-lingo-font-size-xxsmall);
     color: var(--p-text-muted-color);
 }
