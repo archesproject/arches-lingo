@@ -674,8 +674,14 @@ function removeAllNewNodes() {
         );
 
         const traversalQueue = [...(schemeItem.top_concepts ?? [])];
+        const visitedConceptObjects = new Set<Concept>();
 
         for (const currentConcept of traversalQueue) {
+            if (visitedConceptObjects.has(currentConcept)) {
+                continue;
+            }
+            visitedConceptObjects.add(currentConcept);
+
             currentConcept.narrower = (currentConcept.narrower ?? []).filter(
                 (childConcept) => childConcept.id !== NEW,
             );

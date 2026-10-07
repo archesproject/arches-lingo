@@ -19,6 +19,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.1.2] - Unreleased
 
+### Added
+
+-   Add `load_aat` management command to download and load the Getty AAT [#798](https://github.com/archesproject/arches-lingo/pull/798)
+
 ### Fixed
 
 -   Write and read column headers in dumped fixture archives so loading is not affected by model field ordering [#765](https://github.com/archesproject/arches-lingo/pull/765)
