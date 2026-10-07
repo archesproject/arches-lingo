@@ -63,6 +63,20 @@ class LingoEditorMixin:
         return super().dispatch(request, *args, **kwargs)
 
 
+class LingoAdminWriteMixin:
+    """Require Lingo admin group membership for any non-safe (mutating) request."""
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.method not in ("GET", "HEAD", "OPTIONS"):
+            if not is_lingo_admin(request.user):
+                return JSONErrorResponse(
+                    title=_("Permission denied."),
+                    message=_("You must be a Lingo admin to perform this action."),
+                    status=HTTPStatus.FORBIDDEN,
+                )
+        return super().dispatch(request, *args, **kwargs)
+
+
 class LingoEditorWriteMixin:
     """Require Lingo editor group membership for any non-safe (mutating) request."""
 
