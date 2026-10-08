@@ -102,3 +102,30 @@ export const MERGE_STEP_CONFIRM = 3;
 
 export const TILE_STATE_ALREADY_ON_SURVIVOR = "already_on_survivor";
 export const TILE_STATE_DROPPED = "dropped";
+
+export const MERGE_DIALOG_FRAME_PASS_THROUGH = {
+    root: {
+        style: {
+            fontFamily: "var(--p-lingo-font-family)",
+            fontSize: "var(--p-lingo-font-size-small)",
+            border: "0.125rem solid var(--p-dialog-color)",
+            borderRadius: "0.25rem",
+        },
+    },
+    header: {
+        style: {
+            background: "var(--p-navigation-header-color)",
+            color: "var(--p-dialog-header-text-color)",
+            borderRadius: "0",
+            paddingBlock: "1.25rem",
+            paddingInline: "1.5rem",
+        },
+    },
+    title: {
+        style: {
+            fontSize: "var(--p-lingo-font-size-large)",
+            fontWeight: "var(--p-lingo-font-weight-normal)",
+            lineHeight: "1.2",
+        },
+    },
+};

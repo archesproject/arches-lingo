@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   Add support for exporting Lingo Thesauri (schemes & concepts) to N-Triples and Turtle formats [#778](https://github.com/archesproject/arches-lingo/pull/778)
 -   Add support for importing thesauri from N-Triples and Turtle files [#779](https://github.com/archesproject/arches-lingo/pull/779)
 -   Add concept merge workflow, with merge history on the concept header [#801](https://github.com/archesproject/arches-lingo/pull/801)
+-   Add concept match detection: find concepts that probably mean the same thing, within or across schemes, and link them with exactMatch or merge them [#802](https://github.com/archesproject/arches-lingo/pull/802)
 
 ### Changed
 

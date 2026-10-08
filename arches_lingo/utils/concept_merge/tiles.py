@@ -375,35 +375,42 @@ def demote_pref_label_tiles(tile_ids, edit_transaction_id):
     return demoted_tiles
 
 
-def write_reciprocal_exact_match_tiles(
-    survivor, absorbed, edit_transaction_id, write_to_absorbed=True
+def write_match_tiles(
+    first_concept,
+    second_concept,
+    edit_transaction_id,
+    relation_list_item_id=EXACT_MATCH_LIST_ITEM_ID,
+    write_to_first=True,
+    write_to_second=True,
 ):
-    """Record a skos:exactMatch on each concept pointing at the other's URI.
+    """Record a match relation (exactMatch by default) on each concept pointing
+    at the other's URI. Only symmetric relations make sense here: the same
+    relation is written in both directions.
 
-    The absorbed concept keeps its own URI and stays dereferenceable once
-    retired, so without this the two records have no machine-readable link.
-    Concepts without a URI tile are skipped rather than treated as an error.
-
-    `write_to_absorbed` false records the match on the survivor alone, for an
-    absorbed concept the merge is not allowed to edit.
+    Concepts without a URI tile are skipped. `write_to_first` / `write_to_second`
+    hold back a side the caller may not edit, such as a published concept.
     """
-    survivor_uri = get_concept_uri(survivor.pk)
-    absorbed_uri = get_concept_uri(absorbed.pk)
-    if not survivor_uri or not absorbed_uri:
+    first_uri = get_concept_uri(first_concept.pk)
+    second_uri = get_concept_uri(second_concept.pk)
+    if not first_uri or not second_uri:
         return []
 
     merge_graph = ConceptMergeGraph()
-    exact_match_tile_value = get_list_item_tile_value(EXACT_MATCH_LIST_ITEM_ID)
-    resources_by_concept_id = load_concept_resources(survivor.pk, absorbed.pk)
+    relation_tile_value = get_list_item_tile_value(relation_list_item_id)
+    resources_by_concept_id = load_concept_resources(
+        first_concept.pk, second_concept.pk
+    )
 
-    matches_to_write = [(survivor.pk, absorbed_uri)]
-    if write_to_absorbed:
-        matches_to_write.append((absorbed.pk, survivor_uri))
+    matches_to_write = []
+    if write_to_first:
+        matches_to_write.append((first_concept.pk, second_uri))
+    if write_to_second:
+        matches_to_write.append((second_concept.pk, first_uri))
 
     written_tiles = []
     for concept_id, matched_uri in matches_to_write:
         tile_data = {
-            MATCH_STATUS_RELATION_NODE: [exact_match_tile_value],
+            MATCH_STATUS_RELATION_NODE: [relation_tile_value],
             MATCH_STATUS_COMPARATE_NODE: matched_uri,
         }
         existing_identity_keys = merge_graph.collect_identity_keys(
