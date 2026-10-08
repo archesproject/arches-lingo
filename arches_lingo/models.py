@@ -235,7 +235,8 @@ class ConceptMatchRun(models.Model):
 class ConceptMatchCandidate(models.Model):
     """A pair one run found, stored lowest id first (see ``order_concept_ids``).
 
-    Its review status is its pair's ``ConceptPairDecision``, or pending.
+    Its review status is derived: merged from ``ConceptMerge``, linked from an
+    exactMatch tile, dismissed from ``ConceptPairDismissal``, else pending.
     """
 
     SIGNAL_SHARED_IDENTIFIER = "shared_identifier"
@@ -296,37 +297,30 @@ class ConceptMatchCandidate(models.Model):
         return tuple(sorted([str(first_concept_id), str(second_concept_id)]))
 
 
-class ConceptPairDecision(models.Model):
-    """What an editor decided about a pair, wherever it was found."""
-
-    STATUS_CHOICES = [
-        (ConceptMatchCandidate.STATUS_DISMISSED, _("Dismissed")),
-        (ConceptMatchCandidate.STATUS_LINKED, _("Linked")),
-        (ConceptMatchCandidate.STATUS_MERGED, _("Merged")),
-    ]
+class ConceptPairDismissal(models.Model):
+    """An editor's call that two concepts are not duplicates, in every run."""
 
     concept_a_id = models.UUIDField()
     concept_b_id = models.UUIDField()
-    status = models.CharField(max_length=16, choices=STATUS_CHOICES)
-    decided_by = models.ForeignKey(
+    dismissed_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
-        related_name="lingo_concept_pair_decisions",
+        related_name="lingo_concept_pair_dismissals",
     )
-    decided_at = models.DateTimeField(auto_now=True)
+    dismissed_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         app_label = "arches_lingo"
-        verbose_name = _("concept pair decision")
-        verbose_name_plural = _("concept pair decisions")
+        verbose_name = _("concept pair dismissal")
+        verbose_name_plural = _("concept pair dismissals")
         constraints = [
             models.UniqueConstraint(
                 fields=["concept_a_id", "concept_b_id"],
-                name="unique_concept_pair_decision",
+                name="unique_concept_pair_dismissal",
             ),
         ]
 
     def __str__(self):
-        return f"{self.concept_a_id} ~ {self.concept_b_id}: {self.status}"
+        return f"{self.concept_a_id} ~ {self.concept_b_id} (dismissed)"

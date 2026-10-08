@@ -2,16 +2,13 @@ import uuid
 
 from django.db import transaction
 
-from arches_lingo.models import ConceptMatchCandidate, ConceptMerge
+from arches_lingo.models import ConceptMerge
 from arches_lingo.utils.concept_lifecycle import (
     delete_concept,
     index_concepts_in_transaction,
     retire_concept,
 )
-from arches_lingo.utils.concept_pair_decisions import (
-    hand_pending_pairs_to_survivor,
-    mark_pairs_settled,
-)
+from arches_lingo.utils.concept_pair_status import hand_pending_pairs_to_survivor
 from arches_lingo.utils.concept_merge.history import get_labels_by_concept_id
 from arches_lingo.utils.concept_merge.tiles import (
     append_digital_objects_to_survivor,
@@ -110,9 +107,6 @@ def merge_concepts(survivor, absorbed, selections, user, user_is_lingo_admin=Fal
             selections=selections,
         )
 
-        mark_pairs_settled(
-            [(survivor_id, absorbed_id)], ConceptMatchCandidate.STATUS_MERGED, user
-        )
         if should_retire_absorbed or should_delete_absorbed:
             hand_pending_pairs_to_survivor(absorbed_id, survivor_id)
 

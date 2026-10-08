@@ -130,7 +130,6 @@ class ConceptMatchLinkView(LingoEditorMixin, View):
             link_candidates_with_exact_match(
                 run,
                 parse_candidate_ids(_parse_json_body(request)),
-                request.user,
                 user_is_lingo_admin=is_lingo_admin(request.user),
             )
         )

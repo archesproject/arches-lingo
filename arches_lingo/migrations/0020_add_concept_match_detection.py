@@ -127,7 +127,7 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
-            name="ConceptPairDecision",
+            name="ConceptPairDismissal",
             fields=[
                 (
                     "id",
@@ -140,36 +140,25 @@ class Migration(migrations.Migration):
                 ),
                 ("concept_a_id", models.UUIDField()),
                 ("concept_b_id", models.UUIDField()),
+                ("dismissed_at", models.DateTimeField(auto_now_add=True)),
                 (
-                    "status",
-                    models.CharField(
-                        choices=[
-                            ("dismissed", "Dismissed"),
-                            ("linked", "Linked"),
-                            ("merged", "Merged"),
-                        ],
-                        max_length=16,
-                    ),
-                ),
-                ("decided_at", models.DateTimeField(auto_now=True)),
-                (
-                    "decided_by",
+                    "dismissed_by",
                     models.ForeignKey(
                         blank=True,
                         null=True,
                         on_delete=django.db.models.deletion.SET_NULL,
-                        related_name="lingo_concept_pair_decisions",
+                        related_name="lingo_concept_pair_dismissals",
                         to=settings.AUTH_USER_MODEL,
                     ),
                 ),
             ],
             options={
-                "verbose_name": "concept pair decision",
-                "verbose_name_plural": "concept pair decisions",
+                "verbose_name": "concept pair dismissal",
+                "verbose_name_plural": "concept pair dismissals",
                 "constraints": [
                     models.UniqueConstraint(
                         fields=("concept_a_id", "concept_b_id"),
-                        name="unique_concept_pair_decision",
+                        name="unique_concept_pair_dismissal",
                     )
                 ],
             },

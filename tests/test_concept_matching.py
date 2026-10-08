@@ -38,7 +38,7 @@ from arches_lingo.models import (
     ConceptMatchCandidate,
     ConceptMatchRun,
     ConceptMerge,
-    ConceptPairDecision,
+    ConceptPairDismissal,
     ConceptSet,
     ConceptSetMember,
 )
@@ -51,9 +51,8 @@ from arches_lingo.utils.concept_lifecycle import (
     STRATEGY_REPARENT_TO_SURVIVOR,
 )
 from arches_lingo.utils.concept_merge.service import merge_concepts
-from arches_lingo.utils.concept_pair_decisions import (
+from arches_lingo.utils.concept_pair_status import (
     filter_by_review_status,
-    mark_pairs_settled,
     with_review_status,
 )
 from arches_lingo.utils.concept_merge.tiles import get_list_item_tile_value
@@ -188,12 +187,29 @@ class ConceptMatchingTestCase(SchemeWithConceptsTestCase):
         )
 
     def decide(self, candidates, status):
+        """Record a decision the way the app does: a dismissal row, a merge
+        record, or an exactMatch tile pointing at the other concept's URI."""
         for candidate in candidates:
-            ConceptPairDecision.objects.update_or_create(
-                concept_a_id=candidate.concept_a_id,
-                concept_b_id=candidate.concept_b_id,
-                defaults={"status": status},
-            )
+            if status == ConceptMatchCandidate.STATUS_DISMISSED:
+                ConceptPairDismissal.objects.get_or_create(
+                    concept_a_id=candidate.concept_a_id,
+                    concept_b_id=candidate.concept_b_id,
+                )
+            elif status == ConceptMatchCandidate.STATUS_MERGED:
+                ConceptMerge.objects.create(
+                    survivor_concept_id=candidate.concept_a_id,
+                    absorbed_concept_id=candidate.concept_b_id,
+                )
+            else:
+                matched_uri = f"https://example.org/linked/{candidate.concept_b_id}"
+                self.add_uri(
+                    ResourceInstance.objects.get(pk=candidate.concept_b_id),
+                    matched_uri,
+                )
+                self.add_exact_match(
+                    ResourceInstance.objects.get(pk=candidate.concept_a_id),
+                    matched_uri,
+                )
 
     def count_with_status(self, run, status):
         return filter_by_review_status(run.candidates.all(), status).count()
@@ -751,11 +767,10 @@ class CandidateReviewTests(ConceptMatchingTestCase):
             admin,
         )
 
-        decision = ConceptPairDecision.objects.get()
-        self.assertEqual(decision.status, ConceptMatchCandidate.STATUS_DISMISSED)
-        self.assertEqual(decision.decided_by, admin)
-        self.assertIsNotNone(decision.decided_at)
-        self.assertTrue(str(decision).endswith(ConceptMatchCandidate.STATUS_DISMISSED))
+        dismissal = ConceptPairDismissal.objects.get()
+        self.assertEqual(dismissal.dismissed_by, admin)
+        self.assertIsNotNone(dismissal.dismissed_at)
+        self.assertTrue(str(dismissal).endswith("(dismissed)"))
 
     def test_linked_and_merged_are_not_settable_by_hand(self):
         run = self.make_run_with_one_candidate()
@@ -820,7 +835,7 @@ class BulkLinkTests(ConceptMatchingTestCase):
         self.add_uri(self.second_concept, "https://example.org/concepts/2")
         run = self.make_run_for(self.first_concept, self.second_concept)
 
-        result = link_candidates_with_exact_match(run, [run.candidates.get().pk], None)
+        result = link_candidates_with_exact_match(run, [run.candidates.get().pk])
 
         self.assertEqual(result["linked"], 1)
         self.assertEqual(result["linked_one_way"], 0)
@@ -845,7 +860,7 @@ class BulkLinkTests(ConceptMatchingTestCase):
             resource_instance_lifecycle_state_id=PUBLISHED_STATE_ID
         )
 
-        result = link_candidates_with_exact_match(run, [run.candidates.get().pk], None)
+        result = link_candidates_with_exact_match(run, [run.candidates.get().pk])
 
         self.assertEqual(result["linked"], 1)
         self.assertEqual(result["linked_one_way"], 1)
@@ -864,10 +879,10 @@ class BulkLinkTests(ConceptMatchingTestCase):
         ResourceInstance.objects.filter(
             pk__in=[self.first_concept.pk, self.second_concept.pk]
         ).update(resource_instance_lifecycle_state_id=PUBLISHED_STATE_ID)
-        neither_editable = link_candidates_with_exact_match(run, [candidate.pk], None)
+        neither_editable = link_candidates_with_exact_match(run, [candidate.pk])
 
         run.candidates.update(concept_b_id=uuid.uuid4())
-        concept_deleted = link_candidates_with_exact_match(run, [candidate.pk], None)
+        concept_deleted = link_candidates_with_exact_match(run, [candidate.pk])
 
         self.assertEqual(neither_editable["skipped"], {"not_editable": 1})
         self.assertEqual(concept_deleted["skipped"], {"missing_concept": 1})
@@ -879,7 +894,7 @@ class BulkLinkTests(ConceptMatchingTestCase):
         self.add_uri(self.first_concept, "https://example.org/concepts/1")
         run = self.make_run_for(self.first_concept, self.second_concept)
 
-        result = link_candidates_with_exact_match(run, [run.candidates.get().pk], None)
+        result = link_candidates_with_exact_match(run, [run.candidates.get().pk])
 
         self.assertEqual(result["linked"], 0)
         self.assertEqual(result["skipped"], {"missing_uri": 1})
@@ -893,8 +908,8 @@ class BulkLinkTests(ConceptMatchingTestCase):
         run = self.make_run_for(self.first_concept, self.second_concept)
         candidate_id = run.candidates.get().pk
 
-        link_candidates_with_exact_match(run, [candidate_id], None)
-        second_attempt = link_candidates_with_exact_match(run, [candidate_id], None)
+        link_candidates_with_exact_match(run, [candidate_id])
+        second_attempt = link_candidates_with_exact_match(run, [candidate_id])
 
         self.assertEqual(second_attempt["linked"], 0)
         self.assertEqual(second_attempt["skipped"], {"already_decided": 1})
@@ -908,7 +923,7 @@ class BulkLinkTests(ConceptMatchingTestCase):
         run = self.make_run_for(self.first_concept, self.second_concept)
         self.decide(run.candidates.all(), ConceptMatchCandidate.STATUS_DISMISSED)
 
-        result = link_candidates_with_exact_match(run, [run.candidates.get().pk], None)
+        result = link_candidates_with_exact_match(run, [run.candidates.get().pk])
 
         self.assertEqual(result["skipped"], {"already_decided": 1})
         self.assertFalse(
@@ -919,7 +934,7 @@ class BulkLinkTests(ConceptMatchingTestCase):
         self.add_uri(self.first_concept, "https://example.org/concepts/1")
         self.add_uri(self.second_concept, "https://example.org/concepts/2")
         run = self.make_run_for(self.first_concept, self.second_concept)
-        link_candidates_with_exact_match(run, [run.candidates.get().pk], None)
+        link_candidates_with_exact_match(run, [run.candidates.get().pk])
 
         later_run = run_detection(MatchScope(), log=lambda message: None)
 
@@ -929,7 +944,7 @@ class BulkLinkTests(ConceptMatchingTestCase):
         run = self.make_run_for(self.first_concept, self.second_concept)
 
         with self.assertRaises(ConceptMatchRequestError):
-            link_candidates_with_exact_match(run, list(range(MAX_LINK_BATCH + 1)), None)
+            link_candidates_with_exact_match(run, list(range(MAX_LINK_BATCH + 1)))
 
 
 class PairSettlementTests(ConceptMatchingTestCase):
@@ -970,7 +985,7 @@ class PairSettlementTests(ConceptMatchingTestCase):
         other_run = run_detection(MatchScope(), log=lambda message: None)
 
         link_candidates_with_exact_match(
-            reviewed_run, [reviewed_run.candidates.get().pk], None
+            reviewed_run, [reviewed_run.candidates.get().pk]
         )
 
         self.assertEqual(
@@ -978,25 +993,39 @@ class PairSettlementTests(ConceptMatchingTestCase):
             ConceptMatchCandidate.STATUS_LINKED,
         )
 
-    def test_a_decision_only_ever_moves_up_from_dismissed_to_linked_to_merged(self):
+    def test_a_merge_outranks_a_link_which_outranks_a_dismissal(self):
         self.add_label(self.first_concept, "trumpets")
         self.add_label(self.second_concept, "trumpets")
         run = run_detection(MatchScope(), log=lambda message: None)
-        set_candidate_status(
-            run,
-            [run.candidates.get().pk],
-            ConceptMatchCandidate.STATUS_DISMISSED,
-            None,
-        )
-        pair = [(self.first_concept.pk, self.second_concept.pk)]
+        candidate = run.candidates.get()
 
-        for settled_status, expected_status in (
-            (ConceptMatchCandidate.STATUS_LINKED, ConceptMatchCandidate.STATUS_LINKED),
-            (ConceptMatchCandidate.STATUS_MERGED, ConceptMatchCandidate.STATUS_MERGED),
-            (ConceptMatchCandidate.STATUS_LINKED, ConceptMatchCandidate.STATUS_MERGED),
+        for status in (
+            ConceptMatchCandidate.STATUS_DISMISSED,
+            ConceptMatchCandidate.STATUS_LINKED,
+            ConceptMatchCandidate.STATUS_MERGED,
         ):
-            mark_pairs_settled(pair, settled_status)
-            self.assertEqual(self.status_of(run.candidates.get()), expected_status)
+            self.decide([candidate], status)
+            self.assertEqual(self.status_of(candidate), status)
+
+    def test_removing_the_exact_match_tile_reopens_the_pair(self):
+        self.add_uri(self.first_concept, "https://example.org/concepts/1")
+        self.add_uri(self.second_concept, "https://example.org/concepts/2")
+        self.add_label(self.first_concept, "trumpets")
+        self.add_label(self.second_concept, "trumpets")
+        run = run_detection(MatchScope(), log=lambda message: None)
+        link_candidates_with_exact_match(run, [run.candidates.get().pk])
+        self.assertEqual(
+            self.status_of(run.candidates.get()), ConceptMatchCandidate.STATUS_LINKED
+        )
+
+        TileModel.objects.filter(nodegroup_id=MATCH_STATUS_NODEGROUP).delete()
+        later_run = run_detection(MatchScope(), log=lambda message: None)
+
+        for found_in in (run, later_run):
+            self.assertEqual(
+                self.status_of(found_in.candidates.get()),
+                ConceptMatchCandidate.STATUS_PENDING,
+            )
 
     def test_a_dismissal_holds_in_every_run_including_later_ones(self):
         self.add_label(self.first_concept, "trumpets")
@@ -1065,14 +1094,13 @@ class PairSettlementTests(ConceptMatchingTestCase):
 
         absorbed_pair = self.expected_pair(absorbed, third_concept)
         survivor_pair = self.expected_pair(survivor, third_concept)
-        self.assertEqual(
-            ConceptPairDecision.objects.get(
+        self.assertTrue(
+            ConceptPairDismissal.objects.filter(
                 concept_a_id=absorbed_pair[0], concept_b_id=absorbed_pair[1]
-            ).status,
-            ConceptMatchCandidate.STATUS_DISMISSED,
+            ).exists()
         )
         self.assertFalse(
-            ConceptPairDecision.objects.filter(
+            ConceptPairDismissal.objects.filter(
                 concept_a_id=survivor_pair[0], concept_b_id=survivor_pair[1]
             ).exists()
         )
@@ -1647,7 +1675,6 @@ class RunDisposalTests(ConceptMatchingTestCase):
         run = self.make_run_with_candidates(
             [
                 ConceptMatchCandidate.STATUS_PENDING,
-                ConceptMatchCandidate.STATUS_LINKED,
                 ConceptMatchCandidate.STATUS_MERGED,
             ]
         )
@@ -1660,10 +1687,6 @@ class RunDisposalTests(ConceptMatchingTestCase):
 
         self.assertEqual(result["updated"], 1)
         self.assertEqual(
-            self.count_with_status(run, ConceptMatchCandidate.STATUS_LINKED),
-            1,
-        )
-        self.assertEqual(
             self.count_with_status(run, ConceptMatchCandidate.STATUS_MERGED),
             1,
         )
@@ -1673,7 +1696,7 @@ class RunDisposalTests(ConceptMatchingTestCase):
             [
                 ConceptMatchCandidate.STATUS_DISMISSED,
                 ConceptMatchCandidate.STATUS_DISMISSED,
-                ConceptMatchCandidate.STATUS_LINKED,
+                ConceptMatchCandidate.STATUS_MERGED,
             ]
         )
 
@@ -1686,11 +1709,11 @@ class RunDisposalTests(ConceptMatchingTestCase):
         self.assertEqual(result["updated"], 2)
         self.assertEqual(result["skipped"], {})
         self.assertEqual(
-            self.count_with_status(run, ConceptMatchCandidate.STATUS_LINKED),
+            self.count_with_status(run, ConceptMatchCandidate.STATUS_MERGED),
             1,
         )
 
-    def test_a_pair_decided_since_it_was_dismissed_stays_dismissed(self):
+    def test_a_pair_merged_since_it_was_dismissed_is_not_restored(self):
         concept_a_id, concept_b_id = self.expected_pair(
             self.first_concept, self.second_concept
         )
@@ -1708,19 +1731,19 @@ class RunDisposalTests(ConceptMatchingTestCase):
             absorbed_concept_id=self.second_concept.pk,
         )
 
-        for restore in (
-            lambda: set_status_for_all(run, ConceptMatchCandidate.STATUS_PENDING, None),
-            lambda: set_candidate_status(
-                run, [candidate.pk], ConceptMatchCandidate.STATUS_PENDING, None
-            ),
-        ):
-            with self.subTest(restore=restore):
-                result = restore()
-                self.assertEqual(result["updated"], 0)
-                self.assertEqual(result["skipped"], {"already_decided": 1})
-                self.assertEqual(
-                    self.status_of(candidate), ConceptMatchCandidate.STATUS_DISMISSED
-                )
+        restore_all = set_status_for_all(
+            run, ConceptMatchCandidate.STATUS_PENDING, None
+        )
+        restore_one = set_candidate_status(
+            run, [candidate.pk], ConceptMatchCandidate.STATUS_PENDING, None
+        )
+
+        self.assertEqual(restore_all["updated"], 0)
+        self.assertEqual(restore_all["skipped"], {})
+        self.assertEqual(restore_one["updated"], 0)
+        self.assertEqual(restore_one["skipped"], {"already_decided": 1})
+        self.assertEqual(self.status_of(candidate), ConceptMatchCandidate.STATUS_MERGED)
+        self.assertTrue(ConceptPairDismissal.objects.exists())
 
     def test_another_runs_pairs_are_untouched(self):
         run = self.make_run_with_candidates([ConceptMatchCandidate.STATUS_PENDING])

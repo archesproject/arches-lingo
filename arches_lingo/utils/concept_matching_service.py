@@ -29,11 +29,10 @@ from arches_lingo.utils.concept_matching import (
     get_scheme_ids_for_concepts,
     validate_detection_options,
 )
-from arches_lingo.utils.concept_pair_decisions import (
+from arches_lingo.utils.concept_pair_status import (
     count_by_review_status,
     dismiss,
     filter_by_review_status,
-    mark_pairs_settled,
     restore_dismissed,
     with_review_status,
 )
@@ -403,9 +402,7 @@ def _link_outcome(concept_a, concept_b, user_is_lingo_admin):
     return write_to_first, write_to_second, None
 
 
-def link_candidates_with_exact_match(
-    run, candidate_ids, user, user_is_lingo_admin=False
-):
+def link_candidates_with_exact_match(run, candidate_ids, user_is_lingo_admin=False):
     """Record a skos:exactMatch for each candidate, skipping unwritable pairs."""
     if len(candidate_ids) > MAX_LINK_BATCH:
         raise ConceptMatchRequestError(
@@ -432,7 +429,6 @@ def link_candidates_with_exact_match(
 
     edit_transaction_id = uuid.uuid4()
     linked_candidate_ids = []
-    linked_pairs = []
     one_way_count = 0
     skipped_by_reason = defaultdict(int)
     already_decided_count = selected_candidates.count() - len(candidates)
@@ -464,10 +460,6 @@ def link_candidates_with_exact_match(
             if not (write_to_first and write_to_second):
                 one_way_count += 1
             linked_candidate_ids.append(candidate.pk)
-            linked_pairs.append((candidate.concept_a_id, candidate.concept_b_id))
-
-        if linked_pairs:
-            mark_pairs_settled(linked_pairs, ConceptMatchCandidate.STATUS_LINKED, user)
 
     if linked_candidate_ids:
         index_concepts_in_transaction(edit_transaction_id)

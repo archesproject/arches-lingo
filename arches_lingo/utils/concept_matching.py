@@ -464,15 +464,20 @@ def _apply_trigram_session_tuning(similarity_threshold):
         cursor.execute(f"SET LOCAL work_mem = '{TRIGRAM_WORK_MEM}'")
 
 
+def exact_match_relation_json():
+    """The match-status relation value an exactMatch tile carries, as jsonb text."""
+    exact_match_uri = ListItem.objects.get(
+        pk=EXACT_MATCH_LIST_ITEM_ID
+    ).build_tile_value()["uri"]
+    return json.dumps([{"uri": exact_match_uri}])
+
+
 def decided_pairs_sql():
     """Return (sql, params) for pairs settled by a merge or an exactMatch.
 
     Other match relations (close, broad, ...) leave a pair open, since the two
     may still be duplicates.
     """
-    exact_match_uri = ListItem.objects.get(
-        pk=EXACT_MATCH_LIST_ITEM_ID
-    ).build_tile_value()["uri"]
     sql = f"""
         SELECT LEAST(survivor_concept_id::text, absorbed_concept_id::text)
                    AS concept_a,
@@ -494,7 +499,7 @@ def decided_pairs_sql():
                @> %(exact_match_relation)s::jsonb
            AND match_tile.resourceinstanceid <> uri_tile.resourceinstanceid
     """
-    return sql, {"exact_match_relation": json.dumps([{"uri": exact_match_uri}])}
+    return sql, {"exact_match_relation": exact_match_relation_json()}
 
 
 def _store_pairs(run, signal, sql, params, scope, similarity_threshold):
