@@ -45,6 +45,7 @@ const {
     activeRunId,
     candidateStatus,
     pageNumber,
+    searchText,
     conceptIdToSearchFrom,
     showView,
 } = useMatchReviewRoute();
@@ -65,6 +66,7 @@ const {
     activeRunId,
     candidateStatus,
     pageNumber,
+    searchText,
 });
 
 const {
@@ -82,8 +84,16 @@ const mergingCandidate = ref<ConceptMatchCandidate | null>(null);
 
 const selectedCandidateIds = computed(() => Array.from(selectedIds.value));
 
-const dismissedCount = computed(
-    () => activeRun.value?.counts_by_status[CANDIDATE_STATUS_DISMISSED] ?? 0,
+// With a filter, the bulk actions cover only the filtered pairs, and the list's
+// own total is exactly that count for the queue on screen.
+const pendingCountInView = computed(() =>
+    searchText.value ? totalResults.value : activeRun.value?.pending_count ?? 0,
+);
+
+const dismissedCountInView = computed(() =>
+    searchText.value
+        ? totalResults.value
+        : activeRun.value?.counts_by_status[CANDIDATE_STATUS_DISMISSED] ?? 0,
 );
 
 const showNoRunsPrompt = computed(() => !activeRun.value && !runs.value.length);
@@ -99,9 +109,9 @@ watch(
 );
 
 // A page change keeps the selection, so pairs can be gathered across pages.
-watch(candidateStatus, clearSelection);
+watch([candidateStatus, searchText], clearSelection);
 
-watch([candidateStatus, pageNumber], () => loadCandidates());
+watch([candidateStatus, pageNumber, searchText], () => loadCandidates());
 
 watch(lastPageWhenPastEnd, function (lastPageNumber) {
     if (lastPageNumber !== null) {
@@ -165,7 +175,7 @@ async function showNewestRunIfNoneChosen(): Promise<boolean> {
     if (activeRunId !== null || runId === null) {
         return false;
     }
-    await showView({ runId, pageNumber: 1 }, { replace: true });
+    await showView({ runId, pageNumber: 1, search: "" }, { replace: true });
     return true;
 }
 
@@ -178,7 +188,12 @@ async function startRun(
         return false;
     }
     await showView(
-        { runId: run.id, pageNumber: 1, status: CANDIDATE_STATUS_PENDING },
+        {
+            runId: run.id,
+            pageNumber: 1,
+            status: CANDIDATE_STATUS_PENDING,
+            search: "",
+        },
         { replace },
     );
     return true;
@@ -189,7 +204,7 @@ function onRunRequested(request: ConceptMatchRunRequest): void {
 }
 
 function onRunSelected({ runId }: { runId: number | null }): void {
-    showView({ runId, pageNumber: 1 });
+    showView({ runId, pageNumber: 1, search: "" });
 }
 
 function onPageChanged({
@@ -208,6 +223,15 @@ function onStatusChanged({
     showView({ pageNumber: 1, status });
 }
 
+// Replaces rather than pushes, so typing a filter doesn't fill the history.
+function onSearchChanged({
+    searchText: typedSearchText,
+}: {
+    searchText: string;
+}): void {
+    showView({ pageNumber: 1, search: typedSearchText }, { replace: true });
+}
+
 async function onReviewChanged(): Promise<void> {
     clearSelection();
     await Promise.all([loadRuns(), loadCandidates()]);
@@ -221,6 +245,7 @@ async function onRunDeleted(): Promise<void> {
             runId: newestRunId(),
             pageNumber: 1,
             status: CANDIDATE_STATUS_PENDING,
+            search: "",
         },
         { replace: true },
     );
@@ -312,8 +337,9 @@ function closeMerge(): void {
                         :run-id="activeRun.id"
                         :candidate-status="candidateStatus"
                         :selected-candidate-ids="selectedCandidateIds"
-                        :pending-count="activeRun.pending_count"
-                        :dismissed-count="dismissedCount"
+                        :pending-count="pendingCountInView"
+                        :dismissed-count="dismissedCountInView"
+                        :search-text="searchText"
                         :candidate-count="activeRun.candidate_count"
                         :is-run-unfinished="activeRunIsUnfinished"
                         :can-delete-run="activeRun.can_delete"
@@ -385,10 +411,12 @@ function closeMerge(): void {
                     :page-number="pageNumber"
                     :status="candidateStatus"
                     :counts-by-status="activeRun.counts_by_status"
+                    :search-text="searchText"
                     @selection-changed="changeSelection"
                     @select-all-on-page="selectAllOnPage($event.isSelected)"
                     @page-changed="onPageChanged"
                     @status-changed="onStatusChanged"
+                    @search-changed="onSearchChanged"
                     @merge-requested="onMergeRequested"
                 />
             </div>

@@ -266,6 +266,13 @@ function requestRun(): void {
     gap: 0.5rem;
 }
 
+/* PrimeVue keeps chips on one clipped line, which hides every scheme after the
+   first; wrapping shows them all. */
+.run-form .field .scheme-select :deep(.p-multiselect-label) {
+    flex-wrap: wrap;
+    white-space: normal;
+}
+
 .run-form .field .scheme-select,
 .run-form .field .name-input,
 .run-form .field .threshold-slider {

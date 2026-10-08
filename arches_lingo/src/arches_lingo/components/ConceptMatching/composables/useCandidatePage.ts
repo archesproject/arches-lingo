@@ -14,10 +14,12 @@ export function useCandidatePage({
     activeRunId,
     candidateStatus,
     pageNumber,
+    searchText,
 }: {
     activeRunId: number | null;
     candidateStatus: Ref<ConceptMatchCandidateStatus>;
     pageNumber: Ref<number>;
+    searchText: Ref<string>;
 }): {
     candidates: Ref<ConceptMatchCandidate[]>;
     totalResults: Ref<number>;
@@ -68,6 +70,7 @@ export function useCandidatePage({
                 candidateStatus.value,
                 requestedPageNumber,
                 CANDIDATES_PER_PAGE,
+                searchText.value,
             );
             if (requestNumber !== latestRequest) return;
 

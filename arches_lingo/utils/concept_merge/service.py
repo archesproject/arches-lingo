@@ -14,7 +14,7 @@ from arches_lingo.utils.concept_merge.tiles import (
     append_digital_objects_to_survivor,
     copy_tiles_to_survivor,
     demote_pref_label_tiles,
-    write_exact_match_tiles,
+    write_match_tiles,
 )
 from arches_lingo.utils.concept_merge.validation import (
     concept_is_writable,
@@ -70,7 +70,7 @@ def merge_concepts(survivor, absorbed, selections, user, user_is_lingo_admin=Fal
         )
 
         if selections.get("create_exact_match_tiles", True):
-            write_exact_match_tiles(
+            write_match_tiles(
                 survivor,
                 absorbed,
                 edit_transaction_id,

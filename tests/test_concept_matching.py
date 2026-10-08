@@ -61,7 +61,7 @@ from arches_lingo.utils.concept_matching_service import (
     STALE_RUN_SECONDS,
     ConceptMatchRequestError,
     delete_run,
-    link_candidates_with_exact_match,
+    link_candidates,
     reap_stale_runs,
     serialize_candidate_page,
     serialize_run,
@@ -528,7 +528,7 @@ class DecidedPairTests(ConceptMatchingTestCase):
 
         self.assertEqual(self.detect(), {})
 
-    def test_a_match_other_than_exact_leaves_the_pair_open(self):
+    def test_any_match_relation_settles_the_pair(self):
         self.add_label(self.first_concept, "trumpets")
         self.add_label(self.second_concept, "trumpets")
         self.add_uri(self.second_concept, "https://example.org/concepts/2")
@@ -543,7 +543,7 @@ class DecidedPairTests(ConceptMatchingTestCase):
             },
         )
 
-        self.assertEqual(len(self.detect()), 1)
+        self.assertEqual(self.detect(), {})
 
     def test_a_retired_concept_is_not_suggested(self):
         self.add_label(self.first_concept, "trumpets")
@@ -736,6 +736,37 @@ class CandidateReviewTests(ConceptMatchingTestCase):
         )
         self.assertEqual(serialized["pending_count"], 0)
 
+    def label_three_concepts_one_also_brass(self):
+        self.third_concept = self.concepts[3]
+        for concept in (self.first_concept, self.second_concept, self.third_concept):
+            self.add_label(concept, "trumpets")
+        self.add_label(self.first_concept, "Brass instruments", language="fr")
+        return run_detection(MatchScope(), log=lambda message: None)
+
+    def test_the_queue_can_be_filtered_by_either_concepts_labels(self):
+        run = self.label_three_concepts_one_also_brass()
+
+        for search, expected_count in (("BRASS", 2), ("trumpet", 3), ("%", 0)):
+            with self.subTest(search=search):
+                page = serialize_candidate_page(run, search=search)
+                self.assertEqual(page["total_results"], expected_count)
+
+    def test_dismissing_and_restoring_everything_respects_the_filter(self):
+        run = self.label_three_concepts_one_also_brass()
+
+        dismissed = set_status_for_all(
+            run, ConceptMatchCandidate.STATUS_DISMISSED, None, search="brass"
+        )
+        self.assertEqual(dismissed["updated"], 2)
+        self.assertEqual(
+            self.count_with_status(run, ConceptMatchCandidate.STATUS_PENDING), 1
+        )
+
+        restored = set_status_for_all(
+            run, ConceptMatchCandidate.STATUS_PENDING, None, search="brass"
+        )
+        self.assertEqual(restored["updated"], 2)
+
     def test_candidates_can_be_filtered_by_status(self):
         run = self.make_run_with_one_candidate()
         candidate_id = run.candidates.get().pk
@@ -835,7 +866,7 @@ class BulkLinkTests(ConceptMatchingTestCase):
         self.add_uri(self.second_concept, "https://example.org/concepts/2")
         run = self.make_run_for(self.first_concept, self.second_concept)
 
-        result = link_candidates_with_exact_match(run, [run.candidates.get().pk])
+        result = link_candidates(run, [run.candidates.get().pk])
 
         self.assertEqual(result["linked"], 1)
         self.assertEqual(result["linked_one_way"], 0)
@@ -851,6 +882,22 @@ class BulkLinkTests(ConceptMatchingTestCase):
             self.status_of(run.candidates.get()), ConceptMatchCandidate.STATUS_LINKED
         )
 
+    def test_a_pair_can_be_linked_with_another_symmetric_relation(self):
+        self.add_uri(self.first_concept, "https://example.org/concepts/1")
+        self.add_uri(self.second_concept, "https://example.org/concepts/2")
+        run = self.make_run_for(self.first_concept, self.second_concept)
+
+        link_candidates(run, [run.candidates.get().pk], match_type="closeMatch")
+
+        relations = {
+            tile.data[MATCH_STATUS_RELATION_NODE][0]["uri"]
+            for tile in TileModel.objects.filter(nodegroup_id=MATCH_STATUS_NODEGROUP)
+        }
+        self.assertEqual(relations, {"http://www.w3.org/2004/02/skos/core#closeMatch"})
+        self.assertEqual(
+            self.status_of(run.candidates.get()), ConceptMatchCandidate.STATUS_LINKED
+        )
+
     def test_a_published_concept_is_linked_one_way(self):
         self.add_uri(self.first_concept, "https://example.org/concepts/1")
         _, outsider = self.make_concept_in_other_scheme()
@@ -860,7 +907,7 @@ class BulkLinkTests(ConceptMatchingTestCase):
             resource_instance_lifecycle_state_id=PUBLISHED_STATE_ID
         )
 
-        result = link_candidates_with_exact_match(run, [run.candidates.get().pk])
+        result = link_candidates(run, [run.candidates.get().pk])
 
         self.assertEqual(result["linked"], 1)
         self.assertEqual(result["linked_one_way"], 1)
@@ -879,10 +926,10 @@ class BulkLinkTests(ConceptMatchingTestCase):
         ResourceInstance.objects.filter(
             pk__in=[self.first_concept.pk, self.second_concept.pk]
         ).update(resource_instance_lifecycle_state_id=PUBLISHED_STATE_ID)
-        neither_editable = link_candidates_with_exact_match(run, [candidate.pk])
+        neither_editable = link_candidates(run, [candidate.pk])
 
         run.candidates.update(concept_b_id=uuid.uuid4())
-        concept_deleted = link_candidates_with_exact_match(run, [candidate.pk])
+        concept_deleted = link_candidates(run, [candidate.pk])
 
         self.assertEqual(neither_editable["skipped"], {"not_editable": 1})
         self.assertEqual(concept_deleted["skipped"], {"missing_concept": 1})
@@ -894,7 +941,7 @@ class BulkLinkTests(ConceptMatchingTestCase):
         self.add_uri(self.first_concept, "https://example.org/concepts/1")
         run = self.make_run_for(self.first_concept, self.second_concept)
 
-        result = link_candidates_with_exact_match(run, [run.candidates.get().pk])
+        result = link_candidates(run, [run.candidates.get().pk])
 
         self.assertEqual(result["linked"], 0)
         self.assertEqual(result["skipped"], {"missing_uri": 1})
@@ -908,8 +955,8 @@ class BulkLinkTests(ConceptMatchingTestCase):
         run = self.make_run_for(self.first_concept, self.second_concept)
         candidate_id = run.candidates.get().pk
 
-        link_candidates_with_exact_match(run, [candidate_id])
-        second_attempt = link_candidates_with_exact_match(run, [candidate_id])
+        link_candidates(run, [candidate_id])
+        second_attempt = link_candidates(run, [candidate_id])
 
         self.assertEqual(second_attempt["linked"], 0)
         self.assertEqual(second_attempt["skipped"], {"already_decided": 1})
@@ -923,7 +970,7 @@ class BulkLinkTests(ConceptMatchingTestCase):
         run = self.make_run_for(self.first_concept, self.second_concept)
         self.decide(run.candidates.all(), ConceptMatchCandidate.STATUS_DISMISSED)
 
-        result = link_candidates_with_exact_match(run, [run.candidates.get().pk])
+        result = link_candidates(run, [run.candidates.get().pk])
 
         self.assertEqual(result["skipped"], {"already_decided": 1})
         self.assertFalse(
@@ -934,7 +981,7 @@ class BulkLinkTests(ConceptMatchingTestCase):
         self.add_uri(self.first_concept, "https://example.org/concepts/1")
         self.add_uri(self.second_concept, "https://example.org/concepts/2")
         run = self.make_run_for(self.first_concept, self.second_concept)
-        link_candidates_with_exact_match(run, [run.candidates.get().pk])
+        link_candidates(run, [run.candidates.get().pk])
 
         later_run = run_detection(MatchScope(), log=lambda message: None)
 
@@ -944,7 +991,7 @@ class BulkLinkTests(ConceptMatchingTestCase):
         run = self.make_run_for(self.first_concept, self.second_concept)
 
         with self.assertRaises(ConceptMatchRequestError):
-            link_candidates_with_exact_match(run, list(range(MAX_LINK_BATCH + 1)))
+            link_candidates(run, list(range(MAX_LINK_BATCH + 1)))
 
 
 class PairSettlementTests(ConceptMatchingTestCase):
@@ -984,9 +1031,7 @@ class PairSettlementTests(ConceptMatchingTestCase):
         reviewed_run = run_detection(MatchScope(), log=lambda message: None)
         other_run = run_detection(MatchScope(), log=lambda message: None)
 
-        link_candidates_with_exact_match(
-            reviewed_run, [reviewed_run.candidates.get().pk]
-        )
+        link_candidates(reviewed_run, [reviewed_run.candidates.get().pk])
 
         self.assertEqual(
             self.status_of(other_run.candidates.get()),
@@ -1013,7 +1058,7 @@ class PairSettlementTests(ConceptMatchingTestCase):
         self.add_label(self.first_concept, "trumpets")
         self.add_label(self.second_concept, "trumpets")
         run = run_detection(MatchScope(), log=lambda message: None)
-        link_candidates_with_exact_match(run, [run.candidates.get().pk])
+        link_candidates(run, [run.candidates.get().pk])
         self.assertEqual(
             self.status_of(run.candidates.get()), ConceptMatchCandidate.STATUS_LINKED
         )
@@ -1349,6 +1394,16 @@ class ConceptMatchApiTests(ConceptMatchingTestCase):
         self.assertEqual(
             TileModel.objects.filter(nodegroup_id=MATCH_STATUS_NODEGROUP).count(), 2
         )
+
+    def test_a_directional_match_type_is_refused(self):
+        created = self.create_run_with_one_pair()
+
+        response = self.post_json(
+            reverse("api-concept-match-link", args=[created["id"]]),
+            {"candidate_ids": [1], "match_type": "broadMatch"},
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
 
     def test_another_editor_can_review_a_run(self):
         created = self.create_run_with_one_pair()

@@ -15,6 +15,11 @@ from arches.app.models.models import ResourceInstance
 
 import arches.app.utils.task_management as task_management
 
+from arches_lingo.const import (
+    CLOSE_MATCH_LIST_ITEM_ID,
+    EXACT_MATCH_LIST_ITEM_ID,
+    RELATED_MATCH_LIST_ITEM_ID,
+)
 from arches_lingo.models import ConceptMatchCandidate, ConceptMatchRun
 from arches_lingo.tasks import detect_concept_matches_task
 from arches_lingo.utils.concept_builder import ConceptBuilder
@@ -32,13 +37,14 @@ from arches_lingo.utils.concept_matching import (
 from arches_lingo.utils.concept_pair_status import (
     count_by_review_status,
     dismiss,
+    filter_by_label_search,
     filter_by_review_status,
     restore_dismissed,
     with_review_status,
 )
 from arches_lingo.utils.concept_merge.tiles import (
     get_concept_uri,
-    write_exact_match_tiles,
+    write_match_tiles,
 )
 from arches_lingo.utils.concept_merge.validation import concept_is_writable
 
@@ -46,6 +52,17 @@ DEFAULT_ITEMS_PER_PAGE = 50
 MAX_ITEMS_PER_PAGE = 200
 
 MAX_LINK_BATCH = 200
+
+MAX_SEARCH_LENGTH = 255
+
+# Only symmetric relations: a pair has no direction, so broadMatch / narrowMatch
+# would be applied the wrong way round for half of a bulk selection.
+MATCH_TYPE_EXACT = "exactMatch"
+LINKABLE_MATCH_TYPES = {
+    MATCH_TYPE_EXACT: EXACT_MATCH_LIST_ITEM_ID,
+    "closeMatch": CLOSE_MATCH_LIST_ITEM_ID,
+    "relatedMatch": RELATED_MATCH_LIST_ITEM_ID,
+}
 
 # Well clear of HEARTBEAT_INTERVAL_SECONDS.
 STALE_RUN_SECONDS = getattr(settings, "LINGO_MATCH_STALE_SECONDS", 300)
@@ -290,8 +307,17 @@ def _parse_positive_integer(value, default, parameter_name):
     return parsed_value
 
 
+def parse_search(value):
+    return str(value or "").strip()[:MAX_SEARCH_LENGTH]
+
+
 def serialize_candidate_page(
-    run, status=None, page_number=1, items_per_page=None, user_is_lingo_admin=False
+    run,
+    status=None,
+    page_number=1,
+    items_per_page=None,
+    search="",
+    user_is_lingo_admin=False,
 ):
     items_per_page = min(
         _parse_positive_integer(items_per_page, DEFAULT_ITEMS_PER_PAGE, "items"),
@@ -305,7 +331,7 @@ def serialize_candidate_page(
             _("Unknown candidate status: %(status)s") % {"status": status},
         )
 
-    candidates = run.candidates.all()
+    candidates = filter_by_label_search(run.candidates.all(), search)
     if status:
         candidates = filter_by_review_status(candidates, status)
 
@@ -381,11 +407,12 @@ def set_candidate_status(run, candidate_ids, status, user):
     return _status_change_result(status, restored_count, left_dismissed_count)
 
 
-def set_status_for_all(run, status, user):
+def set_status_for_all(run, status, user, search=""):
+    """Dismiss or restore every pair in the run, or every pair matching `search`."""
     _require_reviewable_status(status)
     if status == ConceptMatchCandidate.STATUS_DISMISSED:
-        return _status_change_result(status, dismiss(run, user))
-    restored_count, left_dismissed_count = restore_dismissed(run)
+        return _status_change_result(status, dismiss(run, user, search=search))
+    restored_count, left_dismissed_count = restore_dismissed(run, search=search)
     return _status_change_result(status, restored_count, left_dismissed_count)
 
 
@@ -402,8 +429,21 @@ def _link_outcome(concept_a, concept_b, user_is_lingo_admin):
     return write_to_first, write_to_second, None
 
 
-def link_candidates_with_exact_match(run, candidate_ids, user_is_lingo_admin=False):
-    """Record a skos:exactMatch for each candidate, skipping unwritable pairs."""
+def parse_match_type(body):
+    match_type = body.get("match_type") or MATCH_TYPE_EXACT
+    if match_type not in LINKABLE_MATCH_TYPES:
+        raise ConceptMatchRequestError(
+            _("Invalid request."),
+            _("match_type must be one of: %(types)s")
+            % {"types": ", ".join(LINKABLE_MATCH_TYPES)},
+        )
+    return match_type
+
+
+def link_candidates(
+    run, candidate_ids, match_type=MATCH_TYPE_EXACT, user_is_lingo_admin=False
+):
+    """Record a match relation for each candidate, skipping unwritable pairs."""
     if len(candidate_ids) > MAX_LINK_BATCH:
         raise ConceptMatchRequestError(
             _("Too many pairs."),
@@ -450,10 +490,11 @@ def link_candidates_with_exact_match(run, candidate_ids, user_is_lingo_admin=Fal
                 skipped_by_reason[skip_reason] += 1
                 continue
 
-            write_exact_match_tiles(
+            write_match_tiles(
                 concept_a,
                 concept_b,
                 edit_transaction_id,
+                relation_list_item_id=LINKABLE_MATCH_TYPES[match_type],
                 write_to_first=write_to_first,
                 write_to_second=write_to_second,
             )

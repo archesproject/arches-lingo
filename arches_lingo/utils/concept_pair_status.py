@@ -1,8 +1,9 @@
 """A candidate's review status, read from the vocabulary rather than stored.
 
-Merged comes from ``ConceptMerge``, linked from an exactMatch tile on either
-concept, dismissed from ``ConceptPairDismissal``; anything else is pending. So
-deleting an exactMatch tile in the concept editor reopens the pair everywhere.
+Merged comes from ``ConceptMerge``, linked from a match tile (any relation) on
+either concept pointing at the other, dismissed from ``ConceptPairDismissal``;
+anything else is pending. So deleting the match tile in the concept editor
+reopens the pair everywhere.
 """
 
 from django.db import connection
@@ -11,9 +12,10 @@ from django.db.models.expressions import RawSQL
 from django.utils import timezone
 
 from arches_lingo.const import (
+    CONCEPT_NAME_CONTENT_NODE,
+    CONCEPT_NAME_NODEGROUP,
     MATCH_STATUS_COMPARATE_NODE,
     MATCH_STATUS_NODEGROUP,
-    MATCH_STATUS_RELATION_NODE,
     URI_CONTENT_NODE,
     URI_NODEGROUP,
 )
@@ -22,7 +24,6 @@ from arches_lingo.models import (
     ConceptMerge,
     ConceptPairDismissal,
 )
-from arches_lingo.utils.concept_matching import exact_match_relation_json
 
 STATUS_PENDING = ConceptMatchCandidate.STATUS_PENDING
 STATUS_DISMISSED = ConceptMatchCandidate.STATUS_DISMISSED
@@ -64,7 +65,6 @@ def _review_status_sql():
                     AND match_tile.resourceinstanceid IN (
                             {CANDIDATE_TABLE}.concept_a_id, {CANDIDATE_TABLE}.concept_b_id
                         )
-                    AND match_tile.tiledata -> '{MATCH_STATUS_RELATION_NODE}' @> %s::jsonb
                ) THEN %s
           WHEN EXISTS (
                  SELECT 1
@@ -77,12 +77,40 @@ def _review_status_sql():
     """
     params = [
         STATUS_MERGED,
-        exact_match_relation_json(),
         STATUS_LINKED,
         STATUS_DISMISSED,
         STATUS_PENDING,
     ]
     return sql, params
+
+
+def _label_search_sql(search):
+    """Return (sql, params) true when either concept has a label containing
+    `search`, ignoring case."""
+    escaped_search = (
+        search.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+    )
+    sql = f"""
+        EXISTS (
+            SELECT 1
+              FROM tiles label_tile
+             WHERE label_tile.nodegroupid = '{CONCEPT_NAME_NODEGROUP}'
+               AND label_tile.resourceinstanceid IN (
+                       {CANDIDATE_TABLE}.concept_a_id, {CANDIDATE_TABLE}.concept_b_id
+                   )
+               AND label_tile.tiledata ->> '{CONCEPT_NAME_CONTENT_NODE}' ILIKE %s
+        )
+    """
+    return sql, [f"%{escaped_search}%"]
+
+
+def filter_by_label_search(candidates, search):
+    if not search:
+        return candidates
+    search_sql, search_params = _label_search_sql(search)
+    return candidates.annotate(matches_search=RawSQL(search_sql, search_params)).filter(
+        matches_search=True
+    )
 
 
 def with_review_status(candidates):
@@ -119,19 +147,23 @@ def count_by_review_status(run_ids):
     return counts_by_run_id
 
 
-def _selected_candidates_sql(run, candidate_ids):
+def _selected_candidates_sql(run, candidate_ids, search):
     sql = f"{CANDIDATE_TABLE}.run_id = %s"
     params = [run.pk]
     if candidate_ids is not None:
         sql += f" AND {CANDIDATE_TABLE}.id = ANY(%s)"
         params.append(list(candidate_ids))
+    if search:
+        search_sql, search_params = _label_search_sql(search)
+        sql += f" AND {search_sql}"
+        params.extend(search_params)
     return sql, params
 
 
-def dismiss(run, user=None, candidate_ids=None):
-    """Dismiss the run's pending pairs, or those among `candidate_ids`;
-    return how many."""
-    selected_sql, selected_params = _selected_candidates_sql(run, candidate_ids)
+def dismiss(run, user=None, candidate_ids=None, search=None):
+    """Dismiss the run's pending pairs, narrowed to `candidate_ids` or to pairs
+    matching `search`; return how many."""
+    selected_sql, selected_params = _selected_candidates_sql(run, candidate_ids, search)
     status_sql, status_params = _review_status_sql()
     dismissed_by = user if user is not None and user.is_authenticated else None
     with connection.cursor() as cursor:
@@ -157,13 +189,13 @@ def dismiss(run, user=None, candidate_ids=None):
         return cursor.rowcount
 
 
-def restore_dismissed(run, candidate_ids=None):
+def restore_dismissed(run, candidate_ids=None, search=None):
     """Return dismissed pairs to the queue, returning (restored, not restorable).
 
     A pair linked or merged since it was dismissed shows as linked or merged, so
     it is not restored; its dismissal stays underneath in case the link goes.
     """
-    selected_sql, selected_params = _selected_candidates_sql(run, candidate_ids)
+    selected_sql, selected_params = _selected_candidates_sql(run, candidate_ids, search)
     status_sql, status_params = _review_status_sql()
     with connection.cursor() as cursor:
         cursor.execute(

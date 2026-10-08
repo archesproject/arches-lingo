@@ -14,6 +14,7 @@ interface MatchReviewView {
     runId?: number | null;
     pageNumber?: number;
     status?: ConceptMatchCandidateStatus;
+    search?: string;
 }
 
 // The run is part of the path, which the app keys its RouterView on, so it is
@@ -22,6 +23,7 @@ export function useMatchReviewRoute(): {
     activeRunId: number | null;
     candidateStatus: ComputedRef<ConceptMatchCandidateStatus>;
     pageNumber: ComputedRef<number>;
+    searchText: ComputedRef<string>;
     conceptIdToSearchFrom: () => string | null;
     showView: (
         view: MatchReviewView,
@@ -36,6 +38,9 @@ export function useMatchReviewRoute(): {
         candidateStatusFromRoute(route.query.status),
     );
     const pageNumber = computed(pageNumberInRoute);
+    const searchText = computed(() =>
+        typeof route.query.search === "string" ? route.query.search : "",
+    );
 
     function runIdInRoute(): number | null {
         const rawRunId = Array.isArray(route.params.runId)
@@ -61,6 +66,7 @@ export function useMatchReviewRoute(): {
         runId = activeRunId,
         pageNumber: viewPageNumber = pageNumber.value,
         status = candidateStatus.value,
+        search = searchText.value,
     }: MatchReviewView): RouteLocationRaw {
         const query: Record<string, string> = {};
         if (viewPageNumber > 1) {
@@ -68,6 +74,9 @@ export function useMatchReviewRoute(): {
         }
         if (status !== CANDIDATE_STATUS_PENDING) {
             query.status = status;
+        }
+        if (search) {
+            query.search = search;
         }
         return {
             name: routeNames.conceptMatches,
@@ -88,6 +97,7 @@ export function useMatchReviewRoute(): {
         activeRunId,
         candidateStatus,
         pageNumber,
+        searchText,
         conceptIdToSearchFrom,
         showView,
     };

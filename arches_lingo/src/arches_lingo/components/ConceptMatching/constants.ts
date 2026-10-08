@@ -35,6 +35,12 @@ export const ALL_CANDIDATE_STATUSES: readonly ConceptMatchCandidateStatus[] = [
 
 export const CANNOT_RECEIVE_SCHEME_LOCKED = "scheme_locked" as const;
 
+export const MATCH_TYPE_EXACT = "exactMatch" as const;
+export const MATCH_TYPE_CLOSE = "closeMatch" as const;
+export const MATCH_TYPE_RELATED = "relatedMatch" as const;
+
 export const CANDIDATES_PER_PAGE = 50;
+
+export const SEARCH_DEBOUNCE_MS = 300;
 
 export const SCHEME_FILTER_MINIMUM_OPTIONS = 8;

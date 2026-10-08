@@ -14,10 +14,12 @@ from arches_lingo.utils.concept_matching_service import (
     ConceptMatchRequestError,
     delete_run,
     get_run,
-    link_candidates_with_exact_match,
+    link_candidates,
     list_runs,
     parse_candidate_ids,
     parse_detection_request,
+    parse_match_type,
+    parse_search,
     reap_stale_runs,
     start_detection,
     serialize_candidate_page,
@@ -101,6 +103,7 @@ class ConceptMatchCandidateListView(LingoEditorMixin, View):
                 status=request.GET.get("status") or None,
                 page_number=request.GET.get("page"),
                 items_per_page=request.GET.get("items"),
+                search=parse_search(request.GET.get("search")),
                 user_is_lingo_admin=is_lingo_admin(request.user),
             )
         )
@@ -112,7 +115,12 @@ class ConceptMatchCandidateListView(LingoEditorMixin, View):
 
         if body.get("all"):
             return JSONResponse(
-                set_status_for_all(run, body.get("status"), request.user)
+                set_status_for_all(
+                    run,
+                    body.get("status"),
+                    request.user,
+                    search=parse_search(body.get("search")),
+                )
             )
 
         return JSONResponse(
@@ -126,10 +134,12 @@ class ConceptMatchLinkView(LingoEditorMixin, View):
     @_responds_with_request_errors
     def post(self, request, pk):
         run = get_run(pk)
+        body = _parse_json_body(request)
         return JSONResponse(
-            link_candidates_with_exact_match(
+            link_candidates(
                 run,
-                parse_candidate_ids(_parse_json_body(request)),
+                parse_candidate_ids(body),
+                match_type=parse_match_type(body),
                 user_is_lingo_admin=is_lingo_admin(request.user),
             )
         )

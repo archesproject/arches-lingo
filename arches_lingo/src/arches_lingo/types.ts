@@ -743,6 +743,8 @@ export interface ConceptMatchRunRequest {
     similarity_threshold?: number;
 }
 
+export type ConceptMatchLinkType = "exactMatch" | "closeMatch" | "relatedMatch";
+
 export interface ConceptMatchLinkResult {
     linked: number;
     linked_one_way: number;

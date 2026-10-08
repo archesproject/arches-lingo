@@ -12,6 +12,7 @@ import type {
     ConceptMatchCandidatePage,
     ConceptMatchCandidateStatus,
     ConceptMatchLinkResult,
+    ConceptMatchLinkType,
     ConceptMatchRun,
     ConceptMatchRunRequest,
     ConceptMatchStatusChange,
@@ -1423,12 +1424,16 @@ export const fetchConceptMatchCandidates = async (
     status: ConceptMatchCandidateStatus,
     pageNumber: number,
     itemsPerPage: number,
+    search: string,
 ): Promise<ConceptMatchCandidatePage> => {
     const parameters = new URLSearchParams({
         status,
         page: String(pageNumber),
         items: String(itemsPerPage),
     });
+    if (search) {
+        parameters.set("search", search);
+    }
     const url = `${generateArchesURL(
         "arches_lingo:api-concept-match-candidates",
         {
@@ -1465,6 +1470,7 @@ export const updateConceptMatchCandidates = async (
 export const updateAllConceptMatchCandidates = async (
     runId: number,
     status: ConceptMatchCandidateStatus,
+    search: string,
 ): Promise<ConceptMatchStatusChange> => {
     const url = generateArchesURL("arches_lingo:api-concept-match-candidates", {
         pk: runId,
@@ -1475,7 +1481,7 @@ export const updateAllConceptMatchCandidates = async (
             "X-CSRFTOKEN": getToken(),
             "Content-Type": "application/json",
         },
-        body: JSON.stringify({ all: true, status }),
+        body: JSON.stringify({ all: true, status, search }),
     });
     const parsed = await response.json();
     if (!response.ok) throw new Error(parsed.message || response.statusText);
@@ -1485,6 +1491,7 @@ export const updateAllConceptMatchCandidates = async (
 export const linkConceptMatchCandidates = async (
     runId: number,
     candidateIds: number[],
+    matchType: ConceptMatchLinkType,
 ): Promise<ConceptMatchLinkResult> => {
     const url = generateArchesURL("arches_lingo:api-concept-match-link", {
         pk: runId,
@@ -1495,7 +1502,10 @@ export const linkConceptMatchCandidates = async (
             "X-CSRFTOKEN": getToken(),
             "Content-Type": "application/json",
         },
-        body: JSON.stringify({ candidate_ids: candidateIds }),
+        body: JSON.stringify({
+            candidate_ids: candidateIds,
+            match_type: matchType,
+        }),
     });
     const parsed = await response.json();
     if (!response.ok) throw new Error(parsed.message || response.statusText);

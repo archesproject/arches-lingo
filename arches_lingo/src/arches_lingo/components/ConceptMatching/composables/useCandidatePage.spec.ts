@@ -45,6 +45,7 @@ function setUpPage(pageNumber = 1): ReturnType<typeof useCandidatePage> {
         activeRunId: 7,
         candidateStatus: ref<ConceptMatchCandidateStatus>("pending"),
         pageNumber: ref(pageNumber),
+        searchText: ref(""),
     });
 }
 

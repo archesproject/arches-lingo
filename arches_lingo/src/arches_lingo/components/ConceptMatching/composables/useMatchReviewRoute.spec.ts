@@ -66,14 +66,19 @@ describe("useMatchReviewRoute", () => {
     it("follows the page and queue as the address changes", async () => {
         const { router, route } = await mountAt("/concept-matches/12");
 
-        await route.showView({ pageNumber: 2, status: "dismissed" });
+        await route.showView({
+            pageNumber: 2,
+            status: "dismissed",
+            search: "brass",
+        });
         await flushPromises();
 
         expect(router.currentRoute.value.fullPath).toBe(
-            "/concept-matches/12?page=2&status=dismissed",
+            "/concept-matches/12?page=2&status=dismissed&search=brass",
         );
         expect(route.pageNumber.value).toBe(2);
         expect(route.candidateStatus.value).toBe("dismissed");
+        expect(route.searchText.value).toBe("brass");
     });
 
     it("hands over the concept a search was started from", async () => {

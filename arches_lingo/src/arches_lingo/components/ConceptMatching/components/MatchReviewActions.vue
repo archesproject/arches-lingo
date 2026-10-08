@@ -8,6 +8,7 @@ import { useToast } from "primevue/usetoast";
 
 import Button from "primevue/button";
 import ConfirmDialog from "primevue/confirmdialog";
+import Select from "primevue/select";
 
 import {
     deleteConceptMatchRun,
@@ -20,6 +21,9 @@ import { useErrorToast } from "@/arches_lingo/components/ConceptMatching/composa
 import {
     CANDIDATE_STATUS_DISMISSED,
     CANDIDATE_STATUS_PENDING,
+    MATCH_TYPE_CLOSE,
+    MATCH_TYPE_EXACT,
+    MATCH_TYPE_RELATED,
 } from "@/arches_lingo/components/ConceptMatching/constants.ts";
 import { describeSkippedReasons } from "@/arches_lingo/components/ConceptMatching/utils.ts";
 import {
@@ -33,6 +37,7 @@ import {
 import type {
     ConceptMatchCandidateStatus,
     ConceptMatchLinkResult,
+    ConceptMatchLinkType,
     ConceptMatchStatusChange,
 } from "@/arches_lingo/types.ts";
 
@@ -56,6 +61,7 @@ const {
     selectedCandidateIds,
     pendingCount,
     dismissedCount,
+    searchText,
     candidateCount,
     isRunUnfinished,
     canDeleteRun,
@@ -65,6 +71,7 @@ const {
     selectedCandidateIds: number[];
     pendingCount: number;
     dismissedCount: number;
+    searchText: string;
     candidateCount: number;
     isRunUnfinished: boolean;
     canDeleteRun: boolean;
@@ -82,8 +89,15 @@ const { selectedLanguage } = storeToRefs(useLanguageStore());
 const { reportError } = useErrorToast();
 
 const actionInFlight = ref<ReviewAction | null>(null);
+const matchType = ref<ConceptMatchLinkType>(MATCH_TYPE_EXACT);
 
 const isActionInFlight = computed(() => actionInFlight.value !== null);
+
+const matchTypeOptions = computed(() => [
+    { value: MATCH_TYPE_EXACT, label: $gettext("Exact match") },
+    { value: MATCH_TYPE_CLOSE, label: $gettext("Close match") },
+    { value: MATCH_TYPE_RELATED, label: $gettext("Related match") },
+]);
 
 const isReviewingPending = computed(
     () => candidateStatus === CANDIDATE_STATUS_PENDING,
@@ -194,7 +208,11 @@ async function linkSelection(): Promise<void> {
     await runExclusively(ACTION_LINK, async function () {
         try {
             reportLinkResult(
-                await linkConceptMatchCandidates(runId, selectedCandidateIds),
+                await linkConceptMatchCandidates(
+                    runId,
+                    selectedCandidateIds,
+                    matchType.value,
+                ),
             );
             emit("review-changed");
         } catch (error) {
@@ -225,15 +243,32 @@ async function setStatusForSelection(
     });
 }
 
+function describeChangeAllHeader(isDismissing: boolean): string {
+    if (isDismissing && searchText) {
+        return $gettext(
+            'Dismiss the pairs with a label containing "%{search}"?',
+            { search: searchText },
+        );
+    }
+    if (isDismissing) {
+        return $gettext("Dismiss everything left?");
+    }
+    if (searchText) {
+        return $gettext(
+            'Restore the dismissed pairs with a label containing "%{search}"?',
+            { search: searchText },
+        );
+    }
+    return $gettext("Restore everything dismissed?");
+}
+
 function confirmStatusChangeForAll(status: ConceptMatchCandidateStatus): void {
     const isDismissing = status === CANDIDATE_STATUS_DISMISSED;
     const affectedCount = isDismissing ? pendingCount : dismissedCount;
 
     confirm.require({
         group: CHANGE_ALL_CONFIRM_GROUP,
-        header: isDismissing
-            ? $gettext("Dismiss everything left?")
-            : $gettext("Restore everything dismissed?"),
+        header: describeChangeAllHeader(isDismissing),
         message: isDismissing
             ? $ngettext(
                   "The %{count} pair still awaiting a decision will be dismissed, in this run and in every other search that finds it. It can be restored from the dismissed list.",
@@ -257,7 +292,11 @@ async function changeStatusForAll(
     await runExclusively(ACTION_CHANGE_ALL, async function () {
         try {
             reportStatusChange(
-                await updateAllConceptMatchCandidates(runId, status),
+                await updateAllConceptMatchCandidates(
+                    runId,
+                    status,
+                    searchText,
+                ),
             );
             emit("review-changed");
         } catch (error) {
@@ -319,6 +358,14 @@ async function deleteRun(wasCancelled: boolean): Promise<void> {
 <template>
     <div class="review-actions">
         <template v-if="isReviewingPending">
+            <Select
+                v-model="matchType"
+                class="match-type-select"
+                option-label="label"
+                option-value="value"
+                :options="matchTypeOptions"
+                :aria-label="$gettext('Link as')"
+            />
             <Button
                 class="action-button"
                 icon="pi pi-link"
@@ -416,7 +463,13 @@ async function deleteRun(wasCancelled: boolean): Promise<void> {
 .review-actions {
     display: flex;
     flex-wrap: wrap;
+    align-items: center;
     gap: 0.5rem;
+}
+
+.review-actions .match-type-select {
+    font-size: var(--p-lingo-font-size-small);
+    border-radius: 0.125rem;
 }
 
 .review-actions .action-button {

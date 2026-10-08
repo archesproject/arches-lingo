@@ -135,31 +135,36 @@ function formatList(items: string[]): string {
 
 <style scoped>
 .run-summary {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.25rem 1.5rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+    gap: 0.75rem 1.5rem;
     margin: 0;
-    padding: 0.625rem 0.75rem;
+    padding: 0.75rem;
     border: 0.0625rem solid var(--p-content-border-color);
     border-radius: 0.125rem;
     background: var(--p-content-background);
-    font-size: var(--p-lingo-font-size-xxsmall);
 }
 
 .run-summary .run-summary-entry {
     display: flex;
-    gap: 0.375rem;
+    flex-direction: column;
+    gap: 0.125rem;
     min-width: 0;
 }
 
 .run-summary .run-summary-entry dt {
+    font-size: var(--p-lingo-font-size-xxsmall);
+    font-weight: var(--p-lingo-font-weight-bold);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
     color: var(--p-text-muted-color);
-    white-space: nowrap;
 }
 
 .run-summary .run-summary-entry dd {
     margin: 0;
+    font-size: var(--p-lingo-font-size-small);
     color: var(--p-header-item-label);
+    overflow-wrap: anywhere;
 }
 
 .run-summary .run-summary-name dd {

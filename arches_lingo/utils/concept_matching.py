@@ -4,7 +4,6 @@ Raw SQL over `tiles` because the trigram index is defined on the raw
 `tiledata ->> node_id` expression.
 """
 
-import json
 import logging
 import threading
 from contextlib import contextmanager
@@ -13,17 +12,13 @@ from django.conf import settings
 from django.db import connection, connections, transaction
 from django.utils import timezone
 
-from arches_controlled_lists.models import ListItem
-
 from arches_lingo.const import (
     CONCEPT_NAME_CONTENT_NODE,
     CONCEPT_NAME_LANGUAGE_NODE,
     CONCEPT_NAME_NODEGROUP,
     CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID,
-    EXACT_MATCH_LIST_ITEM_ID,
     MATCH_STATUS_COMPARATE_NODE,
     MATCH_STATUS_NODEGROUP,
-    MATCH_STATUS_RELATION_NODE,
     TOP_CONCEPT_OF_NODE_AND_NODEGROUP,
     URI_CONTENT_NODE,
     URI_NODEGROUP,
@@ -464,20 +459,8 @@ def _apply_trigram_session_tuning(similarity_threshold):
         cursor.execute(f"SET LOCAL work_mem = '{TRIGRAM_WORK_MEM}'")
 
 
-def exact_match_relation_json():
-    """The match-status relation value an exactMatch tile carries, as jsonb text."""
-    exact_match_uri = ListItem.objects.get(
-        pk=EXACT_MATCH_LIST_ITEM_ID
-    ).build_tile_value()["uri"]
-    return json.dumps([{"uri": exact_match_uri}])
-
-
 def decided_pairs_sql():
-    """Return (sql, params) for pairs settled by a merge or an exactMatch.
-
-    Other match relations (close, broad, ...) leave a pair open, since the two
-    may still be duplicates.
-    """
+    """SQL for pairs settled by a merge or by any match relation between them."""
     sql = f"""
         SELECT LEAST(survivor_concept_id::text, absorbed_concept_id::text)
                    AS concept_a,
@@ -495,11 +478,9 @@ def decided_pairs_sql():
            AND lower(btrim(uri_tile.tiledata ->> '{URI_CONTENT_NODE}'))
                = lower(btrim(match_tile.tiledata ->> '{MATCH_STATUS_COMPARATE_NODE}'))
          WHERE match_tile.nodegroupid = '{MATCH_STATUS_NODEGROUP}'
-           AND match_tile.tiledata -> '{MATCH_STATUS_RELATION_NODE}'
-               @> %(exact_match_relation)s::jsonb
            AND match_tile.resourceinstanceid <> uri_tile.resourceinstanceid
     """
-    return sql, {"exact_match_relation": exact_match_relation_json()}
+    return sql
 
 
 def _store_pairs(run, signal, sql, params, scope, similarity_threshold):
@@ -509,7 +490,7 @@ def _store_pairs(run, signal, sql, params, scope, similarity_threshold):
     declared cursor in parallel. A pair a stronger signal already stored keeps
     that signal.
     """
-    decided_sql, decided_params = decided_pairs_sql()
+    decided_sql = decided_pairs_sql()
     with transaction.atomic():
         if signal == SIGNAL_TRIGRAM:
             _apply_trigram_session_tuning(similarity_threshold)
@@ -538,7 +519,6 @@ def _store_pairs(run, signal, sql, params, scope, similarity_threshold):
                 ON CONFLICT (run_id, concept_a_id, concept_b_id) DO NOTHING
                 """,
                 {
-                    **decided_params,
                     "run_id": run.pk,
                     "signal": signal,
                 },
