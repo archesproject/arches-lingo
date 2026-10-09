@@ -2,8 +2,8 @@
 import { ref } from "vue";
 import { useGettext } from "vue3-gettext";
 
-import Button from "primevue/button";
-import Dialog from "primevue/dialog";
+import Button from "openvue/button";
+import Dialog from "openvue/dialog";
 
 import BasicSearch from "@/arches_lingo/components/basic-search/BasicSearch.vue";
 

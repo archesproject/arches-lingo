@@ -1,4 +1,4 @@
-import { definePreset, palette } from "@primeuix/themes";
+import { definePreset, palette } from "@openvue/themes";
 import { ArchesPreset, DEFAULT_THEME } from "@/arches/themes/default.ts";
 import type { archesPreset } from "@/arches_lingo/types.ts";
 
@@ -18,7 +18,8 @@ const lingoColors = Object.freeze({
     nearBlack: "#18181B",
 });
 
-const archesPrimitives = ArchesPreset.primitive as archesPreset;
+const archesPresetWithPrimitives = ArchesPreset as { primitive: archesPreset };
+const archesPrimitives = archesPresetWithPrimitives.primitive;
 
 export const LingoPreset = definePreset(ArchesPreset, {
     primitive: {
@@ -153,7 +154,6 @@ export const LingoPreset = definePreset(ArchesPreset, {
             },
             colorScheme: {
                 light: {
-                    // @ts-expect-error: Ignoring type mismatch for button primary background
                     primary: {
                         background: "{button-secondary-background}",
                         borderColor: "{button-primary-background}",
@@ -173,7 +173,6 @@ export const LingoPreset = definePreset(ArchesPreset, {
                     },
                 },
                 dark: {
-                    // @ts-expect-error: Ignoring type mismatch for button primary background
                     primary: {
                         background: "{primary-100}",
                         borderColor: "{button-primary-background}",
@@ -187,7 +186,6 @@ export const LingoPreset = definePreset(ArchesPreset, {
             },
         },
         inputtext: {
-            // @ts-expect-error: primevue does have border on inputtext
             border: {
                 radius: "0.25rem",
             },
@@ -201,7 +199,6 @@ export const LingoPreset = definePreset(ArchesPreset, {
         splitter: {
             colorScheme: {
                 dark: {
-                    // @ts-expect-error: Ignoring type mismatch for button primary background
                     background: "{surface-900}",
                 },
             },

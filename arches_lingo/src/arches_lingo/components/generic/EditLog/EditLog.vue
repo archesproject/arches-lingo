@@ -2,11 +2,11 @@
 import { computed, inject, onMounted, ref } from "vue";
 
 import { useGettext } from "vue3-gettext";
-import { useToast } from "primevue/usetoast";
+import { useToast } from "openvue/usetoast";
 
-import Button from "primevue/button";
-import Dialog from "primevue/dialog";
-import Skeleton from "primevue/skeleton";
+import Button from "openvue/button";
+import Dialog from "openvue/dialog";
+import Skeleton from "openvue/skeleton";
 
 import {
     fetchResourceEditLog,

@@ -2,10 +2,10 @@
 import { computed, inject, ref, watch } from "vue";
 import { useGettext } from "vue3-gettext";
 
-import Button from "primevue/button";
-import InputText from "primevue/inputtext";
-import Select from "primevue/select";
-import ToggleButton from "primevue/togglebutton";
+import Button from "openvue/button";
+import InputText from "openvue/inputtext";
+import Select from "openvue/select";
+import ToggleButton from "openvue/togglebutton";
 
 import { storeToRefs } from "pinia";
 
@@ -18,7 +18,7 @@ import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 import { getParentLabels } from "@/arches_lingo/utils.ts";
 
-import type { VirtualScrollerLazyEvent } from "primevue/virtualscroller";
+import type { VirtualScrollerLazyEvent } from "openvue/virtualscroller";
 
 import type {
     AdvancedSearchOptions,

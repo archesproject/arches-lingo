@@ -2,7 +2,7 @@ import { ref } from "vue";
 
 import { DANGER, SECONDARY } from "@/arches_lingo/constants.ts";
 
-import type { ConfirmationOptions } from "primevue/confirmationoptions";
+import type { ConfirmationOptions } from "openvue/confirmationoptions";
 
 // Module-level singleton: tracks whether the currently active editor form has
 // unsaved changes.  ComponentEditor writes to this; the router navigation guard
@@ -15,7 +15,7 @@ export function useEditorDirtyState() {
 }
 
 /**
- * Build the common PrimeVue ConfirmationOptions for the "unsaved changes"
+ * Build the common OpenVue ConfirmationOptions for the "unsaved changes"
  * dialog.  Callers can spread additional keys (e.g. `reject`, `onHide`) on
  * top of the returned object.
  */

@@ -2,19 +2,19 @@
 import { computed, ref, watch } from "vue";
 import { useGettext } from "vue3-gettext";
 
-import Button from "primevue/button";
-import Column from "primevue/column";
-import ConfirmDialog from "primevue/confirmdialog";
-import DataTable from "primevue/datatable";
-import IconField from "primevue/iconfield";
-import InputIcon from "primevue/inputicon";
-import InputText from "primevue/inputtext";
-import Skeleton from "primevue/skeleton";
-import Splitter from "primevue/splitter";
-import SplitterPanel from "primevue/splitterpanel";
-import Tag from "primevue/tag";
-import { useConfirm } from "primevue/useconfirm";
-import { useToast } from "primevue/usetoast";
+import Button from "openvue/button";
+import Column from "openvue/column";
+import ConfirmDialog from "openvue/confirmdialog";
+import DataTable from "openvue/datatable";
+import IconField from "openvue/iconfield";
+import InputIcon from "openvue/inputicon";
+import InputText from "openvue/inputtext";
+import Skeleton from "openvue/skeleton";
+import Splitter from "openvue/splitter";
+import SplitterPanel from "openvue/splitterpanel";
+import Tag from "openvue/tag";
+import { useConfirm } from "openvue/useconfirm";
+import { useToast } from "openvue/usetoast";
 
 import ComponentEditor from "@/arches_lingo/components/generic/ComponentManager/components/ComponentEditor.vue";
 import {

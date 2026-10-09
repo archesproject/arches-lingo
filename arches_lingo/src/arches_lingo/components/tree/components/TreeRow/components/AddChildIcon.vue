@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { useRouter } from "vue-router";
 
-import Button from "primevue/button";
+import Button from "openvue/button";
 
 import { NEW, NEW_CONCEPT } from "@/arches_lingo/constants.ts";
 import { navigateToSchemeOrConcept } from "@/arches_lingo/utils.ts";
 
-import type { TreeNode } from "primevue/treenode";
+import type { TreeNode } from "openvue/treenode";
 
 const { node, addChildLabel } = defineProps<{
     node: TreeNode;

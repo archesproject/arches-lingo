@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useGettext } from "vue3-gettext";
-import Skeleton from "primevue/skeleton";
+import Skeleton from "openvue/skeleton";
 
 import type { DashboardStats } from "@/arches_lingo/types/dashboard.ts";
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import Drawer from "primevue/drawer";
+import Drawer from "openvue/drawer";
 
 const shouldShowPageHelpPanel = defineModel("shouldShowPageHelpPanel", {
     type: Boolean,

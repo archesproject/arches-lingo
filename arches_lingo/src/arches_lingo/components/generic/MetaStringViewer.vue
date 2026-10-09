@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { computed, inject, onMounted, onUnmounted, ref } from "vue";
 
-import { useConfirm } from "primevue/useconfirm";
+import { useConfirm } from "openvue/useconfirm";
 import { useGettext } from "vue3-gettext";
-import { useToast } from "primevue/usetoast";
+import { useToast } from "openvue/usetoast";
 
-import DataTable from "primevue/datatable";
-import Column from "primevue/column";
-import Button from "primevue/button";
-import ConfirmDialog from "primevue/confirmdialog";
+import DataTable from "openvue/datatable";
+import Column from "openvue/column";
+import Button from "openvue/button";
+import ConfirmDialog from "openvue/confirmdialog";
 
 import { deleteLingoTile } from "@/arches_lingo/api.ts";
 import { DEFAULT_ERROR_TOAST_LIFE, ERROR } from "@/arches_lingo/constants.ts";

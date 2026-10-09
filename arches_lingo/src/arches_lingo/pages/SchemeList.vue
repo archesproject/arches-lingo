@@ -3,9 +3,9 @@ import { computed, onMounted, ref } from "vue";
 import { useGettext } from "vue3-gettext";
 import { storeToRefs } from "pinia";
 
-import Skeleton from "primevue/skeleton";
+import Skeleton from "openvue/skeleton";
 
-import { useToast } from "primevue/usetoast";
+import { useToast } from "openvue/usetoast";
 import {
     DEFAULT_ERROR_TOAST_LIFE,
     ERROR,

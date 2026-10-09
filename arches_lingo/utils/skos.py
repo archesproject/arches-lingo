@@ -175,9 +175,9 @@ class SKOSReader(SKOSReader):
 
                 for predicate, object in graph.predicate_objects(scheme):
                     predicate_str = (
-                        predicate.replace(ARCHES, "")
-                        .replace(SKOS, "")
-                        .replace(DCTERMS, "")
+                        predicate.replace(str(ARCHES), "")
+                        .replace(str(SKOS), "")
+                        .replace(str(DCTERMS), "")
                     )
 
                     if (
@@ -255,9 +255,9 @@ class SKOSReader(SKOSReader):
                             predicate_str = "scopeNote"
                         else:
                             predicate_str = (
-                                predicate.replace(ARCHES, "")
-                                .replace(SKOS, "")
-                                .replace(DCTERMS, "")
+                                predicate.replace(str(ARCHES), "")
+                                .replace(str(SKOS), "")
+                                .replace(str(DCTERMS), "")
                             )
 
                         if predicate == SKOS.topConceptOf and not new_concept.get(
@@ -352,7 +352,6 @@ class SKOSReader(SKOSReader):
                             SKOS.broadMatch,
                             SKOS.closeMatch,
                             SKOS.exactMatch,
-                            SKOS.inverseOf,
                             SKOS.mappingRelation,
                             SKOS.narrowMatch,
                             SKOS.relatedMatch,
@@ -589,7 +588,7 @@ class SKOSWriter:
 
     def reformat_predicate_based_on_namespace(self, predicate):
         uri = predicate.uri
-        if not (SKOS in uri or ARCHES in uri or DCTERMS in uri):
+        if not (str(SKOS) in uri or str(ARCHES) in uri or str(DCTERMS) in uri):
             predicate_label = [
                 label.value
                 for label in predicate.labels
@@ -598,7 +597,7 @@ class SKOSWriter:
             if predicate_label == "identifier":
                 predicate = DCTERMS.identifier
             else:
-                predicate = SKOS[predicate_label]
+                predicate = URIRef(uri)
         else:
             predicate = URIRef(uri)
         return predicate

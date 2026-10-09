@@ -3,10 +3,10 @@ import { ref } from "vue";
 import { storeToRefs } from "pinia";
 import { useGettext } from "vue3-gettext";
 
-import Button from "primevue/button";
-import Dialog from "primevue/dialog";
-import InputText from "primevue/inputtext";
-import Textarea from "primevue/textarea";
+import Button from "openvue/button";
+import Dialog from "openvue/dialog";
+import InputText from "openvue/inputtext";
+import Textarea from "openvue/textarea";
 
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 

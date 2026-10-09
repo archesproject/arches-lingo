@@ -10,12 +10,12 @@ import {
 } from "vue";
 
 import { useRoute } from "vue-router";
-import { useConfirm } from "primevue/useconfirm";
+import { useConfirm } from "openvue/useconfirm";
 import { useGettext } from "vue3-gettext";
-import { useToast } from "primevue/usetoast";
+import { useToast } from "openvue/usetoast";
 
-import Splitter from "primevue/splitter";
-import SplitterPanel from "primevue/splitterpanel";
+import Splitter from "openvue/splitter";
+import SplitterPanel from "openvue/splitterpanel";
 
 import ComponentEditor from "@/arches_lingo/components/generic/ComponentManager/components/ComponentEditor.vue";
 
@@ -124,7 +124,7 @@ window.addEventListener(
                 return;
             }
             if (isEditorDirty.value) {
-                // Stop propagation so PrimeVue's document-level keydown handler
+                // Stop propagation so OpenVue's document-level keydown handler
                 // doesn't immediately close the dialog we're about to open.
                 event.stopPropagation();
                 confirmDiscard(closeEditor);

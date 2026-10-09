@@ -3,11 +3,11 @@ import { computed, inject, ref, watch } from "vue";
 
 import { useGettext } from "vue3-gettext";
 import { useRouter } from "vue-router";
-import { useToast } from "primevue/usetoast";
+import { useToast } from "openvue/usetoast";
 import { storeToRefs } from "pinia";
 
-import Button from "primevue/button";
-import Tag from "primevue/tag";
+import Button from "openvue/button";
+import Tag from "openvue/tag";
 
 import GenericWidget from "@/arches_vue_components/generics/GenericWidget/GenericWidget.vue";
 

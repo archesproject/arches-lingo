@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, useTemplateRef } from "vue";
 import { useGettext } from "vue3-gettext";
-import { useToast } from "primevue/usetoast";
+import { useToast } from "openvue/usetoast";
 
-import Button from "primevue/button";
-import Panel from "primevue/panel";
-import Splitter from "primevue/splitter";
-import SplitterPanel from "primevue/splitterpanel";
+import Button from "openvue/button";
+import Panel from "openvue/panel";
+import Splitter from "openvue/splitter";
+import SplitterPanel from "openvue/splitterpanel";
 
 import SearchQueryBuilder from "@/arches_lingo/components/advanced-search/SearchQueryBuilder.vue";
 import SearchResults from "@/arches_lingo/components/advanced-search/SearchResults.vue";

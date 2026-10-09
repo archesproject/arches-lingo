@@ -2,12 +2,12 @@
 import { computed, onMounted, ref, watch } from "vue";
 import { useGettext } from "vue3-gettext";
 import { RouterLink } from "vue-router";
-import { useToast } from "primevue/usetoast";
+import { useToast } from "openvue/usetoast";
 import { storeToRefs } from "pinia";
 
-import Skeleton from "primevue/skeleton";
-import Message from "primevue/message";
-import Tag from "primevue/tag";
+import Skeleton from "openvue/skeleton";
+import Message from "openvue/message";
+import Tag from "openvue/tag";
 
 import { fetchConceptChildren } from "@/arches_lingo/api.ts";
 import { getConceptIcon, sortItemsByLabel } from "@/arches_lingo/utils.ts";

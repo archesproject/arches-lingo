@@ -11,10 +11,10 @@ import {
 import { useGettext } from "vue3-gettext";
 import { useRouter } from "vue-router";
 
-import AutoComplete from "primevue/autocomplete";
-import Button from "primevue/button";
-import ProgressBar from "primevue/progressbar";
-import { useToast } from "primevue/usetoast";
+import AutoComplete from "openvue/autocomplete";
+import Button from "openvue/button";
+import ProgressBar from "openvue/progressbar";
+import { useToast } from "openvue/usetoast";
 
 import SortAndFilterControls from "@/arches_lingo/components/basic-search/SortAndFilterControls.vue";
 import SearchResult from "@/arches_lingo/components/basic-search/SearchResult.vue";
@@ -23,8 +23,8 @@ import { fetchSearchResults } from "@/arches_lingo/api.ts";
 import { DEFAULT_ERROR_TOAST_LIFE, ERROR } from "@/arches_lingo/constants.ts";
 import { routeNames } from "@/arches_lingo/routes.ts";
 
-import type { AutoCompleteOptionSelectEvent } from "primevue/autocomplete";
-import type { VirtualScrollerLazyEvent } from "primevue/virtualscroller";
+import type { AutoCompleteOptionSelectEvent } from "openvue/autocomplete";
+import type { VirtualScrollerLazyEvent } from "openvue/virtualscroller";
 import type { SearchResultItem } from "@/arches_lingo/types.ts";
 
 interface Props {
@@ -94,7 +94,7 @@ const autoCompletePt = computed(() => ({
 }));
 
 function getInputElement() {
-    // @ts-expect-error - PrimeVue component instance typing is incomplete
+    // @ts-expect-error - OpenVue component instance typing is incomplete
     const input = autoCompleteRef.value?.$el?.querySelector("input");
     return input instanceof HTMLInputElement ? input : null;
 }
@@ -112,12 +112,12 @@ function focusInput() {
 
 function showOverlay() {
     updateLayoutMetrics();
-    // @ts-expect-error - PrimeVue component instance typing is incomplete
+    // @ts-expect-error - OpenVue component instance typing is incomplete
     autoCompleteRef.value?.show();
 }
 
 function hideOverlay() {
-    // @ts-expect-error - PrimeVue component instance typing is incomplete
+    // @ts-expect-error - OpenVue component instance typing is incomplete
     autoCompleteRef.value?.hide();
 }
 

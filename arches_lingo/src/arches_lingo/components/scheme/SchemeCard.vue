@@ -4,8 +4,8 @@ import { storeToRefs } from "pinia";
 import { NEW } from "@/arches_lingo/constants.ts";
 import { routeNames } from "@/arches_lingo/routes.ts";
 
-import Card from "primevue/card";
-import Button from "primevue/button";
+import Card from "openvue/card";
+import Button from "openvue/button";
 
 import ImportThesauri from "@/arches_lingo/components/scheme/ImportThesauri.vue";
 

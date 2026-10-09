@@ -1,6 +1,6 @@
 import type { Component, Ref } from "vue";
-import type { MenuItem } from "primevue/menuitem";
-import type { TreeNode } from "primevue/treenode";
+import type { MenuItem } from "openvue/menuitem";
+import type { TreeNode } from "openvue/treenode";
 import type { EDIT, VIEW } from "@/arches_lingo/constants.ts";
 
 import type { ReferenceSelectTreeNode } from "@/arches_controlled_lists/datatypes/reference-select/types.ts";

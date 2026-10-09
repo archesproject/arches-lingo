@@ -4,16 +4,16 @@ import { computed, ref, onMounted } from "vue";
 import { useGettext } from "vue3-gettext";
 import { storeToRefs } from "pinia";
 
-import Button from "primevue/button";
-import MultiSelect from "primevue/multiselect";
+import Button from "openvue/button";
+import MultiSelect from "openvue/multiselect";
 
 import { fetchConceptResources } from "@/arches_lingo/api.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 import { getParentLabels } from "@/arches_lingo/utils.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 
-import type { MultiSelectFilterEvent } from "primevue/multiselect";
-import type { VirtualScrollerLazyEvent } from "primevue/virtualscroller";
+import type { MultiSelectFilterEvent } from "openvue/multiselect";
+import type { VirtualScrollerLazyEvent } from "openvue/virtualscroller";
 import type { ResourceInstanceReference } from "@/arches_vue_components/datatypes/resource-instance-list/types";
 import type { SearchResultItem } from "@/arches_lingo/types.ts";
 

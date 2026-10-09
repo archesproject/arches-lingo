@@ -2,7 +2,7 @@
 import { ref } from "vue";
 import { useGettext } from "vue3-gettext";
 
-import Button from "primevue/button";
+import Button from "openvue/button";
 import PageHelpPanel from "@/arches_lingo/components/header/PageHeader/components/PageHelp/components/PageHelpPanel.vue";
 
 const { $gettext } = useGettext();

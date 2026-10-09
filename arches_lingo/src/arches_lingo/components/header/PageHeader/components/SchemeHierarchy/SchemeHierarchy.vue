@@ -3,12 +3,12 @@ import { onMounted, provide, ref } from "vue";
 import { storeToRefs } from "pinia";
 
 import { useGettext } from "vue3-gettext";
-import { useToast } from "primevue/usetoast";
+import { useToast } from "openvue/usetoast";
 
-import Button from "primevue/button";
-import Tab from "primevue/tab";
-import TabList from "primevue/tablist";
-import Tabs from "primevue/tabs";
+import Button from "openvue/button";
+import Tab from "openvue/tab";
+import TabList from "openvue/tablist";
+import Tabs from "openvue/tabs";
 
 import ConceptTree from "@/arches_lingo/components/tree/ConceptTree.vue";
 import ConceptSetBrowser from "@/arches_lingo/components/concept-set-browser/ConceptSetBrowser.vue";
