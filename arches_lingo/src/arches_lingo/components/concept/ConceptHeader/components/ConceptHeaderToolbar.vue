@@ -377,6 +377,14 @@ async function onMerged() {
     });
 }
 
+function findMatches(): void {
+    if (!props.concept?.resourceinstanceid) return;
+    router.push({
+        name: routeNames.conceptMatches,
+        query: { concept: props.concept.resourceinstanceid },
+    });
+}
+
 function onMergeCancelled() {
     showMergeDialog.value = false;
 }
@@ -486,6 +494,13 @@ function onMergeCancelled() {
                 :label="$gettext('Add Child')"
                 class="add-button"
                 @click="addChild"
+            />
+            <Button
+                v-if="isEditor && concept?.resourceinstanceid"
+                icon="pi pi-clone"
+                class="add-button"
+                :label="$gettext('Find Matches')"
+                @click="findMatches"
             />
             <Button
                 v-if="canMerge"

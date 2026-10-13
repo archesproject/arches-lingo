@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 
 import { useGettext } from "vue3-gettext";
 import { storeToRefs } from "pinia";
@@ -39,6 +39,7 @@ import {
     STRATEGY_REPARENT_TO_SURVIVOR,
 } from "@/arches_lingo/constants.ts";
 import {
+    MERGE_DIALOG_FRAME_PASS_THROUGH,
     MERGE_STEP_COMPARE,
     MERGE_STEP_CONFIRM,
     MERGE_STEP_SELECT,
@@ -63,30 +64,7 @@ const DIALOG_SIZE = {
 
 // The chrome Lingo's other dialogs wear; see ExportThesauri.
 const DIALOG_PASS_THROUGH = {
-    root: {
-        style: {
-            fontFamily: "var(--p-lingo-font-family)",
-            fontSize: "var(--p-lingo-font-size-small)",
-            border: "0.125rem solid var(--p-dialog-color)",
-            borderRadius: "0.25rem",
-        },
-    },
-    header: {
-        style: {
-            background: "var(--p-navigation-header-color)",
-            color: "var(--p-dialog-header-text-color)",
-            borderRadius: "0",
-            paddingBlock: "1.25rem",
-            paddingInline: "1.5rem",
-        },
-    },
-    title: {
-        style: {
-            fontSize: "var(--p-lingo-font-size-large)",
-            fontWeight: "var(--p-lingo-font-weight-normal)",
-            lineHeight: "1.2",
-        },
-    },
+    ...MERGE_DIALOG_FRAME_PASS_THROUGH,
     content: {
         style: {
             display: "flex",
@@ -95,7 +73,7 @@ const DIALOG_PASS_THROUGH = {
             minHeight: "0",
             overflow: "hidden",
             padding: "1.25rem",
-            paddingTop: "1rem",
+            paddingBlockStart: "1rem",
         },
     },
 };
@@ -106,11 +84,21 @@ const MERGE_STEP_ORDER = [
     MERGE_STEP_CONFIRM,
 ];
 
-const { survivorConcept, survivorLabel, schemeId, graphSlug } = defineProps<{
+const PRESELECTED_MERGE_STEP_ORDER = [MERGE_STEP_COMPARE, MERGE_STEP_CONFIRM];
+
+const {
+    survivorConcept,
+    survivorLabel,
+    schemeId,
+    graphSlug,
+    preselectedConceptId = undefined,
+} = defineProps<{
     survivorConcept: ResourceInstanceResult;
     survivorLabel: string | undefined;
     schemeId: string;
     graphSlug: string;
+    // Skips the picker, e.g. when match review already knows the pair.
+    preselectedConceptId?: string;
 }>();
 
 const emit = defineEmits<{
@@ -121,7 +109,9 @@ const emit = defineEmits<{
 const { $gettext } = useGettext();
 const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
 
-const currentStep = ref(MERGE_STEP_SELECT);
+const currentStep = ref(
+    preselectedConceptId ? MERGE_STEP_COMPARE : MERGE_STEP_SELECT,
+);
 const survivorSearchResult = ref<SearchResultItem>();
 const selectedConcept = ref<SearchResultItem>();
 const absorbedConcept = ref<ResourceInstanceResult>();
@@ -137,15 +127,26 @@ const selectionState = ref<MergeSelectionState>();
 const isMerging = ref(false);
 const mergeError = ref<string | null>(null);
 
+const mergeStepOrder = computed(function () {
+    if (preselectedConceptId) {
+        return PRESELECTED_MERGE_STEP_ORDER;
+    }
+    return MERGE_STEP_ORDER;
+});
+
+const isOnFirstStep = computed(function () {
+    return currentStep.value === mergeStepOrder.value[0];
+});
+
 const previousStep = computed(function () {
-    const stepIndex = MERGE_STEP_ORDER.indexOf(currentStep.value);
-    return MERGE_STEP_ORDER[Math.max(stepIndex - 1, 0)];
+    const stepIndex = mergeStepOrder.value.indexOf(currentStep.value);
+    return mergeStepOrder.value[Math.max(stepIndex - 1, 0)];
 });
 
 const nextStep = computed(function () {
-    const stepIndex = MERGE_STEP_ORDER.indexOf(currentStep.value);
-    return MERGE_STEP_ORDER[
-        Math.min(stepIndex + 1, MERGE_STEP_ORDER.length - 1)
+    const stepIndex = mergeStepOrder.value.indexOf(currentStep.value);
+    return mergeStepOrder.value[
+        Math.min(stepIndex + 1, mergeStepOrder.value.length - 1)
     ];
 });
 
@@ -192,6 +193,16 @@ const absorbedLabel = computed(function () {
     ).value;
 });
 
+watch(
+    () => preselectedConceptId,
+    function (conceptId) {
+        if (conceptId) {
+            loadPreselectedConcept(conceptId);
+        }
+    },
+    { immediate: true },
+);
+
 onMounted(loadSurvivorPath);
 
 // Without its lineage the header falls back to the survivor's own label.
@@ -204,6 +215,27 @@ async function loadSurvivorPath() {
         );
     } catch {
         survivorSearchResult.value = undefined;
+    }
+}
+
+async function loadPreselectedConcept(conceptId: string): Promise<void> {
+    isLoadingAbsorbedConcept.value = true;
+    try {
+        const ancestorPaths: SearchResultHierarchy[] =
+            await fetchConceptAncestorPaths(conceptId);
+        const searchResult = buildSearchResultFromAncestorPath(
+            ancestorPaths[0]?.searchResults ?? [],
+        );
+        if (!searchResult) {
+            throw new Error(
+                $gettext("The concept to merge could not be found."),
+            );
+        }
+        await onConceptSelected(searchResult);
+    } catch (error) {
+        fetchError.value =
+            error instanceof Error ? error.message : String(error);
+        isLoadingAbsorbedConcept.value = false;
     }
 }
 
@@ -307,7 +339,10 @@ async function onMergeConfirmed() {
             class="merge-stepper"
         >
             <StepList>
-                <Step :value="MERGE_STEP_SELECT">
+                <Step
+                    v-if="!preselectedConceptId"
+                    :value="MERGE_STEP_SELECT"
+                >
                     {{ $gettext("Choose concept") }}
                 </Step>
                 <Step
@@ -333,7 +368,10 @@ async function onMergeConfirmed() {
             />
 
             <StepPanels>
-                <StepPanel :value="MERGE_STEP_SELECT">
+                <StepPanel
+                    v-if="!preselectedConceptId"
+                    :value="MERGE_STEP_SELECT"
+                >
                     <div class="merge-step">
                         <div class="merge-step-body merge-step-body--fill">
                             <p class="merge-step-intro">
@@ -372,6 +410,13 @@ async function onMergeConfirmed() {
                                 v-if="isLoadingAbsorbedConcept"
                                 class="merge-spinner"
                             />
+                            <Message
+                                v-else-if="fetchError"
+                                :severity="ERROR"
+                                :closable="false"
+                            >
+                                <span>{{ fetchError }}</span>
+                            </Message>
                             <MergeComparison
                                 v-else-if="absorbedConcept && mergePreview"
                                 :survivor-aliased-data="
@@ -432,7 +477,7 @@ async function onMergeConfirmed() {
         <template #footer>
             <div class="footer">
                 <Button
-                    v-if="currentStep === MERGE_STEP_SELECT"
+                    v-if="isOnFirstStep"
                     icon="pi pi-times"
                     :label="$gettext('Cancel')"
                     :severity="DANGER"
