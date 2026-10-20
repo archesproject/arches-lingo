@@ -1,7 +1,8 @@
 import logging
 from celery import shared_task
+from django.conf import settings
 from django.contrib.auth.models import User
-from django.utils import timezone
+from django.utils import timezone, translation
 from django.utils.translation import gettext as _
 from arches.app.models import models
 from arches_lingo.etl_modules import migrate_to_lingo
@@ -12,7 +13,7 @@ from arches.app.tasks import notify_completion
 
 @shared_task
 def export_lingo_resources_task(
-    loadid, userid, resourceid, filename=None, format="xml"
+    loadid, userid, resourceid, filename=None, format="xml", language=None
 ):
     logger = logging.getLogger(__name__)
 
@@ -25,7 +26,10 @@ def export_lingo_resources_task(
         exporter.user = User.objects.get(id=userid)
         exporter.loadid = loadid
         exporter.load_event = models.LoadEvent.objects.get(loadid=loadid)
-        exporter.run_export_task(resourceid, filename, format)
+        # The worker has no request, so name and notify in the language the
+        # user had selected when they started the export.
+        with translation.override(language or settings.LANGUAGE_CODE):
+            exporter.run_export_task(resourceid, filename, format)
         # _finalize_export (success) and handle_error (internal failure)
         # both call notify_completion directly
     except Exception as exception:

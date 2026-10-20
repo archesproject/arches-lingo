@@ -14,23 +14,36 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.http import HttpRequest
 from django.test import TestCase, TransactionTestCase
 from django.urls import reverse
+from django.utils import translation
 from rdflib import Graph
 
+from arches.app.datatypes.datatypes import DataTypeFactory
 from arches.app.models.models import (
     DRelationType,
     ETLModule,
     LoadEvent,
     Relation,
     ResourceInstance,
+    TileModel,
     UserXNotification,
     Value,
 )
 from arches.app.utils.skos import SKOSReader
 from arches_querysets.models import ResourceTileTree
 
-from arches_lingo.const import LINGO_EDITOR_GROUP_NAME
+from arches_lingo.const import (
+    CONCEPT_NAME_CONTENT_NODE,
+    CONCEPT_NAME_LANGUAGE_NODE,
+    CONCEPT_NAME_NODEGROUP,
+    CONCEPT_NAME_TYPE_NODE,
+    CONCEPTS_GRAPH_ID,
+    LABEL_LIST_ID,
+    LINGO_EDITOR_GROUP_NAME,
+)
 from arches_lingo.etl_modules.migrate_to_lingo import LingoResourceImporter
 from arches_lingo.etl_modules.lingo_resource_exporter import LingoResourceExporter
+from arches_lingo.tasks import export_lingo_resources_task
+from arches_lingo.utils.display_label import get_display_label
 from tests.tests import ViewTests
 
 from .test_settings import PROJECT_TEST_ROOT
@@ -602,6 +615,93 @@ class ExportTests(TestCase):
             recipient=admin_user
         ).count()
         self.assertGreater(notifications_after, notifications_before)
+
+    # --- Naming ---
+
+    def test_export_is_named_after_the_label_shown_to_the_user(self):
+        # A merge can leave the stored resource name pointing at any label.
+        ResourceInstance.objects.filter(pk=self.test_concept.pk).update(
+            name={"en": "Stale stored name"}
+        )
+        prefLabel_reference = DataTypeFactory().get_instance("reference")
+        TileModel.objects.create(
+            resourceinstance=self.test_concept,
+            nodegroup_id=CONCEPT_NAME_NODEGROUP,
+            data={
+                CONCEPT_NAME_CONTENT_NODE: "Concepto 1",
+                CONCEPT_NAME_TYPE_NODE: prefLabel_reference.transform_value_for_tile(
+                    "prefLabel", controlledList=LABEL_LIST_ID
+                ),
+                CONCEPT_NAME_LANGUAGE_NODE: "es",
+            },
+        )
+
+        response = self._run_export(self.test_concept.pk, "ttl", "partial")
+        file_details = self._assert_successful_export(response)
+        load_details = json.loads(json.loads(response["data"]["load_details"]))
+        self.assertEqual(load_details["scheme_name"], "Concept 1")
+        self.assertTrue(file_details["name"].startswith("Concept_1_"))
+        latest_notification = (
+            UserXNotification.objects.filter(recipient__username="admin")
+            .order_by("-notif__created")
+            .first()
+        )
+        self.assertEqual(
+            latest_notification.notif.message, "Concept 1 export completed"
+        )
+        os.remove(self.file_path)
+
+        with translation.override("es"):
+            response = self._run_export(self.test_concept.pk, "ttl", "partial")
+        file_details = self._assert_successful_export(response)
+        self.assertTrue(file_details["name"].startswith("Concepto_1_"))
+
+    def test_display_label_skips_incomplete_label_tiles(self):
+        unlabelled_concept = ResourceInstance.objects.create(
+            graph_id=CONCEPTS_GRAPH_ID, name="Unlabelled"
+        )
+        TileModel.objects.create(
+            resourceinstance=unlabelled_concept,
+            nodegroup_id=CONCEPT_NAME_NODEGROUP,
+            data={
+                CONCEPT_NAME_CONTENT_NODE: "No label type",
+                CONCEPT_NAME_TYPE_NODE: None,
+                CONCEPT_NAME_LANGUAGE_NODE: "en",
+            },
+        )
+
+        self.assertEqual(get_display_label(unlabelled_concept.pk), "")
+
+    @patch("arches_lingo.tasks.export_lingo_resources_task.apply_async")
+    @patch(
+        "arches_lingo.etl_modules.lingo_resource_exporter.task_management.check_if_celery_available",
+        return_value=True,
+    )
+    def test_background_export_runs_in_the_users_language(
+        self, mock_celery_available, mock_apply_async
+    ):
+        mock_apply_async.return_value.task_id = str(uuid.uuid4())
+        with translation.override("es"):
+            response = self._run_export(self.test_scheme.pk, "ttl")
+        self.assertEqual(response["data"], "delegated_to_celery")
+        task_kwargs = mock_apply_async.call_args.kwargs["kwargs"]
+        self.assertEqual(task_kwargs, {"language": "es"})
+
+        load_event = LoadEvent.objects.latest("load_start_time")
+        languages_seen = []
+        with patch.object(
+            LingoResourceExporter,
+            "run_export_task",
+            side_effect=lambda *args: languages_seen.append(translation.get_language()),
+        ):
+            export_lingo_resources_task(
+                str(load_event.loadid),
+                load_event.user_id,
+                str(self.test_scheme.pk),
+                format="ttl",
+                **task_kwargs,
+            )
+        self.assertEqual(languages_seen, ["es"])
 
 
 class ExportViewTests(TestCase):
