@@ -11,6 +11,7 @@ import type { TreeNode } from "primevue/treenode";
 const { node, addChildLabel } = defineProps<{
     node: TreeNode;
     addChildLabel?: string;
+    actionTabIndex: number;
 }>();
 
 const router = useRouter();
@@ -42,18 +43,18 @@ function onAddChild() {
         }"
         :disabled="node.data.id === NEW"
         icon="pi pi-plus"
-        role="button"
         size="small"
         style="
             color: var(--p-tree-node-selected-color);
             width: 1rem;
             height: 1rem;
         "
-        tabindex="1"
+        :tabindex="actionTabIndex"
         variant="text"
         :aria-label="addChildLabel"
         :rounded="true"
         @click.stop="onAddChild"
-        @keyup.enter.stop="onAddChild"
+        @keydown.enter.stop
+        @keydown.space.stop
     />
 </template>
