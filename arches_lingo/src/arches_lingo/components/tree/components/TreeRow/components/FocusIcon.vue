@@ -12,6 +12,7 @@ const { node, focusLabel, unfocusLabel } = defineProps<{
     node: TreeNode;
     focusLabel: string;
     unfocusLabel: string;
+    actionTabIndex: number;
 }>();
 
 const route = useRoute();
@@ -49,18 +50,18 @@ function toggleFocus() {
         }"
         :disabled="route.params.id === NEW && node.data.id !== NEW"
         :icon="isFocused ? 'pi pi-search-minus' : 'pi pi-bullseye'"
-        role="button"
         size="small"
         style="
             color: var(--p-tree-node-selected-color);
             width: 1rem;
             height: 1rem;
         "
-        tabindex="0"
+        :tabindex="actionTabIndex"
         variant="text"
         :aria-label="isFocused ? unfocusLabel : focusLabel"
         :rounded="true"
         @click.stop="toggleFocus"
-        @keyup.enter.stop="toggleFocus"
+        @keydown.enter.stop
+        @keydown.space.stop
     />
 </template>

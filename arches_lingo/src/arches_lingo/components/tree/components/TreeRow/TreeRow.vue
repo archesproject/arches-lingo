@@ -23,6 +23,7 @@ const { node, focusLabel, unfocusLabel, addChildLabel, filterValue } =
         deleteLabel: string;
         exportLabel: string;
         filterValue: string;
+        actionTabIndex: number;
     }>();
 
 const focusedNode = defineModel<TreeNode | null>("focusedNode");
@@ -79,11 +80,13 @@ const shouldShowAddChildButton = computed(function () {
             :focus-label="focusLabel"
             :node="node"
             :unfocus-label="unfocusLabel"
+            :action-tab-index="actionTabIndex"
         />
         <AddChildIcon
             v-if="shouldShowAddChildButton"
             :node="node"
             :add-child-label="addChildLabel"
+            :action-tab-index="actionTabIndex"
         />
         <DeleteIcon
             v-if="
@@ -92,11 +95,13 @@ const shouldShowAddChildButton = computed(function () {
                 !isNodeInLockedScheme
             "
             :delete-label="deleteLabel"
+            :action-tab-index="actionTabIndex"
         />
         <ExportIcon
             v-if="node.data.id !== NEW && userStore.isEditor"
             :node="node"
             :export-label="exportLabel"
+            :action-tab-index="actionTabIndex"
         />
     </div>
 </template>

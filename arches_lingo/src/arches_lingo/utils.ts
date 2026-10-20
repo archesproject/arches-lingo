@@ -11,6 +11,8 @@ import {
     TOP_CONCEPT_ICON,
     CONCEPT_TYPE_NODE_ALIAS,
     PUBLICLY_DEREFERENCEABLE_LIFECYCLE_STATE_IDS,
+    DRAFT_LIFECYCLE_STATE_ID,
+    RETIRED_LIFECYCLE_STATE_ID,
 } from "@/arches_lingo/constants.ts";
 import { fetchTileData } from "@/arches_vue_components/generics/GenericCard/api.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
@@ -36,6 +38,25 @@ export function dataIsScheme(data: Concept | Scheme) {
 }
 export function dataIsConcept(data: Concept | Scheme) {
     return !dataIsScheme(data);
+}
+
+export function getDisplayedLifecycleStateName(
+    item: Concept | Scheme,
+): string | undefined {
+    const lifecycleStateId = item.resource_instance_lifecycle_state_id;
+    const lifecycleStateName = item.resource_instance_lifecycle_state_name;
+
+    if (!lifecycleStateId || !lifecycleStateName) {
+        return undefined;
+    }
+    if (
+        dataIsScheme(item) ||
+        lifecycleStateId === DRAFT_LIFECYCLE_STATE_ID ||
+        lifecycleStateId === RETIRED_LIFECYCLE_STATE_ID
+    ) {
+        return lifecycleStateName;
+    }
+    return undefined;
 }
 
 export function getConceptIcon(
