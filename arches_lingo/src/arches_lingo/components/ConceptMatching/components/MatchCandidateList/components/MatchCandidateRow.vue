@@ -37,7 +37,7 @@ const emit = defineEmits<{
     (event: "merge-requested", payload: { candidateId: number }): void;
 }>();
 
-const { $gettext } = useGettext();
+const { $gettext, interpolate } = useGettext();
 const { labelOf } = useLocalizedLabel();
 
 const bothConceptsExist = computed(
@@ -50,27 +50,39 @@ const pairedConcepts = computed(() => [
 ]);
 
 const selectionLabel = computed(() =>
-    $gettext("Select %{first} and %{second}", {
-        first: conceptName(candidate.concept_a),
-        second: conceptName(candidate.concept_b),
-    }),
+    interpolate(
+        $gettext("Select %{first} and %{second}"),
+        {
+            first: conceptName(candidate.concept_a),
+            second: conceptName(candidate.concept_b),
+        },
+        true,
+    ),
 );
 
 const reason = computed(function () {
     if (candidate.signal === SIGNAL_SHARED_IDENTIFIER) {
-        return $gettext("Same URI: %{evidence}", {
-            evidence: candidate.evidence,
-        });
+        return interpolate(
+            $gettext("Same URI: %{evidence}"),
+            { evidence: candidate.evidence },
+            true,
+        );
     }
     if (candidate.signal === SIGNAL_TRIGRAM) {
-        return $gettext("Similar labels (%{score}): %{evidence}", {
-            score: candidate.score.toFixed(2),
-            evidence: candidate.evidence,
-        });
+        return interpolate(
+            $gettext("Similar labels (%{score}): %{evidence}"),
+            {
+                score: candidate.score.toFixed(2),
+                evidence: candidate.evidence,
+            },
+            true,
+        );
     }
-    return $gettext("Same label: %{evidence}", {
-        evidence: candidate.evidence,
-    });
+    return interpolate(
+        $gettext("Same label: %{evidence}"),
+        { evidence: candidate.evidence },
+        true,
+    );
 });
 
 function conceptName(concept: MatchedConceptSummary | null): string {
@@ -78,9 +90,11 @@ function conceptName(concept: MatchedConceptSummary | null): string {
 }
 
 function openInNewTabLabel(concept: MatchedConceptSummary): string {
-    return $gettext("Open %{name} in a new tab", {
-        name: conceptName(concept),
-    });
+    return interpolate(
+        $gettext("Open %{name} in a new tab"),
+        { name: conceptName(concept) },
+        true,
+    );
 }
 
 function onSelectionChange(isChecked: boolean): void {

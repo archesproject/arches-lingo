@@ -19,7 +19,7 @@ const emit = defineEmits<{
     (event: "run-selected", payload: { runId: number | null }): void;
 }>();
 
-const { $gettext, $ngettext } = useGettext();
+const { $gettext, $ngettext, interpolate } = useGettext();
 const { selectedLanguage } = storeToRefs(useLanguageStore());
 
 const activeRunDescription = computed(function () {
@@ -30,9 +30,10 @@ const activeRunDescription = computed(function () {
         pending: String(activeRun.pending_count),
         total: String(activeRun.candidate_count),
     };
-    return activeRun.name
-        ? $gettext("%{name} — %{pending} of %{total} left to review", counts)
-        : $gettext("%{pending} of %{total} left to review", counts);
+    const template = activeRun.name
+        ? $gettext("%{name} — %{pending} of %{total} left to review")
+        : $gettext("%{pending} of %{total} left to review");
+    return interpolate(template, counts, true);
 });
 
 function describeRunOption(run: ConceptMatchRun): string {
@@ -44,19 +45,18 @@ function describeRunOption(run: ConceptMatchRun): string {
         ),
         creator: run.created_by ?? $gettext("Command line"),
     };
-    return run.name
+    const template = run.name
         ? $ngettext(
               "%{name} — %{count} pair — %{started} — %{creator}",
               "%{name} — %{count} pairs — %{started} — %{creator}",
               run.candidate_count,
-              details,
           )
         : $ngettext(
               "%{count} pair — %{started} — %{creator}",
               "%{count} pairs — %{started} — %{creator}",
               run.candidate_count,
-              details,
           );
+    return interpolate(template, details, true);
 }
 
 function onRunChosen(runId: number | null): void {
