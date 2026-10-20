@@ -82,7 +82,7 @@ const emit = defineEmits<{
     (event: "run-deleted", payload: { wasCancelled: boolean }): void;
 }>();
 
-const { $gettext, $ngettext } = useGettext();
+const { $gettext, $ngettext, interpolate } = useGettext();
 const toast = useToast();
 const confirm = useConfirm();
 const { selectedLanguage } = storeToRefs(useLanguageStore());
@@ -126,17 +126,25 @@ function describeSkippedDetail(
         missing_concept: $gettext("concept no longer exists"),
         already_decided: $gettext("already dismissed, linked or merged"),
     };
-    return $gettext("Skipped: %{reasons}.", {
-        reasons: describeSkippedReasons(
-            skipped,
-            (reason, count) =>
-                $gettext("%{count} (%{reason})", {
-                    count: String(count),
-                    reason: reasonLabels[reason] ?? reason,
-                }),
-            selectedLanguage.value.code,
-        ),
-    });
+    return interpolate(
+        $gettext("Skipped: %{reasons}."),
+        {
+            reasons: describeSkippedReasons(
+                skipped,
+                (reason, count) =>
+                    interpolate(
+                        $gettext("%{count} (%{reason})"),
+                        {
+                            count: String(count),
+                            reason: reasonLabels[reason] ?? reason,
+                        },
+                        true,
+                    ),
+                selectedLanguage.value.code,
+            ),
+        },
+        true,
+    );
 }
 
 function reportStatusChange(result: ConceptMatchStatusChange): void {
@@ -183,10 +191,11 @@ function reportLinkResult(result: ConceptMatchLinkResult): void {
         ),
         detail:
             oneWayDetail && skippedDetail
-                ? $gettext("%{oneWay} %{skipped}", {
-                      oneWay: oneWayDetail,
-                      skipped: skippedDetail,
-                  })
+                ? interpolate(
+                      $gettext("%{oneWay} %{skipped}"),
+                      { oneWay: oneWayDetail, skipped: skippedDetail },
+                      true,
+                  )
                 : oneWayDetail ?? skippedDetail,
     });
 }
@@ -245,18 +254,22 @@ async function setStatusForSelection(
 
 function describeChangeAllHeader(isDismissing: boolean): string {
     if (isDismissing && searchText) {
-        return $gettext(
-            'Dismiss the pairs with a label containing "%{search}"?',
+        return interpolate(
+            $gettext('Dismiss the pairs with a label containing "%{search}"?'),
             { search: searchText },
+            true,
         );
     }
     if (isDismissing) {
         return $gettext("Dismiss everything left?");
     }
     if (searchText) {
-        return $gettext(
-            'Restore the dismissed pairs with a label containing "%{search}"?',
+        return interpolate(
+            $gettext(
+                'Restore the dismissed pairs with a label containing "%{search}"?',
+            ),
             { search: searchText },
+            true,
         );
     }
     return $gettext("Restore everything dismissed?");

@@ -63,7 +63,7 @@ const emit = defineEmits<{
     (event: "search-changed", payload: { searchText: string }): void;
 }>();
 
-const { $gettext } = useGettext();
+const { $gettext, interpolate } = useGettext();
 
 const draftSearchText = ref(searchText);
 
@@ -110,11 +110,12 @@ const statusOptions = computed(() => [
 
 const emptyText = computed(function () {
     if (searchText) {
-        return $gettext(
-            'No pairs in this list have a label containing "%{search}".',
-            {
-                search: searchText,
-            },
+        return interpolate(
+            $gettext(
+                'No pairs in this list have a label containing "%{search}".',
+            ),
+            { search: searchText },
+            true,
         );
     }
     switch (status) {
