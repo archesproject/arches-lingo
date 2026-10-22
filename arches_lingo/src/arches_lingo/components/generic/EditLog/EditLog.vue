@@ -183,6 +183,17 @@ function canRevert(editEntry: EditLogEntry) {
     );
 }
 
+function getRevertButtonAriaLabel(editEntry: EditLogEntry) {
+    return $gettext(
+        "Revert to here: %{editType}, %{timestamp}",
+        {
+            editType: formatEditTypeLabel(editEntry),
+            timestamp: formatTimestamp(editEntry.timestamp),
+        },
+        true,
+    );
+}
+
 function confirmRevert(editEntry: EditLogEntry) {
     pendingRevertTimestamp.value = editEntry.timestamp;
 }
@@ -269,7 +280,10 @@ async function acceptRevert() {
             v-else-if="!edits.length"
             class="no-edits"
         >
-            <i class="pi pi-history no-edits-icon" />
+            <i
+                class="pi pi-history no-edits-icon"
+                aria-hidden="true"
+            />
             <p>{{ $gettext("No edit history found.") }}</p>
         </div>
 
@@ -289,7 +303,10 @@ async function acceptRevert() {
                             `edit-type-${getEditTypeSeverity(edit.edittype)}`,
                         ]"
                     >
-                        <i :class="['pi', getEditTypeIcon(edit.edittype)]" />
+                        <i
+                            :class="['pi', getEditTypeIcon(edit.edittype)]"
+                            aria-hidden="true"
+                        />
                     </div>
                     <div
                         v-if="index < edits.length - 1"
@@ -308,6 +325,7 @@ async function acceptRevert() {
                             severity="secondary"
                             size="small"
                             :label="$gettext('Revert to here')"
+                            :aria-label="getRevertButtonAriaLabel(edit)"
                             :loading="isReverting"
                             :disabled="isReverting"
                             @click="confirmRevert(edit)"
@@ -318,17 +336,26 @@ async function acceptRevert() {
                         v-if="shouldShowCardNameRow(edit)"
                         class="edit-card-name"
                     >
-                        <i class="pi pi-table" />
+                        <i
+                            class="pi pi-table"
+                            aria-hidden="true"
+                        />
                         {{ edit.card_name }}
                     </div>
 
                     <div class="edit-meta">
                         <span class="edit-user">
-                            <i class="pi pi-user" />
+                            <i
+                                class="pi pi-user"
+                                aria-hidden="true"
+                            />
                             {{ formatUser(edit) }}
                         </span>
                         <span class="edit-timestamp">
-                            <i class="pi pi-clock" />
+                            <i
+                                class="pi pi-clock"
+                                aria-hidden="true"
+                            />
                             {{ formatTimestamp(edit.timestamp) }}
                         </span>
                     </div>
