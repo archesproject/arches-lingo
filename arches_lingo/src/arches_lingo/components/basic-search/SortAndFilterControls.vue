@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useId } from "vue";
 import { useGettext } from "vue3-gettext";
 import RadioButton from "primevue/radiobutton";
 
@@ -13,6 +14,16 @@ const sortOptions = [
     { value: ORDER_MODE_ALPHABETICAL, label: $gettext("A to Z") },
     { value: ORDER_MODE_REVERSE_ALPHABETICAL, label: $gettext("Z to A") },
 ];
+
+// BasicSearch can be mounted more than once (landing page and search dialog),
+// so ids and the radio group name must be unique per instance.
+const sortControlsId = useId();
+const sortLabelId = `${sortControlsId}-label`;
+const sortRadioName = `${sortControlsId}-sort`;
+
+function getSortOptionInputId(index: number) {
+    return `${sortControlsId}-option-${index + 1}`;
+}
 
 const { orderMode } = defineProps<{
     orderMode: string;
@@ -29,8 +40,17 @@ function onOrderModeChange(newOrderMode: string) {
 
 <template>
     <div class="sort-and-filter-controls">
-        <div class="sort-container">
-            <div class="label">{{ $gettext("Sorting:") }}</div>
+        <div
+            class="sort-container"
+            role="radiogroup"
+            :aria-labelledby="sortLabelId"
+        >
+            <div
+                :id="sortLabelId"
+                class="label"
+            >
+                {{ $gettext("Sorting:") }}
+            </div>
 
             <div
                 v-for="(sortOption, index) in sortOptions"
@@ -39,12 +59,12 @@ function onOrderModeChange(newOrderMode: string) {
             >
                 <RadioButton
                     :model-value="orderMode"
-                    :input-id="`querySortPreference${index + 1}`"
-                    name="querySortPreference"
+                    :input-id="getSortOptionInputId(index)"
+                    :name="sortRadioName"
                     :value="sortOption.value"
                     @update:model-value="onOrderModeChange"
                 />
-                <label :for="`querySortPreference${index + 1}`">
+                <label :for="getSortOptionInputId(index)">
                     {{ sortOption.label }}
                 </label>
             </div>
