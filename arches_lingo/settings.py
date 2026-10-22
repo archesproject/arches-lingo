@@ -609,6 +609,12 @@ ES_MAPPING_MODIFIER_CLASSES = [
 
 LINGO_ALLOW_ANONYMOUS_ACCESS = False
 
+# OpenRefine reconciliation service. When enabled, its read-only endpoints accept
+# anonymous requests even while LINGO_ALLOW_ANONYMOUS_ACCESS is False, and expose
+# only published and locked schemes and concepts.
+LINGO_RECONCILIATION_ENABLED = False
+LINGO_RECONCILIATION_SERVICE_NAME = "Arches Lingo"
+
 RESOURCE_LIST_PAGE_SIZE = 25
 
 try:
