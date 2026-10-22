@@ -158,7 +158,7 @@ function onConfirm() {
 
 <style scoped>
 .reinstate-dialog {
-    width: 34rem;
+    width: min(34rem, 100%);
 }
 
 .dialog-body {
