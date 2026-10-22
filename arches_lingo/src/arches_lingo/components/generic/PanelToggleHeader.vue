@@ -9,6 +9,7 @@ const {
     showPanelIcon,
     hidePanelIcon,
     canTogglePanel = true,
+    panelId = undefined,
 } = defineProps<{
     title: string;
     icon: string;
@@ -17,6 +18,7 @@ const {
     showPanelIcon: string;
     hidePanelIcon: string;
     canTogglePanel?: boolean;
+    panelId?: string;
 }>();
 
 const isPanelVisible = defineModel<boolean>("isPanelVisible", {
@@ -43,6 +45,7 @@ function togglePanel(): void {
             size="small"
             :label="isPanelVisible ? hidePanelLabel : showPanelLabel"
             :icon="isPanelVisible ? hidePanelIcon : showPanelIcon"
+            :aria-controls="panelId"
             @click="togglePanel"
         />
     </div>

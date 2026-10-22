@@ -281,6 +281,7 @@ defineExpose({
                                 <InputIcon class="pi pi-search" />
                                 <InputText
                                     v-model="searchQuery"
+                                    :aria-label="$gettext('Search by name')"
                                     :placeholder="$gettext('Search by name...')"
                                     class="search-input"
                                     @input="onSearchInput"
@@ -347,9 +348,24 @@ defineExpose({
                             v-if="editorEnabled"
                             class="actions-column"
                         >
+                            <template #header>
+                                <span class="p-hidden-accessible">{{
+                                    $gettext("Actions")
+                                }}</span>
+                            </template>
                             <template #body="{ data }">
                                 <Button
-                                    :aria-label="$gettext('Delete resource')"
+                                    :aria-label="
+                                        $gettext(
+                                            'Delete resource: %{name}',
+                                            {
+                                                name:
+                                                    data.display_name ||
+                                                    $gettext('Untitled'),
+                                            },
+                                            true,
+                                        )
+                                    "
                                     icon="pi pi-trash"
                                     severity="danger"
                                     text
