@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useTemplateRef, watch } from "vue";
+import { ref, useTemplateRef, watch } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import { ToggleButton } from "primevue";
@@ -34,6 +34,7 @@ watch(shouldShowHierarchy, (newValue) => {
 });
 
 const overlayPanel = useTemplateRef("overlayPanel");
+const isOverlayPanelVisible = ref(false);
 </script>
 
 <template>
@@ -62,6 +63,9 @@ const overlayPanel = useTemplateRef("overlayPanel");
             <Button
                 icon="pi pi-bars"
                 class="overlay-panel-button p-button-text"
+                :aria-label="$gettext('Menu')"
+                aria-haspopup="dialog"
+                :aria-expanded="isOverlayPanelVisible"
                 @click="overlayPanel?.toggle($event)"
             />
 
@@ -72,6 +76,8 @@ const overlayPanel = useTemplateRef("overlayPanel");
                     root: { class: 'overlay-panel-popover-root' },
                     content: { class: 'overlay-panel-popover-content' },
                 }"
+                @show="isOverlayPanelVisible = true"
+                @hide="isOverlayPanelVisible = false"
             >
                 <div class="overlay-panel-items">
                     <div class="overlay-panel-item">

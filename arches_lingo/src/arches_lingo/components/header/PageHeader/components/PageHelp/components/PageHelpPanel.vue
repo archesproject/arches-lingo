@@ -11,7 +11,7 @@ const shouldShowPageHelpPanel = defineModel("shouldShowPageHelpPanel", {
     <Drawer
         v-model:visible="shouldShowPageHelpPanel"
         position="right"
-        style="min-width: 32rem"
+        style="min-width: min(32rem, 100%)"
         :header="$gettext('Help')"
         :pt="{
             content: {

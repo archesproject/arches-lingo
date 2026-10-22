@@ -19,11 +19,17 @@ const { $gettext } = useGettext();
 const router = useRouter();
 
 // This is to force a reload of the page when the badge is clicked
-// when the current route is the root route.
-function handleClick(navigate: () => void, isActive: boolean) {
-    navigate();
+// when the current route is the root route. `navigate` only prevents the
+// default (and navigates) for plain left clicks, so modified clicks such as
+// ctrl/cmd+click still open the link natively.
+function handleClick(
+    event: MouseEvent,
+    navigate: (event?: MouseEvent) => unknown,
+    isActive: boolean,
+) {
+    navigate(event);
 
-    if (isActive) {
+    if (isActive && event.defaultPrevented) {
         router.go(0);
     }
 }
@@ -34,13 +40,14 @@ function handleClick(navigate: () => void, isActive: boolean) {
     <div>
         <RouterLink
             v-if="props.isLink"
-            v-slot="{ navigate, isActive }"
+            v-slot="{ href, navigate, isActive }"
             :to="{ name: routeNames.root }"
             :custom="true"
         >
-            <div
-                class="lingo-badge"
-                @click.prevent="handleClick(navigate, isActive)"
+            <a
+                :href="href"
+                class="lingo-badge lingo-badge-link"
+                @click="handleClick($event, navigate, isActive)"
             >
                 <img
                     :src="
@@ -51,7 +58,7 @@ function handleClick(navigate: () => void, isActive: boolean) {
                     style="height: 1.5rem; width: auto"
                 />
                 <h1 class="lingo-title">{{ $gettext("Lingo") }}</h1>
-            </div>
+            </a>
         </RouterLink>
         <div
             v-else
@@ -75,6 +82,11 @@ function handleClick(navigate: () => void, isActive: boolean) {
     display: flex;
     align-items: center;
     cursor: pointer;
+}
+
+.lingo-badge-link {
+    color: inherit;
+    text-decoration: none;
 }
 
 .lingo-title {

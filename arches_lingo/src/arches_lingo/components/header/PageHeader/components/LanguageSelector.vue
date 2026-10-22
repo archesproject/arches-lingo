@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, useTemplateRef, watchEffect } from "vue";
+import { computed, ref, useTemplateRef, watchEffect } from "vue";
 import { useGettext } from "vue3-gettext";
 import { storeToRefs } from "pinia";
 
@@ -17,6 +17,7 @@ const languageStore = useLanguageStore();
 const { selectedLanguage, availableLanguages } = storeToRefs(languageStore);
 
 const popover = useTemplateRef<PopoverMethods>("popover");
+const isLanguageSelectorVisible = ref(false);
 
 const selectedCode = computed({
     get: () => selectedLanguage.value.code,
@@ -49,7 +50,8 @@ function openLanguageSelector(event: MouseEvent) {
         class="language-selector"
     >
         <Button
-            :aria-label="$gettext('Open language selector')"
+            aria-haspopup="dialog"
+            :aria-expanded="isLanguageSelectorVisible"
             @click="openLanguageSelector"
         >
             <div class="language-abbreviation-circle">
@@ -58,7 +60,11 @@ function openLanguageSelector(event: MouseEvent) {
             <span>{{ selectedLanguage.name }}</span>
         </Button>
 
-        <Popover ref="popover">
+        <Popover
+            ref="popover"
+            @show="isLanguageSelectorVisible = true"
+            @hide="isLanguageSelectorVisible = false"
+        >
             <div class="popover-header">
                 <h4 class="header-title">
                     {{ $gettext("Language Selection") }}

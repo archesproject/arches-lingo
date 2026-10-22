@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, useTemplateRef } from "vue";
+import { computed, ref, useTemplateRef } from "vue";
 import { storeToRefs } from "pinia";
 import { useGettext } from "vue3-gettext";
 import { useRouter } from "vue-router";
@@ -20,6 +20,7 @@ const userStore = useUserStore();
 const { user, isAnonymous } = storeToRefs(userStore);
 
 const popover = useTemplateRef<PopoverMethods>("popover");
+const isUserMenuVisible = ref(false);
 
 const displayName = computed(() => {
     if (!user.value) return "";
@@ -70,7 +71,8 @@ function navigateToLogin() {
         </template>
         <template v-else>
             <Button
-                :aria-label="$gettext('Open user menu')"
+                aria-haspopup="dialog"
+                :aria-expanded="isUserMenuVisible"
                 @click="openUserMenu"
             >
                 <div
@@ -85,6 +87,8 @@ function navigateToLogin() {
             <Popover
                 ref="popover"
                 class="user-interaction-popover"
+                @show="isUserMenuVisible = true"
+                @hide="isUserMenuVisible = false"
             >
                 <UserInteractionMenu
                     :display-name="displayName"
