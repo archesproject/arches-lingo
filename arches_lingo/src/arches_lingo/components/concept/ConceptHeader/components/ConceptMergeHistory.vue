@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from "vue";
-
 import { useGettext } from "vue3-gettext";
-import { useRouter } from "vue-router";
+import { RouterLink } from "vue-router";
 import { storeToRefs } from "pinia";
 
 import Button from "primevue/button";
@@ -20,7 +19,6 @@ const { resourceInstanceId } = defineProps<{
 }>();
 
 const { $gettext, interpolate } = useGettext();
-const router = useRouter();
 const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
 const resourceStore = useResourceStore();
 
@@ -68,11 +66,11 @@ function entryText(entry: ConceptMergeHistoryEntry) {
     );
 }
 
-function openCounterpart(entry: ConceptMergeHistoryEntry) {
-    router.push({
+function counterpartRoute(entry: ConceptMergeHistoryEntry) {
+    return {
         name: routeNames.concept,
         params: { id: entry.counterpart_concept_id },
-    });
+    };
 }
 
 // A failed lookup should never block the header from rendering.
@@ -94,13 +92,17 @@ async function loadMergeHistory() {
             v-for="entry in merges"
             :key="entry.id"
         >
-            <i class="pi pi-sign-in"></i>
+            <i
+                class="pi pi-sign-in"
+                aria-hidden="true"
+            ></i>
             <Button
                 v-if="entry.counterpart_concept_exists"
+                :as="RouterLink"
+                :to="counterpartRoute(entry)"
                 :label="entryText(entry)"
                 variant="link"
                 class="concept-merge-link"
-                @click="openCounterpart(entry)"
             />
             <span v-else>{{ entryText(entry) }}</span>
         </li>

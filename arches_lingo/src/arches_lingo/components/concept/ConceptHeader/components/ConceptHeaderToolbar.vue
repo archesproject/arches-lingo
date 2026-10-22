@@ -428,7 +428,10 @@ function onMergeCancelled() {
         <div class="concept-details">
             <div class="concept-header-title">
                 <div class="concept-name">
-                    <i :class="conceptIcon"></i>
+                    <i
+                        :class="conceptIcon"
+                        aria-hidden="true"
+                    ></i>
                     <span>
                         {{ label?.value }}
                         <span
@@ -476,7 +479,12 @@ function onMergeCancelled() {
                 class="add-button"
                 @click="openEditLog"
             >
-                <span><i class="pi pi-history"></i></span>
+                <span
+                    ><i
+                        class="pi pi-history"
+                        aria-hidden="true"
+                    ></i
+                ></span>
                 <span>{{ $gettext("History") }}</span>
             </Button>
             <Button
@@ -485,7 +493,12 @@ function onMergeCancelled() {
                 class="add-button"
                 @click="openExportDialog"
             >
-                <span><i class="pi pi-cloud-download"></i></span>
+                <span
+                    ><i
+                        class="pi pi-cloud-download"
+                        aria-hidden="true"
+                    ></i
+                ></span>
                 <span>{{ $gettext("Export") }}</span>
             </Button>
             <Button
