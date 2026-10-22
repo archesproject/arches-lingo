@@ -2,7 +2,11 @@ from django.conf import settings
 from django.utils.translation import get_language
 from django.utils.translation import gettext as _
 
-from arches_lingo.utils.concepts import ORDER_MODE_UNSORTED, build_search_queryset
+from arches_lingo.utils.concepts import (
+    MIN_INDEXED_CONTAINS_LENGTH,
+    ORDER_MODE_UNSORTED,
+    build_search_queryset,
+)
 from arches_lingo.utils.reconciliation.candidates import MAX_QUERY_LENGTH
 from arches_lingo.utils.reconciliation.concept_summaries import summarize_concepts
 from arches_lingo.utils.reconciliation.manifest import list_reconcilable_schemes
@@ -56,6 +60,7 @@ def suggest_entities(prefix, raw_cursor=None, scheme_id=None):
         settings.LANGUAGE_CODE,
         scheme_ids=searchable_scheme_ids,
         lifecycle_state_ids=RECONCILABLE_LIFECYCLE_STATE_IDS,
+        prefix_only=len(prefix) < MIN_INDEXED_CONTAINS_LENGTH,
     )
     concept_ids = [
         str(concept_id) for concept_id in search[cursor : cursor + SUGGEST_PAGE_SIZE]

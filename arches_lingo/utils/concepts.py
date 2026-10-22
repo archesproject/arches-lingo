@@ -18,6 +18,9 @@ from arches_lingo.const import (
 ORDER_MODE_ALPHABETICAL = "alphabetical"
 ORDER_MODE_REVERSE_ALPHABETICAL = "reverse-alphabetical"
 ORDER_MODE_UNSORTED = "unsorted"
+# pg_trgm cannot index a "contains" pattern shorter than this, but a prefix
+# pattern of any length can still use the trigram index.
+MIN_INDEXED_CONTAINS_LENGTH = 3
 
 
 def escape_like_pattern(term):
@@ -60,6 +63,7 @@ def build_search_queryset(
     excluded_ids=None,
     scheme_ids=None,
     lifecycle_state_ids=None,
+    prefix_only=False,
 ):
     """Return a SearchResultSet of concept IDs matching a search term.
 
@@ -91,6 +95,7 @@ def build_search_queryset(
         excluded_ids=excluded_ids,
         scheme_ids=scheme_ids,
         lifecycle_state_ids=lifecycle_state_ids,
+        prefix_only=prefix_only,
     )
 
 
@@ -144,6 +149,7 @@ class SearchResultSet:
         excluded_ids=None,
         scheme_ids=None,
         lifecycle_state_ids=None,
+        prefix_only=False,
     ):
         self.term = term
         self.like_term = None if term is None else escape_like_pattern(term)
@@ -158,6 +164,7 @@ class SearchResultSet:
         # None leaves results unfiltered; an empty collection matches nothing.
         self.scheme_ids = scheme_ids
         self.lifecycle_state_ids = lifecycle_state_ids
+        self.prefix_only = prefix_only
         self._count_cache = None
 
     def _where_clause(self):
@@ -169,6 +176,9 @@ class SearchResultSet:
             if self.exact_match:
                 where_sql += f" AND {self.CONTENT_COL} = %s"
                 params.append(self.term)
+            elif self.prefix_only:
+                where_sql += f" AND {self.CONTENT_COL} ILIKE %s"
+                params.append(f"{self.like_term}%")
             elif self.use_fuzzy:
                 # ILIKE uses the GIN trigram index; %% is the pg_trgm similarity
                 # operator (escaped for cursor.execute parameter substitution).

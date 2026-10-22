@@ -7,6 +7,7 @@ from django.utils.translation import gettext as _
 
 from arches_lingo.utils.concept_lifecycle import RETIRED_STATE_ID
 from arches_lingo.utils.concepts import (
+    MIN_INDEXED_CONTAINS_LENGTH,
     ORDER_MODE_UNSORTED,
     build_search_queryset,
     resolve_max_edit_distance,
@@ -160,6 +161,7 @@ def find_scored_candidates(query, searchable_scheme_ids, identified_concept_ids)
         settings.LANGUAGE_CODE,
         scheme_ids=scheme_ids,
         lifecycle_state_ids=SEARCHED_LIFECYCLE_STATE_IDS,
+        prefix_only=len(query.text) < MIN_INDEXED_CONTAINS_LENGTH,
     )
     scored_candidates = [
         ScoredCandidate(

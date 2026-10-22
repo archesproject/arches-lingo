@@ -90,6 +90,8 @@ For developer install instructions, see the [Developer Setup](#developer-setup-f
     ```
     The service is available at `<PUBLIC_SERVER_ADDRESS>/api/lingo/reconcile`, or at `/api/lingo/schemes/<scheme identifier>/reconcile` for a single scheme. It accepts anonymous, cross-origin requests even when `LINGO_ALLOW_ANONYMOUS_ACCESS` is `False`, and only exposes published and locked schemes and concepts. Make sure `PUBLIC_SERVER_ADDRESS` is set to the address OpenRefine users will reach, because the service's links are built from it.
 
+    When enabled, anyone who can reach the server can read, for published and locked concepts in published and locked schemes: labels in every language, broader concepts, identifiers, URIs, exact and close matches, scope notes and definitions. Retired concepts are only returned when a query asks for them. Draft and editing-state concepts are never returned, and requests for them get the same empty or 404 response as an unknown id. Each request is capped (50 queries or ids, 25 candidates per query), but there is no rate limiting in the application, so put a request rate limit on `/api/lingo/reconcile` at your reverse proxy if the server is public.
+
 5. Next ensure arches, arches-vue-components, and arches_lingo are included as dependencies in package.json
     ```
     "dependencies": {
