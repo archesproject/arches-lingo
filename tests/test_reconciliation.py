@@ -437,6 +437,14 @@ class ReconciliationQueryTests(ReconciliationQueryTestCase):
         )
         self.assertFalse(any(result["match"] for result in results[1:]))
 
+    def test_short_terms_match_by_label_prefix_not_anywhere_in_it(self):
+        # Every fixture label contains "on" ("Concept 1" …), none starts with it.
+        anywhere_in_label = self.reconcile({"q0": {"query": "on"}})["q0"]["result"]
+        label_prefix = self.reconcile({"q0": {"query": "co"}})["q0"]["result"]
+
+        self.assertEqual(anywhere_in_label, [])
+        self.assertEqual(len(label_prefix), 5)
+
     def test_shared_pref_label_is_never_automatic(self):
         self.add_label(self.concepts[4], "Concept 4")
 
