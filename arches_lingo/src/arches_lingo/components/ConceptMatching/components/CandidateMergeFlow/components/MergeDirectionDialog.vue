@@ -50,6 +50,10 @@ const survivorId = ref<string | null>(
         null,
 );
 
+const dialogHeader = computed(() =>
+    $gettext("Which concept should take the other's values?"),
+);
+
 const pairedConcepts = computed(() => [conceptA, conceptB]);
 
 const canMergeEitherWay = computed(
@@ -88,7 +92,7 @@ function onVisibilityChange(): void {
         class="direction-dialog"
         :visible="true"
         :modal="true"
-        :header="$gettext('Which concept should take the other\'s values?')"
+        :header="dialogHeader"
         :closable="!isLoading"
         :pt="DIALOG_PASS_THROUGH"
         @update:visible="onVisibilityChange"
@@ -115,7 +119,11 @@ function onVisibilityChange(): void {
                 }}</span>
             </Message>
 
-            <div class="direction-options">
+            <div
+                class="direction-options"
+                role="radiogroup"
+                :aria-label="dialogHeader"
+            >
                 <label
                     v-for="concept in pairedConcepts"
                     :key="concept.id"
