@@ -226,6 +226,7 @@ async function submitPasswordChange() {
                                 <InputText
                                     id="first_name"
                                     v-model="profile.first_name"
+                                    autocomplete="given-name"
                                     class="form-input"
                                     :placeholder="$gettext('First name')"
                                 />
@@ -237,6 +238,7 @@ async function submitPasswordChange() {
                                 <InputText
                                     id="last_name"
                                     v-model="profile.last_name"
+                                    autocomplete="family-name"
                                     class="form-input"
                                     :placeholder="$gettext('Last name')"
                                 />
@@ -249,6 +251,7 @@ async function submitPasswordChange() {
                                 id="email"
                                 v-model="profile.email"
                                 type="email"
+                                autocomplete="email"
                                 class="form-input"
                                 :placeholder="$gettext('Email address')"
                             />
@@ -259,6 +262,8 @@ async function submitPasswordChange() {
                             <InputText
                                 id="phone"
                                 v-model="profile.phone"
+                                type="tel"
+                                autocomplete="tel"
                                 class="form-input"
                                 :placeholder="
                                     $gettext('Phone number (optional)')
@@ -308,8 +313,11 @@ async function submitPasswordChange() {
                                 $gettext("Current Password")
                             }}</label>
                             <Password
-                                id="old_password"
                                 v-model="oldPassword"
+                                input-id="old_password"
+                                :input-props="{
+                                    autocomplete: 'current-password',
+                                }"
                                 :feedback="false"
                                 toggle-mask
                                 class="form-input"
@@ -325,8 +333,9 @@ async function submitPasswordChange() {
                                 $gettext("New Password")
                             }}</label>
                             <Password
-                                id="new_password"
                                 v-model="newPassword"
+                                input-id="new_password"
+                                :input-props="{ autocomplete: 'new-password' }"
                                 toggle-mask
                                 class="form-input"
                                 :placeholder="$gettext('New password')"
@@ -339,8 +348,9 @@ async function submitPasswordChange() {
                                 $gettext("Confirm New Password")
                             }}</label>
                             <Password
-                                id="confirm_password"
                                 v-model="confirmPassword"
+                                input-id="confirm_password"
+                                :input-props="{ autocomplete: 'new-password' }"
                                 :feedback="false"
                                 toggle-mask
                                 class="form-input"
