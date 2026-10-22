@@ -97,8 +97,14 @@ function requestRun(): void {
                 :placeholder="$gettext('Every scheme')"
                 :filter="schemeOptions.length > SCHEME_FILTER_MINIMUM_OPTIONS"
                 :show-toggle-all="false"
+                :pt="{
+                    hiddenInput: { 'aria-describedby': 'match-scheme-help' },
+                }"
             />
-            <p class="option-note">
+            <p
+                id="match-scheme-help"
+                class="option-note"
+            >
                 {{
                     $gettext(
                         "Both concepts of a pair must be in one of these, so the search never reaches outside them. Leave empty to search everything.",
@@ -183,8 +189,14 @@ function requestRun(): void {
                 :min="MIN_SELECTABLE_SIMILARITY"
                 :max="MAX_SELECTABLE_SIMILARITY"
                 :step="SIMILARITY_STEP"
+                :pt="{
+                    handle: { 'aria-describedby': 'match-threshold-help' },
+                }"
             />
-            <p class="option-note">
+            <p
+                id="match-threshold-help"
+                class="option-note"
+            >
                 {{
                     $gettext(
                         "Lower finds more pairs and more noise. Below about 0.6 most suggestions are coincidence.",
