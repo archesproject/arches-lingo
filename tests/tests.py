@@ -410,6 +410,15 @@ class ViewTests(SchemeWithConceptsTestCase):
             ],
         )
 
+    def test_like_wildcards_in_search_term_match_literally(self):
+        for wildcard_term in ["Concept _", "Concept %", "%"]:
+            with self.subTest(wildcard_term=wildcard_term):
+                response = self.client.get(
+                    reverse("api-search"),
+                    {"term": wildcard_term, "maxEditDistance": 0},
+                )
+                self.assertEqual(json.loads(response.content)["data"], [])
+
     def test_invalid_search_term(self):
         with self.assertLogs("django.request", level="WARNING"):
             response = self.client.get(

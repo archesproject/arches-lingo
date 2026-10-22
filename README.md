@@ -83,6 +83,13 @@ For developer install instructions, see the [Developer Setup](#developer-setup-f
     ```
     When enabled, unauthenticated users can browse schemes, concepts, and search results in a read-only mode. When disabled (the default), all users must log in to access any Lingo content. Authenticated users who are not members of the "Lingo Editor" group will still see a read-only experience regardless of this setting.
 
+    Optionally, enable the [OpenRefine](https://openrefine.org/) reconciliation service so spreadsheet data can be matched against your published vocabularies:
+    ```
+    LINGO_RECONCILIATION_ENABLED = True
+    LINGO_RECONCILIATION_SERVICE_NAME = "My Organization Thesauri"  # defaults to "Arches Lingo"
+    ```
+    The service is available at `<PUBLIC_SERVER_ADDRESS>/api/lingo/reconcile`, or at `/api/lingo/schemes/<scheme identifier>/reconcile` for a single scheme. It accepts anonymous, cross-origin requests even when `LINGO_ALLOW_ANONYMOUS_ACCESS` is `False`, and only exposes published and locked schemes and concepts. Make sure `PUBLIC_SERVER_ADDRESS` is set to the address OpenRefine users will reach, because the service's links are built from it.
+
 5. Next ensure arches, arches-vue-components, and arches_lingo are included as dependencies in package.json
     ```
     "dependencies": {

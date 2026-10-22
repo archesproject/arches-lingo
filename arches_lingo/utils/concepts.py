@@ -20,6 +20,11 @@ ORDER_MODE_REVERSE_ALPHABETICAL = "reverse-alphabetical"
 ORDER_MODE_UNSORTED = "unsorted"
 
 
+def escape_like_pattern(term):
+    """Escape LIKE wildcards so a term containing ``%`` or ``_`` matches literally."""
+    return term.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+
+
 def resolve_max_edit_distance(term):
     elastic_prefix_length = settings.SEARCH_TERM_SENSITIVITY
 
@@ -53,6 +58,8 @@ def build_search_queryset(
     system_language=None,
     scheme_id=None,
     excluded_ids=None,
+    scheme_ids=None,
+    lifecycle_state_ids=None,
 ):
     """Return a SearchResultSet of concept IDs matching a search term.
 
@@ -82,6 +89,8 @@ def build_search_queryset(
         system_language=system_language or "",
         scheme_id=scheme_id,
         excluded_ids=excluded_ids,
+        scheme_ids=scheme_ids,
+        lifecycle_state_ids=lifecycle_state_ids,
     )
 
 
@@ -133,8 +142,11 @@ class SearchResultSet:
         exact_match=False,
         scheme_id=None,
         excluded_ids=None,
+        scheme_ids=None,
+        lifecycle_state_ids=None,
     ):
         self.term = term
+        self.like_term = None if term is None else escape_like_pattern(term)
         self.use_fuzzy = use_fuzzy
         self.similarity_threshold = similarity_threshold
         self.order_mode = order_mode
@@ -143,6 +155,9 @@ class SearchResultSet:
         self.exact_match = exact_match
         self.scheme_id = scheme_id
         self.excluded_ids = excluded_ids or []
+        # None leaves results unfiltered; an empty collection matches nothing.
+        self.scheme_ids = scheme_ids
+        self.lifecycle_state_ids = lifecycle_state_ids
         self._count_cache = None
 
     def _where_clause(self):
@@ -161,10 +176,10 @@ class SearchResultSet:
                     f" AND ({self.CONTENT_COL} ILIKE %s"
                     f" OR {self.CONTENT_COL} %% %s)"
                 )
-                params.extend([f"%{self.term}%", self.term])
+                params.extend([f"%{self.like_term}%", self.term])
             else:
                 where_sql += f" AND {self.CONTENT_COL} ILIKE %s"
-                params.append(f"%{self.term}%")
+                params.append(f"%{self.like_term}%")
 
         if self.scheme_id:
             where_sql += (
@@ -175,6 +190,29 @@ class SearchResultSet:
                 f" @> %s::jsonb)"
             )
             params.append(json.dumps([{"resourceId": self.scheme_id}]))
+
+        if self.scheme_ids is not None:
+            where_sql += (
+                f" AND resourceinstanceid IN ("
+                f"SELECT resourceinstanceid FROM tiles"
+                f" WHERE nodegroupid = '{CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID}'"
+                f" AND tiledata -> '{CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID}'"
+                f" @> ANY(%s::jsonb[]))"
+            )
+            params.append(
+                [
+                    json.dumps([{"resourceId": str(scheme_id)}])
+                    for scheme_id in self.scheme_ids
+                ]
+            )
+
+        if self.lifecycle_state_ids is not None:
+            where_sql += (
+                " AND resourceinstanceid IN ("
+                "SELECT resourceinstanceid FROM resource_instances"
+                " WHERE resource_instance_lifecycle_state_id = ANY(%s::uuid[]))"
+            )
+            params.append([str(state_id) for state_id in self.lifecycle_state_ids])
 
         if self.excluded_ids:
             placeholders = ", ".join(["%s"] * len(self.excluded_ids))
@@ -215,8 +253,24 @@ class SearchResultSet:
         """
         return sql, where_params
 
-    def _build_search_sql(self, where_sql, where_params):
-        """SQL for term search with ranking."""
+    def _build_search_sql(self, where_sql, where_params, include_scores=False):
+        """SQL for term search with ranking.
+
+        ``include_scores`` also selects ``best_rank`` and the best trigram
+        ``best_similarity`` of any matching label, for callers that score matches.
+        """
+        if include_scores:
+            selected_columns = "resourceinstanceid, best_rank, best_similarity"
+            similarity_column = (
+                f"MAX(similarity(LOWER({self.CONTENT_COL}), LOWER(%s)))"
+                " AS best_similarity,"
+            )
+            similarity_params = [self.term]
+        else:
+            selected_columns = "resourceinstanceid"
+            similarity_column = ""
+            similarity_params = []
+
         if self.order_mode == ORDER_MODE_UNSORTED:
             order_clause = "ORDER BY best_rank, sort_label"
         elif self.order_mode == ORDER_MODE_ALPHABETICAL:
@@ -225,7 +279,7 @@ class SearchResultSet:
             order_clause = "ORDER BY sort_label DESC, resourceinstanceid"
 
         sql = f"""
-            SELECT resourceinstanceid
+            SELECT {selected_columns}
             FROM (
                 SELECT
                     resourceinstanceid,
@@ -263,6 +317,7 @@ class SearchResultSet:
                             ELSE 2
                         END)
                     ) AS best_rank,
+                    {similarity_column}
                     MIN(LOWER({self.CONTENT_COL})) AS sort_label
                 FROM tiles
                 WHERE {where_sql}
@@ -273,26 +328,39 @@ class SearchResultSet:
 
         rank_params = [
             PREF_LABEL_URI,
-            self.term,  # prefLabel exact
+            self.like_term,  # prefLabel exact
             ALT_LABEL_URI,
-            self.term,  # altLabel exact
+            self.like_term,  # altLabel exact
             PREF_LABEL_URI,
-            f"{self.term}%",  # prefLabel prefix
+            f"{self.like_term}%",  # prefLabel prefix
             PREF_LABEL_URI,
-            f"%{self.term}%",  # prefLabel contains
+            f"%{self.like_term}%",  # prefLabel contains
             ALT_LABEL_URI,
-            f"{self.term}%",  # altLabel prefix
-            self.term,  # any exact
+            f"{self.like_term}%",  # altLabel prefix
+            self.like_term,  # any exact
             ALT_LABEL_URI,
-            f"%{self.term}%",  # altLabel contains
-            f"{self.term}%",  # any prefix
-            f"%{self.term}%",  # any contains
+            f"%{self.like_term}%",  # altLabel contains
+            f"{self.like_term}%",  # any prefix
+            f"%{self.like_term}%",  # any contains
             self.active_language,
             self.system_language,
         ]
 
-        params = rank_params + where_params
+        params = rank_params + similarity_params + where_params
         return sql, params
+
+    def scored_slice(self, limit):
+        """Return ``[(concept_id, best_rank, best_similarity)]`` for the best matches."""
+        where_sql, where_params = self._where_clause()
+        sql, params = self._build_search_sql(
+            where_sql, where_params, include_scores=True
+        )
+        with connection.cursor() as cursor:
+            cursor.execute(f"{sql} LIMIT %s", params + [limit])
+            return [
+                (str(concept_id), best_rank, best_similarity)
+                for concept_id, best_rank, best_similarity in cursor.fetchall()
+            ]
 
     def count(self):
         if self._count_cache is not None:
