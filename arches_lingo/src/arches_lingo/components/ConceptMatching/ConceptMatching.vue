@@ -285,6 +285,7 @@ function closeMerge(): void {
             :hide-panel-label="$gettext('Hide Search Options')"
             :show-panel-label="$gettext('Show Search Options')"
             :can-toggle-panel="isEditor"
+            :panel-id="isEditor ? 'concept-matching-criteria-panel' : undefined"
         />
 
         <Message
@@ -307,6 +308,7 @@ function closeMerge(): void {
         >
             <div
                 v-show="showCriteria"
+                id="concept-matching-criteria-panel"
                 class="matches-criteria"
             >
                 <p class="intro">
