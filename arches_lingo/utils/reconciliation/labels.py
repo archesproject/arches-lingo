@@ -24,3 +24,9 @@ def choose_display_label(
         ),
     )
     return best_label_tile[content_node]
+
+
+def is_same_base_language(language_code, other_language_code):
+    return (language_code or "").split("-")[0].casefold() == (
+        other_language_code or ""
+    ).split("-")[0].casefold()

@@ -59,7 +59,12 @@ from arches_lingo.views.api.concept_merge import (
     ConceptMergePreviewView,
     ConceptMergeView,
 )
-from arches_lingo.views.api.reconciliation import ReconciliationServiceView
+from arches_lingo.views.api.reconciliation import (
+    ReconciliationPreviewView,
+    ReconciliationPropertyProposalView,
+    ReconciliationServiceView,
+    ReconciliationSuggestView,
+)
 from arches_lingo.views.api.scheme_lock import SchemeLockView, SchemeUnlockView
 from arches_lingo.views.api.settings import AppSettingsView
 from arches_lingo.views.api.identifier_resolve import (
@@ -137,6 +142,21 @@ urlpatterns = [
         "api/lingo/reconcile",
         ReconciliationServiceView.as_view(),
         name="api-lingo-reconcile",
+    ),
+    path(
+        "api/lingo/reconcile/suggest/<slug:suggest_kind>",
+        ReconciliationSuggestView.as_view(),
+        name="api-lingo-reconcile-suggest",
+    ),
+    path(
+        "api/lingo/reconcile/properties",
+        ReconciliationPropertyProposalView.as_view(),
+        name="api-lingo-reconcile-properties",
+    ),
+    path(
+        "api/lingo/reconcile/preview",
+        ReconciliationPreviewView.as_view(),
+        name="api-lingo-reconcile-preview",
     ),
     path(
         "api/lingo/schemes/<slug:scheme_identifier>/reconcile",

@@ -12,6 +12,14 @@ export const useAppSettingsStore = defineStore("appSettings", () => {
         () => settings.value?.allow_anonymous_access ?? false,
     );
 
+    const reconciliationEnabled = computed(
+        () => settings.value?.reconciliation_enabled ?? false,
+    );
+
+    const reconciliationServiceUrl = computed(
+        () => settings.value?.reconciliation_service_url ?? null,
+    );
+
     const publicServerAddress = computed(
         () => settings.value?.public_server_address ?? undefined,
     );
@@ -28,6 +36,8 @@ export const useAppSettingsStore = defineStore("appSettings", () => {
     return {
         settings,
         allowAnonymousAccess,
+        reconciliationEnabled,
+        reconciliationServiceUrl,
         publicServerAddress,
         archesVersion,
         lingoVersion,

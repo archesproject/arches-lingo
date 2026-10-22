@@ -22,6 +22,13 @@ def reconcilable_schemes():
     )
 
 
+def reconcilable_scheme_ids():
+    return {
+        str(scheme_id)
+        for scheme_id in reconcilable_schemes().values_list("pk", flat=True)
+    }
+
+
 def resolve_reconcilable_scheme_id(scheme_identifier):
     """Return the id of the reconcilable scheme with this identifier, or None."""
     resource_ids = ResourceIdentifier.objects.filter(

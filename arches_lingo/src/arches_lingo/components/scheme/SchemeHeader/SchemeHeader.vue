@@ -22,6 +22,7 @@ import SchemeURITemplateField from "@/arches_lingo/components/scheme/SchemeHeade
 import SchemeAttributionField from "@/arches_lingo/components/scheme/SchemeHeader/components/SchemeAttributionField.vue";
 import ConceptIdentifierCounterField from "@/arches_lingo/components/scheme/SchemeHeader/components/ConceptIdentifierCounterField.vue";
 import LifecycleStateBadge from "@/arches_lingo/components/generic/LifecycleStateBadge.vue";
+import ReconciliationEndpointPanel from "@/arches_lingo/components/generic/ReconciliationEndpointPanel.vue";
 
 import {
     DANGER,
@@ -29,6 +30,7 @@ import {
     DEFAULT_TOAST_LIFE,
     ERROR,
     LOCKED_LIFECYCLE_STATE_ID,
+    PUBLISHED_LIFECYCLE_STATE_ID,
     NEW_CONCEPT,
     SECONDARY,
     SUCCESS,
@@ -172,6 +174,12 @@ const { publicServerAddress } = storeToRefs(useAppSettingsStore());
 
 const isLocked = computed(
     () => currentLifecycleState.value?.id === LOCKED_LIFECYCLE_STATE_ID,
+);
+// Only published and locked schemes are offered by the reconciliation service.
+const isReconcilable = computed(
+    () =>
+        isLocked.value ||
+        currentLifecycleState.value?.id === PUBLISHED_LIFECYCLE_STATE_ID,
 );
 const isLockLoading = ref(false);
 
@@ -748,6 +756,13 @@ async function onReinstateConfirmed(cascade: boolean) {
                         @update="onSchemeURITemplateUpdate"
                     />
                 </div>
+
+                <ReconciliationEndpointPanel
+                    v-if="isReconcilable"
+                    class="header-row"
+                    :scheme-identifier="identifierValue"
+                    :scheme-name="label?.value"
+                />
 
                 <div class="header-row">
                     <SchemeAttributionField
