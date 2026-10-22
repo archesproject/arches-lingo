@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, useId } from "vue";
 
 import { useGettext } from "vue3-gettext";
 import Checkbox from "primevue/checkbox";
@@ -34,6 +34,11 @@ const emit = defineEmits<{
 }>();
 
 const { $gettext } = useGettext();
+
+const elementIdPrefix = useId();
+const sectionTitleId = `${elementIdPrefix}-title`;
+const survivorColumnHeadingId = `${elementIdPrefix}-survivor-heading`;
+const absorbedColumnHeadingId = `${elementIdPrefix}-absorbed-heading`;
 
 const singleValueOption = computed(function () {
     return comparison.absorbedTileOptions[0];
@@ -81,6 +86,10 @@ const isAbsorbedColumnEmpty = computed(function () {
     );
 });
 
+function getValueId(kind: string, key: string | number) {
+    return `${elementIdPrefix}-${kind}-${key}`;
+}
+
 function onCheckboxChange(tileId: string | undefined, isSelected: boolean) {
     if (tileId) {
         emit("update:selection", tileId, isSelected);
@@ -96,7 +105,7 @@ function onSingleValueChoice(useAbsorbedValue: boolean) {
     <section class="merge-section">
         <header class="merge-section-header">
             <div class="merge-section-title">
-                <h3>{{ sectionTitle }}</h3>
+                <h3 :id="sectionTitleId">{{ sectionTitle }}</h3>
                 <Tag
                     v-if="selectedCount"
                     severity="secondary"
@@ -120,9 +129,18 @@ function onSingleValueChoice(useAbsorbedValue: boolean) {
             }}
         </p>
 
-        <div class="merge-columns">
+        <div
+            class="merge-columns"
+            :role="replacesSurvivorValue ? 'radiogroup' : undefined"
+            :aria-labelledby="
+                replacesSurvivorValue ? sectionTitleId : undefined
+            "
+        >
             <div class="merge-column">
-                <span class="merge-column-heading">
+                <span
+                    :id="survivorColumnHeadingId"
+                    class="merge-column-heading"
+                >
                     {{ survivorColumnHeading }}
                 </span>
                 <p
@@ -140,6 +158,9 @@ function onSingleValueChoice(useAbsorbedValue: boolean) {
                     v-for="(survivorTile, index) in comparison.survivorTiles"
                     :key="survivorTile.tileid ?? index"
                     :tile="survivorTile"
+                    :value-id="
+                        getValueId('survivor', survivorTile.tileid ?? index)
+                    "
                     :display-node-aliases="
                         comparison.section.displayNodeAliases
                     "
@@ -154,6 +175,7 @@ function onSingleValueChoice(useAbsorbedValue: boolean) {
                             :model-value="isSurvivorValueKept"
                             :disabled="comparison.isBlocked"
                             :input-id="`keep-${comparison.section.nodegroupAlias}`"
+                            :aria-labelledby="`${survivorColumnHeadingId} ${getValueId('survivor', survivorTile.tileid ?? index)}`"
                             :name="`single-${comparison.section.nodegroupAlias}`"
                             :value="true"
                             @update:model-value="onSingleValueChoice(false)"
@@ -163,7 +185,10 @@ function onSingleValueChoice(useAbsorbedValue: boolean) {
             </div>
 
             <div class="merge-column">
-                <span class="merge-column-heading">
+                <span
+                    :id="absorbedColumnHeadingId"
+                    class="merge-column-heading"
+                >
                     {{ absorbedColumnHeading }}
                 </span>
                 <p
@@ -179,6 +204,9 @@ function onSingleValueChoice(useAbsorbedValue: boolean) {
                         digitalObjectsById.get(option.digitalObjectId)
                     "
                     :already-on-survivor="option.alreadyOnSurvivor"
+                    :value-id="
+                        getValueId('digital-object', option.digitalObjectId)
+                    "
                 >
                     <template #control>
                         <Checkbox
@@ -187,6 +215,12 @@ function onSingleValueChoice(useAbsorbedValue: boolean) {
                                 comparison.isBlocked || option.alreadyOnSurvivor
                             "
                             :input-id="`digital-object-${option.digitalObjectId}`"
+                            :aria-labelledby="
+                                getValueId(
+                                    'digital-object',
+                                    option.digitalObjectId,
+                                )
+                            "
                             :binary="true"
                             @update:model-value="
                                 emit(
@@ -202,6 +236,9 @@ function onSingleValueChoice(useAbsorbedValue: boolean) {
                     v-for="(option, index) in comparison.absorbedTileOptions"
                     :key="option.tile.tileid ?? index"
                     :tile="option.tile"
+                    :value-id="
+                        getValueId('absorbed', option.tile.tileid ?? index)
+                    "
                     :display-node-aliases="
                         comparison.section.displayNodeAliases
                     "
@@ -217,6 +254,7 @@ function onSingleValueChoice(useAbsorbedValue: boolean) {
                             :model-value="!isSurvivorValueKept"
                             :disabled="comparison.isBlocked"
                             :input-id="`take-${comparison.section.nodegroupAlias}`"
+                            :aria-labelledby="`${absorbedColumnHeadingId} ${getValueId('absorbed', option.tile.tileid ?? index)}`"
                             :name="`single-${comparison.section.nodegroupAlias}`"
                             :value="true"
                             @update:model-value="onSingleValueChoice(true)"
@@ -228,6 +266,12 @@ function onSingleValueChoice(useAbsorbedValue: boolean) {
                                 comparison.isBlocked || option.alreadyOnSurvivor
                             "
                             :input-id="`tile-${option.tile.tileid}`"
+                            :aria-labelledby="
+                                getValueId(
+                                    'absorbed',
+                                    option.tile.tileid ?? index,
+                                )
+                            "
                             :binary="true"
                             @update:model-value="
                                 onCheckboxChange(
