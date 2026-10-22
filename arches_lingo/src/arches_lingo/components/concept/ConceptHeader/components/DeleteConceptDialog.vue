@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, useId } from "vue";
 
 import { useGettext } from "vue3-gettext";
 import Button from "primevue/button";
@@ -36,6 +36,7 @@ const conceptStore = useConceptStore();
 const narrower = ref<Concept[]>([]);
 const isFetchingChildren = ref(true);
 const selectedStrategy = ref<DeleteConceptStrategy>(STRATEGY_REPARENT);
+const strategyQuestionId = useId();
 
 onMounted(async () => {
     try {
@@ -138,9 +139,18 @@ function onConfirm() {
             v-else
             class="dialog-body"
         >
-            <div class="dialog-text">{{ childrenText }}</div>
+            <div
+                :id="strategyQuestionId"
+                class="dialog-text"
+            >
+                {{ childrenText }}
+            </div>
 
-            <div class="strategy-options">
+            <div
+                class="strategy-options"
+                role="radiogroup"
+                :aria-labelledby="strategyQuestionId"
+            >
                 <label
                     class="strategy-option"
                     :class="{
@@ -151,6 +161,7 @@ function onConfirm() {
                     <RadioButton
                         v-model="selectedStrategy"
                         input-id="strategy-reparent"
+                        name="delete-concept-strategy"
                         :value="STRATEGY_REPARENT"
                     />
                     <div class="strategy-label">
@@ -175,6 +186,7 @@ function onConfirm() {
                     <RadioButton
                         v-model="selectedStrategy"
                         input-id="strategy-delete"
+                        name="delete-concept-strategy"
                         :value="STRATEGY_DELETE_CHILDREN"
                     />
                     <div class="strategy-label">
@@ -210,7 +222,7 @@ function onConfirm() {
 
 <style scoped>
 .delete-concept-dialog {
-    width: 34rem;
+    width: min(34rem, 100%);
 }
 
 .loading-skeleton {
