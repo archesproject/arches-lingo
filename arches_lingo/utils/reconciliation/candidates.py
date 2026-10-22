@@ -38,7 +38,7 @@ from arches_lingo.utils.reconciliation.scoring import (
 from arches_lingo.utils.reconciliation.visibility import (
     RECONCILABLE_LIFECYCLE_STATE_IDS,
     SEARCHED_LIFECYCLE_STATE_IDS,
-    reconcilable_schemes,
+    reconcilable_scheme_ids,
     resolve_merge_survivors,
 )
 
@@ -290,10 +290,7 @@ def reconcile_queries(raw_queries, default_scheme_id=None):
     query count grows with the number of queries, not the number of candidates.
     """
     queries_by_key = parse_reconciliation_queries(raw_queries, default_scheme_id)
-    searchable_scheme_ids = {
-        str(scheme_id)
-        for scheme_id in reconcilable_schemes().values_list("pk", flat=True)
-    }
+    searchable_scheme_ids = reconcilable_scheme_ids()
     identified_concept_ids_by_key = find_identified_concept_ids(queries_by_key)
     scored_candidates_by_key = {
         query_key: find_scored_candidates(
