@@ -2,6 +2,7 @@
 import { computed } from "vue";
 
 import { useGettext } from "vue3-gettext";
+import { storeToRefs } from "pinia";
 import Image from "primevue/image";
 
 import MergeCard from "@/arches_lingo/components/concept/ConceptMerge/components/MergeCard.vue";
@@ -10,23 +11,32 @@ import {
     getDigitalObjectImageAlt,
     getDigitalObjectImageUrl,
 } from "@/arches_lingo/components/concept/ConceptImages/components/utils.ts";
+import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 
 import type { DigitalObjectInstance } from "@/arches_lingo/types.ts";
 
-const { digitalObject, alreadyOnSurvivor } = defineProps<{
+const {
+    digitalObject,
+    alreadyOnSurvivor,
+    valueId = undefined,
+} = defineProps<{
     // Undefined until the digital objects arrive, or if fetching them failed.
     digitalObject: DigitalObjectInstance | undefined;
     alreadyOnSurvivor?: boolean;
+    valueId?: string;
 }>();
 
 const { $gettext } = useGettext();
+const { selectedLanguage } = storeToRefs(useLanguageStore());
 
 const imageUrl = computed(function () {
     return digitalObject ? getDigitalObjectImageUrl(digitalObject) : undefined;
 });
 
 const imageAlt = computed(function () {
-    return digitalObject ? getDigitalObjectImageAlt(digitalObject) : "";
+    return digitalObject
+        ? getDigitalObjectImageAlt(digitalObject, selectedLanguage.value.code)
+        : "";
 });
 
 const imageName = computed(function () {
@@ -64,7 +74,12 @@ const imageDescription = computed(function () {
                 />
             </div>
             <div class="merge-digital-object-text">
-                <span class="merge-digital-object-name">{{ imageName }}</span>
+                <span
+                    :id="valueId"
+                    class="merge-digital-object-name"
+                >
+                    {{ imageName }}
+                </span>
                 <span
                     v-if="imageDescription"
                     class="merge-digital-object-description"

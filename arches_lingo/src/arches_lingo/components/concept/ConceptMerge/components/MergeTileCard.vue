@@ -22,12 +22,14 @@ const {
     conceptReferenceNodeAliases,
     conceptLabelsById,
     alreadyOnSurvivor,
+    valueId = undefined,
 } = defineProps<{
     tile: MergeTile;
     displayNodeAliases: string[];
     conceptReferenceNodeAliases: string[];
     conceptLabelsById: Map<string, Label[]>;
     alreadyOnSurvivor?: boolean;
+    valueId?: string;
 }>();
 
 const { $gettext } = useGettext();
@@ -80,7 +82,12 @@ function resolveNodeText(nodeAlias: string) {
         <template #control>
             <slot name="control" />
         </template>
-        <span class="merge-tile-primary">{{ primaryValue }}</span>
+        <span
+            :id="valueId"
+            class="merge-tile-primary"
+        >
+            {{ primaryValue }}
+        </span>
         <span
             v-if="secondaryValues.length"
             class="merge-tile-secondary"
