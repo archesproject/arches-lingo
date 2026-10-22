@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { ref, useId, watch } from "vue";
 import { storeToRefs } from "pinia";
 import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
+import { useConfirm } from "primevue/useconfirm";
 
 import Button from "primevue/button";
+import ConfirmDialog from "primevue/confirmdialog";
 import Dialog from "primevue/dialog";
 import InputText from "primevue/inputtext";
 import Select from "primevue/select";
@@ -18,9 +20,11 @@ import {
     executeAdvancedSearch,
 } from "@/arches_lingo/api.ts";
 import {
+    DANGER,
     DEFAULT_ERROR_TOAST_LIFE,
     DEFAULT_TOAST_LIFE,
     ERROR,
+    SECONDARY,
     SUCCESS,
 } from "@/arches_lingo/constants.ts";
 import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
@@ -33,6 +37,7 @@ import type {
 
 const { $gettext } = useGettext();
 const toast = useToast();
+const confirm = useConfirm();
 const { isAnonymous } = storeToRefs(useUserStore());
 
 const conceptSetStore = useConceptSetStore();
@@ -59,6 +64,9 @@ const emit = defineEmits<{
     (event: "concepts-removed"): void;
 }>();
 
+const DELETE_CONCEPT_SET_CONFIRM_GROUP = "delete-search-concept-set";
+
+const targetSetLabelId = useId();
 const showCreateDialog = ref(false);
 const showAddToSetDialog = ref(false);
 const newSetName = ref("");
@@ -129,6 +137,28 @@ async function deleteSet(setItem: ConceptSetItem) {
             detail: error instanceof Error ? error.message : undefined,
         });
     }
+}
+
+function confirmDeleteSet(setItem: ConceptSetItem) {
+    confirm.require({
+        group: DELETE_CONCEPT_SET_CONFIRM_GROUP,
+        header: $gettext("Delete concept set?"),
+        message: $gettext(
+            'The concept set "%{name}" will be deleted. The concepts in it are not affected.',
+            { name: setItem.name },
+            true,
+        ),
+        accept: () => deleteSet(setItem),
+        rejectProps: {
+            label: $gettext("Cancel"),
+            severity: SECONDARY,
+            outlined: true,
+        },
+        acceptProps: {
+            label: $gettext("Delete"),
+            severity: DANGER,
+        },
+    });
 }
 
 async function handleAddToSet(selectedIds: Set<string>) {
@@ -267,18 +297,31 @@ watch(
             class="set-item"
             :class="{ 'set-item--active': setItem.id === activeConceptSetId }"
         >
-            <div
+            <Button
+                text
+                plain
                 class="set-info"
+                :pt="{
+                    root: {
+                        style: {
+                            flexDirection: 'column',
+                            alignItems: 'flex-start',
+                            justifyContent: 'flex-start',
+                            padding: '0.375rem 0',
+                            gap: '0.125rem',
+                        },
+                    },
+                }"
                 @click="loadSet(setItem)"
             >
-                <div class="set-name">
+                <span class="set-name">
                     <i
                         class="pi pi-folder"
                         aria-hidden="true"
                     />
                     <span>{{ setItem.name }}</span>
-                </div>
-                <div class="set-meta">
+                </span>
+                <span class="set-meta">
                     {{
                         $gettext("%{count} concepts", {
                             count: String(setItem.member_count),
@@ -286,22 +329,24 @@ watch(
                     }}
                     &middot;
                     {{ new Date(setItem.updated).toLocaleDateString() }}
-                </div>
-                <div
+                </span>
+                <span
                     v-if="setItem.description"
                     class="set-description"
                 >
                     {{ setItem.description }}
-                </div>
-            </div>
+                </span>
+            </Button>
             <Button
                 icon="pi pi-trash"
                 severity="danger"
                 text
                 rounded
                 size="small"
-                :aria-label="$gettext('Delete')"
-                @click="deleteSet(setItem)"
+                :aria-label="
+                    $gettext('Delete %{name}', { name: setItem.name }, true)
+                "
+                @click="confirmDeleteSet(setItem)"
             />
         </div>
 
@@ -310,7 +355,7 @@ watch(
             v-model:visible="showCreateDialog"
             :header="$gettext('New Concept Set')"
             modal
-            :style="{ width: '25rem' }"
+            :style="{ width: 'min(25rem, 100%)' }"
         >
             <div class="dialog-content">
                 <label for="set-name">{{ $gettext("Name") }}</label>
@@ -362,12 +407,15 @@ watch(
                       })
             "
             modal
-            :style="{ width: '25rem' }"
+            :style="{ width: 'min(25rem, 100%)' }"
         >
             <div class="dialog-content">
-                <label for="target-set">{{ $gettext("Select Set") }}</label>
+                <label :id="targetSetLabelId">
+                    {{ $gettext("Select Set") }}
+                </label>
                 <Select
                     v-model="targetSetId"
+                    :aria-labelledby="targetSetLabelId"
                     :options="conceptSets"
                     option-label="name"
                     option-value="id"
@@ -390,6 +438,7 @@ watch(
                 />
             </template>
         </Dialog>
+        <ConfirmDialog :group="DELETE_CONCEPT_SET_CONFIRM_GROUP" />
     </div>
 </template>
 
@@ -443,7 +492,7 @@ watch(
 .set-info {
     flex: 1;
     min-width: 0;
-    cursor: pointer;
+    font-family: var(--p-lingo-font-family);
 }
 
 .set-name {
@@ -461,6 +510,7 @@ watch(
 }
 
 .set-description {
+    max-width: 100%;
     font-size: var(--p-lingo-font-size-small);
     color: var(--p-text-muted-color);
     margin-top: 0.25rem;

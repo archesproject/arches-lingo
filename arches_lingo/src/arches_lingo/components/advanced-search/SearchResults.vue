@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, useId } from "vue";
 import { useGettext } from "vue3-gettext";
 import { useRouter } from "vue-router";
 import { storeToRefs } from "pinia";
@@ -36,6 +36,11 @@ const emit = defineEmits<{
 }>();
 
 const expandedRows = ref<Set<string>>(new Set());
+const resultLabelIdPrefix = useId();
+
+function getResultLabelId(conceptId: string) {
+    return `${resultLabelIdPrefix}-${conceptId}`;
+}
 
 function toggleExpand(id: string) {
     const newSet = new Set(expandedRows.value);
@@ -117,6 +122,7 @@ function onPageChange(event: { page: number }) {
                     <Checkbox
                         :model-value="selectedIds.has(item.id)"
                         binary
+                        :aria-labelledby="getResultLabelId(item.id)"
                         @update:model-value="$emit('toggle-select', item.id)"
                     />
 
@@ -129,6 +135,20 @@ function onPageChange(event: { page: number }) {
                         text
                         rounded
                         size="small"
+                        :aria-label="
+                            $gettext(
+                                'Details for %{label}',
+                                {
+                                    label: getItemLabel(
+                                        item,
+                                        selectedLanguage.code,
+                                        systemLanguage.code,
+                                    ).value,
+                                },
+                                true,
+                            )
+                        "
+                        :aria-expanded="expandedRows.has(item.id)"
                         @click="toggleExpand(item.id)"
                     />
 
@@ -138,13 +158,13 @@ function onPageChange(event: { page: number }) {
                                 :class="[getConceptIcon(item), 'concept-icon']"
                                 aria-hidden="true"
                             />
-                            {{
+                            <span :id="getResultLabelId(item.id)">{{
                                 getItemLabel(
                                     item,
                                     selectedLanguage.code,
                                     systemLanguage.code,
                                 ).value
-                            }}
+                            }}</span>
                             <LifecycleStateBadge
                                 :lifecycle-state-id="
                                     item.resource_instance_lifecycle_state_id
@@ -179,13 +199,17 @@ function onPageChange(event: { page: number }) {
                         text
                         class="view-concept-button"
                         :aria-label="
-                            $gettext('View concept %{label}', {
-                                label: getItemLabel(
-                                    item,
-                                    selectedLanguage.code,
-                                    systemLanguage.code,
-                                ).value,
-                            })
+                            $gettext(
+                                'View concept %{label}',
+                                {
+                                    label: getItemLabel(
+                                        item,
+                                        selectedLanguage.code,
+                                        systemLanguage.code,
+                                    ).value,
+                                },
+                                true,
+                            )
                         "
                         @click="navigateToConcept(item.id)"
                     />
