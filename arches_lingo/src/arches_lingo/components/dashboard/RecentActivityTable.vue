@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useRouter } from "vue-router";
+import { RouterLink } from "vue-router";
 import { useGettext } from "vue3-gettext";
 
 import Column from "primevue/column";
@@ -16,6 +16,7 @@ import { routeNames } from "@/arches_lingo/routes.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 
+import type { RouteLocationRaw } from "vue-router";
 import type {
     DashboardActivityItem,
     DashboardStats,
@@ -37,7 +38,6 @@ const emit = defineEmits<{
     "update:selectedActivityPeriod": [value: ActivityPeriod];
 }>();
 
-const router = useRouter();
 const { $gettext } = useGettext();
 
 const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
@@ -74,20 +74,11 @@ function getInitials(
     return username?.[0]?.toUpperCase() ?? "?";
 }
 
-function navigateToConcept(conceptId: string) {
-    router.push({ name: routeNames.concept, params: { id: conceptId } });
-}
-
-function navigateToScheme(schemeId: string) {
-    router.push({ name: routeNames.scheme, params: { id: schemeId } });
-}
-
-function navigateToResource(item: DashboardActivityItem) {
+function getResourceRoute(item: DashboardActivityItem): RouteLocationRaw {
     if (item.resource_type === "scheme") {
-        navigateToScheme(item.resource_id);
-    } else {
-        navigateToConcept(item.resource_id);
+        return { name: routeNames.scheme, params: { id: item.resource_id } };
     }
+    return { name: routeNames.concept, params: { id: item.resource_id } };
 }
 
 function getDisplayName(item: DashboardActivityItem): string {
@@ -117,13 +108,15 @@ function getResourceTypeSeverity(
             <h2>{{ $gettext("Recent Activity") }}</h2>
             <div class="filter-group">
                 <label
+                    id="activity-period-filter-label"
                     for="activity-period-filter"
                     class="filter-label"
                 >
                     {{ $gettext("Time frame") }}:
                 </label>
                 <Select
-                    id="activity-period-filter"
+                    label-id="activity-period-filter"
+                    aria-labelledby="activity-period-filter-label"
                     :model-value="props.selectedActivityPeriod"
                     :options="props.activityPeriods"
                     option-label="label"
@@ -151,7 +144,10 @@ function getResourceTypeSeverity(
             >
                 <template #empty>
                     <div class="empty-state">
-                        <i class="pi pi-inbox empty-icon" />
+                        <i
+                            class="pi pi-inbox empty-icon"
+                            aria-hidden="true"
+                        />
                         <span>{{ $gettext("No recent activity") }}</span>
                     </div>
                 </template>
@@ -172,10 +168,9 @@ function getResourceTypeSeverity(
                 </Column>
                 <Column :header="$gettext('Resource')">
                     <template #body="slotProps">
-                        <a
+                        <RouterLink
                             class="resource-link"
-                            href="#"
-                            @click.prevent="navigateToResource(slotProps.data)"
+                            :to="getResourceRoute(slotProps.data)"
                         >
                             {{
                                 getItemLabel(
@@ -184,7 +179,7 @@ function getResourceTypeSeverity(
                                     systemLanguage.code,
                                 ).value || slotProps.data.resource_id
                             }}
-                        </a>
+                        </RouterLink>
                     </template>
                 </Column>
                 <Column
@@ -217,7 +212,10 @@ function getResourceTypeSeverity(
                 >
                     <template #body="slotProps">
                         <div class="user-cell">
-                            <span class="user-avatar">
+                            <span
+                                class="user-avatar"
+                                aria-hidden="true"
+                            >
                                 {{
                                     getInitials(
                                         slotProps.data.user_firstname,
