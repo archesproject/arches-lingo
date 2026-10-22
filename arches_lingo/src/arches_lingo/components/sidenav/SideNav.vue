@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, markRaw, provide, ref } from "vue";
+import { computed, markRaw, nextTick, provide, ref, useTemplateRef } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import Button from "primevue/button";
@@ -11,6 +11,7 @@ import NavSettings from "@/arches_lingo/components/sidenav/components/NavSetting
 
 import ArchesLingoBadge from "@/arches_lingo/components/header/PageHeader/components/ArchesLingoBadge.vue";
 
+import type { ComponentPublicInstance } from "vue";
 import type { SideNavMenuItem } from "@/arches_lingo/types.ts";
 
 const { $gettext } = useGettext();
@@ -39,13 +40,23 @@ const items = computed<SideNavMenuItem[]>(() => [
     },
 ]);
 
+const navButtonLabel = computed(() =>
+    $gettext("%{appName} navigation", { appName: $gettext("Lingo") }),
+);
+
+const navButton = useTemplateRef<ComponentPublicInstance>("navButton");
 const buttonKey = ref(0);
 
-function toggleAll() {
+async function toggleAll() {
     isNavExpanded.value = !isNavExpanded.value;
     emit("update:isNavExpanded", isNavExpanded.value);
 
     buttonKey.value += 1; // Force re-render of the button to remove tooltip
+
+    // The re-render replaces the focused button, so restore focus to the
+    // new one rather than letting it drop to <body>.
+    await nextTick();
+    (navButton.value?.$el as HTMLElement | undefined)?.focus();
 }
 
 const emit = defineEmits(["update:isNavExpanded"]);
@@ -57,6 +68,7 @@ const emit = defineEmits(["update:isNavExpanded"]);
         :class="{ expanded: isNavExpanded }"
     >
         <Button
+            ref="navButton"
             :key="buttonKey"
             v-tooltip.bottom="{
                 value: $gettext('Expand navigation'),
@@ -75,12 +87,14 @@ const emit = defineEmits(["update:isNavExpanded"]);
             }"
             class="nav-button"
             :class="{ expanded: isNavExpanded }"
-            :aria-label="$gettext('Expand navigation')"
+            :aria-label="navButtonLabel"
+            :aria-expanded="isNavExpanded"
             @click="toggleAll"
         >
             <i
                 v-if="!isNavExpanded"
                 class="pi pi-bars toggle-icon"
+                aria-hidden="true"
             />
 
             <ArchesLingoBadge
