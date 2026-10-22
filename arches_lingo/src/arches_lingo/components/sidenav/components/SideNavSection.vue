@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { inject } from "vue";
 
+import type { MenuItem } from "primevue/menuitem";
 import type { SideNavMenuItem } from "@/arches_lingo/types.ts";
 
 const props = defineProps<{
@@ -8,6 +9,10 @@ const props = defineProps<{
 }>();
 
 const isNavExpanded = inject("isNavExpanded", false);
+
+function getChildLabel(child: MenuItem): string | undefined {
+    return typeof child.label === "function" ? child.label() : child.label;
+}
 </script>
 
 <template>
@@ -45,6 +50,7 @@ const isNavExpanded = inject("isNavExpanded", false);
                     disabled: isNavExpanded,
                 }"
                 :href="href"
+                :aria-label="isNavExpanded ? undefined : getChildLabel(child)"
                 :style="{
                     paddingInlineStart: isNavExpanded ? '2rem' : '0.75rem',
                 }"
@@ -55,6 +61,7 @@ const isNavExpanded = inject("isNavExpanded", false);
                 <i
                     v-if="child.icon"
                     :class="child.icon"
+                    aria-hidden="true"
                 ></i>
                 <span
                     v-if="isNavExpanded"
@@ -78,6 +85,7 @@ const isNavExpanded = inject("isNavExpanded", false);
                 disabled: isNavExpanded,
             }"
             :href="child.url"
+            :aria-label="isNavExpanded ? undefined : getChildLabel(child)"
             :style="{
                 paddingInlineStart: isNavExpanded ? '2rem' : '0.75rem',
             }"
@@ -87,6 +95,7 @@ const isNavExpanded = inject("isNavExpanded", false);
             <i
                 v-if="child.icon"
                 :class="child.icon"
+                aria-hidden="true"
             ></i>
             <span
                 v-if="isNavExpanded"
