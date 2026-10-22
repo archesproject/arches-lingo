@@ -39,6 +39,7 @@ const props = defineProps<{
     condition: SearchCondition;
     options: AdvancedSearchOptions;
     conceptSets: ConceptSetItem[];
+    conditionPosition: string;
 }>();
 
 const emit = defineEmits<{
@@ -111,7 +112,19 @@ const selectConceptSetPlaceholder = computed(() =>
 const selectConceptTypePlaceholder = computed(() =>
     $gettext("Select concept type"),
 );
-const removeConditionLabel = computed(() => $gettext("Remove condition"));
+const removeConditionLabel = computed(() =>
+    $gettext("Remove condition %{position}", {
+        position: props.conditionPosition,
+    }),
+);
+
+function getControlLabel(controlName: string) {
+    return $gettext(
+        "Condition %{position}: %{control}",
+        { position: props.conditionPosition, control: controlName },
+        true,
+    );
+}
 
 const conceptItemSize = 36;
 const conceptOptions = ref<SearchResultItem[]>([]);
@@ -555,6 +568,7 @@ function toggleCascade() {
             :model-value="!!condition.negated"
             :on-label="$gettext('NOT')"
             :off-label="$gettext('NOT')"
+            :aria-label="getControlLabel($gettext('NOT'))"
             class="negation-toggle"
             :class="{ 'negation-active': condition.negated }"
             @update:model-value="toggleNegated"
@@ -567,6 +581,7 @@ function toggleCascade() {
             option-label="label"
             option-value="value"
             :placeholder="$gettext('Select facet')"
+            :aria-label="getControlLabel($gettext('facet'))"
             class="facet-type-dropdown"
             @update:model-value="updateFacet"
         />
@@ -578,6 +593,7 @@ function toggleCascade() {
             :options="imageAttributes"
             option-label="label"
             option-value="value"
+            :aria-label="getControlLabel($gettext('image attribute'))"
             class="facet-sub-dropdown"
             @update:model-value="updateImageAttribute"
         />
@@ -589,6 +605,7 @@ function toggleCascade() {
             :options="matchModes"
             option-label="label"
             option-value="value"
+            :aria-label="getControlLabel($gettext('match mode'))"
             class="match-mode-dropdown"
             @update:model-value="updateMatchMode"
         />
@@ -601,6 +618,7 @@ function toggleCascade() {
             option-value="value"
             :placeholder="$gettext('Is attributed to...')"
             :show-clear="true"
+            :aria-label="getControlLabel($gettext('attribution'))"
             class="match-mode-dropdown"
             @update:model-value="updateAttributionMatchMode"
         />
@@ -610,6 +628,7 @@ function toggleCascade() {
             v-if="showValueInput"
             :model-value="condition.value as string"
             :placeholder="searchTextPlaceholder"
+            :aria-label="getControlLabel($gettext('value'))"
             class="facet-value-input"
             @update:model-value="
                 (val: string | undefined) => updateField('value', val ?? '')
@@ -644,6 +663,7 @@ function toggleCascade() {
                 resizeDelay: 200,
             }"
             :auto-filter-focus="true"
+            :aria-label="getControlLabel($gettext('concept'))"
             class="facet-value-input"
             @before-show="loadConceptPage(1)"
             @filter="onConceptFilter"
@@ -684,6 +704,7 @@ function toggleCascade() {
             option-value="value"
             :placeholder="anyTypePlaceholder"
             show-clear
+            :aria-label="getControlLabel($gettext('label type'))"
             class="facet-sub-dropdown"
             @update:model-value="
                 (val: string | undefined) =>
@@ -700,6 +721,7 @@ function toggleCascade() {
             option-value="value"
             :placeholder="anyTypePlaceholder"
             show-clear
+            :aria-label="getControlLabel($gettext('note type'))"
             class="facet-sub-dropdown"
             @update:model-value="
                 (val: string | undefined) => updateField('note_type', val ?? '')
@@ -715,6 +737,7 @@ function toggleCascade() {
             option-value="code"
             :placeholder="anyLanguagePlaceholder"
             show-clear
+            :aria-label="getControlLabel($gettext('language'))"
             class="facet-sub-dropdown"
             @update:model-value="(val: string) => updateField('language', val)"
         />
@@ -727,6 +750,7 @@ function toggleCascade() {
             option-label="name"
             option-value="code"
             :placeholder="selectLanguagePlaceholder"
+            :aria-label="getControlLabel($gettext('language'))"
             class="facet-value-input"
             @update:model-value="(val: string) => updateField('value', val)"
         />
@@ -739,6 +763,7 @@ function toggleCascade() {
             option-label="label"
             option-value="id"
             :placeholder="selectSchemePlaceholder"
+            :aria-label="getControlLabel($gettext('scheme'))"
             class="facet-value-input"
             @update:model-value="(val: string) => updateField('value', val)"
         />
@@ -752,6 +777,7 @@ function toggleCascade() {
             option-value="id"
             :placeholder="anyScheme"
             :show-clear="true"
+            :aria-label="getControlLabel($gettext('scheme'))"
             class="facet-value-input"
             @update:model-value="
                 (val: string | undefined) => updateField('value', val ?? '')
@@ -766,6 +792,7 @@ function toggleCascade() {
             option-label="name"
             option-value="id"
             :placeholder="selectStatePlaceholder"
+            :aria-label="getControlLabel($gettext('lifecycle state'))"
             class="facet-value-input"
             @update:model-value="(val: string) => updateField('value', val)"
         />
@@ -778,6 +805,7 @@ function toggleCascade() {
             option-label="name"
             option-value="id"
             :placeholder="selectConceptSetPlaceholder"
+            :aria-label="getControlLabel($gettext('concept set'))"
             class="facet-value-input"
             @update:model-value="
                 (val: string) => updateField('value', String(val))
@@ -797,6 +825,7 @@ function toggleCascade() {
             :loading="isLoadingSources"
             :placeholder="selectSourcePlaceholder"
             :show-clear="true"
+            :aria-label="getControlLabel($gettext('source'))"
             class="facet-value-input"
             @filter="onSourceFilter"
             @before-show="loadSources()"
@@ -818,6 +847,7 @@ function toggleCascade() {
             :loading="isLoadingContributors"
             :placeholder="selectContributorPlaceholder"
             :show-clear="true"
+            :aria-label="getControlLabel($gettext('contributor'))"
             class="facet-value-input"
             @filter="onContributorFilter"
             @before-show="loadContributors()"
@@ -835,6 +865,7 @@ function toggleCascade() {
             option-value="value"
             :placeholder="selectConceptTypePlaceholder"
             show-clear
+            :aria-label="getControlLabel($gettext('concept type'))"
             class="facet-value-input"
             @update:model-value="
                 (val: string | undefined) => updateField('value', val ?? '')
@@ -848,16 +879,17 @@ function toggleCascade() {
             :options="hierarchyDirections"
             option-label="label"
             option-value="value"
+            :aria-label="getControlLabel($gettext('direction'))"
             class="facet-sub-dropdown"
             @update:model-value="(val: string) => updateField('direction', val)"
         />
 
-        <!-- Cascade toggle for hierarchical relationships -->
         <ToggleButton
             v-if="showCascadeToggle"
             :model-value="!!condition.cascade"
             :on-label="$gettext('Include all')"
-            :off-label="$gettext('Direct only')"
+            :off-label="$gettext('Include all')"
+            :aria-label="getControlLabel($gettext('Include all'))"
             class="cascade-toggle"
             :class="{ 'cascade-active': condition.cascade }"
             @update:model-value="toggleCascade"
