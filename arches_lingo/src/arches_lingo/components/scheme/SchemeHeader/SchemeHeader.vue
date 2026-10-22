@@ -670,7 +670,7 @@ async function onReinstateConfirmed(cascade: boolean) {
                         severity="danger"
                         class="delete-button"
                         :label="$gettext('Delete')"
-                        :aria-label="$gettext('Delete Concept')"
+                        :aria-label="$gettext('Delete Scheme')"
                         @click="confirmDelete"
                     />
 

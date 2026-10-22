@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, useId } from "vue";
 import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
 
@@ -30,6 +30,12 @@ const emit = defineEmits<{
 
 const toast = useToast();
 const { $gettext } = useGettext();
+
+const schemeURITemplateLabelId = useId();
+const schemeURITemplateHelpId = useId();
+const schemeURITemplateHelpText = $gettext(
+    "Placeholders: <scheme_identifier>, <concept_identifier>",
+);
 
 const isEditingSchemeURITemplate = ref(false);
 const schemeURITemplateDraft = ref("");
@@ -85,7 +91,10 @@ async function saveSchemeURITemplate() {
 
 <template>
     <div class="header-item">
-        <span class="header-item-label">
+        <span
+            :id="schemeURITemplateLabelId"
+            class="header-item-label"
+        >
             {{ $gettext("URI template:") }}
         </span>
 
@@ -94,12 +103,15 @@ async function saveSchemeURITemplate() {
                 <InputText
                     v-model="schemeURITemplateDraft"
                     size="small"
-                    :placeholder="
-                        $gettext(
-                            'Placeholders: <scheme_identifier>, <concept_identifier>',
-                        )
-                    "
+                    :aria-labelledby="schemeURITemplateLabelId"
+                    :aria-describedby="schemeURITemplateHelpId"
                 />
+                <small
+                    :id="schemeURITemplateHelpId"
+                    class="uri-template-help"
+                >
+                    {{ schemeURITemplateHelpText }}
+                </small>
             </div>
             <Button
                 icon="pi pi-check"
@@ -142,9 +154,17 @@ async function saveSchemeURITemplate() {
 
 <style scoped>
 .uri-input-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
     flex: 0 1 auto;
     min-width: 0;
     overflow: hidden;
+}
+
+.uri-template-help {
+    font-size: var(--p-lingo-font-size-xsmall);
+    overflow-wrap: anywhere;
 }
 
 :deep(input) {
