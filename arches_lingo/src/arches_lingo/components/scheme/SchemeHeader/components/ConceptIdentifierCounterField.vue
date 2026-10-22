@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, useId } from "vue";
 import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
 
@@ -32,6 +32,8 @@ const emit = defineEmits<{
 
 const toast = useToast();
 const { $gettext } = useGettext();
+
+const conceptIdentifierCounterLabelId = useId();
 
 const isEditingConceptIdentifierCounter = ref(false);
 const conceptIdentifierCounterStartNumberDraft = ref("1");
@@ -100,13 +102,17 @@ async function saveConceptIdentifierCounter() {
 
 <template>
     <div class="header-item">
-        <span class="header-item-label">
+        <span
+            :id="conceptIdentifierCounterLabelId"
+            class="header-item-label"
+        >
             {{ $gettext("Concept counter:") }}
         </span>
 
         <template v-if="isEditingConceptIdentifierCounter">
             <InputText
                 v-model="conceptIdentifierCounterStartNumberDraft"
+                :aria-labelledby="conceptIdentifierCounterLabelId"
                 size="small"
             />
             <Button
