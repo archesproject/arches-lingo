@@ -180,6 +180,7 @@ function onUpdateModelValue(updatedValue: string[]) {
 
 <template>
     <MultiSelect
+        :input-id="nodeAlias"
         display="chip"
         option-label="label"
         option-value="id"
@@ -236,6 +237,15 @@ function onUpdateModelValue(updatedValue: string[]) {
             </div>
             <div class="button-container">
                 <Button
+                    :aria-label="
+                        $gettext(
+                            'Remove %{label}',
+                            {
+                                label: getChipLabel(slotProps.value) ?? '',
+                            },
+                            true,
+                        )
+                    "
                     icon="pi pi-times"
                     variant="text"
                     size="small"
