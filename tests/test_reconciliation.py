@@ -26,6 +26,10 @@ from arches_lingo.const import (
     SCHEME_NAME_NODEGROUP,
     SCHEME_NAME_TYPE_NODE,
     SCHEMES_GRAPH_ID,
+    STATEMENT_CONTENT_NODE,
+    STATEMENT_LANGUAGE_NODE,
+    STATEMENT_NODEGROUP,
+    STATEMENT_TYPE_NODE,
     URI_CONTENT_NODE,
     URI_NODEGROUP,
 )
@@ -44,9 +48,11 @@ from arches_lingo.utils.reconciliation.candidates import (
     parse_reconciliation_queries,
 )
 from arches_lingo.utils.reconciliation.manifest import (
+    SUGGEST_KINDS,
     build_service_manifest,
     list_reconcilable_schemes,
 )
+from arches_lingo.utils.reconciliation.suggest import SUGGEST_SERVICES
 from arches_lingo.utils.reconciliation.scoring import (
     adjust_score_for_properties,
     decide_automatic_match,
@@ -150,6 +156,22 @@ class ReconciliationManifestTests(SchemeWithConceptsTestCase):
             manifest["schemaSpace"], "http://www.w3.org/2004/02/skos/core#"
         )
         self.assertEqual(len(manifest["defaultTypes"]), 3)
+        self.assertEqual(
+            manifest["preview"]["url"],
+            "https://lingo.example.org/api/lingo/reconcile/preview?id={{id}}",
+        )
+        self.assertEqual(
+            manifest["suggest"]["entity"],
+            {
+                "service_url": "https://lingo.example.org/api/lingo/reconcile",
+                "service_path": "/suggest/entity",
+            },
+        )
+        self.assertEqual(set(SUGGEST_KINDS), set(SUGGEST_SERVICES))
+        self.assertEqual(
+            manifest["extend"]["propose_properties"]["service_path"], "/properties"
+        )
+        self.assertEqual(manifest["extend"]["property_settings"][0]["name"], "lang")
 
     def test_scheme_manifest_is_scoped_and_named_for_the_scheme(self):
         manifest = build_service_manifest(str(self.scheme.pk))
@@ -668,3 +690,261 @@ class ReconciliationQueryPropertyTests(ReconciliationQueryTestCase):
         )
 
         self.assertEqual(response.status_code, 400)
+
+
+class ReconciliationSuggestTests(ReconciliationQueryTestCase):
+    def suggest(self, suggest_kind, **parameters):
+        return self.client.get(
+            reverse(
+                "api-lingo-reconcile-suggest", kwargs={"suggest_kind": suggest_kind}
+            ),
+            parameters,
+        )
+
+    def test_entity_suggest_lists_public_concepts_with_paging(self):
+        set_lifecycle_state(self.concepts[4], DRAFT_STATE_ID)
+
+        first_page = self.suggest("entity", prefix="concept").json()["result"]
+        later_page = self.suggest("entity", prefix="concept", cursor=2).json()
+        scoped_elsewhere = self.suggest(
+            "entity", prefix="concept", type=str(uuid.uuid4())
+        ).json()
+
+        self.assertEqual(
+            [suggestion["name"] for suggestion in first_page],
+            ["Concept 1", "Concept 2", "Concept 3", "Concept 4"],
+        )
+        self.assertEqual(
+            first_page[2]["description"], "Concept 1, Concept 2 · Test Scheme"
+        )
+        self.assertEqual(len(later_page["result"]), 2)
+        self.assertEqual(scoped_elsewhere["result"], [])
+        self.assertEqual(self.suggest("entity", prefix=" ").json()["result"], [])
+
+    def test_type_and_property_suggest_filter_by_prefix(self):
+        self.assertEqual(
+            self.suggest("type", prefix="TEST").json()["result"],
+            [{"id": str(self.scheme.pk), "name": "Test Scheme"}],
+        )
+        self.assertEqual(self.suggest("type", prefix="zzz").json()["result"], [])
+        self.assertEqual(
+            self.suggest("property", prefix="broad").json()["result"],
+            [{"id": "broader", "name": "Broader concept (label or id)"}],
+        )
+        self.assertEqual(len(self.suggest("property").json()["result"]), 6)
+
+    def test_invalid_suggest_requests(self):
+        self.assertEqual(self.suggest("colour", prefix="x").status_code, 404)
+        self.assertEqual(self.suggest("type", cursor="-1").status_code, 400)
+        self.assertEqual(self.suggest("type", cursor="first").status_code, 400)
+        self.assertEqual(self.suggest("entity", prefix="c" * 256).status_code, 400)
+
+
+class ReconciliationPreviewTests(ReconciliationQueryTestCase):
+    def preview(self, concept_id):
+        return self.client.get(
+            reverse("api-lingo-reconcile-preview"), {"id": str(concept_id)}
+        )
+
+    def add_note(self, concept, content, language):
+        TileModel.objects.create(
+            resourceinstance=concept,
+            nodegroup_id=STATEMENT_NODEGROUP,
+            data={
+                STATEMENT_CONTENT_NODE: content,
+                STATEMENT_LANGUAGE_NODE: language,
+                STATEMENT_TYPE_NODE: [
+                    {"labels": [{"language_id": "en", "value": "Scope note"}]}
+                ],
+            },
+        )
+
+    def test_preview_card_shows_labels_note_and_uri_in_the_active_language(self):
+        self.add_label(self.concepts[2], "Third", label_type="altLabel")
+        self.add_label(
+            self.concepts[2], "Troisième", label_type="altLabel", language="fr"
+        )
+        self.add_note(self.concepts[2], "Une note.", "fr")
+        self.add_note(self.concepts[2], "An English note.", "en")
+        TileModel.objects.create(
+            resourceinstance=self.concepts[2],
+            nodegroup_id=URI_NODEGROUP,
+            data={URI_CONTENT_NODE: "https://lingo.example/c3"},
+        )
+
+        response = self.preview(self.concepts[2].pk)
+        content = response.content.decode()
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn("X-Frame-Options", response)
+        self.assertEqual(response["Access-Control-Allow-Origin"], "*")
+        for expected_text in [
+            "Concept 3",
+            "Concept 1, Concept 2 · Test Scheme",
+            "Third",
+            "Scope note",
+            "An English note.",
+            "https://lingo.example/c3",
+        ]:
+            self.assertIn(expected_text, content)
+        self.assertNotIn("Troisième", content)
+        self.assertNotIn("Une note.", content)
+
+    def test_preview_falls_back_to_a_note_in_another_language(self):
+        self.add_note(self.concepts[1], "Une note.", "fr")
+
+        self.assertIn("Une note.", self.preview(self.concepts[1].pk).content.decode())
+
+    def test_retired_concepts_are_flagged(self):
+        set_lifecycle_state(self.concepts[2], RETIRED_STATE_ID)
+
+        self.assertIn("Retired", self.preview(self.concepts[2].pk).content.decode())
+
+    def test_preview_never_reveals_non_public_concepts(self):
+        set_lifecycle_state(self.concepts[1], DRAFT_STATE_ID)
+        self.assertEqual(self.preview(self.concepts[1].pk).status_code, 404)
+        self.assertEqual(self.preview("not-a-uuid").status_code, 404)
+
+        set_lifecycle_state(self.scheme, DRAFT_STATE_ID)
+        self.assertEqual(self.preview(self.concepts[2].pk).status_code, 404)
+
+
+# Controlled list backing match_status_ascribed_relation (SKOS mapping properties).
+MAPPING_PROPERTIES_LIST_ID = "769fa072-6247-4e23-b638-4e801f8c50dc"
+
+
+class ReconciliationExtensionTests(ReconciliationQueryTestCase):
+    def extend(self, ids, properties, method="post"):
+        extension_request = {
+            "extend": json.dumps(
+                {
+                    "ids": [str(concept_id) for concept_id in ids],
+                    "properties": properties,
+                }
+            )
+        }
+        return getattr(self.client, method)(
+            reverse("api-lingo-reconcile"), extension_request
+        )
+
+    def test_columns_come_from_the_concepts_published_skos(self):
+        concept_3 = self.concepts[2]
+        TileModel.objects.create(
+            resourceinstance=concept_3,
+            nodegroup_id=URI_NODEGROUP,
+            data={URI_CONTENT_NODE: "https://lingo.example/c3"},
+        )
+        TileModel.objects.create(
+            resourceinstance=self.concepts[0],
+            nodegroup_id=URI_NODEGROUP,
+            data={URI_CONTENT_NODE: "https://lingo.example/c1"},
+        )
+        TileModel.objects.create(
+            resourceinstance=concept_3,
+            nodegroup_id=MATCH_STATUS_NODEGROUP,
+            data={
+                MATCH_STATUS_RELATION_NODE: DataTypeFactory()
+                .get_instance("reference")
+                .transform_value_for_tile(
+                    "exactMatch", controlledList=MAPPING_PROPERTIES_LIST_ID
+                ),
+                MATCH_STATUS_COMPARATE_NODE: "http://example.org/third",
+            },
+        )
+        self.add_label(concept_3, "Concept trois", language="fr")
+        self.add_label(self.concepts[0], "Concept un", language="fr")
+
+        response = self.extend(
+            [concept_3.pk],
+            [
+                {"id": "uri"},
+                {"id": "prefLabel"},
+                {"id": "inScheme"},
+                {"id": "exactMatch"},
+            ],
+        ).json()
+        # Concept 2's only broader concept, Concept 1, has a minted URI.
+        broader_by_minted_uri = self.extend(
+            [self.concepts[1].pk], [{"id": "broader", "settings": {"lang": "fr"}}]
+        ).json()
+        all_languages = self.extend(
+            [concept_3.pk], [{"id": "prefLabel", "settings": {"lang": "*"}}]
+        ).json()
+
+        self.assertEqual(
+            [column["id"] for column in response["meta"]],
+            ["uri", "prefLabel", "inScheme", "exactMatch"],
+        )
+        self.assertEqual(
+            response["rows"][str(concept_3.pk)],
+            {
+                "uri": [{"str": "https://lingo.example/c3"}],
+                "prefLabel": [{"str": "Concept 3"}],
+                "inScheme": [{"str": "Test Scheme"}],
+                "exactMatch": [{"str": "http://example.org/third"}],
+            },
+        )
+        self.assertEqual(
+            broader_by_minted_uri["rows"][str(self.concepts[1].pk)]["broader"],
+            [{"id": str(self.concepts[0].pk), "name": "Concept un"}],
+        )
+        self.assertEqual(
+            all_languages["rows"][str(concept_3.pk)]["prefLabel"],
+            [{"str": "Concept 3"}, {"str": "Concept trois"}],
+        )
+
+    def test_non_public_concepts_get_empty_rows(self):
+        set_lifecycle_state(self.concepts[0], DRAFT_STATE_ID)
+        set_lifecycle_state(self.concepts[1], DRAFT_STATE_ID)
+        requested_ids = [self.concepts[2].pk, self.concepts[1].pk, "not-a-uuid"]
+
+        rows = self.extend(requested_ids, [{"id": "broader"}], method="get").json()[
+            "rows"
+        ]
+
+        self.assertEqual(rows[str(self.concepts[1].pk)], {"broader": []})
+        self.assertEqual(rows["not-a-uuid"], {"broader": []})
+        # The draft broader concepts are not revealed either.
+        self.assertEqual(rows[str(self.concepts[2].pk)], {"broader": []})
+
+        set_lifecycle_state(self.scheme, DRAFT_STATE_ID)
+        hidden_scheme_rows = self.extend(
+            [self.concepts[3].pk], [{"id": "prefLabel"}]
+        ).json()["rows"]
+        self.assertEqual(
+            hidden_scheme_rows, {str(self.concepts[3].pk): {"prefLabel": []}}
+        )
+
+    def test_malformed_extension_requests_are_rejected(self):
+        too_many_ids = [str(uuid.uuid4()) for _ in range(MAX_QUERIES_PER_REQUEST + 1)]
+        for raw_extension_request in [
+            "not json",
+            json.dumps(["ids"]),
+            json.dumps({"ids": "abc", "properties": []}),
+            json.dumps({"ids": too_many_ids, "properties": []}),
+            json.dumps({"ids": [], "properties": "uri"}),
+            json.dumps({"ids": [], "properties": [{"id": "colour"}]}),
+            json.dumps({"ids": [], "properties": [{"id": "uri"}, {"id": "uri"}]}),
+        ]:
+            with self.subTest(raw_extension_request=raw_extension_request[:40]):
+                response = self.client.post(
+                    reverse("api-lingo-reconcile"), {"extend": raw_extension_request}
+                )
+                self.assertEqual(response.status_code, 400)
+
+    def test_property_proposals(self):
+        proposals_url = reverse("api-lingo-reconcile-properties")
+
+        all_proposals = self.client.get(proposals_url, {"type": "scheme"}).json()
+        limited = self.client.get(proposals_url, {"limit": "2"}).json()
+
+        self.assertEqual(all_proposals["type"], "scheme")
+        self.assertEqual(len(all_proposals["properties"]), 10)
+        self.assertEqual(
+            limited["properties"],
+            [{"id": "uri", "name": "URI"}, {"id": "notation", "name": "Identifier"}],
+        )
+        for bad_limit in ["0", "two"]:
+            self.assertEqual(
+                self.client.get(proposals_url, {"limit": bad_limit}).status_code, 400
+            )

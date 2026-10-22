@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.urls import reverse
+from django.utils.translation import gettext_lazy
 
 from arches_lingo.const import (
     SCHEME_NAME_CONTENT_NODE,
@@ -15,6 +16,25 @@ RECONCILIATION_API_VERSIONS = ["0.1", "0.2"]
 SKOS_NAMESPACE = "http://www.w3.org/2004/02/skos/core#"
 # OpenRefine's own default; small batches keep its progress bar responsive.
 SUGGESTED_BATCH_SIZE = 10
+SUGGEST_KINDS = ("entity", "type", "property")
+# The reconciliation spec defines the preview iframe size as unitless pixel
+# counts, so these cannot be relative units.
+PREVIEW_WIDTH_PIXELS = 400
+PREVIEW_HEIGHT_PIXELS = 220
+
+
+PROPERTY_SETTINGS = [
+    {
+        "name": "lang",
+        "label": gettext_lazy("Language"),
+        "type": "text",
+        "default": "",
+        "help_text": gettext_lazy(
+            "Language code for labels and notes, such as 'fr'. Leave empty for "
+            "the default language, or use '*' for every language."
+        ),
+    }
+]
 
 
 def public_server_address():
@@ -69,6 +89,8 @@ def build_service_manifest(scheme_id=None):
         service_name = f"{service_name} — {reconciliation_types[0]['name']}"
 
     identifier_space = concept_identifier_space()
+    # Suggest and preview are always the global services, even for one scheme.
+    global_service_url = reconciliation_service_url()
     return {
         "versions": RECONCILIATION_API_VERSIONS,
         "name": service_name,
@@ -77,4 +99,26 @@ def build_service_manifest(scheme_id=None):
         "defaultTypes": reconciliation_types,
         "view": {"url": f"{identifier_space}{{{{id}}}}"},
         "batchSize": SUGGESTED_BATCH_SIZE,
+        "preview": {
+            "url": f"{global_service_url}/preview?id={{{{id}}}}",
+            "width": PREVIEW_WIDTH_PIXELS,
+            "height": PREVIEW_HEIGHT_PIXELS,
+        },
+        "suggest": {
+            suggest_kind: {
+                "service_url": global_service_url,
+                "service_path": f"/suggest/{suggest_kind}",
+            }
+            for suggest_kind in SUGGEST_KINDS
+        },
+        "extend": {
+            "propose_properties": {
+                "service_url": global_service_url,
+                "service_path": "/properties",
+            },
+            "property_settings": [
+                {key: str(value) for key, value in property_setting.items()}
+                for property_setting in PROPERTY_SETTINGS
+            ],
+        },
     }
