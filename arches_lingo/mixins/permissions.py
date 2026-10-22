@@ -1,7 +1,9 @@
 from http import HTTPStatus
 
-from django.http import JsonResponse
+from django.http import Http404, JsonResponse
+from django.utils.decorators import method_decorator
 from django.utils.translation import gettext as _
+from django.views.decorators.csrf import csrf_exempt
 
 from arches.app.utils.response import JSONErrorResponse
 
@@ -10,6 +12,7 @@ from arches_lingo.permissions import (
     is_authenticated_user,
     is_lingo_admin,
     is_lingo_editor,
+    reconciliation_enabled,
 )
 
 
@@ -23,6 +26,24 @@ class AnonymousAccessMixin:
                 status=403,
             )
         return super().dispatch(request, *args, **kwargs)
+
+
+class ReconciliationAccessMixin:
+    """Open the read-only reconciliation service to anonymous, cross-origin callers.
+
+    OpenRefine cannot hold an Arches session or send a CSRF token, and its browser
+    UI fetches from another origin, so the service ignores the anonymous access
+    setting and allows any origin. While disabled it is indistinguishable from an
+    absent endpoint.
+    """
+
+    @method_decorator(csrf_exempt)
+    def dispatch(self, request, *args, **kwargs):
+        if not reconciliation_enabled():
+            raise Http404()
+        response = super().dispatch(request, *args, **kwargs)
+        response["Access-Control-Allow-Origin"] = "*"
+        return response
 
 
 class AuthenticatedUserMixin:

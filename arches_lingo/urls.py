@@ -59,6 +59,7 @@ from arches_lingo.views.api.concept_merge import (
     ConceptMergePreviewView,
     ConceptMergeView,
 )
+from arches_lingo.views.api.reconciliation import ReconciliationServiceView
 from arches_lingo.views.api.scheme_lock import SchemeLockView, SchemeUnlockView
 from arches_lingo.views.api.settings import AppSettingsView
 from arches_lingo.views.api.identifier_resolve import (
@@ -129,6 +130,18 @@ urlpatterns = [
         "api/lingo/settings",
         AppSettingsView.as_view(),
         name="api-lingo-settings",
+    ),
+    # Must precede the generic api/lingo/<slug:graph> routes, which would
+    # otherwise capture "reconcile" as a graph slug.
+    path(
+        "api/lingo/reconcile",
+        ReconciliationServiceView.as_view(),
+        name="api-lingo-reconcile",
+    ),
+    path(
+        "api/lingo/schemes/<slug:scheme_identifier>/reconcile",
+        ReconciliationServiceView.as_view(),
+        name="api-lingo-scheme-reconcile",
     ),
     path(
         "api/lingo/change-password",
