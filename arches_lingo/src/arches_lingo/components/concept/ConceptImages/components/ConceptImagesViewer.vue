@@ -17,8 +17,10 @@ import { useConceptImagesEditorStore } from "@/arches_lingo/stores/useConceptIma
 import { storeToRefs } from "pinia";
 import {
     getDigitalObjectImageAlt,
+    getDigitalObjectImageTitle,
     getDigitalObjectImageUrl,
 } from "@/arches_lingo/components/concept/ConceptImages/components/utils.ts";
+import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 
 import type {
@@ -82,6 +84,8 @@ const { isEditor } = useUserStore();
 const { targetDigitalObjectResourceInstanceId } = storeToRefs(
     useConceptImagesEditorStore(),
 );
+
+const { selectedLanguage } = storeToRefs(useLanguageStore());
 
 const configurationError = ref();
 const isLoading = ref(true);
@@ -171,10 +175,17 @@ function confirmDelete(removedResourceInstanceId: string) {
             outlined: true,
         },
         acceptProps: {
-            label: $gettext("Delete"),
+            label: $gettext("Remove"),
             severity: DANGER,
         },
     });
+}
+
+function getImageName(resource: DigitalObjectInstance): string {
+    return (
+        getDigitalObjectImageTitle(resource, selectedLanguage.value.code) ||
+        $gettext("image")
+    );
 }
 
 function newResource() {
@@ -259,7 +270,12 @@ function modifyResource(resourceInstanceId?: string) {
                         <Image
                             v-if="getDigitalObjectImageUrl(resource)"
                             :src="getDigitalObjectImageUrl(resource)"
-                            :alt="getDigitalObjectImageAlt(resource)"
+                            :alt="
+                                getDigitalObjectImageAlt(
+                                    resource,
+                                    selectedLanguage.code,
+                                )
+                            "
                             preview
                             class="card-image"
                         />
@@ -267,7 +283,10 @@ function modifyResource(resourceInstanceId?: string) {
                             v-else
                             class="image-placeholder"
                         >
-                            <i class="pi pi-image" />
+                            <i
+                                class="pi pi-image"
+                                aria-hidden="true"
+                            />
                         </div>
                     </div>
                     <div class="card-body">
@@ -293,7 +312,16 @@ function modifyResource(resourceInstanceId?: string) {
                                     class="controls edit-button"
                                     icon="pi pi-file-edit"
                                     variant="text"
-                                    :aria-label="$gettext('edit')"
+                                    :aria-label="
+                                        $gettext(
+                                            'Edit %{imageName}',
+                                            {
+                                                imageName:
+                                                    getImageName(resource),
+                                            },
+                                            true,
+                                        )
+                                    "
                                     @click="
                                         editResource(
                                             resource.resourceinstanceid,
@@ -304,7 +332,16 @@ function modifyResource(resourceInstanceId?: string) {
                                     v-if="canEditResourceInstances"
                                     class="controls delete-button"
                                     icon="pi pi-trash"
-                                    :aria-label="$gettext('Delete')"
+                                    :aria-label="
+                                        $gettext(
+                                            'Remove %{imageName}',
+                                            {
+                                                imageName:
+                                                    getImageName(resource),
+                                            },
+                                            true,
+                                        )
+                                    "
                                     variant="text"
                                     @click="
                                         confirmDelete(
