@@ -509,3 +509,13 @@ export function filterTreeByLifecycleStates(
         return visibleNodes;
     }, []);
 }
+
+export function saveBlobAsFile(blob: Blob, filename: string): void {
+    const objectUrl = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = objectUrl;
+    anchor.download = filename;
+    anchor.click();
+    // Revoking in the same task can cancel the download in some browsers.
+    setTimeout(() => URL.revokeObjectURL(objectUrl));
+}

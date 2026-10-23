@@ -3,14 +3,7 @@ from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy
 
-from arches_lingo.const import (
-    SCHEME_NAME_CONTENT_NODE,
-    SCHEME_NAME_LANGUAGE_NODE,
-    SCHEME_NAME_NODEGROUP,
-    SCHEME_NAME_TYPE_NODE,
-)
-from arches_lingo.utils.concept_builder import ConceptBuilder
-from arches_lingo.utils.reconciliation.labels import choose_display_label
+from arches_lingo.utils.reconciliation.labels import get_scheme_display_names
 from arches_lingo.utils.reconciliation.visibility import reconcilable_schemes
 
 RECONCILIATION_API_VERSIONS = ["0.1", "0.2"]
@@ -72,23 +65,9 @@ def list_reconcilable_schemes(scheme_ids=None):
     schemes = reconcilable_schemes()
     if scheme_ids is not None:
         schemes = schemes.filter(pk__in=scheme_ids)
-    schemes = schemes.annotate(
-        labels=ConceptBuilder.labels_subquery(SCHEME_NAME_NODEGROUP)
-    )
-
     reconciliation_types = [
-        {
-            "id": str(scheme.pk),
-            "name": choose_display_label(
-                scheme.labels,
-                SCHEME_NAME_CONTENT_NODE,
-                SCHEME_NAME_TYPE_NODE,
-                SCHEME_NAME_LANGUAGE_NODE,
-            )
-            or str(scheme.name)
-            or str(scheme.pk),
-        }
-        for scheme in schemes
+        {"id": scheme_id, "name": scheme_name}
+        for scheme_id, scheme_name in get_scheme_display_names(schemes).items()
     ]
     return sorted(
         reconciliation_types,

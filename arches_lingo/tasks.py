@@ -1,12 +1,17 @@
 import logging
 from celery import shared_task
+from django.conf import settings
 from django.contrib.auth.models import User
-from django.utils import timezone
+from django.utils import timezone, translation
 from django.utils.translation import gettext as _
+from django.utils.translation import ngettext
 from arches.app.models import models
 from arches_lingo.etl_modules import migrate_to_lingo
-from arches_lingo.models import ConceptMatchRun
+from arches_lingo.models import ConceptMatchRun, MatchLinkImport
 from arches_lingo.utils.concept_matching import MatchScope, run_detection
+from arches_lingo.utils.openrefine_round_trip.match_link_import import (
+    apply_match_link_import,
+)
 from arches.app.tasks import notify_completion
 
 
@@ -124,3 +129,38 @@ def detect_concept_matches_task(run_id, scope_parameters, signals, options):
 
     if run.user:
         notify_completion(message, run.user)
+
+
+@shared_task
+def apply_match_link_import_task(match_link_import_id):
+    """Apply an import the request has already recorded and returned to the caller."""
+    try:
+        match_link_import = MatchLinkImport.objects.get(pk=match_link_import_id)
+    except MatchLinkImport.DoesNotExist:
+        logging.getLogger(__name__).warning(
+            "Match link import %s no longer exists; abandoning it.",
+            match_link_import_id,
+        )
+        return
+
+    if match_link_import.status != MatchLinkImport.STATUS_PENDING:
+        logging.getLogger(__name__).warning(
+            "Match link import %s is already %s; not applying it again.",
+            match_link_import.pk,
+            match_link_import.status,
+        )
+        return
+
+    apply_match_link_import(match_link_import)
+    if match_link_import.user:
+        with translation.override(match_link_import.language or settings.LANGUAGE_CODE):
+            if match_link_import.status == MatchLinkImport.STATUS_COMPLETE:
+                added_count = match_link_import.outcome_counts.get("add", 0)
+                message = ngettext(
+                    "Match link import finished: %(count)s link added",
+                    "Match link import finished: %(count)s links added",
+                    added_count,
+                ) % {"count": added_count}
+            else:
+                message = _("Match link import failed")
+        notify_completion(message, match_link_import.user)

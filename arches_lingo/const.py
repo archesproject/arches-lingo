@@ -115,6 +115,16 @@ EXACT_MATCH_LIST_ITEM_ID = "cce4ce1c-0e47-453e-8a12-3e23c3dbb472"
 CLOSE_MATCH_LIST_ITEM_ID = "ed044298-b4a1-4455-b11a-81561fbf2fd8"
 RELATED_MATCH_LIST_ITEM_ID = "5ca7196a-2e9a-449c-b6fe-8ed42f604cba"
 RELATED_PROPERTIES_LIST_ID = "ed3f8d46-c372-4c99-a326-8f726076fb97"
+
+# Match types that may be written as links. Only symmetric relations: a concept
+# matching pair has no direction, so broadMatch / narrowMatch would be applied the
+# wrong way round for half of a bulk selection.
+MATCH_TYPE_EXACT = "exactMatch"
+LINKABLE_MATCH_TYPES = {
+    MATCH_TYPE_EXACT: EXACT_MATCH_LIST_ITEM_ID,
+    "closeMatch": CLOSE_MATCH_LIST_ITEM_ID,
+    "relatedMatch": RELATED_MATCH_LIST_ITEM_ID,
+}
 CONCEPT_TYPE_LIST_ID = "4f9b2c82-59c6-4173-99ea-2a6bfbab6aa2"
 
 

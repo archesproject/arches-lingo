@@ -32,6 +32,9 @@ import type {
     ConceptMergePreview,
     ConceptMergeResult,
     MergeRequestPayload,
+    MatchLinkImportPreview,
+    MatchLinkImportRecord,
+    ReconciliationWorksheetScope,
 } from "@/arches_lingo/types";
 import type {
     MissingTranslationsResponse,
@@ -852,9 +855,8 @@ export const dismissNotifications = async (notificationIds: string[]) => {
         headers: { "X-CSRFTOKEN": getToken() },
         body: formData,
     });
-    const parsed = await response.json();
-    if (!response.ok) throw new Error(parsed.message || response.statusText);
-    return parsed;
+    if (!response.ok) throw new Error(await readErrorMessage(response));
+    return response.json();
 };
 
 export const fetchResourceEditLog = async (
@@ -1510,4 +1512,83 @@ export const linkConceptMatchCandidates = async (
     const parsed = await response.json();
     if (!response.ok) throw new Error(parsed.message || response.statusText);
     return parsed;
+};
+
+// A proxy or server error page may not be JSON, e.g. an nginx 413 for an
+// upload over its body size limit.
+async function readErrorMessage(response: Response): Promise<string> {
+    try {
+        const parsed = await response.json();
+        return parsed.message || response.statusText;
+    } catch {
+        return response.statusText;
+    }
+}
+
+export const downloadReconciliationWorksheet = async (
+    scope: ReconciliationWorksheetScope,
+    language: string,
+): Promise<Blob> => {
+    const response = await fetch(
+        generateArchesURL("arches_lingo:api-lingo-reconciliation-worksheet"),
+        {
+            method: "POST",
+            headers: {
+                "X-CSRFTOKEN": getToken(),
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ scope, language }),
+        },
+    );
+    if (!response.ok) throw new Error(await readErrorMessage(response));
+    return response.blob();
+};
+
+async function postMatchLinkFile<ResponseBody>(
+    urlName: string,
+    file: File,
+    schemeId?: string,
+): Promise<ResponseBody> {
+    const formData = new FormData();
+    formData.append("file", file);
+    if (schemeId) formData.append("scheme_id", schemeId);
+    const response = await fetch(generateArchesURL(urlName), {
+        method: "POST",
+        headers: { "X-CSRFTOKEN": getToken() },
+        body: formData,
+    });
+    if (!response.ok) throw new Error(await readErrorMessage(response));
+    return response.json();
+}
+
+export const previewMatchLinkImport = (
+    file: File,
+    schemeId?: string,
+): Promise<MatchLinkImportPreview> =>
+    postMatchLinkFile(
+        "arches_lingo:api-lingo-match-link-import-preview",
+        file,
+        schemeId,
+    );
+
+export const startMatchLinkImport = (
+    file: File,
+    schemeId?: string,
+): Promise<MatchLinkImportRecord> =>
+    postMatchLinkFile(
+        "arches_lingo:api-lingo-match-link-imports",
+        file,
+        schemeId,
+    );
+
+export const fetchMatchLinkImport = async (
+    importId: number,
+): Promise<MatchLinkImportRecord> => {
+    const response = await fetch(
+        generateArchesURL("arches_lingo:api-lingo-match-link-import", {
+            pk: importId,
+        }),
+    );
+    if (!response.ok) throw new Error(await readErrorMessage(response));
+    return response.json();
 };
