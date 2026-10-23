@@ -10,14 +10,13 @@ import io
 import logging
 import uuid
 from collections import Counter
-from urllib.parse import urlsplit
+from urllib.parse import urlsplit, urlunsplit
 
 from django.db import transaction
 from django.utils import timezone
 from django.utils.translation import get_language
 from django.utils.translation import gettext as _
 
-import arches.app.utils.task_management as task_management
 from arches.app.models.models import ResourceInstance, TileModel
 
 from arches_lingo.const import (
@@ -37,11 +36,13 @@ from arches_lingo.utils.concept_lifecycle import (
     reasons_concepts_cannot_receive_data,
 )
 from arches_lingo.utils.concept_matching import get_scheme_ids_for_concepts
-from arches_lingo.utils.concept_merge.rules import ConceptMergeGraph
 from arches_lingo.utils.concept_merge.tiles import (
+    create_tile_on_concept,
     get_list_item_tile_value,
     load_concept_resources,
-    write_match_tile,
+)
+from arches_lingo.utils.openrefine_round_trip.worksheet_export import (
+    MULTI_VALUE_SEPARATOR,
 )
 from arches_lingo.utils.reconciliation.concept_summaries import (
     get_display_labels_for_concepts,
@@ -53,20 +54,32 @@ MAX_IMPORT_ROWS = 10_000
 MAX_IMPORT_BYTES = 5 * 1024 * 1024
 REQUIRED_COLUMNS = ("concept_id", "match_uri")
 
+SKOS_NAMESPACE = "http://www.w3.org/2004/02/skos/core#"
+MATCH_TYPE_BY_ALIAS = {
+    f"{prefix}{match_type}".casefold(): match_type
+    for match_type in LINKABLE_MATCH_TYPES
+    for prefix in ("", "skos:", SKOS_NAMESPACE)
+}
+
 OUTCOME_ADD = "add"
 OUTCOME_ALREADY_LINKED = "already_linked"
 OUTCOME_DUPLICATE_IN_FILE = "duplicate_in_file"
 OUTCOME_UNKNOWN_CONCEPT = "unknown_concept"
+OUTCOME_OUTSIDE_SCHEME = "outside_scheme"
 OUTCOME_INVALID_MATCH_TYPE = "invalid_match_type"
 OUTCOME_INVALID_URI = "invalid_uri"
 OUTCOME_SELF_MATCH = "self_match"
-# The same values reasons_concepts_cannot_receive_data reports.
-OUTCOME_NOT_EDITABLE = "not_editable"
-OUTCOME_SCHEME_LOCKED = "scheme_locked"
 
 
 def normalize_column_name(column_name):
     return (column_name or "").strip().casefold().replace(" ", "_").replace("-", "_")
+
+
+def canonical_match_type(raw_match_type):
+    """Accept exactMatch, skos:exactMatch or the full SKOS URI, in any case."""
+    if not raw_match_type:
+        return MATCH_TYPE_EXACT
+    return MATCH_TYPE_BY_ALIAS.get(raw_match_type.casefold(), raw_match_type)
 
 
 def parse_match_link_csv(uploaded_file):
@@ -74,7 +87,9 @@ def parse_match_link_csv(uploaded_file):
 
     Headers match case-insensitively and columns other than concept_id,
     match_uri and match_type are ignored, so an edited reconciliation worksheet
-    can be uploaded as it is. Raises ValueError for a file that cannot be read.
+    can be uploaded as it is. A match_uri cell holding several URIs joined the
+    way the worksheet joins them gives one link per URI. Raises ValueError for
+    a file that cannot be read.
     """
     if uploaded_file is None:
         raise ValueError(_("Choose a CSV file to import."))
@@ -88,7 +103,15 @@ def parse_match_link_csv(uploaded_file):
     except UnicodeDecodeError:
         raise ValueError(_("The file must be a UTF-8 encoded CSV."))
 
-    csv_reader = csv.reader(io.StringIO(text))
+    try:
+        return parse_match_link_rows(csv.reader(io.StringIO(text)))
+    except csv.Error as csv_error:
+        raise ValueError(
+            _("The file could not be read as a CSV: %(error)s") % {"error": csv_error}
+        )
+
+
+def parse_match_link_rows(csv_reader):
     header = next(csv_reader, None)
     if header is None:
         raise ValueError(_("The file is empty."))
@@ -118,17 +141,23 @@ def parse_match_link_csv(uploaded_file):
     for row_number, row in enumerate(csv_reader, start=2):
         if not any(value.strip() for value in row):
             continue
-        rows.append(
-            {
-                "row_number": row_number,
-                "concept_id": cell(row, "concept_id"),
-                "match_uri": cell(row, "match_uri"),
-                "match_type": cell(row, "match_type") or MATCH_TYPE_EXACT,
-            }
-        )
+        match_uris = [
+            match_uri.strip()
+            for match_uri in cell(row, "match_uri").split(MULTI_VALUE_SEPARATOR)
+            if match_uri.strip()
+        ] or [""]
+        for match_uri in match_uris:
+            rows.append(
+                {
+                    "row_number": row_number,
+                    "concept_id": cell(row, "concept_id"),
+                    "match_uri": match_uri,
+                    "match_type": canonical_match_type(cell(row, "match_type")),
+                }
+            )
         if len(rows) > MAX_IMPORT_ROWS:
             raise ValueError(
-                _("The file has more than %(limit)s rows.")
+                _("The file has more than %(limit)s links.")
                 % {"limit": f"{MAX_IMPORT_ROWS:,}"}
             )
     return rows
@@ -150,9 +179,44 @@ def is_absolute_web_uri(uri):
     )
 
 
+def comparable_uri(uri):
+    """Reduce a URI to what identifies its target, so http/https, host case and
+    a trailing slash do not make the same link look new."""
+    parsed_uri = urlsplit((uri or "").strip())
+    return urlunsplit(
+        (
+            "",
+            parsed_uri.netloc.casefold(),
+            parsed_uri.path.rstrip("/"),
+            parsed_uri.query,
+            parsed_uri.fragment,
+        )
+    )
+
+
+def stored_uri_variants(uri):
+    """The spellings of a URI that comparable_uri treats as the same, for
+    finding it with an exact database lookup."""
+    parsed_uri = urlsplit(uri)
+    path = parsed_uri.path.rstrip("/")
+    return {
+        urlunsplit(
+            (
+                scheme,
+                parsed_uri.netloc,
+                path_variant,
+                parsed_uri.query,
+                parsed_uri.fragment,
+            )
+        )
+        for scheme in ("http", "https")
+        for path_variant in (path, f"{path}/")
+    }
+
+
 def get_own_uris(concept_ids):
     return {
-        str(concept_id): (uri or "").strip()
+        str(concept_id): comparable_uri(uri)
         for concept_id, uri in TileModel.objects.filter(
             nodegroup_id=URI_NODEGROUP, resourceinstance_id__in=concept_ids
         ).values_list("resourceinstance_id", f"data__{URI_CONTENT_NODE}")
@@ -160,7 +224,7 @@ def get_own_uris(concept_ids):
 
 
 def get_existing_links(concept_ids):
-    """Return ``{(concept_id, relation_uri, matched_uri)}`` already recorded."""
+    """Return ``{(concept_id, relation_uri, comparable matched uri)}`` already recorded."""
     existing_links = set()
     for concept_id, tile_data in TileModel.objects.filter(
         nodegroup_id=MATCH_STATUS_NODEGROUP, resourceinstance_id__in=concept_ids
@@ -171,46 +235,51 @@ def get_existing_links(concept_ids):
                 (
                     str(concept_id),
                     relation_values[0].get("uri"),
-                    (tile_data.get(MATCH_STATUS_COMPARATE_NODE) or "").strip(),
+                    comparable_uri(tile_data.get(MATCH_STATUS_COMPARATE_NODE)),
                 )
             )
     return existing_links
 
 
 def get_internal_concept_uris(match_uris):
-    """Return the subset of these URIs that belong to concepts in this instance."""
-    return set(
-        TileModel.objects.filter(
+    """Return the comparable forms of these URIs that belong to concepts here."""
+    return {
+        comparable_uri(internal_uri)
+        for internal_uri in TileModel.objects.filter(
             nodegroup_id=URI_NODEGROUP,
-            **{f"data__{URI_CONTENT_NODE}__in": list(match_uris)},
+            **{
+                f"data__{URI_CONTENT_NODE}__in": [
+                    uri_variant
+                    for match_uri in match_uris
+                    for uri_variant in stored_uri_variants(match_uri)
+                ]
+            },
         ).values_list(f"data__{URI_CONTENT_NODE}", flat=True)
-    )
+    }
 
 
-def validate_match_link_rows(rows, user):
+def validate_match_link_rows(rows, user, scheme_id=None):
     """Give each row an ``outcome``, in a fixed number of queries.
 
-    Writability uses the same rule as the concept matching "link" action. A
-    match URI that belongs to another concept here is still added (one way
-    only) and flagged ``is_internal_concept``: a two-way link between Lingo
-    concepts belongs to the concept matches workflow.
+    Writability uses the same rule as the concept matching "link" action. With
+    a ``scheme_id``, concepts in other schemes are left alone. A match URI that
+    belongs to another concept here is still added (one way only) and flagged
+    ``is_internal_concept``: a two-way link between Lingo concepts belongs to
+    the concept matches workflow.
     """
-    concept_id_by_row_number = {
-        row["row_number"]: canonical_concept_id(row["concept_id"]) for row in rows
-    }
-    candidate_concept_ids = {
-        concept_id for concept_id in concept_id_by_row_number.values() if concept_id
-    }
+    concept_ids = [canonical_concept_id(row["concept_id"]) for row in rows]
     existing_concept_ids = {
         str(concept_id)
         for concept_id in ResourceInstance.objects.filter(
-            pk__in=candidate_concept_ids, graph_id=CONCEPTS_GRAPH_ID
+            pk__in={concept_id for concept_id in concept_ids if concept_id},
+            graph_id=CONCEPTS_GRAPH_ID,
         ).values_list("pk", flat=True)
     }
+    scheme_id_by_concept_id = get_scheme_ids_for_concepts(existing_concept_ids)
     cannot_receive_reason_by_concept_id = reasons_concepts_cannot_receive_data(
         existing_concept_ids,
-        get_scheme_ids_for_concepts(existing_concept_ids),
-        is_lingo_admin(user),
+        scheme_id_by_concept_id,
+        user is not None and is_lingo_admin(user),
     )
     own_uri_by_concept_id = get_own_uris(existing_concept_ids)
     existing_links = get_existing_links(existing_concept_ids)
@@ -219,25 +288,27 @@ def validate_match_link_rows(rows, user):
         for match_type, list_item_id in LINKABLE_MATCH_TYPES.items()
     }
     internal_concept_uris = get_internal_concept_uris(
-        {row["match_uri"] for row in rows if row["match_uri"]}
+        {row["match_uri"] for row in rows if is_absolute_web_uri(row["match_uri"])}
     )
 
     seen_links = set()
     validated_rows = []
-    for row in rows:
-        concept_id = concept_id_by_row_number[row["row_number"]]
+    for row, concept_id in zip(rows, concept_ids):
+        match_uri = comparable_uri(row["match_uri"])
         link = (
             concept_id,
             relation_uri_by_match_type.get(row["match_type"]),
-            row["match_uri"],
+            match_uri,
         )
         if concept_id not in existing_concept_ids:
             outcome = OUTCOME_UNKNOWN_CONCEPT
+        elif scheme_id and scheme_id_by_concept_id.get(concept_id) != str(scheme_id):
+            outcome = OUTCOME_OUTSIDE_SCHEME
         elif row["match_type"] not in LINKABLE_MATCH_TYPES:
             outcome = OUTCOME_INVALID_MATCH_TYPE
         elif not is_absolute_web_uri(row["match_uri"]):
             outcome = OUTCOME_INVALID_URI
-        elif row["match_uri"] == own_uri_by_concept_id.get(concept_id):
+        elif match_uri == own_uri_by_concept_id.get(concept_id):
             outcome = OUTCOME_SELF_MATCH
         elif link in seen_links:
             outcome = OUTCOME_DUPLICATE_IN_FILE
@@ -253,7 +324,7 @@ def validate_match_link_rows(rows, user):
                 **row,
                 "concept_id": concept_id or row["concept_id"],
                 "outcome": outcome,
-                "is_internal_concept": row["match_uri"] in internal_concept_uris,
+                "is_internal_concept": match_uri in internal_concept_uris,
             }
         )
     return validated_rows
@@ -263,9 +334,11 @@ def count_outcomes(validated_rows):
     return dict(Counter(validated_row["outcome"] for validated_row in validated_rows))
 
 
-def preview_match_link_import(uploaded_file, user):
+def preview_match_link_import(uploaded_file, user, scheme_id=None):
     """Validate an upload without writing anything."""
-    validated_rows = validate_match_link_rows(parse_match_link_csv(uploaded_file), user)
+    validated_rows = validate_match_link_rows(
+        parse_match_link_csv(uploaded_file), user, scheme_id
+    )
     concept_label_by_id = get_display_labels_for_concepts(
         {
             validated_row["concept_id"]
@@ -287,58 +360,51 @@ def preview_match_link_import(uploaded_file, user):
     }
 
 
-def start_match_link_import(uploaded_file, user):
-    """Record an import and apply it on a worker, or right away without one."""
-    rows = parse_match_link_csv(uploaded_file)
-    match_link_import = MatchLinkImport.objects.create(
-        user=user if user.is_authenticated else None,
-        filename=(uploaded_file.name or "")[:255],
-        rows=rows,
-    )
-    if task_management.check_if_celery_available():
-        # Imported here only to break the tasks → this module → tasks cycle.
-        from arches_lingo.tasks import apply_match_link_import_task
-
-        apply_match_link_import_task.apply_async(args=[match_link_import.pk])
-    else:
-        apply_match_link_import(match_link_import)
-    return match_link_import
-
-
 def apply_match_link_import(match_link_import):
     """Validate the stored rows again (state may have changed since the
-    preview) and write the links in one edit transaction."""
+    preview) and write the links in one edit transaction.
+
+    The record is saved as soon as the links commit, so its
+    ``edit_transaction_id`` survives a failure while indexing them.
+    """
     match_link_import.status = MatchLinkImport.STATUS_RUNNING
     match_link_import.save(update_fields=["status"])
+    edit_transaction_id = uuid.uuid4()
+    rows_to_add = []
     try:
-        validated_rows = validate_match_link_rows(
-            match_link_import.rows, match_link_import.user
-        )
-        rows_to_add = [
-            validated_row
-            for validated_row in validated_rows
-            if validated_row["outcome"] == OUTCOME_ADD
-        ]
-        edit_transaction_id = uuid.uuid4()
         relation_tile_value_by_match_type = {
             match_type: get_list_item_tile_value(list_item_id)
             for match_type, list_item_id in LINKABLE_MATCH_TYPES.items()
         }
         with transaction.atomic():
+            validated_rows = validate_match_link_rows(
+                match_link_import.rows,
+                match_link_import.user,
+                match_link_import.scheme_id,
+            )
+            rows_to_add = [
+                validated_row
+                for validated_row in validated_rows
+                if validated_row["outcome"] == OUTCOME_ADD
+            ]
             resource_by_concept_id = load_concept_resources(
                 *{row_to_add["concept_id"] for row_to_add in rows_to_add}
             )
-            merge_graph = ConceptMergeGraph()
             for row_to_add in rows_to_add:
-                write_match_tile(
-                    resource_by_concept_id[row_to_add["concept_id"]],
-                    row_to_add["match_uri"],
-                    relation_tile_value_by_match_type[row_to_add["match_type"]],
+                create_tile_on_concept(
+                    row_to_add["concept_id"],
+                    MATCH_STATUS_NODEGROUP,
+                    {
+                        MATCH_STATUS_RELATION_NODE: [
+                            relation_tile_value_by_match_type[row_to_add["match_type"]]
+                        ],
+                        MATCH_STATUS_COMPARATE_NODE: row_to_add["match_uri"],
+                    },
+                    None,
                     edit_transaction_id,
-                    merge_graph,
+                    resource_by_concept_id[row_to_add["concept_id"]],
                 )
         if rows_to_add:
-            index_concepts_in_transaction(edit_transaction_id)
             match_link_import.edit_transaction_id = edit_transaction_id
         match_link_import.outcome_counts = count_outcomes(validated_rows)
         match_link_import.status = MatchLinkImport.STATUS_COMPLETE
@@ -348,21 +414,18 @@ def apply_match_link_import(match_link_import):
         match_link_import.error_message = str(error)
     match_link_import.finished = timezone.now()
     match_link_import.save()
+
+    if match_link_import.status == MatchLinkImport.STATUS_COMPLETE and rows_to_add:
+        try:
+            index_concepts_in_transaction(edit_transaction_id)
+        except Exception:
+            logger.exception(
+                "Match link import %s could not index its concepts",
+                match_link_import.pk,
+            )
+            match_link_import.error_message = _(
+                "The links were added, but the search index could not be updated. "
+                "Reindex the affected concepts to find them by their new links."
+            )
+            match_link_import.save(update_fields=["error_message"])
     return match_link_import
-
-
-def serialize_match_link_import(match_link_import):
-    return {
-        "id": match_link_import.pk,
-        "filename": match_link_import.filename,
-        "status": match_link_import.status,
-        "created": match_link_import.created.isoformat(),
-        "finished": (
-            match_link_import.finished.isoformat()
-            if match_link_import.finished
-            else None
-        ),
-        "total_rows": len(match_link_import.rows),
-        "outcome_counts": match_link_import.outcome_counts,
-        "error_message": match_link_import.error_message,
-    }

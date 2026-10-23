@@ -355,6 +355,11 @@ class MatchLinkImport(models.Model):
     status = models.CharField(
         max_length=16, choices=STATUS_CHOICES, default=STATUS_PENDING
     )
+    scheme_id = models.UUIDField(
+        null=True,
+        blank=True,
+        help_text=_("When set, only concepts in this scheme receive links."),
+    )
     rows = models.JSONField(
         default=list,
         help_text=_("The parsed rows of the uploaded file, validated again on apply."),

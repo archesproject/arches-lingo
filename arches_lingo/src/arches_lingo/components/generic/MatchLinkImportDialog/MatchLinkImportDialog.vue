@@ -28,6 +28,7 @@ import {
     DEFAULT_ERROR_TOAST_LIFE,
     DEFAULT_TOAST_LIFE,
     ERROR,
+    INFO,
     SECONDARY,
     SUCCESS,
 } from "@/arches_lingo/constants.ts";
@@ -39,11 +40,14 @@ import type {
 } from "@/arches_lingo/types.ts";
 
 const CLOSE_EVENT = "close" as const;
-const IMPORTED_EVENT = "imported" as const;
+
+// Set when opened from a scheme, so only that scheme's concepts receive links.
+const { schemeId } = defineProps<{
+    schemeId?: string;
+}>();
 
 const emit = defineEmits<{
     (event: typeof CLOSE_EVENT): void;
-    (event: typeof IMPORTED_EVENT): void;
 }>();
 
 const { $gettext } = useGettext();
@@ -56,7 +60,7 @@ const preview = ref<MatchLinkImportPreviewData | null>(null);
 const isPreviewing = ref(false);
 const isApplying = ref(false);
 const finishedImport = ref<MatchLinkImportRecord | null>(null);
-const isUnmounted = ref(false);
+let isUnmounted = false;
 
 const linksToAddCount = computed(
     () => preview.value?.counts_by_outcome[OUTCOME_ADD] ?? 0,
@@ -82,7 +86,7 @@ const finishedOutcomeSummary = computed(() =>
 );
 
 onBeforeUnmount(() => {
-    isUnmounted.value = true;
+    isUnmounted = true;
 });
 
 async function onFileSelected(file: File | null): Promise<void> {
@@ -93,7 +97,7 @@ async function onFileSelected(file: File | null): Promise<void> {
 
     isPreviewing.value = true;
     try {
-        preview.value = await previewMatchLinkImport(file);
+        preview.value = await previewMatchLinkImport(file, schemeId);
     } catch (error) {
         toast.add({
             severity: ERROR,
@@ -110,7 +114,10 @@ async function applyImport(): Promise<void> {
     if (!selectedFile.value) return;
     isApplying.value = true;
     try {
-        const startedImport = await startMatchLinkImport(selectedFile.value);
+        const startedImport = await startMatchLinkImport(
+            selectedFile.value,
+            schemeId,
+        );
         const completedImport = await waitForImport(startedImport);
         if (completedImport) reportFinishedImport(completedImport);
     } catch (error) {
@@ -135,7 +142,7 @@ async function waitForImport(
         await new Promise((resolve) =>
             setTimeout(resolve, MATCH_LINK_IMPORT_POLL_INTERVAL_MS),
         );
-        if (isUnmounted.value) return null;
+        if (isUnmounted) return null;
         currentImport = await fetchMatchLinkImport(currentImport.id);
     }
     return currentImport;
@@ -159,10 +166,17 @@ function reportFinishedImport(matchLinkImport: MatchLinkImportRecord): void {
             count: String(matchLinkImport.outcome_counts[OUTCOME_ADD] ?? 0),
         }),
     });
-    emit(IMPORTED_EVENT);
 }
 
 function onVisibilityChange(isNowVisible: boolean): void {
+    if (!isNowVisible && isApplying.value) {
+        toast.add({
+            severity: INFO,
+            life: DEFAULT_TOAST_LIFE,
+            summary: $gettext("The match link import continues"),
+            detail: $gettext("You will be notified when it finishes."),
+        });
+    }
     isVisible.value = isNowVisible;
     if (!isNowVisible) emit(CLOSE_EVENT);
 }
@@ -175,7 +189,6 @@ function onVisibilityChange(isNowVisible: boolean): void {
         :visible="isVisible"
         :modal="true"
         :draggable="false"
-        :closable="!isApplying"
         :header="$gettext('Import match links')"
         :style="{ width: '60rem', maxWidth: '95vw' }"
         @update:visible="onVisibilityChange"
@@ -183,6 +196,7 @@ function onVisibilityChange(isNowVisible: boolean): void {
         <div class="dialog-body">
             <MatchLinkImportUpload
                 :is-disabled="isPreviewing || isApplying"
+                :is-scheme-scoped="Boolean(schemeId)"
                 @file-selected="onFileSelected"
             />
 
@@ -220,10 +234,13 @@ function onVisibilityChange(isNowVisible: boolean): void {
             <div class="dialog-footer">
                 <Button
                     :label="
-                        finishedImport ? $gettext('Close') : $gettext('Cancel')
+                        finishedImport || isApplying
+                            ? $gettext('Close')
+                            : $gettext('Cancel')
                     "
-                    :severity="finishedImport ? SECONDARY : DANGER"
-                    :disabled="isApplying"
+                    :severity="
+                        finishedImport || isApplying ? SECONDARY : DANGER
+                    "
                     @click="onVisibilityChange(false)"
                 />
                 <Button
