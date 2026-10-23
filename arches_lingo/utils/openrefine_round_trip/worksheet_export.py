@@ -2,8 +2,12 @@
 OpenRefine, then bring the matches back with the match-link import."""
 
 import csv
+import io
+import uuid
 from collections import defaultdict
 
+from django.conf import settings
+from django.utils import formats, translation
 from django.utils.translation import gettext as _
 
 from arches.app.models.models import (
@@ -73,6 +77,23 @@ WORKSHEET_COLUMNS = [
 # OpenRefine splits these with "Split multi-valued cells".
 MULTI_VALUE_SEPARATOR = "|"
 WORKSHEET_BATCH_SIZE = 500
+# The worksheet is built in full before it is sent, so a failure part way
+# through is an error response rather than a truncated file that looks whole.
+MAX_WORKSHEET_CONCEPTS = getattr(
+    settings, "LINGO_RECONCILIATION_WORKSHEET_MAX_CONCEPTS", 50_000
+)
+# Cells of free text that a spreadsheet would run as a formula get a leading
+# apostrophe. A leading "-" is left alone: labels such as "-ism" are plausible,
+# and these columns are what OpenRefine sends to the external authority.
+FORMULA_TRIGGER_CHARACTERS = ("=", "+", "@", "\t", "\r")
+FREE_TEXT_COLUMNS = {
+    "identifier",
+    "pref_label",
+    "alt_labels",
+    "broader_labels",
+    "scheme",
+    "lifecycle_state",
+}
 SCOPE_KEYS = ("scheme_id", "concept_set_id", "query")
 MATCH_COLUMN_BY_LIST_ITEM_ID = {
     EXACT_MATCH_LIST_ITEM_ID: "exact_matches",
@@ -96,9 +117,17 @@ def parse_worksheet_scope(request_body):
     return given_scopes[0]
 
 
+def is_empty_search_query(query):
+    return "facet" not in query and not query.get("conditions")
+
+
 def resolve_worksheet_concept_ids(scope_key, scope_value, user):
     """Return the ids of the non-retired concepts in scope, in a stable order."""
     if scope_key == "scheme_id":
+        try:
+            scope_value = uuid.UUID(str(scope_value))
+        except ValueError:
+            raise ValueError(_("The scheme id is not valid."))
         candidate_ids = TileModel.objects.filter(
             nodegroup_id=CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID,
             **{
@@ -110,23 +139,38 @@ def resolve_worksheet_concept_ids(scope_key, scope_value, user):
     elif scope_key == "concept_set_id":
         try:
             concept_set = ConceptSet.objects.get(pk=scope_value, user=user)
-        except (ConceptSet.DoesNotExist, ValueError):
+        except (ConceptSet.DoesNotExist, TypeError, ValueError):
             raise ValueError(_("That concept set was not found."))
         candidate_ids = concept_set.members.values("concept_id")
     else:
         if not isinstance(scope_value, dict):
             raise ValueError(_("The search query must be an object."))
+        if is_empty_search_query(scope_value):
+            raise ValueError(_("Add at least one search condition."))
         candidate_ids = AdvancedSearchEvaluator(user=user).evaluate(scope_value)
 
-    return [
+    concept_ids = [
         str(concept_id)
         for concept_id in ResourceInstance.objects.filter(
             pk__in=candidate_ids, graph_id=CONCEPTS_GRAPH_ID
         )
         .exclude(resource_instance_lifecycle_state_id=RETIRED_STATE_ID)
         .order_by("pk")
-        .values_list("pk", flat=True)
+        .values_list("pk", flat=True)[: MAX_WORKSHEET_CONCEPTS + 1]
     ]
+    if len(concept_ids) > MAX_WORKSHEET_CONCEPTS:
+        raise ValueError(
+            _(
+                "A worksheet can hold at most %(limit)s concepts. "
+                "Narrow the scheme, set or search and try again."
+            )
+            % {
+                "limit": formats.number_format(
+                    MAX_WORKSHEET_CONCEPTS, force_grouping=True
+                )
+            }
+        )
+    return concept_ids
 
 
 def get_match_uris_by_column(concept_ids, column_by_relation_uri):
@@ -260,27 +304,48 @@ def build_worksheet_rows(concept_ids, user, language, column_by_relation_uri):
     return rows
 
 
-class EchoBuffer:
-    """A file-like sink that hands each CSV line straight back for streaming."""
+def neutralize_formula(cell_value):
+    if isinstance(cell_value, str) and cell_value.startswith(
+        FORMULA_TRIGGER_CHARACTERS
+    ):
+        return f"'{cell_value}"
+    return cell_value
 
-    def write(self, value):
-        return value
+
+FREE_TEXT_COLUMN_INDEXES = {
+    column_index
+    for column_index, column_name in enumerate(WORKSHEET_COLUMNS)
+    if column_name in FREE_TEXT_COLUMNS
+}
 
 
-def stream_worksheet(concept_ids, user, language):
-    """Yield the worksheet CSV line by line, hydrating concepts in batches so a
-    whole AAT-sized scheme is never held in memory at once."""
-    csv_writer = csv.writer(EchoBuffer())
+def write_worksheet(concept_ids, user, language):
+    """Return the worksheet CSV, hydrating concepts in batches so each query
+    stays a manageable size."""
+    worksheet = io.StringIO()
+    csv_writer = csv.writer(worksheet)
     column_by_relation_uri = {
         get_list_item_tile_value(list_item_id)["uri"]: column
         for list_item_id, column in MATCH_COLUMN_BY_LIST_ITEM_ID.items()
     }
-    yield csv_writer.writerow(WORKSHEET_COLUMNS)
-    for batch_start in range(0, len(concept_ids), WORKSHEET_BATCH_SIZE):
-        batch_concept_ids = concept_ids[
-            batch_start : batch_start + WORKSHEET_BATCH_SIZE
-        ]
-        for row in build_worksheet_rows(
-            batch_concept_ids, user, language, column_by_relation_uri
-        ):
-            yield csv_writer.writerow(row)
+    csv_writer.writerow(WORKSHEET_COLUMNS)
+    # Lifecycle state names are translated fields, read in the active language.
+    with translation.override(language):
+        for batch_start in range(0, len(concept_ids), WORKSHEET_BATCH_SIZE):
+            batch_concept_ids = concept_ids[
+                batch_start : batch_start + WORKSHEET_BATCH_SIZE
+            ]
+            for row in build_worksheet_rows(
+                batch_concept_ids, user, language, column_by_relation_uri
+            ):
+                csv_writer.writerow(
+                    [
+                        (
+                            neutralize_formula(cell_value)
+                            if column_index in FREE_TEXT_COLUMN_INDEXES
+                            else cell_value
+                        )
+                        for column_index, cell_value in enumerate(row)
+                    ]
+                )
+    return worksheet.getvalue()

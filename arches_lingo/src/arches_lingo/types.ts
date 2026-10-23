@@ -566,6 +566,7 @@ export interface ReconciliationWorksheetScope {
 export type MatchLinkImportOutcome =
     | "add"
     | "already_linked"
+    | "conflicting_link"
     | "duplicate_in_file"
     | "unknown_concept"
     | "outside_scheme"

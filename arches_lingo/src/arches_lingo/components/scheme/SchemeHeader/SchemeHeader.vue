@@ -672,11 +672,11 @@ async function onReinstateConfirmed(cascade: boolean) {
                     <Button
                         v-if="isEditor"
                         class="add-button"
-                        :aria-label="$gettext('Import match links')"
+                        :aria-label="$gettext('Import Match Links')"
                         @click="showMatchLinkImportDialog = true"
                     >
                         <span><i class="pi pi-link"></i></span>
-                        <span>{{ $gettext("Import Links") }}</span>
+                        <span>{{ $gettext("Import Match Links") }}</span>
                     </Button>
 
                     <Button

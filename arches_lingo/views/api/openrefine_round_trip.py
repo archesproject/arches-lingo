@@ -3,7 +3,7 @@ from datetime import date
 from http import HTTPStatus
 
 from django.conf import settings
-from django.http import JsonResponse, StreamingHttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.utils.translation import get_language
 from django.utils.translation import gettext as _
 from django.views import View
@@ -25,7 +25,7 @@ from arches_lingo.utils.openrefine_round_trip.match_link_import_service import (
 from arches_lingo.utils.openrefine_round_trip.worksheet_export import (
     parse_worksheet_scope,
     resolve_worksheet_concept_ids,
-    stream_worksheet,
+    write_worksheet,
 )
 
 
@@ -38,7 +38,7 @@ def invalid_request_response(message):
 
 
 class ReconciliationWorksheetView(LingoEditorMixin, View):
-    """Streams a CSV of concepts to reconcile against external authorities."""
+    """Returns a CSV of concepts to reconcile against external authorities."""
 
     def post(self, request):
         try:
@@ -53,8 +53,8 @@ class ReconciliationWorksheetView(LingoEditorMixin, View):
         language = (
             request_body.get("language") or get_language() or settings.LANGUAGE_CODE
         )
-        response = StreamingHttpResponse(
-            stream_worksheet(concept_ids, request.user, language),
+        response = HttpResponse(
+            write_worksheet(concept_ids, request.user, language),
             content_type="text/csv; charset=utf-8",
         )
         response["Content-Disposition"] = (

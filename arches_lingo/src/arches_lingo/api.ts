@@ -855,9 +855,8 @@ export const dismissNotifications = async (notificationIds: string[]) => {
         headers: { "X-CSRFTOKEN": getToken() },
         body: formData,
     });
-    const parsed = await response.json();
-    if (!response.ok) throw new Error(parsed.message || response.statusText);
-    return parsed;
+    if (!response.ok) throw new Error(await readErrorMessage(response));
+    return response.json();
 };
 
 export const fetchResourceEditLog = async (
@@ -1515,6 +1514,17 @@ export const linkConceptMatchCandidates = async (
     return parsed;
 };
 
+// A proxy or server error page may not be JSON, e.g. an nginx 413 for an
+// upload over its body size limit.
+async function readErrorMessage(response: Response): Promise<string> {
+    try {
+        const parsed = await response.json();
+        return parsed.message || response.statusText;
+    } catch {
+        return response.statusText;
+    }
+}
+
 export const downloadReconciliationWorksheet = async (
     scope: ReconciliationWorksheetScope,
     language: string,
@@ -1530,10 +1540,7 @@ export const downloadReconciliationWorksheet = async (
             body: JSON.stringify({ scope, language }),
         },
     );
-    if (!response.ok) {
-        const parsed = await response.json();
-        throw new Error(parsed.message || response.statusText);
-    }
+    if (!response.ok) throw new Error(await readErrorMessage(response));
     return response.blob();
 };
 
@@ -1550,9 +1557,8 @@ async function postMatchLinkFile<ResponseBody>(
         headers: { "X-CSRFTOKEN": getToken() },
         body: formData,
     });
-    const parsed = await response.json();
-    if (!response.ok) throw new Error(parsed.message || response.statusText);
-    return parsed;
+    if (!response.ok) throw new Error(await readErrorMessage(response));
+    return response.json();
 }
 
 export const previewMatchLinkImport = (
@@ -1583,7 +1589,6 @@ export const fetchMatchLinkImport = async (
             pk: importId,
         }),
     );
-    const parsed = await response.json();
-    if (!response.ok) throw new Error(parsed.message || response.statusText);
-    return parsed;
+    if (!response.ok) throw new Error(await readErrorMessage(response));
+    return response.json();
 };
