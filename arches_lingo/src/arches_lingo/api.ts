@@ -792,6 +792,24 @@ export const importThesaurus = async (file: File, overwriteOption: string) => {
     }
 };
 
+export const fetchDereferencedResource = async (
+    resourceType: "concept" | "scheme",
+    resourceInstanceId: string,
+    format: string,
+): Promise<Blob | null> => {
+    const urlName =
+        resourceType === "concept"
+            ? "arches_lingo:concept"
+            : "arches_lingo:scheme";
+
+    const path = generateArchesURL(urlName, { id: resourceInstanceId });
+    const response = await fetch(`${path}?format=${format}`);
+
+    if (response.status === 404) return null;
+    if (!response.ok) throw new Error(response.statusText);
+    return await response.blob();
+};
+
 export const exportThesaurus = async (
     resourceid: string,
     format: string,

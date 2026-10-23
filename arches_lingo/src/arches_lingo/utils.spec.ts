@@ -1,9 +1,15 @@
 import {
     CONCEPT_ICON,
+    DRAFT_LIFECYCLE_STATE_ID,
+    EDITING_LIFECYCLE_STATE_ID,
     GUIDE_TERM_ICON,
+    LOCKED_LIFECYCLE_STATE_ID,
+    PUBLISHED_LIFECYCLE_STATE_ID,
+    RETIRED_LIFECYCLE_STATE_ID,
     SCHEME_ICON,
 } from "@/arches_lingo/constants.ts";
 import {
+    canUserDereferenceResource,
     dataIsScheme,
     dataIsConcept,
     treeFromSchemes,
@@ -178,5 +184,36 @@ describe("Cyclic hierarchies", () => {
         // The cycle closes here: `second.narrower` points back at `first`, and
         // that edge must be dropped rather than followed.
         expect(secondNode.children).toHaveLength(0);
+    });
+});
+
+describe("RDF dereferencing permissions", () => {
+    it("Should let signed-in users dereference any lifecycle state", () => {
+        expect(
+            canUserDereferenceResource(false, EDITING_LIFECYCLE_STATE_ID),
+        ).toBe(true);
+        expect(canUserDereferenceResource(false, undefined)).toBe(true);
+    });
+
+    it("Should let anonymous users dereference only public lifecycle states", () => {
+        expect(
+            canUserDereferenceResource(true, PUBLISHED_LIFECYCLE_STATE_ID),
+        ).toBe(true);
+        expect(
+            canUserDereferenceResource(true, LOCKED_LIFECYCLE_STATE_ID),
+        ).toBe(true);
+        expect(
+            canUserDereferenceResource(true, RETIRED_LIFECYCLE_STATE_ID),
+        ).toBe(true);
+        expect(canUserDereferenceResource(true, DRAFT_LIFECYCLE_STATE_ID)).toBe(
+            false,
+        );
+        expect(
+            canUserDereferenceResource(true, EDITING_LIFECYCLE_STATE_ID),
+        ).toBe(false);
+    });
+
+    it("Should not let anonymous users dereference before the state loads", () => {
+        expect(canUserDereferenceResource(true, undefined)).toBe(false);
     });
 });

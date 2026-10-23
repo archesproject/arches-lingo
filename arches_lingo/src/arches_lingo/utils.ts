@@ -10,6 +10,7 @@ import {
     SCHEME_ICON,
     TOP_CONCEPT_ICON,
     CONCEPT_TYPE_NODE_ALIAS,
+    PUBLICLY_DEREFERENCEABLE_LIFECYCLE_STATE_IDS,
 } from "@/arches_lingo/constants.ts";
 import { fetchTileData } from "@/arches_vue_components/generics/GenericCard/api.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
@@ -481,6 +482,34 @@ let nextConditionId = Date.now();
  */
 export function generateConditionId(): string {
     return `cond-${nextConditionId++}`;
+}
+
+export function triggerBlobDownload(blob: Blob, filename: string) {
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    link.click();
+    window.URL.revokeObjectURL(url);
+}
+
+// Mirrors DereferenceableResourceView._may_dereference: anonymous users may
+// only fetch RDF for resources in a publicly dereferenceable state.
+export function canUserDereferenceResource(
+    isAnonymous: boolean,
+    lifecycleStateId: string | undefined,
+): boolean {
+    if (!isAnonymous) {
+        return true;
+    }
+
+    if (!lifecycleStateId) {
+        return false;
+    }
+
+    return PUBLICLY_DEREFERENCEABLE_LIFECYCLE_STATE_IDS.includes(
+        lifecycleStateId,
+    );
 }
 
 export function filterTreeByLifecycleStates(
