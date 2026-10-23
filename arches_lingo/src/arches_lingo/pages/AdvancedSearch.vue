@@ -81,6 +81,12 @@ const searchResults = ref<AdvancedSearchResponse | null>(null);
 // The query behind searchResults, which edits to the form do not change until
 // the search runs again.
 const executedQuery = ref<AdvancedSearchQuery | null>(null);
+// A query with no conditions matches every concept, too broad for a worksheet.
+const worksheetQuery = computed(() =>
+    isEditor.value && executedQuery.value?.conditions.length
+        ? executedQuery.value
+        : null,
+);
 const isSearching = ref(false);
 const currentPage = ref(1);
 const selectedConceptIds = ref<Set<string>>(new Set());
@@ -312,7 +318,7 @@ onMounted(loadSearchOptions);
                             :results="searchResults"
                             :loading="isSearching"
                             :selected-ids="selectedConceptIds"
-                            :worksheet-query="isEditor ? executedQuery : null"
+                            :worksheet-query="worksheetQuery"
                             @page-change="executeSearch($event)"
                             @toggle-select="toggleSelectConcept"
                             @select-all="selectAll"

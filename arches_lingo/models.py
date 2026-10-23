@@ -199,6 +199,15 @@ class ConceptMatchRun(models.Model):
         (STATUS_FAILED, _("Failed")),
     ]
 
+    ERROR_APPLY_FAILED = "apply_failed"
+    ERROR_INTERRUPTED = "interrupted"
+    ERROR_INDEXING_FAILED = "indexing_failed"
+    ERROR_CHOICES = [
+        (ERROR_APPLY_FAILED, _("Apply failed")),
+        (ERROR_INTERRUPTED, _("Interrupted")),
+        (ERROR_INDEXING_FAILED, _("Indexing failed")),
+    ]
+
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         null=True,
@@ -342,6 +351,15 @@ class MatchLinkImport(models.Model):
         (STATUS_FAILED, _("Failed")),
     ]
 
+    ERROR_APPLY_FAILED = "apply_failed"
+    ERROR_INTERRUPTED = "interrupted"
+    ERROR_INDEXING_FAILED = "indexing_failed"
+    ERROR_CHOICES = [
+        (ERROR_APPLY_FAILED, _("Apply failed")),
+        (ERROR_INTERRUPTED, _("Interrupted")),
+        (ERROR_INDEXING_FAILED, _("Indexing failed")),
+    ]
+
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         null=True,
@@ -351,9 +369,16 @@ class MatchLinkImport(models.Model):
     )
     filename = models.CharField(max_length=255, blank=True, default="")
     created = models.DateTimeField(auto_now_add=True)
+    started = models.DateTimeField(null=True, blank=True)
     finished = models.DateTimeField(null=True, blank=True)
     status = models.CharField(
         max_length=16, choices=STATUS_CHOICES, default=STATUS_PENDING
+    )
+    language = models.CharField(
+        max_length=32,
+        blank=True,
+        default="",
+        help_text=_("The requester's language, for messages sent after the request."),
     )
     scheme_id = models.UUIDField(
         null=True,
@@ -366,7 +391,9 @@ class MatchLinkImport(models.Model):
     )
     outcome_counts = models.JSONField(default=dict, blank=True)
     edit_transaction_id = models.UUIDField(null=True, blank=True, db_index=True)
-    error_message = models.TextField(blank=True, default="")
+    error_code = models.CharField(
+        max_length=32, choices=ERROR_CHOICES, blank=True, default=""
+    )
 
     class Meta:
         app_label = "arches_lingo"

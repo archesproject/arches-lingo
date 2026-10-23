@@ -2,7 +2,6 @@ import { defineComponent, h } from "vue";
 
 import { flushPromises, mount } from "@vue/test-utils";
 import PrimeVue from "primevue/config";
-import Tooltip from "primevue/tooltip";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import MatchLinkImportDialog from "@/arches_lingo/components/generic/MatchLinkImportDialog/MatchLinkImportDialog.vue";
@@ -18,6 +17,7 @@ import { MATCH_LINK_IMPORT_POLL_INTERVAL_MS } from "@/arches_lingo/components/ge
 
 import type { VueWrapper } from "@vue/test-utils";
 import type {
+    MatchLinkImportOutcome,
     MatchLinkImportPreview as MatchLinkImportPreviewData,
     MatchLinkImportRecord,
 } from "@/arches_lingo/types.ts";
@@ -27,6 +27,22 @@ const toastAdd = vi.fn();
 vi.mock("primevue/usetoast", () => ({
     useToast: () => ({ add: toastAdd }),
 }));
+
+vi.mock("vue3-gettext", () => {
+    const interpolate = (text: string, params: Record<string, string> = {}) =>
+        text.replace(/%\{(\w+)\}/g, (_match, key) => params[key] ?? "");
+    return {
+        useGettext: () => ({
+            $gettext: interpolate,
+            $ngettext: (
+                singular: string,
+                plural: string,
+                count: number,
+                params?: Record<string, string>,
+            ) => interpolate(count === 1 ? singular : plural, params),
+        }),
+    };
+});
 
 vi.mock("@/arches_lingo/api.ts", () => ({
     fetchMatchLinkImport: vi.fn(),
@@ -94,7 +110,6 @@ function mountDialog(schemeId?: string): VueWrapper {
         props: { schemeId },
         global: {
             plugins: [PrimeVue],
-            directives: { tooltip: Tooltip },
             stubs: { Dialog: DialogStub },
         },
     });
@@ -147,6 +162,8 @@ describe("MatchLinkImportDialog", () => {
             true,
         );
         expect(addLinksButton(wrapper).attributes("disabled")).toBeUndefined();
+        expect(addLinksButton(wrapper).text()).toBe("Add 1 link");
+        expect(wrapper.find('[role="status"]').text()).toBe("2 rows checked");
     });
 
     it("cannot apply a file with nothing to add", async () => {
@@ -204,9 +221,13 @@ describe("MatchLinkImportDialog", () => {
 
         expect(fetchMatchLinkImport).toHaveBeenCalledTimes(2);
         expect(toastAdd).toHaveBeenCalledWith(
-            expect.objectContaining({ severity: "success" }),
+            expect.objectContaining({
+                severity: "success",
+                summary: "1 match link added",
+            }),
         );
-        expect(wrapper.text()).toContain("Import finished.");
+        expect(wrapper.text()).toContain("Already linked: 1");
+        expect(wrapper.find('[role="status"]').text()).toBe("Import finished.");
     });
 
     it("reports an import that failed on the server", async () => {
@@ -310,12 +331,15 @@ describe("MatchLinkImportDialog", () => {
     it("filters the preview rows by outcome", async () => {
         const preview = mount(MatchLinkImportPreview, {
             props: { preview: previewWith({ add: 1, already_linked: 1 }) },
-            global: {
-                plugins: [PrimeVue],
-                directives: { tooltip: Tooltip },
-            },
+            global: { plugins: [PrimeVue] },
         });
         expect(preview.findAll("tbody tr")).toHaveLength(2);
+        expect(preview.find("table").attributes("aria-label")).toBe(
+            "Rows in the match links file",
+        );
+        expect(preview.text()).toContain(
+            "Some URIs belong to concepts in Lingo.",
+        );
 
         (preview.vm as unknown as { selectedOutcome: string }).selectedOutcome =
             "already_linked";
@@ -323,5 +347,46 @@ describe("MatchLinkImportDialog", () => {
 
         expect(preview.findAll("tbody tr")).toHaveLength(1);
         expect(preview.find("tbody").text()).toContain("Jars");
+    });
+
+    it("names every outcome, including ones it does not know yet", () => {
+        const preview = mount(MatchLinkImportPreview, {
+            props: {
+                preview: {
+                    ...previewWith({}),
+                    counts_by_outcome: {
+                        conflicting_link: 1,
+                        ["future_outcome" as MatchLinkImportOutcome]: 1,
+                    },
+                },
+            },
+            global: { plugins: [PrimeVue] },
+        });
+
+        expect(preview.text()).toContain(
+            "Already linked with another match type: 1",
+        );
+        expect(preview.text()).toContain("future_outcome: 1");
+    });
+
+    it("names the file chooser after its field and help text", () => {
+        const upload = mount(MatchLinkImportUpload, {
+            props: { isDisabled: false, isSchemeScoped: false },
+            global: { plugins: [PrimeVue] },
+        });
+        const chooseButton = upload.find("button");
+        const labelledBy = chooseButton
+            .attributes("aria-labelledby")!
+            .split(" ");
+
+        expect(labelledBy.map((id) => upload.find(`#${id}`).text())).toEqual([
+            "Match links file (CSV)",
+            "Choose File",
+        ]);
+        expect(
+            upload
+                .find(`#${chooseButton.attributes("aria-describedby")}`)
+                .text(),
+        ).toContain("Needs concept_id and match_uri columns.");
     });
 });

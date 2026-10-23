@@ -8,6 +8,7 @@ import Button from "primevue/button";
 import Dialog from "primevue/dialog";
 import Message from "primevue/message";
 import ProgressSpinner from "primevue/progressspinner";
+import Tag from "primevue/tag";
 import MatchLinkImportPreview from "@/arches_lingo/components/generic/MatchLinkImportDialog/components/MatchLinkImportPreview.vue";
 import MatchLinkImportUpload from "@/arches_lingo/components/generic/MatchLinkImportDialog/components/MatchLinkImportUpload.vue";
 
@@ -22,6 +23,7 @@ import {
     MATCH_LINK_IMPORT_POLL_INTERVAL_MS,
     OUTCOME_ADD,
     buildOutcomeLabels,
+    describeOutcome,
 } from "@/arches_lingo/components/generic/MatchLinkImportDialog/utils.ts";
 import {
     DANGER,
@@ -50,7 +52,7 @@ const emit = defineEmits<{
     (event: typeof CLOSE_EVENT): void;
 }>();
 
-const { $gettext } = useGettext();
+const { $gettext, $ngettext } = useGettext();
 const toast = useToast();
 const outcomeLabels = buildOutcomeLabels($gettext);
 
@@ -74,16 +76,52 @@ const canApply = computed(
         !finishedImport.value,
 );
 
-const finishedOutcomeSummary = computed(() =>
+const finishedOutcomeTotals = computed(() =>
     (
         Object.entries(finishedImport.value?.outcome_counts ?? {}) as [
             MatchLinkImportOutcome,
             number,
         ][]
-    )
-        .map(([outcome, count]) => `${outcomeLabels[outcome]}: ${count}`)
-        .join(", "),
+    ).map(([outcome, count]) => ({
+        outcome,
+        text: $gettext("%{label}: %{count}", {
+            label: describeOutcome(outcomeLabels, outcome),
+            count: String(count),
+        }),
+    })),
 );
+
+const addLinksLabel = computed(() =>
+    $ngettext(
+        "Add %{count} link",
+        "Add %{count} links",
+        linksToAddCount.value,
+        {
+            count: String(linksToAddCount.value),
+        },
+    ),
+);
+
+const workingText = computed(() => {
+    if (isApplying.value) return $gettext("Adding links…");
+    if (isPreviewing.value) return $gettext("Checking the file…");
+    return "";
+});
+
+// Kept in the page from the start, so screen readers announce what changes.
+const statusAnnouncement = computed(() => {
+    if (workingText.value) return workingText.value;
+    if (finishedImport.value) return $gettext("Import finished.");
+    if (preview.value) {
+        return $ngettext(
+            "%{count} row checked",
+            "%{count} rows checked",
+            preview.value.total_rows,
+            { count: String(preview.value.total_rows) },
+        );
+    }
+    return "";
+});
 
 onBeforeUnmount(() => {
     isUnmounted = true;
@@ -159,12 +197,17 @@ function reportFinishedImport(matchLinkImport: MatchLinkImportRecord): void {
         return;
     }
     finishedImport.value = matchLinkImport;
+    const addedCount = matchLinkImport.outcome_counts[OUTCOME_ADD] ?? 0;
     toast.add({
         severity: SUCCESS,
         life: DEFAULT_TOAST_LIFE,
-        summary: $gettext("%{count} match links added", {
-            count: String(matchLinkImport.outcome_counts[OUTCOME_ADD] ?? 0),
-        }),
+        summary: $ngettext(
+            "%{count} match link added",
+            "%{count} match links added",
+            addedCount,
+            { count: String(addedCount) },
+        ),
+        detail: matchLinkImport.error_message || undefined,
     });
 }
 
@@ -200,16 +243,19 @@ function onVisibilityChange(isNowVisible: boolean): void {
                 @file-selected="onFileSelected"
             />
 
+            <span
+                class="status-announcement"
+                role="status"
+                >{{ statusAnnouncement }}</span
+            >
+
             <div
-                v-if="isPreviewing || isApplying"
+                v-if="workingText"
                 class="working"
+                aria-hidden="true"
             >
                 <ProgressSpinner class="spinner" />
-                <span>{{
-                    isApplying
-                        ? $gettext("Adding links…")
-                        : $gettext("Checking the file…")
-                }}</span>
+                <span>{{ workingText }}</span>
             </div>
 
             <Message
@@ -217,11 +263,17 @@ function onVisibilityChange(isNowVisible: boolean): void {
                 :severity="SUCCESS"
                 :closable="false"
             >
-                <span>{{
-                    $gettext("Import finished. %{summary}", {
-                        summary: finishedOutcomeSummary,
-                    })
-                }}</span>
+                <div class="finished-summary">
+                    <span>{{ $gettext("Import finished.") }}</span>
+                    <Tag
+                        v-for="total in finishedOutcomeTotals"
+                        :key="total.outcome"
+                        :severity="
+                            total.outcome === OUTCOME_ADD ? SUCCESS : SECONDARY
+                        "
+                        :value="total.text"
+                    />
+                </div>
             </Message>
 
             <MatchLinkImportPreview
@@ -246,11 +298,7 @@ function onVisibilityChange(isNowVisible: boolean): void {
                 <Button
                     v-if="!finishedImport"
                     icon="pi pi-link"
-                    :label="
-                        $gettext('Add %{count} links', {
-                            count: String(linksToAddCount),
-                        })
-                    "
+                    :label="addLinksLabel"
                     :disabled="!canApply"
                     :loading="isApplying"
                     @click="applyImport"
@@ -271,6 +319,23 @@ function onVisibilityChange(isNowVisible: boolean): void {
     display: flex;
     align-items: center;
     gap: 0.75rem;
+}
+
+/* Screen reader only: the visible spinner and summary say the same thing. */
+.dialog-body .status-announcement {
+    position: absolute;
+    width: 0.0625rem;
+    height: 0.0625rem;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+.dialog-body .finished-summary {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 .dialog-body .working .spinner {
