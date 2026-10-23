@@ -86,7 +86,6 @@ function outcomeSeverity(outcome: MatchLinkImportOutcome): string {
         <DataTable
             paginator
             size="small"
-            data-key="row_number"
             :value="visibleRows"
             :rows="ROWS_PER_PAGE"
         >

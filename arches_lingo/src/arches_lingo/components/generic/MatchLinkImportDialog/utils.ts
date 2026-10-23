@@ -13,6 +13,7 @@ export function buildOutcomeLabels(
         already_linked: $gettext("Already linked"),
         duplicate_in_file: $gettext("Repeated in this file"),
         unknown_concept: $gettext("Concept not found"),
+        outside_scheme: $gettext("Concept is in another scheme"),
         invalid_match_type: $gettext("Unknown match type"),
         invalid_uri: $gettext("Not a web address"),
         self_match: $gettext("The concept's own URI"),

@@ -1540,9 +1540,11 @@ export const downloadReconciliationWorksheet = async (
 async function postMatchLinkFile<ResponseBody>(
     urlName: string,
     file: File,
+    schemeId?: string,
 ): Promise<ResponseBody> {
     const formData = new FormData();
     formData.append("file", file);
+    if (schemeId) formData.append("scheme_id", schemeId);
     const response = await fetch(generateArchesURL(urlName), {
         method: "POST",
         headers: { "X-CSRFTOKEN": getToken() },
@@ -1555,13 +1557,23 @@ async function postMatchLinkFile<ResponseBody>(
 
 export const previewMatchLinkImport = (
     file: File,
+    schemeId?: string,
 ): Promise<MatchLinkImportPreview> =>
-    postMatchLinkFile("arches_lingo:api-lingo-match-link-import-preview", file);
+    postMatchLinkFile(
+        "arches_lingo:api-lingo-match-link-import-preview",
+        file,
+        schemeId,
+    );
 
 export const startMatchLinkImport = (
     file: File,
+    schemeId?: string,
 ): Promise<MatchLinkImportRecord> =>
-    postMatchLinkFile("arches_lingo:api-lingo-match-link-imports", file);
+    postMatchLinkFile(
+        "arches_lingo:api-lingo-match-link-imports",
+        file,
+        schemeId,
+    );
 
 export const fetchMatchLinkImport = async (
     importId: number,
