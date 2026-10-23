@@ -28,7 +28,7 @@ const viewModel = function(params) {
     this.selectedScheme = ko.observable();
     this.selectedSchemeName = ko.observable();
     this.filename = ko.observable();
-    this.format = ko.observable();
+    this.format = ko.observable('xml');
     
     this.getSchemes = async function(){
         try {

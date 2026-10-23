@@ -17,9 +17,10 @@ from arches_lingo.utils.lingo_fixtures import (
 class Command(BaseCommand):
     help = (
         "Dump all arches-lingo concept/scheme resource data (resources, tiles, "
-        "files, resource-to-resource relations, resource identifiers, and "
-        "per-scheme identifier/URI/attribution records) plus the associated "
-        "uploaded files to a single compressed archive in the default file storage."
+        "files, resource-to-resource relations, resource identifiers, "
+        "per-scheme identifier/URI/attribution records, and the language "
+        "records the data's language codes need) plus the associated uploaded "
+        "files to a single compressed archive in the default file storage."
     )
 
     def add_arguments(self, parser):

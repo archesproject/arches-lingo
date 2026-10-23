@@ -1,6 +1,6 @@
 import json
 import uuid
-from unittest.mock import MagicMock, patch
+from unittest.mock import ANY, MagicMock, patch
 
 from django.contrib.auth.models import User
 from django.test import SimpleTestCase
@@ -148,7 +148,9 @@ class OrphanChildrenTests(SimpleTestCase):
         MockTile.objects.get.assert_called_once_with(tileid=tile.tileid)
         saved_refs = fetched.data[CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID]
         self.assertEqual([r["resourceId"] for r in saved_refs], [CONCEPT_C])
-        fetched.save.assert_called_once_with(request=None)
+        fetched.save.assert_called_once_with(
+            request=None, transaction_id=None, index=False
+        )
 
     def test_deletes_tile_when_no_broader_refs_remain(self):
         tile = _mock_tile(resource_id=CONCEPT_B, broader_ids=[CONCEPT_A])
@@ -180,7 +182,9 @@ class ReparentChildrenTests(SimpleTestCase):
         MockTile.objects.get.assert_called_once_with(tileid=tile.tileid)
         saved_refs = fetched.data[CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID]
         self.assertEqual([r["resourceId"] for r in saved_refs], [CONCEPT_B])
-        fetched.save.assert_called_once_with(request=None)
+        fetched.save.assert_called_once_with(
+            request=None, transaction_id=None, index=False
+        )
 
     def test_does_not_duplicate_parent_already_present(self):
         tile = _mock_tile(resource_id=CONCEPT_C, broader_ids=[CONCEPT_A, CONCEPT_B])
@@ -215,7 +219,9 @@ class ReparentChildrenTests(SimpleTestCase):
             nodegroup_id=TOP_CONCEPT_OF_NODE_AND_NODEGROUP,
             data={TOP_CONCEPT_OF_NODE_AND_NODEGROUP: [{"resourceId": SCHEME_S}]},
         )
-        MockTile.return_value.save.assert_called_once_with(request=None)
+        MockTile.return_value.save.assert_called_once_with(
+            request=None, transaction_id=None, index=False
+        )
 
     def test_just_deletes_tile_when_no_parents_remain_and_no_scheme(self):
         tile = _mock_tile(resource_id=CONCEPT_B, broader_ids=[CONCEPT_A])
@@ -278,14 +284,14 @@ class DeleteConceptTests(SimpleTestCase):
         ):
             delete_concept(self.concept, "reparent")
         mock_reparent.assert_called_once_with(
-            str(self.concept.pk), {CONCEPT_B}, SCHEME_S
+            str(self.concept.pk), {CONCEPT_B}, SCHEME_S, None
         )
         self.concept.delete.assert_called_once()
 
     @patch("arches_lingo.utils.concept_lifecycle.orphan_children")
     def test_orphan_calls_orphan_children(self, mock_orphan):
         delete_concept(self.concept, "orphan")
-        mock_orphan.assert_called_once_with(str(self.concept.pk))
+        mock_orphan.assert_called_once_with(str(self.concept.pk), None)
         self.concept.delete.assert_called_once()
 
 
@@ -318,12 +324,14 @@ class RetireConceptTests(SimpleTestCase):
             ),
         ):
             retire_concept(self.concept, "reparent")
-        mock_reparent.assert_called_once_with(str(self.concept.pk), {CONCEPT_B}, None)
+        mock_reparent.assert_called_once_with(
+            str(self.concept.pk), {CONCEPT_B}, None, None
+        )
 
     @patch("arches_lingo.utils.concept_lifecycle.orphan_children")
     def test_orphan_calls_orphan_children(self, mock_orphan):
         retire_concept(self.concept, "orphan")
-        mock_orphan.assert_called_once_with(str(self.concept.pk))
+        mock_orphan.assert_called_once_with(str(self.concept.pk), None)
 
     def test_concept_is_marked_retired_after_strategy(self):
         with patch("arches_lingo.utils.concept_lifecycle.orphan_children"):
@@ -392,7 +400,7 @@ class ConceptDeleteViewTests(ViewTests):
                 reverse("api-concept-delete", kwargs={"pk": uuid.uuid4()})
             )
         self.assertEqual(response.status_code, 200)
-        mock_delete.assert_called_once_with(mock_concept, None)
+        mock_delete.assert_called_once_with(mock_concept, None, edit_transaction_id=ANY)
 
     @patch("arches_lingo.views.api.concepts.ResourceInstance.objects.get")
     def test_delete_children_with_published_descendants_returns_400(self, mock_get):

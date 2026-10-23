@@ -1,16 +1,20 @@
 import json
 import os
+import uuid
 import zipfile
+from http import HTTPStatus
 from io import BytesIO, StringIO
 from pathlib import Path
 from unittest.mock import patch
 
 from django.conf import settings
-from django.contrib.auth.models import User
+from django.contrib.auth.models import Group, User
 from django.core import management
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.http import HttpRequest
 from django.test import TestCase, TransactionTestCase
+from django.urls import reverse
+from rdflib import Graph
 
 from arches.app.models.models import (
     DRelationType,
@@ -24,6 +28,7 @@ from arches.app.models.models import (
 from arches.app.utils.skos import SKOSReader
 from arches_querysets.models import ResourceTileTree
 
+from arches_lingo.const import LINGO_EDITOR_GROUP_NAME
 from arches_lingo.etl_modules.migrate_to_lingo import LingoResourceImporter
 from arches_lingo.etl_modules.lingo_resource_exporter import LingoResourceExporter
 from tests.tests import ViewTests
@@ -32,6 +37,10 @@ from .test_settings import PROJECT_TEST_ROOT
 
 
 class ImportTests(TransactionTestCase):
+    # Restores the rows arches' migrations provide after another
+    # TransactionTestCase's flush has cleared them; without this, setUp fails
+    # looking up the default language.
+    serialized_rollback = True
 
     @classmethod
     def register_etl_module(cls):
@@ -129,17 +138,85 @@ class ImportTests(TransactionTestCase):
         # and a skos:relatedMatch
         self.assertEqual(len(junk_sculpture.aliased_data.match_status), 2)
 
+    @staticmethod
+    def _serialize_to_bytes(graph, rdflib_format):
+        """rdflib returns str or bytes depending on the serializer; normalize to bytes."""
+        serialized = graph.serialize(format=rdflib_format)
+        if isinstance(serialized, str):
+            return serialized.encode("utf-8")
+        return serialized
+
+    def _upload_thesaurus_file(self, content, file_name):
+        """Drive the uploaded-file import path, returning the importer and its response."""
+        load_event = LoadEvent.objects.create(
+            user_id=1, etl_module_id=self.moduleid, status="running"
+        )
+        request = HttpRequest()
+        request.method = "POST"
+        request.user = User.objects.get(username="admin")
+        request.POST["load_id"] = str(load_event.loadid)
+        request.POST["module"] = str(self.moduleid)
+        request.POST["overwrite_option"] = "overwrite"
+        request.POST["action"] = "write"
+        request.FILES = {
+            "file": InMemoryUploadedFile(
+                file=BytesIO(content),
+                field_name="file",
+                name=file_name,
+                content_type="application/octet-stream",
+                size=len(content),
+                charset=None,
+            )
+        }
+
+        importer = LingoResourceImporter(request=request)
+        return importer, load_event, importer.write(request=request)
+
+    def _assert_typed_relation_loaded(self):
+        """Assert that a GVP typed associative relation (gvp:aat2285_practiced-studied_by)
+        from the test fixture is imported with its relation type set on the subject
+        concept's relation_status tile.
+
+        The fixture has:
+          <Example Concept 2>  gvp:aat2285_practiced-studied_by  <Example Concept 1>
+
+        These relations read in one direction, and SKOSWriter exports a
+        relation_status tile with its own concept as the subject, so the tile
+        lives on the subject (Example Concept 2) with ascribed_comparate pointing
+        to the object (Example Concept 1).
+        """
+        concepts = ResourceTileTree.get_tiles(graph_slug="concept")
+        example_concept_2 = concepts.get(
+            appellative_status_ascribed_name_content__any_contains="Example Concept 2"
+        )
+        relations = example_concept_2.aliased_data.relation_status
+        self.assertEqual(len(relations), 1)
+        relation_data = relations[0].aliased_data
+        comparate = relation_data.relation_status_ascribed_comparate
+        self.assertEqual(comparate.name["en"], "Example Concept 1")
+        # The controlled list item for aat2285 is "practiced/studied by - role"
+        self.assertIn("practiced", str(relation_data.relation_status_ascribed_relation))
+
+        example_concept_1 = concepts.get(
+            appellative_status_ascribed_name_content__any_contains="Example Concept 1"
+        )
+        self.assertEqual(len(example_concept_1.aliased_data.relation_status), 0)
+
     def test_lingo_resource_importer(self):
         """
-        This test is really three tests in one, but due to trouble with TransactionTestCase
+        This test is really several tests in one, but due to trouble with TransactionTestCase
         & database rollbacks, they have to be run sequentially in one test method, relying
         on the reverse load functionality of the base importer to clean up between tests.
+        A second test method on this class would fail in setUp, because the flush between
+        test methods empties the languages table that the migrations populate.
 
-        There are three import paths being tested here:
+        The cases being tested here:
         1. Management command path, importing from a SKOS RDF file.
         2. HTTP Request path, importing from a SKOS RDF file upload.
         3. Migrate Concepts & Schemes from RDM
         4. Ensure that an import failure sends a notification to the user
+        5. Importing the same thesaurus serialized as Turtle and as N-Triples
+        6. Rejecting uploads that are not a supported RDF serialization
         """
 
         # 1. Test Import from SKOS via management command path
@@ -155,6 +232,7 @@ class ImportTests(TransactionTestCase):
             stdout=stdout,
         )
         self._assert_resources_loaded()
+        self._assert_typed_relation_loaded()
         print("Test import from CLI completed.\n")
 
         # Reverse load to clear out the loaded resources
@@ -195,6 +273,7 @@ class ImportTests(TransactionTestCase):
         write_request0 = importer.write(request=request0)
         self.assertTrue(write_request0["success"])
         self._assert_resources_loaded()
+        self._assert_typed_relation_loaded()
         print("Test import from Lingo UI completed.\n")
 
         # Reverse load to clear out the loaded resources
@@ -265,6 +344,48 @@ class ImportTests(TransactionTestCase):
             .notif
         )
         self.assertIn("Import failed", latest_notification.message)
+
+        # 5. Test import of the non-XML SKOS serializations
+        # These are serialized from the RDF/XML fixture so that every format under
+        # test describes the same graph, and none of them can drift from the
+        # resource counts asserted by _assert_resources_loaded.
+        source_graph = Graph()
+        source_graph.parse(source=str(self.fixture_path), format="xml")
+
+        for extension, rdflib_format in ((".ttl", "turtle"), (".nt", "nt")):
+            with self.subTest(extension=extension):
+                importer, load_event, response = self._upload_thesaurus_file(
+                    self._serialize_to_bytes(source_graph, rdflib_format),
+                    f"skos_rdf_import_example{extension}",
+                )
+                self.assertTrue(response["success"], response.get("message"))
+                self._assert_resources_loaded()
+                print(f"Test import of {extension} completed.\n")
+
+                importer.reverse_load(loadid=load_event.loadid)
+                self.assertEqual(
+                    ResourceTileTree.get_tiles(graph_slug="scheme").count(), 0
+                )
+                self.assertEqual(
+                    ResourceTileTree.get_tiles(graph_slug="concept").count(), 0
+                )
+
+        # 6. Test rejection of uploads that are not a supported RDF serialization
+        # An extension outside the allowlist is rejected before any parsing.
+        _, _, response = self._upload_thesaurus_file(
+            self._serialize_to_bytes(source_graph, "turtle"),
+            "skos_rdf_import_example.txt",
+        )
+        self.assertFalse(response["success"])
+        self.assertIn("not supported", str(response["message"]))
+
+        # Binary content is rejected even when it carries an allowed extension.
+        png_bytes = b"\x89PNG\r\n\x1a\n" + b"\x00" * 64
+        _, _, response = self._upload_thesaurus_file(
+            png_bytes, "skos_rdf_import_example.ttl"
+        )
+        self.assertFalse(response["success"])
+        self.assertIn("not a text-based RDF serialization", str(response["message"]))
 
 
 class ExportTests(TestCase):
@@ -436,6 +557,32 @@ class ExportTests(TestCase):
         self.assertTrue(file_details["name"].endswith(".zip"))
         self.assertTrue(mock_build.called)
 
+    # --- Turtle ---
+
+    def test_export_full_hierarchy_to_turtle(self):
+        response = self._run_export(self.test_scheme.pk, "ttl")
+        file_details = self._assert_successful_export(response)
+        self.assertTrue(file_details["name"].endswith(".zip"))
+
+        # Verify the ZIP contains a .ttl file with SKOS content
+        with zipfile.ZipFile(self.file_path) as exported_zip:
+            entry_names = exported_zip.namelist()
+            ttl_files = [name for name in entry_names if name.endswith(".ttl")]
+            self.assertEqual(len(ttl_files), 1)
+
+    # --- N-Triples ---
+
+    def test_export_full_hierarchy_to_ntriples(self):
+        response = self._run_export(self.test_scheme.pk, "nt")
+        file_details = self._assert_successful_export(response)
+        self.assertTrue(file_details["name"].endswith(".zip"))
+
+        # Verify the ZIP contains a .nt file with SKOS content
+        with zipfile.ZipFile(self.file_path) as exported_zip:
+            entry_names = exported_zip.namelist()
+            nt_files = [name for name in entry_names if name.endswith(".nt")]
+            self.assertEqual(len(nt_files), 1)
+
     # --- Error handling ---
 
     def test_export_unsupported_format(self):
@@ -455,3 +602,58 @@ class ExportTests(TestCase):
             recipient=admin_user
         ).count()
         self.assertGreater(notifications_after, notifications_before)
+
+
+class ExportViewTests(TestCase):
+    """Exports must be available to the Lingo Editor group without core Arches groups."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.lingo_editor = User.objects.create_user(
+            username="lingo_editor_exporter", password="x"
+        )
+        cls.lingo_editor.groups.add(Group.objects.get(name=LINGO_EDITOR_GROUP_NAME))
+        cls.non_editor = User.objects.create_user(
+            username="non_editor_exporter", password="x"
+        )
+        cls.export_url = reverse("api-lingo-export")
+        cls.export_payload = {"resourceid": str(uuid.uuid4()), "format": "xml"}
+
+    @patch.object(
+        LingoResourceExporter,
+        "start",
+        return_value={"success": True, "data": {"load_id": "test-load-id"}},
+    )
+    def test_lingo_editor_can_start_export(self, mock_start):
+        self.client.force_login(self.lingo_editor)
+
+        response = self.client.post(self.export_url, self.export_payload)
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertTrue(mock_start.called)
+        self.assertEqual(response.json()["result"], {"load_id": "test-load-id"})
+
+    @patch.object(
+        LingoResourceExporter,
+        "start",
+        return_value={"success": False, "data": {"message": "export failed"}},
+    )
+    def test_failed_export_returns_error_response(self, mock_start):
+        self.client.force_login(self.lingo_editor)
+
+        response = self.client.post(self.export_url, self.export_payload)
+
+        self.assertEqual(response.status_code, HTTPStatus.INTERNAL_SERVER_ERROR)
+        self.assertFalse(response.json()["success"])
+
+    def test_non_editor_cannot_start_export(self):
+        self.client.force_login(self.non_editor)
+
+        response = self.client.post(self.export_url, self.export_payload)
+
+        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+
+    def test_anonymous_user_cannot_start_export(self):
+        response = self.client.post(self.export_url, self.export_payload)
+
+        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)

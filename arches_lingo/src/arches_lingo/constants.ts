@@ -5,6 +5,7 @@ import type { Concept } from "@/arches_lingo/types.ts";
 export const ERROR = "error";
 export const SUCCESS = "success";
 export const INFO = "info";
+export const WARN = "warn";
 export const DANGER = "danger";
 export const SECONDARY = "secondary";
 export const CONTRAST = "contrast";
@@ -25,6 +26,7 @@ export const DEPRECATE = "deprecate";
 export const STRATEGY_REPARENT = "reparent";
 export const STRATEGY_DELETE_CHILDREN = "delete_children";
 export const STRATEGY_ORPHAN = "orphan";
+export const STRATEGY_REPARENT_TO_SURVIVOR = "reparent_to_survivor";
 export const CONCEPT_TYPE_NODE_ALIAS = "type";
 export const SCHEME_ALIAS = "scheme";
 

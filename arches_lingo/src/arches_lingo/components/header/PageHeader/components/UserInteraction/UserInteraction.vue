@@ -112,6 +112,7 @@ function navigateToLogin() {
     border-radius: 0 !important;
     color: inherit !important;
     font-size: 0.875rem;
+    height: 3rem;
 }
 
 .p-button:hover {

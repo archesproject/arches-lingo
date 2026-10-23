@@ -11,6 +11,7 @@ import Tag from "primevue/tag";
 
 import GenericWidget from "@/arches_vue_components/generics/GenericWidget/GenericWidget.vue";
 
+import ConceptMergeDialog from "@/arches_lingo/components/concept/ConceptMerge/ConceptMergeDialog.vue";
 import DeleteConceptDialog from "@/arches_lingo/components/concept/ConceptHeader/components/DeleteConceptDialog.vue";
 import ExportThesauri from "@/arches_lingo/components/scheme/SchemeHeader/components/ExportThesauri.vue";
 import LifecycleButtons from "@/arches_lingo/components/scheme/SchemeHeader/components/LifecycleButtons.vue";
@@ -106,6 +107,7 @@ const showExportDialog = ref(false);
 const exportDialogKey = ref(0);
 const showDeleteDialog = ref(false);
 const showReinstateDialog = ref(false);
+const showMergeDialog = ref(false);
 const isLoading = ref(false);
 const isWidgetLoading = ref(false);
 const dialogMode = ref<typeof DELETE | typeof DEPRECATE>(DELETE);
@@ -142,6 +144,10 @@ const canEditResourceInstances = computed(function () {
         props.resourceInstanceId !== undefined &&
         lifecycleState.value?.can_edit_resource_instances === true
     );
+});
+
+const canMerge = computed(function () {
+    return canEditResourceInstances.value && Boolean(schemeId.value);
 });
 
 const canDelete = computed(function () {
@@ -356,6 +362,32 @@ function onRetireRequested() {
 function onReinstateRequested() {
     showReinstateDialog.value = true;
 }
+
+async function onMerged() {
+    showMergeDialog.value = false;
+    refreshSchemeHierarchy!();
+    // Refreshes the resource and the lifecycle state, which every report section
+    // either reads from directly or now watches for.
+    await refreshReportSection!("all");
+
+    toast.add({
+        severity: SUCCESS,
+        life: DEFAULT_TOAST_LIFE,
+        summary: $gettext("Concepts merged"),
+    });
+}
+
+function findMatches(): void {
+    if (!props.concept?.resourceinstanceid) return;
+    router.push({
+        name: routeNames.conceptMatches,
+        query: { concept: props.concept.resourceinstanceid },
+    });
+}
+
+function onMergeCancelled() {
+    showMergeDialog.value = false;
+}
 </script>
 
 <template>
@@ -367,6 +399,15 @@ function onReinstateRequested() {
         :is-loading="isLoading"
         @confirm="onConfirmed"
         @cancel="showDeleteDialog = false"
+    />
+    <ConceptMergeDialog
+        v-if="concept && showMergeDialog && schemeId"
+        :survivor-concept="concept"
+        :survivor-label="label?.value"
+        :scheme-id="schemeId"
+        :graph-slug="graphSlug"
+        @merged="onMerged"
+        @cancel="onMergeCancelled"
     />
     <ReinstateDialog
         v-if="concept && showReinstateDialog"
@@ -439,6 +480,7 @@ function onReinstateRequested() {
                 <span>{{ $gettext("History") }}</span>
             </Button>
             <Button
+                v-if="isEditor"
                 :aria-label="$gettext('Export')"
                 class="add-button"
                 @click="openExportDialog"
@@ -452,6 +494,21 @@ function onReinstateRequested() {
                 :label="$gettext('Add Child')"
                 class="add-button"
                 @click="addChild"
+            />
+            <Button
+                v-if="isEditor && concept?.resourceinstanceid"
+                icon="pi pi-clone"
+                class="add-button"
+                :label="$gettext('Find Matches')"
+                @click="findMatches"
+            />
+            <Button
+                v-if="canMerge"
+                icon="pi pi-sign-in"
+                class="add-button"
+                :label="$gettext('Merge')"
+                :aria-label="$gettext('Merge another concept into this one')"
+                @click="showMergeDialog = true"
             />
             <Button
                 v-if="canDelete"

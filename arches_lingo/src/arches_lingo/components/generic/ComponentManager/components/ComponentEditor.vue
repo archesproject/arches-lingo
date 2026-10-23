@@ -44,6 +44,7 @@ provide("componentEditorFormRef", componentEditorFormRef);
  * to re-sync the global dirty flag with the form's actual dirty state.
  */
 function onSaveSettled() {
+    if (!isComponentMounted.value) return;
     isEditorDirty.value = isFormDirty.value;
 }
 provide("onSaveSettled", onSaveSettled);

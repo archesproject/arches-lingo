@@ -109,31 +109,34 @@ def get_label_stats(concept_qs) -> tuple:
     ``concept_qs`` is a lazy QuerySet (from ``get_concept_ids``).  All counting
     is pushed to the database via aggregation — no tile JSONB data is loaded
     into Python memory.
+
+    The total, the per-language counts and the per-type counts are all read
+    from a single grouped scan.  Counting each of them separately means three
+    scans of the label-tile set, and that set is large enough on a real
+    thesaurus that repeating the scan dominates the whole dashboard request.
+    Each label tile has exactly one type reference (a single-element JSONB
+    array), so grouping by ``(language, type URI)`` loses nothing.
     """
     label_tiles = models.TileModel.objects.filter(
         nodegroup_id=CONCEPT_NAME_NODEGROUP,
         resourceinstance_id__in=concept_qs.values("pk"),
     )
 
-    label_count = label_tiles.count()
-
-    # Group language codes in the database; returns ~50 rows instead of
-    # loading hundreds of thousands of tile records into Python.
-    language_rows = label_tiles.values(
-        lang=RawSQL("tiledata->>%s", [CONCEPT_NAME_LANGUAGE_NODE])
+    # A few hundred rows at most: one per (language, label type) pair present.
+    grouped_label_rows = label_tiles.values(
+        lang=RawSQL("tiledata->>%s", [CONCEPT_NAME_LANGUAGE_NODE]),
+        uri=RawSQL("tiledata->%s->0->>'uri'", [CONCEPT_NAME_TYPE_NODE]),
     ).annotate(count=Count("pk"))
-    language_counter: Counter = Counter(
-        {row["lang"]: row["count"] for row in language_rows if row["lang"]}
-    )
 
-    # Each label tile has exactly one type reference (a single-element JSONB
-    # array).  Extract the URI with tiledata->'node_id'->0->>'uri' in the DB.
-    type_rows = label_tiles.values(
-        uri=RawSQL("tiledata->%s->0->>'uri'", [CONCEPT_NAME_TYPE_NODE])
-    ).annotate(count=Count("pk"))
-    type_counter: Counter = Counter(
-        {row["uri"]: row["count"] for row in type_rows if row["uri"]}
-    )
+    label_count = 0
+    language_counter: Counter = Counter()
+    type_counter: Counter = Counter()
+    for row in grouped_label_rows:
+        label_count += row["count"]
+        if row["lang"]:
+            language_counter[row["lang"]] += row["count"]
+        if row["uri"]:
+            type_counter[row["uri"]] += row["count"]
 
     uri_label_map = build_uri_label_map(LABEL_LIST_ID)
 
@@ -157,7 +160,7 @@ def get_label_stats(concept_qs) -> tuple:
         }
         for code, count in language_counter.items()
     ]
-    labels_by_language.sort(key=lambda entry: -entry["count"])
+    labels_by_language.sort(key=lambda entry: (-entry["count"], entry["language"]))
 
     return label_count, labels_by_type, labels_by_language
 

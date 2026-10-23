@@ -491,10 +491,6 @@ function getInitialLifecycleStateIds(): string[] {
 function getSearchableText(treeNode: TreeNode) {
     const nodeData = treeNode.data as unknown as Scheme | Concept;
 
-    if ("top_concepts" in nodeData) {
-        return "";
-    }
-
     const nodeLabelText = (treeNode.label ?? "").toString();
     const labelValuesFromData = (nodeData.labels ?? [])
         .map((labelItem) => (labelItem?.value ?? "").toString())
@@ -678,8 +674,14 @@ function removeAllNewNodes() {
         );
 
         const traversalQueue = [...(schemeItem.top_concepts ?? [])];
+        const visitedConceptObjects = new Set<Concept>();
 
         for (const currentConcept of traversalQueue) {
+            if (visitedConceptObjects.has(currentConcept)) {
+                continue;
+            }
+            visitedConceptObjects.add(currentConcept);
+
             currentConcept.narrower = (currentConcept.narrower ?? []).filter(
                 (childConcept) => childConcept.id !== NEW,
             );
