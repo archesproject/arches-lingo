@@ -1,5 +1,6 @@
 import logging
 import csv
+import re
 import uuid
 from collections import defaultdict
 from urllib.parse import urlsplit
@@ -25,6 +26,7 @@ ARCHES = Namespace(settings.ARCHES_NAMESPACE_FOR_DATA_EXPORT)
 # «related properties» controlled list stores these URIs as its item
 # identifiers, so a predicate resolves to the relation type to record.
 GVP_TYPED_RELATION_PREFIX = "http://vocab.getty.edu/ontology#aat"
+VALID_LOCAL_NAME_PATTERN = re.compile(r"[A-Za-z_][A-Za-z0-9_.-]*")
 
 
 def subject_uri_for(resource_id, resource_uri_map=None):
@@ -586,19 +588,27 @@ class SKOSWriter:
                 predicate = self.reformat_predicate_based_on_namespace(predicate)
                 predicates.append(predicate)
             return predicates
+        # A value with no type, such as an untyped identifier, has no predicate to
+        # write, so it is left out rather than failing the whole resource.
+        return []
 
     def reformat_predicate_based_on_namespace(self, predicate):
         uri = predicate.uri
-        if not (SKOS in uri or ARCHES in uri or DCTERMS in uri):
-            predicate_label = [
-                label.value
-                for label in predicate.labels
-                if label.valuetype_id == "prefLabel"
-            ][0]
-            if predicate_label == "identifier":
-                predicate = DCTERMS.identifier
-            else:
-                predicate = SKOS[predicate_label]
-        else:
-            predicate = URIRef(uri)
-        return predicate
+        if SKOS in uri or ARCHES in uri or DCTERMS in uri:
+            return URIRef(uri)
+        # Typed relations keep their own predicate, the form import reads back
+        # (see GVP_TYPED_RELATION_PREFIX).
+        if uri.startswith(GVP_TYPED_RELATION_PREFIX):
+            return URIRef(uri)
+        predicate_label = [
+            label.value
+            for label in predicate.labels
+            if label.valuetype_id == "prefLabel"
+        ][0]
+        if predicate_label == "identifier":
+            return DCTERMS.identifier
+        # A label such as "based on - any" is not a usable SKOS local name, and
+        # rdflib cannot serialize the resulting URI, so keep the item's own URI.
+        if not VALID_LOCAL_NAME_PATTERN.fullmatch(predicate_label):
+            return URIRef(uri)
+        return SKOS[predicate_label]

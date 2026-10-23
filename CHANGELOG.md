@@ -13,10 +13,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   Add support for importing thesauri from N-Triples and Turtle files [#779](https://github.com/archesproject/arches-lingo/pull/779)
 -   Add concept merge workflow, with merge history on the concept header [#801](https://github.com/archesproject/arches-lingo/pull/801)
 -   Add concept match detection: find concepts that probably mean the same thing, within or across schemes, and link them with exactMatch or merge them [#802](https://github.com/archesproject/arches-lingo/pull/802)
+-   Add an OpenRefine reconciliation service for published schemes, with suggest, preview and data extension [#809](https://github.com/archesproject/arches-lingo/pull/809)
 
 ### Changed
 
 -   Index concepts in a single pass after retiring or deleting a concept, rather than once per rehomed child [#801](https://github.com/archesproject/arches-lingo/pull/801)
+-   Match `%` and `_` in a search term literally rather than as wildcards [#809](https://github.com/archesproject/arches-lingo/pull/809)
+
+### Fixed
+
+-   Fix SKOS export dropping all but one broader concept when a classification tile names several parents, and failing on typed relations such as "distinguished from" [#809](https://github.com/archesproject/arches-lingo/pull/809)
 
 ## [1.1.2] - Unreleased
 

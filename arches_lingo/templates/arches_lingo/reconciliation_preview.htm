@@ -1,0 +1,73 @@
+{% load i18n %}{% get_current_language as current_language %}<!DOCTYPE html>
+<html lang="{{ current_language }}">
+<head>
+    <meta charset="utf-8">
+    <title>{{ name }}</title>
+    {% comment %}
+    OpenRefine shows this card in a cross-origin iframe, where Lingo's theme
+    tokens are not loaded, so its colors are fixed values.
+    {% endcomment %}
+    <style>
+        body {
+            margin: 0;
+            padding: 0.5rem 0.75rem;
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+            font-size: 0.875rem;
+            line-height: 1.4;
+            color: #1f2933;
+        }
+        h1 {
+            margin: 0 0 0.25rem;
+            font-size: 1rem;
+        }
+        h1 a {
+            color: inherit;
+        }
+        .context,
+        .uri {
+            margin: 0 0 0.5rem;
+            color: #52606d;
+        }
+        .retired {
+            margin-inline-start: 0.5rem;
+            padding: 0 0.375rem;
+            border-radius: 0.25rem;
+            background: #fce8e6;
+            color: #8a1c13;
+            font-size: 0.75rem;
+            font-weight: normal;
+        }
+        dl {
+            margin: 0 0 0.5rem;
+        }
+        dt {
+            font-weight: 600;
+        }
+        dd {
+            margin: 0 0 0.25rem;
+        }
+        .uri {
+            font-size: 0.75rem;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+    <h1>
+        <a href="{{ view_url }}" target="_blank" rel="noopener"{% if name_language %} lang="{{ name_language }}"{% endif %}>{{ name }}</a>
+        {% if is_retired %}<span class="retired">{% trans "Retired" %}</span>{% endif %}
+    </h1>
+    <p class="context">{{ description }}</p>
+    <dl>
+        {% if alternate_labels %}
+            <dt>{% trans "Also known as" %}</dt>
+            <dd>{{ alternate_labels }}</dd>
+        {% endif %}
+        {% if note %}
+            <dt>{{ note.type|default:_("Note") }}</dt>
+            <dd{% if note.language %} lang="{{ note.language }}"{% endif %}>{{ note.content|truncatewords:30 }}</dd>
+        {% endif %}
+    </dl>
+    {% if uri %}<p class="uri">{{ uri }}</p>{% endif %}
+</body>
+</html>

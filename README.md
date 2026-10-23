@@ -83,6 +83,16 @@ For developer install instructions, see the [Developer Setup](#developer-setup-f
     ```
     When enabled, unauthenticated users can browse schemes, concepts, and search results in a read-only mode. When disabled (the default), all users must log in to access any Lingo content. Authenticated users who are not members of the "Lingo Editor" group will still see a read-only experience regardless of this setting.
 
+    Optionally, enable the [OpenRefine](https://openrefine.org/) reconciliation service so spreadsheet data can be matched against your published vocabularies:
+    ```
+    LINGO_RECONCILIATION_ENABLED = True
+    LINGO_RECONCILIATION_SERVICE_NAME = "My Organization Thesauri"  # defaults to "Arches Lingo"
+    LINGO_RECONCILIATION_RATE_LIMIT = "120/m"  # requests per client address (s, m, h or d); defaults to None (no limit)
+    ```
+    The service is available at `<PUBLIC_SERVER_ADDRESS>/api/lingo/reconcile`, or at `/api/lingo/schemes/<scheme identifier>/reconcile` for a single scheme, whose queries, suggestions and data extension never reach another scheme. It accepts anonymous, cross-origin requests even when `LINGO_ALLOW_ANONYMOUS_ACCESS` is `False`, and only exposes published and locked schemes and concepts. Make sure `PUBLIC_SERVER_ADDRESS` is set to the address OpenRefine users will reach, because the service's links are built from it. While `LINGO_ALLOW_ANONYMOUS_ACCESS` is `False`, the links the service hands out (a candidate's "view" link, the preview card's title, and concept URIs pulled in by data extension) lead to Lingo's login page for anyone not signed in.
+
+    When enabled, anyone who can reach the server can read, for published and locked concepts in published and locked schemes: labels in every language, broader concepts, identifiers, URIs, exact and close matches, scope notes and definitions. Retired concepts are only offered as reconciliation candidates when a query asks for them (`includeRetired`), though previews and data extension still answer for retired concepts, since a sheet may already hold their ids. Draft and editing-state concepts are never returned, and requests for them get the same empty or 404 response as an unknown id. Each request is capped (50 queries or ids, 25 candidates per query). If the server is public, limit request rates, either at your reverse proxy or with `LINGO_RECONCILIATION_RATE_LIMIT`, which answers callers over the limit with HTTP 429. The setting is enforced with [django-ratelimit](https://django-ratelimit.readthedocs.io/), the library Arches uses for its own login limits, so it counts requests per client address in `RATELIMIT_USE_CACHE` (the default cache). That cache must be shared by every server process (such as Redis or Memcached, not the per-process default). Behind a reverse proxy, set `RATELIMIT_IP_META_KEY` to the header carrying the client address; otherwise every caller shares one limit. Note that OpenRefine sends reconciliation and data extension batches from the OpenRefine server, so all users of a shared OpenRefine instance count as one client, while suggest and preview requests come from each user's browser.
+
 5. Next ensure arches, arches-vue-components, and arches_lingo are included as dependencies in package.json
     ```
     "dependencies": {
