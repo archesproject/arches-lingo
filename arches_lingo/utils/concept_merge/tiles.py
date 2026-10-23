@@ -409,31 +409,52 @@ def write_match_tiles(
 
     written_tiles = []
     for concept_id, matched_uri in matches_to_write:
-        tile_data = {
-            MATCH_STATUS_RELATION_NODE: [relation_tile_value],
-            MATCH_STATUS_COMPARATE_NODE: matched_uri,
-        }
-        existing_identity_keys = merge_graph.collect_identity_keys(
-            TileModel.objects.filter(
-                resourceinstance_id=concept_id,
-                nodegroup_id=MATCH_STATUS_NODEGROUP,
-            )
+        written_tile = write_match_tile(
+            resources_by_concept_id[str(concept_id)],
+            matched_uri,
+            relation_tile_value,
+            edit_transaction_id,
+            merge_graph,
         )
-        identity_key = merge_graph.build_tile_identity_key(
-            MATCH_STATUS_NODEGROUP, tile_data
-        )
-        if identity_key in existing_identity_keys:
-            continue
-
-        written_tiles.append(
-            create_tile_on_concept(
-                concept_id,
-                MATCH_STATUS_NODEGROUP,
-                tile_data,
-                None,
-                edit_transaction_id,
-                resources_by_concept_id[str(concept_id)],
-            )
-        )
+        if written_tile is not None:
+            written_tiles.append(written_tile)
 
     return written_tiles
+
+
+def write_match_tile(
+    concept_resource,
+    matched_uri,
+    relation_tile_value,
+    edit_transaction_id,
+    merge_graph,
+):
+    """Record one match relation on a concept, unless an identical one exists.
+
+    Returns the new tile, or None when the concept already records that relation
+    to that URI.
+    """
+    tile_data = {
+        MATCH_STATUS_RELATION_NODE: [relation_tile_value],
+        MATCH_STATUS_COMPARATE_NODE: matched_uri,
+    }
+    existing_identity_keys = merge_graph.collect_identity_keys(
+        TileModel.objects.filter(
+            resourceinstance_id=concept_resource.pk,
+            nodegroup_id=MATCH_STATUS_NODEGROUP,
+        )
+    )
+    identity_key = merge_graph.build_tile_identity_key(
+        MATCH_STATUS_NODEGROUP, tile_data
+    )
+    if identity_key in existing_identity_keys:
+        return None
+
+    return create_tile_on_concept(
+        concept_resource.pk,
+        MATCH_STATUS_NODEGROUP,
+        tile_data,
+        None,
+        edit_transaction_id,
+        concept_resource,
+    )

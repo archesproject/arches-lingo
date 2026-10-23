@@ -677,3 +677,12 @@ export function scaleWithRootFontSize(pixelsAtDefaultFontSize: number) {
             DEFAULT_ROOT_FONT_SIZE_IN_PIXELS,
     );
 }
+
+export function saveBlobAsFile(blob: Blob, filename: string): void {
+    const objectUrl = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = objectUrl;
+    anchor.download = filename;
+    anchor.click();
+    URL.revokeObjectURL(objectUrl);
+}

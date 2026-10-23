@@ -11,6 +11,7 @@ import RadioButton from "primevue/radiobutton";
 
 import { exportThesaurus } from "@/arches_lingo/api.ts";
 import { generateArchesURL } from "@/arches/utils/generate-arches-url.ts";
+import { useReconciliationWorksheetDownload } from "@/arches_lingo/composables/useReconciliationWorksheetDownload.ts";
 import {
     DEFAULT_TOAST_LIFE,
     DEFAULT_ERROR_TOAST_LIFE,
@@ -22,8 +23,13 @@ import {
 
 import type { ExportedFile } from "@/arches_lingo/types.ts";
 
+// A CSV of the scheme's concepts for reconciling in OpenRefine; it downloads
+// straight away instead of going through the background export.
+const RECONCILIATION_WORKSHEET_FORMAT = "reconciliation-worksheet";
+
 const { $gettext } = useGettext();
 const toast = useToast();
+const { downloadWorksheet } = useReconciliationWorksheetDownload();
 
 const props = defineProps<{
     resourceId: string;
@@ -42,6 +48,11 @@ const exportformatOptions = ref([
     { label: "RDF/XML", value: "rdf", disabled: false },
     { label: "CSV", value: "csv", disabled: false },
     { label: "JSON-LD", value: "jsonld", disabled: false },
+    {
+        label: $gettext("Reconciliation worksheet (OpenRefine)"),
+        value: RECONCILIATION_WORKSHEET_FORMAT,
+        disabled: false,
+    },
 ]);
 const fileName = ref();
 
@@ -83,6 +94,19 @@ function notifyExportComplete(exportedFile: ExportedFile) {
 
 async function exportThesauri() {
     if (!exportFormat.value) {
+        return;
+    }
+
+    if (exportFormat.value === RECONCILIATION_WORKSHEET_FORMAT) {
+        loading.value = true;
+        const isDownloaded = await downloadWorksheet(
+            { scheme_id: props.resourceId },
+            fileName.value,
+        );
+        loading.value = false;
+        if (isDownloaded) {
+            visible.value = false;
+        }
         return;
     }
 
