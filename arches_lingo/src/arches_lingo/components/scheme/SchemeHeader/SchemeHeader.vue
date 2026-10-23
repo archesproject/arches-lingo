@@ -737,6 +737,7 @@ async function onReinstateConfirmed(cascade: boolean) {
                                 :file-base-name="
                                     identifierValue || props.resourceInstanceId!
                                 "
+                                :lifecycle-state-id="currentLifecycleState?.id"
                             />
                         </div>
                         <span

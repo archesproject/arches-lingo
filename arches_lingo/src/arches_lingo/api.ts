@@ -796,7 +796,7 @@ export const fetchDereferencedResource = async (
     resourceType: "concept" | "scheme",
     resourceInstanceId: string,
     format: string,
-): Promise<Blob> => {
+): Promise<Blob | null> => {
     const urlName =
         resourceType === "concept"
             ? "arches_lingo:concept"
@@ -805,6 +805,7 @@ export const fetchDereferencedResource = async (
     const path = generateArchesURL(urlName, { id: resourceInstanceId });
     const response = await fetch(`${path}?format=${format}`);
 
+    if (response.status === 404) return null;
     if (!response.ok) throw new Error(response.statusText);
     return await response.blob();
 };

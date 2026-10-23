@@ -376,6 +376,9 @@ function extractConceptHeaderData(resource: ResourceInstanceResult) {
                                     conceptIdentifierValue ||
                                     resourceInstanceId!
                                 "
+                                :lifecycle-state-id="
+                                    resourceInstanceLifecycleState?.id
+                                "
                             />
                         </div>
                         <span

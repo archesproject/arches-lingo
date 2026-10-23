@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, useTemplateRef } from "vue";
+import { computed, ref, useTemplateRef } from "vue";
+import { storeToRefs } from "pinia";
 
 import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
@@ -14,7 +15,11 @@ import {
     GET_AS_ICON,
     RDF_EXPORT_FORMATS,
 } from "@/arches_lingo/constants.ts";
-import { triggerBlobDownload } from "@/arches_lingo/utils.ts";
+import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
+import {
+    canUserDereferenceResource,
+    triggerBlobDownload,
+} from "@/arches_lingo/utils.ts";
 import { sanitizeFilename } from "@/arches_controlled_lists/utils.ts";
 
 import type { PopoverMethods } from "primevue/popover";
@@ -24,13 +29,22 @@ const props = defineProps<{
     resourceType: "concept" | "scheme";
     resourceInstanceId: string;
     fileBaseName: string;
+    lifecycleStateId?: string;
 }>();
 
 const { $gettext } = useGettext();
 const toast = useToast();
+const { isAnonymous } = storeToRefs(useUserStore());
 
 const popover = useTemplateRef<PopoverMethods>("popover");
 const downloadingFormatToken = ref<string | null>(null);
+
+const isDownloadAvailable = computed(function () {
+    return canUserDereferenceResource(
+        isAnonymous.value,
+        props.lifecycleStateId,
+    );
+});
 
 function toggleMenu(event: MouseEvent) {
     popover.value!.toggle(event);
@@ -44,24 +58,43 @@ async function downloadAs(format: RdfExportFormat) {
             props.resourceInstanceId,
             format.token,
         );
+
+        if (!blob) {
+            showDownloadError(
+                $gettext("This resource is not available to download."),
+            );
+            return;
+        }
+
         const filename = `${sanitizeFilename(props.fileBaseName)}.${format.extension}`;
         triggerBlobDownload(blob, filename);
         popover.value!.hide();
-    } catch (error) {
-        toast.add({
-            severity: ERROR,
-            life: DEFAULT_ERROR_TOAST_LIFE,
-            summary: $gettext("Unable to download resource"),
-            detail: error instanceof Error ? error.message : undefined,
-        });
+    } catch {
+        showDownloadError(
+            $gettext(
+                "The download could not be prepared. Please try again later.",
+            ),
+        );
     } finally {
         downloadingFormatToken.value = null;
     }
 }
+
+function showDownloadError(detail: string) {
+    toast.add({
+        severity: ERROR,
+        life: DEFAULT_ERROR_TOAST_LIFE,
+        summary: $gettext("Unable to download resource"),
+        detail,
+    });
+}
 </script>
 
 <template>
-    <div class="get-as-menu">
+    <div
+        v-if="isDownloadAvailable"
+        class="get-as-menu"
+    >
         <Button
             :icon="GET_AS_ICON"
             class="get-as-button"

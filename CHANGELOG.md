@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
--   Add a "Get as..." control to download a single concept or scheme as JSON-LD, Turtle, N-Triples, or RDF/XML [#771](https://github.com/archesproject/arches-lingo/pull/771)
+-   Add a "Get as..." control to download a single concept or scheme as JSON-LD, Turtle, N-Triples, or RDF/XML [#787](https://github.com/archesproject/arches-lingo/pull/787)
 -   Add support for exporting Lingo Thesauri (schemes & concepts) to N-Triples and Turtle formats [#778](https://github.com/archesproject/arches-lingo/pull/778)
 -   Add support for importing thesauri from N-Triples and Turtle files [#779](https://github.com/archesproject/arches-lingo/pull/779)
 -   Add concept merge workflow, with merge history on the concept header [#801](https://github.com/archesproject/arches-lingo/pull/801)
