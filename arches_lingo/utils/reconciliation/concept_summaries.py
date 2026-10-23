@@ -9,10 +9,12 @@ from arches_lingo.const import (
     CONCEPT_NAME_LANGUAGE_NODE,
     CONCEPT_NAME_NODEGROUP,
     CONCEPT_NAME_TYPE_NODE,
+    PREF_LABEL_URI,
 )
 from arches_lingo.utils.concept_matching import get_scheme_ids_for_concepts
 from arches_lingo.utils.reconciliation.labels import choose_display_label
 from arches_lingo.utils.reconciliation.manifest import list_reconcilable_schemes
+from arches_lingo.utils.reconciliation.visibility import filter_public_concept_ids
 
 
 def get_lifecycle_state_ids(concept_ids):
@@ -24,7 +26,9 @@ def get_lifecycle_state_ids(concept_ids):
     }
 
 
-def get_broader_ids_for_concepts(concept_ids):
+def get_public_broader_ids_for_concepts(concept_ids):
+    """Return ``{concept_id: [broader_id, …]}``, leaving out broader concepts that
+    are not public, such as a draft parent of a published concept."""
     broader_ids_by_concept_id = defaultdict(list)
     classification_tiles = TileModel.objects.filter(
         nodegroup_id=CLASSIFICATION_STATUS_NODEGROUP,
@@ -38,7 +42,20 @@ def get_broader_ids_for_concepts(concept_ids):
                 broader_ids_by_concept_id[str(concept_id)].append(
                     resource_reference["resourceId"]
                 )
-    return broader_ids_by_concept_id
+
+    public_broader_ids = filter_public_concept_ids(
+        {
+            broader_id
+            for broader_ids in broader_ids_by_concept_id.values()
+            for broader_id in broader_ids
+        }
+    )
+    return {
+        concept_id: [
+            broader_id for broader_id in broader_ids if broader_id in public_broader_ids
+        ]
+        for concept_id, broader_ids in broader_ids_by_concept_id.items()
+    }
 
 
 def get_display_labels_for_concepts(concept_ids, target_language=None):
@@ -61,6 +78,26 @@ def get_display_labels_for_concepts(concept_ids, target_language=None):
     }
 
 
+def get_pref_labels_for_concepts(concept_ids):
+    """Return ``{concept_id: [(casefolded prefLabel, language), …]}``."""
+    pref_labels_by_concept_id = defaultdict(list)
+    label_tiles = TileModel.objects.filter(
+        nodegroup_id=CONCEPT_NAME_NODEGROUP,
+        resourceinstance_id__in=concept_ids,
+    ).values_list("resourceinstance_id", "data")
+    for concept_id, tile_data in label_tiles:
+        label_types = tile_data.get(CONCEPT_NAME_TYPE_NODE) or []
+        if not label_types or label_types[0].get("uri") != PREF_LABEL_URI:
+            continue
+        pref_labels_by_concept_id[str(concept_id)].append(
+            (
+                (tile_data.get(CONCEPT_NAME_CONTENT_NODE) or "").strip().casefold(),
+                tile_data.get(CONCEPT_NAME_LANGUAGE_NODE),
+            )
+        )
+    return pref_labels_by_concept_id
+
+
 def summarize_concepts(concept_ids, target_language=None):
     """Return ``{concept_id: {name, description, type}}`` in a fixed number of queries.
 
@@ -78,7 +115,7 @@ def summarize_concepts(concept_ids, target_language=None):
             set(scheme_id_by_concept_id.values())
         )
     }
-    broader_ids_by_concept_id = get_broader_ids_for_concepts(concept_ids)
+    broader_ids_by_concept_id = get_public_broader_ids_for_concepts(concept_ids)
     all_broader_ids = {
         broader_id
         for broader_ids in broader_ids_by_concept_id.values()

@@ -7,6 +7,7 @@ from arches_lingo.utils.concept_lifecycle import (
     PUBLISHED_STATE_ID,
     RETIRED_STATE_ID,
 )
+from arches_lingo.utils.concept_matching import get_scheme_ids_for_concepts
 
 # OpenRefine never sends a session, so every caller sees the same public states.
 # Retired resources are publicly dereferenceable but are not offered as matches.
@@ -26,6 +27,23 @@ def reconcilable_scheme_ids():
     return {
         str(scheme_id)
         for scheme_id in reconcilable_schemes().values_list("pk", flat=True)
+    }
+
+
+def filter_public_concept_ids(concept_ids):
+    """Keep published, locked and retired concepts in reconcilable schemes."""
+    if not concept_ids:
+        return set()
+    scheme_id_by_concept_id = get_scheme_ids_for_concepts(concept_ids)
+    searchable_scheme_ids = reconcilable_scheme_ids()
+    public_state_concept_ids = ResourceInstance.objects.filter(
+        pk__in=concept_ids,
+        resource_instance_lifecycle_state_id__in=SEARCHED_LIFECYCLE_STATE_IDS,
+    ).values_list("pk", flat=True)
+    return {
+        str(concept_id)
+        for concept_id in public_state_concept_ids
+        if scheme_id_by_concept_id.get(str(concept_id)) in searchable_scheme_ids
     }
 
 

@@ -8,7 +8,6 @@ import { useToast } from "primevue/usetoast";
 import Button from "primevue/button";
 import InputText from "primevue/inputtext";
 
-import { generateArchesURL } from "@/arches/utils/generate-arches-url.ts";
 import {
     DEFAULT_ERROR_TOAST_LIFE,
     DEFAULT_TOAST_LIFE,
@@ -18,6 +17,10 @@ import {
 } from "@/arches_lingo/constants.ts";
 import { useAppSettingsStore } from "@/arches_lingo/stores/useAppSettingsStore.ts";
 
+// Scheme services are routed by Django's slug converter, so a scheme whose
+// identifier is not a slug is offered the global service instead.
+const SLUG_PATTERN = /^[-a-zA-Z0-9_]+$/;
+
 const { schemeIdentifier, schemeName } = defineProps<{
     schemeIdentifier?: string;
     schemeName?: string;
@@ -25,30 +28,43 @@ const { schemeIdentifier, schemeName } = defineProps<{
 
 const { $gettext } = useGettext();
 const toast = useToast();
-const { publicServerAddress, reconciliationEnabled, reconciliationServiceUrl } =
-    storeToRefs(useAppSettingsStore());
+const {
+    reconciliationEnabled,
+    reconciliationServiceUrl,
+    schemeReconciliationServiceUrlTemplate,
+} = storeToRefs(useAppSettingsStore());
 
-const serviceUrl = computed(() => {
-    if (!schemeIdentifier || !publicServerAddress.value) {
-        return reconciliationServiceUrl.value;
+const schemeServiceUrl = computed(() => {
+    if (
+        !schemeIdentifier ||
+        !SLUG_PATTERN.test(schemeIdentifier) ||
+        !schemeReconciliationServiceUrlTemplate.value
+    ) {
+        return undefined;
     }
-    const schemeServicePath = generateArchesURL(
-        "arches_lingo:api-lingo-scheme-reconcile",
-        { scheme_identifier: schemeIdentifier },
+    return schemeReconciliationServiceUrlTemplate.value.replace(
+        "{scheme_identifier}",
+        schemeIdentifier,
     );
-    return `${publicServerAddress.value.replace(/\/+$/, "")}${schemeServicePath}`;
 });
 
+const serviceUrl = computed(
+    () => schemeServiceUrl.value ?? reconciliationServiceUrl.value,
+);
+
 const usageHint = computed(() => {
-    if (schemeIdentifier) {
+    if (schemeServiceUrl.value) {
         return $gettext(
             "Add this URL as a standard reconciliation service in OpenRefine to match spreadsheet values against this scheme.",
         );
     }
     if (schemeName) {
+        // Rendered as text, so escaping would show a name's "<" as "&lt;".
+        const disableHtmlEscaping = true;
         return $gettext(
             'Add this URL as a standard reconciliation service in OpenRefine, then choose "%{scheme}" as the type to reconcile against.',
             { scheme: schemeName },
+            disableHtmlEscaping,
         );
     }
     return $gettext(

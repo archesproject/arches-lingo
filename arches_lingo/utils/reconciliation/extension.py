@@ -16,18 +16,18 @@ from django.utils.translation import gettext_lazy
 from rdflib import Literal
 from rdflib.namespace import DCTERMS, SKOS
 
+from arches.app.models.models import TileModel
 from arches_querysets.models import ResourceTileTree
 
-from arches_lingo.utils.concept_matching import get_scheme_ids_for_concepts
+from arches_lingo.const import URI_CONTENT_NODE, URI_NODEGROUP
 from arches_lingo.utils.reconciliation.candidates import MAX_QUERIES_PER_REQUEST
 from arches_lingo.utils.reconciliation.concept_summaries import (
     get_display_labels_for_concepts,
-    get_lifecycle_state_ids,
 )
 from arches_lingo.utils.reconciliation.labels import is_same_base_language
 from arches_lingo.utils.reconciliation.manifest import list_reconcilable_schemes
 from arches_lingo.utils.reconciliation.visibility import (
-    SEARCHED_LIFECYCLE_STATE_IDS,
+    filter_public_concept_ids,
     reconcilable_scheme_ids,
 )
 from arches_lingo.utils.skos import ARCHES, SKOSWriter, subject_uri_for
@@ -38,6 +38,7 @@ from arches_lingo.utils.skos_serializer import (
 )
 
 ALL_LANGUAGES = "*"
+MATCH_PROPERTY_IDS = ("exactMatch", "closeMatch")
 
 
 @dataclass(frozen=True)
@@ -130,7 +131,12 @@ def parse_extension_request(raw_extension_request):
                 _("Extension property requested twice: %(property_id)s")
                 % {"property_id": property_id}
             )
-        language = (raw_property.get("settings") or {}).get("lang") or None
+        property_settings = raw_property.get("settings") or {}
+        if not isinstance(property_settings, dict):
+            raise ValueError(_("Extension property settings must be a JSON object."))
+        language = property_settings.get("lang") or None
+        if language is not None and not isinstance(language, str):
+            raise ValueError(_('The "lang" setting must be a string.'))
         requested_properties.append((property_id, language))
     return concept_ids, requested_properties
 
@@ -143,20 +149,6 @@ def canonical_id_by_requested_id(requested_ids):
         except ValueError:
             continue
     return canonical_ids
-
-
-def filter_public_concept_ids(concept_ids):
-    """Keep published, locked and retired concepts in reconcilable schemes."""
-    lifecycle_state_id_by_concept_id = get_lifecycle_state_ids(concept_ids)
-    scheme_id_by_concept_id = get_scheme_ids_for_concepts(concept_ids)
-    searchable_scheme_ids = reconcilable_scheme_ids()
-    return {
-        concept_id
-        for concept_id in concept_ids
-        if lifecycle_state_id_by_concept_id.get(concept_id)
-        in SEARCHED_LIFECYCLE_STATE_IDS
-        and scheme_id_by_concept_id.get(concept_id) in searchable_scheme_ids
-    }
 
 
 def build_skos_graph(concept_ids):
@@ -184,6 +176,38 @@ def resource_id_for_uri(rdf_object, resource_ids_by_public_uri):
         return resource_ids_by_public_uri[uri]
     # Anything else is not a resource, so it never matches a public resource id.
     return uri.removeprefix(str(ARCHES))
+
+
+def find_non_public_local_uris(uris):
+    """Return the URIs that name a resource in this instance that is not public,
+    so a match column never reveals the id of, say, a draft concept. Public
+    concepts and reconcilable schemes are both kept."""
+    if not uris:
+        return set()
+    resource_id_by_uri = {}
+    for uri in uris:
+        if not uri.startswith(str(ARCHES)):
+            continue
+        try:
+            resource_id_by_uri[uri] = str(uuid.UUID(uri.removeprefix(str(ARCHES))))
+        except ValueError:
+            continue
+    minted_uri_tiles = TileModel.objects.filter(
+        nodegroup_id=URI_NODEGROUP,
+        **{f"data__{URI_CONTENT_NODE}__in": list(uris)},
+    ).values_list(f"data__{URI_CONTENT_NODE}", "resourceinstance_id")
+    for uri, resource_id in minted_uri_tiles:
+        resource_id_by_uri[uri] = str(resource_id)
+
+    local_resource_ids = set(resource_id_by_uri.values())
+    public_resource_ids = filter_public_concept_ids(local_resource_ids) | (
+        local_resource_ids & reconcilable_scheme_ids()
+    )
+    return {
+        uri
+        for uri, resource_id in resource_id_by_uri.items()
+        if resource_id not in public_resource_ids
+    }
 
 
 def matches_language(rdf_object, language):
@@ -220,13 +244,15 @@ def collect_property_values(
         if property_id in ("broader", "inScheme")
         for rdf_object in rdf_objects
     }
-    public_linked_concept_ids = {
-        resource_id
-        for resource_id, lifecycle_state_id in get_lifecycle_state_ids(
-            linked_resource_ids
-        ).items()
-        if lifecycle_state_id in SEARCHED_LIFECYCLE_STATE_IDS
-    }
+    public_linked_concept_ids = filter_public_concept_ids(linked_resource_ids)
+    non_public_local_uris = find_non_public_local_uris(
+        {
+            str(rdf_object)
+            for (_concept_id, property_id), rdf_objects in objects_by_request.items()
+            if property_id in MATCH_PROPERTY_IDS
+            for rdf_object in rdf_objects
+        }
+    )
     scheme_name_by_id = {
         reconciliation_type["id"]: reconciliation_type["name"]
         for reconciliation_type in list_reconcilable_schemes(linked_resource_ids)
@@ -280,8 +306,11 @@ def collect_property_values(
                 values = [
                     {"str": str(rdf_object)}
                     for rdf_object in rdf_objects
-                    if not extension_property.is_language_filtered
-                    or matches_language(rdf_object, language or default_language)
+                    if str(rdf_object) not in non_public_local_uris
+                    and (
+                        not extension_property.is_language_filtered
+                        or matches_language(rdf_object, language or default_language)
+                    )
                 ]
             values_by_property_id[property_id] = values
         values_by_concept_id[concept_id] = values_by_property_id

@@ -1,6 +1,8 @@
 import json
 import uuid
 
+from django.conf import settings
+from django.core.exceptions import ImproperlyConfigured
 from django.test import SimpleTestCase, TestCase, override_settings
 from django.test.client import Client
 from django.urls import reverse
@@ -52,6 +54,7 @@ from arches_lingo.utils.reconciliation.manifest import (
     build_service_manifest,
     list_reconcilable_schemes,
 )
+from arches_lingo.utils.reconciliation.rate_limit import parse_rate_limit
 from arches_lingo.utils.reconciliation.suggest import SUGGEST_SERVICES
 from arches_lingo.utils.reconciliation.scoring import (
     adjust_score_for_properties,
@@ -62,6 +65,7 @@ from arches_lingo.utils.reconciliation.visibility import (
     resolve_merge_survivors,
     resolve_reconcilable_scheme_id,
 )
+from arches_lingo.utils.skos import ARCHES
 from tests.tests import SchemeWithConceptsTestCase
 
 
@@ -174,12 +178,20 @@ class ReconciliationManifestTests(SchemeWithConceptsTestCase):
         self.assertEqual(manifest["extend"]["property_settings"][0]["name"], "lang")
 
     def test_scheme_manifest_is_scoped_and_named_for_the_scheme(self):
-        manifest = build_service_manifest(str(self.scheme.pk))
+        manifest = build_service_manifest(str(self.scheme.pk), "test-scheme")
 
         self.assertEqual(manifest["name"], "Test Lingo — Test Scheme")
         self.assertEqual(
             manifest["defaultTypes"],
             [{"id": str(self.scheme.pk), "name": "Test Scheme"}],
+        )
+        self.assertEqual(
+            manifest["suggest"]["entity"]["service_url"],
+            "https://lingo.example.org/api/lingo/schemes/test-scheme/reconcile",
+        )
+        self.assertEqual(
+            manifest["extend"]["propose_properties"]["service_url"],
+            "https://lingo.example.org/api/lingo/reconcile",
         )
 
     def test_resolves_identifier_only_for_reconcilable_schemes(self):
@@ -228,6 +240,49 @@ class ReconciliationManifestTests(SchemeWithConceptsTestCase):
             result["reconciliation_service_url"],
             "https://lingo.example.org/api/lingo/reconcile",
         )
+        self.assertEqual(
+            result["scheme_reconciliation_service_url_template"],
+            "https://lingo.example.org/api/lingo/schemes/{scheme_identifier}/reconcile",
+        )
+
+    @override_settings(
+        LINGO_RECONCILIATION_RATE_LIMIT="2/h",
+        CACHES={
+            "default": {
+                "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+                "LOCATION": "reconciliation-rate-limit",
+            }
+        },
+    )
+    def test_callers_over_the_rate_limit_are_told_to_wait(self):
+        responses = [
+            self.client.get(reverse("api-lingo-reconcile")) for _request in range(3)
+        ]
+
+        self.assertEqual(
+            [response.status_code for response in responses], [200, 200, 429]
+        )
+        self.assertEqual(responses[2]["Access-Control-Allow-Origin"], "*")
+        self.assertGreater(int(responses[2]["Retry-After"]), 0)
+
+    @override_settings(LINGO_RECONCILIATION_RATE_LIMIT="1/h")
+    def test_rate_limit_never_blocks_without_a_cache_that_stores(self):
+        # The test settings' default cache is a DummyCache.
+        for _request in range(2):
+            response = self.client.get(reverse("api-lingo-reconcile"))
+            self.assertEqual(response.status_code, 200)
+
+    def test_malformed_rate_limits_are_rejected(self):
+        self.assertEqual(parse_rate_limit("120/m"), (120, 60))
+        for malformed_rate_limit in ["0/m", "many/m", "5/d", "5"]:
+            with self.subTest(rate_limit=malformed_rate_limit):
+                with self.assertRaises(ImproperlyConfigured):
+                    parse_rate_limit(malformed_rate_limit)
+
+    def test_service_name_defaults_when_the_setting_is_absent(self):
+        with override_settings():
+            del settings.LINGO_RECONCILIATION_SERVICE_NAME
+            self.assertEqual(build_service_manifest()["name"], "Arches Lingo")
 
     @override_settings(LINGO_RECONCILIATION_ENABLED=False)
     def test_app_settings_omit_the_url_when_disabled(self):
@@ -559,6 +614,52 @@ class ReconciliationQueryTests(ReconciliationQueryTestCase):
         ]["result"]
         self.assertEqual(results[0]["id"], str(self.concepts[2].pk))
 
+    def test_scheme_service_never_searches_another_scheme(self):
+        other_scheme = ResourceInstance.objects.create(
+            graph_id=SCHEMES_GRAPH_ID, name="Other Scheme"
+        )
+        elsewhere = ResourceInstance.objects.create(
+            graph_id=self.concepts[0].graph_id, name="Elsewhere"
+        )
+        TileModel.objects.create(
+            resourceinstance=elsewhere,
+            nodegroup_id=CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID,
+            data={
+                CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID: [
+                    {"resourceId": str(other_scheme.pk)}
+                ]
+            },
+        )
+        self.add_label(elsewhere, "Concept 3")
+        set_lifecycle_state(elsewhere, PUBLISHED_STATE_ID)
+        set_lifecycle_state(other_scheme, PUBLISHED_STATE_ID)
+        queries = {"q0": {"query": "Concept 3", "type": str(other_scheme.pk)}}
+        scheme_url = reverse(
+            "api-lingo-scheme-reconcile", kwargs={"scheme_identifier": "test-scheme"}
+        )
+
+        self.assertEqual(
+            self.result_ids(self.reconcile(queries)["q0"]["result"]),
+            [str(elsewhere.pk)],
+        )
+        self.assertEqual(self.reconcile(queries, url=scheme_url)["q0"]["result"], [])
+
+    def test_non_public_broader_concepts_are_never_revealed(self):
+        set_lifecycle_state(self.concepts[1], DRAFT_STATE_ID)
+
+        results = self.reconcile({"q0": {"query": "concept 3"}})["q0"]["result"]
+        by_draft_broader_label = self.reconcile(
+            {
+                "q0": {
+                    "query": "concept 3",
+                    "properties": [{"pid": "broader", "v": "concept 2"}],
+                }
+            }
+        )["q0"]["result"]
+
+        self.assertEqual(results[0]["description"], "Concept 1 · Test Scheme")
+        self.assertFalse(any(result["match"] for result in by_draft_broader_label))
+
     def test_version_0_1_clients_and_csrf_free_posts_are_served(self):
         queries = json.dumps({"q0": {"query": "Concept 3", "limit": 1}})
         get_response = self.client.get(
@@ -669,10 +770,20 @@ class ReconciliationQueryPropertyTests(ReconciliationQueryTestCase):
 
     def test_language_chooses_the_returned_name(self):
         self.add_label(self.concepts[2], "Concept trois", language="fr")
+        self.add_label(
+            self.concepts[2], "Concept 3", label_type="altLabel", language="fr"
+        )
 
         results = self.reconcile_one("Concept 3", [{"pid": "lang", "v": "fr"}])
+        in_regional_language = self.reconcile_one(
+            "concept trois", [{"pid": "lang", "v": "fr-CA"}]
+        )
 
         self.assertEqual(results[0]["name"], "Concept trois")
+        # The exact prefLabel is English (the French label is only an altLabel),
+        # so a French query is not matched automatically.
+        self.assertFalse(results[0]["match"])
+        self.assertTrue(in_regional_language[0]["match"])
 
     def test_include_retired_flags_retired_concepts(self):
         set_lifecycle_state(self.concepts[2], RETIRED_STATE_ID)
@@ -741,8 +852,39 @@ class ReconciliationSuggestTests(ReconciliationQueryTestCase):
         )
         self.assertEqual(len(self.suggest("property").json()["result"]), 6)
 
+    def test_scheme_service_suggestions_stay_in_the_scheme(self):
+        other_scheme = ResourceInstance.objects.create(
+            graph_id=SCHEMES_GRAPH_ID, name="Test Other"
+        )
+        set_lifecycle_state(other_scheme, PUBLISHED_STATE_ID)
+
+        def scheme_suggest(suggest_kind, **parameters):
+            return self.client.get(
+                reverse(
+                    "api-lingo-scheme-reconcile-suggest",
+                    kwargs={
+                        "scheme_identifier": "test-scheme",
+                        "suggest_kind": suggest_kind,
+                    },
+                ),
+                parameters,
+            ).json()["result"]
+
+        self.assertEqual(len(self.suggest("type", prefix="test").json()["result"]), 2)
+        self.assertEqual(
+            scheme_suggest("type", prefix="test"),
+            [{"id": str(self.scheme.pk), "name": "Test Scheme"}],
+        )
+        self.assertEqual(len(scheme_suggest("entity", prefix="concept")), 5)
+        self.assertEqual(
+            scheme_suggest("entity", prefix="concept", type=str(other_scheme.pk)), []
+        )
+        self.assertEqual(len(scheme_suggest("property", prefix="broad")), 1)
+
     def test_invalid_suggest_requests(self):
-        self.assertEqual(self.suggest("colour", prefix="x").status_code, 404)
+        unknown_kind = self.suggest("colour", prefix="x")
+        self.assertEqual(unknown_kind.status_code, 404)
+        self.assertEqual(unknown_kind["Access-Control-Allow-Origin"], "*")
         self.assertEqual(self.suggest("type", cursor="-1").status_code, 400)
         self.assertEqual(self.suggest("type", cursor="first").status_code, 400)
         self.assertEqual(self.suggest("entity", prefix="c" * 256).status_code, 400)
@@ -923,6 +1065,44 @@ class ReconciliationExtensionTests(ReconciliationQueryTestCase):
             hidden_scheme_rows, {str(self.concepts[3].pk): {"prefLabel": []}}
         )
 
+    def test_match_columns_reveal_only_public_local_resources(self):
+        draft_concept = self.concepts[4]
+        set_lifecycle_state(draft_concept, DRAFT_STATE_ID)
+        TileModel.objects.create(
+            resourceinstance=draft_concept,
+            nodegroup_id=URI_NODEGROUP,
+            data={URI_CONTENT_NODE: "https://lingo.example/c5"},
+        )
+        public_uris = [
+            str(ARCHES[str(self.concepts[0].pk)]),
+            str(ARCHES[str(self.scheme.pk)]),
+            str(ARCHES["not-a-resource"]),
+        ]
+        for comparate in [
+            str(ARCHES[str(draft_concept.pk)]),
+            "https://lingo.example/c5",
+            *public_uris,
+        ]:
+            TileModel.objects.create(
+                resourceinstance=self.concepts[2],
+                nodegroup_id=MATCH_STATUS_NODEGROUP,
+                data={
+                    MATCH_STATUS_RELATION_NODE: DataTypeFactory()
+                    .get_instance("reference")
+                    .transform_value_for_tile(
+                        "exactMatch", controlledList=MAPPING_PROPERTIES_LIST_ID
+                    ),
+                    MATCH_STATUS_COMPARATE_NODE: comparate,
+                },
+            )
+
+        rows = self.extend([self.concepts[2].pk], [{"id": "exactMatch"}]).json()["rows"]
+
+        self.assertEqual(
+            rows[str(self.concepts[2].pk)]["exactMatch"],
+            [{"str": uri} for uri in sorted(public_uris)],
+        )
+
     def test_malformed_extension_requests_are_rejected(self):
         too_many_ids = [str(uuid.uuid4()) for _ in range(MAX_QUERIES_PER_REQUEST + 1)]
         for raw_extension_request in [
@@ -933,6 +1113,10 @@ class ReconciliationExtensionTests(ReconciliationQueryTestCase):
             json.dumps({"ids": [], "properties": "uri"}),
             json.dumps({"ids": [], "properties": [{"id": "colour"}]}),
             json.dumps({"ids": [], "properties": [{"id": "uri"}, {"id": "uri"}]}),
+            json.dumps({"ids": [], "properties": [{"id": "uri", "settings": "fr"}]}),
+            json.dumps(
+                {"ids": [], "properties": [{"id": "uri", "settings": {"lang": 3}}]}
+            ),
         ]:
             with self.subTest(raw_extension_request=raw_extension_request[:40]):
                 response = self.client.post(
