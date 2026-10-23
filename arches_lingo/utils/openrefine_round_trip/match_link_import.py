@@ -9,11 +9,11 @@ import csv
 import io
 import logging
 import uuid
-from collections import Counter
+from collections import Counter, defaultdict
 from urllib.parse import urlsplit, urlunsplit
 
 from django.db import transaction
-from django.utils import timezone
+from django.utils import formats, timezone
 from django.utils.translation import get_language
 from django.utils.translation import gettext as _
 
@@ -63,6 +63,10 @@ MATCH_TYPE_BY_ALIAS = {
 
 OUTCOME_ADD = "add"
 OUTCOME_ALREADY_LINKED = "already_linked"
+# The concept and URI are already paired by another match type. SKOS makes some
+# of these pairs contradictory (exactMatch and relatedMatch are disjoint), so an
+# editor changes the type deliberately rather than the import adding a second.
+OUTCOME_CONFLICTING_LINK = "conflicting_link"
 OUTCOME_DUPLICATE_IN_FILE = "duplicate_in_file"
 OUTCOME_UNKNOWN_CONCEPT = "unknown_concept"
 OUTCOME_OUTSIDE_SCHEME = "outside_scheme"
@@ -158,7 +162,7 @@ def parse_match_link_rows(csv_reader):
         if len(rows) > MAX_IMPORT_ROWS:
             raise ValueError(
                 _("The file has more than %(limit)s links.")
-                % {"limit": f"{MAX_IMPORT_ROWS:,}"}
+                % {"limit": formats.number_format(MAX_IMPORT_ROWS, force_grouping=True)}
             )
     return rows
 
@@ -166,7 +170,7 @@ def parse_match_link_rows(csv_reader):
 def canonical_concept_id(raw_concept_id):
     try:
         return str(uuid.UUID(raw_concept_id))
-    except ValueError:
+    except (TypeError, ValueError):
         return None
 
 
@@ -195,56 +199,73 @@ def comparable_uri(uri):
 
 
 def stored_uri_variants(uri):
-    """The spellings of a URI that comparable_uri treats as the same, for
-    finding it with an exact database lookup."""
+    """The common spellings of a URI that comparable_uri treats as the same,
+    for finding it with an exact database lookup. Mixed-case hosts other than
+    the one given are not enumerated."""
     parsed_uri = urlsplit(uri)
     path = parsed_uri.path.rstrip("/")
     return {
         urlunsplit(
             (
                 scheme,
-                parsed_uri.netloc,
+                host,
                 path_variant,
                 parsed_uri.query,
                 parsed_uri.fragment,
             )
         )
         for scheme in ("http", "https")
+        for host in (parsed_uri.netloc, parsed_uri.netloc.casefold())
         for path_variant in (path, f"{path}/")
     }
 
 
+def uri_node_value_as_text(uri_node_value):
+    """Older data may hold a URI as a url datatype value rather than a string."""
+    if isinstance(uri_node_value, dict):
+        return uri_node_value.get("url") or ""
+    return uri_node_value if isinstance(uri_node_value, str) else ""
+
+
 def get_own_uris(concept_ids):
-    return {
-        str(concept_id): comparable_uri(uri)
-        for concept_id, uri in TileModel.objects.filter(
-            nodegroup_id=URI_NODEGROUP, resourceinstance_id__in=concept_ids
-        ).values_list("resourceinstance_id", f"data__{URI_CONTENT_NODE}")
-    }
+    """Return ``{concept_id: {comparable uri, …}}``; a concept may have several."""
+    own_uris_by_concept_id = defaultdict(set)
+    for concept_id, uri_node_value in TileModel.objects.filter(
+        nodegroup_id=URI_NODEGROUP, resourceinstance_id__in=concept_ids
+    ).values_list("resourceinstance_id", f"data__{URI_CONTENT_NODE}"):
+        uri = uri_node_value_as_text(uri_node_value)
+        if uri:
+            own_uris_by_concept_id[str(concept_id)].add(comparable_uri(uri))
+    return own_uris_by_concept_id
 
 
 def get_existing_links(concept_ids):
-    """Return ``{(concept_id, relation_uri, comparable matched uri)}`` already recorded."""
-    existing_links = set()
+    """Return ``{(concept_id, comparable matched uri): {relation_uri, …}}``."""
+    relation_uris_by_link = defaultdict(set)
     for concept_id, tile_data in TileModel.objects.filter(
         nodegroup_id=MATCH_STATUS_NODEGROUP, resourceinstance_id__in=concept_ids
     ).values_list("resourceinstance_id", "data"):
         relation_values = tile_data.get(MATCH_STATUS_RELATION_NODE) or []
         if relation_values:
-            existing_links.add(
+            relation_uris_by_link[
                 (
                     str(concept_id),
-                    relation_values[0].get("uri"),
                     comparable_uri(tile_data.get(MATCH_STATUS_COMPARATE_NODE)),
                 )
-            )
-    return existing_links
+            ].add(relation_values[0].get("uri"))
+    return relation_uris_by_link
+
+
+def outcome_for_known_link(relation_uri, recorded_relation_uris, same_type_outcome):
+    if relation_uri in recorded_relation_uris:
+        return same_type_outcome
+    return OUTCOME_CONFLICTING_LINK
 
 
 def get_internal_concept_uris(match_uris):
     """Return the comparable forms of these URIs that belong to concepts here."""
     return {
-        comparable_uri(internal_uri)
+        comparable_uri(uri_node_value_as_text(internal_uri))
         for internal_uri in TileModel.objects.filter(
             nodegroup_id=URI_NODEGROUP,
             **{
@@ -281,8 +302,8 @@ def validate_match_link_rows(rows, user, scheme_id=None):
         scheme_id_by_concept_id,
         user is not None and is_lingo_admin(user),
     )
-    own_uri_by_concept_id = get_own_uris(existing_concept_ids)
-    existing_links = get_existing_links(existing_concept_ids)
+    own_uris_by_concept_id = get_own_uris(existing_concept_ids)
+    existing_relation_uris_by_link = get_existing_links(existing_concept_ids)
     relation_uri_by_match_type = {
         match_type: get_list_item_tile_value(list_item_id)["uri"]
         for match_type, list_item_id in LINKABLE_MATCH_TYPES.items()
@@ -291,15 +312,12 @@ def validate_match_link_rows(rows, user, scheme_id=None):
         {row["match_uri"] for row in rows if is_absolute_web_uri(row["match_uri"])}
     )
 
-    seen_links = set()
+    relation_uris_by_link_seen_in_file = defaultdict(set)
     validated_rows = []
     for row, concept_id in zip(rows, concept_ids):
         match_uri = comparable_uri(row["match_uri"])
-        link = (
-            concept_id,
-            relation_uri_by_match_type.get(row["match_type"]),
-            match_uri,
-        )
+        link = (concept_id, match_uri)
+        relation_uri = relation_uri_by_match_type.get(row["match_type"])
         if concept_id not in existing_concept_ids:
             outcome = OUTCOME_UNKNOWN_CONCEPT
         elif scheme_id and scheme_id_by_concept_id.get(concept_id) != str(scheme_id):
@@ -308,17 +326,31 @@ def validate_match_link_rows(rows, user, scheme_id=None):
             outcome = OUTCOME_INVALID_MATCH_TYPE
         elif not is_absolute_web_uri(row["match_uri"]):
             outcome = OUTCOME_INVALID_URI
-        elif match_uri == own_uri_by_concept_id.get(concept_id):
+        elif match_uri in own_uris_by_concept_id.get(concept_id, set()):
             outcome = OUTCOME_SELF_MATCH
-        elif link in seen_links:
-            outcome = OUTCOME_DUPLICATE_IN_FILE
+        elif link in relation_uris_by_link_seen_in_file:
+            outcome = outcome_for_known_link(
+                relation_uri,
+                relation_uris_by_link_seen_in_file[link],
+                OUTCOME_DUPLICATE_IN_FILE,
+            )
         elif concept_id in cannot_receive_reason_by_concept_id:
             outcome = cannot_receive_reason_by_concept_id[concept_id]
-        elif link in existing_links:
-            outcome = OUTCOME_ALREADY_LINKED
+        elif link in existing_relation_uris_by_link:
+            outcome = outcome_for_known_link(
+                relation_uri,
+                existing_relation_uris_by_link[link],
+                OUTCOME_ALREADY_LINKED,
+            )
         else:
             outcome = OUTCOME_ADD
-        seen_links.add(link)
+        if relation_uri and outcome not in (
+            OUTCOME_UNKNOWN_CONCEPT,
+            OUTCOME_OUTSIDE_SCHEME,
+            OUTCOME_INVALID_URI,
+            OUTCOME_SELF_MATCH,
+        ):
+            relation_uris_by_link_seen_in_file[link].add(relation_uri)
         validated_rows.append(
             {
                 **row,
@@ -360,6 +392,29 @@ def preview_match_link_import(uploaded_file, user, scheme_id=None):
     }
 
 
+def claim_match_link_import(match_link_import):
+    """Move a pending import to running; False if it was already taken or
+    given up on, so a late or repeated worker never applies it a second time."""
+    started = timezone.now()
+    is_claimed = MatchLinkImport.objects.filter(
+        pk=match_link_import.pk, status=MatchLinkImport.STATUS_PENDING
+    ).update(status=MatchLinkImport.STATUS_RUNNING, started=started)
+    match_link_import.refresh_from_db()
+    return bool(is_claimed)
+
+
+def lock_concepts_in_rows(rows):
+    """Lock the rows' concepts until the transaction ends, so two imports
+    running at once cannot both decide the same link is new."""
+    concept_ids = {canonical_concept_id(row.get("concept_id")) for row in rows}
+    list(
+        ResourceInstance.objects.select_for_update()
+        .filter(pk__in=concept_ids - {None})
+        .order_by("pk")
+        .values_list("pk", flat=True)
+    )
+
+
 def apply_match_link_import(match_link_import):
     """Validate the stored rows again (state may have changed since the
     preview) and write the links in one edit transaction.
@@ -367,8 +422,13 @@ def apply_match_link_import(match_link_import):
     The record is saved as soon as the links commit, so its
     ``edit_transaction_id`` survives a failure while indexing them.
     """
-    match_link_import.status = MatchLinkImport.STATUS_RUNNING
-    match_link_import.save(update_fields=["status"])
+    if not claim_match_link_import(match_link_import):
+        logger.warning(
+            "Match link import %s is %s, not pending; not applying it.",
+            match_link_import.pk,
+            match_link_import.status,
+        )
+        return match_link_import
     edit_transaction_id = uuid.uuid4()
     rows_to_add = []
     try:
@@ -377,6 +437,7 @@ def apply_match_link_import(match_link_import):
             for match_type, list_item_id in LINKABLE_MATCH_TYPES.items()
         }
         with transaction.atomic():
+            lock_concepts_in_rows(match_link_import.rows)
             validated_rows = validate_match_link_rows(
                 match_link_import.rows,
                 match_link_import.user,
@@ -408,10 +469,10 @@ def apply_match_link_import(match_link_import):
             match_link_import.edit_transaction_id = edit_transaction_id
         match_link_import.outcome_counts = count_outcomes(validated_rows)
         match_link_import.status = MatchLinkImport.STATUS_COMPLETE
-    except Exception as error:
+    except Exception:
         logger.exception("Match link import %s failed", match_link_import.pk)
         match_link_import.status = MatchLinkImport.STATUS_FAILED
-        match_link_import.error_message = str(error)
+        match_link_import.error_code = MatchLinkImport.ERROR_APPLY_FAILED
     match_link_import.finished = timezone.now()
     match_link_import.save()
 
@@ -423,9 +484,6 @@ def apply_match_link_import(match_link_import):
                 "Match link import %s could not index its concepts",
                 match_link_import.pk,
             )
-            match_link_import.error_message = _(
-                "The links were added, but the search index could not be updated. "
-                "Reindex the affected concepts to find them by their new links."
-            )
-            match_link_import.save(update_fields=["error_message"])
+            match_link_import.error_code = MatchLinkImport.ERROR_INDEXING_FAILED
+            match_link_import.save(update_fields=["error_code"])
     return match_link_import

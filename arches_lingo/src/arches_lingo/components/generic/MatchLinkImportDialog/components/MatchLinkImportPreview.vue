@@ -11,6 +11,7 @@ import Tag from "primevue/tag";
 import {
     OUTCOME_ADD,
     buildOutcomeLabels,
+    describeOutcome,
 } from "@/arches_lingo/components/generic/MatchLinkImportDialog/utils.ts";
 import { SECONDARY, SUCCESS } from "@/arches_lingo/constants.ts";
 
@@ -25,7 +26,7 @@ const { preview } = defineProps<{
     preview: MatchLinkImportPreview;
 }>();
 
-const { $gettext } = useGettext();
+const { $gettext, $ngettext } = useGettext();
 const outcomeLabels = buildOutcomeLabels($gettext);
 
 const selectedOutcome = ref<MatchLinkImportOutcome | null>(null);
@@ -39,7 +40,7 @@ const outcomeTotals = computed(() =>
     ).map(([outcome, count]) => ({
         outcome,
         count,
-        label: outcomeLabels[outcome],
+        label: describeOutcome(outcomeLabels, outcome),
     })),
 );
 
@@ -47,6 +48,10 @@ const visibleRows = computed(() =>
     selectedOutcome.value
         ? preview.rows.filter((row) => row.outcome === selectedOutcome.value)
         : preview.rows,
+);
+
+const hasInternalConceptRows = computed(() =>
+    preview.rows.some((row) => row.is_internal_concept),
 );
 
 function outcomeSeverity(outcome: MatchLinkImportOutcome): string {
@@ -59,16 +64,24 @@ function outcomeSeverity(outcome: MatchLinkImportOutcome): string {
         <div class="totals">
             <span class="total-rows">
                 {{
-                    $gettext("%{count} rows checked", {
-                        count: String(preview.total_rows),
-                    })
+                    $ngettext(
+                        "%{count} row checked",
+                        "%{count} rows checked",
+                        preview.total_rows,
+                        { count: String(preview.total_rows) },
+                    )
                 }}
             </span>
             <Tag
                 v-for="total in outcomeTotals"
                 :key="total.outcome"
                 :severity="outcomeSeverity(total.outcome)"
-                :value="`${total.label}: ${total.count}`"
+                :value="
+                    $gettext('%{label}: %{count}', {
+                        label: total.label,
+                        count: String(total.count),
+                    })
+                "
             />
         </div>
 
@@ -83,11 +96,25 @@ function outcomeSeverity(outcome: MatchLinkImportOutcome): string {
             :aria-label="$gettext('Show rows with this outcome')"
         />
 
+        <p
+            v-if="hasInternalConceptRows"
+            class="internal-concept-note"
+        >
+            {{
+                $gettext(
+                    "Some URIs belong to concepts in Lingo. Those links are added one way only; use Find Matching Concepts for a two-way link.",
+                )
+            }}
+        </p>
+
         <DataTable
             paginator
             size="small"
             :value="visibleRows"
             :rows="ROWS_PER_PAGE"
+            :table-props="{
+                'aria-label': $gettext('Rows in the match links file'),
+            }"
         >
             <Column
                 field="row_number"
@@ -101,16 +128,16 @@ function outcomeSeverity(outcome: MatchLinkImportOutcome): string {
             <Column :header="$gettext('Match URI')">
                 <template #body="{ data }">
                     <span class="match-uri">{{ data.match_uri }}</span>
-                    <i
+                    <span
                         v-if="data.is_internal_concept"
-                        v-tooltip="
-                            $gettext(
-                                'This URI belongs to a concept in Lingo. The link is added one way only; use Find Matching Concepts for a two-way link.',
-                            )
-                        "
-                        class="pi pi-info-circle internal-concept"
-                        :aria-label="$gettext('Concept in this Lingo')"
-                    />
+                        class="internal-concept"
+                    >
+                        <i
+                            class="pi pi-info-circle"
+                            aria-hidden="true"
+                        />
+                        {{ $gettext("Lingo concept: linked one way only") }}
+                    </span>
                 </template>
             </Column>
             <Column
@@ -122,9 +149,10 @@ function outcomeSeverity(outcome: MatchLinkImportOutcome): string {
                     <Tag
                         :severity="outcomeSeverity(data.outcome)"
                         :value="
-                            outcomeLabels[
-                                data.outcome as MatchLinkImportOutcome
-                            ]
+                            describeOutcome(
+                                outcomeLabels,
+                                data.outcome as MatchLinkImportOutcome,
+                            )
                         "
                     />
                 </template>
@@ -161,8 +189,18 @@ function outcomeSeverity(outcome: MatchLinkImportOutcome): string {
     word-break: break-all;
 }
 
+.match-link-import-preview .internal-concept-note {
+    margin: 0;
+    font-size: var(--p-lingo-font-size-small);
+    color: var(--p-text-muted-color);
+}
+
 .match-link-import-preview .internal-concept {
-    margin-inline-start: 0.375rem;
-    color: var(--p-primary-color);
+    display: flex;
+    gap: 0.375rem;
+    align-items: baseline;
+    margin-block-start: 0.25rem;
+    font-size: var(--p-lingo-font-size-small);
+    color: var(--p-text-muted-color);
 }
 </style>

@@ -14,6 +14,8 @@ from django.utils import timezone
 from arches.app.models.models import ResourceInstance, TileModel
 
 from arches_lingo.const import (
+    CONCEPT_NAME_CONTENT_NODE,
+    CONCEPT_NAME_NODEGROUP,
     EXACT_MATCH_LIST_ITEM_ID,
     LINGO_ADMIN_GROUP_NAME,
     LINGO_EDITOR_GROUP_NAME,
@@ -106,9 +108,7 @@ class ReconciliationWorksheetTests(OpenRefineRoundTripTestCase):
         return response
 
     def rows_of(self, response):
-        return list(
-            csv.DictReader(io.StringIO(b"".join(response.streaming_content).decode()))
-        )
+        return list(csv.DictReader(io.StringIO(response.content.decode())))
 
     @patch(
         "arches_lingo.utils.openrefine_round_trip.worksheet_export"
@@ -148,7 +148,16 @@ class ReconciliationWorksheetTests(OpenRefineRoundTripTestCase):
         )
 
         set_rows = self.rows_of(self.export({"concept_set_id": concept_set.pk}))
-        search_rows = self.rows_of(self.export({"query": {}}))
+        search_rows = self.rows_of(
+            self.export(
+                {
+                    "query": {
+                        "operator": "and",
+                        "conditions": [{"facet": "label", "value": "Concept"}],
+                    }
+                }
+            )
+        )
 
         self.assertEqual([row["pref_label"] for row in set_rows], ["Concept 4"])
         self.assertEqual(len(search_rows), 5)
@@ -163,6 +172,10 @@ class ReconciliationWorksheetTests(OpenRefineRoundTripTestCase):
             {},
             {"scheme_id": str(self.scheme.pk), "query": {}},
             {"query": "not an object"},
+            {"query": {}},
+            {"query": {"operator": "and", "conditions": []}},
+            {"scheme_id": "not-a-uuid"},
+            {"concept_set_id": {"not": "an id"}},
         ]:
             with self.subTest(scope=scope):
                 self.assertEqual(self.export(scope).status_code, 400)
@@ -173,6 +186,38 @@ class ReconciliationWorksheetTests(OpenRefineRoundTripTestCase):
                 content_type="application/json",
             ).status_code,
             400,
+        )
+
+    @patch(
+        "arches_lingo.utils.openrefine_round_trip.worksheet_export"
+        ".MAX_WORKSHEET_CONCEPTS",
+        4,
+    )
+    def test_scopes_over_the_limit_are_refused(self):
+        response = self.export({"scheme_id": str(self.scheme.pk)})
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("at most 4 concepts", response.json()["message"])
+
+    def test_free_text_that_would_run_as_a_formula_is_neutralized(self):
+        for concept, label in [
+            (self.concepts[0], '=HYPERLINK("http://evil.example")'),
+            (self.concepts[1], "@SUM(1)"),
+            (self.concepts[2], "-ism"),
+        ]:
+            label_tile = TileModel.objects.get(
+                resourceinstance=concept, nodegroup_id=CONCEPT_NAME_NODEGROUP
+            )
+            label_tile.data[CONCEPT_NAME_CONTENT_NODE] = label
+            label_tile.save()
+
+        pref_labels = {
+            row["pref_label"]
+            for row in self.rows_of(self.export({"scheme_id": str(self.scheme.pk)}))
+        }
+
+        self.assertTrue(
+            {'\'=HYPERLINK("http://evil.example")', "'@SUM(1)", "-ism"} <= pref_labels
         )
 
 
@@ -202,6 +247,8 @@ class MatchLinkImportTests(OpenRefineRoundTripTestCase):
                 [concept_ids[1], "http://example.org/x", ""],
                 [concept_ids[3], "http://example.org/already", ""],
                 [concept_ids[4], "https://lingo.example/c1", "closeMatch"],
+                [concept_ids[3], "http://example.org/already", "relatedMatch"],
+                [concept_ids[2], "http://example.org/new", "closeMatch"],
             ]
         )
 
@@ -220,6 +267,8 @@ class MatchLinkImportTests(OpenRefineRoundTripTestCase):
                 8: "not_editable",
                 9: "already_linked",
                 10: "add",
+                11: "conflicting_link",
+                12: "conflicting_link",
             },
         )
         self.assertEqual(preview.json()["counts_by_outcome"]["add"], 2)
@@ -282,29 +331,79 @@ class MatchLinkImportTests(OpenRefineRoundTripTestCase):
         self.assertEqual(self.outcomes_of(other_scheme), {2: "outside_scheme"})
         self.assertEqual(invalid_scheme.status_code, 400)
 
-    def test_imports_left_running_are_failed_when_read(self):
-        stale_import = MatchLinkImport.objects.create(
-            user=self.editor, status=MatchLinkImport.STATUS_RUNNING
+    def test_imports_left_waiting_or_running_are_failed_when_read(self):
+        a_day_ago = timezone.now() - datetime.timedelta(days=1)
+        stale_running_import = MatchLinkImport.objects.create(
+            user=self.editor,
+            status=MatchLinkImport.STATUS_RUNNING,
+            started=a_day_ago,
         )
-        MatchLinkImport.objects.filter(pk=stale_import.pk).update(
-            created=timezone.now() - datetime.timedelta(days=1)
+        stale_pending_import = MatchLinkImport.objects.create(user=self.editor)
+        MatchLinkImport.objects.filter(pk=stale_pending_import.pk).update(
+            created=a_day_ago
         )
-        fresh_import = MatchLinkImport.objects.create(
-            user=self.editor, status=MatchLinkImport.STATUS_RUNNING
+        # Queued for a day, but only just picked up by a worker.
+        fresh_running_import = MatchLinkImport.objects.create(
+            user=self.editor,
+            status=MatchLinkImport.STATUS_RUNNING,
+            started=timezone.now(),
+        )
+        MatchLinkImport.objects.filter(pk=fresh_running_import.pk).update(
+            created=a_day_ago
         )
         MatchLinkImport.objects.create(user=self.other_editor)
 
-        statuses_by_id = {
-            listed_import["id"]: listed_import["status"]
+        listed_imports_by_id = {
+            listed_import["id"]: listed_import
             for listed_import in self.client.get(
                 reverse("api-lingo-match-link-imports")
             ).json()["imports"]
         }
 
         self.assertEqual(
-            statuses_by_id,
-            {stale_import.pk: "failed", fresh_import.pk: "running"},
+            {
+                import_id: listed_import["status"]
+                for import_id, listed_import in listed_imports_by_id.items()
+            },
+            {
+                stale_running_import.pk: "failed",
+                stale_pending_import.pk: "failed",
+                fresh_running_import.pk: "running",
+            },
         )
+        self.assertIn(
+            "stopped before it finished",
+            listed_imports_by_id[stale_pending_import.pk]["error_message"],
+        )
+
+    @patch("arches_lingo.tasks.notify_completion")
+    def test_an_import_given_up_on_is_never_applied_late(self, notify_completion):
+        given_up_import = MatchLinkImport.objects.create(
+            user=self.editor,
+            status=MatchLinkImport.STATUS_FAILED,
+            error_code=MatchLinkImport.ERROR_INTERRUPTED,
+            rows=[
+                {
+                    "row_number": 2,
+                    "concept_id": str(self.concepts[2].pk),
+                    "match_uri": "http://example.org/late",
+                    "match_type": "exactMatch",
+                }
+            ],
+        )
+
+        apply_match_link_import_task(given_up_import.pk)
+        apply_match_link_import(given_up_import)
+
+        given_up_import.refresh_from_db()
+        self.assertEqual(given_up_import.status, MatchLinkImport.STATUS_FAILED)
+        self.assertFalse(
+            TileModel.objects.filter(
+                nodegroup_id=MATCH_STATUS_NODEGROUP,
+                resourceinstance_id=self.concepts[2].pk,
+            ).exists()
+        )
+        notify_completion.assert_not_called()
 
     @patch(
         "arches_lingo.utils.openrefine_round_trip.match_link_import"
@@ -330,7 +429,9 @@ class MatchLinkImportTests(OpenRefineRoundTripTestCase):
         self.assertEqual(match_link_import.status, MatchLinkImport.STATUS_COMPLETE)
         self.assertIsNotNone(match_link_import.edit_transaction_id)
         self.assertEqual(match_link_import.outcome_counts, {"add": 1})
-        self.assertIn("search index", match_link_import.error_message)
+        self.assertEqual(
+            match_link_import.error_code, MatchLinkImport.ERROR_INDEXING_FAILED
+        )
 
     def test_locked_scheme_blocks_editors_but_not_lingo_admins(self):
         set_lifecycle_state(self.scheme, LOCKED_STATE_ID)
@@ -416,13 +517,20 @@ class MatchLinkImportTests(OpenRefineRoundTripTestCase):
         apply_match_link_import_task(match_link_import.pk)
         apply_match_link_import_task(failing_import.pk)
         apply_match_link_import_task(-1)
+        apply_match_link_import_task(match_link_import.pk)
 
         match_link_import.refresh_from_db()
         failing_import.refresh_from_db()
         self.assertEqual(match_link_import.status, MatchLinkImport.STATUS_COMPLETE)
         self.assertEqual(failing_import.status, MatchLinkImport.STATUS_FAILED)
-        self.assertNotEqual(failing_import.error_message, "")
-        self.assertEqual(notify_completion.call_count, 2)
+        self.assertEqual(failing_import.error_code, MatchLinkImport.ERROR_APPLY_FAILED)
+        self.assertEqual(
+            [call.args[0] for call in notify_completion.call_args_list],
+            [
+                "Match link import finished: 1 link added",
+                "Match link import failed",
+            ],
+        )
 
     def test_unreadable_files_are_rejected(self):
         oversized = csv_upload([[str(self.concepts[2].pk), "http://e.org/a", ""]])

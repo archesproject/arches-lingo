@@ -22,9 +22,6 @@ const { isDownloading, downloadWorksheet } =
         size="small"
         text
         :label="$gettext('Reconciliation worksheet')"
-        :aria-label="
-            $gettext('Download a reconciliation worksheet for OpenRefine')
-        "
         :loading="isDownloading"
         @click="downloadWorksheet(scope)"
     />
