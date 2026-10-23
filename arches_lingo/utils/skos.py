@@ -588,6 +588,9 @@ class SKOSWriter:
                 predicate = self.reformat_predicate_based_on_namespace(predicate)
                 predicates.append(predicate)
             return predicates
+        # A value with no type, such as an untyped identifier, has no predicate to
+        # write, so it is left out rather than failing the whole resource.
+        return []
 
     def reformat_predicate_based_on_namespace(self, predicate):
         uri = predicate.uri

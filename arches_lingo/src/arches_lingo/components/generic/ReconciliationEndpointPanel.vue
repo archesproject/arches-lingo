@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, useId } from "vue";
 
 import { storeToRefs } from "pinia";
 import { useGettext } from "vue3-gettext";
@@ -21,10 +21,18 @@ import { useAppSettingsStore } from "@/arches_lingo/stores/useAppSettingsStore.t
 // identifier is not a slug is offered the global service instead.
 const SLUG_PATTERN = /^[-a-zA-Z0-9_]+$/;
 
-const { schemeIdentifier, schemeName } = defineProps<{
+const {
+    schemeIdentifier,
+    schemeName,
+    headingLevel = 2,
+} = defineProps<{
     schemeIdentifier?: string;
     schemeName?: string;
+    headingLevel?: 2 | 3;
 }>();
+
+const headingId = useId();
+const hintId = useId();
 
 const { $gettext } = useGettext();
 const toast = useToast();
@@ -72,7 +80,21 @@ const usageHint = computed(() => {
     );
 });
 
+function reportCopyFailure(): void {
+    toast.add({
+        severity: ERROR,
+        life: DEFAULT_ERROR_TOAST_LIFE,
+        summary: $gettext("Unable to copy the reconciliation service URL"),
+        detail: $gettext("Select the URL and copy it manually."),
+    });
+}
+
 async function copyServiceUrl(): Promise<void> {
+    // The clipboard API only exists in secure contexts (HTTPS or localhost).
+    if (!navigator.clipboard) {
+        reportCopyFailure();
+        return;
+    }
     try {
         await navigator.clipboard.writeText(serviceUrl.value ?? "");
         toast.add({
@@ -80,13 +102,8 @@ async function copyServiceUrl(): Promise<void> {
             life: DEFAULT_TOAST_LIFE,
             summary: $gettext("Reconciliation service URL copied to clipboard"),
         });
-    } catch (error) {
-        toast.add({
-            severity: ERROR,
-            life: DEFAULT_ERROR_TOAST_LIFE,
-            summary: $gettext("Unable to copy the reconciliation service URL"),
-            detail: error instanceof Error ? error.message : undefined,
-        });
+    } catch {
+        reportCopyFailure();
     }
 }
 </script>
@@ -95,24 +112,36 @@ async function copyServiceUrl(): Promise<void> {
     <section
         v-if="reconciliationEnabled && serviceUrl"
         class="reconciliation-endpoint"
-        :aria-label="$gettext('OpenRefine reconciliation service')"
+        :aria-labelledby="headingId"
     >
-        <span class="title">{{ $gettext("Use in OpenRefine") }}</span>
+        <component
+            :is="`h${headingLevel}`"
+            :id="headingId"
+            class="title"
+        >
+            {{ $gettext("Use in OpenRefine") }}
+        </component>
         <div class="url-row">
             <InputText
                 class="url"
                 readonly
                 :model-value="serviceUrl"
                 :aria-label="$gettext('Reconciliation service URL')"
+                :aria-describedby="hintId"
             />
             <Button
                 icon="pi pi-copy"
-                :label="$gettext('Copy')"
+                :label="$gettext('Copy URL')"
                 :severity="SECONDARY"
                 @click="copyServiceUrl"
             />
         </div>
-        <span class="hint">{{ usageHint }}</span>
+        <span
+            :id="hintId"
+            class="hint"
+        >
+            {{ usageHint }}
+        </span>
     </section>
 </template>
 
@@ -124,7 +153,9 @@ async function copyServiceUrl(): Promise<void> {
 }
 
 .reconciliation-endpoint .title {
+    margin: 0;
     font-size: var(--p-lingo-font-size-small);
+    font-weight: normal;
     color: var(--p-text-muted-color);
 }
 

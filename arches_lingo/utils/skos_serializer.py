@@ -206,11 +206,14 @@ def expand_object_references(triple, tile_tree, references_node_id):
     real relationship, so each gets its own triple.
     """
     tile_data = getattr(tile_tree, "data", None) or {}
-    referenced_resource_ids = [
-        resource_reference["resourceId"]
-        for resource_reference in tile_data.get(references_node_id) or []
-        if resource_reference.get("resourceId")
-    ]
+    # dict.fromkeys drops a resource the tile names twice, keeping the order.
+    referenced_resource_ids = list(
+        dict.fromkeys(
+            resource_reference["resourceId"]
+            for resource_reference in tile_data.get(references_node_id) or []
+            if resource_reference.get("resourceId")
+        )
+    )
     if len(referenced_resource_ids) < 2:
         return [triple]
     expanded_triples = []

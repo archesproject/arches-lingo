@@ -67,7 +67,7 @@ class ReconciliationServiceView(ReconciliationAccessMixin, View):
     def answer(parameters, scheme_id):
         try:
             if "extend" in parameters:
-                return JsonResponse(extend_concepts(parameters["extend"]))
+                return JsonResponse(extend_concepts(parameters["extend"], scheme_id))
             return JsonResponse(reconcile_queries(parameters["queries"], scheme_id))
         except ValueError as value_error:
             return invalid_request_response(str(value_error))

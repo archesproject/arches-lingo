@@ -51,7 +51,8 @@ def suggest_entities(prefix, raw_cursor=None, scheme_id=None, scope_scheme_id=No
             % {"limit": MAX_QUERY_LENGTH}
         )
 
-    searchable_scheme_ids = reconcilable_scheme_ids()
+    public_scheme_ids = reconcilable_scheme_ids()
+    searchable_scheme_ids = set(public_scheme_ids)
     for limiting_scheme_id in (scheme_id, scope_scheme_id):
         if limiting_scheme_id:
             searchable_scheme_ids &= {limiting_scheme_id}
@@ -70,7 +71,7 @@ def suggest_entities(prefix, raw_cursor=None, scheme_id=None, scope_scheme_id=No
     concept_ids = [
         str(concept_id) for concept_id in search[cursor : cursor + SUGGEST_PAGE_SIZE]
     ]
-    summaries = summarize_concepts(concept_ids)
+    summaries = summarize_concepts(concept_ids, public_scheme_ids=public_scheme_ids)
     return {
         "result": [
             {

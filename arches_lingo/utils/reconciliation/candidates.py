@@ -42,6 +42,7 @@ from arches_lingo.utils.reconciliation.scoring import (
 from arches_lingo.utils.reconciliation.visibility import (
     RECONCILABLE_LIFECYCLE_STATE_IDS,
     SEARCHED_LIFECYCLE_STATE_IDS,
+    filter_public_concept_ids,
     reconcilable_scheme_ids,
     resolve_merge_survivors,
 )
@@ -129,7 +130,8 @@ def parse_reconciliation_query(raw_query, default_scheme_id):
             % {"limit": MAX_QUERY_LENGTH}
         )
 
-    scheme_id = raw_query.get("type", default_scheme_id)
+    # An explicit null type means "any type", which is the scheme service's own.
+    scheme_id = raw_query.get("type") or default_scheme_id
     # Version 0.1 of the API allows a list of types.
     if isinstance(scheme_id, list) and len(scheme_id) == 1:
         scheme_id = scheme_id[0]
@@ -148,12 +150,15 @@ def parse_reconciliation_query(raw_query, default_scheme_id):
     )
 
 
-def find_scored_candidates(query, searchable_scheme_ids, identified_concept_ids):
+def scheme_ids_for_query(query, searchable_scheme_ids):
     if query.scheme_id is None:
-        scheme_ids = searchable_scheme_ids
-    elif query.scheme_id in searchable_scheme_ids:
-        scheme_ids = {query.scheme_id}
-    else:
+        return searchable_scheme_ids
+    return searchable_scheme_ids & {query.scheme_id}
+
+
+def find_scored_candidates(query, searchable_scheme_ids, identified_concept_ids):
+    scheme_ids = scheme_ids_for_query(query, searchable_scheme_ids)
+    if not scheme_ids:
         return []
 
     search = build_search_queryset(
@@ -285,13 +290,20 @@ def describe_candidate(summary, candidate):
     }
 
 
-def build_query_results(query, expanded_candidates, summaries, evidence_by_concept_id):
+def build_query_results(
+    query,
+    expanded_candidates,
+    summaries,
+    evidence_by_concept_id,
+    searchable_scheme_ids,
+):
+    # Identifier, exactMatch and merge survivor hits come from outside the label
+    # search, so the scheme scope is enforced again here.
+    query_scheme_ids = scheme_ids_for_query(query, searchable_scheme_ids)
     best_candidate_by_concept_id = {}
     for candidate in expanded_candidates:
         summary = summaries.get(candidate.concept_id)
-        if summary is None:
-            continue
-        if query.scheme_id and summary["type"][0]["id"] != query.scheme_id:
+        if summary is None or summary["type"][0]["id"] not in query_scheme_ids:
             continue
 
         matched_property_count, is_contradicted = evaluate_query_properties(
@@ -335,7 +347,8 @@ def reconcile_queries(raw_queries, default_scheme_id=None):
     query count grows with the number of queries, not the number of candidates.
     """
     queries_by_key = parse_reconciliation_queries(raw_queries, default_scheme_id)
-    searchable_scheme_ids = reconcilable_scheme_ids()
+    public_scheme_ids = reconcilable_scheme_ids()
+    searchable_scheme_ids = set(public_scheme_ids)
     # A scheme's own service never searches another scheme, whatever type a query names.
     if default_scheme_id is not None:
         searchable_scheme_ids &= {default_scheme_id}
@@ -356,11 +369,16 @@ def reconcile_queries(raw_queries, default_scheme_id=None):
         for candidate in scored_candidates
     }
     lifecycle_state_id_by_concept_id = get_lifecycle_state_ids(found_concept_ids)
-    retired_ids = {
-        concept_id
-        for concept_id in found_concept_ids
-        if lifecycle_state_id_by_concept_id.get(concept_id) == RETIRED_STATE_ID
-    }
+    # Only a retired concept that is itself public may lead to a merge survivor;
+    # otherwise an identifier hit would reveal what a hidden concept merged into.
+    retired_ids = filter_public_concept_ids(
+        {
+            concept_id
+            for concept_id in found_concept_ids
+            if lifecycle_state_id_by_concept_id.get(concept_id) == RETIRED_STATE_ID
+        },
+        searchable_scheme_ids,
+    )
     survivor_by_retired_id = resolve_merge_survivors(retired_ids)
 
     survivor_ids = set(survivor_by_retired_id.values()) - found_concept_ids
@@ -377,7 +395,9 @@ def reconcile_queries(raw_queries, default_scheme_id=None):
         reconcilable_concept_ids |= retired_ids
 
     summaries_by_language = {
-        language: summarize_concepts(reconcilable_concept_ids, language)
+        language: summarize_concepts(
+            reconcilable_concept_ids, language, public_scheme_ids
+        )
         for language in {query.language for query in queries_by_key.values()}
     }
     evidence_by_concept_id = gather_property_evidence(
@@ -388,6 +408,7 @@ def reconcile_queries(raw_queries, default_scheme_id=None):
         needs_alternate_labels=any(
             query.values_for(ALT_LABEL) for query in queries_by_key.values()
         ),
+        public_scheme_ids=public_scheme_ids,
     )
 
     return {
@@ -402,6 +423,7 @@ def reconcile_queries(raw_queries, default_scheme_id=None):
                 ),
                 summaries_by_language[query.language],
                 evidence_by_concept_id,
+                searchable_scheme_ids,
             )
         }
         for query_key, query in queries_by_key.items()
