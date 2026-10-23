@@ -29,7 +29,7 @@ import type { ActivityPeriod } from "@/arches_lingo/components/dashboard/RecentA
 import type { ResourceInstanceResult } from "@/arches_lingo/types.ts";
 
 const toast = useToast();
-const { $gettext } = useGettext();
+const { $gettext, interpolate } = useGettext();
 
 const schemes = ref<ResourceInstanceResult[]>([]);
 const selectedSchemeIds = ref<string[]>([]);
@@ -131,7 +131,7 @@ async function loadMissingTranslations() {
 const greeting = computed(() => {
     const name = stats.value?.user_display_name;
     if (name) {
-        return $gettext("Welcome, %{name}", { name });
+        return interpolate($gettext("Welcome, %{name}"), { name }, true);
     }
     return $gettext("Welcome");
 });

@@ -41,7 +41,7 @@ const emit = defineEmits<{
     ): void;
 }>();
 
-const { $gettext } = useGettext();
+const { $gettext, interpolate } = useGettext();
 
 const summaryText = computed(function () {
     const names = {
@@ -49,12 +49,17 @@ const summaryText = computed(function () {
         survivor: survivorLabel ?? "",
     };
     if (isCrossScheme) {
-        return $gettext(
-            'Copying values from "%{absorbed}" into "%{survivor}".',
+        return interpolate(
+            $gettext('Copying values from "%{absorbed}" into "%{survivor}".'),
             names,
+            true,
         );
     }
-    return $gettext('Merging "%{absorbed}" into "%{survivor}".', names);
+    return interpolate(
+        $gettext('Merging "%{absorbed}" into "%{survivor}".'),
+        names,
+        true,
+    );
 });
 
 const hasSelections = computed(function () {
@@ -63,9 +68,12 @@ const hasSelections = computed(function () {
 
 const irreversibilityWarning = computed(function () {
     if (isAbsorbedDraft && removeAbsorbedConcept) {
-        return $gettext(
-            'Merges cannot be undone. Copied values become new values on the surviving concept, and "%{absorbed}" is permanently deleted.',
+        return interpolate(
+            $gettext(
+                'Merges cannot be undone. Copied values become new values on the surviving concept, and "%{absorbed}" is permanently deleted.',
+            ),
             { absorbed: absorbedLabel ?? "" },
+            true,
         );
     }
     return $gettext(
@@ -76,9 +84,17 @@ const irreversibilityWarning = computed(function () {
 const removalTitle = computed(function () {
     const names = { absorbed: absorbedLabel ?? "" };
     if (isAbsorbedDraft) {
-        return $gettext('Delete "%{absorbed}" afterwards', names);
+        return interpolate(
+            $gettext('Delete "%{absorbed}" afterwards'),
+            names,
+            true,
+        );
     }
-    return $gettext('Retire "%{absorbed}" afterwards', names);
+    return interpolate(
+        $gettext('Retire "%{absorbed}" afterwards'),
+        names,
+        true,
+    );
 });
 
 const removalDescription = computed(function () {
@@ -130,9 +146,12 @@ const removalDescription = computed(function () {
             :closable="false"
         >
             {{
-                $gettext(
-                    '"%{absorbed}" is a draft and has no URI yet, so no exactMatch is recorded.',
+                interpolate(
+                    $gettext(
+                        '"%{absorbed}" is a draft and has no URI yet, so no exactMatch is recorded.',
+                    ),
                     { absorbed: absorbedLabel ?? "" },
+                    true,
                 )
             }}
         </Message>
@@ -170,9 +189,12 @@ const removalDescription = computed(function () {
             :closable="false"
         >
             {{
-                $gettext(
-                    'The two concepts are in different schemes, so "%{absorbed}" stays where it is and is left unchanged. Retiring or deleting it is only offered for a merge within one scheme.',
+                interpolate(
+                    $gettext(
+                        'The two concepts are in different schemes, so "%{absorbed}" stays where it is and is left unchanged. Retiring or deleting it is only offered for a merge within one scheme.',
+                    ),
                     { absorbed: absorbedLabel ?? "" },
+                    true,
                 )
             }}
         </Message>

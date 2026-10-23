@@ -15,7 +15,7 @@ import { routeNames } from "@/arches_lingo/routes.ts";
 import { useAppSettingsStore } from "@/arches_lingo/stores/useAppSettingsStore.ts";
 import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 
-const { $gettext } = useGettext();
+const { $gettext, interpolate } = useGettext();
 const router = useRouter();
 const userStore = useUserStore();
 
@@ -95,9 +95,11 @@ function navigateTo(route: { name: string }) {
                     >
                         <p class="welcome-message">
                             {{
-                                $gettext("Welcome back, %{name}!", {
-                                    name: userDisplayName,
-                                })
+                                interpolate(
+                                    $gettext("Welcome back, %{name}!"),
+                                    { name: userDisplayName },
+                                    true,
+                                )
                             }}
                         </p>
                         <Button
