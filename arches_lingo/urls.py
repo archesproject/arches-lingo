@@ -48,6 +48,17 @@ from arches_lingo.views.api.concept_lifecycle import (
     ConceptUnretireView,
     SchemeUnretireConceptsView,
 )
+from arches_lingo.views.api.concept_matching import (
+    ConceptMatchCandidateListView,
+    ConceptMatchLinkView,
+    ConceptMatchRunDetailView,
+    ConceptMatchRunListView,
+)
+from arches_lingo.views.api.concept_merge import (
+    ConceptMergeHistoryView,
+    ConceptMergePreviewView,
+    ConceptMergeView,
+)
 from arches_lingo.views.api.scheme_lock import SchemeLockView, SchemeUnlockView
 from arches_lingo.views.api.settings import AppSettingsView
 from arches_lingo.views.api.identifier_resolve import (
@@ -75,6 +86,13 @@ urlpatterns = [
     path("dashboard", LingoRootView.as_view(), name="dashboard"),
     path("login", LingoRootView.as_view(), name="login"),
     path("advanced-search", LingoRootView.as_view(), name="advanced-search"),
+    path("concept-matches", LingoRootView.as_view(), name="concept-matches"),
+    # Lets a link to a run be opened or reloaded directly.
+    path(
+        "concept-matches/<int:run_id>",
+        LingoRootView.as_view(),
+        name="concept-match-run",
+    ),
     path("schemes", LingoRootView.as_view(), name="schemes"),
     # Identity URIs: content-negotiated. Browsers get the SPA; machines requesting
     # an RDF representation (Accept header or ?format=) get SKOS for the resource.
@@ -263,6 +281,41 @@ urlpatterns = [
         "api/lingo/concept/<uuid:pk>/retire",
         ConceptRetireView.as_view(),
         name="api-concept-retire",
+    ),
+    path(
+        "api/concept-match-runs",
+        ConceptMatchRunListView.as_view(),
+        name="api-concept-match-runs",
+    ),
+    path(
+        "api/concept-match-runs/<int:pk>",
+        ConceptMatchRunDetailView.as_view(),
+        name="api-concept-match-run-detail",
+    ),
+    path(
+        "api/concept-match-runs/<int:pk>/candidates",
+        ConceptMatchCandidateListView.as_view(),
+        name="api-concept-match-candidates",
+    ),
+    path(
+        "api/concept-match-runs/<int:pk>/link",
+        ConceptMatchLinkView.as_view(),
+        name="api-concept-match-link",
+    ),
+    path(
+        "api/lingo/concept/<uuid:pk>/merge",
+        ConceptMergeView.as_view(),
+        name="api-concept-merge",
+    ),
+    path(
+        "api/lingo/concept/<uuid:pk>/merge-preview/<uuid:absorbed_pk>",
+        ConceptMergePreviewView.as_view(),
+        name="api-concept-merge-preview",
+    ),
+    path(
+        "api/lingo/concept/<uuid:pk>/merge-history",
+        ConceptMergeHistoryView.as_view(),
+        name="api-concept-merge-history",
     ),
     path(
         "api/lingo/concept/<uuid:pk>/unretire",

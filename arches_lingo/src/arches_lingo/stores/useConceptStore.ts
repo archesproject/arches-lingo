@@ -12,6 +12,12 @@ function searchParentPaths(
     results: ConceptPathNode[][],
 ): void {
     for (const concept of concepts) {
+        // Concepts that declare each other a parent form a cycle in `narrower`,
+        // which would make this recurse forever.
+        if (currentPath.some((pathNode) => pathNode.id === concept.id)) {
+            continue;
+        }
+
         currentPath.push({
             id: concept.id,
             labels: concept.labels,

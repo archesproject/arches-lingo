@@ -1,3 +1,4 @@
+import uuid
 from http import HTTPStatus
 
 from django.db import transaction
@@ -19,6 +20,7 @@ from arches_lingo.utils.concept_lifecycle import (
     RETIRED_STATE_ID,
     VALID_STRATEGIES,
     get_narrower_ids,
+    index_concepts_in_transaction,
     retire_concept,
     unretire_concept,
 )
@@ -55,9 +57,13 @@ class ConceptRetireView(LingoEditorMixin, View):
                 status=HTTPStatus.BAD_REQUEST,
             )
 
+        edit_transaction_id = uuid.uuid4()
         with transaction.atomic():
-            retire_concept(concept, strategy)
+            retire_concept(concept, strategy, edit_transaction_id=edit_transaction_id)
 
+        index_concepts_in_transaction(
+            edit_transaction_id, additional_concept_ids=(concept.pk,)
+        )
         return JSONResponse({"retired": True})
 
 

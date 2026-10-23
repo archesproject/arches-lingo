@@ -3,7 +3,6 @@ import { computed, onMounted, ref, useTemplateRef } from "vue";
 import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
 
-import Button from "primevue/button";
 import Panel from "primevue/panel";
 import Splitter from "primevue/splitter";
 import SplitterPanel from "primevue/splitterpanel";
@@ -12,6 +11,7 @@ import SearchQueryBuilder from "@/arches_lingo/components/advanced-search/Search
 import SearchResults from "@/arches_lingo/components/advanced-search/SearchResults.vue";
 import SavedSearches from "@/arches_lingo/components/advanced-search/SavedSearches.vue";
 import ConceptSets from "@/arches_lingo/components/advanced-search/ConceptSets.vue";
+import PanelToggleHeader from "@/arches_lingo/components/generic/PanelToggleHeader.vue";
 
 import {
     executeAdvancedSearch,
@@ -262,31 +262,16 @@ onMounted(loadSearchOptions);
 
 <template>
     <div class="advanced-search">
-        <div class="search-header">
-            <h2 class="search-header-title">
-                <i
-                    class="pi pi-search"
-                    aria-hidden="true"
-                />
-                {{ $gettext("Advanced Search") }}
-            </h2>
-            <Button
-                v-if="!isAnonymous"
-                :label="
-                    showSidePanel
-                        ? $gettext('Hide Saved Searches & Sets')
-                        : $gettext('Show Saved Searches & Sets')
-                "
-                :icon="
-                    showSidePanel
-                        ? 'pi pi-angle-double-right'
-                        : 'pi pi-objects-column'
-                "
-                :class="'side-panel-toggle'"
-                size="small"
-                @click="showSidePanel = !showSidePanel"
-            />
-        </div>
+        <PanelToggleHeader
+            v-model:is-panel-visible="showSidePanel"
+            icon="pi pi-search"
+            hide-panel-icon="pi pi-angle-double-right"
+            show-panel-icon="pi pi-objects-column"
+            :title="$gettext('Advanced Search')"
+            :hide-panel-label="$gettext('Hide Saved Searches & Sets')"
+            :show-panel-label="$gettext('Show Saved Searches & Sets')"
+            :can-toggle-panel="!isAnonymous"
+        />
 
         <Splitter
             class="search-splitter"
@@ -376,49 +361,6 @@ onMounted(loadSearchOptions);
     height: 100%;
     overflow: hidden;
     font-family: var(--p-lingo-font-family);
-}
-
-.search-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    row-gap: 0.5rem;
-    min-height: 3rem;
-    padding: 0.375rem 1rem;
-    background: var(--p-header-toolbar-background);
-    border-bottom: 0.0625rem solid var(--p-header-toolbar-border);
-    flex-shrink: 0;
-    box-sizing: border-box;
-}
-
-.search-header-title {
-    display: flex;
-    align-items: center;
-    gap: 0.375rem;
-    margin: 0;
-    font-size: var(--p-lingo-font-size-large);
-    font-weight: var(--p-lingo-font-weight-normal);
-    color: var(--p-text-color);
-}
-
-.search-header-title .pi {
-    font-size: var(--p-lingo-font-size-medium);
-}
-
-.side-panel-toggle {
-    font-size: var(--p-lingo-font-size-small) !important;
-    font-weight: var(--p-lingo-font-weight-normal) !important;
-    border-radius: 0.125rem !important;
-    background: var(--p-header-button-background) !important;
-    color: var(--p-header-button-color) !important;
-    border-color: var(--p-header-button-border) !important;
-    border-style: solid !important;
-    border-width: 0.0625rem !important;
-}
-
-.side-panel-toggle:hover {
-    background: var(--p-highlight-background) !important;
 }
 
 .search-splitter {
