@@ -24,6 +24,7 @@ import SchemeReconciliationServiceField from "@/arches_lingo/components/scheme/S
 import ConceptIdentifierCounterField from "@/arches_lingo/components/scheme/SchemeHeader/components/ConceptIdentifierCounterField.vue";
 import GetAsMenu from "@/arches_lingo/components/generic/GetAsMenu.vue";
 import LifecycleStateBadge from "@/arches_lingo/components/generic/LifecycleStateBadge.vue";
+import MatchLinkImportDialog from "@/arches_lingo/components/generic/MatchLinkImportDialog/MatchLinkImportDialog.vue";
 
 import {
     DANGER,
@@ -143,6 +144,7 @@ const showMoreLabel = computed(() =>
 
 const isLoading = ref(true);
 const showExportDialog = ref(false);
+const showMatchLinkImportDialog = ref(false);
 const showLockDialog = ref(false);
 const exportDialogKey = ref(0);
 const showReinstateDialog = ref(false);
@@ -611,6 +613,10 @@ async function onReinstateConfirmed(cascade: boolean) {
         @confirm="onReinstateConfirmed"
         @cancel="showReinstateDialog = false"
     />
+    <MatchLinkImportDialog
+        v-if="showMatchLinkImportDialog"
+        @close="showMatchLinkImportDialog = false"
+    />
     <ExportThesauri
         v-if="scheme && showExportDialog"
         :key="exportDialogKey"
@@ -663,6 +669,15 @@ async function onReinstateConfirmed(cascade: boolean) {
                     >
                         <span><i class="pi pi-cloud-download"></i></span>
                         <span>{{ $gettext("Export") }}</span>
+                    </Button>
+                    <Button
+                        v-if="isEditor"
+                        class="add-button"
+                        :aria-label="$gettext('Import match links')"
+                        @click="showMatchLinkImportDialog = true"
+                    >
+                        <span><i class="pi pi-link"></i></span>
+                        <span>{{ $gettext("Import Links") }}</span>
                     </Button>
 
                     <Button

@@ -324,3 +324,50 @@ class ConceptPairDismissal(models.Model):
 
     def __str__(self):
         return f"{self.concept_a_id} ~ {self.concept_b_id} (dismissed)"
+
+
+class MatchLinkImport(models.Model):
+    """One upload of match links (typically reconciled in OpenRefine), kept as
+    an audit record. ``edit_transaction_id`` groups every edit log entry the
+    import wrote, so its full effect can be reconstructed or undone later."""
+
+    STATUS_PENDING = "pending"
+    STATUS_RUNNING = "running"
+    STATUS_COMPLETE = "complete"
+    STATUS_FAILED = "failed"
+    STATUS_CHOICES = [
+        (STATUS_PENDING, _("Pending")),
+        (STATUS_RUNNING, _("Running")),
+        (STATUS_COMPLETE, _("Complete")),
+        (STATUS_FAILED, _("Failed")),
+    ]
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="lingo_match_link_imports",
+    )
+    filename = models.CharField(max_length=255, blank=True, default="")
+    created = models.DateTimeField(auto_now_add=True)
+    finished = models.DateTimeField(null=True, blank=True)
+    status = models.CharField(
+        max_length=16, choices=STATUS_CHOICES, default=STATUS_PENDING
+    )
+    rows = models.JSONField(
+        default=list,
+        help_text=_("The parsed rows of the uploaded file, validated again on apply."),
+    )
+    outcome_counts = models.JSONField(default=dict, blank=True)
+    edit_transaction_id = models.UUIDField(null=True, blank=True, db_index=True)
+    error_message = models.TextField(blank=True, default="")
+
+    class Meta:
+        app_label = "arches_lingo"
+        ordering = ["-created"]
+        verbose_name = _("match link import")
+        verbose_name_plural = _("match link imports")
+
+    def __str__(self):
+        return f"Match link import {self.pk} ({self.status})"

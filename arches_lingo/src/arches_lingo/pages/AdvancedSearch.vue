@@ -46,7 +46,7 @@ import type {
 
 const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
 const userStore = useUserStore();
-const { isAnonymous } = storeToRefs(userStore);
+const { isAnonymous, isEditor } = storeToRefs(userStore);
 
 const { $gettext } = useGettext();
 const toast = useToast();
@@ -306,6 +306,7 @@ onMounted(loadSearchOptions);
                             :results="searchResults"
                             :loading="isSearching"
                             :selected-ids="selectedConceptIds"
+                            :worksheet-query="isEditor ? buildQuery() : null"
                             @page-change="executeSearch($event)"
                             @toggle-select="toggleSelectConcept"
                             @select-all="selectAll"
