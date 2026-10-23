@@ -615,6 +615,7 @@ async function onReinstateConfirmed(cascade: boolean) {
     />
     <MatchLinkImportDialog
         v-if="showMatchLinkImportDialog"
+        :scheme-id="props.resourceInstanceId"
         @close="showMatchLinkImportDialog = false"
     />
     <ExportThesauri

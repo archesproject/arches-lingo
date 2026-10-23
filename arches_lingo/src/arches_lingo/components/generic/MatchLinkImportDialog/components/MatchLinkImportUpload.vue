@@ -5,8 +5,9 @@ import FileUpload from "primevue/fileupload";
 
 const FILE_INPUT_ID = "match-link-import-file";
 
-const { isDisabled } = defineProps<{
+const { isDisabled, isSchemeScoped } = defineProps<{
     isDisabled: boolean;
+    isSchemeScoped: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -28,12 +29,22 @@ function onFileSelected(event: { files: File[] }): void {
         <p class="help-text">
             {{
                 $gettext(
-                    "Needs concept_id and match_uri columns. An optional match_type column can be exactMatch (the default), closeMatch or relatedMatch. Other columns are ignored, so an edited reconciliation worksheet can be uploaded as it is.",
+                    "Needs concept_id and match_uri columns. An optional match_type column can be exactMatch (the default), closeMatch or relatedMatch. Other columns are ignored.",
                 )
             }}
         </p>
         <p class="help-text">
-            {{ $gettext("Up to 10,000 rows and 5 MB.") }}
+            {{
+                $gettext(
+                    "A reconciliation worksheet can be uploaded as it is once its match_uri column is filled in, for example in OpenRefine from the reconciled column's matched entity URI. Separate several URIs in one cell with |.",
+                )
+            }}
+        </p>
+        <p
+            v-if="isSchemeScoped"
+            class="help-text"
+        >
+            {{ $gettext("Only concepts in this scheme receive links.") }}
         </p>
         <FileUpload
             accept=".csv,text/csv"

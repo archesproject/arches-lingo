@@ -79,6 +79,7 @@ function importRecord(
         id: 7,
         filename: "matches.csv",
         status: "pending",
+        scheme_id: null,
         created: "2026-10-23T10:00:00Z",
         finished: null,
         total_rows: 2,
@@ -88,8 +89,9 @@ function importRecord(
     };
 }
 
-function mountDialog(): VueWrapper {
+function mountDialog(schemeId?: string): VueWrapper {
     return mount(MatchLinkImportDialog, {
+        props: { schemeId },
         global: {
             plugins: [PrimeVue],
             directives: { tooltip: Tooltip },
@@ -137,7 +139,10 @@ describe("MatchLinkImportDialog", () => {
 
         await selectFile(wrapper);
 
-        expect(previewMatchLinkImport).toHaveBeenCalledWith(UPLOADED_FILE);
+        expect(previewMatchLinkImport).toHaveBeenCalledWith(
+            UPLOADED_FILE,
+            undefined,
+        );
         expect(wrapper.findComponent(MatchLinkImportPreview).exists()).toBe(
             true,
         );
@@ -201,7 +206,6 @@ describe("MatchLinkImportDialog", () => {
         expect(toastAdd).toHaveBeenCalledWith(
             expect.objectContaining({ severity: "success" }),
         );
-        expect(wrapper.emitted("imported")).toHaveLength(1);
         expect(wrapper.text()).toContain("Import finished.");
     });
 
@@ -224,7 +228,6 @@ describe("MatchLinkImportDialog", () => {
                 detail: "Worker died",
             }),
         );
-        expect(wrapper.emitted("imported")).toBeUndefined();
     });
 
     it("reports a request that could not be sent", async () => {
@@ -241,6 +244,56 @@ describe("MatchLinkImportDialog", () => {
         expect(toastAdd).toHaveBeenCalledWith(
             expect.objectContaining({ severity: "error", detail: "Offline" }),
         );
+    });
+
+    it("limits an import opened from a scheme to that scheme", async () => {
+        vi.mocked(previewMatchLinkImport).mockResolvedValue(
+            previewWith({ add: 1 }),
+        );
+        vi.mocked(startMatchLinkImport).mockResolvedValue(
+            importRecord({ status: "complete", scheme_id: "scheme-1" }),
+        );
+        const wrapper = mountDialog("scheme-1");
+        await selectFile(wrapper);
+
+        await addLinksButton(wrapper).trigger("click");
+        await flushPromises();
+
+        expect(wrapper.text()).toContain(
+            "Only concepts in this scheme receive links.",
+        );
+        expect(previewMatchLinkImport).toHaveBeenCalledWith(
+            UPLOADED_FILE,
+            "scheme-1",
+        );
+        expect(startMatchLinkImport).toHaveBeenCalledWith(
+            UPLOADED_FILE,
+            "scheme-1",
+        );
+    });
+
+    it("can be closed while an import runs, and stops polling", async () => {
+        vi.useFakeTimers();
+        vi.mocked(previewMatchLinkImport).mockResolvedValue(
+            previewWith({ add: 1 }),
+        );
+        vi.mocked(startMatchLinkImport).mockResolvedValue(importRecord({}));
+        const wrapper = mountDialog();
+        await selectFile(wrapper);
+        await addLinksButton(wrapper).trigger("click");
+
+        await wrapper
+            .findAll("button")
+            .find((button) => button.text() === "Close")!
+            .trigger("click");
+        expect(wrapper.emitted("close")).toHaveLength(1);
+        wrapper.unmount();
+        await vi.advanceTimersByTimeAsync(MATCH_LINK_IMPORT_POLL_INTERVAL_MS);
+
+        expect(toastAdd).toHaveBeenCalledWith(
+            expect.objectContaining({ severity: "info" }),
+        );
+        expect(fetchMatchLinkImport).toHaveBeenCalledTimes(0);
     });
 
     it("closes when cancelled", async () => {

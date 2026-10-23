@@ -65,6 +65,10 @@ WORKSHEET_COLUMNS = [
     "exact_matches",
     "close_matches",
     "related_matches",
+    # Left empty for the editor to fill in OpenRefine, then read by the
+    # match-link import.
+    "match_uri",
+    "match_type",
 ]
 # OpenRefine splits these with "Split multi-valued cells".
 MULTI_VALUE_SEPARATOR = "|"
@@ -249,6 +253,8 @@ def build_worksheet_rows(concept_ids, user, language, column_by_relation_uri):
                     MULTI_VALUE_SEPARATOR.join(sorted(match_uris.get(column, [])))
                     for column in MATCH_COLUMN_BY_LIST_ITEM_ID.values()
                 ),
+                "",
+                "",
             ]
         )
     return rows

@@ -11,10 +11,14 @@ from django.views import View
 from arches.app.utils.response import JSONErrorResponse
 
 from arches_lingo.mixins.permissions import LingoEditorMixin
-from arches_lingo.models import MatchLinkImport
-from arches_lingo.permissions import is_lingo_admin
 from arches_lingo.utils.openrefine_round_trip.match_link_import import (
     preview_match_link_import,
+)
+from arches_lingo.utils.openrefine_round_trip.match_link_import_service import (
+    get_match_link_import,
+    is_in_progress,
+    list_recent_match_link_imports,
+    parse_scheme_id,
     serialize_match_link_import,
     start_match_link_import,
 )
@@ -65,35 +69,53 @@ class MatchLinkImportPreviewView(LingoEditorMixin, View):
     def post(self, request):
         try:
             return JsonResponse(
-                preview_match_link_import(request.FILES.get("file"), request.user)
+                preview_match_link_import(
+                    request.FILES.get("file"),
+                    request.user,
+                    parse_scheme_id(request.POST.get("scheme_id")),
+                )
             )
         except ValueError as value_error:
             return invalid_request_response(str(value_error))
 
 
 class MatchLinkImportListView(LingoEditorMixin, View):
-    """Starts an import; the response is the record to poll."""
+    def get(self, request):
+        return JsonResponse(
+            {
+                "imports": [
+                    serialize_match_link_import(match_link_import)
+                    for match_link_import in list_recent_match_link_imports(
+                        request.user
+                    )
+                ]
+            }
+        )
 
     def post(self, request):
+        """Starts an import; while it runs, the response is the record to poll."""
         try:
             match_link_import = start_match_link_import(
-                request.FILES.get("file"), request.user
+                request.FILES.get("file"),
+                request.user,
+                parse_scheme_id(request.POST.get("scheme_id")),
             )
         except ValueError as value_error:
             return invalid_request_response(str(value_error))
         return JsonResponse(
             serialize_match_link_import(match_link_import),
-            status=HTTPStatus.ACCEPTED,
+            status=(
+                HTTPStatus.ACCEPTED
+                if is_in_progress(match_link_import)
+                else HTTPStatus.OK
+            ),
         )
 
 
 class MatchLinkImportDetailView(LingoEditorMixin, View):
     def get(self, request, pk):
-        match_link_import = MatchLinkImport.objects.filter(pk=pk).first()
-        if match_link_import is None or (
-            match_link_import.user_id != request.user.pk
-            and not is_lingo_admin(request.user)
-        ):
+        match_link_import = get_match_link_import(pk, request.user)
+        if match_link_import is None:
             return JSONErrorResponse(
                 title=_("Not found."),
                 message=_("That import was not found."),
