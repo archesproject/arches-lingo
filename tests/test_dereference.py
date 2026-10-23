@@ -1,4 +1,5 @@
 import json
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from django.contrib.auth.models import User
@@ -8,7 +9,7 @@ from django.urls import reverse
 
 from pyld import jsonld
 from rdflib import Graph, Literal, URIRef
-from rdflib.namespace import OWL, RDF, SKOS
+from rdflib.namespace import DCTERMS, OWL, RDF, SKOS
 
 from arches.app.datatypes.datatypes import DataTypeFactory
 from arches.app.models.models import ResourceIdentifier, ResourceInstance, TileModel
@@ -17,6 +18,10 @@ from arches_lingo.const import (
     MATCH_STATUS_COMPARATE_NODE,
     MATCH_STATUS_NODEGROUP,
     MATCH_STATUS_RELATION_NODE,
+    RELATED_PROPERTIES_LIST_ID,
+    RELATION_STATUS_ASCRIBED_COMPARATE_NODEID,
+    RELATION_STATUS_ASCRIBED_RELATION_NODEID,
+    RELATION_STATUS_NODEGROUP,
     URI_CONTENT_NODE,
     URI_NODEGROUP,
 )
@@ -24,7 +29,7 @@ from arches_lingo.utils.concept_lifecycle import (
     DRAFT_STATE_ID,
     PUBLISHED_STATE_ID,
 )
-from arches_lingo.utils.skos import ARCHES
+from arches_lingo.utils.skos import ARCHES, SKOSWriter
 from arches_lingo.utils.skos_serializer import (
     NOT_ACCEPTABLE,
     negotiate_rdf_format,
@@ -186,6 +191,82 @@ class SkosSerializerTests(_LingoResourceTestCase):
         # mapping predicate.
         match_objects = set(graph.objects(subject, SKOS.exactMatch))
         self.assertIn(URIRef(external_uri), match_objects)
+
+    def test_serialize_concept_emits_every_broader_reference_in_a_tile(self):
+        # The fixture gives Concept 3 one classification tile naming both
+        # Concept 2 and Concept 1, as retiring a polyhierarchical concept does.
+        concept_3 = ResourceInstance.objects.get(name="Concept 3")
+
+        body, _content_type = serialize_resource(concept_3.pk, "concept", "turtle")
+        graph = Graph().parse(data=body, format="turtle")
+
+        self.assertEqual(
+            set(graph.objects(ARCHES[str(concept_3.pk)], SKOS.broader)),
+            {ARCHES[str(self.concept_1.pk)], ARCHES[str(self.concept_2.pk)]},
+        )
+
+    def test_typed_relation_keeps_its_own_predicate(self):
+        distinguished_from = (
+            DataTypeFactory()
+            .get_instance("reference")
+            .transform_value_for_tile(
+                "distinguished from - any", controlledList=RELATED_PROPERTIES_LIST_ID
+            )
+        )
+        TileModel.objects.create(
+            resourceinstance=self.concept_2,
+            nodegroup_id=RELATION_STATUS_NODEGROUP,
+            data={
+                RELATION_STATUS_ASCRIBED_RELATION_NODEID: distinguished_from,
+                RELATION_STATUS_ASCRIBED_COMPARATE_NODEID: [
+                    {"resourceId": str(self.concept_1.pk)}
+                ],
+            },
+        )
+
+        # Turtle used to fail on the predicate "skos:distinguished from - any".
+        body, _content_type = serialize_resource(self.concept_2.pk, "concept", "turtle")
+        graph = Graph().parse(data=body, format="turtle")
+
+        self.assertIn(
+            (
+                ARCHES[str(self.concept_2.pk)],
+                URIRef("http://vocab.getty.edu/ontology#aat2100_distinguished_from"),
+                ARCHES[str(self.concept_1.pk)],
+            ),
+            graph,
+        )
+
+    def test_predicate_mapping_never_produces_an_invalid_uri(self):
+        def predicate(uri, label):
+            return SimpleNamespace(
+                uri=uri, labels=[SimpleNamespace(value=label, valuetype_id="prefLabel")]
+            )
+
+        writer = SKOSWriter()
+        for list_item, expected_predicate in [
+            (predicate(str(SKOS.scopeNote), "scope note"), SKOS.scopeNote),
+            (
+                predicate("https://vocab.getty.edu/aat/300404012", "identifier"),
+                DCTERMS.identifier,
+            ),
+            (
+                predicate(
+                    "http://purl.org/iso25964/skos-thes#broaderGeneric",
+                    "broaderGeneric",
+                ),
+                SKOS.broaderGeneric,
+            ),
+            (
+                predicate("https://example.org/types/1", "has some type"),
+                URIRef("https://example.org/types/1"),
+            ),
+        ]:
+            with self.subTest(label=list_item.labels[0].value):
+                self.assertEqual(
+                    writer.reformat_predicate_based_on_namespace(list_item),
+                    expected_predicate,
+                )
 
     def test_every_rdf_format_round_trips(self):
         for rdf_format, parse_format, expected_type in [
