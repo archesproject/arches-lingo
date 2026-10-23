@@ -14,8 +14,10 @@ from arches_lingo.utils.concepts import (
 )
 from arches_lingo.utils.reconciliation.concept_summaries import (
     get_lifecycle_state_ids,
+    get_pref_labels_for_concepts,
     summarize_concepts,
 )
+from arches_lingo.utils.reconciliation.labels import is_same_base_language
 from arches_lingo.utils.reconciliation.query_properties import (
     ALT_LABEL,
     BROADER,
@@ -31,6 +33,7 @@ from arches_lingo.utils.reconciliation.query_properties import (
 from arches_lingo.utils.reconciliation.scoring import (
     IDENTIFIED_SCORE,
     NO_LABEL_MATCH_TIER,
+    PREF_LABEL_EXACT_TIER,
     adjust_score_for_properties,
     decide_automatic_match,
     score_match,
@@ -90,6 +93,7 @@ class ScoredCandidate:
     is_identified: bool = False
     is_contradicted: bool = False
     is_retired: bool = False
+    is_other_language_match: bool = False
 
 
 def parse_reconciliation_queries(raw_queries, default_scheme_id=None):
@@ -196,6 +200,45 @@ def find_scored_candidates(query, searchable_scheme_ids, identified_concept_ids)
     return scored_candidates
 
 
+def has_pref_label_in_language(pref_labels, query):
+    folded_query_text = query.text.casefold()
+    return any(
+        label == folded_query_text and is_same_base_language(language, query.language)
+        for label, language in pref_labels
+    )
+
+
+def flag_other_language_matches(queries_by_key, scored_candidates_by_key):
+    """Flag exact prefLabel matches outside a query's ``lang``, which are still
+    offered but never matched automatically."""
+    exact_match_concept_ids = {
+        candidate.concept_id
+        for query_key, query in queries_by_key.items()
+        if query.language
+        for candidate in scored_candidates_by_key[query_key]
+        if candidate.tier == PREF_LABEL_EXACT_TIER
+    }
+    if not exact_match_concept_ids:
+        return scored_candidates_by_key
+
+    pref_labels_by_concept_id = get_pref_labels_for_concepts(exact_match_concept_ids)
+    return {
+        query_key: [
+            (
+                replace(candidate, is_other_language_match=True)
+                if query.language
+                and candidate.tier == PREF_LABEL_EXACT_TIER
+                and not has_pref_label_in_language(
+                    pref_labels_by_concept_id.get(candidate.concept_id, []), query
+                )
+                else candidate
+            )
+            for candidate in scored_candidates_by_key[query_key]
+        ]
+        for query_key, query in queries_by_key.items()
+    }
+
+
 def expand_retired_candidates(
     query, scored_candidates, survivor_by_retired_id, retired_ids
 ):
@@ -293,6 +336,9 @@ def reconcile_queries(raw_queries, default_scheme_id=None):
     """
     queries_by_key = parse_reconciliation_queries(raw_queries, default_scheme_id)
     searchable_scheme_ids = reconcilable_scheme_ids()
+    # A scheme's own service never searches another scheme, whatever type a query names.
+    if default_scheme_id is not None:
+        searchable_scheme_ids &= {default_scheme_id}
     identified_concept_ids_by_key = find_identified_concept_ids(queries_by_key)
     scored_candidates_by_key = {
         query_key: find_scored_candidates(
@@ -300,6 +346,9 @@ def reconcile_queries(raw_queries, default_scheme_id=None):
         )
         for query_key, query in queries_by_key.items()
     }
+    scored_candidates_by_key = flag_other_language_matches(
+        queries_by_key, scored_candidates_by_key
+    )
 
     found_concept_ids = {
         candidate.concept_id

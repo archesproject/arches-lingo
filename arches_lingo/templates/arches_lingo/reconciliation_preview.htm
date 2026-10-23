@@ -3,6 +3,10 @@
 <head>
     <meta charset="utf-8">
     <title>{{ name }}</title>
+    {% comment %}
+    OpenRefine shows this card in a cross-origin iframe, where Lingo's theme
+    tokens are not loaded, so its colors are fixed values.
+    {% endcomment %}
     <style>
         body {
             margin: 0;

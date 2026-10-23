@@ -29,6 +29,7 @@ export interface AppSettings {
     allow_anonymous_access: boolean;
     reconciliation_enabled: boolean;
     reconciliation_service_url: string | null;
+    scheme_reconciliation_service_url_template: string | null;
     public_server_address: string | null;
     arches_version: string;
     lingo_version: string;

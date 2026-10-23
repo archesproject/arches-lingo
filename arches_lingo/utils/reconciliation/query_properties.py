@@ -30,7 +30,7 @@ from arches_lingo.const import (
 )
 from arches_lingo.utils.concept_merge.tiles import get_list_item_tile_value
 from arches_lingo.utils.reconciliation.concept_summaries import (
-    get_broader_ids_for_concepts,
+    get_public_broader_ids_for_concepts,
 )
 
 BROADER = "broader"
@@ -188,7 +188,7 @@ def gather_property_evidence(concept_ids, needs_broader, needs_alternate_labels)
         return {}
 
     broader_ids_by_concept_id = (
-        get_broader_ids_for_concepts(concept_ids) if needs_broader else {}
+        get_public_broader_ids_for_concepts(concept_ids) if needs_broader else {}
     )
     all_broader_ids = {
         broader_id

@@ -51,7 +51,8 @@ def decide_automatic_match(scored_candidates):
     """Return the one candidate safe for OpenRefine to auto-match, or None.
 
     A unique identifier or exactMatch hit wins outright; otherwise only an
-    unambiguous prefLabel exact match qualifies. Candidates a query property
+    unambiguous prefLabel exact match qualifies, in the query's language when it
+    names one. Candidates a query property
     contradicts drop out first, so a broader term can settle a homograph. A
     retired concept, or one standing in for a merged concept, never auto-matches,
     since the editor should see it.
@@ -65,6 +66,7 @@ def decide_automatic_match(scored_candidates):
         candidate
         for candidate in plausible_candidates
         if candidate.tier == PREF_LABEL_EXACT_TIER
+        and not candidate.is_other_language_match
     ]
     if len(shortlist) != 1:
         return None

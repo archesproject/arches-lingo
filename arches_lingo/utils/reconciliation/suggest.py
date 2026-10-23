@@ -35,8 +35,12 @@ def page_of(items, cursor):
     return {"result": items[cursor : cursor + SUGGEST_PAGE_SIZE]}
 
 
-def suggest_entities(prefix, raw_cursor=None, scheme_id=None):
-    """Autocomplete reconcilable concepts by label, prefix matches first."""
+def suggest_entities(prefix, raw_cursor=None, scheme_id=None, scope_scheme_id=None):
+    """Autocomplete reconcilable concepts by label, prefix matches first.
+
+    ``scheme_id`` is the type OpenRefine asks for; ``scope_scheme_id`` is the
+    scheme of a scheme's own service, which no requested type can widen.
+    """
     cursor = parse_cursor(raw_cursor)
     prefix = (prefix or "").strip()
     if not prefix:
@@ -48,8 +52,9 @@ def suggest_entities(prefix, raw_cursor=None, scheme_id=None):
         )
 
     searchable_scheme_ids = reconcilable_scheme_ids()
-    if scheme_id:
-        searchable_scheme_ids &= {scheme_id}
+    for limiting_scheme_id in (scheme_id, scope_scheme_id):
+        if limiting_scheme_id:
+            searchable_scheme_ids &= {limiting_scheme_id}
 
     search = build_search_queryset(
         None,
@@ -79,12 +84,14 @@ def suggest_entities(prefix, raw_cursor=None, scheme_id=None):
     }
 
 
-def suggest_types(prefix, raw_cursor=None):
+def suggest_types(prefix, raw_cursor=None, scope_scheme_id=None):
     cursor = parse_cursor(raw_cursor)
     folded_prefix = (prefix or "").strip().casefold()
     matching_types = [
         reconciliation_type
-        for reconciliation_type in list_reconcilable_schemes()
+        for reconciliation_type in list_reconcilable_schemes(
+            None if scope_scheme_id is None else [scope_scheme_id]
+        )
         if folded_prefix in reconciliation_type["name"].casefold()
     ]
     return page_of(matching_types, cursor)
