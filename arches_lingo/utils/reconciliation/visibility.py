@@ -30,12 +30,15 @@ def reconcilable_scheme_ids():
     }
 
 
-def filter_public_concept_ids(concept_ids):
-    """Keep published, locked and retired concepts in reconcilable schemes."""
+def filter_public_concept_ids(concept_ids, scheme_ids=None):
+    """Keep published, locked and retired concepts in ``scheme_ids``, which
+    defaults to every reconcilable scheme."""
     if not concept_ids:
         return set()
     scheme_id_by_concept_id = get_scheme_ids_for_concepts(concept_ids)
-    searchable_scheme_ids = reconcilable_scheme_ids()
+    searchable_scheme_ids = (
+        reconcilable_scheme_ids() if scheme_ids is None else scheme_ids
+    )
     public_state_concept_ids = ResourceInstance.objects.filter(
         pk__in=concept_ids,
         resource_instance_lifecycle_state_id__in=SEARCHED_LIFECYCLE_STATE_IDS,

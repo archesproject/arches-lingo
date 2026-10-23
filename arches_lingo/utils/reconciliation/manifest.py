@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.urls import reverse
+from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy
 
 from arches_lingo.const import (
@@ -106,7 +107,10 @@ def build_service_manifest(scheme_id=None, scheme_identifier=None):
         settings, "LINGO_RECONCILIATION_SERVICE_NAME", DEFAULT_SERVICE_NAME
     )
     if scheme_id is not None and reconciliation_types:
-        service_name = f"{service_name} — {reconciliation_types[0]['name']}"
+        service_name = _("%(service_name)s — %(scheme_name)s") % {
+            "service_name": service_name,
+            "scheme_name": reconciliation_types[0]["name"],
+        }
 
     identifier_space = concept_identifier_space()
     # Suggest follows the scheme scope; preview and property proposals do not

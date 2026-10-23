@@ -3,6 +3,7 @@ from http import HTTPStatus
 from django.http import Http404, HttpResponseNotFound, JsonResponse
 from django.utils.decorators import method_decorator
 from django.utils.translation import gettext as _
+from django.utils.translation import ngettext
 from django.views.decorators.csrf import csrf_exempt
 
 from arches.app.utils.response import JSONErrorResponse
@@ -42,11 +43,15 @@ class ReconciliationAccessMixin:
     def dispatch(self, request, *args, **kwargs):
         if not reconciliation_enabled():
             raise Http404()
-        retry_after_seconds = seconds_until_allowed(request.META.get("REMOTE_ADDR"))
+        retry_after_seconds = seconds_until_allowed(request)
         if retry_after_seconds:
             response = JSONErrorResponse(
                 title=_("Too many reconciliation requests."),
-                message=_("Try again in %(seconds)s seconds.")
+                message=ngettext(
+                    "Try again in %(seconds)s second.",
+                    "Try again in %(seconds)s seconds.",
+                    retry_after_seconds,
+                )
                 % {"seconds": retry_after_seconds},
                 status=HTTPStatus.TOO_MANY_REQUESTS,
             )
