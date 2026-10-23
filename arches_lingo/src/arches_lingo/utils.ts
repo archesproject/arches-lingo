@@ -516,5 +516,6 @@ export function saveBlobAsFile(blob: Blob, filename: string): void {
     anchor.href = objectUrl;
     anchor.download = filename;
     anchor.click();
-    URL.revokeObjectURL(objectUrl);
+    // Revoking in the same task can cancel the download in some browsers.
+    setTimeout(() => URL.revokeObjectURL(objectUrl));
 }
