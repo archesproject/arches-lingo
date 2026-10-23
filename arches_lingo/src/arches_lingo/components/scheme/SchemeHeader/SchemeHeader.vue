@@ -762,6 +762,7 @@ async function onReinstateConfirmed(cascade: boolean) {
                     class="header-row"
                     :scheme-identifier="identifierValue"
                     :scheme-name="label?.value"
+                    :heading-level="3"
                 />
 
                 <div class="header-row">

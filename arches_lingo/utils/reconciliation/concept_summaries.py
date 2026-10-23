@@ -1,5 +1,7 @@
 from collections import defaultdict
 
+from django.utils.translation import gettext as _
+
 from arches.app.models.models import ResourceInstance, TileModel
 
 from arches_lingo.const import (
@@ -12,7 +14,10 @@ from arches_lingo.const import (
     PREF_LABEL_URI,
 )
 from arches_lingo.utils.concept_matching import get_scheme_ids_for_concepts
-from arches_lingo.utils.reconciliation.labels import choose_display_label
+from arches_lingo.utils.reconciliation.labels import (
+    choose_display_label,
+    join_labels,
+)
 from arches_lingo.utils.reconciliation.manifest import list_reconcilable_schemes
 from arches_lingo.utils.reconciliation.visibility import filter_public_concept_ids
 
@@ -26,7 +31,7 @@ def get_lifecycle_state_ids(concept_ids):
     }
 
 
-def get_public_broader_ids_for_concepts(concept_ids):
+def get_public_broader_ids_for_concepts(concept_ids, public_scheme_ids=None):
     """Return ``{concept_id: [broader_id, …]}``, leaving out broader concepts that
     are not public, such as a draft parent of a published concept."""
     broader_ids_by_concept_id = defaultdict(list)
@@ -38,17 +43,21 @@ def get_public_broader_ids_for_concepts(concept_ids):
         for resource_reference in (
             tile_data.get(CLASSIFICATION_STATUS_ASCRIBED_CLASSIFICATION_NODEID) or []
         ):
-            if resource_reference.get("resourceId"):
-                broader_ids_by_concept_id[str(concept_id)].append(
-                    resource_reference["resourceId"]
-                )
+            broader_id = resource_reference.get("resourceId")
+            # A tile can name the same parent twice, and so can two tiles.
+            if (
+                broader_id
+                and broader_id not in broader_ids_by_concept_id[str(concept_id)]
+            ):
+                broader_ids_by_concept_id[str(concept_id)].append(broader_id)
 
     public_broader_ids = filter_public_concept_ids(
         {
             broader_id
             for broader_ids in broader_ids_by_concept_id.values()
             for broader_id in broader_ids
-        }
+        },
+        public_scheme_ids,
     )
     return {
         concept_id: [
@@ -98,7 +107,7 @@ def get_pref_labels_for_concepts(concept_ids):
     return pref_labels_by_concept_id
 
 
-def summarize_concepts(concept_ids, target_language=None):
+def summarize_concepts(concept_ids, target_language=None, public_scheme_ids=None):
     """Return ``{concept_id: {name, description, type}}`` in a fixed number of queries.
 
     The description names the broader concepts and the scheme, which is what
@@ -115,7 +124,9 @@ def summarize_concepts(concept_ids, target_language=None):
             set(scheme_id_by_concept_id.values())
         )
     }
-    broader_ids_by_concept_id = get_public_broader_ids_for_concepts(concept_ids)
+    broader_ids_by_concept_id = get_public_broader_ids_for_concepts(
+        concept_ids, public_scheme_ids
+    )
     all_broader_ids = {
         broader_id
         for broader_ids in broader_ids_by_concept_id.values()
@@ -137,11 +148,16 @@ def summarize_concepts(concept_ids, target_language=None):
             for broader_id in broader_ids_by_concept_id.get(concept_id, [])
             if display_label_by_concept_id.get(broader_id)
         )
-        description_parts = [", ".join(broader_names)] if broader_names else []
-        description_parts.append(reconciliation_type["name"])
+        if broader_names:
+            description = _("%(broader_concepts)s · %(scheme)s") % {
+                "broader_concepts": join_labels(broader_names),
+                "scheme": reconciliation_type["name"],
+            }
+        else:
+            description = reconciliation_type["name"]
         summaries[concept_id] = {
             "name": display_label_by_concept_id.get(concept_id) or concept_id,
-            "description": " · ".join(description_parts),
+            "description": description,
             "type": [reconciliation_type],
         }
     return summaries

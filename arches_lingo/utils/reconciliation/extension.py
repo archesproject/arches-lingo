@@ -178,7 +178,7 @@ def resource_id_for_uri(rdf_object, resource_ids_by_public_uri):
     return uri.removeprefix(str(ARCHES))
 
 
-def find_non_public_local_uris(uris):
+def find_non_public_local_uris(uris, public_scheme_ids):
     """Return the URIs that name a resource in this instance that is not public,
     so a match column never reveals the id of, say, a draft concept. Public
     concepts and reconcilable schemes are both kept."""
@@ -200,9 +200,9 @@ def find_non_public_local_uris(uris):
         resource_id_by_uri[uri] = str(resource_id)
 
     local_resource_ids = set(resource_id_by_uri.values())
-    public_resource_ids = filter_public_concept_ids(local_resource_ids) | (
-        local_resource_ids & reconcilable_scheme_ids()
-    )
+    public_resource_ids = filter_public_concept_ids(
+        local_resource_ids, public_scheme_ids
+    ) | (local_resource_ids & public_scheme_ids)
     return {
         uri
         for uri, resource_id in resource_id_by_uri.items()
@@ -219,7 +219,12 @@ def matches_language(rdf_object, language):
 
 
 def collect_property_values(
-    rdf_graph, resource_uri_map, concept_ids, requested_properties, default_language
+    rdf_graph,
+    resource_uri_map,
+    concept_ids,
+    requested_properties,
+    default_language,
+    public_scheme_ids,
 ):
     """Return ``{concept_id: {property_id: [value, …]}}`` in a fixed number of queries."""
     resource_ids_by_public_uri = {
@@ -244,14 +249,17 @@ def collect_property_values(
         if property_id in ("broader", "inScheme")
         for rdf_object in rdf_objects
     }
-    public_linked_concept_ids = filter_public_concept_ids(linked_resource_ids)
+    public_linked_concept_ids = filter_public_concept_ids(
+        linked_resource_ids, public_scheme_ids
+    )
     non_public_local_uris = find_non_public_local_uris(
         {
             str(rdf_object)
             for (_concept_id, property_id), rdf_objects in objects_by_request.items()
             if property_id in MATCH_PROPERTY_IDS
             for rdf_object in rdf_objects
-        }
+        },
+        public_scheme_ids,
     )
     scheme_name_by_id = {
         reconciliation_type["id"]: reconciliation_type["name"]
@@ -317,15 +325,24 @@ def collect_property_values(
     return values_by_concept_id
 
 
-def extend_concepts(raw_extension_request):
+def extend_concepts(raw_extension_request, scope_scheme_id=None):
     """Answer a data extension request with ``{"meta": [...], "rows": {...}}``.
 
     Ids that are unknown or not public get empty rows, never an error, so the
-    response cannot reveal whether a draft exists.
+    response cannot reveal whether a draft exists. A scheme's own service
+    (``scope_scheme_id``) only extends that scheme's concepts.
     """
     requested_ids, requested_properties = parse_extension_request(raw_extension_request)
     canonical_ids = canonical_id_by_requested_id(requested_ids)
-    public_ids = filter_public_concept_ids(set(canonical_ids.values()))
+    public_scheme_ids = reconcilable_scheme_ids()
+    extendable_scheme_ids = (
+        public_scheme_ids
+        if scope_scheme_id is None
+        else public_scheme_ids & {scope_scheme_id}
+    )
+    public_ids = filter_public_concept_ids(
+        set(canonical_ids.values()), extendable_scheme_ids
+    )
 
     meta = [
         {"id": property_id, "name": str(EXTENSION_PROPERTIES[property_id].name)}
@@ -347,6 +364,7 @@ def extend_concepts(raw_extension_request):
         public_ids,
         requested_properties,
         get_language() or settings.LANGUAGE_CODE,
+        public_scheme_ids,
     )
     for requested_id, canonical_id in canonical_ids.items():
         if canonical_id in values_by_concept_id:

@@ -20,7 +20,11 @@ vi.mock("primevue/usetoast", () => ({
 
 function mountPanel(
     settingsOverrides: Partial<AppSettings>,
-    props: { schemeIdentifier?: string; schemeName?: string } = {},
+    props: {
+        schemeIdentifier?: string;
+        schemeName?: string;
+        headingLevel?: 2 | 3;
+    } = {},
 ): VueWrapper {
     useAppSettingsStore().settings = {
         allow_anonymous_access: false,
@@ -98,7 +102,7 @@ describe("ReconciliationEndpointPanel", () => {
         );
     });
 
-    it("reports a failed copy", async () => {
+    it("reports a failed copy without exposing the browser's error", async () => {
         const writeText = vi.fn().mockRejectedValue(new Error("denied"));
         Object.assign(navigator, { clipboard: { writeText } });
         const wrapper = mountPanel({});
@@ -107,7 +111,37 @@ describe("ReconciliationEndpointPanel", () => {
         await flushPromises();
 
         expect(toastAdd).toHaveBeenCalledWith(
-            expect.objectContaining({ severity: "error", detail: "denied" }),
+            expect.objectContaining({
+                severity: "error",
+                detail: "Select the URL and copy it manually.",
+            }),
+        );
+    });
+
+    it("reports a failed copy where the clipboard API is unavailable", async () => {
+        Object.assign(navigator, { clipboard: undefined });
+        const wrapper = mountPanel({});
+
+        await wrapper.find("button").trigger("click");
+        await flushPromises();
+
+        expect(toastAdd).toHaveBeenCalledWith(
+            expect.objectContaining({ severity: "error" }),
+        );
+    });
+
+    it("names the region by its heading and describes the URL by the hint", () => {
+        const wrapper = mountPanel({}, { headingLevel: 3 });
+        const heading = wrapper.find("h3");
+        const hint = wrapper.find(".hint");
+
+        expect(
+            wrapper
+                .find(".reconciliation-endpoint")
+                .attributes("aria-labelledby"),
+        ).toBe(heading.attributes("id"));
+        expect(wrapper.find("input").attributes("aria-describedby")).toBe(
+            hint.attributes("id"),
         );
     });
 });
