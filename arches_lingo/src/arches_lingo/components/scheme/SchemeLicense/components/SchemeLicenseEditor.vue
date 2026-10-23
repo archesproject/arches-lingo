@@ -10,11 +10,11 @@ import {
 
 import { useRouter } from "vue-router";
 import { useGettext } from "vue3-gettext";
-import { useToast } from "primevue/usetoast";
+import { useToast } from "openvue/usetoast";
 
-import { Form } from "@primevue/forms";
+import { Form } from "@openvue/forms";
 
-import Skeleton from "primevue/skeleton";
+import Skeleton from "openvue/skeleton";
 
 import GenericWidget from "@/arches_vue_components/generics/GenericWidget/GenericWidget.vue";
 
@@ -26,7 +26,7 @@ import {
     ERROR,
 } from "@/arches_lingo/constants.ts";
 
-import type { FormSubmitEvent } from "@primevue/forms";
+import type { FormSubmitEvent } from "@openvue/forms";
 import type { SchemeRights } from "@/arches_lingo/types";
 
 const props = defineProps<{

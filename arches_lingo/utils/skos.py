@@ -10,8 +10,8 @@ from rdflib.graph import Graph
 from arches.app.models import models
 from arches.app.models.system_settings import settings
 
-from arches_controlled_lists.utils.skos import SKOSReader
-from arches_controlled_lists.models import List, ListItem
+from arches.extensions.controlled_lists.utils.skos import SKOSReader
+from arches.extensions.controlled_lists.models import List, ListItem
 
 from arches_lingo.etl_modules.migrate_to_lingo import LingoResourceImporter
 import arches_lingo.const as const
@@ -331,9 +331,9 @@ class SKOSReader(SKOSReader):
                                 "relation_status": {
                                     "relation_status_ascribed_comparate": {
                                         "resourceId": str(related_concept_id),
-                                        "ontologyProperty": const.RELATION_STATUS_ASCRIBED_COMPARATE_ONTOLOGY_PROPERTY,
+                                        "relationship": const.RELATION_STATUS_ASCRIBED_COMPARATE_ONTOLOGY_PROPERTY,
                                         "resourceXresourceId": "",
-                                        "inverseOntologyProperty": "",
+                                        "inverseRelationship": "",
                                     }
                                 }
                             }

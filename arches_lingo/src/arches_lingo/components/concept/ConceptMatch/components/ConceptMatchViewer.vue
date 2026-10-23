@@ -3,8 +3,8 @@ import { inject, computed, ref, onMounted, watch } from "vue";
 import { RouterLink } from "vue-router";
 import { useGettext } from "vue3-gettext";
 
-import Button from "primevue/button";
-import Tag from "primevue/tag";
+import Button from "openvue/button";
+import Tag from "openvue/tag";
 
 import MetaStringViewer from "@/arches_lingo/components/generic/MetaStringViewer.vue";
 import GenericWidget from "@/arches_vue_components/generics/GenericWidget/GenericWidget.vue";

@@ -7,7 +7,7 @@ from arches.app.utils.betterJSONSerializer import JSONDeserializer
 from arches.app.utils.response import JSONResponse, JSONErrorResponse
 from arches.app.views.api import APIBase
 
-from arches_controlled_lists.models import ListItem
+from arches.extensions.controlled_lists.models import ListItem
 
 from arches_lingo.const import (
     NAMESPACE_NODEGROUP,

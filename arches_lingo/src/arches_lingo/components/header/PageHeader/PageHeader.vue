@@ -2,10 +2,10 @@
 import { useTemplateRef, watch } from "vue";
 import { useGettext } from "vue3-gettext";
 
-import { ToggleButton } from "primevue";
-import Button from "primevue/button";
-import Menubar from "primevue/menubar";
-import Popover from "primevue/popover";
+import { ToggleButton } from "openvue";
+import Button from "openvue/button";
+import Menubar from "openvue/menubar";
+import Popover from "openvue/popover";
 
 import ArchesLingoBadge from "@/arches_lingo/components/header/PageHeader/components/ArchesLingoBadge.vue";
 import LanguageSelector from "@/arches_lingo/components/header/PageHeader/components/LanguageSelector.vue";

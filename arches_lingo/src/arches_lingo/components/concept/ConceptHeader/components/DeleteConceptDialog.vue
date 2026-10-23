@@ -2,10 +2,10 @@
 import { computed, onMounted, ref } from "vue";
 
 import { useGettext } from "vue3-gettext";
-import Button from "primevue/button";
-import Dialog from "primevue/dialog";
-import RadioButton from "primevue/radiobutton";
-import Skeleton from "primevue/skeleton";
+import Button from "openvue/button";
+import Dialog from "openvue/dialog";
+import RadioButton from "openvue/radiobutton";
+import Skeleton from "openvue/skeleton";
 
 import {
     DANGER,

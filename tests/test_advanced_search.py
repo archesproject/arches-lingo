@@ -24,7 +24,7 @@ from arches.app.utils.data_management.resource_graphs.importer import (
     import_graph as ResourceGraphImporter,
 )
 
-from arches_controlled_lists.management.commands.packages import (
+from arches.extensions.controlled_lists.management.commands.packages import (
     Command as ControlledListsPackageCommand,
 )
 

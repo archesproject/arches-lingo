@@ -1,7 +1,7 @@
 import { computed, onBeforeUnmount, ref, watch } from "vue";
 
 import { useGettext } from "vue3-gettext";
-import { useToast } from "primevue/usetoast";
+import { useToast } from "openvue/usetoast";
 
 import {
     createConceptMatchRun,

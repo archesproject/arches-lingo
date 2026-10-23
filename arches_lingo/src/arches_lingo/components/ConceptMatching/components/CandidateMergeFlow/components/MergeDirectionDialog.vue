@@ -3,10 +3,10 @@ import { computed, ref } from "vue";
 
 import { useGettext } from "vue3-gettext";
 
-import Button from "primevue/button";
-import Dialog from "primevue/dialog";
-import Message from "primevue/message";
-import RadioButton from "primevue/radiobutton";
+import Button from "openvue/button";
+import Dialog from "openvue/dialog";
+import Message from "openvue/message";
+import RadioButton from "openvue/radiobutton";
 
 import { MERGE_DIALOG_FRAME_PASS_THROUGH } from "@/arches_lingo/components/concept/ConceptMerge/constants.ts";
 import { CANNOT_RECEIVE_SCHEME_LOCKED } from "@/arches_lingo/components/ConceptMatching/constants.ts";

@@ -16,22 +16,19 @@ classifiers = [
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Framework :: Django",
-    "Framework :: Django :: 5.2",
+    "Framework :: Django :: 6.1",
     "Intended Audience :: Developers",
     "Intended Audience :: Information Technology",
 ]
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 dependencies = [
-    "arches==8.1.3",
-    "arches_vue_components>=2.0.2",
-    "arches_querysets>=1.2.0",
-    "arches_controlled_lists>=1.2.0",
+    "arches @ git+https://github.com/archesproject/arches.git@dev/8.2.x",
 ]
-version = "1.2.0"
+version = "1.3.0"
 
 [project.urls]
 Homepage = "https://archesproject.org/"
@@ -44,7 +41,7 @@ dev = [
     "livereload",
     "sst",
     "coverage",
-    "django-silk==5.1.0",
+    "django-silk==5.5.0",
     "pre-commit",
     "black==24.4.2",
 ]

@@ -2,11 +2,11 @@
 import { computed, useTemplateRef } from "vue";
 import { useGettext } from "vue3-gettext";
 
-import Button from "primevue/button";
-import Checkbox from "primevue/checkbox";
-import Popover from "primevue/popover";
+import Button from "openvue/button";
+import Checkbox from "openvue/checkbox";
+import Popover from "openvue/popover";
 
-import type { PopoverMethods } from "primevue/popover";
+import type { PopoverMethods } from "openvue/popover";
 import type { LifecycleState } from "@/arches_lingo/types";
 
 const props = defineProps<{

@@ -37,7 +37,7 @@ from arches.app.utils.data_management.resource_graphs.importer import (
     import_graph as ResourceGraphImporter,
 )
 
-from arches_controlled_lists.models import ListItem
+from arches.extensions.controlled_lists.models import ListItem
 
 from arches_lingo import const
 from arches_lingo.management.commands.load_aat_sources import (
@@ -191,8 +191,8 @@ class ResourceIdPinningAndPartitionTests(TestCase):
                 const.CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID: [
                     {
                         "resourceId": str(self.scheme.pk),
-                        "ontologyProperty": const.TOP_CONCEPT_OF_ONTOLOGY_PROPERTY,
-                        "inverseOntologyProperty": "",
+                        "relationship": const.TOP_CONCEPT_OF_ONTOLOGY_PROPERTY,
+                        "inverseRelationship": "",
                         "resourceXresourceId": "",
                     }
                 ]
@@ -349,7 +349,7 @@ class LoadAatSourcesHelperTests(TestCase):
         value = _make_resource_instance_list_value([resource_id])
 
         self.assertEqual(value[0]["resourceId"], resource_id)
-        self.assertEqual(value[0]["ontologyProperty"], "")
+        self.assertEqual(value[0]["relationship"], "")
 
     def test_tile_match_key_normalizes_case_and_whitespace(self):
         command = LoadAatSourcesCommand()

@@ -23,7 +23,7 @@ from arches.app.models.models import (
 from arches.app.utils.data_management.resources.formats.rdffile import RdfWriter
 from arches.app.utils.data_management.resources.formats.rdffile import JsonLdWriter
 from arches.app.utils.data_management.resources.formats.csvfile import TileCsvWriter
-from arches_querysets.models import ResourceTileTree
+from arches.extensions.querysets.models import ResourceTileTree
 from arches.app.tasks import notify_completion
 
 from arches_lingo.utils.concept_builder import ConceptBuilder

@@ -2,7 +2,7 @@
 import { computed, inject } from "vue";
 import { useGettext } from "vue3-gettext";
 
-import Button from "primevue/button";
+import Button from "openvue/button";
 
 import GenericWidget from "@/arches_vue_components/generics/GenericWidget/GenericWidget.vue";
 

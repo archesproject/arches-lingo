@@ -3,10 +3,10 @@ import { computed, onBeforeUnmount, ref, watch } from "vue";
 
 import { useGettext } from "vue3-gettext";
 
-import IconField from "primevue/iconfield";
-import InputIcon from "primevue/inputicon";
-import InputText from "primevue/inputtext";
-import Message from "primevue/message";
+import IconField from "openvue/iconfield";
+import InputIcon from "openvue/inputicon";
+import InputText from "openvue/inputtext";
+import Message from "openvue/message";
 
 import SearchResult from "@/arches_lingo/components/basic-search/SearchResult.vue";
 

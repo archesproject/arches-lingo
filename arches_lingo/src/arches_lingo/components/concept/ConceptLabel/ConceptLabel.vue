@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from "vue";
 
-import Message from "primevue/message";
-import Skeleton from "primevue/skeleton";
+import Message from "openvue/message";
+import Skeleton from "openvue/skeleton";
 
 import ConceptLabelEditor from "@/arches_lingo/components/concept/ConceptLabel/components/ConceptLabelEditor.vue";
 import ConceptLabelViewer from "@/arches_lingo/components/concept/ConceptLabel/components/ConceptLabelViewer.vue";

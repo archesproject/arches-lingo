@@ -2,9 +2,9 @@
 import { ref, watch } from "vue";
 import { useGettext } from "vue3-gettext";
 
-import SelectButton from "primevue/selectbutton";
+import SelectButton from "openvue/selectbutton";
 
-import { Theme } from "@primeuix/styled";
+import { Theme } from "@openuxkit/styled";
 
 const { $gettext } = useGettext();
 

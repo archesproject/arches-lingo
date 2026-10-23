@@ -26,7 +26,7 @@ from arches.app.models.models import (
     Value,
 )
 from arches.app.utils.skos import SKOSReader
-from arches_querysets.models import ResourceTileTree
+from arches.extensions.querysets.models import ResourceTileTree
 
 from arches_lingo.const import LINGO_EDITOR_GROUP_NAME
 from arches_lingo.etl_modules.migrate_to_lingo import LingoResourceImporter

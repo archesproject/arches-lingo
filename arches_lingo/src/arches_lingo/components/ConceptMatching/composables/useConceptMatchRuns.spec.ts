@@ -24,7 +24,7 @@ vi.mock("@/arches_lingo/api.ts", () => ({
     fetchConceptMatchRuns: vi.fn(),
 }));
 
-vi.mock("primevue/usetoast", () => ({
+vi.mock("openvue/usetoast", () => ({
     useToast: () => ({ add: toastAdd }),
 }));
 

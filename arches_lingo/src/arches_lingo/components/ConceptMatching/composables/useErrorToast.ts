@@ -1,4 +1,4 @@
-import { useToast } from "primevue/usetoast";
+import { useToast } from "openvue/usetoast";
 
 import { DEFAULT_ERROR_TOAST_LIFE, ERROR } from "@/arches_lingo/constants.ts";
 

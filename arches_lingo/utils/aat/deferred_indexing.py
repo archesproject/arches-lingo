@@ -14,12 +14,7 @@ outright would leave every imported resource showing a stale or empty name.
 from django.contrib.auth.models import User
 from django.db import connection
 
-from arches.app.etl_modules.save import (
-    _save_to_tiles,
-    disable_tile_triggers,
-    log_event_details,
-    reenable_tile_triggers,
-)
+from arches.app.etl_modules.save import log_event_details, save_to_tiles
 from arches.app.models.resource import Resource
 from arches.app.search.elasticsearch_dsl_builder import Bool, Query, Terms
 from arches.app.search.mappings import RESOURCES_INDEX, TERMS_INDEX
@@ -156,31 +151,28 @@ def _attribute_edit_log_to_user(cursor, userid, loadid):
 def save_to_tiles_without_indexing(userid, loadid, recalculate_descriptors=True):
     """Write staged tiles and refresh descriptors, leaving the index alone.
 
-    Mirrors arches.app.etl_modules.save.save_to_tiles, minus the call to
-    index_resources_by_transaction.
+    Runs arches.app.etl_modules.save.save_to_tiles with indexing turned off.
+    Arches only recalculates descriptors while indexing, so this recalculates
+    them itself and then attributes the edit log again, so its resource names
+    come from the new descriptors.
 
     `recalculate_descriptors` may be turned off when the load cannot have
     changed any value a descriptor is built from. Recomputing is expensive --
     several queries and a row update per resource -- so skipping it when the
     result is guaranteed identical is worth the explicit argument.
     """
-    with connection.cursor() as cursor:
-        disable_tile_triggers(cursor, loadid)
-        error_saving_tiles = _save_to_tiles(cursor, loadid)
-        reenable_tile_triggers(cursor, loadid)
-        if error_saving_tiles:
-            return error_saving_tiles
+    save_result = save_to_tiles(userid, loadid, index=False)
+    if not save_result.get("success"):
+        return save_result
 
-        if recalculate_descriptors:
-            log_event_details(cursor, loadid, "done|Recalculating descriptors...")
-            _recalculate_descriptors_for_transaction(cursor, loadid)
+    if not recalculate_descriptors:
+        return save_result
+
+    with connection.cursor() as cursor:
+        log_event_details(cursor, loadid, "done|Recalculating descriptors...")
+        _recalculate_descriptors_for_transaction(cursor, loadid)
 
         log_event_details(cursor, loadid, "done|Updating the edit log...")
         _attribute_edit_log_to_user(cursor, userid, loadid)
 
-        cursor.execute(
-            "UPDATE load_event SET status = %s, indexed_time = now(), "
-            "complete = true, successful = true WHERE loadid = %s",
-            ("indexed", loadid),
-        )
-    return {"success": True, "data": "indexing complete"}
+    return save_result

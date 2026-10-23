@@ -2,11 +2,11 @@
 import { useRouter } from "vue-router";
 import { useGettext } from "vue3-gettext";
 
-import Column from "primevue/column";
-import DataTable from "primevue/datatable";
-import Select from "primevue/select";
-import Skeleton from "primevue/skeleton";
-import Tag from "primevue/tag";
+import Column from "openvue/column";
+import DataTable from "openvue/datatable";
+import Select from "openvue/select";
+import Skeleton from "openvue/skeleton";
+import Tag from "openvue/tag";
 
 import { storeToRefs } from "pinia";
 

@@ -14,7 +14,7 @@ from django.core.management import call_command
 from django.db import connection, transaction
 
 from arches.app.models.models import GraphModel
-from arches_controlled_lists.models import ListItem
+from arches.extensions.controlled_lists.models import ListItem
 
 import arches_lingo
 from arches_lingo import const
