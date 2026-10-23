@@ -1,12 +1,15 @@
 import csv
+import datetime
 import io
 import json
+import uuid
 from contextlib import nullcontext
 from unittest.mock import patch
 
 from django.contrib.auth.models import Group, User
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
+from django.utils import timezone
 
 from arches.app.models.models import ResourceInstance, TileModel
 
@@ -30,12 +33,13 @@ from arches_lingo.utils.concept_lifecycle import (
 )
 from arches_lingo.utils.concept_merge.tiles import get_list_item_tile_value
 from arches_lingo.utils.openrefine_round_trip.match_link_import import (
+    apply_match_link_import,
     parse_match_link_csv,
 )
 from tests.tests import SchemeWithConceptsTestCase
 
 CELERY_CHECK = (
-    "arches_lingo.utils.openrefine_round_trip.match_link_import"
+    "arches_lingo.utils.openrefine_round_trip.match_link_import_service"
     ".task_management.check_if_celery_available"
 )
 
@@ -134,6 +138,8 @@ class ReconciliationWorksheetTests(OpenRefineRoundTripTestCase):
         self.assertEqual(rows_by_label["Concept 3"]["lifecycle_state"], "Draft")
         self.assertEqual(rows_by_label["Concept 3"]["editable"], "true")
         self.assertEqual(rows_by_label["Concept 2"]["editable"], "false")
+        self.assertEqual(rows_by_label["Concept 3"]["match_uri"], "")
+        self.assertEqual(rows_by_label["Concept 3"]["match_type"], "")
 
     def test_concept_set_and_search_scopes(self):
         concept_set = ConceptSet.objects.create(user=self.editor, name="Set")
@@ -222,6 +228,110 @@ class MatchLinkImportTests(OpenRefineRoundTripTestCase):
         self.assertTrue(rows[8]["is_internal_concept"])
         self.assertFalse(rows[0]["is_internal_concept"])
 
+    def test_cells_are_split_aliased_and_compared_loosely(self):
+        self.add_exact_match(self.concepts[3], "http://example.org/already")
+        concept_ids = [str(concept.pk) for concept in self.concepts]
+        upload = csv_upload(
+            [
+                [
+                    concept_ids[2],
+                    "http://example.org/a|https://example.org/b/",
+                    "SKOS:closeMatch",
+                ],
+                [
+                    concept_ids[2],
+                    "https://EXAMPLE.org/a/",
+                    "http://www.w3.org/2004/02/skos/core#closeMatch",
+                ],
+                [concept_ids[3], "https://example.org/already/", "exactmatch"],
+                [concept_ids[4], "http://lingo.example/c1/", ""],
+            ]
+        )
+
+        rows = self.preview(upload).json()["rows"]
+
+        self.assertEqual(
+            [(row["row_number"], row["match_type"], row["outcome"]) for row in rows],
+            [
+                (2, "closeMatch", "add"),
+                (2, "closeMatch", "add"),
+                (3, "closeMatch", "duplicate_in_file"),
+                (4, "exactMatch", "already_linked"),
+                (5, "exactMatch", "add"),
+            ],
+        )
+        self.assertTrue(rows[4]["is_internal_concept"])
+
+    def test_scheme_scope_leaves_other_schemes_alone(self):
+        upload_rows = [[str(self.concepts[2].pk), "http://example.org/x", ""]]
+
+        in_scheme = self.client.post(
+            reverse("api-lingo-match-link-import-preview"),
+            {"file": csv_upload(upload_rows), "scheme_id": str(self.scheme.pk)},
+        )
+        other_scheme = self.client.post(
+            reverse("api-lingo-match-link-import-preview"),
+            {"file": csv_upload(upload_rows), "scheme_id": str(uuid.uuid4())},
+        )
+        invalid_scheme = self.client.post(
+            reverse("api-lingo-match-link-import-preview"),
+            {"file": csv_upload(upload_rows), "scheme_id": "not-a-uuid"},
+        )
+
+        self.assertEqual(self.outcomes_of(in_scheme), {2: "add"})
+        self.assertEqual(self.outcomes_of(other_scheme), {2: "outside_scheme"})
+        self.assertEqual(invalid_scheme.status_code, 400)
+
+    def test_imports_left_running_are_failed_when_read(self):
+        stale_import = MatchLinkImport.objects.create(
+            user=self.editor, status=MatchLinkImport.STATUS_RUNNING
+        )
+        MatchLinkImport.objects.filter(pk=stale_import.pk).update(
+            created=timezone.now() - datetime.timedelta(days=1)
+        )
+        fresh_import = MatchLinkImport.objects.create(
+            user=self.editor, status=MatchLinkImport.STATUS_RUNNING
+        )
+        MatchLinkImport.objects.create(user=self.other_editor)
+
+        statuses_by_id = {
+            listed_import["id"]: listed_import["status"]
+            for listed_import in self.client.get(
+                reverse("api-lingo-match-link-imports")
+            ).json()["imports"]
+        }
+
+        self.assertEqual(
+            statuses_by_id,
+            {stale_import.pk: "failed", fresh_import.pk: "running"},
+        )
+
+    @patch(
+        "arches_lingo.utils.openrefine_round_trip.match_link_import"
+        ".index_concepts_in_transaction",
+        side_effect=RuntimeError("Elasticsearch is down"),
+    )
+    def test_indexing_failure_keeps_the_written_links_on_record(self, _index):
+        match_link_import = MatchLinkImport.objects.create(
+            user=self.editor,
+            rows=[
+                {
+                    "row_number": 2,
+                    "concept_id": str(self.concepts[2].pk),
+                    "match_uri": "http://example.org/a",
+                    "match_type": "exactMatch",
+                }
+            ],
+        )
+
+        apply_match_link_import(match_link_import)
+        match_link_import.refresh_from_db()
+
+        self.assertEqual(match_link_import.status, MatchLinkImport.STATUS_COMPLETE)
+        self.assertIsNotNone(match_link_import.edit_transaction_id)
+        self.assertEqual(match_link_import.outcome_counts, {"add": 1})
+        self.assertIn("search index", match_link_import.error_message)
+
     def test_locked_scheme_blocks_editors_but_not_lingo_admins(self):
         set_lifecycle_state(self.scheme, LOCKED_STATE_ID)
         upload_rows = [[str(self.concepts[2].pk), "http://example.org/x", ""]]
@@ -247,7 +357,7 @@ class MatchLinkImportTests(OpenRefineRoundTripTestCase):
         match_link_import = MatchLinkImport.objects.get(pk=response.json()["id"])
         repeat_preview = self.preview(csv_upload(upload_rows))
 
-        self.assertEqual(response.status_code, 202)
+        self.assertEqual(response.status_code, 200)
         self.assertEqual(match_link_import.status, MatchLinkImport.STATUS_COMPLETE)
         self.assertEqual(
             match_link_import.outcome_counts, {"add": 2, "unknown_concept": 1}
@@ -284,6 +394,7 @@ class MatchLinkImportTests(OpenRefineRoundTripTestCase):
             {"file": csv_upload([[str(self.concepts[2].pk), "http://e.org/a", ""]])},
         )
 
+        self.assertEqual(response.status_code, 202)
         apply_async.assert_called_once_with(args=[response.json()["id"]])
         self.assertEqual(response.json()["status"], "pending")
 
@@ -320,6 +431,13 @@ class MatchLinkImportTests(OpenRefineRoundTripTestCase):
             (csv_upload([], header=("concept_id", "note")), {}),
             (SimpleUploadedFile("empty.csv", b""), {}),
             (SimpleUploadedFile("latin.csv", "é".encode("latin-1")), {}),
+            (
+                SimpleUploadedFile(
+                    "huge-cell.csv",
+                    b"concept_id,match_uri\n" + b"x" * (csv.field_size_limit() + 1),
+                ),
+                {},
+            ),
             (oversized, {"MAX_IMPORT_BYTES": 10}),
             (
                 csv_upload([["a", "b", ""], ["c", "d", ""]]),

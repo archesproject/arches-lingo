@@ -78,6 +78,9 @@ const queryGroup = ref<SearchGroup>({
 });
 
 const searchResults = ref<AdvancedSearchResponse | null>(null);
+// The query behind searchResults, which edits to the form do not change until
+// the search runs again.
+const executedQuery = ref<AdvancedSearchQuery | null>(null);
 const isSearching = ref(false);
 const currentPage = ref(1);
 const selectedConceptIds = ref<Set<string>>(new Set());
@@ -164,6 +167,8 @@ async function executeSearch(page: number = 1) {
     try {
         const query = buildQuery();
         searchResults.value = await executeAdvancedSearch(query, page, 25);
+        // A copy: the query shares its conditions array with the form.
+        executedQuery.value = JSON.parse(JSON.stringify(query));
     } catch (error) {
         toast.add({
             severity: ERROR,
@@ -172,6 +177,7 @@ async function executeSearch(page: number = 1) {
             detail: error instanceof Error ? error.message : undefined,
         });
         searchResults.value = null;
+        executedQuery.value = null;
     } finally {
         isSearching.value = false;
     }
@@ -306,7 +312,7 @@ onMounted(loadSearchOptions);
                             :results="searchResults"
                             :loading="isSearching"
                             :selected-ids="selectedConceptIds"
-                            :worksheet-query="isEditor ? buildQuery() : null"
+                            :worksheet-query="isEditor ? executedQuery : null"
                             @page-change="executeSearch($event)"
                             @toggle-select="toggleSelectConcept"
                             @select-all="selectAll"

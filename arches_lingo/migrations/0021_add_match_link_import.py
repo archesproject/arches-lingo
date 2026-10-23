@@ -42,6 +42,14 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 (
+                    "scheme_id",
+                    models.UUIDField(
+                        blank=True,
+                        help_text="When set, only concepts in this scheme receive links.",
+                        null=True,
+                    ),
+                ),
+                (
                     "rows",
                     models.JSONField(
                         default=list,
