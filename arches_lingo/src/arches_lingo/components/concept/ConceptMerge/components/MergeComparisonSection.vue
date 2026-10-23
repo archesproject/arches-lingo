@@ -33,7 +33,7 @@ const emit = defineEmits<{
     ): void;
 }>();
 
-const { $gettext } = useGettext();
+const { $gettext, interpolate } = useGettext();
 
 const singleValueOption = computed(function () {
     return comparison.absorbedTileOptions[0];
@@ -58,13 +58,19 @@ const selectedCount = computed(function () {
 });
 
 const survivorColumnHeading = computed(function () {
-    return $gettext('Already on "%{name}"', { name: survivorLabel ?? "" });
+    return interpolate(
+        $gettext('Already on "%{name}"'),
+        { name: survivorLabel ?? "" },
+        true,
+    );
 });
 
 const absorbedColumnHeading = computed(function () {
-    return $gettext('Bring across from "%{name}"', {
-        name: absorbedLabel ?? "",
-    });
+    return interpolate(
+        $gettext('Bring across from "%{name}"'),
+        { name: absorbedLabel ?? "" },
+        true,
+    );
 });
 
 const isSurvivorColumnEmpty = computed(function () {

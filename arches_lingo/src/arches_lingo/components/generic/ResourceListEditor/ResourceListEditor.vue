@@ -183,6 +183,7 @@ async function confirmDeleteResource(resource: ResourceSummary) {
     const baseMessage = interpolate(
         $gettext('Are you sure you want to delete "%{name}"?'),
         { name: resourceName },
+        true,
     );
     const referenceWarning = referenceCount
         ? interpolate(

@@ -14,7 +14,7 @@ import { routeNames } from "@/arches_lingo/routes.ts";
 
 import type { PopoverMethods } from "primevue/popover";
 
-const { $gettext } = useGettext();
+const { $gettext, interpolate } = useGettext();
 const router = useRouter();
 const userStore = useUserStore();
 const { user, isAnonymous } = storeToRefs(userStore);
@@ -27,10 +27,14 @@ const displayName = computed(() => {
     if (user.value.first_name && user.value.last_name) {
         // Using gettext here to handle localization-dependant
         // ordering of first name / last name
-        return $gettext("%{firstName} %{lastName}", {
-            firstName: user.value.first_name,
-            lastName: user.value.last_name,
-        });
+        return interpolate(
+            $gettext("%{firstName} %{lastName}"),
+            {
+                firstName: user.value.first_name,
+                lastName: user.value.last_name,
+            },
+            true,
+        );
     }
 
     return user.value.username;

@@ -12,7 +12,7 @@ import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 
 import type { ConceptSetItem } from "@/arches_lingo/types.ts";
 
-const { $gettext } = useGettext();
+const { $gettext, interpolate } = useGettext();
 const { selectedLanguage } = storeToRefs(useLanguageStore());
 
 defineProps<{
@@ -30,12 +30,16 @@ const newSetName = ref("");
 const newSetDescription = ref("");
 
 function formatSetMetadata(setItem: ConceptSetItem): string {
-    return $gettext("%{count} concepts · %{updated}", {
-        count: String(setItem.member_count),
-        updated: new Date(setItem.updated).toLocaleDateString(
-            selectedLanguage.value.code,
-        ),
-    });
+    return interpolate(
+        $gettext("%{count} concepts · %{updated}"),
+        {
+            count: String(setItem.member_count),
+            updated: new Date(setItem.updated).toLocaleDateString(
+                selectedLanguage.value.code,
+            ),
+        },
+        true,
+    );
 }
 
 function submitCreateSet() {

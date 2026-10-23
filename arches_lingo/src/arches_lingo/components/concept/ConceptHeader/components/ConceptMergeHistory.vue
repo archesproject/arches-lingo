@@ -19,7 +19,7 @@ const { resourceInstanceId } = defineProps<{
     resourceInstanceId: string;
 }>();
 
-const { $gettext } = useGettext();
+const { $gettext, interpolate } = useGettext();
 const router = useRouter();
 const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
 const resourceStore = useResourceStore();
@@ -41,19 +41,31 @@ function entryText(entry: ConceptMergeHistoryEntry) {
         ).value || $gettext("a deleted concept");
 
     if (!entry.counterpart_concept_exists) {
-        return $gettext("Merged from %{name} (deleted)", {
-            name: counterpartName,
-        });
+        return interpolate(
+            $gettext("Merged from %{name} (deleted)"),
+            { name: counterpartName },
+            true,
+        );
     }
     if (entry.direction === "absorbed" && entry.is_cross_scheme) {
-        return $gettext("Values copied from %{name}", {
-            name: counterpartName,
-        });
+        return interpolate(
+            $gettext("Values copied from %{name}"),
+            { name: counterpartName },
+            true,
+        );
     }
     if (entry.direction === "absorbed") {
-        return $gettext("Merged from %{name}", { name: counterpartName });
+        return interpolate(
+            $gettext("Merged from %{name}"),
+            { name: counterpartName },
+            true,
+        );
     }
-    return $gettext("Merged into %{name}", { name: counterpartName });
+    return interpolate(
+        $gettext("Merged into %{name}"),
+        { name: counterpartName },
+        true,
+    );
 }
 
 function openCounterpart(entry: ConceptMergeHistoryEntry) {

@@ -17,7 +17,7 @@ import { routeNames } from "@/arches_lingo/routes.ts";
 
 import type { AdvancedSearchResponse } from "@/arches_lingo/types.ts";
 
-const { $gettext } = useGettext();
+const { $gettext, interpolate } = useGettext();
 const router = useRouter();
 
 const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
@@ -179,13 +179,17 @@ function onPageChange(event: { page: number }) {
                         text
                         class="view-concept-button"
                         :aria-label="
-                            $gettext('View concept %{label}', {
-                                label: getItemLabel(
-                                    item,
-                                    selectedLanguage.code,
-                                    systemLanguage.code,
-                                ).value,
-                            })
+                            interpolate(
+                                $gettext('View concept %{label}'),
+                                {
+                                    label: getItemLabel(
+                                        item,
+                                        selectedLanguage.code,
+                                        systemLanguage.code,
+                                    ).value,
+                                },
+                                true,
+                            )
                         "
                         @click="navigateToConcept(item.id)"
                     />
