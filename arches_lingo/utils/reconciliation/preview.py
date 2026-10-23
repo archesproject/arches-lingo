@@ -74,11 +74,11 @@ def build_concept_preview(raw_concept_id):
     lifecycle_state_id = get_lifecycle_state_ids([concept_id]).get(concept_id)
     if lifecycle_state_id not in SEARCHED_LIFECYCLE_STATE_IDS:
         return None
-    summary = summarize_concepts([concept_id]).get(concept_id)
+    display_language = get_language() or settings.LANGUAGE_CODE
+    summary = summarize_concepts([concept_id], display_language).get(concept_id)
     if summary is None:
         return None
 
-    display_language = get_language() or settings.LANGUAGE_CODE
     return {
         "name": summary["name"],
         "description": summary["description"],

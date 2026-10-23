@@ -164,6 +164,11 @@ urlpatterns = [
         name="api-lingo-scheme-reconcile",
     ),
     path(
+        "api/lingo/schemes/<slug:scheme_identifier>/reconcile/suggest/<slug:suggest_kind>",
+        ReconciliationSuggestView.as_view(),
+        name="api-lingo-scheme-reconcile-suggest",
+    ),
+    path(
         "api/lingo/change-password",
         ChangePasswordAPIView.as_view(),
         name="api-lingo-change-password",

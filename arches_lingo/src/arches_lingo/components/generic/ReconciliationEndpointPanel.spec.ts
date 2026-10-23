@@ -18,13 +18,6 @@ vi.mock("primevue/usetoast", () => ({
     useToast: () => ({ add: toastAdd }),
 }));
 
-vi.mock("@/arches/utils/generate-arches-url.ts", () => ({
-    generateArchesURL: (
-        _urlName: string,
-        urlParameters: { scheme_identifier: string },
-    ) => `/api/lingo/schemes/${urlParameters.scheme_identifier}/reconcile`,
-}));
-
 function mountPanel(
     settingsOverrides: Partial<AppSettings>,
     props: { schemeIdentifier?: string; schemeName?: string } = {},
@@ -33,6 +26,8 @@ function mountPanel(
         allow_anonymous_access: false,
         reconciliation_enabled: true,
         reconciliation_service_url: GLOBAL_SERVICE_URL,
+        scheme_reconciliation_service_url_template:
+            "https://lingo.example.org/api/lingo/schemes/{scheme_identifier}/reconcile",
         public_server_address: "https://lingo.example.org/",
         arches_version: "8.1",
         lingo_version: "1.2",
@@ -58,6 +53,7 @@ describe("ReconciliationEndpointPanel", () => {
         const wrapper = mountPanel({
             reconciliation_enabled: false,
             reconciliation_service_url: null,
+            scheme_reconciliation_service_url_template: null,
         });
 
         expect(wrapper.find(".reconciliation-endpoint").exists()).toBe(false);
@@ -76,6 +72,16 @@ describe("ReconciliationEndpointPanel", () => {
         expect(displayedServiceUrl(wrapper)).toBe(
             "https://lingo.example.org/api/lingo/schemes/aat/reconcile",
         );
+    });
+
+    it("falls back to the global service when the identifier is not a slug", () => {
+        const wrapper = mountPanel(
+            {},
+            { schemeIdentifier: "getty.aat", schemeName: "Getty AAT" },
+        );
+
+        expect(displayedServiceUrl(wrapper)).toBe(GLOBAL_SERVICE_URL);
+        expect(wrapper.find(".hint").text()).toContain("as the type");
     });
 
     it("copies the service URL and confirms with a toast", async () => {
