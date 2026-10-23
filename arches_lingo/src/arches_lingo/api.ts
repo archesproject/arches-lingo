@@ -32,6 +32,9 @@ import type {
     ConceptMergePreview,
     ConceptMergeResult,
     MergeRequestPayload,
+    MatchLinkImportPreview,
+    MatchLinkImportRecord,
+    ReconciliationWorksheetScope,
 } from "@/arches_lingo/types";
 import type {
     MissingTranslationsResponse,
@@ -1507,6 +1510,67 @@ export const linkConceptMatchCandidates = async (
             match_type: matchType,
         }),
     });
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+};
+
+export const downloadReconciliationWorksheet = async (
+    scope: ReconciliationWorksheetScope,
+    language: string,
+): Promise<Blob> => {
+    const response = await fetch(
+        generateArchesURL("arches_lingo:api-lingo-reconciliation-worksheet"),
+        {
+            method: "POST",
+            headers: {
+                "X-CSRFTOKEN": getToken(),
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ scope, language }),
+        },
+    );
+    if (!response.ok) {
+        const parsed = await response.json();
+        throw new Error(parsed.message || response.statusText);
+    }
+    return response.blob();
+};
+
+async function postMatchLinkFile<ResponseBody>(
+    urlName: string,
+    file: File,
+): Promise<ResponseBody> {
+    const formData = new FormData();
+    formData.append("file", file);
+    const response = await fetch(generateArchesURL(urlName), {
+        method: "POST",
+        headers: { "X-CSRFTOKEN": getToken() },
+        body: formData,
+    });
+    const parsed = await response.json();
+    if (!response.ok) throw new Error(parsed.message || response.statusText);
+    return parsed;
+}
+
+export const previewMatchLinkImport = (
+    file: File,
+): Promise<MatchLinkImportPreview> =>
+    postMatchLinkFile("arches_lingo:api-lingo-match-link-import-preview", file);
+
+export const startMatchLinkImport = (
+    file: File,
+): Promise<MatchLinkImportRecord> =>
+    postMatchLinkFile("arches_lingo:api-lingo-match-link-imports", file);
+
+export const fetchMatchLinkImport = async (
+    importId: number,
+): Promise<MatchLinkImportRecord> => {
+    const response = await fetch(
+        generateArchesURL("arches_lingo:api-lingo-match-link-import", {
+            pk: importId,
+        }),
+    );
     const parsed = await response.json();
     if (!response.ok) throw new Error(parsed.message || response.statusText);
     return parsed;

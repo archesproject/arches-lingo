@@ -557,6 +557,50 @@ export interface AdvancedSearchQuery {
     conditions: (SearchCondition | SearchGroup)[];
 }
 
+export interface ReconciliationWorksheetScope {
+    scheme_id?: string;
+    concept_set_id?: number;
+    query?: AdvancedSearchQuery;
+}
+
+export type MatchLinkImportOutcome =
+    | "add"
+    | "already_linked"
+    | "duplicate_in_file"
+    | "unknown_concept"
+    | "invalid_match_type"
+    | "invalid_uri"
+    | "self_match"
+    | "not_editable"
+    | "scheme_locked";
+
+export interface MatchLinkImportPreviewRow {
+    row_number: number;
+    concept_id: string;
+    concept_label: string | null;
+    match_uri: string;
+    match_type: string;
+    outcome: MatchLinkImportOutcome;
+    is_internal_concept: boolean;
+}
+
+export interface MatchLinkImportPreview {
+    total_rows: number;
+    counts_by_outcome: Partial<Record<MatchLinkImportOutcome, number>>;
+    rows: MatchLinkImportPreviewRow[];
+}
+
+export interface MatchLinkImportRecord {
+    id: number;
+    filename: string;
+    status: "pending" | "running" | "complete" | "failed";
+    created: string;
+    finished: string | null;
+    total_rows: number;
+    outcome_counts: Partial<Record<MatchLinkImportOutcome, number>>;
+    error_message: string;
+}
+
 interface AdvancedSearchResultItem extends SearchResultItem {
     uri?: string | null;
     identifier?: string | null;
