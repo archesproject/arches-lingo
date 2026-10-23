@@ -396,9 +396,9 @@ class LingoResourceImporter(BaseImportModule):
         mock_tile = {
             node_alias: {
                 "resourceId": str(relationship["resourceId"]),
-                "ontologyProperty": ONTOLOGY_PROPERTY_BY_NODE_ALIAS.get(node_alias, ""),
+                "relationship": ONTOLOGY_PROPERTY_BY_NODE_ALIAS.get(node_alias, ""),
                 "resourceXresourceId": "",
-                "inverseOntologyProperty": "",
+                "inverseRelationship": "",
             }
         }
         return {relationship["nodegroup_alias"]: mock_tile}
@@ -743,7 +743,7 @@ class LingoResourceImporter(BaseImportModule):
                     json_build_object(
                         'notes', '',
                         'valid', true,
-                        'value', json_build_array(json_build_object('resourceId', conceptidfrom, 'ontologyProperty', '', 'resourceXresourceId', '', 'inverseOntologyProperty', '')),
+                        'value', json_build_array(json_build_object('resourceId', conceptidfrom, 'relationship', '', 'resourceXresourceId', '', 'inverseRelationship', '')),
                         'source', conceptidfrom,
                         'datatype', 'resource-instance'
                     )
@@ -791,7 +791,7 @@ class LingoResourceImporter(BaseImportModule):
                     json_build_object(
                         'notes', '',
                         'valid', true,
-                        'value', json_build_array(json_build_object('resourceId', conceptidfrom, 'ontologyProperty', '', 'resourceXresourceId', '', 'inverseOntologyProperty', '')),
+                        'value', json_build_array(json_build_object('resourceId', conceptidfrom, 'relationship', '', 'resourceXresourceId', '', 'inverseRelationship', '')),
                         'source', conceptidfrom,
                         'datatype', 'resource-instance-list'
                     ),
@@ -865,7 +865,7 @@ class LingoResourceImporter(BaseImportModule):
                     json_build_object(
                         'notes', '',
                         'valid', true,
-                        'value', json_build_array(json_build_object('resourceId', conceptidto, 'ontologyProperty', '', 'resourceXresourceId', '', 'inverseOntologyProperty', '')),
+                        'value', json_build_array(json_build_object('resourceId', conceptidto, 'relationship', '', 'resourceXresourceId', '', 'inverseRelationship', '')),
                         'source', conceptidto,
                         'datatype', 'resource-instance-list'
                     ),
@@ -965,9 +965,9 @@ class LingoResourceImporter(BaseImportModule):
                     "value": [
                         {
                             "resourceId": root_scheme,
-                            "ontologyProperty": "",
+                            "relationship": "",
                             "resourceXresourceId": "",
-                            "inverseOntologyProperty": "",
+                            "inverseRelationship": "",
                         }
                     ],
                     "source": root_scheme,

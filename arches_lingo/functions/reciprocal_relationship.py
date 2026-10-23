@@ -235,8 +235,8 @@ class ReciprocalRelationshipFunction(BaseFunction):
         return [
             {
                 "resourceId": str(resource_id),
-                "ontologyProperty": "",
-                "inverseOntologyProperty": "",
+                "relationship": "",
+                "inverseRelationship": "",
                 "resourceXresourceId": str(uuid.uuid4()),
             }
         ]

@@ -2,7 +2,7 @@
 import { ref, watch } from "vue";
 import { storeToRefs } from "pinia";
 import { useGettext } from "vue3-gettext";
-import { useToast } from "primevue/usetoast";
+import { useToast } from "openvue/usetoast";
 
 import ConceptSetList from "@/arches_lingo/components/concept-set-browser/components/ConceptSetList.vue";
 import ConceptSetMemberList from "@/arches_lingo/components/concept-set-browser/components/ConceptSetMemberList.vue";

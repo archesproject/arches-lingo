@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { useRouter } from "vue-router";
 import { useGettext } from "vue3-gettext";
-import { useToast } from "primevue/usetoast";
-import { useConfirm } from "primevue/useconfirm";
+import { useToast } from "openvue/usetoast";
+import { useConfirm } from "openvue/useconfirm";
 
-import Button from "primevue/button";
+import Button from "openvue/button";
 
 import { logout } from "@/arches_lingo/api.ts";
 import { DEFAULT_ERROR_TOAST_LIFE, ERROR } from "@/arches_lingo/constants.ts";

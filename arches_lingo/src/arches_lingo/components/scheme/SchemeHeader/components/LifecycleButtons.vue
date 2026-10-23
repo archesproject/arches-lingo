@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from "vue";
 import { useGettext } from "vue3-gettext";
-import { useToast } from "primevue/usetoast";
+import { useToast } from "openvue/usetoast";
 
-import Button from "primevue/button";
-import Skeleton from "primevue/skeleton";
+import Button from "openvue/button";
+import Skeleton from "openvue/skeleton";
 
 import {
     fetchResourceInstanceLifecycleState,

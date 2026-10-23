@@ -12,7 +12,7 @@ import { NEW } from "@/arches_lingo/constants.ts";
 import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 
 import type { Ref } from "vue";
-import type { TreeNode } from "primevue/treenode";
+import type { TreeNode } from "openvue/treenode";
 
 const { node, focusLabel, unfocusLabel, addChildLabel, filterValue } =
     defineProps<{

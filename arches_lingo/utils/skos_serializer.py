@@ -21,7 +21,7 @@ from rdflib import Literal
 from rdflib.namespace import DCTERMS, OWL, SKOS
 
 from arches.app.models.models import ResourceInstance, TileModel
-from arches_querysets.models import ResourceTileTree
+from arches.extensions.querysets.models import ResourceTileTree
 
 from arches_lingo.const import (
     CONCEPTS_GRAPH_ID,

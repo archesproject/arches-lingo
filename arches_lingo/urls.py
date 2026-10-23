@@ -372,8 +372,9 @@ urlpatterns = [
         IdentifierResolveView.as_view(),
         name="api-lingo-concept-resolve",
     ),
-    path("", include("arches_controlled_lists.urls")),
-    path("", include("arches_vue_components.urls")),
+    path("", include("arches.extensions.querysets.urls")),
+    path("", include("arches.extensions.vue_components.urls")),
+    path("", include("arches.extensions.controlled_lists.urls")),
 ]
 
 # Ensure Arches core urls are superseded by project-level urls

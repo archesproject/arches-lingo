@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { inject, reactive, ref, useTemplateRef, watch, watchEffect } from "vue";
 
-import Message from "primevue/message";
-import Skeleton from "primevue/skeleton";
+import Message from "openvue/message";
+import Skeleton from "openvue/skeleton";
 
 import GenericCardEditor from "@/arches_vue_components/generics/GenericCard/components/GenericCardEditor.vue";
 import { fetchTileData } from "@/arches_vue_components/generics/GenericCard/api.ts";

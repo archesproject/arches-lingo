@@ -4,8 +4,8 @@ import { computed, inject, ref, watch } from "vue";
 import { storeToRefs } from "pinia";
 import { useGettext } from "vue3-gettext";
 
-import Button from "primevue/button";
-import Message from "primevue/message";
+import Button from "openvue/button";
+import Message from "openvue/message";
 import PanelToggleHeader from "@/arches_lingo/components/generic/PanelToggleHeader.vue";
 import CandidateMergeFlow from "@/arches_lingo/components/ConceptMatching/components/CandidateMergeFlow/CandidateMergeFlow.vue";
 import MatchCandidateList from "@/arches_lingo/components/ConceptMatching/components/MatchCandidateList/MatchCandidateList.vue";

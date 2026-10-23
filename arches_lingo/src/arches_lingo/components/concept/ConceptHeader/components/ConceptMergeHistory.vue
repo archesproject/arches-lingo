@@ -5,7 +5,7 @@ import { useGettext } from "vue3-gettext";
 import { useRouter } from "vue-router";
 import { storeToRefs } from "pinia";
 
-import Button from "primevue/button";
+import Button from "openvue/button";
 
 import { fetchConceptMergeHistory } from "@/arches_lingo/api.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";

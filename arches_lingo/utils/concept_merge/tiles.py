@@ -7,7 +7,7 @@ from arches.app.models.models import TileModel
 from arches.app.models.resource import Resource
 from arches.app.models.tile import Tile
 
-from arches_controlled_lists.models import ListItem
+from arches.extensions.controlled_lists.models import ListItem
 
 from arches_lingo.const import (
     ALT_LABEL_LIST_ITEM_ID,
