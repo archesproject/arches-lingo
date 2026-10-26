@@ -163,13 +163,13 @@ async function submitPasswordChange() {
             <!-- Profile Information -->
             <Card class="profile-card">
                 <template #title>
-                    <div class="card-title">
+                    <h2 class="card-title">
                         <i
                             class="pi pi-id-card"
                             aria-hidden="true"
                         />
                         {{ $gettext("Personal Information") }}
-                    </div>
+                    </h2>
                 </template>
                 <template #content>
                     <div
@@ -286,13 +286,13 @@ async function submitPasswordChange() {
             <!-- Change Password -->
             <Card class="profile-card">
                 <template #title>
-                    <div class="card-title">
+                    <h2 class="card-title">
                         <i
                             class="pi pi-lock"
                             aria-hidden="true"
                         />
                         {{ $gettext("Change Password") }}
-                    </div>
+                    </h2>
                 </template>
                 <template #content>
                     <form
@@ -422,6 +422,7 @@ async function submitPasswordChange() {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    margin: 0;
     font-size: 1.1rem;
     font-weight: 600;
 }

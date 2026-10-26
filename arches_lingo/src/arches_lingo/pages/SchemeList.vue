@@ -100,6 +100,7 @@ async function fetchSchemes() {
 </script>
 
 <template>
+    <h1 class="p-hidden-accessible">{{ $gettext("Schemes") }}</h1>
     <Skeleton
         v-if="isLoading"
         class="loading-skeleton"

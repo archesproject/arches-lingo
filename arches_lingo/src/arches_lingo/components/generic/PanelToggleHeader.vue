@@ -32,13 +32,13 @@ function togglePanel(): void {
 
 <template>
     <div class="panel-toggle-header">
-        <h2 class="title">
+        <h1 class="title">
             <i
                 :class="icon"
                 aria-hidden="true"
             />
             <span>{{ title }}</span>
-        </h2>
+        </h1>
         <Button
             v-if="canTogglePanel"
             class="panel-toggle"

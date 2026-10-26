@@ -83,7 +83,7 @@ defineProps<{
                     class="dashboard-section"
                 >
                     <div class="section-header">
-                        <h2>{{ $gettext("Concepts by Type") }}</h2>
+                        <h3>{{ $gettext("Concepts by Type") }}</h3>
                     </div>
                     <div class="type-breakdown">
                         <div
@@ -106,7 +106,7 @@ defineProps<{
                     class="dashboard-section"
                 >
                     <div class="section-header">
-                        <h2>{{ $gettext("Labels by Type") }}</h2>
+                        <h3>{{ $gettext("Labels by Type") }}</h3>
                     </div>
                     <div class="type-breakdown">
                         <div
@@ -130,7 +130,7 @@ defineProps<{
                     class="dashboard-section language-section"
                 >
                     <div class="section-header">
-                        <h2>{{ $gettext("Labels by Language") }}</h2>
+                        <h3>{{ $gettext("Labels by Language") }}</h3>
                     </div>
                     <DataTable
                         :value="stats.labels_by_language"
@@ -211,7 +211,7 @@ defineProps<{
     padding-bottom: 0.25rem;
 }
 
-.section-header h2 {
+.section-header h3 {
     margin: 0;
     font-size: var(--p-lingo-font-size-xsmall);
     font-weight: var(--p-lingo-font-weight-normal);
@@ -264,7 +264,7 @@ defineProps<{
     padding-bottom: 0.5rem;
 }
 
-.language-section .section-header h2 {
+.language-section .section-header h3 {
     font-size: var(--p-lingo-font-size-medium);
     color: var(--p-neutral-500);
 }

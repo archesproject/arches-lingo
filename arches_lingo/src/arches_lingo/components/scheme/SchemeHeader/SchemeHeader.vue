@@ -621,7 +621,7 @@ async function onReinstateConfirmed(cascade: boolean) {
         <div class="scheme-header-panel">
             <div class="scheme-header-toolbar">
                 <div class="scheme-title">
-                    <h2>
+                    <h1>
                         <span class="scheme-title-text">{{
                             label?.value
                         }}</span>
@@ -631,7 +631,7 @@ async function onReinstateConfirmed(cascade: boolean) {
                         >
                             ({{ label?.language_id }})
                         </span>
-                    </h2>
+                    </h1>
                 </div>
 
                 <div
@@ -911,7 +911,7 @@ async function onReinstateConfirmed(cascade: boolean) {
     word-break: break-word;
 }
 
-h2 {
+h1 {
     margin-top: 0;
     margin-bottom: 0;
     font-size: var(--p-lingo-font-size-large);
@@ -919,7 +919,7 @@ h2 {
     min-width: 0;
 }
 
-h2 > span {
+h1 > span {
     min-width: 0;
 }
 
