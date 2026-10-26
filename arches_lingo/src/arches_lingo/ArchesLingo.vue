@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { onMounted, provide, ref, watch } from "vue";
+import { onMounted, provide, ref, watch, watchEffect } from "vue";
 import { useRouter, useRoute } from "vue-router";
+import { useGettext } from "vue3-gettext";
 import type { RouteLocationNormalized } from "vue-router";
 
 import Splitter from "primevue/splitter";
@@ -10,6 +11,7 @@ import Toast from "primevue/toast";
 
 import SchemeHierarchy from "@/arches_lingo/components/header/PageHeader/components/SchemeHierarchy/SchemeHierarchy.vue";
 
+import { MAIN_CONTENT_ID } from "@/arches_lingo/constants.ts";
 import { useUnsavedChangesGuard } from "@/arches_lingo/composables/useUnsavedChangesGuard.ts";
 import { useConceptStore } from "@/arches_lingo/stores/useConceptStore.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
@@ -23,6 +25,7 @@ const languageStore = useLanguageStore();
 
 const router = useRouter();
 const route = useRoute();
+const { $gettext } = useGettext();
 
 const isNavExpanded = ref(false);
 const schemeHierarchyKey = ref(0);
@@ -31,6 +34,13 @@ const shouldShowHierarchy = ref(
 );
 
 provide("refreshSchemeHierarchy", refreshSchemeHierarchy);
+
+watchEffect(() => {
+    document.documentElement.lang = languageStore.selectedLanguage.code;
+    document.documentElement.dir =
+        languageStore.selectedLanguage.default_direction ?? "ltr";
+    document.body.dir = document.documentElement.dir;
+});
 
 onMounted(function () {
     languageStore.initialize();
@@ -106,13 +116,13 @@ function refreshSchemeHierarchy() {
 </script>
 
 <template>
-    <main>
+    <div class="app-shell">
         <SideNav
             v-if="route.meta.shouldShowNavigation"
             @update:is-nav-expanded="isNavExpanded = $event"
         />
 
-        <div class="main-content">
+        <div class="app-content">
             <PageHeader
                 v-if="route.meta.shouldShowNavigation"
                 v-model="shouldShowHierarchy"
@@ -132,7 +142,10 @@ function refreshSchemeHierarchy() {
                     v-show="shouldShowHierarchy"
                     :size="25"
                 >
-                    <div class="hierarchy-panel">
+                    <aside
+                        class="hierarchy-panel"
+                        :aria-label="$gettext('Explore')"
+                    >
                         <SchemeHierarchy
                             v-if="route.meta.shouldShowNavigation"
                             :key="schemeHierarchyKey"
@@ -141,14 +154,19 @@ function refreshSchemeHierarchy() {
                                 shouldShowHierarchy = $event
                             "
                         />
-                    </div>
+                    </aside>
                 </SplitterPanel>
                 <SplitterPanel :size="75">
-                    <RouterView :key="route.path" />
+                    <main
+                        :id="MAIN_CONTENT_ID"
+                        class="page-content"
+                    >
+                        <RouterView :key="route.path" />
+                    </main>
                 </SplitterPanel>
             </Splitter>
         </div>
-    </main>
+    </div>
     <Toast
         :pt="{
             summary: { fontSize: 'medium' },
@@ -163,14 +181,14 @@ function refreshSchemeHierarchy() {
 </template>
 
 <style scoped>
-main {
+.app-shell {
     height: 100vh;
     width: 100vw;
     overflow: hidden;
     display: flex;
 }
 
-.main-content {
+.app-content {
     display: flex;
     flex-direction: column;
     flex: 1 1 auto;
@@ -188,6 +206,10 @@ main {
     height: 100%;
     display: flex;
     flex-direction: column;
+}
+
+.page-content {
+    height: 100%;
 }
 </style>
 
