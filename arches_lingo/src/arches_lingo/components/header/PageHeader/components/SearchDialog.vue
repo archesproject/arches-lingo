@@ -45,6 +45,7 @@ const toggleModal = () => {
             },
             root: {
                 class: 'basic-search-dialog',
+                'aria-label': $gettext('Search'),
             },
         }"
         :show-header="false"
@@ -62,7 +63,7 @@ const toggleModal = () => {
 <!-- NOT scoped because dialog gets appended to <body> and is unreachable via scoped styles -->
 <style>
 .basic-search-button {
-    color: var(--p-menubar-text-color) !important;
+    color: inherit !important;
     border-radius: 0 !important;
     padding: var(--p-button-padding-x) var(--p-button-padding-y) !important;
     font-size: 0.875rem !important;
