@@ -11,6 +11,7 @@ import UserInteractionMenu from "@/arches_lingo/components/header/PageHeader/com
 
 import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 import { routeNames } from "@/arches_lingo/routes.ts";
+import { focusFirstFocusableElement } from "@/arches_lingo/utils.ts";
 
 import type { PopoverMethods } from "primevue/popover";
 
@@ -20,6 +21,7 @@ const userStore = useUserStore();
 const { user, isAnonymous } = storeToRefs(userStore);
 
 const popover = useTemplateRef<PopoverMethods>("popover");
+const userMenu = useTemplateRef<HTMLElement>("userMenu");
 const isUserMenuVisible = ref(false);
 
 const displayName = computed(() => {
@@ -52,6 +54,11 @@ const initials = computed(() => {
 
 function openUserMenu(event: MouseEvent) {
     popover.value!.toggle(event);
+}
+
+function onUserMenuShow() {
+    isUserMenuVisible.value = true;
+    focusFirstFocusableElement(userMenu.value);
 }
 
 function navigateToLogin() {
@@ -87,13 +94,15 @@ function navigateToLogin() {
             <Popover
                 ref="popover"
                 class="user-interaction-popover"
-                @show="isUserMenuVisible = true"
+                @show="onUserMenuShow"
                 @hide="isUserMenuVisible = false"
             >
-                <UserInteractionMenu
-                    :display-name="displayName"
-                    :email="user?.email ?? ''"
-                />
+                <div ref="userMenu">
+                    <UserInteractionMenu
+                        :display-name="displayName"
+                        :email="user?.email ?? ''"
+                    />
+                </div>
             </Popover>
         </template>
     </div>

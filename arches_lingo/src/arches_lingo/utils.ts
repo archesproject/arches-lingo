@@ -559,3 +559,18 @@ export function filterTreeByLifecycleStates(
         return visibleNodes;
     }, []);
 }
+
+const FOCUSABLE_SELECTOR = [
+    "a[href]",
+    "button:not([disabled])",
+    "input:not([disabled])",
+    "select:not([disabled])",
+    "textarea:not([disabled])",
+    '[tabindex]:not([tabindex="-1"])',
+].join(", ");
+
+// PrimeVue Popover focuses only an [autofocus] element on show, so content
+// that can't carry one is otherwise unreachable from the keyboard (2.4.3).
+export function focusFirstFocusableElement(container: HTMLElement | null) {
+    container?.querySelector<HTMLElement>(FOCUSABLE_SELECTOR)?.focus();
+}
