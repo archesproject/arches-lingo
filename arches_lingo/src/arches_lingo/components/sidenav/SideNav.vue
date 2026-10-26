@@ -1,44 +1,17 @@
 <script setup lang="ts">
-import { computed, markRaw, nextTick, provide, ref, useTemplateRef } from "vue";
+import { computed, nextTick, ref, useTemplateRef } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import Button from "primevue/button";
-import PanelMenu from "primevue/panelmenu";
-
-import NavNavigation from "@/arches_lingo/components/sidenav/components/NavNavigation.vue";
-import NavReferenceData from "@/arches_lingo/components/sidenav/components/NavReferenceData.vue";
-import NavSettings from "@/arches_lingo/components/sidenav/components/NavSettings.vue";
 
 import ArchesLingoBadge from "@/arches_lingo/components/header/PageHeader/components/ArchesLingoBadge.vue";
+import SideNavLinks from "@/arches_lingo/components/sidenav/components/SideNavLinks.vue";
 
 import type { ComponentPublicInstance } from "vue";
-import type { SideNavMenuItem } from "@/arches_lingo/types.ts";
 
 const { $gettext } = useGettext();
 
 const isNavExpanded = ref(false);
-provide("isNavExpanded", isNavExpanded);
-
-const items = computed<SideNavMenuItem[]>(() => [
-    {
-        component: markRaw(NavNavigation),
-        key: "navigation",
-        label: $gettext("Navigation"),
-        items: [],
-    },
-    {
-        component: markRaw(NavReferenceData),
-        key: "reference-data",
-        label: $gettext("Reference Data"),
-        items: [],
-    },
-    {
-        component: markRaw(NavSettings),
-        key: "settings",
-        label: $gettext("Settings"),
-        items: [],
-    },
-]);
 
 const navButtonLabel = computed(() =>
     $gettext("%{appName} navigation", { appName: $gettext("Lingo") }),
@@ -63,7 +36,7 @@ const emit = defineEmits(["update:isNavExpanded"]);
 </script>
 
 <template>
-    <aside
+    <div
         class="sidenav"
         :class="{ expanded: isNavExpanded }"
     >
@@ -102,19 +75,8 @@ const emit = defineEmits(["update:isNavExpanded"]);
                 :is-link="false"
             />
         </Button>
-        <PanelMenu
-            :model="items"
-            class="sidenav-panelmenu"
-            :class="{ expanded: isNavExpanded }"
-        >
-            <template #item="{ item }">
-                <component
-                    :is="item.component"
-                    :item="item"
-                />
-            </template>
-        </PanelMenu>
-    </aside>
+        <SideNavLinks :is-expanded="isNavExpanded" />
+    </div>
 </template>
 
 <style scoped>
@@ -135,19 +97,6 @@ const emit = defineEmits(["update:isNavExpanded"]);
     background: var(--p-primary-950) !important;
     border-radius: 0;
     border: none;
-}
-
-.sidenav-panelmenu {
-    width: 100%;
-    min-width: 3rem;
-    transition: min-width 0.3s ease-in-out;
-    border-right: 0.125rem solid var(--p-primary-950);
-    gap: 0.1rem;
-    background-color: var(--p-surface-950);
-}
-
-.sidenav-panelmenu.expanded {
-    min-width: 16rem;
 }
 
 .nav-button {
@@ -173,12 +122,6 @@ const emit = defineEmits(["update:isNavExpanded"]);
 }
 :deep(.p-button):hover {
     background: var(--p-button-primary-hover-background) !important;
-}
-
-:deep(.p-panelmenu-panel) {
-    padding: 0;
-    border-style: none;
-    border-radius: 0 !important;
 }
 
 :deep(.nav-button) {
