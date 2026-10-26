@@ -40,6 +40,7 @@ import {
     RETIRED_LIFECYCLE_STATE_ID,
 } from "@/arches_lingo/constants.ts";
 
+import { useAnnouncer } from "@/arches_lingo/composables/useAnnouncer.ts";
 import { useConceptStore } from "@/arches_lingo/stores/useConceptStore.ts";
 import {
     fetchLifecycleStates,
@@ -123,7 +124,7 @@ const activeTreeItemKey = ref<string | null>(null);
 const treeActionsHintId = useId();
 const filterToolbar = useTemplateRef<HTMLElement>("filterToolbar");
 const { onTreeKeydown } = useTreeKeyboardNavigation(filterFromTreeTypeahead);
-const treeStatusMessage = ref("");
+const { announce } = useAnnouncer();
 
 const selectedKeys = ref<TreeSelectionKeys>({});
 const lastNonEmptySelectedKeys = ref<TreeSelectionKeys>({});
@@ -1061,20 +1062,23 @@ async function onNodeExpand(node: TreeNode) {
 
     const nodeKey: string = node.key as string;
     loadingNodeKeys.add(nodeKey);
-    treeStatusMessage.value = $gettext(
-        "Loading narrower concepts of %{label}",
-        { label: node.label ?? "" },
-        true,
+    announce(
+        $gettext(
+            "Loading narrower concepts of %{label}",
+            { label: node.label ?? "" },
+            true,
+        ),
     );
     try {
         await conceptStore.loadChildren(conceptId);
-        treeStatusMessage.value = $gettext(
-            "Narrower concepts of %{label} loaded",
-            { label: node.label ?? "" },
-            true,
+        announce(
+            $gettext(
+                "Narrower concepts of %{label} loaded",
+                { label: node.label ?? "" },
+                true,
+            ),
         );
     } catch {
-        treeStatusMessage.value = "";
         toast.add({
             severity: ERROR,
             life: DEFAULT_ERROR_TOAST_LIFE,
@@ -1134,12 +1138,6 @@ async function onNodeExpand(node: TreeNode) {
             class="p-hidden-accessible"
         >
             {{ PRESS_TAB_FOR_ACTIONS }}
-        </span>
-        <span
-            role="status"
-            class="p-hidden-accessible"
-        >
-            {{ treeStatusMessage }}
         </span>
         <div
             v-if="!tree.length"
