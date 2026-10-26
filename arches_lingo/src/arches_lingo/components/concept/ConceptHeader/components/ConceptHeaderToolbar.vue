@@ -427,7 +427,7 @@ function onMergeCancelled() {
     <div class="concept-header-toolbar">
         <div class="concept-details">
             <div class="concept-header-title">
-                <div class="concept-name">
+                <h1 class="concept-name">
                     <i
                         :class="conceptIcon"
                         aria-hidden="true"
@@ -441,7 +441,7 @@ function onMergeCancelled() {
                             ({{ label?.language_id }})
                         </span>
                     </span>
-                </div>
+                </h1>
             </div>
             <div class="card flex justify-center">
                 <Tag
@@ -574,6 +574,9 @@ function onMergeCancelled() {
     align-items: center;
     gap: 0.25rem;
     min-width: 0;
+    margin: 0;
+    font-size: inherit;
+    font-weight: inherit;
 }
 
 .concept-name > span {
