@@ -10,8 +10,11 @@ import ConfirmDialog from "primevue/confirmdialog";
 import Toast from "primevue/toast";
 
 import SchemeHierarchy from "@/arches_lingo/components/header/PageHeader/components/SchemeHierarchy/SchemeHierarchy.vue";
+import LiveAnnouncer from "@/arches_lingo/components/generic/LiveAnnouncer.vue";
 
 import { MAIN_CONTENT_ID } from "@/arches_lingo/constants.ts";
+import { usePageTitle } from "@/arches_lingo/composables/usePageTitle.ts";
+import { useRouteChangeFocus } from "@/arches_lingo/composables/useRouteChangeFocus.ts";
 import { useUnsavedChangesGuard } from "@/arches_lingo/composables/useUnsavedChangesGuard.ts";
 import { useConceptStore } from "@/arches_lingo/stores/useConceptStore.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
@@ -26,6 +29,9 @@ const languageStore = useLanguageStore();
 const router = useRouter();
 const route = useRoute();
 const { $gettext } = useGettext();
+
+const { pageTitleDetail } = usePageTitle(route);
+useRouteChangeFocus(router, pageTitleDetail);
 
 const isNavExpanded = ref(false);
 const schemeHierarchyKey = ref(0);
@@ -113,10 +119,22 @@ function refreshSchemeHierarchy() {
     conceptStore.refresh();
     schemeHierarchyKey.value++;
 }
+
+function focusMainContent() {
+    document.getElementById(MAIN_CONTENT_ID)?.focus();
+}
 </script>
 
 <template>
     <div class="app-shell">
+        <a
+            :href="`#${MAIN_CONTENT_ID}`"
+            class="skip-link"
+            @click.prevent="focusMainContent"
+        >
+            {{ $gettext("Skip to main content") }}
+        </a>
+
         <SideNav
             v-if="route.meta.shouldShowNavigation"
             @update:is-nav-expanded="isNavExpanded = $event"
@@ -160,6 +178,7 @@ function refreshSchemeHierarchy() {
                     <main
                         :id="MAIN_CONTENT_ID"
                         class="page-content"
+                        tabindex="-1"
                     >
                         <RouterView :key="route.path" />
                     </main>
@@ -167,6 +186,7 @@ function refreshSchemeHierarchy() {
             </Splitter>
         </div>
     </div>
+    <LiveAnnouncer />
     <Toast
         :pt="{
             summary: { fontSize: 'medium' },
@@ -186,6 +206,23 @@ function refreshSchemeHierarchy() {
     width: 100vw;
     overflow: hidden;
     display: flex;
+}
+
+.skip-link {
+    position: absolute;
+    inset-block-start: 0.5rem;
+    inset-inline-start: 0.5rem;
+    z-index: 1200;
+    padding: 0.5rem 1rem;
+    background: var(--p-content-background);
+    color: var(--p-text-color);
+    border: 0.125rem solid var(--p-text-color);
+    border-radius: 0.25rem;
+    transform: translateY(-200%);
+}
+
+.skip-link:focus {
+    transform: none;
 }
 
 .app-content {
@@ -210,6 +247,12 @@ function refreshSchemeHierarchy() {
 
 .page-content {
     height: 100%;
+}
+
+/* <main> only takes focus programmatically (skip link, route changes) and
+   is not a control, so it needs no focus indicator. */
+.page-content:focus {
+    outline: none;
 }
 </style>
 
