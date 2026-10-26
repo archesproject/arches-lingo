@@ -57,7 +57,7 @@ function handleClick(
                     alt="Arches Logo"
                     style="height: 1.5rem; width: auto"
                 />
-                <h1 class="lingo-title">{{ $gettext("Lingo") }}</h1>
+                <span class="lingo-title">{{ $gettext("Lingo") }}</span>
             </a>
         </RouterLink>
         <div
@@ -72,7 +72,7 @@ function handleClick(
                 alt="Arches Logo"
                 style="height: 1.5rem; width: auto"
             />
-            <h1 class="lingo-title">{{ $gettext("Lingo") }}</h1>
+            <span class="lingo-title">{{ $gettext("Lingo") }}</span>
         </div>
     </div>
 </template>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, useTemplateRef, watchEffect } from "vue";
+import { computed, ref, useTemplateRef } from "vue";
 import { useGettext } from "vue3-gettext";
 import { storeToRefs } from "pinia";
 
@@ -32,12 +32,6 @@ const selectedCode = computed({
 });
 
 const showSelector = computed(() => availableLanguages.value.length > 1);
-
-watchEffect(() => {
-    document.documentElement.dir =
-        selectedLanguage.value.default_direction ?? "ltr";
-    document.body.dir = document.documentElement.dir;
-});
 
 function openLanguageSelector(event: MouseEvent) {
     popover.value!.toggle(event);
