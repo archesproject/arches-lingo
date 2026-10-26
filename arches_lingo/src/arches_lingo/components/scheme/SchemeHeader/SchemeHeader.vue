@@ -3,6 +3,7 @@ import { computed, inject, onMounted, ref, watch } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import { useEditLog } from "@/arches_lingo/composables/useEditLog.ts";
+import { setPageTitleDetail } from "@/arches_lingo/composables/usePageTitle.ts";
 
 import { useConfirm } from "primevue/useconfirm";
 import { useRouter } from "vue-router";
@@ -106,6 +107,7 @@ const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
 const scheme = ref<ResourceInstanceResult>();
 const schemeResource = ref<Labellable>();
 const label = ref<Label>();
+watch(() => label.value?.value, setPageTitleDetail);
 const data = ref<SchemeHeader>();
 const labelCounts = ref<LanguageLabelCount[]>([]);
 const labelCountsLoading = ref(false);

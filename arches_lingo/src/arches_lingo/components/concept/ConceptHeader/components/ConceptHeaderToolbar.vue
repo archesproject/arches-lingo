@@ -49,6 +49,7 @@ import { routeNames } from "@/arches_lingo/routes.ts";
 import { navigateToSchemeOrConcept } from "@/arches_lingo/utils.ts";
 
 import { useEditLog } from "@/arches_lingo/composables/useEditLog.ts";
+import { setPageTitleDetail } from "@/arches_lingo/composables/usePageTitle.ts";
 import { useResourceStore } from "@/arches_lingo/composables/useResourceStore.ts";
 import { useConceptStore } from "@/arches_lingo/stores/useConceptStore.ts";
 import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
@@ -98,6 +99,8 @@ const resourceStore = useResourceStore();
 const conceptStore = useConceptStore();
 
 const { openEditLog } = useEditLog(() => props.graphSlug);
+
+watch(() => props.label?.value, setPageTitleDetail, { immediate: true });
 
 const lifecycleButtonsRef = ref<InstanceType<typeof LifecycleButtons> | null>(
     null,
