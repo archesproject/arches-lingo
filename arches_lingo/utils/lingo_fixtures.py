@@ -77,6 +77,8 @@ from arches_lingo.models import (
 
 DEFAULT_FIXTURE_STORAGE_KEY = "lingo_fixtures/lingo_concept_scheme_fixture.tar.gz"
 
+COPY_CHUNK_SIZE_BYTES = 8192
+
 # Language codes reach tile data two ways: as the value of a language-datatype
 # node, and as the keys of an i18n string. Both need a `languages` row -- the
 # first so the Language widget can resolve a name to display, the second so the
@@ -309,7 +311,9 @@ def _copy_table_into_tar(cursor, tar, table, graph_ids):
         {"graph_ids": graph_ids},
     )
     with tempfile.NamedTemporaryFile() as table_csv_file:
-        cursor.copy_expert(copy_to_sql, table_csv_file)
+        with cursor.copy(copy_to_sql) as copy:
+            for csv_chunk in copy:
+                table_csv_file.write(csv_chunk)
         row_count = cursor.rowcount
         table_csv_file.flush()
         tar.add(table_csv_file.name, arcname=f"db/{table.name}.csv")
@@ -346,8 +350,14 @@ def _copy_table_from_tar(cursor, tar, table):
     copy_from_sql = (
         f"COPY {table.name} ({column_list_sql}) FROM STDIN WITH (FORMAT csv)"
     )
-    cursor.copy_expert(copy_from_sql, table_csv_file)
+    _copy_csv_file_into_table(cursor, copy_from_sql, table_csv_file)
     return cursor.rowcount
+
+
+def _copy_csv_file_into_table(cursor, copy_from_sql, table_csv_file):
+    with cursor.copy(copy_from_sql) as copy:
+        while csv_chunk := table_csv_file.read(COPY_CHUNK_SIZE_BYTES):
+            copy.write(csv_chunk)
 
 
 def _merge_table_from_csv(cursor, table, table_csv_file, column_list_sql):
@@ -365,7 +375,8 @@ def _merge_table_from_csv(cursor, table, table_csv_file, column_list_sql):
         f"CREATE TEMP TABLE {staging_table_name} ON COMMIT DROP AS "
         f"SELECT {column_list_sql} FROM {table.name} WITH NO DATA"
     )
-    cursor.copy_expert(
+    _copy_csv_file_into_table(
+        cursor,
         f"COPY {staging_table_name} ({column_list_sql}) FROM STDIN WITH (FORMAT csv)",
         table_csv_file,
     )
