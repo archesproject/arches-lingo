@@ -2,7 +2,7 @@
 import { provide } from "vue";
 import { useGettext } from "vue3-gettext";
 
-import Button from "primevue/button";
+import Button from "openvue/button";
 
 import FacetGroup from "@/arches_lingo/components/advanced-search/FacetGroup.vue";
 

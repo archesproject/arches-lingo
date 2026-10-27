@@ -2,9 +2,9 @@
 import { computed, onMounted, ref } from "vue";
 
 import { useGettext } from "vue3-gettext";
-import Message from "primevue/message";
-import RadioButton from "primevue/radiobutton";
-import Skeleton from "primevue/skeleton";
+import Message from "openvue/message";
+import RadioButton from "openvue/radiobutton";
+import Skeleton from "openvue/skeleton";
 
 import { fetchConceptAncestorPaths } from "@/arches_lingo/api.ts";
 import {

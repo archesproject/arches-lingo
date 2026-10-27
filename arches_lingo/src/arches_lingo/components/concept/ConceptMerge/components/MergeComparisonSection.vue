@@ -2,9 +2,9 @@
 import { computed } from "vue";
 
 import { useGettext } from "vue3-gettext";
-import Checkbox from "primevue/checkbox";
-import RadioButton from "primevue/radiobutton";
-import Tag from "primevue/tag";
+import Checkbox from "openvue/checkbox";
+import RadioButton from "openvue/radiobutton";
+import Tag from "openvue/tag";
 
 import MergeDigitalObjectCard from "@/arches_lingo/components/concept/ConceptMerge/components/MergeDigitalObjectCard.vue";
 import MergeTileCard from "@/arches_lingo/components/concept/ConceptMerge/components/MergeTileCard.vue";

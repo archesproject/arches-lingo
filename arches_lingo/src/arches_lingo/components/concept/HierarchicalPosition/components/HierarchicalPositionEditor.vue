@@ -3,9 +3,9 @@ import { inject, ref, useTemplateRef, watch } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import { useRouter } from "vue-router";
-import { Form } from "@primevue/forms";
+import { Form } from "@openvue/forms";
 
-import Skeleton from "primevue/skeleton";
+import Skeleton from "openvue/skeleton";
 
 import ConceptResourceSelectWidget from "@/arches_lingo/components/widgets/ConceptResourceSelectWidget/ConceptResourceSelectWidget.vue";
 
@@ -13,7 +13,7 @@ import { createLingoResource, upsertLingoTile } from "@/arches_lingo/api.ts";
 import { EDIT } from "@/arches_lingo/constants.ts";
 
 import type { Component, Ref } from "vue";
-import type { FormSubmitEvent } from "@primevue/forms";
+import type { FormSubmitEvent } from "@openvue/forms";
 import type { ConceptClassificationStatus } from "@/arches_lingo/types.ts";
 
 const { $gettext } = useGettext();

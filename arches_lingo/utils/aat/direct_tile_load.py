@@ -89,8 +89,8 @@ class _CopyBuffer:
     def flush(self):
         if not self.batched_row_count:
             return
-        self.batch.seek(0)
-        self.cursor.copy_expert(self.copy_statement, self.batch)
+        with self.cursor.copy(self.copy_statement) as copy:
+            copy.write(self.batch.getvalue())
         self._start_batch()
 
 
@@ -219,10 +219,10 @@ def load_resources_and_tiles(resource_rows, tile_rows, log=print):
                        ELSE (reference ->> 'resourceXresourceId')::uuid
                    END,
                    '',
-                   reference ->> 'ontologyProperty',
+                   reference ->> 'relationship',
                    relationship.from_id,
                    (reference ->> 'resourceId')::uuid,
-                   reference ->> 'inverseOntologyProperty',
+                   reference ->> 'inverseRelationship',
                    relationship.tileid,
                    relationship.nodeid,
                    now(), now(),
@@ -349,10 +349,10 @@ def merge_into_tiledata(tile_additions, log=print):
                        ELSE (reference ->> 'resourceXresourceId')::uuid
                    END,
                    '',
-                   reference ->> 'ontologyProperty',
+                   reference ->> 'relationship',
                    relationship.from_id,
                    (reference ->> 'resourceId')::uuid,
-                   reference ->> 'inverseOntologyProperty',
+                   reference ->> 'inverseRelationship',
                    relationship.tileid,
                    relationship.nodeid,
                    now(), now(),

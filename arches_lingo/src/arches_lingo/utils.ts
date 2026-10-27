@@ -14,7 +14,7 @@ import {
 import { fetchTileData } from "@/arches_vue_components/generics/GenericCard/api.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 
-import type { TreeNode } from "primevue/treenode";
+import type { TreeNode } from "openvue/treenode";
 import type { Language } from "@/arches_vue_components/types.ts";
 import type {
     Concept,
@@ -139,9 +139,9 @@ export function treeFromSchemes(
                 : buildOccurrenceKey(schemeId, pathIds);
 
         const concept = item as Concept;
-        // leaf=false tells PrimeVue Tree the node has children that haven't
+        // leaf=false tells OpenVue Tree the node has children that haven't
         // been loaded yet. For schemes and fully-loaded concepts use undefined
-        // (PrimeVue defaults to checking children array length).
+        // (OpenVue defaults to checking children array length).
         let leaf: boolean | undefined;
         if (!("top_concepts" in item)) {
             if (concept.has_narrower && !hasLoadedChildren(concept.id)) {

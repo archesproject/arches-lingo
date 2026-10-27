@@ -2,8 +2,8 @@
 import { computed, markRaw, provide, ref } from "vue";
 import { useGettext } from "vue3-gettext";
 
-import Button from "primevue/button";
-import PanelMenu from "primevue/panelmenu";
+import Button from "openvue/button";
+import PanelMenu from "openvue/panelmenu";
 
 import NavNavigation from "@/arches_lingo/components/sidenav/components/NavNavigation.vue";
 import NavReferenceData from "@/arches_lingo/components/sidenav/components/NavReferenceData.vue";

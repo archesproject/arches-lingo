@@ -99,8 +99,8 @@ class DirectWriteTestCase(TestCase):
             const.CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID: [
                 {
                     "resourceId": str(scheme_id),
-                    "ontologyProperty": const.TOP_CONCEPT_OF_ONTOLOGY_PROPERTY,
-                    "inverseOntologyProperty": "",
+                    "relationship": const.TOP_CONCEPT_OF_ONTOLOGY_PROPERTY,
+                    "inverseRelationship": "",
                     "resourceXresourceId": str(cross_reference_id),
                 }
             ]
@@ -351,8 +351,8 @@ class MergeIntoTiledataTests(DirectWriteTestCase):
         return [
             {
                 "resourceId": str(resource_id),
-                "ontologyProperty": "",
-                "inverseOntologyProperty": "",
+                "relationship": "",
+                "inverseRelationship": "",
                 "resourceXresourceId": "",
             }
         ]

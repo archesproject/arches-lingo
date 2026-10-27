@@ -14,8 +14,8 @@ from django.utils.translation import gettext as _
 from arches.app.models import models
 from arches.app.models.card import Card
 
-from arches_controlled_lists.models import ListItem, ListItemValue
-from arches_querysets.models import ResourceTileTree
+from arches.extensions.controlled_lists.models import ListItem, ListItemValue
+from arches.extensions.querysets.models import ResourceTileTree
 
 from arches_lingo.const import (
     CONCEPTS_GRAPH_ID,

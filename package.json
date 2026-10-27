@@ -1,6 +1,6 @@
 {
     "name": "arches_lingo",
-    "version": "1.2.0",
+    "version": "1.3.0",
     "license": "AGPL-3.0-only",
     "scripts": {
         "build_development_unsafe": "cross-env webpack --config ./webpack/webpack.config.dev.js",
@@ -23,14 +23,11 @@
         "vitest": "vitest --run --coverage"
     },
     "devDependencies": {
-        "arches-dev-dependencies": "archesproject/arches-dev-dependencies#dev/8.1.x",
         "globals": "17.8.0"
     },
     "dependencies": {
-        "@primevue/forms": "4.3.7",
-        "arches": "archesproject/arches#dev/8.1.x",
-        "arches-vue-components": "archesproject/arches-vue-components#dev/2.0.x",
-        "arches-controlled-lists": "archesproject/arches-controlled-lists#dev/1.2.x",
+        "@openvue/forms": "1.0.0",
+        "arches": "archesproject/arches#dev/8.2.x",
         "pinia": "3.0.4",
         "vue-router": "4.4.3"
     },

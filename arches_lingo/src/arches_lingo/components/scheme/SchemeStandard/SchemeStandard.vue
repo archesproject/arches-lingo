@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from "vue";
 
-import Message from "primevue/message";
-import Skeleton from "primevue/skeleton";
+import Message from "openvue/message";
+import Skeleton from "openvue/skeleton";
 
 import SchemeStandardViewer from "@/arches_lingo/components/scheme/SchemeStandard/components/SchemeStandardViewer.vue";
 import SchemeStandardEditor from "@/arches_lingo/components/scheme/SchemeStandard/components/SchemeStandardEditor.vue";

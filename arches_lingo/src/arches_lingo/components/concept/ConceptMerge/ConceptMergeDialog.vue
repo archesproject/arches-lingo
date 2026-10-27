@@ -4,15 +4,15 @@ import { computed, onMounted, ref, watch } from "vue";
 import { useGettext } from "vue3-gettext";
 import { storeToRefs } from "pinia";
 
-import Button from "primevue/button";
-import Dialog from "primevue/dialog";
-import Message from "primevue/message";
-import ProgressSpinner from "primevue/progressspinner";
-import Step from "primevue/step";
-import StepList from "primevue/steplist";
-import StepPanel from "primevue/steppanel";
-import StepPanels from "primevue/steppanels";
-import Stepper from "primevue/stepper";
+import Button from "openvue/button";
+import Dialog from "openvue/dialog";
+import Message from "openvue/message";
+import ProgressSpinner from "openvue/progressspinner";
+import Step from "openvue/step";
+import StepList from "openvue/steplist";
+import StepPanel from "openvue/steppanel";
+import StepPanels from "openvue/steppanels";
+import Stepper from "openvue/stepper";
 
 import MergeComparison from "@/arches_lingo/components/concept/ConceptMerge/components/MergeComparison.vue";
 import MergeConceptPair from "@/arches_lingo/components/concept/ConceptMerge/components/MergeConceptPair.vue";
@@ -585,7 +585,7 @@ async function onMergeConfirmed() {
     min-height: 0;
 }
 
-/* PrimeVue draws a Message's border as an outline outside its box, which this
+/* OpenVue draws a Message's border as an outline outside its box, which this
    scrolling container would otherwise clip. */
 .merge-step-body {
     flex: 1;
@@ -610,7 +610,7 @@ async function onMergeConfirmed() {
 }
 
 /* A class on the button itself, since a :deep() rule reaching into the dialog
-   loses to PrimeVue's own without !important. */
+   loses to OpenVue's own without !important. */
 .footer {
     display: flex;
     justify-content: flex-end;

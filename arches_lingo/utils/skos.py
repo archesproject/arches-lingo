@@ -10,8 +10,8 @@ from rdflib.graph import Graph
 from arches.app.models import models
 from arches.app.models.system_settings import settings
 
-from arches_controlled_lists.utils.skos import SKOSReader
-from arches_controlled_lists.models import List, ListItem
+from arches.extensions.controlled_lists.utils.skos import SKOSReader
+from arches.extensions.controlled_lists.models import List, ListItem
 
 from arches_lingo.etl_modules.migrate_to_lingo import LingoResourceImporter
 import arches_lingo.const as const
@@ -20,6 +20,10 @@ logger = logging.getLogger(__name__)
 
 # define the ARCHES namespace
 ARCHES = Namespace(settings.ARCHES_NAMESPACE_FOR_DATA_EXPORT)
+
+# rdflib's SKOS only builds terms the SKOS spec defines, but Arches RDM also
+# writes relation types such as skos:inverseOf into the skos namespace
+OPEN_SKOS_NAMESPACE = Namespace(str(SKOS))
 
 # e.g. http://vocab.getty.edu/ontology#aat2285_practiced-studied_by. The
 # «related properties» controlled list stores these URIs as its item
@@ -175,9 +179,9 @@ class SKOSReader(SKOSReader):
 
                 for predicate, object in graph.predicate_objects(scheme):
                     predicate_str = (
-                        predicate.replace(ARCHES, "")
-                        .replace(SKOS, "")
-                        .replace(DCTERMS, "")
+                        predicate.replace(str(ARCHES), "")
+                        .replace(str(SKOS), "")
+                        .replace(str(DCTERMS), "")
                     )
 
                     if (
@@ -255,9 +259,9 @@ class SKOSReader(SKOSReader):
                             predicate_str = "scopeNote"
                         else:
                             predicate_str = (
-                                predicate.replace(ARCHES, "")
-                                .replace(SKOS, "")
-                                .replace(DCTERMS, "")
+                                predicate.replace(str(ARCHES), "")
+                                .replace(str(SKOS), "")
+                                .replace(str(DCTERMS), "")
                             )
 
                         if predicate == SKOS.topConceptOf and not new_concept.get(
@@ -331,9 +335,9 @@ class SKOSReader(SKOSReader):
                                 "relation_status": {
                                     "relation_status_ascribed_comparate": {
                                         "resourceId": str(related_concept_id),
-                                        "ontologyProperty": const.RELATION_STATUS_ASCRIBED_COMPARATE_ONTOLOGY_PROPERTY,
+                                        "relationship": const.RELATION_STATUS_ASCRIBED_COMPARATE_ONTOLOGY_PROPERTY,
                                         "resourceXresourceId": "",
-                                        "inverseOntologyProperty": "",
+                                        "inverseRelationship": "",
                                     }
                                 }
                             }
@@ -352,7 +356,7 @@ class SKOSReader(SKOSReader):
                             SKOS.broadMatch,
                             SKOS.closeMatch,
                             SKOS.exactMatch,
-                            SKOS.inverseOf,
+                            OPEN_SKOS_NAMESPACE.inverseOf,
                             SKOS.mappingRelation,
                             SKOS.narrowMatch,
                             SKOS.relatedMatch,
@@ -579,7 +583,7 @@ class SKOSWriter:
 
     def transform_predicate_values(self, predicate_references):
         if isinstance(predicate_references, str):
-            return [SKOS[predicate_references]]
+            return [OPEN_SKOS_NAMESPACE[predicate_references]]
         elif isinstance(predicate_references, list):
             predicates = []
             for predicate in predicate_references:
@@ -589,7 +593,7 @@ class SKOSWriter:
 
     def reformat_predicate_based_on_namespace(self, predicate):
         uri = predicate.uri
-        if not (SKOS in uri or ARCHES in uri or DCTERMS in uri):
+        if not (str(SKOS) in uri or str(ARCHES) in uri or str(DCTERMS) in uri):
             predicate_label = [
                 label.value
                 for label in predicate.labels
@@ -598,7 +602,7 @@ class SKOSWriter:
             if predicate_label == "identifier":
                 predicate = DCTERMS.identifier
             else:
-                predicate = SKOS[predicate_label]
+                predicate = OPEN_SKOS_NAMESPACE[predicate_label]
         else:
             predicate = URIRef(uri)
         return predicate

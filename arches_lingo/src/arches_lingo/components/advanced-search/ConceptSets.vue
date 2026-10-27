@@ -2,13 +2,13 @@
 import { ref, watch } from "vue";
 import { storeToRefs } from "pinia";
 import { useGettext } from "vue3-gettext";
-import { useToast } from "primevue/usetoast";
+import { useToast } from "openvue/usetoast";
 
-import Button from "primevue/button";
-import Dialog from "primevue/dialog";
-import InputText from "primevue/inputtext";
-import Select from "primevue/select";
-import Textarea from "primevue/textarea";
+import Button from "openvue/button";
+import Dialog from "openvue/dialog";
+import InputText from "openvue/inputtext";
+import Select from "openvue/select";
+import Textarea from "openvue/textarea";
 
 import {
     createConceptSet,
