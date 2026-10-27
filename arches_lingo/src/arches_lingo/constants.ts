@@ -1,6 +1,6 @@
 import type { Component, InjectionKey, Ref } from "vue";
 import type { Language } from "@/arches_vue_components/types.ts";
-import type { Concept } from "@/arches_lingo/types.ts";
+import type { Concept, RdfExportFormat } from "@/arches_lingo/types.ts";
 
 export const ERROR = "error";
 export const SUCCESS = "success";
@@ -54,6 +54,7 @@ export const GUIDE_TERM_ICON = "pi pi-angle-double-right";
 export const HIERARCHY_NAME_ICON = "pi pi-sitemap";
 export const SCHEME_ICON = "pi pi-folder";
 export const TOP_CONCEPT_ICON = "pi pi-arrow-circle-up";
+export const GET_AS_ICON = "pi pi-download";
 
 export const DRAFT_LIFECYCLE_STATE_ID = "0e7f8c6d-1f7b-4c2a-9a0c-2b9e0d6c8f11";
 export const EDITING_LIFECYCLE_STATE_ID =
@@ -63,6 +64,13 @@ export const PUBLISHED_LIFECYCLE_STATE_ID =
 export const RETIRED_LIFECYCLE_STATE_ID =
     "9d2e1c0b-7a6b-4b3d-8c1a-0f2d9e6b0a7c";
 export const LOCKED_LIFECYCLE_STATE_ID = "c9f7e3d1-2a5b-4c8d-9e6f-3b0a1d2e4f7c";
+
+// Mirrors PUBLICLY_DEREFERENCEABLE_STATE_IDS in utils/concept_lifecycle.py.
+export const PUBLICLY_DEREFERENCEABLE_LIFECYCLE_STATE_IDS = [
+    PUBLISHED_LIFECYCLE_STATE_ID,
+    LOCKED_LIFECYCLE_STATE_ID,
+    RETIRED_LIFECYCLE_STATE_ID,
+];
 
 export const MULTILINE_RENDER_CONTEXT = "multiline";
 
@@ -74,6 +82,13 @@ export const SKOS_PREF_LABEL_URI =
     "http://www.w3.org/2004/02/skos/core#prefLabel";
 export const SKOS_ALT_LABEL_URI =
     "http://www.w3.org/2004/02/skos/core#altLabel";
+
+export const RDF_EXPORT_FORMATS: RdfExportFormat[] = [
+    { token: "jsonld", label: "JSON-LD", extension: "jsonld" },
+    { token: "turtle", label: "Turtle", extension: "ttl" },
+    { token: "nt", label: "N-Triples", extension: "nt" },
+    { token: "xml", label: "RDF/XML", extension: "rdf" },
+];
 
 // Injection keys
 export const openPanelComponentKey = Symbol() as InjectionKey<
