@@ -7,10 +7,7 @@ import Button from "primevue/button";
 
 import { generateArchesURL } from "@/arches/utils/generate-arches-url.ts";
 import BasicSearch from "@/arches_lingo/components/basic-search/BasicSearch.vue";
-import {
-    SEARCH_RESULTS_PER_PAGE,
-    SEARCH_RESULT_ITEM_SIZE,
-} from "@/arches_lingo/constants.ts";
+import { SEARCH_RESULTS_PER_PAGE } from "@/arches_lingo/constants.ts";
 import { routeNames } from "@/arches_lingo/routes.ts";
 import { useAppSettingsStore } from "@/arches_lingo/stores/useAppSettingsStore.ts";
 import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
@@ -294,7 +291,6 @@ const quickActions = [
             <div class="landing-search-container">
                 <BasicSearch
                     :search-results-per-page="SEARCH_RESULTS_PER_PAGE"
-                    :search-result-item-size="SEARCH_RESULT_ITEM_SIZE"
                     results-display="floating"
                 />
             </div>
