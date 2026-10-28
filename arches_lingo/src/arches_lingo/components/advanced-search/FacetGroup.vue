@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, nextTick, ref, watch } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import Button from "primevue/button";
@@ -7,7 +7,10 @@ import SelectButton from "primevue/selectbutton";
 
 import FacetRow from "@/arches_lingo/components/advanced-search/FacetRow.vue";
 
-import { generateConditionId } from "@/arches_lingo/utils.ts";
+import {
+    focusFirstFocusableElement,
+    generateConditionId,
+} from "@/arches_lingo/utils.ts";
 
 import type {
     AdvancedSearchOptions,
@@ -47,6 +50,49 @@ const operatorLabel = computed(() =>
         : $gettext("Combine conditions with"),
 );
 
+const groupName = computed(() => {
+    const isMatchingAll = props.group.operator === "and";
+    if (!props.groupPosition) {
+        return isMatchingAll
+            ? $gettext("Search conditions, match all")
+            : $gettext("Search conditions, match any");
+    }
+    return isMatchingAll
+        ? $gettext("Group %{position}, match all", {
+              position: props.groupPosition,
+          })
+        : $gettext("Group %{position}, match any", {
+              position: props.groupPosition,
+          });
+});
+
+const groupConditionsRef = ref<HTMLElement | null>(null);
+const addConditionButtonRef = ref<InstanceType<typeof Button> | null>(null);
+let conditionIdToFocus: string | null = null;
+let shouldFocusAddConditionButton = false;
+
+watch(
+    () => props.group.conditions,
+    async () => {
+        if (!conditionIdToFocus && !shouldFocusAddConditionButton) {
+            return;
+        }
+        await nextTick();
+        if (conditionIdToFocus) {
+            focusFirstFocusableElement(
+                groupConditionsRef.value?.querySelector<HTMLElement>(
+                    `[data-condition-id="${conditionIdToFocus}"]`,
+                ) ?? null,
+            );
+        } else {
+            // @ts-expect-error This is an error in PrimeVue types
+            addConditionButtonRef.value?.$el.focus();
+        }
+        conditionIdToFocus = null;
+        shouldFocusAddConditionButton = false;
+    },
+);
+
 const removeGroupLabel = computed(() =>
     $gettext("Remove group %{position}", {
         position: props.groupPosition ?? "",
@@ -69,6 +115,7 @@ function addCondition() {
         facet: "label",
         value: "",
     };
+    conditionIdToFocus = newCondition.id;
     emit("update:group", {
         ...props.group,
         conditions: [...props.group.conditions, newCondition],
@@ -87,6 +134,7 @@ function addGroup() {
             } as SearchCondition,
         ],
     };
+    conditionIdToFocus = newGroup.id;
     emit("update:group", {
         ...props.group,
         conditions: [...props.group.conditions, newGroup],
@@ -100,6 +148,11 @@ function updateChild(index: number, updated: SearchCondition | SearchGroup) {
 }
 
 function removeChild(targetIndex: number) {
+    const neighbour =
+        props.group.conditions[targetIndex + 1] ??
+        props.group.conditions[targetIndex - 1];
+    conditionIdToFocus = neighbour?.id ?? null;
+    shouldFocusAddConditionButton = !neighbour;
     const newConditions = props.group.conditions.filter(
         (_item, index) => index !== targetIndex,
     );
@@ -115,6 +168,8 @@ function isGroup(item: SearchCondition | SearchGroup): item is SearchGroup {
     <div
         class="facet-group"
         :class="{ 'nested-group': (depth ?? 0) > 0 }"
+        role="group"
+        :aria-label="groupName"
     >
         <div class="group-header">
             <SelectButton
@@ -130,6 +185,7 @@ function isGroup(item: SearchCondition | SearchGroup): item is SearchGroup {
 
             <div class="group-actions">
                 <Button
+                    ref="addConditionButtonRef"
                     :label="$gettext('Add Condition')"
                     icon="pi pi-plus"
                     size="small"
@@ -156,7 +212,10 @@ function isGroup(item: SearchCondition | SearchGroup): item is SearchGroup {
             </div>
         </div>
 
-        <div class="group-conditions">
+        <div
+            ref="groupConditionsRef"
+            class="group-conditions"
+        >
             <template
                 v-for="(child, index) in group.conditions"
                 :key="child.id"
@@ -174,6 +233,7 @@ function isGroup(item: SearchCondition | SearchGroup): item is SearchGroup {
 
                 <FacetGroup
                     v-if="isGroup(child)"
+                    :data-condition-id="child.id"
                     :group="child"
                     :options="options"
                     :concept-sets="conceptSets"
@@ -185,6 +245,7 @@ function isGroup(item: SearchCondition | SearchGroup): item is SearchGroup {
 
                 <FacetRow
                     v-else
+                    :data-condition-id="child.id"
                     :condition="child"
                     :options="options"
                     :concept-sets="conceptSets"
