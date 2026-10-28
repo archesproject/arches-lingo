@@ -158,6 +158,12 @@ ul:first-child li:first-child .p-card .scheme-circle {
     z-index: 1;
 }
 
+.import-button:focus-visible {
+    outline: 0.125rem solid var(--p-button-contrast-color);
+    outline-offset: -0.25rem;
+    box-shadow: none;
+}
+
 .scheme-card-title {
     margin: 0;
     font-size: inherit;
