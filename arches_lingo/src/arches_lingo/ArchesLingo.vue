@@ -203,6 +203,7 @@ function focusMainContent() {
 <style scoped>
 .app-shell {
     height: 100vh;
+    height: 100dvh;
     width: 100vw;
     overflow: hidden;
     display: flex;
@@ -247,6 +248,7 @@ function focusMainContent() {
 
 .page-content {
     height: 100%;
+    overflow: auto;
 }
 
 /* <main> only takes focus programmatically (skip link, route changes) and

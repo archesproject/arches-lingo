@@ -17,6 +17,7 @@ import { useConfirm } from "primevue/useconfirm";
 import { useToast } from "primevue/usetoast";
 
 import ComponentEditor from "@/arches_lingo/components/generic/ComponentManager/components/ComponentEditor.vue";
+import { useMediaQuery } from "@/arches_lingo/composables/useMediaQuery.ts";
 import {
     deleteLingoResource,
     fetchResourceReferenceCount,
@@ -26,6 +27,7 @@ import {
     DEFAULT_ERROR_TOAST_LIFE,
     DEFAULT_TOAST_LIFE,
     ERROR,
+    NARROW_SCREEN_MEDIA_QUERY,
     SECONDARY,
     SUCCESS,
 } from "@/arches_lingo/constants.ts";
@@ -55,6 +57,7 @@ const emit = defineEmits<{
 
 const toast = useToast();
 const confirm = useConfirm();
+const isNarrowScreen = useMediaQuery(NARROW_SCREEN_MEDIA_QUERY);
 const { $gettext, interpolate, $ngettext } = useGettext();
 
 const isLoading = ref(true);
@@ -258,6 +261,7 @@ defineExpose({
         <Splitter
             :key="isEditorOpen ? 'open' : 'closed'"
             class="resource-splitter"
+            :layout="isNarrowScreen ? 'vertical' : 'horizontal'"
         >
             <SplitterPanel
                 v-show="!isEditorMaximized"

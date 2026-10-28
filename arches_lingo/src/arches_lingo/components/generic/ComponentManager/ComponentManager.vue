@@ -29,10 +29,12 @@ import {
     EDIT,
     MAXIMIZED,
     MINIMIZED,
+    NARROW_SCREEN_MEDIA_QUERY,
     NEW,
     VIEW,
     openPanelComponentKey,
 } from "@/arches_lingo/constants.ts";
+import { useMediaQuery } from "@/arches_lingo/composables/useMediaQuery.ts";
 import {
     useEditorDirtyState,
     unsavedChangesConfirmOptions,
@@ -58,6 +60,11 @@ const route = useRoute();
 const confirm = useConfirm();
 const { $gettext } = useGettext();
 const { isEditorDirty } = useEditorDirtyState();
+const isNarrowScreen = useMediaQuery(NARROW_SCREEN_MEDIA_QUERY);
+
+const splitterLayout = computed(() =>
+    isNarrowScreen.value ? "vertical" : "horizontal",
+);
 
 const processedComponentData = ref(
     props.componentData.map(function (item) {
@@ -306,81 +313,10 @@ provide(openPanelComponentKey, openPanelComponent);
 
 <template>
     <div class="component-manager">
-        <!-- only shown on large screens -->
-        <Splitter class="component-splitter component-splitter-horizontal">
-            <SplitterPanel
-                v-show="editorState !== MAXIMIZED"
-                class="content"
-                :size="50"
-            >
-                <div class="splitter-panel-content">
-                    <component
-                        :is="firstComponentDatum.component"
-                        :graph-slug="firstComponentDatum.graphSlug"
-                        :nodegroup-alias="firstComponentDatum.nodegroupAlias"
-                        :resource-instance-id="resourceInstanceId"
-                        :section-title="firstComponentDatum.sectionTitle"
-                        :component-name="firstComponentDatum.componentName"
-                        :mode="VIEW"
-                    />
-
-                    <div class="scroll-container">
-                        <component
-                            :is="componentDatum.component"
-                            v-for="componentDatum in remainingComponentData"
-                            :key="
-                                componentDatum.componentName +
-                                '-' +
-                                componentDatum.key
-                            "
-                            :graph-slug="componentDatum.graphSlug"
-                            :nodegroup-alias="componentDatum.nodegroupAlias"
-                            :resource-instance-id="resourceInstanceId"
-                            :section-title="componentDatum.sectionTitle"
-                            :component-name="componentDatum.componentName"
-                            :mode="VIEW"
-                        />
-                    </div>
-                </div>
-            </SplitterPanel>
-
-            <SplitterPanel
-                v-if="editorState !== CLOSED"
-                :size="50"
-                class="splitter-panel-parent"
-            >
-                <ComponentEditor
-                    :key="editorKey"
-                    class="splitter-panel-content"
-                    :is-editor-maximized="editorState === MAXIMIZED"
-                    :is-form-editor="isFormEditor"
-                    :is-editor-loading="isEditorLoading"
-                    :header-title="selectedComponentDatum.sectionTitle"
-                    @maximize="maximizeEditor"
-                    @minimize="minimizeEditor"
-                    @close="closeEditor"
-                >
-                    <component
-                        :is="selectedComponentDatum.component"
-                        :graph-slug="selectedComponentDatum.graphSlug"
-                        :nodegroup-alias="selectedComponentDatum.nodegroupAlias"
-                        :resource-instance-id="resourceInstanceId"
-                        :tile-id="editorTileId"
-                        :section-title="selectedComponentDatum.sectionTitle"
-                        :component-name="selectedComponentDatum.componentName"
-                        :mode="EDIT"
-                        @update:is-editor-loading="
-                            updateEditorLoadingState($event)
-                        "
-                    />
-                </ComponentEditor>
-            </SplitterPanel>
-        </Splitter>
-
-        <!-- only shown on small screens -->
         <Splitter
-            class="component-splitter component-splitter-vertical"
-            layout="vertical"
+            class="component-splitter"
+            :class="`component-splitter-${splitterLayout}`"
+            :layout="splitterLayout"
         >
             <SplitterPanel
                 v-show="editorState !== MAXIMIZED"
@@ -463,14 +399,6 @@ provide(openPanelComponentKey, openPanelComponent);
     height: 100%;
     min-height: 0;
     border: none;
-}
-
-.component-splitter-horizontal {
-    display: flex;
-}
-
-.component-splitter-vertical {
-    display: none;
 }
 
 .content {
@@ -564,15 +492,5 @@ provide(openPanelComponentKey, openPanelComponent);
     ) {
     overflow-y: auto;
     width: 12rem;
-}
-
-@media (max-width: 960px) {
-    .component-splitter-horizontal {
-        display: none;
-    }
-
-    .component-splitter-vertical {
-        display: flex;
-    }
 }
 </style>
