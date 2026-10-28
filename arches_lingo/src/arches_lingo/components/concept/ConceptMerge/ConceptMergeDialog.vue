@@ -31,11 +31,13 @@ import {
 } from "@/arches_lingo/components/concept/ConceptMerge/utils.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
+import { useMediaQuery } from "@/arches_lingo/composables/useMediaQuery.ts";
 import {
     DANGER,
     DRAFT_LIFECYCLE_STATE_ID,
     ERROR,
     SECONDARY,
+    SHORT_VIEWPORT_MEDIA_QUERY,
     STRATEGY_REPARENT_TO_SURVIVOR,
 } from "@/arches_lingo/constants.ts";
 import {
@@ -86,6 +88,13 @@ const MERGE_STEP_ORDER = [
 
 const PRESELECTED_MERGE_STEP_ORDER = [MERGE_STEP_COMPARE, MERGE_STEP_CONFIRM];
 
+const SHORT_VIEWPORT_DIALOG_PASS_THROUGH = {
+    ...DIALOG_PASS_THROUGH,
+    content: {
+        style: { ...DIALOG_PASS_THROUGH.content.style, overflow: "auto" },
+    },
+};
+
 const {
     survivorConcept,
     survivorLabel,
@@ -108,6 +117,7 @@ const emit = defineEmits<{
 
 const { $gettext } = useGettext();
 const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
+const isShortViewport = useMediaQuery(SHORT_VIEWPORT_MEDIA_QUERY);
 
 const currentStep = ref(
     preselectedConceptId ? MERGE_STEP_COMPARE : MERGE_STEP_SELECT,
@@ -331,7 +341,11 @@ async function onMergeConfirmed() {
         class="concept-merge-dialog"
         :closable="!isMerging"
         :style="DIALOG_SIZE"
-        :pt="DIALOG_PASS_THROUGH"
+        :pt="
+            isShortViewport
+                ? SHORT_VIEWPORT_DIALOG_PASS_THROUGH
+                : DIALOG_PASS_THROUGH
+        "
         @update:visible="onVisibleChange"
     >
         <Stepper
@@ -555,7 +569,6 @@ async function onMergeConfirmed() {
 .merge-stepper :deep(.p-step-title) {
     font-size: var(--p-lingo-font-size-smallnormal);
     font-weight: var(--p-lingo-font-weight-normal);
-    white-space: nowrap;
 }
 
 .merge-stepper :deep(.p-step-active) .p-step-title {
@@ -625,5 +638,22 @@ async function onMergeConfirmed() {
 .merge-spinner {
     width: 2.5rem;
     height: 2.5rem;
+}
+
+@media (max-height: 40rem) {
+    .merge-stepper,
+    .merge-stepper :deep(.p-steppanels),
+    .merge-stepper :deep(.p-steppanel),
+    .merge-step,
+    .merge-step-body {
+        flex: none;
+        height: auto;
+        min-height: auto;
+    }
+
+    .merge-step-body,
+    .merge-step-body--fill {
+        overflow: visible;
+    }
 }
 </style>
