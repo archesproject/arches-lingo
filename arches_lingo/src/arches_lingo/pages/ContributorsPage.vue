@@ -76,6 +76,7 @@ function onSave(savedTileData: {
         :refresh-trigger="refreshTrigger"
         :show-graph-type="true"
         :editor-enabled="isEditor"
+        :is-editor-loading="isLoadingTile"
         @select-resource="onSelectResource"
     >
         <template #list-actions="{ openBlankEditor }">

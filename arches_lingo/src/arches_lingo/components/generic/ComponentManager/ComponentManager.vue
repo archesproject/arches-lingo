@@ -89,6 +89,9 @@ const isFormEditor = ref(true);
 const isEditorLoading = ref(false);
 const componentManagerRef = ref<HTMLElement | null>(null);
 
+let editorTriggerElement: HTMLElement | null = null;
+let pendingSectionRefresh: Promise<void> | undefined;
+
 const resourceInstanceLifecycleState = ref<object | undefined>(undefined);
 const isFetchingResourceInstanceLifecycleState = ref(false);
 
@@ -172,14 +175,50 @@ provide("updateAfterComponentDeletion", updateAfterComponentDeletion);
 provide("refreshReportSection", refreshReportSection);
 provide("resourceInstanceLifecycleState", resourceInstanceLifecycleState);
 
+function rememberEditorTrigger() {
+    const activeElement = document.activeElement;
+    const editorPanel = componentManagerRef.value?.querySelector(
+        ".splitter-panel-parent",
+    );
+    if (
+        activeElement instanceof HTMLElement &&
+        activeElement !== document.body &&
+        !editorPanel?.contains(activeElement)
+    ) {
+        editorTriggerElement = activeElement;
+    }
+}
+
 function closeEditor() {
+    const closedComponentName = selectedComponentDatum.value?.componentName;
     selectedComponentDatum.value = null;
     editorState.value = CLOSED;
     editorTileId.value = null;
     isEditorLoading.value = false;
+    returnFocusFromEditor(closedComponentName);
+}
+
+async function returnFocusFromEditor(closedComponentName?: string) {
+    const triggerElement = editorTriggerElement;
+    editorTriggerElement = null;
+
+    await pendingSectionRefresh?.catch(() => undefined);
+    await nextTick();
+
+    const isFocusLost =
+        !document.activeElement || document.activeElement === document.body;
+    if (editorState.value !== CLOSED || !isFocusLost) {
+        return;
+    }
+    if (triggerElement?.isConnected) {
+        triggerElement.focus();
+    } else if (closedComponentName) {
+        focusSectionHeading(closedComponentName);
+    }
 }
 
 function doOpenEditor(componentName: string, tileId?: string) {
+    rememberEditorTrigger();
     isEditorLoading.value = true;
     const componentDatum = processedComponentData.value.find(
         (componentDatum) => {
@@ -228,7 +267,12 @@ function updateAfterComponentDeletion(componentName: string, tileId: string) {
     }
 }
 
-async function refreshReportSection(componentName: string) {
+function refreshReportSection(componentName: string) {
+    pendingSectionRefresh = doRefreshReportSection(componentName);
+    return pendingSectionRefresh;
+}
+
+async function doRefreshReportSection(componentName: string) {
     if (componentName === "all") {
         await Promise.all([
             resourceStore.refreshResource(),
@@ -289,6 +333,7 @@ function openPanelComponent(
     graphSlug: string = "",
     nodegroupAlias: string = "",
 ) {
+    rememberEditorTrigger();
     selectedComponentDatum.value = {
         component: markRaw(component),
         componentName,
