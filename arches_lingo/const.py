@@ -3,6 +3,7 @@ from django.utils.translation import gettext_lazy as _
 ### Groups ###
 LINGO_EDITOR_GROUP_NAME = "Lingo Editor"
 LINGO_ADMIN_GROUP_NAME = "Lingo Admin"
+LINGO_EXPORTER_GROUP_NAME = "Lingo Exporter"
 
 ### Fixtures ###
 LINGO_FIXTURE_GRAPH_SLUGS = [

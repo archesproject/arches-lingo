@@ -10,6 +10,7 @@ from arches_lingo.permissions import (
     is_authenticated_user,
     is_lingo_admin,
     is_lingo_editor,
+    is_lingo_exporter,
 )
 
 
@@ -58,6 +59,19 @@ class LingoEditorMixin:
             return JSONErrorResponse(
                 title=_("Permission denied."),
                 message=_("You must be a Lingo editor to perform this action."),
+                status=HTTPStatus.FORBIDDEN,
+            )
+        return super().dispatch(request, *args, **kwargs)
+
+
+class LingoExportMixin:
+    """Require export permission (Lingo Editor/Admin, Lingo Exporter group, or allowed anonymous) for all requests."""
+
+    def dispatch(self, request, *args, **kwargs):
+        if not is_lingo_exporter(request.user):
+            return JSONErrorResponse(
+                title=_("Permission denied."),
+                message=_("You do not have permission to export Lingo data."),
                 status=HTTPStatus.FORBIDDEN,
             )
         return super().dispatch(request, *args, **kwargs)

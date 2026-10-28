@@ -93,7 +93,7 @@ const { $gettext } = useGettext();
 const toast = useToast();
 const router = useRouter();
 
-const { isEditor } = storeToRefs(useUserStore());
+const { isEditor, canExport } = storeToRefs(useUserStore());
 const resourceStore = useResourceStore();
 const conceptStore = useConceptStore();
 
@@ -480,7 +480,7 @@ function onMergeCancelled() {
                 <span>{{ $gettext("History") }}</span>
             </Button>
             <Button
-                v-if="isEditor"
+                v-if="canExport"
                 :aria-label="$gettext('Export')"
                 class="add-button"
                 @click="openExportDialog"

@@ -21,6 +21,7 @@ export interface User {
     phone?: string;
     is_lingo_editor: boolean;
     is_lingo_admin: boolean;
+    is_lingo_exporter: boolean;
     is_anonymous: boolean;
     is_staff: boolean;
 }
