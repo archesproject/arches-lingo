@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, inject } from "vue";
+import { computed, inject, useId } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import Button from "primevue/button";
@@ -20,6 +20,7 @@ const props = defineProps<{
 }>();
 
 const { $gettext } = useGettext();
+const rightsStatementLabelId = useId();
 
 const openEditor =
     inject<(componentName: string, tileId: string | undefined) => void>(
@@ -129,10 +130,14 @@ const buttonIcon = computed(() => {
             <div
                 v-if="props.tileData?.aliased_data.right_statement"
                 class="statement-section"
+                role="group"
+                :aria-labelledby="rightsStatementLabelId"
             >
-                <span class="group-label">{{
-                    $gettext("Rights Statement")
-                }}</span>
+                <span
+                    :id="rightsStatementLabelId"
+                    class="group-label"
+                    >{{ $gettext("Rights Statement") }}</span
+                >
                 <div class="right-statement-group">
                     <GenericWidget
                         node-alias="right_statement_content"
