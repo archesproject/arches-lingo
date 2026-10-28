@@ -13,6 +13,7 @@ import {
     dataIsScheme,
     dataIsConcept,
     focusWithoutScrolling,
+    scaleWithRootFontSize,
     treeFromSchemes,
 } from "@/arches_lingo/utils.ts";
 import schemesFixture from "./fixtures/test_scheme.json";
@@ -221,7 +222,13 @@ describe("RDF dereferencing permissions", () => {
 
 describe("Focus and sizing helpers", () => {
     afterEach(() => {
+        document.documentElement.style.fontSize = "";
         document.body.replaceChildren();
+    });
+
+    it("scales a pixel size with the root font size", () => {
+        document.documentElement.style.fontSize = "20px";
+        expect(scaleWithRootFontSize(36)).toBe(45);
     });
 
     it("makes a heading focusable but leaves a button's tab stop alone", () => {

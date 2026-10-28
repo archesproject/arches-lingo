@@ -582,3 +582,16 @@ export function focusWithoutScrolling(element: HTMLElement) {
     }
     element.focus({ preventScroll: true });
 }
+
+const DEFAULT_ROOT_FONT_SIZE_IN_PIXELS = 16;
+
+// Scales a px size written for the 16px default to the user's root font size.
+export function scaleWithRootFontSize(pixelsAtDefaultFontSize: number) {
+    const rootFontSize = parseFloat(
+        getComputedStyle(document.documentElement).fontSize,
+    );
+    return Math.round(
+        (pixelsAtDefaultFontSize * rootFontSize) /
+            DEFAULT_ROOT_FONT_SIZE_IN_PIXELS,
+    );
+}
