@@ -2,6 +2,7 @@
 import { computed, inject, onMounted, ref, watch } from "vue";
 import { useGettext } from "vue3-gettext";
 
+import { useDialogFocusReturn } from "@/arches_lingo/composables/useDialogFocusReturn.ts";
 import { useEditLog } from "@/arches_lingo/composables/useEditLog.ts";
 import { setPageTitleDetail } from "@/arches_lingo/composables/usePageTitle.ts";
 
@@ -143,10 +144,30 @@ const showMoreLabel = computed(() =>
 
 const isLoading = ref(true);
 const showExportDialog = ref(false);
-const showLockDialog = ref(false);
 const exportDialogKey = ref(0);
-const showReinstateDialog = ref(false);
-const showRetireDialog = ref(false);
+const schemeNameHeadingRef = ref<HTMLElement | null>(null);
+
+const {
+    isDialogMounted: isLockDialogMounted,
+    isDialogVisible: isLockDialogVisible,
+    openDialog: openLockDialog,
+    closeDialog: closeLockDialog,
+    onDialogAfterHide: onLockDialogAfterHide,
+} = useDialogFocusReturn(getSchemeNameHeading);
+const {
+    isDialogMounted: isRetireDialogMounted,
+    isDialogVisible: isRetireDialogVisible,
+    openDialog: openRetireDialog,
+    closeDialog: closeRetireDialog,
+    onDialogAfterHide: onRetireDialogAfterHide,
+} = useDialogFocusReturn(getSchemeNameHeading);
+const {
+    isDialogMounted: isReinstateDialogMounted,
+    isDialogVisible: isReinstateDialogVisible,
+    openDialog: openReinstateDialog,
+    closeDialog: closeReinstateDialog,
+    onDialogAfterHide: onReinstateDialogAfterHide,
+} = useDialogFocusReturn(getSchemeNameHeading);
 const isReinstateLoading = ref(false);
 const pendingReinstateStateId = ref<string | undefined>();
 const pendingRetireStateId = ref<string | undefined>();
@@ -269,6 +290,10 @@ const schemeUri = computed(() => {
     );
 });
 
+function getSchemeNameHeading() {
+    return schemeNameHeadingRef.value;
+}
+
 async function copyUriToClipboard(uri: string) {
     await navigator.clipboard.writeText(uri);
     toast.add({
@@ -330,13 +355,13 @@ onMounted(async () => {
 
 function handleLockToggle() {
     if (!props.resourceInstanceId) return;
-    showLockDialog.value = true;
+    openLockDialog();
 }
 
 async function onLockConfirmed() {
     if (!props.resourceInstanceId) return;
     isLockLoading.value = true;
-    showLockDialog.value = false;
+    closeLockDialog();
     try {
         if (isLocked.value) {
             await unlockScheme(props.resourceInstanceId);
@@ -483,7 +508,7 @@ function onLifecycleStateChange(
 
 function onRetireRequested(nextStateId: string) {
     pendingRetireStateId.value = nextStateId;
-    showRetireDialog.value = true;
+    openRetireDialog();
 }
 
 function onRetireConfirmed() {
@@ -491,13 +516,13 @@ function onRetireConfirmed() {
     lifecycleButtonsRef.value?.transitionLifecycleState(
         pendingRetireStateId.value,
     );
-    showRetireDialog.value = false;
+    closeRetireDialog();
     pendingRetireStateId.value = undefined;
 }
 
 function onReinstateRequested(nextStateId: string) {
     pendingReinstateStateId.value = nextStateId;
-    showReinstateDialog.value = true;
+    openReinstateDialog();
 }
 
 async function onReinstateConfirmed(cascade: boolean) {
@@ -522,7 +547,7 @@ async function onReinstateConfirmed(cascade: boolean) {
         });
     } finally {
         isReinstateLoading.value = false;
-        showReinstateDialog.value = false;
+        closeReinstateDialog();
         pendingReinstateStateId.value = undefined;
     }
 }
@@ -531,12 +556,13 @@ async function onReinstateConfirmed(cascade: boolean) {
 <template>
     <ConfirmDialog group="delete-scheme" />
     <Dialog
-        v-if="showLockDialog"
-        :visible="true"
+        v-if="isLockDialogMounted"
+        :visible="isLockDialogVisible"
         :modal="true"
         :dismissable-mask="false"
         :header="isLocked ? $gettext('Unlock scheme') : $gettext('Lock scheme')"
-        @update:visible="showLockDialog = false"
+        @update:visible="closeLockDialog()"
+        @after-hide="onLockDialogAfterHide"
     >
         <p v-if="isLocked">
             {{
@@ -557,7 +583,7 @@ async function onReinstateConfirmed(cascade: boolean) {
                 :label="$gettext('Cancel')"
                 :severity="SECONDARY"
                 :outlined="true"
-                @click="showLockDialog = false"
+                @click="closeLockDialog()"
             />
             <Button
                 :label="isLocked ? $gettext('Unlock') : $gettext('Lock')"
@@ -567,12 +593,13 @@ async function onReinstateConfirmed(cascade: boolean) {
         </template>
     </Dialog>
     <Dialog
-        v-if="showRetireDialog"
-        :visible="true"
+        v-if="isRetireDialogMounted"
+        :visible="isRetireDialogVisible"
         :modal="true"
         :dismissable-mask="false"
         :header="$gettext('Confirmation')"
-        @update:visible="showRetireDialog = false"
+        @update:visible="closeRetireDialog()"
+        @after-hide="onRetireDialogAfterHide"
     >
         <p>
             {{
@@ -586,7 +613,7 @@ async function onReinstateConfirmed(cascade: boolean) {
                 :label="$gettext('Cancel')"
                 :severity="SECONDARY"
                 :outlined="true"
-                @click="showRetireDialog = false"
+                @click="closeRetireDialog()"
             />
             <Button
                 :label="$gettext('Retire')"
@@ -596,13 +623,15 @@ async function onReinstateConfirmed(cascade: boolean) {
         </template>
     </Dialog>
     <ReinstateDialog
-        v-if="showReinstateDialog && resourceInstanceId"
+        v-if="isReinstateDialogMounted && resourceInstanceId"
+        :visible="isReinstateDialogVisible"
         :resource-id="resourceInstanceId"
         :resource-name="label?.value"
         resource-type="scheme"
         :is-loading="isReinstateLoading"
         @confirm="onReinstateConfirmed"
-        @cancel="showReinstateDialog = false"
+        @cancel="closeReinstateDialog()"
+        @after-hide="onReinstateDialogAfterHide"
     />
     <ExportThesauri
         v-if="scheme && showExportDialog"
@@ -623,7 +652,7 @@ async function onReinstateConfirmed(cascade: boolean) {
         <div class="scheme-header-panel">
             <div class="scheme-header-toolbar">
                 <div class="scheme-title">
-                    <h1>
+                    <h1 ref="schemeNameHeadingRef">
                         <span class="scheme-title-text">{{
                             label?.value
                         }}</span>

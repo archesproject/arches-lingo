@@ -102,6 +102,7 @@ const {
     graphSlug,
     preselectedConceptId = undefined,
 } = defineProps<{
+    visible: boolean;
     survivorConcept: ResourceInstanceResult;
     survivorLabel: string | undefined;
     schemeId: string;
@@ -113,6 +114,7 @@ const {
 const emit = defineEmits<{
     cancel: [];
     merged: [];
+    "after-hide": [];
 }>();
 
 const { $gettext } = useGettext();
@@ -335,7 +337,7 @@ async function onMergeConfirmed() {
 
 <template>
     <Dialog
-        :visible="true"
+        :visible="visible"
         :modal="true"
         :header="$gettext('Merge Concepts')"
         class="concept-merge-dialog"
@@ -347,6 +349,7 @@ async function onMergeConfirmed() {
                 : DIALOG_PASS_THROUGH
         "
         @update:visible="onVisibleChange"
+        @after-hide="emit('after-hide')"
     >
         <Stepper
             v-model:value="currentStep"
