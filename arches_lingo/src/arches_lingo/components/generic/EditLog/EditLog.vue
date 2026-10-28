@@ -294,12 +294,13 @@ async function acceptRevert() {
             <p>{{ $gettext("No edit history found.") }}</p>
         </div>
 
-        <div
+        <ul
             v-else
             ref="editLogEntriesRef"
             class="edit-log-entries"
+            :aria-label="$gettext('Edit history')"
         >
-            <div
+            <li
                 v-for="(edit, index) in edits"
                 :key="edit.editlogid"
                 class="edit-entry"
@@ -368,8 +369,8 @@ async function acceptRevert() {
                         </span>
                     </div>
                 </div>
-            </div>
-        </div>
+            </li>
+        </ul>
     </div>
 </template>
 
@@ -396,7 +397,9 @@ async function acceptRevert() {
 .edit-log-entries {
     overflow-y: auto;
     flex: 1;
+    margin: 0;
     padding: 0.75rem 1rem;
+    list-style: none;
 }
 
 .no-edits {

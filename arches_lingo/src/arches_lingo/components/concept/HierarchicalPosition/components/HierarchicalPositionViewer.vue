@@ -526,20 +526,21 @@ function getTreeNodeStyle(depth: number) {
                             v-for="(hierarchy, lineageIndex) in group.lineages"
                             :key="lineageIndex"
                         >
-                            <div
+                            <ol
                                 v-if="
                                     lineageIndex === 0 ||
                                     isGroupExpanded(groupIndex)
                                 "
                                 class="lineage-path"
                             >
-                                <div
+                                <li
                                     v-for="(
                                         item, depth
                                     ) in hierarchy.searchResults"
                                     :key="item.id"
                                     class="tree-node"
                                     :style="getTreeNodeStyle(depth)"
+                                    :aria-level="depth + 1"
                                 >
                                     <span
                                         :class="getIcon(item)"
@@ -550,6 +551,7 @@ function getTreeNodeStyle(depth: number) {
                                             item.id === props.resourceInstanceId
                                         "
                                         class="tree-node-label tree-node-label-current"
+                                        aria-current="page"
                                     >
                                         {{
                                             getItemLabel(
@@ -572,8 +574,8 @@ function getTreeNodeStyle(depth: number) {
                                             ).value
                                         }}
                                     </RouterLink>
-                                </div>
-                            </div>
+                                </li>
+                            </ol>
                         </template>
                         <Button
                             v-if="group.lineages.length > 1"
@@ -679,7 +681,9 @@ function getTreeNodeStyle(depth: number) {
 }
 
 .lineage-path {
+    margin: 0;
     padding-inline-start: 0.5rem;
+    list-style: none;
 }
 
 .lineage-divider {

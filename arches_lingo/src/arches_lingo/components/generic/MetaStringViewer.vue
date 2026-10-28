@@ -70,6 +70,20 @@ function getRowElementId(tileId: string, part: string): string {
     return `${rowIdPrefix}-${tileId}-${part}`;
 }
 
+// PrimeVue's default toggle name is untranslated and reads as the opposite state.
+function getRowTogglePassThrough({
+    parent,
+}: {
+    parent: { props: { rowData: { tileid: string } } };
+}) {
+    const tileId = parent.props.rowData.tileid;
+    return {
+        id: getRowElementId(tileId, "details"),
+        "aria-label": $gettext("Details"),
+        "aria-labelledby": `${getRowElementId(tileId, "details")} ${getRowElementId(tileId, "name")}`,
+    };
+}
+
 function updateScrollShadow() {
     if (!scrollableTableBody) return;
     const { scrollTop, scrollHeight, clientHeight } = scrollableTableBody;
@@ -193,7 +207,14 @@ async function deleteSectionValue(tileId: string) {
             <Column
                 expander
                 style="width: 3rem"
-            />
+                :pt="{ rowToggleButton: getRowTogglePassThrough }"
+            >
+                <template #header>
+                    <span class="p-hidden-accessible">{{
+                        $gettext("Details")
+                    }}</span>
+                </template>
+            </Column>
             <Column
                 :header="props.metaStringText.name"
                 :field="props.metaStringText.sortFields?.name"
