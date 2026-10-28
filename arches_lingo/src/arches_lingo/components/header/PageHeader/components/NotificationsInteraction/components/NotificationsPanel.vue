@@ -14,7 +14,7 @@ import { SEARCH_RESULT_ITEM_SIZE } from "@/arches_lingo/constants.ts";
 import { scaleWithRootFontSize } from "@/arches_lingo/utils.ts";
 
 const { isLoading } = defineProps<{ isLoading: boolean }>();
-const emit = defineEmits(["load-additional-notifications"]);
+const emit = defineEmits(["load-additional-notifications", "after-hide"]);
 
 const shouldShowNotificationsPanel = defineModel(
     "shouldShowNotificationsPanel",
@@ -83,6 +83,7 @@ function dismissAllNotifications() {
                 },
             },
         }"
+        @after-hide="emit('after-hide')"
     >
         <template #default>
             <template v-if="notifications.length === 0 && !isLoading">

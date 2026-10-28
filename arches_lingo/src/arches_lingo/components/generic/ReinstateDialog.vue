@@ -9,6 +9,7 @@ import RadioButton from "primevue/radiobutton";
 import { INFO, SECONDARY } from "@/arches_lingo/constants.ts";
 
 const { resourceName, resourceType, isLoading } = defineProps<{
+    visible: boolean;
     resourceId: string;
     resourceName: string | undefined;
     resourceType: "concept" | "scheme";
@@ -18,6 +19,7 @@ const { resourceName, resourceType, isLoading } = defineProps<{
 const emit = defineEmits<{
     confirm: [cascade: boolean];
     cancel: [];
+    "after-hide": [];
 }>();
 
 const { $gettext } = useGettext();
@@ -76,13 +78,14 @@ function onConfirm() {
 
 <template>
     <Dialog
-        :visible="true"
+        :visible="visible"
         :modal="true"
         :dismissable-mask="false"
         :header="$gettext('Reinstate')"
         :closable="!isLoading"
         class="reinstate-dialog"
         @update:visible="!isLoading && $emit('cancel')"
+        @after-hide="$emit('after-hide')"
     >
         <div class="dialog-body">
             <div class="dialog-text">{{ confirmationText }}</div>

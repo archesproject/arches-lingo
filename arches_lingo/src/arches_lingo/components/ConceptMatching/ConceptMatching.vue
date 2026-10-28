@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, inject, ref, watch } from "vue";
+import { computed, inject, ref, useTemplateRef, watch } from "vue";
 
 import { storeToRefs } from "pinia";
 import { useGettext } from "vue3-gettext";
@@ -15,6 +15,7 @@ import MatchRunProgress from "@/arches_lingo/components/ConceptMatching/componen
 import MatchRunSelect from "@/arches_lingo/components/ConceptMatching/components/MatchRunSelect.vue";
 import MatchRunSummary from "@/arches_lingo/components/ConceptMatching/components/MatchRunSummary.vue";
 
+import { useDialogFocusReturn } from "@/arches_lingo/composables/useDialogFocusReturn.ts";
 import { useConceptStore } from "@/arches_lingo/stores/useConceptStore.ts";
 import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 import { useCandidatePage } from "@/arches_lingo/components/ConceptMatching/composables/useCandidatePage.ts";
@@ -27,6 +28,7 @@ import {
     CANDIDATE_STATUS_PENDING,
 } from "@/arches_lingo/components/ConceptMatching/constants.ts";
 import { ERROR, INFO, SECONDARY, WARN } from "@/arches_lingo/constants.ts";
+import { focusWithoutScrolling } from "@/arches_lingo/utils.ts";
 
 import type {
     ConceptMatchCandidate,
@@ -81,6 +83,16 @@ const {
 
 const showCriteria = ref(true);
 const mergingCandidate = ref<ConceptMatchCandidate | null>(null);
+const candidateListRef =
+    useTemplateRef<InstanceType<typeof MatchCandidateList>>("candidateListRef");
+
+const {
+    isDialogMounted: isMergeFlowMounted,
+    isDialogVisible: isMergeFlowVisible,
+    openDialog: openMergeFlow,
+    closeDialog: closeMergeFlow,
+    onDialogAfterHide: onMergeFlowDialogAfterHide,
+} = useDialogFocusReturn(() => candidateListRef.value?.getStatusElement());
 
 const selectedCandidateIds = computed(() => Array.from(selectedIds.value));
 
@@ -235,6 +247,10 @@ function onSearchChanged({
 async function onReviewChanged(): Promise<void> {
     clearSelection();
     await Promise.all([loadRuns(), loadCandidates()]);
+    const candidateListStatus = candidateListRef.value?.getStatusElement();
+    if (candidateListStatus) {
+        focusWithoutScrolling(candidateListStatus);
+    }
 }
 
 async function onRunDeleted(): Promise<void> {
@@ -255,6 +271,9 @@ function onMergeRequested({ candidateId }: { candidateId: number }): void {
     mergingCandidate.value =
         candidates.value.find((candidate) => candidate.id === candidateId) ??
         null;
+    if (mergingCandidate.value) {
+        openMergeFlow();
+    }
 }
 
 async function onMergeCompleted(): Promise<void> {
@@ -264,13 +283,14 @@ async function onMergeCompleted(): Promise<void> {
             isSelected: false,
         });
     }
-    closeMerge();
+    closeMergeFlow({ shouldFocusFallback: true });
     refreshSchemeHierarchy!();
     await Promise.all([loadRuns(), loadCandidates()]);
 }
 
-function closeMerge(): void {
+function onMergeFlowAfterHide(): void {
     mergingCandidate.value = null;
+    onMergeFlowDialogAfterHide();
 }
 </script>
 
@@ -405,6 +425,7 @@ function closeMerge(): void {
 
                 <MatchCandidateList
                     v-else-if="activeRun"
+                    ref="candidateListRef"
                     :candidates="candidates"
                     :selected-ids="selectedIds"
                     :is-loading="isLoadingCandidates"
@@ -425,11 +446,17 @@ function closeMerge(): void {
         </div>
 
         <CandidateMergeFlow
-            v-if="mergingCandidate?.concept_a && mergingCandidate.concept_b"
+            v-if="
+                isMergeFlowMounted &&
+                mergingCandidate?.concept_a &&
+                mergingCandidate.concept_b
+            "
+            :visible="isMergeFlowVisible"
             :concept-a="mergingCandidate.concept_a"
             :concept-b="mergingCandidate.concept_b"
             @merged="onMergeCompleted"
-            @cancel="closeMerge"
+            @cancel="closeMergeFlow()"
+            @after-hide="onMergeFlowAfterHide"
         />
     </div>
 </template>

@@ -31,6 +31,7 @@ const DIALOG_PASS_THROUGH = {
 };
 
 const { conceptA, conceptB, isLoading } = defineProps<{
+    visible: boolean;
     conceptA: MatchedConceptSummary;
     conceptB: MatchedConceptSummary;
     isLoading: boolean;
@@ -39,6 +40,7 @@ const { conceptA, conceptB, isLoading } = defineProps<{
 const emit = defineEmits<{
     (event: "direction-chosen", payload: MergeDirection): void;
     (event: "cancel"): void;
+    (event: "after-hide"): void;
 }>();
 
 const { $gettext } = useGettext();
@@ -90,12 +92,13 @@ function onVisibilityChange(): void {
 <template>
     <Dialog
         class="direction-dialog"
-        :visible="true"
+        :visible="visible"
         :modal="true"
         :header="dialogHeader"
         :closable="!isLoading"
         :pt="DIALOG_PASS_THROUGH"
         @update:visible="onVisibilityChange"
+        @after-hide="emit('after-hide')"
     >
         <div class="direction-body">
             <p class="direction-intro">
