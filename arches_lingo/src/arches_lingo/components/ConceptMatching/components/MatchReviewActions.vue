@@ -10,6 +10,8 @@ import Button from "primevue/button";
 import ConfirmDialog from "primevue/confirmdialog";
 import Select from "primevue/select";
 
+import DisabledReasonButton from "@/arches_lingo/components/generic/DisabledReasonButton.vue";
+
 import {
     deleteConceptMatchRun,
     linkConceptMatchCandidates,
@@ -106,8 +108,8 @@ const isReviewingDismissed = computed(
     () => candidateStatus === CANDIDATE_STATUS_DISMISSED,
 );
 const selectedCount = computed(() => selectedCandidateIds.length);
-const canActOnSelection = computed(
-    () => selectedCount.value > 0 && !isActionInFlight.value,
+const selectPairsFirstReason = computed(() =>
+    $gettext("Select one or more pairs first."),
 );
 const canDismissAll = computed(
     () => isReviewingPending.value && pendingCount > 0,
@@ -366,17 +368,19 @@ async function deleteRun(wasCancelled: boolean): Promise<void> {
                 :options="matchTypeOptions"
                 :aria-label="$gettext('Link as')"
             />
-            <Button
+            <DisabledReasonButton
                 class="action-button"
                 icon="pi pi-link"
                 :label="
                     $gettext('Link %{count}', { count: String(selectedCount) })
                 "
-                :disabled="!canActOnSelection"
+                :is-disabled="selectedCount === 0"
+                :disabled-reason="selectPairsFirstReason"
+                :disabled="isActionInFlight"
                 :loading="actionInFlight === ACTION_LINK"
                 @click="linkSelection"
             />
-            <Button
+            <DisabledReasonButton
                 class="action-button"
                 icon="pi pi-times"
                 :label="
@@ -386,13 +390,15 @@ async function deleteRun(wasCancelled: boolean): Promise<void> {
                 "
                 :severity="SECONDARY"
                 :outlined="true"
-                :disabled="!canActOnSelection"
+                :is-disabled="selectedCount === 0"
+                :disabled-reason="selectPairsFirstReason"
+                :disabled="isActionInFlight"
                 :loading="actionInFlight === ACTION_UPDATE_SELECTION"
                 @click="setStatusForSelection(CANDIDATE_STATUS_DISMISSED)"
             />
         </template>
 
-        <Button
+        <DisabledReasonButton
             v-if="isReviewingDismissed"
             class="action-button"
             icon="pi pi-undo"
@@ -401,7 +407,9 @@ async function deleteRun(wasCancelled: boolean): Promise<void> {
             "
             :severity="SECONDARY"
             :outlined="true"
-            :disabled="!canActOnSelection"
+            :is-disabled="selectedCount === 0"
+            :disabled-reason="selectPairsFirstReason"
+            :disabled="isActionInFlight"
             :loading="actionInFlight === ACTION_UPDATE_SELECTION"
             @click="setStatusForSelection(CANDIDATE_STATUS_PENDING)"
         />
@@ -472,7 +480,7 @@ async function deleteRun(wasCancelled: boolean): Promise<void> {
     border-radius: 0.125rem;
 }
 
-.review-actions .action-button {
+.review-actions :deep(.action-button) {
     font-size: var(--p-lingo-font-size-small);
     border-radius: 0.125rem;
 }

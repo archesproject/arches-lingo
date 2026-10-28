@@ -10,6 +10,7 @@ import ConfirmDialog from "primevue/confirmdialog";
 import Tag from "primevue/tag";
 
 import CountTag from "@/arches_lingo/components/generic/CountTag.vue";
+import DisabledReasonButton from "@/arches_lingo/components/generic/DisabledReasonButton.vue";
 
 import { deleteLingoTile } from "@/arches_lingo/api.ts";
 import { getConceptIcon } from "@/arches_lingo/utils.ts";
@@ -406,27 +407,15 @@ function getTreeNodeStyle(depth: number) {
             </div>
 
             <div class="section-header-actions">
-                <Button
+                <DisabledReasonButton
                     v-if="isEditor"
-                    v-tooltip.top="{
-                        disabled: Boolean(!isCreateDisabled),
-                        value: createTooltipText,
-                        showDelay: 300,
-                        pt: {
-                            text: {
-                                style: {
-                                    fontFamily: 'var(--p-lingo-font-family)',
-                                },
-                            },
-                            arrow: { style: { display: 'none' } },
-                        },
-                    }"
-                    :disabled="isCreateDisabled"
+                    :is-disabled="isCreateDisabled"
+                    :disabled-reason="createTooltipText"
                     :label="$gettext('Add Hierarchical Parent')"
                     class="add-button wide"
                     icon="pi pi-plus-circle"
                     @click="openEditor!(props.componentName)"
-                ></Button>
+                />
             </div>
         </div>
 
