@@ -20,6 +20,10 @@ export const useAppSettingsStore = defineStore("appSettings", () => {
 
     const lingoVersion = computed(() => settings.value?.lingo_version ?? "");
 
+    const isAccessibilityMode = computed(
+        () => settings.value?.accessibility_mode ?? false,
+    );
+
     async function initialize() {
         if (settings.value !== null) return;
         settings.value = await fetchAppSettings();
@@ -31,6 +35,7 @@ export const useAppSettingsStore = defineStore("appSettings", () => {
         publicServerAddress,
         archesVersion,
         lingoVersion,
+        isAccessibilityMode,
         initialize,
     };
 });
