@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, useId, watch } from "vue";
+import { ref, useId, useTemplateRef, watch } from "vue";
 import { useGettext } from "vue3-gettext";
 import { useRouter } from "vue-router";
 import { storeToRefs } from "pinia";
@@ -11,6 +11,7 @@ import Paginator from "primevue/paginator";
 import LifecycleStateBadge from "@/arches_lingo/components/generic/LifecycleStateBadge.vue";
 
 import { useAnnouncer } from "@/arches_lingo/composables/useAnnouncer.ts";
+import { useRovingListFocus } from "@/arches_lingo/composables/useRovingListFocus.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 import { getConceptIcon, getParentLabels } from "@/arches_lingo/utils.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
@@ -38,6 +39,21 @@ const emit = defineEmits<{
 }>();
 
 const expandedRows = ref<Set<string>>(new Set());
+const resultsList = useTemplateRef<HTMLUListElement>("resultsList");
+const resultActionsHintId = useId();
+const {
+    activeItemIndex: activeResultIndex,
+    getItemTabIndex: getResultTabIndex,
+    onListFocusIn: onResultsFocusIn,
+    onListKeydown: onResultsKeydown,
+} = useRovingListFocus(getResultRows);
+
+watch(
+    () => props.results,
+    () => {
+        activeResultIndex.value = 0;
+    },
+);
 
 watch(
     () => props.loading,
@@ -56,10 +72,26 @@ watch(
     },
     { immediate: true },
 );
-const resultLabelIdPrefix = useId();
 
-function getResultLabelId(conceptId: string) {
-    return `${resultLabelIdPrefix}-${conceptId}`;
+function getResultLabel(item: AdvancedSearchResponse["data"][number]) {
+    return getItemLabel(
+        item,
+        selectedLanguage.value.code,
+        systemLanguage.value.code,
+    ).value;
+}
+
+function getResultAccessibleName(item: AdvancedSearchResponse["data"][number]) {
+    return [getResultLabel(item), item.resource_instance_lifecycle_state_name]
+        .filter(Boolean)
+        .join(", ");
+}
+
+function getResultRows() {
+    return [
+        ...(resultsList.value?.querySelectorAll<HTMLElement>(":scope > li") ??
+            []),
+    ];
 }
 
 function toggleExpand(id: string) {
@@ -132,20 +164,34 @@ function onPageChange(event: { page: number }) {
             {{ $gettext("No results found.") }}
         </div>
 
-        <div
+        <ul
             v-else-if="results"
+            ref="resultsList"
             class="results-list"
+            :aria-label="$gettext('Search results')"
+            @focusin="onResultsFocusIn"
+            @keydown="onResultsKeydown"
         >
-            <div
-                v-for="item in results.data"
+            <li
+                v-for="(item, resultIndex) in results.data"
                 :key="item.id"
                 class="result-item"
+                :tabindex="getResultTabIndex(resultIndex)"
+                :aria-label="getResultAccessibleName(item)"
+                :aria-describedby="resultActionsHintId"
             >
                 <div class="result-row">
                     <Checkbox
                         :model-value="selectedIds.has(item.id)"
                         binary
-                        :aria-labelledby="getResultLabelId(item.id)"
+                        :tabindex="getResultTabIndex(resultIndex)"
+                        :aria-label="
+                            $gettext(
+                                'Select %{label} to add to a concept set',
+                                { label: getResultLabel(item) },
+                                true,
+                            )
+                        "
                         @update:model-value="$emit('toggle-select', item.id)"
                     />
 
@@ -161,17 +207,12 @@ function onPageChange(event: { page: number }) {
                         :aria-label="
                             $gettext(
                                 'Details for %{label}',
-                                {
-                                    label: getItemLabel(
-                                        item,
-                                        selectedLanguage.code,
-                                        systemLanguage.code,
-                                    ).value,
-                                },
+                                { label: getResultLabel(item) },
                                 true,
                             )
                         "
                         :aria-expanded="expandedRows.has(item.id)"
+                        :tabindex="getResultTabIndex(resultIndex)"
                         @click="toggleExpand(item.id)"
                     />
 
@@ -181,13 +222,7 @@ function onPageChange(event: { page: number }) {
                                 :class="[getConceptIcon(item), 'concept-icon']"
                                 aria-hidden="true"
                             />
-                            <span :id="getResultLabelId(item.id)">{{
-                                getItemLabel(
-                                    item,
-                                    selectedLanguage.code,
-                                    systemLanguage.code,
-                                ).value
-                            }}</span>
+                            <span>{{ getResultLabel(item) }}</span>
                             <LifecycleStateBadge
                                 :lifecycle-state-id="
                                     item.resource_instance_lifecycle_state_id
@@ -221,16 +256,11 @@ function onPageChange(event: { page: number }) {
                         size="small"
                         text
                         class="view-concept-button"
+                        :tabindex="getResultTabIndex(resultIndex)"
                         :aria-label="
                             $gettext(
                                 'View concept %{label}',
-                                {
-                                    label: getItemLabel(
-                                        item,
-                                        selectedLanguage.code,
-                                        systemLanguage.code,
-                                    ).value,
-                                },
+                                { label: getResultLabel(item) },
                                 true,
                             )
                         "
@@ -278,8 +308,15 @@ function onPageChange(event: { page: number }) {
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
+            </li>
+        </ul>
+
+        <span
+            :id="resultActionsHintId"
+            class="p-hidden-accessible"
+        >
+            {{ $gettext("Press Tab for actions") }}
+        </span>
 
         <Paginator
             v-if="results && results.total_pages > 1"
@@ -350,6 +387,9 @@ function onPageChange(event: { page: number }) {
     flex: 1 1 auto;
     overflow-y: auto;
     min-height: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
     border: 0.0625rem solid var(--p-highlight-focus-background);
     border-radius: 0.125rem;
 }
@@ -360,6 +400,11 @@ function onPageChange(event: { page: number }) {
 
 .result-item {
     border-bottom: 0.0625rem solid var(--p-highlight-focus-background);
+}
+
+.result-item:focus-visible {
+    outline: 0.125rem solid var(--p-focus-ring-color);
+    outline-offset: -0.125rem;
 }
 
 .result-item:hover {
