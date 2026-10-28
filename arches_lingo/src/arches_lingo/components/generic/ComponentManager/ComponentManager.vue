@@ -35,6 +35,7 @@ import {
     VIEW,
     openPanelComponentKey,
 } from "@/arches_lingo/constants.ts";
+import { useAnnouncer } from "@/arches_lingo/composables/useAnnouncer.ts";
 import { useMediaQuery } from "@/arches_lingo/composables/useMediaQuery.ts";
 import {
     useEditorDirtyState,
@@ -63,6 +64,7 @@ const route = useRoute();
 const confirm = useConfirm();
 const { $gettext } = useGettext();
 const { isEditorDirty } = useEditorDirtyState();
+const { announce } = useAnnouncer();
 const isNarrowScreen = useMediaQuery(NARROW_SCREEN_MEDIA_QUERY);
 
 const splitterLayout = computed(() =>
@@ -170,7 +172,7 @@ function confirmDiscard(callback: () => void) {
 }
 
 provide("openEditor", openEditor);
-provide("closeEditor", closeEditor);
+provide("closeEditor", closeEditorAfterSave);
 provide("updateAfterComponentDeletion", updateAfterComponentDeletion);
 provide("refreshReportSection", refreshReportSection);
 provide("resourceInstanceLifecycleState", resourceInstanceLifecycleState);
@@ -196,6 +198,17 @@ function closeEditor() {
     editorTileId.value = null;
     isEditorLoading.value = false;
     returnFocusFromEditor(closedComponentName);
+}
+
+// Editors call the injected closeEditor only once a save has succeeded.
+function closeEditorAfterSave() {
+    const savedSectionTitle = selectedComponentDatum.value?.sectionTitle;
+    if (savedSectionTitle) {
+        announce(
+            $gettext("%{section} saved", { section: savedSectionTitle }, true),
+        );
+    }
+    closeEditor();
 }
 
 async function returnFocusFromEditor(closedComponentName?: string) {
@@ -355,10 +368,6 @@ function initNewLabel() {
     openEditor(labelComponent[0].componentName);
 }
 
-provide("openEditor", openEditor);
-provide("closeEditor", closeEditor);
-provide("updateAfterComponentDeletion", updateAfterComponentDeletion);
-provide("refreshReportSection", refreshReportSection);
 provide(openPanelComponentKey, openPanelComponent);
 provide("focusSectionHeading", focusSectionHeading);
 
