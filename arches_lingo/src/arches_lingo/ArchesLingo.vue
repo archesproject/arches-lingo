@@ -16,6 +16,7 @@ import {
     HIERARCHY_PANEL_ID,
     MAIN_CONTENT_ID,
 } from "@/arches_lingo/constants.ts";
+import { useAccessibleToasts } from "@/arches_lingo/composables/useAccessibleToasts.ts";
 import { usePageTitle } from "@/arches_lingo/composables/usePageTitle.ts";
 import { useRouteChangeFocus } from "@/arches_lingo/composables/useRouteChangeFocus.ts";
 import { useUnsavedChangesGuard } from "@/arches_lingo/composables/useUnsavedChangesGuard.ts";
@@ -36,6 +37,7 @@ const { $gettext } = useGettext();
 
 const { pageTitleDetail } = usePageTitle(route);
 useRouteChangeFocus(router, pageTitleDetail);
+const { onToastKeydown, onToastClose } = useAccessibleToasts();
 
 const isNavExpanded = ref(false);
 const schemeHierarchyKey = ref(0);
@@ -194,12 +196,14 @@ function focusMainContent() {
     <LiveAnnouncer />
     <Toast
         :pt="{
+            root: { onKeydown: onToastKeydown },
             summary: { fontSize: 'medium' },
             detail: { fontSize: 'small' },
             messageIcon: {
                 style: { marginTop: 'var(--p-toast-messageicon-margintop)' },
             },
         }"
+        @close="onToastClose"
     />
     <ConfirmDialog group="unsaved-changes" />
     <ConfirmDialog group="logout" />
