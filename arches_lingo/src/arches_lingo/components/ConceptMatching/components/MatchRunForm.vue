@@ -19,7 +19,7 @@ import {
     SIMILARITY_STEP,
 } from "@/arches_lingo/components/ConceptMatching/constants.ts";
 import { buildSignalList } from "@/arches_lingo/components/ConceptMatching/utils.ts";
-import { WARN } from "@/arches_lingo/constants.ts";
+import { STATIC_NOTE_PASS_THROUGH, WARN } from "@/arches_lingo/constants.ts";
 
 import type { ConceptMatchRunRequest, Scheme } from "@/arches_lingo/types.ts";
 
@@ -163,6 +163,7 @@ function requestRun(): void {
                 class="option-message"
                 :severity="WARN"
                 :closable="false"
+                :pt="STATIC_NOTE_PASS_THROUGH"
             >
                 <span>{{
                     $gettext(
