@@ -7,9 +7,10 @@ import ConfirmDialog from "primevue/confirmdialog";
 import Image from "primevue/image";
 import Message from "primevue/message";
 import Skeleton from "primevue/skeleton";
-import Tag from "primevue/tag";
 import { useConfirm } from "primevue/useconfirm";
 import { useToast } from "primevue/usetoast";
+
+import CountTag from "@/arches_lingo/components/generic/CountTag.vue";
 
 import GenericWidget from "@/arches_vue_components/generics/GenericWidget/GenericWidget.vue";
 
@@ -232,10 +233,9 @@ function modifyResource(resourceInstanceId?: string) {
         <div class="section-header">
             <div class="section-title">
                 <h2 ref="sectionHeadingRef">{{ props.sectionTitle }}</h2>
-                <Tag
+                <CountTag
                     v-if="resources?.length"
-                    :value="String(resources.length)"
-                    severity="secondary"
+                    :count="resources.length"
                 />
             </div>
             <Button
@@ -474,9 +474,7 @@ function modifyResource(resourceInstanceId?: string) {
     font-size: var(--p-lingo-font-size-smallnormal);
     font-weight: var(--p-lingo-font-weight-normal);
     color: var(--p-text-color);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    overflow-wrap: anywhere;
     flex: 1;
     min-width: 0;
 }
