@@ -27,7 +27,14 @@ import {
     CANDIDATE_STATUS_DISMISSED,
     CANDIDATE_STATUS_PENDING,
 } from "@/arches_lingo/components/ConceptMatching/constants.ts";
-import { ERROR, INFO, SECONDARY, WARN } from "@/arches_lingo/constants.ts";
+import {
+    ERROR,
+    INFO,
+    SECONDARY,
+    STATIC_NOTE_PASS_THROUGH,
+    STATUS_MESSAGE_PASS_THROUGH,
+    WARN,
+} from "@/arches_lingo/constants.ts";
 import { focusWithoutScrolling } from "@/arches_lingo/utils.ts";
 
 import type {
@@ -313,6 +320,7 @@ function onMergeFlowAfterHide(): void {
             class="access-message"
             :severity="WARN"
             :closable="false"
+            :pt="STATIC_NOTE_PASS_THROUGH"
         >
             <span>{{
                 $gettext(
@@ -395,6 +403,7 @@ function onMergeFlowAfterHide(): void {
                     v-if="hasUnshownResults"
                     :severity="INFO"
                     :closable="false"
+                    :pt="STATUS_MESSAGE_PASS_THROUGH"
                 >
                     <span class="unshown-results">
                         <span>{{
