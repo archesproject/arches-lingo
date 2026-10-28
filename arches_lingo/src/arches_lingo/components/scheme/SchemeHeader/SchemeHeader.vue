@@ -102,7 +102,7 @@ const { openEditLog } = useEditLog(() => props.graphSlug);
 const confirm = useConfirm();
 const router = useRouter();
 const toast = useToast();
-const { $gettext, interpolate } = useGettext();
+const { $gettext, $ngettext, interpolate } = useGettext();
 const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
 
 const scheme = ref<ResourceInstanceResult>();
@@ -137,9 +137,12 @@ const visibleLabelChips = computed(() =>
 );
 
 const showMoreLabel = computed(() =>
-    interpolate($gettext("+%{count} more"), {
-        count: hiddenLanguageCount.value,
-    }),
+    $ngettext(
+        "+%{count} more language",
+        "+%{count} more languages",
+        hiddenLanguageCount.value,
+        { count: String(hiddenLanguageCount.value) },
+    ),
 );
 
 const isLoading = ref(true);
@@ -746,12 +749,21 @@ async function onReinstateConfirmed(cascade: boolean) {
                         >
                             <Button
                                 :label="schemeUri"
+                                :aria-label="
+                                    $gettext(
+                                        '%{uri} (opens in a new tab)',
+                                        { uri: schemeUri },
+                                        true,
+                                    )
+                                "
                                 class="scheme-uri"
                                 variant="link"
                                 as="a"
                                 :href="schemeUri"
                                 target="_blank"
                                 rel="noopener"
+                                icon="pi pi-external-link"
+                                icon-pos="right"
                             ></Button>
                             <Button
                                 icon="pi pi-copy"

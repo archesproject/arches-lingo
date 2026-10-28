@@ -3,9 +3,9 @@ import { inject, computed } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import Button from "primevue/button";
-import Tag from "primevue/tag";
 
 import MetaStringViewer from "@/arches_lingo/components/generic/MetaStringViewer.vue";
+import CountTag from "@/arches_lingo/components/generic/CountTag.vue";
 import GenericWidget from "@/arches_vue_components/generics/GenericWidget/GenericWidget.vue";
 
 import { VIEW } from "@/arches_lingo/constants.ts";
@@ -81,10 +81,9 @@ const metaStringLabel = computed<MetaStringText>(() => ({
         <div class="section-header">
             <div class="section-title">
                 <h2>{{ props.sectionTitle }}</h2>
-                <Tag
+                <CountTag
                     v-if="props.tileData?.length"
-                    :value="String(props.tileData.length)"
-                    severity="secondary"
+                    :count="props.tileData.length"
                 />
             </div>
 
