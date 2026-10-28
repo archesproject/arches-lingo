@@ -9,6 +9,8 @@ import Button from "primevue/button";
 import ConfirmDialog from "primevue/confirmdialog";
 import Tag from "primevue/tag";
 
+import CountTag from "@/arches_lingo/components/generic/CountTag.vue";
+
 import { deleteLingoTile } from "@/arches_lingo/api.ts";
 import { getConceptIcon } from "@/arches_lingo/utils.ts";
 import { routeNames } from "@/arches_lingo/routes.ts";
@@ -359,10 +361,9 @@ function getTreeNodeStyle(depth: number) {
         <div class="section-header">
             <div class="section-title">
                 <h2>{{ props.sectionTitle }}</h2>
-                <Tag
+                <CountTag
                     v-if="relationshipGroups.length"
-                    :value="String(relationshipGroups.length)"
-                    severity="secondary"
+                    :count="relationshipGroups.length"
                 />
                 <Button
                     v-if="relationshipGroups.length > 1"
