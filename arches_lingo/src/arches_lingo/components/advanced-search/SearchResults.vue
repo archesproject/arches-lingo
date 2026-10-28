@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, useId } from "vue";
+import { ref, useId, watch } from "vue";
 import { useGettext } from "vue3-gettext";
 import { useRouter } from "vue-router";
 import { storeToRefs } from "pinia";
@@ -10,6 +10,7 @@ import Paginator from "primevue/paginator";
 
 import LifecycleStateBadge from "@/arches_lingo/components/generic/LifecycleStateBadge.vue";
 
+import { useAnnouncer } from "@/arches_lingo/composables/useAnnouncer.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 import { getConceptIcon, getParentLabels } from "@/arches_lingo/utils.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
@@ -19,10 +20,11 @@ import type { AdvancedSearchResponse } from "@/arches_lingo/types.ts";
 
 const { $gettext } = useGettext();
 const router = useRouter();
+const { announce } = useAnnouncer();
 
 const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
 
-defineProps<{
+const props = defineProps<{
     results: AdvancedSearchResponse | null;
     loading: boolean;
     selectedIds: Set<string>;
@@ -36,6 +38,24 @@ const emit = defineEmits<{
 }>();
 
 const expandedRows = ref<Set<string>>(new Set());
+
+watch(
+    () => props.loading,
+    (isLoading) => {
+        if (isLoading) {
+            announce($gettext("Searching..."));
+        } else if (props.results?.total_results === 0) {
+            announce($gettext("No results found."));
+        } else if (props.results) {
+            announce(
+                $gettext("%{count} results found", {
+                    count: String(props.results.total_results),
+                }),
+            );
+        }
+    },
+    { immediate: true },
+);
 const resultLabelIdPrefix = useId();
 
 function getResultLabelId(conceptId: string) {
@@ -98,7 +118,10 @@ function onPageChange(event: { page: number }) {
             v-if="loading"
             class="loading-indicator"
         >
-            <i class="pi pi-spin pi-spinner" />
+            <i
+                class="pi pi-spin pi-spinner"
+                aria-hidden="true"
+            />
             {{ $gettext("Searching...") }}
         </div>
 
