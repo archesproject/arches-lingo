@@ -15,11 +15,13 @@ import type { VirtualScrollerLazyEvent } from "primevue/virtualscroller";
 
 import NotificationsPanel from "@/arches_lingo/components/header/PageHeader/components/NotificationsInteraction/components/NotificationsPanel.vue";
 import { fetchUserNotifications } from "@/arches_lingo/api.ts";
+import { useAnnouncer } from "@/arches_lingo/composables/useAnnouncer.ts";
 import type { ComponentPublicInstance } from "vue";
 import type { Notification, PaginatorDetails } from "@/arches_lingo/types.ts";
 import { SEARCH_RESULTS_PER_PAGE } from "@/arches_lingo/constants.ts";
 
-const { $gettext } = useGettext();
+const { $gettext, $ngettext } = useGettext();
+const { announce } = useAnnouncer();
 
 const shouldShowNotificationsPanel = ref(false);
 const notificationsButton = useTemplateRef<ComponentPublicInstance>(
@@ -52,9 +54,11 @@ async function loadNotifications(
     items: number,
     pageNumber: number,
     unreadOnly: boolean,
+    { shouldAnnounceNew = false } = {},
 ) {
     isLoading.value = true;
     const parsed = await fetchUserNotifications(items, pageNumber, unreadOnly);
+    let newUnreadCount = 0;
     parsed.notifications.forEach((newNotif: Notification) => {
         if (
             !notifications.value.some(
@@ -62,8 +66,21 @@ async function loadNotifications(
             )
         ) {
             notifications.value.push(newNotif);
+            if (!newNotif.isread) {
+                newUnreadCount += 1;
+            }
         }
     });
+    if (shouldAnnounceNew && newUnreadCount) {
+        announce(
+            $ngettext(
+                "%{count} new notification",
+                "%{count} new notifications",
+                newUnreadCount,
+                { count: String(newUnreadCount) },
+            ),
+        );
+    }
     notifications.value.sort(
         (first, second) =>
             new Date(second.created).getTime() -
@@ -99,7 +116,9 @@ function resetNotifications() {
 
 function startPolling() {
     pollInterval.value = setInterval(() => {
-        loadNotifications(resultsPerPage.value, 1, showUnreadOnly.value);
+        loadNotifications(resultsPerPage.value, 1, showUnreadOnly.value, {
+            shouldAnnounceNew: true,
+        });
     }, POLLING_TIME_INTERVAL);
 }
 
