@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, useId } from "vue";
+import { computed, nextTick, ref, useId } from "vue";
 import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
 
@@ -8,6 +8,7 @@ import InputText from "primevue/inputtext";
 
 import { upsertSchemeURITemplate } from "@/arches_lingo/api.ts";
 import { DEFAULT_ERROR_TOAST_LIFE, ERROR } from "@/arches_lingo/constants.ts";
+import { focusFirstElementById } from "@/arches_lingo/utils.ts";
 
 type SchemeURITemplate = {
     scheme_resource_instance_id: string;
@@ -32,6 +33,8 @@ const toast = useToast();
 const { $gettext } = useGettext();
 
 const schemeURITemplateLabelId = useId();
+const schemeURITemplateInputId = useId();
+const schemeURITemplateEditButtonId = useId();
 const schemeURITemplateHelpId = useId();
 const schemeURITemplateHelpText = $gettext(
     "Placeholders: <scheme_identifier>, <concept_identifier>",
@@ -50,14 +53,21 @@ const schemeURITemplateValue = computed(() => {
     return props.defaultSchemeURITemplate;
 });
 
-function editSchemeURITemplate() {
+async function editSchemeURITemplate() {
     schemeURITemplateDraft.value = schemeURITemplateValue.value || "";
     isEditingSchemeURITemplate.value = true;
+    await nextTick();
+    focusFirstElementById(schemeURITemplateInputId);
 }
 
-function cancelEditingSchemeURITemplate() {
+async function cancelEditingSchemeURITemplate() {
     schemeURITemplateDraft.value = "";
     isEditingSchemeURITemplate.value = false;
+    await nextTick();
+    focusFirstElementById(
+        schemeURITemplateEditButtonId,
+        schemeURITemplateLabelId,
+    );
 }
 
 async function saveSchemeURITemplate() {
@@ -101,6 +111,7 @@ async function saveSchemeURITemplate() {
         <template v-if="isEditingSchemeURITemplate">
             <div class="uri-input-wrapper">
                 <InputText
+                    :id="schemeURITemplateInputId"
                     v-model="schemeURITemplateDraft"
                     size="small"
                     :aria-labelledby="schemeURITemplateLabelId"
@@ -141,6 +152,7 @@ async function saveSchemeURITemplate() {
             </span>
             <Button
                 v-if="canEditResourceInstances"
+                :id="schemeURITemplateEditButtonId"
                 icon="pi pi-pencil"
                 variant="text"
                 size="small"
