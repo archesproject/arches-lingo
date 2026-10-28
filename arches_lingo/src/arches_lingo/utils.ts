@@ -574,3 +574,11 @@ const FOCUSABLE_SELECTOR = [
 export function focusFirstFocusableElement(container: HTMLElement | null) {
     container?.querySelector<HTMLElement>(FOCUSABLE_SELECTOR)?.focus();
 }
+
+// Non-focusable targets get tabindex="-1", which keeps them out of the tab order.
+export function focusWithoutScrolling(element: HTMLElement) {
+    if (element.tabIndex < 0 && !element.hasAttribute("tabindex")) {
+        element.setAttribute("tabindex", "-1");
+    }
+    element.focus({ preventScroll: true });
+}
