@@ -7,7 +7,11 @@ import Message from "primevue/message";
 
 import MergeRetirementOptions from "@/arches_lingo/components/concept/ConceptMerge/components/MergeRetirementOptions.vue";
 
-import { INFO, WARN } from "@/arches_lingo/constants.ts";
+import {
+    INFO,
+    STATIC_NOTE_PASS_THROUGH,
+    WARN,
+} from "@/arches_lingo/constants.ts";
 
 import type { MergeRetirementStrategy } from "@/arches_lingo/types.ts";
 import type { MergeSectionSummary } from "@/arches_lingo/components/concept/ConceptMerge/types.ts";
@@ -117,6 +121,7 @@ const removalDescription = computed(function () {
             v-if="!hasSelections"
             :severity="INFO"
             :closable="false"
+            :pt="STATIC_NOTE_PASS_THROUGH"
         >
             {{
                 $gettext(
@@ -144,6 +149,7 @@ const removalDescription = computed(function () {
             v-if="isAbsorbedDraft"
             :severity="INFO"
             :closable="false"
+            :pt="STATIC_NOTE_PASS_THROUGH"
         >
             {{
                 interpolate(
@@ -187,6 +193,7 @@ const removalDescription = computed(function () {
             v-if="isCrossScheme"
             :severity="INFO"
             :closable="false"
+            :pt="STATIC_NOTE_PASS_THROUGH"
         >
             {{
                 interpolate(
@@ -236,6 +243,7 @@ const removalDescription = computed(function () {
         <Message
             :severity="WARN"
             :closable="false"
+            :pt="STATIC_NOTE_PASS_THROUGH"
         >
             {{ irreversibilityWarning }}
         </Message>
