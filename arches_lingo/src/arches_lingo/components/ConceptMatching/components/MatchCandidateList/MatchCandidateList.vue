@@ -63,9 +63,10 @@ const emit = defineEmits<{
     (event: "search-changed", payload: { searchText: string }): void;
 }>();
 
-const { $gettext, interpolate } = useGettext();
+const { $gettext, interpolate, $ngettext } = useGettext();
 
 const draftSearchText = ref(searchText);
+const statusRegionRef = ref<HTMLElement | null>(null);
 
 let searchTimer: ReturnType<typeof setTimeout> | undefined;
 
@@ -130,6 +131,18 @@ const emptyText = computed(function () {
     }
 });
 
+const statusText = computed(function () {
+    if (isLoading) {
+        return $gettext("Loading pairs");
+    }
+    if (!candidates.length) {
+        return emptyText.value;
+    }
+    return $ngettext("%{count} pair", "%{count} pairs", totalResults, {
+        count: String(totalResults),
+    });
+});
+
 // Back and forward change the filter without the input, so it follows the route.
 watch(
     () => searchText,
@@ -161,6 +174,12 @@ function onStatusChosen(chosenStatus: ConceptMatchCandidateStatus): void {
 function onPageChosen(pageState: PageState): void {
     emit("page-changed", { pageNumber: pageState.page + 1 });
 }
+
+function getStatusElement(): HTMLElement | null {
+    return statusRegionRef.value;
+}
+
+defineExpose({ getStatusElement });
 </script>
 
 <template>
@@ -203,18 +222,20 @@ function onPageChosen(pageState: PageState): void {
             </IconField>
         </div>
 
+        <p
+            ref="statusRegionRef"
+            role="status"
+            class="candidate-status"
+            :class="{ 'candidate-empty': !isLoading && !candidates.length }"
+        >
+            {{ statusText }}
+        </p>
+
         <ProgressSpinner
             v-if="isLoading"
             class="candidate-spinner"
-            :aria-label="$gettext('Loading pairs')"
+            aria-hidden="true"
         />
-
-        <p
-            v-else-if="!candidates.length"
-            class="candidate-empty"
-        >
-            {{ emptyText }}
-        </p>
 
         <template v-else>
             <MatchCandidateRow
@@ -277,11 +298,15 @@ function onPageChosen(pageState: PageState): void {
     height: 2.5rem;
 }
 
-.candidate-list .candidate-empty {
+.candidate-list .candidate-status {
     margin: 0;
+    font-size: var(--p-lingo-font-size-small);
+    color: var(--p-text-muted-color);
+}
+
+.candidate-list .candidate-empty {
     padding-block: 1rem;
     font-size: var(--p-lingo-font-size-smallnormal);
     font-weight: var(--p-lingo-font-weight-light);
-    color: var(--p-text-muted-color);
 }
 </style>
