@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject, computed, ref } from "vue";
+import { inject, computed, ref, useId } from "vue";
 import { useGettext } from "vue3-gettext";
 import { useConfirm } from "primevue/useconfirm";
 import { useToast } from "primevue/usetoast";
@@ -54,9 +54,13 @@ const updateAfterComponentDeletion = inject<
     (componentName: string, tileId: string) => void
 >("updateAfterComponentDeletion");
 
-const refreshReportSection = inject<(componentName: string) => void>(
+const refreshReportSection = inject<(componentName: string) => Promise<void>>(
     "refreshReportSection",
 );
+const focusSectionHeading = inject<(componentName: string) => void>(
+    "focusSectionHeading",
+);
+const confirmDialogHeaderId = useId();
 
 const refreshSchemeHierarchy = inject<() => void>("refreshSchemeHierarchy");
 
@@ -274,10 +278,11 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
         );
 
         refreshSchemeHierarchy!();
-        refreshReportSection!(props.componentName);
+        await refreshReportSection!(props.componentName);
         updateAfterComponentDeletion!(props.componentName, hierarchy.tileid!);
 
         confirm.close();
+        focusSectionHeading!(props.componentName);
     } catch (error) {
         toast.add({
             severity: ERROR,
@@ -306,6 +311,7 @@ function getTreeNodeStyle(depth: number) {
         <ConfirmDialog
             :pt="{ root: { style: { fontFamily: 'sans-serif' } } }"
             group="delete-parent"
+            :aria-labelledby="confirmDialogHeaderId"
         >
             <template #container="{ message, rejectCallback }">
                 <div
@@ -314,7 +320,10 @@ function getTreeNodeStyle(depth: number) {
                     @mousedown.stop
                     @mouseup.stop
                 >
-                    <div class="confirm-dialog-header">
+                    <div
+                        :id="confirmDialogHeaderId"
+                        class="confirm-dialog-header"
+                    >
                         {{ message.header }}
                     </div>
                     <div class="confirm-dialog-message">
@@ -326,6 +335,7 @@ function getTreeNodeStyle(depth: number) {
                             :disabled="isDeletePending"
                             severity="secondary"
                             outlined
+                            autofocus
                             @click="
                                 () => {
                                     rejectCallback();

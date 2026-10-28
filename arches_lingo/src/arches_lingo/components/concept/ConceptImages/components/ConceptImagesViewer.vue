@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject, ref, computed, watch } from "vue";
+import { inject, nextTick, ref, computed, watch } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import Button from "primevue/button";
@@ -9,10 +9,18 @@ import Message from "primevue/message";
 import Skeleton from "primevue/skeleton";
 import Tag from "primevue/tag";
 import { useConfirm } from "primevue/useconfirm";
+import { useToast } from "primevue/usetoast";
 
 import GenericWidget from "@/arches_vue_components/generics/GenericWidget/GenericWidget.vue";
 
-import { DANGER, SECONDARY, VIEW } from "@/arches_lingo/constants.ts";
+import {
+    DANGER,
+    DEFAULT_ERROR_TOAST_LIFE,
+    ERROR,
+    SECONDARY,
+    VIEW,
+} from "@/arches_lingo/constants.ts";
+import { focusWithoutScrolling } from "@/arches_lingo/utils.ts";
 import { useConceptImagesEditorStore } from "@/arches_lingo/stores/useConceptImagesEditorStore.ts";
 import { storeToRefs } from "pinia";
 import {
@@ -92,6 +100,8 @@ const isLoading = ref(true);
 const resources = ref<DigitalObjectInstance[]>();
 const { $gettext } = useGettext();
 const confirm = useConfirm();
+const toast = useToast();
+const sectionHeadingRef = ref<HTMLElement | null>(null);
 
 // The report refreshes its resource in place after a merge rather than
 // remounting this section, so the images are refetched whenever the tile does.
@@ -126,49 +136,7 @@ function confirmDelete(removedResourceInstanceId: string) {
         message: $gettext(
             "Do you want to remove this digital resource from concept images? (This does not delete the digital resource)",
         ),
-        accept: async () => {
-            isLoading.value = true;
-
-            const resourceInstanceId = props.tileData?.resourceinstance;
-
-            if (resourceInstanceId) {
-                const resource: ConceptInstance =
-                    await fetchLingoResourcePartial(
-                        props.graphSlug,
-                        resourceInstanceId,
-                        props.nodegroupAlias,
-                    );
-
-                const depictingDigitalAssetInternalData =
-                    resource.aliased_data.depicting_digital_asset_internal
-                        ?.aliased_data;
-                if (
-                    depictingDigitalAssetInternalData?.depicting_digital_asset_internal
-                ) {
-                    const currentNodeValue =
-                        depictingDigitalAssetInternalData
-                            .depicting_digital_asset_internal.node_value ?? [];
-                    depictingDigitalAssetInternalData.depicting_digital_asset_internal.node_value =
-                        currentNodeValue.filter(
-                            (ref) =>
-                                ref.resourceId !== removedResourceInstanceId,
-                        );
-                    resources.value = resources.value?.filter(
-                        (resource) =>
-                            resource.resourceinstanceid !==
-                            removedResourceInstanceId,
-                    );
-                    await updateLingoResource(
-                        props.graphSlug,
-                        resourceInstanceId,
-                        resource,
-                    );
-                }
-
-                isLoading.value = false;
-                newResource();
-            }
-        },
+        accept: () => removeDigitalResource(removedResourceInstanceId),
         rejectProps: {
             label: $gettext("Cancel"),
             severity: SECONDARY,
@@ -179,6 +147,61 @@ function confirmDelete(removedResourceInstanceId: string) {
             severity: DANGER,
         },
     });
+}
+
+async function removeDigitalResource(removedResourceInstanceId: string) {
+    const resourceInstanceId = props.tileData?.resourceinstance;
+    if (!resourceInstanceId) {
+        return;
+    }
+
+    isLoading.value = true;
+    try {
+        const resource: ConceptInstance = await fetchLingoResourcePartial(
+            props.graphSlug,
+            resourceInstanceId,
+            props.nodegroupAlias,
+        );
+
+        const depictingDigitalAssetInternalData =
+            resource.aliased_data.depicting_digital_asset_internal
+                ?.aliased_data;
+        if (
+            depictingDigitalAssetInternalData?.depicting_digital_asset_internal
+        ) {
+            const currentNodeValue =
+                depictingDigitalAssetInternalData
+                    .depicting_digital_asset_internal.node_value ?? [];
+            depictingDigitalAssetInternalData.depicting_digital_asset_internal.node_value =
+                currentNodeValue.filter(
+                    (ref) => ref.resourceId !== removedResourceInstanceId,
+                );
+            await updateLingoResource(
+                props.graphSlug,
+                resourceInstanceId,
+                resource,
+            );
+            resources.value = resources.value?.filter(
+                (resource) =>
+                    resource.resourceinstanceid !== removedResourceInstanceId,
+            );
+        }
+        newResource();
+    } catch (error) {
+        toast.add({
+            severity: ERROR,
+            life: DEFAULT_ERROR_TOAST_LIFE,
+            summary: $gettext("Failed to remove the image."),
+            detail: error instanceof Error ? error.message : undefined,
+        });
+    } finally {
+        isLoading.value = false;
+    }
+
+    await nextTick();
+    if (sectionHeadingRef.value) {
+        focusWithoutScrolling(sectionHeadingRef.value);
+    }
 }
 
 function getImageName(resource: DigitalObjectInstance): string {
@@ -208,7 +231,7 @@ function modifyResource(resourceInstanceId?: string) {
 
         <div class="section-header">
             <div class="section-title">
-                <h2>{{ props.sectionTitle }}</h2>
+                <h2 ref="sectionHeadingRef">{{ props.sectionTitle }}</h2>
                 <Tag
                     v-if="resources?.length"
                     :value="String(resources.length)"
