@@ -11,6 +11,7 @@ import { useConfirm } from "primevue/useconfirm";
 import { useToast } from "primevue/usetoast";
 
 import CountTag from "@/arches_lingo/components/generic/CountTag.vue";
+import DisabledReasonButton from "@/arches_lingo/components/generic/DisabledReasonButton.vue";
 
 import GenericWidget from "@/arches_vue_components/generics/GenericWidget/GenericWidget.vue";
 
@@ -238,25 +239,15 @@ function modifyResource(resourceInstanceId?: string) {
                     :count="resources.length"
                 />
             </div>
-            <Button
+            <DisabledReasonButton
                 v-if="isEditor"
-                v-tooltip.top="{
-                    disabled: Boolean(!isCreateDisabled),
-                    value: createTooltipText,
-                    showDelay: 300,
-                    pt: {
-                        text: {
-                            style: { fontFamily: 'var(--p-lingo-font-family)' },
-                        },
-                        arrow: { style: { display: 'none' } },
-                    },
-                }"
-                :disabled="isCreateDisabled"
+                :is-disabled="isCreateDisabled"
+                :disabled-reason="createTooltipText"
                 :label="$gettext('Add Image')"
                 class="add-button"
                 icon="pi pi-plus-circle"
                 @click="newResource"
-            ></Button>
+            />
         </div>
 
         <Skeleton

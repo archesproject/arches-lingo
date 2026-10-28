@@ -2,7 +2,7 @@
 import { computed, inject, useId } from "vue";
 import { useGettext } from "vue3-gettext";
 
-import Button from "primevue/button";
+import DisabledReasonButton from "@/arches_lingo/components/generic/DisabledReasonButton.vue";
 
 import GenericWidget from "@/arches_vue_components/generics/GenericWidget/GenericWidget.vue";
 
@@ -82,27 +82,17 @@ const buttonIcon = computed(() => {
         <div class="section-header">
             <h2>{{ props.sectionTitle }}</h2>
 
-            <Button
+            <DisabledReasonButton
                 v-if="isEditor"
-                v-tooltip.top="{
-                    disabled: Boolean(!isCreateDisabled),
-                    value: createTooltipText,
-                    showDelay: 300,
-                    pt: {
-                        text: {
-                            style: { fontFamily: 'var(--p-lingo-font-family)' },
-                        },
-                        arrow: { style: { display: 'none' } },
-                    },
-                }"
-                :disabled="isCreateDisabled"
+                :is-disabled="isCreateDisabled"
+                :disabled-reason="createTooltipText"
                 :label="buttonLabel"
                 :icon="buttonIcon"
                 class="add-button"
                 @click="
                     openEditor!(props.componentName, props.tileData?.tileid)
                 "
-            ></Button>
+            />
         </div>
 
         <div

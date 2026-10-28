@@ -3,7 +3,6 @@ import { computed, ref } from "vue";
 
 import { useGettext } from "vue3-gettext";
 
-import Button from "primevue/button";
 import Checkbox from "primevue/checkbox";
 import InputText from "primevue/inputtext";
 import Message from "primevue/message";
@@ -19,6 +18,7 @@ import {
     SIMILARITY_STEP,
 } from "@/arches_lingo/components/ConceptMatching/constants.ts";
 import { buildSignalList } from "@/arches_lingo/components/ConceptMatching/utils.ts";
+import DisabledReasonButton from "@/arches_lingo/components/generic/DisabledReasonButton.vue";
 import { STATIC_NOTE_PASS_THROUGH, WARN } from "@/arches_lingo/constants.ts";
 
 import type { ConceptMatchRunRequest, Scheme } from "@/arches_lingo/types.ts";
@@ -52,8 +52,6 @@ const hasAnySignal = computed(
     () =>
         compareLabels.value || compareUris.value || compareSimilarLabels.value,
 );
-
-const canStartRun = computed(() => !isStartingRun && hasAnySignal.value);
 
 const thresholdLabel = computed(() =>
     $gettext("How similar? (%{threshold})", {
@@ -232,11 +230,15 @@ function requestRun(): void {
             </div>
         </fieldset>
 
-        <Button
+        <DisabledReasonButton
             class="run-button"
             icon="pi pi-search"
             :label="$gettext('Find matches')"
-            :disabled="!canStartRun"
+            :is-disabled="!hasAnySignal"
+            :disabled-reason="
+                $gettext('Choose at least one thing to compare first.')
+            "
+            :disabled="isStartingRun"
             :loading="isStartingRun"
             @click="requestRun"
         />
@@ -310,8 +312,11 @@ function requestRun(): void {
     color: var(--p-text-muted-color);
 }
 
-.run-form .run-button {
+.run-form .disabled-reason-button {
     align-self: flex-start;
+}
+
+.run-form :deep(.run-button) {
     font-size: var(--p-lingo-font-size-small);
     border-radius: 0.125rem;
 }
