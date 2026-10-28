@@ -42,6 +42,7 @@ import {
 } from "@/arches_lingo/composables/useEditorDirtyState.ts";
 
 import { fetchResourceInstanceLifecycleState } from "@/arches_lingo/api.ts";
+import { focusWithoutScrolling } from "@/arches_lingo/utils.ts";
 import { DEFAULT_ERROR_TOAST_LIFE, ERROR } from "@/arches_lingo/constants.ts";
 import { getSplitterGutterPassThrough } from "@/arches_lingo/utils.ts";
 
@@ -86,6 +87,7 @@ const editorState = ref(CLOSED);
 const selectedComponentDatum = ref();
 const isFormEditor = ref(true);
 const isEditorLoading = ref(false);
+const componentManagerRef = ref<HTMLElement | null>(null);
 
 const resourceInstanceLifecycleState = ref<object | undefined>(undefined);
 const isFetchingResourceInstanceLifecycleState = ref(false);
@@ -313,10 +315,25 @@ provide("closeEditor", closeEditor);
 provide("updateAfterComponentDeletion", updateAfterComponentDeletion);
 provide("refreshReportSection", refreshReportSection);
 provide(openPanelComponentKey, openPanelComponent);
+provide("focusSectionHeading", focusSectionHeading);
+
+async function focusSectionHeading(componentName: string) {
+    await nextTick();
+    const sectionHeading =
+        componentManagerRef.value?.querySelector<HTMLElement>(
+            `[data-component-name="${componentName}"] h2`,
+        );
+    if (sectionHeading) {
+        focusWithoutScrolling(sectionHeading);
+    }
+}
 </script>
 
 <template>
-    <div class="component-manager">
+    <div
+        ref="componentManagerRef"
+        class="component-manager"
+    >
         <Splitter
             class="component-splitter"
             :class="`component-splitter-${splitterLayout}`"
@@ -350,21 +367,26 @@ provide(openPanelComponentKey, openPanelComponent);
                     />
 
                     <div class="scroll-container">
-                        <component
-                            :is="componentDatum.component"
+                        <div
                             v-for="componentDatum in remainingComponentData"
                             :key="
                                 componentDatum.componentName +
                                 '-' +
                                 componentDatum.key
                             "
-                            :graph-slug="componentDatum.graphSlug"
-                            :nodegroup-alias="componentDatum.nodegroupAlias"
-                            :resource-instance-id="resourceInstanceId"
-                            :section-title="componentDatum.sectionTitle"
-                            :component-name="componentDatum.componentName"
-                            :mode="VIEW"
-                        />
+                            class="report-section"
+                            :data-component-name="componentDatum.componentName"
+                        >
+                            <component
+                                :is="componentDatum.component"
+                                :graph-slug="componentDatum.graphSlug"
+                                :nodegroup-alias="componentDatum.nodegroupAlias"
+                                :resource-instance-id="resourceInstanceId"
+                                :section-title="componentDatum.sectionTitle"
+                                :component-name="componentDatum.componentName"
+                                :mode="VIEW"
+                            />
+                        </div>
                     </div>
                 </div>
             </SplitterPanel>
@@ -431,6 +453,10 @@ provide(openPanelComponentKey, openPanelComponent);
     flex: 1;
     overflow-y: auto;
     min-height: 0;
+}
+
+.report-section {
+    display: contents;
 }
 
 :deep(.viewer-section) {

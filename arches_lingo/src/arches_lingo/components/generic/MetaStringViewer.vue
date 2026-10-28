@@ -33,8 +33,11 @@ const openEditor =
 const updateAfterComponentDeletion = inject<
     (componentName: string, tileId: string) => void
 >("updateAfterComponentDeletion");
-const refreshReportSection = inject<(componentName: string) => void>(
+const refreshReportSection = inject<(componentName: string) => Promise<void>>(
     "refreshReportSection",
+);
+const focusSectionHeading = inject<(componentName: string) => void>(
+    "focusSectionHeading",
 );
 const refreshSchemeHierarchy = inject<() => void>("refreshSchemeHierarchy");
 const { isEditor } = useUserStore();
@@ -55,6 +58,7 @@ const canEditResourceInstances = computed(() => {
 });
 
 const rowIdPrefix = useId();
+const confirmDialogHeaderId = useId();
 const expandedRows = ref([]);
 const isDeletePending = ref(false);
 const tableContainerRef = ref<HTMLElement | null>(null);
@@ -106,11 +110,12 @@ async function deleteSectionValue(tileId: string) {
 
         await deleteLingoTile(props.graphSlug, props.nodegroupAlias, tileId);
 
-        refreshReportSection!(props.componentName);
+        await refreshReportSection!(props.componentName);
         updateAfterComponentDeletion!(props.componentName, tileId);
         refreshSchemeHierarchy!();
 
         confirm.close();
+        focusSectionHeading!(props.componentName);
     } catch (error) {
         toast.add({
             severity: ERROR,
@@ -128,6 +133,7 @@ async function deleteSectionValue(tileId: string) {
     <ConfirmDialog
         :pt="{ root: { style: { fontFamily: 'sans-serif' } } }"
         :group="metaStringText.name"
+        :aria-labelledby="confirmDialogHeaderId"
     >
         <template #container="{ message, rejectCallback }">
             <div
@@ -136,7 +142,10 @@ async function deleteSectionValue(tileId: string) {
                 @mousedown.stop
                 @mouseup.stop
             >
-                <div class="confirm-dialog-header">
+                <div
+                    :id="confirmDialogHeaderId"
+                    class="confirm-dialog-header"
+                >
                     {{ message.header }}
                 </div>
                 <div class="confirm-dialog-message">
@@ -148,6 +157,7 @@ async function deleteSectionValue(tileId: string) {
                         :disabled="isDeletePending"
                         severity="secondary"
                         outlined
+                        autofocus
                         @click="
                             () => {
                                 rejectCallback();
