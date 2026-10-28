@@ -56,6 +56,7 @@ function onSave(savedTileData: {
         :fetch-resources="fetchSources"
         :refresh-trigger="refreshTrigger"
         :editor-enabled="isEditor"
+        :is-editor-loading="isLoadingTile"
         @select-resource="onSelectResource"
     >
         <template #list-actions="{ openBlankEditor }">
