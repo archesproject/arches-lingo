@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {
     computed,
+    nextTick,
     onUnmounted,
     provide,
     ref,
@@ -43,9 +44,16 @@ provide("componentEditorFormRef", componentEditorFormRef);
  * Called by child editors at the end of their save() (in their finally block)
  * to re-sync the global dirty flag with the form's actual dirty state.
  */
-function onSaveSettled() {
+async function onSaveSettled() {
     if (!isComponentMounted.value) return;
     isEditorDirty.value = isFormDirty.value;
+
+    await nextTick();
+    const isFocusLost =
+        !document.activeElement || document.activeElement === document.body;
+    if (isComponentMounted.value && isFocusLost) {
+        attemptFocusFirstField(5);
+    }
 }
 provide("onSaveSettled", onSaveSettled);
 
@@ -70,6 +78,7 @@ watch(
             requestAnimationFrame(() => attemptFocusFirstField(5));
         }
     },
+    { immediate: true },
 );
 
 function attemptFocusFirstField(attemptsRemaining: number) {
