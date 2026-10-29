@@ -19,10 +19,11 @@ from arches_lingo.utils.reconciliation.concept_summaries import (
 )
 from arches_lingo.utils.reconciliation.labels import (
     choose_display_label_tile,
+    get_label_type_uri,
     is_same_base_language,
     join_labels,
 )
-from arches_lingo.utils.reconciliation.manifest import concept_identifier_space
+from arches_lingo.utils.reconciliation.manifest import get_concept_identifier_space
 from arches_lingo.utils.reconciliation.visibility import (
     SEARCHED_LIFECYCLE_STATE_IDS,
 )
@@ -42,8 +43,7 @@ def choose_alternate_labels(label_tiles, display_language):
         label_tile[CONCEPT_NAME_CONTENT_NODE]
         for label_tile in label_tiles
         if label_tile.get(CONCEPT_NAME_CONTENT_NODE)
-        and (label_tile.get(CONCEPT_NAME_TYPE_NODE) or [{}])[0].get("uri")
-        == ALT_LABEL_URI
+        and get_label_type_uri(label_tile, CONCEPT_NAME_TYPE_NODE) == ALT_LABEL_URI
         and is_same_base_language(
             label_tile.get(CONCEPT_NAME_LANGUAGE_NODE), display_language
         )
@@ -103,6 +103,6 @@ def build_concept_preview(raw_concept_id):
         "alternate_labels": choose_alternate_labels(label_tiles, display_language),
         "note": choose_preview_note(concept_id, display_language),
         "uri": get_uris_for_concepts([concept_id]).get(concept_id),
-        "view_url": f"{concept_identifier_space()}{concept_id}",
+        "view_url": f"{get_concept_identifier_space()}{concept_id}",
         "is_retired": lifecycle_state_id == RETIRED_STATE_ID,
     }

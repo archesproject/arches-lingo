@@ -19,17 +19,16 @@ import {
 import {
     CONCEPT_TYPE_NODE_ALIAS,
     DEFAULT_ERROR_TOAST_LIFE,
-    DEFAULT_TOAST_LIFE,
     ERROR,
     SKOS_PREF_LABEL_URI,
     SKOS_ALT_LABEL_URI,
-    SUCCESS,
 } from "@/arches_lingo/constants.ts";
 import { PREF_LABEL, ALT_LABEL } from "@/arches_controlled_lists/constants.ts";
 
 import { extractDescriptors } from "@/arches_lingo/utils.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 
+import { useCopyToClipboard } from "@/arches_lingo/composables/useCopyToClipboard.ts";
 import { useResourceStore } from "@/arches_lingo/composables/useResourceStore.ts";
 import { useConceptStore } from "@/arches_lingo/stores/useConceptStore.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
@@ -63,6 +62,7 @@ const resourceInstanceLifecycleState = inject<
 
 const { $gettext } = useGettext();
 const toast = useToast();
+const { copyToClipboard } = useCopyToClipboard();
 
 const resourceStore = useResourceStore();
 const conceptStore = useConceptStore();
@@ -79,12 +79,10 @@ const conceptTypeTile = ref();
 const isWidgetLoading = ref(false);
 const ancestorLabelsById = ref<Map<string, Label[]>>(new Map());
 
-async function copyUriToClipboard(uri: string) {
-    await navigator.clipboard.writeText(uri);
-    toast.add({
-        severity: SUCCESS,
-        life: DEFAULT_TOAST_LIFE,
-        summary: $gettext("URI copied to clipboard"),
+async function copyUriToClipboard(uri: string): Promise<void> {
+    await copyToClipboard(uri, {
+        copiedSummary: $gettext("URI copied to clipboard"),
+        failedSummary: $gettext("Unable to copy the URI"),
     });
 }
 

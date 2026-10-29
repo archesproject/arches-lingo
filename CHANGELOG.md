@@ -22,7 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
--   Fix SKOS export dropping all but one broader concept when a classification tile names several parents, and failing on typed relations such as "distinguished from" [#809](https://github.com/archesproject/arches-lingo/pull/809)
+-   Fix SKOS export dropping all but one broader concept when a classification tile names several parents, and failing on typed relations such as "distinguished from" or on values with no type [#809](https://github.com/archesproject/arches-lingo/pull/809)
 
 ## [1.1.2] - Unreleased
 

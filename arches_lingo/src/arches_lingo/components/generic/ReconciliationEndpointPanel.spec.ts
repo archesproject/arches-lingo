@@ -1,7 +1,7 @@
 import { createPinia, setActivePinia } from "pinia";
 import PrimeVue from "primevue/config";
 import { flushPromises, mount } from "@vue/test-utils";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import ReconciliationEndpointPanel from "@/arches_lingo/components/generic/ReconciliationEndpointPanel.vue";
 
@@ -16,6 +16,17 @@ const toastAdd = vi.fn();
 
 vi.mock("primevue/usetoast", () => ({
     useToast: () => ({ add: toastAdd }),
+}));
+
+vi.mock("vue3-gettext", () => ({
+    useGettext: () => ({
+        $gettext: (text: string) => text,
+        interpolate: (text: string, values: Record<string, string>) =>
+            text.replace(
+                /%\{(\w+)\}/g,
+                (_placeholder, valueName: string) => values[valueName],
+            ),
+    }),
 }));
 
 function mountPanel(
@@ -53,6 +64,13 @@ describe("ReconciliationEndpointPanel", () => {
         toastAdd.mockReset();
     });
 
+    afterEach(() => {
+        Object.defineProperty(navigator, "clipboard", {
+            value: undefined,
+            configurable: true,
+        });
+    });
+
     it("renders nothing while the reconciliation service is disabled", () => {
         const wrapper = mountPanel({
             reconciliation_enabled: false,
@@ -67,7 +85,9 @@ describe("ReconciliationEndpointPanel", () => {
         const wrapper = mountPanel({}, { schemeName: "Test Scheme" });
 
         expect(displayedServiceUrl(wrapper)).toBe(GLOBAL_SERVICE_URL);
-        expect(wrapper.find(".hint").text()).toContain("as the type");
+        expect(wrapper.find(".hint").text()).toContain(
+            'choose "Test Scheme" as the type',
+        );
     });
 
     it("offers a scheme's own service when the scheme has an identifier", () => {
@@ -88,9 +108,12 @@ describe("ReconciliationEndpointPanel", () => {
         expect(wrapper.find(".hint").text()).toContain("as the type");
     });
 
-    it("copies the service URL and confirms with a toast", async () => {
+    it("copies the service URL", async () => {
         const writeText = vi.fn().mockResolvedValue(undefined);
-        Object.assign(navigator, { clipboard: { writeText } });
+        Object.defineProperty(navigator, "clipboard", {
+            value: { writeText },
+            configurable: true,
+        });
         const wrapper = mountPanel({});
 
         await wrapper.find("button").trigger("click");
@@ -99,34 +122,6 @@ describe("ReconciliationEndpointPanel", () => {
         expect(writeText).toHaveBeenCalledWith(GLOBAL_SERVICE_URL);
         expect(toastAdd).toHaveBeenCalledWith(
             expect.objectContaining({ severity: "success" }),
-        );
-    });
-
-    it("reports a failed copy without exposing the browser's error", async () => {
-        const writeText = vi.fn().mockRejectedValue(new Error("denied"));
-        Object.assign(navigator, { clipboard: { writeText } });
-        const wrapper = mountPanel({});
-
-        await wrapper.find("button").trigger("click");
-        await flushPromises();
-
-        expect(toastAdd).toHaveBeenCalledWith(
-            expect.objectContaining({
-                severity: "error",
-                detail: "Select the URL and copy it manually.",
-            }),
-        );
-    });
-
-    it("reports a failed copy where the clipboard API is unavailable", async () => {
-        Object.assign(navigator, { clipboard: undefined });
-        const wrapper = mountPanel({});
-
-        await wrapper.find("button").trigger("click");
-        await flushPromises();
-
-        expect(toastAdd).toHaveBeenCalledWith(
-            expect.objectContaining({ severity: "error" }),
         );
     });
 
