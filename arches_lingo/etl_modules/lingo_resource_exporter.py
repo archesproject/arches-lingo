@@ -9,7 +9,7 @@ from datetime import datetime
 from slugify import slugify
 
 from django.db import connection
-from django.utils.translation import gettext as _
+from django.utils.translation import get_language, gettext as _
 
 import arches.app.utils.task_management as task_management
 from arches.app.models.system_settings import settings
@@ -27,6 +27,7 @@ from arches_querysets.models import ResourceTileTree
 from arches.app.tasks import notify_completion
 
 from arches_lingo.utils.concept_builder import ConceptBuilder
+from arches_lingo.utils.display_label import get_display_label
 from arches_lingo.utils.skos import SKOSWriter
 from arches_lingo.utils.skos_serializer import (
     build_resource_uri_map,
@@ -95,7 +96,8 @@ class LingoResourceExporter:
             from arches_lingo import tasks as lingo_tasks
 
             task = lingo_tasks.export_lingo_resources_task.apply_async(
-                args=[self.loadid, self.user.id, self.resourceid, filename, format]
+                args=[self.loadid, self.user.id, self.resourceid, filename, format],
+                kwargs={"language": get_language()},
             )
             with connection.cursor() as cursor:
                 cursor.execute(
@@ -205,7 +207,7 @@ class LingoResourceExporter:
             graph_slug="scheme", resource_ids=[resourceid]
         )
         if len(schemes) > 0:
-            self.scheme_name = schemes.first().name[settings.LANGUAGE_CODE]
+            self.scheme_name = get_display_label(resourceid)
             concepts = ResourceTileTree.get_tiles(graph_slug="concept").filter(
                 part_of_scheme__id=resourceid
             )
@@ -230,7 +232,7 @@ class LingoResourceExporter:
                 self._handle_error(error)
                 return [], []
             scheme_id = part_of_scheme.aliased_data.part_of_scheme.pk
-            self.scheme_name = root_concept.name[settings.LANGUAGE_CODE]
+            self.scheme_name = get_display_label(resourceid)
 
             concept_builder = ConceptBuilder()
             all_ids = {str(resourceid)}
@@ -401,7 +403,7 @@ class LingoResourceExporter:
             concepts = ResourceTileTree.get_tiles(graph_slug="concept").filter(
                 part_of_scheme__id=resourceid
             )
-            self.scheme_name = schemes.first().name[settings.LANGUAGE_CODE]
+            self.scheme_name = get_display_label(resourceid)
         # Partial Hierarchy Export
         else:
             root_concept = ResourceTileTree.get_tiles(
@@ -421,7 +423,7 @@ class LingoResourceExporter:
             else:
                 scheme_id = part_of_scheme.aliased_data.part_of_scheme.pk
 
-            self.scheme_name = root_concept.name[settings.LANGUAGE_CODE]
+            self.scheme_name = get_display_label(resourceid)
 
             # use ConceptBuilder to identify correct hierarchy to export
             concept_builder = ConceptBuilder()
