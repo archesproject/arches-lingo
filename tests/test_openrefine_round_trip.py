@@ -11,7 +11,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 from django.utils import timezone
 
-from arches.app.models.models import ResourceInstance, TileModel
+from arches.app.models.models import EditLog, ResourceInstance, TileModel
 
 from arches_lingo.const import (
     CONCEPT_NAME_CONTENT_NODE,
@@ -43,6 +43,9 @@ from tests.tests import SchemeWithConceptsTestCase
 CELERY_CHECK = (
     "arches_lingo.utils.openrefine_round_trip.match_link_import_service"
     ".task_management.check_if_celery_available"
+)
+NOTIFY_COMPLETION = (
+    "arches_lingo.utils.openrefine_round_trip.match_link_import.notify_completion"
 )
 
 
@@ -210,15 +213,26 @@ class ReconciliationWorksheetTests(OpenRefineRoundTripTestCase):
             )
             label_tile.data[CONCEPT_NAME_CONTENT_NODE] = label
             label_tile.save()
+        self.add_exact_match(self.concepts[3], "=1+1")
 
-        pref_labels = {
-            row["pref_label"]
-            for row in self.rows_of(self.export({"scheme_id": str(self.scheme.pk)}))
-        }
+        rows = self.rows_of(self.export({"scheme_id": str(self.scheme.pk)}))
 
         self.assertTrue(
-            {'\'=HYPERLINK("http://evil.example")', "'@SUM(1)", "-ism"} <= pref_labels
+            {'\'=HYPERLINK("http://evil.example")', "'@SUM(1)", "-ism"}
+            <= {row["pref_label"] for row in rows}
         )
+        self.assertIn("'=1+1", {row["exact_matches"] for row in rows})
+
+    def test_unknown_languages_fall_back_to_the_active_one(self):
+        for language in ["zz-not-a-language", {"not": "a string"}]:
+            with self.subTest(language=language):
+                response = self.export(
+                    {"scheme_id": str(self.scheme.pk)}, language=language
+                )
+                self.assertEqual(response.status_code, 200)
+                self.assertIn(
+                    "Concept 1", {row["pref_label"] for row in self.rows_of(response)}
+                )
 
 
 class MatchLinkImportTests(OpenRefineRoundTripTestCase):
@@ -351,32 +365,44 @@ class MatchLinkImportTests(OpenRefineRoundTripTestCase):
         MatchLinkImport.objects.filter(pk=fresh_running_import.pk).update(
             created=a_day_ago
         )
-        MatchLinkImport.objects.create(user=self.other_editor)
+        # Queued for an hour: a backed-up queue, not a lost worker.
+        queued_pending_import = MatchLinkImport.objects.create(user=self.editor)
+        MatchLinkImport.objects.filter(pk=queued_pending_import.pk).update(
+            created=timezone.now() - datetime.timedelta(hours=1)
+        )
 
-        listed_imports_by_id = {
-            listed_import["id"]: listed_import
-            for listed_import in self.client.get(
-                reverse("api-lingo-match-link-imports")
-            ).json()["imports"]
+        imports_by_id = {
+            match_link_import.pk: self.client.get(
+                reverse(
+                    "api-lingo-match-link-import", kwargs={"pk": match_link_import.pk}
+                )
+            ).json()
+            for match_link_import in [
+                stale_running_import,
+                stale_pending_import,
+                fresh_running_import,
+                queued_pending_import,
+            ]
         }
 
         self.assertEqual(
             {
-                import_id: listed_import["status"]
-                for import_id, listed_import in listed_imports_by_id.items()
+                import_id: read_import["status"]
+                for import_id, read_import in imports_by_id.items()
             },
             {
                 stale_running_import.pk: "failed",
                 stale_pending_import.pk: "failed",
                 fresh_running_import.pk: "running",
+                queued_pending_import.pk: "pending",
             },
         )
         self.assertIn(
             "stopped before it finished",
-            listed_imports_by_id[stale_pending_import.pk]["error_message"],
+            imports_by_id[stale_pending_import.pk]["error_message"],
         )
 
-    @patch("arches_lingo.tasks.notify_completion")
+    @patch(NOTIFY_COMPLETION)
     def test_an_import_given_up_on_is_never_applied_late(self, notify_completion):
         given_up_import = MatchLinkImport.objects.create(
             user=self.editor,
@@ -444,8 +470,11 @@ class MatchLinkImportTests(OpenRefineRoundTripTestCase):
         self.assertEqual(self.outcomes_of(editor_preview), {2: "scheme_locked"})
         self.assertEqual(self.outcomes_of(admin_preview), {2: "add"})
 
+    @patch(NOTIFY_COMPLETION)
     @patch(CELERY_CHECK, return_value=False)
-    def test_apply_writes_links_once_in_one_edit_transaction(self, _celery_check):
+    def test_apply_writes_links_once_in_one_edit_transaction(
+        self, _celery_check, notify_completion
+    ):
         upload_rows = [
             [str(self.concepts[2].pk), "http://example.org/a", ""],
             [str(self.concepts[3].pk), "http://example.org/b", "closeMatch"],
@@ -464,6 +493,17 @@ class MatchLinkImportTests(OpenRefineRoundTripTestCase):
             match_link_import.outcome_counts, {"add": 2, "unknown_concept": 1}
         )
         self.assertIsNotNone(match_link_import.edit_transaction_id)
+        self.assertEqual(
+            set(
+                EditLog.objects.filter(
+                    transactionid=match_link_import.edit_transaction_id
+                ).values_list("userid", "user_username")
+            ),
+            {(str(self.editor.pk), self.editor.username)},
+        )
+        notify_completion.assert_called_once_with(
+            "Match link import finished: 2 links added", self.editor
+        )
         self.assertEqual(
             TileModel.objects.filter(
                 nodegroup_id=MATCH_STATUS_NODEGROUP,
@@ -499,7 +539,7 @@ class MatchLinkImportTests(OpenRefineRoundTripTestCase):
         apply_async.assert_called_once_with(args=[response.json()["id"]])
         self.assertEqual(response.json()["status"], "pending")
 
-    @patch("arches_lingo.tasks.notify_completion")
+    @patch(NOTIFY_COMPLETION)
     def test_worker_task_applies_and_notifies(self, notify_completion):
         match_link_import = MatchLinkImport.objects.create(
             user=self.editor,
@@ -576,6 +616,7 @@ class MatchLinkImportTests(OpenRefineRoundTripTestCase):
             (
                 "﻿Concept ID,pref_label,Match-URI\n"
                 f"{self.concepts[2].pk},Concept 3,http://example.org/a\n"
+                f"{self.concepts[3].pk},Concept 4,\n"
                 ",,\n"
             ).encode("utf-8"),
         )

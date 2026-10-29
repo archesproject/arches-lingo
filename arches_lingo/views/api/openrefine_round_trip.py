@@ -2,9 +2,7 @@ import json
 from datetime import date
 from http import HTTPStatus
 
-from django.conf import settings
 from django.http import HttpResponse, JsonResponse
-from django.utils.translation import get_language
 from django.utils.translation import gettext as _
 from django.views import View
 
@@ -17,7 +15,6 @@ from arches_lingo.utils.openrefine_round_trip.match_link_import import (
 from arches_lingo.utils.openrefine_round_trip.match_link_import_service import (
     get_match_link_import,
     is_in_progress,
-    list_recent_match_link_imports,
     parse_scheme_id,
     serialize_match_link_import,
     start_match_link_import,
@@ -25,6 +22,7 @@ from arches_lingo.utils.openrefine_round_trip.match_link_import_service import (
 from arches_lingo.utils.openrefine_round_trip.worksheet_export import (
     parse_worksheet_scope,
     resolve_worksheet_concept_ids,
+    resolve_worksheet_language,
     write_worksheet,
 )
 
@@ -50,9 +48,7 @@ class ReconciliationWorksheetView(LingoEditorMixin, View):
         except ValueError as value_error:
             return invalid_request_response(str(value_error))
 
-        language = (
-            request_body.get("language") or get_language() or settings.LANGUAGE_CODE
-        )
+        language = resolve_worksheet_language(request_body.get("language"))
         response = HttpResponse(
             write_worksheet(concept_ids, request.user, language),
             content_type="text/csv; charset=utf-8",
@@ -79,19 +75,7 @@ class MatchLinkImportPreviewView(LingoEditorMixin, View):
             return invalid_request_response(str(value_error))
 
 
-class MatchLinkImportListView(LingoEditorMixin, View):
-    def get(self, request):
-        return JsonResponse(
-            {
-                "imports": [
-                    serialize_match_link_import(match_link_import)
-                    for match_link_import in list_recent_match_link_imports(
-                        request.user
-                    )
-                ]
-            }
-        )
-
+class MatchLinkImportCreateView(LingoEditorMixin, View):
     def post(self, request):
         """Starts an import; while it runs, the response is the record to poll."""
         try:

@@ -199,15 +199,6 @@ class ConceptMatchRun(models.Model):
         (STATUS_FAILED, _("Failed")),
     ]
 
-    ERROR_APPLY_FAILED = "apply_failed"
-    ERROR_INTERRUPTED = "interrupted"
-    ERROR_INDEXING_FAILED = "indexing_failed"
-    ERROR_CHOICES = [
-        (ERROR_APPLY_FAILED, _("Apply failed")),
-        (ERROR_INTERRUPTED, _("Interrupted")),
-        (ERROR_INDEXING_FAILED, _("Indexing failed")),
-    ]
-
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         null=True,

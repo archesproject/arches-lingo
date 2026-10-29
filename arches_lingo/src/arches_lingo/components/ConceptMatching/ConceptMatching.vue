@@ -365,7 +365,7 @@ function onMergeFlowAfterHide(): void {
                     </p>
                     <Button
                         icon="pi pi-link"
-                        :label="$gettext('Import match links')"
+                        :label="$gettext('Import Match Links')"
                         :severity="SECONDARY"
                         @click="showMatchLinkImportDialog = true"
                     />

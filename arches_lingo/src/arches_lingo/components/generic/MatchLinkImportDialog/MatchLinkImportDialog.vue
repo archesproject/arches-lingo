@@ -20,19 +20,20 @@ import {
 import {
     MATCH_LINK_IMPORT_COMPLETE_STATUS,
     MATCH_LINK_IMPORT_IN_PROGRESS_STATUSES,
+    MATCH_LINK_IMPORT_MAX_FAILED_POLLS,
     MATCH_LINK_IMPORT_POLL_INTERVAL_MS,
     OUTCOME_ADD,
     buildOutcomeLabels,
     describeOutcome,
 } from "@/arches_lingo/components/generic/MatchLinkImportDialog/utils.ts";
 import {
-    DANGER,
     DEFAULT_ERROR_TOAST_LIFE,
     DEFAULT_TOAST_LIFE,
     ERROR,
     INFO,
     SECONDARY,
     SUCCESS,
+    WARN,
 } from "@/arches_lingo/constants.ts";
 
 import type {
@@ -59,6 +60,7 @@ const outcomeLabels = buildOutcomeLabels($gettext);
 const isVisible = ref(true);
 const selectedFile = ref<File | null>(null);
 const preview = ref<MatchLinkImportPreviewData | null>(null);
+const previewErrorMessage = ref<string | null>(null);
 const isPreviewing = ref(false);
 const isApplying = ref(false);
 const finishedImport = ref<MatchLinkImportRecord | null>(null);
@@ -74,6 +76,10 @@ const canApply = computed(
         !isPreviewing.value &&
         !isApplying.value &&
         !finishedImport.value,
+);
+
+const finishedSeverity = computed(() =>
+    finishedImport.value?.error_message ? WARN : SUCCESS,
 );
 
 const finishedOutcomeTotals = computed(() =>
@@ -130,6 +136,7 @@ onBeforeUnmount(() => {
 async function onFileSelected(file: File | null): Promise<void> {
     selectedFile.value = file;
     preview.value = null;
+    previewErrorMessage.value = null;
     finishedImport.value = null;
     if (!file) return;
 
@@ -137,12 +144,10 @@ async function onFileSelected(file: File | null): Promise<void> {
     try {
         preview.value = await previewMatchLinkImport(file, schemeId);
     } catch (error) {
-        toast.add({
-            severity: ERROR,
-            life: DEFAULT_ERROR_TOAST_LIFE,
-            summary: $gettext("Unable to read the match links file"),
-            detail: error instanceof Error ? error.message : undefined,
-        });
+        previewErrorMessage.value =
+            error instanceof Error && error.message
+                ? error.message
+                : $gettext("The file could not be checked.");
     } finally {
         isPreviewing.value = false;
     }
@@ -174,6 +179,7 @@ async function waitForImport(
     matchLinkImport: MatchLinkImportRecord,
 ): Promise<MatchLinkImportRecord | null> {
     let currentImport = matchLinkImport;
+    let failedPollCount = 0;
     while (
         MATCH_LINK_IMPORT_IN_PROGRESS_STATUSES.includes(currentImport.status)
     ) {
@@ -181,7 +187,27 @@ async function waitForImport(
             setTimeout(resolve, MATCH_LINK_IMPORT_POLL_INTERVAL_MS),
         );
         if (isUnmounted) return null;
-        currentImport = await fetchMatchLinkImport(currentImport.id);
+        try {
+            currentImport = await fetchMatchLinkImport(currentImport.id);
+            failedPollCount = 0;
+        } catch {
+            // The import carries on without the dialog, so a lost status
+            // check is not reported as a failed import.
+            failedPollCount += 1;
+            if (failedPollCount >= MATCH_LINK_IMPORT_MAX_FAILED_POLLS) {
+                toast.add({
+                    severity: WARN,
+                    life: DEFAULT_ERROR_TOAST_LIFE,
+                    summary: $gettext(
+                        "Unable to check on the match link import",
+                    ),
+                    detail: $gettext(
+                        "It may still be running. You will be notified when it finishes.",
+                    ),
+                });
+                return null;
+            }
+        }
     }
     return currentImport;
 }
@@ -199,8 +225,10 @@ function reportFinishedImport(matchLinkImport: MatchLinkImportRecord): void {
     finishedImport.value = matchLinkImport;
     const addedCount = matchLinkImport.outcome_counts[OUTCOME_ADD] ?? 0;
     toast.add({
-        severity: SUCCESS,
-        life: DEFAULT_TOAST_LIFE,
+        severity: finishedSeverity.value,
+        life: matchLinkImport.error_message
+            ? DEFAULT_ERROR_TOAST_LIFE
+            : DEFAULT_TOAST_LIFE,
         summary: $ngettext(
             "%{count} match link added",
             "%{count} match links added",
@@ -232,7 +260,7 @@ function onVisibilityChange(isNowVisible: boolean): void {
         :visible="isVisible"
         :modal="true"
         :draggable="false"
-        :header="$gettext('Import match links')"
+        :header="$gettext('Import Match Links')"
         :style="{ width: '60rem', maxWidth: '95vw' }"
         @update:visible="onVisibilityChange"
     >
@@ -259,12 +287,28 @@ function onVisibilityChange(isNowVisible: boolean): void {
             </div>
 
             <Message
+                v-if="previewErrorMessage"
+                :severity="ERROR"
+                :closable="false"
+            >
+                <div class="preview-error">
+                    <strong>{{
+                        $gettext("Unable to read the match links file")
+                    }}</strong>
+                    <span>{{ previewErrorMessage }}</span>
+                </div>
+            </Message>
+
+            <Message
                 v-if="finishedImport"
-                :severity="SUCCESS"
+                :severity="finishedSeverity"
                 :closable="false"
             >
                 <div class="finished-summary">
                     <span>{{ $gettext("Import finished.") }}</span>
+                    <span v-if="finishedImport.error_message">{{
+                        finishedImport.error_message
+                    }}</span>
                     <Tag
                         v-for="total in finishedOutcomeTotals"
                         :key="total.outcome"
@@ -290,9 +334,7 @@ function onVisibilityChange(isNowVisible: boolean): void {
                             ? $gettext('Close')
                             : $gettext('Cancel')
                     "
-                    :severity="
-                        finishedImport || isApplying ? SECONDARY : DANGER
-                    "
+                    :severity="SECONDARY"
                     @click="onVisibilityChange(false)"
                 />
                 <Button
@@ -329,6 +371,12 @@ function onVisibilityChange(isNowVisible: boolean): void {
     overflow: hidden;
     clip-path: inset(50%);
     white-space: nowrap;
+}
+
+.dialog-body .preview-error {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
 }
 
 .dialog-body .finished-summary {
