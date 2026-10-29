@@ -42,7 +42,7 @@ function onFileSelected(event: { files: File[] }): void {
             <p class="help-text">
                 {{
                     $gettext(
-                        "A reconciliation worksheet can be uploaded as it is once its match_uri column is filled in, for example in OpenRefine from the reconciled column's matched entity URI. Separate several URIs in one cell with |.",
+                        "A reconciliation worksheet can be uploaded as it is once its match_uri column is filled in, for example in OpenRefine from the reconciled column's matched entity URI. Rows left without a match_uri are skipped. Separate several URIs in one cell with |.",
                     )
                 }}
             </p>

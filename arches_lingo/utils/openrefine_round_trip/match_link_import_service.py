@@ -19,11 +19,15 @@ from arches_lingo.utils.openrefine_round_trip.match_link_import import (
     parse_match_link_csv,
 )
 
-# An import still waiting to start, or still running, this long after it was
-# created or started is presumed lost with its worker, so the dialog polling it
-# stops waiting. A worker that picks up a given-up import leaves it alone.
+# An import still running this long after it started is presumed lost with its
+# worker, so the dialog polling it stops waiting. A worker that picks up a
+# given-up import leaves it alone.
 STALE_IMPORT_SECONDS = getattr(settings, "LINGO_MATCH_LINK_IMPORT_STALE_SECONDS", 1800)
-RECENT_IMPORTS_LIMIT = 25
+# Waiting to start is given longer: a queue backed up behind other long tasks
+# is not a lost worker.
+STALE_PENDING_IMPORT_SECONDS = getattr(
+    settings, "LINGO_MATCH_LINK_IMPORT_STALE_PENDING_SECONDS", 6 * 60 * 60
+)
 IN_PROGRESS_STATUSES = [MatchLinkImport.STATUS_PENDING, MatchLinkImport.STATUS_RUNNING]
 
 
@@ -54,13 +58,19 @@ def start_match_link_import(uploaded_file, user, scheme_id=None):
 
 
 def reap_stale_imports(match_link_imports):
-    cutoff = timezone.now() - datetime.timedelta(seconds=STALE_IMPORT_SECONDS)
+    now = timezone.now()
     match_link_imports.filter(
-        Q(status=MatchLinkImport.STATUS_PENDING, created__lt=cutoff)
-        | Q(status=MatchLinkImport.STATUS_RUNNING, started__lt=cutoff)
+        Q(
+            status=MatchLinkImport.STATUS_PENDING,
+            created__lt=now - datetime.timedelta(seconds=STALE_PENDING_IMPORT_SECONDS),
+        )
+        | Q(
+            status=MatchLinkImport.STATUS_RUNNING,
+            started__lt=now - datetime.timedelta(seconds=STALE_IMPORT_SECONDS),
+        )
     ).update(
         status=MatchLinkImport.STATUS_FAILED,
-        finished=timezone.now(),
+        finished=now,
         error_code=MatchLinkImport.ERROR_INTERRUPTED,
     )
 
@@ -72,12 +82,6 @@ def get_match_link_import(match_link_import_id, user):
         match_link_imports = match_link_imports.filter(user_id=user.pk)
     reap_stale_imports(match_link_imports)
     return match_link_imports.first()
-
-
-def list_recent_match_link_imports(user):
-    match_link_imports = MatchLinkImport.objects.filter(user_id=user.pk)
-    reap_stale_imports(match_link_imports)
-    return match_link_imports[:RECENT_IMPORTS_LIMIT]
 
 
 def is_in_progress(match_link_import):

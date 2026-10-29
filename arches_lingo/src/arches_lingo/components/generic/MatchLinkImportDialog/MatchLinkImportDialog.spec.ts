@@ -13,7 +13,10 @@ import {
     previewMatchLinkImport,
     startMatchLinkImport,
 } from "@/arches_lingo/api.ts";
-import { MATCH_LINK_IMPORT_POLL_INTERVAL_MS } from "@/arches_lingo/components/generic/MatchLinkImportDialog/utils.ts";
+import {
+    MATCH_LINK_IMPORT_MAX_FAILED_POLLS,
+    MATCH_LINK_IMPORT_POLL_INTERVAL_MS,
+} from "@/arches_lingo/components/generic/MatchLinkImportDialog/utils.ts";
 
 import type { VueWrapper } from "@vue/test-utils";
 import type {
@@ -185,12 +188,10 @@ describe("MatchLinkImportDialog", () => {
 
         await selectFile(wrapper);
 
-        expect(toastAdd).toHaveBeenCalledWith(
-            expect.objectContaining({
-                severity: "error",
-                detail: "The file needs these columns: match_uri.",
-            }),
+        expect(wrapper.text()).toContain(
+            "The file needs these columns: match_uri.",
         );
+        expect(toastAdd).toHaveBeenCalledTimes(0);
         expect(wrapper.findComponent(MatchLinkImportPreview).exists()).toBe(
             false,
         );
@@ -228,6 +229,63 @@ describe("MatchLinkImportDialog", () => {
         );
         expect(wrapper.text()).toContain("Already linked: 1");
         expect(wrapper.find('[role="status"]').text()).toBe("Import finished.");
+    });
+
+    it("warns when the links were added but not indexed", async () => {
+        vi.mocked(previewMatchLinkImport).mockResolvedValue(
+            previewWith({ add: 1 }),
+        );
+        vi.mocked(startMatchLinkImport).mockResolvedValue(
+            importRecord({
+                status: "complete",
+                outcome_counts: { add: 1 },
+                error_message: "The search index could not be updated.",
+            }),
+        );
+        const wrapper = mountDialog();
+        await selectFile(wrapper);
+
+        await addLinksButton(wrapper).trigger("click");
+        await flushPromises();
+
+        expect(toastAdd).toHaveBeenCalledWith(
+            expect.objectContaining({ severity: "warn" }),
+        );
+        expect(wrapper.text()).toContain(
+            "The search index could not be updated.",
+        );
+    });
+
+    it("keeps polling through a lost status check, then gives up without calling the import failed", async () => {
+        vi.useFakeTimers();
+        vi.mocked(previewMatchLinkImport).mockResolvedValue(
+            previewWith({ add: 1 }),
+        );
+        vi.mocked(startMatchLinkImport).mockResolvedValue(importRecord({}));
+        vi.mocked(fetchMatchLinkImport)
+            .mockRejectedValueOnce(new Error("Bad Gateway"))
+            .mockResolvedValueOnce(importRecord({ status: "running" }))
+            .mockRejectedValue(new Error("Bad Gateway"));
+        const wrapper = mountDialog();
+        await selectFile(wrapper);
+
+        await addLinksButton(wrapper).trigger("click");
+        await vi.advanceTimersByTimeAsync(
+            MATCH_LINK_IMPORT_POLL_INTERVAL_MS *
+                (MATCH_LINK_IMPORT_MAX_FAILED_POLLS + 2),
+        );
+        await flushPromises();
+
+        expect(fetchMatchLinkImport).toHaveBeenCalledTimes(
+            MATCH_LINK_IMPORT_MAX_FAILED_POLLS + 2,
+        );
+        expect(toastAdd).toHaveBeenCalledTimes(1);
+        expect(toastAdd).toHaveBeenCalledWith(
+            expect.objectContaining({
+                severity: "warn",
+                summary: "Unable to check on the match link import",
+            }),
+        );
     });
 
     it("reports an import that failed on the server", async () => {

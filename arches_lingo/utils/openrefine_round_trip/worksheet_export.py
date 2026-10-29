@@ -8,9 +8,11 @@ from collections import defaultdict
 
 from django.conf import settings
 from django.utils import formats, translation
+from django.utils.translation import get_language
 from django.utils.translation import gettext as _
 
 from arches.app.models.models import (
+    Language,
     ResourceInstance,
     ResourceInstanceLifecycleState,
     TileModel,
@@ -79,21 +81,16 @@ MULTI_VALUE_SEPARATOR = "|"
 WORKSHEET_BATCH_SIZE = 500
 # The worksheet is built in full before it is sent, so a failure part way
 # through is an error response rather than a truncated file that looks whole.
+# Built within the request, so kept small enough to finish well inside a proxy
+# timeout; it also matches the match-link import's row limit.
 MAX_WORKSHEET_CONCEPTS = getattr(
-    settings, "LINGO_RECONCILIATION_WORKSHEET_MAX_CONCEPTS", 50_000
+    settings, "LINGO_RECONCILIATION_WORKSHEET_MAX_CONCEPTS", 10_000
 )
-# Cells of free text that a spreadsheet would run as a formula get a leading
-# apostrophe. A leading "-" is left alone: labels such as "-ism" are plausible,
-# and these columns are what OpenRefine sends to the external authority.
+# Cells that a spreadsheet would run as a formula get a leading apostrophe;
+# stored URIs are not guaranteed to be web addresses, so no column is exempt.
+# A leading "-" is left alone: labels such as "-ism" are plausible, and labels
+# are what OpenRefine sends to the external authority.
 FORMULA_TRIGGER_CHARACTERS = ("=", "+", "@", "\t", "\r")
-FREE_TEXT_COLUMNS = {
-    "identifier",
-    "pref_label",
-    "alt_labels",
-    "broader_labels",
-    "scheme",
-    "lifecycle_state",
-}
 SCOPE_KEYS = ("scheme_id", "concept_set_id", "query")
 MATCH_COLUMN_BY_LIST_ITEM_ID = {
     EXACT_MATCH_LIST_ITEM_ID: "exact_matches",
@@ -312,11 +309,15 @@ def neutralize_formula(cell_value):
     return cell_value
 
 
-FREE_TEXT_COLUMN_INDEXES = {
-    column_index
-    for column_index, column_name in enumerate(WORKSHEET_COLUMNS)
-    if column_name in FREE_TEXT_COLUMNS
-}
+def resolve_worksheet_language(requested_language):
+    """Return the requested label language if Arches knows it, else the
+    active one, so an arbitrary value never reaches translation.override."""
+    if (
+        isinstance(requested_language, str)
+        and Language.objects.filter(code=requested_language).exists()
+    ):
+        return requested_language
+    return get_language() or settings.LANGUAGE_CODE
 
 
 def write_worksheet(concept_ids, user, language):
@@ -339,13 +340,6 @@ def write_worksheet(concept_ids, user, language):
                 batch_concept_ids, user, language, column_by_relation_uri
             ):
                 csv_writer.writerow(
-                    [
-                        (
-                            neutralize_formula(cell_value)
-                            if column_index in FREE_TEXT_COLUMN_INDEXES
-                            else cell_value
-                        )
-                        for column_index, cell_value in enumerate(row)
-                    ]
+                    [neutralize_formula(cell_value) for cell_value in row]
                 )
     return worksheet.getvalue()

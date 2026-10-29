@@ -668,7 +668,7 @@ async function onReinstateConfirmed(cascade: boolean) {
                         <span>{{ $gettext("Export") }}</span>
                     </Button>
                     <Button
-                        v-if="isEditor"
+                        v-if="isEditor && (!isLocked || isLingoAdmin)"
                         class="add-button"
                         :aria-label="$gettext('Import Match Links')"
                         @click="showMatchLinkImportDialog = true"

@@ -1,6 +1,8 @@
 import type { MatchLinkImportOutcome } from "@/arches_lingo/types.ts";
 
 export const MATCH_LINK_IMPORT_POLL_INTERVAL_MS = 2000;
+// Consecutive failed status checks before the dialog stops waiting.
+export const MATCH_LINK_IMPORT_MAX_FAILED_POLLS = 3;
 export const OUTCOME_ADD: MatchLinkImportOutcome = "add";
 export const MATCH_LINK_IMPORT_IN_PROGRESS_STATUSES = ["pending", "running"];
 export const MATCH_LINK_IMPORT_COMPLETE_STATUS = "complete";
