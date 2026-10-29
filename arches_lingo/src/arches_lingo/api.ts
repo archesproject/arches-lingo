@@ -32,10 +32,12 @@ import type {
     ConceptMergePreview,
     ConceptMergeResult,
     MergeRequestPayload,
-    MatchLinkImportPreview,
-    MatchLinkImportRecord,
     ReconciliationWorksheetScope,
 } from "@/arches_lingo/types";
+import type {
+    MatchLinkImportPreview,
+    MatchLinkImportRecord,
+} from "@/arches_lingo/components/generic/MatchLinkImportDialog/types.ts";
 import type {
     MissingTranslationsResponse,
     DashboardStats,

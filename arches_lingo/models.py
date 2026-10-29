@@ -185,19 +185,33 @@ class ConceptMerge(models.Model):
         return f"{self.absorbed_concept_id} merged into {self.survivor_concept_id}"
 
 
-class ConceptMatchRun(models.Model):
-    """One pass of match detection, kept so its candidates stay reviewable."""
+class BackgroundJobStatus(models.TextChoices):
+    PENDING = "pending", _("Pending")
+    RUNNING = "running", _("Running")
+    COMPLETE = "complete", _("Complete")
+    FAILED = "failed", _("Failed")
 
-    STATUS_PENDING = "pending"
-    STATUS_RUNNING = "running"
-    STATUS_COMPLETE = "complete"
-    STATUS_FAILED = "failed"
-    STATUS_CHOICES = [
-        (STATUS_PENDING, _("Pending")),
-        (STATUS_RUNNING, _("Running")),
-        (STATUS_COMPLETE, _("Complete")),
-        (STATUS_FAILED, _("Failed")),
-    ]
+
+class BackgroundJob(models.Model):
+    """The status of work handed to a Celery worker and polled by the client."""
+
+    STATUS_PENDING = BackgroundJobStatus.PENDING
+    STATUS_RUNNING = BackgroundJobStatus.RUNNING
+    STATUS_COMPLETE = BackgroundJobStatus.COMPLETE
+    STATUS_FAILED = BackgroundJobStatus.FAILED
+
+    status = models.CharField(
+        max_length=16,
+        choices=BackgroundJobStatus.choices,
+        default=BackgroundJobStatus.PENDING,
+    )
+
+    class Meta:
+        abstract = True
+
+
+class ConceptMatchRun(BackgroundJob):
+    """One pass of match detection, kept so its candidates stay reviewable."""
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -212,9 +226,6 @@ class ConceptMatchRun(models.Model):
     # Celery acks a task on receipt, so a worker restarted mid-run cannot fail
     # its own run; a stale heartbeat here is how the run gets reaped instead.
     last_progress = models.DateTimeField(null=True, blank=True)
-    status = models.CharField(
-        max_length=16, choices=STATUS_CHOICES, default=STATUS_PENDING
-    )
     parameters = models.JSONField(
         default=dict,
         help_text=_("Scope, signals and thresholds this run was started with."),
@@ -326,21 +337,10 @@ class ConceptPairDismissal(models.Model):
         return f"{self.concept_a_id} ~ {self.concept_b_id} (dismissed)"
 
 
-class MatchLinkImport(models.Model):
+class MatchLinkImport(BackgroundJob):
     """One upload of match links (typically reconciled in OpenRefine), kept as
     an audit record. ``edit_transaction_id`` groups every edit log entry the
     import wrote, so its full effect can be reconstructed or undone later."""
-
-    STATUS_PENDING = "pending"
-    STATUS_RUNNING = "running"
-    STATUS_COMPLETE = "complete"
-    STATUS_FAILED = "failed"
-    STATUS_CHOICES = [
-        (STATUS_PENDING, _("Pending")),
-        (STATUS_RUNNING, _("Running")),
-        (STATUS_COMPLETE, _("Complete")),
-        (STATUS_FAILED, _("Failed")),
-    ]
 
     ERROR_APPLY_FAILED = "apply_failed"
     ERROR_INTERRUPTED = "interrupted"
@@ -362,9 +362,6 @@ class MatchLinkImport(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     started = models.DateTimeField(null=True, blank=True)
     finished = models.DateTimeField(null=True, blank=True)
-    status = models.CharField(
-        max_length=16, choices=STATUS_CHOICES, default=STATUS_PENDING
-    )
     language = models.CharField(
         max_length=32,
         blank=True,
@@ -376,9 +373,9 @@ class MatchLinkImport(models.Model):
         blank=True,
         help_text=_("When set, only concepts in this scheme receive links."),
     )
-    rows = models.JSONField(
+    links = models.JSONField(
         default=list,
-        help_text=_("The parsed rows of the uploaded file, validated again on apply."),
+        help_text=_("The parsed links of the uploaded file, validated again on apply."),
     )
     outcome_counts = models.JSONField(default=dict, blank=True)
     edit_transaction_id = models.UUIDField(null=True, blank=True, db_index=True)

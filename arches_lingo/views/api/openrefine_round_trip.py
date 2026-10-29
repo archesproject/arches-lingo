@@ -9,13 +9,11 @@ from django.views import View
 from arches.app.utils.response import JSONErrorResponse
 
 from arches_lingo.mixins.permissions import LingoEditorMixin
-from arches_lingo.utils.openrefine_round_trip.match_link_import import (
-    preview_match_link_import,
-)
 from arches_lingo.utils.openrefine_round_trip.match_link_import_service import (
     get_match_link_import,
     is_in_progress,
     parse_scheme_id,
+    preview_match_link_import,
     serialize_match_link_import,
     start_match_link_import,
 )
@@ -60,7 +58,7 @@ class ReconciliationWorksheetView(LingoEditorMixin, View):
 
 
 class MatchLinkImportPreviewView(LingoEditorMixin, View):
-    """Validates an uploaded match-link CSV and reports each row's outcome."""
+    """Validates an uploaded match-link CSV and reports each link's outcome."""
 
     def post(self, request):
         try:

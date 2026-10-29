@@ -9,18 +9,18 @@ import Select from "primevue/select";
 import Tag from "primevue/tag";
 
 import {
-    OUTCOME_ADD,
     buildOutcomeLabels,
     describeOutcome,
+    outcomeSeverity,
+    summarizeOutcomeCounts,
 } from "@/arches_lingo/components/generic/MatchLinkImportDialog/utils.ts";
-import { SECONDARY, SUCCESS } from "@/arches_lingo/constants.ts";
 
 import type {
     MatchLinkImportOutcome,
     MatchLinkImportPreview,
-} from "@/arches_lingo/types.ts";
+} from "@/arches_lingo/components/generic/MatchLinkImportDialog/types.ts";
 
-const ROWS_PER_PAGE = 10;
+const LINKS_PER_PAGE = 10;
 
 const { preview } = defineProps<{
     preview: MatchLinkImportPreview;
@@ -32,56 +32,38 @@ const outcomeLabels = buildOutcomeLabels($gettext);
 const selectedOutcome = ref<MatchLinkImportOutcome | null>(null);
 
 const outcomeTotals = computed(() =>
-    (
-        Object.entries(preview.counts_by_outcome) as [
-            MatchLinkImportOutcome,
-            number,
-        ][]
-    ).map(([outcome, count]) => ({
-        outcome,
-        count,
-        label: describeOutcome(outcomeLabels, outcome),
-    })),
+    summarizeOutcomeCounts($gettext, outcomeLabels, preview.counts_by_outcome),
 );
 
-const visibleRows = computed(() =>
+const visibleLinks = computed(() =>
     selectedOutcome.value
-        ? preview.rows.filter((row) => row.outcome === selectedOutcome.value)
-        : preview.rows,
+        ? preview.links.filter((link) => link.outcome === selectedOutcome.value)
+        : preview.links,
 );
 
-const hasInternalConceptRows = computed(() =>
-    preview.rows.some((row) => row.is_internal_concept),
+const hasInternalConceptLinks = computed(() =>
+    preview.links.some((link) => link.is_internal_concept),
 );
-
-function outcomeSeverity(outcome: MatchLinkImportOutcome): string {
-    return outcome === OUTCOME_ADD ? SUCCESS : SECONDARY;
-}
 </script>
 
 <template>
     <div class="match-link-import-preview">
         <div class="totals">
-            <span class="total-rows">
+            <span class="total-links">
                 {{
                     $ngettext(
-                        "%{count} row checked",
-                        "%{count} rows checked",
-                        preview.total_rows,
-                        { count: String(preview.total_rows) },
+                        "%{count} link checked",
+                        "%{count} links checked",
+                        preview.total_links,
+                        { count: String(preview.total_links) },
                     )
                 }}
             </span>
             <Tag
-                v-for="total in outcomeTotals"
-                :key="total.outcome"
-                :severity="outcomeSeverity(total.outcome)"
-                :value="
-                    $gettext('%{label}: %{count}', {
-                        label: total.label,
-                        count: String(total.count),
-                    })
-                "
+                v-for="outcomeTotal in outcomeTotals"
+                :key="outcomeTotal.outcome"
+                :severity="outcomeTotal.severity"
+                :value="outcomeTotal.text"
             />
         </div>
 
@@ -92,12 +74,12 @@ function outcomeSeverity(outcome: MatchLinkImportOutcome): string {
             option-value="outcome"
             show-clear
             :options="outcomeTotals"
-            :placeholder="$gettext('All rows')"
-            :aria-label="$gettext('Show rows with this outcome')"
+            :placeholder="$gettext('All links')"
+            :aria-label="$gettext('Show links with this outcome')"
         />
 
         <p
-            v-if="hasInternalConceptRows"
+            v-if="hasInternalConceptLinks"
             class="internal-concept-note"
         >
             {{
@@ -110,10 +92,10 @@ function outcomeSeverity(outcome: MatchLinkImportOutcome): string {
         <DataTable
             paginator
             size="small"
-            :value="visibleRows"
-            :rows="ROWS_PER_PAGE"
+            :value="visibleLinks"
+            :rows="LINKS_PER_PAGE"
             :table-props="{
-                'aria-label': $gettext('Rows in the match links file'),
+                'aria-label': $gettext('Links in the match links file'),
             }"
         >
             <Column
@@ -136,7 +118,9 @@ function outcomeSeverity(outcome: MatchLinkImportOutcome): string {
                             class="pi pi-info-circle"
                             aria-hidden="true"
                         />
-                        {{ $gettext("Lingo concept: linked one way only") }}
+                        <span>{{
+                            $gettext("Lingo concept: linked one way only")
+                        }}</span>
                     </span>
                 </template>
             </Column>
@@ -148,12 +132,7 @@ function outcomeSeverity(outcome: MatchLinkImportOutcome): string {
                 <template #body="{ data }">
                     <Tag
                         :severity="outcomeSeverity(data.outcome)"
-                        :value="
-                            describeOutcome(
-                                outcomeLabels,
-                                data.outcome as MatchLinkImportOutcome,
-                            )
-                        "
+                        :value="describeOutcome(outcomeLabels, data.outcome)"
                     />
                 </template>
             </Column>
@@ -175,7 +154,7 @@ function outcomeSeverity(outcome: MatchLinkImportOutcome): string {
     gap: 0.5rem;
 }
 
-.match-link-import-preview .totals .total-rows {
+.match-link-import-preview .totals .total-links {
     font-size: var(--p-lingo-font-size-small);
     color: var(--p-text-muted-color);
 }
