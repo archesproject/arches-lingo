@@ -32,6 +32,7 @@ from arches_lingo.utils.concept_merge.tiles import get_list_item_tile_value
 from arches_lingo.utils.reconciliation.concept_summaries import (
     get_public_broader_ids_for_concepts,
 )
+from arches_lingo.utils.reconciliation.labels import get_label_type_uri
 
 BROADER = "broader"
 ALT_LABEL = "altLabel"
@@ -212,8 +213,7 @@ def gather_property_evidence(
     for concept_id, tile_data in label_tiles:
         label = (tile_data.get(CONCEPT_NAME_CONTENT_NODE) or "").strip().casefold()
         all_labels_by_concept_id[str(concept_id)].add(label)
-        label_types = tile_data.get(CONCEPT_NAME_TYPE_NODE) or []
-        if label_types and label_types[0].get("uri") == ALT_LABEL_URI:
+        if get_label_type_uri(tile_data, CONCEPT_NAME_TYPE_NODE) == ALT_LABEL_URI:
             alternate_labels_by_concept_id[str(concept_id)].add(label)
 
     evidence_by_concept_id = {}

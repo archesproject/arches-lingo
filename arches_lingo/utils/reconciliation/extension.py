@@ -20,15 +20,17 @@ from arches.app.models.models import TileModel
 from arches_querysets.models import ResourceTileTree
 
 from arches_lingo.const import URI_CONTENT_NODE, URI_NODEGROUP
-from arches_lingo.utils.reconciliation.candidates import MAX_QUERIES_PER_REQUEST
 from arches_lingo.utils.reconciliation.concept_summaries import (
     get_display_labels_for_concepts,
 )
 from arches_lingo.utils.reconciliation.labels import is_same_base_language
-from arches_lingo.utils.reconciliation.manifest import list_reconcilable_schemes
+from arches_lingo.utils.reconciliation.manifest import (
+    MAX_QUERIES_PER_REQUEST,
+    list_reconcilable_schemes,
+)
 from arches_lingo.utils.reconciliation.visibility import (
     filter_public_concept_ids,
-    reconcilable_scheme_ids,
+    get_reconcilable_scheme_ids,
 )
 from arches_lingo.utils.skos import ARCHES, SKOSWriter, subject_uri_for
 from arches_lingo.utils.skos_serializer import (
@@ -141,7 +143,7 @@ def parse_extension_request(raw_extension_request):
     return concept_ids, requested_properties
 
 
-def canonical_id_by_requested_id(requested_ids):
+def map_requested_ids_to_canonical_ids(requested_ids):
     canonical_ids = {}
     for requested_id in requested_ids:
         try:
@@ -333,8 +335,8 @@ def extend_concepts(raw_extension_request, scope_scheme_id=None):
     (``scope_scheme_id``) only extends that scheme's concepts.
     """
     requested_ids, requested_properties = parse_extension_request(raw_extension_request)
-    canonical_ids = canonical_id_by_requested_id(requested_ids)
-    public_scheme_ids = reconcilable_scheme_ids()
+    canonical_ids = map_requested_ids_to_canonical_ids(requested_ids)
+    public_scheme_ids = get_reconcilable_scheme_ids()
     extendable_scheme_ids = (
         public_scheme_ids
         if scope_scheme_id is None

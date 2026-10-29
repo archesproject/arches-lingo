@@ -5,6 +5,12 @@ from arches.app.utils.i18n import rank_label
 from arches_lingo.utils.concept_builder import ConceptBuilder
 
 
+def get_label_type_uri(label_tile, type_node):
+    """Return the URI of a label tile's type, or None for an untyped label."""
+    label_types = label_tile.get(type_node) or [{}]
+    return label_types[0].get("uri")
+
+
 def choose_display_label_tile(
     label_tiles, content_node, type_node, language_node, target_language=None
 ):
@@ -20,7 +26,7 @@ def choose_display_label_tile(
         named_label_tiles,
         key=lambda label_tile: rank_label(
             kind=ConceptBuilder.find_valuetype_id_from_uri(
-                (label_tile.get(type_node) or [{}])[0].get("uri")
+                get_label_type_uri(label_tile, type_node)
             ),
             source_lang=label_tile.get(language_node) or "",
             target_lang=target_language or "",

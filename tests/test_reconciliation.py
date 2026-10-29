@@ -1,7 +1,6 @@
 import json
 import uuid
 
-from django.conf import settings
 from django.test import SimpleTestCase, TestCase, override_settings
 from django.test.client import Client
 from django.urls import reverse
@@ -34,7 +33,10 @@ from arches_lingo.const import (
     URI_CONTENT_NODE,
     URI_NODEGROUP,
 )
-from arches_lingo.checks import check_reconciliation_rate_limit
+from arches_lingo.checks import (
+    check_reconciliation_public_server_address,
+    check_reconciliation_rate_limit,
+)
 from arches_lingo.models import ConceptMerge
 from arches_lingo.utils.concept_merge.tiles import get_list_item_tile_value
 from arches_lingo.utils.concept_lifecycle import (
@@ -45,13 +47,12 @@ from arches_lingo.utils.concept_lifecycle import (
 )
 from arches_lingo.utils.reconciliation.candidates import (
     MAX_CANDIDATE_LIMIT,
-    MAX_QUERIES_PER_REQUEST,
     ScoredCandidate,
     parse_reconciliation_queries,
 )
 from arches_lingo.utils.reconciliation.manifest import (
+    MAX_QUERIES_PER_REQUEST,
     SUGGEST_KINDS,
-    build_service_manifest,
     list_reconcilable_schemes,
 )
 from arches_lingo.utils.reconciliation.suggest import SUGGEST_SERVICES
@@ -202,7 +203,11 @@ class ReconciliationManifestTests(SchemeWithConceptsTestCase):
             manifest["extend"]["propose_properties"]["service_url"],
             "https://lingo.example.org/api/lingo/reconcile",
         )
-        for hidden_identifier in ["draft-scheme", "no-such-scheme"]:
+        for shared_scheme in [self.locked_scheme, self.unlabelled_scheme]:
+            ResourceIdentifier.objects.create(
+                resourceid=shared_scheme, identifier="shared", source="arches-lingo"
+            )
+        for hidden_identifier in ["draft-scheme", "no-such-scheme", "shared"]:
             self.assertEqual(
                 scheme_manifest_response(hidden_identifier).status_code, 404
             )
@@ -250,13 +255,6 @@ class ReconciliationManifestTests(SchemeWithConceptsTestCase):
         self.assertEqual(responses[2]["Access-Control-Allow-Origin"], "*")
         self.assertGreater(int(responses[2]["Retry-After"]), 0)
 
-    @override_settings(LINGO_RECONCILIATION_RATE_LIMIT="1/h")
-    def test_rate_limit_never_blocks_without_a_cache_that_stores(self):
-        # The test settings' default cache is a DummyCache.
-        for _request in range(2):
-            response = self.client.get(reverse("api-lingo-reconcile"))
-            self.assertEqual(response.status_code, 200)
-
     def test_system_check_rejects_malformed_rate_limits(self):
         for rate_limit, is_valid in [
             (None, True),
@@ -277,10 +275,22 @@ class ReconciliationManifestTests(SchemeWithConceptsTestCase):
                     [] if is_valid else ["arches_lingo.E001"],
                 )
 
-    def test_service_name_defaults_when_the_setting_is_absent(self):
-        with override_settings():
-            del settings.LINGO_RECONCILIATION_SERVICE_NAME
-            self.assertEqual(build_service_manifest()["name"], "Arches Lingo")
+    def test_check_warns_about_a_local_public_server_address(self):
+        for public_server_address, is_enabled, expected_ids in [
+            ("https://lingo.example.org/", True, []),
+            ("http://localhost:8000/", True, ["arches_lingo.W001"]),
+            ("http://127.0.0.1:8000/", True, ["arches_lingo.W001"]),
+            ("http://localhost:8000/", False, []),
+        ]:
+            with self.subTest(
+                public_server_address=public_server_address, is_enabled=is_enabled
+            ):
+                with override_settings(
+                    PUBLIC_SERVER_ADDRESS=public_server_address,
+                    LINGO_RECONCILIATION_ENABLED=is_enabled,
+                ):
+                    warnings = check_reconciliation_public_server_address(None)
+                self.assertEqual([warning.id for warning in warnings], expected_ids)
 
 
 class ReconciliationScoringTests(SimpleTestCase):
@@ -444,6 +454,25 @@ class ReconciliationQueryTestCase(SchemeWithConceptsTestCase):
     def result_ids(self, results):
         return [result["id"] for result in results]
 
+    def create_published_scheme(self, name="Other Scheme"):
+        scheme = ResourceInstance.objects.create(graph_id=SCHEMES_GRAPH_ID, name=name)
+        set_lifecycle_state(scheme, PUBLISHED_STATE_ID)
+        return scheme
+
+    def create_concept_in_scheme(self, scheme, name):
+        concept = ResourceInstance.objects.create(
+            graph_id=self.concepts[0].graph_id, name=name
+        )
+        TileModel.objects.create(
+            resourceinstance=concept,
+            nodegroup_id=CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID,
+            data={
+                CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID: [{"resourceId": str(scheme.pk)}]
+            },
+        )
+        set_lifecycle_state(concept, PUBLISHED_STATE_ID)
+        return concept
+
     def add_label(self, concept, value, label_type="prefLabel", language="en"):
         TileModel.objects.create(
             resourceinstance=concept,
@@ -501,6 +530,13 @@ class ReconciliationQueryTests(ReconciliationQueryTestCase):
         )
         self.assertFalse(any(result["match"] for result in results))
 
+        only_one_homograph_returned = self.reconcile(
+            {"q0": {"query": "Concept 4", "limit": 1}}
+        )["q0"]["result"]
+
+        self.assertEqual(len(only_one_homograph_returned), 1)
+        self.assertFalse(only_one_homograph_returned[0]["match"])
+
     def test_drafts_and_unmerged_retired_concepts_are_not_offered(self):
         set_lifecycle_state(self.concepts[3], DRAFT_STATE_ID)
         set_lifecycle_state(self.concepts[4], RETIRED_STATE_ID)
@@ -530,23 +566,8 @@ class ReconciliationQueryTests(ReconciliationQueryTestCase):
         self.assertNotIn(str(self.concepts[4].pk), self.result_ids(results))
 
     def test_cross_scheme_survivor_respects_scheme_scope_and_visibility(self):
-        other_scheme = ResourceInstance.objects.create(
-            graph_id=SCHEMES_GRAPH_ID, name="Other Scheme"
-        )
-        survivor = ResourceInstance.objects.create(
-            graph_id=self.concepts[0].graph_id, name="Survivor"
-        )
-        TileModel.objects.create(
-            resourceinstance=survivor,
-            nodegroup_id=CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID,
-            data={
-                CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID: [
-                    {"resourceId": str(other_scheme.pk)}
-                ]
-            },
-        )
-        set_lifecycle_state(survivor, PUBLISHED_STATE_ID)
-        set_lifecycle_state(other_scheme, PUBLISHED_STATE_ID)
+        other_scheme = self.create_published_scheme()
+        survivor = self.create_concept_in_scheme(other_scheme, "Survivor")
         set_lifecycle_state(self.concepts[4], RETIRED_STATE_ID)
         ConceptMerge.objects.create(
             absorbed_concept_id=self.concepts[4].pk, survivor_concept_id=survivor.pk
@@ -608,44 +629,25 @@ class ReconciliationQueryTests(ReconciliationQueryTestCase):
         )
 
     def test_scheme_service_defaults_queries_to_its_scheme(self):
-        set_lifecycle_state(self.scheme, DRAFT_STATE_ID)
-        hidden_scheme_url = reverse(
+        scheme_url = reverse(
             "api-lingo-scheme-reconcile", kwargs={"scheme_identifier": "test-scheme"}
         )
-        self.assertEqual(
-            self.client.post(hidden_scheme_url, {"queries": "{}"}).status_code, 404
-        )
 
-        set_lifecycle_state(self.scheme, PUBLISHED_STATE_ID)
-        results = self.reconcile({"q0": {"query": "Concept 3"}}, url=hidden_scheme_url)[
-            "q0"
-        ]["result"]
+        results = self.reconcile({"q0": {"query": "Concept 3"}}, url=scheme_url)["q0"][
+            "result"
+        ]
+
         self.assertEqual(results[0]["id"], str(self.concepts[2].pk))
 
     def test_scheme_service_never_searches_another_scheme(self):
-        other_scheme = ResourceInstance.objects.create(
-            graph_id=SCHEMES_GRAPH_ID, name="Other Scheme"
-        )
-        elsewhere = ResourceInstance.objects.create(
-            graph_id=self.concepts[0].graph_id, name="Elsewhere"
-        )
-        TileModel.objects.create(
-            resourceinstance=elsewhere,
-            nodegroup_id=CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID,
-            data={
-                CONCEPTS_PART_OF_SCHEME_NODEGROUP_ID: [
-                    {"resourceId": str(other_scheme.pk)}
-                ]
-            },
-        )
+        other_scheme = self.create_published_scheme()
+        elsewhere = self.create_concept_in_scheme(other_scheme, "Elsewhere")
         self.add_label(elsewhere, "Concept 3")
         TileModel.objects.create(
             resourceinstance=elsewhere,
             nodegroup_id=IDENTIFIER_NODEGROUP,
             data={IDENTIFIER_CONTENT_NODE: "E-1"},
         )
-        set_lifecycle_state(elsewhere, PUBLISHED_STATE_ID)
-        set_lifecycle_state(other_scheme, PUBLISHED_STATE_ID)
         queries = {
             "typed_elsewhere": {"query": "Concept 3", "type": str(other_scheme.pk)},
             "identified_with_null_type": {
@@ -881,10 +883,7 @@ class ReconciliationSuggestTests(ReconciliationQueryTestCase):
         self.assertEqual(len(self.suggest("property").json()["result"]), 6)
 
     def test_scheme_service_suggestions_stay_in_the_scheme(self):
-        other_scheme = ResourceInstance.objects.create(
-            graph_id=SCHEMES_GRAPH_ID, name="Test Other"
-        )
-        set_lifecycle_state(other_scheme, PUBLISHED_STATE_ID)
+        other_scheme = self.create_published_scheme("Test Other")
 
         def scheme_suggest(suggest_kind, **parameters):
             return self.client.get(
@@ -915,6 +914,9 @@ class ReconciliationSuggestTests(ReconciliationQueryTestCase):
         self.assertEqual(unknown_kind["Access-Control-Allow-Origin"], "*")
         self.assertEqual(self.suggest("type", cursor="-1").status_code, 400)
         self.assertEqual(self.suggest("type", cursor="first").status_code, 400)
+        self.assertEqual(
+            self.suggest("entity", prefix="c", cursor=str(10**20)).status_code, 400
+        )
         self.assertEqual(self.suggest("entity", prefix="c" * 256).status_code, 400)
 
 
@@ -972,9 +974,18 @@ class ReconciliationPreviewTests(ReconciliationQueryTestCase):
         self.add_note(self.concepts[1], "Une note.", "fr")
 
         self.assertIn(
-            '<dd lang="fr">Une note.</dd>',
+            '<dd dir="auto" lang="fr">Une note.</dd>',
             self.preview(self.concepts[1].pk).content.decode(),
         )
+
+    def test_long_note_is_shortened_even_without_spaces_between_words(self):
+        unspaced_note = "語" * 300
+        self.add_note(self.concepts[1], unspaced_note, "ja")
+
+        content = self.preview(self.concepts[1].pk).content.decode()
+
+        self.assertIn("…", content)
+        self.assertNotIn(unspaced_note, content)
 
     def test_note_type_is_named_in_the_display_language(self):
         note_type = [

@@ -18,6 +18,10 @@ from arches_lingo.utils.reconciliation.concept_summaries import (
     summarize_concepts,
 )
 from arches_lingo.utils.reconciliation.labels import is_same_base_language
+from arches_lingo.utils.reconciliation.manifest import (
+    MAX_QUERIES_PER_REQUEST,
+    MAX_QUERY_LENGTH,
+)
 from arches_lingo.utils.reconciliation.query_properties import (
     ALT_LABEL,
     BROADER,
@@ -43,14 +47,12 @@ from arches_lingo.utils.reconciliation.visibility import (
     RECONCILABLE_LIFECYCLE_STATE_IDS,
     SEARCHED_LIFECYCLE_STATE_IDS,
     filter_public_concept_ids,
-    reconcilable_scheme_ids,
+    get_reconcilable_scheme_ids,
     resolve_merge_survivors,
 )
 
-MAX_QUERIES_PER_REQUEST = 50
 DEFAULT_CANDIDATE_LIMIT = 10
 MAX_CANDIDATE_LIMIT = 25
-MAX_QUERY_LENGTH = 255
 # Retired matches are searched but mostly dropped, so fetch extra to still fill
 # the requested limit afterwards.
 OVERFETCH_FACTOR = 2
@@ -327,8 +329,11 @@ def build_query_results(
     ranked_candidates = sorted(
         best_candidate_by_concept_id.values(),
         key=lambda candidate: -candidate.score,
-    )[: query.limit]
+    )
+    # Decided before the limit applies, so a homograph cut from the list still
+    # makes the match ambiguous.
     automatic_match = decide_automatic_match(ranked_candidates)
+    ranked_candidates = ranked_candidates[: query.limit]
     return [
         {
             "id": candidate.concept_id,
@@ -347,7 +352,7 @@ def reconcile_queries(raw_queries, default_scheme_id=None):
     query count grows with the number of queries, not the number of candidates.
     """
     queries_by_key = parse_reconciliation_queries(raw_queries, default_scheme_id)
-    public_scheme_ids = reconcilable_scheme_ids()
+    public_scheme_ids = get_reconcilable_scheme_ids()
     searchable_scheme_ids = set(public_scheme_ids)
     # A scheme's own service never searches another scheme, whatever type a query names.
     if default_scheme_id is not None:
