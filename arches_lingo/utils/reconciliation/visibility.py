@@ -16,17 +16,17 @@ RECONCILABLE_LIFECYCLE_STATE_IDS = frozenset({PUBLISHED_STATE_ID, LOCKED_STATE_I
 SEARCHED_LIFECYCLE_STATE_IDS = RECONCILABLE_LIFECYCLE_STATE_IDS | {RETIRED_STATE_ID}
 
 
-def reconcilable_schemes():
+def get_reconcilable_schemes():
     return ResourceInstance.objects.filter(
         graph_id=SCHEMES_GRAPH_ID,
         resource_instance_lifecycle_state_id__in=RECONCILABLE_LIFECYCLE_STATE_IDS,
     )
 
 
-def reconcilable_scheme_ids():
+def get_reconcilable_scheme_ids():
     return {
         str(scheme_id)
-        for scheme_id in reconcilable_schemes().values_list("pk", flat=True)
+        for scheme_id in get_reconcilable_schemes().values_list("pk", flat=True)
     }
 
 
@@ -37,7 +37,7 @@ def filter_public_concept_ids(concept_ids, scheme_ids=None):
         return set()
     scheme_id_by_concept_id = get_scheme_ids_for_concepts(concept_ids)
     searchable_scheme_ids = (
-        reconcilable_scheme_ids() if scheme_ids is None else scheme_ids
+        get_reconcilable_scheme_ids() if scheme_ids is None else scheme_ids
     )
     public_state_concept_ids = ResourceInstance.objects.filter(
         pk__in=concept_ids,
@@ -51,18 +51,19 @@ def filter_public_concept_ids(concept_ids, scheme_ids=None):
 
 
 def resolve_reconcilable_scheme_id(scheme_identifier):
-    """Return the id of the reconcilable scheme with this identifier, or None."""
+    """Return the id of the reconcilable scheme with this identifier, or None,
+    also when several schemes share it, rather than serving one arbitrarily."""
     resource_ids = ResourceIdentifier.objects.filter(
         identifier=scheme_identifier,
         source="arches-lingo",
     ).values("resourceid")
-    scheme_id = (
-        reconcilable_schemes()
+    scheme_ids = list(
+        get_reconcilable_schemes()
         .filter(pk__in=resource_ids)
         .values_list("pk", flat=True)
-        .first()
+        .distinct()[:2]
     )
-    return None if scheme_id is None else str(scheme_id)
+    return str(scheme_ids[0]) if len(scheme_ids) == 1 else None
 
 
 def resolve_merge_survivors(concept_ids):

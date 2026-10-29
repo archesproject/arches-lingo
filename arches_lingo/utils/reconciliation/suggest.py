@@ -7,16 +7,20 @@ from arches_lingo.utils.concepts import (
     ORDER_MODE_UNSORTED,
     build_search_queryset,
 )
-from arches_lingo.utils.reconciliation.candidates import MAX_QUERY_LENGTH
 from arches_lingo.utils.reconciliation.concept_summaries import summarize_concepts
-from arches_lingo.utils.reconciliation.manifest import list_reconcilable_schemes
+from arches_lingo.utils.reconciliation.manifest import (
+    MAX_QUERY_LENGTH,
+    list_reconcilable_schemes,
+)
 from arches_lingo.utils.reconciliation.query_properties import QUERY_PROPERTY_NAMES
 from arches_lingo.utils.reconciliation.visibility import (
     RECONCILABLE_LIFECYCLE_STATE_IDS,
-    reconcilable_scheme_ids,
+    get_reconcilable_scheme_ids,
 )
 
 SUGGEST_PAGE_SIZE = 10
+# Far past any page a person scrolls to, and well inside a SQL OFFSET's range.
+MAX_SUGGEST_CURSOR = 10_000
 
 
 def parse_cursor(raw_cursor):
@@ -28,10 +32,14 @@ def parse_cursor(raw_cursor):
         raise ValueError(_("The cursor must be a non-negative integer."))
     if cursor < 0:
         raise ValueError(_("The cursor must be a non-negative integer."))
+    if cursor > MAX_SUGGEST_CURSOR:
+        raise ValueError(
+            _("The cursor cannot exceed %(limit)s.") % {"limit": MAX_SUGGEST_CURSOR}
+        )
     return cursor
 
 
-def page_of(items, cursor):
+def build_page(items, cursor):
     return {"result": items[cursor : cursor + SUGGEST_PAGE_SIZE]}
 
 
@@ -51,7 +59,7 @@ def suggest_entities(prefix, raw_cursor=None, scheme_id=None, scope_scheme_id=No
             % {"limit": MAX_QUERY_LENGTH}
         )
 
-    public_scheme_ids = reconcilable_scheme_ids()
+    public_scheme_ids = get_reconcilable_scheme_ids()
     searchable_scheme_ids = set(public_scheme_ids)
     for limiting_scheme_id in (scheme_id, scope_scheme_id):
         if limiting_scheme_id:
@@ -95,7 +103,7 @@ def suggest_types(prefix, raw_cursor=None, scope_scheme_id=None):
         )
         if folded_prefix in reconciliation_type["name"].casefold()
     ]
-    return page_of(matching_types, cursor)
+    return build_page(matching_types, cursor)
 
 
 def suggest_properties(prefix, raw_cursor=None):
@@ -107,7 +115,7 @@ def suggest_properties(prefix, raw_cursor=None):
         if folded_prefix in property_id.casefold()
         or folded_prefix in str(property_name).casefold()
     ]
-    return page_of(matching_properties, cursor)
+    return build_page(matching_properties, cursor)
 
 
 SUGGEST_SERVICES = {

@@ -3,18 +3,12 @@ import { computed, useId } from "vue";
 
 import { storeToRefs } from "pinia";
 import { useGettext } from "vue3-gettext";
-import { useToast } from "primevue/usetoast";
 
 import Button from "primevue/button";
 import InputText from "primevue/inputtext";
 
-import {
-    DEFAULT_ERROR_TOAST_LIFE,
-    DEFAULT_TOAST_LIFE,
-    ERROR,
-    SECONDARY,
-    SUCCESS,
-} from "@/arches_lingo/constants.ts";
+import { SECONDARY } from "@/arches_lingo/constants.ts";
+import { useCopyToClipboard } from "@/arches_lingo/composables/useCopyToClipboard.ts";
 import { useAppSettingsStore } from "@/arches_lingo/stores/useAppSettingsStore.ts";
 
 // Scheme services are routed by Django's slug converter, so a scheme whose
@@ -31,16 +25,16 @@ const {
     headingLevel?: 2 | 3;
 }>();
 
-const headingId = useId();
-const hintId = useId();
-
-const { $gettext } = useGettext();
-const toast = useToast();
+const { $gettext, interpolate } = useGettext();
+const { copyToClipboard } = useCopyToClipboard();
 const {
     reconciliationEnabled,
     reconciliationServiceUrl,
     schemeReconciliationServiceUrlTemplate,
 } = storeToRefs(useAppSettingsStore());
+
+const headingId = useId();
+const hintId = useId();
 
 const schemeServiceUrl = computed(() => {
     if (
@@ -60,6 +54,8 @@ const serviceUrl = computed(
     () => schemeServiceUrl.value ?? reconciliationServiceUrl.value,
 );
 
+const headingTag = computed(() => `h${headingLevel}`);
+
 const usageHint = computed(() => {
     if (schemeServiceUrl.value) {
         return $gettext(
@@ -67,12 +63,12 @@ const usageHint = computed(() => {
         );
     }
     if (schemeName) {
-        // Rendered as text, so escaping would show a name's "<" as "&lt;".
-        const disableHtmlEscaping = true;
-        return $gettext(
-            'Add this URL as a standard reconciliation service in OpenRefine, then choose "%{scheme}" as the type to reconcile against.',
+        return interpolate(
+            $gettext(
+                'Add this URL as a standard reconciliation service in OpenRefine, then choose "%{scheme}" as the type to reconcile against.',
+            ),
             { scheme: schemeName },
-            disableHtmlEscaping,
+            true,
         );
     }
     return $gettext(
@@ -80,31 +76,15 @@ const usageHint = computed(() => {
     );
 });
 
-function reportCopyFailure(): void {
-    toast.add({
-        severity: ERROR,
-        life: DEFAULT_ERROR_TOAST_LIFE,
-        summary: $gettext("Unable to copy the reconciliation service URL"),
-        detail: $gettext("Select the URL and copy it manually."),
-    });
-}
-
 async function copyServiceUrl(): Promise<void> {
-    // The clipboard API only exists in secure contexts (HTTPS or localhost).
-    if (!navigator.clipboard) {
-        reportCopyFailure();
-        return;
-    }
-    try {
-        await navigator.clipboard.writeText(serviceUrl.value ?? "");
-        toast.add({
-            severity: SUCCESS,
-            life: DEFAULT_TOAST_LIFE,
-            summary: $gettext("Reconciliation service URL copied to clipboard"),
-        });
-    } catch {
-        reportCopyFailure();
-    }
+    await copyToClipboard(serviceUrl.value ?? "", {
+        copiedSummary: $gettext(
+            "Reconciliation service URL copied to clipboard",
+        ),
+        failedSummary: $gettext(
+            "Unable to copy the reconciliation service URL",
+        ),
+    });
 }
 </script>
 
@@ -115,7 +95,7 @@ async function copyServiceUrl(): Promise<void> {
         :aria-labelledby="headingId"
     >
         <component
-            :is="`h${headingLevel}`"
+            :is="headingTag"
             :id="headingId"
             class="title"
         >

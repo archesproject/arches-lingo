@@ -11,7 +11,7 @@ from arches_lingo.const import (
 )
 from arches_lingo.utils.concept_builder import ConceptBuilder
 from arches_lingo.utils.reconciliation.labels import choose_display_label
-from arches_lingo.utils.reconciliation.visibility import reconcilable_schemes
+from arches_lingo.utils.reconciliation.visibility import get_reconcilable_schemes
 
 RECONCILIATION_API_VERSIONS = ["0.1", "0.2"]
 DEFAULT_SERVICE_NAME = "Arches Lingo"
@@ -21,6 +21,8 @@ SKOS_NAMESPACE = "http://www.w3.org/2004/02/skos/core#"
 # OpenRefine's own default; small batches keep its progress bar responsive.
 SUGGESTED_BATCH_SIZE = 10
 SUGGEST_KINDS = ("entity", "type", "property")
+MAX_QUERIES_PER_REQUEST = 50
+MAX_QUERY_LENGTH = 255
 # The reconciliation spec defines the preview iframe size as unitless pixel
 # counts, so these cannot be relative units.
 PREVIEW_WIDTH_PIXELS = 400
@@ -41,7 +43,7 @@ PROPERTY_SETTINGS = [
 ]
 
 
-def public_server_address():
+def get_public_server_address():
     return settings.PUBLIC_SERVER_ADDRESS.rstrip("/")
 
 
@@ -53,7 +55,7 @@ def reconciliation_service_url(scheme_identifier=None):
             "api-lingo-scheme-reconcile",
             kwargs={"scheme_identifier": scheme_identifier},
         )
-    return f"{public_server_address()}{service_path}"
+    return f"{get_public_server_address()}{service_path}"
 
 
 def scheme_reconciliation_service_url_template():
@@ -63,13 +65,13 @@ def scheme_reconciliation_service_url_template():
     )
 
 
-def concept_identifier_space():
-    return f"{public_server_address()}{reverse('root')}concept/"
+def get_concept_identifier_space():
+    return f"{get_public_server_address()}{reverse('root')}concept/"
 
 
 def list_reconcilable_schemes(scheme_ids=None):
     """Return reconciliation types, one per reconcilable scheme, sorted by name."""
-    schemes = reconcilable_schemes()
+    schemes = get_reconcilable_schemes()
     if scheme_ids is not None:
         schemes = schemes.filter(pk__in=scheme_ids)
     schemes = schemes.annotate(
@@ -112,7 +114,7 @@ def build_service_manifest(scheme_id=None, scheme_identifier=None):
             "scheme_name": reconciliation_types[0]["name"],
         }
 
-    identifier_space = concept_identifier_space()
+    identifier_space = get_concept_identifier_space()
     # Suggest follows the scheme scope; preview and property proposals do not
     # depend on it, so they are always the global services.
     service_url = reconciliation_service_url(scheme_identifier)

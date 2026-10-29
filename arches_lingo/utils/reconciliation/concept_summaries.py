@@ -16,6 +16,7 @@ from arches_lingo.const import (
 from arches_lingo.utils.concept_matching import get_scheme_ids_for_concepts
 from arches_lingo.utils.reconciliation.labels import (
     choose_display_label,
+    get_label_type_uri,
     join_labels,
 )
 from arches_lingo.utils.reconciliation.manifest import list_reconcilable_schemes
@@ -95,8 +96,7 @@ def get_pref_labels_for_concepts(concept_ids):
         resourceinstance_id__in=concept_ids,
     ).values_list("resourceinstance_id", "data")
     for concept_id, tile_data in label_tiles:
-        label_types = tile_data.get(CONCEPT_NAME_TYPE_NODE) or []
-        if not label_types or label_types[0].get("uri") != PREF_LABEL_URI:
+        if get_label_type_uri(tile_data, CONCEPT_NAME_TYPE_NODE) != PREF_LABEL_URI:
             continue
         pref_labels_by_concept_id[str(concept_id)].append(
             (
