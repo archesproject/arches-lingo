@@ -50,12 +50,21 @@ export function useReconciliationWorksheetDownload() {
     function worksheetFilename(requestedFilename?: string): string {
         const trimmedFilename = requestedFilename?.trim();
         if (!trimmedFilename) {
-            const today = new Date().toISOString().slice(0, 10);
-            return `reconciliation-worksheet-${today}.csv`;
+            return `reconciliation-worksheet-${localDateStamp()}.csv`;
         }
         return trimmedFilename.toLowerCase().endsWith(CSV_EXTENSION)
             ? trimmedFilename
             : `${trimmedFilename}${CSV_EXTENSION}`;
+    }
+
+    // The user's own date, not UTC's, which is a day off near midnight.
+    function localDateStamp(): string {
+        const today = new Date();
+        return [
+            today.getFullYear(),
+            String(today.getMonth() + 1).padStart(2, "0"),
+            String(today.getDate()).padStart(2, "0"),
+        ].join("-");
     }
 
     return { isDownloading, downloadWorksheet };

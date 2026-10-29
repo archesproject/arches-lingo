@@ -12,12 +12,15 @@ import uuid
 from collections import Counter, defaultdict
 from urllib.parse import urlsplit, urlunsplit
 
+from django.conf import settings
 from django.db import transaction
-from django.utils import formats, timezone
+from django.utils import formats, timezone, translation
 from django.utils.translation import get_language
 from django.utils.translation import gettext as _
+from django.utils.translation import ngettext
 
-from arches.app.models.models import ResourceInstance, TileModel
+from arches.app.models.models import EditLog, ResourceInstance, TileModel
+from arches.app.tasks import notify_completion
 
 from arches_lingo.const import (
     CONCEPTS_GRAPH_ID,
@@ -47,6 +50,7 @@ from arches_lingo.utils.openrefine_round_trip.worksheet_export import (
 from arches_lingo.utils.reconciliation.concept_summaries import (
     get_display_labels_for_concepts,
 )
+from arches_lingo.utils.reconciliation.labels import join_labels
 
 logger = logging.getLogger(__name__)
 
@@ -92,7 +96,9 @@ def parse_match_link_csv(uploaded_file):
     Headers match case-insensitively and columns other than concept_id,
     match_uri and match_type are ignored, so an edited reconciliation worksheet
     can be uploaded as it is. A match_uri cell holding several URIs joined the
-    way the worksheet joins them gives one link per URI. Raises ValueError for
+    way the worksheet joins them gives one link per URI, and a row with no
+    match_uri gives none, so unmatched concepts neither show in the preview
+    nor count toward MAX_IMPORT_ROWS. Raises ValueError for
     a file that cannot be read.
     """
     if uploaded_file is None:
@@ -131,7 +137,7 @@ def parse_match_link_rows(csv_reader):
     if missing_columns:
         raise ValueError(
             _("The file needs these columns: %(columns)s.")
-            % {"columns": ", ".join(missing_columns)}
+            % {"columns": join_labels(missing_columns)}
         )
 
     def cell(row, column_name):
@@ -143,13 +149,12 @@ def parse_match_link_rows(csv_reader):
     rows = []
     # Line 1 is the header, so data rows are numbered as a spreadsheet shows them.
     for row_number, row in enumerate(csv_reader, start=2):
-        if not any(value.strip() for value in row):
-            continue
         match_uris = [
             match_uri.strip()
             for match_uri in cell(row, "match_uri").split(MULTI_VALUE_SEPARATOR)
             if match_uri.strip()
-        ] or [""]
+        ]
+        # A worksheet row the editor found no match for is not an error.
         for match_uri in match_uris:
             rows.append(
                 {
@@ -415,6 +420,20 @@ def lock_concepts_in_rows(rows):
     )
 
 
+def attribute_edits_to_user(edit_transaction_id, user):
+    """Name the importer on the edit log, since create_tile_on_concept saves
+    tiles without a user to keep them out of provisional edits."""
+    if user is None:
+        return
+    EditLog.objects.filter(transactionid=edit_transaction_id).update(
+        userid=str(user.pk),
+        user_email=user.email,
+        user_firstname=user.first_name,
+        user_lastname=user.last_name,
+        user_username=user.username,
+    )
+
+
 def apply_match_link_import(match_link_import):
     """Validate the stored rows again (state may have changed since the
     preview) and write the links in one edit transaction.
@@ -465,6 +484,7 @@ def apply_match_link_import(match_link_import):
                     edit_transaction_id,
                     resource_by_concept_id[row_to_add["concept_id"]],
                 )
+            attribute_edits_to_user(edit_transaction_id, match_link_import.user)
         if rows_to_add:
             match_link_import.edit_transaction_id = edit_transaction_id
         match_link_import.outcome_counts = count_outcomes(validated_rows)
@@ -486,4 +506,24 @@ def apply_match_link_import(match_link_import):
             )
             match_link_import.error_code = MatchLinkImport.ERROR_INDEXING_FAILED
             match_link_import.save(update_fields=["error_code"])
+
+    notify_requester(match_link_import)
     return match_link_import
+
+
+def notify_requester(match_link_import):
+    """Tell the requester how the import ended, in the language they asked in;
+    they may have closed the dialog while it ran."""
+    if not match_link_import.user:
+        return
+    with translation.override(match_link_import.language or settings.LANGUAGE_CODE):
+        if match_link_import.status == MatchLinkImport.STATUS_COMPLETE:
+            added_count = match_link_import.outcome_counts.get(OUTCOME_ADD, 0)
+            message = ngettext(
+                "Match link import finished: %(count)s link added",
+                "Match link import finished: %(count)s links added",
+                added_count,
+            ) % {"count": added_count}
+        else:
+            message = _("Match link import failed")
+    notify_completion(message, match_link_import.user)
