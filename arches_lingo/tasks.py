@@ -132,20 +132,14 @@ def detect_concept_matches_task(run_id, scope_parameters, signals, options):
 @shared_task
 def apply_match_link_import_task(match_link_import_id):
     """Apply an import the request has already recorded and returned to the caller."""
+    logger = logging.getLogger(__name__)
+
     try:
         match_link_import = MatchLinkImport.objects.get(pk=match_link_import_id)
     except MatchLinkImport.DoesNotExist:
-        logging.getLogger(__name__).warning(
+        logger.warning(
             "Match link import %s no longer exists; abandoning it.",
             match_link_import_id,
-        )
-        return
-
-    if match_link_import.status != MatchLinkImport.STATUS_PENDING:
-        logging.getLogger(__name__).warning(
-            "Match link import %s is already %s; not applying it again.",
-            match_link_import.pk,
-            match_link_import.status,
         )
         return
 

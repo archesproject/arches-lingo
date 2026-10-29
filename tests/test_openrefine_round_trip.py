@@ -34,9 +34,11 @@ from arches_lingo.utils.concept_lifecycle import (
     RETIRED_STATE_ID,
 )
 from arches_lingo.utils.concept_merge.tiles import get_list_item_tile_value
+from arches_lingo.utils.openrefine_round_trip.match_link_csv import (
+    parse_match_link_csv,
+)
 from arches_lingo.utils.openrefine_round_trip.match_link_import import (
     apply_match_link_import,
-    parse_match_link_csv,
 )
 from tests.tests import SchemeWithConceptsTestCase
 
@@ -243,7 +245,8 @@ class MatchLinkImportTests(OpenRefineRoundTripTestCase):
 
     def outcomes_of(self, preview_response):
         return {
-            row["row_number"]: row["outcome"] for row in preview_response.json()["rows"]
+            link["row_number"]: link["outcome"]
+            for link in preview_response.json()["links"]
         }
 
     def test_every_row_gets_an_outcome(self):
@@ -267,7 +270,7 @@ class MatchLinkImportTests(OpenRefineRoundTripTestCase):
         )
 
         preview = self.preview(upload)
-        rows = preview.json()["rows"]
+        links = preview.json()["links"]
 
         self.assertEqual(
             self.outcomes_of(preview),
@@ -286,13 +289,19 @@ class MatchLinkImportTests(OpenRefineRoundTripTestCase):
             },
         )
         self.assertEqual(preview.json()["counts_by_outcome"]["add"], 2)
-        self.assertEqual(rows[0]["concept_label"], "Concept 3")
+        self.assertEqual(links[0]["concept_label"], "Concept 3")
         # Row 10 links to Concept 1's own URI: added one way, and flagged.
-        self.assertTrue(rows[8]["is_internal_concept"])
-        self.assertFalse(rows[0]["is_internal_concept"])
+        self.assertTrue(links[8]["is_internal_concept"])
+        self.assertFalse(links[0]["is_internal_concept"])
 
     def test_cells_are_split_aliased_and_compared_loosely(self):
         self.add_exact_match(self.concepts[3], "http://example.org/already")
+        # Older data holds some URIs as url datatype values.
+        TileModel.objects.create(
+            resourceinstance=self.concepts[1],
+            nodegroup_id=URI_NODEGROUP,
+            data={URI_CONTENT_NODE: {"url": "https://lingo.example/c2"}},
+        )
         concept_ids = [str(concept.pk) for concept in self.concepts]
         upload = csv_upload(
             [
@@ -308,22 +317,27 @@ class MatchLinkImportTests(OpenRefineRoundTripTestCase):
                 ],
                 [concept_ids[3], "https://example.org/already/", "exactmatch"],
                 [concept_ids[4], "http://lingo.example/c1/", ""],
+                [concept_ids[1], "http://lingo.example/c2", ""],
             ]
         )
 
-        rows = self.preview(upload).json()["rows"]
+        links = self.preview(upload).json()["links"]
 
         self.assertEqual(
-            [(row["row_number"], row["match_type"], row["outcome"]) for row in rows],
+            [
+                (link["row_number"], link["match_type"], link["outcome"])
+                for link in links
+            ],
             [
                 (2, "closeMatch", "add"),
                 (2, "closeMatch", "add"),
                 (3, "closeMatch", "duplicate_in_file"),
                 (4, "exactMatch", "already_linked"),
                 (5, "exactMatch", "add"),
+                (6, "exactMatch", "self_match"),
             ],
         )
-        self.assertTrue(rows[4]["is_internal_concept"])
+        self.assertTrue(links[4]["is_internal_concept"])
 
     def test_scheme_scope_leaves_other_schemes_alone(self):
         upload_rows = [[str(self.concepts[2].pk), "http://example.org/x", ""]]
@@ -408,7 +422,7 @@ class MatchLinkImportTests(OpenRefineRoundTripTestCase):
             user=self.editor,
             status=MatchLinkImport.STATUS_FAILED,
             error_code=MatchLinkImport.ERROR_INTERRUPTED,
-            rows=[
+            links=[
                 {
                     "row_number": 2,
                     "concept_id": str(self.concepts[2].pk),
@@ -439,7 +453,7 @@ class MatchLinkImportTests(OpenRefineRoundTripTestCase):
     def test_indexing_failure_keeps_the_written_links_on_record(self, _index):
         match_link_import = MatchLinkImport.objects.create(
             user=self.editor,
-            rows=[
+            links=[
                 {
                     "row_number": 2,
                     "concept_id": str(self.concepts[2].pk),
@@ -543,7 +557,7 @@ class MatchLinkImportTests(OpenRefineRoundTripTestCase):
     def test_worker_task_applies_and_notifies(self, notify_completion):
         match_link_import = MatchLinkImport.objects.create(
             user=self.editor,
-            rows=[
+            links=[
                 {
                     "row_number": 2,
                     "concept_id": str(self.concepts[2].pk),
@@ -552,16 +566,24 @@ class MatchLinkImportTests(OpenRefineRoundTripTestCase):
                 }
             ],
         )
-        failing_import = MatchLinkImport.objects.create(user=self.editor, rows=[{}])
+        failing_import = MatchLinkImport.objects.create(user=self.editor, links=[{}])
+        # Its user deleted: still applied, with nobody to name or notify.
+        orphaned_import = MatchLinkImport.objects.create(
+            user=None,
+            links=[{**match_link_import.links[0], "match_uri": "http://example.org/b"}],
+        )
 
         apply_match_link_import_task(match_link_import.pk)
         apply_match_link_import_task(failing_import.pk)
+        apply_match_link_import_task(orphaned_import.pk)
         apply_match_link_import_task(-1)
         apply_match_link_import_task(match_link_import.pk)
 
         match_link_import.refresh_from_db()
         failing_import.refresh_from_db()
+        orphaned_import.refresh_from_db()
         self.assertEqual(match_link_import.status, MatchLinkImport.STATUS_COMPLETE)
+        self.assertEqual(orphaned_import.status, MatchLinkImport.STATUS_COMPLETE)
         self.assertEqual(failing_import.status, MatchLinkImport.STATUS_FAILED)
         self.assertEqual(failing_import.error_code, MatchLinkImport.ERROR_APPLY_FAILED)
         self.assertEqual(
@@ -589,13 +611,13 @@ class MatchLinkImportTests(OpenRefineRoundTripTestCase):
             (oversized, {"MAX_IMPORT_BYTES": 10}),
             (
                 csv_upload([["a", "b", ""], ["c", "d", ""]]),
-                {"MAX_IMPORT_ROWS": 1},
+                {"MAX_IMPORT_LINKS": 1},
             ),
         ]:
             with self.subTest(patches=patches, upload=getattr(upload, "name", None)):
                 with (
                     patch.multiple(
-                        "arches_lingo.utils.openrefine_round_trip.match_link_import",
+                        "arches_lingo.utils.openrefine_round_trip.match_link_csv",
                         **patches,
                     )
                     if patches
@@ -621,10 +643,10 @@ class MatchLinkImportTests(OpenRefineRoundTripTestCase):
             ).encode("utf-8"),
         )
 
-        rows = parse_match_link_csv(upload)
+        match_links = parse_match_link_csv(upload)
 
         self.assertEqual(
-            rows,
+            match_links,
             [
                 {
                     "row_number": 2,

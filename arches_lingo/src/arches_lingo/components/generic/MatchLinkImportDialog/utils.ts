@@ -1,4 +1,13 @@
-import type { MatchLinkImportOutcome } from "@/arches_lingo/types.ts";
+import { SECONDARY, SUCCESS } from "@/arches_lingo/constants.ts";
+
+import type { useGettext } from "vue3-gettext";
+import type {
+    MatchLinkImportOutcome,
+    MatchLinkImportOutcomeCounts,
+    MatchLinkImportOutcomeTotal,
+} from "@/arches_lingo/components/generic/MatchLinkImportDialog/types.ts";
+
+type Gettext = ReturnType<typeof useGettext>["$gettext"];
 
 export const MATCH_LINK_IMPORT_POLL_INTERVAL_MS = 2000;
 // Consecutive failed status checks before the dialog stops waiting.
@@ -15,8 +24,34 @@ export function describeOutcome(
     return outcomeLabels[outcome] ?? outcome;
 }
 
+export function outcomeSeverity(outcome: MatchLinkImportOutcome): string {
+    return outcome === OUTCOME_ADD ? SUCCESS : SECONDARY;
+}
+
+export function summarizeOutcomeCounts(
+    $gettext: Gettext,
+    outcomeLabels: Record<MatchLinkImportOutcome, string>,
+    countsByOutcome: MatchLinkImportOutcomeCounts,
+): MatchLinkImportOutcomeTotal[] {
+    return (
+        Object.entries(countsByOutcome) as [MatchLinkImportOutcome, number][]
+    ).map(([outcome, count]) => {
+        const label = describeOutcome(outcomeLabels, outcome);
+        return {
+            outcome,
+            count,
+            label,
+            text: $gettext("%{label}: %{count}", {
+                label,
+                count: String(count),
+            }),
+            severity: outcomeSeverity(outcome),
+        };
+    });
+}
+
 export function buildOutcomeLabels(
-    $gettext: (text: string) => string,
+    $gettext: Gettext,
 ): Record<MatchLinkImportOutcome, string> {
     return {
         add: $gettext("New link"),
