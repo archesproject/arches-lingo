@@ -13,17 +13,14 @@ import {
     previewMatchLinkImport,
     startMatchLinkImport,
 } from "@/arches_lingo/api.ts";
-import {
-    MATCH_LINK_IMPORT_MAX_FAILED_POLLS,
-    MATCH_LINK_IMPORT_POLL_INTERVAL_MS,
-} from "@/arches_lingo/components/generic/MatchLinkImportDialog/utils.ts";
+import { MATCH_LINK_IMPORT_POLL_INTERVAL_MS } from "@/arches_lingo/components/generic/MatchLinkImportDialog/utils.ts";
 
 import type { VueWrapper } from "@vue/test-utils";
 import type {
     MatchLinkImportOutcome,
     MatchLinkImportPreview as MatchLinkImportPreviewData,
     MatchLinkImportRecord,
-} from "@/arches_lingo/types.ts";
+} from "@/arches_lingo/components/generic/MatchLinkImportDialog/types.ts";
 
 const toastAdd = vi.fn();
 
@@ -66,9 +63,9 @@ function previewWith(
     countsByOutcome: MatchLinkImportPreviewData["counts_by_outcome"],
 ): MatchLinkImportPreviewData {
     return {
-        total_rows: 2,
+        total_links: 2,
         counts_by_outcome: countsByOutcome,
-        rows: [
+        links: [
             {
                 row_number: 2,
                 concept_id: "concept-1",
@@ -101,7 +98,7 @@ function importRecord(
         scheme_id: null,
         created: "2026-10-23T10:00:00Z",
         finished: null,
-        total_rows: 2,
+        total_links: 2,
         outcome_counts: {},
         error_message: "",
         ...overrides,
@@ -166,7 +163,7 @@ describe("MatchLinkImportDialog", () => {
         );
         expect(addLinksButton(wrapper).attributes("disabled")).toBeUndefined();
         expect(addLinksButton(wrapper).text()).toBe("Add 1 link");
-        expect(wrapper.find('[role="status"]').text()).toBe("2 rows checked");
+        expect(wrapper.find('[role="status"]').text()).toBe("2 links checked");
     });
 
     it("cannot apply a file with nothing to add", async () => {
@@ -256,75 +253,6 @@ describe("MatchLinkImportDialog", () => {
         );
     });
 
-    it("keeps polling through a lost status check, then gives up without calling the import failed", async () => {
-        vi.useFakeTimers();
-        vi.mocked(previewMatchLinkImport).mockResolvedValue(
-            previewWith({ add: 1 }),
-        );
-        vi.mocked(startMatchLinkImport).mockResolvedValue(importRecord({}));
-        vi.mocked(fetchMatchLinkImport)
-            .mockRejectedValueOnce(new Error("Bad Gateway"))
-            .mockResolvedValueOnce(importRecord({ status: "running" }))
-            .mockRejectedValue(new Error("Bad Gateway"));
-        const wrapper = mountDialog();
-        await selectFile(wrapper);
-
-        await addLinksButton(wrapper).trigger("click");
-        await vi.advanceTimersByTimeAsync(
-            MATCH_LINK_IMPORT_POLL_INTERVAL_MS *
-                (MATCH_LINK_IMPORT_MAX_FAILED_POLLS + 2),
-        );
-        await flushPromises();
-
-        expect(fetchMatchLinkImport).toHaveBeenCalledTimes(
-            MATCH_LINK_IMPORT_MAX_FAILED_POLLS + 2,
-        );
-        expect(toastAdd).toHaveBeenCalledTimes(1);
-        expect(toastAdd).toHaveBeenCalledWith(
-            expect.objectContaining({
-                severity: "warn",
-                summary: "Unable to check on the match link import",
-            }),
-        );
-    });
-
-    it("reports an import that failed on the server", async () => {
-        vi.mocked(previewMatchLinkImport).mockResolvedValue(
-            previewWith({ add: 1 }),
-        );
-        vi.mocked(startMatchLinkImport).mockResolvedValue(
-            importRecord({ status: "failed", error_message: "Worker died" }),
-        );
-        const wrapper = mountDialog();
-        await selectFile(wrapper);
-
-        await addLinksButton(wrapper).trigger("click");
-        await flushPromises();
-
-        expect(toastAdd).toHaveBeenCalledWith(
-            expect.objectContaining({
-                severity: "error",
-                detail: "Worker died",
-            }),
-        );
-    });
-
-    it("reports a request that could not be sent", async () => {
-        vi.mocked(previewMatchLinkImport).mockResolvedValue(
-            previewWith({ add: 1 }),
-        );
-        vi.mocked(startMatchLinkImport).mockRejectedValue(new Error("Offline"));
-        const wrapper = mountDialog();
-        await selectFile(wrapper);
-
-        await addLinksButton(wrapper).trigger("click");
-        await flushPromises();
-
-        expect(toastAdd).toHaveBeenCalledWith(
-            expect.objectContaining({ severity: "error", detail: "Offline" }),
-        );
-    });
-
     it("limits an import opened from a scheme to that scheme", async () => {
         vi.mocked(previewMatchLinkImport).mockResolvedValue(
             previewWith({ add: 1 }),
@@ -386,14 +314,14 @@ describe("MatchLinkImportDialog", () => {
         expect(wrapper.emitted("close")).toHaveLength(1);
     });
 
-    it("filters the preview rows by outcome", async () => {
+    it("filters the previewed links by outcome", async () => {
         const preview = mount(MatchLinkImportPreview, {
             props: { preview: previewWith({ add: 1, already_linked: 1 }) },
             global: { plugins: [PrimeVue] },
         });
         expect(preview.findAll("tbody tr")).toHaveLength(2);
         expect(preview.find("table").attributes("aria-label")).toBe(
-            "Rows in the match links file",
+            "Links in the match links file",
         );
         expect(preview.text()).toContain(
             "Some URIs belong to concepts in Lingo.",

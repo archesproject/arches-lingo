@@ -60,10 +60,10 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 (
-                    "rows",
+                    "links",
                     models.JSONField(
                         default=list,
-                        help_text="The parsed rows of the uploaded file, validated again on apply.",
+                        help_text="The parsed links of the uploaded file, validated again on apply.",
                     ),
                 ),
                 ("outcome_counts", models.JSONField(blank=True, default=dict)),

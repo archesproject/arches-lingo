@@ -71,8 +71,8 @@ WORKSHEET_COLUMNS = [
     "exact_matches",
     "close_matches",
     "related_matches",
-    # Left empty for the editor to fill in OpenRefine, then read by the
-    # match-link import.
+    # Left empty (DictWriter's restval) for the editor to fill in OpenRefine,
+    # then read by the match-link import.
     "match_uri",
     "match_type",
 ]
@@ -171,7 +171,6 @@ def resolve_worksheet_concept_ids(scope_key, scope_value, user):
 
 
 def get_match_uris_by_column(concept_ids, column_by_relation_uri):
-    """Return ``{concept_id: {column: [uri, …]}}`` for exact, close and related matches."""
     match_uris_by_column = defaultdict(lambda: defaultdict(list))
     match_tiles = TileModel.objects.filter(
         nodegroup_id=MATCH_STATUS_NODEGROUP, resourceinstance_id__in=concept_ids
@@ -267,36 +266,46 @@ def build_worksheet_rows(concept_ids, user, language, column_by_relation_uri):
         )
         match_uris = match_uris_by_concept_id.get(concept_id, {})
         rows.append(
-            [
-                concept_id,
-                uri_by_concept_id.get(concept_id) or "",
-                identifier_by_concept_id.get(concept_id) or "",
-                pref_label_tile[CONCEPT_NAME_CONTENT_NODE] if pref_label_tile else "",
-                pref_label_tile[CONCEPT_NAME_LANGUAGE_NODE] if pref_label_tile else "",
-                MULTI_VALUE_SEPARATOR.join(alternate_labels),
-                MULTI_VALUE_SEPARATOR.join(
+            {
+                "concept_id": concept_id,
+                "uri": uri_by_concept_id.get(concept_id) or "",
+                "identifier": identifier_by_concept_id.get(concept_id) or "",
+                "pref_label": (
+                    pref_label_tile[CONCEPT_NAME_CONTENT_NODE]
+                    if pref_label_tile
+                    else ""
+                ),
+                "pref_label_language": (
+                    pref_label_tile[CONCEPT_NAME_LANGUAGE_NODE]
+                    if pref_label_tile
+                    else ""
+                ),
+                "alt_labels": MULTI_VALUE_SEPARATOR.join(alternate_labels),
+                "broader_labels": MULTI_VALUE_SEPARATOR.join(
                     sorted(
                         broader_name_by_id[broader_id]
                         for broader_id in broader_ids_by_concept_id.get(concept_id, [])
                         if broader_name_by_id.get(broader_id)
                     )
                 ),
-                scheme_name_by_id.get(scheme_id_by_concept_id.get(concept_id), ""),
-                lifecycle_state_name_by_id.get(
+                "scheme": scheme_name_by_id.get(
+                    scheme_id_by_concept_id.get(concept_id), ""
+                ),
+                "lifecycle_state": lifecycle_state_name_by_id.get(
                     lifecycle_state_id_by_concept_id.get(concept_id), ""
                 ),
-                (
+                "editable": (
                     "false"
                     if concept_id in cannot_receive_reason_by_concept_id
                     else "true"
                 ),
-                *(
-                    MULTI_VALUE_SEPARATOR.join(sorted(match_uris.get(column, [])))
+                **{
+                    column: MULTI_VALUE_SEPARATOR.join(
+                        sorted(match_uris.get(column, []))
+                    )
                     for column in MATCH_COLUMN_BY_LIST_ITEM_ID.values()
-                ),
-                "",
-                "",
-            ]
+                },
+            }
         )
     return rows
 
@@ -324,12 +333,12 @@ def write_worksheet(concept_ids, user, language):
     """Return the worksheet CSV, hydrating concepts in batches so each query
     stays a manageable size."""
     worksheet = io.StringIO()
-    csv_writer = csv.writer(worksheet)
+    csv_writer = csv.DictWriter(worksheet, fieldnames=WORKSHEET_COLUMNS, restval="")
     column_by_relation_uri = {
         get_list_item_tile_value(list_item_id)["uri"]: column
         for list_item_id, column in MATCH_COLUMN_BY_LIST_ITEM_ID.items()
     }
-    csv_writer.writerow(WORKSHEET_COLUMNS)
+    csv_writer.writeheader()
     # Lifecycle state names are translated fields, read in the active language.
     with translation.override(language):
         for batch_start in range(0, len(concept_ids), WORKSHEET_BATCH_SIZE):
@@ -340,6 +349,9 @@ def write_worksheet(concept_ids, user, language):
                 batch_concept_ids, user, language, column_by_relation_uri
             ):
                 csv_writer.writerow(
-                    [neutralize_formula(cell_value) for cell_value in row]
+                    {
+                        column: neutralize_formula(cell_value)
+                        for column, cell_value in row.items()
+                    }
                 )
     return worksheet.getvalue()

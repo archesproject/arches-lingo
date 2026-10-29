@@ -1,4 +1,4 @@
-"""Starting, finding and listing match link imports for the API."""
+"""Previewing, starting and finding match link imports for the API."""
 
 import datetime
 import uuid
@@ -14,9 +14,19 @@ import arches.app.utils.task_management as task_management
 from arches_lingo.models import MatchLinkImport
 from arches_lingo.permissions import is_lingo_admin
 from arches_lingo.tasks import apply_match_link_import_task
+from arches_lingo.utils.openrefine_round_trip.match_link_csv import (
+    parse_match_link_csv,
+)
 from arches_lingo.utils.openrefine_round_trip.match_link_import import (
     apply_match_link_import,
-    parse_match_link_csv,
+)
+from arches_lingo.utils.openrefine_round_trip.match_link_validation import (
+    OUTCOME_UNKNOWN_CONCEPT,
+    count_outcomes,
+    validate_match_links,
+)
+from arches_lingo.utils.reconciliation.concept_summaries import (
+    get_display_labels_for_concepts,
 )
 
 # An import still running this long after it started is presumed lost with its
@@ -40,14 +50,39 @@ def parse_scheme_id(raw_scheme_id):
         raise ValueError(_("The scheme id is not valid."))
 
 
+def preview_match_link_import(uploaded_file, user, scheme_id=None):
+    validated_links = validate_match_links(
+        parse_match_link_csv(uploaded_file), user, scheme_id
+    )
+    concept_label_by_id = get_display_labels_for_concepts(
+        {
+            validated_link["concept_id"]
+            for validated_link in validated_links
+            if validated_link["outcome"] != OUTCOME_UNKNOWN_CONCEPT
+        },
+        get_language(),
+    )
+    return {
+        "total_links": len(validated_links),
+        "counts_by_outcome": count_outcomes(validated_links),
+        "links": [
+            {
+                **validated_link,
+                "concept_label": concept_label_by_id.get(validated_link["concept_id"]),
+            }
+            for validated_link in validated_links
+        ],
+    }
+
+
 def start_match_link_import(uploaded_file, user, scheme_id=None):
     """Record an import and apply it on a worker, or right away without one."""
-    rows = parse_match_link_csv(uploaded_file)
+    match_links = parse_match_link_csv(uploaded_file)
     match_link_import = MatchLinkImport.objects.create(
         user=user,
         filename=(uploaded_file.name or "")[:255],
         scheme_id=scheme_id,
-        rows=rows,
+        links=match_links,
         language=get_language() or "",
     )
     if task_management.check_if_celery_available():
@@ -121,7 +156,7 @@ def serialize_match_link_import(match_link_import):
             if match_link_import.finished
             else None
         ),
-        "total_rows": len(match_link_import.rows),
+        "total_links": len(match_link_import.links),
         "outcome_counts": match_link_import.outcome_counts,
         "error_message": describe_error(match_link_import.error_code),
     }
