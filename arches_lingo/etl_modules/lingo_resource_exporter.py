@@ -26,6 +26,7 @@ from arches.app.utils.data_management.resources.formats.csvfile import TileCsvWr
 from arches_querysets.models import ResourceTileTree
 from arches.app.tasks import notify_completion
 
+from arches_lingo import const
 from arches_lingo.utils.concept_builder import ConceptBuilder
 from arches_lingo.utils.display_label import get_display_label
 from arches_lingo.utils.skos import SKOSWriter
@@ -92,7 +93,13 @@ class LingoResourceExporter:
         )
         self.load_event = load_event
 
-        if task_management.check_if_celery_available():
+        scheme_ids, concept_ids = self._get_resource_ids_for_export(self.resourceid)
+        if len(concept_ids) > const.CELERY_CONCEPT_COUNT_THRESHOLD:
+            if not task_management.check_if_celery_available():
+                error = _(
+                    "The thesaurus exceeds the threshold for synchronous export, but Celery is not available. Please contact your system administrator."
+                )
+                return self._handle_error(error)
             from arches_lingo import tasks as lingo_tasks
 
             task = lingo_tasks.export_lingo_resources_task.apply_async(
@@ -489,5 +496,7 @@ class LingoResourceExporter:
                 if scheme_name
                 else _("Export failed")
             )
+            if error:
+                message = f"{message}: {error}"
             notify_completion(message, self.user)
         return {"success": False, "message": error}

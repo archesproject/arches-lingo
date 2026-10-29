@@ -1,5 +1,7 @@
 from django.utils.translation import gettext_lazy as _
 
+CELERY_CONCEPT_COUNT_THRESHOLD = 1000
+
 ### Groups ###
 LINGO_EDITOR_GROUP_NAME = "Lingo Editor"
 LINGO_ADMIN_GROUP_NAME = "Lingo Admin"

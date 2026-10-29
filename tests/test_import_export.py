@@ -672,6 +672,7 @@ class ExportTests(TestCase):
 
         self.assertEqual(get_display_label(unlabelled_concept.pk), "")
 
+    @patch("arches_lingo.const.CELERY_CONCEPT_COUNT_THRESHOLD", 0)
     @patch("arches_lingo.tasks.export_lingo_resources_task.apply_async")
     @patch(
         "arches_lingo.etl_modules.lingo_resource_exporter.task_management.check_if_celery_available",
