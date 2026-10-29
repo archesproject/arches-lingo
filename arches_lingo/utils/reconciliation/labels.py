@@ -2,6 +2,12 @@ from django.utils.translation import pgettext
 
 from arches.app.utils.i18n import rank_label
 
+from arches_lingo.const import (
+    SCHEME_NAME_CONTENT_NODE,
+    SCHEME_NAME_LANGUAGE_NODE,
+    SCHEME_NAME_NODEGROUP,
+    SCHEME_NAME_TYPE_NODE,
+)
 from arches_lingo.utils.concept_builder import ConceptBuilder
 
 
@@ -45,6 +51,24 @@ def choose_display_label(
 
 def join_labels(labels):
     return pgettext("separator between items in a list", ", ").join(labels)
+
+
+def get_scheme_display_names(schemes, target_language=None):
+    """Return ``{scheme_id: name}`` for a scheme queryset, in one query."""
+    return {
+        str(scheme.pk): choose_display_label(
+            scheme.labels,
+            SCHEME_NAME_CONTENT_NODE,
+            SCHEME_NAME_TYPE_NODE,
+            SCHEME_NAME_LANGUAGE_NODE,
+            target_language,
+        )
+        or str(scheme.name)
+        or str(scheme.pk)
+        for scheme in schemes.annotate(
+            labels=ConceptBuilder.labels_subquery(SCHEME_NAME_NODEGROUP)
+        )
+    }
 
 
 def is_same_base_language(language_code, other_language_code):

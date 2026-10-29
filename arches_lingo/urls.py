@@ -59,6 +59,12 @@ from arches_lingo.views.api.concept_merge import (
     ConceptMergePreviewView,
     ConceptMergeView,
 )
+from arches_lingo.views.api.openrefine_round_trip import (
+    MatchLinkImportCreateView,
+    MatchLinkImportDetailView,
+    MatchLinkImportPreviewView,
+    ReconciliationWorksheetView,
+)
 from arches_lingo.views.api.reconciliation import (
     ReconciliationPreviewView,
     ReconciliationPropertyProposalView,
@@ -137,7 +143,7 @@ urlpatterns = [
         name="api-lingo-settings",
     ),
     # Must precede the generic api/lingo/<slug:graph> routes, which would
-    # otherwise capture "reconcile" as a graph slug.
+    # otherwise capture these paths as graph slugs.
     path(
         "api/lingo/reconcile",
         ReconciliationServiceView.as_view(),
@@ -157,6 +163,26 @@ urlpatterns = [
         "api/lingo/reconcile/preview",
         ReconciliationPreviewView.as_view(),
         name="api-lingo-reconcile-preview",
+    ),
+    path(
+        "api/lingo/reconciliation-worksheet",
+        ReconciliationWorksheetView.as_view(),
+        name="api-lingo-reconciliation-worksheet",
+    ),
+    path(
+        "api/lingo/match-link-imports/preview",
+        MatchLinkImportPreviewView.as_view(),
+        name="api-lingo-match-link-import-preview",
+    ),
+    path(
+        "api/lingo/match-link-imports",
+        MatchLinkImportCreateView.as_view(),
+        name="api-lingo-match-link-imports",
+    ),
+    path(
+        "api/lingo/match-link-imports/<int:pk>",
+        MatchLinkImportDetailView.as_view(),
+        name="api-lingo-match-link-import",
     ),
     path(
         "api/lingo/schemes/<slug:scheme_identifier>/reconcile",

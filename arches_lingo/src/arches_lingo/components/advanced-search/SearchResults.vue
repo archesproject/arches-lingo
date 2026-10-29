@@ -9,13 +9,17 @@ import Checkbox from "primevue/checkbox";
 import Paginator from "primevue/paginator";
 
 import LifecycleStateBadge from "@/arches_lingo/components/generic/LifecycleStateBadge.vue";
+import ReconciliationWorksheetExportButton from "@/arches_lingo/components/generic/ReconciliationWorksheetExportButton.vue";
 
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 import { getConceptIcon, getParentLabels } from "@/arches_lingo/utils.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 import { routeNames } from "@/arches_lingo/routes.ts";
 
-import type { AdvancedSearchResponse } from "@/arches_lingo/types.ts";
+import type {
+    AdvancedSearchQuery,
+    AdvancedSearchResponse,
+} from "@/arches_lingo/types.ts";
 
 const { $gettext } = useGettext();
 const router = useRouter();
@@ -26,6 +30,8 @@ defineProps<{
     results: AdvancedSearchResponse | null;
     loading: boolean;
     selectedIds: Set<string>;
+    // Null hides the worksheet download, e.g. for users who are not editors.
+    worksheetQuery: AdvancedSearchQuery | null;
 }>();
 
 const emit = defineEmits<{
@@ -74,6 +80,10 @@ function onPageChange(event: { page: number }) {
                 }}
             </span>
             <div class="results-actions">
+                <ReconciliationWorksheetExportButton
+                    v-if="worksheetQuery && results.total_results > 0"
+                    :scope="{ query: worksheetQuery }"
+                />
                 <Button
                     :label="$gettext('Select All')"
                     size="small"

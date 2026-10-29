@@ -46,7 +46,7 @@ import type {
 
 const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
 const userStore = useUserStore();
-const { isAnonymous } = storeToRefs(userStore);
+const { isAnonymous, isEditor } = storeToRefs(userStore);
 
 const { $gettext } = useGettext();
 const toast = useToast();
@@ -78,6 +78,15 @@ const queryGroup = ref<SearchGroup>({
 });
 
 const searchResults = ref<AdvancedSearchResponse | null>(null);
+// The query behind searchResults, which edits to the form do not change until
+// the search runs again.
+const executedQuery = ref<AdvancedSearchQuery | null>(null);
+// A query with no conditions matches every concept, too broad for a worksheet.
+const worksheetQuery = computed(() =>
+    isEditor.value && executedQuery.value?.conditions.length
+        ? executedQuery.value
+        : null,
+);
 const isSearching = ref(false);
 const currentPage = ref(1);
 const selectedConceptIds = ref<Set<string>>(new Set());
@@ -164,6 +173,8 @@ async function executeSearch(page: number = 1) {
     try {
         const query = buildQuery();
         searchResults.value = await executeAdvancedSearch(query, page, 25);
+        // A copy: the query shares its conditions array with the form.
+        executedQuery.value = JSON.parse(JSON.stringify(query));
     } catch (error) {
         toast.add({
             severity: ERROR,
@@ -172,6 +183,7 @@ async function executeSearch(page: number = 1) {
             detail: error instanceof Error ? error.message : undefined,
         });
         searchResults.value = null;
+        executedQuery.value = null;
     } finally {
         isSearching.value = false;
     }
@@ -306,6 +318,7 @@ onMounted(loadSearchOptions);
                             :results="searchResults"
                             :loading="isSearching"
                             :selected-ids="selectedConceptIds"
+                            :worksheet-query="worksheetQuery"
                             @page-change="executeSearch($event)"
                             @toggle-select="toggleSelectConcept"
                             @select-all="selectAll"

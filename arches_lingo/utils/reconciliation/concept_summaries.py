@@ -32,9 +32,9 @@ def get_lifecycle_state_ids(concept_ids):
     }
 
 
-def get_public_broader_ids_for_concepts(concept_ids, public_scheme_ids=None):
-    """Return ``{concept_id: [broader_id, …]}``, leaving out broader concepts that
-    are not public, such as a draft parent of a published concept."""
+def get_broader_ids_for_concepts(concept_ids):
+    """Return ``{concept_id: [broader_id, …]}`` whatever the broader concepts'
+    lifecycle state; public callers use get_public_broader_ids_for_concepts."""
     broader_ids_by_concept_id = defaultdict(list)
     classification_tiles = TileModel.objects.filter(
         nodegroup_id=CLASSIFICATION_STATUS_NODEGROUP,
@@ -51,7 +51,13 @@ def get_public_broader_ids_for_concepts(concept_ids, public_scheme_ids=None):
                 and broader_id not in broader_ids_by_concept_id[str(concept_id)]
             ):
                 broader_ids_by_concept_id[str(concept_id)].append(broader_id)
+    return broader_ids_by_concept_id
 
+
+def get_public_broader_ids_for_concepts(concept_ids, public_scheme_ids=None):
+    """Return ``{concept_id: [broader_id, …]}``, leaving out broader concepts that
+    are not public, such as a draft parent of a published concept."""
+    broader_ids_by_concept_id = get_broader_ids_for_concepts(concept_ids)
     public_broader_ids = filter_public_concept_ids(
         {
             broader_id

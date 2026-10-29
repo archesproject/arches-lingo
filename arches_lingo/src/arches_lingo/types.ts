@@ -557,6 +557,12 @@ export interface AdvancedSearchQuery {
     conditions: (SearchCondition | SearchGroup)[];
 }
 
+export interface ReconciliationWorksheetScope {
+    scheme_id?: string;
+    concept_set_id?: number;
+    query?: AdvancedSearchQuery;
+}
+
 interface AdvancedSearchResultItem extends SearchResultItem {
     uri?: string | null;
     identifier?: string | null;

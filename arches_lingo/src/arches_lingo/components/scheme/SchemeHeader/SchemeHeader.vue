@@ -22,6 +22,7 @@ import SchemeURITemplateField from "@/arches_lingo/components/scheme/SchemeHeade
 import SchemeAttributionField from "@/arches_lingo/components/scheme/SchemeHeader/components/SchemeAttributionField.vue";
 import ConceptIdentifierCounterField from "@/arches_lingo/components/scheme/SchemeHeader/components/ConceptIdentifierCounterField.vue";
 import LifecycleStateBadge from "@/arches_lingo/components/generic/LifecycleStateBadge.vue";
+import MatchLinkImportDialog from "@/arches_lingo/components/generic/MatchLinkImportDialog/MatchLinkImportDialog.vue";
 import ReconciliationEndpointPanel from "@/arches_lingo/components/generic/ReconciliationEndpointPanel.vue";
 
 import {
@@ -142,6 +143,7 @@ const showMoreLabel = computed(() =>
 
 const isLoading = ref(true);
 const showExportDialog = ref(false);
+const showMatchLinkImportDialog = ref(false);
 const showLockDialog = ref(false);
 const exportDialogKey = ref(0);
 const showReinstateDialog = ref(false);
@@ -607,6 +609,11 @@ async function onReinstateConfirmed(cascade: boolean) {
         @confirm="onReinstateConfirmed"
         @cancel="showReinstateDialog = false"
     />
+    <MatchLinkImportDialog
+        v-if="showMatchLinkImportDialog"
+        :scheme-id="props.resourceInstanceId"
+        @close="showMatchLinkImportDialog = false"
+    />
     <ExportThesauri
         v-if="scheme && showExportDialog"
         :key="exportDialogKey"
@@ -659,6 +666,15 @@ async function onReinstateConfirmed(cascade: boolean) {
                     >
                         <span><i class="pi pi-cloud-download"></i></span>
                         <span>{{ $gettext("Export") }}</span>
+                    </Button>
+                    <Button
+                        v-if="isEditor && (!isLocked || isLingoAdmin)"
+                        class="add-button"
+                        :aria-label="$gettext('Import Match Links')"
+                        @click="showMatchLinkImportDialog = true"
+                    >
+                        <span><i class="pi pi-link"></i></span>
+                        <span>{{ $gettext("Import Match Links") }}</span>
                     </Button>
 
                     <Button

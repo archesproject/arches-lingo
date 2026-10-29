@@ -16,16 +16,15 @@ from arches.app.models.models import ResourceInstance
 import arches.app.utils.task_management as task_management
 
 from arches_lingo.const import (
-    CLOSE_MATCH_LIST_ITEM_ID,
-    EXACT_MATCH_LIST_ITEM_ID,
-    RELATED_MATCH_LIST_ITEM_ID,
+    LINKABLE_MATCH_TYPES,
+    MATCH_TYPE_EXACT,
 )
 from arches_lingo.models import ConceptMatchCandidate, ConceptMatchRun
 from arches_lingo.tasks import detect_concept_matches_task
 from arches_lingo.utils.concept_builder import ConceptBuilder
 from arches_lingo.utils.concept_lifecycle import (
-    LOCKED_STATE_ID,
     index_concepts_in_transaction,
+    reasons_concepts_cannot_receive_data,
 )
 from arches_lingo.utils.concept_matching import (
     DEFAULT_SIMILARITY_THRESHOLD,
@@ -55,14 +54,6 @@ MAX_LINK_BATCH = 200
 
 MAX_SEARCH_LENGTH = 255
 
-# Only symmetric relations: a pair has no direction, so broadMatch / narrowMatch
-# would be applied the wrong way round for half of a bulk selection.
-MATCH_TYPE_EXACT = "exactMatch"
-LINKABLE_MATCH_TYPES = {
-    MATCH_TYPE_EXACT: EXACT_MATCH_LIST_ITEM_ID,
-    "closeMatch": CLOSE_MATCH_LIST_ITEM_ID,
-    "relatedMatch": RELATED_MATCH_LIST_ITEM_ID,
-}
 
 # Well clear of HEARTBEAT_INTERVAL_SECONDS.
 STALE_RUN_SECONDS = getattr(settings, "LINGO_MATCH_STALE_SECONDS", 300)
@@ -204,48 +195,6 @@ def reap_stale_runs(run_ids=None):
     )
 
 
-CANNOT_RECEIVE_NOT_EDITABLE = "not_editable"
-CANNOT_RECEIVE_SCHEME_LOCKED = "scheme_locked"
-
-
-def _reasons_concepts_cannot_receive_data(
-    concept_ids, scheme_ids_by_concept_id, user_is_lingo_admin
-):
-    """``concept_is_writable`` for a whole page at once; absent means writable."""
-    editable_ids = {
-        str(concept_id)
-        for concept_id in ResourceInstance.objects.filter(
-            pk__in=concept_ids,
-            resource_instance_lifecycle_state__can_edit_resource_instances=True,
-        ).values_list("pk", flat=True)
-    }
-    reasons = {
-        concept_id: CANNOT_RECEIVE_NOT_EDITABLE
-        for concept_id in concept_ids
-        if concept_id not in editable_ids
-    }
-    if user_is_lingo_admin:
-        return reasons
-
-    locked_scheme_ids = {
-        str(scheme_id)
-        for scheme_id in ResourceInstance.objects.filter(
-            pk__in={
-                scheme_id
-                for scheme_id in scheme_ids_by_concept_id.values()
-                if scheme_id
-            },
-            resource_instance_lifecycle_state_id=LOCKED_STATE_ID,
-        ).values_list("pk", flat=True)
-    }
-    for concept_id in concept_ids:
-        if concept_id not in reasons and (
-            scheme_ids_by_concept_id.get(concept_id) in locked_scheme_ids
-        ):
-            reasons[concept_id] = CANNOT_RECEIVE_SCHEME_LOCKED
-    return reasons
-
-
 def _build_concept_summaries(concept_ids, user_is_lingo_admin=False):
     """Return {concept id: {labels, scheme, whether it can be merged into}}."""
     if not concept_ids:
@@ -263,7 +212,7 @@ def _build_concept_summaries(concept_ids, user_is_lingo_admin=False):
 
     builder = ConceptBuilder(list(concept_ids))
     scheme_ids_by_concept_id = get_scheme_ids_for_concepts(concept_ids)
-    cannot_receive_reasons = _reasons_concepts_cannot_receive_data(
+    cannot_receive_reasons = reasons_concepts_cannot_receive_data(
         concept_ids, scheme_ids_by_concept_id, user_is_lingo_admin
     )
 
