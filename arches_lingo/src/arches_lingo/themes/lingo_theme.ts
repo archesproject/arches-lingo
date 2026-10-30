@@ -195,6 +195,11 @@ export const LingoPreset = definePreset(ArchesPreset, {
         },
     },
     components: {
+        button: {
+            root: {
+                borderRadius: "0.125rem",
+            },
+        },
         dialog: {
             title: {
                 fontSize: "{lingo-font-size-normal}",
