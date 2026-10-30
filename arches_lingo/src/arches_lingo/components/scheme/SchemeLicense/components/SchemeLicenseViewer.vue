@@ -198,7 +198,7 @@ const buttonIcon = computed(() => {
     display: block;
     font-size: var(--p-lingo-font-size-smallnormal);
     font-weight: var(--p-lingo-font-weight-normal);
-    color: var(--p-neutral-400);
+    color: var(--p-lingo-muted-color);
     margin-bottom: 0.5rem;
 }
 
@@ -206,14 +206,14 @@ const buttonIcon = computed(() => {
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
-    border-inline-start: 0.125rem solid var(--p-highlight-focus-background);
+    border-inline-start: 0.125rem solid var(--p-lingo-divider-color);
     padding-inline-start: 1.25rem;
 }
 
 :deep(.widget-label) {
     font-size: var(--p-lingo-font-size-smallnormal);
     font-weight: var(--p-lingo-font-weight-normal);
-    color: var(--p-neutral-400);
+    color: var(--p-lingo-muted-color);
     margin-bottom: 0.125rem;
 }
 

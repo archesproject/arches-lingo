@@ -7,6 +7,7 @@ import { useRouter } from "vue-router";
 import Button from "primevue/button";
 import Popover from "primevue/popover";
 
+import DisplaySettingsMenu from "@/arches_lingo/components/generic/DisplaySettingsMenu.vue";
 import UserInteractionMenu from "@/arches_lingo/components/header/PageHeader/components/UserInteraction/components/UserInteractionMenu/UserInteractionMenu.vue";
 
 import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
@@ -69,6 +70,7 @@ function navigateToLogin() {
 <template>
     <div class="user-interaction">
         <template v-if="isAnonymous">
+            <DisplaySettingsMenu />
             <Button
                 :label="$gettext('Login')"
                 :aria-label="$gettext('Login')"
@@ -119,7 +121,7 @@ function navigateToLogin() {
     padding: 0.5rem;
 }
 
-.p-button {
+.user-interaction :deep(.p-button) {
     background: transparent !important;
     border: none !important;
     border-radius: 0 !important;
@@ -128,11 +130,8 @@ function navigateToLogin() {
     height: 3rem;
 }
 
-.p-button:hover {
-    background: var(
-        --p-button-text-hover-background,
-        var(--p-button-primary-hover-background)
-    ) !important;
+.user-interaction :deep(.p-button:hover) {
+    background: var(--p-lingo-navigation-bar-hover-background) !important;
 }
 
 .initials-circle {

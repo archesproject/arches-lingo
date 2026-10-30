@@ -184,8 +184,8 @@ defineProps<{
     margin: 0;
     font-size: var(--p-lingo-font-size-medium);
     font-weight: var(--p-lingo-font-weight-normal);
-    color: var(--p-neutral-500);
-    border-bottom: 0.0625rem solid var(--p-highlight-focus-background);
+    color: var(--p-lingo-muted-strong-color);
+    border-bottom: 0.0625rem solid var(--p-lingo-divider-color);
     padding-bottom: 0.5rem;
 }
 
@@ -215,7 +215,7 @@ defineProps<{
     margin: 0;
     font-size: var(--p-lingo-font-size-xsmall);
     font-weight: var(--p-lingo-font-weight-normal);
-    color: var(--p-neutral-400);
+    color: var(--p-lingo-muted-color);
 }
 
 .type-breakdown {
@@ -232,14 +232,14 @@ defineProps<{
     padding: 0.75rem 1.625rem;
     border-radius: 0.25rem;
     background: var(--p-highlight-background);
-    border: 0.125rem solid var(--p-highlight-focus-background);
+    border: 0.125rem solid var(--p-lingo-divider-color);
     font-size: var(--p-lingo-font-size-smallnormal);
     text-transform: capitalize;
     min-width: 9rem;
 }
 
 .type-label {
-    color: var(--p-neutral-400);
+    color: var(--p-lingo-muted-color);
 }
 
 .type-count {
@@ -260,13 +260,13 @@ defineProps<{
 }
 
 .language-section .section-header {
-    border-bottom: 0.0625rem solid var(--p-highlight-focus-background);
+    border-bottom: 0.0625rem solid var(--p-lingo-divider-color);
     padding-bottom: 0.5rem;
 }
 
 .language-section .section-header h3 {
     font-size: var(--p-lingo-font-size-medium);
-    color: var(--p-neutral-500);
+    color: var(--p-lingo-muted-strong-color);
 }
 
 :deep(.p-datatable-tbody > tr > td) {
@@ -276,7 +276,7 @@ defineProps<{
 
 :deep(.p-datatable-column-title) {
     font-weight: var(--p-lingo-font-weight-normal);
-    color: var(--p-neutral-500);
+    color: var(--p-lingo-muted-strong-color);
     font-size: var(--p-lingo-font-size-small);
 }
 

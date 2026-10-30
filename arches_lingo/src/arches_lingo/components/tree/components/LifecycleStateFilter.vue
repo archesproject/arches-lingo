@@ -149,7 +149,7 @@ function openPopover(event: MouseEvent) {
     font-weight: 600;
     font-size: 0.875rem;
     padding-bottom: 0.5rem;
-    border-bottom: 0.0625rem solid var(--p-menubar-border-color);
+    border-bottom: 0.0625rem solid var(--p-content-border-color);
 }
 
 .lifecycle-filter-option {

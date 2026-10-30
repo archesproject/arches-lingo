@@ -256,7 +256,7 @@ watch(
     display: flex;
     justify-content: flex-end;
     padding-bottom: 0.5rem;
-    border-bottom: 0.0625rem solid var(--p-highlight-focus-background);
+    border-bottom: 0.0625rem solid var(--p-lingo-divider-color);
 }
 
 .section-actions :deep(.p-button) {

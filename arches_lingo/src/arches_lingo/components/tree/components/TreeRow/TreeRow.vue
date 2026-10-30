@@ -71,6 +71,11 @@ const shouldShowAddChildButton = computed(function () {
         class="tree-row"
         :class="{ retired: isRetired }"
     >
+        <i
+            v-if="isRetired"
+            class="pi pi-ban retired-icon"
+            aria-hidden="true"
+        />
         <TreeRowLabel
             :filter-value="filterValue"
             :node="node"
@@ -115,7 +120,12 @@ const shouldShowAddChildButton = computed(function () {
 }
 
 .tree-row.retired {
-    opacity: 0.5;
+    color: var(--p-text-muted-color);
+    font-style: italic;
     text-decoration: line-through;
+}
+
+.tree-row.retired .retired-icon {
+    font-size: var(--p-lingo-font-size-xsmall);
 }
 </style>

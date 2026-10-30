@@ -348,7 +348,7 @@ h2 {
 
 .footer {
     background: var(--p-header-background);
-    border-top: 0.125rem solid var(--p-menubar-border-color);
+    border-top: 0.125rem solid var(--p-content-border-color);
     display: flex;
     padding: 1rem;
 }

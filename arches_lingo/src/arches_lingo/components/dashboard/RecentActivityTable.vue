@@ -255,7 +255,7 @@ function getResourceTypeSeverity(
     display: flex;
     align-items: center;
     justify-content: space-between;
-    border-bottom: 0.0625rem solid var(--p-highlight-focus-background);
+    border-bottom: 0.0625rem solid var(--p-lingo-divider-color);
     padding-bottom: 0.5rem;
 }
 
@@ -263,7 +263,7 @@ function getResourceTypeSeverity(
     margin: 0;
     font-size: var(--p-lingo-font-size-medium);
     font-weight: var(--p-lingo-font-weight-normal);
-    color: var(--p-neutral-500);
+    color: var(--p-lingo-muted-strong-color);
 }
 
 .filter-group {
@@ -275,7 +275,7 @@ function getResourceTypeSeverity(
 .filter-label {
     font-size: var(--p-lingo-font-size-small);
     font-weight: var(--p-lingo-font-weight-normal);
-    color: var(--p-neutral-400);
+    color: var(--p-lingo-muted-color);
     white-space: nowrap;
 }
 
@@ -304,7 +304,7 @@ function getResourceTypeSeverity(
     height: 1.5rem;
     border-radius: 50%;
     background: var(--p-primary-100);
-    color: var(--p-primary-600);
+    color: var(--p-lingo-accent-badge-soft-color);
     border: 0.0625rem solid var(--p-primary-300);
     font-size: 0.5625rem;
     font-weight: var(--p-lingo-font-weight-normal);
@@ -328,7 +328,7 @@ function getResourceTypeSeverity(
 }
 
 .resource-link {
-    color: var(--p-primary-500);
+    color: var(--p-lingo-accent-color);
     text-decoration: none;
     font-size: var(--p-lingo-font-size-smallnormal);
 }
@@ -344,7 +344,7 @@ function getResourceTypeSeverity(
 
 :deep(.p-datatable-column-title) {
     font-weight: var(--p-lingo-font-weight-normal);
-    color: var(--p-neutral-500);
+    color: var(--p-lingo-muted-strong-color);
     font-size: var(--p-lingo-font-size-small);
 }
 
