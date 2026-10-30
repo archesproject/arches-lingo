@@ -454,7 +454,12 @@ const quickActions = [
 
 .pulse-ring {
     transform-origin: 240px 45px;
-    animation: node-pulse 2.8s ease-out infinite;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .pulse-ring {
+        animation: node-pulse 2.8s ease-out forwards;
+    }
 }
 
 @keyframes node-pulse {

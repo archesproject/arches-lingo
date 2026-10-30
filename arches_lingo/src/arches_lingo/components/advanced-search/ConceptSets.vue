@@ -301,6 +301,9 @@ watch(
                 text
                 plain
                 class="set-info"
+                :aria-current="
+                    setItem.id === activeConceptSetId ? 'true' : undefined
+                "
                 :pt="{
                     root: {
                         style: {

@@ -192,6 +192,7 @@ function discardPendingSearch() {
                     type="button"
                     class="merge-picker-result"
                     :class="{ selected: candidate.id === selectedConceptId }"
+                    :aria-pressed="candidate.id === selectedConceptId"
                     :disabled="!isMergeable(candidate)"
                     @click="onCandidateClick(candidate)"
                 >
