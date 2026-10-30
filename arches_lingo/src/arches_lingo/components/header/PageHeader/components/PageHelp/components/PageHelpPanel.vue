@@ -844,7 +844,7 @@ const shouldShowPageHelpPanel = defineModel("shouldShowPageHelpPanel", {
     min-width: 2.5rem;
     border-radius: 50%;
     background: var(--p-primary-100);
-    color: var(--p-primary-600);
+    color: var(--p-lingo-accent-badge-soft-color);
     font-size: 1.125rem;
 }
 
@@ -858,7 +858,7 @@ const shouldShowPageHelpPanel = defineModel("shouldShowPageHelpPanel", {
 .help-intro-desc {
     margin: 0;
     font-size: var(--p-lingo-font-size-small);
-    color: var(--p-neutral-500);
+    color: var(--p-help-panel-intro-color);
     line-height: 1.5;
 }
 
@@ -879,7 +879,7 @@ const shouldShowPageHelpPanel = defineModel("shouldShowPageHelpPanel", {
     margin: 0 0 0.75rem;
     font-size: var(--p-lingo-font-size-xsmall);
     font-weight: var(--p-lingo-font-weight-normal);
-    color: var(--p-neutral-600);
+    color: var(--p-help-panel-section-title-color);
     text-transform: uppercase;
     letter-spacing: 0.06em;
     padding: 1rem;
@@ -888,13 +888,13 @@ const shouldShowPageHelpPanel = defineModel("shouldShowPageHelpPanel", {
 
 .help-section-title .pi {
     font-size: 0.8125rem;
-    color: var(--p-primary-500);
+    color: var(--p-lingo-accent-color);
 }
 
 .help-text {
     margin: 0 0 0.75rem;
     font-size: var(--p-lingo-font-size-small);
-    color: var(--p-neutral-500);
+    color: var(--p-lingo-muted-strong-color);
     line-height: 1.5;
     padding: 0 1rem;
 }
@@ -920,7 +920,7 @@ const shouldShowPageHelpPanel = defineModel("shouldShowPageHelpPanel", {
 
 .help-list-icon {
     font-size: 0.75rem;
-    color: var(--p-primary-400);
+    color: var(--p-lingo-accent-soft-color);
     min-width: 0.75rem;
     margin-top: 0.25rem;
 }
@@ -938,16 +938,16 @@ const shouldShowPageHelpPanel = defineModel("shouldShowPageHelpPanel", {
     margin: 0.875rem;
     padding: 0.625rem 0.75rem;
     background: var(--p-highlight-background);
-    border-left: 0.1875rem solid var(--p-primary-400);
+    border-left: 0.1875rem solid var(--p-lingo-accent-soft-color);
     border-radius: 0 0.125rem 0.125rem 0;
     font-size: var(--p-lingo-font-size-small);
-    color: var(--p-neutral-600);
+    color: var(--p-lingo-muted-stronger-color);
     line-height: 1.5;
 }
 
 .help-tip-icon {
     font-size: 0.75rem;
-    color: var(--p-primary-500);
+    color: var(--p-lingo-accent-color);
     min-width: 0.75rem;
     margin-top: 0.2rem;
 }
@@ -1022,7 +1022,7 @@ const shouldShowPageHelpPanel = defineModel("shouldShowPageHelpPanel", {
 
 .help-label-desc {
     font-size: var(--p-lingo-font-size-small);
-    color: var(--p-neutral-500);
+    color: var(--p-lingo-muted-strong-color);
     line-height: 1.5;
 }
 
@@ -1039,7 +1039,7 @@ const shouldShowPageHelpPanel = defineModel("shouldShowPageHelpPanel", {
 
 /* ── Link ── */
 .help-link {
-    color: var(--p-primary-500);
+    color: var(--p-lingo-accent-color);
     text-decoration: none;
 }
 

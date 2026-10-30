@@ -379,7 +379,7 @@ async function deleteSectionValue(tileId: string) {
 
 :deep(.p-datatable-column-title) {
     font-weight: var(--p-lingo-font-weight-normal);
-    color: var(--p-neutral-400);
+    color: var(--p-lingo-muted-color);
 }
 
 :deep(.p-datatable-row-expansion td) {

@@ -416,6 +416,7 @@ async function submitPasswordChange() {
 
 .profile-card {
     border-radius: 0.25rem;
+    box-shadow: var(--p-profile-card-shadow, var(--p-card-shadow));
 }
 
 .card-title {
