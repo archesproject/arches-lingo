@@ -223,6 +223,13 @@ async function handleAddToSet(selectedIds: Set<string>) {
     }
 }
 
+function getActiveSetAriaCurrent(setItem: ConceptSetItem) {
+    if (setItem.id === props.activeConceptSetId) {
+        return "true";
+    }
+    return undefined;
+}
+
 function loadSet(setItem: ConceptSetItem) {
     emit("load-set", setItem.id);
 }
@@ -324,6 +331,7 @@ watch(
                 plain
                 class="set-info"
                 :data-concept-set-id="setItem.id"
+                :aria-current="getActiveSetAriaCurrent(setItem)"
                 :pt="{
                     root: {
                         style: {
