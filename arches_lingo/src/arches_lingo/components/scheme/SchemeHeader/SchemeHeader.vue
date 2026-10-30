@@ -23,16 +23,16 @@ import SchemeAttributionField from "@/arches_lingo/components/scheme/SchemeHeade
 import ConceptIdentifierCounterField from "@/arches_lingo/components/scheme/SchemeHeader/components/ConceptIdentifierCounterField.vue";
 import GetAsMenu from "@/arches_lingo/components/generic/GetAsMenu.vue";
 import LifecycleStateBadge from "@/arches_lingo/components/generic/LifecycleStateBadge.vue";
+import ReconciliationEndpointPanel from "@/arches_lingo/components/generic/ReconciliationEndpointPanel.vue";
 
 import {
     DANGER,
     DEFAULT_ERROR_TOAST_LIFE,
-    DEFAULT_TOAST_LIFE,
     ERROR,
     LOCKED_LIFECYCLE_STATE_ID,
     NEW_CONCEPT,
+    PUBLISHED_LIFECYCLE_STATE_ID,
     SECONDARY,
-    SUCCESS,
 } from "@/arches_lingo/constants.ts";
 import { PREF_LABEL } from "@/arches_controlled_lists/constants.ts";
 
@@ -49,6 +49,7 @@ import {
     unlockScheme,
     unretireSchemeConcepts,
 } from "@/arches_lingo/api.ts";
+import { useCopyToClipboard } from "@/arches_lingo/composables/useCopyToClipboard.ts";
 import { useResourceStore } from "@/arches_lingo/composables/useResourceStore.ts";
 import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 import { useAppSettingsStore } from "@/arches_lingo/stores/useAppSettingsStore.ts";
@@ -100,6 +101,7 @@ const { openEditLog } = useEditLog(() => props.graphSlug);
 const confirm = useConfirm();
 const router = useRouter();
 const toast = useToast();
+const { copyToClipboard } = useCopyToClipboard();
 const { $gettext, interpolate } = useGettext();
 const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
 
@@ -173,6 +175,12 @@ const { publicServerAddress } = storeToRefs(useAppSettingsStore());
 
 const isLocked = computed(
     () => currentLifecycleState.value?.id === LOCKED_LIFECYCLE_STATE_ID,
+);
+// Only published and locked schemes are offered by the reconciliation service.
+const isReconcilable = computed(
+    () =>
+        isLocked.value ||
+        currentLifecycleState.value?.id === PUBLISHED_LIFECYCLE_STATE_ID,
 );
 const isLockLoading = ref(false);
 
@@ -267,12 +275,10 @@ const schemeUri = computed(() => {
     );
 });
 
-async function copyUriToClipboard(uri: string) {
-    await navigator.clipboard.writeText(uri);
-    toast.add({
-        severity: SUCCESS,
-        life: DEFAULT_TOAST_LIFE,
-        summary: $gettext("URI copied to clipboard"),
+async function copyUriToClipboard(uri: string): Promise<void> {
+    await copyToClipboard(uri, {
+        copiedSummary: $gettext("URI copied to clipboard"),
+        failedSummary: $gettext("Unable to copy the URI"),
     });
 }
 
@@ -759,6 +765,14 @@ async function onReinstateConfirmed(cascade: boolean) {
                         @update="onSchemeURITemplateUpdate"
                     />
                 </div>
+
+                <ReconciliationEndpointPanel
+                    v-if="isReconcilable"
+                    class="header-row"
+                    :scheme-identifier="identifierValue"
+                    :scheme-name="label?.value"
+                    :heading-level="3"
+                />
 
                 <div class="header-row">
                     <SchemeAttributionField

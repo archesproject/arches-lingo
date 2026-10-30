@@ -609,6 +609,16 @@ ES_MAPPING_MODIFIER_CLASSES = [
 
 LINGO_ALLOW_ANONYMOUS_ACCESS = False
 
+# OpenRefine reconciliation service. When enabled, its read-only endpoints accept
+# anonymous requests even while LINGO_ALLOW_ANONYMOUS_ACCESS is False, and expose
+# only published and locked schemes and concepts.
+LINGO_RECONCILIATION_ENABLED = False
+LINGO_RECONCILIATION_SERVICE_NAME = "Arches Lingo"
+# Requests per client address, such as "120/m" (s, m, h or d); None disables the
+# limit. Counted by django-ratelimit in RATELIMIT_USE_CACHE (the default cache),
+# which every server process must share.
+LINGO_RECONCILIATION_RATE_LIMIT = None
+
 RESOURCE_LIST_PAGE_SIZE = 25
 
 try:

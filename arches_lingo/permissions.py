@@ -9,6 +9,11 @@ def anonymous_access_allowed():
     return getattr(settings, "LINGO_ALLOW_ANONYMOUS_ACCESS", False)
 
 
+def reconciliation_enabled():
+    """Check if the OpenRefine reconciliation service is enabled via settings."""
+    return getattr(settings, "LINGO_RECONCILIATION_ENABLED", False)
+
+
 def is_lingo_editor(user):
     """Check if a user is a member of the Lingo Editor group (or is a superuser)."""
     if not user.is_authenticated:
