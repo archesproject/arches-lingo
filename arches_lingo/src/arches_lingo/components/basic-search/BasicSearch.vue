@@ -5,14 +5,15 @@ import {
     onMounted,
     onUnmounted,
     ref,
+    useId,
     useTemplateRef,
     watch,
 } from "vue";
 import { useGettext } from "vue3-gettext";
 import { useRouter } from "vue-router";
 
-import AutoComplete from "primevue/autocomplete";
 import Button from "primevue/button";
+import InputText from "primevue/inputtext";
 import ProgressBar from "primevue/progressbar";
 import { useToast } from "primevue/usetoast";
 
@@ -21,15 +22,15 @@ import SearchResult from "@/arches_lingo/components/basic-search/SearchResult.vu
 
 import { fetchSearchResults } from "@/arches_lingo/api.ts";
 import { DEFAULT_ERROR_TOAST_LIFE, ERROR } from "@/arches_lingo/constants.ts";
+import { scaleWithRootFontSize } from "@/arches_lingo/utils.ts";
+import { useLocalAnnouncer } from "@/arches_lingo/composables/useAnnouncer.ts";
+import { useRovingListFocus } from "@/arches_lingo/composables/useRovingListFocus.ts";
 import { routeNames } from "@/arches_lingo/routes.ts";
 
-import type { AutoCompleteOptionSelectEvent } from "primevue/autocomplete";
-import type { VirtualScrollerLazyEvent } from "primevue/virtualscroller";
 import type { SearchResultItem } from "@/arches_lingo/types.ts";
 
 interface Props {
     searchResultsPerPage: number;
-    searchResultItemSize: number;
     resultsDisplay?: "inline" | "floating";
 }
 
@@ -39,30 +40,37 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<{ select: [] }>();
 
-const { $gettext } = useGettext();
+const SEARCH_DELAY_MS = 500;
+// VoiceOver drops a status message sent while it is still echoing typing.
+const RESULTS_ANNOUNCEMENT_DELAY_MS = 750;
+const LOAD_MORE_SCROLL_THRESHOLD = scaleWithRootFontSize(64);
+
+const { $gettext, $ngettext } = useGettext();
+const { localMessage, announceLocally } = useLocalAnnouncer();
 const router = useRouter();
 const toast = useToast();
 
-const autoCompleteRef = useTemplateRef("autoComplete");
 const rootRef = useTemplateRef<HTMLElement>("root");
-const resultsHostRef = useTemplateRef<HTMLElement>("resultsHost");
+const resultsList = useTemplateRef<HTMLUListElement>("resultsList");
+const resultsListId = useId();
 
-const autoCompleteKey = ref(0);
 const query = ref("");
 const orderMode = ref("unsorted");
 const searchResults = ref<SearchResultItem[]>([]);
 const searchResultsPage = ref(1);
 const searchResultsTotalCount = ref(0);
-const searchResultsHeight = ref("2.25rem");
+const searchResultsTotalPages = ref(0);
+const resultsMaxHeight = ref("60vh");
 const isLoading = ref(false);
 const isLoadingAdditionalResults = ref(false);
-const shouldShowClearInputButton = ref(false);
+const hasSearchResponse = ref(false);
+const isResultsPanelOpen = ref(false);
 
-// keepOverlayVisible re-opens the overlay whenever it hides while focus is
-// still in the search, so the sort controls can be used without losing the
-// results. Escape must still dismiss it (WCAG 1.4.13), so a hide started by
-// Escape is let through. AutoComplete hides on a timeout, after the keydown.
-let isEscapeDismissPending = false;
+let searchDelayTimeoutId: number | undefined;
+let resultsAnnouncementTimeoutId: number | undefined;
+
+const { focusItem: focusResultLink, onListKeydown: onArrowKeyInResults } =
+    useRovingListFocus(getResultLinks);
 
 const isFloatingResults = computed(() => props.resultsDisplay === "floating");
 
@@ -74,35 +82,41 @@ const resultsHostClass = computed(() => {
     return "results-host results-host--inline";
 });
 
-const autoCompleteAppendTarget = computed(() => resultsHostRef.value ?? "self");
+const isResultsPanelVisible = computed(
+    () =>
+        isResultsPanelOpen.value &&
+        Boolean(query.value) &&
+        hasSearchResponse.value,
+);
 
-const autoCompletePt = computed(() => ({
-    option: {
-        style: {
-            padding: "0",
-            borderRadius: "0",
-        },
-    },
-    overlay: {
-        class: "basic-search-overlay",
-        style: {
-            padding: "0",
-            borderRadius: "0",
-            borderTop: "0.0725rem solid var(--p-dialog-border-color)",
-        },
-    },
-    list: {
-        style: {
-            padding: "0",
-            gap: "0",
-        },
-    },
-}));
+const hasMoreResults = computed(
+    () => searchResultsPage.value < searchResultsTotalPages.value,
+);
+
+function getResultLinks() {
+    return [
+        ...(resultsList.value?.querySelectorAll<HTMLElement>(".result-link") ??
+            []),
+    ];
+}
+
+function getLastResultsPanelFocusable() {
+    const panelFocusables =
+        rootRef.value?.querySelectorAll<HTMLElement>(
+            ".result-link, .load-more-button",
+        ) ?? [];
+    return panelFocusables[panelFocusables.length - 1];
+}
+
+function getResultPositionDescription(resultIndex: number) {
+    return $gettext("Result %{position} of %{total}", {
+        position: String(resultIndex + 1),
+        total: String(searchResultsTotalCount.value),
+    });
+}
 
 function getInputElement() {
-    // @ts-expect-error - PrimeVue component instance typing is incomplete
-    const input = autoCompleteRef.value?.$el?.querySelector("input");
-    return input instanceof HTMLInputElement ? input : null;
+    return rootRef.value?.querySelector<HTMLInputElement>(".search-input");
 }
 
 function isInsideSearch(eventTarget: EventTarget | null) {
@@ -116,89 +130,66 @@ function focusInput() {
     getInputElement()?.focus();
 }
 
-function showOverlay() {
-    updateLayoutMetrics();
-    // @ts-expect-error - PrimeVue component instance typing is incomplete
-    autoCompleteRef.value?.show();
+function openResultsPanel() {
+    updateResultsMaxHeight();
+    isResultsPanelOpen.value = true;
 }
 
-function hideOverlay() {
-    // @ts-expect-error - PrimeVue component instance typing is incomplete
-    autoCompleteRef.value?.hide();
+function closeResultsPanel() {
+    isResultsPanelOpen.value = false;
 }
 
 function resetSearchResults() {
     searchResults.value = [];
     searchResultsPage.value = 1;
     searchResultsTotalCount.value = 0;
+    searchResultsTotalPages.value = 0;
+    hasSearchResponse.value = false;
 }
 
 function clearInput() {
     query.value = "";
-    shouldShowClearInputButton.value = false;
-    resetSearchResults();
-    hideOverlay();
     focusInput();
 }
 
-function getSearchResultsHeight(results: SearchResultItem[]) {
-    if (!results.length) {
-        return "2.25rem";
-    }
-
+function updateResultsMaxHeight() {
     const rootFontSize = parseFloat(
         getComputedStyle(document.documentElement).fontSize,
     );
-    const totalHeightInRem =
-        results.length * (props.searchResultItemSize / rootFontSize);
-
-    let maxHeightInRem = (window.innerHeight * 0.6) / rootFontSize;
+    let maxHeight = window.innerHeight * 0.6;
 
     if (isFloatingResults.value && rootRef.value) {
-        maxHeightInRem = Math.max(
-            (window.innerHeight -
+        maxHeight = Math.max(
+            window.innerHeight -
                 rootRef.value.getBoundingClientRect().bottom -
-                rootFontSize * 2) /
-                rootFontSize,
-            5,
+                rootFontSize * 2,
+            rootFontSize * 5,
         );
     }
 
-    return `${Math.min(totalHeightInRem, maxHeightInRem)}rem`;
+    resultsMaxHeight.value = `${maxHeight}px`;
 }
 
-function updateLayoutMetrics() {
-    searchResultsHeight.value = getSearchResultsHeight(searchResults.value);
-}
-
-async function fetchData(
-    searchTerm: string,
-    items: number,
-    pageNumber: number,
-    orderModeValue: string,
-) {
+async function fetchData(searchTerm: string, pageNumber: number) {
+    const searchOrderMode = orderMode.value;
     isLoading.value = true;
-    shouldShowClearInputButton.value = pageNumber !== 1;
+    isLoadingAdditionalResults.value = pageNumber > 1;
 
     try {
         const parsedResponse = await fetchSearchResults(
             searchTerm,
-            items,
+            props.searchResultsPerPage,
             pageNumber,
-            orderModeValue,
+            searchOrderMode,
         );
 
-        if (searchTerm !== query.value) {
-            return;
-        }
-
-        if (!query.value) {
-            resetSearchResults();
+        if (searchTerm !== query.value || searchOrderMode !== orderMode.value) {
             return;
         }
 
         if (pageNumber === 1) {
             searchResults.value = parsedResponse.data;
+            openResultsPanel();
         } else {
             searchResults.value = [
                 ...searchResults.value,
@@ -207,7 +198,9 @@ async function fetchData(
         }
         searchResultsPage.value = parsedResponse.current_page;
         searchResultsTotalCount.value = parsedResponse.total_results;
-        shouldShowClearInputButton.value = true;
+        searchResultsTotalPages.value = parsedResponse.total_pages;
+        hasSearchResponse.value = true;
+        announceSearchResults(pageNumber);
     } catch (error) {
         toast.add({
             severity: ERROR,
@@ -217,124 +210,190 @@ async function fetchData(
         });
 
         resetSearchResults();
-        shouldShowClearInputButton.value = true;
     } finally {
         isLoading.value = false;
         isLoadingAdditionalResults.value = false;
     }
 }
 
+function queueResultsAnnouncement(message: string) {
+    window.clearTimeout(resultsAnnouncementTimeoutId);
+    resultsAnnouncementTimeoutId = window.setTimeout(() => {
+        void announceLocally(message);
+    }, RESULTS_ANNOUNCEMENT_DELAY_MS);
+}
+
+function announceSearchResults(pageNumber: number) {
+    const totalCount = searchResultsTotalCount.value;
+    if (!totalCount) {
+        queueResultsAnnouncement($gettext("No results found."));
+    } else if (pageNumber === 1) {
+        queueResultsAnnouncement(
+            $ngettext(
+                "%{count} result found",
+                "%{count} results found",
+                totalCount,
+                { count: String(totalCount) },
+            ),
+        );
+    } else {
+        queueResultsAnnouncement(
+            $gettext("Showing %{shown} of %{total} results", {
+                shown: String(searchResults.value.length),
+                total: String(totalCount),
+            }),
+        );
+    }
+}
+
+async function loadMoreResults() {
+    if (isLoading.value || !hasMoreResults.value) {
+        return;
+    }
+
+    await fetchData(query.value, searchResultsPage.value + 1);
+}
+
+function loadMoreIfScrolledToEnd() {
+    const list = resultsList.value;
+    if (!list || !hasMoreResults.value) {
+        return;
+    }
+
+    const distanceToEnd =
+        list.scrollHeight - list.scrollTop - list.clientHeight;
+    if (distanceToEnd <= LOAD_MORE_SCROLL_THRESHOLD) {
+        void loadMoreResults();
+    }
+}
+
+async function loadMoreResultsAndFocusFirstNew() {
+    const firstNewResultIndex = searchResults.value.length;
+    await loadMoreResults();
+
+    if (searchResults.value.length > firstNewResultIndex) {
+        await nextTick();
+        focusResultLink(firstNewResultIndex);
+    }
+}
+
 function onSearchKeydown(event: KeyboardEvent) {
-    isEscapeDismissPending = event.key === "Escape";
+    if (!isResultsPanelVisible.value) {
+        return;
+    }
+
+    const isTabFromLastResult =
+        event.key === "Tab" &&
+        !event.shiftKey &&
+        event.target === getLastResultsPanelFocusable();
+
+    if (event.key === "Escape") {
+        event.stopPropagation();
+        closeResultsPanel();
+    } else if (!isTabFromLastResult) {
+        return;
+    }
+
+    event.preventDefault();
+    focusInput();
+}
+
+function onInputKeydown(event: KeyboardEvent) {
+    if (event.key !== "ArrowDown" || !searchResults.value.length) {
+        return;
+    }
+
+    event.preventDefault();
+    openResultsPanel();
+    nextTick(() => focusResultLink(0));
+}
+
+function onResultsKeydown(event: KeyboardEvent) {
+    if (event.key === "ArrowUp" && event.target === getResultLinks()[0]) {
+        event.preventDefault();
+        focusInput();
+        return;
+    }
+
+    onArrowKeyInResults(event);
+}
+
+function onSearchFocusOut(event: FocusEvent) {
+    if (event.relatedTarget && !isInsideSearch(event.relatedTarget)) {
+        closeResultsPanel();
+    }
 }
 
 function onDocumentPointerDown(event: PointerEvent) {
-    isEscapeDismissPending = false;
-
     if (!isInsideSearch(event.target)) {
-        hideOverlay();
+        closeResultsPanel();
     }
 }
 
-function keepOverlayVisible() {
-    if (isEscapeDismissPending) {
-        isEscapeDismissPending = false;
-        return;
+function onInputClick() {
+    if (hasSearchResponse.value) {
+        openResultsPanel();
     }
-
-    if (!query.value || !searchResults.value.length) {
-        return;
-    }
-
-    if (isLoading.value !== isLoadingAdditionalResults.value) {
-        return;
-    }
-
-    nextTick(() => {
-        if (isInsideSearch(document.activeElement)) {
-            showOverlay();
-        }
-    });
 }
 
-function onComplete() {
-    hideOverlay();
-    void fetchData(query.value, props.searchResultsPerPage, 1, orderMode.value);
-}
-
-function loadAdditionalSearchResults(event: VirtualScrollerLazyEvent) {
-    if (
-        event.last < searchResultsPage.value * props.searchResultsPerPage ||
-        event.last > searchResultsTotalCount.value
-    ) {
+async function openSearchResult(
+    clickEvent: MouseEvent,
+    searchResult: SearchResultItem,
+) {
+    const isOpeningElsewhere =
+        clickEvent.button !== 0 ||
+        clickEvent.metaKey ||
+        clickEvent.ctrlKey ||
+        clickEvent.shiftKey ||
+        clickEvent.altKey;
+    if (isOpeningElsewhere) {
         return;
     }
 
-    isLoadingAdditionalResults.value = true;
-    searchResultsPage.value += 1;
-
-    void fetchData(
-        query.value,
-        props.searchResultsPerPage,
-        searchResultsPage.value,
-        orderMode.value,
-    );
-}
-
-async function navigateToReport(event: AutoCompleteOptionSelectEvent) {
-    query.value = "";
+    clickEvent.preventDefault();
     const failure = await router.push({
         name: routeNames.concept,
-        params: { id: event.value.id },
+        params: { id: searchResult.id },
     });
 
     if (!failure) {
+        query.value = "";
         emit("select");
     }
 }
 
 onMounted(() => {
     focusInput();
-    updateLayoutMetrics();
     document.addEventListener("pointerdown", onDocumentPointerDown);
-    window.addEventListener("resize", updateLayoutMetrics);
+    window.addEventListener("resize", updateResultsMaxHeight);
 });
 
 onUnmounted(() => {
     document.removeEventListener("pointerdown", onDocumentPointerDown);
-    window.removeEventListener("resize", updateLayoutMetrics);
+    window.removeEventListener("resize", updateResultsMaxHeight);
+    window.clearTimeout(searchDelayTimeoutId);
+    window.clearTimeout(resultsAnnouncementTimeoutId);
 });
 
-watch(query, (newQueryValue) => {
-    if (newQueryValue) {
+watch(query, (newQuery) => {
+    window.clearTimeout(searchDelayTimeoutId);
+
+    if (!newQuery) {
+        resetSearchResults();
         return;
     }
 
-    autoCompleteKey.value += 1;
-
-    nextTick(() => {
-        focusInput();
-    });
+    searchDelayTimeoutId = window.setTimeout(() => {
+        void fetchData(newQuery, 1);
+    }, SEARCH_DELAY_MS);
 });
 
-watch(orderMode, async (newOrderMode, previousOrderMode) => {
+watch(orderMode, (newOrderMode, previousOrderMode) => {
     if (!query.value || newOrderMode === previousOrderMode) {
         return;
     }
 
-    searchResultsPage.value = 1;
-
-    await fetchData(query.value, props.searchResultsPerPage, 1, newOrderMode);
-
-    if (searchResults.value.length) {
-        nextTick(() => {
-            showOverlay();
-        });
-    }
-});
-
-watch(searchResults, () => {
-    updateLayoutMetrics();
+    void fetchData(query.value, 1);
 });
 </script>
 
@@ -343,6 +402,7 @@ watch(searchResults, () => {
         ref="root"
         class="basic-search"
         @keydown="onSearchKeydown"
+        @focusout="onSearchFocusOut"
     >
         <div class="search-input-row">
             <i
@@ -350,63 +410,22 @@ watch(searchResults, () => {
                 aria-hidden="true"
             />
 
-            <AutoComplete
-                ref="autoComplete"
-                :key="autoCompleteKey"
+            <InputText
                 v-model="query"
-                option-label="id"
-                :append-to="autoCompleteAppendTarget"
-                :delay="500"
-                :loading="isLoading && !isLoadingAdditionalResults"
+                class="search-input"
+                role="searchbox"
+                autocomplete="off"
                 :placeholder="$gettext('Quick Search')"
                 :aria-label="$gettext('Quick Search')"
-                :pt="autoCompletePt"
-                :suggestions="searchResults"
-                :virtual-scroller-options="{
-                    itemSize: props.searchResultItemSize,
-                    lazy: true,
-                    onLazyLoad: loadAdditionalSearchResults,
-                    scrollHeight: searchResultsHeight,
-                    style: {
-                        minHeight: searchResultsHeight,
-                        maxHeight: searchResultsHeight,
-                    },
-                    numToleratedItems: 1,
-                }"
-                @complete="onComplete"
-                @option-select="navigateToReport"
-                @before-hide="keepOverlayVisible"
-                @update:model-value="
-                    (value) => {
-                        if (!value) {
-                            shouldShowClearInputButton = false;
-                        }
-                    }
+                :aria-controls="
+                    isResultsPanelVisible ? resultsListId : undefined
                 "
-            >
-                <template #empty>
-                    <div style="text-align: center">
-                        {{ $gettext("No search results found") }}
-                    </div>
-                </template>
-
-                <template #option="slotProps">
-                    <SearchResult :search-result="slotProps" />
-                </template>
-
-                <template
-                    v-if="isLoadingAdditionalResults"
-                    #footer
-                >
-                    <ProgressBar
-                        mode="indeterminate"
-                        style="height: 0.5rem"
-                    />
-                </template>
-            </AutoComplete>
+                @keydown="onInputKeydown"
+                @click="onInputClick"
+            />
 
             <Button
-                v-if="shouldShowClearInputButton"
+                v-if="query"
                 class="p-button-text clear-button"
                 icon="pi pi-times"
                 :aria-label="$gettext('Clear Input')"
@@ -421,13 +440,81 @@ watch(searchResults, () => {
                 v-if="isLoading && !isLoadingAdditionalResults"
                 mode="indeterminate"
                 style="height: 0.25rem"
+                :aria-label="$gettext('Searching')"
             />
         </div>
 
         <div
-            ref="resultsHost"
+            v-if="isResultsPanelVisible"
             :class="resultsHostClass"
-        />
+        >
+            <p
+                v-if="!searchResults.length"
+                class="no-results"
+            >
+                {{ $gettext("No search results found") }}
+            </p>
+
+            <ul
+                v-else
+                :id="resultsListId"
+                ref="resultsList"
+                class="results-list"
+                :aria-label="$gettext('Search results')"
+                :style="{ maxHeight: resultsMaxHeight }"
+                @scroll="loadMoreIfScrolledToEnd"
+                @keydown="onResultsKeydown"
+            >
+                <li
+                    v-for="(searchResult, resultIndex) in searchResults"
+                    :key="searchResult.id"
+                >
+                    <SearchResult
+                        :search-result="{
+                            index: resultIndex,
+                            option: searchResult,
+                        }"
+                        is-link
+                        :position-description="
+                            getResultPositionDescription(resultIndex)
+                        "
+                        @select="
+                            (clickEvent) =>
+                                openSearchResult(clickEvent, searchResult)
+                        "
+                    />
+                </li>
+            </ul>
+
+            <ProgressBar
+                v-if="isLoadingAdditionalResults"
+                mode="indeterminate"
+                style="height: 0.5rem"
+                :aria-label="$gettext('Loading more results')"
+            />
+
+            <Button
+                v-if="hasMoreResults"
+                class="load-more-button"
+                :loading="isLoadingAdditionalResults"
+                size="small"
+                text
+                :label="
+                    $gettext('Load more results (%{shown} of %{total})', {
+                        shown: String(searchResults.length),
+                        total: String(searchResultsTotalCount),
+                    })
+                "
+                @click="loadMoreResultsAndFocusFirstNew"
+            />
+        </div>
+
+        <div
+            role="status"
+            class="p-hidden-accessible"
+        >
+            {{ localMessage }}
+        </div>
     </div>
 </template>
 
@@ -464,36 +551,50 @@ watch(searchResults, () => {
     font-weight: bold;
 }
 
-.p-autocomplete {
+.search-input {
     width: 100%;
+    padding: 1rem 2.5rem;
     border: 0.0625rem solid var(--p-header-button-border);
     border-radius: 0.25rem;
     margin-bottom: 0.25rem;
-}
-
-:deep(.p-autocomplete-loader) {
-    color: var(--p-primary-600);
 }
 
 :deep(.p-progressbar .p-progressbar-value) {
     background: var(--p-primary-800);
 }
 
-:deep(.p-autocomplete .p-autocomplete-input) {
-    width: 100%;
-    padding: 1rem 2.5rem;
-    border: none;
-}
-
-:deep(.p-autocomplete-overlay) {
+.results-host {
+    background-color: var(--p-dialog-background);
     border-top: 0.0725rem solid var(--p-dialog-border-color);
 }
 
-:deep(.basic-search-overlay) {
-    position: static !important;
-    inset: auto !important;
-    width: 100% !important;
-    margin-top: 0 !important;
+.results-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    overflow-y: auto;
+}
+
+.no-results {
+    margin: 0;
+    padding: 0.5rem;
+    text-align: center;
+}
+
+.load-more-button:not(:focus-visible) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+}
+
+.load-more-button:focus-visible {
+    width: 100%;
 }
 
 .results-host--floating {

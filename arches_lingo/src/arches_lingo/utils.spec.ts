@@ -12,6 +12,8 @@ import {
     canUserDereferenceResource,
     dataIsScheme,
     dataIsConcept,
+    focusWithoutScrolling,
+    scaleWithRootFontSize,
     treeFromSchemes,
 } from "@/arches_lingo/utils.ts";
 import schemesFixture from "./fixtures/test_scheme.json";
@@ -215,5 +217,31 @@ describe("RDF dereferencing permissions", () => {
 
     it("Should not let anonymous users dereference before the state loads", () => {
         expect(canUserDereferenceResource(true, undefined)).toBe(false);
+    });
+});
+
+describe("Focus and sizing helpers", () => {
+    afterEach(() => {
+        document.documentElement.style.fontSize = "";
+        document.body.replaceChildren();
+    });
+
+    it("scales a pixel size with the root font size", () => {
+        document.documentElement.style.fontSize = "20px";
+        expect(scaleWithRootFontSize(36)).toBe(45);
+    });
+
+    it("makes a heading focusable but leaves a button's tab stop alone", () => {
+        const heading = document.createElement("h2");
+        const button = document.createElement("button");
+        document.body.append(heading, button);
+
+        focusWithoutScrolling(heading);
+        expect(document.activeElement).toBe(heading);
+        expect(heading.getAttribute("tabindex")).toBe("-1");
+
+        focusWithoutScrolling(button);
+        expect(document.activeElement).toBe(button);
+        expect(button.hasAttribute("tabindex")).toBe(false);
     });
 });

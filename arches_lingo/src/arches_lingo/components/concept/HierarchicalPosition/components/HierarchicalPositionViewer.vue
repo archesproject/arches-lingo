@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject, computed, ref } from "vue";
+import { inject, computed, ref, useId } from "vue";
 import { useGettext } from "vue3-gettext";
 import { useConfirm } from "primevue/useconfirm";
 import { useToast } from "primevue/usetoast";
@@ -8,6 +8,9 @@ import { storeToRefs } from "pinia";
 import Button from "primevue/button";
 import ConfirmDialog from "primevue/confirmdialog";
 import Tag from "primevue/tag";
+
+import CountTag from "@/arches_lingo/components/generic/CountTag.vue";
+import DisabledReasonButton from "@/arches_lingo/components/generic/DisabledReasonButton.vue";
 
 import { deleteLingoTile } from "@/arches_lingo/api.ts";
 import { getConceptIcon } from "@/arches_lingo/utils.ts";
@@ -54,9 +57,13 @@ const updateAfterComponentDeletion = inject<
     (componentName: string, tileId: string) => void
 >("updateAfterComponentDeletion");
 
-const refreshReportSection = inject<(componentName: string) => void>(
+const refreshReportSection = inject<(componentName: string) => Promise<void>>(
     "refreshReportSection",
 );
+const focusSectionHeading = inject<(componentName: string) => void>(
+    "focusSectionHeading",
+);
+const confirmDialogHeaderId = useId();
 
 const refreshSchemeHierarchy = inject<() => void>("refreshSchemeHierarchy");
 
@@ -274,10 +281,11 @@ async function deleteSectionValue(hierarchy: SearchResultHierarchy) {
         );
 
         refreshSchemeHierarchy!();
-        refreshReportSection!(props.componentName);
+        await refreshReportSection!(props.componentName);
         updateAfterComponentDeletion!(props.componentName, hierarchy.tileid!);
 
         confirm.close();
+        focusSectionHeading!(props.componentName);
     } catch (error) {
         toast.add({
             severity: ERROR,
@@ -306,6 +314,7 @@ function getTreeNodeStyle(depth: number) {
         <ConfirmDialog
             :pt="{ root: { style: { fontFamily: 'sans-serif' } } }"
             group="delete-parent"
+            :aria-labelledby="confirmDialogHeaderId"
         >
             <template #container="{ message, rejectCallback }">
                 <div
@@ -314,7 +323,10 @@ function getTreeNodeStyle(depth: number) {
                     @mousedown.stop
                     @mouseup.stop
                 >
-                    <div class="confirm-dialog-header">
+                    <div
+                        :id="confirmDialogHeaderId"
+                        class="confirm-dialog-header"
+                    >
                         {{ message.header }}
                     </div>
                     <div class="confirm-dialog-message">
@@ -326,6 +338,7 @@ function getTreeNodeStyle(depth: number) {
                             :disabled="isDeletePending"
                             severity="secondary"
                             outlined
+                            autofocus
                             @click="
                                 () => {
                                     rejectCallback();
@@ -349,10 +362,9 @@ function getTreeNodeStyle(depth: number) {
         <div class="section-header">
             <div class="section-title">
                 <h2>{{ props.sectionTitle }}</h2>
-                <Tag
+                <CountTag
                     v-if="relationshipGroups.length"
-                    :value="String(relationshipGroups.length)"
-                    severity="secondary"
+                    :count="relationshipGroups.length"
                 />
                 <Button
                     v-if="relationshipGroups.length > 1"
@@ -395,27 +407,15 @@ function getTreeNodeStyle(depth: number) {
             </div>
 
             <div class="section-header-actions">
-                <Button
+                <DisabledReasonButton
                     v-if="isEditor"
-                    v-tooltip.top="{
-                        disabled: Boolean(!isCreateDisabled),
-                        value: createTooltipText,
-                        showDelay: 300,
-                        pt: {
-                            text: {
-                                style: {
-                                    fontFamily: 'var(--p-lingo-font-family)',
-                                },
-                            },
-                            arrow: { style: { display: 'none' } },
-                        },
-                    }"
-                    :disabled="isCreateDisabled"
+                    :is-disabled="isCreateDisabled"
+                    :disabled-reason="createTooltipText"
                     :label="$gettext('Add Hierarchical Parent')"
                     class="add-button wide"
                     icon="pi pi-plus-circle"
                     @click="openEditor!(props.componentName)"
-                ></Button>
+                />
             </div>
         </div>
 
@@ -514,20 +514,21 @@ function getTreeNodeStyle(depth: number) {
                             v-for="(hierarchy, lineageIndex) in group.lineages"
                             :key="lineageIndex"
                         >
-                            <div
+                            <ol
                                 v-if="
                                     lineageIndex === 0 ||
                                     isGroupExpanded(groupIndex)
                                 "
                                 class="lineage-path"
                             >
-                                <div
+                                <li
                                     v-for="(
                                         item, depth
                                     ) in hierarchy.searchResults"
                                     :key="item.id"
                                     class="tree-node"
                                     :style="getTreeNodeStyle(depth)"
+                                    :aria-level="depth + 1"
                                 >
                                     <span
                                         :class="getIcon(item)"
@@ -538,6 +539,7 @@ function getTreeNodeStyle(depth: number) {
                                             item.id === props.resourceInstanceId
                                         "
                                         class="tree-node-label tree-node-label-current"
+                                        aria-current="page"
                                     >
                                         {{
                                             getItemLabel(
@@ -560,8 +562,8 @@ function getTreeNodeStyle(depth: number) {
                                             ).value
                                         }}
                                     </RouterLink>
-                                </div>
-                            </div>
+                                </li>
+                            </ol>
                         </template>
                         <Button
                             v-if="group.lineages.length > 1"
@@ -667,7 +669,9 @@ function getTreeNodeStyle(depth: number) {
 }
 
 .lineage-path {
+    margin: 0;
     padding-inline-start: 0.5rem;
+    list-style: none;
 }
 
 .lineage-divider {

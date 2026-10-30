@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, useId } from "vue";
+import { computed, nextTick, ref, useId } from "vue";
 import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
 
@@ -8,6 +8,7 @@ import InputText from "primevue/inputtext";
 
 import { upsertSchemeIdentifier } from "@/arches_lingo/api.ts";
 import { DEFAULT_ERROR_TOAST_LIFE, ERROR } from "@/arches_lingo/constants.ts";
+import { focusFirstElementById } from "@/arches_lingo/utils.ts";
 
 const props = defineProps<{
     resourceInstanceId: string | undefined;
@@ -17,6 +18,8 @@ const props = defineProps<{
 }>();
 
 const identifierLabelId = useId();
+const identifierInputId = useId();
+const identifierEditButtonId = useId();
 
 const emit = defineEmits<{
     (
@@ -39,14 +42,18 @@ const shouldShowIdentifierEditButton = computed(() => {
     return props.canEditResourceInstances;
 });
 
-function editIdentifier() {
+async function editIdentifier() {
     identifierDraft.value = props.identifierValue || "";
     isEditingIdentifier.value = true;
+    await nextTick();
+    focusFirstElementById(identifierInputId);
 }
 
-function cancelEditingIdentifier() {
+async function cancelEditingIdentifier() {
     identifierDraft.value = "";
     isEditingIdentifier.value = false;
+    await nextTick();
+    focusFirstElementById(identifierEditButtonId, identifierLabelId);
 }
 
 async function saveIdentifier() {
@@ -92,6 +99,7 @@ async function saveIdentifier() {
 
         <template v-if="isEditingIdentifier">
             <InputText
+                :id="identifierInputId"
                 v-model="identifierDraft"
                 :aria-labelledby="identifierLabelId"
                 size="small"
@@ -124,6 +132,7 @@ async function saveIdentifier() {
             </span>
             <Button
                 v-if="shouldShowIdentifierEditButton"
+                :id="identifierEditButtonId"
                 icon="pi pi-pencil"
                 variant="text"
                 size="small"

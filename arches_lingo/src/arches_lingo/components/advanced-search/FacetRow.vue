@@ -16,7 +16,10 @@ import {
 } from "@/arches_lingo/api.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
-import { getParentLabels } from "@/arches_lingo/utils.ts";
+import {
+    getParentLabels,
+    scaleWithRootFontSize,
+} from "@/arches_lingo/utils.ts";
 
 import type { VirtualScrollerLazyEvent } from "primevue/virtualscroller";
 
@@ -127,6 +130,7 @@ function getControlLabel(controlName: string) {
 }
 
 const conceptItemSize = 36;
+const scaledConceptItemSize = scaleWithRootFontSize(conceptItemSize);
 const conceptOptions = ref<SearchResultItem[]>([]);
 const isLoadingConcepts = ref(false);
 const conceptSearchPage = ref(0);
@@ -656,7 +660,7 @@ function toggleCascade() {
             :placeholder="selectConceptPlaceholder"
             :show-clear="true"
             :virtual-scroller-options="{
-                itemSize: conceptItemSize,
+                itemSize: scaledConceptItemSize,
                 lazy: true,
                 loading: isLoadingConcepts,
                 onLazyLoad: onConceptLazyLoad,

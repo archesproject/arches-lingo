@@ -30,6 +30,7 @@ export interface AppSettings {
     public_server_address: string | null;
     arches_version: string;
     lingo_version: string;
+    accessibility_mode: boolean;
 }
 
 export interface DisplayedRowRefAndSetter {

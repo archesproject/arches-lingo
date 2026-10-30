@@ -574,3 +574,34 @@ const FOCUSABLE_SELECTOR = [
 export function focusFirstFocusableElement(container: HTMLElement | null) {
     container?.querySelector<HTMLElement>(FOCUSABLE_SELECTOR)?.focus();
 }
+
+// Non-focusable targets get tabindex="-1", which keeps them out of the tab order.
+export function focusWithoutScrolling(element: HTMLElement) {
+    if (element.tabIndex < 0 && !element.hasAttribute("tabindex")) {
+        element.setAttribute("tabindex", "-1");
+    }
+    element.focus({ preventScroll: true });
+}
+
+export function focusFirstElementById(...elementIds: string[]) {
+    for (const elementId of elementIds) {
+        const element = document.getElementById(elementId);
+        if (element) {
+            focusWithoutScrolling(element);
+            return;
+        }
+    }
+}
+
+const DEFAULT_ROOT_FONT_SIZE_IN_PIXELS = 16;
+
+// Scales a px size written for the 16px default to the user's root font size.
+export function scaleWithRootFontSize(pixelsAtDefaultFontSize: number) {
+    const rootFontSize = parseFloat(
+        getComputedStyle(document.documentElement).fontSize,
+    );
+    return Math.round(
+        (pixelsAtDefaultFontSize * rootFontSize) /
+            DEFAULT_ROOT_FONT_SIZE_IN_PIXELS,
+    );
+}

@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import Drawer from "primevue/drawer";
 
+const emit = defineEmits(["after-hide"]);
+
 const shouldShowPageHelpPanel = defineModel("shouldShowPageHelpPanel", {
     type: Boolean,
     default: false,
@@ -34,6 +36,7 @@ const shouldShowPageHelpPanel = defineModel("shouldShowPageHelpPanel", {
                 },
             },
         }"
+        @after-hide="emit('after-hide')"
     >
         <div class="help-container">
             <!-- Intro -->

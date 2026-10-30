@@ -19,6 +19,7 @@ import { useConceptStore } from "@/arches_lingo/stores/useConceptStore.ts";
 import type { Concept, DeleteConceptStrategy } from "@/arches_lingo/types.ts";
 
 const { conceptId, conceptName, mode, isLoading } = defineProps<{
+    visible: boolean;
     conceptId: string;
     conceptName: string | undefined;
     mode: typeof DELETE | typeof DEPRECATE;
@@ -28,6 +29,7 @@ const { conceptId, conceptName, mode, isLoading } = defineProps<{
 const emit = defineEmits<{
     confirm: [strategy: DeleteConceptStrategy | null];
     cancel: [];
+    "after-hide": [];
 }>();
 
 const { $gettext } = useGettext();
@@ -109,12 +111,13 @@ function onConfirm() {
 
 <template>
     <Dialog
-        :visible="true"
+        :visible="visible"
         :modal="true"
         :header="dialogHeader"
         :closable="!isLoading"
         class="delete-concept-dialog"
         @update:visible="!isLoading && $emit('cancel')"
+        @after-hide="$emit('after-hide')"
     >
         <Skeleton
             v-if="isFetchingChildren"

@@ -1,5 +1,13 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from "vue";
+import {
+    computed,
+    nextTick,
+    onMounted,
+    onUnmounted,
+    ref,
+    useTemplateRef,
+    watch,
+} from "vue";
 import { useGettext } from "vue3-gettext";
 
 import Button from "primevue/button";
@@ -7,12 +15,18 @@ import type { VirtualScrollerLazyEvent } from "primevue/virtualscroller";
 
 import NotificationsPanel from "@/arches_lingo/components/header/PageHeader/components/NotificationsInteraction/components/NotificationsPanel.vue";
 import { fetchUserNotifications } from "@/arches_lingo/api.ts";
+import { useAnnouncer } from "@/arches_lingo/composables/useAnnouncer.ts";
+import type { ComponentPublicInstance } from "vue";
 import type { Notification, PaginatorDetails } from "@/arches_lingo/types.ts";
 import { SEARCH_RESULTS_PER_PAGE } from "@/arches_lingo/constants.ts";
 
-const { $gettext } = useGettext();
+const { $gettext, $ngettext } = useGettext();
+const { announce } = useAnnouncer();
 
 const shouldShowNotificationsPanel = ref(false);
+const notificationsButton = useTemplateRef<ComponentPublicInstance>(
+    "notificationsButton",
+);
 const notifications = ref<Notification[]>([]);
 const isLoading = ref(false);
 const showUnreadOnly = ref(true);
@@ -30,13 +44,21 @@ function activateHierarchyOverlay() {
     shouldShowNotificationsPanel.value = true;
 }
 
+// PrimeVue Drawer doesn't return focus to its trigger.
+async function onNotificationsPanelAfterHide() {
+    await nextTick();
+    (notificationsButton.value?.$el as HTMLElement | undefined)?.focus();
+}
+
 async function loadNotifications(
     items: number,
     pageNumber: number,
     unreadOnly: boolean,
+    { shouldAnnounceNew = false } = {},
 ) {
     isLoading.value = true;
     const parsed = await fetchUserNotifications(items, pageNumber, unreadOnly);
+    let newUnreadCount = 0;
     parsed.notifications.forEach((newNotif: Notification) => {
         if (
             !notifications.value.some(
@@ -44,8 +66,21 @@ async function loadNotifications(
             )
         ) {
             notifications.value.push(newNotif);
+            if (!newNotif.isread) {
+                newUnreadCount += 1;
+            }
         }
     });
+    if (shouldAnnounceNew && newUnreadCount) {
+        announce(
+            $ngettext(
+                "%{count} new notification",
+                "%{count} new notifications",
+                newUnreadCount,
+                { count: String(newUnreadCount) },
+            ),
+        );
+    }
     notifications.value.sort(
         (first, second) =>
             new Date(second.created).getTime() -
@@ -81,7 +116,9 @@ function resetNotifications() {
 
 function startPolling() {
     pollInterval.value = setInterval(() => {
-        loadNotifications(resultsPerPage.value, 1, showUnreadOnly.value);
+        loadNotifications(resultsPerPage.value, 1, showUnreadOnly.value, {
+            shouldAnnounceNew: true,
+        });
     }, POLLING_TIME_INTERVAL);
 }
 
@@ -125,6 +162,7 @@ onUnmounted(() => {
                 aria-hidden="true"
             ></span>
             <Button
+                ref="notificationsButton"
                 icon="pi pi-bell"
                 variant="text"
                 class="notifications-button"
@@ -145,6 +183,7 @@ onUnmounted(() => {
             v-model:show-unread-only="showUnreadOnly"
             :is-loading="isLoading"
             @load-additional-notifications="loadAdditionalNotifications"
+            @after-hide="onNotificationsPanelAfterHide"
         />
     </div>
 </template>

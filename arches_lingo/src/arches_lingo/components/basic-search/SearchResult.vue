@@ -1,23 +1,51 @@
 <script setup lang="ts">
+import { computed, useId } from "vue";
+import { useRouter } from "vue-router";
 import { storeToRefs } from "pinia";
 
 import LifecycleStateBadge from "@/arches_lingo/components/generic/LifecycleStateBadge.vue";
 
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 import { getParentLabels, getConceptIcon } from "@/arches_lingo/utils.ts";
+import { routeNames } from "@/arches_lingo/routes.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 
-import type { PropType } from "vue";
 import type { SearchResultItem } from "@/arches_lingo/types.ts";
 
+const {
+    searchResult,
+    isLink = false,
+    positionDescription = "",
+} = defineProps<{
+    searchResult: { index: number; option: SearchResultItem };
+    isLink?: boolean;
+    positionDescription?: string;
+}>();
+
+const emit = defineEmits<{
+    (event: "select", clickEvent: MouseEvent): void;
+}>();
+
+const router = useRouter();
+const positionDescriptionId = useId();
 const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
 
-defineProps({
-    searchResult: {
-        type: Object as PropType<{ index: number; option: SearchResultItem }>,
-        required: true,
-    },
-});
+const label = computed(
+    () =>
+        getItemLabel(
+            searchResult.option,
+            selectedLanguage.value.code,
+            systemLanguage.value.code,
+        ).value,
+);
+
+const conceptHref = computed(
+    () =>
+        router.resolve({
+            name: routeNames.concept,
+            params: { id: searchResult.option.id },
+        }).href,
+);
 </script>
 
 <template>
@@ -34,13 +62,18 @@ defineProps({
                     ]"
                     aria-hidden="true"
                 />
-                {{
-                    getItemLabel(
-                        searchResult.option,
-                        selectedLanguage.code,
-                        systemLanguage.code,
-                    ).value
-                }}
+                <a
+                    v-if="isLink"
+                    class="result-link"
+                    :href="conceptHref"
+                    :aria-describedby="
+                        positionDescription ? positionDescriptionId : undefined
+                    "
+                    @click="emit('select', $event)"
+                >
+                    {{ label }}
+                </a>
+                <template v-else>{{ label }}</template>
                 <LifecycleStateBadge
                     :lifecycle-state-id="
                         searchResult.option.resource_instance_lifecycle_state_id
@@ -52,6 +85,14 @@ defineProps({
                 />
             </span>
         </div>
+
+        <span
+            v-if="positionDescription"
+            :id="positionDescriptionId"
+            class="p-hidden-accessible"
+        >
+            {{ positionDescription }}
+        </span>
 
         <div class="search-result-hierarchy">
             [
@@ -69,6 +110,7 @@ defineProps({
 
 <style scoped>
 .search-result {
+    position: relative;
     height: 100%;
     width: 100%;
     font-size: 0.875rem;
@@ -89,23 +131,39 @@ defineProps({
     flex-wrap: wrap;
 }
 
+.result-link {
+    color: inherit;
+    text-decoration: none;
+}
+
+.result-link::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+}
+
+.result-link:focus-visible {
+    outline: none;
+}
+
+.result-link:focus-visible::after {
+    outline: 0.125rem solid var(--p-focus-ring-color);
+    outline-offset: -0.125rem;
+}
+
 .search-result-hierarchy {
     margin: 0 0.5rem;
     font-size: var(--p-lingo-font-size-xsmall);
     color: var(--p-search-result-hierarchy-color);
 }
 
-.p-focus > .search-result {
-    background-color: var(--p-search-result-focus-background);
-}
-
-:deep(.p-autocomplete-option:hover) > .search-result,
-:deep(.p-autocomplete-option-active) > .search-result {
-    background-color: var(--p-search-result-focus-background);
-}
-
 .is-even {
     background-color: var(--p-search-result-is-even-background);
+}
+
+.search-result:has(.result-link):hover,
+.search-result:focus-within {
+    background-color: var(--p-search-result-focus-background);
 }
 
 .concept-icon {

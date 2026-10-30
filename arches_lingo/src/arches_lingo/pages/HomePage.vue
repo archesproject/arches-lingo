@@ -14,6 +14,7 @@ import {
     fetchMissingTranslations,
 } from "@/arches_lingo/api.ts";
 import { DEFAULT_ERROR_TOAST_LIFE, ERROR } from "@/arches_lingo/constants.ts";
+import { useAnnouncer } from "@/arches_lingo/composables/useAnnouncer.ts";
 
 import BreakdownsGrid from "@/arches_lingo/components/dashboard/BreakdownsGrid.vue";
 import DashboardStatCards from "@/arches_lingo/components/dashboard/DashboardStatCards.vue";
@@ -30,6 +31,7 @@ import type { ResourceInstanceResult } from "@/arches_lingo/types.ts";
 
 const toast = useToast();
 const { $gettext } = useGettext();
+const { announce } = useAnnouncer();
 
 const schemes = ref<ResourceInstanceResult[]>([]);
 const selectedSchemeIds = ref<string[]>([]);
@@ -157,6 +159,20 @@ watch(translationLanguage, () => {
 onMounted(async () => {
     await Promise.all([loadSchemes(), loadLanguages(), loadStats()]);
 });
+
+watch(
+    isStatsLoading,
+    (isLoading) => {
+        announce(
+            isLoading
+                ? $gettext(
+                      "Gathering the latest statistics, this may take a moment...",
+                  )
+                : $gettext("Statistics loaded"),
+        );
+    },
+    { immediate: true },
+);
 </script>
 
 <template>
@@ -211,7 +227,10 @@ onMounted(async () => {
             :closable="false"
             class="stats-loading-notice"
         >
-            <i class="pi pi-spin pi-sync stats-loading-spinner" />
+            <i
+                class="pi pi-spin pi-sync stats-loading-spinner"
+                aria-hidden="true"
+            />
             <span>{{
                 $gettext(
                     "Gathering the latest statistics, this may take a moment...",

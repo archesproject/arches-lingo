@@ -29,16 +29,20 @@ import {
     EDIT,
     MAXIMIZED,
     MINIMIZED,
+    NARROW_SCREEN_MEDIA_QUERY,
     NEW,
     VIEW,
     openPanelComponentKey,
 } from "@/arches_lingo/constants.ts";
+import { useAnnouncer } from "@/arches_lingo/composables/useAnnouncer.ts";
+import { useMediaQuery } from "@/arches_lingo/composables/useMediaQuery.ts";
 import {
     useEditorDirtyState,
     unsavedChangesConfirmOptions,
 } from "@/arches_lingo/composables/useEditorDirtyState.ts";
 
 import { fetchResourceInstanceLifecycleState } from "@/arches_lingo/api.ts";
+import { focusWithoutScrolling } from "@/arches_lingo/utils.ts";
 import { DEFAULT_ERROR_TOAST_LIFE, ERROR } from "@/arches_lingo/constants.ts";
 
 import type { Component } from "vue";
@@ -58,6 +62,12 @@ const route = useRoute();
 const confirm = useConfirm();
 const { $gettext } = useGettext();
 const { isEditorDirty } = useEditorDirtyState();
+const { announce } = useAnnouncer();
+const isNarrowScreen = useMediaQuery(NARROW_SCREEN_MEDIA_QUERY);
+
+const splitterLayout = computed(() =>
+    isNarrowScreen.value ? "vertical" : "horizontal",
+);
 
 const processedComponentData = ref(
     props.componentData.map(function (item) {
@@ -75,6 +85,10 @@ const editorState = ref(CLOSED);
 const selectedComponentDatum = ref();
 const isFormEditor = ref(true);
 const isEditorLoading = ref(false);
+const componentManagerRef = ref<HTMLElement | null>(null);
+
+let editorTriggerElement: HTMLElement | null = null;
+let pendingSectionRefresh: Promise<void> | undefined;
 
 const resourceInstanceLifecycleState = ref<object | undefined>(undefined);
 const isFetchingResourceInstanceLifecycleState = ref(false);
@@ -154,19 +168,66 @@ function confirmDiscard(callback: () => void) {
 }
 
 provide("openEditor", openEditor);
-provide("closeEditor", closeEditor);
+provide("closeEditor", closeEditorAfterSave);
 provide("updateAfterComponentDeletion", updateAfterComponentDeletion);
 provide("refreshReportSection", refreshReportSection);
 provide("resourceInstanceLifecycleState", resourceInstanceLifecycleState);
 
+function rememberEditorTrigger() {
+    const activeElement = document.activeElement;
+    const editorPanel = componentManagerRef.value?.querySelector(
+        ".splitter-panel-parent",
+    );
+    if (
+        activeElement instanceof HTMLElement &&
+        activeElement !== document.body &&
+        !editorPanel?.contains(activeElement)
+    ) {
+        editorTriggerElement = activeElement;
+    }
+}
+
 function closeEditor() {
+    const closedComponentName = selectedComponentDatum.value?.componentName;
     selectedComponentDatum.value = null;
     editorState.value = CLOSED;
     editorTileId.value = null;
     isEditorLoading.value = false;
+    returnFocusFromEditor(closedComponentName);
+}
+
+// Editors call the injected closeEditor only once a save has succeeded.
+function closeEditorAfterSave() {
+    const savedSectionTitle = selectedComponentDatum.value?.sectionTitle;
+    if (savedSectionTitle) {
+        announce(
+            $gettext("%{section} saved", { section: savedSectionTitle }, true),
+        );
+    }
+    closeEditor();
+}
+
+async function returnFocusFromEditor(closedComponentName?: string) {
+    const triggerElement = editorTriggerElement;
+    editorTriggerElement = null;
+
+    await pendingSectionRefresh?.catch(() => undefined);
+    await nextTick();
+
+    const isFocusLost =
+        !document.activeElement || document.activeElement === document.body;
+    if (editorState.value !== CLOSED || !isFocusLost) {
+        return;
+    }
+    if (triggerElement?.isConnected) {
+        triggerElement.focus();
+    } else if (closedComponentName) {
+        focusSectionHeading(closedComponentName);
+    }
 }
 
 function doOpenEditor(componentName: string, tileId?: string) {
+    rememberEditorTrigger();
     isEditorLoading.value = true;
     const componentDatum = processedComponentData.value.find(
         (componentDatum) => {
@@ -215,7 +276,12 @@ function updateAfterComponentDeletion(componentName: string, tileId: string) {
     }
 }
 
-async function refreshReportSection(componentName: string) {
+function refreshReportSection(componentName: string) {
+    pendingSectionRefresh = doRefreshReportSection(componentName);
+    return pendingSectionRefresh;
+}
+
+async function doRefreshReportSection(componentName: string) {
     if (componentName === "all") {
         await Promise.all([
             resourceStore.refreshResource(),
@@ -276,6 +342,7 @@ function openPanelComponent(
     graphSlug: string = "",
     nodegroupAlias: string = "",
 ) {
+    rememberEditorTrigger();
     selectedComponentDatum.value = {
         component: markRaw(component),
         componentName,
@@ -297,90 +364,30 @@ function initNewLabel() {
     openEditor(labelComponent[0].componentName);
 }
 
-provide("openEditor", openEditor);
-provide("closeEditor", closeEditor);
-provide("updateAfterComponentDeletion", updateAfterComponentDeletion);
-provide("refreshReportSection", refreshReportSection);
 provide(openPanelComponentKey, openPanelComponent);
+provide("focusSectionHeading", focusSectionHeading);
+
+async function focusSectionHeading(componentName: string) {
+    await nextTick();
+    const sectionHeading =
+        componentManagerRef.value?.querySelector<HTMLElement>(
+            `[data-component-name="${componentName}"] h2`,
+        );
+    if (sectionHeading) {
+        focusWithoutScrolling(sectionHeading);
+    }
+}
 </script>
 
 <template>
-    <div class="component-manager">
-        <!-- only shown on large screens -->
-        <Splitter class="component-splitter component-splitter-horizontal">
-            <SplitterPanel
-                v-show="editorState !== MAXIMIZED"
-                class="content"
-                :size="50"
-            >
-                <div class="splitter-panel-content">
-                    <component
-                        :is="firstComponentDatum.component"
-                        :graph-slug="firstComponentDatum.graphSlug"
-                        :nodegroup-alias="firstComponentDatum.nodegroupAlias"
-                        :resource-instance-id="resourceInstanceId"
-                        :section-title="firstComponentDatum.sectionTitle"
-                        :component-name="firstComponentDatum.componentName"
-                        :mode="VIEW"
-                    />
-
-                    <div class="scroll-container">
-                        <component
-                            :is="componentDatum.component"
-                            v-for="componentDatum in remainingComponentData"
-                            :key="
-                                componentDatum.componentName +
-                                '-' +
-                                componentDatum.key
-                            "
-                            :graph-slug="componentDatum.graphSlug"
-                            :nodegroup-alias="componentDatum.nodegroupAlias"
-                            :resource-instance-id="resourceInstanceId"
-                            :section-title="componentDatum.sectionTitle"
-                            :component-name="componentDatum.componentName"
-                            :mode="VIEW"
-                        />
-                    </div>
-                </div>
-            </SplitterPanel>
-
-            <SplitterPanel
-                v-if="editorState !== CLOSED"
-                :size="50"
-                class="splitter-panel-parent"
-            >
-                <ComponentEditor
-                    :key="editorKey"
-                    class="splitter-panel-content"
-                    :is-editor-maximized="editorState === MAXIMIZED"
-                    :is-form-editor="isFormEditor"
-                    :is-editor-loading="isEditorLoading"
-                    :header-title="selectedComponentDatum.sectionTitle"
-                    @maximize="maximizeEditor"
-                    @minimize="minimizeEditor"
-                    @close="closeEditor"
-                >
-                    <component
-                        :is="selectedComponentDatum.component"
-                        :graph-slug="selectedComponentDatum.graphSlug"
-                        :nodegroup-alias="selectedComponentDatum.nodegroupAlias"
-                        :resource-instance-id="resourceInstanceId"
-                        :tile-id="editorTileId"
-                        :section-title="selectedComponentDatum.sectionTitle"
-                        :component-name="selectedComponentDatum.componentName"
-                        :mode="EDIT"
-                        @update:is-editor-loading="
-                            updateEditorLoadingState($event)
-                        "
-                    />
-                </ComponentEditor>
-            </SplitterPanel>
-        </Splitter>
-
-        <!-- only shown on small screens -->
+    <div
+        ref="componentManagerRef"
+        class="component-manager"
+    >
         <Splitter
-            class="component-splitter component-splitter-vertical"
-            layout="vertical"
+            class="component-splitter"
+            :class="`component-splitter-${splitterLayout}`"
+            :layout="splitterLayout"
         >
             <SplitterPanel
                 v-show="editorState !== MAXIMIZED"
@@ -399,21 +406,26 @@ provide(openPanelComponentKey, openPanelComponent);
                     />
 
                     <div class="scroll-container">
-                        <component
-                            :is="componentDatum.component"
+                        <div
                             v-for="componentDatum in remainingComponentData"
                             :key="
                                 componentDatum.componentName +
                                 '-' +
                                 componentDatum.key
                             "
-                            :graph-slug="componentDatum.graphSlug"
-                            :nodegroup-alias="componentDatum.nodegroupAlias"
-                            :resource-instance-id="resourceInstanceId"
-                            :section-title="componentDatum.sectionTitle"
-                            :component-name="componentDatum.componentName"
-                            :mode="VIEW"
-                        />
+                            class="report-section"
+                            :data-component-name="componentDatum.componentName"
+                        >
+                            <component
+                                :is="componentDatum.component"
+                                :graph-slug="componentDatum.graphSlug"
+                                :nodegroup-alias="componentDatum.nodegroupAlias"
+                                :resource-instance-id="resourceInstanceId"
+                                :section-title="componentDatum.sectionTitle"
+                                :component-name="componentDatum.componentName"
+                                :mode="VIEW"
+                            />
+                        </div>
                     </div>
                 </div>
             </SplitterPanel>
@@ -465,14 +477,6 @@ provide(openPanelComponentKey, openPanelComponent);
     border: none;
 }
 
-.component-splitter-horizontal {
-    display: flex;
-}
-
-.component-splitter-vertical {
-    display: none;
-}
-
 .content {
     overflow: auto;
 }
@@ -488,6 +492,10 @@ provide(openPanelComponentKey, openPanelComponent);
     flex: 1;
     overflow-y: auto;
     min-height: 0;
+}
+
+.report-section {
+    display: contents;
 }
 
 :deep(.viewer-section) {
@@ -564,15 +572,5 @@ provide(openPanelComponentKey, openPanelComponent);
     ) {
     overflow-y: auto;
     width: 12rem;
-}
-
-@media (max-width: 960px) {
-    .component-splitter-horizontal {
-        display: none;
-    }
-
-    .component-splitter-vertical {
-        display: flex;
-    }
 }
 </style>
