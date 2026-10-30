@@ -629,7 +629,7 @@ async function onMergeConfirmed() {
 .merge-concept-pair-summary {
     flex: none;
     padding-bottom: 1rem;
-    border-bottom: 0.0625rem solid var(--p-highlight-focus-background);
+    border-bottom: 0.0625rem solid var(--p-lingo-divider-color);
 }
 
 .merge-stepper {
@@ -643,7 +643,7 @@ async function onMergeConfirmed() {
 .merge-stepper :deep(.p-steplist) {
     flex: none;
     padding: 0 0 1rem 0;
-    border-bottom: 0.0625rem solid var(--p-highlight-focus-background);
+    border-bottom: 0.0625rem solid var(--p-lingo-divider-color);
 }
 
 .merge-stepper :deep(.p-step-header) {

@@ -162,6 +162,6 @@ const metaStringLabel = computed<MetaStringText>(() => ({
 
 <style scoped>
 .text-link {
-    color: var(--p-primary-500);
+    color: var(--p-lingo-accent-color);
 }
 </style>

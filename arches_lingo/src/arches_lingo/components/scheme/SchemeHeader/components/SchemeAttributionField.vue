@@ -169,7 +169,7 @@ async function saveAttribution() {
     overflow-y: auto;
     max-height: 6rem;
     font-size: var(--p-lingo-font-size-smallnormal);
-    color: var(--p-primary-500);
+    color: var(--p-lingo-accent-color);
     background: var(--p-content-background);
     border: 1px solid var(--p-content-border-color);
     border-radius: var(--p-border-radius-sm);

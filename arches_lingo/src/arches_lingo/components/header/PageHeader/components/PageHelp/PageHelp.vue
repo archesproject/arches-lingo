@@ -49,6 +49,6 @@ async function onPageHelpPanelAfterHide() {
 }
 
 .page-help-button:hover {
-    background: var(--p-button-primary-hover-background) !important;
+    background: var(--p-lingo-navigation-bar-hover-background) !important;
 }
 </style>

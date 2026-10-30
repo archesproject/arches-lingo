@@ -134,10 +134,7 @@ function navigateToLogin() {
 }
 
 .p-button:hover {
-    background: var(
-        --p-button-text-hover-background,
-        var(--p-button-primary-hover-background)
-    ) !important;
+    background: var(--p-lingo-navigation-bar-hover-background) !important;
 }
 
 .initials-circle {
