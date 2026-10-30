@@ -576,7 +576,15 @@ function toggleCascade() {
             class="negation-toggle"
             :class="{ 'negation-active': condition.negated }"
             @update:model-value="toggleNegated"
-        />
+        >
+            <template #icon="{ value, class: iconClass }">
+                <i
+                    v-if="value"
+                    :class="[iconClass, 'pi pi-check']"
+                    aria-hidden="true"
+                />
+            </template>
+        </ToggleButton>
 
         <!-- Facet type selector -->
         <Select
@@ -897,7 +905,15 @@ function toggleCascade() {
             class="cascade-toggle"
             :class="{ 'cascade-active': condition.cascade }"
             @update:model-value="toggleCascade"
-        />
+        >
+            <template #icon="{ value, class: iconClass }">
+                <i
+                    v-if="value"
+                    :class="[iconClass, 'pi pi-check']"
+                    aria-hidden="true"
+                />
+            </template>
+        </ToggleButton>
 
         <Button
             icon="pi pi-times"
