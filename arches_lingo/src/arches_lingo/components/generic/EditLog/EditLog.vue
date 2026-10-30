@@ -500,7 +500,7 @@ async function acceptRevert() {
 
 .edit-card-name {
     font-size: var(--p-lingo-font-size-xsmall);
-    color: var(--p-primary-500);
+    color: var(--p-lingo-accent-color);
     margin-top: 0.2rem;
     display: flex;
     align-items: center;

@@ -224,7 +224,7 @@ function onVisibilityChange(): void {
 
 .direction-body .direction-options .direction-option.unavailable {
     cursor: not-allowed;
-    opacity: 0.65;
+    opacity: var(--p-lingo-dimmed-unavailable-opacity);
 }
 
 .direction-body .direction-option .direction-option-body {

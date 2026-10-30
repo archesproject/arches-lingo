@@ -274,6 +274,8 @@ export default {
 .nested-group {
     border-color: var(--p-primary-200);
     background-color: var(--p-highlight-background);
+    box-shadow: inset 0 0 0 0.125rem
+        var(--p-lingo-query-builder-group-outline-color);
     margin: 0.25rem 0;
 }
 
@@ -306,10 +308,19 @@ export default {
 .operator-label {
     font-size: var(--p-lingo-font-size-xsmall);
     font-weight: var(--p-lingo-font-weight-normal);
-    color: var(--p-primary-500);
+    color: var(--p-lingo-accent-color);
     text-transform: uppercase;
     padding: 0.125rem 0.5rem;
-    align-self: flex-start;
+    align-self: stretch;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.operator-label::after {
+    content: "";
+    flex: 1;
+    border-top: 0.0625rem solid var(--p-lingo-query-builder-rule-color);
 }
 
 .operator-toggle :deep(.p-selectbutton) {

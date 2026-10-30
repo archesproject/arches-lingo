@@ -208,7 +208,7 @@ function cancelCreateDialog() {
     display: flex;
     justify-content: flex-end;
     padding: 0.5rem;
-    border-bottom: 0.0625rem solid var(--p-highlight-focus-background);
+    border-bottom: 0.0625rem solid var(--p-lingo-divider-color);
     flex-shrink: 0;
 }
 

@@ -299,7 +299,7 @@ function onSingleValueChoice(useAbsorbedValue: boolean) {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 0.0625rem solid var(--p-highlight-focus-background);
+    border-bottom: 0.0625rem solid var(--p-lingo-divider-color);
     padding-bottom: 0.5rem;
 }
 
@@ -319,7 +319,7 @@ function onSingleValueChoice(useAbsorbedValue: boolean) {
     margin: 0;
     font-size: var(--p-lingo-font-size-medium);
     font-weight: var(--p-lingo-font-weight-normal);
-    color: var(--p-neutral-500);
+    color: var(--p-lingo-muted-strong-color);
 }
 
 .merge-columns {
@@ -339,7 +339,7 @@ function onSingleValueChoice(useAbsorbedValue: boolean) {
 .merge-column-heading {
     font-size: var(--p-lingo-font-size-smallnormal);
     font-weight: var(--p-lingo-font-weight-normal);
-    color: var(--p-neutral-400);
+    color: var(--p-lingo-muted-color);
 }
 
 .merge-empty {

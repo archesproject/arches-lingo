@@ -610,7 +610,7 @@ function getTreeNodeStyle(depth: number) {
 .bulk-action-button {
     font-size: var(--p-lingo-font-size-xsmall);
     font-weight: var(--p-lingo-font-weight-normal);
-    color: var(--p-neutral-500);
+    color: var(--p-lingo-muted-strong-color);
 }
 
 .relationship-group {
@@ -647,7 +647,7 @@ function getTreeNodeStyle(depth: number) {
 }
 
 .relationship-group-label:hover {
-    color: var(--p-primary-500);
+    color: var(--p-lingo-accent-color);
 }
 
 .relationship-group-actions {
@@ -711,7 +711,7 @@ function getTreeNodeStyle(depth: number) {
 .tree-node-label {
     margin-inline-start: 0.5rem;
     font-size: var(--p-lingo-font-size-small);
-    color: var(--p-primary-500);
+    color: var(--p-lingo-accent-color);
 }
 
 .tree-node-label-current {
@@ -808,6 +808,6 @@ function getTreeNodeStyle(depth: number) {
     margin-block-start: 0.25rem;
     padding-inline-start: 0;
     font-size: var(--p-lingo-font-size-xsmall);
-    color: var(--p-primary-500);
+    color: var(--p-lingo-accent-color);
 }
 </style>
