@@ -183,6 +183,17 @@ export const LingoPreset = definePreset(ArchesPreset, {
                 searchResultHierarchy: {
                     color: "{zinc.400}",
                 },
+                profileCard: {
+                    shadow: "0 0 0 0.0625rem {content.border.color}",
+                },
+                helpPanel: {
+                    intro: {
+                        color: "{surface.0}",
+                    },
+                    sectionTitle: {
+                        color: "{surface.0}",
+                    },
+                },
                 sortAndFilterControls: {
                     background: "{surface.700}",
                     border: "{surface.900}",
