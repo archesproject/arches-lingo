@@ -1,5 +1,16 @@
 <script setup lang="ts">
 import Drawer from "primevue/drawer";
+import Tag from "primevue/tag";
+
+import LifecycleStateBadge from "@/arches_lingo/components/generic/LifecycleStateBadge.vue";
+import {
+    DRAFT_LIFECYCLE_STATE_ID,
+    INFO,
+    SECONDARY,
+    EDITING_LIFECYCLE_STATE_ID,
+    PUBLISHED_LIFECYCLE_STATE_ID,
+    RETIRED_LIFECYCLE_STATE_ID,
+} from "@/arches_lingo/constants.ts";
 
 const emit = defineEmits(["after-hide"]);
 
@@ -414,9 +425,11 @@ const shouldShowPageHelpPanel = defineModel("shouldShowPageHelpPanel", {
                 </p>
                 <div class="help-label-types">
                     <div class="help-label-type">
-                        <span class="help-badge help-badge--preferred">{{
-                            $gettext("Preferred")
-                        }}</span>
+                        <Tag
+                            class="help-example-badge"
+                            :severity="INFO"
+                            :value="$gettext('Preferred')"
+                        />
                         <span class="help-label-desc">{{
                             $gettext(
                                 "The primary display term. Each concept should have exactly one per language.",
@@ -424,9 +437,11 @@ const shouldShowPageHelpPanel = defineModel("shouldShowPageHelpPanel", {
                         }}</span>
                     </div>
                     <div class="help-label-type">
-                        <span class="help-badge help-badge--alternate">{{
-                            $gettext("Alternate")
-                        }}</span>
+                        <Tag
+                            class="help-example-badge"
+                            :severity="SECONDARY"
+                            :value="$gettext('Alternate')"
+                        />
                         <span class="help-label-desc">{{
                             $gettext(
                                 "Synonyms or variant spellings — help users find the concept via different terms.",
@@ -434,9 +449,11 @@ const shouldShowPageHelpPanel = defineModel("shouldShowPageHelpPanel", {
                         }}</span>
                     </div>
                     <div class="help-label-type">
-                        <span class="help-badge help-badge--hidden">{{
-                            $gettext("Hidden")
-                        }}</span>
+                        <Tag
+                            class="help-example-badge"
+                            :severity="SECONDARY"
+                            :value="$gettext('Hidden')"
+                        />
                         <span class="help-label-desc">{{
                             $gettext(
                                 "Used for search indexing only — not shown in displays or exports.",
@@ -583,9 +600,11 @@ const shouldShowPageHelpPanel = defineModel("shouldShowPageHelpPanel", {
                 </p>
                 <div class="help-label-types">
                     <div class="help-label-type">
-                        <span class="help-badge help-badge--lifecycle-draft">{{
-                            $gettext("Draft")
-                        }}</span>
+                        <LifecycleStateBadge
+                            class="help-example-badge"
+                            :lifecycle-state-id="DRAFT_LIFECYCLE_STATE_ID"
+                            :lifecycle-state-name="$gettext('Draft')"
+                        />
                         <span class="help-label-desc">{{
                             $gettext(
                                 "Initial working state. The record can be freely edited and deleted.",
@@ -593,10 +612,11 @@ const shouldShowPageHelpPanel = defineModel("shouldShowPageHelpPanel", {
                         }}</span>
                     </div>
                     <div class="help-label-type">
-                        <span
-                            class="help-badge help-badge--lifecycle-editing"
-                            >{{ $gettext("Editing") }}</span
-                        >
+                        <LifecycleStateBadge
+                            class="help-example-badge"
+                            :lifecycle-state-id="EDITING_LIFECYCLE_STATE_ID"
+                            :lifecycle-state-name="$gettext('Editing')"
+                        />
                         <span class="help-label-desc">{{
                             $gettext(
                                 "Back under active revision after prior publication.",
@@ -604,10 +624,11 @@ const shouldShowPageHelpPanel = defineModel("shouldShowPageHelpPanel", {
                         }}</span>
                     </div>
                     <div class="help-label-type">
-                        <span
-                            class="help-badge help-badge--lifecycle-published"
-                            >{{ $gettext("Published") }}</span
-                        >
+                        <LifecycleStateBadge
+                            class="help-example-badge"
+                            :lifecycle-state-id="PUBLISHED_LIFECYCLE_STATE_ID"
+                            :lifecycle-state-name="$gettext('Published')"
+                        />
                         <span class="help-label-desc">{{
                             $gettext(
                                 "Finalized and stable. The URI is now authoritative.",
@@ -615,10 +636,11 @@ const shouldShowPageHelpPanel = defineModel("shouldShowPageHelpPanel", {
                         }}</span>
                     </div>
                     <div class="help-label-type">
-                        <span
-                            class="help-badge help-badge--lifecycle-retired"
-                            >{{ $gettext("Retired") }}</span
-                        >
+                        <LifecycleStateBadge
+                            class="help-example-badge"
+                            :lifecycle-state-id="RETIRED_LIFECYCLE_STATE_ID"
+                            :lifecycle-state-name="$gettext('Retired')"
+                        />
                         <span class="help-label-desc">{{
                             $gettext(
                                 "No longer active. Retired records are preserved for reference and their URIs remain resolvable.",
@@ -966,58 +988,12 @@ const shouldShowPageHelpPanel = defineModel("shouldShowPageHelpPanel", {
     gap: 0.75rem;
 }
 
-.help-badge {
-    display: inline-flex;
-    align-items: center;
+.help-example-badge {
     justify-content: center;
-    padding: 0.125rem 0.5rem;
-    border-radius: 0.125rem;
-    font-size: var(--p-lingo-font-size-xsmall);
-    font-weight: var(--p-lingo-font-weight-normal);
-    white-space: nowrap;
     min-width: 5.25rem;
-}
-
-.help-badge--preferred {
-    background: var(--p-primary-100);
-    color: var(--p-primary-700);
-    border: 0.0625rem solid var(--p-primary-200);
-}
-
-.help-badge--alternate {
-    background: var(--p-highlight-background);
-    color: var(--p-neutral-600);
-    border: 0.0625rem solid var(--p-highlight-focus-background);
-}
-
-.help-badge--hidden {
-    background: var(--p-content-background);
-    color: var(--p-neutral-500);
-    border: 0.0625rem solid var(--p-header-toolbar-border);
-}
-
-.help-badge--lifecycle-draft {
-    background: var(--p-tag-secondary-background);
-    color: var(--p-tag-secondary-color);
-    border: 0.0625rem solid var(--p-tag-secondary-border-color);
-}
-
-.help-badge--lifecycle-editing {
-    background: var(--p-tag-warn-background);
-    color: var(--p-tag-warn-color);
-    border: 0.0625rem solid var(--p-tag-warn-border-color);
-}
-
-.help-badge--lifecycle-published {
-    background: var(--p-tag-success-background);
-    color: var(--p-tag-success-color);
-    border: 0.0625rem solid var(--p-tag-success-border-color);
-}
-
-.help-badge--lifecycle-retired {
-    background: var(--p-tag-danger-background);
-    color: var(--p-tag-danger-color);
-    border: 0.0625rem solid var(--p-tag-danger-border-color);
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    font-size: var(--p-lingo-font-size-xxsmall);
 }
 
 .help-label-desc {
