@@ -24,6 +24,7 @@ const props = defineProps<{
     options: AdvancedSearchOptions;
     conceptSets: ConceptSetItem[];
     depth?: number;
+    groupPosition?: string;
 }>();
 
 const emit = defineEmits<{
@@ -35,6 +36,28 @@ const operatorOptions = computed(() => [
     { label: $gettext("AND"), value: "and" as SearchOperator },
     { label: $gettext("OR"), value: "or" as SearchOperator },
 ]);
+
+const operatorLabel = computed(() =>
+    props.groupPosition
+        ? $gettext(
+              "Group %{position}: combine conditions with",
+              { position: props.groupPosition },
+              true,
+          )
+        : $gettext("Combine conditions with"),
+);
+
+const removeGroupLabel = computed(() =>
+    $gettext("Remove group %{position}", {
+        position: props.groupPosition ?? "",
+    }),
+);
+
+function getChildPosition(index: number) {
+    return props.groupPosition
+        ? `${props.groupPosition}.${index + 1}`
+        : String(index + 1);
+}
 
 function updateOperator(value: SearchOperator) {
     emit("update:group", { ...props.group, operator: value });
@@ -100,6 +123,7 @@ function isGroup(item: SearchCondition | SearchGroup): item is SearchGroup {
                 option-label="label"
                 option-value="value"
                 :allow-empty="false"
+                :aria-label="operatorLabel"
                 class="operator-toggle"
                 @update:model-value="updateOperator"
             />
@@ -126,7 +150,7 @@ function isGroup(item: SearchCondition | SearchGroup): item is SearchGroup {
                     size="small"
                     text
                     rounded
-                    :aria-label="$gettext('Remove group')"
+                    :aria-label="removeGroupLabel"
                     @click="$emit('remove')"
                 />
             </div>
@@ -154,6 +178,7 @@ function isGroup(item: SearchCondition | SearchGroup): item is SearchGroup {
                     :options="options"
                     :concept-sets="conceptSets"
                     :depth="(depth ?? 0) + 1"
+                    :group-position="getChildPosition(index)"
                     @update:group="updateChild(index, $event)"
                     @remove="removeChild(index)"
                 />
@@ -163,6 +188,7 @@ function isGroup(item: SearchCondition | SearchGroup): item is SearchGroup {
                     :condition="child"
                     :options="options"
                     :concept-sets="conceptSets"
+                    :condition-position="getChildPosition(index)"
                     @update:condition="updateChild(index, $event)"
                     @remove="removeChild(index)"
                 />

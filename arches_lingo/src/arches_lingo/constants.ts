@@ -39,6 +39,8 @@ export const DEFAULT_ERROR_TOAST_LIFE = 8000;
 export const SEARCH_RESULTS_PER_PAGE = 25;
 export const SEARCH_RESULT_ITEM_SIZE = 50;
 
+export const MAIN_CONTENT_ID = "main-content";
+
 export const FALLBACK_LANGUAGE: Language = {
     code: "en",
     default_direction: "ltr",

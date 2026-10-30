@@ -49,6 +49,7 @@ import { routeNames } from "@/arches_lingo/routes.ts";
 import { navigateToSchemeOrConcept } from "@/arches_lingo/utils.ts";
 
 import { useEditLog } from "@/arches_lingo/composables/useEditLog.ts";
+import { setPageTitleDetail } from "@/arches_lingo/composables/usePageTitle.ts";
 import { useResourceStore } from "@/arches_lingo/composables/useResourceStore.ts";
 import { useConceptStore } from "@/arches_lingo/stores/useConceptStore.ts";
 import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
@@ -98,6 +99,8 @@ const resourceStore = useResourceStore();
 const conceptStore = useConceptStore();
 
 const { openEditLog } = useEditLog(() => props.graphSlug);
+
+watch(() => props.label?.value, setPageTitleDetail, { immediate: true });
 
 const lifecycleButtonsRef = ref<InstanceType<typeof LifecycleButtons> | null>(
     null,
@@ -427,8 +430,11 @@ function onMergeCancelled() {
     <div class="concept-header-toolbar">
         <div class="concept-details">
             <div class="concept-header-title">
-                <div class="concept-name">
-                    <i :class="conceptIcon"></i>
+                <h1 class="concept-name">
+                    <i
+                        :class="conceptIcon"
+                        aria-hidden="true"
+                    ></i>
                     <span>
                         {{ label?.value }}
                         <span
@@ -438,7 +444,7 @@ function onMergeCancelled() {
                             ({{ label?.language_id }})
                         </span>
                     </span>
-                </div>
+                </h1>
             </div>
             <div class="card flex justify-center">
                 <Tag
@@ -476,7 +482,12 @@ function onMergeCancelled() {
                 class="add-button"
                 @click="openEditLog"
             >
-                <span><i class="pi pi-history"></i></span>
+                <span
+                    ><i
+                        class="pi pi-history"
+                        aria-hidden="true"
+                    ></i
+                ></span>
                 <span>{{ $gettext("History") }}</span>
             </Button>
             <Button
@@ -485,7 +496,12 @@ function onMergeCancelled() {
                 class="add-button"
                 @click="openExportDialog"
             >
-                <span><i class="pi pi-cloud-download"></i></span>
+                <span
+                    ><i
+                        class="pi pi-cloud-download"
+                        aria-hidden="true"
+                    ></i
+                ></span>
                 <span>{{ $gettext("Export") }}</span>
             </Button>
             <Button
@@ -561,6 +577,9 @@ function onMergeCancelled() {
     align-items: center;
     gap: 0.25rem;
     min-width: 0;
+    margin: 0;
+    font-size: inherit;
+    font-weight: inherit;
 }
 
 .concept-name > span {

@@ -46,7 +46,7 @@ function dismissAllNotifications() {
     <Drawer
         v-model:visible="shouldShowNotificationsPanel"
         position="right"
-        style="min-width: 32rem"
+        style="min-width: min(32rem, 100%)"
         :header="$gettext('Notifications')"
         :pt="{
             content: {

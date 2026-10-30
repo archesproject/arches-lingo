@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, useId, useTemplateRef } from "vue";
 import { storeToRefs } from "pinia";
 import { useGettext } from "vue3-gettext";
 import { useRoute, useRouter } from "vue-router";
@@ -44,7 +44,19 @@ const currentConceptIsAlreadyMember = computed(
         ),
 );
 
+const memberListHeader = useTemplateRef<HTMLElement>("memberListHeader");
 const selectedConceptIds = ref<Set<string>>(new Set());
+const memberLabelIdPrefix = useId();
+
+function getMemberLabelId(conceptId: string) {
+    return `${memberLabelIdPrefix}-${conceptId}`;
+}
+
+function focusBackButton() {
+    memberListHeader.value?.querySelector<HTMLElement>("button")?.focus();
+}
+
+defineExpose({ focusBackButton });
 
 function toggleSelectConcept(conceptId: string) {
     const updatedSet = new Set(selectedConceptIds.value);
@@ -68,7 +80,10 @@ function handleRemoveSelected() {
 
 <template>
     <div class="concept-set-member-list">
-        <div class="member-list-header">
+        <div
+            ref="memberListHeader"
+            class="member-list-header"
+        >
             <Button
                 icon="pi pi-arrow-left"
                 text
@@ -139,6 +154,7 @@ function handleRemoveSelected() {
                 <Checkbox
                     :model-value="selectedConceptIds.has(member.id)"
                     binary
+                    :aria-labelledby="getMemberLabelId(member.id)"
                     @update:model-value="toggleSelectConcept(member.id)"
                 />
                 <Button
@@ -159,13 +175,16 @@ function handleRemoveSelected() {
                             },
                         },
                     }"
+                    :aria-current="
+                        member.id === currentConceptId ? 'page' : undefined
+                    "
                     @click="navigateToConcept(member.id)"
                 >
                     <i
                         :class="[getConceptIcon(member), 'concept-icon']"
                         aria-hidden="true"
                     />
-                    <span>{{
+                    <span :id="getMemberLabelId(member.id)">{{
                         getItemLabel(
                             member,
                             selectedLanguage.code,

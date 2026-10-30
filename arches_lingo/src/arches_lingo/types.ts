@@ -415,6 +415,11 @@ export interface SideNavMenuItem extends MenuItem {
     showIconIfCollapsed?: boolean;
 }
 
+// Stored as `meta.title` on each route. It takes $gettext so the title is
+// extracted for translation and follows UI language changes.
+export type TranslateFunction = (msgid: string) => string;
+export type RouteTitle = ($gettext: TranslateFunction) => string;
+
 export interface SearchResultItem {
     id: string;
     labels: Label[];

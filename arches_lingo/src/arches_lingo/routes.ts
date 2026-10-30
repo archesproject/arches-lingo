@@ -1,4 +1,5 @@
 import type { RouteLocationNormalized } from "vue-router";
+import type { TranslateFunction } from "@/arches_lingo/types.ts";
 
 import {
     resolveSchemeIdentifier,
@@ -11,6 +12,7 @@ export const routes = [
         name: "login",
         component: () => import("@/arches_lingo/pages/LoginPage.vue"),
         meta: {
+            title: ($gettext: TranslateFunction) => $gettext("Login"),
             shouldShowNavigation: false,
             requiresAuthentication: false,
             alwaysPublic: true,
@@ -31,6 +33,7 @@ export const routes = [
         name: "dashboard",
         component: () => import("@/arches_lingo/pages/HomePage.vue"),
         meta: {
+            title: ($gettext: TranslateFunction) => $gettext("Dashboard"),
             shouldShowNavigation: true,
             requiresAuthentication: false,
         },
@@ -40,6 +43,7 @@ export const routes = [
         name: "schemes",
         component: () => import("@/arches_lingo/pages/SchemeList.vue"),
         meta: {
+            title: ($gettext: TranslateFunction) => $gettext("Schemes"),
             shouldShowNavigation: true,
             requiresAuthentication: false,
         },
@@ -49,6 +53,7 @@ export const routes = [
         name: "advanced-search",
         component: () => import("@/arches_lingo/pages/AdvancedSearch.vue"),
         meta: {
+            title: ($gettext: TranslateFunction) => $gettext("Advanced Search"),
             shouldShowNavigation: true,
             requiresAuthentication: false,
         },
@@ -58,6 +63,7 @@ export const routes = [
         name: "concept-matches",
         component: () => import("@/arches_lingo/pages/ConceptMatchesPage.vue"),
         meta: {
+            title: ($gettext: TranslateFunction) => $gettext("Find Matches"),
             shouldShowNavigation: true,
             requiresAuthentication: true,
         },
@@ -67,6 +73,7 @@ export const routes = [
         name: "concept",
         component: () => import("@/arches_lingo/pages/ConceptPage.vue"),
         meta: {
+            title: ($gettext: TranslateFunction) => $gettext("Concept"),
             shouldShowNavigation: true,
             requiresAuthentication: false,
         },
@@ -76,6 +83,7 @@ export const routes = [
         name: "scheme",
         component: () => import("@/arches_lingo/pages/SchemePage.vue"),
         meta: {
+            title: ($gettext: TranslateFunction) => $gettext("Scheme"),
             shouldShowNavigation: true,
             requiresAuthentication: false,
         },
@@ -92,6 +100,7 @@ export const routes = [
             to.meta.resolvedResourceId = result.resourceinstanceid;
         },
         meta: {
+            title: ($gettext: TranslateFunction) => $gettext("Scheme"),
             shouldShowNavigation: true,
             requiresAuthentication: false,
         },
@@ -109,6 +118,7 @@ export const routes = [
             to.meta.resolvedResourceId = result.resourceinstanceid;
         },
         meta: {
+            title: ($gettext: TranslateFunction) => $gettext("Concept"),
             shouldShowNavigation: true,
             requiresAuthentication: false,
         },
@@ -118,6 +128,7 @@ export const routes = [
         name: "sources",
         component: () => import("@/arches_lingo/pages/SourcesPage.vue"),
         meta: {
+            title: ($gettext: TranslateFunction) => $gettext("Sources"),
             shouldShowNavigation: true,
             requiresAuthentication: false,
         },
@@ -127,6 +138,7 @@ export const routes = [
         name: "source",
         component: () => import("@/arches_lingo/pages/SourcesPage.vue"),
         meta: {
+            title: ($gettext: TranslateFunction) => $gettext("Sources"),
             shouldShowNavigation: true,
             requiresAuthentication: false,
         },
@@ -136,6 +148,7 @@ export const routes = [
         name: "contributors",
         component: () => import("@/arches_lingo/pages/ContributorsPage.vue"),
         meta: {
+            title: ($gettext: TranslateFunction) => $gettext("Contributors"),
             shouldShowNavigation: true,
             requiresAuthentication: false,
         },
@@ -145,6 +158,7 @@ export const routes = [
         name: "contributor",
         component: () => import("@/arches_lingo/pages/ContributorsPage.vue"),
         meta: {
+            title: ($gettext: TranslateFunction) => $gettext("Contributors"),
             shouldShowNavigation: true,
             requiresAuthentication: false,
         },
@@ -154,6 +168,7 @@ export const routes = [
         name: "profile",
         component: () => import("@/arches_lingo/pages/UserProfilePage.vue"),
         meta: {
+            title: ($gettext: TranslateFunction) => $gettext("My Profile"),
             shouldShowNavigation: true,
             requiresAuthentication: true,
         },

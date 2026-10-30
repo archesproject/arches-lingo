@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import { useRouter } from "vue-router";
+import { RouterLink, useRouter } from "vue-router";
 import { useGettext } from "vue3-gettext";
 
 import Button from "primevue/button";
@@ -60,10 +60,6 @@ const quickActions = [
         route: { name: routeNames.advancedSearch },
     },
 ];
-
-function navigateTo(route: { name: string }) {
-    router.push(route);
-}
 </script>
 
 <template>
@@ -306,20 +302,23 @@ function navigateTo(route: { name: string }) {
 
         <section class="landing-cards-section">
             <div class="action-cards">
-                <button
+                <RouterLink
                     v-for="action in quickActions"
                     :key="action.key"
                     class="action-card"
-                    @click="navigateTo(action.route)"
+                    :to="action.route"
                 >
                     <span class="action-card-icon-wrap">
-                        <i :class="[action.icon, 'action-card-icon']" />
+                        <i
+                            :class="[action.icon, 'action-card-icon']"
+                            aria-hidden="true"
+                        />
                     </span>
                     <span class="action-card-label">{{ action.label }}</span>
                     <span class="action-card-description">{{
                         action.description
                     }}</span>
-                </button>
+                </RouterLink>
             </div>
         </section>
     </div>
@@ -510,6 +509,8 @@ function navigateTo(route: { name: string }) {
     cursor: pointer;
     text-align: center;
     font-family: var(--p-lingo-font-family);
+    color: inherit;
+    text-decoration: none;
     box-shadow: 0 0.0625rem 0.25rem rgba(0, 0, 0, 0.06);
     transition:
         box-shadow 0.2s ease,

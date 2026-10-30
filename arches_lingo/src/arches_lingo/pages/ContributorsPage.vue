@@ -93,11 +93,22 @@ function onSave(savedTileData: {
                 v-if="isCreatingNew"
                 class="new-contributor-type-selector"
             >
-                <label class="widget-label type-selector-label">
-                    {{ $gettext("Contributor Type") }}
+                <label
+                    id="contributor-type-label"
+                    for="contributor-type-select"
+                    class="widget-label type-selector-label"
+                >
+                    <span>{{ $gettext("Contributor Type") }}</span>
+                    <i
+                        aria-hidden="true"
+                        class="pi pi-asterisk required-asterisk"
+                    />
                 </label>
                 <Select
                     v-model="newGraphSlug"
+                    label-id="contributor-type-select"
+                    aria-labelledby="contributor-type-label"
+                    :pt="{ label: { 'aria-required': 'true' } }"
                     :options="graphTypeOptions"
                     option-label="label"
                     :placeholder="$gettext('Select type')"
@@ -148,8 +159,14 @@ function onSave(savedTileData: {
 }
 
 .type-selector-label {
+    display: flex;
     font-size: var(--p-lingo-font-size-smallnormal);
     font-weight: 600;
+}
+
+.required-asterisk {
+    font-size: 0.75rem;
+    padding-top: 0.25rem;
 }
 
 .type-selector {

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, inject, onMounted, onUnmounted, ref } from "vue";
+import { computed, inject, onMounted, onUnmounted, ref, useId } from "vue";
 
 import { useConfirm } from "primevue/useconfirm";
 import { useGettext } from "vue3-gettext";
@@ -54,12 +54,17 @@ const canEditResourceInstances = computed(() => {
     );
 });
 
+const rowIdPrefix = useId();
 const expandedRows = ref([]);
 const isDeletePending = ref(false);
 const tableContainerRef = ref<HTMLElement | null>(null);
 const isScrolledToBottom = ref(true);
 
 let scrollableTableBody: HTMLElement | null = null;
+
+function getRowElementId(tileId: string, part: string): string {
+    return `${rowIdPrefix}-${tileId}-${part}`;
+}
 
 function updateScrollShadow() {
     if (!scrollableTableBody) return;
@@ -185,10 +190,12 @@ async function deleteSectionValue(tileId: string) {
                 :sortable="Boolean(props.metaStringText.sortFields?.name)"
             >
                 <template #body="slotProps">
-                    <slot
-                        name="name"
-                        :row-data="slotProps.data"
-                    ></slot>
+                    <div :id="getRowElementId(slotProps.data.tileid, 'name')">
+                        <slot
+                            name="name"
+                            :row-data="slotProps.data"
+                        ></slot>
+                    </div>
                 </template>
             </Column>
             <Column
@@ -222,14 +229,21 @@ async function deleteSectionValue(tileId: string) {
                 header-class="action-column"
                 header-style="width: 1%;"
             >
+                <template #header>
+                    <span class="p-hidden-accessible">{{
+                        $gettext("Actions")
+                    }}</span>
+                </template>
                 <template #body="slotProps">
                     <div class="button-container">
                         <Button
                             v-if="canEditResourceInstances"
+                            :id="getRowElementId(slotProps.data.tileid, 'edit')"
                             class="controls edit-button"
                             icon="pi pi-file-edit"
                             variant="text"
                             :aria-label="$gettext('edit')"
+                            :aria-labelledby="`${getRowElementId(slotProps.data.tileid, 'edit')} ${getRowElementId(slotProps.data.tileid, 'name')}`"
                             @click="
                                 openEditor!(
                                     componentName,
@@ -239,10 +253,14 @@ async function deleteSectionValue(tileId: string) {
                         />
                         <Button
                             v-if="canEditResourceInstances"
+                            :id="
+                                getRowElementId(slotProps.data.tileid, 'delete')
+                            "
                             class="controls delete-button"
                             icon="pi pi-trash"
                             variant="text"
                             :aria-label="$gettext('delete')"
+                            :aria-labelledby="`${getRowElementId(slotProps.data.tileid, 'delete')} ${getRowElementId(slotProps.data.tileid, 'name')}`"
                             @click="confirmDelete(slotProps.data.tileid)"
                         />
                     </div>
@@ -371,7 +389,7 @@ async function deleteSectionValue(tileId: string) {
     display: flex;
     flex-direction: column;
     gap: 1rem;
-    min-width: 24rem;
+    min-width: min(24rem, 100%);
     padding: 1.5rem;
 }
 

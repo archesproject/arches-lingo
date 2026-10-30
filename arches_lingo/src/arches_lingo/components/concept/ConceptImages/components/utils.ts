@@ -10,6 +10,7 @@ import {
 import { DIGITAL_OBJECT_GRAPH_SLUG } from "@/arches_lingo/components/concept/ConceptImages/components/constants.ts";
 import { type Ref, toRaw } from "vue";
 import type { FileListAliasedNodeData } from "@/arches_vue_components/datatypes/file-list/types.ts";
+import type { LanguageValue } from "@/arches_vue_components/datatypes/string/types.ts";
 import type { ResourceInstanceListAliasedNodeData } from "@/arches_vue_components/datatypes/resource-instance-list/types.ts";
 import type {
     ConceptInstance,
@@ -42,11 +43,54 @@ export function getDigitalObjectImageUrl(
     return fileReference?.url ? getFileUrl(fileReference.url) : undefined;
 }
 
+// Older versions of the image editor saved this placeholder instead of real
+// alt text. Treat it as absent so the image title is used instead.
+export const PLACEHOLDER_ALT_TEXT = "Replaceable alt text";
+
+type LocalizedValue = string | Record<string, LanguageValue> | null | undefined;
+
+// File metadata and string nodes are stored as {languageCode: {value,
+// direction}}; legacy data may still hold a plain string.
+function getLocalizedValue(
+    localizedValue: LocalizedValue,
+    languageCode: string,
+): string {
+    if (typeof localizedValue === "string") {
+        return localizedValue;
+    }
+    return localizedValue?.[languageCode]?.value ?? "";
+}
+
+export function getDigitalObjectImageTitle(
+    resource: DigitalObjectInstance,
+    languageCode: string,
+): string {
+    const nameContent = resource.aliased_data.name?.aliased_data.name_content;
+    return (
+        getLocalizedValue(
+            nameContent?.node_value as LocalizedValue,
+            languageCode,
+        ) ||
+        nameContent?.display_value ||
+        ""
+    );
+}
+
+// Never falls back to the file name: it rarely describes the image.
 export function getDigitalObjectImageAlt(
     resource: DigitalObjectInstance,
+    languageCode: string,
 ): string {
     const fileReference = getDigitalObjectFileReference(resource);
-    return fileReference?.altText || fileReference?.name || "";
+    const altText = getLocalizedValue(
+        fileReference?.altText as LocalizedValue,
+        languageCode,
+    ).trim();
+
+    if (altText && altText !== PLACEHOLDER_ALT_TEXT) {
+        return altText;
+    }
+    return getDigitalObjectImageTitle(resource, languageCode);
 }
 
 export async function createDigitalObject(

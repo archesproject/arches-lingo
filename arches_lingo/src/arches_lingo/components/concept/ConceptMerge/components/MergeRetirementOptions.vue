@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, useId } from "vue";
 
 import { useGettext } from "vue3-gettext";
 import Message from "primevue/message";
@@ -52,6 +52,7 @@ const children = ref<Concept[]>([]);
 const isSurvivorBeneathAbsorbed = ref(false);
 const isFetchingChildren = ref(true);
 const fetchError = ref<string | null>(null);
+const retirementQuestionId = useId();
 
 const hasChildren = computed(function () {
     return children.value.length > 0;
@@ -181,8 +182,15 @@ function isConceptOnAnyPath(
     <div
         v-else-if="hasChildren"
         class="retirement-options"
+        role="radiogroup"
+        :aria-labelledby="retirementQuestionId"
     >
-        <p class="retirement-text">{{ childrenText }}</p>
+        <p
+            :id="retirementQuestionId"
+            class="retirement-text"
+        >
+            {{ childrenText }}
+        </p>
 
         <Message
             v-if="isSurvivorBeneathAbsorbed"

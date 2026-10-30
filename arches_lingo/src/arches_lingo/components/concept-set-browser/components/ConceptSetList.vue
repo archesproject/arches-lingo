@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, useTemplateRef } from "vue";
 import { storeToRefs } from "pinia";
 import { useGettext } from "vue3-gettext";
 
@@ -25,6 +25,7 @@ const emit = defineEmits<{
     (event: "delete-set", setItem: ConceptSetItem): void;
 }>();
 
+const setListRoot = useTemplateRef<HTMLElement>("setListRoot");
 const showCreateDialog = ref(false);
 const newSetName = ref("");
 const newSetDescription = ref("");
@@ -37,6 +38,18 @@ function formatSetMetadata(setItem: ConceptSetItem): string {
         ),
     });
 }
+
+function focusSet(setId: ConceptSetItem["id"]) {
+    setListRoot.value
+        ?.querySelector<HTMLElement>(`[data-set-id="${setId}"]`)
+        ?.focus();
+}
+
+function focusNewSetButton() {
+    setListRoot.value?.querySelector<HTMLElement>(".new-set-button")?.focus();
+}
+
+defineExpose({ focusSet, focusNewSetButton });
 
 function submitCreateSet() {
     const name = newSetName.value.trim();
@@ -55,9 +68,13 @@ function cancelCreateDialog() {
 </script>
 
 <template>
-    <div class="concept-set-list">
+    <div
+        ref="setListRoot"
+        class="concept-set-list"
+    >
         <div class="list-actions">
             <Button
+                class="new-set-button"
                 :label="$gettext('New Set')"
                 icon="pi pi-folder"
                 size="small"
@@ -82,10 +99,10 @@ function cancelCreateDialog() {
                 class="set-item"
             >
                 <Button
-                    v-tooltip="setItem.description || undefined"
                     text
                     plain
                     class="set-info"
+                    :data-set-id="setItem.id"
                     :pt="{
                         root: {
                             style: {
@@ -106,6 +123,12 @@ function cancelCreateDialog() {
                         />
                         <span>{{ setItem.name }}</span>
                     </div>
+                    <div
+                        v-if="setItem.description"
+                        class="set-description"
+                    >
+                        {{ setItem.description }}
+                    </div>
                     <div class="set-meta">
                         <span>{{ formatSetMetadata(setItem) }}</span>
                     </div>
@@ -116,7 +139,13 @@ function cancelCreateDialog() {
                     text
                     rounded
                     size="small"
-                    :aria-label="$gettext('Delete set')"
+                    :aria-label="
+                        $gettext(
+                            'Delete set %{name}',
+                            { name: setItem.name },
+                            true,
+                        )
+                    "
                     @click="emit('delete-set', setItem)"
                 />
             </li>
@@ -126,7 +155,7 @@ function cancelCreateDialog() {
             v-model:visible="showCreateDialog"
             :header="$gettext('New Concept Set')"
             modal
-            :style="{ width: '25rem' }"
+            :style="{ width: 'min(25rem, 100%)' }"
         >
             <div class="dialog-content">
                 <label for="new-set-name">{{ $gettext("Name") }}</label>
@@ -231,6 +260,12 @@ function cancelCreateDialog() {
     text-overflow: ellipsis;
     white-space: nowrap;
     max-width: 100%;
+}
+
+.set-description {
+    font-size: var(--p-lingo-font-size-xsmall);
+    text-align: start;
+    overflow-wrap: anywhere;
 }
 
 .set-meta {

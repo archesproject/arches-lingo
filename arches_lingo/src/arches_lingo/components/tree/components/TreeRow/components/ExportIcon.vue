@@ -11,6 +11,7 @@ import type { TreeNode } from "primevue/treenode";
 const { node, exportLabel } = defineProps<{
     node: TreeNode;
     exportLabel: string;
+    actionTabIndex: number;
 }>();
 
 const showExportDialog = ref(false);
@@ -40,19 +41,19 @@ function openExportDialog() {
         }"
         :disabled="node.data.id === NEW"
         icon="pi pi-download"
-        role="button"
         size="small"
         style="
             color: var(--p-tree-node-selected-color);
             width: 1rem;
             height: 1rem;
         "
-        tabindex="1"
+        :tabindex="actionTabIndex"
         variant="text"
         :aria-label="exportLabel"
         :rounded="true"
         @click.stop="openExportDialog"
-        @keyup.enter.stop="openExportDialog"
+        @keydown.enter.stop
+        @keydown.space.stop
     />
     <ExportThesauri
         v-if="showExportDialog"

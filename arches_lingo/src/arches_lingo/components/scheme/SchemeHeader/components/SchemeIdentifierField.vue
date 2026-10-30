@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, useId } from "vue";
 import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
 
@@ -15,6 +15,8 @@ const props = defineProps<{
     resourceIdentifierId: number | undefined;
     canEditResourceInstances: boolean;
 }>();
+
+const identifierLabelId = useId();
 
 const emit = defineEmits<{
     (
@@ -81,13 +83,17 @@ async function saveIdentifier() {
 
 <template>
     <div class="header-item identifier-item">
-        <span class="header-item-label">
+        <span
+            :id="identifierLabelId"
+            class="header-item-label"
+        >
             {{ $gettext("Identifier:") }}
         </span>
 
         <template v-if="isEditingIdentifier">
             <InputText
                 v-model="identifierDraft"
+                :aria-labelledby="identifierLabelId"
                 size="small"
             />
             <Button
