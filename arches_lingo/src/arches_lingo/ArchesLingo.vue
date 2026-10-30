@@ -264,6 +264,7 @@ function focusMainContent() {
 
 <style>
 @import url("arches/arches/app/media/fonts/openSans.css");
+@import url("./themes/high_contrast.css");
 
 :root {
     --p-font-family: var(--p-lingo-font-family);

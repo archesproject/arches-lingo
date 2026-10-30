@@ -6,9 +6,12 @@ import { createRouter, createWebHistory } from 'vue-router';
 import ArchesLingo from '@/arches_lingo/ArchesLingo.vue';
 import { routes } from '@/arches_lingo/routes.ts';
 import { LingoTheme } from '@/arches_lingo/themes/lingo_theme.ts';
+import { applyHighContrast, isHighContrastPreferred } from '@/arches_lingo/themes/high_contrast.ts';
 import { useUserStore } from '@/arches_lingo/stores/useUserStore.ts';
 import { useAppSettingsStore } from '@/arches_lingo/stores/useAppSettingsStore.ts';
 import { routeNames } from '@/arches_lingo/routes.ts';
+
+applyHighContrast(isHighContrastPreferred());
 
 const pinia = createPinia();
 

@@ -1,12 +1,19 @@
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { ref, useId, watch } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import SelectButton from "primevue/selectbutton";
 
 import { Theme } from "@primeuix/styled";
 
+import {
+    HIGH_CONTRAST_CLASS,
+    setHighContrast,
+} from "@/arches_lingo/themes/high_contrast.ts";
+
 const { $gettext } = useGettext();
+
+const contrastLabelId = useId();
 
 const darkModeClass = Theme.options.darkModeSelector.substring(1);
 const isDarkModeEnabled = ref(
@@ -33,6 +40,16 @@ const options = ref([
         value: true,
         disabled: false,
     },
+]);
+
+const isHighContrastEnabled = ref(
+    document.documentElement.classList.contains(HIGH_CONTRAST_CLASS),
+);
+watch(isHighContrastEnabled, setHighContrast);
+
+const contrastOptions = ref([
+    { label: $gettext("Off"), value: false },
+    { label: $gettext("On"), value: true },
 ]);
 
 function setTheme(value: boolean) {
@@ -65,6 +82,32 @@ function setTheme(value: boolean) {
                 <span>{{ slotProps.option.label }}</span>
             </template>
         </SelectButton>
+
+        <div
+            :id="contrastLabelId"
+            class="section-title contrast-title"
+        >
+            {{ $gettext("Increase Contrast") }}
+        </div>
+
+        <SelectButton
+            v-model="isHighContrastEnabled"
+            data-key="value"
+            option-label="label"
+            option-value="value"
+            :allow-empty="false"
+            :aria-labelledby="contrastLabelId"
+            :options="contrastOptions"
+        >
+            <template #option="slotProps">
+                <i
+                    v-if="slotProps.option.value === isHighContrastEnabled"
+                    class="pi pi-check"
+                    aria-hidden="true"
+                ></i>
+                <span>{{ slotProps.option.label }}</span>
+            </template>
+        </SelectButton>
     </div>
 </template>
 
@@ -73,6 +116,10 @@ function setTheme(value: boolean) {
     color: var(--p-text-muted-color);
     margin-bottom: 0.5rem;
     font-weight: 300;
+}
+
+.contrast-title {
+    margin-top: 1rem;
 }
 
 .p-selectbutton {

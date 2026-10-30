@@ -1,0 +1,227 @@
+:root.arches-high-contrast {
+    --p-primary-color: var(--p-primary-700);
+    --p-primary-hover-color: var(--p-primary-800);
+    --p-primary-active-color: var(--p-primary-900);
+
+    --p-text-muted-color: var(--p-surface-600);
+    --p-text-hover-muted-color: var(--p-surface-700);
+    --p-list-option-icon-color: var(--p-surface-600);
+
+    --p-form-field-border-color: var(--p-surface-500);
+    --p-form-field-hover-border-color: var(--p-surface-600);
+
+    --p-togglebutton-color: var(--p-surface-700);
+    --p-togglebutton-icon-color: var(--p-surface-700);
+    --p-togglebutton-hover-color: var(--p-surface-900);
+    --p-togglebutton-icon-hover-color: var(--p-surface-900);
+    --p-togglebutton-border-color: var(--p-surface-500);
+    --p-togglebutton-checked-border-color: var(--p-primary-700);
+    --p-togglebutton-content-checked-background: var(--p-primary-700);
+    --p-togglebutton-checked-color: var(--p-surface-0);
+    --p-togglebutton-icon-checked-color: var(--p-surface-0);
+
+    --p-button-success-background: var(--p-green-800);
+    --p-button-success-border-color: var(--p-green-800);
+    --p-button-success-hover-background: var(--p-green-900);
+    --p-button-success-hover-border-color: var(--p-green-900);
+    --p-button-success-active-background: var(--p-green-950);
+    --p-button-success-active-border-color: var(--p-green-950);
+    --p-button-danger-background: var(--p-red-700);
+    --p-button-danger-border-color: var(--p-red-700);
+    --p-button-danger-hover-background: var(--p-red-800);
+    --p-button-danger-hover-border-color: var(--p-red-800);
+    --p-button-danger-active-background: var(--p-red-900);
+    --p-button-danger-active-border-color: var(--p-red-900);
+    --p-button-warn-background: var(--p-orange-800);
+    --p-button-warn-border-color: var(--p-orange-800);
+    --p-button-warn-hover-background: var(--p-orange-900);
+    --p-button-warn-hover-border-color: var(--p-orange-900);
+    --p-button-warn-active-background: var(--p-orange-950);
+    --p-button-warn-active-border-color: var(--p-orange-950);
+    --p-button-text-warn-color: var(--p-orange-800);
+    --p-button-outlined-warn-color: var(--p-orange-800);
+    --p-button-outlined-warn-border-color: var(--p-orange-800);
+    --p-button-text-danger-color: var(--p-red-700);
+    --p-button-text-success-color: var(--p-green-800);
+    --p-button-text-secondary-color: var(--p-surface-600);
+    --p-button-outlined-danger-color: var(--p-red-700);
+    --p-button-outlined-danger-border-color: var(--p-red-700);
+    --p-button-outlined-success-color: var(--p-green-800);
+    --p-button-outlined-success-border-color: var(--p-green-800);
+    --p-button-outlined-secondary-color: var(--p-surface-600);
+    --p-button-outlined-secondary-border-color: var(--p-surface-500);
+    --p-button-outlined-primary-border-color: var(--p-primary-700);
+    --p-button-outlined-primary-color: var(--p-primary-800);
+    --p-button-text-primary-color: var(--p-primary-800);
+    --p-button-link-color: var(--p-primary-800);
+    --p-button-link-hover-color: var(--p-primary-900);
+    --p-button-link-active-color: var(--p-primary-900);
+
+    --p-tag-secondary-color: var(--p-surface-800);
+    --p-tag-info-color: var(--p-sky-900);
+    --p-tag-success-color: var(--p-green-900);
+    --p-tag-warn-color: var(--p-orange-900);
+    --p-tag-danger-color: var(--p-red-900);
+    --p-tag-primary-color: var(--p-primary-900);
+
+    --p-content-border-color: var(--p-surface-500);
+    --p-lingo-divider-color: var(--p-surface-500);
+    --p-header-border: var(--p-surface-500);
+    --p-header-toolbar-border: var(--p-surface-500);
+    --p-header-button-border: var(--p-primary-700);
+    --p-sort-and-filter-controls-border: var(--p-surface-500);
+    --p-search-result-border-bottom: var(--p-surface-500);
+    --p-search-result-is-even-background: var(--p-surface-200);
+    --p-datatable-border-color: var(--p-content-border-color);
+    --p-datatable-header-border-color: var(--p-content-border-color);
+    --p-datatable-header-cell-border-color: var(--p-content-border-color);
+    --p-datatable-body-cell-border-color: var(--p-content-border-color);
+    --p-datatable-footer-border-color: var(--p-content-border-color);
+    --p-datatable-footer-cell-border-color: var(--p-content-border-color);
+    --p-datatable-paginator-top-border-color: var(--p-content-border-color);
+    --p-datatable-paginator-bottom-border-color: var(--p-content-border-color);
+    --p-datatable-row-striped-background: var(--p-surface-200);
+    --p-splitter-gutter-background: var(--p-surface-500);
+    --p-splitter-handle-background: var(--p-surface-900);
+    --p-splitter-handle-size: 3rem;
+
+    --p-tabs-active-bar-height: 0.25rem;
+    --p-tabs-tab-active-background: var(--p-content-background);
+
+    --p-profile-card-shadow: 0 0 0 0.0625rem var(--p-content-border-color),
+        0 0.25rem 0.75rem rgba(0, 0, 0, 0.3);
+    --p-lingo-query-builder-group-outline-color: var(--p-primary-700);
+    --p-lingo-query-builder-rule-color: var(--p-surface-500);
+
+    --p-lingo-navigation-bar-hover-background: var(--p-primary-700);
+
+    --p-header-item-label: var(--p-surface-600);
+    --p-search-result-color: var(--p-sky-800);
+    --p-search-result-hierarchy-color: var(--p-zinc-600);
+
+    --p-lingo-accent-color: var(--p-primary-800);
+    --p-lingo-accent-strong-color: var(--p-primary-900);
+    --p-lingo-accent-stronger-color: var(--p-primary-950);
+    --p-lingo-accent-soft-color: var(--p-primary-700);
+    --p-lingo-accent-badge-color: var(--p-primary-800);
+    --p-lingo-accent-badge-soft-color: var(--p-primary-800);
+    --p-lingo-muted-color: var(--p-neutral-600);
+    --p-lingo-muted-strong-color: var(--p-neutral-600);
+    --p-lingo-muted-stronger-color: var(--p-neutral-700);
+    --p-lingo-selection-indicator-color: var(--p-primary-700);
+    --p-lingo-form-subtitle-color: var(--p-surface-600);
+    --p-lingo-language-chip-background: var(--p-surface-200);
+    --p-lingo-dimmed-already-present-opacity: 1;
+    --p-lingo-dimmed-unavailable-opacity: 1;
+}
+
+:root.arches-high-contrast.arches-dark {
+    --p-primary-color: var(--p-primary-300);
+    --p-primary-hover-color: var(--p-primary-200);
+    --p-primary-active-color: var(--p-primary-100);
+
+    --p-text-muted-color: var(--p-surface-300);
+    --p-text-hover-muted-color: var(--p-surface-200);
+    --p-list-option-icon-color: var(--p-surface-300);
+
+    --p-form-field-border-color: var(--p-surface-400);
+    --p-form-field-hover-border-color: var(--p-surface-300);
+
+    --p-togglebutton-color: var(--p-surface-300);
+    --p-togglebutton-icon-color: var(--p-surface-300);
+    --p-togglebutton-hover-color: var(--p-surface-0);
+    --p-togglebutton-icon-hover-color: var(--p-surface-0);
+    --p-togglebutton-border-color: var(--p-surface-400);
+    --p-togglebutton-checked-border-color: var(--p-primary-300);
+    --p-togglebutton-content-checked-background: var(--p-primary-300);
+    --p-togglebutton-checked-color: var(--p-surface-950);
+    --p-togglebutton-icon-checked-color: var(--p-surface-950);
+
+    --p-button-success-background: var(--p-green-300);
+    --p-button-success-border-color: var(--p-green-300);
+    --p-button-success-hover-background: var(--p-green-200);
+    --p-button-success-hover-border-color: var(--p-green-200);
+    --p-button-success-active-background: var(--p-green-100);
+    --p-button-success-active-border-color: var(--p-green-100);
+    --p-button-danger-background: var(--p-red-300);
+    --p-button-danger-border-color: var(--p-red-300);
+    --p-button-danger-hover-background: var(--p-red-200);
+    --p-button-danger-hover-border-color: var(--p-red-200);
+    --p-button-danger-active-background: var(--p-red-100);
+    --p-button-danger-active-border-color: var(--p-red-100);
+    --p-button-warn-background: var(--p-orange-300);
+    --p-button-warn-border-color: var(--p-orange-300);
+    --p-button-warn-hover-background: var(--p-orange-200);
+    --p-button-warn-hover-border-color: var(--p-orange-200);
+    --p-button-warn-active-background: var(--p-orange-100);
+    --p-button-warn-active-border-color: var(--p-orange-100);
+    --p-button-text-warn-color: var(--p-orange-300);
+    --p-button-outlined-warn-color: var(--p-orange-300);
+    --p-button-outlined-warn-border-color: var(--p-orange-300);
+    --p-button-text-danger-color: var(--p-red-200);
+    --p-button-text-success-color: var(--p-green-300);
+    --p-button-text-secondary-color: var(--p-surface-300);
+    --p-button-outlined-danger-color: var(--p-red-200);
+    --p-button-outlined-danger-border-color: var(--p-red-300);
+    --p-button-outlined-success-color: var(--p-green-300);
+    --p-button-outlined-success-border-color: var(--p-green-300);
+    --p-button-outlined-secondary-color: var(--p-surface-300);
+    --p-button-outlined-secondary-border-color: var(--p-surface-400);
+    --p-button-outlined-primary-border-color: var(--p-primary-300);
+    --p-button-outlined-primary-color: var(--p-primary-color);
+    --p-button-text-primary-color: var(--p-primary-color);
+    --p-button-link-color: var(--p-primary-color);
+    --p-button-link-hover-color: var(--p-primary-color);
+    --p-button-link-active-color: var(--p-primary-color);
+
+    --p-tag-secondary-color: var(--p-surface-100);
+    --p-tag-info-color: var(--p-sky-200);
+    --p-tag-success-color: var(--p-green-200);
+    --p-tag-warn-color: var(--p-orange-200);
+    --p-tag-danger-color: var(--p-red-200);
+    --p-tag-primary-color: var(--p-primary-200);
+
+    --p-header-button-border: var(--p-primary-300);
+    --p-search-result-is-even-background: var(--p-surface-700);
+    --p-datatable-row-striped-background: var(--p-surface-700);
+    --p-splitter-handle-background: var(--p-surface-0);
+    --p-lingo-query-builder-group-outline-color: var(--p-primary-300);
+    --p-lingo-query-builder-rule-color: var(--p-surface-400);
+
+    --p-help-panel-intro-color: var(--p-lingo-muted-strong-color);
+    --p-help-panel-section-title-color: var(--p-lingo-muted-stronger-color);
+
+    --p-header-item-label: var(--p-surface-300);
+    --p-search-result-color: var(--p-sky-300);
+    --p-search-result-hierarchy-color: var(--p-zinc-300);
+
+    --p-lingo-accent-color: var(--p-primary-300);
+    --p-lingo-accent-strong-color: var(--p-primary-200);
+    --p-lingo-accent-stronger-color: var(--p-primary-100);
+    --p-lingo-accent-soft-color: var(--p-primary-300);
+    --p-lingo-accent-hover-background: var(--p-primary-900);
+    --p-lingo-muted-color: var(--p-neutral-300);
+    --p-lingo-muted-strong-color: var(--p-neutral-300);
+    --p-lingo-muted-stronger-color: var(--p-neutral-200);
+    --p-lingo-selection-indicator-color: var(--p-primary-300);
+    --p-lingo-form-subtitle-color: var(--p-surface-300);
+    --p-lingo-language-chip-background: var(--p-surface-700);
+}
+
+:root.arches-high-contrast .p-tag {
+    box-shadow: inset 0 0 0 0.0625rem currentColor;
+}
+
+:root.arches-high-contrast
+    .p-splitter-horizontal
+    > .p-splitter-gutter
+    > .p-splitter-gutter-handle {
+    width: 0.75rem;
+}
+
+:root.arches-high-contrast
+    .p-splitter-vertical
+    > .p-splitter-gutter
+    > .p-splitter-gutter-handle {
+    height: 0.75rem;
+}
