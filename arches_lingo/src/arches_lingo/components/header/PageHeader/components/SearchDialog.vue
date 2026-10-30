@@ -67,7 +67,7 @@ const toggleModal = () => {
 }
 
 .basic-search-button:hover {
-    background: var(--p-button-primary-hover-background) !important;
+    background: var(--p-lingo-navigation-bar-hover-background) !important;
 }
 
 .basic-search-dialog {

@@ -344,7 +344,7 @@ function onPageChange(event: { page: number }) {
     align-items: center;
     justify-content: space-between;
     padding: 0.5rem 0;
-    border-bottom: 0.0625rem solid var(--p-highlight-focus-background);
+    border-bottom: 0.0625rem solid var(--p-lingo-divider-color);
     flex-shrink: 0;
 }
 
@@ -390,7 +390,7 @@ function onPageChange(event: { page: number }) {
     margin: 0;
     padding: 0;
     list-style: none;
-    border: 0.0625rem solid var(--p-highlight-focus-background);
+    border: 0.0625rem solid var(--p-lingo-divider-color);
     border-radius: 0.125rem;
 }
 
@@ -399,7 +399,7 @@ function onPageChange(event: { page: number }) {
 }
 
 .result-item {
-    border-bottom: 0.0625rem solid var(--p-highlight-focus-background);
+    border-bottom: 0.0625rem solid var(--p-lingo-divider-color);
 }
 
 .result-item:focus-visible {
@@ -443,7 +443,7 @@ function onPageChange(event: { page: number }) {
 
 .result-uri {
     font-size: var(--p-lingo-font-size-xsmall);
-    color: var(--p-primary-500);
+    color: var(--p-lingo-accent-color);
     overflow-wrap: break-word;
     word-break: break-all;
     margin-top: 0.125rem;
@@ -474,7 +474,7 @@ function onPageChange(event: { page: number }) {
 
 .detail-label {
     font-weight: var(--p-lingo-font-weight-normal);
-    color: var(--p-neutral-500);
+    color: var(--p-lingo-muted-strong-color);
     flex-shrink: 0;
 }
 
@@ -493,7 +493,7 @@ function onPageChange(event: { page: number }) {
 
 .note-type {
     font-style: italic;
-    color: var(--p-primary-500);
+    color: var(--p-lingo-accent-color);
 }
 
 .note-language {

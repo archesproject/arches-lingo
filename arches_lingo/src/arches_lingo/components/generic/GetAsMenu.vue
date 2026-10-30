@@ -134,7 +134,7 @@ function showDownloadError(detail: string) {
 .get-as-button {
     flex-shrink: 0;
     font-size: var(--p-lingo-font-size-small);
-    color: var(--p-primary-500);
+    color: var(--p-lingo-accent-color);
 }
 
 .get-as-popover {

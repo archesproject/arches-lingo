@@ -129,7 +129,7 @@ const buttonIcon = computed(() => {
 :deep(.widget-label) {
     font-size: var(--p-lingo-font-size-smallnormal);
     font-weight: var(--p-lingo-font-weight-normal);
-    color: var(--p-neutral-400);
+    color: var(--p-lingo-muted-color);
     margin-bottom: 0.125rem;
 }
 

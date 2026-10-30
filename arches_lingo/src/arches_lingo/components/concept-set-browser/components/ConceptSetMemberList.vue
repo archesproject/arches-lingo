@@ -220,7 +220,7 @@ function handleRemoveSelected() {
     gap: 0.5rem;
     padding: 0.25rem 0.5rem;
     background: var(--p-header-toolbar-background);
-    border-bottom: 0.0625rem solid var(--p-menubar-border-color);
+    border-bottom: 0.0625rem solid var(--p-content-border-color);
     flex-shrink: 0;
 }
 
@@ -239,7 +239,7 @@ function handleRemoveSelected() {
     padding: 0.5rem;
     font-size: var(--p-lingo-font-size-small);
     color: var(--p-text-muted-color);
-    border-bottom: 0.0625rem solid var(--p-highlight-focus-background);
+    border-bottom: 0.0625rem solid var(--p-lingo-divider-color);
     flex-shrink: 0;
 }
 
@@ -249,7 +249,7 @@ function handleRemoveSelected() {
     justify-content: flex-end;
     gap: 0.375rem;
     padding: 0.5rem;
-    border-bottom: 0.0625rem solid var(--p-highlight-focus-background);
+    border-bottom: 0.0625rem solid var(--p-lingo-divider-color);
     flex-shrink: 0;
 }
 

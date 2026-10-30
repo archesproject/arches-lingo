@@ -175,7 +175,7 @@ async function onMobileNavAfterHide() {
 
 <style scoped>
 .explore-button {
-    background: var(--p-menubar-background) !important;
+    background: var(--p-lingo-navigation-bar-background) !important;
     border: none !important;
     color: inherit !important;
     padding: var(--p-button-padding-y) var(--p-button-padding-x);
@@ -192,12 +192,12 @@ async function onMobileNavAfterHide() {
 }
 
 .explore-button:not(.p-togglebutton-checked):hover {
-    background: var(--p-button-primary-hover-background) !important;
+    background: var(--p-lingo-navigation-bar-hover-background) !important;
 }
 
 .explore-button.p-togglebutton-checked,
 .explore-button.p-togglebutton-checked * {
-    background: var(--p-button-primary-hover-background) !important;
+    background: var(--p-lingo-navigation-bar-hover-background) !important;
 }
 
 .p-menubar {
@@ -223,7 +223,7 @@ async function onMobileNavAfterHide() {
 .overlay-panel-button,
 .mobile-nav-button {
     display: none;
-    color: var(--p-menubar-color) !important;
+    color: var(--p-lingo-navigation-bar-color) !important;
 }
 
 .overlay-panel-items {
@@ -269,7 +269,7 @@ async function onMobileNavAfterHide() {
 <style>
 .mobile-nav-drawer {
     background: var(--p-surface-950) !important;
-    color: var(--p-menubar-color) !important;
+    color: var(--p-lingo-navigation-bar-color) !important;
 }
 
 .mobile-nav-drawer .p-drawer-content {
