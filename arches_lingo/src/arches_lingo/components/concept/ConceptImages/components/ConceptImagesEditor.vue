@@ -24,6 +24,8 @@ import {
 } from "@/arches_lingo/components/concept/ConceptImages/components/utils.ts";
 
 import { useConceptImagesEditorStore } from "@/arches_lingo/stores/useConceptImagesEditorStore.ts";
+import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
+import { setLocalizedValue } from "@/arches_vue_components/datatypes/file-list/utils.ts";
 import { storeToRefs } from "pinia";
 
 import {
@@ -34,8 +36,11 @@ import {
 
 import type { Component, Ref } from "vue";
 import type { FormSubmitEvent } from "@openvue/forms";
+import type { Language } from "@/arches_vue_components/types.ts";
+import type { NonLocalizedTextAliasedNodeData } from "@/arches_vue_components/datatypes/non-localized-text/types.ts";
 import type {
     FileListAliasedNodeData,
+    FileMetadataField,
     FileReference,
 } from "@/arches_vue_components/datatypes/file-list/types.ts";
 
@@ -49,6 +54,11 @@ type PossiblyNewFile = FileReference & {
     file?: File;
 };
 
+const FILE_WIDGET_METADATA_FIELDS: FileMetadataField[] = [
+    "altText",
+    "attribution",
+];
+
 const props = defineProps<{
     tileData: ConceptImages | undefined;
     componentName: string;
@@ -61,6 +71,7 @@ const props = defineProps<{
 
 const { $gettext } = useGettext();
 const toast = useToast();
+const languageStore = useLanguageStore();
 
 const digitalObjectResource = ref<DigitalObjectInstance>();
 const digitalObjectLoaded = ref(false);
@@ -108,18 +119,57 @@ async function getDigitalObjectInstance(resourceInstanceId?: string) {
     }
 }
 
+function getTileLanguage(
+    tileAliasedData: object | undefined,
+    languageNodeAlias: string,
+): Language {
+    const languageNode = (
+        tileAliasedData as
+            | Record<string, { node_value?: unknown } | undefined>
+            | undefined
+    )?.[languageNodeAlias];
+    return (
+        languageStore.availableLanguages.find(
+            (language) => language.code === languageNode?.node_value,
+        ) ?? languageStore.selectedLanguage
+    );
+}
+
+function getNonLocalizedText(aliasedNodeData: object | undefined): string {
+    return (
+        (aliasedNodeData as NonLocalizedTextAliasedNodeData | undefined)
+            ?.node_value ?? ""
+    );
+}
+
+function withRecordTitleAndDescription(
+    file: PossiblyNewFile,
+    digitalObjectInstanceAliases: DigitalObjectInstanceAliases,
+): PossiblyNewFile {
+    const nameAliasedData = digitalObjectInstanceAliases.name?.aliased_data;
+    const statementAliasedData =
+        digitalObjectInstanceAliases.statement?.aliased_data;
+
+    return {
+        ...file,
+        title: setLocalizedValue(
+            file.title,
+            getTileLanguage(nameAliasedData, "name_language"),
+            getNonLocalizedText(nameAliasedData?.name_content),
+        ),
+        description: setLocalizedValue(
+            file.description,
+            getTileLanguage(statementAliasedData, "statement_language"),
+            getNonLocalizedText(statementAliasedData?.statement_content),
+        ),
+    };
+}
+
 async function save(e: FormSubmitEvent) {
     isLoading.value = true;
 
     try {
         const submittedFormData = e.values;
-        const contentFiles =
-            (
-                submittedFormData.content as {
-                    node_value: PossiblyNewFile[] | null;
-                }
-            )?.node_value ?? null;
-
         const digitalObjectInstanceAliases: DigitalObjectInstanceAliases =
             digitalObjectResource.value?.aliased_data ?? {};
 
@@ -138,6 +188,20 @@ async function save(e: FormSubmitEvent) {
             };
         }
 
+        const submittedContentFiles =
+            (
+                submittedFormData.content as {
+                    node_value: PossiblyNewFile[] | null;
+                }
+            )?.node_value ?? null;
+        const contentFiles =
+            submittedContentFiles?.map((file) =>
+                withRecordTitleAndDescription(
+                    file,
+                    digitalObjectInstanceAliases,
+                ),
+            ) ?? null;
+
         // files do not respect json.stringify
         const fileJsonObjects = (contentFiles ?? []).map((file) => {
             if (!file.file) {
@@ -151,7 +215,10 @@ async function save(e: FormSubmitEvent) {
                 url: null,
                 file_id: null,
                 content: URL.createObjectURL(file.file),
-                altText: "Replaceable alt text",
+                altText: file.altText,
+                title: file.title,
+                description: file.description,
+                attribution: file.attribution,
             };
         });
 
@@ -314,6 +381,8 @@ function resetForm() {
                         "
                         :mode="EDIT"
                         :should-show-label="false"
+                        :should-show-metadata-language-select="true"
+                        :visible-metadata-fields="FILE_WIDGET_METADATA_FIELDS"
                     />
                 </div>
             </Form>
