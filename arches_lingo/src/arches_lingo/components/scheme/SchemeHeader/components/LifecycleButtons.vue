@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, nextTick, onMounted, ref, watch } from "vue";
 import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
 
@@ -47,6 +47,7 @@ defineExpose({ transitionLifecycleState, refreshLifecycleState });
 const toast = useToast();
 const { $gettext } = useGettext();
 
+const lifecycleButtonsContainerRef = ref<HTMLElement | null>(null);
 const isLoading = ref(false);
 const activeRequestStateId = ref<string | undefined>();
 const currentResourceInstanceLifecycleState = ref<
@@ -79,7 +80,28 @@ const nextResourceInstanceLifecycleStates = computed(() => {
     return [];
 });
 
-async function refreshLifecycleState() {
+async function keepFocusOnLifecycleButtons(update: () => Promise<void>) {
+    const hadFocus = Boolean(
+        lifecycleButtonsContainerRef.value?.contains(document.activeElement),
+    );
+    await update();
+    if (!hadFocus) {
+        return;
+    }
+    await nextTick();
+    if (document.activeElement && document.activeElement !== document.body) {
+        return;
+    }
+    lifecycleButtonsContainerRef.value
+        ?.querySelector<HTMLElement>("button")
+        ?.focus();
+}
+
+function refreshLifecycleState() {
+    return keepFocusOnLifecycleButtons(loadLifecycleState);
+}
+
+async function loadLifecycleState() {
     if (!props.resourceInstanceId) {
         currentResourceInstanceLifecycleState.value = undefined;
         return;
@@ -103,7 +125,13 @@ async function refreshLifecycleState() {
     }
 }
 
-async function transitionLifecycleState(nextStateId: string) {
+function transitionLifecycleState(nextStateId: string) {
+    return keepFocusOnLifecycleButtons(() =>
+        requestLifecycleStateTransition(nextStateId),
+    );
+}
+
+async function requestLifecycleStateTransition(nextStateId: string) {
     if (!props.resourceInstanceId) {
         return;
     }
@@ -181,6 +209,7 @@ watch(
 <template>
     <div
         v-if="resourceInstanceId"
+        ref="lifecycleButtonsContainerRef"
         class="lifecycle-buttons"
     >
         <Skeleton

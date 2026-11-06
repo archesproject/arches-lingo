@@ -10,6 +10,7 @@ import { fetchConceptAncestorPaths } from "@/arches_lingo/api.ts";
 import {
     ERROR,
     INFO,
+    STATIC_NOTE_PASS_THROUGH,
     STRATEGY_DELETE_CHILDREN,
     STRATEGY_REPARENT,
     STRATEGY_REPARENT_TO_SURVIVOR,
@@ -196,6 +197,7 @@ function isConceptOnAnyPath(
             v-if="isSurvivorBeneathAbsorbed"
             :severity="INFO"
             :closable="false"
+            :pt="STATIC_NOTE_PASS_THROUGH"
         >
             {{ survivorBeneathAbsorbedText }}
         </Message>

@@ -163,6 +163,13 @@ function getResourceTypeSeverity(
                             "
                         >
                             {{ formatRelativeTime(slotProps.data.timestamp) }}
+                            <span class="p-hidden-accessible">
+                                ({{
+                                    formatFullTimestamp(
+                                        slotProps.data.timestamp,
+                                    )
+                                }})
+                            </span>
                         </span>
                     </template>
                 </Column>

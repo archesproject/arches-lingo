@@ -36,7 +36,7 @@ const emit = defineEmits<{
     (event: "select", concept: SearchResultItem): void;
 }>();
 
-const { $gettext } = useGettext();
+const { $gettext, $ngettext } = useGettext();
 
 const searchTerm = ref("");
 const candidates = ref<SearchResultItem[]>([]);
@@ -50,6 +50,24 @@ let activeRequestId = 0;
 
 const trimmedSearchTerm = computed(function () {
     return searchTerm.value.trim();
+});
+
+const statusText = computed(function () {
+    if (!trimmedSearchTerm.value) {
+        return $gettext("Search for the concept you want to merge away.");
+    }
+    if (isLoading.value && !candidates.value.length) {
+        return $gettext("Searching…");
+    }
+    if (!candidates.value.length) {
+        return fetchError.value ? "" : $gettext("No matching concepts.");
+    }
+    return $ngettext(
+        "%{count} matching concept",
+        "%{count} matching concepts",
+        candidates.value.length,
+        { count: String(candidates.value.length) },
+    );
 });
 
 const searchIconClass = computed(function () {
@@ -155,28 +173,15 @@ function discardPendingSearch() {
         </Message>
 
         <p
-            v-if="!trimmedSearchTerm"
+            role="status"
             class="merge-picker-status"
+            :class="{ 'p-hidden-accessible': candidates.length }"
         >
-            {{ $gettext("Search for the concept you want to merge away.") }}
-        </p>
-
-        <p
-            v-else-if="isLoading && !candidates.length"
-            class="merge-picker-status"
-        >
-            {{ $gettext("Searching…") }}
-        </p>
-
-        <p
-            v-else-if="!fetchError && !candidates.length"
-            class="merge-picker-status"
-        >
-            {{ $gettext("No matching concepts.") }}
+            {{ statusText }}
         </p>
 
         <ul
-            v-else-if="candidates.length"
+            v-if="candidates.length"
             class="merge-picker-results"
         >
             <li
@@ -237,6 +242,12 @@ function discardPendingSearch() {
     font-size: var(--p-lingo-font-size-smallnormal);
     color: var(--p-text-muted-color);
     text-align: center;
+}
+
+/* The scoped padding and border would otherwise outweigh p-hidden-accessible. */
+.merge-picker-status.p-hidden-accessible {
+    padding: 0;
+    border: 0;
 }
 
 .merge-picker-results {

@@ -117,7 +117,7 @@ onMounted(async () => {
                 />
             </div>
         </div>
-        <div
+        <ul
             v-if="topConcepts.length"
             :ref="(el) => (listElement = el as HTMLElement | null)"
             :class="[
@@ -129,27 +129,33 @@ onMounted(async () => {
             ]"
             @scroll="checkScrollBottom"
         >
-            <RouterLink
+            <li
                 v-for="concept in sortedTopConcepts"
                 :key="concept.id"
-                :to="{
-                    name: routeNames.concept,
-                    params: { id: concept.id },
-                }"
-                class="top-concept-item"
             >
-                <span :class="getConceptIcon(concept)"></span>
-                <span class="top-concept-label">
-                    {{
-                        getItemLabel(
-                            concept,
-                            selectedLanguage.code,
-                            systemLanguage.code,
-                        ).value
-                    }}
-                </span>
-            </RouterLink>
-        </div>
+                <RouterLink
+                    :to="{
+                        name: routeNames.concept,
+                        params: { id: concept.id },
+                    }"
+                    class="top-concept-item"
+                >
+                    <span
+                        :class="getConceptIcon(concept)"
+                        aria-hidden="true"
+                    ></span>
+                    <span class="top-concept-label">
+                        {{
+                            getItemLabel(
+                                concept,
+                                selectedLanguage.code,
+                                systemLanguage.code,
+                            ).value
+                        }}
+                    </span>
+                </RouterLink>
+            </li>
+        </ul>
         <div
             v-else
             class="section-message"
@@ -164,7 +170,9 @@ onMounted(async () => {
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
-    padding-top: 0.5rem;
+    margin: 0;
+    padding: 0.5rem 0 0 0;
+    list-style: none;
 }
 
 .top-concepts-list.scrollable {

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, nextTick, onMounted, ref, useId, watch } from "vue";
 
 import { useGettext } from "vue3-gettext";
 import { storeToRefs } from "pinia";
@@ -31,11 +31,14 @@ import {
 } from "@/arches_lingo/components/concept/ConceptMerge/utils.ts";
 import { getItemLabel } from "@/arches_controlled_lists/utils.ts";
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
+import { useMediaQuery } from "@/arches_lingo/composables/useMediaQuery.ts";
+import { focusWithoutScrolling } from "@/arches_lingo/utils.ts";
 import {
     DANGER,
     DRAFT_LIFECYCLE_STATE_ID,
     ERROR,
     SECONDARY,
+    SHORT_VIEWPORT_MEDIA_QUERY,
     STRATEGY_REPARENT_TO_SURVIVOR,
 } from "@/arches_lingo/constants.ts";
 import {
@@ -86,6 +89,13 @@ const MERGE_STEP_ORDER = [
 
 const PRESELECTED_MERGE_STEP_ORDER = [MERGE_STEP_COMPARE, MERGE_STEP_CONFIRM];
 
+const SHORT_VIEWPORT_DIALOG_PASS_THROUGH = {
+    ...DIALOG_PASS_THROUGH,
+    content: {
+        style: { ...DIALOG_PASS_THROUGH.content.style, overflow: "auto" },
+    },
+};
+
 const {
     survivorConcept,
     survivorLabel,
@@ -93,6 +103,7 @@ const {
     graphSlug,
     preselectedConceptId = undefined,
 } = defineProps<{
+    visible: boolean;
     survivorConcept: ResourceInstanceResult;
     survivorLabel: string | undefined;
     schemeId: string;
@@ -104,10 +115,13 @@ const {
 const emit = defineEmits<{
     cancel: [];
     merged: [];
+    "after-hide": [];
 }>();
 
 const { $gettext } = useGettext();
 const { selectedLanguage, systemLanguage } = storeToRefs(useLanguageStore());
+const isShortViewport = useMediaQuery(SHORT_VIEWPORT_MEDIA_QUERY);
+const stepHeadingIdPrefix = useId();
 
 const currentStep = ref(
     preselectedConceptId ? MERGE_STEP_COMPARE : MERGE_STEP_SELECT,
@@ -136,6 +150,52 @@ const mergeStepOrder = computed(function () {
 
 const isOnFirstStep = computed(function () {
     return currentStep.value === mergeStepOrder.value[0];
+});
+
+const isOnConfirmStep = computed(function () {
+    return currentStep.value === MERGE_STEP_CONFIRM;
+});
+
+const stepTitles = computed<Record<number, string>>(function () {
+    return {
+        [MERGE_STEP_SELECT]: $gettext("Choose concept"),
+        [MERGE_STEP_COMPARE]: $gettext("Choose values"),
+        [MERGE_STEP_CONFIRM]: $gettext("Confirm"),
+    };
+});
+
+const backButton = computed(function () {
+    if (isOnFirstStep.value) {
+        return {
+            label: $gettext("Cancel"),
+            icon: "pi pi-times",
+            severity: DANGER,
+            isOutlined: false,
+        };
+    }
+    return {
+        label: $gettext("Back"),
+        icon: "pi pi-arrow-left",
+        severity: SECONDARY,
+        isOutlined: true,
+    };
+});
+
+const forwardButton = computed(function () {
+    if (isOnConfirmStep.value) {
+        return {
+            label: $gettext("Merge"),
+            icon: isMerging.value ? "pi pi-spin pi-spinner" : "pi pi-check",
+            iconPosition: "left" as const,
+            isDisabled: !canConfirm.value,
+        };
+    }
+    return {
+        label: $gettext("Next"),
+        icon: "pi pi-arrow-right",
+        iconPosition: "right" as const,
+        isDisabled: isNextDisabled.value,
+    };
 });
 
 const previousStep = computed(function () {
@@ -289,6 +349,46 @@ function onVisibleChange() {
     }
 }
 
+function getStepHeadingId(step: number) {
+    return `${stepHeadingIdPrefix}-${step}`;
+}
+
+function getStepHeadingText(step: number) {
+    return $gettext("Step %{number} of %{total}: %{title}", {
+        number: String(mergeStepOrder.value.indexOf(step) + 1),
+        total: String(mergeStepOrder.value.length),
+        title: stepTitles.value[step],
+    });
+}
+
+async function goToStep(step: number) {
+    currentStep.value = step;
+    await nextTick();
+    const stepHeading = document.getElementById(getStepHeadingId(step));
+    if (stepHeading) {
+        focusWithoutScrolling(stepHeading);
+    }
+}
+
+function onBackButtonClick() {
+    if (isOnFirstStep.value) {
+        emit("cancel");
+    } else {
+        goToStep(previousStep.value);
+    }
+}
+
+// Disabling the focused Merge button would drop focus, so clicks are ignored instead.
+function onForwardButtonClick() {
+    if (isOnConfirmStep.value) {
+        if (!isMerging.value) {
+            onMergeConfirmed();
+        }
+    } else {
+        goToStep(nextStep.value);
+    }
+}
+
 async function onMergeConfirmed() {
     if (!selectionState.value || !absorbedConcept.value) {
         return;
@@ -325,14 +425,19 @@ async function onMergeConfirmed() {
 
 <template>
     <Dialog
-        :visible="true"
+        :visible="visible"
         :modal="true"
         :header="$gettext('Merge Concepts')"
         class="concept-merge-dialog"
         :closable="!isMerging"
         :style="DIALOG_SIZE"
-        :pt="DIALOG_PASS_THROUGH"
+        :pt="
+            isShortViewport
+                ? SHORT_VIEWPORT_DIALOG_PASS_THROUGH
+                : DIALOG_PASS_THROUGH
+        "
         @update:visible="onVisibleChange"
+        @after-hide="emit('after-hide')"
     >
         <Stepper
             v-model:value="currentStep"
@@ -343,19 +448,19 @@ async function onMergeConfirmed() {
                     v-if="!preselectedConceptId"
                     :value="MERGE_STEP_SELECT"
                 >
-                    {{ $gettext("Choose concept") }}
+                    {{ stepTitles[MERGE_STEP_SELECT] }}
                 </Step>
                 <Step
                     :value="MERGE_STEP_COMPARE"
                     :disabled="!canCompare"
                 >
-                    {{ $gettext("Choose values") }}
+                    {{ stepTitles[MERGE_STEP_COMPARE] }}
                 </Step>
                 <Step
                     :value="MERGE_STEP_CONFIRM"
                     :disabled="!canConfirm"
                 >
-                    {{ $gettext("Confirm") }}
+                    {{ stepTitles[MERGE_STEP_CONFIRM] }}
                 </Step>
             </StepList>
 
@@ -373,6 +478,12 @@ async function onMergeConfirmed() {
                     :value="MERGE_STEP_SELECT"
                 >
                     <div class="merge-step">
+                        <h2
+                            :id="getStepHeadingId(MERGE_STEP_SELECT)"
+                            class="p-hidden-accessible"
+                        >
+                            {{ getStepHeadingText(MERGE_STEP_SELECT) }}
+                        </h2>
                         <div class="merge-step-body merge-step-body--fill">
                             <p class="merge-step-intro">
                                 {{
@@ -405,6 +516,12 @@ async function onMergeConfirmed() {
 
                 <StepPanel :value="MERGE_STEP_COMPARE">
                     <div class="merge-step">
+                        <h2
+                            :id="getStepHeadingId(MERGE_STEP_COMPARE)"
+                            class="p-hidden-accessible"
+                        >
+                            {{ getStepHeadingText(MERGE_STEP_COMPARE) }}
+                        </h2>
                         <div class="merge-step-body">
                             <ProgressSpinner
                                 v-if="isLoadingAbsorbedConcept"
@@ -436,6 +553,12 @@ async function onMergeConfirmed() {
 
                 <StepPanel :value="MERGE_STEP_CONFIRM">
                     <div class="merge-step">
+                        <h2
+                            :id="getStepHeadingId(MERGE_STEP_CONFIRM)"
+                            class="p-hidden-accessible"
+                        >
+                            {{ getStepHeadingText(MERGE_STEP_CONFIRM) }}
+                        </h2>
                         <div class="merge-step-body">
                             <MergeConfirmation
                                 v-if="absorbedConcept"
@@ -477,42 +600,22 @@ async function onMergeConfirmed() {
         <template #footer>
             <div class="footer">
                 <Button
-                    v-if="isOnFirstStep"
-                    icon="pi pi-times"
-                    :label="$gettext('Cancel')"
-                    :severity="DANGER"
-                    class="footer-button"
-                    @click="emit('cancel')"
-                />
-                <Button
-                    v-else
-                    icon="pi pi-arrow-left"
-                    :label="$gettext('Back')"
-                    :severity="SECONDARY"
-                    :outlined="true"
+                    :icon="backButton.icon"
+                    :label="backButton.label"
+                    :severity="backButton.severity"
+                    :outlined="backButton.isOutlined"
                     :disabled="isMerging"
                     class="footer-button"
-                    @click="currentStep = previousStep"
-                />
-
-                <Button
-                    v-if="currentStep === MERGE_STEP_CONFIRM"
-                    icon="pi pi-check"
-                    :label="$gettext('Merge')"
-                    :disabled="!canConfirm || isMerging"
-                    :loading="isMerging"
-                    class="footer-button"
-                    @click="onMergeConfirmed"
+                    @click="onBackButtonClick"
                 />
                 <Button
-                    v-else
-                    icon="pi pi-arrow-right"
-                    icon-pos="right"
-                    :label="$gettext('Next')"
-                    :disabled="isNextDisabled"
-                    :loading="isLoadingAbsorbedConcept"
+                    :icon="forwardButton.icon"
+                    :icon-pos="forwardButton.iconPosition"
+                    :label="forwardButton.label"
+                    :disabled="forwardButton.isDisabled"
+                    :aria-disabled="isMerging"
                     class="footer-button"
-                    @click="currentStep = nextStep"
+                    @click="onForwardButtonClick"
                 />
             </div>
         </template>
@@ -555,7 +658,6 @@ async function onMergeConfirmed() {
 .merge-stepper :deep(.p-step-title) {
     font-size: var(--p-lingo-font-size-smallnormal);
     font-weight: var(--p-lingo-font-weight-normal);
-    white-space: nowrap;
 }
 
 .merge-stepper :deep(.p-step-active) .p-step-title {
@@ -625,5 +727,22 @@ async function onMergeConfirmed() {
 .merge-spinner {
     width: 2.5rem;
     height: 2.5rem;
+}
+
+@media (max-height: 40rem) {
+    .merge-stepper,
+    .merge-stepper :deep(.p-steppanels),
+    .merge-stepper :deep(.p-steppanel),
+    .merge-step,
+    .merge-step-body {
+        flex: none;
+        height: auto;
+        min-height: auto;
+    }
+
+    .merge-step-body,
+    .merge-step-body--fill {
+        overflow: visible;
+    }
 }
 </style>

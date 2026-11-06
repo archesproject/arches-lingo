@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, inject, onMounted, ref } from "vue";
+import { computed, inject, nextTick, onMounted, ref } from "vue";
 
 import { useGettext } from "vue3-gettext";
 import { useToast } from "primevue/usetoast";
@@ -20,6 +20,7 @@ import {
     SUCCESS,
 } from "@/arches_lingo/constants.ts";
 import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
+import { focusWithoutScrolling } from "@/arches_lingo/utils.ts";
 
 import type { DataComponentMode, EditLogEntry } from "@/arches_lingo/types.ts";
 
@@ -60,6 +61,7 @@ const isReverting = ref(false);
 
 const edits = ref([] as EditLogEntry[]);
 const pendingRevertTimestamp = ref<string | null>(null);
+const editLogEntriesRef = ref<HTMLElement | null>(null);
 
 const isRevertDialogVisible = computed(
     () => pendingRevertTimestamp.value !== null,
@@ -229,6 +231,10 @@ async function acceptRevert() {
 
         await loadEditLog();
         refreshReportSection?.("all");
+        await nextTick();
+        if (editLogEntriesRef.value) {
+            focusWithoutScrolling(editLogEntriesRef.value);
+        }
     } catch (caughtError) {
         toast.add({
             severity: ERROR,
@@ -259,6 +265,7 @@ async function acceptRevert() {
                 :label="$gettext('Cancel')"
                 severity="secondary"
                 outlined
+                autofocus
                 @click="cancelRevert"
             />
             <Button
@@ -287,11 +294,13 @@ async function acceptRevert() {
             <p>{{ $gettext("No edit history found.") }}</p>
         </div>
 
-        <div
+        <ul
             v-else
+            ref="editLogEntriesRef"
             class="edit-log-entries"
+            :aria-label="$gettext('Edit history')"
         >
-            <div
+            <li
                 v-for="(edit, index) in edits"
                 :key="edit.editlogid"
                 class="edit-entry"
@@ -360,8 +369,8 @@ async function acceptRevert() {
                         </span>
                     </div>
                 </div>
-            </div>
-        </div>
+            </li>
+        </ul>
     </div>
 </template>
 
@@ -388,7 +397,9 @@ async function acceptRevert() {
 .edit-log-entries {
     overflow-y: auto;
     flex: 1;
+    margin: 0;
     padding: 0.75rem 1rem;
+    list-style: none;
 }
 
 .no-edits {

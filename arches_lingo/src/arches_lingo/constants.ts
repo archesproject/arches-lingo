@@ -41,6 +41,16 @@ export const SEARCH_RESULT_ITEM_SIZE = 50;
 
 export const MAIN_CONTENT_ID = "main-content";
 
+// PrimeVue Message hard-codes role="alert"; pt binds after it, so these win.
+export const STATIC_NOTE_PASS_THROUGH = {
+    root: { role: "note", "aria-live": "off" },
+};
+export const STATUS_MESSAGE_PASS_THROUGH = {
+    root: { role: "status", "aria-live": "polite" },
+};
+export const NARROW_SCREEN_MEDIA_QUERY = "(max-width: 960px)";
+export const SHORT_VIEWPORT_MEDIA_QUERY = "(max-height: 40rem)";
+
 export const FALLBACK_LANGUAGE: Language = {
     code: "en",
     default_direction: "ltr",

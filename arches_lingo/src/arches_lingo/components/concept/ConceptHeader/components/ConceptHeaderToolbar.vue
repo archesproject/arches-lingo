@@ -48,6 +48,7 @@ import {
 import { routeNames } from "@/arches_lingo/routes.ts";
 import { navigateToSchemeOrConcept } from "@/arches_lingo/utils.ts";
 
+import { useDialogFocusReturn } from "@/arches_lingo/composables/useDialogFocusReturn.ts";
 import { useEditLog } from "@/arches_lingo/composables/useEditLog.ts";
 import { setPageTitleDetail } from "@/arches_lingo/composables/usePageTitle.ts";
 import { useResourceStore } from "@/arches_lingo/composables/useResourceStore.ts";
@@ -106,11 +107,35 @@ const lifecycleButtonsRef = ref<InstanceType<typeof LifecycleButtons> | null>(
     null,
 );
 
+const conceptNameHeadingRef = ref<HTMLElement | null>(null);
+
+function getConceptNameHeading() {
+    return conceptNameHeadingRef.value;
+}
+
 const showExportDialog = ref(false);
 const exportDialogKey = ref(0);
-const showDeleteDialog = ref(false);
-const showReinstateDialog = ref(false);
-const showMergeDialog = ref(false);
+const {
+    isDialogMounted: isDeleteDialogMounted,
+    isDialogVisible: isDeleteDialogVisible,
+    openDialog: openDeleteDialog,
+    closeDialog: closeDeleteDialog,
+    onDialogAfterHide: onDeleteDialogAfterHide,
+} = useDialogFocusReturn(getConceptNameHeading);
+const {
+    isDialogMounted: isReinstateDialogMounted,
+    isDialogVisible: isReinstateDialogVisible,
+    openDialog: openReinstateDialog,
+    closeDialog: closeReinstateDialog,
+    onDialogAfterHide: onReinstateDialogAfterHide,
+} = useDialogFocusReturn(getConceptNameHeading);
+const {
+    isDialogMounted: isMergeDialogMounted,
+    isDialogVisible: isMergeDialogVisible,
+    openDialog: openMergeDialog,
+    closeDialog: closeMergeDialog,
+    onDialogAfterHide: onMergeDialogAfterHide,
+} = useDialogFocusReturn(getConceptNameHeading);
 const isLoading = ref(false);
 const isWidgetLoading = ref(false);
 const dialogMode = ref<typeof DELETE | typeof DEPRECATE>(DELETE);
@@ -259,7 +284,7 @@ async function onConceptTypeChange(newValue: unknown) {
 function confirmDelete() {
     if (!props.concept?.resourceinstanceid) return;
     dialogMode.value = DELETE;
-    showDeleteDialog.value = true;
+    openDeleteDialog();
 }
 
 async function onConfirmed(strategy: DeleteConceptStrategy | null) {
@@ -278,7 +303,7 @@ async function onConfirmed(strategy: DeleteConceptStrategy | null) {
             );
 
             refreshSchemeHierarchy!();
-            showDeleteDialog.value = false;
+            closeDeleteDialog();
 
             router.push({
                 name: routeNames.scheme,
@@ -292,7 +317,7 @@ async function onConfirmed(strategy: DeleteConceptStrategy | null) {
             );
 
             refreshSchemeHierarchy!();
-            showDeleteDialog.value = false;
+            closeDeleteDialog();
 
             lifecycleButtonsRef.value?.refreshLifecycleState();
             refreshReportSection!("all");
@@ -322,7 +347,7 @@ async function onReinstateConfirmed(cascade: boolean) {
     try {
         await unretireConcept(props.concept.resourceinstanceid, cascade);
         refreshSchemeHierarchy!();
-        showReinstateDialog.value = false;
+        closeReinstateDialog();
         lifecycleButtonsRef.value?.refreshLifecycleState();
         refreshReportSection!("all");
     } catch (error) {
@@ -359,15 +384,15 @@ function addChild() {
 function onRetireRequested() {
     if (!props.concept?.resourceinstanceid) return;
     dialogMode.value = DEPRECATE;
-    showDeleteDialog.value = true;
+    openDeleteDialog();
 }
 
 function onReinstateRequested() {
-    showReinstateDialog.value = true;
+    openReinstateDialog();
 }
 
 async function onMerged() {
-    showMergeDialog.value = false;
+    closeMergeDialog();
     refreshSchemeHierarchy!();
     // Refreshes the resource and the lifecycle state, which every report section
     // either reads from directly or now watches for.
@@ -389,37 +414,43 @@ function findMatches(): void {
 }
 
 function onMergeCancelled() {
-    showMergeDialog.value = false;
+    closeMergeDialog();
 }
 </script>
 
 <template>
     <DeleteConceptDialog
-        v-if="concept && showDeleteDialog"
+        v-if="concept && isDeleteDialogMounted"
+        :visible="isDeleteDialogVisible"
         :concept-id="concept.resourceinstanceid"
         :concept-name="label?.value"
         :mode="dialogMode"
         :is-loading="isLoading"
         @confirm="onConfirmed"
-        @cancel="showDeleteDialog = false"
+        @cancel="closeDeleteDialog()"
+        @after-hide="onDeleteDialogAfterHide"
     />
     <ConceptMergeDialog
-        v-if="concept && showMergeDialog && schemeId"
+        v-if="concept && isMergeDialogMounted && schemeId"
+        :visible="isMergeDialogVisible"
         :survivor-concept="concept"
         :survivor-label="label?.value"
         :scheme-id="schemeId"
         :graph-slug="graphSlug"
         @merged="onMerged"
         @cancel="onMergeCancelled"
+        @after-hide="onMergeDialogAfterHide"
     />
     <ReinstateDialog
-        v-if="concept && showReinstateDialog"
+        v-if="concept && isReinstateDialogMounted"
+        :visible="isReinstateDialogVisible"
         :resource-id="concept.resourceinstanceid"
         :resource-name="label?.value"
         resource-type="concept"
         :is-loading="isLoading"
         @confirm="onReinstateConfirmed"
-        @cancel="showReinstateDialog = false"
+        @cancel="closeReinstateDialog()"
+        @after-hide="onReinstateDialogAfterHide"
     />
     <ExportThesauri
         v-if="concept && showExportDialog"
@@ -430,7 +461,10 @@ function onMergeCancelled() {
     <div class="concept-header-toolbar">
         <div class="concept-details">
             <div class="concept-header-title">
-                <h1 class="concept-name">
+                <h1
+                    ref="conceptNameHeadingRef"
+                    class="concept-name"
+                >
                     <i
                         :class="conceptIcon"
                         aria-hidden="true"
@@ -524,7 +558,7 @@ function onMergeCancelled() {
                 class="add-button"
                 :label="$gettext('Merge')"
                 :aria-label="$gettext('Merge another concept into this one')"
-                @click="showMergeDialog = true"
+                @click="openMergeDialog"
             />
             <Button
                 v-if="canDelete"

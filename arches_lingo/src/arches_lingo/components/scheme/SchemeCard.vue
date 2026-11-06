@@ -101,6 +101,7 @@ function onImport() {
                     :label="$gettext('Import Thesauri')"
                     type="button"
                     outlined
+                    class="import-button"
                     @click.stop.prevent="openImportDialog"
                 />
             </template>
@@ -126,6 +127,12 @@ ul:first-child li:first-child .p-card .scheme-circle {
 
 a {
     text-decoration: none;
+}
+
+.import-button:focus-visible {
+    outline: 0.125rem solid var(--p-button-contrast-color);
+    outline-offset: -0.25rem;
+    box-shadow: none;
 }
 
 .scheme-card-title {

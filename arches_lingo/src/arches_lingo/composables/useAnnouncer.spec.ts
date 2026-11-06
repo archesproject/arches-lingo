@@ -2,7 +2,10 @@ import { nextTick } from "vue";
 
 import { describe, expect, it } from "vitest";
 
-import { useAnnouncer } from "@/arches_lingo/composables/useAnnouncer.ts";
+import {
+    useAnnouncer,
+    useLocalAnnouncer,
+} from "@/arches_lingo/composables/useAnnouncer.ts";
 
 describe("useAnnouncer", () => {
     it("routes polite and assertive messages to separate regions", async () => {
@@ -25,5 +28,18 @@ describe("useAnnouncer", () => {
         await repeated;
         await nextTick();
         expect(politeMessage.value).toBe("Loaded");
+    });
+});
+
+describe("useLocalAnnouncer", () => {
+    it("keeps its message separate from the app's regions", async () => {
+        const { politeMessage } = useAnnouncer();
+        const { announceLocally, localMessage } = useLocalAnnouncer();
+        await useAnnouncer().announce("App message");
+
+        await announceLocally("3 results found");
+
+        expect(localMessage.value).toBe("3 results found");
+        expect(politeMessage.value).toBe("App message");
     });
 });

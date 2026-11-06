@@ -20,5 +20,6 @@ class AppSettingsView(View):
                 ),
                 "arches_version": arches.__version__,
                 "lingo_version": arches_lingo.__version__,
+                "accessibility_mode": settings.ACCESSIBILITY_MODE,
             }
         )
