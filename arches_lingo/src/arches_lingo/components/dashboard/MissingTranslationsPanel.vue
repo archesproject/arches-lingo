@@ -74,15 +74,13 @@ function getConceptScheme(concept: SearchResultItem): string {
                 </span>
             </div>
             <div class="filter-group">
-                <label
+                <span
                     id="language-filter-label"
-                    for="language-filter"
                     class="filter-label"
                 >
                     {{ $gettext("Language") }}:
-                </label>
+                </span>
                 <Select
-                    label-id="language-filter"
                     aria-labelledby="language-filter-label"
                     :model-value="props.translationLanguage"
                     :options="props.languages"

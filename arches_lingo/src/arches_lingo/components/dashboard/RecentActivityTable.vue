@@ -107,15 +107,13 @@ function getResourceTypeSeverity(
         <div class="section-header">
             <h2>{{ $gettext("Recent Activity") }}</h2>
             <div class="filter-group">
-                <label
+                <span
                     id="activity-period-filter-label"
-                    for="activity-period-filter"
                     class="filter-label"
                 >
                     {{ $gettext("Time frame") }}:
-                </label>
+                </span>
                 <Select
-                    label-id="activity-period-filter"
                     aria-labelledby="activity-period-filter-label"
                     :model-value="props.selectedActivityPeriod"
                     :options="props.activityPeriods"
