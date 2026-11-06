@@ -178,7 +178,7 @@ function getConceptScheme(concept: SearchResultItem): string {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    border-bottom: 0.0625rem solid var(--p-highlight-focus-background);
+    border-bottom: 0.0625rem solid var(--p-lingo-divider-color);
     padding-bottom: 0.5rem;
 }
 
@@ -186,7 +186,7 @@ function getConceptScheme(concept: SearchResultItem): string {
     margin: 0;
     font-size: var(--p-lingo-font-size-medium);
     font-weight: var(--p-lingo-font-weight-normal);
-    color: var(--p-neutral-500);
+    color: var(--p-lingo-muted-strong-color);
 }
 
 .section-header-left {
@@ -200,7 +200,7 @@ function getConceptScheme(concept: SearchResultItem): string {
     align-items: center;
     justify-content: center;
     background: var(--p-primary-100);
-    color: var(--p-primary-700);
+    color: var(--p-lingo-accent-badge-color);
     font-size: var(--p-lingo-font-size-xsmall);
     font-weight: var(--p-lingo-font-weight-normal);
     padding: 0.125rem 0.5rem;
@@ -217,7 +217,7 @@ function getConceptScheme(concept: SearchResultItem): string {
 .filter-label {
     font-size: var(--p-lingo-font-size-small);
     font-weight: var(--p-lingo-font-weight-normal);
-    color: var(--p-neutral-400);
+    color: var(--p-lingo-muted-color);
     white-space: nowrap;
 }
 
@@ -252,7 +252,7 @@ function getConceptScheme(concept: SearchResultItem): string {
 }
 
 .resource-link {
-    color: var(--p-primary-500);
+    color: var(--p-lingo-accent-color);
     text-decoration: none;
     font-size: var(--p-lingo-font-size-smallnormal);
 }
@@ -268,7 +268,7 @@ function getConceptScheme(concept: SearchResultItem): string {
 
 :deep(.p-datatable-column-title) {
     font-weight: var(--p-lingo-font-weight-normal);
-    color: var(--p-neutral-500);
+    color: var(--p-lingo-muted-strong-color);
     font-size: var(--p-lingo-font-size-small);
 }
 

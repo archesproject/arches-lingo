@@ -495,13 +495,13 @@ function extractConceptHeaderData(resource: ResourceInstanceResult) {
 .concept-uri {
     font-size: var(--p-lingo-font-size-small);
     font-weight: var(--p-lingo-font-weight-normal);
-    color: var(--p-primary-500);
+    color: var(--p-lingo-accent-color);
 }
 
 .uri-copy-button {
     flex-shrink: 0;
     font-size: var(--p-lingo-font-size-small);
-    color: var(--p-primary-500);
+    color: var(--p-lingo-accent-color);
 }
 
 .p-button-link {
@@ -544,7 +544,7 @@ function extractConceptHeaderData(resource: ResourceInstanceResult) {
 .header-item-value,
 :deep(a) {
     font-size: var(--p-lingo-font-size-smallnormal);
-    color: var(--p-primary-500);
+    color: var(--p-lingo-accent-color);
 }
 
 .top-concept-owner {
@@ -556,6 +556,6 @@ function extractConceptHeaderData(resource: ResourceInstanceResult) {
 }
 
 .parent-concept:hover a {
-    color: var(--p-primary-700);
+    color: var(--p-lingo-accent-stronger-color);
 }
 </style>

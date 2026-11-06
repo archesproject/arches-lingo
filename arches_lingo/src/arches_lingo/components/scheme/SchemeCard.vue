@@ -62,7 +62,10 @@ function onImport() {
 </script>
 
 <template>
-    <RouterLink :to="schemeURL">
+    <RouterLink
+        class="scheme-card-link"
+        :to="schemeURL"
+    >
         <Card :class="scheme.id === NEW ? 'new-scheme' : ''">
             <template #title>
                 <h2
@@ -127,6 +130,15 @@ ul:first-child li:first-child .p-card .scheme-circle {
 
 a {
     text-decoration: none;
+}
+
+:global(.arches-high-contrast .scheme-card-link:focus-visible) {
+    outline: none;
+}
+
+:global(.arches-high-contrast .scheme-card-link:focus-visible .p-card) {
+    outline: 0.25rem solid var(--p-text-color);
+    outline-offset: 0.125rem;
 }
 
 .import-button:focus-visible {

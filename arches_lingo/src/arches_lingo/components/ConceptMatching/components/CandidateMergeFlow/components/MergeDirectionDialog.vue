@@ -153,6 +153,10 @@ function onVisibilityChange(): void {
                             v-if="!concept.can_receive_data"
                             class="direction-option-unavailable"
                         >
+                            <i
+                                class="pi pi-ban"
+                                aria-hidden="true"
+                            />
                             {{ whyUnavailable(concept.cannot_receive_reason) }}
                         </span>
                     </span>
@@ -224,7 +228,7 @@ function onVisibilityChange(): void {
 
 .direction-body .direction-options .direction-option.unavailable {
     cursor: not-allowed;
-    opacity: 0.65;
+    opacity: var(--p-lingo-dimmed-unavailable-opacity);
 }
 
 .direction-body .direction-option .direction-option-body {
@@ -238,6 +242,11 @@ function onVisibilityChange(): void {
 .direction-body .direction-option-body .direction-option-unavailable {
     font-size: var(--p-lingo-font-size-xxsmall);
     color: var(--p-text-muted-color);
+}
+
+.direction-body .direction-option-body .direction-option-unavailable .pi {
+    font-size: inherit;
+    margin-inline-end: 0.25rem;
 }
 
 .direction-footer {

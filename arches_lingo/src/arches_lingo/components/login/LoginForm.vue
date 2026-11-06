@@ -113,7 +113,7 @@ form {
     margin: 0;
     font-weight: var(--p-lingo-font-weight-normal);
     font-size: var(--p-lingo-font-size-normal);
-    color: var(--p-inputtext-hover-border-color);
+    color: var(--p-lingo-form-subtitle-color);
 }
 
 input {
