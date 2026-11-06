@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, useTemplateRef } from "vue";
+import { computed, ref, useId, useTemplateRef } from "vue";
 import { useGettext } from "vue3-gettext";
 
 import Button from "primevue/button";
@@ -30,6 +30,7 @@ const LIFECYCLE_STATE_FILTER_LABEL = computed(() =>
 
 const popoverRef = useTemplateRef<PopoverMethods>("popover");
 const isPopoverOpen = ref(false);
+const lifecycleFilterHeadingId = useId();
 
 const isFilterActive = computed(
     () => selectedLifecycleStateIds.value.length < props.lifecycleStates.length,
@@ -96,11 +97,15 @@ function openPopover(event: MouseEvent) {
 
         <Popover
             ref="popover"
+            :pt="{ root: { 'aria-labelledby': lifecycleFilterHeadingId } }"
             @show="isPopoverOpen = true"
             @hide="isPopoverOpen = false"
         >
             <div class="lifecycle-filter-panel">
-                <div class="lifecycle-filter-heading">
+                <div
+                    :id="lifecycleFilterHeadingId"
+                    class="lifecycle-filter-heading"
+                >
                     {{ LIFECYCLE_STATE_FILTER_LABEL }}
                 </div>
 

@@ -94,6 +94,7 @@ function navigateToLogin() {
             <Popover
                 ref="popover"
                 class="user-interaction-popover"
+                :pt="{ root: { 'aria-label': $gettext('User menu') } }"
                 @show="onUserMenuShow"
                 @hide="isUserMenuVisible = false"
             >
