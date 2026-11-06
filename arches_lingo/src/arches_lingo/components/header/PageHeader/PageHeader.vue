@@ -128,7 +128,10 @@ async function onMobileNavAfterHide() {
                     ref="overlayPanel"
                     show-close-icon
                     :pt="{
-                        root: { class: 'overlay-panel-popover-root' },
+                        root: {
+                            class: 'overlay-panel-popover-root',
+                            'aria-label': $gettext('Menu'),
+                        },
                         content: { class: 'overlay-panel-popover-content' },
                     }"
                     @show="onOverlayPanelShow"
