@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, useTemplateRef } from "vue";
+import { computed, ref, useId, useTemplateRef } from "vue";
 import { useGettext } from "vue3-gettext";
 import { storeToRefs } from "pinia";
 
@@ -8,6 +8,7 @@ import Popover from "primevue/popover";
 import RadioButton from "primevue/radiobutton";
 
 import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
+import { ARROW_KEYS } from "@/arches_lingo/constants.ts";
 
 import type { PopoverMethods } from "primevue/popover";
 
@@ -18,20 +19,49 @@ const { selectedLanguage, availableLanguages } = storeToRefs(languageStore);
 
 const popover = useTemplateRef<PopoverMethods>("popover");
 const isLanguageSelectorVisible = ref(false);
+const languageSelectionLegendId = useId();
 
-const selectedCode = computed({
-    get: () => selectedLanguage.value.code,
-    set: (code: string) => {
-        const lang = availableLanguages.value.find(
-            (language) => language.code === code,
-        );
-        if (lang) {
-            languageStore.setSelectedLanguage(lang);
-        }
-    },
-});
+const highlightedCode = ref(selectedLanguage.value.code);
+let isArrowKeyHeld = false;
 
 const showSelector = computed(() => availableLanguages.value.length > 1);
+
+function changeLanguage(code: string) {
+    const language = availableLanguages.value.find(
+        (availableLanguage) => availableLanguage.code === code,
+    );
+    if (language && language.code !== selectedLanguage.value.code) {
+        languageStore.setSelectedLanguage(language);
+    }
+}
+
+function onLanguageRadioChange(code: string) {
+    highlightedCode.value = code;
+    if (!isArrowKeyHeld) {
+        changeLanguage(code);
+    }
+}
+
+function onLanguageRadioKeydown(event: KeyboardEvent) {
+    if (ARROW_KEYS.has(event.key)) {
+        isArrowKeyHeld = true;
+    } else if (event.key === "Enter") {
+        event.preventDefault();
+        changeLanguage(highlightedCode.value);
+    }
+}
+
+function onLanguageRadioKeyup(event: KeyboardEvent) {
+    if (ARROW_KEYS.has(event.key)) {
+        isArrowKeyHeld = false;
+    }
+}
+
+function onLanguageSelectorShow() {
+    highlightedCode.value = selectedLanguage.value.code;
+    isArrowKeyHeld = false;
+    isLanguageSelectorVisible.value = true;
+}
 
 function openLanguageSelector(event: MouseEvent) {
     popover.value!.toggle(event);
@@ -58,11 +88,19 @@ function openLanguageSelector(event: MouseEvent) {
 
         <Popover
             ref="popover"
-            @show="isLanguageSelectorVisible = true"
+            :pt="{ root: { 'aria-labelledby': languageSelectionLegendId } }"
+            @show="onLanguageSelectorShow"
             @hide="isLanguageSelectorVisible = false"
         >
-            <fieldset class="popover-header">
-                <legend class="header-title">
+            <fieldset
+                class="popover-header"
+                @keydown="onLanguageRadioKeydown"
+                @keyup="onLanguageRadioKeyup"
+            >
+                <legend
+                    :id="languageSelectionLegendId"
+                    class="header-title"
+                >
                     {{ $gettext("Language Selection") }}
                 </legend>
                 <div class="formats-container">
@@ -73,15 +111,17 @@ function openLanguageSelector(event: MouseEvent) {
                     >
                         <RadioButton
                             :key="language.code"
-                            v-model="selectedCode"
+                            :model-value="highlightedCode"
                             :input-id="`language-${language.code}`"
                             name="ui-language"
                             :value="language.code"
                             :pt="{
                                 input: {
-                                    autofocus: language.code === selectedCode,
+                                    autofocus:
+                                        language.code === selectedLanguage.code,
                                 },
                             }"
+                            @update:model-value="onLanguageRadioChange"
                         />
                         <label :for="`language-${language.code}`">
                             <span :lang="language.code">{{
