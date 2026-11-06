@@ -49,6 +49,12 @@ export const FALLBACK_LANGUAGE: Language = {
     name: "English",
     scope: "system",
 };
+export const ARROW_KEYS = new Set([
+    "ArrowUp",
+    "ArrowDown",
+    "ArrowLeft",
+    "ArrowRight",
+]);
 
 // Icons
 export const CONCEPT_ICON = "pi pi-tag";
