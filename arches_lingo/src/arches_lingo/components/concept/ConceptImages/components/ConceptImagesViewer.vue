@@ -17,10 +17,8 @@ import { useConceptImagesEditorStore } from "@/arches_lingo/stores/useConceptIma
 import { storeToRefs } from "pinia";
 import {
     getDigitalObjectImageAlt,
-    getDigitalObjectImageTitle,
     getDigitalObjectImageUrl,
 } from "@/arches_lingo/components/concept/ConceptImages/components/utils.ts";
-import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 import { useUserStore } from "@/arches_lingo/stores/useUserStore.ts";
 
 import type {
@@ -84,8 +82,6 @@ const { isEditor } = useUserStore();
 const { targetDigitalObjectResourceInstanceId } = storeToRefs(
     useConceptImagesEditorStore(),
 );
-
-const { selectedLanguage } = storeToRefs(useLanguageStore());
 
 const configurationError = ref();
 const isLoading = ref(true);
@@ -183,7 +179,7 @@ function confirmDelete(removedResourceInstanceId: string) {
 
 function getImageName(resource: DigitalObjectInstance): string {
     return (
-        getDigitalObjectImageTitle(resource, selectedLanguage.value.code) ||
+        resource.aliased_data.name?.aliased_data.name_content?.display_value ||
         $gettext("image")
     );
 }
@@ -270,12 +266,7 @@ function modifyResource(resourceInstanceId?: string) {
                         <Image
                             v-if="getDigitalObjectImageUrl(resource)"
                             :src="getDigitalObjectImageUrl(resource)"
-                            :alt="
-                                getDigitalObjectImageAlt(
-                                    resource,
-                                    selectedLanguage.code,
-                                )
-                            "
+                            :alt="getDigitalObjectImageAlt(resource)"
                             preview
                             class="card-image"
                         />

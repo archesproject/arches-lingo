@@ -2,7 +2,6 @@
 import { computed } from "vue";
 
 import { useGettext } from "vue3-gettext";
-import { storeToRefs } from "pinia";
 import Image from "primevue/image";
 
 import MergeCard from "@/arches_lingo/components/concept/ConceptMerge/components/MergeCard.vue";
@@ -11,7 +10,6 @@ import {
     getDigitalObjectImageAlt,
     getDigitalObjectImageUrl,
 } from "@/arches_lingo/components/concept/ConceptImages/components/utils.ts";
-import { useLanguageStore } from "@/arches_lingo/stores/useLanguageStore.ts";
 
 import type { DigitalObjectInstance } from "@/arches_lingo/types.ts";
 
@@ -27,16 +25,13 @@ const {
 }>();
 
 const { $gettext } = useGettext();
-const { selectedLanguage } = storeToRefs(useLanguageStore());
 
 const imageUrl = computed(function () {
     return digitalObject ? getDigitalObjectImageUrl(digitalObject) : undefined;
 });
 
 const imageAlt = computed(function () {
-    return digitalObject
-        ? getDigitalObjectImageAlt(digitalObject, selectedLanguage.value.code)
-        : "";
+    return digitalObject ? getDigitalObjectImageAlt(digitalObject) : "";
 });
 
 const imageName = computed(function () {
